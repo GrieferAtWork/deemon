@@ -84,9 +84,23 @@ final class NativeMethodParam {
 		get(): string -> getCTypeSimplified(typ, typAfter);
 	};
 
+	public property fullTyp: string = {
+		get(): string {
+		return typAfter ? typ + "*" : typ;
+		}
+	}
+
 	public property typWithoutRestrict: string = {
 		get(): string {
 			return typ
+				.rereplace(r"\b__restrict\b", "")
+				.rereplace(r"\b  +\b", " ");
+		}
+	};
+
+	public property fullTypWithoutRestrict: string = {
+		get(): string {
+			return fullTyp
 				.rereplace(r"\b__restrict\b", "")
 				.rereplace(r"\b  +\b", " ");
 		}
@@ -169,6 +183,15 @@ final class NativeMethodImpl {
 	public member implPrefix: {string...} = ();    /* Extra code to emit before the function body */
 	public member origImpl: string | none = none;  /* Implementation body */
 	public member inheritAs: string | none = none; /* Impl name that must be used when inherited as a native operator */
+
+	@@Returns true if this impl accepts a @Super object as its "self"-argument
+	public property acceptsSuperAsSelf: bool = {
+		get(): bool {
+			/* Might not always be true, but any impl that doesn't need to be replaced
+			 * with another during inheritance is probably able to deal with "Super". */
+			return inheritAs is none;
+		}
+	}
 
 	function _makeTyped(): NativeMethodImpl {
 		local result = copy this;
@@ -397,6 +420,20 @@ final class NativeMethod {
 
 	public member _methodHint: WeakRef with MethodHint | none = none;
 	public property methodHint: MethodHint | none = { get() -> _methodHint.value; };
+
+	@@Enumerate all impls as the name by which they get declared, and the actual impl
+	public property allImpls: {(string, NativeMethodImpl)...} = {
+		get(): {(string, NativeMethodImpl)...} {
+			for (local attr: methodHint.allAttributes.distinct())
+				yield (f"default__{name}__with_callattr_{attr}", callAttrImpl);
+			if (unsupportedImpl !is none)
+				yield (f"default__{name}__unsupported", unsupportedImpl);
+			for (local dependencies, impl: usingImpls)
+				yield (getUsingImplName(dependencies), impl);
+			for (local name, impl: customImpls)
+				yield (name, impl);
+		}
+	}
 
 	public property tpSelfExpr: string = {
 		get(): string {
@@ -2031,12 +2068,243 @@ function printSpecialTypeMhCacheBody(impl: string) {
 }
 
 
-class DependencyChain {
+@@Print decls/impls of method hint impls for the built-in "Super" type
+function printSuperMethodHintWrappers(impl: bool) {
+	for (local name, nativeMethod /*: NativeMethod*/: NATIVE_METHOD_HINTS) {
+		if (nativeMethod.unsupportedImpl is none)
+			continue; /* Only possible for methods with an "%{unsupported}" impl */
+		local attrib = nativeMethod.getReturnAttrib();
+		print(impl ? "INTERN" : "INTDEF", " "),;
+		if (attrib)
+			print(attrib, " "),;
+		print nativeMethod.returnType,;
+		if (impl) {
+			if (nativeMethod.cc) {
+				if (!nativeMethod.returnType.endswith("*"))
+					print " ",;
+				print nativeMethod.cc,;
+			}
+			print;
+		} else {
+			if (!nativeMethod.returnType.endswith("*"))
+				print " ",;
+			if (nativeMethod.cc)
+				print(nativeMethod.cc, " "),;
+		}
+		local firstParam: NativeMethodParam = copy nativeMethod.params.first;
+		firstParam.typ = firstParam.typ.replace("DeeObject", "DeeSuperObject");
+		local usedParams: {NativeMethodParam...} = { firstParam, nativeMethod.params[1:]... }.frozen;
+		print("super_mh__", name, "(", ", ".join(usedParams.each.Cstr), ")"),;
+		if (!impl) {
+			print(";");
+		} else {
+
+			/* Check if the database is able to return "Dee_SUPER_METHOD_HINT_CC_WITH_SUPER" */
+			local needWithSuper = false;
+			for (local none, impl/*: NativeMethodImpl*/: nativeMethod.allImpls) {
+				if (impl.acceptsSuperAsSelf) {
+					needWithSuper = true;
+					break;
+				}
+			}
+
+			/* Check if the database is able to return "Dee_SUPER_METHOD_HINT_CC_WITH_TYPE" */
+			local needWithTyped = false;
+			for (local operatorSpec/*: OperatorSpec*/: nativeMethod.operatorSpecs) {
+				local operatorName: NativeOperatorName = NativeOperatorName(
+						table: operatorSpec.operatorTable,
+						field: operatorSpec.operatorField);
+				local nativeOperator: NativeOperator | none =
+						NATIVE_OPERATORS.get(operatorName);
+				if (nativeOperator !is none && nativeOperator.hasMakeTypedMacro) {
+					needWithTyped = true;
+					break;
+				}
+			}
+
+			local selfArg = firstParam.name;
+			local selfArgNInd = firstParam.typ.count("*");
+			if (selfArgNInd >= 2)
+				selfArg = f"({"*" * (selfArgNInd - 1)}{selfArg})";
+			print(f" \{");
+			print(f"	struct Dee_super_method_hint specs;");
+			print(f"	DeeType_GetMethodHintForSuper({selfArg}, Dee_TMH_{name}, &specs);");
+			print(f"	switch (specs.smh_cc) \{");
+			if (selfArgNInd >= 2) {
+				/* Inplace operator wrapper */
+				print(f"	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF: \{");
+				print(f"		{nativeMethod.returnType} _res;");
+				print(f"		DREF DeeObject *_self = {selfArg}->s_self;");
+				print(f"		Dee_Incref(_self);");
+				print(f"		_res = (*(DeeMH_{name}_t)specs.smh_cb)(&_self{
+						"".join(for (local x: usedParams[1:].each.name) f", {x}")});");
+				print(f"		return repack_super_after_inplace_{
+						nativeMethod.returnType}(_res, _self, {firstParam.name});");
+				print(f"	\}	break;");
+			} else {
+				print(f"	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:");
+				print(f"		return (*(DeeMH_{name}_t)specs.smh_cb)({selfArg}->s_self{
+						"".join(for (local x: usedParams[1:].each.name) f", {x}")});");
+			}
+			if (needWithSuper) {
+				print(f"	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:");
+				print(f"		return (*(DeeMH_{name}_t)specs.smh_cb)(({
+						nativeMethod.params.first.fullTypWithoutRestrict}){
+						", ".join(usedParams.each.name)});");
+			}
+
+			if (needWithTyped) {
+				function printTypedCallbackPointer() {
+					print("(*("),;
+					print nativeMethod.returnType,;
+					if (!nativeMethod.returnType.endswith("*"))
+						print " ",;
+					print("("),;
+					if (nativeMethod.cc)
+						print(nativeMethod.cc, " "),;
+					print("*)(DeeTypeObject *"),;
+					print("".join(for (local x: nativeMethod.params.each.fullTypWithoutRestrict) f", {x}")),;
+					print(")"),;
+					print(")specs.smh_cb)"),;
+				}
+
+				if (selfArgNInd >= 2) {
+					/* Inplace operator wrapper */
+					print(f"	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE: \{");
+					print(f"		{nativeMethod.returnType} _res;");
+					print(f"		DREF DeeObject *_self = {selfArg}->s_self;");
+					print(f"		Dee_Incref(_self);");
+					print(f"		_res = "),;
+					printTypedCallbackPointer();
+					print(f"({selfArg}->s_type, &_self{
+							"".join(for (local x: usedParams[1:].each.name) f", {x}")});");
+					print(f"		return repack_super_after_inplace_{
+							nativeMethod.returnType}(_res, _self, {firstParam.name});");
+					print(f"	\}	break;");
+				} else {
+					print(f"	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:");
+					print(f"		return "),;
+					printTypedCallbackPointer();
+					print(f"({selfArg}->s_type, {selfArg}->s_self{
+							"".join(for (local x: usedParams[1:].each.name) f", {x}")});");
+				}
+			}
+			print(f"	default: break;");
+			print(f"	\}");
+			print(f"	__builtin_unreachable();");
+			print(f"\}");
+			print;
+		}
+	}
+}
+
+
+@@Print the initializer for `super_mhcache`
+function printSuperMethodHintCacheInitializer() {
+	for (local name, nativeMethod /*: NativeMethod*/: NATIVE_METHOD_HINTS) {
+		if (nativeMethod.unsupportedImpl is none) {
+			print("	NULL,");
+		} else {
+			print("	(DeeMH_", name, "_t)&super_mh__", name, ",");
+		}
+	}
+}
+
+@@Print the definition of `mh_super_map` (and related support structures)
+function printMhSuperMap() {
+	local nativeMethodsWith__msm_replace: {string...} = HashSet();
+	local nativeMethodsWith__msm_with_super: {string...} = HashSet();
+	local nativeMethodsWith__msm_with_type: {string...} = HashSet();
+	for (local name, nativeMethod /*: NativeMethod*/: NATIVE_METHOD_HINTS) {
+		if (nativeMethod.unsupportedImpl is none)
+			continue; /* Not needed */
+		local allImpls: {(string, NativeMethodImpl)...} = Tuple(nativeMethod.allImpls);
+		local replaceImpls: {string: string} = Dict();
+		for (local name, impl: allImpls) {
+			if (impl.inheritAs !is none)
+				replaceImpls[name] = impl.inheritAs;
+		}
+		if (replaceImpls) {
+			nativeMethodsWith__msm_replace.insert(name);
+			print(f"PRIVATE struct mh_super_map_replace tpconst msm_replace__{
+					name}[{#replaceImpls + 1}] = \{");
+			for (local oldImpl, newImpl: replaceImpls)
+				print(f"	MH_SUPER_MAP_REPLACE_INIT(&{oldImpl}, &{newImpl}),");
+			print(f"	MH_SUPER_MAP_REPLACE_END");
+			print(f"\};");
+		}
+		local superAsSelfImpls: {string...} = [];
+		for (local name, impl: allImpls) {
+			if (impl.acceptsSuperAsSelf)
+				superAsSelfImpls.append(name);
+		}
+		if (superAsSelfImpls) {
+			nativeMethodsWith__msm_with_super.insert(name);
+			print(f"PRIVATE Dee_funptr_t tpconst msm_with_super__{
+					name}[{#superAsSelfImpls + 1}] = \{");
+			for (local impl: superAsSelfImpls)
+				print(f"	(Dee_funptr_t)&{impl},");
+			print(f"	NULL");
+			print(f"\};");
+		}
+
+		/* Figure out typed-mappings */
+		local typedImpls: {string: string} = Dict();
+		for (local operatorSpec/*: OperatorSpec*/: nativeMethod.operatorSpecs) {
+			local operatorName: NativeOperatorName = NativeOperatorName(
+					table: operatorSpec.operatorTable,
+					field: operatorSpec.operatorField);
+			local nativeOperator: NativeOperator | none =
+					NATIVE_OPERATORS.get(operatorName);
+			if (nativeOperator !is none) {
+				local typelessSymbols: {string...} = nativeOperator
+						.doPrintNativeOperatorHintDecl(true);
+				local typedSymbols: {string...} = nativeOperator
+						.typed.doPrintNativeOperatorHintDecl(true);
+				for (local i, typelessSymbol: typelessSymbols.enumerate()) {
+					local typedSymbol = typedSymbols[i];
+					typedImpls[typelessSymbol] = typedSymbol;
+				}
+			}
+		}
+
+		if (typedImpls) {
+			nativeMethodsWith__msm_with_type.insert(name);
+			print(f"PRIVATE struct mh_super_map_typed tpconst msm_with_type__{
+					name}[{#typedImpls + 1}] = \{");
+			for (local regularImpl, typedImpl: typedImpls)
+				print(f"	MH_SUPER_MAP_TYPED_INIT(&{regularImpl}, &{typedImpl}),");
+			print(f"	MH_SUPER_MAP_TYPED_END");
+			print(f"\};");
+		}
+	}
+	print("PRIVATE struct mh_super_map tpconst mh_super_maps[", #NATIVE_METHOD_HINTS, "] = {");
+	for (local name, nativeMethod /*: NativeMethod*/: NATIVE_METHOD_HINTS) {
+		print(f"	MH_SUPER_MAP_INIT({
+			name in nativeMethodsWith__msm_replace ? f"msm_replace__{name}" : "NULL"
+		}, {
+			name in nativeMethodsWith__msm_with_super ? f"msm_with_super__{name}" : "NULL"
+		}, {
+			name in nativeMethodsWith__msm_with_type ? f"msm_with_type__{name}" : "NULL"
+		}),");
+	}
+	print("};");
+}
+
+
+
+
+final class WrappedName {
+	this = default;
+	public member name: string;
+}
+
+final class DependencyChain {
 	this = default;
 	public member length: int;
 
 	@@The operator being assigned
-	public member name: NativeOperatorName;
+	public member name: NativeOperatorName | WrappedName;
 
 	@@The method to assign
 	public member method: string;
@@ -2073,15 +2341,10 @@ class DependencyChain {
 	public member before: {DependencyChain...} = [];
 }
 
-final class FakeName {
-	this = default;
-	public member name: string;
-}
-
 final class OperatorImplChain {
 	this = default;
 	@@This operator (e.g. "tp_cmp->tp_compare")
-	public member name: NativeOperatorName | FakeName;
+	public member name: NativeOperatorName | WrappedName;
 
 	@@Ways in which this operator can be implemented
 	@@>	{
@@ -2096,11 +2359,11 @@ final class OperatorImplChain {
 		return _getLongestChainLength(HashSet({ name }), HashSet());
 	}
 	function _getLongestChainLength(
-			unassigned: HashSet with NativeOperatorName | FakeName,
-			assigned: HashSet with NativeOperatorName | FakeName
+			unassigned: HashSet with NativeOperatorName | WrappedName,
+			assigned: HashSet with NativeOperatorName | WrappedName
 	): DependencyChain | none {
 		local result: DependencyChain | none = none;
-		local addedNotAssigned: HashSet with NativeOperatorName | FakeName = HashSet();
+		local addedNotAssigned: HashSet with NativeOperatorName | WrappedName = HashSet();
 		for (local dependencies: using) {
 			for (local dependency: dependencies) {
 				if (dependency.name in unassigned)
@@ -2135,9 +2398,9 @@ next_dependencies:;
 
 @@Prints the "Dee_TMH_USING_MAXLEN" macro
 function print_TMH_USING_MAXLEN() {
-	local chains: {FakeName: OperatorImplChain} = Dict();
+	local chains: {WrappedName: OperatorImplChain} = Dict();
 	function _getOperatorImplChain(name: string): OperatorImplChain {
-		local nameKey = FakeName(name);
+		local nameKey = WrappedName(name);
 		local result: OperatorImplChain | none = chains.get(nameKey);
 		if (result is none)
 			chains[nameKey] = result = OperatorImplChain(name: nameKey);

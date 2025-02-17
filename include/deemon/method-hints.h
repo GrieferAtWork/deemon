@@ -28,6 +28,7 @@ DECL_BEGIN
 
 #ifdef DEE_SOURCE
 #define Dee_type_method_hint type_method_hint
+#define Dee_super_object     super_object
 #endif /* DEE_SOURCE */
 
 /*
@@ -2136,6 +2137,29 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
  * Never returns NULL when `id' has an "%{unsupported}" implementation. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetUncachedMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
+
+
+enum Dee_super_method_hint_cc {
+	Dee_SUPER_METHOD_HINT_CC_WITH_SELF,  /* Invoke the method hint by passing `DeeSuper_SELF(super)' as first argument */
+	Dee_SUPER_METHOD_HINT_CC_WITH_SUPER, /* Invoke the method hint by passing `(DeeObject *)super' as first argument */
+	Dee_SUPER_METHOD_HINT_CC_WITH_TYPE,  /* Invoke the method hint by injecting an additional, leading argument `DeeSuper_TYPE(super)' */
+};
+
+struct Dee_super_method_hint {
+	Dee_funptr_t                  smh_cb; /* [1..1] Function pointer to invoke */
+	enum Dee_super_method_hint_cc smh_cc; /* Calling convention for how to invoke `smh_cb' */
+};
+struct Dee_super_object;
+
+/* Same as `DeeType_GetMethodHint(DeeSuper_TYPE(super), id)', but must be used in
+ * order to lookup information on how to invoke a method hint on a Super-object.
+ * @return: true:  Success (always returned for method hints with "%{unsupported}")
+ * @return: false: Failure (method it is not supported by `DeeSuper_TYPE(super)',
+ *                          and also has no "%{unsupported}" version) */
+DFUNDEF NONNULL((1, 3)) bool
+(DCALL DeeType_GetMethodHintForSuper)(struct Dee_super_object *__restrict super, enum Dee_tmh_id id,
+                                      struct Dee_super_method_hint *__restrict result);
+
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Check if `self' specifically is able to supply the method hint `id'

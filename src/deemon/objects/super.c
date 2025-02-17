@@ -31,6 +31,10 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#include "../runtime/method-hint-super.h"
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
 /* Define type-specific object operators. */
 #define DEFINE_TYPED_OPERATORS 1
 #define SUPER_PRIVATE_EXPANDARGS(...) (DeeTypeObject *tp_self, __VA_ARGS__)
@@ -1299,7 +1303,12 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&super_call_kw,
-	/* TODO: Method hint integration? */
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ NULL,
+	/* .tp_operators_size= */ 0,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_mhcache       = */ &super_mhcache,
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 

@@ -2716,7 +2716,7 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 			 * >>     print repr x;
 			 *
 			 * With this extra check, the above code fails with an error:
-			 * >> SequenceError: type MyClass does not support: Sequence.operator iter()
+			 * >> NotImplemented: type MyClass does not support: Sequence.operator iter()
 			 *
 			 * Without this extra check, "MyClass" would be configured as:
 			 * - tp_seq->tp_iter = &default__seq_operator_iter
@@ -2750,9 +2750,9 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 }
 
 
-/* TODO: Hard-link this impl for "DeeSeq_Type", "DeeSet_Type" and "DeeMapping_Type",
- *       such that direct instances of these types behave as "empty" instances with
- *       the respective typing. */
+/* Hard-link this impl for "DeeSeq_Type", "DeeSet_Type" and "DeeMapping_Type",
+ * such that direct instances of these types behave as "empty" instances with
+ * the respective typing. */
 INTERN struct Dee_type_mh_cache mh_cache_empty = {
 /* clang-format off */
 /*[[[deemon (printSpecialTypeMhCacheBody from "..method-hints.method-hints")("$empty");]]]*/

@@ -458,6 +458,7 @@
 		<ClInclude Include="..\src\deemon\runtime\kwlist.h" />
 		<ClInclude Include="..\src\deemon\runtime\method-hint-defaults.h" />
 		<ClInclude Include="..\src\deemon\runtime\method-hint-select.h" />
+		<ClInclude Include="..\src\deemon\runtime\method-hint-super.h" />
 		<ClInclude Include="..\src\deemon\runtime\method-hints.h" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl" />
@@ -656,6 +657,8 @@
 		<ClCompile Include="..\src\deemon\runtime\lock.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hint-defaults.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hint-select.c" />
+		<ClCompile Include="..\src\deemon\runtime\method-hint-super-invoke.c" />
+		<ClCompile Include="..\src\deemon\runtime\method-hint-super.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hint-wrappers.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hints.c" />
 		<ClCompile Include="..\src\deemon\runtime\misc.c" />
