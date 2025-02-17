@@ -2100,7 +2100,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 fix_relint_r(DeeObject **__restrict p_obj) {
 	DeeObject *obj = *p_obj;
 	if (DeeObject_IsShared(obj)) {
-		ASSERT(!DeeObject_InstanceOfExact(obj, &DeeRelInt_Type));
+		ASSERTF(!DeeObject_InstanceOfExact(obj, &DeeRelInt_Type),
+		        "RelInt object should not be shared");
 		return 0;
 	}
 	if (DeeObject_InstanceOfExact(obj, &DeeRelInt_Type))

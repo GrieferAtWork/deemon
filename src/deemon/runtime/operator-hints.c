@@ -285,10 +285,9 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_compare_eq[6] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__compare_eq__with__le__and__ge, Dee_TNO_le, Dee_TNO_ge),
 	OH_INIT_SPEC_IMPL_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_compare_eq[5] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_compare_eq[4] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_compare_eq, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_compare_eq, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_compare_eq, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_compare_eq, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
@@ -329,10 +328,9 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_trycompare_eq[2] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__trycompare_eq__with__compare_eq, Dee_TNO_compare_eq, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_trycompare_eq[5] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_trycompare_eq[4] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_trycompare_eq, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_trycompare_eq, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_trycompare_eq, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_trycompare_eq, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
@@ -349,10 +347,9 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_eq[3] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__eq__with__compare_eq, Dee_TNO_compare_eq, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_eq[5] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_eq[4] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_eq, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_eq, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_eq, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_eq, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
@@ -365,10 +362,9 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_ne[3] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__ne__with__compare_eq, Dee_TNO_compare_eq, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_ne[5] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_ne[4] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_ne, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_ne, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_ne, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_ne, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };

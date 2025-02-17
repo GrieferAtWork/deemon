@@ -1230,35 +1230,31 @@ PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_hash 
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
-PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_compare_eq = {
+PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_compare_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_compare_eq,
 	/* .misos_operators = */ {
 		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare_eq, NULL, Dee_SEQCLASS_SET, OPERATOR_EQ),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare_eq, NULL, Dee_SEQCLASS_MAP, OPERATOR_EQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
-PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_trycompare_eq = {
+PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_trycompare_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_trycompare_eq,
 	/* .misos_operators = */ {
 		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_SET, OPERATOR_EQ),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_MAP, OPERATOR_EQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
-PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_eq = {
+PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_eq,
 	/* .misos_operators = */ {
 		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_eq, NULL, Dee_SEQCLASS_SET, OPERATOR_EQ),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_eq, NULL, Dee_SEQCLASS_MAP, OPERATOR_EQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
-PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_ne = {
+PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_ne = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_ne,
 	/* .misos_operators = */ {
 		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ne, NULL, Dee_SEQCLASS_SET, OPERATOR_NE),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ne, NULL, Dee_SEQCLASS_MAP, OPERATOR_NE),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };

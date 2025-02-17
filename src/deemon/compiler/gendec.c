@@ -1253,8 +1253,8 @@ done:
 	return 0;
 err_unsupported:
 	DeeError_Throwf(&DeeError_NotImplemented,
-	                "Instance %r or type %k cannot be encoded in a DEC file",
-	                self, Dee_TYPE(self));
+	                "Instance of type %k cannot be encoded in a DEC file",
+	                Dee_TYPE(self));
 err:
 	return -1;
 }
