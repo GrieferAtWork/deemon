@@ -53,23 +53,6 @@ err:
 }
 
 
-/************************************************************************/
-/* deemon.Sequence.__seq_trycompare_eq__()                              */
-/************************************************************************/
-__seq_trycompare_eq__(rhs:?S?O)->?Dbool {
-	int result;
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_trycompare_eq__", &rhs))
-		goto err;
-	result = CALL_DEPENDENCY(seq_operator_trycompare_eq, self, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
-		goto err;
-	return_bool(result == 0);
-err:
-	return NULL;
-}
-
-
 
 /*[[[deemon
 import * from deemon;
@@ -1969,8 +1952,8 @@ seq_operator_compare_eq = {
 
 [[operator(Sequence.OPERATOR_EQ: tp_cmp->tp_trycompare_eq)]]
 [[wunused]] int
-__seq_trycompare_eq__.seq_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
-                                                 [[nonnull]] DeeObject *rhs)
+__seq_compare_eq__.seq_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
+                                              [[nonnull]] DeeObject *rhs)
 %{unsupported({
 	return 1;
 })}
@@ -2017,7 +2000,7 @@ err:
 		return 1;
 	return default__seq_operator_compare_eq__with__seq_operator_sizeob__and__seq_operator_getitem(lhs, rhs);
 }}
-%{$with__seq_operator_compare_eq = {
+%{using seq_operator_compare_eq: {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
 	if (result == Dee_COMPARE_ERR) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||

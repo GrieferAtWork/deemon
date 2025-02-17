@@ -44,7 +44,7 @@ __seq_delrange__.seq_operator_delrange([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *end)
 %{unsupported(auto("operator del[:]"))}
 %{$empty = 0}
-%{$with__seq_operator_delrange_index__and__seq_operator_delrange_index_n = {
+%{using [seq_operator_delrange_index, seq_operator_delrange_index_n]: {
 	Dee_ssize_t start_index, end_index;
 	if (DeeObject_AsSSize(start, &start_index))
 		goto err;
@@ -96,7 +96,7 @@ __seq_delrange__.seq_operator_delrange_index([[nonnull]] DeeObject *self,
                                              Dee_ssize_t start, Dee_ssize_t end)
 %{unsupported(auto("operator del[:]"))}
 %{$empty = 0}
-%{$with__seq_operator_delrange = {
+%{using seq_operator_delrange: {
 	int result;
 	DREF DeeObject *startob, *endob;
 	startob = DeeInt_NewSSize(start);
@@ -162,7 +162,7 @@ __seq_delrange__.seq_operator_delrange_index_n([[nonnull]] DeeObject *self,
 	return err_seq_unsupportedf(self, "operator del[:](%" PCKdSIZ ", none)", start);
 })}
 %{$empty = 0}
-%{$with__seq_operator_delrange_index = {
+%{using [seq_operator_size, seq_operator_delrange_index]: {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
@@ -209,8 +209,9 @@ seq_operator_delrange_index_n = {
 		return $empty;
 	if (seq_operator_delrange_index == &default__seq_operator_delrange_index__with__seq_operator_delrange)
 		return $with__seq_operator_delrange;
-	if (seq_operator_delrange_index)
-		return $with__seq_operator_delrange_index;
+	if (seq_operator_delrange_index &&
+	    REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
+		return $with__seq_operator_size__and__seq_operator_delrange_index;
 };
 
 

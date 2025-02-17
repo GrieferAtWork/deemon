@@ -111,7 +111,7 @@ int __seq_unpack__.seq_unpack([[nonnull]] DeeObject *__restrict self, size_t cou
 		return err_invalid_unpack_size(self, count, 0);
 	return 0;
 }}
-%{$with__seq_unpack_ex = {
+%{using seq_unpack_ex: {
 	size_t real_count = CALL_DEPENDENCY(seq_unpack_ex, self, count, count, result);
 	if likely(real_count != (size_t)-1)
 		real_count = 0;

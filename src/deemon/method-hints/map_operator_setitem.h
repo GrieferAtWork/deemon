@@ -42,7 +42,7 @@ __map_setitem__.map_operator_setitem([[nonnull]] DeeObject *self,
 	(void)value;
 	return err_unknown_key(self, key);
 }}
-%{$with__map_operator_setitem_index__and__map_operator_setitem_string_len_hash = {
+%{using [map_operator_setitem_index, map_operator_setitem_string_len_hash]: {
 	size_t key_value;
 	if (DeeString_Check(key)) {
 		return CALL_DEPENDENCY(map_operator_setitem_string_len_hash, self,
@@ -57,7 +57,7 @@ __map_setitem__.map_operator_setitem([[nonnull]] DeeObject *self,
 err:
 	return -1;
 }}
-%{$with__map_operator_setitem_index__and__map_operator_setitem_string_hash = {
+%{using [map_operator_setitem_index, map_operator_setitem_string_hash]: {
 	size_t key_value;
 	if (DeeString_Check(key)) {
 		return CALL_DEPENDENCY(map_operator_setitem_string_hash, self,
@@ -70,7 +70,7 @@ err:
 err:
 	return -1;
 }}
-%{$with__map_operator_setitem_string_len_hash = {
+%{using map_operator_setitem_string_len_hash: {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
 	return CALL_DEPENDENCY(map_operator_setitem_string_len_hash, self,
@@ -81,7 +81,7 @@ err:
 err:
 	return -1;
 }}
-%{$with__map_operator_setitem_string_hash = {
+%{using map_operator_setitem_string_hash: {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
 	return CALL_DEPENDENCY(map_operator_setitem_string_hash, self,
@@ -91,7 +91,7 @@ err:
 err:
 	return -1;
 }}
-%{$with__map_operator_setitem_index = {
+%{using map_operator_setitem_index: {
 	size_t key_value;
 	if (DeeObject_AsSize(key, &key_value))
 		goto err;
@@ -115,7 +115,7 @@ err:
 
 map_operator_setitem = {
 	DeeMH_map_enumerate_t map_enumerate;
-	if (REQUIRE_NODEFAULT(map_operator_setitem_string_len_hash)) {
+	/*if (REQUIRE_NODEFAULT(map_operator_setitem_string_len_hash)) {
 		return REQUIRE_NODEFAULT(map_operator_setitem_index)
 		       ? &$with__map_operator_setitem_index__and__map_operator_setitem_string_len_hash
 		       : &$with__map_operator_setitem_string_len_hash;
@@ -125,7 +125,7 @@ map_operator_setitem = {
 		       : &$with__map_operator_setitem_string_hash;
 	} else if (REQUIRE_NODEFAULT(map_operator_setitem_index)) {
 		return &$with__map_operator_setitem_index;
-	}
+	}*/
 	map_enumerate = REQUIRE(map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)
 		return &$empty;
@@ -144,7 +144,7 @@ __map_setitem__.map_operator_setitem_index([[nonnull]] DeeObject *self, size_t k
 	(void)value;
 	return err_unknown_key_int(self, key);
 }}
-%{$with__map_operator_setitem = {
+%{using map_operator_setitem: {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeInt_NewSize(key);
@@ -181,7 +181,7 @@ __map_setitem__.map_operator_setitem_string_hash([[nonnull]] DeeObject *self,
 	(void)value;
 	return err_unknown_key_str(self, key);
 }}
-%{$with__map_operator_setitem = {
+%{using map_operator_setitem: {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeString_NewWithHash(key, hash);
@@ -219,7 +219,7 @@ __map_setitem__.map_operator_setitem_string_len_hash([[nonnull]] DeeObject *self
 	(void)value;
 	return err_unknown_key_str_len(self, key, keylen);
 }}
-%{$with__map_operator_setitem = {
+%{using map_operator_setitem: {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeString_NewSizedWithHash(key, keylen, hash);

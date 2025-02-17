@@ -308,7 +308,7 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 132
+#define MHC_COUNT 131
 #define MHC_FIRST mhc___seq_bool__
 	union mhc_slot mhc___seq_bool__;
 	union mhc_slot mhc___seq_size__;
@@ -323,7 +323,6 @@ struct Dee_type_mh_cache {
 	union mhc_slot mhc___seq_hash__;
 	union mhc_slot mhc___seq_compare__;
 	union mhc_slot mhc___seq_compare_eq__;
-	union mhc_slot mhc___seq_trycompare_eq__;
 	union mhc_slot mhc___seq_eq__;
 	union mhc_slot mhc___seq_ne__;
 	union mhc_slot mhc___seq_lo__;

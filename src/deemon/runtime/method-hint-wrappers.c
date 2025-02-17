@@ -222,22 +222,6 @@ err:
 	return NULL;
 }
 
-PUBLIC_CONST char const DeeMA___seq_trycompare_eq___name[] = "__seq_trycompare_eq__";
-PUBLIC_CONST char const DeeMA___seq_trycompare_eq___doc[] = "(rhs:?S?O)->?Dbool";
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
-DeeMA___seq_trycompare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
-	int result;
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_trycompare_eq__", &rhs))
-		goto err;
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trycompare_eq))(self, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
-		goto err;
-	return_bool(result == 0);
-err:
-	return NULL;
-}
-
 PUBLIC_CONST char const DeeMA___seq_eq___name[] = "__seq_eq__";
 PUBLIC_CONST char const DeeMA___seq_eq___doc[] = "(rhs:?S?O)->?Dbool";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL

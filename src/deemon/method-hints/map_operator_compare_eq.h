@@ -136,7 +136,7 @@ __map_compare_eq__.map_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
 	return 1;
 })}
 %{$empty = "default__seq_operator_trycompare_eq__empty"}
-%{$with__map_operator_compare_eq = {
+%{using map_operator_compare_eq: {
 	int result = CALL_DEPENDENCY(map_operator_compare_eq, lhs, rhs);
 	if (result == Dee_COMPARE_ERR) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||

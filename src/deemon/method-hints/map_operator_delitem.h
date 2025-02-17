@@ -56,7 +56,7 @@ __map_delitem__.map_operator_delitem([[nonnull]] DeeObject *self,
 err:
 	return -1;
 }}
-%{$with__map_operator_delitem_index__and__map_operator_delitem_string_len_hash = {
+%{using [map_operator_delitem_index, map_operator_delitem_string_len_hash]: {
 	size_t key_value;
 	if (DeeString_Check(key)) {
 		return CALL_DEPENDENCY(map_operator_delitem_string_len_hash, self,
@@ -70,7 +70,7 @@ err:
 err:
 	return -1;
 }}
-%{$with__map_operator_delitem_index__and__map_operator_delitem_string_hash = {
+%{using [map_operator_delitem_index, map_operator_delitem_string_hash]: {
 	size_t key_value;
 	if (DeeString_Check(key)) {
 		return CALL_DEPENDENCY(map_operator_delitem_string_hash, self,
@@ -83,7 +83,7 @@ err:
 err:
 	return -1;
 }}
-%{$with__map_operator_delitem_string_len_hash = {
+%{using map_operator_delitem_string_len_hash: {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
 	return CALL_DEPENDENCY(map_operator_delitem_string_len_hash, self,
@@ -93,7 +93,7 @@ err:
 err:
 	return -1;
 }}
-%{$with__map_operator_delitem_string_hash = {
+%{using map_operator_delitem_string_hash: {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
 	return CALL_DEPENDENCY(map_operator_delitem_string_hash, self,
@@ -102,7 +102,7 @@ err:
 err:
 	return -1;
 }}
-%{$with__map_operator_delitem_index = {
+%{using map_operator_delitem_index: {
 	size_t key_value;
 	if (DeeObject_AsSize(key, &key_value))
 		goto err;
@@ -127,7 +127,7 @@ map_operator_delitem = {
 		return &$with__map_remove;
 	if (REQUIRE_NODEFAULT(map_removekeys))
 		return &$with__map_removekeys;
-	if (REQUIRE_NODEFAULT(map_operator_delitem_string_len_hash)) {
+	/*if (REQUIRE_NODEFAULT(map_operator_delitem_string_len_hash)) {
 		return REQUIRE_NODEFAULT(map_operator_delitem_index)
 		       ? &$with__map_operator_delitem_index__and__map_operator_delitem_string_len_hash
 		       : &$with__map_operator_delitem_string_len_hash;
@@ -137,7 +137,7 @@ map_operator_delitem = {
 		       : &$with__map_operator_delitem_string_hash;
 	} else if (REQUIRE_NODEFAULT(map_operator_delitem_index)) {
 		return &$with__map_operator_delitem_index;
-	}
+	}*/
 	map_enumerate = REQUIRE(map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)
 		return &$empty;
@@ -152,7 +152,7 @@ map_operator_delitem = {
 __map_delitem__.map_operator_delitem_index([[nonnull]] DeeObject *self, size_t key)
 %{unsupported(auto("operator del[]"))}
 %{$empty = 0}
-%{$with__map_operator_delitem = {
+%{using map_operator_delitem: {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeInt_NewSize(key);
@@ -184,7 +184,7 @@ __map_delitem__.map_operator_delitem_string_hash([[nonnull]] DeeObject *self,
 	return err_map_unsupportedf(self, "operator del[](%q)", key);
 })}
 %{$empty = 0}
-%{$with__map_operator_delitem = {
+%{using map_operator_delitem: {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeString_NewWithHash(key, hash);
@@ -217,7 +217,7 @@ __map_delitem__.map_operator_delitem_string_len_hash([[nonnull]] DeeObject *self
 	return err_map_unsupportedf(self, "operator del[](%$q)", keylen, key);
 })}
 %{$empty = 0}
-%{$with__map_operator_delitem = {
+%{using map_operator_delitem: {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeString_NewSizedWithHash(key, keylen, hash);

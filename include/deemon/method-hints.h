@@ -388,8 +388,6 @@ typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_compare_t)(De
 
 /* __seq_compare_eq__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_compare_eq_t)(DeeObject *lhs, DeeObject *rhs);
-
-/* __seq_trycompare_eq__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_trycompare_eq_t)(DeeObject *lhs, DeeObject *rhs);
 
 /* __seq_eq__ */
@@ -887,11 +885,6 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_compare__(DeeObject *__re
 DDATDEF char const DeeMA___seq_compare_eq___name[]; /* "__seq_compare_eq__" */
 DDATDEF char const DeeMA___seq_compare_eq___doc[];  /* "(rhs:?S?O)->?X2?Dbool?Dint" */
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
-
-#define DeeMA___seq_trycompare_eq___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_trycompare_eq___name[]; /* "__seq_trycompare_eq__" */
-DDATDEF char const DeeMA___seq_trycompare_eq___doc[];  /* "(rhs:?S?O)->?Dbool" */
-DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_trycompare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_eq___flags Dee_TYPE_METHOD_FNORMAL
 DDATDEF char const DeeMA___seq_eq___name[]; /* "__seq_eq__" */
@@ -2127,7 +2120,7 @@ DDATDEF char const DeeMA_Mapping_popitem_name[]; /* "popitem" */
 /*[[[end]]]*/
 /* clang-format on */
 
-/* Same as `DeeType_GetExplicitMethodHint', but also searches the type's
+/* Master function for looking up method hints, that searches the type's
  * MRO for all matches regarding attributes named "id", and returns the
  * native version for that attribute (or `NULL' if it doesn't have one)
  *
@@ -2157,7 +2150,7 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 (DCALL DeeType_GetPrivateMethodHint)(DeeTypeObject *self, DeeTypeObject *orig_type, enum Dee_tmh_id id);
 
 /* Same as `DeeType_GetPrivateMethodHint', but only check for attributes
- * without doing any default substitutions.
+ * without doing any additional default substitutions.
  *
  * WARNING: Only call this function for some given "self, orig_type" if
  *          you've already called it with all preceding types "self" that
@@ -2169,6 +2162,13 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 /* Returns a pointer to method hint's entry in `self->tp_method_hints' */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetExplicitMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
+
+/* Same as `DeeType_GetExplicitMethodHint()', but also resolves direct
+ * aliases within method hint groups (e.g. when an explicit method hint
+ * for `seq_enumerate_index' is defined, but none for `seq_enumerate',
+ * then return `default__seq_enumerate__with__seq_enumerate_index') */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
+(DCALL DeeType_GetExplicitOrImplicitMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
 
 /* Returns the "%{unsupported}" implementation of `id'
  * (if it has one). If not, return `NULL' instead. */

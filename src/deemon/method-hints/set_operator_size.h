@@ -34,7 +34,7 @@ err:
 __set_size__.set_operator_sizeob([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
 %{$empty = { return_reference_(DeeInt_Zero); }}
-%{$with__set_operator_size = {
+%{using set_operator_size: {
 	size_t setsize = CALL_DEPENDENCY(set_operator_size, self);
 	if unlikely(setsize == (size_t)-1)
 		goto err;
@@ -54,7 +54,7 @@ __set_size__.set_operator_size([[nonnull]] DeeObject *__restrict self)
 %{$with__set_operator_foreach = [[prefix(DEFINE_default_seq_size_with_foreach_cb)]] {
 	return (size_t)CALL_DEPENDENCY(set_operator_foreach, self, &default_seq_size_with_foreach_cb, NULL);
 }}
- %{$with__set_operator_sizeob = {
+ %{using set_operator_sizeob: {
 	DREF DeeObject *sizeob;
 	sizeob = CALL_DEPENDENCY(set_operator_sizeob, self);
 	if unlikely(!sizeob)

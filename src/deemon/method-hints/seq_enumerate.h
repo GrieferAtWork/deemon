@@ -311,7 +311,7 @@ err_indexob:
 /*err:*/
 	return -1;
 }}
-%{$with__seq_enumerate_index = {
+%{using seq_enumerate_index: {
 	// TODO
 	(void)self;
 	(void)cb;
@@ -510,7 +510,7 @@ err_temp:
 err:
 	return -1;
 }}
-%{$with__seq_enumerate = {
+%{using seq_enumerate: {
 	// TODO
 	(void)self;
 	(void)cb;
@@ -548,8 +548,8 @@ err:
 seq_enumerate = {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach;
 	DeeMH_seq_operator_size_t seq_operator_size;
-	if (REQUIRE_NODEFAULT(seq_enumerate_index))
-		return &$with__seq_enumerate_index;
+	/*if (REQUIRE_NODEFAULT(seq_enumerate_index))
+		return &$with__seq_enumerate_index;*/
 	seq_operator_size = REQUIRE_ANY(seq_operator_size);
 	if (seq_operator_size != &default__seq_operator_size__unsupported) {
 		DeeMH_seq_operator_getitem_t seq_operator_getitem;

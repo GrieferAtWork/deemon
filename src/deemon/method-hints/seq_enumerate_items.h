@@ -89,7 +89,7 @@ __seq_enumerate_items__.seq_makeenumeration_with_range([[nonnull]] DeeObject *se
 %{$empty = {
 	return_empty_seq;
 }}
-%{$with__seq_makeenumeration_with_intrange = {
+%{using seq_makeenumeration_with_intrange: {
 	size_t start_index, end_index;
 	if (DeeObject_AsSize(start, &start_index))
 		goto err;
@@ -122,7 +122,7 @@ __seq_enumerate_items__.seq_makeenumeration_with_intrange([[nonnull]] DeeObject 
 %{$empty = {
 	return_empty_seq;
 }}
-%{$with__seq_makeenumeration_with_range = {
+%{using seq_makeenumeration_with_range: {
 	DREF DeeObject *result, *startob, *endob;
 	startob = DeeInt_NewSize(start);
 	if unlikely(!startob)

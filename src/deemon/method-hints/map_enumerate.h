@@ -154,7 +154,7 @@ __map_enumerate__.map_enumerate_range([[nonnull]] DeeObject *self,
 	return err_map_unsupportedf(self, "__map_enumerate__(<callable>, %r, %r)", start, end);
 })}
 %{$empty = 0}
-%{$with__map_enumerate = [[prefix(DEFINE_map_enumerate_with_filter_cb)]] {
+%{using map_enumerate: [[prefix(DEFINE_map_enumerate_with_filter_cb)]] {
 	struct map_enumerate_with_filter_data data;
 	data.mewfd_cb           = cb;
 	data.mewfd_arg          = arg;

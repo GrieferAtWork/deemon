@@ -39,7 +39,7 @@ __seq_setitem__.seq_operator_setitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *value)
 %{unsupported(auto("operator []="))}
 %{$empty = err_index_out_of_bounds_ob(self, index)}
-%{$with__seq_operator_setitem_index = {
+%{using seq_operator_setitem_index: {
 	size_t index_value;
 	if (DeeObject_AsSize(index, &index_value))
 		goto err;

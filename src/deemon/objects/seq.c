@@ -2267,9 +2267,11 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_METHOD("__compare__", &default_seq___compare__,
 	            "(rhs:?S?O)->?Dint\n"
 	            "Alias for ${deemon.compare(this as Sequence, rhs)}"),
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD("__trycompare_eq__", &default_seq___trycompare_eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${deemon.equals(this as Sequence, rhs)}"),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__eq__", &default_seq___eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Sequence) == (rhs)}"),

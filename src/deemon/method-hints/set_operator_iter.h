@@ -102,7 +102,7 @@ __set_iter__.set_operator_foreach([[nonnull]] DeeObject *__restrict self,
 	Dee_simple_hashset_fini(&data.dsfud_encountered);
 	return result;
 }}
-%{$with__set_operator_iter = {
+%{using set_operator_iter: {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
 	iter = CALL_DEPENDENCY(set_operator_iter, self);
@@ -122,7 +122,7 @@ __set_iter__.set_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
                                        [[nonnull]] Dee_foreach_pair_t cb,
                                        void *arg)
 %{$empty = 0}
-%{$with__set_operator_foreach = [[prefix(DEFINE_default_foreach_pair_with_foreach_cb)]] {
+%{using set_operator_foreach: [[prefix(DEFINE_default_foreach_pair_with_foreach_cb)]] {
 	struct default_foreach_pair_with_foreach_data data;
 	data.dfpwf_cb  = cb;
 	data.dfpwf_arg = arg;

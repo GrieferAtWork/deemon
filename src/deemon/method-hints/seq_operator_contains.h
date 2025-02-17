@@ -81,7 +81,7 @@ __seq_contains__.seq_contains([[nonnull]] DeeObject *self,
                               [[nonnull]] DeeObject *item)
 %{unsupported(auto)}
 %{$empty = 0}
-%{$with__seq_operator_contains = {
+%{using seq_operator_contains: {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_contains, self, item);
 	if unlikely(!result)
 		goto err;
@@ -396,7 +396,7 @@ __seq_contains__.seq_operator_contains([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *item)
 %{unsupported(auto("operator contains"))}
 %{$empty = return_false}
-%{$with__seq_contains = {
+%{using seq_contains: {
 	int result = CALL_DEPENDENCY(seq_contains, self, item);
 	if unlikely(result < 0)
 		goto err;

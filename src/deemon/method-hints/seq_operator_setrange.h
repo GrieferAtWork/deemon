@@ -51,7 +51,7 @@ __seq_setrange__.seq_operator_setrange([[nonnull]] DeeObject *self,
 err:
 	return -1;
 }}
-%{$with__seq_operator_setrange_index__and__seq_operator_setrange_index_n = {
+%{using [seq_operator_setrange_index, seq_operator_setrange_index_n]: {
 	Dee_ssize_t start_index, end_index;
 	if (DeeObject_AsSSize(start, &start_index))
 		goto err;
@@ -108,7 +108,7 @@ __seq_setrange__.seq_operator_setrange_index([[nonnull]] DeeObject *self,
 err:
 	return -1;
 }}
-%{$with__seq_operator_setrange = {
+%{using seq_operator_setrange: {
 	int result;
 	DREF DeeObject *startob, *endob;
 	startob = DeeInt_NewSSize(start);
@@ -175,7 +175,7 @@ __seq_setrange__.seq_operator_setrange_index_n([[nonnull]] DeeObject *self,
 err:
 	return -1;
 }}
-%{$with__seq_operator_setrange_index = {
+%{using [seq_operator_size, seq_operator_setrange_index]: {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
@@ -195,7 +195,7 @@ err:
 err:
 	return -1;
 }}
-%{$with__seq_operator_setrange = {
+%{using seq_operator_setrange: {
 	int result;
 	DREF DeeObject *startob;
 	startob = DeeInt_NewSSize(start);
@@ -216,8 +216,9 @@ seq_operator_setrange_index_n = {
 		return $empty;
 	if (seq_operator_setrange_index == &default__seq_operator_setrange_index__with__seq_operator_setrange)
 		return $with__seq_operator_setrange;
-	if (seq_operator_setrange_index)
-		return $with__seq_operator_setrange_index;
+	if (seq_operator_setrange_index &&
+	    REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
+		return $with__seq_operator_size__and__seq_operator_setrange_index;
 };
 
 

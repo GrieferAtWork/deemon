@@ -374,7 +374,7 @@ err_size:
 err:
 	return -1;
 }}
-%{$with__seq_operator_foreach_pair = [[prefix(DECLARE_default_foreach_with_foreach_pair_cb)]] {
+%{using seq_operator_foreach_pair: [[prefix(DECLARE_default_foreach_with_foreach_pair_cb)]] {
 	struct default_foreach_with_foreach_pair_data data;
 	data.dfwfp_cb  = cb;
 	data.dfwfp_arg = arg;
@@ -438,7 +438,7 @@ err_index:
 /*err:*/
 	return -1;
 }}
-%{$with__seq_operator_iter = {
+%{using seq_operator_iter: {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
 	iter = CALL_DEPENDENCY(seq_operator_iter, self);
@@ -489,13 +489,13 @@ __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
                                        [[nonnull]] Dee_foreach_pair_t cb,
                                        void *arg)
 %{$empty = 0}
-%{$with__seq_operator_foreach = [[prefix(DEFINE_default_foreach_pair_with_foreach_cb)]] {
+%{using seq_operator_foreach: [[prefix(DEFINE_default_foreach_pair_with_foreach_cb)]] {
 	struct default_foreach_pair_with_foreach_data data;
 	data.dfpwf_cb  = cb;
 	data.dfpwf_arg = arg;
 	return CALL_DEPENDENCY(seq_operator_foreach, self, &default_foreach_pair_with_foreach_cb, &data);
 }}
-%{$with__seq_operator_iter = {
+%{using seq_operator_iter: {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
 	iter = CALL_DEPENDENCY(seq_operator_iter, self);
