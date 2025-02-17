@@ -62,7 +62,7 @@
 //#define DEFINE_DeeObject_VCallAttrStringLenHashf
 //#define DEFINE_DeeObject_TVCallAttrStringLenHashf
 //#define DEFINE_DeeObject_HasAttr
-#define DEFINE_DeeObject_THasAttr
+//#define DEFINE_DeeObject_THasAttr
 //#define DEFINE_DeeObject_HasAttrStringHash
 //#define DEFINE_DeeObject_THasAttrStringHash
 //#define DEFINE_DeeObject_HasAttrStringLenHash
@@ -82,7 +82,7 @@
 //#define DEFINE_DeeObject_TFindAttrInfoStringHash
 //#define DEFINE_DeeObject_TFindAttrInfoStringLenHash
 //#define DEFINE_DeeObject_TFindPrivateAttrInfoStringHash
-//#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
+#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
 //#define DEFINE_DeeObject_FindAttr
 //#define DEFINE_DeeObject_EnumAttr
 #endif /* __INTELLISENSE__ */
@@ -1250,29 +1250,29 @@ do_tp_iter_attr:
 #elif defined(LOCAL_IS_HAS) && !defined(LOCAL_HAS_string)
 			if (tp_iter->tp_attr->tp_hasattr)
 				return (*tp_iter->tp_attr->tp_hasattr)(self, attr);
-#elif defined(LOCAL_IS_DEL) && defined(LOCAL_DEL_string) && defined(LOCAL_DEL_hash) && defined(LOCAL_DEL_len)
+#elif defined(LOCAL_IS_DEL) && defined(LOCAL_HAS_string) && defined(LOCAL_HAS_hash) && defined(LOCAL_HAS_len)
 			if (tp_iter->tp_attr->tp_delattr_string_len_hash)
 				return (*tp_iter->tp_attr->tp_delattr_string_len_hash)(self, attr, attrlen, hash);
-#elif defined(LOCAL_IS_DEL) && defined(LOCAL_DEL_string) && defined(LOCAL_DEL_hash)
+#elif defined(LOCAL_IS_DEL) && defined(LOCAL_HAS_string) && defined(LOCAL_HAS_hash)
 			if (tp_iter->tp_attr->tp_delattr_string_hash)
 				return (*tp_iter->tp_attr->tp_delattr_string_hash)(self, attr, hash);
-#elif defined(LOCAL_IS_DEL) && !defined(LOCAL_DEL_string)
+#elif defined(LOCAL_IS_DEL) && !defined(LOCAL_HAS_string)
 			/* ... */
-#elif defined(LOCAL_IS_SET) && defined(LOCAL_SET_string) && defined(LOCAL_SET_hash) && defined(LOCAL_SET_len)
+#elif defined(LOCAL_IS_SET) && defined(LOCAL_HAS_string) && defined(LOCAL_HAS_hash) && defined(LOCAL_HAS_len)
 			if (tp_iter->tp_attr->tp_setattr_string_len_hash)
 				return (*tp_iter->tp_attr->tp_setattr_string_len_hash)(self, attr, attrlen, hash, value);
-#elif defined(LOCAL_IS_SET) && defined(LOCAL_SET_string) && defined(LOCAL_SET_hash)
+#elif defined(LOCAL_IS_SET) && defined(LOCAL_HAS_string) && defined(LOCAL_HAS_hash)
 			if (tp_iter->tp_attr->tp_setattr_string_hash)
 				return (*tp_iter->tp_attr->tp_setattr_string_hash)(self, attr, hash, value);
-#elif defined(LOCAL_IS_SET) && !defined(LOCAL_DEL_string)
+#elif defined(LOCAL_IS_SET) && !defined(LOCAL_HAS_string)
 			/* ... */
 #elif defined(LOCAL_IS_FIND)
 			if (tp_iter->tp_attr->tp_findattr)
 				return (*tp_iter->tp_attr->tp_findattr)(tp_iter, self, retinfo, rules);
-#elif defined(LOCAL_IS_FINDINFO) && defined(LOCAL_SET_string) && defined(LOCAL_SET_hash) && defined(LOCAL_SET_len)
+#elif defined(LOCAL_IS_FINDINFO) && defined(LOCAL_HAS_string) && defined(LOCAL_HAS_hash) && defined(LOCAL_HAS_len)
 			if (self != NULL && tp_iter->tp_attr->tp_findattr_info_string_len_hash)
 				return (*tp_iter->tp_attr->tp_findattr_info_string_len_hash)(tp_iter, self, attr, attrlen, hash, retinfo);
-#elif defined(LOCAL_IS_FINDINFO) && defined(LOCAL_SET_string) && defined(LOCAL_SET_hash)
+#elif defined(LOCAL_IS_FINDINFO) && defined(LOCAL_HAS_string) && defined(LOCAL_HAS_hash)
 			if (self != NULL && tp_iter->tp_attr->tp_findattr_info_string_len_hash)
 				return (*tp_iter->tp_attr->tp_findattr_info_string_len_hash)(tp_iter, self, attr, strlen(attr), hash, retinfo);
 #elif defined(LOCAL_IS_ENUM)
