@@ -29,6 +29,34 @@
 
 DECL_BEGIN
 
+/* Address in `:tp_class->cb_members'.
+ *
+ * Q: Why do we store class member address here, and not the actual
+ *    references to the underlying methods?
+ * A: Semantically speaking, it would be possible to do that, but
+ *    in practice that would form an unresolvable reference loop
+ *    in code like this:
+ *    >> local class MyClass1 { this = default; final member mySize; __seq_size__() -> mySize; }
+ *    >> local class MyClass2: MyClass1 { this = super; __seq_size__() -> 42; }
+ *    >>
+ *    >> local a = MyClass1(10);
+ *    >> local b = MyClass2(20);
+ *    >>
+ *    >> print Sequence.length(a);             // OK: 10
+ *    >> print Sequence.length(b);             // OK: 42
+ *    >> print Sequence.length(b as MyClass1); // OK: 20
+ *    ^ When this program exits, because "MyClass1.mySize" is "final",
+ *    "MyClass1.__seq_size__" will access it using "ASM_GETMEMBER_THIS_R",
+ *    meaning that "MyClass1" appears in "MyClass1.__seq_size__.__refs__",
+ *    and thus forms a reference loop with "MyClass1" (one that cannot be
+ *    resolved because when "MyClass1" is cleared, we don't drop the cached
+ *    reference to "MyClass1.__seq_size__")
+ *    So to prevent this front happening, we do the next-best thing by just
+ *    storing the addresses where relevant callbacks can be found in the
+ *    type's class member table.
+ */
+typedef uint16_t Dee_mhc_slot_t;
+
 struct Dee_type_mh_cache {
 	/* Method hint function pointer caches.
 	 * All of these are [0..1][lock(WRITE_ONCE)]
@@ -281,153 +309,141 @@ struct Dee_type_mh_cache {
 
 #define DeeType_HasTraitHint(self, name) _DeeType_HasTraitHint_##name(self)
 
-	/* Method hint attribute data caches.
-	 * All of these are [0..1][lock(WRITE_ONCE)]
-	 *
-	 * The effectively valid variant is applicable only when specific
-	 * default impls are linked to method hints above. For example:
-	 * >> mhc___seq_all__.c_object:
-	 * >> [valid_if(mh_seq_all == &default__seq_all__with_callobjectcache___seq_all__ ||
-	 * >>           mh_seq_all_with_key == &default__seq_all_with_key__with_callobjectcache___seq_all__ ||
-	 * >>           mh_seq_all_with_range == &default__seq_all_with_range__with_callobjectcache___seq_all__ ||
-	 * >>           mh_seq_all_with_range_and_key == &default__seq_all_with_range_and_key__with_callobjectcache___seq_all__)]
-	 */
-
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
 #define MHC_COUNT 131
 #define MHC_FIRST mhc___seq_bool__
-	DREF DeeObject *mhc___seq_bool__;
-	DREF DeeObject *mhc___seq_size__;
-	DREF DeeObject *mhc___seq_iter__;
-	DREF DeeObject *mhc___seq_getitem__;
-	DREF DeeObject *mhc___seq_delitem__;
-	DREF DeeObject *mhc___seq_setitem__;
-	DREF DeeObject *mhc___seq_getrange__;
-	DREF DeeObject *mhc___seq_delrange__;
-	DREF DeeObject *mhc___seq_setrange__;
-	DREF DeeObject *mhc___seq_assign__;
-	DREF DeeObject *mhc___seq_hash__;
-	DREF DeeObject *mhc___seq_compare__;
-	DREF DeeObject *mhc___seq_compare_eq__;
-	DREF DeeObject *mhc___seq_eq__;
-	DREF DeeObject *mhc___seq_ne__;
-	DREF DeeObject *mhc___seq_lo__;
-	DREF DeeObject *mhc___seq_le__;
-	DREF DeeObject *mhc___seq_gr__;
-	DREF DeeObject *mhc___seq_ge__;
-	DREF DeeObject *mhc___seq_inplace_add__;
-	DREF DeeObject *mhc___seq_inplace_mul__;
-	DREF DeeObject *mhc___seq_enumerate__;
-	DREF DeeObject *mhc___seq_enumerate_items__;
-	DREF DeeObject *mhc___seq_unpack__;
-	DREF DeeObject *mhc___seq_unpackub__;
-	DREF DeeObject *mhc_get___seq_first__;
-	DREF DeeObject *mhc_del___seq_first__;
-	DREF DeeObject *mhc_set___seq_first__;
-	DREF DeeObject *mhc_get___seq_last__;
-	DREF DeeObject *mhc_del___seq_last__;
-	DREF DeeObject *mhc_set___seq_last__;
-	DREF DeeObject *mhc_get___seq_cached__;
-	DREF DeeObject *mhc_get___seq_frozen__;
-	DREF DeeObject *mhc___seq_any__;
-	DREF DeeObject *mhc___seq_all__;
-	DREF DeeObject *mhc___seq_parity__;
-	DREF DeeObject *mhc___seq_reduce__;
-	DREF DeeObject *mhc___seq_min__;
-	DREF DeeObject *mhc___seq_max__;
-	DREF DeeObject *mhc___seq_sum__;
-	DREF DeeObject *mhc___seq_count__;
-	DREF DeeObject *mhc___seq_contains__;
-	DREF DeeObject *mhc___seq_locate__;
-	DREF DeeObject *mhc___seq_rlocate__;
-	DREF DeeObject *mhc___seq_startswith__;
-	DREF DeeObject *mhc___seq_endswith__;
-	DREF DeeObject *mhc___seq_find__;
-	DREF DeeObject *mhc___seq_rfind__;
-	DREF DeeObject *mhc___seq_erase__;
-	DREF DeeObject *mhc___seq_insert__;
-	DREF DeeObject *mhc___seq_insertall__;
-	DREF DeeObject *mhc___seq_pushfront__;
-	DREF DeeObject *mhc___seq_append__;
-	DREF DeeObject *mhc___seq_extend__;
-	DREF DeeObject *mhc___seq_xchitem__;
-	DREF DeeObject *mhc___seq_clear__;
-	DREF DeeObject *mhc___seq_pop__;
-	DREF DeeObject *mhc___seq_remove__;
-	DREF DeeObject *mhc___seq_rremove__;
-	DREF DeeObject *mhc___seq_removeall__;
-	DREF DeeObject *mhc___seq_removeif__;
-	DREF DeeObject *mhc___seq_resize__;
-	DREF DeeObject *mhc___seq_fill__;
-	DREF DeeObject *mhc___seq_reverse__;
-	DREF DeeObject *mhc___seq_reversed__;
-	DREF DeeObject *mhc___seq_sort__;
-	DREF DeeObject *mhc___seq_sorted__;
-	DREF DeeObject *mhc___seq_bfind__;
-	DREF DeeObject *mhc___seq_bposition__;
-	DREF DeeObject *mhc___seq_brange__;
-	DREF DeeObject *mhc___set_iter__;
-	DREF DeeObject *mhc___set_size__;
-	DREF DeeObject *mhc___set_hash__;
-	DREF DeeObject *mhc___set_compare_eq__;
-	DREF DeeObject *mhc___set_eq__;
-	DREF DeeObject *mhc___set_ne__;
-	DREF DeeObject *mhc___set_lo__;
-	DREF DeeObject *mhc___set_le__;
-	DREF DeeObject *mhc___set_gr__;
-	DREF DeeObject *mhc___set_ge__;
-	DREF DeeObject *mhc___set_inv__;
-	DREF DeeObject *mhc___set_add__;
-	DREF DeeObject *mhc___set_sub__;
-	DREF DeeObject *mhc___set_and__;
-	DREF DeeObject *mhc___set_xor__;
-	DREF DeeObject *mhc___set_inplace_add__;
-	DREF DeeObject *mhc___set_inplace_sub__;
-	DREF DeeObject *mhc___set_inplace_and__;
-	DREF DeeObject *mhc___set_inplace_xor__;
-	DREF DeeObject *mhc_get___set_frozen__;
-	DREF DeeObject *mhc___set_unify__;
-	DREF DeeObject *mhc___set_insert__;
-	DREF DeeObject *mhc___set_insertall__;
-	DREF DeeObject *mhc___set_remove__;
-	DREF DeeObject *mhc___set_removeall__;
-	DREF DeeObject *mhc___set_pop__;
-	DREF DeeObject *mhc___map_getitem__;
-	DREF DeeObject *mhc___map_delitem__;
-	DREF DeeObject *mhc___map_setitem__;
-	DREF DeeObject *mhc___map_contains__;
-	DREF DeeObject *mhc_get___map_keys__;
-	DREF DeeObject *mhc_get___map_iterkeys__;
-	DREF DeeObject *mhc_get___map_values__;
-	DREF DeeObject *mhc_get___map_itervalues__;
-	DREF DeeObject *mhc___map_enumerate__;
-	DREF DeeObject *mhc___map_compare_eq__;
-	DREF DeeObject *mhc___map_eq__;
-	DREF DeeObject *mhc___map_ne__;
-	DREF DeeObject *mhc___map_lo__;
-	DREF DeeObject *mhc___map_le__;
-	DREF DeeObject *mhc___map_gr__;
-	DREF DeeObject *mhc___map_ge__;
-	DREF DeeObject *mhc___map_add__;
-	DREF DeeObject *mhc___map_sub__;
-	DREF DeeObject *mhc___map_and__;
-	DREF DeeObject *mhc___map_xor__;
-	DREF DeeObject *mhc___map_inplace_add__;
-	DREF DeeObject *mhc___map_inplace_sub__;
-	DREF DeeObject *mhc___map_inplace_and__;
-	DREF DeeObject *mhc___map_inplace_xor__;
-	DREF DeeObject *mhc_get___map_frozen__;
-	DREF DeeObject *mhc___map_setold__;
-	DREF DeeObject *mhc___map_setold_ex__;
-	DREF DeeObject *mhc___map_setnew__;
-	DREF DeeObject *mhc___map_setnew_ex__;
-	DREF DeeObject *mhc___map_setdefault__;
-	DREF DeeObject *mhc___map_update__;
-	DREF DeeObject *mhc___map_remove__;
-	DREF DeeObject *mhc___map_removekeys__;
-	DREF DeeObject *mhc___map_pop__;
-	DREF DeeObject *mhc___map_popitem__;
+	Dee_mhc_slot_t mhc___seq_bool__;
+	Dee_mhc_slot_t mhc___seq_size__;
+	Dee_mhc_slot_t mhc___seq_iter__;
+	Dee_mhc_slot_t mhc___seq_getitem__;
+	Dee_mhc_slot_t mhc___seq_delitem__;
+	Dee_mhc_slot_t mhc___seq_setitem__;
+	Dee_mhc_slot_t mhc___seq_getrange__;
+	Dee_mhc_slot_t mhc___seq_delrange__;
+	Dee_mhc_slot_t mhc___seq_setrange__;
+	Dee_mhc_slot_t mhc___seq_assign__;
+	Dee_mhc_slot_t mhc___seq_hash__;
+	Dee_mhc_slot_t mhc___seq_compare__;
+	Dee_mhc_slot_t mhc___seq_compare_eq__;
+	Dee_mhc_slot_t mhc___seq_eq__;
+	Dee_mhc_slot_t mhc___seq_ne__;
+	Dee_mhc_slot_t mhc___seq_lo__;
+	Dee_mhc_slot_t mhc___seq_le__;
+	Dee_mhc_slot_t mhc___seq_gr__;
+	Dee_mhc_slot_t mhc___seq_ge__;
+	Dee_mhc_slot_t mhc___seq_inplace_add__;
+	Dee_mhc_slot_t mhc___seq_inplace_mul__;
+	Dee_mhc_slot_t mhc___seq_enumerate__;
+	Dee_mhc_slot_t mhc___seq_enumerate_items__;
+	Dee_mhc_slot_t mhc___seq_unpack__;
+	Dee_mhc_slot_t mhc___seq_unpackub__;
+	Dee_mhc_slot_t mhc_get___seq_first__;
+	Dee_mhc_slot_t mhc_del___seq_first__;
+	Dee_mhc_slot_t mhc_set___seq_first__;
+	Dee_mhc_slot_t mhc_get___seq_last__;
+	Dee_mhc_slot_t mhc_del___seq_last__;
+	Dee_mhc_slot_t mhc_set___seq_last__;
+	Dee_mhc_slot_t mhc_get___seq_cached__;
+	Dee_mhc_slot_t mhc_get___seq_frozen__;
+	Dee_mhc_slot_t mhc___seq_any__;
+	Dee_mhc_slot_t mhc___seq_all__;
+	Dee_mhc_slot_t mhc___seq_parity__;
+	Dee_mhc_slot_t mhc___seq_reduce__;
+	Dee_mhc_slot_t mhc___seq_min__;
+	Dee_mhc_slot_t mhc___seq_max__;
+	Dee_mhc_slot_t mhc___seq_sum__;
+	Dee_mhc_slot_t mhc___seq_count__;
+	Dee_mhc_slot_t mhc___seq_contains__;
+	Dee_mhc_slot_t mhc___seq_locate__;
+	Dee_mhc_slot_t mhc___seq_rlocate__;
+	Dee_mhc_slot_t mhc___seq_startswith__;
+	Dee_mhc_slot_t mhc___seq_endswith__;
+	Dee_mhc_slot_t mhc___seq_find__;
+	Dee_mhc_slot_t mhc___seq_rfind__;
+	Dee_mhc_slot_t mhc___seq_erase__;
+	Dee_mhc_slot_t mhc___seq_insert__;
+	Dee_mhc_slot_t mhc___seq_insertall__;
+	Dee_mhc_slot_t mhc___seq_pushfront__;
+	Dee_mhc_slot_t mhc___seq_append__;
+	Dee_mhc_slot_t mhc___seq_extend__;
+	Dee_mhc_slot_t mhc___seq_xchitem__;
+	Dee_mhc_slot_t mhc___seq_clear__;
+	Dee_mhc_slot_t mhc___seq_pop__;
+	Dee_mhc_slot_t mhc___seq_remove__;
+	Dee_mhc_slot_t mhc___seq_rremove__;
+	Dee_mhc_slot_t mhc___seq_removeall__;
+	Dee_mhc_slot_t mhc___seq_removeif__;
+	Dee_mhc_slot_t mhc___seq_resize__;
+	Dee_mhc_slot_t mhc___seq_fill__;
+	Dee_mhc_slot_t mhc___seq_reverse__;
+	Dee_mhc_slot_t mhc___seq_reversed__;
+	Dee_mhc_slot_t mhc___seq_sort__;
+	Dee_mhc_slot_t mhc___seq_sorted__;
+	Dee_mhc_slot_t mhc___seq_bfind__;
+	Dee_mhc_slot_t mhc___seq_bposition__;
+	Dee_mhc_slot_t mhc___seq_brange__;
+	Dee_mhc_slot_t mhc___set_iter__;
+	Dee_mhc_slot_t mhc___set_size__;
+	Dee_mhc_slot_t mhc___set_hash__;
+	Dee_mhc_slot_t mhc___set_compare_eq__;
+	Dee_mhc_slot_t mhc___set_eq__;
+	Dee_mhc_slot_t mhc___set_ne__;
+	Dee_mhc_slot_t mhc___set_lo__;
+	Dee_mhc_slot_t mhc___set_le__;
+	Dee_mhc_slot_t mhc___set_gr__;
+	Dee_mhc_slot_t mhc___set_ge__;
+	Dee_mhc_slot_t mhc___set_inv__;
+	Dee_mhc_slot_t mhc___set_add__;
+	Dee_mhc_slot_t mhc___set_sub__;
+	Dee_mhc_slot_t mhc___set_and__;
+	Dee_mhc_slot_t mhc___set_xor__;
+	Dee_mhc_slot_t mhc___set_inplace_add__;
+	Dee_mhc_slot_t mhc___set_inplace_sub__;
+	Dee_mhc_slot_t mhc___set_inplace_and__;
+	Dee_mhc_slot_t mhc___set_inplace_xor__;
+	Dee_mhc_slot_t mhc_get___set_frozen__;
+	Dee_mhc_slot_t mhc___set_unify__;
+	Dee_mhc_slot_t mhc___set_insert__;
+	Dee_mhc_slot_t mhc___set_insertall__;
+	Dee_mhc_slot_t mhc___set_remove__;
+	Dee_mhc_slot_t mhc___set_removeall__;
+	Dee_mhc_slot_t mhc___set_pop__;
+	Dee_mhc_slot_t mhc___map_getitem__;
+	Dee_mhc_slot_t mhc___map_delitem__;
+	Dee_mhc_slot_t mhc___map_setitem__;
+	Dee_mhc_slot_t mhc___map_contains__;
+	Dee_mhc_slot_t mhc_get___map_keys__;
+	Dee_mhc_slot_t mhc_get___map_iterkeys__;
+	Dee_mhc_slot_t mhc_get___map_values__;
+	Dee_mhc_slot_t mhc_get___map_itervalues__;
+	Dee_mhc_slot_t mhc___map_enumerate__;
+	Dee_mhc_slot_t mhc___map_compare_eq__;
+	Dee_mhc_slot_t mhc___map_eq__;
+	Dee_mhc_slot_t mhc___map_ne__;
+	Dee_mhc_slot_t mhc___map_lo__;
+	Dee_mhc_slot_t mhc___map_le__;
+	Dee_mhc_slot_t mhc___map_gr__;
+	Dee_mhc_slot_t mhc___map_ge__;
+	Dee_mhc_slot_t mhc___map_add__;
+	Dee_mhc_slot_t mhc___map_sub__;
+	Dee_mhc_slot_t mhc___map_and__;
+	Dee_mhc_slot_t mhc___map_xor__;
+	Dee_mhc_slot_t mhc___map_inplace_add__;
+	Dee_mhc_slot_t mhc___map_inplace_sub__;
+	Dee_mhc_slot_t mhc___map_inplace_and__;
+	Dee_mhc_slot_t mhc___map_inplace_xor__;
+	Dee_mhc_slot_t mhc_get___map_frozen__;
+	Dee_mhc_slot_t mhc___map_setold__;
+	Dee_mhc_slot_t mhc___map_setold_ex__;
+	Dee_mhc_slot_t mhc___map_setnew__;
+	Dee_mhc_slot_t mhc___map_setnew_ex__;
+	Dee_mhc_slot_t mhc___map_setdefault__;
+	Dee_mhc_slot_t mhc___map_update__;
+	Dee_mhc_slot_t mhc___map_remove__;
+	Dee_mhc_slot_t mhc___map_removekeys__;
+	Dee_mhc_slot_t mhc___map_pop__;
+	Dee_mhc_slot_t mhc___map_popitem__;
 #define MHC_LAST mhc___map_popitem__
 /*[[[end]]]*/
 	/* clang-format on */
@@ -436,9 +452,8 @@ struct Dee_type_mh_cache {
 #define Dee_type_mh_cache_alloc() \
 	((struct Dee_type_mh_cache *)Dee_TryCalloc(sizeof(struct Dee_type_mh_cache)))
 #define Dee_type_mh_cache_free(self) Dee_Free(self)
-
-INTDEF NONNULL((1)) void DCALL
-Dee_type_mh_cache_destroy(struct Dee_type_mh_cache *__restrict self);
+#define Dee_type_mh_cache_destroy(self) \
+	Dee_type_mh_cache_free(self)
 
 INTDEF WUNUSED NONNULL((1)) struct Dee_type_mh_cache *DCALL
 Dee_type_mh_cache_of(DeeTypeObject *__restrict self);

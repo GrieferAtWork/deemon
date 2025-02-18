@@ -398,13 +398,6 @@ INTERN_TPCONST Dee_funptr_t tpconst mh_unsupported_impls[Dee_TMH_COUNT] = {
 	/* clang-format on */
 };
 
-INTERN NONNULL((1)) void
-(DCALL Dee_type_mh_cache_destroy)(struct Dee_type_mh_cache *__restrict self) {
-	/* Finalize "union mhc_slot" fields. */
-	Dee_XDecrefv(&self->MHC_FIRST, MHC_COUNT);
-	Dee_type_mh_cache_free(self);
-}
-
 INTERN WUNUSED NONNULL((1)) struct Dee_type_mh_cache *
 (DCALL Dee_type_mh_cache_of)(DeeTypeObject *__restrict self) {
 	struct Dee_type_mh_cache *result;
@@ -2500,7 +2493,7 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 			uint16_t addr;
 			struct class_desc *desc;
 			struct Dee_type_mh_cache *mhcache;
-			DREF DeeObject *callback;
+			Dee_mhc_slot_t *cache;
 			if ((specs->mis_attr_kind == MH_KIND_GETSET_DEL ||
 			     specs->mis_attr_kind == MH_KIND_GETSET_SET) &&
 			    (info->ai_value.v_attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY))
@@ -2523,16 +2516,9 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 				break;
 			default: break;
 			}
-			Dee_class_desc_lock_read(desc);
-			callback = desc->cd_members[addr];
-			Dee_XIncref(callback);
-			Dee_class_desc_lock_endread(desc);
-			if likely(callback) {
-				DREF DeeObject **cache = (DREF DeeObject **)((byte_t *)mhcache + specs->mis_offsetof_cache);
-				if unlikely(!atomic_cmpxch(cache, NULL, callback))
-					Dee_Decref(callback);
-				return specs->mis_withcache_object;
-			}
+			cache = (Dee_mhc_slot_t *)((byte_t *)mhcache + specs->mis_offsetof_cache);
+			atomic_write(cache, addr);
+			return specs->mis_withcache_object;
 		}
 		break;
 

@@ -5113,11 +5113,15 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	/* Lock and extract the member. */
 	Dee_class_desc_lock_read(desc);
 	result = desc->cd_members[addr];
-	Dee_XIncref(result);
-	Dee_class_desc_lock_endread(desc);
 	if unlikely(!result)
-		err_unbound_class_member(self, desc, addr);
+		goto err_unlock_unbound;
+	Dee_Incref(result);
+	Dee_class_desc_lock_endread(desc);
 	return result;
+err_unlock_unbound:
+	Dee_class_desc_lock_endread(desc);
+	err_unbound_class_member(self, desc, addr);
+	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *

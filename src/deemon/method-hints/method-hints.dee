@@ -674,12 +674,12 @@ final class NativeMethod {
 			local hintAttr = methodHint.attr;
 			local usedCallAttrImpl: NativeMethodImpl = callAttrImpl;
 			local callCacheName = f"default__{name}__with_callobjectcache_{hintAttr}";
+			local selfExpr = params.first.name;
+			local selfExprInd = params.first.typ.count("*");
+			if (selfExprInd >= 2)
+				selfExpr = f"{"*" * (selfExprInd - 1)}{selfExpr}";
+			local tpSelfExpr = f"Dee_TYPE({selfExpr})";
 			if (hasTypedCallAttrCacheImpl) {
-				local selfExpr = params.first.name;
-				local selfExprInd = params.first.typ.count("*");
-				if (selfExprInd >= 2)
-					selfExpr = f"{"*" * (selfExprInd - 1)}{selfExpr}";
-				local tpSelfExpr = f"Dee_TYPE({selfExpr})";
 				usedCallAttrImpl = copy usedCallAttrImpl;
 				usedCallAttrImpl.impl =
 					f"\{\n"
@@ -692,41 +692,8 @@ final class NativeMethod {
 					f"#endif /* !__OPTIMIZE_SIZE__ */\n"
 					f"\}";
 			}
-			if (methodHint.getset) {
-				printInternImpl(callCacheName, usedCallAttrImpl, {
-					"LOCAL_GETATTR": (self) ->
-						f"DeeObject_Call(Dee_TYPE({self})->tp_mhcache->mhc_get_{
-							hintAttr}, 1, (DeeObject *const *)&{self})",
-					"LOCAL_BOUNDATTR": (self) ->
-						f"call_getter_for_bound(Dee_TYPE({self})->tp_mhcache->mhc_get_{
-							hintAttr}, {self})",
-					"LOCAL_DELATTR": (self) ->
-						f"call_delete(Dee_TYPE({self})->tp_mhcache->mhc_del_{
-							hintAttr}, {self})",
-					"LOCAL_SETATTR": (self, value) ->
-						f"call_setter(Dee_TYPE({self})->tp_mhcache->mhc_set_{
-							hintAttr}, {self}, {value})",
-					"LOCAL_CALLATTR": (self, argc, argv) ->
-						f"call_getter_result(Dee_TYPE({self})->tp_mhcache->mhc_get_{
-							hintAttr}, {self}, {argc}, {argv})",
-					"LOCAL_CALLATTRF": (self, args...) ->
-						f"call_getter_resultf(Dee_TYPE({self})->tp_mhcache->mhc_get_{
-							hintAttr}, {self}, {", ".join(args)})",
-				});
-			} else {
-				printInternImpl(callCacheName, usedCallAttrImpl, {
-					"LOCAL_GETATTR": (self) ->
-						f"DeeInstanceMethod_New(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}, {self})",
-					"LOCAL_BOUNDATTR": (self) -> f"Dee_BOUND_YES",
-					"LOCAL_CALLATTR": (self, argc, argv) ->
-						f"DeeObject_ThisCall(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}, {self}, {argc}, {argv})",
-					"LOCAL_CALLATTRF": (self, args...) ->
-						f"DeeObject_ThisCallf(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}, {self}, {", ".join(args)})",
-				});
-			}
+			printInternImpl(callCacheName, usedCallAttrImpl,
+					getCallAttrMacros(tpSelfExpr, hintAttr, methodHint.getset));
 			print;
 		}
 		if (unsupportedImpl !is none && unsupportedImpl.alias is none) {
@@ -770,6 +737,56 @@ final class NativeMethod {
 		print;
 	}
 
+	function getCallAttrMacros(tpSelfExpr: string,
+	                           hintAttr: string,
+	                           getset: bool)
+			: {string: string | Callable} {
+		if (getset) {
+			return {
+				"LOCAL_GETATTR": (self) ->
+					f"mhcache_call({tpSelfExpr}, {
+							tpSelfExpr}->tp_mhcache->mhc_get_{hintAttr}, 1, &{self})",
+				"LOCAL_BOUNDATTR": (self) ->
+					f"mhcache_call_bound({tpSelfExpr}, {
+							tpSelfExpr}->tp_mhcache->mhc_get_{hintAttr}, 1, &{self})",
+				"LOCAL_DELATTR": (self) ->
+					f"mhcache_call_int({tpSelfExpr}, {
+							tpSelfExpr}->tp_mhcache->mhc_del_{hintAttr}, 1, &{self})",
+				"LOCAL_SETATTR": (self, value) ->
+					f"mhcache_thiscall_int({tpSelfExpr}, {
+							tpSelfExpr}->tp_mhcache->mhc_set_{hintAttr}, {self}, 1, &{value})",
+				"LOCAL_CALLATTR": (self, argc, argv) ->
+					f"mhcache_thiscall_result({tpSelfExpr}, {
+							tpSelfExpr}->tp_mhcache->mhc_get_{
+							hintAttr}, 1, &{self}, {argc}, {argv})",
+				"LOCAL_CALLATTRF": (self, args...) ->
+					f"mhcache_thiscall_resultf({tpSelfExpr}, {
+							tpSelfExpr}->tp_mhcache->mhc_get_{
+							hintAttr}, 1, &{self}, {", ".join(args)})",
+			};
+		} else {
+			return {
+				"LOCAL_GETATTR": (self) ->
+					f"mhcache_instancemethod({tpSelfExpr}, {
+							tpSelfExpr}->tp_mhcache->mhc_{hintAttr}, {self})",
+				"LOCAL_BOUNDATTR": (self) -> f"Dee_BOUND_YES",
+				"LOCAL_CALLATTR": (self, argc, argv) -> {
+					if (argc == "0") {
+						return f"mhcache_call({tpSelfExpr}, {
+								tpSelfExpr}->tp_mhcache->mhc_{hintAttr}, 1, &{self})";
+					}
+					return f"mhcache_thiscall({tpSelfExpr}, {
+							tpSelfExpr}->tp_mhcache->mhc_{hintAttr}, {
+							self}, {argc}, {argv})";
+				},
+				"LOCAL_CALLATTRF": (self, args...) ->
+					f"mhcache_thiscallf({tpSelfExpr}, {
+							tpSelfExpr}->tp_mhcache->mhc_{
+							hintAttr}, {self}, {", ".join(args)})",
+			};
+		}
+	}
+
 	public printTypedDefaultImpls() {
 		if (!hasTypedCallAttrCacheImpl)
 			return;
@@ -778,41 +795,9 @@ final class NativeMethod {
 		local hintAttr = methodHint.attr;
 		local tMethod = tCallAttrImpl;
 		local tpSelfExpr = tMethod.params.first.name;
-		if (methodHint.getset) {
-			tMethod.printInternImpl(f"tdefault__{name}__with_callobjectcache_{hintAttr}", tMethod.callAttrImpl, {
-				"LOCAL_GETATTR": (self) ->
-					f"DeeObject_Call({tpSelfExpr}->tp_mhcache->mhc_get_{
-						hintAttr}, 1, (DeeObject *const *)&{self})",
-				"LOCAL_BOUNDATTR": (self) ->
-					f"call_getter_for_bound({tpSelfExpr}->tp_mhcache->mhc_get_{
-						hintAttr}, {self})",
-				"LOCAL_DELATTR": (self) ->
-					f"call_delete({tpSelfExpr}->tp_mhcache->mhc_del_{
-						hintAttr}, {self})",
-				"LOCAL_SETATTR": (self, value) ->
-					f"call_setter({tpSelfExpr}->tp_mhcache->mhc_set_{
-						hintAttr}, {self}, {value})",
-				"LOCAL_CALLATTR": (self, argc, argv) ->
-					f"call_getter_result({tpSelfExpr}->tp_mhcache->mhc_get_{
-						hintAttr}, {self}, {argc}, {argv})",
-				"LOCAL_CALLATTRF": (self, args...) ->
-					f"call_getter_resultf({tpSelfExpr}->tp_mhcache->mhc_get_{
-						hintAttr}, {self}, {", ".join(args)})",
-			});
-		} else {
-			tMethod.printInternImpl(f"tdefault__{name}__with_callobjectcache_{hintAttr}", tMethod.callAttrImpl, {
-				"LOCAL_GETATTR": (self) ->
-					f"DeeInstanceMethod_New({tpSelfExpr}->tp_mhcache->mhc_{
-						hintAttr}, {self})",
-				"LOCAL_BOUNDATTR": (self) -> f"Dee_BOUND_YES",
-				"LOCAL_CALLATTR": (self, argc, argv) ->
-					f"DeeObject_ThisCall({tpSelfExpr}->tp_mhcache->mhc_{
-						hintAttr}, {self}, {argc}, {argv})",
-				"LOCAL_CALLATTRF": (self, args...) ->
-					f"DeeObject_ThisCallf({tpSelfExpr}->tp_mhcache->mhc_{
-						hintAttr}, {self}, {", ".join(args)})",
-			});
-		}
+		local callCacheName = f"tdefault__{name}__with_callobjectcache_{hintAttr}";
+		tMethod.printInternImpl(callCacheName, tMethod.callAttrImpl,
+				tMethod.getCallAttrMacros(tpSelfExpr, hintAttr, methodHint.getset));
 		print;
 	}
 
@@ -1530,7 +1515,7 @@ function printMhCacheAttributeMembers() {
 		for (local name: all) {
 			if (name == all.first)
 				print("#define MHC_FIRST ", name);
-			print("\tDREF DeeObject *", name, ";");
+			print("\tDee_mhc_slot_t ", name, ";");
 			if (name == all.last)
 				print("#define MHC_LAST ", name);
 		}
