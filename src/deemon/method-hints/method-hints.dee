@@ -1141,6 +1141,7 @@ final class NativeOperator {
 					name: "tp_self",
 					nonnull: true),
 				params.each._withoutRestrict()...),
+			operatorName: operatorName,
 			tpSelfExpr: "tp_self",
 			impls: Tuple(impls.each._makeTyped()),
 			usrtypeImpls: Tuple(usrtypeImpls.each._makeTyped()),
