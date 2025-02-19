@@ -29,7 +29,17 @@ err:
 	return NULL;
 }
 
-[[operator([Sequence,Set,Mapping].OPERATOR_ITER: tp_seq->tp_iter)]]
+/* The "iter" operator callbacks are special, in that methods hints
+ * here can be loaded from "tp_iter" and friends, no matter what the
+ * sequence class of the associated type is (even if it doesn't seem
+ * to be a sequence class at all). This is because even types that
+ * don't implement the "Sequence" interface (or "Set" / "Mapping")
+ * can still provide "operator iter", and there is no way to mis-
+ * understand what that operator is supposed to do (and even in the
+ * very special cases of "rt.SeqEach", that type can just provide
+ * a custom "__seq_iter__" method which would be used here instead) */
+[[accept_any_base_class_for_method_hint]]
+[[operator([Sequence, Set, Mapping].OPERATOR_ITER: tp_seq->tp_iter)]]
 [[wunused]] DREF DeeObject *
 __seq_iter__.seq_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
@@ -247,7 +257,9 @@ err:
 #endif /* !DEFINED_default_foreach_with_map_enumerate_cb */
 )]
 
-[[operator([Sequence,Set,Mapping].OPERATOR_ITER: tp_seq->tp_foreach)]]
+/* accept_any_base_class_for_method_hint -- see comment on "seq_operator_iter" */
+[[accept_any_base_class_for_method_hint]]
+[[operator([Sequence, Set, Mapping].OPERATOR_ITER: tp_seq->tp_foreach)]]
 [[wunused]] Dee_ssize_t
 __seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *__restrict self,
                                   [[nonnull]] Dee_foreach_t cb,
@@ -483,7 +495,9 @@ default_foreach_pair_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject 
 #endif /* !DEFINED_default_foreach_pair_with_map_enumerate_cb */
 )]
 
-[[operator([Sequence,Set,Mapping].OPERATOR_ITER: tp_seq->tp_foreach_pair)]]
+/* accept_any_base_class_for_method_hint -- see comment on "seq_operator_iter" */
+[[accept_any_base_class_for_method_hint]]
+[[operator([Sequence, Set, Mapping].OPERATOR_ITER: tp_seq->tp_foreach_pair)]]
 [[wunused]] Dee_ssize_t
 __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
                                        [[nonnull]] Dee_foreach_pair_t cb,

@@ -553,9 +553,7 @@ PRIVATE struct_mh_init_spec_operators(4) tpconst mh_operators_seq_operator_size 
 PRIVATE struct_mh_init_spec_operators(4) tpconst mh_operators_seq_operator_iter = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_iter,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_iter, NULL, Dee_SEQCLASS_SEQ, OPERATOR_ITER),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_iter, NULL, Dee_SEQCLASS_SET, OPERATOR_ITER),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_iter, NULL, Dee_SEQCLASS_MAP, OPERATOR_ITER),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_iter, NULL, Dee_SEQCLASS_UNKNOWN, OPERATOR_ITER),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -567,9 +565,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_foreach[3] = {
 PRIVATE struct_mh_init_spec_operators(4) tpconst mh_operators_seq_operator_foreach = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_foreach,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach, NULL, Dee_SEQCLASS_SEQ, OPERATOR_ITER),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach, NULL, Dee_SEQCLASS_SET, OPERATOR_ITER),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach, NULL, Dee_SEQCLASS_MAP, OPERATOR_ITER),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach, NULL, Dee_SEQCLASS_UNKNOWN, OPERATOR_ITER),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -581,9 +577,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_foreach_pair[3] = {
 PRIVATE struct_mh_init_spec_operators(4) tpconst mh_operators_seq_operator_foreach_pair = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_foreach_pair,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_SEQ, OPERATOR_ITER),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_SET, OPERATOR_ITER),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_MAP, OPERATOR_ITER),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_UNKNOWN, OPERATOR_ITER),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };

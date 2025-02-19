@@ -404,13 +404,17 @@ done:;
 final class OperatorSpec {
 	this = default;
 	@@Required base-class for this operator to be linkable
-	public member baseClass: string;
+	public member baseClass: string | none;
 	@@OPERATOR_ITER  (or "0" if not defined)
 	public member operatorName: string;
 	@@tp_seq (@none if part of the root DeeTypeObject)
 	public member operatorTable: string | none = none;
 	@@tp_iter
 	public member operatorField: string;
+	@@When true, accept any base class when loading operators
+	@@into method hints, but still require @baseClass when
+	@@loading method hints into operatorts.
+	public member acceptAnyBaseClassForMethodHint: bool = false;
 }
 
 
@@ -879,11 +883,16 @@ global final BASE_CLASS_ALIASES: {string: string} = Dict.Frozen(
 
 final class MethodHintAlias {
 	this = default;
-	public member baseClass: string; /* "DeeSeq_Type" */
-	public member attr: string;      /* "any" */
+	public member baseClass: string | none; /* "DeeSeq_Type" */
+	public member attr: string;             /* "any" */
 	public member nameAliases: {string...} = ();
-	public property name: string = { get() -> f"{
-		PRETTY_BASE_CLASS_NAMES.get(baseClass, baseClass)}_{attr}"; };
+	public property name: string = {
+		get() {
+			if (baseClass is none)
+				return attr;
+			return f"{PRETTY_BASE_CLASS_NAMES.get(baseClass, baseClass)}_{attr}";
+		}
+	}
 }
 
 final class MethodHint: WeakRefAble {
@@ -1582,14 +1591,16 @@ function printMhInitSpecs() {
 			for (local alias: methodHint.aliases) {
 				print("	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT("),;
 				print("&str_", alias.attr, ", "),;
-				if (alias.baseClass == "DeeSeq_Type") {
+				if (alias.baseClass is none) {
+					print("NULL, Dee_SEQCLASS_UNKNOWN, "),;
+				} else if (alias.baseClass == "DeeSeq_Type") {
 					print("NULL, Dee_SEQCLASS_SEQ, "),;
 				} else if (alias.baseClass == "DeeSet_Type") {
 					print("NULL, Dee_SEQCLASS_SET, "),;
 				} else if (alias.baseClass == "DeeMapping_Type") {
 					print("NULL, Dee_SEQCLASS_MAP, "),;
 				} else {
-					print("&", alias.baseClass, ", 0, "),;
+					print("&", alias.baseClass, ", Dee_SEQCLASS_UNKNOWN, "),;
 				}
 				print(f"&default__{native.name}__with_callattr_{alias.attr}),",);
 			}
@@ -1618,8 +1629,10 @@ function printMhInitSpecs() {
 				}) tpconst mh_operators_{native.name} = \{");
 			print("	/* .misos_default   = */ (Dee_funptr_t)&default__", native.name, ",");
 			print("	/* .misos_operators = */ {");
+			local lines: {string...} = [];
 			for (local spec: native.operatorSpecs) {
-				print("		MH_INIT_SPEC_OPERATOR_INIT("),;
+				File.Writer line;
+				print line: ("		MH_INIT_SPEC_OPERATOR_INIT("),;
 				local opName = NativeOperatorName(
 						table: spec.operatorTable,
 						field: spec.operatorField);
@@ -1627,18 +1640,25 @@ function printMhInitSpecs() {
 				local opNameStr: string = op !is none
 						? op.name.TNO_id
 						: f"Dee_TNO_MISSING({opName})";
-				print(opNameStr, ", "),;
-				if (spec.baseClass == "DeeSeq_Type") {
-					print("NULL, Dee_SEQCLASS_SEQ, "),;
+				print line: (opNameStr, ", "),;
+				if (spec.baseClass is none || spec.acceptAnyBaseClassForMethodHint) {
+					print line: ("NULL, Dee_SEQCLASS_UNKNOWN, "),;
+				} else if (spec.baseClass == "DeeSeq_Type") {
+					print line: ("NULL, Dee_SEQCLASS_SEQ, "),;
 				} else if (spec.baseClass == "DeeSet_Type") {
-					print("NULL, Dee_SEQCLASS_SET, "),;
+					print line: ("NULL, Dee_SEQCLASS_SET, "),;
 				} else if (spec.baseClass == "DeeMapping_Type") {
-					print("NULL, Dee_SEQCLASS_MAP, "),;
+					print line: ("NULL, Dee_SEQCLASS_MAP, "),;
 				} else {
-					print("&", spec.baseClass, ", 0, "),;
+					print line: ("&", spec.baseClass, ", Dee_SEQCLASS_UNKNOWN, "),;
 				}
-				print(spec.operatorName, "),");
+				print line: (spec.operatorName, "),");
+				local lineString = line.string;
+				if (lineString !in lines)
+					lines.append(lineString);
 			}
+			for (local line: lines)
+				print line,;
 			print("		MH_INIT_SPEC_OPERATOR_END");
 			print("	}");
 			print("};");
@@ -1798,14 +1818,16 @@ function printNativeOperatorHintSpecs() {
 					name.name}[{#nativeMethods + 1}] = \{");
 			for (local operatorSpec, nativeMethod: nativeMethods) {
 				print("	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_", nativeMethod.name, ", "),;
-				if (operatorSpec.baseClass == "DeeSeq_Type") {
+				if (operatorSpec.baseClass is none) {
+					print("NULL, Dee_SEQCLASS_UNKNOWN"),;
+				} else if (operatorSpec.baseClass == "DeeSeq_Type") {
 					print("NULL, Dee_SEQCLASS_SEQ"),;
 				} else if (operatorSpec.baseClass == "DeeSet_Type") {
 					print("NULL, Dee_SEQCLASS_SET"),;
 				} else if (operatorSpec.baseClass == "DeeMapping_Type") {
 					print("NULL, Dee_SEQCLASS_MAP"),;
 				} else {
-					print("&", operatorSpec.baseClass, ", 0"),;
+					print("&", operatorSpec.baseClass, ", Dee_SEQCLASS_UNKNOWN"),;
 				}
 				print("),");
 			}
@@ -2589,6 +2611,7 @@ final class _SpecParserAttrib {
 	public member customBadAllocImplName: string = "";
 	public member operatorExportNames: (string, string) | none = none;
 	public member inheritAs: string | none = none;
+	public member acceptAnyBaseClassForMethodHint: bool = false;
 };
 
 global final _C_TYPENAME_TOKENS = HashSet.Frozen({
@@ -2864,6 +2887,7 @@ done:
 		} else {
 			result.operatorField = field;
 		}
+		result.acceptAnyBaseClassForMethodHint = attrib.acceptAnyBaseClassForMethodHint;
 		for (local baseClass: baseClasses) {
 			result.baseClass = baseClass;
 			yield copy result;
@@ -2983,6 +3007,11 @@ done:
 				attrib.inheritAs = parseSymbol();
 				skip(")");
 			}	break;
+
+			case "accept_any_base_class_for_method_hint":
+				next();
+				attrib.acceptAnyBaseClassForMethodHint = true;
+				break;
 
 			case "declNameAlias": {
 				next();
