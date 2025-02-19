@@ -3571,7 +3571,14 @@ PUBLIC NONNULL((1, 3)) bool
                                       struct Dee_super_method_hint *__restrict result) {
 	struct mh_super_map const *specs;
 	DeeTypeObject *view_type = DeeSuper_TYPE(super);
-	Dee_funptr_t view_impl = DeeType_GetMethodHint(view_type, id);
+	Dee_funptr_t view_impl;
+	if (view_type->tp_mhcache == &mh_cache_empty) {
+		/* Hack needed so that invoking method hints on something like "foo as Set"
+		 * doesn't *actually* like an instance of "Set()", but rather invokes the
+		 * true and proper method hints of "foo". */
+		goto fallback;
+	}
+	view_impl = DeeType_GetMethodHint(view_type, id);
 	if unlikely(!view_impl)
 		return false;
 
@@ -3624,6 +3631,7 @@ PUBLIC NONNULL((1, 3)) bool
 		return true;
 	}
 
+fallback:
 	/* Fallback: anything we don't recognize can't be made to have
 	 *           super-object support. As such, better be safe and
 	 *           invoke the *real* impl of the target type (even
