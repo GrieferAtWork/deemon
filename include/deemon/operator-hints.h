@@ -29,12 +29,6 @@
 
 DECL_BEGIN
 
-/* Equivalence callbacks for native operators.
- *
- * These equivalences are not related to method hints,
- * and are applicable to *any* type of object, but only
- * within an object itself. */
-
 /* clang-format off */
 /*[[[deemon (printNativeOperatorTypes from "...src.deemon.method-hints.method-hints")();]]]*/
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_assign_t)(DeeObject *self, DeeObject *value);
@@ -601,6 +595,14 @@ INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT]
 /*[[[end]]]*/
 /* clang-format on */
 
+
+
+
+/* Equivalence callbacks for native operators.
+ *
+ * These equivalences are only tangentially related to method hints,
+ * and are applicable to *any* type of object, but only within an
+ * object itself (iow: not when it comes to inherited operators). */
 
 /* clang-format off */
 /*[[[deemon (printNativeOperatorHintDecls from "...src.deemon.method-hints.method-hints")();]]]*/
