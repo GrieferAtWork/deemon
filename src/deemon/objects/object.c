@@ -3697,7 +3697,7 @@ type_newinstance(DeeTypeObject *self, size_t argc,
 			for (i = 0; i <= kwds->kw_mask; ++i) {
 				if (!kwds->kw_map[i].ke_name)
 					continue;
-				ASSERT(kwds->kw_map[i].ke_index <= argc);
+				ASSERT(kwds->kw_map[i].ke_index < argc);
 				if unlikely(set_private_basic_member(self, result,
 				                                     kwds->kw_map[i].ke_name,
 				                                     argv[kwds->kw_map[i].ke_index]))

@@ -69,13 +69,13 @@ if (lo in ["lo", "ge"]) {
 	print('	Dee_ssize_t contains_status;');
 	print('	struct set_compare__lhs_foreach__rhs__data data;');
 	print('	data.sc_lfr_rhs       = rhs;');
-	print('	data.sc_lfr_rcontains = DeeType_RequireMethodHint(Dee_TYPE(rhs), seq_operator_contains);');
+	print('	data.sc_lfr_rcontains = DeeType_RequireNativeOperator(Dee_TYPE(rhs), contains);');
 	print('	contains_status = CALL_DEPENDENCY(set_operator_foreach, lhs, &set_compare__lhs_foreach__rhs__cb, &data);');
 	print('	if unlikely(contains_status == -1)');
 	print('		goto err;');
 	print('	if (contains_status == -2)');
 	print('		goto missing_item; /' '* "rhs" is missing some element of "lhs" *' '/');
-	print('	rhs_size = DeeObject_InvokeMethodHint(seq_operator_size, rhs);');
+	print('	rhs_size = DeeObject_Size(rhs);');
 	print('	if unlikely(rhs_size == (size_t)-1)');
 	print('		goto err;');
 	print('	if ((size_t)contains_status >= rhs_size)');
@@ -89,7 +89,7 @@ if (lo in ["lo", "ge"]) {
 	print('	Dee_ssize_t contains_status;');
 	print('	struct set_compare__lhs_foreach__rhs__data data;');
 	print('	data.sc_lfr_rhs       = rhs;');
-	print('	data.sc_lfr_rcontains = DeeType_RequireMethodHint(Dee_TYPE(rhs), seq_operator_contains);');
+	print('	data.sc_lfr_rcontains = DeeType_RequireNativeOperator(Dee_TYPE(rhs), contains);');
 	print('	contains_status = CALL_DEPENDENCY(set_operator_foreach, lhs, &set_compare__lhs_foreach__rhs__cb, &data);');
 	print('	if unlikely(contains_status == -1)');
 	print('		goto err;');
@@ -150,13 +150,13 @@ err:
 	Dee_ssize_t contains_status;
 	struct set_compare__lhs_foreach__rhs__data data;
 	data.sc_lfr_rhs       = rhs;
-	data.sc_lfr_rcontains = DeeType_RequireMethodHint(Dee_TYPE(rhs), seq_operator_contains);
+	data.sc_lfr_rcontains = DeeType_RequireNativeOperator(Dee_TYPE(rhs), contains);
 	contains_status = CALL_DEPENDENCY(set_operator_foreach, lhs, &set_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "rhs" is missing some element of "lhs" */
-	rhs_size = DeeObject_InvokeMethodHint(seq_operator_size, rhs);
+	rhs_size = DeeObject_Size(rhs);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)
@@ -206,7 +206,7 @@ __set_le__.set_operator_le([[nonnull]] DeeObject *lhs,
 	Dee_ssize_t contains_status;
 	struct set_compare__lhs_foreach__rhs__data data;
 	data.sc_lfr_rhs       = rhs;
-	data.sc_lfr_rcontains = DeeType_RequireMethodHint(Dee_TYPE(rhs), seq_operator_contains);
+	data.sc_lfr_rcontains = DeeType_RequireNativeOperator(Dee_TYPE(rhs), contains);
 	contains_status = CALL_DEPENDENCY(set_operator_foreach, lhs, &set_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -256,7 +256,7 @@ __set_gr__.set_operator_gr([[nonnull]] DeeObject *lhs,
 	Dee_ssize_t contains_status;
 	struct set_compare__lhs_foreach__rhs__data data;
 	data.sc_lfr_rhs       = rhs;
-	data.sc_lfr_rcontains = DeeType_RequireMethodHint(Dee_TYPE(rhs), seq_operator_contains);
+	data.sc_lfr_rcontains = DeeType_RequireNativeOperator(Dee_TYPE(rhs), contains);
 	contains_status = CALL_DEPENDENCY(set_operator_foreach, lhs, &set_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -315,13 +315,13 @@ err:
 	Dee_ssize_t contains_status;
 	struct set_compare__lhs_foreach__rhs__data data;
 	data.sc_lfr_rhs       = rhs;
-	data.sc_lfr_rcontains = DeeType_RequireMethodHint(Dee_TYPE(rhs), seq_operator_contains);
+	data.sc_lfr_rcontains = DeeType_RequireNativeOperator(Dee_TYPE(rhs), contains);
 	contains_status = CALL_DEPENDENCY(set_operator_foreach, lhs, &set_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "rhs" is missing some element of "lhs" */
-	rhs_size = DeeObject_InvokeMethodHint(seq_operator_size, rhs);
+	rhs_size = DeeObject_Size(rhs);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)

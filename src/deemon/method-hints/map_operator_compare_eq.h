@@ -72,13 +72,13 @@ err:
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
-	data.mc_lfr_rtrygetitem = DeeType_RequireMethodHint(Dee_TYPE(rhs), map_operator_trygetitem);
+	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
 	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
 		return 1; /* "rhs" is missing some element of "lhs", or has a different value for it */
-	rhs_size = DeeObject_InvokeMethodHint(set_operator_size, rhs);
+	rhs_size = DeeObject_Size(rhs);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status != rhs_size)

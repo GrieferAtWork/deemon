@@ -54,7 +54,7 @@ if (lo in ["lo", "ge"]) {
 	print('	Dee_ssize_t contains_status;');
 	print('	struct map_compare__lhs_foreach__rhs__data data;');
 	print('	data.mc_lfr_rhs         = rhs;');
-	print('	data.mc_lfr_rtrygetitem = DeeType_RequireMethodHint(Dee_TYPE(rhs), map_operator_trygetitem);');
+	print('	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);');
 	print('	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);');
 	print('	if unlikely(contains_status == -1)');
 	print('		goto err;');
@@ -74,7 +74,7 @@ if (lo in ["lo", "ge"]) {
 	print('	Dee_ssize_t contains_status;');
 	print('	struct map_compare__lhs_foreach__rhs__data data;');
 	print('	data.mc_lfr_rhs         = rhs;');
-	print('	data.mc_lfr_rtrygetitem = DeeType_RequireMethodHint(Dee_TYPE(rhs), map_operator_trygetitem);');
+	print('	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);');
 	print('	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);');
 	print('	if unlikely(contains_status == -1)');
 	print('		goto err;');
@@ -128,7 +128,7 @@ __map_lo__.map_operator_lo([[nonnull]] DeeObject *lhs,
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
-	data.mc_lfr_rtrygetitem = DeeType_RequireMethodHint(Dee_TYPE(rhs), map_operator_trygetitem);
+	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
 	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -183,7 +183,7 @@ __map_le__.map_operator_le([[nonnull]] DeeObject *lhs,
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
-	data.mc_lfr_rtrygetitem = DeeType_RequireMethodHint(Dee_TYPE(rhs), map_operator_trygetitem);
+	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
 	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -233,7 +233,7 @@ __map_gr__.map_operator_gr([[nonnull]] DeeObject *lhs,
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
-	data.mc_lfr_rtrygetitem = DeeType_RequireMethodHint(Dee_TYPE(rhs), map_operator_trygetitem);
+	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
 	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -284,7 +284,7 @@ __map_ge__.map_operator_ge([[nonnull]] DeeObject *lhs,
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
-	data.mc_lfr_rtrygetitem = DeeType_RequireMethodHint(Dee_TYPE(rhs), map_operator_trygetitem);
+	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
 	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;

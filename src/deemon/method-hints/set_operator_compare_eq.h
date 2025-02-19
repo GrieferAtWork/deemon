@@ -73,14 +73,14 @@ err:
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
 	struct set_compare__lhs_foreach__rhs__data data;
 	data.sc_lfr_rhs       = rhs;
-	data.sc_lfr_rcontains = DeeType_RequireMethodHint(tp_rhs, seq_operator_contains);
+	data.sc_lfr_rcontains = DeeType_RequireNativeOperator(tp_rhs, contains);
 	contains_status = CALL_DEPENDENCY(set_operator_foreach, lhs, &set_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
 		return 1; /* "rhs" is missing some element of "lhs" */
 	ASSERT(tp_rhs == Dee_TYPE(rhs));
-	rhs_size = (*DeeType_RequireMethodHint(tp_rhs, set_operator_size))(rhs);
+	rhs_size = DeeObject_Size(rhs);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status != rhs_size)

@@ -27,6 +27,7 @@
 #include <deemon/error.h>
 #include <deemon/class.h>
 #include <deemon/thread.h>
+#include <deemon/operator-hints.h>
 
 #include "../../runtime/runtime_error.h"
 
@@ -664,13 +665,11 @@ LOCAL_seq_docompare__(lhs_xvector)(DeeObject *const *lhs_vector, size_t lhs_size
 	int result;
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	DeeMH_seq_operator_foreach_t rhs_tp_foreach = DeeType_RequireMethodHint(tp_rhs, seq_operator_foreach);
+	DeeNO_foreach_t rhs_tp_foreach = DeeType_RequireNativeOperator(tp_rhs, foreach);
 #else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	Dee_ssize_t (DCALL *rhs_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
-	if ((!tp_rhs->tp_seq || !tp_rhs->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs))
+	DeeNO_foreach_t rhs_tp_foreach = DeeType_RequireSupportedNativeOperator(tp_rhs, foreach);
+	if unlikely(!rhs_tp_foreach)
 		goto err_rhs_no_iter;
-	rhs_tp_foreach = tp_rhs->tp_seq->tp_foreach;
-	ASSERT(rhs_tp_foreach);
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
 		size_t rhs_size = (*tp_rhs->tp_seq->tp_size)(rhs);
@@ -908,16 +907,14 @@ LOCAL_seq_docompare__(lhs_vector)(DeeObject *const *lhs_vector, size_t lhs_size,
 	int result;
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	DeeMH_seq_operator_foreach_t rhs_tp_foreach = DeeType_RequireMethodHint(tp_rhs, seq_operator_foreach);
+	DeeNO_foreach_t rhs_tp_foreach = DeeType_RequireNativeOperator(tp_rhs, foreach);
 #else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	Dee_ssize_t (DCALL *rhs_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
-	if ((!tp_rhs->tp_seq || !tp_rhs->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs))
+	DeeNO_foreach_t rhs_tp_foreach = DeeType_RequireSupportedNativeOperator(tp_rhs, foreach);
+	if unlikely(!rhs_tp_foreach)
 		goto err_rhs_no_iter;
-	rhs_tp_foreach = tp_rhs->tp_seq->tp_foreach;
-	ASSERT(rhs_tp_foreach);
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #ifdef DEFINE_compareeq
-	if (tp_rhs->tp_seq->tp_size_fast != NULL) {
+	if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 		size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);
 		if (lhs_size != rhs_sizefast && rhs_sizefast != (size_t)-1)
 			return 1;

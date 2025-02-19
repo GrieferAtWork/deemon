@@ -334,10 +334,6 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_trycompare_eq[4] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_trycompare_eq, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
-PRIVATE struct oh_init_inherit_as tpconst oh_inherit_trycompare_eq[2] = {
-	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_trycompare_eq__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_trycompare_eq__with__seq_operator_size__and__seq_operator_trygetitem_index),
-	OH_INIT_INHERIT_AS_END
-};
 PRIVATE struct oh_init_spec_class tpconst oh_class_eq[2] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__eq__with__EQ, OPERATOR_EQ, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
@@ -1204,7 +1200,7 @@ INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[113] = {
 	/* tp_cmp->tp_hash                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_hash), oh_class_hash, NULL, oh_mhints_hash, oh_inherit_hash),
 	/* tp_cmp->tp_compare_eq                 */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_compare_eq), oh_class_compare_eq, oh_impls_compare_eq, oh_mhints_compare_eq, oh_inherit_compare_eq),
 	/* tp_cmp->tp_compare                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_compare), oh_class_compare, oh_impls_compare, oh_mhints_compare, oh_inherit_compare),
-	/* tp_cmp->tp_trycompare_eq              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_trycompare_eq), oh_class_trycompare_eq, oh_impls_trycompare_eq, oh_mhints_trycompare_eq, oh_inherit_trycompare_eq),
+	/* tp_cmp->tp_trycompare_eq              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_trycompare_eq), oh_class_trycompare_eq, oh_impls_trycompare_eq, oh_mhints_trycompare_eq, NULL),
 	/* tp_cmp->tp_eq                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_eq), oh_class_eq, oh_impls_eq, oh_mhints_eq, NULL),
 	/* tp_cmp->tp_ne                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_ne), oh_class_ne, oh_impls_ne, oh_mhints_ne, NULL),
 	/* tp_cmp->tp_lo                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_lo), oh_class_lo, oh_impls_lo, oh_mhints_lo, NULL),

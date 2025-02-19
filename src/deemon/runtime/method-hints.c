@@ -2571,7 +2571,7 @@ findattr_for_method_hint(DeeTypeObject *__restrict self,
 		 * >> }
 		 * >>
 		 * >> print Sequence.length(MyClass1()); // 42
-		 * >> print Sequence.length(MyClass2()); // Error: not supported...
+		 * >> print Sequence.length(MyClass2()); // NotImplemented: not supported...
 		 *
 		 * iow: if a properly named attribute exists, but is defined
 		 *      statically, then it doesn't count as a valid way of
