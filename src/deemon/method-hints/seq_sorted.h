@@ -56,6 +56,8 @@ __seq_sorted__.seq_sorted([[nonnull]] DeeObject *self,
 	if unlikely(start > end)
 		start = end;
 	end -= start;
+	if (!end)
+		return_empty_tuple;
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;
@@ -89,6 +91,8 @@ err:
 	if unlikely(start > end)
 		start = end;
 	end -= start;
+	if (!end)
+		return_empty_tuple;
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;
@@ -158,6 +162,8 @@ __seq_sorted__.seq_sorted_with_key([[nonnull]] DeeObject *self,
 	if unlikely(start > end)
 		start = end;
 	end -= start;
+	if (!end)
+		return_empty_tuple;
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;
@@ -191,6 +197,8 @@ err:
 	if unlikely(start > end)
 		start = end;
 	end -= start;
+	if (!end)
+		return_empty_tuple;
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;

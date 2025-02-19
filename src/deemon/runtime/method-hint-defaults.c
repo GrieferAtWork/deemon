@@ -13326,6 +13326,8 @@ default__seq_sorted__with__seq_operator_size__and__operator_getitem_index_fast(D
 	if unlikely(start > end)
 		start = end;
 	end -= start;
+	if (!end)
+		return_empty_tuple;
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;
@@ -13361,6 +13363,8 @@ default__seq_sorted__with__seq_operator_size__and__seq_operator_trygetitem_index
 	if unlikely(start > end)
 		start = end;
 	end -= start;
+	if (!end)
+		return_empty_tuple;
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;
@@ -13446,6 +13450,8 @@ default__seq_sorted_with_key__with__seq_operator_size__and__operator_getitem_ind
 	if unlikely(start > end)
 		start = end;
 	end -= start;
+	if (!end)
+		return_empty_tuple;
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;
@@ -13481,6 +13487,8 @@ default__seq_sorted_with_key__with__seq_operator_size__and__seq_operator_trygeti
 	if unlikely(start > end)
 		start = end;
 	end -= start;
+	if (!end)
+		return_empty_tuple;
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;
