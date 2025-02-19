@@ -355,16 +355,18 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) bool
 (DCALL DeeType_InheritNativeOperatorWithoutHints)(DeeTypeObject *__restrict from,
                                                   DeeTypeObject *__restrict into,
                                                   enum Dee_tno_id id, Dee_funptr_t impl);
-
+ 
 /* Same as `DeeType_GetNativeOperatorWithoutHints', but also load operators
  * from method hints (though don't inherit them from base-types, yet). */
 INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperatorWithoutInherit)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
 
-/* Same as `DeeType_GetNativeOperatorWithoutInherit', but actually also does
- * the operator inherit part (meaning that this is the actual master-function
+/* Same as `DeeType_GetNativeOperatorWithoutInherit', but actually also does the
+ * operator inherit part (meaning that this is the low-level* master-function
  * that's called when you invoke one of the standard operators whose callback
- * is currently set to "NULL" within its relevant type) */
+ * is currently set to "NULL" within its relevant type)
+ * [*] The actual master function is `DeeType_GetNativeOperator', but that
+ *     one only adds coalesce to `DeeType_GetNativeOperatorUnsupported()' */
 INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperatorWithoutUnsupported)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
 
@@ -383,12 +385,18 @@ INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorOOM[Dee_TNO_COUNT];
 #define DeeType_GetNativeOperatorOOM(id) _DeeType_GetNativeOperatorOOM[id]
 
 /* Same as `DeeType_GetNativeOperatorWithoutUnsupported()', but never returns NULL
- * (for any operator linked against a deemon user-code ID (e.g. "OPERATOR_ITER")
+ * (for any operator linked against a deemon user-code ID (e.g. "OPERATOR_ITER"))
  * and instead returns special implementations for each operator that simply call
  * `err_unimplemented_operator()' with the relevant arguments, before returning
  * whatever is indicative of an error in the context of the native operator. */
 INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperator)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
+
+
+/* Returns the impl for "id" that calls `err_unimplemented_operator()'.
+ * Returns "NULL" if "id" doesn't define a user-code ID */
+INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT];
+#define DeeType_GetNativeOperatorUnsupported(id) _DeeType_GetNativeOperatorUnsupported[id]
 
 
 /* Returns the ID of some native operator that should always be present
@@ -414,14 +422,8 @@ INTDEF Dee_operator_t const _DeeType_GetOperatorOfTno[Dee_TNO_COUNT];
 INTDEF WUNUSED NONNULL((1)) DeeTypeObject *
 (DCALL DeeType_GetNativeOperatorOrigin)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
 
-
-/* Returns the impl for "id" that calls `err_unimplemented_operator()'.
- * Returns "NULL" if "id" doesn't define a user-code ID */
-INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT];
-#define DeeType_GetNativeOperatorUnsupported(id) _DeeType_GetNativeOperatorUnsupported[id]
-
 /* Convenience wrapper for `DeeType_GetNativeOperator' that
- * already the function pointer into the proper type.
+ * already casts the function pointer into the proper type.
  *
  * Using this, something like (e.g.) `DeeObject_Iter()' is implemented as:
  * >> PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

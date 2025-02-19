@@ -1747,10 +1747,12 @@ PRIVATE WUNUSED NONNULL((1)) Dee_funptr_t
 	return NULL;
 }
 
-/* Same as `DeeType_GetNativeOperatorWithoutInherit', but actually also does
- * the operator inherit part (meaning that this is the actual master-function
+/* Same as `DeeType_GetNativeOperatorWithoutInherit', but actually also does the
+ * operator inherit part (meaning that this is the low-level* master-function
  * that's called when you invoke one of the standard operators whose callback
- * is currently set to "NULL" within its relevant type) */
+ * is currently set to "NULL" within its relevant type)
+ * [*] The actual master function is `DeeType_GetNativeOperator', but that
+ *     one only adds coalesce to `DeeType_GetNativeOperatorUnsupported()' */
 INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperatorWithoutUnsupported)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
 	Dee_funptr_t result = DeeType_GetNativeOperatorWithoutInherit(self, id);
@@ -1760,7 +1762,7 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 }
 
 /* Same as `DeeType_GetNativeOperatorWithoutUnsupported()', but never returns NULL
- * (for any operator linked against a deemon user-code ID (e.g. "OPERATOR_ITER")
+ * (for any operator linked against a deemon user-code ID (e.g. "OPERATOR_ITER"))
  * and instead returns special implementations for each operator that simply call
  * `err_unimplemented_operator()' with the relevant arguments, before returning
  * whatever is indicative of an error in the context of the native operator. */

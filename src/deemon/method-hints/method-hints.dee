@@ -2136,7 +2136,7 @@ function printNativeOperatorExportedApi() {
 				print(f"!{tpSelfExpr}->{usedOperator.name.table} || "),;
 			print(f"({opVarName} = {tpSelfExpr}->{usedOperator.name.locExpr}) == NULL)"),;
 			print(fastForwardImpls ? f" \{" : "");
-			print(f"		{opVarName} = DeeType_RequireNativeOperator({tpSelfExpr}, {opName});");
+			print(f"		{opVarName} = _DeeType_RequireNativeOperator({tpSelfExpr}, {opName});");
 			if (fastForwardImpls) {
 				/* vvv these checks are needed because `maketyped__{xxx}'
 				 *     can't handle signaling (badalloc / unsupported) impls */
