@@ -3566,7 +3566,22 @@ PUBLIC NONNULL((1, 3)) bool
 	if (view_type->tp_mhcache == &mh_cache_empty) {
 		/* Hack needed so that invoking method hints on something like "foo as Set"
 		 * doesn't *actually* like an instance of "Set()", but rather invokes the
-		 * true and proper method hints of "foo". */
+		 * true and proper method hints of "foo".
+		 *
+		 * Technically, this check doesn't belong here, and instead we'd need to
+		 * implement all the callbacks from "mh_cache_empty" to instead do:
+		 * >> int default__foo__empty(DeeObject *self) {
+		 * >>     DeeMH_foo_t foo = DeeType_RequireMethodHint(Dee_TYPE(self), foo);
+		 * >>     if (foo != &default__foo__empty)
+		 * >>         return (*foo)(self); // Force-forward to real callback when invoked from a super-call
+		 * >>     ... // regular "empty" impl
+		 * >> }
+		 *
+		 * However, that would produce a *whole* heap of unnecessarily bloated code, so
+		 * instead we just have this one, singular check right here, that (semantically
+		 * speaking) does the same as the example code above, for *every-possible-method-
+		 * hint* (whereas the above would do so for "foo").
+		 */
 		goto fallback;
 	}
 	view_impl = DeeType_GetMethodHint(view_type, id);
