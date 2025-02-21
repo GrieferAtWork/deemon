@@ -3686,6 +3686,10 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_iter) ==
               offsetof(DefaultIterator_WithNextAndCounter, dinc_iter));
 #define di_nuf_bool di_ncp_bool
 
+STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_iter) ==
+              offsetof(ProxyObject, po_obj));
+#define di_nuf_cmp generic_proxy__cmp_recursive
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_nuf_copy(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
             DefaultIterator_WithNextAndUnpackFilter *__restrict other) {
@@ -3976,7 +3980,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndUnpackFilter_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_nuf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ &di_nuf_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_nuf_iter_next,
 	/* .tp_iterator      = */ &di_nuf_iterator,
@@ -4068,6 +4072,8 @@ err:
 STATIC_ASSERT(offsetof(DefaultIterator_PairSubItem, dipsi_iter) == offsetof(ProxyObject, po_obj));
 #define di_nv_advance generic_proxy__iter_advance
 #define di_nk_advance generic_proxy__iter_advance
+#define di_nv_cmp     generic_proxy__cmp_recursive
+#define di_nk_cmp     generic_proxy__cmp_recursive
 
 #define di_nv_iter_next di_nk_iter_next
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4115,7 +4121,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextKey = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_nk_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ &di_nk_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_nk_iter_next,
 	/* .tp_iterator      = */ &di_nk_iterator,
@@ -4161,7 +4167,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextValue = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_nv_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ &di_nv_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_nv_iter_next,
 	/* .tp_iterator      = */ &di_nv_iterator,

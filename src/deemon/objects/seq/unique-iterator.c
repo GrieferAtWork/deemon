@@ -48,6 +48,9 @@ DECL_BEGIN
 /************************************************************************/
 /* DISTINCT SET                                                         */
 /************************************************************************/
+STATIC_ASSERT(offsetof(DistinctIterator, di_iter) == offsetof(ProxyObject, po_obj));
+#define di_cmp generic_proxy__cmp_recursive
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_copy(DistinctIterator *__restrict self,
         DistinctIterator *__restrict other) {
@@ -191,7 +194,7 @@ INTERN DeeTypeObject DistinctIterator_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_visit,
 	/* .tp_gc            = */ &di_gc,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ &di_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_next,
 	/* .tp_iterator      = */ NULL,
@@ -214,6 +217,11 @@ INTERN DeeTypeObject DistinctIterator_Type = {
 STATIC_ASSERT(offsetof(DistinctIteratorWithKey, diwk_iter) == offsetof(DistinctIterator, di_iter));
 STATIC_ASSERT(offsetof(DistinctIteratorWithKey, diwk_tp_next) == offsetof(DistinctIterator, di_tp_next));
 STATIC_ASSERT(offsetof(DistinctIteratorWithKey, diwk_encountered) == offsetof(DistinctIterator, di_encountered));
+#define uqiwk_clear di_clear
+#define uqiwk_gc    di_gc
+
+STATIC_ASSERT(offsetof(DistinctIteratorWithKey, diwk_iter) == offsetof(ProxyObject, po_obj));
+#define uqiwk_cmp generic_proxy__cmp_recursive
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 uqiwk_copy(DistinctIteratorWithKey *__restrict self,
@@ -262,9 +270,6 @@ uqiwk_visit(DistinctIteratorWithKey *__restrict self, dvisit_t proc, void *arg) 
 	Dee_simple_hashset_with_lock_visit(&self->diwk_encountered, proc, arg);
 	Dee_Visit(self->diwk_key);
 }
-
-#define uqiwk_clear di_clear
-#define uqiwk_gc    di_gc
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 uqiwk_next(DistinctIteratorWithKey *__restrict self) {
@@ -357,7 +362,7 @@ INTERN DeeTypeObject DistinctIteratorWithKey_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uqiwk_visit,
 	/* .tp_gc            = */ &uqiwk_gc,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ &uqiwk_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uqiwk_next,
 	/* .tp_iterator      = */ NULL,
@@ -492,6 +497,9 @@ STATIC_ASSERT(offsetof(DistinctMappingIterator, dmi_encountered) == offsetof(Dis
 #define dmi_visit di_visit
 #define dmi_gc    di_gc
 
+STATIC_ASSERT(offsetof(DistinctMappingIterator, dmi_iter) == offsetof(ProxyObject, po_obj));
+#define dmi_cmp generic_proxy__cmp_recursive
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dmi_init(DistinctMappingIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
@@ -585,7 +593,7 @@ INTERN DeeTypeObject DistinctMappingIterator_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dmi_visit,
 	/* .tp_gc            = */ &dmi_gc,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ &dmi_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ &dmi_iterator,
