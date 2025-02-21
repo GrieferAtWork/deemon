@@ -426,7 +426,7 @@ is_oom_operator_impl(enum Dee_tmh_id id, Dee_funptr_t impl) {
 		struct mh_init_spec_operator const *iter;
 		for (iter = ospec->misos_operators; iter->miso_tno < Dee_TNO_COUNT; ++iter) {
 			if unlikely(impl == DeeType_GetNativeOperatorOOM(iter->miso_tno))
-				return false;
+				return true;
 		}
 	}
 	return false;
@@ -2674,7 +2674,9 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 			 * lead to a whole chain of stuff breaking. */
 			result = DeeType_GetNativeOperatorWithoutDefaults(self, iter->miso_tno);
 
-			/* Don't accept the operator if it is the default method hint invocation wrapper.
+			/* Don't accept the operator if it is the default method hint
+			 * invocation wrapper (`ospec->misos_default').
+			 *
 			 * This is necessary to prevent infinite recursion in code like:
 			 * >> import * from deemon;
 			 * >> class MyClass: Sequence {}
@@ -2698,8 +2700,13 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 			 * But in this case, it's much more obvious, *and* we get a stack overflow
 			 * in user-code (meaning that deemon won't hard-crash)
 			 */
-			if (result && result != ospec->misos_default /*&&
-			    likely(result != DeeType_GetNativeOperatorOOM(iter->miso_tno))*/) {
+			if (result && result != ospec->misos_default) {
+				if unlikely(result == DeeType_GetNativeOperatorOOM(iter->miso_tno)) {
+					/* Fast-forward the error (note that our caller check for this and
+					 * won't cache the function pointer in this case) */
+					return result;
+				}
+
 				/* Check if "result" can be inherited from "self" into "orig_type".
 				 * Only if it can be, can we actually use this operator to implement
 				 * the method hint. */
