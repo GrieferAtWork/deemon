@@ -245,7 +245,7 @@ PRIVATE struct type_cmp funcstaticsiter_cmp = {
 };
 
 PRIVATE struct type_getset tpconst funcstaticsiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &funcstaticsiter_getseq, "->?Ert:FunctionStatics"),
+	TYPE_GETTER_ALWAYSBOUND(STR_seq, &funcstaticsiter_getseq, "->?Ert:FunctionStatics"),
 	TYPE_GETSET_END
 };
 
@@ -1189,7 +1189,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF FunctionSymbolsByNameIterator *DCALL
-funcsymbolsbyname_iterkeys(FunctionSymbolsByName *__restrict self) {
+funcsymbolsbyname_mh_map_iterkeys(FunctionSymbolsByName *__restrict self) {
 	DREF FunctionSymbolsByNameIterator *result;
 	result = DeeObject_MALLOC(FunctionSymbolsByNameIterator);
 	if unlikely(!result)
@@ -1459,7 +1459,7 @@ PRIVATE struct type_seq funcsymbolsbyname_seq = {
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&funcsymbolsbyname_enumerate,
 	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_iterkeys,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_mh_map_iterkeys,
 	/* .tp_bounditem                  = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_bounditem),
 	/* .tp_hasitem                    = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_hasitem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_size,
@@ -1508,6 +1508,11 @@ PRIVATE struct type_member tpconst funcsymbolsbyname_members[] = {
 PRIVATE struct type_method tpconst funcsymbolsbyname_methods[] = {
 	TYPE_METHOD_HINTREF(map_setold_ex),
 	TYPE_METHOD_HINTREF(map_setnew_ex),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_getset tpconst funcsymbolsbyname_getsets[] = {
+	TYPE_GETTER_ALWAYSBOUND(STR_iterkeys, &funcsymbolsbyname_mh_map_iterkeys, "->?#KeysIterator"),
 	TYPE_METHOD_END
 };
 
@@ -1562,7 +1567,7 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ funcsymbolsbyname_methods,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ funcsymbolsbyname_getsets,
 	/* .tp_members       = */ funcsymbolsbyname_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -2037,8 +2042,8 @@ PRIVATE struct type_cmp yfuncsymbolsbynameiter_cmp = {
 };
 
 PRIVATE struct type_getset tpconst yfuncsymbolsbynameiter_getsets[] = {
-	TYPE_GETTER("__yfunc__", &yfuncsymbolsbynameiter_get_yfunc, "->?Ert:YieldFunction"),
-	TYPE_GETTER("__func__", &yfuncsymbolsbynameiter_get_func, "->?DFunction"),
+	TYPE_GETTER_ALWAYSBOUND("__yfunc__", &yfuncsymbolsbynameiter_get_yfunc, "->?Ert:YieldFunction"),
+	TYPE_GETTER_ALWAYSBOUND("__func__", &yfuncsymbolsbynameiter_get_func, "->?DFunction"),
 	TYPE_GETSET_END
 };
 
@@ -2341,7 +2346,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF YieldFunctionSymbolsByNameIterator *DCALL
-yfuncsymbolsbyname_iterkeys(YieldFunctionSymbolsByName *__restrict self) {
+yfuncsymbolsbyname_mh_map_iterkeys(YieldFunctionSymbolsByName *__restrict self) {
 	DREF YieldFunctionSymbolsByNameIterator *result;
 	result = DeeObject_MALLOC(YieldFunctionSymbolsByNameIterator);
 	if unlikely(!result)
@@ -2551,7 +2556,7 @@ PRIVATE struct type_seq yfuncsymbolsbyname_seq = {
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&yfuncsymbolsbyname_enumerate,
 	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_iterkeys,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_mh_map_iterkeys,
 	/* .tp_bounditem                  = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_bounditem),
 	/* .tp_hasitem                    = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_hasitem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_size,
@@ -2603,7 +2608,8 @@ PRIVATE struct type_method_hint tpconst yfuncsymbolsbyname_method_hints[] = {
 };
 
 PRIVATE struct type_getset tpconst yfuncsymbolsbyname_getsets[] = {
-	TYPE_GETTER("__func__", &yfuncsymbolsbyname_getfunc, "->?DFunction"),
+	TYPE_GETTER_ALWAYSBOUND(STR_iterkeys, &yfuncsymbolsbyname_mh_map_iterkeys, "->?#KeysIterator"),
+	TYPE_GETTER_ALWAYSBOUND("__func__", &yfuncsymbolsbyname_getfunc, "->?DFunction"),
 	TYPE_GETSET_END
 };
 
@@ -4750,7 +4756,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF FrameSymbolsByNameIterator *DCALL
-framesymbolsbyname_keysiter(FrameSymbolsByName *__restrict self) {
+framesymbolsbyname_mh_map_keysiter(FrameSymbolsByName *__restrict self) {
 	DREF FrameSymbolsByNameIterator *result;
 	result = DeeObject_MALLOC(FrameSymbolsByNameIterator);
 	if unlikely(!result)
@@ -5095,7 +5101,7 @@ PRIVATE struct type_seq framesymbolsbyname_seq = {
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *, Dee_seq_enumerate_t cb, void *arg))&framesymbolsbyname_enumerate,
 	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbyname_keysiter,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbyname_mh_map_keysiter,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_size,
@@ -5134,6 +5140,11 @@ PRIVATE struct type_method tpconst framesymbolsbyname_methods[] = {
 	TYPE_METHOD_END
 };
 
+PRIVATE struct type_getset tpconst framesymbolsbyname_getsets[] = {
+	TYPE_GETTER_ALWAYSBOUND(STR_iterkeys, &framesymbolsbyname_mh_map_keysiter, "->?#KeysIterator"),
+	TYPE_GETSET_END
+};
+
 PRIVATE struct type_method_hint tpconst framesymbolsbyname_method_hints[] = {
 	TYPE_METHOD_HINT(map_setold_ex, &framesymbolsbyname_mh_setold_ex),
 	TYPE_METHOD_HINT(map_setnew_ex, &framesymbolsbyname_mh_setnew_ex),
@@ -5142,6 +5153,7 @@ PRIVATE struct type_method_hint tpconst framesymbolsbyname_method_hints[] = {
 
 PRIVATE struct type_member tpconst framesymbolsbyname_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &FrameSymbolsByNameIterator_Type),
+	TYPE_MEMBER_CONST(STR_KeysIterator, &FrameSymbolsByNameKeysIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -5199,7 +5211,7 @@ INTERN DeeTypeObject FrameSymbolsByName_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ framesymbolsbyname_methods,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ framesymbolsbyname_getsets,
 	/* .tp_members       = */ framesymbolsbyname_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
