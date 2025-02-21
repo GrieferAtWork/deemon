@@ -3595,7 +3595,7 @@ PRIVATE struct mh_super_map tpconst mh_super_maps[236] = {
 
 
 INTERN WUNUSED bool DCALL
-Dee_tmh_isdefault(enum Dee_tmh_id id, Dee_funptr_t funptr) {
+Dee_tmh_isdefault_or_usrtype(enum Dee_tmh_id id, Dee_funptr_t funptr) {
 	/* Any method hint that depends on other stuff (is a default hint)
 	 * necessarily *has* to appear in one of the mapping tables above.
 	 *

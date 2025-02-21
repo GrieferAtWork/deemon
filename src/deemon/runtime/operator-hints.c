@@ -1502,7 +1502,7 @@ INTERN WUNUSED NONNULL((1)) size_t
 
 
 INTDEF WUNUSED bool DCALL /* Implemented in "./method-hint-super-invoke.c" */
-Dee_tmh_isdefault(enum Dee_tmh_id id, Dee_funptr_t funptr);
+Dee_tmh_isdefault_or_usrtype(enum Dee_tmh_id id, Dee_funptr_t funptr);
 
 /* Return an actual, user-defined operator "id"
  * (*NOT* allowing stuff like `default__size__with__sizeob'
@@ -1517,6 +1517,17 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 		/* Check if `result' might be a default operator
 		 * implementation (including method hint defaults). */
 		struct oh_init_spec const *specs = &oh_init_specs[id];
+		if (specs->ohis_class) {
+			/* Important: `Dee_tmh_isdefault_or_usrtype' would indicate
+			 * that usrtype impls would be default impls, but for our
+			 * purpose, that mustn't actually be the case. As such, filter
+			 * out these impls here and treat them as non-default. */
+			struct oh_init_spec_class const *iter = specs->ohis_class;
+			for (; iter->ohisc_usertyp; ++iter) {
+				if (result == iter->ohisc_usertyp)
+					goto yes;
+			}
+		}
 		if (specs->ohis_impls) {
 			struct oh_init_spec_impl const *iter = specs->ohis_impls;
 			for (; iter->ohisi_impl; ++iter) {
@@ -1527,11 +1538,12 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 		if (specs->ohis_mhints) {
 			struct oh_init_spec_mhint const *iter = specs->ohis_mhints;
 			for (; iter->ohismh_id < Dee_TMH_COUNT; ++iter) {
-				if (Dee_tmh_isdefault(iter->ohismh_id, result))
+				if (Dee_tmh_isdefault_or_usrtype(iter->ohismh_id, result))
 					goto nope;
 			}
 		}
 	}
+yes:
 	return result;
 nope:
 	return NULL;
