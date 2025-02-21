@@ -1689,8 +1689,11 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 
 				/* Only check for method hints privately! */
 				result = DeeType_GetPrivateMethodHint(self, self, iter->ohismh_id);
-				if (result)
+				if (result) {
+					/* Remember that this operator has been inherited from method hints. */
+					type_tno_tryset(self, id, result);
 					break;
+				}
 			}
 		}
 	}
