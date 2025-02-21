@@ -55,11 +55,15 @@ di_copy(DistinctIterator *__restrict self,
 	result = Dee_simple_hashset_with_lock_copy(&self->di_encountered,
 	                                           &other->di_encountered);
 	if likely(result == 0) {
-		Dee_Incref(other->di_iter);
-		self->di_iter    = other->di_iter;
+		self->di_iter = DeeObject_Copy(other->di_iter);
+		if unlikely(!self->di_iter)
+			goto err_encountered;
 		self->di_tp_next = other->di_tp_next;
 	}
 	return result;
+err_encountered:
+	Dee_simple_hashset_with_lock_fini(&self->di_encountered);
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
