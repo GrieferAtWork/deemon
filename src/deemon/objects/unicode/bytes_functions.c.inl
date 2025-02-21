@@ -6106,6 +6106,9 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 
 INTERN_TPCONST struct type_method_hint tpconst bytes_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_xchitem_index, &bytes_xchitem_index, METHOD_FNOREFESCAPE),
+	/* TODO: All the other method hints (after all we *do* define our own "find" and
+	 *       so on, so we *really* need to override these so that "Sequence" doesn't
+	 *       think that our "find" is compatible with *its*) */
 	TYPE_METHOD_HINT_END
 };
 

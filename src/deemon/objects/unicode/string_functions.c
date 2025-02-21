@@ -11458,6 +11458,17 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	 *
 	 * s.a. "string_method_hints" */
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINTREF(__seq_compare__),
+	TYPE_METHOD_HINTREF(__seq_compare_eq__),
+	TYPE_METHOD_HINTREF(__seq_eq__),
+	TYPE_METHOD_HINTREF(__seq_ne__),
+	TYPE_METHOD_HINTREF(__seq_lo__),
+	TYPE_METHOD_HINTREF(__seq_le__),
+	TYPE_METHOD_HINTREF(__seq_gr__),
+	TYPE_METHOD_HINTREF(__seq_ge__),
+	TYPE_METHOD_HINTREF(__seq_sum__),
+	TYPE_METHOD_HINTREF(__seq_any__),
+	TYPE_METHOD_HINTREF(__seq_all__),
 	TYPE_METHOD_HINTREF(__seq_count__),
 	TYPE_METHOD_HINTREF(__seq_contains__),
 	TYPE_METHOD_HINTREF(__seq_startswith__),

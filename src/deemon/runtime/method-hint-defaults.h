@@ -2407,7 +2407,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__se
 #define DeeSeq_DefaultCountWithKeyWithSeqForeach                              default__seq_count_with_key__with__seq_operator_foreach
 #define DeeSeq_DefaultCountWithRangeWithSeqEnumerateIndex                     default__seq_count_with_range__with__seq_enumerate_index
 #define DeeSeq_DefaultCountWithRangeAndKeyWithSeqEnumerateIndex               default__seq_count_with_range_and_key__with__seq_enumerate_index
-#define DeeSeq_DefaultContainsWithContains                                    default__seq_operator_contains__with__seq_contains
+#define DeeSeq_DefaultContainsWithContains                                    default__seq_contains__with__seq_operator_contains
 #define DeeSeq_DefaultContainsWithKeyWithSeqForeach                           default__seq_contains_with_key__with__seq_operator_foreach
 #define DeeSeq_DefaultContainsWithRangeWithSeqEnumerateIndex                  default__seq_contains_with_range__with__seq_enumerate_index
 #define DeeSeq_DefaultContainsWithRangeAndKeyWithSeqEnumerateIndex            default__seq_contains_with_range_and_key__with__seq_enumerate_index
