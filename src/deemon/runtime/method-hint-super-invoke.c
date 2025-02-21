@@ -3594,6 +3594,52 @@ PRIVATE struct mh_super_map tpconst mh_super_maps[236] = {
 /* clang-format on */
 
 
+INTERN WUNUSED bool DCALL
+Dee_tmh_isdefault(enum Dee_tmh_id id, Dee_funptr_t funptr) {
+	/* Any method hint that depends on other stuff (is a default hint)
+	 * necessarily *has* to appear in one of the mapping tables above.
+	 *
+	 * As such, can check those tables and if we find "funptr", then
+	 * we know that it's a default impl. */
+	struct mh_super_map const *specs = &mh_super_maps[id];
+	if (specs->msm_replace) {
+		struct mh_super_map_replace const *iter;
+		for (iter = specs->msm_replace; iter->msmr_old; ++iter) {
+			if (iter->msmr_old == funptr)
+				goto foundit;
+		}
+	}
+	if (specs->msm_with_super) {
+		Dee_funptr_t const *iter;
+		for (iter = specs->msm_with_super; *iter; ++iter) {
+			if (*iter == funptr)
+				goto foundit;
+		}
+	}
+	if (specs->msm_with_type) {
+		struct mh_super_map_typed const *iter;
+		for (iter = specs->msm_with_type; iter->msmr_regular; ++iter) {
+			if (iter->msmr_regular == funptr)
+				goto foundit;
+		}
+	}
+	return false;
+foundit:
+	/* Can't be done because empty/unsupported impls are allowed to alias other hints!
+	 * E.g. `default__seq_operator_eq__empty' is defined as an alias for:
+	 *      `default__seq_operator_eq__with__seq_operator_compare_eq' */
+#if 0
+	/* Check for special cases: "$empty" impls don't have
+	 * dependencies and thus aren't defaults impls, either... */
+	if (Dee_type_mh_cache_gethint(&mh_cache_empty, id) == funptr)
+		return false;
+	/* ... and the same goes for "%{unsupported}" impls. */
+	if (DeeType_GetUnsupportedMethodHint(id) == funptr)
+		return false;
+#endif
+	return true;
+}
+
 
 /* Same as `DeeType_GetMethodHint(DeeSuper_TYPE(super), id)', but must be used in
  * order to lookup information on how to invoke a method hint on a Super-object.

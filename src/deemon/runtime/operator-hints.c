@@ -1378,32 +1378,6 @@ type_tno_tryset(DeeTypeObject const *__restrict self,
 	return true;
 }
 
-
-PRIVATE WUNUSED NONNULL((1)) Dee_funptr_t DCALL
-type_tno_has_nondefault(DeeTypeObject const *__restrict self, enum Dee_tno_id id) {
-	Dee_funptr_t result;
-	struct oh_init_spec const *specs = &oh_init_specs[id];
-	byte_t const *table = (byte_t const *)self;
-	if (specs->ohis_table != 0) {
-		table += specs->ohis_table;
-		table = atomic_read((byte_t **)table);
-		if (!table)
-			return NULL;
-	}
-	table += specs->ohis_field;
-	result = atomic_read((Dee_funptr_t *)table);
-	if (result && specs->ohis_impls) {
-		/* Check if "result" appears in "specs->ohis_impls" */
-		struct oh_init_spec_impl const *iter;
-		for (iter = specs->ohis_impls; iter->ohisi_impl; ++iter) {
-			if (result == iter->ohisi_impl)
-				return NULL;
-		}
-	}
-	return result;
-}
-
-
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 Dee_tno_assign_contains(struct Dee_tno_assign const actions[Dee_TNO_ASSIGN_MAXLEN],
                         size_t actions_count, enum Dee_tno_id id) {
@@ -1457,7 +1431,7 @@ INTERN WUNUSED NONNULL((1)) size_t
 				 *      that hasn't already been assigned. */
 				goto next_implementation;
 			}
-			if (type_tno_has_nondefault(self, missing_dependencies[dep_i]))
+			if (DeeType_GetNativeOperatorWithoutDefaults(self, missing_dependencies[dep_i]))
 				missing_dependencies[dep_i] = Dee_TNO_COUNT; /* Dependency is present (or already being assigned) */
 		}
 
@@ -1526,27 +1500,41 @@ INTERN WUNUSED NONNULL((1)) size_t
 	return do_DeeType_SelectMissingNativeOperator(self, id, actions, 0);
 }
 
+
+INTDEF WUNUSED bool DCALL /* Implemented in "./method-hint-super-invoke.c" */
+Dee_tmh_isdefault(enum Dee_tmh_id id, Dee_funptr_t funptr);
+
 /* Return an actual, user-defined operator "id"
- * (*NOT* allowing stuff like `default__size__with__sizeob')
+ * (*NOT* allowing stuff like `default__size__with__sizeob'
+ * or `default__seq_operator_size__with__seq_operator_sizeob')
  * Also never returns `DeeType_GetNativeOperatorOOM()' or
  * `DeeType_GetNativeOperatorUnsupported()' */
 INTERN WUNUSED NONNULL((1)) Dee_funptr_t
-(DCALL DeeType_GetNativeOperatorWithoutDefaults)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
+(DCALL DeeType_GetNativeOperatorWithoutDefaults)(DeeTypeObject const *__restrict self,
+                                                 enum Dee_tno_id id) {
 	Dee_funptr_t result = type_tno_get(self, id);
 	if (result) {
-		/* Check if `result' might be a default operator implementation. */
+		/* Check if `result' might be a default operator
+		 * implementation (including method hint defaults). */
 		struct oh_init_spec const *specs = &oh_init_specs[id];
-		struct oh_init_spec_impl const *impls = specs->ohis_impls;
-		if (impls) {
-			for (; impls->ohisi_impl; ++impls) {
-				if (result == impls->ohisi_impl) {
-					result = NULL;
-					break;
-				}
+		if (specs->ohis_impls) {
+			struct oh_init_spec_impl const *iter = specs->ohis_impls;
+			for (; iter->ohisi_impl; ++iter) {
+				if (result == iter->ohisi_impl)
+					goto nope;
+			}
+		}
+		if (specs->ohis_mhints) {
+			struct oh_init_spec_mhint const *iter = specs->ohis_mhints;
+			for (; iter->ohismh_id < Dee_TMH_COUNT; ++iter) {
+				if (Dee_tmh_isdefault(iter->ohismh_id, result))
+					goto nope;
 			}
 		}
 	}
 	return result;
+nope:
+	return NULL;
 }
 
 /* Wrapper around `DeeType_SelectMissingNativeOperator' that checks if the
