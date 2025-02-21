@@ -55,6 +55,7 @@
 #include "seq/each.h"
 #include "seq/hashfilter.h"
 #include "seq/range.h"
+#include "seq/unique-iterator.h"
 
 DECL_BEGIN
 
@@ -463,9 +464,15 @@ map_Frozen_get(DeeTypeObject *__restrict self) {
 	return_reference_(result);
 }
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-set_Iterator_get(DeeTypeObject *__restrict self);
-#define map_Iterator_get set_Iterator_get
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+map_Iterator_get(DeeTypeObject *__restrict self) {
+	DeeTypeObject *result = &DeeIterator_Type;
+	DeeMH_map_operator_iter_t map_operator_iter = DeeType_RequireMethodHint(self, map_operator_iter);
+	if (map_operator_iter == &default__map_operator_iter__with__seq_operator_iter) {
+		result = &DistinctMappingIterator_Type;
+	}
+	return_reference_(result);
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_Keys_get(DeeTypeObject *__restrict self) {

@@ -44,6 +44,7 @@
 #include "../runtime/strings.h"
 #include "seq/default-api.h"
 #include "seq/default-sets.h"
+#include "seq/unique-iterator.h"
 
 DECL_BEGIN
 
@@ -308,14 +309,12 @@ set_Frozen_get(DeeTypeObject *__restrict self) {
 	return_reference_(result);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL /* INTERN because re-used as "map_Iterator_get" */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 set_Iterator_get(DeeTypeObject *__restrict self) {
-	DeeTypeObject *result = &DeeSet_Type;
-	DeeMH_set_frozen_t set_frozen = DeeType_RequireMethodHint(self, set_frozen);
-	if (set_frozen == &DeeObject_NewRef) {
-		result = self;
-	} else if (set_frozen == &DeeRoSet_FromSequence) {
-		result = &DeeRoSet_Type;
+	DeeTypeObject *result = &DeeIterator_Type;
+	DeeMH_set_operator_iter_t set_operator_iter = DeeType_RequireMethodHint(self, set_operator_iter);
+	if (set_operator_iter == &default__set_operator_iter__with__seq_operator_iter) {
+		result = &DistinctIterator_Type;
 	}
 	return_reference_(result);
 }
