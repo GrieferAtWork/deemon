@@ -418,6 +418,7 @@ INTERN WUNUSED NONNULL((1)) struct Dee_type_mh_cache *
 	return result;
 }
 
+#if 0 /* Not needed because "DeeType_GetPrivateMethodHintNoDefault" never returns OOM */
 PRIVATE ATTR_NOINLINE WUNUSED bool DCALL
 is_oom_operator_impl(enum Dee_tmh_id id, Dee_funptr_t impl) {
 	struct mh_init_spec const *specs = &mh_init_specs[id];
@@ -431,6 +432,7 @@ is_oom_operator_impl(enum Dee_tmh_id id, Dee_funptr_t impl) {
 	}
 	return false;
 }
+#endif
 
 /* Master function for looking up method hints, that searches the type's
  * MRO for all matches regarding attributes named "id", and returns the
@@ -452,8 +454,12 @@ read_from_mhcache:
 		if /*likely*/(result)
 			return result;
 		result = DeeType_GetUncachedMethodHint(self, id);
+#if 0
 		if likely(!is_oom_operator_impl(id, result))
+#endif
+		{
 			Dee_type_mh_cache_sethint(mhcache, id, result);
+		}
 		return result;
 	}
 	mhcache = Dee_type_mh_cache_alloc();
@@ -470,8 +476,12 @@ read_from_mhcache:
 		Dee_UntrackAlloc(mhcache);
 #endif /* !NDEBUG */
 	result = DeeType_GetUncachedMethodHint(self, id);
+#if 0
 	if likely(!is_oom_operator_impl(id, result))
+#endif
+	{
 		Dee_type_mh_cache_sethint(mhcache, id, result);
+	}
 	return result;
 }
 
@@ -2688,7 +2698,7 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 			 * >> NotImplemented: type MyClass does not support: Sequence.operator iter()
 			 *
 			 * Without this extra check, "MyClass" would be configured as:
-			 * - tp_seq->tp_iter = &default__seq_operator_iter
+			 * - tp_seq->tp_iter = &default__seq_operator_iter // Inherited from Sequence (correct)
 			 * - tp_mhcache->mh_seq_operator_iter = &default__seq_operator_iter
 			 * ... meaning that "default__seq_operator_iter" would infinitely
 			 *     recurse back on itself.
@@ -2701,20 +2711,40 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 			 * in user-code (meaning that deemon won't hard-crash)
 			 */
 			if (result && result != ospec->misos_default) {
+#if 0 /* Can't happen because `DeeType_GetNativeOperatorWithoutDefaults()' never returns OOM. */
 				if unlikely(result == DeeType_GetNativeOperatorOOM(iter->miso_tno)) {
-					/* Fast-forward the error (note that our caller check for this and
-					 * won't cache the function pointer in this case) */
+					/* Fast-forward the error (note that our callers check for this
+					 * and won't cache the function pointer in this case) */
 					return result;
 				}
+#endif
 
 				/* Check if "result" can be inherited from "self" into "orig_type".
 				 * Only if it can be, can we actually use this operator to implement
 				 * the method hint. */
-				if (self == orig_type ||
-				    DeeType_InheritNativeOperatorWithoutHints(self, orig_type,
-				                                              iter->miso_tno,
-				                                              result))
+#if 1 /* XXX: I think this should always be OK since "result" isn't a default impl... */
+				return result;
+#else
+				if (self == orig_type) {
 					return result;
+				} else {
+					/* TODO: This should be "DeeType_InheritNativeOperatorWithoutDependencies"
+					 * Currently, this handles OOM incorrectly, since DeeType_InheritNativeOperatorWithoutHints
+					 * returns "true" even if the final function pointer could not be written
+					 * (which is the behavior needed during normal operator inheritance), but
+					 * we know that *ONLY* 1 function will *EVER* be written (because we know
+					 * that "result" isn't any kind of default impl), and we have to propagate
+					 * OOM if that operator could not be stored in "self"
+					 *
+					 * XXX: Why? Nothing we're doing depends on the operator actually becoming
+					 *      inherited by `self'; s.a. "XXX" above. */
+					if (DeeType_InheritNativeOperatorWithoutHints(self, orig_type,
+					                                              iter->miso_tno,
+					                                              result))
+						return result;
+					return DeeType_GetNativeOperatorOOM(iter->miso_tno);
+				}
+#endif
 			}
 		}
 	}
