@@ -58,7 +58,7 @@ err:
 	return -1;
 })}
 %{$empty = "default__map_operator_inplace_and__unsupported"}
-%{$with__set_operator_foreach_pair__and__map_removekeys = {
+%{$with__map_operator_foreach_pair__and__map_removekeys = {
 	int result;
 	DREF DeeObject *a_keys;
 	DREF DeeObject *a_keys_without_b_proxy;
@@ -104,7 +104,7 @@ err:
 
 map_operator_inplace_and = {
 	DeeMH_map_removekeys_t map_removekeys = REQUIRE(map_removekeys);
-	if (map_removekeys && REQUIRE_ANY(set_operator_foreach_pair) != &default__set_operator_foreach_pair__unsupported)
-		return &$with__set_operator_foreach_pair__and__map_removekeys;
+	if (map_removekeys && REQUIRE_ANY(map_operator_foreach_pair) != &default__map_operator_foreach_pair__unsupported)
+		return &$with__map_operator_foreach_pair__and__map_removekeys;
 };
 

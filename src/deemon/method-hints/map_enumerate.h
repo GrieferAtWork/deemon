@@ -56,9 +56,9 @@ __map_enumerate__.map_enumerate([[nonnull]] DeeObject *__restrict self,
 %{unsupported({
 	return err_map_unsupportedf(self, "__map_enumerate__(<callback>)");
 })}
-%{$empty = "default__set_operator_foreach_pair__empty"}
-/*%{$with__set_operator_foreach_pair = {
-	// Not explicitly defined; we just directly alias "set_operator_foreach_pair"!
+%{$empty = "default__map_operator_foreach_pair__empty"}
+/*%{$with__map_operator_foreach_pair = {
+	// Not explicitly defined; we just directly alias "map_operator_foreach_pair"!
 	return CALL_DEPENDENCY(seq_operator_foreach_pair, self, cb, arg);
 }}*/
 %{using map_enumerate_range: {
@@ -193,7 +193,7 @@ err:
 
 
 map_enumerate = {
-	DeeMH_set_operator_foreach_pair_t set_operator_foreach_pair;
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
 	DeeMH_map_iterkeys_t map_iterkeys;
 	/*if (REQUIRE_NODEFAULT(map_enumerate_range))
 		return &$with__map_enumerate_range;*/
@@ -209,9 +209,9 @@ map_enumerate = {
 				return &$with__map_iterkeys__and__map_operator_trygetitem;
 		}
 	}
-	set_operator_foreach_pair = REQUIRE(set_operator_foreach_pair);
-	if (set_operator_foreach_pair)
-		return set_operator_foreach_pair; /* Binary-compatible */
+	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
+	if (map_operator_foreach_pair)
+		return map_operator_foreach_pair; /* Binary-compatible */
 };
 
 map_enumerate_range = {

@@ -3187,19 +3187,14 @@ err:
 	return -1;
 }
 
-#ifndef DECLARED_default_foreach_with_foreach_pair_cb
-#define DECLARED_default_foreach_with_foreach_pair_cb
+#ifndef DEFINED_default_foreach_with_foreach_pair_cb
+#define DEFINED_default_foreach_with_foreach_pair_cb
 struct default_foreach_with_foreach_pair_data {
 	Dee_foreach_t dfwfp_cb;  /* [1..1] Underlying callback. */
 	void         *dfwfp_arg; /* Cookie for `dfwfp_cb' */
 };
 
-INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
-default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
-#endif /* !DECLARED_default_foreach_with_foreach_pair_cb */
-#ifndef DEFINED_default_foreach_with_foreach_pair_cb
-#define DEFINED_default_foreach_with_foreach_pair_cb
-INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 	struct default_foreach_with_foreach_pair_data *data;
 	Dee_ssize_t result;

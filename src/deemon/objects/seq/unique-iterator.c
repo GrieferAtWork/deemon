@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/gc.h>
+#include <deemon/map.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
@@ -42,9 +43,14 @@
 
 DECL_BEGIN
 
+
+
+/************************************************************************/
+/* DISTINCT SET                                                         */
+/************************************************************************/
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-uqi_copy(DistinctIterator *__restrict self,
-         DistinctIterator *__restrict other) {
+di_copy(DistinctIterator *__restrict self,
+        DistinctIterator *__restrict other) {
 	int result;
 	result = Dee_simple_hashset_with_lock_copy(&self->di_encountered,
 	                                           &other->di_encountered);
@@ -57,7 +63,7 @@ uqi_copy(DistinctIterator *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-uqi_init(DistinctIterator *__restrict self, size_t argc, DeeObject *const *argv) {
+di_init(DistinctIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
 	if (DeeArg_Unpack(argc, argv, "o:_DistinctIterator", &self->di_iter))
 		goto err;
@@ -73,28 +79,28 @@ err:
 }
 
 PRIVATE NONNULL((1)) void DCALL
-uqi_fini(DistinctIterator *__restrict self) {
+di_fini(DistinctIterator *__restrict self) {
 	Dee_Decref(self->di_iter);
 	Dee_simple_hashset_with_lock_fini(&self->di_encountered);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-uqi_visit(DistinctIterator *__restrict self, dvisit_t proc, void *arg) {
+di_visit(DistinctIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->di_iter);
 	Dee_simple_hashset_with_lock_visit(&self->di_encountered, proc, arg);
 }
 
 PRIVATE NONNULL((1)) void DCALL
-uqi_clear(DistinctIterator *__restrict self) {
+di_clear(DistinctIterator *__restrict self) {
 	Dee_simple_hashset_with_lock_clear(&self->di_encountered);
 }
 
-PRIVATE struct type_gc uqi_gc = {
-	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&uqi_clear
+PRIVATE struct type_gc di_gc = {
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&di_clear
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uqi_next(DistinctIterator *__restrict self) {
+di_next(DistinctIterator *__restrict self) {
 	DREF DeeObject *result;
 	for (;;) {
 		int exists;
@@ -120,7 +126,8 @@ err:
 
 PRIVATE struct type_member tpconst uqiwk_members[] = {
 	TYPE_MEMBER_FIELD("__key__", STRUCT_OBJECT, offsetof(DistinctIteratorWithKey, diwk_key)),
-#define uqi_members (uqiwk_members + 1)
+#define di_members  (uqiwk_members + 1)
+#define dmi_members di_members
 	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT, offsetof(DistinctIteratorWithKey, diwk_iter)),
 	TYPE_MEMBER_FIELD("__num_encountered__", STRUCT_ATOMIC | STRUCT_CONST | STRUCT_SIZE_T,
 	                  offsetof(DistinctIteratorWithKey, diwk_encountered.shswl_set.shs_size)),
@@ -128,7 +135,7 @@ PRIVATE struct type_member tpconst uqiwk_members[] = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uqi_getseq(DistinctIterator *__restrict self) {
+di_getseq(DistinctIterator *__restrict self) {
 	DREF DeeObject *iter_seq, *result;
 	iter_seq = DeeObject_GetAttr(self->di_iter, (DeeObject *)&str_seq);
 	if unlikely(!iter_seq)
@@ -141,8 +148,8 @@ err:
 }
 
 
-PRIVATE struct type_getset tpconst uqi_getsets[] = {
-	TYPE_GETTER(STR_seq, &uqi_getseq,
+PRIVATE struct type_getset tpconst di_getsets[] = {
+	TYPE_GETTER(STR_seq, &di_getseq,
 	            "->?DSet\n"
 	            "Returns ${this.__iter__.seq as Set}"),
 	/* TODO: "__encountered__->?DSet" (using a custom wrapper object) */
@@ -161,13 +168,13 @@ INTERN DeeTypeObject DistinctIterator_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&uqi_copy,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&uqi_init,
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_init,
 				TYPE_FIXED_ALLOCATOR_GC(DistinctIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&uqi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -177,19 +184,19 @@ INTERN DeeTypeObject DistinctIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uqi_visit,
-	/* .tp_gc            = */ &uqi_gc,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_visit,
+	/* .tp_gc            = */ &di_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uqi_next,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_next,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ uqi_getsets,
-	/* .tp_members       = */ uqi_members,
+	/* .tp_getsets       = */ di_getsets,
+	/* .tp_members       = */ di_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -252,8 +259,8 @@ uqiwk_visit(DistinctIteratorWithKey *__restrict self, dvisit_t proc, void *arg) 
 	Dee_Visit(self->diwk_key);
 }
 
-#define uqiwk_clear uqi_clear
-#define uqiwk_gc    uqi_gc
+#define uqiwk_clear di_clear
+#define uqiwk_gc    di_gc
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 uqiwk_next(DistinctIteratorWithKey *__restrict self) {
@@ -364,7 +371,7 @@ INTERN DeeTypeObject DistinctIteratorWithKey_Type = {
 
 
 /************************************************************************/
-/* UNIQUE SET W/ KEY                                                    */
+/* DISTINCT SET W/ KEY                                                  */
 /************************************************************************/
 STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, po_obj2));
@@ -467,6 +474,126 @@ INTERN DeeTypeObject DistinctSetWithKey_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ dswk_class_members
+};
+
+
+
+/************************************************************************/
+/* DISTINCT MAP                                                         */
+/************************************************************************/
+STATIC_ASSERT(offsetof(DistinctMappingIterator, dmi_iter) == offsetof(DistinctIterator, di_iter));
+STATIC_ASSERT(offsetof(DistinctMappingIterator, dmi_encountered) == offsetof(DistinctIterator, di_encountered));
+#define dmi_copy  di_copy
+#define dmi_fini  di_fini
+#define dmi_visit di_visit
+#define dmi_gc    di_gc
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+dmi_init(DistinctMappingIterator *__restrict self, size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *itertyp;
+	if (DeeArg_Unpack(argc, argv, "o:_DistinctMappingIterator", &self->dmi_iter))
+		goto err;
+	itertyp = Dee_TYPE(self->dmi_iter);
+	self->dmi_tp_nextpair = DeeType_RequireSupportedNativeOperator(itertyp, nextpair);
+	if unlikely(!self->dmi_tp_nextpair)
+		return err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+	Dee_Incref(self->dmi_iter);
+	Dee_simple_hashset_with_lock_init(&self->dmi_encountered);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dmi_nextpair(DistinctMappingIterator *__restrict self,
+             /*out*/ DREF DeeObject *key_and_value[2]) {
+	int result;
+again:
+	result = (*self->dmi_tp_nextpair)(self->dmi_iter, key_and_value);
+	if likely(result == 0) {
+		int exists = Dee_simple_hashset_with_lock_insert(&self->dmi_encountered, key_and_value[0]);
+		if unlikely(exists) {
+			Dee_Decref(key_and_value[1]);
+			Dee_Decref(key_and_value[0]);
+			if unlikely(exists < 0)
+				goto err;
+			goto again;
+		}
+	}
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE struct type_iterator dmi_iterator = {
+	/* .tp_nextpair = */ (int (DCALL *)(DeeObject *__restrict, /*out*/ DREF DeeObject *[2]))&dmi_nextpair
+};
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dmi_getseq(DistinctMappingIterator *__restrict self) {
+	DREF DeeObject *iter_seq, *result;
+	iter_seq = DeeObject_GetAttr(self->dmi_iter, (DeeObject *)&str_seq);
+	if unlikely(!iter_seq)
+		goto err;
+	result = DeeSuper_New(&DeeMapping_Type, iter_seq);
+	Dee_Decref(iter_seq);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE struct type_getset tpconst dmi_getsets[] = {
+	TYPE_GETTER(STR_seq, &dmi_getseq,
+	            "->?DMapping\n"
+	            "Returns ${this.__iter__.seq as Mapping}"),
+	/* TODO: "__encountered_keys__->?DSet" (using a custom wrapper object) */
+	TYPE_GETSET_END
+};
+
+INTERN DeeTypeObject DistinctMappingIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_DistinctIterator",
+	/* .tp_doc      = */ DOC("(objWithNext)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&dmi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&dmi_init,
+				TYPE_FIXED_ALLOCATOR_GC(DistinctIterator)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dmi_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dmi_visit,
+	/* .tp_gc            = */ &dmi_gc,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &dmi_iterator,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ dmi_getsets,
+	/* .tp_members       = */ dmi_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
 };
 
 DECL_END

@@ -67,13 +67,13 @@ err:
 err:
 	return Dee_COMPARE_ERR;
 }}
-%{$with__set_operator_foreach_pair = {
+%{$with__map_operator_foreach_pair = {
 	size_t rhs_size;
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs; /* Important: must treat "rhs" as a mapping for this compare! */
 	data.mc_lfr_rtrygetitem = DeeType_RequireMethodHint(Dee_TYPE(rhs), map_operator_trygetitem);
-	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
+	contains_status = CALL_DEPENDENCY(map_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
@@ -114,16 +114,16 @@ err:
 
 
 map_operator_compare_eq = {
-	DeeMH_set_operator_foreach_pair_t set_operator_foreach_pair;
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
 	if (REQUIRE_NODEFAULT(map_operator_eq))
 		return $with__map_operator_eq;
 	if (REQUIRE_NODEFAULT(map_operator_ne))
 		return $with__map_operator_ne;
-	set_operator_foreach_pair = REQUIRE(set_operator_foreach_pair);
-	if (set_operator_foreach_pair == &default__set_operator_foreach_pair__empty)
+	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
+	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
 		return &$empty;
-	if (set_operator_foreach_pair)
-		return &$with__set_operator_foreach_pair;
+	if (map_operator_foreach_pair)
+		return &$with__map_operator_foreach_pair;
 };
 
 

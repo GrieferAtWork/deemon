@@ -240,7 +240,6 @@ enum Dee_tmh_id {
 	Dee_TMH_seq_brange_with_key,
 	Dee_TMH_set_operator_iter,
 	Dee_TMH_set_operator_foreach,
-	Dee_TMH_set_operator_foreach_pair,
 	Dee_TMH_set_operator_sizeob,
 	Dee_TMH_set_operator_size,
 	Dee_TMH_set_operator_hash,
@@ -269,6 +268,10 @@ enum Dee_tmh_id {
 	Dee_TMH_set_removeall,
 	Dee_TMH_set_pop,
 	Dee_TMH_set_pop_with_default,
+	Dee_TMH_map_operator_iter,
+	Dee_TMH_map_operator_foreach_pair,
+	Dee_TMH_map_operator_sizeob,
+	Dee_TMH_map_operator_size,
 	Dee_TMH_map_operator_getitem,
 	Dee_TMH_map_operator_trygetitem,
 	Dee_TMH_map_operator_getitem_index,
@@ -609,7 +612,6 @@ typedef WUNUSED_T NONNULL_T((1, 2, 5, 6)) int (DCALL *DeeMH_seq_brange_with_key_
 /* __set_iter__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_operator_iter_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_set_operator_foreach_t)(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
-typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_set_operator_foreach_pair_t)(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
 
 /* __set_size__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_operator_sizeob_t)(DeeObject *__restrict self);
@@ -686,6 +688,14 @@ typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_set_removeall_t)(DeeObject
 /* Set_pop, set_pop, __set_pop__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_pop_t)(DeeObject *self);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_set_pop_with_default_t)(DeeObject *self, DeeObject *default_);
+
+/* __map_iter__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_map_operator_iter_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_map_operator_foreach_pair_t)(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
+
+/* __map_size__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_map_operator_sizeob_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeMH_map_operator_size_t)(DeeObject *__restrict self);
 
 /* __map_getitem__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_map_operator_getitem_t)(DeeObject *self, DeeObject *key);
@@ -1825,6 +1835,16 @@ DDATDEF char const DeeMA_Set_pop_name[]; /* "pop" */
 #define DeeMA_set_pop_doc   DeeMA_Set_pop_doc
 #define DeeMA_set_pop       DeeMA_Set_pop
 
+#define DeeMA___map_iter___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___map_iter___name[]; /* "__map_iter__" */
+DDATDEF char const DeeMA___map_iter___doc[];  /* "->?DIterator" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___map_size___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___map_size___name[]; /* "__map_size__" */
+DDATDEF char const DeeMA___map_size___doc[];  /* "->?Dint" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
 #define DeeMA___map_getitem___flags Dee_TYPE_METHOD_FNORMAL
 DDATDEF char const DeeMA___map_getitem___name[]; /* "__map_getitem__" */
 DDATDEF char const DeeMA___map_getitem___doc[];  /* "(key)->" */
@@ -2281,7 +2301,6 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 #define DeeType_RequireSeqOperatorInplaceMul(self)              ((DeeMH_seq_operator_inplace_mul_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_inplace_mul))
 #define DeeType_RequireSetOperatorIter(self)                    ((DeeMH_set_operator_iter_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_iter))
 #define DeeType_RequireSetOperatorForeach(self)                 ((DeeMH_set_operator_foreach_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_foreach))
-#define DeeType_RequireSetOperatorForeachPair(self)             ((DeeMH_set_operator_foreach_pair_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_foreach_pair))
 #define DeeType_RequireSetOperatorSize(self)                    ((DeeMH_set_operator_size_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_size))
 #define DeeType_RequireSetOperatorSizeOb(self)                  ((DeeMH_set_operator_sizeob_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_sizeob))
 #define DeeType_RequireSetOperatorHash(self)                    ((DeeMH_set_operator_hash_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_hash))
@@ -2302,6 +2321,10 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 #define DeeType_RequireSetOperatorInplaceSub(self)              ((DeeMH_set_operator_inplace_sub_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_inplace_sub))
 #define DeeType_RequireSetOperatorInplaceAnd(self)              ((DeeMH_set_operator_inplace_and_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_inplace_and))
 #define DeeType_RequireSetOperatorInplaceXor(self)              ((DeeMH_set_operator_inplace_xor_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_inplace_xor))
+#define DeeType_RequireMapOperatorIter(self)                    ((DeeMH_map_operator_iter_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_iter))
+#define DeeType_RequireMapOperatorSizeOb(self)                  ((DeeMH_map_operator_sizeob_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_sizeob))
+#define DeeType_RequireMapOperatorSize(self)                    ((DeeMH_map_operator_size_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_size))
+#define DeeType_RequireMapOperatorForeachPair(self)             ((DeeMH_map_operator_foreach_pair_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_foreach_pair))
 #define DeeType_RequireMapOperatorContains(self)                ((DeeMH_map_operator_contains_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_contains))
 #define DeeType_RequireMapOperatorGetItem(self)                 ((DeeMH_map_operator_getitem_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_getitem))
 #define DeeType_RequireMapOperatorDelItem(self)                 ((DeeMH_map_operator_delitem_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_delitem))
@@ -2527,11 +2550,10 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 #define DeeSet_OperatorInplaceAnd(p_self, some_object)                        (*DeeType_RequireSetOperatorInplaceAnd(Dee_TYPE(*(p_self))))(p_self, some_object)
 #define DeeSet_OperatorInplaceXor(p_self, some_object)                        (*DeeType_RequireSetOperatorInplaceXor(Dee_TYPE(*(p_self))))(p_self, some_object)
 #define DeeMap_OperatorBool                                                   DeeSet_OperatorBool
-#define DeeMap_OperatorIter                                                   DeeSet_OperatorIter
-#define DeeMap_OperatorSizeOb                                                 DeeSet_OperatorSizeOb
-#define DeeMap_OperatorSize                                                   DeeSet_OperatorSize
-#define DeeMap_OperatorForeach                                                DeeSet_OperatorForeach
-#define DeeMap_OperatorForeachPair                                            DeeSet_OperatorForeachPair
+#define DeeMap_OperatorIter(self)                                             (*DeeType_RequireMapOperatorIter(Dee_TYPE(self)))(self)
+#define DeeMap_OperatorSizeOb(self)                                           (*DeeType_RequireMapOperatorSizeOb(Dee_TYPE(self)))(self)
+#define DeeMap_OperatorSize(self)                                             (*DeeType_RequireMapOperatorSize(Dee_TYPE(self)))(self)
+#define DeeMap_OperatorForeachPair(self, cb, arg)                             (*DeeType_RequireMapOperatorForeachPair(Dee_TYPE(self)))(self, cb, arg)
 #define DeeMap_OperatorContains(self, some_object)                            (*DeeType_RequireMapOperatorContains(Dee_TYPE(self)))(self, some_object)
 #define DeeMap_OperatorGetItem(self, index)                                   (*DeeType_RequireMapOperatorGetItem(Dee_TYPE(self)))(self, index)
 #define DeeMap_OperatorDelItem(self, index)                                   (*DeeType_RequireMapOperatorDelItem(Dee_TYPE(self)))(self, index)
@@ -4113,7 +4135,6 @@ DeeType_GetMethodHint(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
 #define _Dee_PRIVATE_UNIFIED_TMH_seq_brange_with_key                     DeeType_RequireSeqBRangeWithKey
 #define _Dee_PRIVATE_UNIFIED_TMH_set_operator_iter                       DeeType_RequireSetOperatorIter
 #define _Dee_PRIVATE_UNIFIED_TMH_set_operator_foreach                    DeeType_RequireSetOperatorForeach
-/*efine _Dee_PRIVATE_UNIFIED_TMH_set_operator_foreach_pair*/
 #define _Dee_PRIVATE_UNIFIED_TMH_set_operator_sizeob                     DeeType_RequireSetOperatorSizeOb
 #define _Dee_PRIVATE_UNIFIED_TMH_set_operator_size                       DeeType_RequireSetOperatorSize
 #define _Dee_PRIVATE_UNIFIED_TMH_set_operator_hash                       DeeType_RequireSetOperatorHash

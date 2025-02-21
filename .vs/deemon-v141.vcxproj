@@ -255,7 +255,9 @@
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_and.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_sub.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_xor.h" />
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_iter.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_setitem.h" />
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_size.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_sub.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_xor.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_pop.h" />

@@ -741,7 +741,13 @@
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_xor.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_iter.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_setitem.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_size.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_sub.h">

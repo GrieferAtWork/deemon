@@ -728,16 +728,31 @@ default__seq_operator_foreach(DeeObject *__restrict self, Dee_foreach_t cb, void
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, cb, arg);
 }
 
-#ifndef DECLARED_default_foreach_with_foreach_pair_cb
-#define DECLARED_default_foreach_with_foreach_pair_cb
+#ifndef DEFINED_default_foreach_with_foreach_pair_cb
+#define DEFINED_default_foreach_with_foreach_pair_cb
 struct default_foreach_with_foreach_pair_data {
 	Dee_foreach_t dfwfp_cb;  /* [1..1] Underlying callback. */
 	void         *dfwfp_arg; /* Cookie for `dfwfp_cb' */
 };
 
-INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
-default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
-#endif /* !DECLARED_default_foreach_with_foreach_pair_cb */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_foreach_with_foreach_pair_data *data;
+	Dee_ssize_t result;
+	DREF DeeTupleObject *pair;
+	data = (struct default_foreach_with_foreach_pair_data *)arg;
+	pair = DeeTuple_NewUninitializedPair();
+	if unlikely(!pair)
+		goto err;
+	pair->t_elem[0] = key;   /* Symbolic reference */
+	pair->t_elem[1] = value; /* Symbolic reference */
+	result = (*data->dfwfp_cb)(data->dfwfp_arg, (DeeObject *)pair);
+	DeeTuple_DecrefSymbolic((DREF DeeObject *)pair);
+	return result;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_foreach_with_foreach_pair_cb */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_operator_foreach__with__seq_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
 	struct default_foreach_with_foreach_pair_data data;
@@ -886,6 +901,14 @@ err_size:
 	Dee_Decref(size);
 err:
 	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default__seq_operator_foreach__with__map_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
+	struct default_foreach_with_foreach_pair_data data;
+	data.dfwfp_cb  = cb;
+	data.dfwfp_arg = arg;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, &default_foreach_with_foreach_pair_cb, &data);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -14511,14 +14534,10 @@ err:
 
 #ifndef DEFINED_default_set_foreach_unique_cb
 #define DEFINED_default_set_foreach_unique_cb
-struct default_set_foreach_unique_cb_data {
-	Dee_foreach_t dsfucd_cb;  /* [1..1] user-defined callback */
-	void         *dsfucd_arg; /* [?..?] Cookie for `dsfucd_cb' */
-};
-
 struct default_set_foreach_unique_data {
-	struct Dee_simple_hashset                 dsfud_encountered; /* Set of objects already encountered. */
-	struct default_set_foreach_unique_cb_data dsfud_cb;          /* Callback data */
+	struct Dee_simple_hashset dsfud_encountered; /* Set of objects already encountered. */
+	Dee_foreach_t             dsfud_cb;          /* [1..1] user-defined callback */
+	void                     *dsfud_arg;         /* [?..?] Cookie for `dsfud_cb' */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -14528,7 +14547,7 @@ default_set_foreach_unique_cb(void *arg, DeeObject *item) {
 	data = (struct default_set_foreach_unique_data *)arg;
 	insert_status = Dee_simple_hashset_insert(&data->dsfud_encountered, item);
 	if likely(insert_status > 0)
-		return (*data->dsfud_cb.dsfucd_cb)(data->dsfud_cb.dsfucd_arg, item);
+		return (*data->dsfud_cb)(data->dsfud_arg, item);
 	return insert_status; /* error, or already-exists */
 }
 #endif /* !DEFINED_default_set_foreach_unique_cb */
@@ -14536,27 +14555,12 @@ INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__set_operator_foreach__with__seq_operator_foreach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
 	Dee_ssize_t result;
 	struct default_set_foreach_unique_data data;
-	data.dsfud_cb.dsfucd_cb  = cb;
-	data.dsfud_cb.dsfucd_arg = arg;
+	data.dsfud_cb  = cb;
+	data.dsfud_arg = arg;
 	Dee_simple_hashset_init(&data.dsfud_encountered);
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_set_foreach_unique_cb, &data);
 	Dee_simple_hashset_fini(&data.dsfud_encountered);
 	return result;
-}
-
-
-/* set_operator_foreach_pair */
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default__set_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg) {
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_foreach_pair))(self, cb, arg);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default__set_operator_foreach_pair__with__set_operator_foreach(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg) {
-	struct default_foreach_pair_with_foreach_data data;
-	data.dfpwf_cb  = cb;
-	data.dfpwf_arg = arg;
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_foreach))(self, &default_foreach_pair_with_foreach_cb, &data);
 }
 
 
@@ -14595,9 +14599,6 @@ default__set_operator_sizeob__with__set_operator_size(DeeObject *__restrict self
 err:
 	return NULL;
 }
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__set_operator_sizeob__empty(DeeObject *__restrict UNUSED(self)) { return_reference_(DeeInt_Zero); }
 
 
 /* set_operator_size */
@@ -16300,6 +16301,181 @@ default__set_pop_with_default__with__seq_pop(DeeObject *self, DeeObject *default
 	return result;
 err:
 	return NULL;
+}
+
+
+/* map_operator_iter */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__map_operator_iter(DeeObject *__restrict self) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_iter))(self);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__map_operator_iter__with_callattr___map_iter__(DeeObject *__restrict self) {
+	return DeeObject_CallAttr(self, (DeeObject *)&str___map_iter__, 0, NULL);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__map_operator_iter__with_callobjectcache___map_iter__(DeeObject *__restrict self) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__map_operator_iter__with_callobjectcache___map_iter__(Dee_TYPE(self), self);
+#else /* __OPTIMIZE_SIZE__ */
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_iter__, 1, &self);
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__map_operator_iter__unsupported(DeeObject *__restrict self) {
+	err_map_unsupportedf(self, "operator iter()");
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__map_operator_iter__with__seq_operator_iter(DeeObject *__restrict self) {
+	DREF DeeObject *iter;
+	DeeTypeObject *itertyp;
+	DREF DistinctMappingIterator *result;
+	iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter))(self);
+	if unlikely(!iter)
+		goto err;
+	result = DeeGCObject_MALLOC(DistinctMappingIterator);
+	if unlikely(!result)
+		goto err_iter;
+	itertyp                 = Dee_TYPE(iter);
+	result->dmi_tp_nextpair = DeeType_RequireNativeOperator(itertyp, nextpair);
+	result->dmi_iter        = iter; /* Inherit reference */
+	Dee_simple_hashset_with_lock_init(&result->dmi_encountered);
+	DeeObject_Init(result, &DistinctMappingIterator_Type);
+	return DeeGC_Track((DREF DeeObject *)result);
+err_iter:
+	Dee_Decref(iter);
+err:
+	return NULL;
+}
+
+
+/* map_operator_foreach_pair */
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default__map_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, cb, arg);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default__map_operator_foreach_pair__with__map_operator_iter(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg) {
+	Dee_ssize_t result;
+	DREF DeeObject *iter;
+	iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_iter))(self);
+	if unlikely(!iter)
+		goto err;
+	result = DeeIterator_ForeachPair(iter, cb, arg);
+	Dee_Decref_likely(iter);
+	return result;
+err:
+	return -1;
+}
+
+#ifndef DEFINED_default_map_foreach_pair_unique_cb
+#define DEFINED_default_map_foreach_pair_unique_cb
+struct default_map_foreach_pair_unique_data {
+	struct Dee_simple_hashset dmfpud_encountered; /* Set of keys already encountered. */
+	Dee_foreach_pair_t        dmfpud_cb;          /* [1..1] user-defined callback */
+	void                     *dmfpud_arg;         /* [?..?] Cookie for `dmfpud_cb' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_foreach_pair_unique_cb(void *arg, DeeObject *key, DeeObject *value) {
+	int insert_status;
+	struct default_map_foreach_pair_unique_data *data;
+	data = (struct default_map_foreach_pair_unique_data *)arg;
+	insert_status = Dee_simple_hashset_insert(&data->dmfpud_encountered, key);
+	if likely(insert_status > 0)
+		return (*data->dmfpud_cb)(data->dmfpud_arg, key, value);
+	return insert_status; /* error, or already-exists */
+}
+#endif /* !DEFINED_default_map_foreach_pair_unique_cb */
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default__map_operator_foreach_pair__with__seq_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg) {
+	Dee_ssize_t result;
+	struct default_map_foreach_pair_unique_data data;
+	data.dmfpud_cb  = cb;
+	data.dmfpud_arg = arg;
+	Dee_simple_hashset_init(&data.dmfpud_encountered);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach_pair))(self, &default_map_foreach_pair_unique_cb, &data);
+	Dee_simple_hashset_fini(&data.dmfpud_encountered);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default__map_operator_foreach_pair__with__map_enumerate(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg) {
+	struct default_foreach_pair_with_map_enumerate_data data;
+	data.dfpwme_cb  = cb;
+	data.dfpwme_arg = arg;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_foreach_pair_with_map_enumerate_cb, &data);
+}
+
+
+/* map_operator_sizeob */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__map_operator_sizeob(DeeObject *__restrict self) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_sizeob))(self);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__map_operator_sizeob__with_callattr___map_size__(DeeObject *__restrict self) {
+	return DeeObject_CallAttr(self, (DeeObject *)&str___map_size__, 0, NULL);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__map_operator_sizeob__with_callobjectcache___map_size__(DeeObject *__restrict self) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__map_operator_sizeob__with_callobjectcache___map_size__(Dee_TYPE(self), self);
+#else /* __OPTIMIZE_SIZE__ */
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_size__, 1, &self);
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__map_operator_sizeob__unsupported(DeeObject *__restrict self) {
+	err_map_unsupportedf(self, "operator size()");
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__map_operator_sizeob__with__map_operator_size(DeeObject *__restrict self) {
+	size_t mapsize = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_size))(self);
+	if unlikely(mapsize == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(mapsize);
+err:
+	return NULL;
+}
+
+
+/* map_operator_size */
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+default__map_operator_size(DeeObject *__restrict self) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_size))(self);
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+default__map_operator_size__unsupported(DeeObject *__restrict self) {
+	return (size_t)err_map_unsupportedf(self, "operator size()");
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+default__map_operator_size__with__map_operator_sizeob(DeeObject *__restrict self) {
+	DREF DeeObject *sizeob;
+	sizeob = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_sizeob))(self);
+	if unlikely(!sizeob)
+		goto err;
+	return DeeObject_AsDirectSizeInherited(sizeob);
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+default__map_operator_size__with__map_operator_foreach_pair(DeeObject *__restrict self) {
+	return (size_t)(*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, &default_seq_size_with_foreach_pair_cb, NULL);
 }
 
 
@@ -18105,13 +18281,13 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__map_operator_compare_eq__with__set_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs) {
+default__map_operator_compare_eq__with__map_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs) {
 	size_t rhs_size;
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs; /* Important: must treat "rhs" as a mapping for this compare! */
 	data.mc_lfr_rtrygetitem = DeeType_RequireMethodHint(Dee_TYPE(rhs), map_operator_trygetitem);
-	contains_status = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_foreach_pair))(lhs, &map_compare__lhs_foreach__rhs__cb, &data);
+	contains_status = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_foreach_pair))(lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
@@ -18253,13 +18429,13 @@ default__map_operator_lo__with__map_operator_ge(DeeObject *lhs, DeeObject *rhs) 
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__map_operator_lo__with__set_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs) {
+default__map_operator_lo__with__map_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs) {
 	size_t rhs_size;
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
 	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
-	contains_status = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_foreach_pair))(lhs, &map_compare__lhs_foreach__rhs__cb, &data);
+	contains_status = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_foreach_pair))(lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
@@ -18310,12 +18486,12 @@ default__map_operator_le__with__map_operator_gr(DeeObject *lhs, DeeObject *rhs) 
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__map_operator_le__with__set_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs) {
+default__map_operator_le__with__map_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs) {
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
 	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
-	contains_status = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_foreach_pair))(lhs, &map_compare__lhs_foreach__rhs__cb, &data);
+	contains_status = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_foreach_pair))(lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
@@ -18361,12 +18537,12 @@ default__map_operator_gr__with__map_operator_le(DeeObject *lhs, DeeObject *rhs) 
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__map_operator_gr__with__set_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs) {
+default__map_operator_gr__with__map_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs) {
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
 	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
-	contains_status = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_foreach_pair))(lhs, &map_compare__lhs_foreach__rhs__cb, &data);
+	contains_status = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_foreach_pair))(lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
@@ -18412,13 +18588,13 @@ default__map_operator_ge__with__map_operator_lo(DeeObject *lhs, DeeObject *rhs) 
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__map_operator_ge__with__set_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs) {
+default__map_operator_ge__with__map_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs) {
 	size_t rhs_size;
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
 	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
-	contains_status = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_foreach_pair))(lhs, &map_compare__lhs_foreach__rhs__cb, &data);
+	contains_status = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_foreach_pair))(lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
@@ -18752,7 +18928,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__map_operator_inplace_and__with__set_operator_foreach_pair__and__map_removekeys(DREF DeeObject **__restrict p_self, DeeObject *keys) {
+default__map_operator_inplace_and__with__map_operator_foreach_pair__and__map_removekeys(DREF DeeObject **__restrict p_self, DeeObject *keys) {
 	int result;
 	DREF DeeObject *a_keys;
 	DREF DeeObject *a_keys_without_b_proxy;
@@ -18837,7 +19013,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__map_operator_inplace_xor__with__set_operator_foreach_pair__and__map_update__and__map_removekeys(DREF DeeObject **__restrict p_self, DeeObject *rhs) {
+default__map_operator_inplace_xor__with__map_operator_foreach_pair__and__map_update__and__map_removekeys(DREF DeeObject **__restrict p_self, DeeObject *rhs) {
 	/* >> a ^= b
 	 * <=>
 	 * >> local a_keys = (a as Mapping).keys;
@@ -21607,6 +21783,18 @@ tdefault__set_pop__with_callobjectcache___set_pop__(DeeTypeObject *tp_self, DeeO
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tdefault__set_pop_with_default__with_callobjectcache___set_pop__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *default_) {
 	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___set_pop__, self, 1, &default_);
+}
+
+/* map_operator_iter */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+tdefault__map_operator_iter__with_callobjectcache___map_iter__(DeeTypeObject *tp_self, DeeObject *self) {
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_iter__, 1, &self);
+}
+
+/* map_operator_sizeob */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+tdefault__map_operator_sizeob__with_callobjectcache___map_size__(DeeTypeObject *tp_self, DeeObject *self) {
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_size__, 1, &self);
 }
 
 /* map_operator_getitem */

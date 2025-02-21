@@ -19,26 +19,26 @@
  */
 
 /************************************************************************/
-/* deemon.Set.operator size()                                           */
+/* deemon.Mapping.operator size()                                       */
 /************************************************************************/
-__set_size__()->?Dint {
-	if (DeeArg_Unpack(argc, argv, ":__set_size__"))
+__map_size__()->?Dint {
+	if (DeeArg_Unpack(argc, argv, ":__map_size__"))
 		goto err;
-	return CALL_DEPENDENCY(set_operator_sizeob, self);
+	return CALL_DEPENDENCY(map_operator_sizeob, self);
 err:
 	return NULL;
 }
 
-[[operator(Set.OPERATOR_SIZE: tp_seq->tp_sizeob)]] /* TODO: Allow hint init from Mapping, but not operator loading into Mapping */
+[[operator(Mapping.OPERATOR_SIZE: tp_seq->tp_sizeob)]] /* TODO: Allow operator init for Set, but not method hint init */
 [[wunused]] DREF DeeObject *
-__set_size__.set_operator_sizeob([[nonnull]] DeeObject *__restrict self)
+__map_size__.map_operator_sizeob([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
 %{$empty = "default__seq_operator_sizeob__empty"}
-%{using set_operator_size: {
-	size_t setsize = CALL_DEPENDENCY(set_operator_size, self);
-	if unlikely(setsize == (size_t)-1)
+%{using map_operator_size: {
+	size_t mapsize = CALL_DEPENDENCY(map_operator_size, self);
+	if unlikely(mapsize == (size_t)-1)
 		goto err;
-	return DeeInt_NewSize(setsize);
+	return DeeInt_NewSize(mapsize);
 err:
 	return NULL;
 }} {
@@ -46,47 +46,40 @@ err:
 }
 
 
-[[operator(Set.OPERATOR_SIZE: tp_seq->tp_size)]] /* TODO: Allow hint init from Mapping, but not operator loading into Mapping */
+[[operator(Mapping.OPERATOR_SIZE: tp_seq->tp_size)]] /* TODO: Allow operator init for Set, but not method hint init */
 [[wunused]] size_t
-__set_size__.set_operator_size([[nonnull]] DeeObject *__restrict self)
+__map_size__.map_operator_size([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
 %{$empty = "default__seq_operator_size__empty"}
-%{$with__set_operator_foreach = [[prefix(DEFINE_default_seq_size_with_foreach_cb)]] {
-	return (size_t)CALL_DEPENDENCY(set_operator_foreach, self, &default_seq_size_with_foreach_cb, NULL);
+%{$with__map_operator_foreach_pair = [[prefix(DEFINE_default_seq_size_with_foreach_pair_cb)]] {
+	return (size_t)CALL_DEPENDENCY(map_operator_foreach_pair, self, &default_seq_size_with_foreach_pair_cb, NULL);
 }}
- %{using set_operator_sizeob: {
+ %{using map_operator_sizeob: {
 	DREF DeeObject *sizeob;
-	sizeob = CALL_DEPENDENCY(set_operator_sizeob, self);
+	sizeob = CALL_DEPENDENCY(map_operator_sizeob, self);
 	if unlikely(!sizeob)
 		goto err;
 	return DeeObject_AsDirectSizeInherited(sizeob);
 err:
 	return (size_t)-1;
-}} = $with__set_operator_sizeob;
+}} = $with__map_operator_sizeob;
 
 
-set_operator_sizeob = {
-	DeeMH_set_operator_size_t set_operator_size;
-	DeeMH_map_operator_sizeob_t map_operator_sizeob = REQUIRE_NODEFAULT(map_operator_sizeob);
-	if (map_operator_sizeob)
-		return map_operator_sizeob;
-	set_operator_size = REQUIRE(set_operator_size);
-	if (set_operator_size == &default__set_operator_size__empty)
+map_operator_sizeob = {
+	DeeMH_map_operator_size_t map_operator_size = REQUIRE(map_operator_size);
+	if (map_operator_size == &default__map_operator_size__empty)
 		return &$empty;
-	if (set_operator_size)
-		return &$with__set_operator_size;
+	if (map_operator_size)
+		return &$with__map_operator_size;
 };
 
-set_operator_size = {
-	DeeMH_set_operator_foreach_t set_operator_foreach;
-	DeeMH_map_operator_size_t map_operator_size = REQUIRE_NODEFAULT(map_operator_size);
-	if (map_operator_size)
-		return map_operator_size;
-	if (REQUIRE_NODEFAULT(set_operator_sizeob))
-		return &$with__set_operator_sizeob;
-	set_operator_foreach = REQUIRE(set_operator_foreach);
-	if (set_operator_foreach == &default__set_operator_foreach__empty)
+map_operator_size = {
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
+	if (REQUIRE_NODEFAULT(map_operator_sizeob))
+		return &$with__map_operator_sizeob;
+	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
+	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
 		return &$empty;
-	if (set_operator_foreach)
-		return $with__set_operator_foreach;
+	if (map_operator_foreach_pair)
+		return $with__map_operator_foreach_pair;
 };

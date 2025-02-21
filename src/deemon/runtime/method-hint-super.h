@@ -175,7 +175,6 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL super_mh__seq_brange(DeeSuperObject 
 INTDEF WUNUSED NONNULL((1, 2, 5, 6)) int DCALL super_mh__seq_brange_with_key(DeeSuperObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key, size_t result_range[2]);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__set_operator_iter(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL super_mh__set_operator_foreach(DeeSuperObject *__restrict self, Dee_foreach_t cb, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL super_mh__set_operator_foreach_pair(DeeSuperObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__set_operator_sizeob(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL super_mh__set_operator_size(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL super_mh__set_operator_hash(DeeSuperObject *__restrict self);
@@ -204,6 +203,10 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__set_remove(DeeSuperObject *se
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__set_removeall(DeeSuperObject *self, DeeObject *keys);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__set_pop(DeeSuperObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__set_pop_with_default(DeeSuperObject *self, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_operator_iter(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL super_mh__map_operator_foreach_pair(DeeSuperObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_operator_sizeob(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL super_mh__map_operator_size(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__map_operator_getitem(DeeSuperObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__map_operator_trygetitem(DeeSuperObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_operator_getitem_index(DeeSuperObject *self, size_t key);

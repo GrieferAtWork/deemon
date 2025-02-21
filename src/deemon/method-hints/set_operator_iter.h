@@ -30,7 +30,7 @@ err:
 }
 
 
-[[operator([Set, Mapping].OPERATOR_ITER: tp_seq->tp_iter)]]
+[[operator(Set.OPERATOR_ITER: tp_seq->tp_iter)]] /* TODO: Allow hint init from Mapping, but not operator loading into Mapping */
 [[wunused]] DREF DeeObject *
 __set_iter__.set_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
@@ -63,14 +63,10 @@ err:
 %[define(DEFINE_default_set_foreach_unique_cb =
 #ifndef DEFINED_default_set_foreach_unique_cb
 #define DEFINED_default_set_foreach_unique_cb
-struct default_set_foreach_unique_cb_data {
-	Dee_foreach_t dsfucd_cb;  /* [1..1] user-defined callback */
-	void         *dsfucd_arg; /* [?..?] Cookie for `dsfucd_cb' */
-};
-
 struct default_set_foreach_unique_data {
-	struct Dee_simple_hashset                 dsfud_encountered; /* Set of objects already encountered. */
-	struct default_set_foreach_unique_cb_data dsfud_cb;          /* Callback data */
+	struct Dee_simple_hashset dsfud_encountered; /* Set of objects already encountered. */
+	Dee_foreach_t             dsfud_cb;          /* [1..1] user-defined callback */
+	void                     *dsfud_arg;         /* [?..?] Cookie for `dsfud_cb' */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -80,13 +76,14 @@ default_set_foreach_unique_cb(void *arg, DeeObject *item) {
 	data = (struct default_set_foreach_unique_data *)arg;
 	insert_status = Dee_simple_hashset_insert(&data->dsfud_encountered, item);
 	if likely(insert_status > 0)
-		return (*data->dsfud_cb.dsfucd_cb)(data->dsfud_cb.dsfucd_arg, item);
+		return (*data->dsfud_cb)(data->dsfud_arg, item);
 	return insert_status; /* error, or already-exists */
 }
 #endif /* !DEFINED_default_set_foreach_unique_cb */
 )]
 
-[[operator([Set, Mapping].OPERATOR_ITER: tp_seq->tp_foreach)]]
+
+[[operator(Set.OPERATOR_ITER: tp_seq->tp_foreach)]] /* TODO: Allow hint init from Mapping, but not operator loading into Mapping */
 [[wunused]] Dee_ssize_t
 __set_iter__.set_operator_foreach([[nonnull]] DeeObject *__restrict self,
                                   [[nonnull]] Dee_foreach_t cb,
@@ -95,8 +92,8 @@ __set_iter__.set_operator_foreach([[nonnull]] DeeObject *__restrict self,
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_set_foreach_unique_cb)]] {
 	Dee_ssize_t result;
 	struct default_set_foreach_unique_data data;
-	data.dsfud_cb.dsfucd_cb  = cb;
-	data.dsfud_cb.dsfucd_arg = arg;
+	data.dsfud_cb  = cb;
+	data.dsfud_arg = arg;
 	Dee_simple_hashset_init(&data.dsfud_encountered);
 	result = CALL_DEPENDENCY(seq_operator_foreach, self, &default_set_foreach_unique_cb, &data);
 	Dee_simple_hashset_fini(&data.dsfud_encountered);
@@ -116,18 +113,6 @@ err:
 }} = $with__set_operator_iter;
 
 
-[[operator([Set, Mapping].OPERATOR_ITER: tp_seq->tp_foreach_pair)]]
-[[wunused]] Dee_ssize_t
-__set_iter__.set_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
-                                       [[nonnull]] Dee_foreach_pair_t cb,
-                                       void *arg)
-%{$empty = 0}
-%{using set_operator_foreach: [[prefix(DEFINE_default_foreach_pair_with_foreach_cb)]] {
-	struct default_foreach_pair_with_foreach_data data;
-	data.dfpwf_cb  = cb;
-	data.dfpwf_arg = arg;
-	return CALL_DEPENDENCY(set_operator_foreach, self, &default_foreach_pair_with_foreach_cb, &data);
-}} = $with__set_operator_foreach;
 
 set_operator_iter = {
 	DeeMH_seq_operator_iter_t seq_operator_iter = REQUIRE(seq_operator_iter);
@@ -145,12 +130,4 @@ set_operator_foreach = {
 		return &$with__seq_operator_foreach;
 	if (set_operator_iter)
 		return &$with__set_operator_iter;
-};
-
-set_operator_foreach_pair = {
-	DeeMH_set_operator_foreach_t set_operator_foreach = REQUIRE(set_operator_foreach);
-	if (set_operator_foreach == &default__set_operator_foreach__empty)
-		return &$empty;
-	if (set_operator_foreach)
-		return &$with__set_operator_foreach;
 };

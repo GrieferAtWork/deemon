@@ -175,7 +175,6 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_brange_t DCALL mh_select_seq_
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_brange_with_key_t DCALL mh_select_seq_brange_with_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_iter_t DCALL mh_select_set_operator_iter(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_foreach_t DCALL mh_select_set_operator_foreach(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_foreach_pair_t DCALL mh_select_set_operator_foreach_pair(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_sizeob_t DCALL mh_select_set_operator_sizeob(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_size_t DCALL mh_select_set_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_hash_t DCALL mh_select_set_operator_hash(DeeTypeObject *self, DeeTypeObject *orig_type);
@@ -199,6 +198,10 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_remove_t DCALL mh_select_set_
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_removeall_t DCALL mh_select_set_removeall(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_pop_t DCALL mh_select_set_pop(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_pop_with_default_t DCALL mh_select_set_pop_with_default(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_iter_t DCALL mh_select_map_operator_iter(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_foreach_pair_t DCALL mh_select_map_operator_foreach_pair(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_sizeob_t DCALL mh_select_map_operator_sizeob(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_size_t DCALL mh_select_map_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_getitem_t DCALL mh_select_map_operator_getitem(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_trygetitem_t DCALL mh_select_map_operator_trygetitem(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_getitem_index_t DCALL mh_select_map_operator_getitem_index(DeeTypeObject *self, DeeTypeObject *orig_type);

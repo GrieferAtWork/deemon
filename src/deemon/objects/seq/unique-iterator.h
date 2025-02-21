@@ -22,8 +22,8 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/gc.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/util/simple-hashset.h>
 
 #include "../generic-proxy.h"
@@ -33,8 +33,7 @@ DECL_BEGIN
 typedef struct {
 	OBJECT_HEAD /* GC Object */
 	DREF DeeObject                     *di_iter;        /* [1..1][const] Underlying iterator */
-	/* [1..1][const] Callback to load the next item from `di_iter'. */
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *di_tp_next)(DeeObject *self);
+	DeeNO_iter_next_t                   di_tp_next;     /* [1..1][const] Callback to load the next item from `di_iter'. */
 	struct Dee_simple_hashset_with_lock di_encountered; /* Set of objects previously encountered objects */
 } DistinctIterator;
 
@@ -43,8 +42,7 @@ INTDEF DeeTypeObject DistinctIterator_Type;
 typedef struct {
 	OBJECT_HEAD /* GC Object */
 	DREF DeeObject                     *diwk_iter;        /* [1..1][const] Underlying iterator */
-	/* [1..1][const] Callback to load the next item from `diwk_iter'. */
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *diwk_tp_next)(DeeObject *self);
+	DeeNO_iter_next_t                   diwk_tp_next;     /* [1..1][const] Callback to load the next item from `diwk_iter'. */
 	struct Dee_simple_hashset_with_lock diwk_encountered; /* Set of objects previously encountered objects */
 	DREF DeeObject                     *diwk_key;         /* [1..1][const] unique-ness filter keys */
 } DistinctIteratorWithKey;
@@ -57,6 +55,17 @@ typedef struct {
 } DistinctSetWithKey;
 
 INTDEF DeeTypeObject DistinctSetWithKey_Type;
+
+
+
+typedef struct {
+	OBJECT_HEAD /* GC Object */
+	DREF DeeObject                     *dmi_iter;        /* [1..1][const] Underlying iterator */
+	DeeNO_nextpair_t                    dmi_tp_nextpair; /* [1..1][const] Callback to load the next key/value pair from `dmi_iter'. */
+	struct Dee_simple_hashset_with_lock dmi_encountered; /* Set of objects previously encountered keys */
+} DistinctMappingIterator;
+
+INTDEF DeeTypeObject DistinctMappingIterator_Type;
 
 DECL_END
 

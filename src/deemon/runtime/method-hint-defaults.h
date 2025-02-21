@@ -98,6 +98,7 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_operator_foreach__
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_operator_foreach__with__map_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_operator_foreach__with__seq_operator_getitem_index(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_operator_foreach__with__seq_operator_getitem(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_operator_foreach__with__map_enumerate(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
@@ -1512,14 +1513,6 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__set_operator_foreach__
 #define default__set_operator_foreach__empty (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&_DeeNone_rets0_3)
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__set_operator_foreach__with__seq_operator_foreach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 
-/* set_operator_foreach_pair */
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__set_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
-#define default__set_operator_foreach_pair__with_callattr___set_iter__ (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&default__set_operator_foreach_pair__with__set_operator_foreach)
-#define default__set_operator_foreach_pair__with_callobjectcache___set_iter__ (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&default__set_operator_foreach_pair__with__set_operator_foreach)
-#define default__set_operator_foreach_pair__unsupported (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&default__set_operator_foreach_pair__with__set_operator_foreach)
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__set_operator_foreach_pair__with__set_operator_foreach(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
-#define default__set_operator_foreach_pair__empty (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&_DeeNone_rets0_3)
-
 /* set_operator_sizeob */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with_callattr___set_size__(DeeObject *__restrict self);
@@ -1527,7 +1520,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__set_operator_sizeob__with_callobjectcache___set_size__(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__unsupported(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with__set_operator_size(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__empty(DeeObject *__restrict self);
+#define default__set_operator_sizeob__empty (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&default__seq_operator_sizeob__empty)
 
 /* set_operator_size */
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size(DeeObject *__restrict self);
@@ -1535,7 +1528,7 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size(DeeObject *_
 #define default__set_operator_size__with_callobjectcache___set_size__ (*(size_t (DCALL *)(DeeObject *__restrict))&default__set_operator_size__with__set_operator_sizeob)
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size__unsupported(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size__with__set_operator_sizeob(DeeObject *__restrict self);
-#define default__set_operator_size__empty (*(size_t (DCALL *)(DeeObject *__restrict))&_DeeNone_rets0_1)
+#define default__set_operator_size__empty (*(size_t (DCALL *)(DeeObject *__restrict))&default__seq_operator_size__empty)
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size__with__set_operator_foreach(DeeObject *__restrict self);
 
 /* set_operator_hash */
@@ -1789,6 +1782,43 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_pop_with_defau
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_pop_with_default__with__seq_trygetfirst__and__set_remove(DeeObject *self, DeeObject *default_);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_pop_with_default__with__map_popitem(DeeObject *self, DeeObject *default_);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_pop_with_default__with__seq_pop(DeeObject *self, DeeObject *default_);
+
+/* map_operator_iter */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_operator_iter(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_operator_iter__with_callattr___map_iter__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_operator_iter__with_callobjectcache___map_iter__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__map_operator_iter__with_callobjectcache___map_iter__(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_operator_iter__unsupported(DeeObject *__restrict self);
+#define default__map_operator_iter__empty (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&default__seq_operator_iter__empty)
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_operator_iter__with__seq_operator_iter(DeeObject *__restrict self);
+
+/* map_operator_foreach_pair */
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
+#define default__map_operator_foreach_pair__with_callattr___map_iter__ (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&default__map_operator_foreach_pair__with__map_operator_iter)
+#define default__map_operator_foreach_pair__with_callobjectcache___map_iter__ (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&default__map_operator_foreach_pair__with__map_operator_iter)
+#define default__map_operator_foreach_pair__unsupported (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&default__map_operator_foreach_pair__with__map_operator_iter)
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_operator_foreach_pair__with__map_operator_iter(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
+#define default__map_operator_foreach_pair__empty (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&_DeeNone_rets0_3)
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_operator_foreach_pair__with__seq_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_operator_foreach_pair__with__map_enumerate(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
+
+/* map_operator_sizeob */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_operator_sizeob(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_operator_sizeob__with_callattr___map_size__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_operator_sizeob__with_callobjectcache___map_size__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__map_operator_sizeob__with_callobjectcache___map_size__(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_operator_sizeob__unsupported(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_operator_sizeob__with__map_operator_size(DeeObject *__restrict self);
+#define default__map_operator_sizeob__empty (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&default__seq_operator_sizeob__empty)
+
+/* map_operator_size */
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__map_operator_size(DeeObject *__restrict self);
+#define default__map_operator_size__with_callattr___map_size__ (*(size_t (DCALL *)(DeeObject *__restrict))&default__map_operator_size__with__map_operator_sizeob)
+#define default__map_operator_size__with_callobjectcache___map_size__ (*(size_t (DCALL *)(DeeObject *__restrict))&default__map_operator_size__with__map_operator_sizeob)
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__map_operator_size__unsupported(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__map_operator_size__with__map_operator_sizeob(DeeObject *__restrict self);
+#define default__map_operator_size__empty (*(size_t (DCALL *)(DeeObject *__restrict))&default__seq_operator_size__empty)
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__map_operator_size__with__map_operator_foreach_pair(DeeObject *__restrict self);
 
 /* map_operator_getitem */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_getitem(DeeObject *self, DeeObject *key);
@@ -2075,7 +2105,7 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_enumerate__with_ca
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tdefault__map_enumerate__with_callobjectcache___map_enumerate__(DeeTypeObject *tp_self, DeeObject *self, Dee_seq_enumerate_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_enumerate__unsupported(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_enumerate__with__map_enumerate_range(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);
-#define default__map_enumerate__empty (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&default__set_operator_foreach_pair__empty)
+#define default__map_enumerate__empty (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&default__map_operator_foreach_pair__empty)
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_enumerate__with__map_iterkeys__and__map_operator_trygetitem(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);
 
 /* map_enumerate_range */
@@ -2096,7 +2126,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_compare_eq__unsup
 #define default__map_operator_compare_eq__empty (*(int (DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_compare_eq__empty)
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_compare_eq__with__map_operator_eq(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_compare_eq__with__map_operator_ne(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_compare_eq__with__set_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_compare_eq__with__map_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs);
 
 /* map_operator_trycompare_eq */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
@@ -2132,7 +2162,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__map_operator_l
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_lo__unsupported(DeeObject *lhs, DeeObject *rhs);
 #define default__map_operator_lo__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__set_operator_lo__empty)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_lo__with__map_operator_ge(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_lo__with__set_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_lo__with__map_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs);
 
 /* map_operator_le */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_le(DeeObject *lhs, DeeObject *rhs);
@@ -2142,7 +2172,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__map_operator_l
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_le__unsupported(DeeObject *lhs, DeeObject *rhs);
 #define default__map_operator_le__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__set_operator_le__empty)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_le__with__map_operator_gr(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_le__with__set_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_le__with__map_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs);
 
 /* map_operator_gr */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_gr(DeeObject *lhs, DeeObject *rhs);
@@ -2152,7 +2182,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__map_operator_g
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_gr__unsupported(DeeObject *lhs, DeeObject *rhs);
 #define default__map_operator_gr__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__set_operator_gr__empty)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_gr__with__map_operator_le(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_gr__with__set_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_gr__with__map_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs);
 
 /* map_operator_ge */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_ge(DeeObject *lhs, DeeObject *rhs);
@@ -2162,7 +2192,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__map_operator_g
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_ge__unsupported(DeeObject *lhs, DeeObject *rhs);
 #define default__map_operator_ge__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__set_operator_ge__empty)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_ge__with__map_operator_lo(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_ge__with__set_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_ge__with__map_operator_foreach_pair(DeeObject *lhs, DeeObject *rhs);
 
 /* map_operator_add */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_add(DeeObject *lhs, DeeObject *rhs);
@@ -2225,7 +2255,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_inplace_and__with
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__map_operator_inplace_and__with_callobjectcache___map_inplace_and__(DeeTypeObject *tp_self, DREF DeeObject **p_self, DeeObject *keys);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_inplace_and__unsupported(DREF DeeObject **__restrict p_self, DeeObject *keys);
 #define default__map_operator_inplace_and__empty (*(int (DCALL *)(DREF DeeObject **__restrict, DeeObject *))&default__map_operator_inplace_and__unsupported)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_inplace_and__with__set_operator_foreach_pair__and__map_removekeys(DREF DeeObject **__restrict p_self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_inplace_and__with__map_operator_foreach_pair__and__map_removekeys(DREF DeeObject **__restrict p_self, DeeObject *keys);
 
 /* map_operator_inplace_xor */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_inplace_xor(DREF DeeObject **__restrict p_self, DeeObject *rhs);
@@ -2234,7 +2264,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_inplace_xor__with
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__map_operator_inplace_xor__with_callobjectcache___map_inplace_xor__(DeeTypeObject *tp_self, DREF DeeObject **p_self, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_inplace_xor__unsupported(DREF DeeObject **__restrict p_self, DeeObject *rhs);
 #define default__map_operator_inplace_xor__empty (*(int (DCALL *)(DREF DeeObject **__restrict, DeeObject *))&default__map_operator_inplace_xor__unsupported)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_inplace_xor__with__set_operator_foreach_pair__and__map_update__and__map_removekeys(DREF DeeObject **__restrict p_self, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_inplace_xor__with__map_operator_foreach_pair__and__map_update__and__map_removekeys(DREF DeeObject **__restrict p_self, DeeObject *rhs);
 
 /* map_frozen */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_frozen(DeeObject *__restrict self);
@@ -2244,7 +2274,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_frozen__with_call
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__map_frozen__with_callobjectcache___map_frozen__(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_frozen__unsupported(DeeObject *__restrict self);
 #define default__map_frozen__empty (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeObject_NewRef)
-#define default__map_frozen__with__set_operator_foreach_pair (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeRoDict_FromSequence)
+#define default__map_frozen__with__map_operator_foreach_pair (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeRoDict_FromSequence)
 
 /* map_setold */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__map_setold__with_callattr_setold(DeeObject *self, DeeObject *key, DeeObject *value);

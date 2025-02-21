@@ -1617,6 +1617,28 @@ err:
 	return NULL;
 }
 
+PUBLIC_CONST char const DeeMA___map_iter___name[] = "__map_iter__";
+PUBLIC_CONST char const DeeMA___map_iter___doc[] = "->?DIterator";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	if (DeeArg_Unpack(argc, argv, ":__map_iter__"))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_iter))(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_size___name[] = "__map_size__";
+PUBLIC_CONST char const DeeMA___map_size___doc[] = "->?Dint";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	if (DeeArg_Unpack(argc, argv, ":__map_size__"))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_sizeob))(self);
+err:
+	return NULL;
+}
+
 PUBLIC_CONST char const DeeMA___map_getitem___name[] = "__map_getitem__";
 PUBLIC_CONST char const DeeMA___map_getitem___doc[] = "(key)->";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL

@@ -438,7 +438,7 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_iter[6] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_iter, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_iter, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_iter, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_iter, NULL, Dee_SEQCLASS_MAP),
+	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_iter, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_inherit_as tpconst oh_inherit_iter[2] = {
@@ -450,12 +450,11 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_foreach[3] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__foreach__with__foreach_pair, Dee_TNO_foreach_pair, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_foreach[6] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_foreach[5] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_foreach, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_foreach, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_inherit_as tpconst oh_inherit_foreach[2] = {
@@ -467,12 +466,11 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_foreach_pair[3] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__foreach_pair__with__iter, Dee_TNO_iter, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_foreach_pair[7] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_foreach_pair[6] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach_pair, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach_pair, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach_pair, NULL, Dee_SEQCLASS_MAP),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_foreach_pair, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_foreach_pair, NULL, Dee_SEQCLASS_MAP),
+	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_foreach_pair, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_enumerate, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
@@ -489,7 +487,7 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_sizeob[6] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_sizeob, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_sizeob, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_sizeob, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_sizeob, NULL, Dee_SEQCLASS_MAP),
+	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_sizeob, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_size[2] = {
@@ -501,7 +499,7 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_size[6] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_size, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_size, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_size, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_size, NULL, Dee_SEQCLASS_MAP),
+	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_size, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_size_fast[2] = {

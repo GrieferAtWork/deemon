@@ -30,15 +30,15 @@ __map_frozen__->?O;
 __map_frozen__.map_frozen([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$empty = "DeeObject_NewRef"}
-%{$with__set_operator_foreach_pair = "DeeRoDict_FromSequence"} {
+%{$with__map_operator_foreach_pair = "DeeRoDict_FromSequence"} {
 	return LOCAL_GETATTR(self);
 }
 
 
 map_frozen = {
-	DeeMH_set_operator_foreach_pair_t set_operator_foreach_pair = REQUIRE(set_operator_foreach_pair);
-	if (set_operator_foreach_pair == &default__set_operator_foreach_pair__empty)
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
+	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
 		return &$empty;
-	if (set_operator_foreach_pair)
-		return &$with__set_operator_foreach_pair;
+	if (map_operator_foreach_pair)
+		return &$with__map_operator_foreach_pair;
 };

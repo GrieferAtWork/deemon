@@ -48,14 +48,14 @@ for (local lo, ge: {
 	print('	DREF DeeObject *result = CALL_DEPENDENCY(map_operator_', ge, ', lhs, rhs);');
 	print('	return xinvoke_not(result);');
 	print('}}');
-	print('%{$with__set_operator_foreach_pair = {');
+	print('%{$with__map_operator_foreach_pair = {');
 if (lo in ["lo", "ge"]) {
 	print('	size_t rhs_size;');
 	print('	Dee_ssize_t contains_status;');
 	print('	struct map_compare__lhs_foreach__rhs__data data;');
 	print('	data.mc_lfr_rhs         = rhs;');
 	print('	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);');
-	print('	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);');
+	print('	contains_status = CALL_DEPENDENCY(map_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);');
 	print('	if unlikely(contains_status == -1)');
 	print('		goto err;');
 	print('	if (contains_status == -2)');
@@ -75,7 +75,7 @@ if (lo in ["lo", "ge"]) {
 	print('	struct map_compare__lhs_foreach__rhs__data data;');
 	print('	data.mc_lfr_rhs         = rhs;');
 	print('	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);');
-	print('	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);');
+	print('	contains_status = CALL_DEPENDENCY(map_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);');
 	print('	if unlikely(contains_status == -1)');
 	print('		goto err;');
 	print('	if (contains_status == -2)');
@@ -91,14 +91,14 @@ if (lo in ["lo", "ge"]) {
 	print('}');
 	print;
 	print('map_operator_', lo, ' = {');
-	print('	DeeMH_set_operator_foreach_pair_t set_operator_foreach_pair;');
+	print('	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;');
 	print('	if (REQUIRE_NODEFAULT(map_operator_', ge, '))');
 	print('		return &$with__map_operator_', ge, ';');
-	print('	set_operator_foreach_pair = REQUIRE(set_operator_foreach_pair);');
-	print('	if (set_operator_foreach_pair == &default__set_operator_foreach_pair__empty)');
+	print('	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);');
+	print('	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)');
 	print('		return &$empty;');
-	print('	if (set_operator_foreach_pair)');
-	print('		return &$with__set_operator_foreach_pair;');
+	print('	if (map_operator_foreach_pair)');
+	print('		return &$with__map_operator_foreach_pair;');
 	print('};');
 	print;
 	print;
@@ -123,13 +123,13 @@ __map_lo__.map_operator_lo([[nonnull]] DeeObject *lhs,
 	DREF DeeObject *result = CALL_DEPENDENCY(map_operator_ge, lhs, rhs);
 	return xinvoke_not(result);
 }}
-%{$with__set_operator_foreach_pair = {
+%{$with__map_operator_foreach_pair = {
 	size_t rhs_size;
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
 	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
-	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
+	contains_status = CALL_DEPENDENCY(map_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
@@ -149,14 +149,14 @@ err:
 }
 
 map_operator_lo = {
-	DeeMH_set_operator_foreach_pair_t set_operator_foreach_pair;
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
 	if (REQUIRE_NODEFAULT(map_operator_ge))
 		return &$with__map_operator_ge;
-	set_operator_foreach_pair = REQUIRE(set_operator_foreach_pair);
-	if (set_operator_foreach_pair == &default__set_operator_foreach_pair__empty)
+	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
+	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
 		return &$empty;
-	if (set_operator_foreach_pair)
-		return &$with__set_operator_foreach_pair;
+	if (map_operator_foreach_pair)
+		return &$with__map_operator_foreach_pair;
 };
 
 
@@ -179,12 +179,12 @@ __map_le__.map_operator_le([[nonnull]] DeeObject *lhs,
 	DREF DeeObject *result = CALL_DEPENDENCY(map_operator_gr, lhs, rhs);
 	return xinvoke_not(result);
 }}
-%{$with__set_operator_foreach_pair = {
+%{$with__map_operator_foreach_pair = {
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
 	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
-	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
+	contains_status = CALL_DEPENDENCY(map_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
@@ -199,14 +199,14 @@ err:
 }
 
 map_operator_le = {
-	DeeMH_set_operator_foreach_pair_t set_operator_foreach_pair;
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
 	if (REQUIRE_NODEFAULT(map_operator_gr))
 		return &$with__map_operator_gr;
-	set_operator_foreach_pair = REQUIRE(set_operator_foreach_pair);
-	if (set_operator_foreach_pair == &default__set_operator_foreach_pair__empty)
+	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
+	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
 		return &$empty;
-	if (set_operator_foreach_pair)
-		return &$with__set_operator_foreach_pair;
+	if (map_operator_foreach_pair)
+		return &$with__map_operator_foreach_pair;
 };
 
 
@@ -229,12 +229,12 @@ __map_gr__.map_operator_gr([[nonnull]] DeeObject *lhs,
 	DREF DeeObject *result = CALL_DEPENDENCY(map_operator_le, lhs, rhs);
 	return xinvoke_not(result);
 }}
-%{$with__set_operator_foreach_pair = {
+%{$with__map_operator_foreach_pair = {
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
 	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
-	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
+	contains_status = CALL_DEPENDENCY(map_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
@@ -249,14 +249,14 @@ err:
 }
 
 map_operator_gr = {
-	DeeMH_set_operator_foreach_pair_t set_operator_foreach_pair;
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
 	if (REQUIRE_NODEFAULT(map_operator_le))
 		return &$with__map_operator_le;
-	set_operator_foreach_pair = REQUIRE(set_operator_foreach_pair);
-	if (set_operator_foreach_pair == &default__set_operator_foreach_pair__empty)
+	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
+	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
 		return &$empty;
-	if (set_operator_foreach_pair)
-		return &$with__set_operator_foreach_pair;
+	if (map_operator_foreach_pair)
+		return &$with__map_operator_foreach_pair;
 };
 
 
@@ -279,13 +279,13 @@ __map_ge__.map_operator_ge([[nonnull]] DeeObject *lhs,
 	DREF DeeObject *result = CALL_DEPENDENCY(map_operator_lo, lhs, rhs);
 	return xinvoke_not(result);
 }}
-%{$with__set_operator_foreach_pair = {
+%{$with__map_operator_foreach_pair = {
 	size_t rhs_size;
 	Dee_ssize_t contains_status;
 	struct map_compare__lhs_foreach__rhs__data data;
 	data.mc_lfr_rhs         = rhs;
 	data.mc_lfr_rtrygetitem = DeeType_RequireNativeOperator(Dee_TYPE(rhs), trygetitem);
-	contains_status = CALL_DEPENDENCY(set_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
+	contains_status = CALL_DEPENDENCY(map_operator_foreach_pair, lhs, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
@@ -305,14 +305,14 @@ err:
 }
 
 map_operator_ge = {
-	DeeMH_set_operator_foreach_pair_t set_operator_foreach_pair;
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
 	if (REQUIRE_NODEFAULT(map_operator_lo))
 		return &$with__map_operator_lo;
-	set_operator_foreach_pair = REQUIRE(set_operator_foreach_pair);
-	if (set_operator_foreach_pair == &default__set_operator_foreach_pair__empty)
+	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
+	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
 		return &$empty;
-	if (set_operator_foreach_pair)
-		return &$with__set_operator_foreach_pair;
+	if (map_operator_foreach_pair)
+		return &$with__map_operator_foreach_pair;
 };
 /*[[[end]]]*/
 

@@ -227,6 +227,15 @@
 /* For `deemon.Mapping'                                                 */
 /************************************************************************/
 
+/* Need a dedicated "map_operator_iter" (using "set_operator_iter" doesn't work):
+ * >> assert 1 == #({ ("foo", 10), ("foo", 20) } as Mapping);
+ * ^ This would fail because it gets treated as:
+ * >> assert 1 == #({ ("foo", 10), ("foo", 20) } as Set);
+ * ... which actually does evaluate to 2 (because the 2 pairs have a different 2nd item)
+ * For that reason, also need "map_operator_size" and "map_operator_sizeob" */
+%[include("map_operator_iter.h")]
+%[include("map_operator_size.h")]
+
 %[include("map_operator_getitem.h")]
 %[include("map_operator_delitem.h")]
 %[include("map_operator_setitem.h")]

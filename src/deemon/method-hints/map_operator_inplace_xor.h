@@ -53,7 +53,7 @@ err:
 	return -1;
 })}
 %{$empty = "default__map_operator_inplace_xor__unsupported"}
-%{$with__set_operator_foreach_pair__and__map_update__and__map_removekeys = {
+%{$with__map_operator_foreach_pair__and__map_update__and__map_removekeys = {
 	/* >> a ^= b
 	 * <=>
 	 * >> local a_keys = (a as Mapping).keys;
@@ -115,9 +115,9 @@ err:
 }
 
 map_operator_inplace_xor = {
-	if ((REQUIRE_ANY(set_operator_foreach_pair) != &default__set_operator_foreach_pair__unsupported) &&
+	if ((REQUIRE_ANY(map_operator_foreach_pair) != &default__map_operator_foreach_pair__unsupported) &&
 	    (REQUIRE(map_removekeys) && REQUIRE_ANY(map_update)) ||
 		(REQUIRE(map_update) && REQUIRE_ANY(map_removekeys)))
-		return &$with__set_operator_foreach_pair__and__map_update__and__map_removekeys;
+		return &$with__map_operator_foreach_pair__and__map_update__and__map_removekeys;
 };
 
