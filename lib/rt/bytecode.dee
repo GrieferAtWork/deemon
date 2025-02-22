@@ -446,16 +446,3 @@ function code(data: {int...}): Bytes {
 	}
 	return w.string.bytes();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

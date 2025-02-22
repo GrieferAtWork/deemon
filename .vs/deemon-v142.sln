@@ -300,6 +300,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gen", "gen", "{2360741E-FB4
 		..\lib\rt\gen\string.dee = ..\lib\rt\gen\string.dee
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hints", "hints", "{2360741E-FB49-40D4-B684-00C103B84A53}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\rt\hints\method.dee = ..\lib\rt\hints\method.dee
+		..\lib\rt\hints\operator.dee = ..\lib\rt\hints\operator.dee
+	EndProjectSection
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "util", "util", "{2360741E-FB49-40D4-B684-00000000F424}"
 	ProjectSection(SolutionItems) = preProject
 		..\util\deemon.xml = ..\util\deemon.xml
@@ -388,6 +394,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\deemon-int-tostr.dee = ..\util\test\deemon-int-tostr.dee
 		..\util\test\deemon-java-lambda.dee = ..\util\test\deemon-java-lambda.dee
 		..\util\test\deemon-kwcall-reference-loophole.dee = ..\util\test\deemon-kwcall-reference-loophole.dee
+		..\util\test\deemon-list-remove.dee = ..\util\test\deemon-list-remove.dee
 		..\util\test\deemon-list-setrange.dee = ..\util\test\deemon-list-setrange.dee
 		..\util\test\deemon-list-sort.dee = ..\util\test\deemon-list-sort.dee
 		..\util\test\deemon-mapping-byattr.dee = ..\util\test\deemon-mapping-byattr.dee
@@ -436,6 +443,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\deemon-string.dee = ..\util\test\deemon-string.dee
 		..\util\test\deemon-type-mro.dee = ..\util\test\deemon-type-mro.dee
 		..\util\test\deemon-type-newinstance.dee = ..\util\test\deemon-type-newinstance.dee
+		..\util\test\deemon-unified-method-hints.dee = ..\util\test\deemon-unified-method-hints.dee
 		..\util\test\deemon-yield-function-ddi-symbols.dee = ..\util\test\deemon-yield-function-ddi-symbols.dee
 		..\util\test\deemon-yield-function-manual-stack-push.dee = ..\util\test\deemon-yield-function-manual-stack-push.dee
 		..\util\test\deemon-yield-function-with-kwds.dee = ..\util\test\deemon-yield-function-with-kwds.dee
@@ -823,6 +831,7 @@ Global
 		{2360741E-FB49-40D4-B684-4301F0D08DF1} = {2360741E-FB49-40D4-B684-00182015F605}
 		{2360741E-FB49-40D4-B684-591924C4CFA6} = {2360741E-FB49-40D4-B684-4301F0D08DF1}
 		{2360741E-FB49-40D4-B684-0003040EE286} = {2360741E-FB49-40D4-B684-0000003040E4}
+		{2360741E-FB49-40D4-B684-00C103B84A53} = {2360741E-FB49-40D4-B684-0000003040E4}
 		{2360741E-FB49-40D4-B684-00F42E7A6DD3} = {2360741E-FB49-40D4-B684-00000000F424}
 		{2360741E-FB49-40D4-B684-00007A1732AC} = {2360741E-FB49-40D4-B684-00000000F424}
 		{2360741E-FB49-40D4-B684-00000F42E6DC} = {2360741E-FB49-40D4-B684-00000000F424}

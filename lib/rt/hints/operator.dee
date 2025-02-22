@@ -1,0 +1,146 @@
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+@@Map TypeNativeOperator to their internal ID.
+@@e.g. @(TNO_BYNAME["call"] == 7)
+global final TNO_BYNAME: {string: int} = {
+/*[[[deemon (print_TNO_BYNAME from "....src.deemon.method-hints.method-hints")();]]]*/
+	"assign": 0,
+	"move_assign": 1,
+	"str": 2,
+	"print": 3,
+	"repr": 4,
+	"printrepr": 5,
+	"bool": 6,
+	"call": 7,
+	"call_kw": 8,
+	"iter_next": 9,
+	"nextpair": 10,
+	"nextkey": 11,
+	"nextvalue": 12,
+	"advance": 13,
+	"int": 14,
+	"int32": 15,
+	"int64": 16,
+	"double": 17,
+	"hash": 18,
+	"compare_eq": 19,
+	"compare": 20,
+	"trycompare_eq": 21,
+	"eq": 22,
+	"ne": 23,
+	"lo": 24,
+	"le": 25,
+	"gr": 26,
+	"ge": 27,
+	"iter": 28,
+	"foreach": 29,
+	"foreach_pair": 30,
+	"sizeob": 31,
+	"size": 32,
+	"size_fast": 33,
+	"contains": 34,
+	"getitem": 35,
+	"trygetitem": 36,
+	"getitem_index_fast": 37,
+	"getitem_index": 38,
+	"trygetitem_index": 39,
+	"getitem_string_hash": 40,
+	"trygetitem_string_hash": 41,
+	"getitem_string_len_hash": 42,
+	"trygetitem_string_len_hash": 43,
+	"bounditem": 44,
+	"bounditem_index": 45,
+	"bounditem_string_hash": 46,
+	"bounditem_string_len_hash": 47,
+	"hasitem": 48,
+	"hasitem_index": 49,
+	"hasitem_string_hash": 50,
+	"hasitem_string_len_hash": 51,
+	"delitem": 52,
+	"delitem_index": 53,
+	"delitem_string_hash": 54,
+	"delitem_string_len_hash": 55,
+	"setitem": 56,
+	"setitem_index": 57,
+	"setitem_string_hash": 58,
+	"setitem_string_len_hash": 59,
+	"getrange": 60,
+	"getrange_index": 61,
+	"getrange_index_n": 62,
+	"delrange": 63,
+	"delrange_index": 64,
+	"delrange_index_n": 65,
+	"setrange": 66,
+	"setrange_index": 67,
+	"setrange_index_n": 68,
+	"inv": 69,
+	"pos": 70,
+	"neg": 71,
+	"add": 72,
+	"inplace_add": 73,
+	"sub": 74,
+	"inplace_sub": 75,
+	"mul": 76,
+	"inplace_mul": 77,
+	"div": 78,
+	"inplace_div": 79,
+	"mod": 80,
+	"inplace_mod": 81,
+	"shl": 82,
+	"inplace_shl": 83,
+	"shr": 84,
+	"inplace_shr": 85,
+	"and": 86,
+	"inplace_and": 87,
+	"or": 88,
+	"inplace_or": 89,
+	"xor": 90,
+	"inplace_xor": 91,
+	"pow": 92,
+	"inplace_pow": 93,
+	"inc": 94,
+	"dec": 95,
+	"enter": 96,
+	"leave": 97,
+	"getattr": 98,
+	"getattr_string_hash": 99,
+	"getattr_string_len_hash": 100,
+	"boundattr": 101,
+	"boundattr_string_hash": 102,
+	"boundattr_string_len_hash": 103,
+	"hasattr": 104,
+	"hasattr_string_hash": 105,
+	"hasattr_string_len_hash": 106,
+	"delattr": 107,
+	"delattr_string_hash": 108,
+	"delattr_string_len_hash": 109,
+	"setattr": 110,
+	"setattr_string_hash": 111,
+	"setattr_string_len_hash": 112,
+/*[[[end]]]*/
+}.frozen;
+
+@@Map TypeNativeOperator to their name, given their ID
+@@e.g. @(TNO_BYID[7] == "call")
+global final TNO_BYID: {int: string} = Mapping.frozen(
+	for (local id, name: TNO_BYNAME) (name, id));

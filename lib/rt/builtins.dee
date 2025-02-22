@@ -582,5 +582,3 @@ final global function get_builtin(id: deemon.int) {
 
 /* Implement the self-referencing builtin */
 __objects[0x000d] = get_builtin;
-
-

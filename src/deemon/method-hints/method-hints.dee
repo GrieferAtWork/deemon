@@ -1488,6 +1488,23 @@ function print_Dee_tmh_id() {
 	print("};");
 }
 
+function print_TMH_BYNAME() {
+	local id = 0;
+	for (local none, hint: NATIVE_METHOD_HINTS) {
+		print("	", repr hint.name, ": ", id, ",");
+		++id;
+	}
+}
+
+function print_TNO_BYNAME() {
+	RESET_PREFIX();
+	local id = 0;
+	for (local none, method: NATIVE_OPERATORS) {
+		print("	", repr method.name.name, ": ", id, ",");
+		++id;
+	}
+}
+
 function printMHTypedefs() {
 	RESET_PREFIX();
 	for (local none, hintAttr: METHOD_HINTS) {
