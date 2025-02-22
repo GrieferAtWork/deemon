@@ -1,0 +1,80 @@
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+import rt;
+
+/* Tests for stuff that only works under "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" */
+if (!hasattr(rt, "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast"))
+	return; // "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" isn't enabled; don't run this test
+
+
+class MyClass1 {
+	this = default;
+	final member mySize; /* "final" so "__seq_size__" needs a ref to "MyClass1" */
+	__seq_size__() -> mySize;
+}
+class MyClass2: MyClass1 {
+	this = super;
+	__seq_size__() -> 42;
+}
+
+local a = MyClass1(10);
+local b = MyClass2(20);
+
+assert Sequence.length(a) == 10;
+assert Sequence.length(b) == 42;
+assert Sequence.length(b as MyClass1) == 20;
+
+class MyClassWithIter1 {
+	__seq_iter__() -> {10, 20}.operator iter();
+}
+class MyClassWithIter2 {
+	operator iter() -> {10, 20}.operator iter();
+}
+class MyClassWithIter3: Sequence {
+	operator iter() -> {10, 20}.operator iter();
+}
+
+#define TRY(x...) (try x catch (_e...) _e)
+assert TRY({10,20} == (MyClassWithIter1() as Sequence)) === true;
+assert TRY({10,20} == (MyClassWithIter2() as Sequence)) === true;
+assert TRY({10,20} == (MyClassWithIter3() as Sequence)) === true;
+assert TRY({10,20} == MyClassWithIter1()) is NotImplemented;
+assert TRY({10,20} == MyClassWithIter2()) === true;
+assert TRY({10,20} == MyClassWithIter3()) === true;
+
+assert !({10} == ({10, 10}            ));
+assert !({10} == ({10, 10} as Sequence));
+assert (({10} == ({10, 10} as Set     )));
+
+assert !(({10, 10}            ) == {10});
+assert !(({10, 10} as Sequence) == {10});
+assert ((({10, 10} as Set     ) == {10}));
+
+class MySet1: Set {}
+class MySet2: MySet1 { __set_add__(rhs) -> "Works!"; }
+class MySet3: MySet2 {}
+
+assert (MySet1() | {10}) is SetUnion from rt;
+assert (MySet2() | {10}) == "Works!";
+assert (MySet3() | {10}) == "Works!";
+
