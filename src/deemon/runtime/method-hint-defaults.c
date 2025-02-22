@@ -5324,7 +5324,7 @@ default__seq_makeenumeration_with_intrange__with__seq_enumerate_index(DeeObject 
 /* seq_foreach_reverse */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_foreach_reverse__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
-	DREF DeeObject *(DCALL *tp_getitem_index_fast)(DeeObject *self, size_t index);
+	DeeNO_getitem_index_fast_t tp_getitem_index_fast;
 	Dee_ssize_t temp, result = 0;
 	size_t size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(size == (size_t)-1)
@@ -5461,7 +5461,7 @@ err:
 /* seq_enumerate_index_reverse */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_enumerate_index_reverse__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end) {
-	DREF DeeObject *(DCALL *tp_getitem_index_fast)(DeeObject *self, size_t index);
+	DeeNO_getitem_index_fast_t tp_getitem_index_fast;
 	Dee_ssize_t temp, result = 0;
 	size_t size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(size == (size_t)-1)

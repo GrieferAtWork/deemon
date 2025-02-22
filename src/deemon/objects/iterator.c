@@ -2981,11 +2981,9 @@ DeeIterator_ForeachPair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void 
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	DeeNO_nextpair_t tp_nextpair = DeeType_RequireNativeOperator(Dee_TYPE(self), nextpair);
 #else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	int (DCALL *tp_nextpair)(DeeObject *__restrict self, DREF DeeObject *pair[2]);
-	if unlikely((!Dee_TYPE(self)->tp_iterator || !Dee_TYPE(self)->tp_iterator->tp_nextpair) &&
-	            !DeeType_InheritIterNext(Dee_TYPE(self)))
+	DeeNO_nextpair_t tp_nextpair = DeeType_RequireSupportedNativeOperator(Dee_TYPE(self), nextpair);
+	if unlikely(!tp_nextpair)
 		goto err_no_iternext;
-	tp_nextpair = Dee_TYPE(self)->tp_iterator->tp_nextpair;
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	while ((status = (*tp_nextpair)(self, pair)) == 0) {
 		temp = (*cb)(arg, pair[0], pair[1]);
