@@ -185,6 +185,7 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		self->acu_value.v_int = (Dee_ssize_t)intval1;
 		self->acu_mode = Dee_ACCU_INT;
 #endif /* !HAVE_Dee_ACCU_INT64 */
+		Dee_Decref(first);
 #ifdef HAVE_Dee_ACCU_FLOAT
 	} else if (tp_add == (DeeNO_add_t)&float_add) {
 		double second_value;
