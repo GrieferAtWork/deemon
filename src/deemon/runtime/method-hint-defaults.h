@@ -552,44 +552,44 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_enumerate_index_re
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_enumerate_index_reverse__with__seq_operator_sizeob__and__seq_operator_getitem(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end);
 
 /* seq_unpack */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with_callattr_unpack(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with_callattr_unpack(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL tdefault__seq_unpack__with_callobjectcache___seq_unpack__(DeeTypeObject *tp_self, DeeObject *self, size_t count, DREF DeeObject *result[]);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__unsupported(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_unpack_ex(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__empty(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__tp_asvector(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_foreach(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_iter(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__unsupported(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_unpack_ex(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__empty(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__tp_asvector(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_foreach(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_iter(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
 
 /* seq_unpack_ex */
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with_callattr_unpack(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with_callattr_unpack(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL tdefault__seq_unpack_ex__with_callobjectcache___seq_unpack__(DeeTypeObject *tp_self, DeeObject *self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__tp_asvector(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_foreach(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_iter(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__tp_asvector(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_foreach(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_iter(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
 
 /* seq_unpack_ub */
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with_callattr_unpackub(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with_callattr___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with_callobjectcache___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with_callattr_unpackub(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with_callattr___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with_callobjectcache___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL tdefault__seq_unpack_ub__with_callobjectcache___seq_unpackub__(DeeTypeObject *tp_self, DeeObject *self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
 
 /* seq_trygetfirst */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_trygetfirst__with_callattr_first(DeeObject *__restrict self);

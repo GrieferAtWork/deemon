@@ -799,7 +799,7 @@ super_mh__seq_makeenumeration_with_intrange(DeeSuperObject *__restrict self, siz
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-super_mh__seq_unpack(DeeSuperObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+super_mh__seq_unpack(DeeSuperObject *__restrict self, size_t count, DREF DeeObject *result[]) {
 	struct Dee_super_method_hint specs;
 	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_unpack, &specs);
 	switch (specs.smh_cc) {
@@ -815,7 +815,7 @@ super_mh__seq_unpack(DeeSuperObject *__restrict self, size_t count, DREF DeeObje
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-super_mh__seq_unpack_ex(DeeSuperObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+super_mh__seq_unpack_ex(DeeSuperObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	struct Dee_super_method_hint specs;
 	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_unpack_ex, &specs);
 	switch (specs.smh_cc) {
@@ -831,7 +831,7 @@ super_mh__seq_unpack_ex(DeeSuperObject *__restrict self, size_t min_count, size_
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-super_mh__seq_unpack_ub(DeeSuperObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+super_mh__seq_unpack_ub(DeeSuperObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	struct Dee_super_method_hint specs;
 	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_unpack_ub, &specs);
 	switch (specs.smh_cc) {

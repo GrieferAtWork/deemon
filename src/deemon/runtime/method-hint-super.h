@@ -77,9 +77,9 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL super_mh__seq_enumerate_index(D
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__seq_makeenumeration(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL super_mh__seq_makeenumeration_with_range(DeeSuperObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__seq_makeenumeration_with_intrange(DeeSuperObject *__restrict self, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL super_mh__seq_unpack(DeeSuperObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL super_mh__seq_unpack_ex(DeeSuperObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
-INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL super_mh__seq_unpack_ub(DeeSuperObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL super_mh__seq_unpack(DeeSuperObject *__restrict self, size_t count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL super_mh__seq_unpack_ex(DeeSuperObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL super_mh__seq_unpack_ub(DeeSuperObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__seq_trygetfirst(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__seq_getfirst(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__seq_boundfirst(DeeSuperObject *__restrict self);

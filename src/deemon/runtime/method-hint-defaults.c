@@ -5640,7 +5640,7 @@ err:
 
 /* seq_unpack */
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__with_callattr_unpack(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack__with_callattr_unpack(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]) {
 	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str_unpack, PCKuSIZ, count);
 	if unlikely(!resultob)
 		goto err;
@@ -5660,7 +5660,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]) {
 	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_unpack__, PCKuSIZ, count);
 	if unlikely(!resultob)
 		goto err;
@@ -5680,7 +5680,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_unpack__with_callobjectcache___seq_unpack__(Dee_TYPE(self), self, count, result);
 #else /* __OPTIMIZE_SIZE__ */
@@ -5704,12 +5704,12 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__unsupported(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict UNUSED(result)[]) {
+default__seq_unpack__unsupported(DeeObject *__restrict self, size_t count, DREF DeeObject *UNUSED(result)[]) {
 	return err_seq_unsupportedf(self, "__seq_unpack__(%" PRFuSIZ ")", count);
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__with__seq_unpack_ex(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack__with__seq_unpack_ex(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]) {
 	size_t real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_unpack_ex))(self, count, count, result);
 	if likely(real_count != (size_t)-1)
 		real_count = 0;
@@ -5717,14 +5717,14 @@ default__seq_unpack__with__seq_unpack_ex(DeeObject *__restrict self, size_t coun
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__empty(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict UNUSED(result)[]) {
+default__seq_unpack__empty(DeeObject *__restrict self, size_t count, DREF DeeObject *UNUSED(result)[]) {
 	if unlikely(count != 0)
 		return err_invalid_unpack_size(self, count, 0);
 	return 0;
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__with__tp_asvector(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack__with__tp_asvector(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]) {
 	size_t real_count = (*Dee_TYPE(self)->tp_seq->tp_asvector)(self, count, result);
 	if likely(real_count == count)
 		return 0;
@@ -5735,7 +5735,7 @@ default__seq_unpack__with__tp_asvector(DeeObject *__restrict self, size_t count,
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]) {
 	DeeNO_getitem_index_fast_t getitem_index_fast = Dee_TYPE(self)->tp_seq->tp_getitem_index_fast;
 	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	ASSERTF(count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
@@ -5760,7 +5760,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) { /* requires: __seq_getitem_always_bound__ */
+default__seq_unpack__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]) { /* requires: __seq_getitem_always_bound__ */
 	DeeMH_seq_operator_trygetitem_index_t cached_seq_operator_trygetitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index);;
 	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	ASSERTF(count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
@@ -5787,7 +5787,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) { /* requires: __seq_getitem_always_bound__ */
+default__seq_unpack__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]) { /* requires: __seq_getitem_always_bound__ */
 	DeeMH_seq_operator_getitem_index_t cached_seq_operator_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index);;
 	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	ASSERTF(count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
@@ -5834,7 +5834,7 @@ default_unpack_with_foreach_cb(void *arg, DeeObject *elem) {
 }
 #endif /* !DEFINED_default_unpack_with_foreach_cb */
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__with__seq_operator_foreach(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack__with__seq_operator_foreach(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]) {
 	Dee_ssize_t foreach_status;
 	struct default_unpack_with_foreach_data data;
 	data.duqfd_count  = count;
@@ -5853,7 +5853,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__with__seq_operator_iter(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack__with__seq_operator_iter(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]) {
 	size_t i, remainder;
 	DREF DeeObject *elem;
 	DREF DeeObject *iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter))(self);
@@ -5892,7 +5892,7 @@ err:
 
 /* seq_unpack_ex */
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__with_callattr_unpack(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ex__with_callattr_unpack(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	size_t result_count;
 	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str_unpack, PCKuSIZ PCKuSIZ, min_count, max_count);
 	if unlikely(!resultob)
@@ -5914,7 +5914,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ex__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	size_t result_count;
 	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_unpack__, PCKuSIZ PCKuSIZ, min_count, max_count);
 	if unlikely(!resultob)
@@ -5936,7 +5936,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ex__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_unpack_ex__with_callobjectcache___seq_unpack__(Dee_TYPE(self), self, min_count, max_count, result);
 #else /* __OPTIMIZE_SIZE__ */
@@ -5962,19 +5962,19 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict UNUSED(result)[]) {
+default__seq_unpack_ex__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED(result)[]) {
 	return err_seq_unsupportedf(self, "__seq_unpack__(%" PRFuSIZ ", %" PRFuSIZ ")", min_count, max_count);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict UNUSED(result)[]) {
+default__seq_unpack_ex__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED(result)[]) {
 	if unlikely(min_count > 0)
 		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);
 	return 0;
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__with__tp_asvector(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ex__with__tp_asvector(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	size_t real_count = (*Dee_TYPE(self)->tp_seq->tp_asvector)(self, max_count, result);
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if (real_count < min_count) 
@@ -5985,7 +5985,7 @@ default__seq_unpack_ex__with__tp_asvector(DeeObject *__restrict self, size_t min
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ex__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	DeeNO_getitem_index_fast_t getitem_index_fast = Dee_TYPE(self)->tp_seq->tp_getitem_index_fast;
 	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
@@ -6012,7 +6012,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) { /* requires: __seq_getitem_always_bound__ */
+default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) { /* requires: __seq_getitem_always_bound__ */
 	DeeMH_seq_operator_trygetitem_index_t cached_seq_operator_trygetitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index);;
 	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
@@ -6041,7 +6041,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) { /* requires: __seq_getitem_always_bound__ */
+default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) { /* requires: __seq_getitem_always_bound__ */
 	DeeMH_seq_operator_getitem_index_t cached_seq_operator_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index);;
 	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
@@ -6071,7 +6071,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__with__seq_operator_foreach(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ex__with__seq_operator_foreach(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	Dee_ssize_t foreach_status;
 	struct default_unpack_with_foreach_data data;
 	data.duqfd_count  = max_count;
@@ -6090,7 +6090,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__with__seq_operator_iter(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ex__with__seq_operator_iter(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	size_t i, remainder;
 	DREF DeeObject *elem;
 	DREF DeeObject *iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter))(self);
@@ -6134,7 +6134,7 @@ err:
 
 /* seq_unpack_ub */
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ub__with_callattr_unpackub(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ub__with_callattr_unpackub(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	size_t result_count;
 	DREF DeeObject *resultob;
 	resultob = min_count == max_count ? DeeObject_CallAttrf(self, (DeeObject *)&str_unpackub, PCKuSIZ, min_count)
@@ -6162,7 +6162,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ub__with_callattr___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ub__with_callattr___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	size_t result_count;
 	DREF DeeObject *resultob;
 	resultob = min_count == max_count ? DeeObject_CallAttrf(self, (DeeObject *)&str___seq_unpackub__, PCKuSIZ, min_count)
@@ -6190,7 +6190,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ub__with_callobjectcache___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ub__with_callobjectcache___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_unpack_ub__with_callobjectcache___seq_unpackub__(Dee_TYPE(self), self, min_count, max_count, result);
 #else /* __OPTIMIZE_SIZE__ */
@@ -6222,19 +6222,19 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ub__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict UNUSED(result)[]) {
+default__seq_unpack_ub__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED(result)[]) {
 	return err_seq_unsupportedf(self, "__seq_unpackub__(%" PRFuSIZ ", %" PRFuSIZ ")", min_count, max_count);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ub__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict UNUSED(result)[]) {
+default__seq_unpack_ub__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED(result)[]) {
 	if unlikely(min_count > 0)
 		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);
 	return 0;
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ub__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ub__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	DeeNO_getitem_index_fast_t getitem_index_fast = Dee_TYPE(self)->tp_seq->tp_getitem_index_fast;
 	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
@@ -6251,7 +6251,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	DeeMH_seq_operator_trygetitem_index_t cached_seq_operator_trygetitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index);;
 	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
@@ -6277,7 +6277,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	DeeMH_seq_operator_getitem_index_t cached_seq_operator_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index);;
 	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");

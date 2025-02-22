@@ -74,7 +74,7 @@ err:
 [[wunused]]
 size_t __seq_unpackub__.seq_unpack_ub([[nonnull]] DeeObject *__restrict self,
                                       size_t min_count, size_t max_count,
-                                      [[nonnull]] /*out*/ DREF DeeObject *__restrict result[])
+                                      [[nonnull]] /*out*/ DREF DeeObject *result[])
 %{unsupported({
 	return err_seq_unsupportedf(self, "__seq_unpackub__(%" PRFuSIZ ", %" PRFuSIZ ")", min_count, max_count);
 })}

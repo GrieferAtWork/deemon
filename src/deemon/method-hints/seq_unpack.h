@@ -102,7 +102,7 @@ default_unpack_with_foreach_cb(void *arg, DeeObject *elem) {
  * @return: -1: An error was thrown (`dst' may have been modified, but contains no references) */
 [[wunused]]
 int __seq_unpack__.seq_unpack([[nonnull]] DeeObject *__restrict self, size_t count,
-                              [[nonnull]] /*out*/ DREF DeeObject *__restrict result[])
+                              [[nonnull]] /*out*/ DREF DeeObject *result[])
 %{unsupported({
 	return err_seq_unsupportedf(self, "__seq_unpack__(%" PRFuSIZ ")", count);
 })}
@@ -281,7 +281,7 @@ err:
 [[wunused]]
 size_t __seq_unpack__.seq_unpack_ex([[nonnull]] DeeObject *__restrict self,
                                     size_t min_count, size_t max_count,
-                                    [[nonnull]] /*out*/ DREF DeeObject *__restrict result[])
+                                    [[nonnull]] /*out*/ DREF DeeObject *result[])
 %{unsupported({
 	return err_seq_unsupportedf(self, "__seq_unpack__(%" PRFuSIZ ", %" PRFuSIZ ")", min_count, max_count);
 })}

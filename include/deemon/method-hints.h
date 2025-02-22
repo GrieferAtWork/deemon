@@ -430,11 +430,11 @@ typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_seq_makeenu
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_makeenumeration_with_intrange_t)(DeeObject *__restrict self, size_t start, size_t end);
 
 /* Sequence_unpack, unpack, __seq_unpack__, explicit_seq_unpack */
-typedef WUNUSED_T NONNULL_T((1, 3)) int (DCALL *DeeMH_seq_unpack_t)(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
-typedef WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *DeeMH_seq_unpack_ex_t)(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+typedef WUNUSED_T NONNULL_T((1, 3)) int (DCALL *DeeMH_seq_unpack_t)(DeeObject *__restrict self, size_t count, DREF DeeObject *result[]);
+typedef WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *DeeMH_seq_unpack_ex_t)(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
 
 /* Sequence_unpackub, unpackub, __seq_unpackub__, explicit_seq_unpackub */
-typedef WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *DeeMH_seq_unpack_ub_t)(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+typedef WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *DeeMH_seq_unpack_ub_t)(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]);
 
 /* Sequence_first, __seq_first__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_trygetfirst_t)(DeeObject *__restrict self);
