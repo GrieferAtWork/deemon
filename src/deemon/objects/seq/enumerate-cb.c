@@ -47,12 +47,13 @@ DECL_BEGIN
 /************************************************************************/
 
 INTERN WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-seq_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
+seq_enumerate_cb(void *arg, DeeObject *key_or_index,
+                 /*nullable*/ DeeObject *value) {
 	DREF DeeObject *result;
 	DeeObject *args[2];
 	struct seq_enumerate_data *data;
 	data    = (struct seq_enumerate_data *)arg;
-	args[0] = index;
+	args[0] = key_or_index;
 	args[1] = value;
 	result  = DeeObject_Call(data->sed_cb, value ? 2 : 1, args);
 	if unlikely(!result)
@@ -183,6 +184,43 @@ seq_call_enumerate_with_range(DeeObject *self, DeeObject *cb,
 err:
 	return NULL;
 }
+
+
+
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+/* Helpers for enumerating a mapping by invoking a given callback. */
+INTERN NONNULL((1, 2)) DREF DeeObject *DCALL
+map_call_enumerate(DeeObject *self, DeeObject *cb) {
+	Dee_ssize_t foreach_status;
+	struct seq_enumerate_data data;
+	data.sed_cb    = cb;
+	foreach_status = DeeObject_InvokeMethodHint(map_enumerate, self, &seq_enumerate_cb, &data);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == -2)
+		return data.sed_result;
+	return_none;
+err:
+	return NULL;
+}
+
+INTERN NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+map_call_enumerate_with_range(DeeObject *self, DeeObject *cb,
+                              DeeObject *start, DeeObject *end) {
+	Dee_ssize_t foreach_status;
+	struct seq_enumerate_data data;
+	data.sed_cb    = cb;
+	foreach_status = DeeObject_InvokeMethodHint(map_enumerate_range, self,
+	                                            &seq_enumerate_cb, &data, start, end);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == -2)
+		return data.sed_result;
+	return_none;
+err:
+	return NULL;
+}
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 

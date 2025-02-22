@@ -25,10 +25,12 @@
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
+#include <deemon/callable.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/none-operator.h>
@@ -53,6 +55,7 @@
 #include "seq/default-iterators.h"
 #include "seq/default-map-proxy.h"
 #include "seq/each.h"
+#include "seq/enumerate-cb.h"
 #include "seq/hashfilter.h"
 #include "seq/range.h"
 #include "seq/unique-iterator.h"
@@ -92,6 +95,164 @@ err:
 	return NULL;
 }
 
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("cb");
+print define_Dee_HashStr("start");
+print define_Dee_HashStr("end");
+]]]*/
+#define Dee_HashStr__cb _Dee_HashSelectC(0x75ffadba, 0x2501dbb50208b92e)
+#define Dee_HashStr__start _Dee_HashSelectC(0xa2ed6890, 0x80b621ce3c3982d5)
+#define Dee_HashStr__end _Dee_HashSelectC(0x37fb4a05, 0x6de935c204dc3d01)
+/*[[[end]]]*/
+
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+PRIVATE ATTR_COLD int DCALL
+err_map_enumerate_start_but_no_end(void) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Mapping.enumerate: `start' given, but no `end'");
+}
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+do_map_enumerate_with_kw(DeeObject *self, size_t argc,
+                         DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result;
+	DeeObject *cb, *start, *end;
+	DeeKwArgs kwds;
+	if (DeeKwArgs_Init(&kwds, &argc, argv, kw))
+		goto err;
+	switch (argc) {
+
+	case 0: {
+		if unlikely((cb = DeeKwArgs_TryGetItemNRStringHash(&kwds, "cb", Dee_HashStr__cb)) == NULL)
+			goto err;
+		if unlikely((start = DeeKwArgs_TryGetItemNRStringHash(&kwds, "start", Dee_HashStr__start)) == NULL)
+			goto err;
+		if unlikely((end = DeeKwArgs_TryGetItemNRStringHash(&kwds, "end", Dee_HashStr__end)) == NULL)
+			goto err;
+		if (cb != ITER_DONE) {
+handle_with_cb:
+			if (end != ITER_DONE) {
+				if (start != ITER_DONE) {
+					result = map_call_enumerate_with_range(self, cb, start, end);
+				} else {
+					start = DeeObject_NewDefault(Dee_TYPE(end));
+					if unlikely(!start)
+						goto err;
+					result = map_call_enumerate_with_range(self, cb, start, end);
+					Dee_Decref(start);
+				}
+			} else if (start == ITER_DONE) {
+				result = map_call_enumerate(self, cb);
+			} else {
+				goto err_start_but_no_end;
+			}
+		} else {
+			if (end != ITER_DONE) {
+				if (start != ITER_DONE) {
+					result = DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, start, end);
+				} else {
+					start = DeeObject_NewDefault(Dee_TYPE(end));
+					if unlikely(!start)
+						goto err;
+					result = DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, start, end);
+					Dee_Decref(start);
+				}
+			} else if (start == ITER_DONE) {
+				result = DeeObject_InvokeMethodHint(map_makeenumeration, self);
+			} else {
+				goto err_start_but_no_end;
+			}
+		}
+	}	break;
+
+	case 1: {
+		cb = argv[0];
+		if unlikely((end = DeeKwArgs_TryGetItemNRStringHash(&kwds, "end", Dee_HashStr__end)) == NULL)
+			goto err;
+		if (DeeCallable_Check(cb)) {
+			if unlikely((start = DeeKwArgs_TryGetItemNRStringHash(&kwds, "start", Dee_HashStr__start)) == NULL)
+				goto err;
+			goto handle_with_cb;
+		}
+		start = cb;
+		if (end != ITER_DONE) {
+			result = DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, start, end);
+		} else {
+			goto err_start_but_no_end;
+		}
+	}	break;
+
+	case 2: {
+		cb = argv[0];
+		if (DeeCallable_Check(cb)) {
+			if unlikely((end = DeeKwArgs_TryGetItemNRStringHash(&kwds, "end", Dee_HashStr__end)) == NULL)
+				goto err;
+			start = argv[1];
+			goto handle_with_cb;
+		}
+		start = argv[0];
+		end   = argv[1];
+		result = DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, start, end);
+	}	break;
+
+	case 3: {
+		cb     = argv[0];
+		start  = argv[1];
+		end    = argv[2];
+		result = map_call_enumerate_with_range(self, cb, start, end);
+	}	break;
+
+	default:
+		goto err_bad_args;
+	}
+	if unlikely(DeeKwArgs_Done(&kwds, argc, "enumerate"))
+		goto err_r;
+	return result;
+err_start_but_no_end:
+	err_map_enumerate_start_but_no_end();
+	goto err;
+err_bad_args:
+	err_invalid_argc("enumerate", argc, 0, 3);
+	goto err;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_enumerate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	if unlikely(kw)
+		return do_map_enumerate_with_kw(self, argc, argv, kw);
+	if likely(argc == 0)
+		return DeeObject_InvokeMethodHint(map_makeenumeration, self);
+	if (DeeCallable_Check(argv[0])) {
+		if (argc == 1)
+			return map_call_enumerate(self, argv[0]);
+		if unlikely(argc == 2)
+			goto err_start_but_no_end;
+		if (argc != 3)
+			goto err_bad_args;
+		return map_call_enumerate_with_range(self, argv[0], argv[1], argv[2]);
+	} else {
+		if unlikely(argc == 1)
+			goto err_start_but_no_end;
+		if (argc != 2)
+			goto err_bad_args;
+		return DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, argv[0], argv[1]);
+	}
+	__builtin_unreachable();
+err_start_but_no_end:
+	err_map_enumerate_start_but_no_end();
+	goto err;
+err_bad_args:
+	err_invalid_argc("enumerate", argc, 0, 3);
+err:
+	return NULL;
+}
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
 
 
 PRIVATE struct type_method tpconst map_methods[] = {
@@ -100,6 +261,17 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	            "(key,def=!N)->\n"
 	            "#r{The value associated with @key or @def when @key has no value associated}"),
 	TYPE_KWMETHOD("byhash", &map_byhash, DOC_GET(map_byhash_doc)),
+
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_KWMETHOD("enumerate", &map_enumerate,
+	              "->?S?T2?O?O\n"
+	              "(start,end)->?S?T2?O?O\n"
+	              "(cb:?DCallable)->?X2?O?N\n"
+	              "(cb:?DCallable,start,end)->?X2?O?N\n"
+	              "Enumerate keys and associated values of @this mapping\n"
+	              "This function can be used to easily enumerate mapping keys and values, "
+	              /**/ "including being able to enumerate keys that are currently unbound"),
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Default operations for modifiable mappings. */
 	TYPE_METHOD(STR_setold, &DeeMH_map_setold,

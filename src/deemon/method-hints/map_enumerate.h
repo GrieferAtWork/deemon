@@ -24,17 +24,17 @@
 
 /* TODO: Doc string should be:
  * "(cb:?DCallable)->?X2?O?N\n"
- * "(cb:?DCallable,startkey,endkey)->?X2?O?N" */
+ * "(cb:?DCallable,start,end)->?X2?O?N" */
 
 /* function cb(key, value?) */
-__map_enumerate__(cb:?DCallable,startkey?,endkey?)->?X2?O?N {
+__map_enumerate__(cb:?DCallable,start?,end?)->?X2?O?N {
 	Dee_ssize_t foreach_status;
 	struct seq_enumerate_data data;
-	DeeObject *startkey, *endkey = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|oo:__map_enumerate__", &data.sed_cb, &startkey, &endkey))
+	DeeObject *start, *end = NULL;
+	if (DeeArg_Unpack(argc, argv, "o|oo:__map_enumerate__", &data.sed_cb, &start, &end))
 		goto err;
-	if (endkey) {
-		foreach_status = CALL_DEPENDENCY(map_enumerate_range, self, &seq_enumerate_cb, &data, startkey, endkey);
+	if (end) {
+		foreach_status = CALL_DEPENDENCY(map_enumerate_range, self, &seq_enumerate_cb, &data, start, end);
 	} else {
 		foreach_status = CALL_DEPENDENCY(map_enumerate, self, &seq_enumerate_cb, &data);
 	}

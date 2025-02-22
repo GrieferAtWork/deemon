@@ -25,12 +25,12 @@
 /* Operators for the purpose of constructing `DefaultEnumeration_With*' objects.
  * Together with `__map_enumerate__', this API is used to implement `Mapping.enumerate()' */
 
-__map_enumerate_items__(startkey?,endkey?)->?S?T2?O?O {
-	DeeObject *startkey = NULL, *endkey = NULL;
-	if (DeeArg_Unpack(argc, argv, "|oo:__map_enumerate_items__", &startkey, &endkey))
+__map_enumerate_items__(start?,end?)->?S?T2?O?O {
+	DeeObject *start, *end = NULL;
+	if (DeeArg_Unpack(argc, argv, "|oo:__map_enumerate_items__", &start, &end))
 		goto err;
-	if (endkey)
-		return DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, startkey, endkey);
+	if (end)
+		return DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, start, end);
 	return DeeObject_InvokeMethodHint(map_makeenumeration, self);
 err:
 	return NULL;
@@ -60,28 +60,28 @@ __map_enumerate_items__.map_makeenumeration([[nonnull]] DeeObject *__restrict se
 
 [[wunused]] DREF DeeObject *
 __map_enumerate_items__.map_makeenumeration_with_range([[nonnull]] DeeObject *self,
-                                                       [[nonnull]] DeeObject *startkey,
-                                                       [[nonnull]] DeeObject *endkey)
+                                                       [[nonnull]] DeeObject *start,
+                                                       [[nonnull]] DeeObject *end)
 %{unsupported(auto)}
 %{$empty = "default__seq_makeenumeration_with_range__empty"}
 %{$with__map_operator_iter = {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack, self, startkey, endkey);
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack, self, start, end);
 }}
 %{$with__map_iterkeys__and__map_operator_getitem = {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem, self, startkey, endkey);
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem, self, start, end);
 }}
 %{$with__map_iterkeys__and__map_operator_trygetitem = {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_trygetitem, self, startkey, endkey);
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_trygetitem, self, start, end);
 }}
 %{$with__map_enumerate_range = {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_enumerate_range, self, startkey, endkey);
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_enumerate_range, self, start, end);
 }}
 /*%{$with__map_makeenumeration = {
 	// TODO
 }}*/ {
 	DeeObject *args[2];
-	args[0] = startkey;
-	args[1] = endkey;
+	args[0] = start;
+	args[1] = end;
 	return LOCAL_CALLATTR(self, 2, args);
 }
 
