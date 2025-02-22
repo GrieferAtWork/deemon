@@ -25,6 +25,7 @@
 
 #include <deemon/compiler/compiler.h>
 
+#include <deemon/abi/ctypes.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/asm.h>
@@ -3974,6 +3975,18 @@ err:
 
 PRIVATE DEFINE_CMETHOD(librt_kw, &librt_kw_f, METHOD_FCONSTCALL);
 
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_ctypes_addrof_f(size_t argc, DeeObject *const *argv) {
+	DeeObject *ob;
+	if (DeeArg_Unpack(argc, argv, "o:kw", &ob))
+		goto err;
+	return DeeCTypes_CreateVoidPointer(ob);
+err:
+	return NULL;
+}
+
+PRIVATE DEFINE_CMETHOD(librt_ctypes_addrof, &librt_ctypes_addrof_f, METHOD_FCONSTCALL);
+
 
 /* Define some magic constants that may be of interest to user-code. */
 /*[[[deemon
@@ -4587,6 +4600,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	RT_HASHOF_UNBOUND_ITEM_DEF
 	RT_HASHOF_RECURSIVE_ITEM_DEF
 
+	{ "ctypes_addrof", (DeeObject *)&librt_ctypes_addrof, MODSYM_FREADONLY,
+	  DOC("(ob)->?Aptr?Ectypes:void\n"
+	      "Returns the object address of @ob") },
 	{ NULL }
 };
 

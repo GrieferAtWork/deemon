@@ -1,0 +1,116 @@
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from "rt.hints.method";
+import * from "rt.hints.operator";
+import int, * from ctypes;
+import ipc;
+import rt;
+
+/* Tests for stuff that only works under "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" */
+if (!hasattr(rt, "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast"))
+	return; // "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" isn't enabled; don't run this test
+
+
+local final DeeObject_ptr = void.ptr;
+local final Dee_funptr_t = void.func(void).ptr;
+local final deemon = ShLib(ipc.Process.current.exe);
+local final DeeType_GetMethodHint = (Dee_funptr_t(DeeObject_ptr, int).ptr)(
+	Mapping.get(deemon, "DeeType_GetMethodHint") ??
+	Mapping.get(deemon, "_DeeType_GetMethodHint") ??
+	Mapping.get(deemon, "_DeeType_GetMethodHint@8") ??
+	none
+);
+
+local final DeeType_GetNativeOperatorWithoutUnsupported = (Dee_funptr_t(DeeObject_ptr, int).ptr)(
+	Mapping.get(deemon, "DeeType_GetNativeOperatorWithoutUnsupported") ??
+	Mapping.get(deemon, "_DeeType_GetNativeOperatorWithoutUnsupported") ??
+	Mapping.get(deemon, "_DeeType_GetNativeOperatorWithoutUnsupported@8") ??
+	none
+);
+
+/* If neither of these methods could be loaded, then don't run this test. */
+if (!DeeType_GetMethodHint && !DeeType_GetNativeOperatorWithoutUnsupported)
+	return;
+
+function _addr2name(addr: void.ptr): string | none {
+	if (!addr)
+		return "NULL";
+	local nameAndDelta: (string, int) | none = ShLib.addr2name(addr);
+	if (nameAndDelta is none)
+		return none;
+	local name, delta = nameAndDelta...;
+	if (delta == 0)
+		return name;
+	return none;
+}
+
+@@Returns the name of the function used to implement method hint @hint of @type
+@@If name cannot be determined (e.g. debug info not available/supported), return @none
+@@If the hint isn't supported, return @"NULL"
+function _Type_getMethodHintName(typ: Type, hint: string): string | none {
+	if (!DeeType_GetMethodHint)
+		return none;
+	local typAddr: void.ptr = rt.ctypes_addrof(typ);
+	local hintAddr = DeeType_GetMethodHint(typAddr, TMH_BYNAME[hint]);
+	return _addr2name(hintAddr);
+}
+
+
+@@Returns the name of the function used to implement native operator @op of @type
+@@If name cannot be determined (e.g. debug info not available/supported), return @none
+@@If the operator isn't supported, return @"NULL"
+function _Type_getNativeOperatorName(typ: Type, op: string): string | none {
+	if (!DeeType_GetNativeOperatorWithoutUnsupported)
+		return none;
+	local typAddr: void.ptr = rt.ctypes_addrof(typ);
+	local hintAddr = DeeType_GetNativeOperatorWithoutUnsupported(typAddr, TNO_BYNAME[op]);
+	return _addr2name(hintAddr);
+}
+
+
+@@Combination of @_Type_getMethodHintName and @_Type_getNativeOperatorName
+function Type_getImplName(typ: Type, hintOrOperator: string): string | none {
+	return hintOrOperator in TNO_BYNAME
+			? _Type_getNativeOperatorName(typ, hintOrOperator)
+			: _Type_getMethodHintName(typ, hintOrOperator);
+}
+
+
+#ifdef __MAIN__
+function dumpType(typ: Type): {string: string} {
+	for (local tnoName: TNO_BYNAME.keys) {
+		local symName = Type_getImplName(typ, tnoName);
+		if (symName !is none)
+			yield (tnoName, symName);
+	}
+	for (local tmhName: TMH_BYNAME.keys) {
+		local symName = Type_getImplName(typ, tmhName);
+		if (symName !is none)
+			yield (tmhName, symName);
+	}
+}
+
+
+for (local a, b: dumpType(Dict))
+	print repr a, repr b;
+#endif /* __MAIN__ */
+

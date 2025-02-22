@@ -40,9 +40,10 @@ LOCAL WUNUSED DREF DeeObject *DCALL DeeCTypes_GetVoid(void) {
 /* Construct a new void-pointer pointing to the given `address'. */
 LOCAL WUNUSED DREF DeeObject *DCALL
 DeeCTypes_CreateVoidPointer(void *address) {
-	DREF DeeObject *result, *ptr;
+	DREF DeeObject *result;
 	result = DeeCTypes_GetVoid();
 	if likely(result) {
+		DREF DeeObject *ptr;
 		ptr = DeeObject_CallAttrStringf(result, "ptr", DEE_PCKuPTR, address);
 		Dee_Decref(result);
 		result = ptr;

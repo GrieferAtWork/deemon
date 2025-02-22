@@ -28,14 +28,19 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
-#include <deemon/file.h>
+#include <deemon/map.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
 #include <deemon/system.h>
+#include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
+#include <deemon/util/once.h>
+
+#ifdef CONFIG_HOST_WINDOWS
+#include <Windows.h>
+#endif /* CONFIG_HOST_WINDOWS */
 
 DECL_BEGIN
 
@@ -336,12 +341,181 @@ err:
 	return NULL;
 }
 
+#undef shlib_addr2name_impl_USE_Dbghelp_dll
+#undef shlib_addr2name_impl_USE_libdebuginfo /* TODO: KOS-specific: libdebuginfo */
+#undef shlib_addr2name_impl_USE_addr2line /* TODO: ipc.Process("addr2line -f") */
+#undef shlib_addr2name_impl_USE_STUB
+#ifdef CONFIG_HOST_WINDOWS
+#define shlib_addr2name_impl_USE_Dbghelp_dll
+#else /* CONFIG_HOST_WINDOWS */
+#define shlib_addr2name_impl_USE_STUB
+#endif /* !CONFIG_HOST_WINDOWS */
+
+#ifdef shlib_addr2name_impl_USE_Dbghelp_dll
+PRIVATE WCHAR const wDbghelp_dll[] = { 'D', 'b', 'g', 'h', 'e', 'l', 'p', '.', 'd', 'l', 'l', 0 };
+
+PRIVATE HMODULE DCALL get_Dbghelp_dll(void) {
+	static HMODULE hDbghelp = NULL;
+	HMODULE result;
+again:
+	result = atomic_read(&hDbghelp);
+	if (result == INVALID_HANDLE_VALUE)
+		return NULL;
+	if (result == NULL) {
+		result = LoadLibraryW(wDbghelp_dll);
+		if (result == NULL) {
+			atomic_cmpxch(&hDbghelp, NULL, INVALID_HANDLE_VALUE);
+			return NULL;
+		}
+		if (!atomic_cmpxch(&hDbghelp, NULL, result)) {
+			(void)FreeLibrary(result);
+			goto again;
+		}
+	}
+	return result;
+}
+
+#ifndef IMAGEAPI
+#define IMAGEAPI __ATTR_STDCALL
+#endif /* !IMAGEAPI */
+
+#ifndef MAX_SYM_NAME
+#define MAX_SYM_NAME 2000
+#endif /* !MAX_SYM_NAME */
+
+typedef struct NT_SYMBOL_INFO {
+	ULONG       SizeOfStruct;
+	ULONG       TypeIndex;        // Type Index of symbol
+	ULONG64     Reserved[2];
+	ULONG       Index;
+	ULONG       Size;
+	ULONG64     ModBase;          // Base Address of module comtaining this symbol
+	ULONG       Flags;
+	ULONG64     Value;            // Value of symbol, ValuePresent should be 1
+	ULONG64     Address;          // Address of symbol including base address of module
+	ULONG       Register;         // register holding value or pointer to value
+	ULONG       Scope;            // scope of the symbol
+	ULONG       Tag;              // pdb classification
+	ULONG       NameLen;          // Actual length of name
+	ULONG       MaxNameLen;
+	CHAR        Name[1];          // Name of symbol
+} NT_SYMBOL_INFO, *NT_PSYMBOL_INFO;
+
+typedef BOOL (IMAGEAPI *LPSYMFROMADDR)(HANDLE hProcess, uint64_t Address, uint64_t *Displacement, NT_PSYMBOL_INFO Symbol);
+PRIVATE LPSYMFROMADDR pdyn_SymFromAddr = NULL;
+#define SymFromAddr (*pdyn_SymFromAddr)
+
+typedef BOOL (IMAGEAPI *LPSYMINITIALIZE)(HANDLE hProcess, PCSTR UserSearchPath, BOOL fInvadeProcess);
+PRIVATE LPSYMINITIALIZE pdyn_SymInitialize = NULL;
+#define SymInitialize (*pdyn_SymInitialize)
+
+PRIVATE bool DCALL load_Dbghelp_dll(void) {
+	HMODULE hModule;
+	if (pdyn_SymFromAddr)
+		return true;
+	hModule = get_Dbghelp_dll();
+	if unlikely(!hModule)
+		return false;
+	pdyn_SymInitialize = (LPSYMINITIALIZE)GetProcAddress(hModule, "SymInitialize");
+	if unlikely(!pdyn_SymInitialize)
+		goto err;
+	pdyn_SymFromAddr = (LPSYMFROMADDR)GetProcAddress(hModule, "SymFromAddr");
+	return pdyn_SymFromAddr != NULL;
+err:
+	return false;
+}
+
+PRIVATE bool DCALL init_Dbghelp_dll(void) {
+	static bool success = false;
+	Dee_ONCE({
+		if (load_Dbghelp_dll())
+			success = SymInitialize(GetCurrentProcess(), NULL, TRUE);
+	});
+	return success;
+}
+
+#endif /* shlib_addr2name_impl_USE_Dbghelp_dll */
+
+
+PRIVATE DREF DeeObject *DCALL
+shlib_addr2name_impl(void const *addr) {
+#ifdef shlib_addr2name_impl_USE_Dbghelp_dll
+	static Dee_shared_lock_t lock = DEE_SHARED_LOCK_INIT;
+	if unlikely(Dee_shared_lock_acquire(&lock))
+		goto err;
+	if (init_Dbghelp_dll()) {
+		uint64_t displacement = 0;
+		char buffer[sizeof(NT_SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
+		NT_PSYMBOL_INFO pSymbol = (NT_PSYMBOL_INFO)buffer;
+		pSymbol->SizeOfStruct = sizeof(NT_SYMBOL_INFO);
+		pSymbol->MaxNameLen   = MAX_SYM_NAME;
+		pSymbol->NameLen      = 0;
+		if (SymFromAddr(GetCurrentProcess(), (uint64_t)(uintptr_t)addr, &displacement, pSymbol) &&
+		    pSymbol->NameLen && pSymbol->NameLen < MAX_SYM_NAME) {
+			DREF DeeObject *name;
+			DREF DeeObject *delta;
+			DREF DeeTupleObject *result;
+			Dee_shared_lock_release(&lock);
+			name = DeeString_NewSized(pSymbol->Name, pSymbol->NameLen);
+			if unlikely(!name)
+				goto err;
+			delta = DeeInt_NewUInt64(displacement);
+			if unlikely(!delta)
+				goto err_name;
+			result = DeeTuple_NewUninitialized(2);
+			if unlikely(!result)
+				goto err_name_delta;
+			result->t_elem[0] = name;  /* Inherit reference */
+			result->t_elem[1] = delta; /* Inherit reference */
+			return (DREF DeeObject *)result;
+err_name_delta:
+			Dee_Decref(delta);
+err_name:
+			Dee_Decref_likely(name);
+			goto err;
+		}
+	}
+	Dee_shared_lock_release(&lock);
+	return_none;
+err:
+	return NULL;
+#endif /* shlib_addr2name_impl_USE_Dbghelp_dll */
+
+#ifdef shlib_addr2name_impl_USE_STUB
+	(void)addr;
+	return_none;
+#endif /* shlib_addr2name_impl_USE_STUB */
+}
+
+PRIVATE DREF DeeObject *DCALL
+shlib_addr2name(DeeTypeObject *UNUSED(tp_self),
+                size_t argc, DeeObject *const *argv) {
+	union pointer addr;
+	DeeObject *addrob;
+	if (DeeArg_Unpack(argc, argv, "o:addr2name", &addrob))
+		goto err;
+	if (DeeObject_AsPointer(addrob, &DeeCVoid_Type, &addr))
+		goto err;
+	return shlib_addr2name_impl(addr.ptr);
+err:
+	return NULL;
+}
+
 
 
 PRIVATE struct type_method tpconst shlib_methods[] = {
 	TYPE_METHOD_F("base", &shlib_base, METHOD_FNOREFESCAPE,
 	              "->?Aptr?Gvoid\n"
 	              "Returns the base address of the shared library"),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method tpconst shlib_class_methods[] = {
+	TYPE_METHOD_F("addr2name", &shlib_addr2name, METHOD_FNOREFESCAPE,
+	              "(addr:?Aptr?Gvoid)->?X2?T2?Dstring?Dint?N\n"
+	              "Using system-specific debug/export information, try to "
+	              /**/ "convert a symbol address into that symbol's name.\n"
+	              "On success, returns ${(symbolName, offsetFromSymbol)}"),
 	TYPE_METHOD_END
 };
 
@@ -352,7 +526,7 @@ INTERN DeeTypeObject DeeShlib_Type = {
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
@@ -390,7 +564,7 @@ INTERN DeeTypeObject DeeShlib_Type = {
 	/* .tp_methods       = */ shlib_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
+	/* .tp_class_methods = */ shlib_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
