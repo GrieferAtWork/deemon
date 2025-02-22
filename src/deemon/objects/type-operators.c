@@ -82,7 +82,7 @@ do_DeeType_InheritUninheritable(DeeTypeObject *self,
 	(void)info;
 }
 
-#ifdef DCALL_CALLER_CLEANUP
+#if defined(DCALL_CALLER_CLEANUP) && !defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS)
 #define do_DeeType_InheritConstructors (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritConstructors)
 #define do_DeeType_InheritStr          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritStr)
 #define do_DeeType_InheritRepr         (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritRepr)

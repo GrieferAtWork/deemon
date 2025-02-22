@@ -371,7 +371,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
  * - the same function has been called a given # of times */
 #if (!defined(CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE) && \
      !defined(CONFIG_NO_HOSTASM_AUTO_RECOMPILE))
-#include <hybrid/host.h>
 #if ((defined(__i386__) || defined(__x86_64__)) && \
      (defined(CONFIG_HOST_WINDOWS) || defined(CONFIG_HOST_UNIX)))
 #define CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
