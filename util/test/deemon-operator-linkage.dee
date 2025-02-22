@@ -109,6 +109,24 @@ function Type_assert(typ: Type, impls: {string: string}) {
 }
 
 
+/* Assert that operators that are inherited also have their  */
+
+//@[nobuiltin] // TODO: New compiler tag
+class MyCell: Cell {
+	this = super;
+}
+Type_assert(MyCell, {
+	"tp_compare":       "cell_compare",
+	"tp_compare_eq":    "cell_compare", /* Used to be "default__compare_eq__with__compare" */
+	"tp_trycompare_eq": "cell_trycompare_eq", /* Used to be "default__trycompare_eq__with__compare_eq" */
+	"tp_eq":            "default__eq__with__compare_eq",
+	"tp_ne":            "default__ne__with__compare_eq",
+	"tp_lo":            "default__lo__with__compare",
+	"tp_le":            "default__le__with__compare",
+	"tp_gr":            "default__gr__with__compare",
+	"tp_ge":            "default__ge__with__compare",
+});
+
 
 #ifndef __MAIN__
 Type_assert(deemon.Dict, {

@@ -355,7 +355,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cell_trycompare_eq(DeeCellObject *self, DeeCellObject *other) {
 	uintptr_t lhs_id, rhs_id;
 	if unlikely(!DeeCell_Check(other))
-		return 1;
+		return -1;
 	lhs_id = DeeObject_Id(DeeCell_GetItemPointer(self));
 	rhs_id = DeeObject_Id(DeeCell_GetItemPointer(other));
 	return lhs_id == rhs_id ? 0 : 1;

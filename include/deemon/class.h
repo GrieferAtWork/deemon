@@ -418,6 +418,7 @@ struct Dee_class_descriptor_object {
 #define CLASS_TP_FSUPERKWDS                             Dee_TP_FHEAP    /* FLAG: When set, the superargs operator actually returns a tuple `(args, kwds)' which
                                                                          *       should then be used to invoke the super-constructor as `super(args..., **kwds)'
                                                                          *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
+#define CLASS_TP_FNOBUILTIN                             Dee_TP_FVARIABLE/* FLAG: Don't auto-define builtin operators */
 #endif /* DEE_SOURCE */
 	uint16_t                                            cd_flags;       /* [const] Additional flags to set for the resulting type (set of `TP_F*').
 	                                                                     * NOTE: The `TP_FINHERITCTOR' flag has special meaning here,

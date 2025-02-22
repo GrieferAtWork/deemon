@@ -5901,7 +5901,13 @@ err_custom_allocator:
 	if ((!result->tp_cast.tp_repr && !result->tp_cast.tp_printrepr) && (desc->cd_flags & CLASS_TP_FAUTOINIT))
 		result->tp_cast.tp_printrepr = &instance_builtin_auto_printrepr;
 #endif /* CLASS_TP_FAUTOINIT */
-	if (!result->tp_cmp)
+	if (!result->tp_cmp && !(desc->cd_flags & CLASS_TP_FNOBUILTIN)
+#if 1 /* TODO: Get rid of this once the compiler is able to produce "CLASS_TP_FNOBUILTIN"
+       * right now, this is here for the "class MyCell: Cell" test (asserting that cross-
+       * dependent operators are inherited as sets) */
+	    && desc->cd_imemb_size > 0
+#endif
+	    )
 		result->tp_cmp = &instance_builtin_cmp;
 
 	/* Make sure to disallow MOVE-ANY when the builtin move-assign operator is used. */
