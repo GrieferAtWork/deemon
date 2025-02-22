@@ -30,13 +30,42 @@ __seq_frozen__->?O;
 __seq_frozen__.seq_frozen([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$empty = "DeeObject_NewRef"}
-%{$with__seq_operator_foreach = "DeeTuple_FromSequence"} {
+%{$with__seq_operator_foreach = "DeeTuple_FromSequence"}
+%{$with__set_frozen = {
+	/* return Set.frozen(this) as Sequence */
+	DREF DeeObject *result;
+	DREF DeeObject *set_frozen = CALL_DEPENDENCY(set_frozen, self);
+	if unlikely(!set_frozen)
+		goto err;
+	result = DeeSuper_New(&DeeSeq_Type, set_frozen);
+	Dee_Decref_unlikely(set_frozen);
+	return result;
+err:
+	return NULL;
+}}
+%{$with__map_frozen = {
+	/* return Mapping.frozen(this) as Sequence */
+	DREF DeeObject *result;
+	DREF DeeObject *map_frozen = CALL_DEPENDENCY(map_frozen, self);
+	if unlikely(!map_frozen)
+		goto err;
+	result = DeeSuper_New(&DeeSeq_Type, map_frozen);
+	Dee_Decref_unlikely(map_frozen);
+	return result;
+err:
+	return NULL;
+}} {
 	return LOCAL_GETATTR(self);
 }
 
 
 seq_frozen = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
+	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	if (REQUIRE_NODEFAULT(set_frozen))
+		return &$with__set_frozen;
+	if (REQUIRE_NODEFAULT(map_frozen))
+		return &$with__map_frozen;
+	seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
 	if (seq_operator_foreach)

@@ -22,7 +22,10 @@
 /* deemon.Sequence.last                                                 */
 /************************************************************************/
 
-[[getset, alias(Sequence.last)]]
+[[getset]]
+[[alias(Sequence.last)]]
+[[alias(Set.last)]]
+[[alias(Mapping.last)]]
 __seq_last__->?O;
 
 
@@ -44,7 +47,15 @@ seq_default_getlast_with_foreach_cb(void *arg, DeeObject *item) {
 /* Try to return the last element of the sequence (returns ITER_DONE if the sequence is empty) */
 [[wunused]] DREF DeeObject *
 __seq_last__.seq_trygetlast([[nonnull]] DeeObject *__restrict self)
-%{unsupported(auto("last"))} %{$empty = ITER_DONE}
+%{unsupported_alias(default__seq_getlast__unsupported)}
+%{$empty = "default__seq_trygetfirst__empty"}
+%{$with__seq_getlast = {
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_getlast, self);
+	if (!result && (DeeError_Catch(&DeeError_UnboundAttribute) ||
+	                DeeError_Catch(&DeeError_IndexError)))
+		result = ITER_DONE;
+	return result;
+}}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DeeObject *result;
@@ -82,18 +93,13 @@ err:
 	if (foreach_status == 0)
 		return ITER_DONE;
 	return NULL;
-}} {
-	DREF DeeObject *result = LOCAL_GETATTR(self);
-	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
-		result = ITER_DONE;
-	return result;
-}
+}} = $with__seq_getlast;
 
 
 /* Return the last element of the sequence */
 [[wunused, getset_member("get")]] DREF DeeObject *
 __seq_last__.seq_getlast([[nonnull]] DeeObject *__restrict self)
-%{unsupported_alias(default__seq_trygetlast__unsupported)}
+%{unsupported(auto("last"))}
 %{$empty = {
 	err_unbound_attribute_string(THIS_TYPE, "last");
 	return NULL;
@@ -189,12 +195,12 @@ err:
 
 seq_trygetlast = {
 	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ) {
-		if (THIS_TYPE->tp_seq &&
-		    THIS_TYPE->tp_seq->tp_getitem_index_fast &&
-		    THIS_TYPE->tp_seq->tp_size)
-			return &$with__seq_operator_size__and__operator_getitem_index_fast;
-	}
+	if (REQUIRE_NODEFAULT(seq_getlast))
+		return &$with__seq_getlast;
+	if (THIS_TYPE->tp_seq &&
+	    THIS_TYPE->tp_seq->tp_getitem_index_fast &&
+	    THIS_TYPE->tp_seq->tp_size)
+		return &$with__seq_operator_size__and__operator_getitem_index_fast;
 	seq_operator_trygetitem_index = REQUIRE(seq_operator_trygetitem_index);
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
 		return &$empty;

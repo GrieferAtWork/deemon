@@ -6313,42 +6313,17 @@ err:
 
 /* seq_trygetfirst */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetfirst__with_callattr_first(DeeObject *__restrict self) {
-	DREF DeeObject *result = DeeObject_GetAttr(self, (DeeObject *)&str_first);
-	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
-		result = ITER_DONE;
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetfirst__with_callattr___seq_first__(DeeObject *__restrict self) {
-	DREF DeeObject *result = DeeObject_GetAttr(self, (DeeObject *)&str___seq_first__);
-	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
-		result = ITER_DONE;
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetfirst__with_callobjectcache___seq_first__(DeeObject *__restrict self) {
-#ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_trygetfirst__with_callobjectcache___seq_first__(Dee_TYPE(self), self);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_first__, 1, (DeeObject *const *)&self);
-	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
-		result = ITER_DONE;
-	return result;
-#endif /* !__OPTIMIZE_SIZE__ */
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetfirst__unsupported(DeeObject *__restrict self) {
-	err_seq_unsupportedf(self, "first()");
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_trygetfirst__empty(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_trygetfirst__with__seq_getfirst(DeeObject *__restrict self) {
+	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_getfirst))(self);
+	if (!result && (DeeError_Catch(&DeeError_UnboundAttribute) ||
+	                DeeError_Catch(&DeeError_IndexError)))
+		result = ITER_DONE;
+	return result;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -6417,6 +6392,12 @@ default__seq_getfirst__with_callobjectcache___seq_first__(DeeObject *__restrict 
 #else /* __OPTIMIZE_SIZE__ */
 	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_first__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_getfirst__unsupported(DeeObject *__restrict self) {
+	err_seq_unsupportedf(self, "first()");
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -6564,42 +6545,12 @@ default__seq_setfirst__with__seq_operator_setitem_index(DeeObject *self, DeeObje
 
 /* seq_trygetlast */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetlast__with_callattr_last(DeeObject *__restrict self) {
-	DREF DeeObject *result = DeeObject_GetAttr(self, (DeeObject *)&str_last);
-	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
+default__seq_trygetlast__with__seq_getlast(DeeObject *__restrict self) {
+	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_getlast))(self);
+	if (!result && (DeeError_Catch(&DeeError_UnboundAttribute) ||
+	                DeeError_Catch(&DeeError_IndexError)))
 		result = ITER_DONE;
 	return result;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetlast__with_callattr___seq_last__(DeeObject *__restrict self) {
-	DREF DeeObject *result = DeeObject_GetAttr(self, (DeeObject *)&str___seq_last__);
-	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
-		result = ITER_DONE;
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetlast__with_callobjectcache___seq_last__(DeeObject *__restrict self) {
-#ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_trygetlast__with_callobjectcache___seq_last__(Dee_TYPE(self), self);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_last__, 1, (DeeObject *const *)&self);
-	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
-		result = ITER_DONE;
-	return result;
-#endif /* !__OPTIMIZE_SIZE__ */
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetlast__unsupported(DeeObject *__restrict self) {
-	err_seq_unsupportedf(self, "last()");
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetlast__empty(DeeObject *__restrict UNUSED(self)) {
-	return ITER_DONE;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -6679,6 +6630,12 @@ default__seq_getlast__with_callobjectcache___seq_last__(DeeObject *__restrict se
 #else /* __OPTIMIZE_SIZE__ */
 	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_last__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_getlast__unsupported(DeeObject *__restrict self) {
+	err_seq_unsupportedf(self, "last()");
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -6929,6 +6886,34 @@ default__seq_frozen__with_callobjectcache___seq_frozen__(DeeObject *__restrict s
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_frozen__unsupported(DeeObject *__restrict self) {
 	err_seq_unsupportedf(self, "__seq_frozen__()");
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_frozen__with__set_frozen(DeeObject *__restrict self) {
+	/* return Set.frozen(this) as Sequence */
+	DREF DeeObject *result;
+	DREF DeeObject *set_frozen = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_frozen))(self);
+	if unlikely(!set_frozen)
+		goto err;
+	result = DeeSuper_New(&DeeSeq_Type, set_frozen);
+	Dee_Decref_unlikely(set_frozen);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_frozen__with__map_frozen(DeeObject *__restrict self) {
+	/* return Mapping.frozen(this) as Sequence */
+	DREF DeeObject *result;
+	DREF DeeObject *map_frozen = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_frozen))(self);
+	if unlikely(!map_frozen)
+		goto err;
+	result = DeeSuper_New(&DeeSeq_Type, map_frozen);
+	Dee_Decref_unlikely(map_frozen);
+	return result;
+err:
 	return NULL;
 }
 
@@ -15726,6 +15711,20 @@ default__set_frozen__unsupported(DeeObject *__restrict self) {
 	return NULL;
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__set_frozen__with__map_frozen(DeeObject *__restrict self) {
+	/* return Mapping.frozen(this) as Set */
+	DREF DeeObject *result;
+	DREF DeeObject *map_frozen = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_frozen))(self);
+	if unlikely(!map_frozen)
+		goto err;
+	result = DeeSuper_New(&DeeSet_Type, map_frozen);
+	Dee_Decref_unlikely(map_frozen);
+	return result;
+err:
+	return NULL;
+}
+
 
 /* set_unify */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -20598,15 +20597,6 @@ err:
 	return (size_t)-1;
 }
 
-/* seq_trygetfirst */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__seq_trygetfirst__with_callobjectcache___seq_first__(DeeTypeObject *tp_self, DeeObject *self) {
-	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_first__, 1, (DeeObject *const *)&self);
-	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
-		result = ITER_DONE;
-	return result;
-}
-
 /* seq_getfirst */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_getfirst__with_callobjectcache___seq_first__(DeeTypeObject *tp_self, DeeObject *self) {
@@ -20629,15 +20619,6 @@ tdefault__seq_delfirst__with_callobjectcache___seq_first__(DeeTypeObject *tp_sel
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__seq_setfirst__with_callobjectcache___seq_first__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value) {
 	return mhcache_thiscall_int(tp_self, tp_self->tp_mhcache->mhc_set___seq_first__, self, 1, (DeeObject *const *)&value);
-}
-
-/* seq_trygetlast */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__seq_trygetlast__with_callobjectcache___seq_last__(DeeTypeObject *tp_self, DeeObject *self) {
-	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_last__, 1, (DeeObject *const *)&self);
-	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
-		result = ITER_DONE;
-	return result;
 }
 
 /* seq_getlast */

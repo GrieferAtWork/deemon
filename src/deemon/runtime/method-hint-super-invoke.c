@@ -888,18 +888,15 @@ PRIVATE struct mh_super_map_replace tpconst msm_replace__seq_trygetfirst[2] = {
 	MH_SUPER_MAP_REPLACE_INIT(&default__seq_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_trygetfirst__with__seq_operator_trygetitem_index),
 	MH_SUPER_MAP_REPLACE_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_trygetfirst[7] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_trygetfirst[8] = {
 	(Dee_funptr_t)&default__seq_trygetfirst__with_callattr_first,
 	(Dee_funptr_t)&default__seq_trygetfirst__with_callattr___seq_first__,
 	(Dee_funptr_t)&default__seq_trygetfirst__unsupported,
 	(Dee_funptr_t)&default__seq_trygetfirst__empty,
+	(Dee_funptr_t)&default__seq_trygetfirst__with__seq_getfirst,
 	(Dee_funptr_t)&default__seq_trygetfirst__with__seq_operator_trygetitem_index,
 	(Dee_funptr_t)&default__seq_trygetfirst__with__seq_operator_foreach,
 	NULL
-};
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_trygetfirst[2] = {
-	MH_SUPER_MAP_TYPED_INIT(&default__seq_trygetfirst__with_callobjectcache___seq_first__, &tdefault__seq_trygetfirst__with_callobjectcache___seq_first__),
-	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__seq_getfirst[7] = {
 	(Dee_funptr_t)&default__seq_getfirst__with_callattr_first,
@@ -955,18 +952,15 @@ PRIVATE struct mh_super_map_replace tpconst msm_replace__seq_trygetlast[2] = {
 	MH_SUPER_MAP_REPLACE_INIT(&default__seq_trygetlast__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	MH_SUPER_MAP_REPLACE_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_trygetlast[7] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_trygetlast[8] = {
 	(Dee_funptr_t)&default__seq_trygetlast__with_callattr_last,
 	(Dee_funptr_t)&default__seq_trygetlast__with_callattr___seq_last__,
 	(Dee_funptr_t)&default__seq_trygetlast__unsupported,
 	(Dee_funptr_t)&default__seq_trygetlast__empty,
+	(Dee_funptr_t)&default__seq_trygetlast__with__seq_getlast,
 	(Dee_funptr_t)&default__seq_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index,
 	(Dee_funptr_t)&default__seq_trygetlast__with__seq_operator_foreach,
 	NULL
-};
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_trygetlast[2] = {
-	MH_SUPER_MAP_TYPED_INIT(&default__seq_trygetlast__with_callobjectcache___seq_last__, &tdefault__seq_trygetlast__with_callobjectcache___seq_last__),
-	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__seq_getlast[7] = {
 	(Dee_funptr_t)&default__seq_getlast__with_callattr_last,
@@ -1033,12 +1027,14 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_cached[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__seq_cached__with_callobjectcache___seq_cached__, &tdefault__seq_cached__with_callobjectcache___seq_cached__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_frozen[6] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_frozen[8] = {
 	(Dee_funptr_t)&default__seq_frozen__with_callattr_frozen,
 	(Dee_funptr_t)&default__seq_frozen__with_callattr___seq_frozen__,
 	(Dee_funptr_t)&default__seq_frozen__unsupported,
 	(Dee_funptr_t)&default__seq_frozen__empty,
 	(Dee_funptr_t)&default__seq_frozen__with__seq_operator_foreach,
+	(Dee_funptr_t)&default__seq_frozen__with__set_frozen,
+	(Dee_funptr_t)&default__seq_frozen__with__map_frozen,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_frozen[2] = {
@@ -2371,12 +2367,13 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_inplace_xo
 	MH_SUPER_MAP_TYPED_INIT(&default__inplace_xor__with__xor, &tdefault__inplace_xor__with__xor),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__set_frozen[6] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__set_frozen[7] = {
 	(Dee_funptr_t)&default__set_frozen__with_callattr_frozen,
 	(Dee_funptr_t)&default__set_frozen__with_callattr___set_frozen__,
 	(Dee_funptr_t)&default__set_frozen__unsupported,
 	(Dee_funptr_t)&default__set_frozen__empty,
 	(Dee_funptr_t)&default__set_frozen__with__set_operator_foreach,
+	(Dee_funptr_t)&default__set_frozen__with__map_frozen,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_frozen[2] = {
@@ -3442,12 +3439,12 @@ PRIVATE struct mh_super_map tpconst mh_super_maps[238] = {
 	MH_SUPER_MAP_INIT(msm_replace__seq_unpack, msm_with_super__seq_unpack, msm_with_type__seq_unpack),
 	MH_SUPER_MAP_INIT(msm_replace__seq_unpack_ex, msm_with_super__seq_unpack_ex, msm_with_type__seq_unpack_ex),
 	MH_SUPER_MAP_INIT(msm_replace__seq_unpack_ub, msm_with_super__seq_unpack_ub, msm_with_type__seq_unpack_ub),
-	MH_SUPER_MAP_INIT(msm_replace__seq_trygetfirst, msm_with_super__seq_trygetfirst, msm_with_type__seq_trygetfirst),
+	MH_SUPER_MAP_INIT(msm_replace__seq_trygetfirst, msm_with_super__seq_trygetfirst, NULL),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_getfirst, msm_with_type__seq_getfirst),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_boundfirst, msm_with_type__seq_boundfirst),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_delfirst, msm_with_type__seq_delfirst),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_setfirst, msm_with_type__seq_setfirst),
-	MH_SUPER_MAP_INIT(msm_replace__seq_trygetlast, msm_with_super__seq_trygetlast, msm_with_type__seq_trygetlast),
+	MH_SUPER_MAP_INIT(msm_replace__seq_trygetlast, msm_with_super__seq_trygetlast, NULL),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_getlast, msm_with_type__seq_getlast),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_boundlast, msm_with_type__seq_boundlast),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_dellast, msm_with_type__seq_dellast),

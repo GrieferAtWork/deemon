@@ -22,7 +22,10 @@
 /* deemon.Sequence.first                                                */
 /************************************************************************/
 
-[[getset, alias(Sequence.first)]]
+[[getset]]
+[[alias(Sequence.first)]]
+[[alias(Set.first)]]
+[[alias(Mapping.first)]]
 __seq_first__->?O;
 
 
@@ -43,7 +46,15 @@ seq_default_getfirst_with_foreach_cb(void *arg, DeeObject *item) {
 /* Try to return the first element of the sequence (returns ITER_DONE if the sequence is empty) */
 [[wunused]] DREF DeeObject *
 __seq_first__.seq_trygetfirst([[nonnull]] DeeObject *__restrict self)
-%{unsupported(auto("first"))} %{$empty = ITER_DONE}
+%{unsupported_alias(default__seq_getfirst__unsupported)}
+%{$empty = ITER_DONE}
+%{$with__seq_getfirst = {
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_getfirst, self);
+	if (!result && (DeeError_Catch(&DeeError_UnboundAttribute) ||
+	                DeeError_Catch(&DeeError_IndexError)))
+		result = ITER_DONE;
+	return result;
+}}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_trygetitem_index)]] {
 	DREF DeeObject *result;
@@ -71,18 +82,15 @@ err:
 	if (foreach_status == 0)
 		return ITER_DONE;
 	return NULL;
-}} {
-	DREF DeeObject *result = LOCAL_GETATTR(self);
-	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
-		result = ITER_DONE;
-	return result;
-}
+}} = $with__seq_getfirst;
+
+
 
 
 /* Return the first element of the sequence */
 [[wunused, getset_member("get")]] DREF DeeObject *
 __seq_first__.seq_getfirst([[nonnull]] DeeObject *__restrict self)
-%{unsupported_alias(default__seq_trygetfirst__unsupported)}
+%{unsupported(auto("first"))}
 %{$empty = {
 	err_unbound_attribute_string(THIS_TYPE, "first");
 	return NULL;
@@ -155,11 +163,11 @@ __seq_first__.seq_setfirst([[nonnull]] DeeObject *self,
 
 seq_trygetfirst = {
 	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ) {
-		if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast &&
-		    REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
-			return &$with__seq_operator_size__and__operator_getitem_index_fast;
-	}
+	if (REQUIRE_NODEFAULT(seq_getfirst))
+		return &$with__seq_getfirst;
+	if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast &&
+	    REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
+		return &$with__seq_operator_size__and__operator_getitem_index_fast;
 	seq_operator_trygetitem_index = REQUIRE(seq_operator_trygetitem_index);
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
 		return &$empty;

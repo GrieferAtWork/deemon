@@ -1060,11 +1060,11 @@ mh_select_seq_unpack_ub(DeeTypeObject *self, DeeTypeObject *orig_type) {
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_trygetfirst_t DCALL
 mh_select_seq_trygetfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
-	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ) {
-		if (self->tp_seq && self->tp_seq->tp_getitem_index_fast &&
-		    (DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size) != &default__seq_operator_size__unsupported)
-			return &default__seq_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast;
-	}
+	if ((DeeMH_seq_getfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_getfirst))
+		return &default__seq_trygetfirst__with__seq_getfirst;
+	if (self->tp_seq && self->tp_seq->tp_getitem_index_fast &&
+	    (DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size) != &default__seq_operator_size__unsupported)
+		return &default__seq_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast;
 	seq_operator_trygetitem_index = (DeeMH_seq_operator_trygetitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_trygetitem_index);
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
 		return &default__seq_trygetfirst__empty;
@@ -1130,12 +1130,12 @@ mh_select_seq_setfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_trygetlast_t DCALL
 mh_select_seq_trygetlast(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
-	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ) {
-		if (self->tp_seq &&
-		    self->tp_seq->tp_getitem_index_fast &&
-		    self->tp_seq->tp_size)
-			return &default__seq_trygetlast__with__seq_operator_size__and__operator_getitem_index_fast;
-	}
+	if ((DeeMH_seq_getlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_getlast))
+		return &default__seq_trygetlast__with__seq_getlast;
+	if (self->tp_seq &&
+	    self->tp_seq->tp_getitem_index_fast &&
+	    self->tp_seq->tp_size)
+		return &default__seq_trygetlast__with__seq_operator_size__and__operator_getitem_index_fast;
 	seq_operator_trygetitem_index = (DeeMH_seq_operator_trygetitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_trygetitem_index);
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
 		return &default__seq_trygetlast__empty;
@@ -1224,7 +1224,12 @@ mh_select_seq_cached(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_frozen_t DCALL
 mh_select_seq_frozen(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	if ((DeeMH_set_frozen_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_frozen))
+		return &default__seq_frozen__with__set_frozen;
+	if ((DeeMH_map_frozen_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_frozen))
+		return &default__seq_frozen__with__map_frozen;
+	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &default__seq_frozen__empty;
 	if (seq_operator_foreach)
@@ -2576,7 +2581,10 @@ mh_select_set_operator_inplace_xor(DeeTypeObject *self, DeeTypeObject *orig_type
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_frozen_t DCALL
 mh_select_set_frozen(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_set_operator_foreach_t set_operator_foreach = (DeeMH_set_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_operator_foreach);
+	DeeMH_set_operator_foreach_t set_operator_foreach;
+	if ((DeeMH_map_frozen_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_frozen))
+		return &default__set_frozen__with__map_frozen;
+	set_operator_foreach = (DeeMH_set_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_operator_foreach);
 	if (set_operator_foreach == &default__set_operator_foreach__empty)
 		return &default__set_frozen__empty;
 	if (set_operator_foreach)

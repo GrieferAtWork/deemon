@@ -855,8 +855,6 @@ super_mh__seq_trygetfirst(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_trygetfirst_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_trygetfirst_t)specs.smh_cb)((DeeObject *)self);
-	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -935,8 +933,6 @@ super_mh__seq_trygetlast(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_trygetlast_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_trygetlast_t)specs.smh_cb)((DeeObject *)self);
-	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();

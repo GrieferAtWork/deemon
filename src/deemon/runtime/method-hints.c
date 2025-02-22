@@ -955,44 +955,64 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_unpack_ub[
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_unpackub, NULL, Dee_SEQCLASS_SEQ, &default__seq_unpack_ub__with_callattr_unpackub),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_trygetfirst[2] = {
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_trygetfirst[4] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SEQ, &default__seq_trygetfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SET, &default__seq_trygetfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_MAP, &default__seq_trygetfirst__with_callattr_first),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_getfirst[2] = {
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_getfirst[4] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SEQ, &default__seq_getfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SET, &default__seq_getfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_MAP, &default__seq_getfirst__with_callattr_first),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_boundfirst[2] = {
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_boundfirst[4] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SEQ, &default__seq_boundfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SET, &default__seq_boundfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_MAP, &default__seq_boundfirst__with_callattr_first),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_delfirst[2] = {
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_delfirst[4] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SEQ, &default__seq_delfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SET, &default__seq_delfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_MAP, &default__seq_delfirst__with_callattr_first),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_setfirst[2] = {
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_setfirst[4] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SEQ, &default__seq_setfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SET, &default__seq_setfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_MAP, &default__seq_setfirst__with_callattr_first),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_trygetlast[2] = {
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_trygetlast[4] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SEQ, &default__seq_trygetlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SET, &default__seq_trygetlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_MAP, &default__seq_trygetlast__with_callattr_last),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_getlast[2] = {
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_getlast[4] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SEQ, &default__seq_getlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SET, &default__seq_getlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_MAP, &default__seq_getlast__with_callattr_last),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_boundlast[2] = {
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_boundlast[4] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SEQ, &default__seq_boundlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SET, &default__seq_boundlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_MAP, &default__seq_boundlast__with_callattr_last),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_dellast[2] = {
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_dellast[4] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SEQ, &default__seq_dellast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SET, &default__seq_dellast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_MAP, &default__seq_dellast__with_callattr_last),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_setlast[2] = {
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_setlast[4] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SEQ, &default__seq_setlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SET, &default__seq_setlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_MAP, &default__seq_setlast__with_callattr_last),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_cached[2] = {

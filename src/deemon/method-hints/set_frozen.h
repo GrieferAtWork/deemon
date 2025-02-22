@@ -30,13 +30,28 @@ __set_frozen__->?O;
 __set_frozen__.set_frozen([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$empty = "DeeObject_NewRef"}
-%{$with__set_operator_foreach = "DeeRoSet_FromSequence"} {
+%{$with__set_operator_foreach = "DeeRoSet_FromSequence"}
+%{$with__map_frozen = {
+	/* return Mapping.frozen(this) as Set */
+	DREF DeeObject *result;
+	DREF DeeObject *map_frozen = CALL_DEPENDENCY(map_frozen, self);
+	if unlikely(!map_frozen)
+		goto err;
+	result = DeeSuper_New(&DeeSet_Type, map_frozen);
+	Dee_Decref_unlikely(map_frozen);
+	return result;
+err:
+	return NULL;
+}} {
 	return LOCAL_GETATTR(self);
 }
 
 
 set_frozen = {
-	DeeMH_set_operator_foreach_t set_operator_foreach = REQUIRE(set_operator_foreach);
+	DeeMH_set_operator_foreach_t set_operator_foreach;
+	if (REQUIRE_NODEFAULT(map_frozen))
+		return &$with__map_frozen;
+	set_operator_foreach = REQUIRE(set_operator_foreach);
 	if (set_operator_foreach == &default__set_operator_foreach__empty)
 		return &$empty;
 	if (set_operator_foreach)
