@@ -2536,17 +2536,12 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 		       /*                             */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FREADONLY))) {
 			uint16_t addr;
 			struct class_desc *desc;
-			struct Dee_type_mh_cache *mhcache;
-			Dee_mhc_slot_t *cache;
 			if ((specs->mis_attr_kind == MH_KIND_GETSET_DEL ||
 			     specs->mis_attr_kind == MH_KIND_GETSET_SET) &&
 			    (info->ai_value.v_attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY))
 				break;
 			desc = DeeClass_DESC(info->ai_decl);
 			addr = info->ai_value.v_attr->ca_addr;
-			mhcache = Dee_type_mh_cache_of(orig_type);
-			if unlikely(!mhcache)
-				break;
 			switch (specs->mis_attr_kind) {
 			case MH_KIND_GETSET_GET:
 			case MH_KIND_GETSET_BOUND:
@@ -2560,9 +2555,30 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 				break;
 			default: break;
 			}
-			cache = (Dee_mhc_slot_t *)((byte_t *)mhcache + specs->mis_offsetof_cache);
-			atomic_write(cache, addr);
-			return specs->mis_withcache_object;
+			if ((DeeTypeObject *)info->ai_decl == orig_type) {
+				Dee_mhc_slot_t *cache;
+				struct Dee_type_mh_cache *mhcache;
+				mhcache = Dee_type_mh_cache_of(orig_type);
+				if unlikely(!mhcache)
+					break;
+				cache = (Dee_mhc_slot_t *)((byte_t *)mhcache + specs->mis_offsetof_cache);
+				atomic_write(cache, addr);
+				return specs->mis_withcache_object;
+			} else {
+				/* XXX: Somehow also optimize this case:
+				 *
+				 * >> class MyClass1: Set {}
+				 * >> class MyClass2: MyClass1 { __set_add__(rhs) -> "Works!"; }
+				 * >> class MyClass3: MyClass2 {}
+				 * >>
+				 * >> local result = MyClass3() | {10};
+				 * >> assert result == "Works!";
+				 * This code works, but "MyClass3.operator |" must be implemented
+				 * as "default__set_operator_add__with_callattr___set_add__", when
+				 * "MyClass2" was previously able to implement it as:
+				 * "default__set_operator_add__with_callobjectcache___set_add__"
+				 */
+			}
 		}
 		break;
 
