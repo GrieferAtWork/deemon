@@ -248,10 +248,7 @@
 %[include("map_itervalues.h")]
 
 %[include("map_enumerate.h")]
-/* TODO: map_enumerate_items + map_enumerate_items_with_range.
- *       Like seq_enumerate_items, but follows map semantics, and uses stuff
- *       like "DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack"
- * NOTE: Obviously, there won't be a "map_enumerate_items_with_intrange"! */
+%[include("map_enumerate_items.h")]
 
 %[include("map_operator_compare_eq.h")]
 %[include("map_operator_cmp.h")]

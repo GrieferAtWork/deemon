@@ -25,9 +25,8 @@
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
-
-#include "operator-require.h"
 
 /**/
 #include "method-hint-defaults.h"
@@ -2366,6 +2365,10 @@ mh_select_set_operator_iter(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_iter_t seq_operator_iter = (DeeMH_seq_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &default__set_operator_iter__empty;
+	if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate ||
+	    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem ||
+	    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem)
+		return seq_operator_iter;
 	if (seq_operator_iter)
 		return &default__set_operator_iter__with__seq_operator_iter;
 	return NULL;
@@ -2654,6 +2657,10 @@ mh_select_map_operator_iter(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_iter_t seq_operator_iter = (DeeMH_seq_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &default__map_operator_iter__empty;
+	if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate ||
+	    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem ||
+	    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem)
+		return seq_operator_iter;
 	if (seq_operator_iter)
 		return &default__map_operator_iter__with__seq_operator_iter;
 	return NULL;
@@ -3078,11 +3085,11 @@ mh_select_map_iterkeys(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		return &default__map_iterkeys__empty;
 	if (DeeType_HasTraitHint(self, __map_getitem_always_bound__) ||
 	    map_enumerate == (DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_foreach_pair)) {
-		DeeMH_set_operator_iter_t set_operator_iter = (DeeMH_set_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_operator_iter);
-		if (set_operator_iter == &default__set_operator_iter__empty)
+		DeeMH_map_operator_iter_t map_operator_iter = (DeeMH_map_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_iter);
+		if (map_operator_iter == &default__map_operator_iter__empty)
 			return &default__map_iterkeys__empty;
-		if (set_operator_iter)
-			return &default__map_iterkeys__with__set_operator_iter;
+		if (map_operator_iter)
+			return &default__map_iterkeys__with__map_operator_iter;
 	}
 	if (map_enumerate)
 		return &default__map_iterkeys__with__map_enumerate;
@@ -3101,14 +3108,14 @@ mh_select_map_values(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_itervalues_t DCALL
 mh_select_map_itervalues(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_set_operator_iter_t set_operator_iter;
+	DeeMH_map_operator_iter_t map_operator_iter;
 	if ((DeeMH_map_values_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_values))
 		return &default__map_itervalues__with__map_values;
-	set_operator_iter = (DeeMH_set_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_operator_iter);
-	if (set_operator_iter == &default__set_operator_iter__empty)
+	map_operator_iter = (DeeMH_map_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_iter);
+	if (map_operator_iter == &default__map_operator_iter__empty)
 		return &default__map_itervalues__empty;
-	if (set_operator_iter)
-		return &default__map_itervalues__with__set_operator_iter;
+	if (map_operator_iter)
+		return &default__map_itervalues__with__map_operator_iter;
 	return NULL;
 }
 
@@ -3122,7 +3129,7 @@ mh_select_map_enumerate(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if (map_iterkeys) {
 		if (map_iterkeys == &default__map_iterkeys__empty)
 			return &default__map_enumerate__empty;
-		if (map_iterkeys != &default__map_iterkeys__with__set_operator_iter) {
+		if (map_iterkeys != &default__map_iterkeys__with__map_operator_iter) {
 			DeeMH_map_operator_trygetitem_t map_operator_trygetitem = (DeeMH_map_operator_trygetitem_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_trygetitem);
 			if (map_operator_trygetitem == &default__map_operator_trygetitem__empty)
 				return &default__map_enumerate__empty;
@@ -3145,6 +3152,66 @@ mh_select_map_enumerate_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		return &default__map_enumerate_range__with__map_iterkeys__and__map_operator_trygetitem;
 	if (map_enumerate)
 		return &default__map_enumerate_range__with__map_enumerate;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_makeenumeration_t DCALL
+mh_select_map_makeenumeration(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_map_enumerate_t map_enumerate = (DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_enumerate);
+	if (map_enumerate == &default__map_enumerate__empty)
+		return &default__map_makeenumeration__empty;
+	if (map_enumerate == &default__map_enumerate__with__map_iterkeys__and__map_operator_trygetitem) {
+		DeeMH_map_operator_trygetitem_t map_operator_trygetitem;
+		DeeMH_map_iterkeys_t map_iterkeys = (DeeMH_map_iterkeys_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_iterkeys);
+		if (map_iterkeys == &default__map_iterkeys__empty)
+			return &default__map_makeenumeration__empty;
+		if (map_iterkeys == &default__map_iterkeys__with__map_operator_iter) {
+return__with__map_operator_iter:
+			if (DeeType_RequireSupportedNativeOperator(self, iter) == (DeeMH_map_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_iter))
+				return &default__map_makeenumeration__with__operator_iter;
+			return &default__map_makeenumeration__with__map_operator_iter;
+		}
+
+		map_operator_trygetitem = (DeeMH_map_operator_trygetitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_trygetitem);
+		if (map_operator_trygetitem == &default__map_operator_trygetitem__empty)
+			return &default__map_makeenumeration__empty;
+		if (map_operator_trygetitem == &default__map_operator_trygetitem__with__map_operator_getitem)
+			return &default__map_makeenumeration__with__map_iterkeys__and__map_operator_getitem;
+		return &default__map_makeenumeration__with__map_iterkeys__and__map_operator_trygetitem;
+	}
+	if (map_enumerate) {
+		/* The "$with__map_enumerate" impl is super-inefficient.
+		 * See if we can use one of the others, even if that one would work. */
+		DeeMH_map_operator_iter_t map_operator_iter = (DeeMH_map_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_iter);
+		if (map_operator_iter == &default__map_operator_iter__empty)
+			return &default__map_makeenumeration__empty;
+		if (map_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem)
+			return &default__map_makeenumeration__with__map_iterkeys__and__map_operator_trygetitem;
+		if (map_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem)
+			return &default__map_makeenumeration__with__map_iterkeys__and__map_operator_getitem;
+		if (map_operator_iter != &default__seq_operator_iter__with__map_enumerate)
+			goto return__with__map_operator_iter;
+		return &default__map_makeenumeration__with__map_enumerate;
+	}
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_makeenumeration_with_range_t DCALL
+mh_select_map_makeenumeration_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_map_makeenumeration_t map_makeenumeration = (DeeMH_map_makeenumeration_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_makeenumeration);
+	if (map_makeenumeration == &default__map_makeenumeration__empty)
+		return &default__map_makeenumeration_with_range__empty;
+	if (map_makeenumeration == &default__map_makeenumeration__with__operator_iter ||
+	    map_makeenumeration == &default__map_makeenumeration__with__map_operator_iter)
+		return &default__map_makeenumeration_with_range__with__map_operator_iter;
+	if (map_makeenumeration == &default__map_makeenumeration__with__map_iterkeys__and__map_operator_getitem)
+		return &default__map_makeenumeration_with_range__with__map_iterkeys__and__map_operator_getitem;
+	if (map_makeenumeration == &default__map_makeenumeration__with__map_iterkeys__and__map_operator_trygetitem)
+		return &default__map_makeenumeration_with_range__with__map_iterkeys__and__map_operator_trygetitem;
+	if (map_makeenumeration == &default__map_makeenumeration__with__map_enumerate)
+		return &default__map_makeenumeration_with_range__with__map_enumerate_range;
+	/*if (map_makeenumeration) // TODO
+		return &$with__map_makeenumeration;*/
 	return NULL;
 }
 

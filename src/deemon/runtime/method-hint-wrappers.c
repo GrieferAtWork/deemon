@@ -1714,6 +1714,20 @@ err:
 	return NULL;
 }
 
+PUBLIC_CONST char const DeeMA___map_enumerate_items___name[] = "__map_enumerate_items__";
+PUBLIC_CONST char const DeeMA___map_enumerate_items___doc[] = "(startkey?,endkey?)->?S?T2";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *startkey = NULL, *endkey = NULL;
+	if (DeeArg_Unpack(argc, argv, "|oo:__map_enumerate_items__", &startkey, &endkey))
+		goto err;
+	if (endkey)
+		return DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, startkey, endkey);
+	return DeeObject_InvokeMethodHint(map_makeenumeration, self);
+err:
+	return NULL;
+}
+
 PUBLIC_CONST char const DeeMA___map_compare_eq___name[] = "__map_compare_eq__";
 PUBLIC_CONST char const DeeMA___map_compare_eq___doc[] = "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?X2?Dbool?Dint";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL

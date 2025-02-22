@@ -696,6 +696,9 @@
 		<ClInclude Include="..\src\deemon\method-hints\map_enumerate.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_enumerate_items.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\map_frozen.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>

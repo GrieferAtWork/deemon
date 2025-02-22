@@ -1270,7 +1270,7 @@ global final TYPES: {EnumType...} = {
 	EnumType("DefaultEnumeration__with__map_iterkeys__and__map_operator_trygetitem",                         "de_mik_motg__"),
 	EnumType("DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_trygetitem",               "dewf_mik_motg__"),
 	EnumType("DefaultEnumeration__with__map_enumerate",                                                      "de_me__"),
-	EnumType("DefaultEnumerationWithFilter__with__map_enumerate",                                            "dewf_mer__"),
+	EnumType("DefaultEnumerationWithFilter__with__map_enumerate_range",                                      "dewf_mer__"),
 };
 
 local inImplBlock = false;
@@ -3428,7 +3428,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__map_enumerate = {
 };
 
 
-/* DefaultEnumerationWithFilter__with__map_enumerate */
+/* DefaultEnumerationWithFilter__with__map_enumerate_range */
 PRIVATE struct type_seq dewf_mer__seq = {
 	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dewf_mer__iter,
 	/* .tp_sizeob                       = */ NULL,
@@ -3477,7 +3477,7 @@ PRIVATE struct type_seq dewf_mer__seq = {
 	/* .tp_asvector                     = */ NULL,
 };
 
-INTERN DeeTypeObject DefaultEnumerationWithFilter__with__map_enumerate = {
+INTERN DeeTypeObject DefaultEnumerationWithFilter__with__map_enumerate_range = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ dewf_mer__name,
 	/* .tp_doc      = */ DOC(dewf_mer__doc),

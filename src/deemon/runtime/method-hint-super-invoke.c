@@ -2919,7 +2919,7 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_iterkeys[8] = {
 	(Dee_funptr_t)&default__map_iterkeys__empty,
 	(Dee_funptr_t)&default__map_iterkeys__with__map_keys,
 	(Dee_funptr_t)&default__map_iterkeys__with__map_enumerate,
-	(Dee_funptr_t)&default__map_iterkeys__with__set_operator_iter,
+	(Dee_funptr_t)&default__map_iterkeys__with__map_operator_iter,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_iterkeys[2] = {
@@ -2944,7 +2944,7 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_itervalues[7] = {
 	(Dee_funptr_t)&default__map_itervalues__unsupported,
 	(Dee_funptr_t)&default__map_itervalues__empty,
 	(Dee_funptr_t)&default__map_itervalues__with__map_values,
-	(Dee_funptr_t)&default__map_itervalues__with__set_operator_iter,
+	(Dee_funptr_t)&default__map_itervalues__with__map_operator_iter,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_itervalues[2] = {
@@ -2975,6 +2975,38 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_enumerate_range[6] = {
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_enumerate_range[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__map_enumerate_range__with_callobjectcache___map_enumerate__, &tdefault__map_enumerate_range__with_callobjectcache___map_enumerate__),
+	MH_SUPER_MAP_TYPED_END
+};
+PRIVATE struct mh_super_map_replace tpconst msm_replace__map_makeenumeration[2] = {
+	MH_SUPER_MAP_REPLACE_INIT(&default__map_makeenumeration__with__operator_iter, &default__map_makeenumeration__with__map_operator_iter),
+	MH_SUPER_MAP_REPLACE_END
+};
+PRIVATE Dee_funptr_t tpconst msm_with_super__map_makeenumeration[8] = {
+	(Dee_funptr_t)&default__map_makeenumeration__with_callattr___map_enumerate_items__,
+	(Dee_funptr_t)&default__map_makeenumeration__unsupported,
+	(Dee_funptr_t)&default__map_makeenumeration__empty,
+	(Dee_funptr_t)&default__map_makeenumeration__with__map_operator_iter,
+	(Dee_funptr_t)&default__map_makeenumeration__with__map_iterkeys__and__map_operator_getitem,
+	(Dee_funptr_t)&default__map_makeenumeration__with__map_iterkeys__and__map_operator_trygetitem,
+	(Dee_funptr_t)&default__map_makeenumeration__with__map_enumerate,
+	NULL
+};
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_makeenumeration[2] = {
+	MH_SUPER_MAP_TYPED_INIT(&default__map_makeenumeration__with_callobjectcache___map_enumerate_items__, &tdefault__map_makeenumeration__with_callobjectcache___map_enumerate_items__),
+	MH_SUPER_MAP_TYPED_END
+};
+PRIVATE Dee_funptr_t tpconst msm_with_super__map_makeenumeration_with_range[8] = {
+	(Dee_funptr_t)&default__map_makeenumeration_with_range__with_callattr___map_enumerate_items__,
+	(Dee_funptr_t)&default__map_makeenumeration_with_range__unsupported,
+	(Dee_funptr_t)&default__map_makeenumeration_with_range__empty,
+	(Dee_funptr_t)&default__map_makeenumeration_with_range__with__map_operator_iter,
+	(Dee_funptr_t)&default__map_makeenumeration_with_range__with__map_iterkeys__and__map_operator_getitem,
+	(Dee_funptr_t)&default__map_makeenumeration_with_range__with__map_iterkeys__and__map_operator_trygetitem,
+	(Dee_funptr_t)&default__map_makeenumeration_with_range__with__map_enumerate_range,
+	NULL
+};
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_makeenumeration_with_range[2] = {
+	MH_SUPER_MAP_TYPED_INIT(&default__map_makeenumeration_with_range__with_callobjectcache___map_enumerate_items__, &tdefault__map_makeenumeration_with_range__with_callobjectcache___map_enumerate_items__),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_compare_eq[7] = {
@@ -3352,7 +3384,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_popitem[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__map_popitem__with_callobjectcache___map_popitem__, &tdefault__map_popitem__with_callobjectcache___map_popitem__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE struct mh_super_map tpconst mh_super_maps[236] = {
+PRIVATE struct mh_super_map tpconst mh_super_maps[238] = {
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_bool, msm_with_type__seq_operator_bool),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_sizeob, msm_with_type__seq_operator_sizeob),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_size, msm_with_type__seq_operator_size),
@@ -3561,6 +3593,8 @@ PRIVATE struct mh_super_map tpconst mh_super_maps[236] = {
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_itervalues, msm_with_type__map_itervalues),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_enumerate, msm_with_type__map_enumerate),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_enumerate_range, msm_with_type__map_enumerate_range),
+	MH_SUPER_MAP_INIT(msm_replace__map_makeenumeration, msm_with_super__map_makeenumeration, msm_with_type__map_makeenumeration),
+	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_makeenumeration_with_range, msm_with_type__map_makeenumeration_with_range),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_operator_compare_eq, msm_with_type__map_operator_compare_eq),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_operator_trycompare_eq, msm_with_type__map_operator_trycompare_eq),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_operator_eq, msm_with_type__map_operator_eq),

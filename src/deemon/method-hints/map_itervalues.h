@@ -40,13 +40,13 @@ __map_itervalues__.map_itervalues([[nonnull]] DeeObject *__restrict self)
 err:
 	return NULL;
 }}
-%{$with__set_operator_iter = {
+%{$with__map_operator_iter = {
 	DeeTypeObject *itertyp;
 	DREF DefaultIterator_PairSubItem *result;
 	result = DeeObject_MALLOC(DefaultIterator_PairSubItem);
 	if unlikely(!result)
 		goto err;
-	result->dipsi_iter = CALL_DEPENDENCY(set_operator_iter, self);
+	result->dipsi_iter = CALL_DEPENDENCY(map_operator_iter, self);
 	if unlikely(!result->dipsi_iter)
 		goto err_r;
 	itertyp            = Dee_TYPE(result->dipsi_iter);
@@ -62,12 +62,12 @@ err:
 }
 
 map_itervalues = {
-	DeeMH_set_operator_iter_t set_operator_iter;
+	DeeMH_map_operator_iter_t map_operator_iter;
 	if (REQUIRE_NODEFAULT(map_values))
 		return &$with__map_values;
-	set_operator_iter = REQUIRE(set_operator_iter);
-	if (set_operator_iter == &default__set_operator_iter__empty)
+	map_operator_iter = REQUIRE(map_operator_iter);
+	if (map_operator_iter == &default__map_operator_iter__empty)
 		return &$empty;
-	if (set_operator_iter)
-		return &$with__set_operator_iter;
+	if (map_operator_iter)
+		return &$with__map_operator_iter;
 };

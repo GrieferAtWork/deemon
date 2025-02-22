@@ -303,6 +303,8 @@ enum Dee_tmh_id {
 	Dee_TMH_map_itervalues,
 	Dee_TMH_map_enumerate,
 	Dee_TMH_map_enumerate_range,
+	Dee_TMH_map_makeenumeration,
+	Dee_TMH_map_makeenumeration_with_range,
 	Dee_TMH_map_operator_compare_eq,
 	Dee_TMH_map_operator_trycompare_eq,
 	Dee_TMH_map_operator_eq,
@@ -745,6 +747,10 @@ typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_map_itervalues_t)
 /* __map_enumerate__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_map_enumerate_t)(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);
 typedef WUNUSED_T NONNULL_T((1, 2, 4, 5)) Dee_ssize_t (DCALL *DeeMH_map_enumerate_range_t)(DeeObject *self, Dee_seq_enumerate_t cb, void *arg, DeeObject *start, DeeObject *end);
+
+/* __map_enumerate_items__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_map_makeenumeration_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_map_makeenumeration_with_range_t)(DeeObject *self, DeeObject *startkey, DeeObject *endkey);
 
 /* __map_compare_eq__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_map_operator_compare_eq_t)(DeeObject *lhs, DeeObject *rhs);
@@ -1869,6 +1875,11 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_contains__(DeeObject *__r
 DDATDEF char const DeeMA___map_enumerate___name[]; /* "__map_enumerate__" */
 DDATDEF char const DeeMA___map_enumerate___doc[];  /* "(cb:?DCallable,startkey?,endkey?)->?X2?O?N" */
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___map_enumerate_items___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___map_enumerate_items___name[]; /* "__map_enumerate_items__" */
+DDATDEF char const DeeMA___map_enumerate_items___doc[];  /* "(startkey?,endkey?)->?S?T2" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_compare_eq___flags Dee_TYPE_METHOD_FNORMAL
 DDATDEF char const DeeMA___map_compare_eq___name[]; /* "__map_compare_eq__" */

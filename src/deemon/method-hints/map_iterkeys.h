@@ -29,7 +29,7 @@ __map_iterkeys__->?DIterator;
 [[wunused, getset_member("get")]] DREF DeeObject *
 __map_iterkeys__.map_iterkeys([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
-%{$empty = "default__set_operator_iter__empty"}
+%{$empty = "default__seq_operator_iter__empty"}
 %{$with__map_keys = {
 	DREF DeeObject *result, *keys = CALL_DEPENDENCY(map_keys, self);
 	if unlikely(!keys)
@@ -46,14 +46,14 @@ err:
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }}
-%{$with__set_operator_iter = {
+%{$with__map_operator_iter = {
 	/* NOTE: This only works when the mapping can't have unbound keys! */
 	DeeTypeObject *itertyp;
 	DREF DefaultIterator_PairSubItem *result;
 	result = DeeObject_MALLOC(DefaultIterator_PairSubItem);
 	if unlikely(!result)
 		goto err;
-	result->dipsi_iter = CALL_DEPENDENCY(set_operator_iter, self);
+	result->dipsi_iter = CALL_DEPENDENCY(map_operator_iter, self);
 	if unlikely(!result->dipsi_iter)
 		goto err_r;
 	itertyp            = Dee_TYPE(result->dipsi_iter);
@@ -77,11 +77,11 @@ map_iterkeys = {
 		return &$empty;
 	if (DeeType_HasTraitHint(THIS_TYPE, __map_getitem_always_bound__) ||
 	    map_enumerate == REQUIRE(map_operator_foreach_pair)) {
-		DeeMH_set_operator_iter_t set_operator_iter = REQUIRE(set_operator_iter);
-		if (set_operator_iter == &default__set_operator_iter__empty)
+		DeeMH_map_operator_iter_t map_operator_iter = REQUIRE(map_operator_iter);
+		if (map_operator_iter == &default__map_operator_iter__empty)
 			return &$empty;
-		if (set_operator_iter)
-			return &$with__set_operator_iter;
+		if (map_operator_iter)
+			return &$with__map_operator_iter;
 	}
 	if (map_enumerate)
 		return &$with__map_enumerate;

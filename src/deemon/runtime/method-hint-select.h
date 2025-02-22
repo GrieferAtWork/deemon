@@ -233,6 +233,8 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_values_t DCALL mh_select_map_
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_itervalues_t DCALL mh_select_map_itervalues(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_enumerate_t DCALL mh_select_map_enumerate(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_enumerate_range_t DCALL mh_select_map_enumerate_range(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_makeenumeration_t DCALL mh_select_map_makeenumeration(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_makeenumeration_with_range_t DCALL mh_select_map_makeenumeration_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_compare_eq_t DCALL mh_select_map_operator_compare_eq(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_trycompare_eq_t DCALL mh_select_map_operator_trycompare_eq(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_eq_t DCALL mh_select_map_operator_eq(DeeTypeObject *self, DeeTypeObject *orig_type);

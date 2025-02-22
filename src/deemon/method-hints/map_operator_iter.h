@@ -146,6 +146,10 @@ map_operator_iter = {
 	DeeMH_seq_operator_iter_t seq_operator_iter = REQUIRE(seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &$empty;
+	if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate ||
+	    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem ||
+	    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem)
+		return seq_operator_iter;
 	if (seq_operator_iter)
 		return &$with__seq_operator_iter;
 };

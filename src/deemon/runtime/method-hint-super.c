@@ -3414,6 +3414,38 @@ super_mh__map_enumerate_range(DeeSuperObject *self, Dee_seq_enumerate_t cb, void
 	__builtin_unreachable();
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_mh__map_makeenumeration(DeeSuperObject *__restrict self) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_map_makeenumeration, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_map_makeenumeration_t)specs.smh_cb)(self->s_self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_map_makeenumeration_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+	default: break;
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+super_mh__map_makeenumeration_with_range(DeeSuperObject *self, DeeObject *startkey, DeeObject *endkey) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_map_makeenumeration_with_range, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_map_makeenumeration_with_range_t)specs.smh_cb)(self->s_self, startkey, endkey);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_map_makeenumeration_with_range_t)specs.smh_cb)((DeeObject *)self, startkey, endkey);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, startkey, endkey);
+	default: break;
+	}
+	__builtin_unreachable();
+}
+
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 super_mh__map_operator_compare_eq(DeeSuperObject *lhs, DeeObject *rhs) {
 	struct Dee_super_method_hint specs;
@@ -4117,6 +4149,8 @@ INTERN struct Dee_type_mh_cache super_mhcache = {
 	(DeeMH_map_itervalues_t)&super_mh__map_itervalues,
 	(DeeMH_map_enumerate_t)&super_mh__map_enumerate,
 	(DeeMH_map_enumerate_range_t)&super_mh__map_enumerate_range,
+	(DeeMH_map_makeenumeration_t)&super_mh__map_makeenumeration,
+	(DeeMH_map_makeenumeration_with_range_t)&super_mh__map_makeenumeration_with_range,
 	(DeeMH_map_operator_compare_eq_t)&super_mh__map_operator_compare_eq,
 	(DeeMH_map_operator_trycompare_eq_t)&super_mh__map_operator_trycompare_eq,
 	(DeeMH_map_operator_eq_t)&super_mh__map_operator_eq,

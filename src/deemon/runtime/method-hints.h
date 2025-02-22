@@ -276,6 +276,8 @@ struct Dee_type_mh_cache {
 	DeeMH_map_itervalues_t mh_map_itervalues;
 	DeeMH_map_enumerate_t mh_map_enumerate;
 	DeeMH_map_enumerate_range_t mh_map_enumerate_range;
+	DeeMH_map_makeenumeration_t mh_map_makeenumeration;
+	DeeMH_map_makeenumeration_with_range_t mh_map_makeenumeration_with_range;
 	DeeMH_map_operator_compare_eq_t mh_map_operator_compare_eq;
 	DeeMH_map_operator_trycompare_eq_t mh_map_operator_trycompare_eq;
 	DeeMH_map_operator_eq_t mh_map_operator_eq;
@@ -314,7 +316,7 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 133
+#define MHC_COUNT 134
 #define MHC_FIRST mhc___seq_bool__
 	Dee_mhc_slot_t mhc___seq_bool__;
 	Dee_mhc_slot_t mhc___seq_size__;
@@ -423,6 +425,7 @@ struct Dee_type_mh_cache {
 	Dee_mhc_slot_t mhc_get___map_values__;
 	Dee_mhc_slot_t mhc_get___map_itervalues__;
 	Dee_mhc_slot_t mhc___map_enumerate__;
+	Dee_mhc_slot_t mhc___map_enumerate_items__;
 	Dee_mhc_slot_t mhc___map_compare_eq__;
 	Dee_mhc_slot_t mhc___map_eq__;
 	Dee_mhc_slot_t mhc___map_ne__;

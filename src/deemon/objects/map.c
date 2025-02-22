@@ -500,7 +500,7 @@ map_IterKeys_get(DeeTypeObject *__restrict self) {
 	DeeMH_map_iterkeys_t map_iterkeys = DeeType_RequireMethodHint(self, map_iterkeys);
 	if (map_iterkeys == &default__map_iterkeys__with__map_enumerate) {
 		/* TODO: Custom iterator type that uses "tp_enumerate" */
-	} else if (map_iterkeys == &default__map_iterkeys__with__set_operator_iter) {
+	} else if (map_iterkeys == &default__map_iterkeys__with__map_operator_iter) {
 		result = &DefaultIterator_WithNextKey;
 	}
 	return_reference_(result);
@@ -510,7 +510,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_IterValues_get(DeeTypeObject *__restrict self) {
 	DeeTypeObject *result = &DeeIterator_Type;
 	DeeMH_map_itervalues_t map_itervalues = DeeType_RequireMethodHint(self, map_itervalues);
-	if (map_itervalues == &default__map_itervalues__with__set_operator_iter) {
+	if (map_itervalues == &default__map_itervalues__with__map_operator_iter) {
 		result = &DefaultIterator_WithNextValue;
 	}
 	return_reference_(result);

@@ -201,7 +201,7 @@ map_enumerate = {
 	if (map_iterkeys) {
 		if (map_iterkeys == &default__map_iterkeys__empty)
 			return &$empty;
-		if (map_iterkeys != &default__map_iterkeys__with__set_operator_iter) {
+		if (map_iterkeys != &default__map_iterkeys__with__map_operator_iter) {
 			DeeMH_map_operator_trygetitem_t map_operator_trygetitem = REQUIRE_NODEFAULT(map_operator_trygetitem);
 			if (map_operator_trygetitem == &default__map_operator_trygetitem__empty)
 				return &$empty;

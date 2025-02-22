@@ -240,6 +240,7 @@
 		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\function-wrappers.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_enumerate.h" />
+		<ClInclude Include="..\src\deemon\method-hints\map_enumerate_items.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_frozen.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_iterkeys.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_itervalues.h" />
