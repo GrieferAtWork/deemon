@@ -729,14 +729,16 @@ mh_select_seq_enumerate(DeeTypeObject *self, DeeTypeObject *orig_type) {
 			return &default__seq_enumerate__empty;
 		if (self->tp_seq && self->tp_seq->tp_getitem_index_fast)
 			return &default__seq_enumerate__with__seq_operator_size__and__operator_getitem_index_fast;
+		if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach)
+			goto use_seq_operator_foreach;
+		if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach_pair)
+			goto use_seq_operator_foreach;
 		seq_operator_getitem = (DeeMH_seq_operator_getitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem);
 		if (seq_operator_getitem == &default__seq_operator_getitem__with__seq_operator_getitem_index) {
 			DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
-			if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach)
-				goto use_seq_operator_foreach;
-			if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach_pair)
-				goto use_seq_operator_foreach;
 			seq_operator_getitem_index = (DeeMH_seq_operator_getitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem_index);
+			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
+				return &default__seq_enumerate__empty;
 			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_foreach)
 				goto use_seq_operator_foreach;
 			return &default__seq_enumerate__with__seq_operator_size__and__seq_operator_getitem_index;

@@ -171,7 +171,7 @@ global final NAMESPACES: {string: string} = {
 	"de_se__":           "DefaultEnumeration__",
 	"dewif_sei__":       "DefaultEnumerationWithIntFilter__",
 
-	"dewf_toi__":        "DefaultEnumerationWithFilter__",
+	"dewf_moi__":        "DefaultEnumerationWithFilter__",
 	"de_mik_mog__":      "DefaultEnumeration__",
 	"dewf_mik_mog__":    "DefaultEnumerationWithFilter__",
 	"de_mik_motg__":     "DefaultEnumeration__",
@@ -211,7 +211,7 @@ printPrefixAliases("members");
 #define dewif_soi__ctor       DefaultEnumerationWithIntFilter__ctor
 #define de_se__ctor           DefaultEnumeration__ctor
 #define dewif_sei__ctor       DefaultEnumerationWithIntFilter__ctor
-#define dewf_toi__ctor        DefaultEnumerationWithFilter__ctor
+#define dewf_moi__ctor        DefaultEnumerationWithFilter__ctor
 #define de_mik_mog__ctor      DefaultEnumeration__ctor
 #define dewf_mik_mog__ctor    DefaultEnumerationWithFilter__ctor
 #define de_mik_motg__ctor     DefaultEnumeration__ctor
@@ -236,7 +236,7 @@ printPrefixAliases("members");
 #define dewif_soi__init       DefaultEnumerationWithIntFilter__init
 #define de_se__init           DefaultEnumeration__init
 #define dewif_sei__init       DefaultEnumerationWithIntFilter__init
-#define dewf_toi__init        DefaultEnumerationWithFilter__init
+#define dewf_moi__init        DefaultEnumerationWithFilter__init
 #define de_mik_mog__init      DefaultEnumeration__init
 #define dewf_mik_mog__init    DefaultEnumerationWithFilter__init
 #define de_mik_motg__init     DefaultEnumeration__init
@@ -261,7 +261,7 @@ printPrefixAliases("members");
 #define dewif_soi__copy       DefaultEnumerationWithIntFilter__copy
 #define de_se__copy           DefaultEnumeration__copy
 #define dewif_sei__copy       DefaultEnumerationWithIntFilter__copy
-#define dewf_toi__copy        DefaultEnumerationWithFilter__copy
+#define dewf_moi__copy        DefaultEnumerationWithFilter__copy
 #define de_mik_mog__copy      DefaultEnumeration__copy
 #define dewf_mik_mog__copy    DefaultEnumerationWithFilter__copy
 #define de_mik_motg__copy     DefaultEnumeration__copy
@@ -286,7 +286,7 @@ printPrefixAliases("members");
 #define dewif_soi__deepcopy       DefaultEnumerationWithIntFilter__deepcopy
 #define de_se__deepcopy           DefaultEnumeration__deepcopy
 #define dewif_sei__deepcopy       DefaultEnumerationWithIntFilter__deepcopy
-#define dewf_toi__deepcopy        DefaultEnumerationWithFilter__deepcopy
+#define dewf_moi__deepcopy        DefaultEnumerationWithFilter__deepcopy
 #define de_mik_mog__deepcopy      DefaultEnumeration__deepcopy
 #define dewf_mik_mog__deepcopy    DefaultEnumerationWithFilter__deepcopy
 #define de_mik_motg__deepcopy     DefaultEnumeration__deepcopy
@@ -311,7 +311,7 @@ printPrefixAliases("members");
 #define dewif_soi__fini       DefaultEnumerationWithIntFilter__fini
 #define de_se__fini           DefaultEnumeration__fini
 #define dewif_sei__fini       DefaultEnumerationWithIntFilter__fini
-#define dewf_toi__fini        DefaultEnumerationWithFilter__fini
+#define dewf_moi__fini        DefaultEnumerationWithFilter__fini
 #define de_mik_mog__fini      DefaultEnumeration__fini
 #define dewf_mik_mog__fini    DefaultEnumerationWithFilter__fini
 #define de_mik_motg__fini     DefaultEnumeration__fini
@@ -336,7 +336,7 @@ printPrefixAliases("members");
 #define dewif_soi__visit       DefaultEnumerationWithIntFilter__visit
 #define de_se__visit           DefaultEnumeration__visit
 #define dewif_sei__visit       DefaultEnumerationWithIntFilter__visit
-#define dewf_toi__visit        DefaultEnumerationWithFilter__visit
+#define dewf_moi__visit        DefaultEnumerationWithFilter__visit
 #define de_mik_mog__visit      DefaultEnumeration__visit
 #define dewf_mik_mog__visit    DefaultEnumerationWithFilter__visit
 #define de_mik_motg__visit     DefaultEnumeration__visit
@@ -361,7 +361,7 @@ printPrefixAliases("members");
 #define dewif_soi__members       DefaultEnumerationWithIntFilter__members
 #define de_se__members           DefaultEnumeration__members
 #define dewif_sei__members       DefaultEnumerationWithIntFilter__members
-#define dewf_toi__members        DefaultEnumerationWithFilter__members
+#define dewf_moi__members        DefaultEnumerationWithFilter__members
 #define de_mik_mog__members      DefaultEnumeration__members
 #define dewf_mik_mog__members    DefaultEnumerationWithFilter__members
 #define de_mik_motg__members     DefaultEnumeration__members
@@ -389,7 +389,7 @@ printPrefixAliases("members");
 #define de_se__name           "_SeqEnumWithSeqEnumerate"
 #define dewif_sei__name       "_SeqEnumWithIntFilterAndSeqEnumerateIndex"
 
-#define dewf_toi__name        "_SeqEnumWithFilterAndSetOperatorIterAndUnpack"
+#define dewf_moi__name        "_SeqEnumWithFilterAndMapOperatorIterAndUnpack"
 #define de_mik_mog__name      "_SeqEnumWithMapIterkeysAndMapOperatorGetItem"
 #define dewf_mik_mog__name    "_SeqEnumWithFilterAndMapIterkeysAndMapOperatorGetItem"
 #define de_mik_motg__name     "_SeqEnumWithMapIterkeysAndMapOperatorTryGetItem"
@@ -415,7 +415,7 @@ printPrefixAliases("members");
 #define de_se__doc           "(obj_with____seq_enumerate__)"
 #define dewif_sei__doc       "(obj_with____seq_enumerate__,start:Dint,end:Dint)"
 
-#define dewf_toi__doc        "(obj_with____set_iter__,start:?X2?Dint?O,end:?X2?Dint?O)"
+#define dewf_moi__doc        "(obj_with____set_iter__,start:?X2?Dint?O,end:?X2?Dint?O)"
 #define de_mik_mog__doc      "(obj_with____map_iterkeys____and____map_getitem__)"
 #define dewf_mik_mog__doc    "(obj_with____map_iterkeys____and____map_getitem__,start:?X2?Dint?O,end:?X2?Dint?O)"
 #define de_mik_motg__doc     "(obj_with____map_iterkeys____and____map_getitem__)"
@@ -954,15 +954,15 @@ dewif_sei__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 /* For Mapping                                                          */
 /************************************************************************/
 
-/* WithFilter: $with__set_operator_iter__and__unpack */
-#define dewf_toi__class_members Iterator__is__DefaultIterator_WithNextAndUnpackFilter_Type
+/* WithFilter: $with__map_operator_iter__and__unpack */
+#define dewf_moi__class_members Iterator__is__DefaultIterator_WithNextAndUnpackFilter_Type
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithNextAndUnpackFilter *DCALL
-dewf_toi__iter(DefaultEnumerationWithFilter *__restrict self) {
+dewf_moi__iter(DefaultEnumerationWithFilter *__restrict self) {
 	DREF DefaultIterator_WithNextAndUnpackFilter *result;
 	result = DeeObject_MALLOC(DefaultIterator_WithNextAndUnpackFilter);
 	if unlikely(!result)
 		goto err;
-	result->dinuf_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->dewf_seq);
+	result->dinuf_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->dewf_seq);
 	if unlikely(!result->dinuf_iter)
 		goto err_r;
 	result->dinuf_tp_next = DeeType_RequireNativeOperator(Dee_TYPE(result->dinuf_iter), iter_next);
@@ -1264,7 +1264,7 @@ global final TYPES: {EnumType...} = {
 	EnumType("DefaultEnumeration__with__seq_enumerate",                                                      "de_se__"),
 	EnumType("DefaultEnumerationWithIntFilter__with__seq_enumerate_index",                                   "dewif_sei__"),
 
-	EnumType("DefaultEnumerationWithFilter__with__set_operator_iter__and__unpack",                           "dewf_toi__"),
+	EnumType("DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack",                           "dewf_moi__"),
 	EnumType("DefaultEnumeration__with__map_iterkeys__and__map_operator_getitem",                            "de_mik_mog__"),
 	EnumType("DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem",                  "dewf_mik_mog__"),
 	EnumType("DefaultEnumeration__with__map_iterkeys__and__map_operator_trygetitem",                         "de_mik_motg__"),
@@ -2846,9 +2846,9 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_enumerate_index 
 };
 
 
-/* DefaultEnumerationWithFilter__with__set_operator_iter__and__unpack */
-PRIVATE struct type_seq dewf_toi__seq = {
-	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dewf_toi__iter,
+/* DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack */
+PRIVATE struct type_seq dewf_moi__seq = {
+	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dewf_moi__iter,
 	/* .tp_sizeob                       = */ NULL,
 	/* .tp_contains                     = */ NULL,
 	/* .tp_getitem                      = */ NULL,
@@ -2895,10 +2895,10 @@ PRIVATE struct type_seq dewf_toi__seq = {
 	/* .tp_asvector                     = */ NULL,
 };
 
-INTERN DeeTypeObject DefaultEnumerationWithFilter__with__set_operator_iter__and__unpack = {
+INTERN DeeTypeObject DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ dewf_toi__name,
-	/* .tp_doc      = */ DOC(dewf_toi__doc),
+	/* .tp_name     = */ dewf_moi__name,
+	/* .tp_doc      = */ DOC(dewf_moi__doc),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2906,14 +2906,14 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__set_operator_iter__and_
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&dewf_toi__ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&dewf_toi__copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&dewf_toi__deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&dewf_toi__init,
+				/* .tp_ctor      = */ (dfunptr_t)&dewf_moi__ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&dewf_moi__copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&dewf_moi__deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&dewf_moi__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithFilter)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewf_toi__fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewf_moi__fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -2923,11 +2923,11 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__set_operator_iter__and_
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dewf_toi__visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dewf_moi__visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ &dewf_toi__seq,
+	/* .tp_seq           = */ &dewf_moi__seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
@@ -2935,10 +2935,10 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__set_operator_iter__and_
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ dewf_toi__members,
+	/* .tp_members       = */ dewf_moi__members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ dewf_toi__class_members,
+	/* .tp_class_members = */ dewf_moi__class_members,
 	/* .tp_method_hints  = */ NULL,
 };
 

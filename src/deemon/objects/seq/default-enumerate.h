@@ -138,8 +138,8 @@ INTDEF DeeTypeObject DefaultEnumeration__with__seq_enumerate;                   
 INTDEF DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_enumerate_index;                                   /* dewif_sei__*:       seq_enumerate_index */
 
 /* For Mapping */
-/*TDEF DeeTypeObject DefaultEnumeration__with__set_operator_iter__and__unpack;                        * de_toi__*:        set_operator_iter  <Not needed; can use identity for this one> (for Mappings) */
-INTDEF DeeTypeObject DefaultEnumerationWithFilter__with__set_operator_iter__and__unpack;             /* dewf_toi__*:      set_operator_iter */
+/*TDEF DeeTypeObject DefaultEnumeration__with__map_operator_iter__and__unpack;                        * de_moi__*:        map_operator_iter  <Not needed; can use identity for this one> (for Mappings) */
+INTDEF DeeTypeObject DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack;             /* dewf_moi__*:      map_operator_iter */
 INTDEF DeeTypeObject DefaultEnumeration__with__map_iterkeys__and__map_operator_getitem;              /* de_mik_mog__*:    map_iterkeys, map_operator_getitem */
 INTDEF DeeTypeObject DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem;    /* dewf_mik_mog__*:  map_iterkeys, map_operator_getitem */
 INTDEF DeeTypeObject DefaultEnumeration__with__map_iterkeys__and__map_operator_trygetitem;           /* de_mik_motg__*:   map_iterkeys, map_operator_trygetitem */

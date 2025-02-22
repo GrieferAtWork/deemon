@@ -65,7 +65,7 @@ typedef struct {
 	struct Dee_simple_hashset_with_lock dmi_encountered; /* Set of objects previously encountered keys */
 } DistinctMappingIterator;
 
-INTDEF DeeTypeObject DistinctMappingIterator_Type;
+INTDEF DeeTypeObject DistinctMappingIterator_Type; /* TODO: Expose on librt */
 
 DECL_END
 
