@@ -143,6 +143,26 @@ err_bad_bounds:
 err:
 	return NULL;
 }}
+%{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
+	size_t size;
+	DREF DeeObject *result;
+	result = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, index);
+	if likely(ITER_ISOK(result))
+		return result;
+	if unlikely(!result)
+		goto err;
+	size = CALL_DEPENDENCY(seq_operator_size, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if unlikely(index >= size)
+		goto err_bad_bounds;
+	err_unbound_index(self, index);
+	goto err;
+err_bad_bounds:
+	err_index_out_of_bounds((DeeObject *)self, index, size);
+err:
+	return NULL;
+}}
 %{using seq_operator_getitem: {
 	DREF DeeObject *result;
 	DREF DeeObject *indexob = DeeInt_NewSize(index);
@@ -195,8 +215,17 @@ seq_operator_getitem_index = {
 		return &$with__map_enumerate;
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
-	if (seq_operator_foreach)
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem ||
+	    seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem)
+		return &$with__seq_operator_getitem;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index)
+		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_operator_foreach) {
+		/* Using "seq_operator_foreach" works, but is inefficient -> try to use other operators. */
+		if (REQUIRE_NODEFAULT(seq_operator_getitem))
+			return &$with__seq_operator_getitem;
 		return &$with__seq_operator_foreach;
+	}
 };
 
 

@@ -85,6 +85,26 @@ struct oh_init_spec_mhint {
 	unsigned int    ohismh_seqclass;   /* [valid_if(!miso_implements)] Required sequence class for this hint. (e.g. "Dee_SEQCLASS_SEQ") */
 };
 
+/* Check if "type" can use "self" */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+oh_init_spec_mhint_canuse(struct oh_init_spec_mhint const *__restrict self,
+                          DeeTypeObject const *__restrict type) {
+	if (self->ohismh_implements) {
+		if (!DeeType_Implements(type, self->ohismh_implements))
+			goto nope;
+		if (type == self->ohismh_implements)
+			goto nope; /* Don't inherit from the abstract origin */
+	} else if (self->ohismh_seqclass != Dee_SEQCLASS_UNKNOWN) {
+		if (DeeType_GetSeqClass(type) != self->ohismh_seqclass)
+			goto nope;
+		if (DeeType_IsSeqClassBase(type, self->ohismh_seqclass))
+			goto nope; /* Don't inherit from the abstract origin */
+	}
+	return true;
+nope:
+	return false;
+}
+
 #define OH_INIT_SPEC_MHINT_END { Dee_TMH_COUNT, NULL, 0 }
 #define OH_INIT_SPEC_MHINT_INIT(ohismh_id, ohismh_implements, ohismh_seqclass) \
 	{                                                                          \
@@ -1679,13 +1699,8 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 		struct oh_init_spec_mhint const *iter = specs->ohis_mhints;
 		if (iter) {
 			for (; iter->ohismh_id < Dee_TMH_COUNT; ++iter) {
-				if (iter->ohismh_implements) {
-					if (!DeeType_Implements(self, iter->ohismh_implements))
-						continue;
-				} else if (iter->ohismh_seqclass != Dee_SEQCLASS_UNKNOWN) {
-					if (DeeType_GetSeqClass(self) != iter->ohismh_seqclass)
-						continue;
-				}
+				if (!oh_init_spec_mhint_canuse(iter, self))
+					continue;
 
 				/* Only check for method hints privately! */
 				result = DeeType_GetPrivateMethodHint(self, self, iter->ohismh_id);
@@ -1701,16 +1716,50 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 }
 
 /* Check if "value" is a method-hint implementation that needs to be transformed when inherited.
- * If so, return the transformed function pointer, but if not: re-return "value" as-is. */
-PRIVATE ATTR_CONST ATTR_RETNONNULL Dee_funptr_t DCALL
-DeeType_MapTMHInTNOForInherit(enum Dee_tno_id id, Dee_funptr_t value) {
+ * If so, return the transformed function pointer, but if not: re-return "value" as-is.
+ *
+ * Returns "NULL" if the operator cannot be inherited due to dependency conflicts. */
+PRIVATE ATTR_PURE NONNULL((1, 2, 4)) Dee_funptr_t DCALL
+DeeType_MapTMHInTNOForInherit(DeeTypeObject *__restrict from,
+                              DeeTypeObject *__restrict into,
+                              enum Dee_tno_id id, Dee_funptr_t value) {
 	struct oh_init_spec const *specs = &oh_init_specs[id];
-	struct oh_init_inherit_as const *inherit = specs->ohis_inherit;
-	if (inherit) {
-		for (; inherit->ohia_optr; ++inherit) {
-			if (value == inherit->ohia_optr)
-				return inherit->ohia_nptr;
+	if (specs->ohis_inherit) {
+		struct oh_init_inherit_as const *iter = specs->ohis_inherit;
+		for (; iter->ohia_optr; ++iter) {
+			if (value == iter->ohia_optr) {
+				value = iter->ohia_nptr;
+				break;
+			}
 		}
+	}
+
+	if (specs->ohis_mhints) {
+		bool is_unsupported_default = false;
+		struct oh_init_spec_mhint const *iter = specs->ohis_mhints;
+
+		/* When inheriting method hint wrappers, map them to their full method hints.
+		 * e.g.: Replace "default__set_operator_add" (or any other default impl such
+		 * as "tdefault__set_operator_add__with_callobjectcache___set_add__") with
+		 * its relevant default impl for "into". If "into" doesn't support such a
+		 * default impl, must inherit as "default__set_operator_add". */
+		for (; iter->ohismh_id < Dee_TMH_COUNT; ++iter) {
+			Dee_funptr_t mapped;
+			if (!oh_init_spec_mhint_canuse(iter, from))
+				continue; /* The hint must obviously be usable by "from" */
+			mapped = DeeType_MapDefaultMethodHintImplForInherit(into, iter->ohismh_id, value);
+			if (mapped) {
+				/* In order to allow being inherited by "into",
+				 * that type must support the operator, too! */
+				if (!oh_init_spec_mhint_canuse(iter, into)) {
+					is_unsupported_default = true;
+					continue;
+				}
+				return mapped;
+			}
+		}
+		if (is_unsupported_default)
+			return NULL;
 	}
 	return value;
 }
@@ -1738,7 +1787,9 @@ PRIVATE WUNUSED NONNULL((1)) Dee_funptr_t
 			 * implementation, rather than the original one. (This is needed to
 			 * map method hint default impls that assume the presence of specific
 			 * operators within `Dee_TYPE(self)'). */
-			result = DeeType_MapTMHInTNOForInherit(id, result);
+			result = DeeType_MapTMHInTNOForInherit(iter, self, id, result);
+			if unlikely(!result)
+				continue; /* Unfulfilled conditions */
 
 			if unlikely(!DeeType_InheritNativeOperatorWithoutHints(iter, self, id, result))
 				return NULL;
@@ -1842,9 +1893,13 @@ INTERN WUNUSED NONNULL((1)) DeeTypeObject *
 			if (mhints->ohismh_implements) {
 				if (!DeeType_Implements(self, mhints->ohismh_implements))
 					continue;
+				if (self == mhints->ohismh_implements)
+					continue; /* Don't inherit from the abstract origin */
 			} else if (mhints->ohismh_seqclass != Dee_SEQCLASS_UNKNOWN) {
 				if (DeeType_GetSeqClass(self) != mhints->ohismh_seqclass)
 					continue;
+				if (DeeType_IsSeqClassBase(self, mhints->ohismh_seqclass))
+					continue; /* Don't inherit from the abstract origin */
 			}
 			if (funptr == DeeType_GetPrivateMethodHint(self, self, mhints->ohismh_id))
 				return self; /* Implemented via method hint within "self" */

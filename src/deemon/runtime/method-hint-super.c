@@ -3431,16 +3431,16 @@ super_mh__map_makeenumeration(DeeSuperObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-super_mh__map_makeenumeration_with_range(DeeSuperObject *self, DeeObject *startkey, DeeObject *endkey) {
+super_mh__map_makeenumeration_with_range(DeeSuperObject *self, DeeObject *start, DeeObject *end) {
 	struct Dee_super_method_hint specs;
 	DeeType_GetMethodHintForSuper(self, Dee_TMH_map_makeenumeration_with_range, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
-		return (*(DeeMH_map_makeenumeration_with_range_t)specs.smh_cb)(self->s_self, startkey, endkey);
+		return (*(DeeMH_map_makeenumeration_with_range_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_makeenumeration_with_range_t)specs.smh_cb)((DeeObject *)self, startkey, endkey);
+		return (*(DeeMH_map_makeenumeration_with_range_t)specs.smh_cb)((DeeObject *)self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, startkey, endkey);
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();

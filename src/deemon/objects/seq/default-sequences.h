@@ -42,7 +42,7 @@ typedef struct {
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *dssg_tp_getitem)(DeeObject *self, DeeObject *index);
 	DREF DeeObject *dssg_start; /* [1..1][const] Starting index for enumeration. */
 	DREF DeeObject *dssg_end;   /* [1..1][const] Enumeration stop index. */
-} DefaultSequence_WithSizeAndGetItem;
+} DefaultSequence_WithSizeObAndGetItem;
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 typedef struct {
@@ -87,7 +87,7 @@ typedef struct {
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type;     /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type; /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type;  /* DefaultSequence_WithSizeAndGetItemIndex */
-INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItem_Type;          /* DefaultSequence_WithSizeAndGetItem */
+INTDEF DeeTypeObject DefaultSequence_WithSizeObAndGetItem_Type;        /* DefaultSequence_WithSizeObAndGetItem */
 INTDEF DeeTypeObject DefaultSequence_WithIter_Type;                    /* DefaultSequence_WithIter */
 INTDEF DeeTypeObject DefaultSequence_WithIterAndLimit_Type;            /* DefaultSequence_WithIterAndLimit */
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS

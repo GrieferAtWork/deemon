@@ -197,12 +197,13 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_getitem[9]
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem__with__getitem_string_hash, &tdefault__getitem__with__getitem_string_hash),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_getitem_index[7] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_getitem_index[8] = {
 	(Dee_funptr_t)&default__seq_operator_getitem_index__with_callattr___seq_getitem__,
 	(Dee_funptr_t)&default__seq_operator_getitem_index__unsupported,
 	(Dee_funptr_t)&default__seq_operator_getitem_index__with__seq_operator_getitem,
 	(Dee_funptr_t)&default__seq_operator_getitem_index__empty,
 	(Dee_funptr_t)&default__seq_operator_getitem_index__with__seq_operator_foreach,
+	(Dee_funptr_t)&default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index,
 	(Dee_funptr_t)&default__seq_operator_getitem_index__with__map_enumerate,
 	NULL
 };

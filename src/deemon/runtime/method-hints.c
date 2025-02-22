@@ -23,10 +23,12 @@
 #include <deemon/api.h>
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/class.h>
+#include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/mro.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
 
@@ -2627,6 +2629,16 @@ nope:
 }
 
 
+STATIC_ASSERT(Dee_SEQCLASS_SEQ == 2);
+STATIC_ASSERT(Dee_SEQCLASS_SET == 3);
+STATIC_ASSERT(Dee_SEQCLASS_MAP == 4);
+INTERN_TPCONST DeeTypeObject const *tpconst _Dee_SEQCLASS_BASES[] = {
+	NULL,
+	&DeeSeq_Type,
+	&DeeSet_Type,
+	&DeeMapping_Type,
+};
+
 /* Same as `DeeType_GetPrivateMethodHint', but only check for attributes
  * without doing any additional default substitutions.
  *
@@ -2652,9 +2664,13 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 			if (iter->missa_implements) {
 				if (!DeeType_Implements(self, iter->missa_implements))
 					continue;
+				if (self == iter->missa_implements)
+					continue; /* Don't inherit from the abstract origin */
 			} else if (iter->missa_seqclass != 0) {
 				if (DeeType_GetSeqClass(self) != iter->missa_seqclass)
 					continue;
+				if (DeeType_IsSeqClassBase(self, iter->missa_seqclass))
+					continue; /* Don't inherit from the abstract origin */
 			}
 			if (findattr_for_method_hint(self, (DeeObject *)iter->missa_attrib, &info)) {
 				Dee_funptr_t result;
@@ -2675,9 +2691,13 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 			if (iter->miso_implements) {
 				if (!DeeType_Implements(self, iter->miso_implements))
 					continue;
+				if (self == iter->miso_implements)
+					continue; /* Don't inherit from the abstract origin */
 			} else if (iter->miso_seqclass != Dee_SEQCLASS_UNKNOWN) {
 				if (DeeType_GetSeqClass(self) != iter->miso_seqclass)
 					continue;
+				if (DeeType_IsSeqClassBase(self, iter->miso_seqclass))
+					continue; /* Don't inherit from the abstract origin */
 			}
 
 			/* See if the type implements the relevant native operator.
@@ -2755,6 +2775,35 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 
 	/* Fallback: return "NULL" to indicate that the method isn't available. */
 	return NULL;
+}
+
+
+INTDEF WUNUSED bool DCALL /* Implemented in "./method-hint-super-invoke.c" */
+Dee_tmh_isdefault_or_usrtype(enum Dee_tmh_id id, Dee_funptr_t funptr);
+
+
+/* Check if "impl" is a default impl for "id", and if so:
+ * - Return "DeeType_GetMethodHint(into, id)" if non-NULL
+ * - If "DeeType_GetMethodHint()" returned NULL ("into" can't
+ *   implement the hint), return the "%{unsupported}" impl
+ * Otherwise, return "NULL" */
+INTERN ATTR_PURE WUNUSED NONNULL((1, 3)) Dee_funptr_t
+(DCALL DeeType_MapDefaultMethodHintImplForInherit)(DeeTypeObject *into,
+                                                   enum Dee_tmh_id id,
+                                                   Dee_funptr_t impl) {
+	Dee_funptr_t result;
+
+	/* Only map default impls! */
+	if (!Dee_tmh_isdefault_or_usrtype(id, impl))
+		return NULL;
+
+	/* Load the relevant method hint impl for "into". */
+	result = DeeType_GetMethodHint(into, id);
+	if (result)
+		return result;
+
+	/* Method hint is unsupported :( -- return its UNSUPPORTED impl */
+	return DeeType_GetUnsupportedMethodHint(id);
 }
 
 

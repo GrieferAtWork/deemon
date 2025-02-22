@@ -1471,7 +1471,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_sg_init(DefaultIterator_WithSizeObAndGetItem *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "ooo:_IterWithSizeAndGetItem",
+	if (DeeArg_Unpack(argc, argv, "ooo:_IterWithSizeObAndGetItem",
 	                  &self->disg_seq, &self->disg_index, &self->disg_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->disg_seq);
@@ -1783,7 +1783,7 @@ PRIVATE struct type_member tpconst di_sg_class_members[] = {
 
 INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_IterWithSizeAndGetItem",
+	/* .tp_name     = */ "_IterWithSizeObAndGetItem",
 	/* .tp_doc      = */ DOC("(objWithGetItem,index,end)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,

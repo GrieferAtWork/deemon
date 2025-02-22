@@ -113,7 +113,7 @@ if (hasattr(rt, "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast")) {
 	assertRtTypeName("SeqWithSizeAndGetItemIndex");
 	assertRtTypeName("SeqWithSizeAndGetItemIndexFast");
 	assertRtTypeName("SeqWithSizeAndTryGetItemIndex");
-	assertRtTypeName("SeqWithSizeAndGetItem");
+	assertRtTypeName("SeqWithSizeObAndGetItem");
 	assertRtTypeName("SeqWithIter");
 	assertRtTypeName("SeqWithIterAndLimit");
 
@@ -127,7 +127,7 @@ if (hasattr(rt, "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast")) {
 	assertRtTypeName("IterWithSizeAndTryGetItemIndexPair");
 	assertRtTypeName("IterWithGetItem");
 	assertRtTypeName("IterWithGetItemPair");
-	assertRtTypeName("IterWithSizeAndGetItem");
+	assertRtTypeName("IterWithSizeObAndGetItem");
 	assertRtTypeName("IterWithSizeAndGetItemPair");
 	assertRtTypeName("IterWithNextAndLimit");
 	assertRtTypeName("IterWithIterKeysAndGetItemForMap");
@@ -168,7 +168,7 @@ if (hasattr(rt, "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast")) {
 	assertRtTypeName("SeqWithSizeAndGetItemIndex");
 	assertRtTypeName("SeqWithSizeAndGetItemIndexFast");
 	assertRtTypeName("SeqWithSizeAndTryGetItemIndex");
-	assertRtTypeName("SeqWithSizeAndGetItem");
+	assertRtTypeName("SeqWithSizeObAndGetItem");
 	assertRtTypeName("SeqWithTSizeAndGetItem");
 	assertRtTypeName("SeqWithIter");
 	assertRtTypeName("SeqWithIterAndLimit");
@@ -184,7 +184,7 @@ if (hasattr(rt, "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast")) {
 	assertRtTypeName("IterWithSizeAndTryGetItemIndexPair");
 	assertRtTypeName("IterWithGetItem");
 	assertRtTypeName("IterWithTGetItem");
-	assertRtTypeName("IterWithSizeAndGetItem");
+	assertRtTypeName("IterWithSizeObAndGetItem");
 	assertRtTypeName("IterWithSizeObAndTGetItem");
 	assertRtTypeName("IterWithNextAndLimit");
 	assertRtTypeName("IterWithIterKeysAndGetItemForSeq");

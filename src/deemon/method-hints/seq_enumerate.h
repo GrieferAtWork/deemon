@@ -623,6 +623,8 @@ seq_enumerate = {
 				return &$empty;
 			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_foreach)
 				goto use_seq_operator_foreach;
+			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+				return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
 			return &$with__seq_operator_size__and__seq_operator_getitem_index;
 		} else if (seq_operator_getitem) {
 			return &$with__seq_operator_sizeob__and__seq_operator_getitem;

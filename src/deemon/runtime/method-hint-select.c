@@ -123,6 +123,7 @@ mh_select_seq_operator_iter(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if (seq_operator_size) {
 		if (seq_operator_size == &default__seq_operator_size__empty)
 			return &default__seq_operator_iter__empty;
+with_seq_operator_size:
 		if (self->tp_seq && self->tp_seq->tp_getitem_index_fast)
 			return &default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast;
 		if ((DeeMH_seq_operator_trygetitem_index_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_trygetitem_index))
@@ -132,6 +133,12 @@ mh_select_seq_operator_iter(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		if ((DeeMH_seq_operator_getitem_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_getitem) || (DeeMH_seq_operator_trygetitem_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_trygetitem))
 			return &default__seq_operator_iter__with__seq_operator_sizeob__and__seq_operator_getitem;
 	} else {
+		DeeMH_seq_operator_sizeob_t seq_operator_sizeob = (DeeMH_seq_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_sizeob);
+		if (seq_operator_sizeob) {
+			if (seq_operator_sizeob == &default__seq_operator_sizeob__empty)
+				return &default__seq_operator_iter__empty;
+			goto with_seq_operator_size;
+		}
 		if ((DeeMH_seq_operator_getitem_index_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_getitem_index) ||
 		    (DeeMH_seq_operator_trygetitem_index_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_trygetitem_index))
 			return &default__seq_operator_iter__with__seq_operator_getitem_index;
@@ -231,8 +238,17 @@ mh_select_seq_operator_getitem_index(DeeTypeObject *self, DeeTypeObject *orig_ty
 		return &default__seq_operator_getitem_index__with__map_enumerate;
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &default__seq_operator_getitem_index__empty;
-	if (seq_operator_foreach)
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem ||
+	    seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem)
+		return &default__seq_operator_getitem_index__with__seq_operator_getitem;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index)
+		return &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_operator_foreach) {
+		/* Using "seq_operator_foreach" works, but is inefficient -> try to use other operators. */
+		if ((DeeMH_seq_operator_getitem_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_getitem))
+			return &default__seq_operator_getitem_index__with__seq_operator_getitem;
 		return &default__seq_operator_getitem_index__with__seq_operator_foreach;
+	}
 	return NULL;
 }
 
@@ -387,7 +403,7 @@ mh_select_seq_operator_getrange_index(DeeTypeObject *self, DeeTypeObject *orig_t
 		DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
 		if (seq_operator_size == &default__seq_operator_size__empty)
 			return default__seq_operator_getrange_index__empty;
-		if (self->tp_seq->tp_getitem_index_fast)
+		if (self->tp_seq && self->tp_seq->tp_getitem_index_fast)
 			return &default__seq_operator_getrange_index__with__seq_operator_size__and__operator_getitem_index_fast;
 		seq_operator_trygetitem_index = (DeeMH_seq_operator_trygetitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_trygetitem_index);
 		if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
@@ -740,6 +756,8 @@ mh_select_seq_enumerate(DeeTypeObject *self, DeeTypeObject *orig_type) {
 				return &default__seq_enumerate__empty;
 			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_foreach)
 				goto use_seq_operator_foreach;
+			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+				return &default__seq_enumerate__with__seq_operator_size__and__seq_operator_trygetitem_index;
 			return &default__seq_enumerate__with__seq_operator_size__and__seq_operator_getitem_index;
 		} else if (seq_operator_getitem) {
 			return &default__seq_enumerate__with__seq_operator_sizeob__and__seq_operator_getitem;
@@ -832,6 +850,8 @@ mh_select_seq_makeenumeration(DeeTypeObject *self, DeeTypeObject *orig_type) {
 						goto use__seq_enumerate;
 					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__map_enumerate)
 						goto use__seq_enumerate;
+					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+						return &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index;
 					return &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index;
 				}
 				return &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem;
@@ -920,6 +940,8 @@ mh_select_seq_foreach_reverse(DeeTypeObject *self, DeeTypeObject *orig_type) {
 			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_getitem ||
 			    seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
 				return &default__seq_foreach_reverse__with__seq_operator_sizeob__and__seq_operator_getitem;
+			if (seq_operator_getitem_index == default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+				return &default__seq_foreach_reverse__with__seq_operator_size__and__seq_operator_trygetitem_index;
 			return &default__seq_foreach_reverse__with__seq_operator_size__and__seq_operator_getitem_index;
 		}
 		if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
@@ -957,6 +979,8 @@ mh_select_seq_enumerate_index_reverse(DeeTypeObject *self, DeeTypeObject *orig_t
 			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_getitem ||
 			    seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
 				return &default__seq_enumerate_index_reverse__with__seq_operator_sizeob__and__seq_operator_getitem;
+			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+				return &default__seq_enumerate_index_reverse__with__seq_operator_size__and__seq_operator_trygetitem_index;
 			return &default__seq_enumerate_index_reverse__with__seq_operator_size__and__seq_operator_getitem_index;
 		}
 		if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)

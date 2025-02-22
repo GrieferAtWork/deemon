@@ -472,6 +472,12 @@ INTDEF Dee_funptr_t tpconst mh_unsupported_impls[Dee_TMH_COUNT];
 /* Statically initialized method cache where all hints use their "$empty" impl (if defined) */
 INTDEF struct Dee_type_mh_cache mh_cache_empty;
 
+
+/* Allowed to assume that "seqclass != Dee_SEQCLASS_UNKNOWN" */
+#define DeeType_IsSeqClassBase(self, seqclass) \
+	((self) == _Dee_SEQCLASS_BASES[(seqclass) - 1])
+INTDEF DeeTypeObject const *tpconst _Dee_SEQCLASS_BASES[];
+
 DECL_END
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 

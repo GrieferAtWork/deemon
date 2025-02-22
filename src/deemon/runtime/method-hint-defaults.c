@@ -1205,6 +1205,28 @@ err:
 	return NULL;
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t index) {
+	size_t size;
+	DREF DeeObject *result;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index))(self, index);
+	if likely(ITER_ISOK(result))
+		return result;
+	if unlikely(!result)
+		goto err;
+	size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if unlikely(index >= size)
+		goto err_bad_bounds;
+	err_unbound_index(self, index);
+	goto err;
+err_bad_bounds:
+	err_index_out_of_bounds((DeeObject *)self, index, size);
+err:
+	return NULL;
+}
+
 #ifndef DEFINED_default_getitem_index_with_map_enumerate
 #define DEFINED_default_getitem_index_with_map_enumerate
 struct default_getitem_index_with_map_enumerate_data {
@@ -1822,7 +1844,7 @@ default__seq_operator_getrange__empty(DeeObject *UNUSED(self), DeeObject *UNUSED
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 default__seq_operator_getrange__with__seq_operator_sizeob__and__seq_operator_getitem(DeeObject *self, DeeObject *start, DeeObject *end) {
 	int temp;
-	DREF DefaultSequence_WithSizeAndGetItem *result;
+	DREF DefaultSequence_WithSizeObAndGetItem *result;
 	DREF DeeObject *startob_and_endob[2];
 	DREF DeeObject *startob_and_endob_tuple;
 	DREF DeeObject *sizeob = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_sizeob))(self);
@@ -1837,7 +1859,7 @@ default__seq_operator_getrange__with__seq_operator_sizeob__and__seq_operator_get
 	Dee_Decref(startob_and_endob_tuple);
 	if unlikely(temp)
 		goto err;
-	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItem);
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeObAndGetItem);
 	if unlikely(!result)
 		goto err;
 	result->dssg_start = startob_and_endob[0]; /* Inherit reference */
@@ -1845,7 +1867,7 @@ default__seq_operator_getrange__with__seq_operator_sizeob__and__seq_operator_get
 	Dee_Incref(self);
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem);
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItem_Type);
+	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 	return (DREF DeeObject *)result;
 err:
 	return NULL;
@@ -1948,7 +1970,7 @@ default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator
 	result->dssgi_tp_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index);
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
 	return (DREF DeeObject *)result;
 err:
 	return NULL;
@@ -1956,13 +1978,13 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_getitem(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end) {
-	DREF DefaultSequence_WithSizeAndGetItem *result;
+	DREF DefaultSequence_WithSizeObAndGetItem *result;
 	struct Dee_seq_range range;
 	size_t size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, size);
-	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItem);
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeObAndGetItem);
 	if unlikely(!result)
 		goto err;
 	result->dssg_start = DeeInt_NewSize(range.sr_start);
@@ -1974,7 +1996,7 @@ default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator
 	Dee_Incref(self);
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem);
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItem_Type);
+	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 	return (DREF DeeObject *)result;
 err_r_start:
 	Dee_Decref(result->dssg_start);
@@ -2166,7 +2188,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_getitem(DeeObject *self, Dee_ssize_t start) {
-	DREF DefaultSequence_WithSizeAndGetItem *result;
+	DREF DefaultSequence_WithSizeObAndGetItem *result;
 	size_t size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(size == (size_t)-1)
 		goto err;
@@ -2180,7 +2202,7 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operat
 			}
 		}
 	}
-	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItem);
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeObAndGetItem);
 	if unlikely(!result)
 		goto err;
 	result->dssg_start = DeeInt_NewSize((size_t)start);
@@ -2192,7 +2214,7 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operat
 	Dee_Incref(self);
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem);
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItem_Type);
+	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 	return (DREF DeeObject *)result;
 empty_range:
 	return_empty_seq;
@@ -18230,49 +18252,49 @@ default__map_makeenumeration__with__map_enumerate(DeeObject *__restrict self) {
 
 /* map_makeenumeration_with_range */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__map_makeenumeration_with_range__with_callattr___map_enumerate_items__(DeeObject *self, DeeObject *startkey, DeeObject *endkey) {
+default__map_makeenumeration_with_range__with_callattr___map_enumerate_items__(DeeObject *self, DeeObject *start, DeeObject *end) {
 	DeeObject *args[2];
-	args[0] = startkey;
-	args[1] = endkey;
+	args[0] = start;
+	args[1] = end;
 	return DeeObject_CallAttr(self, (DeeObject *)&str___map_enumerate_items__, 2, args);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__map_makeenumeration_with_range__with_callobjectcache___map_enumerate_items__(DeeObject *self, DeeObject *startkey, DeeObject *endkey) {
+default__map_makeenumeration_with_range__with_callobjectcache___map_enumerate_items__(DeeObject *self, DeeObject *start, DeeObject *end) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__map_makeenumeration_with_range__with_callobjectcache___map_enumerate_items__(Dee_TYPE(self), self, startkey, endkey);
+	return tdefault__map_makeenumeration_with_range__with_callobjectcache___map_enumerate_items__(Dee_TYPE(self), self, start, end);
 #else /* __OPTIMIZE_SIZE__ */
 	DeeObject *args[2];
-	args[0] = startkey;
-	args[1] = endkey;
+	args[0] = start;
+	args[1] = end;
 	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_enumerate_items__, self, 2, args);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__map_makeenumeration_with_range__unsupported(DeeObject *self, DeeObject *startkey, DeeObject *endkey) {
-	err_map_unsupportedf(self, "__map_enumerate_items__(%r, %r)", startkey, endkey);
+default__map_makeenumeration_with_range__unsupported(DeeObject *self, DeeObject *start, DeeObject *end) {
+	err_map_unsupportedf(self, "__map_enumerate_items__(%r, %r)", start, end);
 	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__map_makeenumeration_with_range__with__map_operator_iter(DeeObject *self, DeeObject *startkey, DeeObject *endkey) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack, self, startkey, endkey);
+default__map_makeenumeration_with_range__with__map_operator_iter(DeeObject *self, DeeObject *start, DeeObject *end) {
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack, self, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__map_makeenumeration_with_range__with__map_iterkeys__and__map_operator_getitem(DeeObject *self, DeeObject *startkey, DeeObject *endkey) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem, self, startkey, endkey);
+default__map_makeenumeration_with_range__with__map_iterkeys__and__map_operator_getitem(DeeObject *self, DeeObject *start, DeeObject *end) {
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem, self, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__map_makeenumeration_with_range__with__map_iterkeys__and__map_operator_trygetitem(DeeObject *self, DeeObject *startkey, DeeObject *endkey) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_trygetitem, self, startkey, endkey);
+default__map_makeenumeration_with_range__with__map_iterkeys__and__map_operator_trygetitem(DeeObject *self, DeeObject *start, DeeObject *end) {
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_trygetitem, self, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__map_makeenumeration_with_range__with__map_enumerate_range(DeeObject *self, DeeObject *startkey, DeeObject *endkey) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_enumerate_range, self, startkey, endkey);
+default__map_makeenumeration_with_range__with__map_enumerate_range(DeeObject *self, DeeObject *start, DeeObject *end) {
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_enumerate_range, self, start, end);
 }
 
 
@@ -21993,10 +22015,10 @@ tdefault__map_makeenumeration__with_callobjectcache___map_enumerate_items__(DeeT
 
 /* map_makeenumeration_with_range */
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
-tdefault__map_makeenumeration_with_range__with_callobjectcache___map_enumerate_items__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *startkey, DeeObject *endkey) {
+tdefault__map_makeenumeration_with_range__with_callobjectcache___map_enumerate_items__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end) {
 	DeeObject *args[2];
-	args[0] = startkey;
-	args[1] = endkey;
+	args[0] = start;
+	args[1] = end;
 	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___map_enumerate_items__, self, 2, args);
 }
 

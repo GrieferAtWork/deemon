@@ -1692,16 +1692,16 @@ err:
 }
 
 PUBLIC_CONST char const DeeMA___map_enumerate___name[] = "__map_enumerate__";
-PUBLIC_CONST char const DeeMA___map_enumerate___doc[] = "(cb:?DCallable,startkey?,endkey?)->?X2?O?N";
+PUBLIC_CONST char const DeeMA___map_enumerate___doc[] = "(cb:?DCallable,start?,end?)->?X2?O?N";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___map_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
 	Dee_ssize_t foreach_status;
 	struct seq_enumerate_data data;
-	DeeObject *startkey, *endkey = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|oo:__map_enumerate__", &data.sed_cb, &startkey, &endkey))
+	DeeObject *start, *end = NULL;
+	if (DeeArg_Unpack(argc, argv, "o|oo:__map_enumerate__", &data.sed_cb, &start, &end))
 		goto err;
-	if (endkey) {
-		foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate_range))(self, &seq_enumerate_cb, &data, startkey, endkey);
+	if (end) {
+		foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate_range))(self, &seq_enumerate_cb, &data, start, end);
 	} else {
 		foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &seq_enumerate_cb, &data);
 	}
@@ -1715,14 +1715,14 @@ err:
 }
 
 PUBLIC_CONST char const DeeMA___map_enumerate_items___name[] = "__map_enumerate_items__";
-PUBLIC_CONST char const DeeMA___map_enumerate_items___doc[] = "(startkey?,endkey?)->?S?T2";
+PUBLIC_CONST char const DeeMA___map_enumerate_items___doc[] = "(start?,end?)->?S?T2";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___map_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
-	DeeObject *startkey = NULL, *endkey = NULL;
-	if (DeeArg_Unpack(argc, argv, "|oo:__map_enumerate_items__", &startkey, &endkey))
+	DeeObject *start, *end = NULL;
+	if (DeeArg_Unpack(argc, argv, "|oo:__map_enumerate_items__", &start, &end))
 		goto err;
-	if (endkey)
-		return DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, startkey, endkey);
+	if (end)
+		return DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, start, end);
 	return DeeObject_InvokeMethodHint(map_makeenumeration, self);
 err:
 	return NULL;

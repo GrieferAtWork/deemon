@@ -358,6 +358,8 @@ seq_foreach_reverse = {
 			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_getitem ||
 			    seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
 				return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+			if (seq_operator_getitem_index == default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+				return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
 			return &$with__seq_operator_size__and__seq_operator_getitem_index;
 		}
 		if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
@@ -393,6 +395,8 @@ seq_enumerate_index_reverse = {
 			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_getitem ||
 			    seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
 				return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+				return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
 			return &$with__seq_operator_size__and__seq_operator_getitem_index;
 		}
 		if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)

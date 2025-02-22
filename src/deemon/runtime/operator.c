@@ -12712,8 +12712,8 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeWithSizeObAndGetIt
 	}
 #endif /* DEFINE_TYPED_OPERATORS */
 	{
-		DREF DefaultSequence_WithSizeAndGetItem *result;
-		result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItem);
+		DREF DefaultSequence_WithSizeObAndGetItem *result;
+		result = DeeObject_MALLOC(DefaultSequence_WithSizeObAndGetItem);
 		if unlikely(!result)
 			goto err;
 		result->dssg_start = startob_and_endob[0]; /* Inherit reference */
@@ -12721,7 +12721,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeWithSizeObAndGetIt
 		Dee_Incref(self);
 		result->dssg_seq        = self;
 		result->dssg_tp_getitem = tp_self->tp_seq->tp_getitem;
-		DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItem_Type);
+		DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 		return (DREF DeeObject *)result;
 	}
 	__builtin_unreachable();
@@ -12805,7 +12805,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeDefau
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
 	size_t size;
 	struct Dee_seq_range range;
-	DREF DefaultSequence_WithSizeAndGetItem *result;
+	DREF DefaultSequence_WithSizeObAndGetItem *result;
 	LOAD_TP_SELF;
 	size = DeeType_INVOKE_SIZE(tp_self, self);
 	if unlikely(size == (size_t)-1)
@@ -12843,7 +12843,7 @@ err_tr:
 		}
 	}
 #endif /* DEFINE_TYPED_OPERATORS */
-	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItem);
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeObAndGetItem);
 	if unlikely(!result)
 		goto err;
 	result->dssg_start = DeeInt_NewSize(range.sr_start);
@@ -12855,7 +12855,7 @@ err_tr:
 	Dee_Incref(self);
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = tp_self->tp_seq->tp_getitem;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItem_Type);
+	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 	return (DREF DeeObject *)result;
 err_r_start:
 	Dee_Decref(result->dssg_start);
@@ -13138,7 +13138,7 @@ err:
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefaultAndGetItem,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
-	DREF DefaultSequence_WithSizeAndGetItem *result;
+	DREF DefaultSequence_WithSizeObAndGetItem *result;
 	size_t size;
 	LOAD_TP_SELF;
 	size = DeeType_INVOKE_SIZE(tp_self, self);
@@ -13186,7 +13186,7 @@ err_tr:
 		}
 	}
 #endif /* DEFINE_TYPED_OPERATORS */
-	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItem);
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeObAndGetItem);
 	if unlikely(!result)
 		goto err;
 	result->dssg_start = DeeInt_NewSize((size_t)start);
@@ -13198,7 +13198,7 @@ err_tr:
 	Dee_Incref(self);
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = tp_self->tp_seq->tp_getitem;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItem_Type);
+	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 	return (DREF DeeObject *)result;
 empty_range:
 	return_empty_seq;

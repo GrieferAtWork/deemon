@@ -564,7 +564,7 @@ PRIVATE struct type_getset tpconst dmi_getsets[] = {
 
 INTERN DeeTypeObject DistinctMappingIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_DistinctIterator",
+	/* .tp_name     = */ "_DistinctMappingIterator",
 	/* .tp_doc      = */ DOC("(objWithNext)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,

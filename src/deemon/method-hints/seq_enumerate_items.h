@@ -203,6 +203,8 @@ seq_makeenumeration = {
 						goto use__seq_enumerate;
 					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__map_enumerate)
 						goto use__seq_enumerate;
+					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+						return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
 					return &$with__seq_operator_size__and__seq_operator_getitem_index;
 				}
 				return &$with__seq_operator_sizeob__and__seq_operator_getitem;

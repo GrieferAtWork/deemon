@@ -871,13 +871,18 @@ my_custom_getitem_index(DeeObject *self, size_t index) {
 	return_none;
 }
 
-#define my_custom_iter     my_custom_sizeob
-#define my_custom_iterkeys my_custom_sizeob
+#define my_custom_iter         my_custom_sizeob
+#define my_custom_map_iterkeys my_custom_sizeob
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 my_custom_sizeob(DeeObject *__restrict self) {
 	(void)self;
 	return_none;
 }
+
+PRIVATE struct type_getset tpconst type_getset_with_iterkeys[] = {
+	TYPE_GETTER_NODOC("iterkeys", &my_custom_map_iterkeys),
+	TYPE_GETSET_END,
+};
 
 #if __SIZEOF_SIZE_T__ == __SIZEOF_POINTER__
 #define my_custom_getitem_PTR ((DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&my_custom_getitem_index)
@@ -891,37 +896,51 @@ my_custom_getitem(DeeObject *self, DeeObject *index) {
 }
 #endif /* __SIZEOF_SIZE_T__ != __SIZEOF_POINTER__ */
 
-#define INIT_CUSTOM_SEQ_TYPE(tp_seq) INIT_CUSTOM_SEQ_TYPE_EX(tp_seq, &DeeSeq_Type)
-#define INIT_CUSTOM_SEQ_TYPE_EX(tp_seq, base)              \
-	{                                                      \
-		OBJECT_HEAD_INIT(&DeeType_Type),                   \
-		/* .tp_name     = */ NULL,                         \
-		/* .tp_doc      = */ NULL,                         \
-		/* .tp_flags    = */ TP_FNORMAL | TP_FINHERITCTOR, \
-		/* .tp_weakrefs = */ 0,                            \
-		/* .tp_features = */ TF_NONE,                      \
-		/* .tp_base     = */ base,                         \
-		/* .tp_init = */ {                                 \
-			{                                              \
-				/* .tp_alloc = */ {                        \
-					/* .tp_ctor      = */ (dfunptr_t)NULL, \
-					/* .tp_copy_ctor = */ (dfunptr_t)NULL, \
-					/* .tp_deep_ctor = */ (dfunptr_t)NULL, \
-					/* .tp_any_ctor  = */ (dfunptr_t)NULL, \
-					TYPE_AUTO_ALLOCATOR(DeeObject)         \
-				}                                          \
-			},                                             \
-			/* .tp_dtor        = */ NULL,                  \
-			/* .tp_assign      = */ NULL,                  \
-			/* .tp_move_assign = */ NULL                   \
-		},                                                 \
-		/* .tp_cast = */ { NULL },                         \
-		/* .tp_call          = */ NULL,                    \
-		/* .tp_visit         = */ NULL,                    \
-		/* .tp_gc            = */ NULL,                    \
-		/* .tp_math          = */ NULL,                    \
-		/* .tp_cmp           = */ NULL,                    \
-		/* .tp_seq           = */ tp_seq,                  \
+#define INIT_CUSTOM_SEQ_TYPE(tp_seq) \
+	INIT_CUSTOM_SEQ_TYPE_EX(&DeeSeq_Type, tp_seq, NULL, NULL, NULL)
+#define INIT_CUSTOM_SEQ_TYPE_EX(tp_base, tp_seq, tp_methods, \
+                                tp_getsets, tp_method_hints) \
+	{                                                        \
+		OBJECT_HEAD_INIT(&DeeType_Type),                     \
+		/* .tp_name     = */ NULL,                           \
+		/* .tp_doc      = */ NULL,                           \
+		/* .tp_flags    = */ TP_FNORMAL | TP_FINHERITCTOR,   \
+		/* .tp_weakrefs = */ 0,                              \
+		/* .tp_features = */ TF_NONE,                        \
+		/* .tp_base     = */ tp_base,                        \
+		/* .tp_init = */ {                                   \
+			{                                                \
+				/* .tp_alloc = */ {                          \
+					/* .tp_ctor      = */ (dfunptr_t)NULL,   \
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,   \
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,   \
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL,   \
+					TYPE_AUTO_ALLOCATOR(DeeObject)           \
+				}                                            \
+			},                                               \
+			/* .tp_dtor        = */ NULL,                    \
+			/* .tp_assign      = */ NULL,                    \
+			/* .tp_move_assign = */ NULL                     \
+		},                                                   \
+		/* .tp_cast = */ { NULL },                           \
+		/* .tp_call          = */ NULL,                      \
+		/* .tp_visit         = */ NULL,                      \
+		/* .tp_gc            = */ NULL,                      \
+		/* .tp_math          = */ NULL,                      \
+		/* .tp_cmp           = */ NULL,                      \
+		/* .tp_seq           = */ tp_seq,                    \
+		/* .tp_iter_next     = */ NULL,                      \
+		/* .tp_iterator      = */ NULL,                      \
+		/* .tp_attr          = */ NULL,                      \
+		/* .tp_with          = */ NULL,                      \
+		/* .tp_buffer        = */ NULL,                      \
+		/* .tp_methods       = */ tp_methods,                \
+		/* .tp_getsets       = */ tp_getsets,                \
+		/* .tp_members       = */ NULL,                      \
+		/* .tp_class_methods = */ NULL,                      \
+		/* .tp_class_getsets = */ NULL,                      \
+		/* .tp_class_members = */ NULL,                      \
+		/* .tp_method_hints  = */ tp_method_hints            \
 	}
 
 PRIVATE struct type_seq type_seq_with_size_and_getitem_index = {
@@ -1571,6 +1590,20 @@ librt_get_IterWithGetItemIndex_Type_f(size_t UNUSED(argc), DeeObject *const *UNU
 	return_cached(get_type_of(DeeObject_Iter(&object_with_getitem_index)));
 }
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define get_seq_enumerate_of_noinherit(self) \
+	DeeObject_InvokeMethodHint(seq_makeenumeration, self)
+#define get_seq_enumerate_of_noinherit_with_int_range(self) \
+	DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, 0, 1)
+#define get_seq_enumerate_of_noinherit_with_range(self) \
+	DeeObject_InvokeMethodHint(seq_makeenumeration_with_range, self, Dee_EmptyString, Dee_EmptyString)
+
+#define get_map_enumerate_of_noinherit(self) \
+	DeeObject_InvokeMethodHint(map_makeenumeration, self)
+#define get_map_enumerate_of_noinherit_with_range(self) \
+	DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, Dee_EmptyString, Dee_EmptyString)
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define get_map_enumerate_of_noinherit get_seq_enumerate_of_noinherit
 #define get_seq_enumerate_of_noinherit(self) \
 	DeeObject_CallAttrStringHash(self, "enumerate", Dee_HashStr__enumerate, 0, NULL)
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1581,6 +1614,7 @@ get_seq_enumerate_of_noinherit_with_int_range(DeeObject *self) {
 	return DeeObject_CallAttrStringHash(self, "enumerate", Dee_HashStr__enumerate, 2, args);
 }
 
+#define get_map_enumerate_of_noinherit_with_range get_seq_enumerate_of_noinherit_with_range
 PRIVATE WUNUSED DREF DeeObject *DCALL
 get_seq_enumerate_of_noinherit_with_range(DeeObject *self) {
 	DeeObject *args[2];
@@ -1588,6 +1622,7 @@ get_seq_enumerate_of_noinherit_with_range(DeeObject *self) {
 	args[1] = Dee_EmptyString;
 	return DeeObject_CallAttrStringHash(self, "enumerate", Dee_HashStr__enumerate, 2, args);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 /*
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1813,7 +1848,7 @@ PRIVATE struct type_seq type_seq_with_iterkeys_and_getitem_formap = {
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
 	/* .tp_enumerate_index    = */ NULL,
-	/* .tp_iterkeys           = */ &my_custom_iterkeys,
+	/* .tp_iterkeys           = */ &my_custom_map_iterkeys,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ NULL,
@@ -1833,7 +1868,7 @@ PRIVATE struct type_seq type_seq_with_iterkeys_and_getitem_formap = {
 	/* .tp_trygetitem         = */ NULL,
 	/* .tp_trygetitem_index   = */ NULL,
 };
-PRIVATE DeeTypeObject type_with_iterkeys_and_getitem_formap = INIT_CUSTOM_SEQ_TYPE_EX(&type_seq_with_iterkeys_and_getitem_formap, &DeeMapping_Type);
+PRIVATE DeeTypeObject type_with_iterkeys_and_getitem_formap = INIT_CUSTOM_SEQ_TYPE_EX(&DeeMapping_Type, &type_seq_with_iterkeys_and_getitem_formap, NULL, type_getset_with_iterkeys, NULL);
 PRIVATE DeeObject object_with_iterkeys_and_getitem_formap = { OBJECT_HEAD_INIT(&type_with_iterkeys_and_getitem_formap) };
 
 
@@ -1852,7 +1887,7 @@ PRIVATE struct type_seq type_seq_with_iterkeys_and_trygetitem_formap = {
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
 	/* .tp_enumerate_index    = */ NULL,
-	/* .tp_iterkeys           = */ &my_custom_iterkeys,
+	/* .tp_iterkeys           = */ &my_custom_map_iterkeys,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ NULL,
@@ -1872,14 +1907,14 @@ PRIVATE struct type_seq type_seq_with_iterkeys_and_trygetitem_formap = {
 	/* .tp_trygetitem         = */ my_custom_getitem_PTR,
 	/* .tp_trygetitem_index   = */ NULL,
 };
-PRIVATE DeeTypeObject type_with_iterkeys_and_trygetitem_formap = INIT_CUSTOM_SEQ_TYPE_EX(&type_seq_with_iterkeys_and_trygetitem_formap, &DeeMapping_Type);
+PRIVATE DeeTypeObject type_with_iterkeys_and_trygetitem_formap = INIT_CUSTOM_SEQ_TYPE_EX(&DeeMapping_Type, &type_seq_with_iterkeys_and_trygetitem_formap, NULL, type_getset_with_iterkeys, NULL);
 PRIVATE DeeObject object_with_iterkeys_and_trygetitem_formap = { OBJECT_HEAD_INIT(&type_with_iterkeys_and_trygetitem_formap) };
 
 
 
 
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-PRIVATE DeeTypeObject type_with_iter_and_size_formap = INIT_CUSTOM_SEQ_TYPE_EX(&type_seq_with_iter_and_size, &DeeMapping_Type);
+PRIVATE DeeTypeObject type_with_iter_and_size_formap = INIT_CUSTOM_SEQ_TYPE_EX(&DeeMapping_Type, &type_seq_with_iter_and_size, NULL, NULL, NULL);
 PRIVATE DeeObject object_with_iter_and_size_formap = { OBJECT_HEAD_INIT(&type_with_iter_and_size_formap) };
 
 PRIVATE struct type_method_hint type_with_map_enumerate_method_hints[] = {
@@ -2018,37 +2053,37 @@ librt_get_SeqEnumWithIntFilterAndSeqEnumerateIndex_Type_impl_f(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqEnumWithFilterAndMapOperatorIterAndUnpack_Type_impl_f(void) {
-	return_cached(get_type_of(get_seq_enumerate_of_noinherit_with_range(&object_with_iter_and_size_formap)));
+	return_cached(get_type_of(get_map_enumerate_of_noinherit_with_range(&object_with_iter_and_size_formap)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqEnumWithMapIterkeysAndMapOperatorGetItem_Type_impl_f(void) {
-	return_cached(get_type_of(get_seq_enumerate_of_noinherit(&object_with_iterkeys_and_getitem_formap)));
+	return_cached(get_type_of(get_map_enumerate_of_noinherit(&object_with_iterkeys_and_getitem_formap)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqEnumWithFilterAndMapIterkeysAndMapOperatorGetItem_Type_impl_f(void) {
-	return_cached(get_type_of(get_seq_enumerate_of_noinherit_with_range(&object_with_iterkeys_and_getitem_formap)));
+	return_cached(get_type_of(get_map_enumerate_of_noinherit_with_range(&object_with_iterkeys_and_getitem_formap)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqEnumWithMapIterkeysAndMapOperatorTryGetItem_Type_impl_f(void) {
-	return_cached(get_type_of(get_seq_enumerate_of_noinherit(&object_with_iterkeys_and_trygetitem_formap)));
+	return_cached(get_type_of(get_map_enumerate_of_noinherit(&object_with_iterkeys_and_trygetitem_formap)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqEnumWithFilterAndMapIterkeysAndMapOperatorTryGetItem_Type_impl_f(void) {
-	return_cached(get_type_of(get_seq_enumerate_of_noinherit_with_range(&object_with_iterkeys_and_trygetitem_formap)));
+	return_cached(get_type_of(get_map_enumerate_of_noinherit_with_range(&object_with_iterkeys_and_trygetitem_formap)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqEnumWithMapEnumerate_Type_impl_f(void) {
-	return_cached(get_type_of(get_seq_enumerate_of_noinherit(&object_with_map_enumerate)));
+	return_cached(get_type_of(get_map_enumerate_of_noinherit(&object_with_map_enumerate)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqEnumWithFilterAndMapEnumerateRange_Type_impl_f(void) {
-	return_cached(get_type_of(get_seq_enumerate_of_noinherit_with_range(&object_with_map_enumerate)));
+	return_cached(get_type_of(get_map_enumerate_of_noinherit_with_range(&object_with_map_enumerate)));
 }
 
 
@@ -2179,7 +2214,7 @@ librt_get_IterWithSizeObAndGetItemPair_Type_f(size_t UNUSED(argc), DeeObject *co
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_IterWithGetItemPair_Type_impl_f(void) {
-	return_cached(get_Iterator_of(librt_get_SeqEnumWithSeqOperatorGetItemIndex_Type_impl_f()));
+	return_cached(get_Iterator_of(librt_get_SeqEnumWithSeqOperatorGetItem_Type_impl_f()));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2257,7 +2292,7 @@ PRIVATE struct type_seq type_seq_with_iterkeys_and_getitem = {
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
 	/* .tp_enumerate_index    = */ NULL,
-	/* .tp_iterkeys           = */ &my_custom_iterkeys,
+	/* .tp_iterkeys           = */ &my_custom_map_iterkeys,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ NULL,
@@ -2304,7 +2339,7 @@ PRIVATE struct type_seq type_seq_with_iterkeys_and_trygetitem = {
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
 	/* .tp_enumerate_index    = */ NULL,
-	/* .tp_iterkeys           = */ &my_custom_iterkeys,
+	/* .tp_iterkeys           = */ &my_custom_map_iterkeys,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ NULL,
@@ -2391,7 +2426,7 @@ PRIVATE struct type_seq type_seq_with_iter_formap = {
 	/* .tp_trygetitem         = */ NULL,
 	/* .tp_trygetitem_index   = */ NULL,
 };
-PRIVATE DeeTypeObject type_with_iter_formap = INIT_CUSTOM_SEQ_TYPE_EX(&type_seq_with_iter_formap, &DeeMapping_Type);
+PRIVATE DeeTypeObject type_with_iter_formap = INIT_CUSTOM_SEQ_TYPE_EX(&DeeMapping_Type, &type_seq_with_iter_formap, NULL, NULL, NULL);
 PRIVATE DeeObject object_with_iter_formap = { OBJECT_HEAD_INIT(&type_with_iter_formap) };
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -4155,7 +4190,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqWithSizeAndGetItemIndex", (DeeObject *)&librt_get_SeqWithSizeAndGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* DefaultSequence_WithSizeAndGetItemIndex_Type */
 	{ "SeqWithSizeAndGetItemIndexFast", (DeeObject *)&librt_get_SeqWithSizeAndGetItemIndexFast, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* DefaultSequence_WithSizeAndGetItemIndexFast_Type */
 	{ "SeqWithSizeAndTryGetItemIndex", (DeeObject *)&librt_get_SeqWithSizeAndTryGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* DefaultSequence_WithSizeAndTryGetItemIndex_Type */
-	{ "SeqWithSizeAndGetItem", (DeeObject *)&librt_get_SeqWithSizeAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* DefaultSequence_WithSizeAndGetItem_Type */
+	{ "SeqWithSizeObAndGetItem", (DeeObject *)&librt_get_SeqWithSizeAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* DefaultSequence_WithSizeObAndGetItem_Type */
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	{ "SeqWithTSizeAndGetItem", (DeeObject *)&librt_get_SeqWithTSizeAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* DefaultSequence_WithTSizeAndGetItem_Type */
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
@@ -4178,7 +4213,7 @@ PRIVATE struct dex_symbol symbols[] = {
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	{ "IterWithGetItemPair", (DeeObject *)&librt_get_IterWithGetItemPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* DefaultIterator_WithGetItemPair_Type */
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	{ "IterWithSizeAndGetItem", (DeeObject *)&librt_get_IterWithSizeObAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* DefaultIterator_WithSizeObAndGetItem_Type */
+	{ "IterWithSizeObAndGetItem", (DeeObject *)&librt_get_IterWithSizeObAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* DefaultIterator_WithSizeObAndGetItem_Type */
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	{ "IterWithSizeAndGetItemPair", (DeeObject *)&librt_get_IterWithSizeObAndGetItemPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultIterator_WithSizeObAndGetItemPair_Type */
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */

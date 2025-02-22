@@ -239,7 +239,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_itervalues(DeeSu
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL super_mh__map_enumerate(DeeSuperObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 4, 5)) Dee_ssize_t DCALL super_mh__map_enumerate_range(DeeSuperObject *self, Dee_seq_enumerate_t cb, void *arg, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_makeenumeration(DeeSuperObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL super_mh__map_makeenumeration_with_range(DeeSuperObject *self, DeeObject *startkey, DeeObject *endkey);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL super_mh__map_makeenumeration_with_range(DeeSuperObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__map_operator_compare_eq(DeeSuperObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__map_operator_trycompare_eq(DeeSuperObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__map_operator_eq(DeeSuperObject *lhs, DeeObject *rhs);

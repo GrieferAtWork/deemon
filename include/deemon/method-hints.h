@@ -750,7 +750,7 @@ typedef WUNUSED_T NONNULL_T((1, 2, 4, 5)) Dee_ssize_t (DCALL *DeeMH_map_enumerat
 
 /* __map_enumerate_items__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_map_makeenumeration_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_map_makeenumeration_with_range_t)(DeeObject *self, DeeObject *startkey, DeeObject *endkey);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_map_makeenumeration_with_range_t)(DeeObject *self, DeeObject *start, DeeObject *end);
 
 /* __map_compare_eq__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_map_operator_compare_eq_t)(DeeObject *lhs, DeeObject *rhs);
@@ -1873,12 +1873,12 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_contains__(DeeObject *__r
 
 #define DeeMA___map_enumerate___flags Dee_TYPE_METHOD_FNORMAL
 DDATDEF char const DeeMA___map_enumerate___name[]; /* "__map_enumerate__" */
-DDATDEF char const DeeMA___map_enumerate___doc[];  /* "(cb:?DCallable,startkey?,endkey?)->?X2?O?N" */
+DDATDEF char const DeeMA___map_enumerate___doc[];  /* "(cb:?DCallable,start?,end?)->?X2?O?N" */
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_enumerate_items___flags Dee_TYPE_METHOD_FNORMAL
 DDATDEF char const DeeMA___map_enumerate_items___name[]; /* "__map_enumerate_items__" */
-DDATDEF char const DeeMA___map_enumerate_items___doc[];  /* "(startkey?,endkey?)->?S?T2" */
+DDATDEF char const DeeMA___map_enumerate_items___doc[];  /* "(start?,end?)->?S?T2" */
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_compare_eq___flags Dee_TYPE_METHOD_FNORMAL
@@ -2212,6 +2212,16 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
  *          appear in "orig_type.__mro__". */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 (DCALL DeeType_GetPrivateMethodHintNoDefault)(DeeTypeObject *self, DeeTypeObject *orig_type, enum Dee_tmh_id id);
+
+/* Check if "impl" is a default impl for "id", and if so:
+ * - Return "DeeType_GetMethodHint(into, id)" if non-NULL
+ * - If "DeeType_GetMethodHint()" returned NULL ("into" can't
+ *   implement the hint), return the "%{unsupported}" impl
+ * Otherwise, return "NULL" */
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 3)) Dee_funptr_t
+(DCALL DeeType_MapDefaultMethodHintImplForInherit)(DeeTypeObject *into,
+                                                   enum Dee_tmh_id id,
+                                                   Dee_funptr_t impl);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Returns a pointer to method hint's entry in `self->tp_method_hints' */
