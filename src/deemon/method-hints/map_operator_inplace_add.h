@@ -26,7 +26,7 @@ __map_inplace_add__(items:?X3?DMapping?M?O?O?S?T2?O?O)->?. {
 	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_add__", &items))
 		goto err;
 	Dee_Incref(self);
-	if unlikely(CALL_DEPENDENCY(map_operator_inplace_add, &self, items))
+	if unlikely(CALL_DEPENDENCY(map_operator_inplace_add, (DeeObject **)&self, items))
 		goto err_self;
 	return self;
 err_self:

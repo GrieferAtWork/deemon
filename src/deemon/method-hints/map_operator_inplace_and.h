@@ -26,7 +26,7 @@ __map_inplace_and__(keys:?X2?DSet?DSequence?S?O)->?. {
 	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_and__", &keys))
 		goto err;
 	Dee_Incref(self);
-	if unlikely(CALL_DEPENDENCY(map_operator_inplace_and, &self, keys))
+	if unlikely(CALL_DEPENDENCY(map_operator_inplace_and, (DeeObject **)&self, keys))
 		goto err_self;
 	return self;
 err_self:

@@ -26,7 +26,7 @@ __map_inplace_xor__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?. {
 	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_xor__", &rhs))
 		goto err;
 	Dee_Incref(self);
-	if unlikely(CALL_DEPENDENCY(map_operator_inplace_xor, &self, rhs))
+	if unlikely(CALL_DEPENDENCY(map_operator_inplace_xor, (DeeObject **)&self, rhs))
 		goto err_self;
 	return self;
 err_self:

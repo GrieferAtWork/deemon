@@ -302,7 +302,7 @@ DeeMA___seq_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__seq_inplace_add__", &rhs))
 		goto err;
 	Dee_Incref(self);
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_inplace_add))(&self, rhs))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_inplace_add))((DeeObject **)&self, rhs))
 		goto err_self;
 	return self;
 err_self:
@@ -319,7 +319,7 @@ DeeMA___seq_inplace_mul__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__seq_inplace_mul__", &repeat))
 		goto err;
 	Dee_Incref(self);
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_inplace_mul))(&self, repeat))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_inplace_mul))((DeeObject **)&self, repeat))
 		goto err_self;
 	return self;
 err_self:
@@ -1464,7 +1464,7 @@ DeeMA___set_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__set_inplace_add__", &rhs))
 		goto err;
 	Dee_Incref(self);
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_add))(&self, rhs))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_add))((DeeObject **)&self, rhs))
 		goto err_self;
 	return self;
 err_self:
@@ -1481,7 +1481,7 @@ DeeMA___set_inplace_sub__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__set_inplace_sub__", &rhs))
 		goto err;
 	Dee_Incref(self);
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_sub))(&self, rhs))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_sub))((DeeObject **)&self, rhs))
 		goto err_self;
 	return self;
 err_self:
@@ -1498,7 +1498,7 @@ DeeMA___set_inplace_and__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__set_inplace_and__", &rhs))
 		goto err;
 	Dee_Incref(self);
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_and))(&self, rhs))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_and))((DeeObject **)&self, rhs))
 		goto err_self;
 	return self;
 err_self:
@@ -1515,7 +1515,7 @@ DeeMA___set_inplace_xor__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__set_inplace_xor__", &rhs))
 		goto err;
 	Dee_Incref(self);
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_xor))(&self, rhs))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_xor))((DeeObject **)&self, rhs))
 		goto err_self;
 	return self;
 err_self:
@@ -1877,7 +1877,7 @@ DeeMA___map_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_add__", &items))
 		goto err;
 	Dee_Incref(self);
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_add))(&self, items))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_add))((DeeObject **)&self, items))
 		goto err_self;
 	return self;
 err_self:
@@ -1894,7 +1894,7 @@ DeeMA___map_inplace_sub__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_sub__", &keys))
 		goto err;
 	Dee_Incref(self);
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_sub))(&self, keys))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_sub))((DeeObject **)&self, keys))
 		goto err_self;
 	return self;
 err_self:
@@ -1911,7 +1911,7 @@ DeeMA___map_inplace_and__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_and__", &keys))
 		goto err;
 	Dee_Incref(self);
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_and))(&self, keys))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_and))((DeeObject **)&self, keys))
 		goto err_self;
 	return self;
 err_self:
@@ -1928,7 +1928,7 @@ DeeMA___map_inplace_xor__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_xor__", &rhs))
 		goto err;
 	Dee_Incref(self);
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_xor))(&self, rhs))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_xor))((DeeObject **)&self, rhs))
 		goto err_self;
 	return self;
 err_self:

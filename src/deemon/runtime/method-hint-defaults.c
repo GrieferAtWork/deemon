@@ -15974,7 +15974,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_insertall__with__set_operator_inplace_add(DeeObject *self, DeeObject *keys) {
 	int result;
 	Dee_Incref(self);
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_add))(&self, keys);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_add))((DeeObject **)&self, keys);
 	Dee_Decref(self);
 	return result;
 }
@@ -16158,7 +16158,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_removeall__with__set_operator_inplace_sub(DeeObject *self, DeeObject *keys) {
 	int result;
 	Dee_Incref(self);
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_sub))(&self, keys);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_sub))((DeeObject **)&self, keys);
 	Dee_Decref(self);
 	return result;
 }
@@ -19797,7 +19797,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_update__with__map_operator_inplace_add(DeeObject *self, DeeObject *items) {
 	int result;
 	Dee_Incref(self);
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_add))(&self, items);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_add))((DeeObject **)&self, items);
 	Dee_Decref(self);
 	return result;
 }
@@ -19942,7 +19942,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_removekeys__with__map_operator_inplace_sub(DeeObject *self, DeeObject *keys) {
 	int result;
 	Dee_Incref(self);
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_sub))(&self, keys);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_sub))((DeeObject **)&self, keys);
 	Dee_Decref(self);
 	return result;
 }

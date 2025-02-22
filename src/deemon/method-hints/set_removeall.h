@@ -59,7 +59,7 @@ __set_removeall__.set_removeall([[nonnull]] DeeObject *self,
 %{$with__set_operator_inplace_sub = {
 	int result;
 	Dee_Incref(self);
-	result = CALL_DEPENDENCY(set_operator_inplace_sub, &self, keys);
+	result = CALL_DEPENDENCY(set_operator_inplace_sub, (DeeObject **)&self, keys);
 	Dee_Decref(self);
 	return result;
 }}

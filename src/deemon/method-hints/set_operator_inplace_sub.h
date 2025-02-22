@@ -26,7 +26,7 @@ __set_inplace_sub__(rhs:?X3?DSet?DSequence?S?O)->?. {
 	if (DeeArg_Unpack(argc, argv, "o:__set_inplace_sub__", &rhs))
 		goto err;
 	Dee_Incref(self);
-	if unlikely(CALL_DEPENDENCY(set_operator_inplace_sub, &self, rhs))
+	if unlikely(CALL_DEPENDENCY(set_operator_inplace_sub, (DeeObject **)&self, rhs))
 		goto err_self;
 	return self;
 err_self:

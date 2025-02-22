@@ -70,7 +70,7 @@ err:
 %{$with__map_operator_inplace_add = {
 	int result;
 	Dee_Incref(self);
-	result = CALL_DEPENDENCY(map_operator_inplace_add, &self, items);
+	result = CALL_DEPENDENCY(map_operator_inplace_add, (DeeObject **)&self, items);
 	Dee_Decref(self);
 	return result;
 }}

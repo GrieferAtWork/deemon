@@ -61,7 +61,7 @@ __map_removekeys__.map_removekeys([[nonnull]] DeeObject *self,
 %{$with__map_operator_inplace_sub = {
 	int result;
 	Dee_Incref(self);
-	result = CALL_DEPENDENCY(map_operator_inplace_sub, &self, keys);
+	result = CALL_DEPENDENCY(map_operator_inplace_sub, (DeeObject **)&self, keys);
 	Dee_Decref(self);
 	return result;
 }}

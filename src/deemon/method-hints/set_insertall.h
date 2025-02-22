@@ -61,7 +61,7 @@ __set_insertall__.set_insertall([[nonnull]] DeeObject *self,
 %{$with__set_operator_inplace_add = {
 	int result;
 	Dee_Incref(self);
-	result = CALL_DEPENDENCY(set_operator_inplace_add, &self, keys);
+	result = CALL_DEPENDENCY(set_operator_inplace_add, (DeeObject **)&self, keys);
 	Dee_Decref(self);
 	return result;
 }}
