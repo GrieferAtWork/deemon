@@ -24,15 +24,11 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/bytes.h>
 #include <deemon/class.h>
 #include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
 #include <deemon/gc.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
-#include <deemon/list.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/none-operator.h>
@@ -44,15 +40,12 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
-#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/objectlist.h>
 
 #include <hybrid/align.h>
-#include <hybrid/bit.h>
 #include <hybrid/overflow.h>
-#include <hybrid/sched/yield.h>
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
@@ -61,7 +54,6 @@
 #include "seq/default-api.h"
 #include "seq/default-compare.h"
 #include "seq/default-map-proxy.h"
-#include "seq/hashfilter.h"
 
 /**/
 #include "dict.h"
@@ -4092,7 +4084,9 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD_HINT_F(seq_operator_size, &dict_size, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_size_fast, &dict_size_fast, METHOD_FNOREFESCAPE),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#else /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	TYPE_METHOD_HINT_F(seq_operator_hasitem_index, &default__seq_operator_hasitem_index__with__seq_operator_size, METHOD_FNOREFESCAPE),
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_operator_getitem_index, &dict_mh_seq_getitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_trygetitem_index, &dict_mh_seq_trygetitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_delitem_index, &dict_mh_seq_delitem_index, METHOD_FNOREFESCAPE),

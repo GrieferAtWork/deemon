@@ -2358,6 +2358,9 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[238] = {
 #define Dee_TMH_USING_MAXLEN 4
 /*[[[end]]]*/
 
+/* +1 here because "Dee_TMH_USING_MAXLEN" counts edges, but we need the max # of nodes */
+#define Dee_TMH_ABSENT_MAXLEN (Dee_TMH_USING_MAXLEN + 1)
+
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 Dee_tmh_id_array_contains(enum Dee_tmh_id const values[],
                           size_t count, enum Dee_tmh_id value) {
@@ -2374,7 +2377,7 @@ __pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 3, 5)) Dee_funptr_t DCALL
 find_method_hint_in_using(DeeTypeObject *__restrict self, enum Dee_tmh_id id,
-                          enum Dee_tmh_id absent[Dee_TMH_USING_MAXLEN],
+                          enum Dee_tmh_id absent[Dee_TMH_ABSENT_MAXLEN],
                           size_t absent_count, size_t *__restrict p_nactions) {
 	struct mh_init_spec const *specs = &mh_init_specs[id];
 	struct mh_init_using const *iter = specs->mis_using;
@@ -2386,6 +2389,7 @@ find_method_hint_in_using(DeeTypeObject *__restrict self, enum Dee_tmh_id id,
 	winner_actions = (size_t)-1;
 
 	/* Remember that "id" is considered as absent, so-as to prevent recursion */
+	ASSERT(absent_count < Dee_TMH_ABSENT_MAXLEN);
 	absent[absent_count] = id;
 	++absent_count;
 	for (; iter->miu_impl; ++iter) {
@@ -2454,9 +2458,9 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 	if (!result) {
 		struct mh_init_spec const *specs = &mh_init_specs[id];
 		if (specs->mis_using) {
-			size_t n_actions;
-			enum Dee_tmh_id absent[Dee_TMH_USING_MAXLEN];
-			result = find_method_hint_in_using(self, id, absent, 0, &n_actions);
+			size_t n_absent;
+			enum Dee_tmh_id absent[Dee_TMH_ABSENT_MAXLEN];
+			result = find_method_hint_in_using(self, id, absent, 0, &n_absent);
 		}
 	}
 	return result;
@@ -2713,6 +2717,12 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 					return result;
 			}
 		}
+	} else if (!specs->mis_attr_prim) {
+		/* Anonymous method hint -> check if explicitly defined. */
+		Dee_funptr_t result;
+		result = DeeType_GetExplicitOrImplicitMethodHint(self, id);
+		if (result)
+			return result;
 	}
 
 	/* Check for native operators. Must be done after attributes because
