@@ -1111,7 +1111,6 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 	/* Special cases for magic operator groups. */
 
-	/* TODO: This big ol' switch needs to be virtual via function pointers in opinfo descriptors. */
 	switch (name) {
 	case OPERATOR_CONSTRUCTOR:
 	case OPERATOR_COPY:

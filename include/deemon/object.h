@@ -2518,29 +2518,6 @@ myob_foreach_pair(MyObject *__restrict self, Dee_foreach_pair_t proc, void *arg)
 	return DeeError_NOTIMPLEMENTED();
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-myob_enumerate(MyObject *__restrict self, Dee_seq_enumerate_t proc, void *arg) {
-	(void)self;
-	(void)proc;
-	(void)arg;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-myob_enumerate_index(MyObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
-	(void)self;
-	(void)proc;
-	(void)arg;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-myob_iterkeys(MyObject *__restrict self) {
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 myob_bounditem(MyObject *self, DeeObject *index) {
 	(void)self;
@@ -2797,31 +2774,6 @@ myob_asvector_nothrow(MyObject *self, size_t dst_length, /*out*/ DREF DeeObject 
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-myob_unpack(MyObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
-	(void)self;
-	(void)dst;
-	(void)dst_length;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-myob_unpack_ex(MyObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst) {
-	(void)self;
-	(void)dst;
-	(void)dst_length_min;
-	(void)dst_length_max;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-myob_unpack_ub(MyObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
-	(void)self;
-	(void)dst;
-	(void)dst_length;
-	return DeeError_NOTIMPLEMENTED();
-}
-
 PRIVATE struct type_seq myob_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&myob_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&myob_sizeob,
@@ -2834,9 +2786,9 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&myob_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&myob_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&myob_foreach_pair,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&myob_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&myob_enumerate_index,
-	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&myob_iterkeys,
+	/* ._deprecated_tp_enumerate      = */ NULL,
+	/* ._deprecated_tp_enumerate_index= */ NULL,
+	/* ._deprecated_tp_iterkeys       = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&myob_size,
@@ -2869,9 +2821,9 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&myob_hasitem_string_len_hash,
 	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_asvector,
 	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_asvector_nothrow,
-	/* .tp_unpack                     = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_unpack,
-	/* .tp_unpack_ex                  = */ (int (DCALL *)(DeeObject *, size_t, size_t, DREF DeeObject **))&myob_unpack_ex,
-	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_unpack_ub,
+	/* ._deprecated_tp_unpack         = */ NULL,
+	/* ._deprecated_tp_unpack_ex      = */ NULL,
+	/* ._deprecated_tp_unpack_ub      = */ NULL,
 	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))NULL,
 	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))NULL,
 	/* .tp_getitemnr_string_len_hash    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))NULL,

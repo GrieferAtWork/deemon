@@ -561,7 +561,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceAdd)(DeeObject **__restrict p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_InplaceAdd)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_add_t tp_inplace_add;
 	if unlikely(!Dee_TYPE(*p_lhs)->tp_math || (tp_inplace_add = Dee_TYPE(*p_lhs)->tp_math->tp_inplace_add) == NULL)
 		tp_inplace_add = _DeeType_RequireNativeOperator(Dee_TYPE(*p_lhs), inplace_add);
@@ -577,7 +577,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceSub)(DeeObject **__restrict p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_InplaceSub)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_sub_t tp_inplace_sub;
 	if unlikely(!Dee_TYPE(*p_lhs)->tp_math || (tp_inplace_sub = Dee_TYPE(*p_lhs)->tp_math->tp_inplace_sub) == NULL)
 		tp_inplace_sub = _DeeType_RequireNativeOperator(Dee_TYPE(*p_lhs), inplace_sub);
@@ -593,7 +593,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceMul)(DeeObject **__restrict p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_InplaceMul)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_mul_t tp_inplace_mul;
 	if unlikely(!Dee_TYPE(*p_lhs)->tp_math || (tp_inplace_mul = Dee_TYPE(*p_lhs)->tp_math->tp_inplace_mul) == NULL)
 		tp_inplace_mul = _DeeType_RequireNativeOperator(Dee_TYPE(*p_lhs), inplace_mul);
@@ -609,7 +609,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceDiv)(DeeObject **__restrict p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_InplaceDiv)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_div_t tp_inplace_div;
 	if unlikely(!Dee_TYPE(*p_lhs)->tp_math || (tp_inplace_div = Dee_TYPE(*p_lhs)->tp_math->tp_inplace_div) == NULL)
 		tp_inplace_div = _DeeType_RequireNativeOperator(Dee_TYPE(*p_lhs), inplace_div);
@@ -625,7 +625,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceMod)(DeeObject **__restrict p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_InplaceMod)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_mod_t tp_inplace_mod;
 	if unlikely(!Dee_TYPE(*p_lhs)->tp_math || (tp_inplace_mod = Dee_TYPE(*p_lhs)->tp_math->tp_inplace_mod) == NULL)
 		tp_inplace_mod = _DeeType_RequireNativeOperator(Dee_TYPE(*p_lhs), inplace_mod);
@@ -641,7 +641,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceShl)(DeeObject **__restrict p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_InplaceShl)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_shl_t tp_inplace_shl;
 	if unlikely(!Dee_TYPE(*p_lhs)->tp_math || (tp_inplace_shl = Dee_TYPE(*p_lhs)->tp_math->tp_inplace_shl) == NULL)
 		tp_inplace_shl = _DeeType_RequireNativeOperator(Dee_TYPE(*p_lhs), inplace_shl);
@@ -657,7 +657,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceShr)(DeeObject **__restrict p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_InplaceShr)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_shr_t tp_inplace_shr;
 	if unlikely(!Dee_TYPE(*p_lhs)->tp_math || (tp_inplace_shr = Dee_TYPE(*p_lhs)->tp_math->tp_inplace_shr) == NULL)
 		tp_inplace_shr = _DeeType_RequireNativeOperator(Dee_TYPE(*p_lhs), inplace_shr);
@@ -673,7 +673,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceAnd)(DeeObject **__restrict p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_InplaceAnd)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_and_t tp_inplace_and;
 	if unlikely(!Dee_TYPE(*p_lhs)->tp_math || (tp_inplace_and = Dee_TYPE(*p_lhs)->tp_math->tp_inplace_and) == NULL)
 		tp_inplace_and = _DeeType_RequireNativeOperator(Dee_TYPE(*p_lhs), inplace_and);
@@ -689,7 +689,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceOr)(DeeObject **__restrict p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_InplaceOr)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_or_t tp_inplace_or;
 	if unlikely(!Dee_TYPE(*p_lhs)->tp_math || (tp_inplace_or = Dee_TYPE(*p_lhs)->tp_math->tp_inplace_or) == NULL)
 		tp_inplace_or = _DeeType_RequireNativeOperator(Dee_TYPE(*p_lhs), inplace_or);
@@ -705,7 +705,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceXor)(DeeObject **__restrict p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_InplaceXor)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_xor_t tp_inplace_xor;
 	if unlikely(!Dee_TYPE(*p_lhs)->tp_math || (tp_inplace_xor = Dee_TYPE(*p_lhs)->tp_math->tp_inplace_xor) == NULL)
 		tp_inplace_xor = _DeeType_RequireNativeOperator(Dee_TYPE(*p_lhs), inplace_xor);
@@ -721,7 +721,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplacePow)(DeeObject **__restrict p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_InplacePow)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_pow_t tp_inplace_pow;
 	if unlikely(!Dee_TYPE(*p_lhs)->tp_math || (tp_inplace_pow = Dee_TYPE(*p_lhs)->tp_math->tp_inplace_pow) == NULL)
 		tp_inplace_pow = _DeeType_RequireNativeOperator(Dee_TYPE(*p_lhs), inplace_pow);
@@ -729,7 +729,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1)) int
-(DCALL DeeObject_Inc)(DeeObject **__restrict p_self) {
+(DCALL DeeObject_Inc)(DREF DeeObject **__restrict p_self) {
 	DeeNO_inc_t tp_inc;
 	if unlikely(!Dee_TYPE(*p_self)->tp_math || (tp_inc = Dee_TYPE(*p_self)->tp_math->tp_inc) == NULL)
 		tp_inc = _DeeType_RequireNativeOperator(Dee_TYPE(*p_self), inc);
@@ -737,7 +737,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1)) int
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1)) int
-(DCALL DeeObject_Dec)(DeeObject **__restrict p_self) {
+(DCALL DeeObject_Dec)(DREF DeeObject **__restrict p_self) {
 	DeeNO_dec_t tp_dec;
 	if unlikely(!Dee_TYPE(*p_self)->tp_math || (tp_dec = Dee_TYPE(*p_self)->tp_math->tp_dec) == NULL)
 		tp_dec = _DeeType_RequireNativeOperator(Dee_TYPE(*p_self), dec);
@@ -1544,7 +1544,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL DeeObject_TInplaceAdd)(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_TInplaceAdd)(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_add_t tp_inplace_add;
 	if unlikely(!tp_self->tp_math || (tp_inplace_add = tp_self->tp_math->tp_inplace_add) == NULL) {
 		tp_inplace_add = _DeeType_RequireNativeOperator(tp_self, inplace_add);
@@ -1568,7 +1568,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL DeeObject_TInplaceSub)(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_TInplaceSub)(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_sub_t tp_inplace_sub;
 	if unlikely(!tp_self->tp_math || (tp_inplace_sub = tp_self->tp_math->tp_inplace_sub) == NULL) {
 		tp_inplace_sub = _DeeType_RequireNativeOperator(tp_self, inplace_sub);
@@ -1592,7 +1592,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL DeeObject_TInplaceMul)(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_TInplaceMul)(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_mul_t tp_inplace_mul;
 	if unlikely(!tp_self->tp_math || (tp_inplace_mul = tp_self->tp_math->tp_inplace_mul) == NULL) {
 		tp_inplace_mul = _DeeType_RequireNativeOperator(tp_self, inplace_mul);
@@ -1616,7 +1616,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL DeeObject_TInplaceDiv)(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_TInplaceDiv)(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_div_t tp_inplace_div;
 	if unlikely(!tp_self->tp_math || (tp_inplace_div = tp_self->tp_math->tp_inplace_div) == NULL) {
 		tp_inplace_div = _DeeType_RequireNativeOperator(tp_self, inplace_div);
@@ -1640,7 +1640,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL DeeObject_TInplaceMod)(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_TInplaceMod)(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_mod_t tp_inplace_mod;
 	if unlikely(!tp_self->tp_math || (tp_inplace_mod = tp_self->tp_math->tp_inplace_mod) == NULL) {
 		tp_inplace_mod = _DeeType_RequireNativeOperator(tp_self, inplace_mod);
@@ -1664,7 +1664,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL DeeObject_TInplaceShl)(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_TInplaceShl)(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_shl_t tp_inplace_shl;
 	if unlikely(!tp_self->tp_math || (tp_inplace_shl = tp_self->tp_math->tp_inplace_shl) == NULL) {
 		tp_inplace_shl = _DeeType_RequireNativeOperator(tp_self, inplace_shl);
@@ -1688,7 +1688,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL DeeObject_TInplaceShr)(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_TInplaceShr)(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_shr_t tp_inplace_shr;
 	if unlikely(!tp_self->tp_math || (tp_inplace_shr = tp_self->tp_math->tp_inplace_shr) == NULL) {
 		tp_inplace_shr = _DeeType_RequireNativeOperator(tp_self, inplace_shr);
@@ -1712,7 +1712,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL DeeObject_TInplaceAnd)(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_TInplaceAnd)(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_and_t tp_inplace_and;
 	if unlikely(!tp_self->tp_math || (tp_inplace_and = tp_self->tp_math->tp_inplace_and) == NULL) {
 		tp_inplace_and = _DeeType_RequireNativeOperator(tp_self, inplace_and);
@@ -1736,7 +1736,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL DeeObject_TInplaceOr)(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_TInplaceOr)(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_or_t tp_inplace_or;
 	if unlikely(!tp_self->tp_math || (tp_inplace_or = tp_self->tp_math->tp_inplace_or) == NULL) {
 		tp_inplace_or = _DeeType_RequireNativeOperator(tp_self, inplace_or);
@@ -1760,7 +1760,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL DeeObject_TInplaceXor)(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_TInplaceXor)(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_xor_t tp_inplace_xor;
 	if unlikely(!tp_self->tp_math || (tp_inplace_xor = tp_self->tp_math->tp_inplace_xor) == NULL) {
 		tp_inplace_xor = _DeeType_RequireNativeOperator(tp_self, inplace_xor);
@@ -1784,7 +1784,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL DeeObject_TInplacePow)(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) {
+(DCALL DeeObject_TInplacePow)(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DeeNO_inplace_pow_t tp_inplace_pow;
 	if unlikely(!tp_self->tp_math || (tp_inplace_pow = tp_self->tp_math->tp_inplace_pow) == NULL) {
 		tp_inplace_pow = _DeeType_RequireNativeOperator(tp_self, inplace_pow);
@@ -1796,7 +1796,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_TInc)(DeeTypeObject *tp_self, DeeObject **p_self) {
+(DCALL DeeObject_TInc)(DeeTypeObject *tp_self, DREF DeeObject **p_self) {
 	DeeNO_inc_t tp_inc;
 	if unlikely(!tp_self->tp_math || (tp_inc = tp_self->tp_math->tp_inc) == NULL) {
 		tp_inc = _DeeType_RequireNativeOperator(tp_self, inc);
@@ -1808,7 +1808,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_TDec)(DeeTypeObject *tp_self, DeeObject **p_self) {
+(DCALL DeeObject_TDec)(DeeTypeObject *tp_self, DREF DeeObject **p_self) {
 	DeeNO_dec_t tp_dec;
 	if unlikely(!tp_self->tp_math || (tp_dec = tp_self->tp_math->tp_dec) == NULL) {
 		tp_dec = _DeeType_RequireNativeOperator(tp_self, dec);

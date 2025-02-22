@@ -193,31 +193,31 @@ INTDEF void*DCALL default__add__badalloc(void*, void*);
 #define default__xor__badalloc default__add__badalloc
 #define default__pow__badalloc default__add__badalloc
 INTDEF void*DCALL default__add__unsupported(DeeObject*, void*);
-INTDEF int DCALL default__inplace_add__unsupported(DeeObject**, void*);
+INTDEF int DCALL default__inplace_add__unsupported(DREF DeeObject**, void*);
 INTDEF void*DCALL default__sub__unsupported(DeeObject*, void*);
-INTDEF int DCALL default__inplace_sub__unsupported(DeeObject**, void*);
+INTDEF int DCALL default__inplace_sub__unsupported(DREF DeeObject**, void*);
 INTDEF void*DCALL default__mul__unsupported(DeeObject*, void*);
-INTDEF int DCALL default__inplace_mul__unsupported(DeeObject**, void*);
+INTDEF int DCALL default__inplace_mul__unsupported(DREF DeeObject**, void*);
 INTDEF void*DCALL default__div__unsupported(DeeObject*, void*);
-INTDEF int DCALL default__inplace_div__unsupported(DeeObject**, void*);
+INTDEF int DCALL default__inplace_div__unsupported(DREF DeeObject**, void*);
 INTDEF void*DCALL default__mod__unsupported(DeeObject*, void*);
-INTDEF int DCALL default__inplace_mod__unsupported(DeeObject**, void*);
+INTDEF int DCALL default__inplace_mod__unsupported(DREF DeeObject**, void*);
 INTDEF void*DCALL default__shl__unsupported(DeeObject*, void*);
-INTDEF int DCALL default__inplace_shl__unsupported(DeeObject**, void*);
+INTDEF int DCALL default__inplace_shl__unsupported(DREF DeeObject**, void*);
 INTDEF void*DCALL default__shr__unsupported(DeeObject*, void*);
-INTDEF int DCALL default__inplace_shr__unsupported(DeeObject**, void*);
+INTDEF int DCALL default__inplace_shr__unsupported(DREF DeeObject**, void*);
 INTDEF void*DCALL default__and__unsupported(DeeObject*, void*);
-INTDEF int DCALL default__inplace_and__unsupported(DeeObject**, void*);
+INTDEF int DCALL default__inplace_and__unsupported(DREF DeeObject**, void*);
 INTDEF void*DCALL default__or__unsupported(DeeObject*, void*);
-INTDEF int DCALL default__inplace_or__unsupported(DeeObject**, void*);
+INTDEF int DCALL default__inplace_or__unsupported(DREF DeeObject**, void*);
 INTDEF void*DCALL default__xor__unsupported(DeeObject*, void*);
-INTDEF int DCALL default__inplace_xor__unsupported(DeeObject**, void*);
+INTDEF int DCALL default__inplace_xor__unsupported(DREF DeeObject**, void*);
 INTDEF void*DCALL default__pow__unsupported(DeeObject*, void*);
-INTDEF int DCALL default__inplace_pow__unsupported(DeeObject**, void*);
+INTDEF int DCALL default__inplace_pow__unsupported(DREF DeeObject**, void*);
 INTDEF int DCALL default__inc__badalloc(void*);
 #define default__dec__badalloc default__inc__badalloc
-INTDEF int DCALL default__inc__unsupported(DeeObject**);
-INTDEF int DCALL default__dec__unsupported(DeeObject**);
+INTDEF int DCALL default__inc__unsupported(DREF DeeObject**);
+INTDEF int DCALL default__dec__unsupported(DREF DeeObject**);
 INTDEF int DCALL default__enter__badalloc(void*);
 #define default__leave__badalloc default__enter__badalloc
 INTDEF int DCALL default__enter__unsupported(DeeObject*);

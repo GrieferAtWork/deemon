@@ -104,29 +104,29 @@ typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_inv_t)(DeeObject 
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_pos_t)(DeeObject *self);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_neg_t)(DeeObject *self);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_add_t)(DeeObject *lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_add_t)(DeeObject **__restrict p_lhs, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_add_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_sub_t)(DeeObject *lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_sub_t)(DeeObject **__restrict p_lhs, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_sub_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_mul_t)(DeeObject *lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_mul_t)(DeeObject **__restrict p_lhs, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_mul_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_div_t)(DeeObject *lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_div_t)(DeeObject **__restrict p_lhs, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_div_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_mod_t)(DeeObject *lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_mod_t)(DeeObject **__restrict p_lhs, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_mod_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_shl_t)(DeeObject *lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_shl_t)(DeeObject **__restrict p_lhs, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_shl_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_shr_t)(DeeObject *lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_shr_t)(DeeObject **__restrict p_lhs, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_shr_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_and_t)(DeeObject *lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_and_t)(DeeObject **__restrict p_lhs, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_and_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_or_t)(DeeObject *lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_or_t)(DeeObject **__restrict p_lhs, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_or_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_xor_t)(DeeObject *lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_xor_t)(DeeObject **__restrict p_lhs, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_xor_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_pow_t)(DeeObject *lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_pow_t)(DeeObject **__restrict p_lhs, DeeObject *rhs);
-typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_inc_t)(DeeObject **__restrict p_self);
-typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_dec_t)(DeeObject **__restrict p_self);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_inplace_pow_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_inc_t)(DREF DeeObject **__restrict p_self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_dec_t)(DREF DeeObject **__restrict p_self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_enter_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_leave_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_getattr_t)(DeeObject *self, DeeObject *attr);
@@ -1415,11 +1415,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__add__with__ADD(Dee
 #define maketyped__add(tp_add) ((tp_add) == &usrtype__add__with__ADD ? &tusrtype__add__with__ADD : &tdefault__add)
 
 /* tp_math->tp_inplace_add */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_add__with__INPLACE_ADD(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_add__with__add(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_add(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_add__with__INPLACE_ADD(DeeObject **__restrict p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_add__with__add(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_add__with__INPLACE_ADD(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_add__with__add(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_add(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_add__with__INPLACE_ADD(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_add__with__add(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define isusrtype__inplace_add(tp_inplace_add) ((tp_inplace_add) == &usrtype__inplace_add__with__INPLACE_ADD)
 #define isdefault__inplace_add(tp_inplace_add) ((tp_inplace_add) == &default__inplace_add__with__add)
 #define maketyped__inplace_add(tp_inplace_add) ((tp_inplace_add) == &usrtype__inplace_add__with__INPLACE_ADD ? &tusrtype__inplace_add__with__INPLACE_ADD : (tp_inplace_add) == &default__inplace_add__with__add ? &tdefault__inplace_add__with__add : &tdefault__inplace_add)
@@ -1432,11 +1432,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__sub__with__SUB(Dee
 #define maketyped__sub(tp_sub) ((tp_sub) == &usrtype__sub__with__SUB ? &tusrtype__sub__with__SUB : &tdefault__sub)
 
 /* tp_math->tp_inplace_sub */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_sub__with__INPLACE_SUB(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_sub__with__sub(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_sub(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_sub__with__INPLACE_SUB(DeeObject **__restrict p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_sub__with__sub(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_sub__with__INPLACE_SUB(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_sub__with__sub(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_sub(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_sub__with__INPLACE_SUB(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_sub__with__sub(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define isusrtype__inplace_sub(tp_inplace_sub) ((tp_inplace_sub) == &usrtype__inplace_sub__with__INPLACE_SUB)
 #define isdefault__inplace_sub(tp_inplace_sub) ((tp_inplace_sub) == &default__inplace_sub__with__sub)
 #define maketyped__inplace_sub(tp_inplace_sub) ((tp_inplace_sub) == &usrtype__inplace_sub__with__INPLACE_SUB ? &tusrtype__inplace_sub__with__INPLACE_SUB : (tp_inplace_sub) == &default__inplace_sub__with__sub ? &tdefault__inplace_sub__with__sub : &tdefault__inplace_sub)
@@ -1449,11 +1449,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__mul__with__MUL(Dee
 #define maketyped__mul(tp_mul) ((tp_mul) == &usrtype__mul__with__MUL ? &tusrtype__mul__with__MUL : &tdefault__mul)
 
 /* tp_math->tp_inplace_mul */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_mul__with__INPLACE_MUL(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mul__with__mul(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mul(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_mul__with__INPLACE_MUL(DeeObject **__restrict p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_mul__with__mul(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_mul__with__INPLACE_MUL(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mul__with__mul(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mul(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_mul__with__INPLACE_MUL(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_mul__with__mul(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define isusrtype__inplace_mul(tp_inplace_mul) ((tp_inplace_mul) == &usrtype__inplace_mul__with__INPLACE_MUL)
 #define isdefault__inplace_mul(tp_inplace_mul) ((tp_inplace_mul) == &default__inplace_mul__with__mul)
 #define maketyped__inplace_mul(tp_inplace_mul) ((tp_inplace_mul) == &usrtype__inplace_mul__with__INPLACE_MUL ? &tusrtype__inplace_mul__with__INPLACE_MUL : (tp_inplace_mul) == &default__inplace_mul__with__mul ? &tdefault__inplace_mul__with__mul : &tdefault__inplace_mul)
@@ -1466,11 +1466,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__div__with__DIV(Dee
 #define maketyped__div(tp_div) ((tp_div) == &usrtype__div__with__DIV ? &tusrtype__div__with__DIV : &tdefault__div)
 
 /* tp_math->tp_inplace_div */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_div__with__INPLACE_DIV(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_div__with__div(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_div(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_div__with__INPLACE_DIV(DeeObject **__restrict p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_div__with__div(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_div__with__INPLACE_DIV(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_div__with__div(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_div(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_div__with__INPLACE_DIV(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_div__with__div(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define isusrtype__inplace_div(tp_inplace_div) ((tp_inplace_div) == &usrtype__inplace_div__with__INPLACE_DIV)
 #define isdefault__inplace_div(tp_inplace_div) ((tp_inplace_div) == &default__inplace_div__with__div)
 #define maketyped__inplace_div(tp_inplace_div) ((tp_inplace_div) == &usrtype__inplace_div__with__INPLACE_DIV ? &tusrtype__inplace_div__with__INPLACE_DIV : (tp_inplace_div) == &default__inplace_div__with__div ? &tdefault__inplace_div__with__div : &tdefault__inplace_div)
@@ -1483,11 +1483,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__mod__with__MOD(Dee
 #define maketyped__mod(tp_mod) ((tp_mod) == &usrtype__mod__with__MOD ? &tusrtype__mod__with__MOD : &tdefault__mod)
 
 /* tp_math->tp_inplace_mod */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_mod__with__INPLACE_MOD(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mod__with__mod(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mod(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_mod__with__INPLACE_MOD(DeeObject **__restrict p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_mod__with__mod(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_mod__with__INPLACE_MOD(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mod__with__mod(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mod(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_mod__with__INPLACE_MOD(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_mod__with__mod(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define isusrtype__inplace_mod(tp_inplace_mod) ((tp_inplace_mod) == &usrtype__inplace_mod__with__INPLACE_MOD)
 #define isdefault__inplace_mod(tp_inplace_mod) ((tp_inplace_mod) == &default__inplace_mod__with__mod)
 #define maketyped__inplace_mod(tp_inplace_mod) ((tp_inplace_mod) == &usrtype__inplace_mod__with__INPLACE_MOD ? &tusrtype__inplace_mod__with__INPLACE_MOD : (tp_inplace_mod) == &default__inplace_mod__with__mod ? &tdefault__inplace_mod__with__mod : &tdefault__inplace_mod)
@@ -1500,11 +1500,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__shl__with__SHL(Dee
 #define maketyped__shl(tp_shl) ((tp_shl) == &usrtype__shl__with__SHL ? &tusrtype__shl__with__SHL : &tdefault__shl)
 
 /* tp_math->tp_inplace_shl */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_shl__with__INPLACE_SHL(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shl__with__shl(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shl(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_shl__with__INPLACE_SHL(DeeObject **__restrict p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_shl__with__shl(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_shl__with__INPLACE_SHL(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shl__with__shl(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shl(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_shl__with__INPLACE_SHL(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_shl__with__shl(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define isusrtype__inplace_shl(tp_inplace_shl) ((tp_inplace_shl) == &usrtype__inplace_shl__with__INPLACE_SHL)
 #define isdefault__inplace_shl(tp_inplace_shl) ((tp_inplace_shl) == &default__inplace_shl__with__shl)
 #define maketyped__inplace_shl(tp_inplace_shl) ((tp_inplace_shl) == &usrtype__inplace_shl__with__INPLACE_SHL ? &tusrtype__inplace_shl__with__INPLACE_SHL : (tp_inplace_shl) == &default__inplace_shl__with__shl ? &tdefault__inplace_shl__with__shl : &tdefault__inplace_shl)
@@ -1517,11 +1517,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__shr__with__SHR(Dee
 #define maketyped__shr(tp_shr) ((tp_shr) == &usrtype__shr__with__SHR ? &tusrtype__shr__with__SHR : &tdefault__shr)
 
 /* tp_math->tp_inplace_shr */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_shr__with__INPLACE_SHR(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shr__with__shr(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shr(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_shr__with__INPLACE_SHR(DeeObject **__restrict p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_shr__with__shr(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_shr__with__INPLACE_SHR(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shr__with__shr(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shr(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_shr__with__INPLACE_SHR(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_shr__with__shr(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define isusrtype__inplace_shr(tp_inplace_shr) ((tp_inplace_shr) == &usrtype__inplace_shr__with__INPLACE_SHR)
 #define isdefault__inplace_shr(tp_inplace_shr) ((tp_inplace_shr) == &default__inplace_shr__with__shr)
 #define maketyped__inplace_shr(tp_inplace_shr) ((tp_inplace_shr) == &usrtype__inplace_shr__with__INPLACE_SHR ? &tusrtype__inplace_shr__with__INPLACE_SHR : (tp_inplace_shr) == &default__inplace_shr__with__shr ? &tdefault__inplace_shr__with__shr : &tdefault__inplace_shr)
@@ -1534,11 +1534,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__and__with__AND(Dee
 #define maketyped__and(tp_and) ((tp_and) == &usrtype__and__with__AND ? &tusrtype__and__with__AND : &tdefault__and)
 
 /* tp_math->tp_inplace_and */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_and__with__INPLACE_AND(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_and__with__and(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_and(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_and__with__INPLACE_AND(DeeObject **__restrict p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_and__with__and(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_and__with__INPLACE_AND(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_and__with__and(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_and(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_and__with__INPLACE_AND(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_and__with__and(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define isusrtype__inplace_and(tp_inplace_and) ((tp_inplace_and) == &usrtype__inplace_and__with__INPLACE_AND)
 #define isdefault__inplace_and(tp_inplace_and) ((tp_inplace_and) == &default__inplace_and__with__and)
 #define maketyped__inplace_and(tp_inplace_and) ((tp_inplace_and) == &usrtype__inplace_and__with__INPLACE_AND ? &tusrtype__inplace_and__with__INPLACE_AND : (tp_inplace_and) == &default__inplace_and__with__and ? &tdefault__inplace_and__with__and : &tdefault__inplace_and)
@@ -1551,11 +1551,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__or__with__OR(DeeOb
 #define maketyped__or(tp_or) ((tp_or) == &usrtype__or__with__OR ? &tusrtype__or__with__OR : &tdefault__or)
 
 /* tp_math->tp_inplace_or */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_or__with__INPLACE_OR(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_or__with__or(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_or(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_or__with__INPLACE_OR(DeeObject **__restrict p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_or__with__or(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_or__with__INPLACE_OR(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_or__with__or(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_or(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_or__with__INPLACE_OR(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_or__with__or(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define isusrtype__inplace_or(tp_inplace_or) ((tp_inplace_or) == &usrtype__inplace_or__with__INPLACE_OR)
 #define isdefault__inplace_or(tp_inplace_or) ((tp_inplace_or) == &default__inplace_or__with__or)
 #define maketyped__inplace_or(tp_inplace_or) ((tp_inplace_or) == &usrtype__inplace_or__with__INPLACE_OR ? &tusrtype__inplace_or__with__INPLACE_OR : (tp_inplace_or) == &default__inplace_or__with__or ? &tdefault__inplace_or__with__or : &tdefault__inplace_or)
@@ -1568,11 +1568,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__xor__with__XOR(Dee
 #define maketyped__xor(tp_xor) ((tp_xor) == &usrtype__xor__with__XOR ? &tusrtype__xor__with__XOR : &tdefault__xor)
 
 /* tp_math->tp_inplace_xor */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_xor__with__INPLACE_XOR(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_xor__with__xor(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_xor(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_xor__with__INPLACE_XOR(DeeObject **__restrict p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_xor__with__xor(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_xor__with__INPLACE_XOR(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_xor__with__xor(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_xor(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_xor__with__INPLACE_XOR(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_xor__with__xor(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define isusrtype__inplace_xor(tp_inplace_xor) ((tp_inplace_xor) == &usrtype__inplace_xor__with__INPLACE_XOR)
 #define isdefault__inplace_xor(tp_inplace_xor) ((tp_inplace_xor) == &default__inplace_xor__with__xor)
 #define maketyped__inplace_xor(tp_inplace_xor) ((tp_inplace_xor) == &usrtype__inplace_xor__with__INPLACE_XOR ? &tusrtype__inplace_xor__with__INPLACE_XOR : (tp_inplace_xor) == &default__inplace_xor__with__xor ? &tdefault__inplace_xor__with__xor : &tdefault__inplace_xor)
@@ -1585,35 +1585,35 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__pow__with__POW(Dee
 #define maketyped__pow(tp_pow) ((tp_pow) == &usrtype__pow__with__POW ? &tusrtype__pow__with__POW : &tdefault__pow)
 
 /* tp_math->tp_inplace_pow */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_pow__with__INPLACE_POW(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_pow__with__pow(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_pow(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_pow__with__INPLACE_POW(DeeObject **__restrict p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_pow__with__pow(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_pow__with__INPLACE_POW(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_pow__with__pow(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_pow(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_pow__with__INPLACE_POW(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_pow__with__pow(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define isusrtype__inplace_pow(tp_inplace_pow) ((tp_inplace_pow) == &usrtype__inplace_pow__with__INPLACE_POW)
 #define isdefault__inplace_pow(tp_inplace_pow) ((tp_inplace_pow) == &default__inplace_pow__with__pow)
 #define maketyped__inplace_pow(tp_inplace_pow) ((tp_inplace_pow) == &usrtype__inplace_pow__with__INPLACE_POW ? &tusrtype__inplace_pow__with__INPLACE_POW : (tp_inplace_pow) == &default__inplace_pow__with__pow ? &tdefault__inplace_pow__with__pow : &tdefault__inplace_pow)
 
 /* tp_math->tp_inc */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__inc__with__INC(DeeTypeObject *tp_self, DeeObject **p_self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__inc__with__inplace_add(DeeTypeObject *tp_self, DeeObject **p_self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__inc__with__add(DeeTypeObject *tp_self, DeeObject **p_self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__inc(DeeTypeObject *tp_self, DeeObject **p_self);
-INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__inc__with__INC(DeeObject **__restrict p_self);
-INTDEF WUNUSED NONNULL((1)) int DCALL default__inc__with__inplace_add(DeeObject **__restrict p_self);
-INTDEF WUNUSED NONNULL((1)) int DCALL default__inc__with__add(DeeObject **__restrict p_self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__inc__with__INC(DeeTypeObject *tp_self, DREF DeeObject **p_self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__inc__with__inplace_add(DeeTypeObject *tp_self, DREF DeeObject **p_self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__inc__with__add(DeeTypeObject *tp_self, DREF DeeObject **p_self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__inc(DeeTypeObject *tp_self, DREF DeeObject **p_self);
+INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__inc__with__INC(DREF DeeObject **__restrict p_self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__inc__with__inplace_add(DREF DeeObject **__restrict p_self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__inc__with__add(DREF DeeObject **__restrict p_self);
 #define isusrtype__inc(tp_inc) ((tp_inc) == &usrtype__inc__with__INC)
 #define isdefault__inc(tp_inc) ((tp_inc) == &default__inc__with__inplace_add || (tp_inc) == &default__inc__with__add)
 #define maketyped__inc(tp_inc) ((tp_inc) == &usrtype__inc__with__INC ? &tusrtype__inc__with__INC : (tp_inc) == &default__inc__with__inplace_add ? &tdefault__inc__with__inplace_add : (tp_inc) == &default__inc__with__add ? &tdefault__inc__with__add : &tdefault__inc)
 
 /* tp_math->tp_dec */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__dec__with__DEC(DeeTypeObject *tp_self, DeeObject **p_self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__dec__with__inplace_sub(DeeTypeObject *tp_self, DeeObject **p_self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__dec__with__sub(DeeTypeObject *tp_self, DeeObject **p_self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__dec(DeeTypeObject *tp_self, DeeObject **p_self);
-INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__dec__with__DEC(DeeObject **__restrict p_self);
-INTDEF WUNUSED NONNULL((1)) int DCALL default__dec__with__inplace_sub(DeeObject **__restrict p_self);
-INTDEF WUNUSED NONNULL((1)) int DCALL default__dec__with__sub(DeeObject **__restrict p_self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__dec__with__DEC(DeeTypeObject *tp_self, DREF DeeObject **p_self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__dec__with__inplace_sub(DeeTypeObject *tp_self, DREF DeeObject **p_self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__dec__with__sub(DeeTypeObject *tp_self, DREF DeeObject **p_self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__dec(DeeTypeObject *tp_self, DREF DeeObject **p_self);
+INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__dec__with__DEC(DREF DeeObject **__restrict p_self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__dec__with__inplace_sub(DREF DeeObject **__restrict p_self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__dec__with__sub(DREF DeeObject **__restrict p_self);
 #define isusrtype__dec(tp_dec) ((tp_dec) == &usrtype__dec__with__DEC)
 #define isdefault__dec(tp_dec) ((tp_dec) == &default__dec__with__inplace_sub || (tp_dec) == &default__dec__with__sub)
 #define maketyped__dec(tp_dec) ((tp_dec) == &usrtype__dec__with__DEC ? &tusrtype__dec__with__DEC : (tp_dec) == &default__dec__with__inplace_sub ? &tdefault__dec__with__inplace_sub : (tp_dec) == &default__dec__with__sub ? &tdefault__dec__with__sub : &tdefault__dec)
@@ -2024,7 +2024,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__setattr_string_len_hash__wi
 #define DeeType_InvokeSeqBoundItem(tp_self, self, index)                                         (*maketyped__bounditem((tp_self)->tp_seq->tp_bounditem))(tp_self, self, index)
 #define DeeType_InvokeSeqHasItem(tp_self, self, index)                                           (*maketyped__hasitem((tp_self)->tp_seq->tp_hasitem))(tp_self, self, index)
 #define DeeType_InvokeSeqSize(tp_self, self)                                                     (*maketyped__size((tp_self)->tp_seq->tp_size))(tp_self, self)
-#define DeeType_InvokeSeqSizeFast(tp_self, self)                                                 (*(tp_self)->tp_seq->tp_size)(self)
+#define DeeType_InvokeSeqSizeFast(tp_self, self)                                                 (*(tp_self)->tp_seq->tp_size_fast)(self)
 #define DeeType_InvokeSeqGetItemIndex(tp_self, self, index)                                      (*maketyped__getitem_index((tp_self)->tp_seq->tp_getitem_index))(tp_self, self, index)
 #define DeeType_InvokeSeqDelItemIndex(tp_self, self, index)                                      (*maketyped__delitem_index((tp_self)->tp_seq->tp_delitem_index))(tp_self, self, index)
 #define DeeType_InvokeSeqSetItemIndex(tp_self, self, index, value)                               (*maketyped__setitem_index((tp_self)->tp_seq->tp_setitem_index))(tp_self, self, index, value)

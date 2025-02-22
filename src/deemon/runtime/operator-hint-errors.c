@@ -280,86 +280,86 @@ INTERN void*DCALL default__add__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ADD);
 	return NULL;
 }
-INTERN int DCALL default__inplace_add__unsupported(DeeObject**self, void*) {
+INTERN int DCALL default__inplace_add__unsupported(DREF DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_ADD);
 }
 INTERN void*DCALL default__sub__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_SUB);
 	return NULL;
 }
-INTERN int DCALL default__inplace_sub__unsupported(DeeObject**self, void*) {
+INTERN int DCALL default__inplace_sub__unsupported(DREF DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_SUB);
 }
 INTERN void*DCALL default__mul__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_MUL);
 	return NULL;
 }
-INTERN int DCALL default__inplace_mul__unsupported(DeeObject**self, void*) {
+INTERN int DCALL default__inplace_mul__unsupported(DREF DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_MUL);
 }
 INTERN void*DCALL default__div__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_DIV);
 	return NULL;
 }
-INTERN int DCALL default__inplace_div__unsupported(DeeObject**self, void*) {
+INTERN int DCALL default__inplace_div__unsupported(DREF DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_DIV);
 }
 INTERN void*DCALL default__mod__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_MOD);
 	return NULL;
 }
-INTERN int DCALL default__inplace_mod__unsupported(DeeObject**self, void*) {
+INTERN int DCALL default__inplace_mod__unsupported(DREF DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_MOD);
 }
 INTERN void*DCALL default__shl__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_SHL);
 	return NULL;
 }
-INTERN int DCALL default__inplace_shl__unsupported(DeeObject**self, void*) {
+INTERN int DCALL default__inplace_shl__unsupported(DREF DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_SHL);
 }
 INTERN void*DCALL default__shr__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_SHR);
 	return NULL;
 }
-INTERN int DCALL default__inplace_shr__unsupported(DeeObject**self, void*) {
+INTERN int DCALL default__inplace_shr__unsupported(DREF DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_SHR);
 }
 INTERN void*DCALL default__and__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_AND);
 	return NULL;
 }
-INTERN int DCALL default__inplace_and__unsupported(DeeObject**self, void*) {
+INTERN int DCALL default__inplace_and__unsupported(DREF DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_AND);
 }
 INTERN void*DCALL default__or__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_OR);
 	return NULL;
 }
-INTERN int DCALL default__inplace_or__unsupported(DeeObject**self, void*) {
+INTERN int DCALL default__inplace_or__unsupported(DREF DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_OR);
 }
 INTERN void*DCALL default__xor__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_XOR);
 	return NULL;
 }
-INTERN int DCALL default__inplace_xor__unsupported(DeeObject**self, void*) {
+INTERN int DCALL default__inplace_xor__unsupported(DREF DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_XOR);
 }
 INTERN void*DCALL default__pow__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_POW);
 	return NULL;
 }
-INTERN int DCALL default__inplace_pow__unsupported(DeeObject**self, void*) {
+INTERN int DCALL default__inplace_pow__unsupported(DREF DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_POW);
 }
 INTERN int DCALL default__inc__badalloc(void*UNUSED(self)) {
 	return Dee_BadAlloc(sizeof(struct type_math));
 }
-INTERN int DCALL default__inc__unsupported(DeeObject**self) {
+INTERN int DCALL default__inc__unsupported(DREF DeeObject**self) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INC);
 }
-INTERN int DCALL default__dec__unsupported(DeeObject**self) {
+INTERN int DCALL default__dec__unsupported(DREF DeeObject**self) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_DEC);
 }
 INTERN int DCALL default__enter__badalloc(void*UNUSED(self)) {
