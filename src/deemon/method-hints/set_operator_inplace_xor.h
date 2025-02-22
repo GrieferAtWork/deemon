@@ -95,8 +95,8 @@ err:
 
 set_operator_inplace_xor = {
 	if ((REQUIRE_ANY(set_operator_foreach) != &default__set_operator_foreach__unsupported) &&
-	    (REQUIRE(set_removeall) && REQUIRE_ANY(set_insertall)) ||
-		(REQUIRE(set_insertall) && REQUIRE_ANY(set_removeall)))
+	    ((REQUIRE(set_removeall) && REQUIRE_ANY(set_insertall)) ||
+	     (REQUIRE(set_insertall) && REQUIRE_ANY(set_removeall))))
 		return &$with__set_operator_foreach__and__set_insertall__and__set_removeall;
 };
 

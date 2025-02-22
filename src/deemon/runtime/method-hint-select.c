@@ -2568,8 +2568,8 @@ mh_select_set_operator_inplace_and(DeeTypeObject *self, DeeTypeObject *orig_type
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_inplace_xor_t DCALL
 mh_select_set_operator_inplace_xor(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if (((DeeMH_set_operator_foreach_t)DeeType_GetMethodHint(orig_type, Dee_TMH_set_operator_foreach) != &default__set_operator_foreach__unsupported) &&
-	    ((DeeMH_set_removeall_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_removeall) && (DeeMH_set_insertall_t)DeeType_GetMethodHint(orig_type, Dee_TMH_set_insertall)) ||
-		((DeeMH_set_insertall_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_insertall) && (DeeMH_set_removeall_t)DeeType_GetMethodHint(orig_type, Dee_TMH_set_removeall)))
+	    (((DeeMH_set_removeall_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_removeall) && (DeeMH_set_insertall_t)DeeType_GetMethodHint(orig_type, Dee_TMH_set_insertall)) ||
+	     ((DeeMH_set_insertall_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_insertall) && (DeeMH_set_removeall_t)DeeType_GetMethodHint(orig_type, Dee_TMH_set_removeall))))
 		return &default__set_operator_inplace_xor__with__set_operator_foreach__and__set_insertall__and__set_removeall;
 	return NULL;
 }
