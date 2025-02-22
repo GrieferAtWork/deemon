@@ -258,10 +258,12 @@ final class NativeMethodParam {
 
 	public property Cstr_UNUSED: string = {
 		get(): string {
-			local UNUSED_name = f"UNUSED({name})";
+			local UNUSED_name = typAfter
+				? f"UNUSED2({name}, {typAfter})"
+				: f"UNUSED({name})";
 			if (typ.endswith("*"))
-				return typ + UNUSED_name + typAfter;
-			return f"{typ} {UNUSED_name}{typAfter}";
+				return typ + UNUSED_name;
+			return f"{typ} {UNUSED_name}";
 		}
 	};
 };

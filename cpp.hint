@@ -104,6 +104,8 @@
 #define __COMPILER_ASMNAME(x)
 #define UNUSED(...) __VA_ARGS__
 #define __UNUSED(...) __VA_ARGS__
+#define UNUSED2(...) __VA_ARGS__
+#define __UNUSED2(...) __VA_ARGS__
 #define static_assert(...)
 #define _Static_assert(...)
 #define STATIC_ASSERT(...)

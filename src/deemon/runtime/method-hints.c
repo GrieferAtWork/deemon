@@ -2360,6 +2360,9 @@ Dee_tmh_id_array_contains(enum Dee_tmh_id const values[],
 	return false;
 }
 
+/* Suppress incorrect warning about "single_dep_actions" being used while uninitialized. */
+__pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
+
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 3, 5)) Dee_funptr_t DCALL
 find_method_hint_in_using(DeeTypeObject *__restrict self, enum Dee_tmh_id id,
                           enum Dee_tmh_id absent[Dee_TMH_USING_MAXLEN],
@@ -2429,6 +2432,8 @@ next_using:;
 	*p_nactions = winner_actions;
 	return winner;
 }
+
+__pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 
 /* Same as `DeeType_GetExplicitMethodHint()', but also resolves direct
  * aliases within method hint groups (e.g. when an explicit method hint
@@ -2535,12 +2540,12 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 		    : ((info->ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY)) ==
 		       /*                             */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FREADONLY))) {
 			uint16_t addr;
-			struct class_desc *desc;
 			if ((specs->mis_attr_kind == MH_KIND_GETSET_DEL ||
 			     specs->mis_attr_kind == MH_KIND_GETSET_SET) &&
 			    (info->ai_value.v_attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY))
 				break;
-			desc = DeeClass_DESC(info->ai_decl);
+			/*struct class_desc *desc;
+			desc = DeeClass_DESC(info->ai_decl);*/
 			addr = info->ai_value.v_attr->ca_addr;
 			switch (specs->mis_attr_kind) {
 			case MH_KIND_GETSET_GET:

@@ -5704,7 +5704,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__unsupported(DeeObject *__restrict self, size_t count, DREF DeeObject *UNUSED(result)[]) {
+default__seq_unpack__unsupported(DeeObject *__restrict self, size_t count, DREF DeeObject *UNUSED2(result, [])) {
 	return err_seq_unsupportedf(self, "__seq_unpack__(%" PRFuSIZ ")", count);
 }
 
@@ -5717,7 +5717,7 @@ default__seq_unpack__with__seq_unpack_ex(DeeObject *__restrict self, size_t coun
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_unpack__empty(DeeObject *__restrict self, size_t count, DREF DeeObject *UNUSED(result)[]) {
+default__seq_unpack__empty(DeeObject *__restrict self, size_t count, DREF DeeObject *UNUSED2(result, [])) {
 	if unlikely(count != 0)
 		return err_invalid_unpack_size(self, count, 0);
 	return 0;
@@ -5962,12 +5962,12 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED(result)[]) {
+default__seq_unpack_ex__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED2(result, [])) {
 	return err_seq_unsupportedf(self, "__seq_unpack__(%" PRFuSIZ ", %" PRFuSIZ ")", min_count, max_count);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ex__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED(result)[]) {
+default__seq_unpack_ex__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED2(result, [])) {
 	if unlikely(min_count > 0)
 		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);
 	return 0;
@@ -6222,12 +6222,12 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ub__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED(result)[]) {
+default__seq_unpack_ub__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED2(result, [])) {
 	return err_seq_unsupportedf(self, "__seq_unpackub__(%" PRFuSIZ ", %" PRFuSIZ ")", min_count, max_count);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
-default__seq_unpack_ub__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED(result)[]) {
+default__seq_unpack_ub__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED2(result, [])) {
 	if unlikely(min_count > 0)
 		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);
 	return 0;
@@ -14178,7 +14178,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
-default__seq_brange__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, size_t UNUSED(result_range)[2]) {
+default__seq_brange__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, size_t UNUSED2(result_range, [2])) {
 	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 }
 
@@ -14370,7 +14370,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5, 6)) int DCALL
-default__seq_brange_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *UNUSED(key), size_t UNUSED(result_range)[2]) {
+default__seq_brange_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *UNUSED(key), size_t UNUSED2(result_range, [2])) {
 	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 }
 
