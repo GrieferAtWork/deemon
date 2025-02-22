@@ -1021,7 +1021,7 @@ DeeMA___seq_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	DeeObject *item, *key = Dee_None;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:__seq_remove__",
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_remove__",
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
@@ -1043,7 +1043,7 @@ DeeMA___seq_rremove__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	DeeObject *item, *key = Dee_None;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:__seq_rremove__",
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_rremove__",
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)

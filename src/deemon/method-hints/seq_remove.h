@@ -27,7 +27,7 @@ __seq_remove__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Db
 	DeeObject *item, *key = Dee_None;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:__seq_remove__",
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_remove__",
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
