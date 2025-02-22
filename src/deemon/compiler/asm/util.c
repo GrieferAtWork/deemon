@@ -499,11 +499,6 @@ push_tuple_parts:
 		 *   #2: Otherwise, push all Dict key/item pairs manually,
 		 *       before packing everything together as a Dict. */
 		size_t i, num_items;
-#ifndef CONFIG_EXPERIMENTAL_ORDERED_DICTS
-		size_t ro_mask;
-		size_t mask;
-		struct dict_item *elem;
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 		DREF DeeRoDictObject *rodict;
 		DeeDictObject *val;
 		val = (DeeDictObject *)value;
@@ -548,7 +543,6 @@ unlock_and_push_empty_dict:
 			goto err;
 		}
 #else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 		for (i = Dee_dict_vidx_tovirt(0);
 		     Dee_dict_vidx_virt_lt_real(i, val->d_vsize); ++i) {
 			struct Dee_dict_item *item;
@@ -561,21 +555,6 @@ unlock_and_push_empty_dict:
 				goto push_dict_parts;
 			}
 		}
-#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-		mask = val->d_mask;
-		elem = val->d_elem;
-		for (i = 0; i <= mask; ++i) {
-			if (!elem[i].di_key)
-				continue;
-			if (elem[i].di_key == dummy)
-				continue;
-			if (!asm_allowconst(elem[i].di_key) ||
-			    !asm_allowconst(elem[i].di_value)) {
-				DeeDict_LockEndRead(val);
-				goto push_dict_parts;
-			}
-		}
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 		num_items = DeeDict_SIZE(val);
 		ro_mask   = RODICT_INITIAL_MASK;
 		while (ro_mask <= num_items)
@@ -592,7 +571,6 @@ unlock_and_push_empty_dict:
 		rodict->rd_mask = ro_mask;
 
 		/* Pack all key-value pairs into the ro-Dict. */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 		for (i = Dee_dict_vidx_tovirt(0);
 		     Dee_dict_vidx_virt_lt_real(i, val->d_vsize); ++i) {
 			struct Dee_dict_item *item;
@@ -606,20 +584,6 @@ unlock_and_push_empty_dict:
 			                      item->di_key,
 			                      item->di_value);
 		}
-#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-		for (i = 0; i <= mask; ++i) {
-			if (!elem[i].di_key)
-				continue;
-			if (elem[i].di_key == dummy)
-				continue;
-			Dee_Incref(elem[i].di_key);
-			Dee_Incref(elem[i].di_value);
-			rodict_insert_nocheck(rodict,
-			                      elem[i].di_hash,
-			                      elem[i].di_key,
-			                      elem[i].di_value);
-		}
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 		DeeDict_LockEndRead(val);
 		DeeObject_Init(rodict, &DeeRoDict_Type);
 #endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
@@ -642,27 +606,15 @@ push_dict_parts:
 		/* Construct a Dict by pushing its individual parts. */
 		num_items = 0;
 		DeeDict_LockRead(val);
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 		for (i = Dee_dict_vidx_tovirt(0);
-		     Dee_dict_vidx_virt_lt_real(i, val->d_vsize); ++i)
-#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-		for (i = 0; i <= val->d_mask; ++i)
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-		{
+		     Dee_dict_vidx_virt_lt_real(i, val->d_vsize); ++i) {
 			int error;
 			struct dict_item *item;
 			DREF DeeObject *item_key, *item_value;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 			item     = &_DeeDict_GetVirtVTab(val)[i];
 			item_key = item->di_key;
 			if (!item_key)
 				continue;
-#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-			item     = &val->d_elem[i];
-			item_key = item->di_key;
-			if (!item_key || item_key == dummy)
-				continue;
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 			item_value = item->di_value;
 			Dee_Incref(item_key);
 			Dee_Incref(item_value);

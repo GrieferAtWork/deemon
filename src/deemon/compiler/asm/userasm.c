@@ -1771,26 +1771,14 @@ write_regular_local:
 				DeeDict_LockEndRead(d);
 				goto next_option;
 			}
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 			for (i = Dee_dict_vidx_tovirt(0);
-			     Dee_dict_vidx_virt_lt_real(i, d->d_vsize); ++i)
-#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-			for (i = 0; i <= d->d_mask; ++i)
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-			{
+			     Dee_dict_vidx_virt_lt_real(i, d->d_vsize); ++i) {
 				int error;
 				DREF DeeObject *key, *value;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 				key = _DeeDict_GetVirtVTab(d)[i].di_key;
 				if (!key || key == &DeeDict_Dummy)
 					continue;
 				value = _DeeDict_GetVirtVTab(d)[i].di_value;
-#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-				key = d->d_elem[i].di_key;
-				if (!key || key == &DeeDict_Dummy)
-					continue;
-				value = d->d_elem[i].di_value;
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 				Dee_Incref(key);
 				Dee_Incref(value);
 				DeeDict_LockEndRead(d);

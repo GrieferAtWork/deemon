@@ -1407,24 +1407,30 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpopind(self, offsetof(DeeCellObject, c_lock))); /* instance */
 #endif /* !CONFIG_NO_THREADS */
 		return 1;
-#ifndef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 	} else if (tp_ctor == DeeDict_Type.tp_init.tp_alloc.tp_ctor) {
-		DO(fg_vpush_immSIZ(self, 0));                          /* instance, 0 */
-		DO(fg_vpopind(self, offsetof(DeeDictObject, d_mask))); /* instance */
-		DO(fg_vpush_immSIZ(self, 0));                          /* instance, 0 */
-		DO(fg_vpopind(self, offsetof(DeeDictObject, d_size))); /* instance */
-		DO(fg_vpush_immSIZ(self, 0));                          /* instance, 0 */
-		DO(fg_vpopind(self, offsetof(DeeDictObject, d_used))); /* instance */
-		DO(fg_vpush_addr(self, DeeDict_EmptyItems));           /* instance, DeeDict_EmptyItems */
-		DO(fg_vpopind(self, offsetof(DeeDictObject, d_elem))); /* instance */
+		DO(fg_vpush_immSIZ(self, 0));                            /* instance, 0 */
+		DO(fg_vpopind(self, offsetof(DeeDictObject, d_valloc))); /* instance */
+		DO(fg_vpush_immSIZ(self, 0));                            /* instance, 0 */
+		DO(fg_vpopind(self, offsetof(DeeDictObject, d_vsize)));  /* instance */
+		DO(fg_vpush_immSIZ(self, 0));                            /* instance, 0 */
+		DO(fg_vpopind(self, offsetof(DeeDictObject, d_vused)));  /* instance */
+		DO(fg_vpush_addr(self, DeeDict_EmptyVTab));              /* instance, DeeDict_EmptyVTab */
+		DO(fg_vpopind(self, offsetof(DeeDictObject, d_vtab)));   /* instance */
+		DO(fg_vpush_immSIZ(self, 0));                            /* instance, 0 */
+		DO(fg_vpopind(self, offsetof(DeeDictObject, d_hmask)));  /* instance */
+		DO(fg_vpush_funptr(self, &Dee_dict_gethidx8));           /* instance, &Dee_dict_gethidx8 */
+		DO(fg_vpopind(self, offsetof(DeeDictObject, d_hidxget)));/* instance */
+		DO(fg_vpush_funptr(self, &Dee_dict_sethidx8));           /* instance, &Dee_dict_sethidx8 */
+		DO(fg_vpopind(self, offsetof(DeeDictObject, d_hidxset)));/* instance */
+		DO(fg_vpush_addr(self, DeeDict_EmptyHTab));              /* instance, DeeDict_EmptyHTab */
+		DO(fg_vpopind(self, offsetof(DeeDictObject, d_htab)));   /* instance */
 #ifndef CONFIG_NO_THREADS
-		DO(fg_vpush_ATOMIC_RWLOCK_INIT(self));                 /* instance, ATOMIC_RWLOCK_INIT */
-		DO(fg_vpopind(self, offsetof(DeeDictObject, d_lock))); /* instance */
+		DO(fg_vpush_ATOMIC_RWLOCK_INIT(self));                   /* instance, ATOMIC_RWLOCK_INIT */
+		DO(fg_vpopind(self, offsetof(DeeDictObject, d_lock)));   /* instance */
 #endif /* !CONFIG_NO_THREADS */
 		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                    /* instance, WEAKREF_SUPPORT_INIT */
 		DO(fg_vpopind(self, offsetof(DeeDictObject, ob_weakrefs))); /* instance */
 		return 1;
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 	} else if (tp_ctor == DeeHashSet_Type.tp_init.tp_alloc.tp_ctor) {
 		DO(fg_vpush_immSIZ(self, 0));                              /* instance, 0 */
 		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_mask))); /* instance */
@@ -4814,7 +4820,7 @@ _fg_vmakemorph(struct fungen *__restrict self,
 }
 
 
-#ifndef CONFIG_EXPERIMENTAL_ORDERED_DICTS /* TODO */
+#if 0 /* TODO */
 /* [elems...] -> seq
  * NOTE: [elems...] are all DIRECT values. */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -5225,7 +5231,7 @@ err:
 err_no_result_d_elem_template:
 	return -1;
 }
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+#endif
 
 /* [elems...] -> seq */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -5340,12 +5346,12 @@ fg_vpackseq(struct fungen *__restrict self,
 		}
 		DO(fg_vsettyp_noalias(self, seq_type));
 		return fg_voneref_noalias(self);
-#ifndef CONFIG_EXPERIMENTAL_ORDERED_DICTS /* TODO */
+#if 0 /* TODO */
 	} else if ((seq_type == &DeeDict_Type || seq_type == &DeeRoDict_Type ||
 	            seq_type == &DeeHashSet_Type || seq_type == &DeeRoSet_Type) &&
 	           !(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE)) {
 		return vpack_map_or_set_at_runtime(self, seq_type, elemc);
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+#endif
 	} else if (seq_type == &DeeDict_Type || seq_type == &DeeHashSet_Type) {
 		vstackaddr_t i;
 		/* Force all elements to become references. */

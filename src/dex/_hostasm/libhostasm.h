@@ -2447,6 +2447,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_hstack(struct fungen *__restrict 
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_hstackind(struct fungen *__restrict self, host_cfa_t cfa_offset, ptrdiff_t val_delta);                         /* (MEMOBJ_F_NOREF) */
 #define fg_vpush_none(self)           fg_vpush_const_(self, Dee_None)
 #define fg_vpush_const(self, value)   fg_vpush_const_(self, (DeeObject *)Dee_REQUIRES_OBJECT(value))
+#define fg_vpush_funptr(self, ptr)    fg_vpush_addr(self, (void *)(Dee_funptr_t)(ptr))
 #define fg_vpush_NULL(self)           fg_vpush_addr(self, NULL)
 #define fg_vpush_imm8(self, imm8)     fg_vpush_addr(self, (void *)(uintptr_t)(uint8_t)(imm8))
 #define fg_vpush_Simm8(self, Simm8)   fg_vpush_addr(self, (void *)(uintptr_t)(intptr_t)(int8_t)(Simm8))
@@ -3985,20 +3986,6 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_Shl
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_Float(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_TFloat(DeeTypeObject *tp_self, DeeObject *self);
 #endif /* CONFIG_HAVE_FPU */
-
-
-/* Helpers for quickly filling in dict/set items where the key wasn't a compile-time constant expression.
- * These functions operate in a situation where "self" hasn't been fully initialized yet (i.e. don't do
- * locking, and can assume that "self != key && self != value"), as well as that "self" always has enough
- * space to hold he extra key (and associated value, if any)
- * @return: * :   Always re-return `self' on success.
- * @return: NULL: Error (in this case "self" was freed). */
-#ifndef CONFIG_EXPERIMENTAL_ORDERED_DICTS
-INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL libhostasm_rt_DeeDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key, /*inherit(always)*/ DREF DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL libhostasm_rt_DeeRoDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key, /*inherit(always)*/ DREF DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL libhostasm_rt_DeeHashSet_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL libhostasm_rt_DeeRoSet_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key);
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

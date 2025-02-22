@@ -21,11 +21,6 @@
 
 import * from deemon;
 
-/* Check if "CONFIG_EXPERIMENTAL_ORDERED_DICTS" was enabled when building deemon.
- * TODO: Remove this check once "CONFIG_EXPERIMENTAL_ORDERED_DICTS" becomes mandatory */ 
-if (!hasattr(Dict, "__hidxio__"))
-	return;
-
 /* A simple test */
 local d = Dict({ "foo": 1, "bar": 2, "foo": 3, true: "yes", false: "no" });
 assert { ("bar", 2), ("foo", 3), (true, "yes"), (false, "no") } == d;

@@ -46,8 +46,6 @@
 
 DECL_BEGIN
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
-
 #ifndef CONFIG_HAVE_strcmp
 #define CONFIG_HAVE_strcmp
 #undef strcmp
@@ -410,8 +408,6 @@ DeeDict_LockReadAndOptimize(DeeDictObject *__restrict self) {
 		DeeDict_LockDowngrade(self);
 	}
 }
-
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 
 
 

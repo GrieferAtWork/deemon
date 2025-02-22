@@ -1027,27 +1027,15 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 		/* Encode all of the Dict's elements. */
 		written = 0;
 		DeeDict_LockRead(me);
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 		for (i = Dee_dict_vidx_tovirt(0);
-		     Dee_dict_vidx_virt_lt_real(i, me->d_vsize); ++i)
-#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-		for (i = 0; i <= me->d_mask; ++i)
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-		{
+		     Dee_dict_vidx_virt_lt_real(i, me->d_vsize); ++i) {
 			struct Dee_dict_item *item;
 			DREF DeeObject *key, *value;
 			int error;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 			item = &_DeeDict_GetVirtVTab(me)[i];
 			key = item->di_key;
 			if (!key)
 				continue;
-#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-			item = &me->d_elem[i];
-			key = item->di_key;
-			if (!key || key == &DeeDict_Dummy)
-				continue;
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 			value = item->di_value;
 			ASSERT_OBJECT(value);
 			Dee_Incref(key);

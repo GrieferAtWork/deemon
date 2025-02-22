@@ -22,9 +22,8 @@
 
 #include "api.h"
 
-#include <hybrid/host.h>
-
-#include <stddef.h>
+#include <hybrid/host.h> /* __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC */
+#include <hybrid/typecore.h>
 
 #include "object.h"
 #include "util/lock.h"
@@ -83,7 +82,6 @@ typedef struct Dee_dict_object DeeDictObject;
  *
  * Also implement this for HashSet
  */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 struct Dee_dict_item {
 	Dee_hash_t      di_hash;  /* [valid_if(di_key)] Hash of `di_key' (undefined, but readable when "di_key == NULL") */
 	union {
@@ -265,85 +263,6 @@ DDATDEF struct Dee_dict_hidxio_struct Dee_tpconst Dee_dict_hidxio[DEE_DICT_HIDXI
 #define _DeeDict_HTabSet(self, hs, /*virt*/i) (*(self)->d_hidxset)((self)->d_htab, (hs) & (self)->d_hmask, i)
 #endif /* DEE_SOURCE */
 
-
-DDATDEF DeeObject DeeDict_Dummy; /* DEPRECATED (no longer used by the dict impl) */
-
-#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-struct Dee_dict_item {
-	DREF DeeObject *di_key;   /* [0..1][lock(:d_lock)] Dictionary item key. */
-	DREF DeeObject *di_value; /* [1..1|if(di_key == dummy, 0..0)][valid_if(di_key)][lock(:d_lock)] Dictionary item value. */
-	Dee_hash_t      di_hash;  /* [valid_if(di_key)][lock(:d_lock)] Hash of `di_key' (with a starting value of `0').
-	                           * NOTE: Some random value when `di_key' is the dummy key. */
-};
-
-/* Static initializer for `struct Dee_dict_item' */
-#define Dee_DICT_ITEM_INIT(hash, key, value) { key, value, hash }
-
-struct Dee_dict_object {
-	Dee_OBJECT_HEAD /* GC Object */
-	size_t                d_mask; /* [lock(d_lock)][> d_size || d_mask == 0] Allocated dictionary size. */
-	size_t                d_size; /* [lock(d_lock)][< d_mask || d_mask == 0] Amount of non-NULL key-item pairs. */
-	size_t                d_used; /* [lock(d_lock)][<= d_size] Amount of key-item pairs actually in use.
-	                               * HINT: The difference to `d_size' is the number of dummy keys currently in use. */
-	struct Dee_dict_item *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
-	                               * [owned_if(!= INTERNAL(DeeDict_EmptyItems))] Dict key-item pairs (items). */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t   d_lock; /* Lock used for accessing this Dict. */
-#endif /* !CONFIG_NO_THREADS */
-	Dee_WEAKREF_SUPPORT
-};
-
-#ifdef CONFIG_NO_THREADS
-#define Dee_DICT_INIT \
-	{ Dee_OBJECT_HEAD_INIT(&DeeDict_Type), 0, 0, 0, (struct Dee_dict_item *)DeeDict_EmptyItems, Dee_WEAKREF_SUPPORT_INIT }
-#else /* CONFIG_NO_THREADS */
-#define Dee_DICT_INIT \
-	{ Dee_OBJECT_HEAD_INIT(&DeeDict_Type), 0, 0, 0, (struct Dee_dict_item *)DeeDict_EmptyItems, DEE_ATOMIC_RWLOCK_INIT, Dee_WEAKREF_SUPPORT_INIT }
-#endif /* !CONFIG_NO_THREADS */
-
-/* A dummy object used by Dict and HashSet to refer to
- * deleted keys that are still apart of the hash chain.
- * Only here to allow dex modules to correct work
- * DON'T USE THIS OBJECT AS KEY FOR DICTS OR HASHSETS!
- * DO NOT EXPOSE THIS OBJECT TO USER-CODE! (not even in `rt'!) */
-DDATDEF DeeObject DeeDict_Dummy;
-DDATDEF struct Dee_dict_item const DeeDict_EmptyItems[1];
-
-/* The basic dictionary item lookup algorithm:
- * >> DeeObject *get_item(DeeObject *self, DeeObject *key) {
- * >>     Dee_hash_t i, perturb;
- * >>     Dee_hash_t hash = DeeObject_Hash(key);
- * >>     perturb = i = DeeDict_HashSt(self, hash);
- * >>     for (;; i = DeeDict_HashNx(i, perturb), DeeDict_HashPt(perturb)) {
- * >>          struct Dee_dict_item *item = DeeDict_HashIt(self, i);
- * >>          if (!item->di_key)
- * >>              break; // Not found
- * >>          if (item->di_hash != hash)
- * >>              continue; // Non-matching hash
- * >>          if (DeeObject_TryCompareEq(key, item->di_key) == 0)
- * >>              return item->di_item;
- * >>     }
- * >>     return NULL;
- * >> }
- * Requirements to prevent an infinite loop:
- * - `DeeDict_HashNx()' must be able to eventually enumerate all integers `<= d_mask'
- * - `d_size' must always be lower than `d_mask', ensuring that at least one(1)
- *   entry exists that no value has been assigned to (Acting as a sentinel to
- *   terminate a search for an existing element).
- * - `d_elem' must never be empty (or `NULL' for that matter)
- * NOTE: I can't say that I came up with the way that this mapping
- *       algorithm works (but noone can really claim to have invented
- *       something ~new~ nowadays. - It's always been done already).
- *       Yet the point here is, that this is similar to what python
- *       does for its dictionary lookup.
- */
-#define DeeDict_HashSt(self, hash)  ((hash) & (self)->d_mask)
-#define DeeDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5)
-#define DeeDict_HashIt(self, i)     ((self)->d_elem + ((i) & (self)->d_mask))
-
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-
-
 /* The main `Dict' container class */
 DDATDEF DeeTypeObject DeeDict_Type;
 #define DeeDict_Check(ob)         DeeObject_InstanceOf(ob, &DeeDict_Type)
@@ -372,30 +291,21 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromSequenceInherited
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromRoDict(DeeObject *__restrict self);
 
 
-#if defined(CONFIG_BUILDING_DEEMON) && !defined(CONFIG_EXPERIMENTAL_ORDERED_DICTS)
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeDict_GetItemStringHash(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeDict_GetItemStringLenHash(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeDict_DelItemStringHash(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeDict_DelItemStringLenHash(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeDict_SetItemStringHash(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeDict_SetItemStringLenHash(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *value);
-#else /* CONFIG_BUILDING_DEEMON && !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+#define DeeDict_GetItemString(self, key)                              DeeDict_GetItemStringHash(self, key, Dee_HashStr(key))
+#define DeeDict_GetItemStringLen(self, key, keylen)                   DeeDict_GetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 #define DeeDict_GetItemStringHash(self, key, hash)                    (*DeeDict_Type.tp_seq->tp_getitem_string_hash)(self, key, hash)
 #define DeeDict_GetItemStringLenHash(self, key, keylen, hash)         (*DeeDict_Type.tp_seq->tp_getitem_string_len_hash)(self, key, keylen, hash)
+#define DeeDict_DelItemString(self, key)                              DeeDict_DelItemStringHash(self, key, Dee_HashStr(key))
+#define DeeDict_DelItemStringLen(self, key, keylen)                   DeeDict_DelItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 #define DeeDict_DelItemStringHash(self, key, hash)                    (*DeeDict_Type.tp_seq->tp_delitem_string_hash)(self, key, hash)
 #define DeeDict_DelItemStringLenHash(self, key, keylen, hash)         (*DeeDict_Type.tp_seq->tp_delitem_string_len_hash)(self, key, keylen, hash)
+#define DeeDict_SetItemString(self, key, value)                       DeeDict_SetItemStringHash(self, key, Dee_HashStr(key), value)
+#define DeeDict_SetItemStringLen(self, key, keylen, value)            DeeDict_SetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), value)
 #define DeeDict_SetItemStringHash(self, key, hash, value)             (*DeeDict_Type.tp_seq->tp_setitem_string_hash)(self, key, hash, value)
 #define DeeDict_SetItemStringLenHash(self, key, keylen, hash, value)  (*DeeDict_Type.tp_seq->tp_setitem_string_len_hash)(self, key, keylen, hash, value)
-#endif /* !CONFIG_BUILDING_DEEMON || CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-#define DeeDict_TryGetItem(self, key)                       (*DeeDict_Type.tp_seq->tp_trygetitem)(self, key)
-#define DeeDict_GetItemString(self, key)                    DeeDict_GetItemStringHash(self, key, Dee_HashStr(key))
-#define DeeDict_GetItemStringLen(self, key, keylen)         DeeDict_GetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
-#define DeeDict_DelItemString(self, key)                    DeeDict_DelItemStringHash(self, key, Dee_HashStr(key))
-#define DeeDict_DelItemStringLen(self, key, keylen)         DeeDict_DelItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
-#define DeeDict_SetItemString(self, key, value)             DeeDict_SetItemStringHash(self, key, Dee_HashStr(key), value)
-#define DeeDict_SetItemStringLen(self, key, keylen, value)  DeeDict_SetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), value)
 
 #define DeeDict_GetItem(self, key)        (*DeeDict_Type.tp_seq->tp_getitem)(self, key)
+#define DeeDict_TryGetItem(self, key)     (*DeeDict_Type.tp_seq->tp_trygetitem)(self, key)
 #define DeeDict_DelItem(self, key)        (*DeeDict_Type.tp_seq->tp_delitem)(self, key)
 #define DeeDict_SetItem(self, key, value) (*DeeDict_Type.tp_seq->tp_setitem)(self, key, value)
 
@@ -425,30 +335,26 @@ DeeDict_NewKeyValuesInherited(size_t num_items,
 #define DeeDict_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->d_lock)
 
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
-#define _Dee_DICT_SIZE_FIELD d_vused
-#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-#define _Dee_DICT_SIZE_FIELD d_used
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
-
 /* Return the # of bound key within "self". */
-#define DeeDict_SIZE(self) ((self)->_Dee_DICT_SIZE_FIELD)
+#define DeeDict_SIZE(self) ((self)->d_vused)
 #ifdef __INTELLISENSE__
 #define DeeDict_SIZE_ATOMIC(self) DeeDict_SIZE(self)
 #elif defined(__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC) || defined(CONFIG_NO_THREADS)
-#define DeeDict_SIZE_ATOMIC(self) Dee_atomic_read(&(self)->_Dee_DICT_SIZE_FIELD)
+#define DeeDict_SIZE_ATOMIC(self) Dee_atomic_read(&(self)->d_vused)
 #else /* __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC || CONFIG_NO_THREADS */
 LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t
 (DeeDict_SIZE_ATOMIC)(DeeDictObject *__restrict self) {
 	size_t result;
 	DeeDict_LockRead(self);
-	result = self->_Dee_DICT_SIZE_FIELD;
+	result = self->d_vused;
 	DeeDict_LockEndRead(self);
 	return result;
 }
 #endif /* !__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC && !CONFIG_NO_THREADS */
 
 
+
+DDATDEF DeeObject DeeDict_Dummy; /* DEPRECATED (no longer used by the dict impl) */
 
 DECL_END
 
