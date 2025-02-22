@@ -123,7 +123,7 @@ do_DeeType_InheritUninheritable(DeeTypeObject *self,
 		ASSERT(type_type == &DeeType_Type);             \
 		(void)type_type;                                \
 		(void)info;                                     \
-		impl(self);                                     \
+		(void)impl(self);                               \
 	}
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritConstructors, DeeType_InheritConstructors);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritStr, DeeType_InheritStr);
