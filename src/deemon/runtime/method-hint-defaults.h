@@ -337,6 +337,7 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL tdefault__seq_operator_hash__wit
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__unsupported(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__empty(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_foreach(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_foreach_pair(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self);
@@ -1520,6 +1521,7 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__set_operator_foreach(D
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__set_operator_foreach__with__set_operator_iter(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 #define default__set_operator_foreach__empty (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&_DeeNone_rets0_3)
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__set_operator_foreach__with__seq_operator_foreach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__set_operator_foreach__with__map_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 
 /* set_operator_sizeob */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob(DeeObject *__restrict self);
@@ -1547,6 +1549,7 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL tdefault__set_operator_hash__wit
 #define default__set_operator_hash__unsupported (*(Dee_hash_t (DCALL *)(DeeObject *__restrict))&default__seq_operator_hash__unsupported)
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__empty(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with__set_operator_foreach(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with__map_operator_foreach_pair(DeeObject *__restrict self);
 
 /* set_operator_compare_eq */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs);

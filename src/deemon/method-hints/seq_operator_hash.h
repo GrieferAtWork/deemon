@@ -56,6 +56,31 @@ default_seq_hash_with_foreach_cb(void *arg, DeeObject *elem) {
 #endif /* !DEFINED_default_seq_hash_with_foreach_cb */
 )]
 
+%[define(DEFINE_default_seq_hash_with_foreach_pair_cb =
+#ifndef DEFINED_default_seq_hash_with_foreach_pair_cb
+#define DEFINED_default_seq_hash_with_foreach_pair_cb
+struct default_seq_hash_with_foreach_pair_data {
+	Dee_hash_t sqhwfp_result;   /* Hash result (or DEE_HASHOF_EMPTY_SEQUENCE when sqhwfp_nonempty=false) */
+	bool       sqhwfp_nonempty; /* True after the first element */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_seq_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_seq_hash_with_foreach_pair_data *data;
+	Dee_hash_t elem_hash;
+	data = (struct default_seq_hash_with_foreach_pair_data *)arg;
+	elem_hash = Dee_HashCombine(DeeObject_Hash(key), DeeObject_Hash(value));
+	if (data->sqhwfp_nonempty) {
+		data->sqhwfp_result = Dee_HashCombine(data->sqhwfp_result, elem_hash);
+	} else {
+		data->sqhwfp_result = elem_hash;
+		data->sqhwfp_nonempty = true;
+	}
+	return 0;
+}
+#endif /* !DEFINED_default_seq_hash_with_foreach_pair_cb */
+)]
+
 %[define(DEFINE_seq_handle_hash_error =
 #ifndef DEFINED_seq_handle_hash_error
 #define DEFINED_seq_handle_hash_error
@@ -85,6 +110,18 @@ __seq_hash__.seq_operator_hash([[nonnull]] DeeObject *__restrict self)
 	if unlikely(CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_hash_with_foreach_cb, &data))
 		goto err;
 	return data.sqhwf_result;
+err:
+	return seq_handle_hash_error(self);
+}}
+%{$with__seq_operator_foreach_pair =
+[[prefix(DEFINE_default_seq_hash_with_foreach_pair_cb)]]
+[[prefix(DEFINE_seq_handle_hash_error)]] {
+	struct default_seq_hash_with_foreach_pair_data data;
+	data.sqhwfp_result   = DEE_HASHOF_EMPTY_SEQUENCE;
+	data.sqhwfp_nonempty = false;
+	if unlikely(CALL_DEPENDENCY(seq_operator_foreach_pair, self, &default_seq_hash_with_foreach_pair_cb, &data))
+		goto err;
+	return data.sqhwfp_result;
 err:
 	return seq_handle_hash_error(self);
 }}
@@ -285,6 +322,11 @@ seq_operator_hash = {
 		return &$with__seq_operator_size__and__seq_operator_getitem_index;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem)
 		return &$with__seq_operator_sizeob__and__seq_operator_getitem;
-	if (seq_operator_foreach)
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_foreach_pair)
+		return &$with__seq_operator_foreach_pair;
+	if (seq_operator_foreach) {
+		if (REQUIRE_NODEFAULT(seq_operator_foreach_pair))
+			return &$with__seq_operator_foreach_pair;
 		return $with__seq_operator_foreach;
+	}
 };

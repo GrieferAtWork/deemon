@@ -284,21 +284,17 @@
 
 
 
-/* TODO: Once everything has been migrated, write a unit test that asserts that the correct
- *       default impls of method hints get linked for certain operators:
- *       >> assert "default__seq_operator_getitem_index__with__seq_operator_foreach" == (
- *       >>         class { __seq_iter__() -> []{ yield 10, 20; }.operator iter(); }
- *       >> ).__method_hints__["seq_operator_getitem_index"];
- * To get the names of symbols on...
- * - ...windows: https://learn.microsoft.com/en-us/windows/win32/debug/retrieving-symbol-information-by-address
- * - ...linux:   use `ipc.Process("addr2line -f")'
- * It's OK if it doesn't work in all environments (especially since it can't
- * if you've deleted the .pdb files, or did `strip deemon`). The "assert"
- * above is just meant to illustrate a point, and the actual user-code API
- * to access symbol names of internal method hints will look different (and
- * have an implicit fallback for when the runtime can't determine the names
- * of symbols, in which case nothing will be asserted)
- */
+/************************************************************************/
+/* For `deemon.Iterator'                                                */
+/************************************************************************/
+/* TODO: __iter_index__ */
+/* TODO: __iter_peek__ */
+/* TODO: __iter_prev__ */
+/* TODO: __iter_rewind__ */
+/* TODO: __iter_revert__ */
+/* TODO: __iter_future__ */
+/* TODO: __iter_seq__ */
+/* TODO: __iter_hasprev__ */
 
 
 

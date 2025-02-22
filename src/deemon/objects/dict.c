@@ -4054,6 +4054,15 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	TYPE_METHOD_HINTREF_DOC(explicit_seq_pop, "(index=!-1)->" D_TItem),
 	TYPE_METHOD_HINTREF(explicit_seq_removeif),
 	TYPE_METHOD_HINTREF(explicit_seq_reverse),
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINTREF(__seq_iter__),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_HINTREF(__seq_getitem__),
+	TYPE_METHOD_HINTREF(__seq_delitem__),
+	TYPE_METHOD_HINTREF(__seq_setitem__),
+	TYPE_METHOD_HINTREF(__seq_compare__),
+	TYPE_METHOD_HINTREF(__seq_compare_eq__),
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_END
 };
 
@@ -4074,11 +4083,14 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &dict_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &dict_trygetfirst, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &dict_trygetlast, METHOD_FNOREFESCAPE),
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINT_F(seq_operator_iter, &dict_iter, METHOD_FNORMAL),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_operator_foreach, &dict_mh_seq_foreach, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_foreach_pair, &dict_foreach_pair, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_enumerate_index, &dict_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_operator_size, &dict_size, METHOD_FNOREFESCAPE),
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINT_F(seq_operator_size, &dict_size, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_size_fast, &dict_size_fast, METHOD_FNOREFESCAPE),
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_operator_getitem_index, &dict_mh_seq_getitem_index, METHOD_FNOREFESCAPE),

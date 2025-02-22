@@ -519,11 +519,12 @@ PRIVATE struct mh_super_map_replace tpconst msm_replace__seq_operator_hash[2] = 
 	MH_SUPER_MAP_REPLACE_INIT(&default__seq_operator_hash__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_hash__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	MH_SUPER_MAP_REPLACE_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_hash[8] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_hash[9] = {
 	(Dee_funptr_t)&default__seq_operator_hash__with_callattr___seq_hash__,
 	(Dee_funptr_t)&default__seq_operator_hash__unsupported,
 	(Dee_funptr_t)&default__seq_operator_hash__empty,
 	(Dee_funptr_t)&default__seq_operator_hash__with__seq_operator_foreach,
+	(Dee_funptr_t)&default__seq_operator_hash__with__seq_operator_foreach_pair,
 	(Dee_funptr_t)&default__seq_operator_hash__with__seq_operator_size__and__seq_operator_trygetitem_index,
 	(Dee_funptr_t)&default__seq_operator_hash__with__seq_operator_size__and__seq_operator_getitem_index,
 	(Dee_funptr_t)&default__seq_operator_hash__with__seq_operator_sizeob__and__seq_operator_getitem,
@@ -2086,12 +2087,13 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_iter[3] = 
 	MH_SUPER_MAP_TYPED_INIT(&usrtype__iter__with__ITER, &tusrtype__iter__with__ITER),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_foreach[6] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_foreach[7] = {
 	(Dee_funptr_t)&default__set_operator_foreach__with_callattr___set_iter__,
 	(Dee_funptr_t)&default__set_operator_foreach__unsupported,
 	(Dee_funptr_t)&default__set_operator_foreach__with__set_operator_iter,
 	(Dee_funptr_t)&default__set_operator_foreach__empty,
 	(Dee_funptr_t)&default__set_operator_foreach__with__seq_operator_foreach,
+	(Dee_funptr_t)&default__set_operator_foreach__with__map_operator_foreach_pair,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_foreach[3] = {
@@ -2124,11 +2126,12 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_size[2] = 
 	MH_SUPER_MAP_TYPED_INIT(&default__size__with__sizeob, &tdefault__size__with__sizeob),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_hash[5] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_hash[6] = {
 	(Dee_funptr_t)&default__set_operator_hash__with_callattr___set_hash__,
 	(Dee_funptr_t)&default__set_operator_hash__unsupported,
 	(Dee_funptr_t)&default__set_operator_hash__empty,
 	(Dee_funptr_t)&default__set_operator_hash__with__set_operator_foreach,
+	(Dee_funptr_t)&default__set_operator_hash__with__map_operator_foreach_pair,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_hash[4] = {

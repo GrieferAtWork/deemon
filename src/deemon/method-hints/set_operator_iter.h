@@ -99,6 +99,12 @@ __set_iter__.set_operator_foreach([[nonnull]] DeeObject *__restrict self,
 	Dee_simple_hashset_fini(&data.dsfud_encountered);
 	return result;
 }}
+%{$with__map_operator_foreach_pair = [[prefix(DEFINE_default_foreach_with_foreach_pair_cb)]] {
+	struct default_foreach_with_foreach_pair_data data;
+	data.dfwfp_cb  = cb;
+	data.dfwfp_arg = arg;
+	return CALL_DEPENDENCY(map_operator_foreach_pair, self, &default_foreach_with_foreach_pair_cb, &data);
+}}
 %{using set_operator_iter: {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
@@ -115,7 +121,11 @@ err:
 
 
 set_operator_iter = {
-	DeeMH_seq_operator_iter_t seq_operator_iter = REQUIRE(seq_operator_iter);
+	DeeMH_seq_operator_iter_t seq_operator_iter;
+	DeeMH_map_operator_iter_t map_operator_iter = REQUIRE_NODEFAULT(map_operator_iter);
+	if (map_operator_iter)
+		return map_operator_iter;
+	seq_operator_iter = REQUIRE(seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &$empty;
 	if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate ||
@@ -127,7 +137,10 @@ set_operator_iter = {
 };
 
 set_operator_foreach = {
-	DeeMH_set_operator_iter_t set_operator_iter = REQUIRE(set_operator_iter);
+	DeeMH_set_operator_iter_t set_operator_iter;
+	if (REQUIRE_NODEFAULT(map_operator_foreach_pair))
+		return &$with__map_operator_foreach_pair;
+	set_operator_iter = REQUIRE(set_operator_iter);
 	if (set_operator_iter == &default__set_operator_iter__empty)
 		return &$empty;
 	if (set_operator_iter == &default__set_operator_iter__with__seq_operator_iter)
