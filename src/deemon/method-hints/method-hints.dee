@@ -2125,6 +2125,7 @@ function printNativeOperatorExportedApi() {
 			local fastForwardImpls = {oomImplName, unsupImplName}
 				.filter(e -> e !is none)
 				.distinct()
+				.sorted()
 				.frozen;
 			local mustMapFunptr = isTyped && nativeOperator.hasMakeTypedMacro;
 			if (!mustMapFunptr)

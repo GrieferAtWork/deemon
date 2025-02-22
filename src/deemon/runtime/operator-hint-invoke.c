@@ -832,8 +832,8 @@ DeeObject_TIterNextKey(DeeTypeObject *tp_self, DeeObject *self) {
 	DeeNO_nextkey_t tp_nextkey;
 	if unlikely(!tp_self->tp_iterator || (tp_nextkey = tp_self->tp_iterator->tp_nextkey) == NULL) {
 		tp_nextkey = _DeeType_RequireNativeOperator(tp_self, nextkey);
-		if unlikely(tp_nextkey == (DeeNO_nextkey_t)&default__nextkey__unsupported ||
-		            tp_nextkey == (DeeNO_nextkey_t)&default__nextkey__badalloc)
+		if unlikely(tp_nextkey == (DeeNO_nextkey_t)&default__nextkey__badalloc ||
+		            tp_nextkey == (DeeNO_nextkey_t)&default__nextkey__unsupported)
 			return (*tp_nextkey)(self);
 	}
 	return (*maketyped__nextkey(tp_nextkey))(tp_self, self);
@@ -904,8 +904,8 @@ DeeObject_TAsDouble(DeeTypeObject *tp_self, DeeObject *self, double *p_result) {
 	DeeNO_double_t tp_double;
 	if unlikely(!tp_self->tp_math || (tp_double = tp_self->tp_math->tp_double) == NULL) {
 		tp_double = _DeeType_RequireNativeOperator(tp_self, double);
-		if unlikely(tp_double == (DeeNO_double_t)&default__double__unsupported ||
-		            tp_double == (DeeNO_double_t)&default__double__badalloc)
+		if unlikely(tp_double == (DeeNO_double_t)&default__double__badalloc ||
+		            tp_double == (DeeNO_double_t)&default__double__unsupported)
 			return (*tp_double)(self, p_result);
 	}
 	return (*maketyped__double(tp_double))(tp_self, self, p_result);
@@ -928,8 +928,8 @@ DeeObject_TCompare(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	DeeNO_compare_t tp_compare;
 	if unlikely(!tp_self->tp_cmp || (tp_compare = tp_self->tp_cmp->tp_compare) == NULL) {
 		tp_compare = _DeeType_RequireNativeOperator(tp_self, compare);
-		if unlikely(tp_compare == (DeeNO_compare_t)&default__compare__unsupported ||
-		            tp_compare == (DeeNO_compare_t)&default__compare__badalloc)
+		if unlikely(tp_compare == (DeeNO_compare_t)&default__compare__badalloc ||
+		            tp_compare == (DeeNO_compare_t)&default__compare__unsupported)
 			return (*tp_compare)(lhs, rhs);
 	}
 	return (*maketyped__compare(tp_compare))(tp_self, lhs, rhs);
@@ -940,8 +940,8 @@ DeeObject_TTryCompareEq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) 
 	DeeNO_trycompare_eq_t tp_trycompare_eq;
 	if unlikely(!tp_self->tp_cmp || (tp_trycompare_eq = tp_self->tp_cmp->tp_trycompare_eq) == NULL) {
 		tp_trycompare_eq = _DeeType_RequireNativeOperator(tp_self, trycompare_eq);
-		if unlikely(tp_trycompare_eq == (DeeNO_trycompare_eq_t)&default__trycompare_eq__unsupported ||
-		            tp_trycompare_eq == (DeeNO_trycompare_eq_t)&default__trycompare_eq__badalloc)
+		if unlikely(tp_trycompare_eq == (DeeNO_trycompare_eq_t)&default__trycompare_eq__badalloc ||
+		            tp_trycompare_eq == (DeeNO_trycompare_eq_t)&default__trycompare_eq__unsupported)
 			return (*tp_trycompare_eq)(lhs, rhs);
 	}
 	return (*maketyped__trycompare_eq(tp_trycompare_eq))(tp_self, lhs, rhs);
@@ -952,8 +952,8 @@ DeeObject_TCmpEq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	DeeNO_eq_t tp_eq;
 	if unlikely(!tp_self->tp_cmp || (tp_eq = tp_self->tp_cmp->tp_eq) == NULL) {
 		tp_eq = _DeeType_RequireNativeOperator(tp_self, eq);
-		if unlikely(tp_eq == (DeeNO_eq_t)&default__eq__unsupported ||
-		            tp_eq == (DeeNO_eq_t)&default__eq__badalloc)
+		if unlikely(tp_eq == (DeeNO_eq_t)&default__eq__badalloc ||
+		            tp_eq == (DeeNO_eq_t)&default__eq__unsupported)
 			return (*tp_eq)(lhs, rhs);
 	}
 	return (*maketyped__eq(tp_eq))(tp_self, lhs, rhs);
@@ -964,8 +964,8 @@ DeeObject_TCmpNe(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	DeeNO_ne_t tp_ne;
 	if unlikely(!tp_self->tp_cmp || (tp_ne = tp_self->tp_cmp->tp_ne) == NULL) {
 		tp_ne = _DeeType_RequireNativeOperator(tp_self, ne);
-		if unlikely(tp_ne == (DeeNO_ne_t)&default__ne__unsupported ||
-		            tp_ne == (DeeNO_ne_t)&default__ne__badalloc)
+		if unlikely(tp_ne == (DeeNO_ne_t)&default__ne__badalloc ||
+		            tp_ne == (DeeNO_ne_t)&default__ne__unsupported)
 			return (*tp_ne)(lhs, rhs);
 	}
 	return (*maketyped__ne(tp_ne))(tp_self, lhs, rhs);
@@ -988,8 +988,8 @@ DeeObject_TCmpLe(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	DeeNO_le_t tp_le;
 	if unlikely(!tp_self->tp_cmp || (tp_le = tp_self->tp_cmp->tp_le) == NULL) {
 		tp_le = _DeeType_RequireNativeOperator(tp_self, le);
-		if unlikely(tp_le == (DeeNO_le_t)&default__le__unsupported ||
-		            tp_le == (DeeNO_le_t)&default__le__badalloc)
+		if unlikely(tp_le == (DeeNO_le_t)&default__le__badalloc ||
+		            tp_le == (DeeNO_le_t)&default__le__unsupported)
 			return (*tp_le)(lhs, rhs);
 	}
 	return (*maketyped__le(tp_le))(tp_self, lhs, rhs);
@@ -1024,8 +1024,8 @@ DeeObject_TIter(DeeTypeObject *tp_self, DeeObject *self) {
 	DeeNO_iter_t tp_iter;
 	if unlikely(!tp_self->tp_seq || (tp_iter = tp_self->tp_seq->tp_iter) == NULL) {
 		tp_iter = _DeeType_RequireNativeOperator(tp_self, iter);
-		if unlikely(tp_iter == (DeeNO_iter_t)&default__iter__unsupported ||
-		            tp_iter == (DeeNO_iter_t)&default__iter__badalloc)
+		if unlikely(tp_iter == (DeeNO_iter_t)&default__iter__badalloc ||
+		            tp_iter == (DeeNO_iter_t)&default__iter__unsupported)
 			return (*tp_iter)(self);
 	}
 	return (*maketyped__iter(tp_iter))(tp_self, self);
@@ -1036,8 +1036,8 @@ DeeObject_TForeach(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t cb, vo
 	DeeNO_foreach_t tp_foreach;
 	if unlikely(!tp_self->tp_seq || (tp_foreach = tp_self->tp_seq->tp_foreach) == NULL) {
 		tp_foreach = _DeeType_RequireNativeOperator(tp_self, foreach);
-		if unlikely(tp_foreach == (DeeNO_foreach_t)&default__foreach__unsupported ||
-		            tp_foreach == (DeeNO_foreach_t)&default__foreach__badalloc)
+		if unlikely(tp_foreach == (DeeNO_foreach_t)&default__foreach__badalloc ||
+		            tp_foreach == (DeeNO_foreach_t)&default__foreach__unsupported)
 			return (*tp_foreach)(self, cb, arg);
 	}
 	return (*maketyped__foreach(tp_foreach))(tp_self, self, cb, arg);
@@ -1048,8 +1048,8 @@ DeeObject_TForeachPair(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair
 	DeeNO_foreach_pair_t tp_foreach_pair;
 	if unlikely(!tp_self->tp_seq || (tp_foreach_pair = tp_self->tp_seq->tp_foreach_pair) == NULL) {
 		tp_foreach_pair = _DeeType_RequireNativeOperator(tp_self, foreach_pair);
-		if unlikely(tp_foreach_pair == (DeeNO_foreach_pair_t)&default__foreach_pair__unsupported ||
-		            tp_foreach_pair == (DeeNO_foreach_pair_t)&default__foreach_pair__badalloc)
+		if unlikely(tp_foreach_pair == (DeeNO_foreach_pair_t)&default__foreach_pair__badalloc ||
+		            tp_foreach_pair == (DeeNO_foreach_pair_t)&default__foreach_pair__unsupported)
 			return (*tp_foreach_pair)(self, cb, arg);
 	}
 	return (*maketyped__foreach_pair(tp_foreach_pair))(tp_self, self, cb, arg);
@@ -1060,8 +1060,8 @@ DeeObject_TSizeOb(DeeTypeObject *tp_self, DeeObject *self) {
 	DeeNO_sizeob_t tp_sizeob;
 	if unlikely(!tp_self->tp_seq || (tp_sizeob = tp_self->tp_seq->tp_sizeob) == NULL) {
 		tp_sizeob = _DeeType_RequireNativeOperator(tp_self, sizeob);
-		if unlikely(tp_sizeob == (DeeNO_sizeob_t)&default__sizeob__unsupported ||
-		            tp_sizeob == (DeeNO_sizeob_t)&default__sizeob__badalloc)
+		if unlikely(tp_sizeob == (DeeNO_sizeob_t)&default__sizeob__badalloc ||
+		            tp_sizeob == (DeeNO_sizeob_t)&default__sizeob__unsupported)
 			return (*tp_sizeob)(self);
 	}
 	return (*maketyped__sizeob(tp_sizeob))(tp_self, self);
@@ -1092,8 +1092,8 @@ DeeObject_TContains(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item) {
 	DeeNO_contains_t tp_contains;
 	if unlikely(!tp_self->tp_seq || (tp_contains = tp_self->tp_seq->tp_contains) == NULL) {
 		tp_contains = _DeeType_RequireNativeOperator(tp_self, contains);
-		if unlikely(tp_contains == (DeeNO_contains_t)&default__contains__unsupported ||
-		            tp_contains == (DeeNO_contains_t)&default__contains__badalloc)
+		if unlikely(tp_contains == (DeeNO_contains_t)&default__contains__badalloc ||
+		            tp_contains == (DeeNO_contains_t)&default__contains__unsupported)
 			return (*tp_contains)(self, item);
 	}
 	return (*maketyped__contains(tp_contains))(tp_self, self, item);
@@ -1140,8 +1140,8 @@ DeeObject_TTryGetItemIndex(DeeTypeObject *tp_self, DeeObject *self, size_t index
 	DeeNO_trygetitem_index_t tp_trygetitem_index;
 	if unlikely(!tp_self->tp_seq || (tp_trygetitem_index = tp_self->tp_seq->tp_trygetitem_index) == NULL) {
 		tp_trygetitem_index = _DeeType_RequireNativeOperator(tp_self, trygetitem_index);
-		if unlikely(tp_trygetitem_index == (DeeNO_trygetitem_index_t)&default__trygetitem_index__unsupported ||
-		            tp_trygetitem_index == (DeeNO_trygetitem_index_t)&default__trygetitem_index__badalloc)
+		if unlikely(tp_trygetitem_index == (DeeNO_trygetitem_index_t)&default__trygetitem_index__badalloc ||
+		            tp_trygetitem_index == (DeeNO_trygetitem_index_t)&default__trygetitem_index__unsupported)
 			return (*tp_trygetitem_index)(self, index);
 	}
 	return (*maketyped__trygetitem_index(tp_trygetitem_index))(tp_self, self, index);
@@ -1164,8 +1164,8 @@ DeeObject_TTryGetItemStringHash(DeeTypeObject *tp_self, DeeObject *self, char co
 	DeeNO_trygetitem_string_hash_t tp_trygetitem_string_hash;
 	if unlikely(!tp_self->tp_seq || (tp_trygetitem_string_hash = tp_self->tp_seq->tp_trygetitem_string_hash) == NULL) {
 		tp_trygetitem_string_hash = _DeeType_RequireNativeOperator(tp_self, trygetitem_string_hash);
-		if unlikely(tp_trygetitem_string_hash == (DeeNO_trygetitem_string_hash_t)&default__trygetitem_string_hash__unsupported ||
-		            tp_trygetitem_string_hash == (DeeNO_trygetitem_string_hash_t)&default__trygetitem_string_hash__badalloc)
+		if unlikely(tp_trygetitem_string_hash == (DeeNO_trygetitem_string_hash_t)&default__trygetitem_string_hash__badalloc ||
+		            tp_trygetitem_string_hash == (DeeNO_trygetitem_string_hash_t)&default__trygetitem_string_hash__unsupported)
 			return (*tp_trygetitem_string_hash)(self, key, hash);
 	}
 	return (*maketyped__trygetitem_string_hash(tp_trygetitem_string_hash))(tp_self, self, key, hash);
@@ -1188,8 +1188,8 @@ DeeObject_TTryGetItemStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char
 	DeeNO_trygetitem_string_len_hash_t tp_trygetitem_string_len_hash;
 	if unlikely(!tp_self->tp_seq || (tp_trygetitem_string_len_hash = tp_self->tp_seq->tp_trygetitem_string_len_hash) == NULL) {
 		tp_trygetitem_string_len_hash = _DeeType_RequireNativeOperator(tp_self, trygetitem_string_len_hash);
-		if unlikely(tp_trygetitem_string_len_hash == (DeeNO_trygetitem_string_len_hash_t)&default__trygetitem_string_len_hash__unsupported ||
-		            tp_trygetitem_string_len_hash == (DeeNO_trygetitem_string_len_hash_t)&default__trygetitem_string_len_hash__badalloc)
+		if unlikely(tp_trygetitem_string_len_hash == (DeeNO_trygetitem_string_len_hash_t)&default__trygetitem_string_len_hash__badalloc ||
+		            tp_trygetitem_string_len_hash == (DeeNO_trygetitem_string_len_hash_t)&default__trygetitem_string_len_hash__unsupported)
 			return (*tp_trygetitem_string_len_hash)(self, key, keylen, hash);
 	}
 	return (*maketyped__trygetitem_string_len_hash(tp_trygetitem_string_len_hash))(tp_self, self, key, keylen, hash);
@@ -1224,8 +1224,8 @@ DeeObject_TBoundItemStringHash(DeeTypeObject *tp_self, DeeObject *self, char con
 	DeeNO_bounditem_string_hash_t tp_bounditem_string_hash;
 	if unlikely(!tp_self->tp_seq || (tp_bounditem_string_hash = tp_self->tp_seq->tp_bounditem_string_hash) == NULL) {
 		tp_bounditem_string_hash = _DeeType_RequireNativeOperator(tp_self, bounditem_string_hash);
-		if unlikely(tp_bounditem_string_hash == (DeeNO_bounditem_string_hash_t)&default__bounditem_string_hash__unsupported ||
-		            tp_bounditem_string_hash == (DeeNO_bounditem_string_hash_t)&default__bounditem_string_hash__badalloc)
+		if unlikely(tp_bounditem_string_hash == (DeeNO_bounditem_string_hash_t)&default__bounditem_string_hash__badalloc ||
+		            tp_bounditem_string_hash == (DeeNO_bounditem_string_hash_t)&default__bounditem_string_hash__unsupported)
 			return (*tp_bounditem_string_hash)(self, key, hash);
 	}
 	return (*maketyped__bounditem_string_hash(tp_bounditem_string_hash))(tp_self, self, key, hash);
@@ -1236,8 +1236,8 @@ DeeObject_TBoundItemStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char 
 	DeeNO_bounditem_string_len_hash_t tp_bounditem_string_len_hash;
 	if unlikely(!tp_self->tp_seq || (tp_bounditem_string_len_hash = tp_self->tp_seq->tp_bounditem_string_len_hash) == NULL) {
 		tp_bounditem_string_len_hash = _DeeType_RequireNativeOperator(tp_self, bounditem_string_len_hash);
-		if unlikely(tp_bounditem_string_len_hash == (DeeNO_bounditem_string_len_hash_t)&default__bounditem_string_len_hash__unsupported ||
-		            tp_bounditem_string_len_hash == (DeeNO_bounditem_string_len_hash_t)&default__bounditem_string_len_hash__badalloc)
+		if unlikely(tp_bounditem_string_len_hash == (DeeNO_bounditem_string_len_hash_t)&default__bounditem_string_len_hash__badalloc ||
+		            tp_bounditem_string_len_hash == (DeeNO_bounditem_string_len_hash_t)&default__bounditem_string_len_hash__unsupported)
 			return (*tp_bounditem_string_len_hash)(self, key, keylen, hash);
 	}
 	return (*maketyped__bounditem_string_len_hash(tp_bounditem_string_len_hash))(tp_self, self, key, keylen, hash);
@@ -1284,8 +1284,8 @@ DeeObject_THasItemStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char co
 	DeeNO_hasitem_string_len_hash_t tp_hasitem_string_len_hash;
 	if unlikely(!tp_self->tp_seq || (tp_hasitem_string_len_hash = tp_self->tp_seq->tp_hasitem_string_len_hash) == NULL) {
 		tp_hasitem_string_len_hash = _DeeType_RequireNativeOperator(tp_self, hasitem_string_len_hash);
-		if unlikely(tp_hasitem_string_len_hash == (DeeNO_hasitem_string_len_hash_t)&default__hasitem_string_len_hash__unsupported ||
-		            tp_hasitem_string_len_hash == (DeeNO_hasitem_string_len_hash_t)&default__hasitem_string_len_hash__badalloc)
+		if unlikely(tp_hasitem_string_len_hash == (DeeNO_hasitem_string_len_hash_t)&default__hasitem_string_len_hash__badalloc ||
+		            tp_hasitem_string_len_hash == (DeeNO_hasitem_string_len_hash_t)&default__hasitem_string_len_hash__unsupported)
 			return (*tp_hasitem_string_len_hash)(self, key, keylen, hash);
 	}
 	return (*maketyped__hasitem_string_len_hash(tp_hasitem_string_len_hash))(tp_self, self, key, keylen, hash);
@@ -1296,8 +1296,8 @@ DeeObject_TDelItem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 	DeeNO_delitem_t tp_delitem;
 	if unlikely(!tp_self->tp_seq || (tp_delitem = tp_self->tp_seq->tp_delitem) == NULL) {
 		tp_delitem = _DeeType_RequireNativeOperator(tp_self, delitem);
-		if unlikely(tp_delitem == (DeeNO_delitem_t)&default__delitem__unsupported ||
-		            tp_delitem == (DeeNO_delitem_t)&default__delitem__badalloc)
+		if unlikely(tp_delitem == (DeeNO_delitem_t)&default__delitem__badalloc ||
+		            tp_delitem == (DeeNO_delitem_t)&default__delitem__unsupported)
 			return (*tp_delitem)(self, index);
 	}
 	return (*maketyped__delitem(tp_delitem))(tp_self, self, index);
@@ -1308,8 +1308,8 @@ DeeObject_TDelItemIndex(DeeTypeObject *tp_self, DeeObject *self, size_t index) {
 	DeeNO_delitem_index_t tp_delitem_index;
 	if unlikely(!tp_self->tp_seq || (tp_delitem_index = tp_self->tp_seq->tp_delitem_index) == NULL) {
 		tp_delitem_index = _DeeType_RequireNativeOperator(tp_self, delitem_index);
-		if unlikely(tp_delitem_index == (DeeNO_delitem_index_t)&default__delitem_index__unsupported ||
-		            tp_delitem_index == (DeeNO_delitem_index_t)&default__delitem_index__badalloc)
+		if unlikely(tp_delitem_index == (DeeNO_delitem_index_t)&default__delitem_index__badalloc ||
+		            tp_delitem_index == (DeeNO_delitem_index_t)&default__delitem_index__unsupported)
 			return (*tp_delitem_index)(self, index);
 	}
 	return (*maketyped__delitem_index(tp_delitem_index))(tp_self, self, index);
@@ -1320,8 +1320,8 @@ DeeObject_TDelItemStringHash(DeeTypeObject *tp_self, DeeObject *self, char const
 	DeeNO_delitem_string_hash_t tp_delitem_string_hash;
 	if unlikely(!tp_self->tp_seq || (tp_delitem_string_hash = tp_self->tp_seq->tp_delitem_string_hash) == NULL) {
 		tp_delitem_string_hash = _DeeType_RequireNativeOperator(tp_self, delitem_string_hash);
-		if unlikely(tp_delitem_string_hash == (DeeNO_delitem_string_hash_t)&default__delitem_string_hash__unsupported ||
-		            tp_delitem_string_hash == (DeeNO_delitem_string_hash_t)&default__delitem_string_hash__badalloc)
+		if unlikely(tp_delitem_string_hash == (DeeNO_delitem_string_hash_t)&default__delitem_string_hash__badalloc ||
+		            tp_delitem_string_hash == (DeeNO_delitem_string_hash_t)&default__delitem_string_hash__unsupported)
 			return (*tp_delitem_string_hash)(self, key, hash);
 	}
 	return (*maketyped__delitem_string_hash(tp_delitem_string_hash))(tp_self, self, key, hash);
@@ -1344,8 +1344,8 @@ DeeObject_TSetItem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, De
 	DeeNO_setitem_t tp_setitem;
 	if unlikely(!tp_self->tp_seq || (tp_setitem = tp_self->tp_seq->tp_setitem) == NULL) {
 		tp_setitem = _DeeType_RequireNativeOperator(tp_self, setitem);
-		if unlikely(tp_setitem == (DeeNO_setitem_t)&default__setitem__unsupported ||
-		            tp_setitem == (DeeNO_setitem_t)&default__setitem__badalloc)
+		if unlikely(tp_setitem == (DeeNO_setitem_t)&default__setitem__badalloc ||
+		            tp_setitem == (DeeNO_setitem_t)&default__setitem__unsupported)
 			return (*tp_setitem)(self, index, value);
 	}
 	return (*maketyped__setitem(tp_setitem))(tp_self, self, index, value);
@@ -1368,8 +1368,8 @@ DeeObject_TSetItemStringHash(DeeTypeObject *tp_self, DeeObject *self, char const
 	DeeNO_setitem_string_hash_t tp_setitem_string_hash;
 	if unlikely(!tp_self->tp_seq || (tp_setitem_string_hash = tp_self->tp_seq->tp_setitem_string_hash) == NULL) {
 		tp_setitem_string_hash = _DeeType_RequireNativeOperator(tp_self, setitem_string_hash);
-		if unlikely(tp_setitem_string_hash == (DeeNO_setitem_string_hash_t)&default__setitem_string_hash__unsupported ||
-		            tp_setitem_string_hash == (DeeNO_setitem_string_hash_t)&default__setitem_string_hash__badalloc)
+		if unlikely(tp_setitem_string_hash == (DeeNO_setitem_string_hash_t)&default__setitem_string_hash__badalloc ||
+		            tp_setitem_string_hash == (DeeNO_setitem_string_hash_t)&default__setitem_string_hash__unsupported)
 			return (*tp_setitem_string_hash)(self, key, hash, value);
 	}
 	return (*maketyped__setitem_string_hash(tp_setitem_string_hash))(tp_self, self, key, hash, value);
@@ -1380,8 +1380,8 @@ DeeObject_TSetItemStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char co
 	DeeNO_setitem_string_len_hash_t tp_setitem_string_len_hash;
 	if unlikely(!tp_self->tp_seq || (tp_setitem_string_len_hash = tp_self->tp_seq->tp_setitem_string_len_hash) == NULL) {
 		tp_setitem_string_len_hash = _DeeType_RequireNativeOperator(tp_self, setitem_string_len_hash);
-		if unlikely(tp_setitem_string_len_hash == (DeeNO_setitem_string_len_hash_t)&default__setitem_string_len_hash__unsupported ||
-		            tp_setitem_string_len_hash == (DeeNO_setitem_string_len_hash_t)&default__setitem_string_len_hash__badalloc)
+		if unlikely(tp_setitem_string_len_hash == (DeeNO_setitem_string_len_hash_t)&default__setitem_string_len_hash__badalloc ||
+		            tp_setitem_string_len_hash == (DeeNO_setitem_string_len_hash_t)&default__setitem_string_len_hash__unsupported)
 			return (*tp_setitem_string_len_hash)(self, key, keylen, hash, value);
 	}
 	return (*maketyped__setitem_string_len_hash(tp_setitem_string_len_hash))(tp_self, self, key, keylen, hash, value);
@@ -1392,8 +1392,8 @@ DeeObject_TGetRange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, D
 	DeeNO_getrange_t tp_getrange;
 	if unlikely(!tp_self->tp_seq || (tp_getrange = tp_self->tp_seq->tp_getrange) == NULL) {
 		tp_getrange = _DeeType_RequireNativeOperator(tp_self, getrange);
-		if unlikely(tp_getrange == (DeeNO_getrange_t)&default__getrange__unsupported ||
-		            tp_getrange == (DeeNO_getrange_t)&default__getrange__badalloc)
+		if unlikely(tp_getrange == (DeeNO_getrange_t)&default__getrange__badalloc ||
+		            tp_getrange == (DeeNO_getrange_t)&default__getrange__unsupported)
 			return (*tp_getrange)(self, start, end);
 	}
 	return (*maketyped__getrange(tp_getrange))(tp_self, self, start, end);
@@ -1440,8 +1440,8 @@ DeeObject_TDelRangeIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t st
 	DeeNO_delrange_index_t tp_delrange_index;
 	if unlikely(!tp_self->tp_seq || (tp_delrange_index = tp_self->tp_seq->tp_delrange_index) == NULL) {
 		tp_delrange_index = _DeeType_RequireNativeOperator(tp_self, delrange_index);
-		if unlikely(tp_delrange_index == (DeeNO_delrange_index_t)&default__delrange_index__unsupported ||
-		            tp_delrange_index == (DeeNO_delrange_index_t)&default__delrange_index__badalloc)
+		if unlikely(tp_delrange_index == (DeeNO_delrange_index_t)&default__delrange_index__badalloc ||
+		            tp_delrange_index == (DeeNO_delrange_index_t)&default__delrange_index__unsupported)
 			return (*tp_delrange_index)(self, start, end);
 	}
 	return (*maketyped__delrange_index(tp_delrange_index))(tp_self, self, start, end);
@@ -1452,8 +1452,8 @@ DeeObject_TDelRangeIndexN(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t s
 	DeeNO_delrange_index_n_t tp_delrange_index_n;
 	if unlikely(!tp_self->tp_seq || (tp_delrange_index_n = tp_self->tp_seq->tp_delrange_index_n) == NULL) {
 		tp_delrange_index_n = _DeeType_RequireNativeOperator(tp_self, delrange_index_n);
-		if unlikely(tp_delrange_index_n == (DeeNO_delrange_index_n_t)&default__delrange_index_n__unsupported ||
-		            tp_delrange_index_n == (DeeNO_delrange_index_n_t)&default__delrange_index_n__badalloc)
+		if unlikely(tp_delrange_index_n == (DeeNO_delrange_index_n_t)&default__delrange_index_n__badalloc ||
+		            tp_delrange_index_n == (DeeNO_delrange_index_n_t)&default__delrange_index_n__unsupported)
 			return (*tp_delrange_index_n)(self, start);
 	}
 	return (*maketyped__delrange_index_n(tp_delrange_index_n))(tp_self, self, start);
@@ -1608,8 +1608,8 @@ DeeObject_TDiv(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	DeeNO_div_t tp_div;
 	if unlikely(!tp_self->tp_math || (tp_div = tp_self->tp_math->tp_div) == NULL) {
 		tp_div = _DeeType_RequireNativeOperator(tp_self, div);
-		if unlikely(tp_div == (DeeNO_div_t)&default__div__unsupported ||
-		            tp_div == (DeeNO_div_t)&default__div__badalloc)
+		if unlikely(tp_div == (DeeNO_div_t)&default__div__badalloc ||
+		            tp_div == (DeeNO_div_t)&default__div__unsupported)
 			return (*tp_div)(lhs, rhs);
 	}
 	return (*maketyped__div(tp_div))(tp_self, lhs, rhs);
@@ -1644,8 +1644,8 @@ DeeObject_TInplaceMod(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs)
 	DeeNO_inplace_mod_t tp_inplace_mod;
 	if unlikely(!tp_self->tp_math || (tp_inplace_mod = tp_self->tp_math->tp_inplace_mod) == NULL) {
 		tp_inplace_mod = _DeeType_RequireNativeOperator(tp_self, inplace_mod);
-		if unlikely(tp_inplace_mod == (DeeNO_inplace_mod_t)&default__inplace_mod__unsupported ||
-		            tp_inplace_mod == (DeeNO_inplace_mod_t)&default__inplace_mod__badalloc)
+		if unlikely(tp_inplace_mod == (DeeNO_inplace_mod_t)&default__inplace_mod__badalloc ||
+		            tp_inplace_mod == (DeeNO_inplace_mod_t)&default__inplace_mod__unsupported)
 			return (*tp_inplace_mod)(p_lhs, rhs);
 	}
 	return (*maketyped__inplace_mod(tp_inplace_mod))(tp_self, p_lhs, rhs);
@@ -1668,8 +1668,8 @@ DeeObject_TInplaceShl(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs)
 	DeeNO_inplace_shl_t tp_inplace_shl;
 	if unlikely(!tp_self->tp_math || (tp_inplace_shl = tp_self->tp_math->tp_inplace_shl) == NULL) {
 		tp_inplace_shl = _DeeType_RequireNativeOperator(tp_self, inplace_shl);
-		if unlikely(tp_inplace_shl == (DeeNO_inplace_shl_t)&default__inplace_shl__unsupported ||
-		            tp_inplace_shl == (DeeNO_inplace_shl_t)&default__inplace_shl__badalloc)
+		if unlikely(tp_inplace_shl == (DeeNO_inplace_shl_t)&default__inplace_shl__badalloc ||
+		            tp_inplace_shl == (DeeNO_inplace_shl_t)&default__inplace_shl__unsupported)
 			return (*tp_inplace_shl)(p_lhs, rhs);
 	}
 	return (*maketyped__inplace_shl(tp_inplace_shl))(tp_self, p_lhs, rhs);
@@ -1728,8 +1728,8 @@ DeeObject_TOr(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	DeeNO_or_t tp_or;
 	if unlikely(!tp_self->tp_math || (tp_or = tp_self->tp_math->tp_or) == NULL) {
 		tp_or = _DeeType_RequireNativeOperator(tp_self, or);
-		if unlikely(tp_or == (DeeNO_or_t)&default__or__unsupported ||
-		            tp_or == (DeeNO_or_t)&default__or__badalloc)
+		if unlikely(tp_or == (DeeNO_or_t)&default__or__badalloc ||
+		            tp_or == (DeeNO_or_t)&default__or__unsupported)
 			return (*tp_or)(lhs, rhs);
 	}
 	return (*maketyped__or(tp_or))(tp_self, lhs, rhs);
@@ -1740,8 +1740,8 @@ DeeObject_TInplaceOr(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs) 
 	DeeNO_inplace_or_t tp_inplace_or;
 	if unlikely(!tp_self->tp_math || (tp_inplace_or = tp_self->tp_math->tp_inplace_or) == NULL) {
 		tp_inplace_or = _DeeType_RequireNativeOperator(tp_self, inplace_or);
-		if unlikely(tp_inplace_or == (DeeNO_inplace_or_t)&default__inplace_or__unsupported ||
-		            tp_inplace_or == (DeeNO_inplace_or_t)&default__inplace_or__badalloc)
+		if unlikely(tp_inplace_or == (DeeNO_inplace_or_t)&default__inplace_or__badalloc ||
+		            tp_inplace_or == (DeeNO_inplace_or_t)&default__inplace_or__unsupported)
 			return (*tp_inplace_or)(p_lhs, rhs);
 	}
 	return (*maketyped__inplace_or(tp_inplace_or))(tp_self, p_lhs, rhs);
@@ -1788,8 +1788,8 @@ DeeObject_TInplacePow(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs)
 	DeeNO_inplace_pow_t tp_inplace_pow;
 	if unlikely(!tp_self->tp_math || (tp_inplace_pow = tp_self->tp_math->tp_inplace_pow) == NULL) {
 		tp_inplace_pow = _DeeType_RequireNativeOperator(tp_self, inplace_pow);
-		if unlikely(tp_inplace_pow == (DeeNO_inplace_pow_t)&default__inplace_pow__unsupported ||
-		            tp_inplace_pow == (DeeNO_inplace_pow_t)&default__inplace_pow__badalloc)
+		if unlikely(tp_inplace_pow == (DeeNO_inplace_pow_t)&default__inplace_pow__badalloc ||
+		            tp_inplace_pow == (DeeNO_inplace_pow_t)&default__inplace_pow__unsupported)
 			return (*tp_inplace_pow)(p_lhs, rhs);
 	}
 	return (*maketyped__inplace_pow(tp_inplace_pow))(tp_self, p_lhs, rhs);
@@ -1800,8 +1800,8 @@ DeeObject_TInc(DeeTypeObject *tp_self, DeeObject **p_self) {
 	DeeNO_inc_t tp_inc;
 	if unlikely(!tp_self->tp_math || (tp_inc = tp_self->tp_math->tp_inc) == NULL) {
 		tp_inc = _DeeType_RequireNativeOperator(tp_self, inc);
-		if unlikely(tp_inc == (DeeNO_inc_t)&default__inc__unsupported ||
-		            tp_inc == (DeeNO_inc_t)&default__inc__badalloc)
+		if unlikely(tp_inc == (DeeNO_inc_t)&default__inc__badalloc ||
+		            tp_inc == (DeeNO_inc_t)&default__inc__unsupported)
 			return (*tp_inc)(p_self);
 	}
 	return (*maketyped__inc(tp_inc))(tp_self, p_self);
@@ -1824,8 +1824,8 @@ DeeObject_TEnter(DeeTypeObject *tp_self, DeeObject *self) {
 	DeeNO_enter_t tp_enter;
 	if unlikely(!tp_self->tp_with || (tp_enter = tp_self->tp_with->tp_enter) == NULL) {
 		tp_enter = _DeeType_RequireNativeOperator(tp_self, enter);
-		if unlikely(tp_enter == (DeeNO_enter_t)&default__enter__unsupported ||
-		            tp_enter == (DeeNO_enter_t)&default__enter__badalloc)
+		if unlikely(tp_enter == (DeeNO_enter_t)&default__enter__badalloc ||
+		            tp_enter == (DeeNO_enter_t)&default__enter__unsupported)
 			return (*tp_enter)(self);
 	}
 	return (*maketyped__enter(tp_enter))(tp_self, self);
@@ -1836,8 +1836,8 @@ DeeObject_TLeave(DeeTypeObject *tp_self, DeeObject *self) {
 	DeeNO_leave_t tp_leave;
 	if unlikely(!tp_self->tp_with || (tp_leave = tp_self->tp_with->tp_leave) == NULL) {
 		tp_leave = _DeeType_RequireNativeOperator(tp_self, leave);
-		if unlikely(tp_leave == (DeeNO_leave_t)&default__leave__unsupported ||
-		            tp_leave == (DeeNO_leave_t)&default__leave__badalloc)
+		if unlikely(tp_leave == (DeeNO_leave_t)&default__leave__badalloc ||
+		            tp_leave == (DeeNO_leave_t)&default__leave__unsupported)
 			return (*tp_leave)(self);
 	}
 	return (*maketyped__leave(tp_leave))(tp_self, self);
