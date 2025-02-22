@@ -148,7 +148,6 @@ typedef WUNUSED_T NONNULL_T((1, 2, 5)) int (DCALL *DeeNO_setattr_string_len_hash
 /* clang-format on */
 
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
-#if defined(CONFIG_BUILDING_DEEMON) || defined(__DEEMON__)
 
 /* Dee_TypeNativeOperator_ID */
 enum Dee_tno_id {
@@ -272,95 +271,7 @@ enum Dee_tno_id {
 	Dee_TNO_COUNT
 };
 
-struct Dee_tno_assign {
-	enum Dee_tno_id tnoa_id; /* Operator slot ID to write to */
-	Dee_funptr_t    tnoa_cb; /* [1..1] Function pointer to write to `tnoa_id' */
-};
 
-/* The max # of operator slots that might ever need to be assigned at once.
- * iow: this is the length of the longest non-looping dependency chain that
- *      can be formed using `default__*__with__*' callbacks below.
- * Example:
- *  - default__hasitem__with__bounditem
- *  - default__bounditem__with__getitem
- *  - default__getitem__with__getitem_index
- * Note that the following doesn't count because is can be shortened:
- *  - default__hasitem_index__with__hasitem
- *  - default__hasitem__with__bounditem
- *  - default__bounditem__with__getitem
- *  - default__getitem__with__getitem_index
- * Shorter version is:
- *  - default__hasitem_index__with__bounditem_index
- *  - default__bounditem_index__with__getitem_index */
-/*[[[deemon (print_TNO_ASSIGN_MAXLEN from "...src.deemon.method-hints.method-hints")();]]]*/
-/* { Dee_TNO_hasitem_string_len_hash,   &default__hasitem_string_len_hash__with__bounditem_string_len_hash }
- * { Dee_TNO_bounditem_string_len_hash, &default__bounditem_string_len_hash__with__bounditem_string_hash }
- * { Dee_TNO_bounditem_string_hash,     &default__bounditem_string_hash__with__getitem_string_hash }
- * { Dee_TNO_getitem_string_hash,       &default__getitem_string_hash__with__trygetitem_string_hash }
- * { Dee_TNO_trygetitem_string_hash,    &default__trygetitem_string_hash__with__trygetitem }
- * { Dee_TNO_trygetitem,                &default__trygetitem__with__getitem }
- * { Dee_TNO_getitem,                   &default__getitem__with__getitem_index }
- * { Dee_TNO_getitem_index,             &default__getitem_index__with__size__and__getitem_index_fast }
- * { Dee_TNO_size,                      &default__size__with__sizeob } */
-#define Dee_TNO_ASSIGN_MAXLEN 9
-/*[[[end]]]*/
-
-
-
-/* Looking at related operators that actually *are* present,
- * and assuming that `id' isn't implemented, return the most
- * applicable default implementation for the operator.
- *
- * e.g. Given a type that defines `tp_iter' and `id=Dee_TNO_foreach',
- *      this function would return `&default__foreach__with__iter'
- *
- * When no related operators are present (or `id' doesn't
- * have *any* related operators), return `NULL' instead.
- *
- * NOTE: This function does *!!NOT!!* return method hint pointers
- * @param actions: Actions that need to be performed (multiple assignments
- *                 might be necessary in case of a transitive dependency)
- *                 Stored actions must be performed in *REVERSE* order
- *                 The first (last-written) action is always for `id'
- * @return: The number of actions written to `actions' */
-INTDEF WUNUSED NONNULL((1)) size_t
-(DCALL DeeType_SelectMissingNativeOperator)(DeeTypeObject const *__restrict self, enum Dee_tno_id id,
-                                            struct Dee_tno_assign actions[Dee_TNO_ASSIGN_MAXLEN]);
-
-/* Return an actual, user-defined operator "id"
- * (*NOT* allowing stuff like `default__size__with__sizeob'
- * or `default__seq_operator_size__with__seq_operator_sizeob')
- * Also never returns `DeeType_GetNativeOperatorOOM()' or
- * `DeeType_GetNativeOperatorUnsupported()' */
-INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
-(DCALL DeeType_GetNativeOperatorWithoutDefaults)(DeeTypeObject const *__restrict self, enum Dee_tno_id id);
-
-/* Wrapper around `DeeType_SelectMissingNativeOperator' that checks if the
- * operator is already defined, and if not: see if can be substituted via
- * some other set of native operators (in which case: do that substitution
- * and then return the operator's function pointer) */
-INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
-(DCALL DeeType_GetNativeOperatorWithoutHints)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
-
-/* Ignoring method hints that might have been able to implement "id" along
- * the way, and assuming that `DeeType_GetNativeOperatorWithoutHints(from, id)'
- * returned `impl', make sure that `impl' can be (and is) inherited by `into'.
- *
- * This function is allowed to assume that "impl" really is what should be
- * inherited for the specified "id" (if it is not correct, everything breaks)
- *
- * @return: Indicative of a successful inherit (inherit may fail when "impl"
- *          is `default__*__with__*', and dependencies could not be written
- *          due to OOM, though in this case, no error is thrown) */
-INTDEF WUNUSED NONNULL((1, 2, 4)) bool
-(DCALL DeeType_InheritNativeOperatorWithoutHints)(DeeTypeObject *__restrict from,
-                                                  DeeTypeObject *__restrict into,
-                                                  enum Dee_tno_id id, Dee_funptr_t impl);
- 
-/* Same as `DeeType_GetNativeOperatorWithoutHints', but also load operators
- * from method hints (though don't inherit them from base-types, yet). */
-INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
-(DCALL DeeType_GetNativeOperatorWithoutInherit)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
 
 /* Same as `DeeType_GetNativeOperatorWithoutInherit', but actually also does the
  * operator inherit part (meaning that this is the low-level* master-function
@@ -368,60 +279,17 @@ INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
  * is currently set to "NULL" within its relevant type)
  * [*] The actual master function is `DeeType_GetNativeOperator', but that
  *     one only adds coalesce to `DeeType_GetNativeOperatorUnsupported()' */
-INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
+DFUNDEF WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperatorWithoutUnsupported)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
-
-/* Returns a special impl for "id" returned by:
- * - DeeType_GetNativeOperatorWithoutHints()
- * - DeeType_GetNativeOperatorWithoutInherit()
- * - DeeType_GetNativeOperatorWithoutUnsupported()
- * when it failed to allocate a necessary operator table. These impls behave
- * similar to `DeeType_GetNativeOperatorUnsupported()', except that rather
- * than calling `err_unimplemented_operator()', these call:
- * >> Dee_BadAlloc(type_tno_sizeof_table(oh_init_specs[id].ohis_table));
- * where "id" is the same as the given "id"
- *
- * Returns "NULL" if "id" isn't part of a sub-table. */
-INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorOOM[Dee_TNO_COUNT];
-#define DeeType_GetNativeOperatorOOM(id) _DeeType_GetNativeOperatorOOM[id]
 
 /* Same as `DeeType_GetNativeOperatorWithoutUnsupported()', but never returns NULL
  * (for any operator linked against a deemon user-code ID (e.g. "OPERATOR_ITER"))
  * and instead returns special implementations for each operator that simply call
  * `err_unimplemented_operator()' with the relevant arguments, before returning
  * whatever is indicative of an error in the context of the native operator. */
-INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
+DFUNDEF WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperator)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
 
-
-/* Returns the impl for "id" that calls `err_unimplemented_operator()'.
- * Returns "NULL" if "id" doesn't define a user-code ID */
-INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT];
-#define DeeType_GetNativeOperatorUnsupported(id) _DeeType_GetNativeOperatorUnsupported[id]
-
-
-/* Returns the ID of some native operator that should always be present
- * (as an impl `!= DeeType_GetNativeOperatorUnsupported(return)') in
- * types that are considered to be implementing `op'.
- * Returns `Dee_TNO_COUNT' when the operator does not have a native variant
- * The caller must ensure that `op < Dee_OPERATOR_USERCOUNT' */
-INTDEF enum Dee_tno_id const _DeeType_GetTnoOfOperator[Dee_OPERATOR_USERCOUNT];
-#define DeeType_GetTnoOfOperator(op) _DeeType_GetTnoOfOperator[op]
-
-/* The inverse of `DeeType_GetTnoOfOperator' */
-INTDEF Dee_operator_t const _DeeType_GetOperatorOfTno[Dee_TNO_COUNT];
-#define DeeType_GetOperatorOfTno(id) _DeeType_GetOperatorOfTno[id]
-
-
-/* Find the type where native operator "id" has been inherited from.
- * This function correctly handles:
- * - when "id" is implemented as an alias for another operator (in which case it
- *   return the origin of the operator's first dependency, or "self" if there are
- *   no dependencies)
- * - when "id" is implemented using a method hint, return the origin of that hint
- * - when "id" is not implemented at all, return "NULL" */
-INTDEF WUNUSED NONNULL((1)) DeeTypeObject *
-(DCALL DeeType_GetNativeOperatorOrigin)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
 
 /* Convenience wrapper for `DeeType_GetNativeOperator' that
  * already casts the function pointer into the proper type.
@@ -599,7 +467,150 @@ INTDEF WUNUSED NONNULL((1)) DeeTypeObject *
 /* clang-format on */
 
 
+#if defined(CONFIG_BUILDING_DEEMON) || defined(__DEEMON__)
+struct Dee_tno_assign {
+	enum Dee_tno_id tnoa_id; /* Operator slot ID to write to */
+	Dee_funptr_t    tnoa_cb; /* [1..1] Function pointer to write to `tnoa_id' */
+};
 
+/* The max # of operator slots that might ever need to be assigned at once.
+ * iow: this is the length of the longest non-looping dependency chain that
+ *      can be formed using `default__*__with__*' callbacks below.
+ * Example:
+ *  - default__hasitem__with__bounditem
+ *  - default__bounditem__with__getitem
+ *  - default__getitem__with__getitem_index
+ * Note that the following doesn't count because is can be shortened:
+ *  - default__hasitem_index__with__hasitem
+ *  - default__hasitem__with__bounditem
+ *  - default__bounditem__with__getitem
+ *  - default__getitem__with__getitem_index
+ * Shorter version is:
+ *  - default__hasitem_index__with__bounditem_index
+ *  - default__bounditem_index__with__getitem_index */
+/*[[[deemon (print_TNO_ASSIGN_MAXLEN from "...src.deemon.method-hints.method-hints")();]]]*/
+/* { Dee_TNO_hasitem_string_len_hash,   &default__hasitem_string_len_hash__with__bounditem_string_len_hash }
+ * { Dee_TNO_bounditem_string_len_hash, &default__bounditem_string_len_hash__with__bounditem_string_hash }
+ * { Dee_TNO_bounditem_string_hash,     &default__bounditem_string_hash__with__getitem_string_hash }
+ * { Dee_TNO_getitem_string_hash,       &default__getitem_string_hash__with__trygetitem_string_hash }
+ * { Dee_TNO_trygetitem_string_hash,    &default__trygetitem_string_hash__with__trygetitem }
+ * { Dee_TNO_trygetitem,                &default__trygetitem__with__getitem }
+ * { Dee_TNO_getitem,                   &default__getitem__with__getitem_index }
+ * { Dee_TNO_getitem_index,             &default__getitem_index__with__size__and__getitem_index_fast }
+ * { Dee_TNO_size,                      &default__size__with__sizeob } */
+#define Dee_TNO_ASSIGN_MAXLEN 9
+/*[[[end]]]*/
+
+
+/* Looking at related operators that actually *are* present,
+ * and assuming that `id' isn't implemented, return the most
+ * applicable default implementation for the operator.
+ *
+ * e.g. Given a type that defines `tp_iter' and `id=Dee_TNO_foreach',
+ *      this function would return `&default__foreach__with__iter'
+ *
+ * When no related operators are present (or `id' doesn't
+ * have *any* related operators), return `NULL' instead.
+ *
+ * NOTE: This function does *!!NOT!!* return method hint pointers
+ * @param actions: Actions that need to be performed (multiple assignments
+ *                 might be necessary in case of a transitive dependency)
+ *                 Stored actions must be performed in *REVERSE* order
+ *                 The first (last-written) action is always for `id'
+ * @return: The number of actions written to `actions' */
+INTDEF WUNUSED NONNULL((1)) size_t
+(DCALL DeeType_SelectMissingNativeOperator)(DeeTypeObject const *__restrict self, enum Dee_tno_id id,
+                                            struct Dee_tno_assign actions[Dee_TNO_ASSIGN_MAXLEN]);
+
+/* Return an actual, user-defined operator "id"
+ * (*NOT* allowing stuff like `default__size__with__sizeob'
+ * or `default__seq_operator_size__with__seq_operator_sizeob')
+ * Also never returns `DeeType_GetNativeOperatorOOM()' or
+ * `DeeType_GetNativeOperatorUnsupported()' */
+INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
+(DCALL DeeType_GetNativeOperatorWithoutDefaults)(DeeTypeObject const *__restrict self, enum Dee_tno_id id);
+
+/* Wrapper around `DeeType_SelectMissingNativeOperator' that checks if the
+ * operator is already defined, and if not: see if can be substituted via
+ * some other set of native operators (in which case: do that substitution
+ * and then return the operator's function pointer) */
+INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
+(DCALL DeeType_GetNativeOperatorWithoutHints)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
+
+/* Ignoring method hints that might have been able to implement "id" along
+ * the way, and assuming that `DeeType_GetNativeOperatorWithoutHints(from, id)'
+ * returned `impl', make sure that `impl' can be (and is) inherited by `into'.
+ *
+ * This function is allowed to assume that "impl" really is what should be
+ * inherited for the specified "id" (if it is not correct, everything breaks)
+ *
+ * @return: Indicative of a successful inherit (inherit may fail when "impl"
+ *          is `default__*__with__*', and dependencies could not be written
+ *          due to OOM, though in this case, no error is thrown) */
+INTDEF WUNUSED NONNULL((1, 2, 4)) bool
+(DCALL DeeType_InheritNativeOperatorWithoutHints)(DeeTypeObject *__restrict from,
+                                                  DeeTypeObject *__restrict into,
+                                                  enum Dee_tno_id id, Dee_funptr_t impl);
+ 
+/* Same as `DeeType_GetNativeOperatorWithoutHints', but also load operators
+ * from method hints (though don't inherit them from base-types, yet). */
+INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
+(DCALL DeeType_GetNativeOperatorWithoutInherit)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
+
+/* Returns a special impl for "id" returned by:
+ * - DeeType_GetNativeOperatorWithoutHints()
+ * - DeeType_GetNativeOperatorWithoutInherit()
+ * - DeeType_GetNativeOperatorWithoutUnsupported()
+ * when it failed to allocate a necessary operator table. These impls behave
+ * similar to `DeeType_GetNativeOperatorUnsupported()', except that rather
+ * than calling `err_unimplemented_operator()', these call:
+ * >> Dee_BadAlloc(type_tno_sizeof_table(oh_init_specs[id].ohis_table));
+ * where "id" is the same as the given "id"
+ *
+ * Returns "NULL" if "id" isn't part of a sub-table. */
+INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorOOM[Dee_TNO_COUNT];
+#define DeeType_GetNativeOperatorOOM(id) _DeeType_GetNativeOperatorOOM[id]
+
+/* Returns the impl for "id" that calls `err_unimplemented_operator()'.
+ * Returns "NULL" if "id" doesn't define a user-code ID */
+INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT];
+#define DeeType_GetNativeOperatorUnsupported(id) _DeeType_GetNativeOperatorUnsupported[id]
+
+
+/* Smallest unsigned integer type still able to represent
+ * all `enum Dee_tno_id' values (including `Dee_TNO_COUNT') */
+typedef uint8_t Dee_compact_tno_id_t;
+
+/* Returns the ID of some native operator that should always be present
+ * (as an impl `!= DeeType_GetNativeOperatorUnsupported(return)') in
+ * types that are considered to be implementing `op'.
+ * Returns `Dee_TNO_COUNT' when the operator does not have a native variant
+ * The caller must ensure that `op < Dee_OPERATOR_USERCOUNT' */
+INTDEF Dee_compact_tno_id_t const _DeeType_GetTnoOfOperator[Dee_OPERATOR_USERCOUNT];
+#define DeeType_GetTnoOfOperator(op) ((enum Dee_tno_id)_DeeType_GetTnoOfOperator[op])
+
+/* The inverse of `DeeType_GetTnoOfOperator' */
+INTDEF Dee_operator_t const _DeeType_GetOperatorOfTno[Dee_TNO_COUNT];
+#define DeeType_GetOperatorOfTno(id) _DeeType_GetOperatorOfTno[id]
+
+
+/* Find the type where native operator "id" has been inherited from.
+ * This function correctly handles:
+ * - when "id" is implemented as an alias for another operator (in which case it
+ *   return the origin of the operator's first dependency, or "self" if there are
+ *   no dependencies)
+ * - when "id" is implemented using a method hint, return the origin of that hint
+ * - when "id" is not implemented at all, return "NULL" */
+INTDEF WUNUSED NONNULL((1)) DeeTypeObject *
+(DCALL DeeType_GetNativeOperatorOrigin)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
+
+
+
+
+
+/************************************************************************/
+/* OPERATOR DEFAULT IMPLS                                               */
+/************************************************************************/
 
 /* Equivalence callbacks for native operators.
  *

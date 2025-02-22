@@ -2552,7 +2552,6 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 #define DeeSet_OperatorContains                                               DeeSeq_OperatorContains
 #define DeeSet_OperatorIter(self)                                             (*DeeType_RequireSetOperatorIter(Dee_TYPE(self)))(self)
 #define DeeSet_OperatorForeach(self, cb, arg)                                 (*DeeType_RequireSetOperatorForeach(Dee_TYPE(self)))(self, cb, arg)
-#define DeeSet_OperatorForeachPair(self, cb, arg)                             (*DeeType_RequireSetOperatorForeachPair(Dee_TYPE(self)))(self, cb, arg)
 #define DeeSet_OperatorSize(self)                                             (*DeeType_RequireSetOperatorSize(Dee_TYPE(self)))(self)
 #define DeeSet_OperatorSizeOb(self)                                           (*DeeType_RequireSetOperatorSizeOb(Dee_TYPE(self)))(self)
 #define DeeSet_OperatorHash(self)                                             (*DeeType_RequireSetOperatorHash(Dee_TYPE(self)))(self)
