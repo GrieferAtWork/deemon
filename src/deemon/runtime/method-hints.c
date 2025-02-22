@@ -2402,7 +2402,7 @@ find_method_hint_in_using(DeeTypeObject *__restrict self, enum Dee_tmh_id id,
 		}
 
 		/* Check for optimal case: all dependencies are natively present */
-		if (missing_dependencies[0] == Dee_TNO_COUNT) {
+		if (missing_dependencies[0] == Dee_TMH_COUNT) {
 			*p_nactions = 1;
 			return iter->miu_impl;
 		}
@@ -2411,7 +2411,7 @@ find_method_hint_in_using(DeeTypeObject *__restrict self, enum Dee_tmh_id id,
 		dep_actions = 1;
 		for (dep_i = 0; dep_i < COMPILER_LENOF(missing_dependencies); ++dep_i) {
 			size_t single_dep_actions;
-			if (missing_dependencies[dep_i] >= Dee_TNO_COUNT)
+			if (missing_dependencies[dep_i] >= Dee_TMH_COUNT)
 				break; /* No more dependencies... */
 			if (!find_method_hint_in_using(self, missing_dependencies[dep_i],
 			                               absent, absent_count, &single_dep_actions))
