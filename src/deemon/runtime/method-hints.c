@@ -1452,10 +1452,11 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_operator_a
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_union, NULL, Dee_SEQCLASS_SET, &default__set_operator_add__with_callattr_union),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_add = {
+PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_add = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_add,
 	/* .misos_operators = */ {
 		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_add, NULL, Dee_SEQCLASS_SET, OPERATOR_ADD),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_or, NULL, Dee_SEQCLASS_SET, OPERATOR_OR),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1492,10 +1493,11 @@ PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_xor =
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
-PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_inplace_add = {
+PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_inplace_add = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_inplace_add,
 	/* .misos_operators = */ {
 		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_add, NULL, Dee_SEQCLASS_SET, OPERATOR_INPLACE_ADD),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_or, NULL, Dee_SEQCLASS_SET, OPERATOR_INPLACE_OR),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1978,10 +1980,11 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_map_operator_a
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_union, NULL, Dee_SEQCLASS_MAP, &default__map_operator_add__with_callattr_union),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_add = {
+PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_map_operator_add = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_add,
 	/* .misos_operators = */ {
 		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_add, NULL, Dee_SEQCLASS_MAP, OPERATOR_ADD),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_or, NULL, Dee_SEQCLASS_MAP, OPERATOR_OR),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -2018,10 +2021,11 @@ PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_xor =
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
-PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_inplace_add = {
+PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_map_operator_inplace_add = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_inplace_add,
 	/* .misos_operators = */ {
 		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_add, NULL, Dee_SEQCLASS_MAP, OPERATOR_INPLACE_ADD),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_or, NULL, Dee_SEQCLASS_MAP, OPERATOR_INPLACE_OR),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -2786,16 +2790,23 @@ Dee_tmh_isdefault_or_usrtype(enum Dee_tmh_id id, Dee_funptr_t funptr);
  * - Return "DeeType_GetMethodHint(into, id)" if non-NULL
  * - If "DeeType_GetMethodHint()" returned NULL ("into" can't
  *   implement the hint), return the "%{unsupported}" impl
- * Otherwise, return "NULL" */
+ * Otherwise, return "NULL"
+ *
+ * The caller must ensure that `id' can be used to implement
+ * native operators. */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 3)) Dee_funptr_t
-(DCALL DeeType_MapDefaultMethodHintImplForInherit)(DeeTypeObject *into,
-                                                   enum Dee_tmh_id id,
-                                                   Dee_funptr_t impl) {
+(DCALL DeeType_MapDefaultMethodHintOperatorImplForInherit)(DeeTypeObject *into,
+                                                           enum Dee_tmh_id id,
+                                                           Dee_funptr_t impl) {
 	Dee_funptr_t result;
+	ASSERT(id < Dee_TMH_COUNT);
 
-	/* Only map default impls! */
-	if (!Dee_tmh_isdefault_or_usrtype(id, impl))
-		return NULL;
+	/* Only map default impls! (but also allow default wrappers like "default__set_operator_add") */
+	ASSERTF(mh_init_specs[id].mis_operators, "Method hint cannot be used for operators");
+	if (impl != mh_init_specs[id].mis_operators->misos_default) {
+		if (!Dee_tmh_isdefault_or_usrtype(id, impl))
+			return NULL;
+	}
 
 	/* Load the relevant method hint impl for "into". */
 	result = DeeType_GetMethodHint(into, id);

@@ -105,6 +105,23 @@ nope:
 	return false;
 }
 
+/* Same as `oh_init_spec_mhint_canuse', but returns
+ * true even when "type" is the hint's abstract origin. */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+oh_init_spec_mhint_caninherit(struct oh_init_spec_mhint const *__restrict self,
+                              DeeTypeObject const *__restrict type) {
+	if (self->ohismh_implements) {
+		if (!DeeType_Implements(type, self->ohismh_implements))
+			goto nope;
+	} else if (self->ohismh_seqclass != Dee_SEQCLASS_UNKNOWN) {
+		if (DeeType_GetSeqClass(type) != self->ohismh_seqclass)
+			goto nope;
+	}
+	return true;
+nope:
+	return false;
+}
+
 #define OH_INIT_SPEC_MHINT_END { Dee_TMH_COUNT, NULL, 0 }
 #define OH_INIT_SPEC_MHINT_INIT(ohismh_id, ohismh_implements, ohismh_seqclass) \
 	{                                                                          \
@@ -1058,6 +1075,11 @@ PRIVATE struct oh_init_spec_class tpconst oh_class_or[2] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__or__with__OR, OPERATOR_OR, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
 };
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_or[3] = {
+	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_add, NULL, Dee_SEQCLASS_SET),
+	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_add, NULL, Dee_SEQCLASS_MAP),
+	OH_INIT_SPEC_MHINT_END
+};
 PRIVATE struct oh_init_spec_class tpconst oh_class_inplace_or[2] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__inplace_or__with__INPLACE_OR, OPERATOR_INPLACE_OR, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
@@ -1065,6 +1087,11 @@ PRIVATE struct oh_init_spec_class tpconst oh_class_inplace_or[2] = {
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_inplace_or[2] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__inplace_or__with__or, Dee_TNO_or, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
+};
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_inplace_or[3] = {
+	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_inplace_add, NULL, Dee_SEQCLASS_SET),
+	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_inplace_add, NULL, Dee_SEQCLASS_MAP),
+	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_spec_class tpconst oh_class_xor[2] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__xor__with__XOR, OPERATOR_XOR, OPERATOR_USERCOUNT),
@@ -1285,8 +1312,8 @@ INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[113] = {
 	/* tp_math->tp_inplace_shr               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_shr), oh_class_inplace_shr, oh_impls_inplace_shr, NULL, NULL),
 	/* tp_math->tp_and                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_and), oh_class_and, NULL, oh_mhints_and, NULL),
 	/* tp_math->tp_inplace_and               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_and), oh_class_inplace_and, oh_impls_inplace_and, oh_mhints_inplace_and, NULL),
-	/* tp_math->tp_or                        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_or), oh_class_or, NULL, NULL, NULL),
-	/* tp_math->tp_inplace_or                */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_or), oh_class_inplace_or, oh_impls_inplace_or, NULL, NULL),
+	/* tp_math->tp_or                        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_or), oh_class_or, NULL, oh_mhints_or, NULL),
+	/* tp_math->tp_inplace_or                */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_or), oh_class_inplace_or, oh_impls_inplace_or, oh_mhints_inplace_or, NULL),
 	/* tp_math->tp_xor                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_xor), oh_class_xor, NULL, oh_mhints_xor, NULL),
 	/* tp_math->tp_inplace_xor               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_xor), oh_class_inplace_xor, oh_impls_inplace_xor, oh_mhints_inplace_xor, NULL),
 	/* tp_math->tp_pow                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_pow), oh_class_pow, NULL, NULL, NULL),
@@ -1621,7 +1648,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) bool
 	struct oh_init_spec const *specs = &oh_init_specs[id];
 	struct oh_init_spec_impl const *impls = specs->ohis_impls;
 	ASSERT(from != into);
-	ASSERT(DeeType_GetNativeOperatorWithoutHints(from, id) == impl);
+	/* vvv can't be asserted because "DeeType_MapTMHInTNOForInherit()" is allowed to change the impl! */
+	/*ASSERT(DeeType_GetNativeOperatorWithoutHints(from, id) == impl);*/
 
 	/* Check if the given "impl" is one of the defaults that has dependencies.
 	 * If that is the case, then we must ensure that those dependencies are also
@@ -1745,9 +1773,9 @@ DeeType_MapTMHInTNOForInherit(DeeTypeObject *__restrict from,
 		 * default impl, must inherit as "default__set_operator_add". */
 		for (; iter->ohismh_id < Dee_TMH_COUNT; ++iter) {
 			Dee_funptr_t mapped;
-			if (!oh_init_spec_mhint_canuse(iter, from))
+			if (!oh_init_spec_mhint_caninherit(iter, from))
 				continue; /* The hint must obviously be usable by "from" */
-			mapped = DeeType_MapDefaultMethodHintImplForInherit(into, iter->ohismh_id, value);
+			mapped = DeeType_MapDefaultMethodHintOperatorImplForInherit(into, iter->ohismh_id, value);
 			if (mapped) {
 				/* In order to allow being inherited by "into",
 				 * that type must support the operator, too! */
@@ -1890,17 +1918,8 @@ INTERN WUNUSED NONNULL((1)) DeeTypeObject *
 	mhints = specs->ohis_mhints;
 	if (mhints) {
 		for (; mhints->ohismh_id < Dee_TMH_COUNT; ++mhints) {
-			if (mhints->ohismh_implements) {
-				if (!DeeType_Implements(self, mhints->ohismh_implements))
-					continue;
-				if (self == mhints->ohismh_implements)
-					continue; /* Don't inherit from the abstract origin */
-			} else if (mhints->ohismh_seqclass != Dee_SEQCLASS_UNKNOWN) {
-				if (DeeType_GetSeqClass(self) != mhints->ohismh_seqclass)
-					continue;
-				if (DeeType_IsSeqClassBase(self, mhints->ohismh_seqclass))
-					continue; /* Don't inherit from the abstract origin */
-			}
+			if (!oh_init_spec_mhint_canuse(mhints, self))
+				continue;
 			if (funptr == DeeType_GetPrivateMethodHint(self, self, mhints->ohismh_id))
 				return self; /* Implemented via method hint within "self" */
 		}

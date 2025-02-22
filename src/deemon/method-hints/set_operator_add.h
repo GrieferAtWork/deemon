@@ -34,6 +34,7 @@ err:
 
 /* {"a"} + {"b"}   ->   {"a", "b"} */
 [[operator(Set.OPERATOR_ADD: tp_math->tp_add)]]
+[[operator(Set.OPERATOR_OR: tp_math->tp_or)]]
 [[wunused]] DREF DeeObject *
 __set_add__.set_operator_add([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *rhs)

@@ -2275,9 +2275,10 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_add[5] = {
 	(Dee_funptr_t)&default__set_operator_add__empty,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_add[3] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_add[4] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__set_operator_add__with_callobjectcache___set_add__, &tdefault__set_operator_add__with_callobjectcache___set_add__),
 	MH_SUPER_MAP_TYPED_INIT(&usrtype__add__with__ADD, &tusrtype__add__with__ADD),
+	MH_SUPER_MAP_TYPED_INIT(&usrtype__or__with__OR, &tusrtype__or__with__OR),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_sub[5] = {
@@ -2323,10 +2324,12 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_inplace_add[5] = {
 	(Dee_funptr_t)&default__set_operator_inplace_add__with__set_insertall,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_inplace_add[4] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_inplace_add[6] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__set_operator_inplace_add__with_callobjectcache___set_inplace_add__, &tdefault__set_operator_inplace_add__with_callobjectcache___set_inplace_add__),
 	MH_SUPER_MAP_TYPED_INIT(&usrtype__inplace_add__with__INPLACE_ADD, &tusrtype__inplace_add__with__INPLACE_ADD),
 	MH_SUPER_MAP_TYPED_INIT(&default__inplace_add__with__add, &tdefault__inplace_add__with__add),
+	MH_SUPER_MAP_TYPED_INIT(&usrtype__inplace_or__with__INPLACE_OR, &tusrtype__inplace_or__with__INPLACE_OR),
+	MH_SUPER_MAP_TYPED_INIT(&default__inplace_or__with__or, &tdefault__inplace_or__with__or),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_inplace_sub[5] = {
@@ -3136,9 +3139,10 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_add[5] = {
 	(Dee_funptr_t)&default__map_operator_add__empty,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_add[3] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_add[4] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__map_operator_add__with_callobjectcache___map_add__, &tdefault__map_operator_add__with_callobjectcache___map_add__),
 	MH_SUPER_MAP_TYPED_INIT(&usrtype__add__with__ADD, &tusrtype__add__with__ADD),
+	MH_SUPER_MAP_TYPED_INIT(&usrtype__or__with__OR, &tusrtype__or__with__OR),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_sub[5] = {
@@ -3184,10 +3188,12 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_inplace_add[5] = {
 	(Dee_funptr_t)&default__map_operator_inplace_add__with__map_update,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_inplace_add[4] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_inplace_add[6] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__map_operator_inplace_add__with_callobjectcache___map_inplace_add__, &tdefault__map_operator_inplace_add__with_callobjectcache___map_inplace_add__),
 	MH_SUPER_MAP_TYPED_INIT(&usrtype__inplace_add__with__INPLACE_ADD, &tusrtype__inplace_add__with__INPLACE_ADD),
 	MH_SUPER_MAP_TYPED_INIT(&default__inplace_add__with__add, &tdefault__inplace_add__with__add),
+	MH_SUPER_MAP_TYPED_INIT(&usrtype__inplace_or__with__INPLACE_OR, &tusrtype__inplace_or__with__INPLACE_OR),
+	MH_SUPER_MAP_TYPED_INIT(&default__inplace_or__with__or, &tdefault__inplace_or__with__or),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_inplace_sub[5] = {

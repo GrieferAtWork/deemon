@@ -2217,11 +2217,14 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
  * - Return "DeeType_GetMethodHint(into, id)" if non-NULL
  * - If "DeeType_GetMethodHint()" returned NULL ("into" can't
  *   implement the hint), return the "%{unsupported}" impl
- * Otherwise, return "NULL" */
+ * Otherwise, return "NULL"
+ *
+ * The caller must ensure that `id' can be used to implement
+ * native operators. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 3)) Dee_funptr_t
-(DCALL DeeType_MapDefaultMethodHintImplForInherit)(DeeTypeObject *into,
-                                                   enum Dee_tmh_id id,
-                                                   Dee_funptr_t impl);
+(DCALL DeeType_MapDefaultMethodHintOperatorImplForInherit)(DeeTypeObject *into,
+                                                           enum Dee_tmh_id id,
+                                                           Dee_funptr_t impl);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Returns a pointer to method hint's entry in `self->tp_method_hints' */

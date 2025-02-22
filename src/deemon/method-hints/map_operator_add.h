@@ -34,6 +34,7 @@ err:
 
 /* {"a":1} + {"b":2}   ->   {"a":1, "b":2} */
 [[operator(Mapping.OPERATOR_ADD: tp_math->tp_add)]]
+[[operator(Mapping.OPERATOR_OR: tp_math->tp_or)]]
 [[wunused]] DREF DeeObject *
 __map_add__.map_operator_add([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *rhs)
