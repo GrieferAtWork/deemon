@@ -16360,7 +16360,8 @@ DEFINE_OPERATOR(int, UnpackWithUnbound,
                 (DeeObject *__restrict self, size_t dst_length,
                  /*out*/ DREF DeeObject **__restrict dst)) {
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	return DeeObject_InvokeMethodHint(seq_unpack_ub, self, dst_length, dst_length, dst);
+	size_t result = DeeObject_InvokeMethodHint(seq_unpack_ub, self, dst_length, dst_length, dst);
+	return likely(result != (size_t)-1) ? 0 : -1;
 #else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_unpack_ub) ||
