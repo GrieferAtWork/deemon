@@ -78,3 +78,56 @@ assert (MySet1() | {10}) is SetUnion from rt;
 assert (MySet2() | {10}) == "Works!";
 assert (MySet3() | {10}) == "Works!";
 
+/* Make sure that a "raw" Sequence-instance is empty. */
+assert !Sequence();
+assert #Sequence() == 0;
+assert TRY(Sequence()[0]) is IndexError;
+
+/* Make sure that a Sequence sub-class that doesn't provide any way */
+class UnsupportedSeq: Sequence {}
+assert TRY(UnsupportedSeq().operator iter()) is NotImplemented;
+assert TRY(UnsupportedSeq().find("foo")) is NotImplemented;
+assert TRY(UnsupportedSeq()[42]) is NotImplemented;
+assert TRY(#UnsupportedSeq()) is NotImplemented;
+
+
+/* Make sure that a Sequence sub-class that *does* provide
+ * operators has those operators used for everything */
+class SupportedSeq: Sequence {
+	@@A `__seq_getitem__` function is all it takes for us to implement all
+	@@read-only sequence operations. Even `operator iter` is supported, which
+	@@simply calls this function with incrementing integers until @IndexError
+	@@is thrown
+	public __seq_getitem__(index: int): string {
+		switch (index) {
+		case 0: return "first";
+		case 1: return "second";
+		case 2: return "third";
+		default:
+			throw IndexError();
+		}
+	}
+}
+
+/* FIXME: This doesn't work because user-classes define default compare operators :(
+ *        Figure out a way to resolve this issue (which is actually intended behavior
+ *        right now) */
+//assert SupportedSeq() == {"first", "second", "third"};
+/* vvv Not even this works, because "Sequence" thinks that the "operator ==" impl of
+ *     SupportedSeq complies with "Sequence", meaning it invokes the generate operator. */
+//assert (SupportedSeq() as Sequence) == {"first", "second", "third"};
+/* vvv This also doesn't work since method hints select the "this != {}" impl as it
+ *     thinks that "SupportedSeq" supports sequence compare operators. */
+//assert SupportedSeq();
+assert (SupportedSeq() as Set) == {"first", "second", "third"};
+assert SupportedSeq().enumerate() == {(0, "first"), (1, "second"), (2, "third")};
+assert #SupportedSeq() == 3;
+assert SupportedSeq()[0] == "first";
+assert SupportedSeq()[1] == "second";
+assert SupportedSeq()[2] == "third";
+assert SupportedSeq().find("second") == 1;
+assert SupportedSeq().find("fourth") == -1;
+assert "third" in SupportedSeq();
+assert "fourth" !in SupportedSeq();
+
+

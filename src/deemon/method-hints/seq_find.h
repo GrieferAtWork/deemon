@@ -80,7 +80,11 @@ err:
 __seq_find__.seq_find([[nonnull]] DeeObject *self,
                       [[nonnull]] DeeObject *item,
                       size_t start, size_t end)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported({
+	err_seq_unsupportedf(self, "__seq_find__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
+	return (size_t)Dee_COMPARE_ERR;
+})}
+%{$empty = 0}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_find_cb)]] {
 	Dee_ssize_t status;
 	union seq_find_data data;
@@ -153,7 +157,11 @@ __seq_find__.seq_find_with_key([[nonnull]] DeeObject *self,
                                [[nonnull]] DeeObject *item,
                                size_t start, size_t end,
                                [[nonnull]] DeeObject *key)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported({
+	err_seq_unsupportedf(self, "__seq_find__(%r, %" PRFuSIZ ", %" PRFuSIZ ", %r)", item, start, end, key);
+	return (size_t)Dee_COMPARE_ERR;
+})}
+%{$empty = 0}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_find_with_key_cb)]] {
 	Dee_ssize_t status;
 	struct seq_find_with_key_data data;

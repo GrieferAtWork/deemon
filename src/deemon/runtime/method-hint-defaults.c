@@ -10766,7 +10766,8 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_find__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end) {
-	return (size_t)err_seq_unsupportedf(self, "__seq_find__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
+	err_seq_unsupportedf(self, "__seq_find__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
+	return (size_t)Dee_COMPARE_ERR;
 }
 
 #ifndef DEFINED_seq_find_cb
@@ -10879,7 +10880,8 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_find_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-	return (size_t)err_seq_unsupportedf(self, "__seq_find__(%r, %" PRFuSIZ ", %" PRFuSIZ ", %r)", item, start, end, key);
+	err_seq_unsupportedf(self, "__seq_find__(%r, %" PRFuSIZ ", %" PRFuSIZ ", %r)", item, start, end, key);
+	return (size_t)Dee_COMPARE_ERR;
 }
 
 #ifndef DEFINED_seq_find_with_key_cb
@@ -10996,7 +10998,8 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_rfind__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end) {
-	return (size_t)err_seq_unsupportedf(self, "__seq_rfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
+	err_seq_unsupportedf(self, "__seq_rfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
+	return (size_t)Dee_COMPARE_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -11126,7 +11129,8 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_rfind_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-	return (size_t)err_seq_unsupportedf(self, "__seq_rfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ", %r)", item, start, end, key);
+	err_seq_unsupportedf(self, "__seq_rfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ", %r)", item, start, end, key);
+	return (size_t)Dee_COMPARE_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
