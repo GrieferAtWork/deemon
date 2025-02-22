@@ -778,24 +778,24 @@ final class NativeMethod {
 			return {
 				"LOCAL_GETATTR": (self) ->
 					f"mhcache_call({tpSelfExpr}, {
-							tpSelfExpr}->tp_mhcache->mhc_get_{hintAttr}, 1, &{self})",
+							tpSelfExpr}->tp_mhcache->mhc_get_{hintAttr}, 1, (DeeObject *const *)&{self})",
 				"LOCAL_BOUNDATTR": (self) ->
 					f"mhcache_call_bound({tpSelfExpr}, {
-							tpSelfExpr}->tp_mhcache->mhc_get_{hintAttr}, 1, &{self})",
+							tpSelfExpr}->tp_mhcache->mhc_get_{hintAttr}, 1, (DeeObject *const *)&{self})",
 				"LOCAL_DELATTR": (self) ->
 					f"mhcache_call_int({tpSelfExpr}, {
-							tpSelfExpr}->tp_mhcache->mhc_del_{hintAttr}, 1, &{self})",
+							tpSelfExpr}->tp_mhcache->mhc_del_{hintAttr}, 1, (DeeObject *const *)&{self})",
 				"LOCAL_SETATTR": (self, value) ->
 					f"mhcache_thiscall_int({tpSelfExpr}, {
-							tpSelfExpr}->tp_mhcache->mhc_set_{hintAttr}, {self}, 1, &{value})",
+							tpSelfExpr}->tp_mhcache->mhc_set_{hintAttr}, {self}, 1, (DeeObject *const *)&{value})",
 				"LOCAL_CALLATTR": (self, argc, argv) ->
 					f"mhcache_thiscall_result({tpSelfExpr}, {
 							tpSelfExpr}->tp_mhcache->mhc_get_{
-							hintAttr}, 1, &{self}, {argc}, {argv})",
+							hintAttr}, 1, (DeeObject *const *)&{self}, {argc}, {argv})",
 				"LOCAL_CALLATTRF": (self, args...) ->
 					f"mhcache_thiscall_resultf({tpSelfExpr}, {
 							tpSelfExpr}->tp_mhcache->mhc_get_{
-							hintAttr}, 1, &{self}, {", ".join(args)})",
+							hintAttr}, 1, (DeeObject *const *)&{self}, {", ".join(args)})",
 			};
 		} else {
 			return {
@@ -806,7 +806,7 @@ final class NativeMethod {
 				"LOCAL_CALLATTR": (self, argc, argv) -> {
 					if (argc == "0") {
 						return f"mhcache_call({tpSelfExpr}, {
-								tpSelfExpr}->tp_mhcache->mhc_{hintAttr}, 1, &{self})";
+								tpSelfExpr}->tp_mhcache->mhc_{hintAttr}, 1, (DeeObject *const *)&{self})";
 					}
 					return f"mhcache_thiscall({tpSelfExpr}, {
 							tpSelfExpr}->tp_mhcache->mhc_{hintAttr}, {

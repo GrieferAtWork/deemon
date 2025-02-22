@@ -311,7 +311,7 @@ default__seq_operator_bool__with_callobjectcache___seq_bool__(DeeObject *__restr
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_operator_bool__with_callobjectcache___seq_bool__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_bool__, 1, &self);
+	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_bool__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -406,7 +406,7 @@ default__seq_operator_sizeob__with_callobjectcache___seq_size__(DeeObject *__res
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_operator_sizeob__with_callobjectcache___seq_size__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_size__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_size__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -514,7 +514,7 @@ default__seq_operator_iter__with_callobjectcache___seq_iter__(DeeObject *__restr
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_operator_iter__with_callobjectcache___seq_iter__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_iter__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_iter__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -2721,7 +2721,7 @@ default__seq_operator_hash__with_callobjectcache___seq_hash__(DeeObject *__restr
 	int temp;
 	Dee_hash_t result;
 	DREF DeeObject *resultob;
-	resultob = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_hash__, 1, &self);
+	resultob = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_hash__, 1, (DeeObject *const *)&self);
 	if unlikely(!resultob)
 		goto err;
 	temp = DeeObject_AsUIntX(resultob, &result);
@@ -5134,7 +5134,7 @@ default__seq_makeenumeration__with_callobjectcache___seq_enumerate_items__(DeeOb
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_makeenumeration__with_callobjectcache___seq_enumerate_items__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_enumerate_items__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_enumerate_items__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -6333,7 +6333,7 @@ default__seq_trygetfirst__with_callobjectcache___seq_first__(DeeObject *__restri
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_trygetfirst__with_callobjectcache___seq_first__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_first__, 1, &self);
+	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_first__, 1, (DeeObject *const *)&self);
 	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
 		result = ITER_DONE;
 	return result;
@@ -6415,7 +6415,7 @@ default__seq_getfirst__with_callobjectcache___seq_first__(DeeObject *__restrict 
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_getfirst__with_callobjectcache___seq_first__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_first__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_first__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -6462,7 +6462,7 @@ default__seq_boundfirst__with_callobjectcache___seq_first__(DeeObject *__restric
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_boundfirst__with_callobjectcache___seq_first__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call_bound(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_first__, 1, &self);
+	return mhcache_call_bound(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_first__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -6509,7 +6509,7 @@ default__seq_delfirst__with_callobjectcache___seq_first__(DeeObject *__restrict 
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_delfirst__with_callobjectcache___seq_first__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call_int(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_del___seq_first__, 1, &self);
+	return mhcache_call_int(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_del___seq_first__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -6546,7 +6546,7 @@ default__seq_setfirst__with_callobjectcache___seq_first__(DeeObject *self, DeeOb
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_setfirst__with_callobjectcache___seq_first__(Dee_TYPE(self), self, value);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_thiscall_int(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_set___seq_first__, self, 1, &value);
+	return mhcache_thiscall_int(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_set___seq_first__, self, 1, (DeeObject *const *)&value);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -6584,7 +6584,7 @@ default__seq_trygetlast__with_callobjectcache___seq_last__(DeeObject *__restrict
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_trygetlast__with_callobjectcache___seq_last__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_last__, 1, &self);
+	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_last__, 1, (DeeObject *const *)&self);
 	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
 		result = ITER_DONE;
 	return result;
@@ -6677,7 +6677,7 @@ default__seq_getlast__with_callobjectcache___seq_last__(DeeObject *__restrict se
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_getlast__with_callobjectcache___seq_last__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_last__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_last__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -6729,7 +6729,7 @@ default__seq_boundlast__with_callobjectcache___seq_last__(DeeObject *__restrict 
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_boundlast__with_callobjectcache___seq_last__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call_bound(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_last__, 1, &self);
+	return mhcache_call_bound(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_last__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -6783,7 +6783,7 @@ default__seq_dellast__with_callobjectcache___seq_last__(DeeObject *__restrict se
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_dellast__with_callobjectcache___seq_last__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call_int(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_del___seq_last__, 1, &self);
+	return mhcache_call_int(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_del___seq_last__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -6824,7 +6824,7 @@ default__seq_setlast__with_callobjectcache___seq_last__(DeeObject *self, DeeObje
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_setlast__with_callobjectcache___seq_last__(Dee_TYPE(self), self, value);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_thiscall_int(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_set___seq_last__, self, 1, &value);
+	return mhcache_thiscall_int(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_set___seq_last__, self, 1, (DeeObject *const *)&value);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -6868,7 +6868,7 @@ default__seq_cached__with_callobjectcache___seq_cached__(DeeObject *__restrict s
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_cached__with_callobjectcache___seq_cached__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_cached__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_cached__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -6922,7 +6922,7 @@ default__seq_frozen__with_callobjectcache___seq_frozen__(DeeObject *__restrict s
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_frozen__with_callobjectcache___seq_frozen__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_frozen__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_frozen__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -6959,7 +6959,7 @@ default__seq_any__with_callobjectcache___seq_any__(DeeObject *__restrict self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_any__with_callobjectcache___seq_any__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_any__, 1, &self);
+	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_any__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -7254,7 +7254,7 @@ default__seq_all__with_callobjectcache___seq_all__(DeeObject *__restrict self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_all__with_callobjectcache___seq_all__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_all__, 1, &self);
+	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_all__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -7557,7 +7557,7 @@ default__seq_parity__with_callobjectcache___seq_parity__(DeeObject *__restrict s
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_parity__with_callobjectcache___seq_parity__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_parity__, 1, &self);
+	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_parity__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -8208,7 +8208,7 @@ default__seq_min__with_callobjectcache___seq_min__(DeeObject *__restrict self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_min__with_callobjectcache___seq_min__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_min__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_min__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -8576,7 +8576,7 @@ default__seq_max__with_callobjectcache___seq_max__(DeeObject *__restrict self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_max__with_callobjectcache___seq_max__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_max__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_max__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -8944,7 +8944,7 @@ default__seq_sum__with_callobjectcache___seq_sum__(DeeObject *__restrict self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__seq_sum__with_callobjectcache___seq_sum__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_sum__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_sum__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -11715,7 +11715,7 @@ default__seq_clear__with_callobjectcache___seq_clear__(DeeObject *__restrict sel
 	return tdefault__seq_clear__with_callobjectcache___seq_clear__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_clear__, 1, &self);
+	result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_clear__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);
@@ -14501,7 +14501,7 @@ default__set_operator_iter__with_callobjectcache___set_iter__(DeeObject *__restr
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__set_operator_iter__with_callobjectcache___set_iter__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_iter__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_iter__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -14603,7 +14603,7 @@ default__set_operator_sizeob__with_callobjectcache___set_size__(DeeObject *__res
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__set_operator_sizeob__with_callobjectcache___set_size__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_size__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_size__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -14692,7 +14692,7 @@ default__set_operator_hash__with_callobjectcache___set_hash__(DeeObject *__restr
 	int temp;
 	Dee_hash_t result;
 	DREF DeeObject *resultob;
-	resultob = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_hash__, 1, &self);
+	resultob = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_hash__, 1, (DeeObject *const *)&self);
 	if unlikely(!resultob)
 		goto err;
 	temp = DeeObject_AsUIntX(resultob, &result);
@@ -15214,7 +15214,7 @@ default__set_operator_inv__with_callobjectcache___set_size__(DeeObject *__restri
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__set_operator_inv__with_callobjectcache___set_size__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_size__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_size__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -15702,7 +15702,7 @@ default__set_frozen__with_callobjectcache___set_frozen__(DeeObject *__restrict s
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__set_frozen__with_callobjectcache___set_frozen__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___set_frozen__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___set_frozen__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -16197,7 +16197,7 @@ default__set_pop__with_callobjectcache___set_pop__(DeeObject *self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__set_pop__with_callobjectcache___set_pop__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_pop__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_pop__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -16343,7 +16343,7 @@ default__map_operator_iter__with_callobjectcache___map_iter__(DeeObject *__restr
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__map_operator_iter__with_callobjectcache___map_iter__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_iter__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_iter__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -16453,7 +16453,7 @@ default__map_operator_sizeob__with_callobjectcache___map_size__(DeeObject *__res
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__map_operator_sizeob__with_callobjectcache___map_size__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_size__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_size__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -17804,7 +17804,7 @@ default__map_keys__with_callobjectcache___map_keys__(DeeObject *__restrict self)
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__map_keys__with_callobjectcache___map_keys__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___map_keys__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___map_keys__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -17855,7 +17855,7 @@ default__map_iterkeys__with_callobjectcache___map_iterkeys__(DeeObject *__restri
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__map_iterkeys__with_callobjectcache___map_iterkeys__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___map_iterkeys__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___map_iterkeys__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -17928,7 +17928,7 @@ default__map_values__with_callobjectcache___map_values__(DeeObject *__restrict s
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__map_values__with_callobjectcache___map_values__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___map_values__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___map_values__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -17979,7 +17979,7 @@ default__map_itervalues__with_callobjectcache___map_itervalues__(DeeObject *__re
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__map_itervalues__with_callobjectcache___map_itervalues__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___map_itervalues__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___map_itervalues__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -18219,7 +18219,7 @@ default__map_makeenumeration__with_callobjectcache___map_enumerate_items__(DeeOb
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__map_makeenumeration__with_callobjectcache___map_enumerate_items__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_enumerate_items__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_enumerate_items__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -19199,7 +19199,7 @@ default__map_frozen__with_callobjectcache___map_frozen__(DeeObject *__restrict s
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__map_frozen__with_callobjectcache___map_frozen__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___map_frozen__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___map_frozen__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -20085,7 +20085,7 @@ default__map_popitem__with_callobjectcache___map_popitem__(DeeObject *self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__map_popitem__with_callobjectcache___map_popitem__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_popitem__, 1, &self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_popitem__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -20184,7 +20184,7 @@ err:
 /* seq_operator_bool */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__seq_operator_bool__with_callobjectcache___seq_bool__(DeeTypeObject *tp_self, DeeObject *self) {
-	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_bool__, 1, &self);
+	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_bool__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -20195,13 +20195,13 @@ err:
 /* seq_operator_sizeob */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_operator_sizeob__with_callobjectcache___seq_size__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_size__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_size__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_operator_iter */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_operator_iter__with_callobjectcache___seq_iter__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_iter__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_iter__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_operator_getitem */
@@ -20334,7 +20334,7 @@ tdefault__seq_operator_hash__with_callobjectcache___seq_hash__(DeeTypeObject *tp
 	int temp;
 	Dee_hash_t result;
 	DREF DeeObject *resultob;
-	resultob = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_hash__, 1, &self);
+	resultob = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_hash__, 1, (DeeObject *const *)&self);
 	if unlikely(!resultob)
 		goto err;
 	temp = DeeObject_AsUIntX(resultob, &result);
@@ -20493,7 +20493,7 @@ err:
 /* seq_makeenumeration */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_makeenumeration__with_callobjectcache___seq_enumerate_items__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_enumerate_items__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_enumerate_items__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_makeenumeration_with_range */
@@ -20587,7 +20587,7 @@ err:
 /* seq_trygetfirst */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_trygetfirst__with_callobjectcache___seq_first__(DeeTypeObject *tp_self, DeeObject *self) {
-	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_first__, 1, &self);
+	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_first__, 1, (DeeObject *const *)&self);
 	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
 		result = ITER_DONE;
 	return result;
@@ -20596,31 +20596,31 @@ tdefault__seq_trygetfirst__with_callobjectcache___seq_first__(DeeTypeObject *tp_
 /* seq_getfirst */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_getfirst__with_callobjectcache___seq_first__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_first__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_first__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_boundfirst */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__seq_boundfirst__with_callobjectcache___seq_first__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call_bound(tp_self, tp_self->tp_mhcache->mhc_get___seq_first__, 1, &self);
+	return mhcache_call_bound(tp_self, tp_self->tp_mhcache->mhc_get___seq_first__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_delfirst */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__seq_delfirst__with_callobjectcache___seq_first__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call_int(tp_self, tp_self->tp_mhcache->mhc_del___seq_first__, 1, &self);
+	return mhcache_call_int(tp_self, tp_self->tp_mhcache->mhc_del___seq_first__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_setfirst */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__seq_setfirst__with_callobjectcache___seq_first__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value) {
-	return mhcache_thiscall_int(tp_self, tp_self->tp_mhcache->mhc_set___seq_first__, self, 1, &value);
+	return mhcache_thiscall_int(tp_self, tp_self->tp_mhcache->mhc_set___seq_first__, self, 1, (DeeObject *const *)&value);
 }
 
 /* seq_trygetlast */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_trygetlast__with_callobjectcache___seq_last__(DeeTypeObject *tp_self, DeeObject *self) {
-	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_last__, 1, &self);
+	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_last__, 1, (DeeObject *const *)&self);
 	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
 		result = ITER_DONE;
 	return result;
@@ -20629,43 +20629,43 @@ tdefault__seq_trygetlast__with_callobjectcache___seq_last__(DeeTypeObject *tp_se
 /* seq_getlast */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_getlast__with_callobjectcache___seq_last__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_last__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_last__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_boundlast */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__seq_boundlast__with_callobjectcache___seq_last__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call_bound(tp_self, tp_self->tp_mhcache->mhc_get___seq_last__, 1, &self);
+	return mhcache_call_bound(tp_self, tp_self->tp_mhcache->mhc_get___seq_last__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_dellast */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__seq_dellast__with_callobjectcache___seq_last__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call_int(tp_self, tp_self->tp_mhcache->mhc_del___seq_last__, 1, &self);
+	return mhcache_call_int(tp_self, tp_self->tp_mhcache->mhc_del___seq_last__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_setlast */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__seq_setlast__with_callobjectcache___seq_last__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value) {
-	return mhcache_thiscall_int(tp_self, tp_self->tp_mhcache->mhc_set___seq_last__, self, 1, &value);
+	return mhcache_thiscall_int(tp_self, tp_self->tp_mhcache->mhc_set___seq_last__, self, 1, (DeeObject *const *)&value);
 }
 
 /* seq_cached */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_cached__with_callobjectcache___seq_cached__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_cached__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_cached__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_frozen */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_frozen__with_callobjectcache___seq_frozen__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_frozen__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___seq_frozen__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_any */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__seq_any__with_callobjectcache___seq_any__(DeeTypeObject *tp_self, DeeObject *self) {
-	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_any__, 1, &self);
+	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_any__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -20714,7 +20714,7 @@ err:
 /* seq_all */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__seq_all__with_callobjectcache___seq_all__(DeeTypeObject *tp_self, DeeObject *self) {
-	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_all__, 1, &self);
+	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_all__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -20763,7 +20763,7 @@ err:
 /* seq_parity */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__seq_parity__with_callobjectcache___seq_parity__(DeeTypeObject *tp_self, DeeObject *self) {
-	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_parity__, 1, &self);
+	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_parity__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -20841,7 +20841,7 @@ tdefault__seq_reduce_with_range_and_init__with_callobjectcache___seq_reduce__(De
 /* seq_min */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_min__with_callobjectcache___seq_min__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_min__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_min__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_min_with_key */
@@ -20869,7 +20869,7 @@ tdefault__seq_min_with_range_and_key__with_callobjectcache___seq_min__(DeeTypeOb
 /* seq_max */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_max__with_callobjectcache___seq_max__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_max__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_max__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_max_with_key */
@@ -20897,7 +20897,7 @@ tdefault__seq_max_with_range_and_key__with_callobjectcache___seq_max__(DeeTypeOb
 /* seq_sum */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__seq_sum__with_callobjectcache___seq_sum__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_sum__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_sum__, 1, (DeeObject *const *)&self);
 }
 
 /* seq_sum_with_range */
@@ -21316,7 +21316,7 @@ tdefault__seq_xchitem_index__with_callobjectcache___seq_xchitem__(DeeTypeObject 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__seq_clear__with_callobjectcache___seq_clear__(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *result;
-	result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_clear__, 1, &self);
+	result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_clear__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);
@@ -21639,13 +21639,13 @@ err:
 /* set_operator_iter */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__set_operator_iter__with_callobjectcache___set_iter__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_iter__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_iter__, 1, (DeeObject *const *)&self);
 }
 
 /* set_operator_sizeob */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__set_operator_sizeob__with_callobjectcache___set_size__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_size__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_size__, 1, (DeeObject *const *)&self);
 }
 
 /* set_operator_hash */
@@ -21663,7 +21663,7 @@ tdefault__set_operator_hash__with_callobjectcache___set_hash__(DeeTypeObject *tp
 	int temp;
 	Dee_hash_t result;
 	DREF DeeObject *resultob;
-	resultob = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_hash__, 1, &self);
+	resultob = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_hash__, 1, (DeeObject *const *)&self);
 	if unlikely(!resultob)
 		goto err;
 	temp = DeeObject_AsUIntX(resultob, &result);
@@ -21741,7 +21741,7 @@ tdefault__set_operator_ge__with_callobjectcache___set_ge__(DeeTypeObject *tp_sel
 /* set_operator_inv */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__set_operator_inv__with_callobjectcache___set_size__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_size__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_size__, 1, (DeeObject *const *)&self);
 }
 
 /* set_operator_add */
@@ -21827,7 +21827,7 @@ err:
 /* set_frozen */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__set_frozen__with_callobjectcache___set_frozen__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___set_frozen__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___set_frozen__, 1, (DeeObject *const *)&self);
 }
 
 /* set_unify */
@@ -21889,7 +21889,7 @@ err:
 /* set_pop */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__set_pop__with_callobjectcache___set_pop__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_pop__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_pop__, 1, (DeeObject *const *)&self);
 }
 
 /* set_pop_with_default */
@@ -21901,13 +21901,13 @@ tdefault__set_pop_with_default__with_callobjectcache___set_pop__(DeeTypeObject *
 /* map_operator_iter */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__map_operator_iter__with_callobjectcache___map_iter__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_iter__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_iter__, 1, (DeeObject *const *)&self);
 }
 
 /* map_operator_sizeob */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__map_operator_sizeob__with_callobjectcache___map_size__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_size__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_size__, 1, (DeeObject *const *)&self);
 }
 
 /* map_operator_getitem */
@@ -21954,25 +21954,25 @@ tdefault__map_operator_contains__with_callobjectcache___map_contains__(DeeTypeOb
 /* map_keys */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__map_keys__with_callobjectcache___map_keys__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___map_keys__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___map_keys__, 1, (DeeObject *const *)&self);
 }
 
 /* map_iterkeys */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__map_iterkeys__with_callobjectcache___map_iterkeys__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___map_iterkeys__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___map_iterkeys__, 1, (DeeObject *const *)&self);
 }
 
 /* map_values */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__map_values__with_callobjectcache___map_values__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___map_values__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___map_values__, 1, (DeeObject *const *)&self);
 }
 
 /* map_itervalues */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__map_itervalues__with_callobjectcache___map_itervalues__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___map_itervalues__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___map_itervalues__, 1, (DeeObject *const *)&self);
 }
 
 /* map_enumerate */
@@ -22010,7 +22010,7 @@ err:
 /* map_makeenumeration */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__map_makeenumeration__with_callobjectcache___map_enumerate_items__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_enumerate_items__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_enumerate_items__, 1, (DeeObject *const *)&self);
 }
 
 /* map_makeenumeration_with_range */
@@ -22168,7 +22168,7 @@ err:
 /* map_frozen */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__map_frozen__with_callobjectcache___map_frozen__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___map_frozen__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___map_frozen__, 1, (DeeObject *const *)&self);
 }
 
 /* map_setold */
@@ -22322,7 +22322,7 @@ tdefault__map_pop_with_default__with_callobjectcache___map_pop__(DeeTypeObject *
 /* map_popitem */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__map_popitem__with_callobjectcache___map_popitem__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_popitem__, 1, &self);
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_popitem__, 1, (DeeObject *const *)&self);
 }
 /*[[[end]]]*/
 /* clang-format on */
