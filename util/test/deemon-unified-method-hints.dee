@@ -82,6 +82,8 @@ assert (MySet3() | {10}) == "Works!";
 assert !Sequence();
 assert #Sequence() == 0;
 assert TRY(Sequence()[0]) is IndexError;
+assert Sequence().find("foo") == -1;
+assert Sequence().rfind("foo") == -1;
 
 /* Make sure that a Sequence sub-class that doesn't provide any way */
 class UnsupportedSeq: Sequence {}

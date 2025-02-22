@@ -10770,6 +10770,11 @@ default__seq_find__unsupported(DeeObject *self, DeeObject *item, size_t start, s
 	return (size_t)Dee_COMPARE_ERR;
 }
 
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+default__seq_find__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end)) {
+	return (size_t)-1;
+}
+
 #ifndef DEFINED_seq_find_cb
 #define DEFINED_seq_find_cb
 union seq_find_data {
@@ -10882,6 +10887,11 @@ INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_find_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	err_seq_unsupportedf(self, "__seq_find__(%r, %" PRFuSIZ ", %" PRFuSIZ ", %r)", item, start, end, key);
 	return (size_t)Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+default__seq_find_with_key__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end), DeeObject *UNUSED(key)) {
+	return (size_t)-1;
 }
 
 #ifndef DEFINED_seq_find_with_key_cb

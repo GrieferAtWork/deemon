@@ -1159,7 +1159,7 @@ INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL default__seq_find__with_callattr___s
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL default__seq_find__with_callobjectcache___seq_find__(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL tdefault__seq_find__with_callobjectcache___seq_find__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL default__seq_find__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end);
-#define default__seq_find__empty (*(size_t (DCALL *)(DeeObject *, DeeObject *, size_t, size_t))&_DeeNone_rets0_4)
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL default__seq_find__empty(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL default__seq_find__with__seq_enumerate_index(DeeObject *self, DeeObject *item, size_t start, size_t end);
 
 /* seq_find_with_key */
@@ -1168,7 +1168,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_find_with_key__with_
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_find_with_key__with_callobjectcache___seq_find__(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 3, 6)) size_t DCALL tdefault__seq_find_with_key__with_callobjectcache___seq_find__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_find_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-#define default__seq_find_with_key__empty (*(size_t (DCALL *)(DeeObject *, DeeObject *, size_t, size_t, DeeObject *))&_DeeNone_rets0_5)
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_find_with_key__empty(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_find_with_key__with__seq_enumerate_index(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
 /* seq_rfind */
@@ -1177,7 +1177,7 @@ INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL default__seq_rfind__with_callattr___
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL default__seq_rfind__with_callobjectcache___seq_rfind__(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL tdefault__seq_rfind__with_callobjectcache___seq_rfind__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL default__seq_rfind__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end);
-#define default__seq_rfind__empty (*(size_t (DCALL *)(DeeObject *, DeeObject *, size_t, size_t))&_DeeNone_rets0_4)
+#define default__seq_rfind__empty (*(size_t (DCALL *)(DeeObject *, DeeObject *, size_t, size_t))&default__seq_find__empty)
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL default__seq_rfind__with__seq_enumerate_index_reverse(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL default__seq_rfind__with__seq_enumerate_index(DeeObject *self, DeeObject *item, size_t start, size_t end);
 
@@ -1187,7 +1187,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_rfind_with_key__with
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_rfind_with_key__with_callobjectcache___seq_rfind__(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 3, 6)) size_t DCALL tdefault__seq_rfind_with_key__with_callobjectcache___seq_rfind__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_rfind_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-#define default__seq_rfind_with_key__empty (*(size_t (DCALL *)(DeeObject *, DeeObject *, size_t, size_t, DeeObject *))&_DeeNone_rets0_5)
+#define default__seq_rfind_with_key__empty (*(size_t (DCALL *)(DeeObject *, DeeObject *, size_t, size_t, DeeObject *))&default__seq_find_with_key__empty)
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_rfind_with_key__with__seq_enumerate_index_reverse(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_rfind_with_key__with__seq_enumerate_index(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
