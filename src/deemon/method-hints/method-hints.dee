@@ -2175,8 +2175,12 @@ function printNativeOperatorExportedApi() {
 						fastForwardImpls.map(e -> f"{opVarName} == {e}"))
 				})");
 				local usedFunPtr = opVarName;
-				if (#fastForwardImpls == 1)
-					usedFunPtr = fastForwardImpls.first;
+				/* vvv doing this would be totally fine, but it creates an unsuppressable warning
+				 *     when compiling using GCC: "function called through a non-compatible type"
+				 *     Obviously, this is total garbage, since the types *ARE* binary-compatible,
+				 *     but what do I know... */
+				//if (#fastForwardImpls == 1)
+				//	usedFunPtr = fastForwardImpls.first;
 				print(f"			return (*{usedFunPtr})({
 					", ".join(nativeOperator.params.each.name)
 				});");

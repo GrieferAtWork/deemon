@@ -766,7 +766,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 	if unlikely((tp_assign = tp_self->tp_init.tp_assign) == NULL) {
 		tp_assign = _DeeType_RequireNativeOperator(tp_self, assign);
 		if unlikely(tp_assign == (DeeNO_assign_t)&default__assign__unsupported)
-			return (*(DeeNO_assign_t)&default__assign__unsupported)(self, value);
+			return (*tp_assign)(self, value);
 	}
 	return (*maketyped__assign(tp_assign))(tp_self, self, value);
 }
@@ -777,7 +777,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 	if unlikely((tp_move_assign = tp_self->tp_init.tp_move_assign) == NULL) {
 		tp_move_assign = _DeeType_RequireNativeOperator(tp_self, move_assign);
 		if unlikely(tp_move_assign == (DeeNO_move_assign_t)&default__move_assign__unsupported)
-			return (*(DeeNO_move_assign_t)&default__move_assign__unsupported)(self, value);
+			return (*tp_move_assign)(self, value);
 	}
 	return (*maketyped__move_assign(tp_move_assign))(tp_self, self, value);
 }
@@ -788,7 +788,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	if unlikely((tp_call = tp_self->tp_call) == NULL) {
 		tp_call = _DeeType_RequireNativeOperator(tp_self, call);
 		if unlikely(tp_call == (DeeNO_call_t)&default__call__unsupported)
-			return (*(DeeNO_call_t)&default__call__unsupported)(self, argc, argv);
+			return (*tp_call)(self, argc, argv);
 	}
 	return (*maketyped__call(tp_call))(tp_self, self, argc, argv);
 }
@@ -799,7 +799,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	if unlikely((tp_call_kw = tp_self->tp_call_kw) == NULL) {
 		tp_call_kw = _DeeType_RequireNativeOperator(tp_self, call_kw);
 		if unlikely(tp_call_kw == (DeeNO_call_kw_t)&default__call_kw__unsupported)
-			return (*(DeeNO_call_kw_t)&default__call_kw__unsupported)(self, argc, argv, kw);
+			return (*tp_call_kw)(self, argc, argv, kw);
 	}
 	return (*maketyped__call_kw(tp_call_kw))(tp_self, self, argc, argv, kw);
 }
@@ -810,7 +810,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	if unlikely((tp_iter_next = tp_self->tp_iter_next) == NULL) {
 		tp_iter_next = _DeeType_RequireNativeOperator(tp_self, iter_next);
 		if unlikely(tp_iter_next == (DeeNO_iter_next_t)&default__iter_next__unsupported)
-			return (*(DeeNO_iter_next_t)&default__iter_next__unsupported)(self);
+			return (*tp_iter_next)(self);
 	}
 	return (*maketyped__iter_next(tp_iter_next))(tp_self, self);
 }
