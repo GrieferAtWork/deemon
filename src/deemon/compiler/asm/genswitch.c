@@ -452,20 +452,9 @@ do_generate_block:
 			goto done;
 
 		/* Make sure that all constant cases share the same common SP value. */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
-		for (i = 0; i < jump_table->rd_vsize; ++i)
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-		for (i = 0; i <= jump_table->rd_mask; ++i)
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-		{
+		for (i = 0; i < jump_table->rd_vsize; ++i) {
 			DeeObject *case_target;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 			case_target = _DeeRoDict_GetRealVTab(jump_table)[i].di_value;
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-			if (!jump_table->rd_elem[i].rdi_key)
-				continue;
-			case_target = jump_table->rd_elem[i].rdi_value;
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 			if unlikely(!DeeTuple_Check(case_target))
 				goto done; /* Shouldn't happen */
 			if unlikely(DeeTuple_SIZE(case_target) != 2)
@@ -494,29 +483,14 @@ update_constants:
 			current_assembler.a_constv[default_cid] = DeeTuple_GET(default_target, 0);
 			Dee_Incref(DeeTuple_GET(default_target, 0));
 			Dee_Decref_likely(default_target);
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
-			for (i = 0; i < jump_table->rd_vsize; ++i)
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-			for (i = 0; i <= jump_table->rd_mask; ++i)
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-			{
+			for (i = 0; i < jump_table->rd_vsize; ++i) {
 				DeeObject *case_target;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 				struct Dee_dict_item *item;
 				item = &_DeeRoDict_GetRealVTab(jump_table)[i];
 				case_target = item->di_value;
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-				if (!jump_table->rd_elem[i].rdi_key)
-					continue;
-				case_target = jump_table->rd_elem[i].rdi_value;
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 				ASSERT(DeeTuple_Check(case_target));
 				ASSERT(DeeTuple_SIZE(case_target) == 2);
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 				item->di_value = DeeTuple_GET(case_target, 0);
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-				jump_table->rd_elem[i].rdi_value = DeeTuple_GET(case_target, 0);
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 				Dee_Incref(DeeTuple_GET(case_target, 0));
 				Dee_Decref_likely(case_target);
 			}

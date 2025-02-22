@@ -178,9 +178,6 @@ err:
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
-
-
 /* NOTE: Caller must ensure that "self" is optimized
  * @return: * :        read-lock to "self" is still held; success
  * @return: NULL:      read-lock to "self" was released; error was thrown
@@ -229,28 +226,6 @@ rodict_fromdict_locked_or_unlock(DeeDictObject *__restrict self) {
 	DeeObject_Init(result, &DeeRoDict_Type);
 	return result;
 }
-
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-/* NOTE: _Always_ inherits references to `key' and `value' */
-PRIVATE NONNULL((1, 3, 4)) void DCALL
-rodict_insert_nocheck(DeeRoDictObject *__restrict self, Dee_hash_t hash,
-                      /*inherit(always)*/ DREF DeeObject *key,
-                      /*inherit(always)*/ DREF DeeObject *value) {
-	Dee_hash_t i, perturb;
-	struct rodict_item *item;
-	perturb = i = DeeRoDict_HashSt(self, hash);
-	for (;; DeeRoDict_HashNx(i, perturb)) {
-		item = &self->rd_elem[i & self->rd_mask];
-		if (!item->rdi_key)
-			break;
-	}
-
-	/* Fill in the item. */
-	item->rdi_hash  = hash;
-	item->rdi_key   = key;   /* Inherit reference. */
-	item->rdi_value = value; /* Inherit reference. */
-}
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 
 /* NOTE: _Always_ inherits references to `key' */
@@ -506,13 +481,11 @@ check_dict_again:
 		DeeDict_LockRead(val);
 		if (!DeeDict_SIZE(val)) {
 			/* Simple case: The Dict is empty, so we can just pack an empty Dict at runtime. */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 unlock_and_push_empty_dict:
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 			DeeDict_LockEndRead(val);
 			return asm_gpack_dict(0);
 		}
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+
 		/* Ensure that "val" is optimized */
 		if unlikely(_DeeDict_CanOptimizeVTab(val)) {
 			bool atomic_upgrade = DeeDict_LockUpgrade(val);
@@ -542,51 +515,6 @@ unlock_and_push_empty_dict:
 				goto check_dict_again;
 			goto err;
 		}
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-		for (i = Dee_dict_vidx_tovirt(0);
-		     Dee_dict_vidx_virt_lt_real(i, val->d_vsize); ++i) {
-			struct Dee_dict_item *item;
-			item = &_DeeDict_GetVirtVTab(val)[i];
-			if (!item->di_key)
-				continue;
-			if (!asm_allowconst(item->di_key) ||
-			    !asm_allowconst(item->di_value)) {
-				DeeDict_LockEndRead(val);
-				goto push_dict_parts;
-			}
-		}
-		num_items = DeeDict_SIZE(val);
-		ro_mask   = RODICT_INITIAL_MASK;
-		while (ro_mask <= num_items)
-			ro_mask = (ro_mask << 1) | 1;
-		ro_mask = (ro_mask << 1) | 1;
-		rodict  = (DREF DeeRoDictObject *)DeeObject_TryCalloc(SIZEOF_RODICT(ro_mask));
-		if unlikely(!rodict) {
-			DeeDict_LockEndRead(val);
-			if (Dee_CollectMemory(SIZEOF_RODICT(ro_mask)))
-				goto check_dict_again;
-			goto err;
-		}
-		rodict->rd_size = num_items;
-		rodict->rd_mask = ro_mask;
-
-		/* Pack all key-value pairs into the ro-Dict. */
-		for (i = Dee_dict_vidx_tovirt(0);
-		     Dee_dict_vidx_virt_lt_real(i, val->d_vsize); ++i) {
-			struct Dee_dict_item *item;
-			item = &_DeeDict_GetVirtVTab(val)[i];
-			if (!item->di_key)
-				continue;
-			Dee_Incref(item->di_key);
-			Dee_Incref(item->di_value);
-			rodict_insert_nocheck(rodict,
-			                      item->di_hash,
-			                      item->di_key,
-			                      item->di_value);
-		}
-		DeeDict_LockEndRead(val);
-		DeeObject_Init(rodict, &DeeRoDict_Type);
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 		/* All right! we've got the ro-Dict all packed together!
 		 * -> Register it as a constant. */

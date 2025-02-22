@@ -766,22 +766,14 @@ PRIVATE struct ccall_optimization tpconst cco_Dict[] = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cco_RoDict_bool(struct fungen *__restrict self, vstackaddr_t argc) {
 	(void)argc;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 	return vbool_field_nonzero(self, offsetof(DeeRoDictObject, rd_vsize));
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-	return vbool_field_nonzero(self, offsetof(DeeRoDictObject, rd_size));
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 }
 
 /* this -> size */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cco_RoDict_size(struct fungen *__restrict self, vstackaddr_t argc) {
 	(void)argc;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 	return vsize_field_uint(self, offsetof(DeeRoDictObject, rd_vsize));
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-	return vsize_field_uint(self, offsetof(DeeRoDictObject, rd_size));
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 }
 
 PRIVATE struct ccall_optimization tpconst cco_RoDict[] = {

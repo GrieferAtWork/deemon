@@ -413,16 +413,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
-/* Experimental feature switch: RoDict-s retain the order in which items are added. */
-#if (!defined(CONFIG_EXPERIMENTAL_ORDERED_RODICTS) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_ORDERED_RODICTS))
-#if 1
-#define CONFIG_EXPERIMENTAL_ORDERED_RODICTS
-#else
-#define CONFIG_NO_EXPERIMENTAL_ORDERED_RODICTS
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_ORDERED_RODICTS */
-
 
 /* Experimental feature switch: Use the new, generated + unified method hint (and operator) system. */
 #if (!defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) && \

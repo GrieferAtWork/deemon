@@ -51,7 +51,6 @@ check_foreach_args_kw(size_t argc, DeeObject *const *argv, DeeObject *kw,
 			/* No extra values in here :) */
 		} else if (tp_kw == &DeeRoDict_Type) {
 			DeeRoDictObject *kwob = (DeeRoDictObject *)kw;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 			for (i = 0; i < kwob->rd_vsize; ++i) {
 				struct Dee_dict_item *item;
 				item = &_DeeRoDict_GetRealVTab(kwob)[i];
@@ -60,17 +59,6 @@ check_foreach_args_kw(size_t argc, DeeObject *const *argv, DeeObject *kw,
 				if (!(*check)(item->di_value))
 					goto nope;
 			}
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-			for (i = 0; i <= kwob->rd_mask; ++i) {
-				struct rodict_item *item = &kwob->rd_elem[i];
-				if (!item->rdi_key)
-					continue;
-				/*if (!(*check)(it->rdi_key))
-					goto nope;*/ /* For keywords, only the value matters */
-				if (!(*check)(item->rdi_value))
-					goto nope;
-			}
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 		} else {
 			/* TODO: Support for `DeeKwdsMapping_Type' */
 			/* TODO: Support for `DeeBlackListKwds_Type' */
@@ -110,7 +98,6 @@ check_foreach_elem(DeeObject *seq, bool (DCALL *check)(DeeObject *ob)) {
 	} else if (tp_seq == &DeeRoDict_Type) {
 		size_t i;
 		DeeRoDictObject *me = (DeeRoDictObject *)seq;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 		for (i = 0; i < me->rd_vsize; ++i) {
 			struct Dee_dict_item *item;
 			item = &_DeeRoDict_GetRealVTab(me)[i];
@@ -119,17 +106,6 @@ check_foreach_elem(DeeObject *seq, bool (DCALL *check)(DeeObject *ob)) {
 			if (!(*check)(item->di_value))
 				goto nope;
 		}
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-		for (i = 0; i <= me->rd_mask; ++i) {
-			struct rodict_item *item = &me->rd_elem[i];
-			if (!item->rdi_key)
-				continue;
-			if (!(*check)(item->rdi_key))
-				goto nope;
-			if (!(*check)(item->rdi_value))
-				goto nope;
-		}
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 		return true;
 	}
 nope:

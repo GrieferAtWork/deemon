@@ -1669,7 +1669,6 @@ DECL_END
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_init_fromrodict_noincref(Dict *__restrict self, DeeRoDictObject *__restrict other) {
 	size_t tabssz;
@@ -1734,7 +1733,6 @@ dict_init_fromrodict_keysonly(Dict *__restrict self, DeeRoDictObject *__restrict
 	}
 	return result;
 }
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF Dict *DCALL
 dict_new_copy(Dict *__restrict self) {
@@ -1765,13 +1763,11 @@ DeeDict_FromSequence(DeeObject *__restrict self) {
 		 * Optimize "self" and then duplicate its control structures */
 		return (DREF DeeObject *)dict_new_copy((Dict *)self);
 	}
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 	if (DeeRoDict_Check(self)) {
 		/* Special optimization when "self" is an RoDict:
 		 * Duplicate its control structures */
 		return DeeDict_FromRoDict(self);
 	}
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 	hint = DeeObject_SizeFast(self);
 	if likely(hint != (size_t)-1) {
 		result = (DREF Dict *)DeeDict_TryNewWithHint(hint);
@@ -1806,7 +1802,6 @@ DeeDict_FromSequenceInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeDict_FromRoDict(DeeObject *__restrict self) {
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 	DREF Dict *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeRoDict_Type);
 	result = DeeGCObject_MALLOC(Dict);
@@ -1824,9 +1819,6 @@ err_r:
 	DeeGCObject_FREE(result);
 err:
 	return NULL;
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-	return DeeDict_FromSequence(self);
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 }
 
 
@@ -2088,10 +2080,8 @@ dict_initfrom_seq(Dict *__restrict self, DeeObject *seq) {
 		return dict_init_fromcopy(self, (Dict *)seq);
 
 	/* Special optimization when "seq" is an RoDict: Duplicate its control structures */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 	if (DeeRoDict_Check(seq))
 		return dict_init_fromrodict(self, (DeeRoDictObject *)seq);
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 	hint = DeeObject_SizeFast(seq);
 	if likely(hint != (size_t)-1) {
@@ -3714,7 +3704,6 @@ err:
 	return NULL;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Dict *DCALL
 dict_from_rodict_keys(DeeRoDictObject *dict_keys, DeeObject *value, DeeObject *valuefor) {
 	DREF Dict *result;
@@ -3737,7 +3726,6 @@ err_r:
 err:
 	return NULL;
 }
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Dict *DCALL
 dict_fromkeys(DeeObject *keys, DeeObject *value, DeeObject *valuefor) {
@@ -3754,10 +3742,8 @@ dict_fromkeys(DeeObject *keys, DeeObject *value, DeeObject *valuefor) {
 		DeeTypeObject *tp_mapping_of_keys = Dee_TYPE(mapping_of_keys);
 		if (tp_mapping_of_keys == &DeeDict_Type)
 			return dict_from_dict_keys((Dict *)mapping_of_keys, value, valuefor);
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 		if (tp_mapping_of_keys == &DeeRoDict_Type)
 			return dict_from_rodict_keys((DeeRoDictObject *)mapping_of_keys, value, valuefor);
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 	} else if (tp_keys == &DeeHashSet_Type) {
 		/* Special optimization when "keys" is a HashSet: Duplicate its control structures */
 		/* TODO: do this once "HashSet" uses the same data structure as Dict. */
@@ -3988,11 +3974,7 @@ PRIVATE struct type_getset tpconst dict_getsets[] = {
 	TYPE_GETSET_BOUND("lastvalue", &dict_getlastvalue, &dict_dellast, &dict_setlastvalue, &dict_nonempty_as_bound, "->" D_TValue),
 
 	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 	TYPE_GETTER(STR_frozen, &DeeRoDict_FromDict, "->?#Frozen"),
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence, "->?#Frozen"),
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 	TYPE_GETTER_F("__sizeof__", &dict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETTER_F("__hidxio__", &dict___hidxio__, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"

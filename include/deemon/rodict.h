@@ -22,9 +22,7 @@
 
 #include "api.h"
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 #include "dict.h"
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 #include "object.h"
 
 #include <stddef.h>
@@ -51,7 +49,6 @@ DECL_BEGIN
  * NOTE: `_RoDict' is exported as `deemon.Dict.Frozen' */
 typedef struct Dee_rodict_object DeeRoDictObject;
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 #ifdef DEE_SOURCE
 #define Dee_rodict_builder rodict_builder
 #endif /* DEE_SOURCE */
@@ -65,6 +62,11 @@ struct Dee_rodict_object {
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_dict_item, rd_vtab);      /* [rd_vsize] Dict key-item pairs (never contains deleted keys). */
 //	COMPILER_FLEXIBLE_ARRAY(byte_t,               rd_htab_data); /* Dict hash-table. */
 };
+
+/* The main `_RoDict' container class. */
+DDATDEF DeeTypeObject DeeRoDict_Type;
+#define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_RoDict' is final */
+#define DeeRoDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeRoDict_Type)
 
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoDict_FromSequence(DeeObject *__restrict self);
@@ -157,99 +159,6 @@ Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restr
 #define _DeeRoDict_GetVirtVTab(self) ((self)->rd_vtab - 1)
 #define _DeeRoDict_GetRealVTab(self) ((self)->rd_vtab)
 #endif /* DEE_SOURCE */
-
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-
-#ifdef DEE_SOURCE
-#define Dee_rodict_item rodict_item
-#endif /* DEE_SOURCE */
-
-struct Dee_rodict_item {
-	DREF DeeObject *rdi_key;   /* [0..1][const] Dictionary item key. */
-	DREF DeeObject *rdi_value; /* [1..1][valid_if(rdi_key)][const] Dictionary item value. */
-	Dee_hash_t      rdi_hash;  /* [valid_if(rdi_key)][const] Hash of `rdi_key' (with a starting value of `0'). */
-};
-
-struct Dee_rodict_object {
-	Dee_OBJECT_HEAD
-	size_t                                          rd_mask;  /* [const][!0] Allocated dictionary mask. */
-	size_t                                          rd_size;  /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
-	COMPILER_FLEXIBLE_ARRAY(struct Dee_rodict_item, rd_elem); /* [rd_mask+1] Dict key-item pairs. */
-};
-
-/* Special empty instance of `DeeRoDict_Type'
- * NOTE: This is _NOT_ a singleton! */
-#ifdef GUARD_DEEMON_OBJECTS_RODICT_C
-struct Dee_empty_rodict_object {
-	Dee_OBJECT_HEAD
-	size_t                 rd_mask;    /* [== 0] */
-	size_t                 rd_size;    /* [== 0] */
-	struct Dee_rodict_item rd_elem[1]; /* [== {{NULL,NULL,0}}] */
-};
-DDATDEF struct Dee_empty_rodict_object DeeRoDict_EmptyInstance;
-#define Dee_EmptyRoDict ((DeeObject *)&DeeRoDict_EmptyInstance)
-#else /* GUARD_DEEMON_OBJECTS_RODICT_C */
-DDATDEF DeeObject DeeRoDict_EmptyInstance;
-#define Dee_EmptyRoDict (&DeeRoDict_EmptyInstance)
-#endif /* !GUARD_DEEMON_OBJECTS_RODICT_C */
-
-/* Hash-iteration control. */
-#define DeeRoDict_HashSt(self, hash)  ((hash) & (self)->rd_mask)
-#define DeeRoDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define DeeRoDict_HashIt(self, i)     ((self)->rd_elem+((i) & (self)->rd_mask))
-
-/* Internal functions for constructing a read-only Dict object. */
-DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_New(void);
-DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
-DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_TryNewWithHint(size_t num_items);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeRoDict_Insert(/*in|out*/ DREF DeeRoDictObject **__restrict p_self,
-                 DeeObject *key, DeeObject *value);
-
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRoDict_FromSequence(DeeObject *__restrict self);
-
-
-
-
-
-/************************************************************************/
-/* FORWARD-COMPATIBLE RODICT BUILDER                                    */
-/************************************************************************/
-struct Dee_rodict_builder {
-	DeeRoDictObject *rdb_dict; /* [0..1][owned] The dict being built. */
-};
-
-#define Dee_RODICT_BUILDER_INIT        { NULL }
-#define Dee_rodict_builder_init(self)  (void)((self)->rdb_dict = NULL)
-#define Dee_rodict_builder_cinit(self) (void)(Dee_ASSERT((self)->rdb_dict == NULL))
-#define Dee_rodict_builder_fini(self)  (void)Dee_XDecref_likely((self)->rdb_dict)
-#define Dee_rodict_builder_init_with_hint(self, num_items) \
-	(void)((self)->rdb_dict = DeeRoDict_TryNewWithHint(num_items))
-#define Dee_rodict_builder_pack(self) \
-	((self)->rdb_dict ? (self)->rdb_dict : (Dee_Incref(Dee_EmptyRoDict), (DREF DeeRoDictObject *)Dee_EmptyRoDict))
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_pair_t" */
-Dee_rodict_builder_setitem(/*struct Dee_rodict_builder*/ void *__restrict self,
-                           DeeObject *key, DeeObject *value);
-
-LOCAL WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_pair_t" */
-Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restrict self,
-                                     /*inherit(always)*/ DREF DeeObject *key,
-                                     /*inherit(always)*/ DREF DeeObject *value) {
-	int result = Dee_rodict_builder_setitem(self, key, value);
-	Dee_Decref_unlikely(key);
-	Dee_Decref_unlikely(value);
-	return result;
-}
-#define Dee_rodict_builder_update(self, mapping) \
-	DeeObject_ForeachPair(mapping, &Dee_rodict_builder_setitem, self)
-
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-
-/* The main `_RoDict' container class. */
-DDATDEF DeeTypeObject DeeRoDict_Type;
-#define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_RoDict' is final */
-#define DeeRoDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeRoDict_Type)
 
 DECL_END
 

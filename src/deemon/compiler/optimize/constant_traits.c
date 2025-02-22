@@ -132,7 +132,6 @@ asm_allowconst(DeeObject *__restrict self) {
 	}
 	if (type == &DeeRoDict_Type) {
 		/* Special case: Only allow read-only dicts of constant expressions. */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 		size_t j;
 		DeeRoDictObject *me = (DeeRoDictObject *)self;
 		for (j = 0; j < me->rd_vsize; ++j) {
@@ -143,19 +142,6 @@ asm_allowconst(DeeObject *__restrict self) {
 			if (!asm_allowconst(item->di_value))
 				goto illegal;
 		}
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-		struct rodict_item *iter, *end;
-		iter = ((DeeRoDictObject *)self)->rd_elem;
-		end  = iter + ((DeeRoDictObject *)self)->rd_mask + 1;
-		for (; iter < end; ++iter) {
-			if (!iter->rdi_key)
-				continue;
-			if (!asm_allowconst(iter->rdi_key))
-				goto illegal;
-			if (!asm_allowconst(iter->rdi_value))
-				goto illegal;
-		}
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 		goto allowed;
 	}
 illegal:
@@ -234,7 +220,6 @@ again0:
 		int temp, result;
 		size_t i;
 		result = CONSTEXPR_ALLOWED;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 		for (i = 0; i < me->rd_vsize; ++i) {
 			struct Dee_dict_item *item;
 			item = &_DeeRoDict_GetRealVTab(me)[i];
@@ -249,22 +234,6 @@ again0:
 			if (temp == CONSTEXPR_USECOPY)
 				result = CONSTEXPR_USECOPY;
 		}
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-		for (i = 0; i <= me->rd_mask; ++i) {
-			if (!me->rd_elem[i].rdi_key)
-				continue;
-			temp = allow_constexpr(me->rd_elem[i].rdi_key);
-			if (temp == CONSTEXPR_ILLEGAL)
-				goto illegal;
-			if (temp == CONSTEXPR_USECOPY)
-				result = CONSTEXPR_USECOPY;
-			temp = allow_constexpr(me->rd_elem[i].rdi_value);
-			if (temp == CONSTEXPR_ILLEGAL)
-				goto illegal;
-			if (temp == CONSTEXPR_USECOPY)
-				result = CONSTEXPR_USECOPY;
-		}
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 		return result;
 	}
 

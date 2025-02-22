@@ -2118,7 +2118,6 @@ fix_relint_r(DeeObject **__restrict p_obj) {
 	}
 	if (DeeRoDict_Check(obj)) {
 		/* RO-Dict objects can easily appear as part of jump-tables. */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 		size_t i;
 		DeeRoDictObject *me = (DeeRoDictObject *)obj;
 		for (i = 0; i < me->rd_vsize; ++i) {
@@ -2127,17 +2126,6 @@ fix_relint_r(DeeObject **__restrict p_obj) {
 			if (fix_relint_r(&item->di_value))
 				goto err;
 		}
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-		struct rodict_item *iter, *end;
-		iter = ((DeeRoDictObject *)obj)->rd_elem;
-		end  = iter + ((DeeRoDictObject *)obj)->rd_mask + 1;
-		for (; iter < end; ++iter) {
-			if (!iter->rdi_key)
-				continue;
-			if (fix_relint_r(&iter->rdi_value))
-				goto err;
-		}
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 	}
 done:
 	return 0;

@@ -6784,13 +6784,8 @@ is_constexpr_empty_sequence(struct fungen *__restrict gen,
 		return true;
 	if (tp_self == &DeeMapping_Type)
 		return true;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 	if (tp_self == &DeeRoDict_Type)
 		return ((DeeRoDictObject *)self)->rd_vsize == 0;
-#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
-	if (tp_self == &DeeRoDict_Type)
-		return ((DeeRoDictObject *)self)->rd_size == 0;
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 	if (tp_self == &DeeRoSet_Type)
 		return ((DeeRoSetObject *)self)->rs_size == 0;
 	if (DeeType_GetOperatorFlags(tp_self, OPERATOR_ITER) & METHOD_FCONSTCALL) {

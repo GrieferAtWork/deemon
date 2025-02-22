@@ -415,7 +415,6 @@ DeeDict_LockReadAndOptimize(DeeDictObject *__restrict self) {
 /************************************************************************/
 /* RODICT HELPERS                                                       */
 /************************************************************************/
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 #define _RoDict_TryMalloc(sizeof)     ((DREF DeeRoDictObject *)DeeObject_TryMalloc(sizeof))
 #define _RoDict_TryCalloc(sizeof)     ((DREF DeeRoDictObject *)DeeObject_TryCalloc(sizeof))
 #define _RoDict_TryRealloc(p, sizeof) ((DREF DeeRoDictObject *)DeeObject_TryRealloc(p, sizeof))
@@ -488,7 +487,6 @@ hmask_memmovedown_and_maybe_downcast(void *dst, shift_t dst_hidxio,
 		}
 	}
 }
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 DECL_END
 
