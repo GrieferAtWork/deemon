@@ -550,25 +550,38 @@ final class NativeMethod {
 	}
 
 	public printDecl(name: string, lineFeedBeforeName: bool = false,
-	                 bodyHint: string | none = none) {
+	                 bodyHint: string | none = none,
+	                 parenAroundName: bool = false) {
 		local attrib = getReturnAttrib();
 		if (attrib)
 			print(attrib, " "),;
 		print returnType,;
 		if (lineFeedBeforeName) {
-			if (cc) {
-				if (!returnType.endswith("*"))
-					print " ",;
-				print cc,;
+			if (parenAroundName) {
+				print;
+				print("("),;
+				if (cc)
+					print(cc, " "),;
+			} else {
+				if (cc) {
+					if (!returnType.endswith("*"))
+						print " ",;
+					print cc,;
+				}
+				print;
 			}
-			print;
 		} else {
 			if (!returnType.endswith("*"))
 				print " ",;
+			if (parenAroundName)
+				print("("),;
 			if (cc)
 				print(cc, " "),;
 		}
-		print(name, "(", ", ".join(bodyHint !is none
+		print(name),;
+		if (parenAroundName)
+			print(")"),;
+		print("(", ", ".join(bodyHint !is none
 			? params.each.CstrForBody(bodyHint)
 			: params.each.Cstr), ")"),;
 	}
@@ -1189,25 +1202,38 @@ final class NativeOperator {
 	}
 
 	public printDecl(name: string, lineFeedBeforeName: bool = false,
-	                 bodyHint: string | none = none) {
+	                 bodyHint: string | none = none,
+	                 parenAroundName: bool = false) {
 		local attrib = getReturnAttrib();
 		if (attrib)
 			print(attrib, " "),;
 		print returnType,;
 		if (lineFeedBeforeName) {
-			if (cc) {
-				if (!returnType.endswith("*"))
-					print " ",;
-				print cc,;
+			if (parenAroundName) {
+				print;
+				print("("),;
+				if (cc)
+					print(cc, " "),;
+			} else {
+				if (cc) {
+					if (!returnType.endswith("*"))
+						print " ",;
+					print cc,;
+				}
+				print;
 			}
-			print;
 		} else {
 			if (!returnType.endswith("*"))
 				print " ",;
+			if (parenAroundName)
+				print("("),;
 			if (cc)
 				print(cc, " "),;
 		}
-		print(name, "(", ", ".join(bodyHint !is none
+		print(name),;
+		if (parenAroundName)
+			print(")"),;
+		print("(", ", ".join(bodyHint !is none
 			? params.each.CstrForBody(bodyHint)
 			: params.each.Cstr), ")"),;
 	}
@@ -2108,7 +2134,7 @@ function printNativeOperatorExportedApi() {
 			print("PUBLIC "),;
 			if (!isTyped)
 				print("ATTR_HOT "),;
-			usedOperator.printDecl(name, lineFeedBeforeName: true);
+			usedOperator.printDecl(name, lineFeedBeforeName: true, parenAroundName: true);
 			local opName = usedOperator.name.name;
 			local opVarName = f"tp_{opName}";
 //			local opVarName = opName in {"bool", "int", "double"} ? f"{opName}_" : opName;
