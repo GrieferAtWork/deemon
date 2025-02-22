@@ -3356,8 +3356,8 @@ mh_select_map_operator_inplace_and(DeeTypeObject *self, DeeTypeObject *orig_type
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_inplace_xor_t DCALL
 mh_select_map_operator_inplace_xor(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if (((DeeMH_map_operator_foreach_pair_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_operator_foreach_pair) != &default__map_operator_foreach_pair__unsupported) &&
-	    ((DeeMH_map_removekeys_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_removekeys) && (DeeMH_map_update_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_update)) ||
-		((DeeMH_map_update_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_update) && (DeeMH_map_removekeys_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_removekeys)))
+	    (((DeeMH_map_removekeys_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_removekeys) && (DeeMH_map_update_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_update)) ||
+	     ((DeeMH_map_update_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_update) && (DeeMH_map_removekeys_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_removekeys))))
 		return &default__map_operator_inplace_xor__with__map_operator_foreach_pair__and__map_update__and__map_removekeys;
 	return NULL;
 }
