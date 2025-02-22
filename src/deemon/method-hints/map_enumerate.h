@@ -48,7 +48,8 @@ err:
 }
 
 
-[[operator(Mapping: tp_seq->tp_foreach_pair)]] /* TODO: This causes "default__map_enumerate" to be generated, but it's not actually needed... */
+[[no_self_invocation_wrapper]]
+[[operator(Mapping: tp_seq->tp_foreach_pair)]]
 [[wunused]] Dee_ssize_t
 __map_enumerate__.map_enumerate([[nonnull]] DeeObject *__restrict self,
                                 [[nonnull]] Dee_seq_enumerate_t cb,

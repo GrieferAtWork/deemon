@@ -447,6 +447,9 @@ final class NativeMethod {
 	@@Which part of a getset this method implements ("get", "del", "set")
 	public member getsetMember: string = "";
 
+	@@When true, @defineSelfInvocationWrapper is always false
+	public member noSelfInvocationWrapper: bool = false;
+
 	@@Descriptor for a location within "DeeTypeObject" where a binary-compatible
 	@@callback can be found that may be used to implement this native method, too.
 	public member operatorSpecs: {OperatorSpec...} = ();
@@ -485,6 +488,7 @@ final class NativeMethod {
 								? callAttrImpl
 								: NativeMethodImpl(alias: f"t{callAttrImpl.alias}"),
 						getsetMember: getsetMember,
+						noSelfInvocationWrapper: noSelfInvocationWrapper,
 						operatorSpecs: operatorSpecs,
 				);
 			}
@@ -647,7 +651,7 @@ final class NativeMethod {
 
 	public property defineSelfInvocationWrapper: bool = {
 		get(): bool {
-			return operatorSpecs || getsetMember;
+			return (operatorSpecs || getsetMember) && !noSelfInvocationWrapper;
 		}
 	}
 
@@ -1671,7 +1675,9 @@ function printMhInitSpecs() {
 		if (native.operatorSpecs) {
 			print(f"PRIVATE struct_mh_init_spec_operators({#native.operatorSpecs + 1
 				}) tpconst mh_operators_{native.name} = \{");
-			print("	/* .misos_default   = */ (Dee_funptr_t)&default__", native.name, ",");
+			print("	/* .misos_default   = */ ", native.defineSelfInvocationWrapper
+					? f"(Dee_funptr_t)&default__{native.name}"
+					: "NULL", ",");
 			print("	/* .misos_operators = */ {");
 			local lines: {string...} = [];
 			for (local spec: native.operatorSpecs) {
@@ -2438,10 +2444,6 @@ function printMhSuperMap() {
 			}
 		}
 
-		/* TODO: Must also replace stuff like "default__map_enumerate__with_callobjectcache___map_enumerate__"
-		 *       with a custom impl "tdefault__map_enumerate__with_callobjectcache___map_enumerate__", because
-		 *       (iow: a typed version), since this is required for super-calls. */
-
 		if (typedImpls) {
 			nativeMethodsWith__msm_with_type.insert(name);
 			print(f"PRIVATE struct mh_super_map_typed tpconst msm_with_type__{
@@ -2650,6 +2652,7 @@ final class _SpecParserAttrib {
 	public member nonnull: bool = false;
 	public member getset: bool = false;
 	public member getsetMember: string = "";
+	public member noSelfInvocationWrapper: bool = false;
 	public member attr: string | none = none;
 	public member cc: string = "DCALL";
 	public member aliases: {MethodHintAlias...} = [];
@@ -3054,6 +3057,11 @@ done:
 			case "accept_any_base_class_for_method_hint":
 				next();
 				attrib.acceptAnyBaseClassForMethodHint = true;
+				break;
+
+			case "no_self_invocation_wrapper":
+				next();
+				attrib.noSelfInvocationWrapper = true;
 				break;
 
 			case "declNameAlias": {
@@ -3588,6 +3596,7 @@ done:
 						wunused: attrib.wunused,
 						cc: attrib.cc,
 						getsetMember: attrib.getsetMember,
+						noSelfInvocationWrapper: attrib.noSelfInvocationWrapper,
 						operatorSpecs: attrib.operatorSpecs);
 				local name1 = parseSymbol();
 				if (tok == ".") {

@@ -44,7 +44,8 @@ seq_default_getfirst_with_foreach_cb(void *arg, DeeObject *item) {
 
 
 /* Try to return the first element of the sequence (returns ITER_DONE if the sequence is empty) */
-[[wunused]] DREF DeeObject *
+[[no_self_invocation_wrapper]]
+[[wunused, getset_member("get")]] DREF DeeObject *
 __seq_first__.seq_trygetfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias(default__seq_getfirst__unsupported)}
 %{$empty = ITER_DONE}

@@ -18147,11 +18147,6 @@ err:
 
 /* map_enumerate */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default__map_enumerate(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, cb, arg);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__map_enumerate__with_callattr___map_enumerate__(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
 	DREF DeeObject *result;
 	DREF EnumerateWrapper *wrapper;
