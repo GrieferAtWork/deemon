@@ -29,7 +29,7 @@ err:
 	return NULL;
 }
 
-[[operator(Mapping.OPERATOR_SIZE: tp_seq->tp_sizeob)]] /* TODO: Allow operator init for Set, but not method hint init */
+[[operator(Mapping: tp_seq->tp_sizeob)]] /* TODO: Allow operator init for Set, but not method hint init */
 [[wunused]] DREF DeeObject *
 __map_size__.map_operator_sizeob([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
@@ -46,7 +46,7 @@ err:
 }
 
 
-[[operator(Mapping.OPERATOR_SIZE: tp_seq->tp_size)]] /* TODO: Allow operator init for Set, but not method hint init */
+[[operator(Mapping: tp_seq->tp_size)]] /* TODO: Allow operator init for Set, but not method hint init */
 [[wunused]] size_t
 __map_size__.map_operator_size([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}

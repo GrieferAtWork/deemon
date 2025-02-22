@@ -33,7 +33,7 @@ err:
 
 
 /* {"a":1, "b":2} & {"a"}   ->   {"a":1} */
-[[operator(Mapping.OPERATOR_AND: tp_math->tp_and)]]
+[[operator(Mapping: tp_math->tp_and)]]
 [[wunused]] DREF DeeObject *
 __map_and__.map_operator_and([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *keys)

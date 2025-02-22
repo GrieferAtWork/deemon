@@ -33,7 +33,7 @@ err:
 
 
 /* {"a", "b"} ^ {"a", "c"}   ->   {"b", "c"} */
-[[operator(Set.OPERATOR_XOR: tp_math->tp_xor)]]
+[[operator(Set: tp_math->tp_xor)]]
 [[wunused]] DREF DeeObject *
 __set_xor__.set_operator_xor([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *rhs)

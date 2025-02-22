@@ -33,7 +33,7 @@ err:
 
 
 /* {"a":1, "b":2} - {"a"}   ->   {"b":2} */
-[[operator(Mapping.OPERATOR_SUB: tp_math->tp_sub)]]
+[[operator(Mapping: tp_math->tp_sub)]]
 [[wunused]] DREF DeeObject *
 __map_sub__.map_operator_sub([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *keys)

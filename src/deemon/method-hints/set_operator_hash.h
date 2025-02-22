@@ -54,7 +54,7 @@ set_handle_hash_error(DeeObject *self) {
 #endif /* !DEFINED_set_handle_hash_error */
 )]
 
-[[operator([Set, Mapping].OPERATOR_HASH: tp_cmp->tp_hash)]]
+[[operator([Set, Mapping]: tp_cmp->tp_hash)]]
 [[wunused]] Dee_hash_t
 __set_hash__.set_operator_hash([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias("default__seq_operator_hash__unsupported")}

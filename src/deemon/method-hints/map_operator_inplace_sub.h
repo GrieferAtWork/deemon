@@ -37,7 +37,7 @@ err:
 
 
 
-[[operator(Mapping.OPERATOR_INPLACE_SUB: tp_math->tp_inplace_sub)]]
+[[operator(Mapping: tp_math->tp_inplace_sub)]]
 [[wunused]] int
 __map_inplace_sub__.map_operator_inplace_sub([[nonnull]] DREF DeeObject **__restrict p_self,
                                              [[nonnull]] DeeObject *keys)

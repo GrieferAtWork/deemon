@@ -37,7 +37,7 @@ err:
 
 
 
-[[operator(Sequence.OPERATOR_INPLACE_ADD: tp_math->tp_inplace_add)]]
+[[operator(Sequence: tp_math->tp_inplace_add)]]
 [[wunused]] int
 __seq_inplace_add__.seq_operator_inplace_add([[nonnull]] DREF DeeObject **__restrict p_self,
                                              [[nonnull]] DeeObject *rhs)

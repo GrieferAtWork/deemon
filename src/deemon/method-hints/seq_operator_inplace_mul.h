@@ -35,7 +35,7 @@ err:
 	return NULL;
 }
 
-[[operator(Sequence.OPERATOR_INPLACE_MUL: tp_math->tp_inplace_mul)]]
+[[operator(Sequence: tp_math->tp_inplace_mul)]]
 [[wunused]] int
 __seq_inplace_mul__.seq_operator_inplace_mul([[nonnull]] DREF DeeObject **__restrict p_self,
                                              [[nonnull]] DeeObject *repeat)

@@ -34,7 +34,7 @@ err:
 	return NULL;
 }
 
-[[operator(Sequence.OPERATOR_SETRANGE: tp_seq->tp_setrange)]]
+[[operator(Sequence: tp_seq->tp_setrange)]]
 [[wunused]] int
 __seq_setrange__.seq_operator_setrange([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *start,
@@ -92,7 +92,7 @@ seq_operator_setrange = {
 
 
 
-[[operator(Sequence.OPERATOR_SETRANGE: tp_seq->tp_setrange_index)]]
+[[operator(Sequence: tp_seq->tp_setrange_index)]]
 [[wunused]] int
 __seq_setrange__.seq_operator_setrange_index([[nonnull]] DeeObject *self,
                                              Dee_ssize_t start, Dee_ssize_t end,
@@ -157,7 +157,7 @@ seq_operator_setrange_index = {
 
 
 
-[[operator(Sequence.OPERATOR_SETRANGE: tp_seq->tp_setrange_index_n)]]
+[[operator(Sequence: tp_seq->tp_setrange_index_n)]]
 [[wunused]] int
 __seq_setrange__.seq_operator_setrange_index_n([[nonnull]] DeeObject *self,
                                                Dee_ssize_t start,

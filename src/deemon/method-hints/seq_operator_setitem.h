@@ -32,7 +32,7 @@ err:
 	return NULL;
 }
 
-[[operator(Sequence.OPERATOR_SETITEM: tp_seq->tp_setitem)]]
+[[operator(Sequence: tp_seq->tp_setitem)]]
 [[wunused]] int
 __seq_setitem__.seq_operator_setitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *index,
@@ -63,7 +63,7 @@ err:
 
 
 
-[[operator(Sequence.OPERATOR_SETITEM: tp_seq->tp_setitem_index)]]
+[[operator(Sequence: tp_seq->tp_setitem_index)]]
 [[wunused]] int
 __seq_setitem__.seq_operator_setitem_index([[nonnull]] DeeObject *self,
                                            size_t index,

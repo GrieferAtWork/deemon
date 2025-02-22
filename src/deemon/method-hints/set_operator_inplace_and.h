@@ -37,7 +37,7 @@ err:
 
 
 
-[[operator(Set.OPERATOR_INPLACE_AND: tp_math->tp_inplace_and)]]
+[[operator(Set: tp_math->tp_inplace_and)]]
 [[wunused]] int
 __set_inplace_and__.set_operator_inplace_and([[nonnull]] DREF DeeObject **__restrict p_self,
                                              [[nonnull]] DeeObject *rhs)

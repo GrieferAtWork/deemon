@@ -31,7 +31,7 @@ err:
 
 
 
-[[operator([Sequence, Set, Mapping].OPERATOR_SIZE: tp_seq->tp_sizeob)]]
+[[operator([Sequence, Set, Mapping]: tp_seq->tp_sizeob)]]
 [[wunused]]
 DREF DeeObject *__seq_size__.seq_operator_sizeob([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
@@ -74,7 +74,7 @@ default_seq_size_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *valu
 )]
 
 
-[[operator([Sequence, Set, Mapping].OPERATOR_SIZE: tp_seq->tp_size)]]
+[[operator([Sequence, Set, Mapping]: tp_seq->tp_size)]]
 [[wunused]]
 size_t __seq_size__.seq_operator_size([[nonnull]] DeeObject *__restrict self)
 // NOTE: The "unsupported"-impl here is still needed so other hints can

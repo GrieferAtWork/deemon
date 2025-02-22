@@ -33,7 +33,7 @@ err:
 
 
 /* {"a":1,"b":2} ^ {"a":3, "c":4}   ->   {"b":2, "c":4} */
-[[operator(Mapping.OPERATOR_AND: tp_math->tp_xor)]]
+[[operator(Mapping: tp_math->tp_xor)]]
 [[wunused]] DREF DeeObject *
 __map_xor__.map_operator_xor([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *rhs)

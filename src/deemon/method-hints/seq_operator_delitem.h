@@ -34,7 +34,7 @@ err:
 
 
 
-[[operator(Sequence.OPERATOR_DELITEM: tp_seq->tp_delitem)]]
+[[operator(Sequence: tp_seq->tp_delitem)]]
 [[wunused]] int
 __seq_delitem__.seq_operator_delitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *index)
@@ -61,7 +61,7 @@ err:
 
 
 
-[[operator(Sequence.OPERATOR_DELITEM: tp_seq->tp_delitem_index)]]
+[[operator(Sequence: tp_seq->tp_delitem_index)]]
 [[wunused]] int
 __seq_delitem__.seq_operator_delitem_index([[nonnull]] DeeObject *__restrict self,
                                            size_t index)

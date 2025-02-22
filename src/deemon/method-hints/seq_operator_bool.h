@@ -46,7 +46,7 @@ default_seq_bool_with_foreach_cb(void *arg, DeeObject *elem) {
 )]
 
 [[wunused]]
-[[operator([Sequence, Set, Mapping].OPERATOR_BOOL: tp_cast.tp_bool)]]
+[[operator([Sequence, Set, Mapping]: tp_cast.tp_bool)]]
 int __seq_bool__.seq_operator_bool([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator bool"))} %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_bool_with_foreach_cb)]] {

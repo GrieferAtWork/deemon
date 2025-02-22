@@ -30,7 +30,7 @@ err:
 }
 
 
-[[operator(Mapping.OPERATOR_ITER: tp_seq->tp_iter)]]
+[[operator(Mapping: tp_seq->tp_iter)]]
 [[wunused]] DREF DeeObject *
 __map_iter__.map_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
@@ -105,7 +105,7 @@ default_map_foreach_pair_unique_cb(void *arg, DeeObject *key, DeeObject *value) 
 )]
 
 
-[[operator(Mapping.OPERATOR_ITER: tp_seq->tp_foreach_pair)]]
+[[operator(Mapping: tp_seq->tp_foreach_pair)]]
 [[wunused]] Dee_ssize_t
 __map_iter__.map_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
                                        [[nonnull]] Dee_foreach_pair_t cb,

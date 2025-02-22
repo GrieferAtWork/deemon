@@ -30,7 +30,7 @@ err:
 }
 
 
-[[operator(Set.OPERATOR_INV: tp_math->tp_inv)]]
+[[operator(Set: tp_math->tp_inv)]]
 [[wunused]] DREF DeeObject *
 __set_size__.set_operator_inv([[nonnull]] DeeObject *__restrict self)
 %{unsupported({

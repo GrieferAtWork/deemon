@@ -37,8 +37,8 @@ err:
 
 
 
-[[operator(Set.OPERATOR_INPLACE_ADD: tp_math->tp_inplace_add)]]
-[[operator(Set.OPERATOR_INPLACE_OR: tp_math->tp_inplace_or)]]
+[[operator(Set: tp_math->tp_inplace_add)]]
+[[operator(Set: tp_math->tp_inplace_or)]]
 [[wunused]] int
 __set_inplace_add__.set_operator_inplace_add([[nonnull]] DREF DeeObject **__restrict p_self,
                                              [[nonnull]] DeeObject *rhs)

@@ -40,7 +40,7 @@ for (local lo, ge, alias: {
 	print('	return NULL;');
 	print('}');
 	print;
-	print('[[operator(Set.OPERATOR_', lo.upper(), ': tp_cmp->tp_', lo, ')]]');
+	print('[[operator(Set: tp_cmp->tp_', lo, ')]]');
 	print('[[wunused]] DREF DeeObject *');
 	print('__set_', lo, '__.set_operator_', lo, '([[nonnull]] DeeObject *lhs,');
 	print('                           [[nonnull]] DeeObject *rhs)');
@@ -128,7 +128,7 @@ err:
 	return NULL;
 }
 
-[[operator(Set.OPERATOR_LO: tp_cmp->tp_lo)]]
+[[operator(Set: tp_cmp->tp_lo)]]
 [[wunused]] DREF DeeObject *
 __set_lo__.set_operator_lo([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -192,7 +192,7 @@ err:
 	return NULL;
 }
 
-[[operator(Set.OPERATOR_LE: tp_cmp->tp_le)]]
+[[operator(Set: tp_cmp->tp_le)]]
 [[wunused]] DREF DeeObject *
 __set_le__.set_operator_le([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -242,7 +242,7 @@ err:
 	return NULL;
 }
 
-[[operator(Set.OPERATOR_GR: tp_cmp->tp_gr)]]
+[[operator(Set: tp_cmp->tp_gr)]]
 [[wunused]] DREF DeeObject *
 __set_gr__.set_operator_gr([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -293,7 +293,7 @@ err:
 	return NULL;
 }
 
-[[operator(Set.OPERATOR_GE: tp_cmp->tp_ge)]]
+[[operator(Set: tp_cmp->tp_ge)]]
 [[wunused]] DREF DeeObject *
 __set_ge__.set_operator_ge([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)

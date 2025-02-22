@@ -1447,7 +1447,7 @@ struct Dee_tno_assign {
  * Shorter version is:
  *  - default__hasitem_index__with__bounditem_index
  *  - default__bounditem_index__with__getitem_index */
-/*[[[deemon (print_TNO_ASSIGN_MAXLEN from "...src.deemon.method-hints.method-hints")();]]]*/
+/*[[[deemon (print_TNO_ASSIGN_MAXLEN from "..method-hints.method-hints")();]]]*/
 /* { Dee_TNO_hasitem_string_len_hash,   &default__hasitem_string_len_hash__with__bounditem_string_len_hash }
  * { Dee_TNO_bounditem_string_len_hash, &default__bounditem_string_len_hash__with__bounditem_string_hash }
  * { Dee_TNO_bounditem_string_hash,     &default__bounditem_string_hash__with__getitem_string_hash }

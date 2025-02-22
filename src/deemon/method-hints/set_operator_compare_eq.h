@@ -37,7 +37,7 @@ err:
 
 
 
-[[operator(Set.OPERATOR_EQ: tp_cmp->tp_compare_eq)]]
+[[operator(Set: tp_cmp->tp_compare_eq)]]
 [[wunused]] int
 __set_compare_eq__.set_operator_compare_eq([[nonnull]] DeeObject *lhs,
                                            [[nonnull]] DeeObject *rhs)
@@ -130,7 +130,7 @@ set_operator_compare_eq = {
 
 
 
-[[operator(Set.OPERATOR_EQ: tp_cmp->tp_trycompare_eq)]]
+[[operator(Set: tp_cmp->tp_trycompare_eq)]]
 [[wunused]] int
 __set_compare_eq__.set_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
                                               [[nonnull]] DeeObject *rhs)
@@ -174,7 +174,7 @@ err:
 	return NULL;
 }
 
-[[operator(Set.OPERATOR_EQ: tp_cmp->tp_eq)]]
+[[operator(Set: tp_cmp->tp_eq)]]
 [[wunused]] DREF DeeObject *
 __set_eq__.set_operator_eq([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -210,7 +210,7 @@ err:
 	return NULL;
 }
 
-[[operator(Set.OPERATOR_NE: tp_cmp->tp_ne)]]
+[[operator(Set: tp_cmp->tp_ne)]]
 [[wunused]] DREF DeeObject *
 __set_ne__.set_operator_ne([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)

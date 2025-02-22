@@ -32,7 +32,7 @@ err:
 	return NULL;
 }
 
-[[operator(Mapping.OPERATOR_SETITEM: tp_seq->tp_setitem)]]
+[[operator(Mapping: tp_seq->tp_setitem)]]
 [[wunused]] int
 __map_setitem__.map_operator_setitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key,
@@ -135,7 +135,7 @@ map_operator_setitem = {
 
 
 
-[[operator(Mapping.OPERATOR_SETITEM: tp_seq->tp_setitem_index)]]
+[[operator(Mapping: tp_seq->tp_setitem_index)]]
 [[wunused]] int
 __map_setitem__.map_operator_setitem_index([[nonnull]] DeeObject *self, size_t key,
                                            [[nonnull]] DeeObject *value)
@@ -168,7 +168,7 @@ map_operator_setitem_index = {
 
 
 
-[[operator(Mapping.OPERATOR_SETITEM: tp_seq->tp_setitem_string_hash)]]
+[[operator(Mapping: tp_seq->tp_setitem_string_hash)]]
 [[wunused]] int
 __map_setitem__.map_operator_setitem_string_hash([[nonnull]] DeeObject *self,
                                                  [[nonnull]] char const *key, Dee_hash_t hash,
@@ -205,7 +205,7 @@ map_operator_setitem_string_hash = {
 
 
 
-[[operator(Mapping.OPERATOR_SETITEM: tp_seq->tp_setitem_string_len_hash)]]
+[[operator(Mapping: tp_seq->tp_setitem_string_len_hash)]]
 [[wunused]] int
 __map_setitem__.map_operator_setitem_string_len_hash([[nonnull]] DeeObject *self,
                                                      char const *key, size_t keylen,

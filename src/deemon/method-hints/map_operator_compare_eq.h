@@ -37,7 +37,7 @@ err:
 
 
 
-[[operator(Mapping.OPERATOR_EQ: tp_cmp->tp_compare_eq)]]
+[[operator(Mapping: tp_cmp->tp_compare_eq)]]
 [[wunused]] int
 __map_compare_eq__.map_operator_compare_eq([[nonnull]] DeeObject *lhs,
                                            [[nonnull]] DeeObject *rhs)
@@ -128,7 +128,7 @@ map_operator_compare_eq = {
 
 
 
-[[operator(Mapping.OPERATOR_EQ: tp_cmp->tp_trycompare_eq)]]
+[[operator(Mapping: tp_cmp->tp_trycompare_eq)]]
 [[wunused]] int
 __map_compare_eq__.map_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
                                               [[nonnull]] DeeObject *rhs)
@@ -172,7 +172,7 @@ err:
 	return NULL;
 }
 
-[[operator(Mapping.OPERATOR_EQ: tp_cmp->tp_eq)]]
+[[operator(Mapping: tp_cmp->tp_eq)]]
 [[wunused]] DREF DeeObject *
 __map_eq__.map_operator_eq([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -208,7 +208,7 @@ err:
 	return NULL;
 }
 
-[[operator(Mapping.OPERATOR_NE: tp_cmp->tp_ne)]]
+[[operator(Mapping: tp_cmp->tp_ne)]]
 [[wunused]] DREF DeeObject *
 __map_ne__.map_operator_ne([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)

@@ -33,7 +33,7 @@ err:
 
 
 /* {"a", "b"} & {"a"}   ->   {"a"} */
-[[operator(Set.OPERATOR_AND: tp_math->tp_and)]]
+[[operator(Set: tp_math->tp_and)]]
 [[wunused]] DREF DeeObject *
 __set_and__.set_operator_and([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *rhs)

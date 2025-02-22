@@ -35,7 +35,7 @@ err:
 
 
 
-[[operator(Sequence.OPERATOR_GETRANGE: tp_seq->tp_getrange)]]
+[[operator(Sequence: tp_seq->tp_getrange)]]
 [[wunused]] DREF DeeObject *
 __seq_getrange__.seq_operator_getrange([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *start,
@@ -112,7 +112,7 @@ seq_operator_getrange = {
 
 
 
-[[operator(Sequence.OPERATOR_GETRANGE: tp_seq->tp_getrange_index)]]
+[[operator(Sequence: tp_seq->tp_getrange_index)]]
 [[wunused]] DREF DeeObject *
 __seq_getrange__.seq_operator_getrange_index([[nonnull]] DeeObject *self,
                                              Dee_ssize_t start, Dee_ssize_t end)
@@ -285,7 +285,7 @@ seq_operator_getrange_index = {
 
 
 
-[[operator(Sequence.OPERATOR_GETRANGE: tp_seq->tp_getrange_index_n)]]
+[[operator(Sequence: tp_seq->tp_getrange_index_n)]]
 [[wunused]] DREF DeeObject *
 __seq_getrange__.seq_operator_getrange_index_n([[nonnull]] DeeObject *self,
                                                Dee_ssize_t start)

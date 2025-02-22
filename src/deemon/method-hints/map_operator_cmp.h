@@ -38,7 +38,7 @@ for (local lo, ge: {
 	print('	return NULL;');
 	print('}');
 	print;
-	print('[[operator(Mapping.OPERATOR_', lo.upper(), ': tp_cmp->tp_', lo, ')]]');
+	print('[[operator(Mapping: tp_cmp->tp_', lo, ')]]');
 	print('[[wunused]] DREF DeeObject *');
 	print('__map_', lo, '__.map_operator_', lo, '([[nonnull]] DeeObject *lhs,');
 	print('                           [[nonnull]] DeeObject *rhs)');
@@ -113,7 +113,7 @@ err:
 	return NULL;
 }
 
-[[operator(Mapping.OPERATOR_LO: tp_cmp->tp_lo)]]
+[[operator(Mapping: tp_cmp->tp_lo)]]
 [[wunused]] DREF DeeObject *
 __map_lo__.map_operator_lo([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -169,7 +169,7 @@ err:
 	return NULL;
 }
 
-[[operator(Mapping.OPERATOR_LE: tp_cmp->tp_le)]]
+[[operator(Mapping: tp_cmp->tp_le)]]
 [[wunused]] DREF DeeObject *
 __map_le__.map_operator_le([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -219,7 +219,7 @@ err:
 	return NULL;
 }
 
-[[operator(Mapping.OPERATOR_GR: tp_cmp->tp_gr)]]
+[[operator(Mapping: tp_cmp->tp_gr)]]
 [[wunused]] DREF DeeObject *
 __map_gr__.map_operator_gr([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -269,7 +269,7 @@ err:
 	return NULL;
 }
 
-[[operator(Mapping.OPERATOR_GE: tp_cmp->tp_ge)]]
+[[operator(Mapping: tp_cmp->tp_ge)]]
 [[wunused]] DREF DeeObject *
 __map_ge__.map_operator_ge([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)

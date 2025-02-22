@@ -82,7 +82,7 @@ function gen(isEq: bool) {
 	local SEQ_COMPARE_FOREACH_RESULT_LESS  = isEq ? 'SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL' : 'SEQ_COMPARE_FOREACH_RESULT_LESS';
 	local SEQ_COMPARE_FOREACH_RESULT_ERROR = isEq ? 'SEQ_COMPAREEQ_FOREACH_RESULT_ERROR'    : 'SEQ_COMPARE_FOREACH_RESULT_ERROR';
 
-	print('[[operator(Sequence.OPERATOR_', isEq ? 'EQ' : 'LO', ': tp_cmp->tp_compare', _eq, ')]]');
+	print('[[operator(Sequence: tp_cmp->tp_compare', _eq, ')]]');
 	print('[[wunused]] int');
 	print('__seq_compare', _eq, '__.seq_operator_compare', _eq, '([[nonnull]] DeeObject *lhs,');
 	print('             ', ___, '                       ', ___, ' [[nonnull]] DeeObject *rhs)');
@@ -865,7 +865,7 @@ if (!isEq) {
 gen(false);
 gen(true);
 ]]]*/
-[[operator(Sequence.OPERATOR_LO: tp_cmp->tp_compare)]]
+[[operator(Sequence: tp_cmp->tp_compare)]]
 [[wunused]] int
 __seq_compare__.seq_operator_compare([[nonnull]] DeeObject *lhs,
                                      [[nonnull]] DeeObject *rhs)
@@ -1448,7 +1448,7 @@ err:
 
 
 
-[[operator(Sequence.OPERATOR_EQ: tp_cmp->tp_compare_eq)]]
+[[operator(Sequence: tp_cmp->tp_compare_eq)]]
 [[wunused]] int
 __seq_compare_eq__.seq_operator_compare_eq([[nonnull]] DeeObject *lhs,
                                            [[nonnull]] DeeObject *rhs)
@@ -2002,7 +2002,7 @@ seq_operator_compare_eq = {
 
 
 
-[[operator(Sequence.OPERATOR_EQ: tp_cmp->tp_trycompare_eq)]]
+[[operator(Sequence: tp_cmp->tp_trycompare_eq)]]
 [[wunused]] int
 __seq_compare_eq__.seq_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
                                               [[nonnull]] DeeObject *rhs)

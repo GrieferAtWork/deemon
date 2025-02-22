@@ -30,7 +30,7 @@ err:
 }
 
 
-[[operator(Set.OPERATOR_ITER: tp_seq->tp_iter)]] /* TODO: Allow hint init from Mapping, but not operator loading into Mapping */
+[[operator(Set: tp_seq->tp_iter)]] /* TODO: Allow hint init from Mapping, but not operator loading into Mapping */
 [[wunused]] DREF DeeObject *
 __set_iter__.set_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
@@ -83,7 +83,7 @@ default_set_foreach_unique_cb(void *arg, DeeObject *item) {
 )]
 
 
-[[operator(Set.OPERATOR_ITER: tp_seq->tp_foreach)]] /* TODO: Allow hint init from Mapping, but not operator loading into Mapping */
+[[operator(Set: tp_seq->tp_foreach)]] /* TODO: Allow hint init from Mapping, but not operator loading into Mapping */
 [[wunused]] Dee_ssize_t
 __set_iter__.set_operator_foreach([[nonnull]] DeeObject *__restrict self,
                                   [[nonnull]] Dee_foreach_t cb,

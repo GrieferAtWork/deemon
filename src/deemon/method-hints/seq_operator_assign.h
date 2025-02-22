@@ -33,7 +33,7 @@ err:
 }
 
 [[wunused]]
-[[operator([Sequence, Set, Mapping].OPERATOR_ASSIGN: tp_init.tp_assign)]]
+[[operator([Sequence, Set, Mapping]: tp_init.tp_assign)]]
 int __seq_assign__.seq_operator_assign([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *items)
 %{unsupported(auto("operator :="))}

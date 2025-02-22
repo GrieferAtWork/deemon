@@ -30,7 +30,7 @@ err:
 	return NULL;
 }
 
-[[operator(Mapping.OPERATOR_CONTAINS: tp_seq->tp_contains)]]
+[[operator(Mapping: tp_seq->tp_contains)]]
 [[wunused]] DREF DeeObject *
 __map_contains__.map_operator_contains([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *key)

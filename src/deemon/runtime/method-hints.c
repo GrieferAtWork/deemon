@@ -100,19 +100,14 @@ struct mh_init_spec_operator {
 	enum Dee_tno_id       miso_tno;        /* Native operator ID */
 	DeeTypeObject        *miso_implements; /* [0..1] Type that must be implemented for this attribute to be used. */
 	unsigned int          miso_seqclass;   /* [valid_if(!miso_implements)] Required sequence class for this attribute to be used. (e.g. "Dee_SEQCLASS_SEQ") */
-
-	// TODO: "miso_operator" isn't needed (I think)
-	Dee_operator_t        miso_operator;   /* The core operator (for implicit substitution) */
 };
 #define Dee_TNO_MISSING(path)     Dee_TNO_COUNT /* TODO: Remove me */
-#define MH_INIT_SPEC_OPERATOR_END { Dee_TNO_COUNT, NULL, 0, 0 }
-#define MH_INIT_SPEC_OPERATOR_INIT(miso_tno, miso_implements,    \
-                                   miso_seqclass, miso_operator) \
-	{                                                            \
-		/* .miso_tno        = */ miso_tno,                       \
-		/* .miso_implements = */ miso_implements,                \
-		/* .miso_seqclass   = */ miso_seqclass,                  \
-		/* .miso_operator   = */ miso_operator                   \
+#define MH_INIT_SPEC_OPERATOR_END { Dee_TNO_COUNT, NULL, 0 }
+#define MH_INIT_SPEC_OPERATOR_INIT(miso_tno, miso_implements, miso_seqclass) \
+	{                                                                        \
+		/* .miso_tno        = */ miso_tno,                                   \
+		/* .miso_implements = */ miso_implements,                            \
+		/* .miso_seqclass   = */ miso_seqclass                               \
 	}
 
 struct mh_init_spec_operators {
@@ -422,22 +417,6 @@ INTERN WUNUSED NONNULL((1)) struct Dee_type_mh_cache *
 	return result;
 }
 
-#if 0 /* Not needed because "DeeType_GetPrivateMethodHintNoDefault" never returns OOM */
-PRIVATE ATTR_NOINLINE WUNUSED bool DCALL
-is_oom_operator_impl(enum Dee_tmh_id id, Dee_funptr_t impl) {
-	struct mh_init_spec const *specs = &mh_init_specs[id];
-	if (specs->mis_operators /*&& impl*/) {
-		struct mh_init_spec_operators const *ospec = specs->mis_operators;
-		struct mh_init_spec_operator const *iter;
-		for (iter = ospec->misos_operators; iter->miso_tno < Dee_TNO_COUNT; ++iter) {
-			if unlikely(impl == DeeType_GetNativeOperatorOOM(iter->miso_tno))
-				return true;
-		}
-	}
-	return false;
-}
-#endif
-
 /* Master function for looking up method hints, that searches the type's
  * MRO for all matches regarding attributes named "id", and returns the
  * native version for that attribute (or `NULL' if it doesn't have one)
@@ -458,12 +437,7 @@ read_from_mhcache:
 		if /*likely*/(result)
 			return result;
 		result = DeeType_GetUncachedMethodHint(self, id);
-#if 0
-		if likely(!is_oom_operator_impl(id, result))
-#endif
-		{
-			Dee_type_mh_cache_sethint(mhcache, id, result);
-		}
+		Dee_type_mh_cache_sethint(mhcache, id, result);
 		return result;
 	}
 	mhcache = Dee_type_mh_cache_alloc();
@@ -480,12 +454,7 @@ read_from_mhcache:
 		Dee_UntrackAlloc(mhcache);
 #endif /* !NDEBUG */
 	result = DeeType_GetUncachedMethodHint(self, id);
-#if 0
-	if likely(!is_oom_operator_impl(id, result))
-#endif
-	{
-		Dee_type_mh_cache_sethint(mhcache, id, result);
-	}
+	Dee_type_mh_cache_sethint(mhcache, id, result);
 	return result;
 }
 
@@ -535,9 +504,9 @@ PUBLIC ATTR_CONST WUNUSED Dee_funptr_t
 PRIVATE struct_mh_init_spec_operators(4) tpconst mh_operators_seq_operator_bool = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_bool,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bool, NULL, Dee_SEQCLASS_SEQ, OPERATOR_BOOL),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bool, NULL, Dee_SEQCLASS_SET, OPERATOR_BOOL),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bool, NULL, Dee_SEQCLASS_MAP, OPERATOR_BOOL),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bool, NULL, Dee_SEQCLASS_SEQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bool, NULL, Dee_SEQCLASS_SET),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bool, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -548,9 +517,9 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_sizeob[2] = {
 PRIVATE struct_mh_init_spec_operators(4) tpconst mh_operators_seq_operator_sizeob = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_sizeob,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sizeob, NULL, Dee_SEQCLASS_SEQ, OPERATOR_SIZE),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sizeob, NULL, Dee_SEQCLASS_SET, OPERATOR_SIZE),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sizeob, NULL, Dee_SEQCLASS_MAP, OPERATOR_SIZE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sizeob, NULL, Dee_SEQCLASS_SEQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sizeob, NULL, Dee_SEQCLASS_SET),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sizeob, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -561,16 +530,16 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_size[2] = {
 PRIVATE struct_mh_init_spec_operators(4) tpconst mh_operators_seq_operator_size = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_size,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_SEQ, OPERATOR_SIZE),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_SET, OPERATOR_SIZE),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_MAP, OPERATOR_SIZE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_SEQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_SET),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(4) tpconst mh_operators_seq_operator_iter = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_iter,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_iter, NULL, Dee_SEQCLASS_UNKNOWN, OPERATOR_ITER),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_iter, NULL, Dee_SEQCLASS_UNKNOWN),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -582,7 +551,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_foreach[3] = {
 PRIVATE struct_mh_init_spec_operators(4) tpconst mh_operators_seq_operator_foreach = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_foreach,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach, NULL, Dee_SEQCLASS_UNKNOWN, OPERATOR_ITER),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach, NULL, Dee_SEQCLASS_UNKNOWN),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -594,7 +563,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_foreach_pair[3] = {
 PRIVATE struct_mh_init_spec_operators(4) tpconst mh_operators_seq_operator_foreach_pair = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_foreach_pair,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_UNKNOWN, OPERATOR_ITER),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_UNKNOWN),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -605,7 +574,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_getitem[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_getitem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_getitem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -616,7 +585,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_getitem_index[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_getitem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_getitem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_index, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_index, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -628,7 +597,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_trygetitem[3] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_trygetitem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_trygetitem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -639,7 +608,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_trygetitem_index[2] =
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_trygetitem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_trygetitem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_index, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_index, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -651,7 +620,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_hasitem[3] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_hasitem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_hasitem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -662,7 +631,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_hasitem_index[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_hasitem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_hasitem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem_index, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem_index, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -674,7 +643,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_bounditem[3] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_bounditem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_bounditem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -685,7 +654,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_bounditem_index[2] = 
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_bounditem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_bounditem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_index, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_index, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -696,14 +665,14 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_delitem[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_delitem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_delitem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem, NULL, Dee_SEQCLASS_SEQ, OPERATOR_DELITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_delitem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_delitem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem_index, NULL, Dee_SEQCLASS_SEQ, OPERATOR_DELITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem_index, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -714,14 +683,14 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_setitem[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_setitem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_setitem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem, NULL, Dee_SEQCLASS_SEQ, OPERATOR_SETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_setitem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_setitem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_index, NULL, Dee_SEQCLASS_SEQ, OPERATOR_SETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_index, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -732,7 +701,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_getrange[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_getrange = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_getrange,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getrange, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GETRANGE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getrange, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -743,7 +712,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_getrange_index[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_getrange_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_getrange_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getrange_index, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GETRANGE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getrange_index, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -755,7 +724,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_getrange_index_n[3] =
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_getrange_index_n = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_getrange_index_n,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getrange_index_n, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GETRANGE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getrange_index_n, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -766,7 +735,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_delrange[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_delrange = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_delrange,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delrange, NULL, Dee_SEQCLASS_SEQ, OPERATOR_DELRANGE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delrange, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -777,7 +746,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_delrange_index[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_delrange_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_delrange_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delrange_index, NULL, Dee_SEQCLASS_SEQ, OPERATOR_DELRANGE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delrange_index, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -788,7 +757,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_delrange_index_n[2] =
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_delrange_index_n = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_delrange_index_n,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delrange_index_n, NULL, Dee_SEQCLASS_SEQ, OPERATOR_DELRANGE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delrange_index_n, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -799,7 +768,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_setrange[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_setrange = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_setrange,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setrange, NULL, Dee_SEQCLASS_SEQ, OPERATOR_SETRANGE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setrange, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -810,7 +779,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_setrange_index[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_setrange_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_setrange_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setrange_index, NULL, Dee_SEQCLASS_SEQ, OPERATOR_SETRANGE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setrange_index, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -822,37 +791,37 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_setrange_index_n[3] =
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_setrange_index_n = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_setrange_index_n,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setrange_index_n, NULL, Dee_SEQCLASS_SEQ, OPERATOR_SETRANGE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setrange_index_n, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(4) tpconst mh_operators_seq_operator_assign = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_assign,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_assign, NULL, Dee_SEQCLASS_SEQ, OPERATOR_ASSIGN),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_assign, NULL, Dee_SEQCLASS_SET, OPERATOR_ASSIGN),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_assign, NULL, Dee_SEQCLASS_MAP, OPERATOR_ASSIGN),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_assign, NULL, Dee_SEQCLASS_SEQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_assign, NULL, Dee_SEQCLASS_SET),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_assign, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hash, NULL, Dee_SEQCLASS_SEQ, OPERATOR_HASH),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hash, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_compare = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_compare,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare, NULL, Dee_SEQCLASS_SEQ, OPERATOR_LO),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_compare_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_compare_eq,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare_eq, NULL, Dee_SEQCLASS_SEQ, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare_eq, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -863,63 +832,63 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_trycompare_eq[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_trycompare_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_trycompare_eq,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_SEQ, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_eq,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_eq, NULL, Dee_SEQCLASS_SEQ, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_eq, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_ne = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_ne,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ne, NULL, Dee_SEQCLASS_SEQ, OPERATOR_NE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ne, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_lo = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_lo,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_lo, NULL, Dee_SEQCLASS_SEQ, OPERATOR_LO),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_lo, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_le = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_le,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_le, NULL, Dee_SEQCLASS_SEQ, OPERATOR_LE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_le, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_gr = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_gr,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_gr, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GR),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_gr, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_ge = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_ge,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ge, NULL, Dee_SEQCLASS_SEQ, OPERATOR_GE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ge, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_inplace_add = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_inplace_add,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_add, NULL, Dee_SEQCLASS_SEQ, OPERATOR_INPLACE_ADD),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_add, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_inplace_mul = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_inplace_mul,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_mul, NULL, Dee_SEQCLASS_SEQ, OPERATOR_INPLACE_MUL),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_mul, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1154,7 +1123,7 @@ PRIVATE struct mh_init_using tpconst mh_using_seq_operator_contains[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_seq_operator_contains = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__seq_operator_contains,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_contains, NULL, Dee_SEQCLASS_SEQ, OPERATOR_CONTAINS),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_contains, NULL, Dee_SEQCLASS_SEQ),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1348,7 +1317,7 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_brange_wit
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_iter = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_iter,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_iter, NULL, Dee_SEQCLASS_SET, OPERATOR_ITER),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_iter, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1359,7 +1328,7 @@ PRIVATE struct mh_init_using tpconst mh_using_set_operator_foreach[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_foreach = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_foreach,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach, NULL, Dee_SEQCLASS_SET, OPERATOR_ITER),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1370,7 +1339,7 @@ PRIVATE struct mh_init_using tpconst mh_using_set_operator_sizeob[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_sizeob = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_sizeob,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sizeob, NULL, Dee_SEQCLASS_SET, OPERATOR_SIZE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sizeob, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1381,22 +1350,22 @@ PRIVATE struct mh_init_using tpconst mh_using_set_operator_size[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_size = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_size,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_SET, OPERATOR_SIZE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hash, NULL, Dee_SEQCLASS_SET, OPERATOR_HASH),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_HASH),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hash, NULL, Dee_SEQCLASS_SET),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_compare_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_compare_eq,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare_eq, NULL, Dee_SEQCLASS_SET, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare_eq, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1407,28 +1376,28 @@ PRIVATE struct mh_init_using tpconst mh_using_set_operator_trycompare_eq[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_trycompare_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_trycompare_eq,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_SET, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_eq,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_eq, NULL, Dee_SEQCLASS_SET, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_eq, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_ne = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_ne,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ne, NULL, Dee_SEQCLASS_SET, OPERATOR_NE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ne, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_lo = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_lo,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_lo, NULL, Dee_SEQCLASS_SET, OPERATOR_LO),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_lo, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1439,14 +1408,14 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_operator_l
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_le = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_le,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_le, NULL, Dee_SEQCLASS_SET, OPERATOR_LE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_le, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_gr = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_gr,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_gr, NULL, Dee_SEQCLASS_SET, OPERATOR_GR),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_gr, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1457,14 +1426,14 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_operator_g
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_ge = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_ge,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ge, NULL, Dee_SEQCLASS_SET, OPERATOR_GE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ge, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_inv = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_inv,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inv, NULL, Dee_SEQCLASS_SET, OPERATOR_INV),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inv, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1475,8 +1444,8 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_operator_a
 PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_add = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_add,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_add, NULL, Dee_SEQCLASS_SET, OPERATOR_ADD),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_or, NULL, Dee_SEQCLASS_SET, OPERATOR_OR),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_add, NULL, Dee_SEQCLASS_SET),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_or, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1487,7 +1456,7 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_operator_s
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_sub = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_sub,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sub, NULL, Dee_SEQCLASS_SET, OPERATOR_SUB),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sub, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1498,7 +1467,7 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_operator_a
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_and = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_and,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_and, NULL, Dee_SEQCLASS_SET, OPERATOR_AND),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_and, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1509,36 +1478,36 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_operator_x
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_xor = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_xor,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_xor, NULL, Dee_SEQCLASS_SET, OPERATOR_XOR),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_xor, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_inplace_add = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_inplace_add,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_add, NULL, Dee_SEQCLASS_SET, OPERATOR_INPLACE_ADD),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_or, NULL, Dee_SEQCLASS_SET, OPERATOR_INPLACE_OR),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_add, NULL, Dee_SEQCLASS_SET),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_or, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_inplace_sub = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_inplace_sub,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_sub, NULL, Dee_SEQCLASS_SET, OPERATOR_INPLACE_SUB),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_sub, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_inplace_and = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_inplace_and,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_and, NULL, Dee_SEQCLASS_SET, OPERATOR_INPLACE_AND),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_and, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_set_operator_inplace_xor = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_inplace_xor,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_xor, NULL, Dee_SEQCLASS_SET, OPERATOR_INPLACE_XOR),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_xor, NULL, Dee_SEQCLASS_SET),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1577,7 +1546,7 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_pop_with_d
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_iter = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_iter,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_iter, NULL, Dee_SEQCLASS_MAP, OPERATOR_ITER),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_iter, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1588,7 +1557,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_foreach_pair[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_foreach_pair = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_foreach_pair,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_MAP, OPERATOR_ITER),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1599,7 +1568,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_sizeob[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_sizeob = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_sizeob,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sizeob, NULL, Dee_SEQCLASS_MAP, OPERATOR_SIZE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sizeob, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1610,7 +1579,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_size[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_size = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_size,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_MAP, OPERATOR_SIZE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1625,7 +1594,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_getitem[6] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_getitem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_getitem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1641,7 +1610,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_trygetitem[7] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_trygetitem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_trygetitem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1652,7 +1621,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_getitem_index[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_getitem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_getitem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_index, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_index, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1663,7 +1632,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_trygetitem_index[2] =
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_trygetitem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_trygetitem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_index, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_index, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1674,7 +1643,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_getitem_string_hash[2
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_getitem_string_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_getitem_string_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_string_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_string_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1685,7 +1654,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_trygetitem_string_has
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_trygetitem_string_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_trygetitem_string_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_string_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_string_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1696,7 +1665,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_getitem_string_len_ha
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_getitem_string_len_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_getitem_string_len_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_string_len_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1707,7 +1676,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_trygetitem_string_len
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_trygetitem_string_len_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_trygetitem_string_len_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_string_len_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1718,7 +1687,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_bounditem[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_bounditem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_bounditem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1730,7 +1699,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_bounditem_index[3] = 
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_bounditem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_bounditem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_index, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_index, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1742,7 +1711,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_bounditem_string_hash
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_bounditem_string_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_bounditem_string_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_string_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_string_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1754,7 +1723,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_bounditem_string_len_
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_bounditem_string_len_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_bounditem_string_len_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_string_len_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1765,7 +1734,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_hasitem[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_hasitem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_hasitem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1776,7 +1745,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_hasitem_index[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_hasitem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_hasitem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem_index, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem_index, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1787,7 +1756,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_hasitem_string_hash[2
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_hasitem_string_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_hasitem_string_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem_string_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem_string_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1798,7 +1767,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_hasitem_string_len_ha
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_hasitem_string_len_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_hasitem_string_len_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem_string_len_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_GETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1813,7 +1782,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_delitem[6] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_delitem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_delitem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem, NULL, Dee_SEQCLASS_MAP, OPERATOR_DELITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1824,7 +1793,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_delitem_index[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_delitem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_delitem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem_index, NULL, Dee_SEQCLASS_MAP, OPERATOR_DELITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem_index, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1835,7 +1804,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_delitem_string_hash[2
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_delitem_string_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_delitem_string_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem_string_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_DELITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem_string_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1846,7 +1815,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_delitem_string_len_ha
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_delitem_string_len_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_delitem_string_len_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem_string_len_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_DELITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1861,7 +1830,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_setitem[6] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_setitem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_setitem,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem, NULL, Dee_SEQCLASS_MAP, OPERATOR_SETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1872,7 +1841,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_setitem_index[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_setitem_index = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_setitem_index,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_index, NULL, Dee_SEQCLASS_MAP, OPERATOR_SETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_index, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1883,7 +1852,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_setitem_string_hash[2
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_setitem_string_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_setitem_string_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_string_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_SETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_string_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1894,14 +1863,14 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_setitem_string_len_ha
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_setitem_string_len_hash = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_setitem_string_len_hash,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_string_len_hash, NULL, Dee_SEQCLASS_MAP, OPERATOR_SETITEM),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_contains = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_contains,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_contains, NULL, Dee_SEQCLASS_MAP, OPERATOR_CONTAINS),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_contains, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1928,7 +1897,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_enumerate[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_enumerate = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_enumerate,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_MAP, OPERATOR_ITER),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1939,7 +1908,7 @@ PRIVATE struct mh_init_using tpconst mh_using_map_enumerate_range[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_compare_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_compare_eq,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare_eq, NULL, Dee_SEQCLASS_MAP, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare_eq, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -1950,49 +1919,49 @@ PRIVATE struct mh_init_using tpconst mh_using_map_operator_trycompare_eq[2] = {
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_trycompare_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_trycompare_eq,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_MAP, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_eq = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_eq,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_eq, NULL, Dee_SEQCLASS_MAP, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_eq, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_ne = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_ne,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ne, NULL, Dee_SEQCLASS_MAP, OPERATOR_NE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ne, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_lo = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_lo,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_lo, NULL, Dee_SEQCLASS_MAP, OPERATOR_LO),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_lo, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_le = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_le,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_le, NULL, Dee_SEQCLASS_MAP, OPERATOR_LE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_le, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_gr = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_gr,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_gr, NULL, Dee_SEQCLASS_MAP, OPERATOR_GR),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_gr, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_ge = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_ge,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ge, NULL, Dee_SEQCLASS_MAP, OPERATOR_GE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ge, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -2003,8 +1972,8 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_map_operator_a
 PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_map_operator_add = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_add,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_add, NULL, Dee_SEQCLASS_MAP, OPERATOR_ADD),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_or, NULL, Dee_SEQCLASS_MAP, OPERATOR_OR),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_add, NULL, Dee_SEQCLASS_MAP),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_or, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -2015,7 +1984,7 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_map_operator_s
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_sub = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_sub,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sub, NULL, Dee_SEQCLASS_MAP, OPERATOR_SUB),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sub, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -2026,7 +1995,7 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_map_operator_a
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_and = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_and,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_and, NULL, Dee_SEQCLASS_MAP, OPERATOR_AND),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_and, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -2037,36 +2006,36 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_map_operator_x
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_xor = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_xor,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_xor, NULL, Dee_SEQCLASS_MAP, OPERATOR_AND),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_xor, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_map_operator_inplace_add = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_inplace_add,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_add, NULL, Dee_SEQCLASS_MAP, OPERATOR_INPLACE_ADD),
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_or, NULL, Dee_SEQCLASS_MAP, OPERATOR_INPLACE_OR),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_add, NULL, Dee_SEQCLASS_MAP),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_or, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_inplace_sub = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_inplace_sub,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_sub, NULL, Dee_SEQCLASS_MAP, OPERATOR_INPLACE_SUB),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_sub, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_inplace_and = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_inplace_and,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_and, NULL, Dee_SEQCLASS_MAP, OPERATOR_INPLACE_AND),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_and, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_inplace_xor = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_inplace_xor,
 	/* .misos_operators = */ {
-		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_xor, NULL, Dee_SEQCLASS_MAP, OPERATOR_INPLACE_XOR),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inplace_xor, NULL, Dee_SEQCLASS_MAP),
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
@@ -2779,42 +2748,8 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 			 * But in this case, it's much more obvious, *and* we get a stack overflow
 			 * in user-code (meaning that deemon won't hard-crash)
 			 */
-			if (result && result != ospec->misos_default) {
-#if 0 /* Can't happen because `DeeType_GetNativeOperatorWithoutDefaults()' never returns OOM. */
-				if unlikely(result == DeeType_GetNativeOperatorOOM(iter->miso_tno)) {
-					/* Fast-forward the error (note that our callers check for this
-					 * and won't cache the function pointer in this case) */
-					return result;
-				}
-#endif
-
-				/* Check if "result" can be inherited from "self" into "orig_type".
-				 * Only if it can be, can we actually use this operator to implement
-				 * the method hint. */
-#if 1 /* XXX: I think this should always be OK since "result" isn't a default impl... */
+			if (result && result != ospec->misos_default)
 				return result;
-#else
-				if (self == orig_type) {
-					return result;
-				} else {
-					/* TODO: This should be "DeeType_InheritNativeOperatorWithoutDependencies"
-					 * Currently, this handles OOM incorrectly, since DeeType_InheritNativeOperatorWithoutHints
-					 * returns "true" even if the final function pointer could not be written
-					 * (which is the behavior needed during normal operator inheritance), but
-					 * we know that *ONLY* 1 function will *EVER* be written (because we know
-					 * that "result" isn't any kind of default impl), and we have to propagate
-					 * OOM if that operator could not be stored in "self"
-					 *
-					 * XXX: Why? Nothing we're doing depends on the operator actually becoming
-					 *      inherited by `self'; s.a. "XXX" above. */
-					if (DeeType_InheritNativeOperatorWithoutHints(self, orig_type,
-					                                              iter->miso_tno,
-					                                              result))
-						return result;
-					return DeeType_GetNativeOperatorOOM(iter->miso_tno);
-				}
-#endif
-			}
 		}
 	}
 

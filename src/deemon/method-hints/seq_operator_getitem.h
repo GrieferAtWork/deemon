@@ -34,7 +34,7 @@ err:
 
 
 
-[[operator(Sequence.OPERATOR_GETITEM: tp_seq->tp_getitem)]]
+[[operator(Sequence: tp_seq->tp_getitem)]]
 [[wunused]] DREF DeeObject *
 __seq_getitem__.seq_operator_getitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *index)
@@ -117,7 +117,7 @@ err:
 
 
 
-[[operator(Sequence.OPERATOR_GETITEM: tp_seq->tp_getitem_index)]]
+[[operator(Sequence: tp_seq->tp_getitem_index)]]
 [[wunused]] DREF DeeObject *
 __seq_getitem__.seq_operator_getitem_index([[nonnull]] DeeObject *__restrict self,
                                            size_t index)
@@ -233,7 +233,7 @@ seq_operator_getitem_index = {
 
 
 
-[[operator(Sequence.OPERATOR_GETITEM: tp_seq->tp_trygetitem)]]
+[[operator(Sequence: tp_seq->tp_trygetitem)]]
 [[wunused]] DREF DeeObject *
 __seq_getitem__.seq_operator_trygetitem([[nonnull]] DeeObject *self,
                                         [[nonnull]] DeeObject *index)
@@ -271,7 +271,7 @@ seq_operator_trygetitem = {
 
 
 
-[[operator(Sequence.OPERATOR_GETITEM: tp_seq->tp_trygetitem_index)]]
+[[operator(Sequence: tp_seq->tp_trygetitem_index)]]
 [[wunused]] DREF DeeObject *
 __seq_getitem__.seq_operator_trygetitem_index([[nonnull]] DeeObject *__restrict self,
                                               size_t index)
@@ -341,7 +341,7 @@ seq_operator_trygetitem_index = {
 
 
 
-[[operator(Sequence.OPERATOR_GETITEM: tp_seq->tp_hasitem)]]
+[[operator(Sequence: tp_seq->tp_hasitem)]]
 [[wunused]] int
 __seq_getitem__.seq_operator_hasitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *index)
@@ -391,7 +391,7 @@ seq_operator_hasitem = {
 
 
 
-[[operator(Sequence.OPERATOR_GETITEM: tp_seq->tp_hasitem_index)]]
+[[operator(Sequence: tp_seq->tp_hasitem_index)]]
 [[wunused]] int
 __seq_getitem__.seq_operator_hasitem_index([[nonnull]] DeeObject *__restrict self,
                                            size_t index)
@@ -433,7 +433,7 @@ seq_operator_hasitem_index = {
 
 
 
-[[operator(Sequence.OPERATOR_GETITEM: tp_seq->tp_bounditem)]]
+[[operator(Sequence: tp_seq->tp_bounditem)]]
 [[wunused]] int
 __seq_getitem__.seq_operator_bounditem([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *index)
@@ -475,7 +475,7 @@ seq_operator_bounditem = {
 
 
 
-[[operator(Sequence.OPERATOR_GETITEM: tp_seq->tp_bounditem_index)]]
+[[operator(Sequence: tp_seq->tp_bounditem_index)]]
 [[wunused]] int
 __seq_getitem__.seq_operator_bounditem_index([[nonnull]] DeeObject *__restrict self,
                                              size_t index)

@@ -33,7 +33,7 @@ err:
 
 
 /* {"a", "b"} - {"b"}   ->   {"a"} */
-[[operator(Set.OPERATOR_SUB: tp_math->tp_sub)]]
+[[operator(Set: tp_math->tp_sub)]]
 [[wunused]] DREF DeeObject *
 __set_sub__.set_operator_sub([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *rhs)

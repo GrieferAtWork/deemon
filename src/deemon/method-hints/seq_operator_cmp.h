@@ -39,7 +39,7 @@ for (local op, eq, ne, Eq, EQ, isEq: {
 	print('	return NULL;');
 	print('}');
 	print;
-	print("[[operator(Sequence.OPERATOR_", EQ, ": tp_cmp->tp_", eq, ")]]");
+	print("[[operator(Sequence: tp_cmp->tp_", eq, ")]]");
 	print('[[wunused]] DREF DeeObject *');
 	print('__seq_', eq, '__.seq_operator_', eq, '([[nonnull]] DeeObject *lhs,');
 	print('                           [[nonnull]] DeeObject *rhs)');
@@ -83,7 +83,7 @@ err:
 	return NULL;
 }
 
-[[operator(Sequence.OPERATOR_EQ: tp_cmp->tp_eq)]]
+[[operator(Sequence: tp_cmp->tp_eq)]]
 [[wunused]] DREF DeeObject *
 __seq_eq__.seq_operator_eq([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -125,7 +125,7 @@ err:
 	return NULL;
 }
 
-[[operator(Sequence.OPERATOR_NE: tp_cmp->tp_ne)]]
+[[operator(Sequence: tp_cmp->tp_ne)]]
 [[wunused]] DREF DeeObject *
 __seq_ne__.seq_operator_ne([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -167,7 +167,7 @@ err:
 	return NULL;
 }
 
-[[operator(Sequence.OPERATOR_LO: tp_cmp->tp_lo)]]
+[[operator(Sequence: tp_cmp->tp_lo)]]
 [[wunused]] DREF DeeObject *
 __seq_lo__.seq_operator_lo([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -209,7 +209,7 @@ err:
 	return NULL;
 }
 
-[[operator(Sequence.OPERATOR_LE: tp_cmp->tp_le)]]
+[[operator(Sequence: tp_cmp->tp_le)]]
 [[wunused]] DREF DeeObject *
 __seq_le__.seq_operator_le([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -251,7 +251,7 @@ err:
 	return NULL;
 }
 
-[[operator(Sequence.OPERATOR_GR: tp_cmp->tp_gr)]]
+[[operator(Sequence: tp_cmp->tp_gr)]]
 [[wunused]] DREF DeeObject *
 __seq_gr__.seq_operator_gr([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
@@ -293,7 +293,7 @@ err:
 	return NULL;
 }
 
-[[operator(Sequence.OPERATOR_GE: tp_cmp->tp_ge)]]
+[[operator(Sequence: tp_cmp->tp_ge)]]
 [[wunused]] DREF DeeObject *
 __seq_ge__.seq_operator_ge([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)

@@ -407,8 +407,6 @@ final class OperatorSpec {
 	this = default;
 	@@Required base-class for this operator to be linkable
 	public member baseClass: string | none;
-	@@OPERATOR_ITER  (or "0" if not defined)
-	public member operatorName: string;
 	@@tp_seq (@none if part of the root DeeTypeObject)
 	public member operatorTable: string | none = none;
 	@@tp_iter
@@ -1688,17 +1686,17 @@ function printMhInitSpecs() {
 						: f"Dee_TNO_MISSING({opName})";
 				print line: (opNameStr, ", "),;
 				if (spec.baseClass is none || spec.acceptAnyBaseClassForMethodHint) {
-					print line: ("NULL, Dee_SEQCLASS_UNKNOWN, "),;
+					print line: ("NULL, Dee_SEQCLASS_UNKNOWN"),;
 				} else if (spec.baseClass == "DeeSeq_Type") {
-					print line: ("NULL, Dee_SEQCLASS_SEQ, "),;
+					print line: ("NULL, Dee_SEQCLASS_SEQ"),;
 				} else if (spec.baseClass == "DeeSet_Type") {
-					print line: ("NULL, Dee_SEQCLASS_SET, "),;
+					print line: ("NULL, Dee_SEQCLASS_SET"),;
 				} else if (spec.baseClass == "DeeMapping_Type") {
-					print line: ("NULL, Dee_SEQCLASS_MAP, "),;
+					print line: ("NULL, Dee_SEQCLASS_MAP"),;
 				} else {
-					print line: ("&", spec.baseClass, ", Dee_SEQCLASS_UNKNOWN, "),;
+					print line: ("&", spec.baseClass, ", Dee_SEQCLASS_UNKNOWN"),;
 				}
-				print line: (spec.operatorName, "),");
+				print line: ("),");
 				local lineString = line.string;
 				if (lineString !in lines)
 					lines.append(lineString);
@@ -2923,12 +2921,6 @@ done:
 	public parseOperatorSpecs(): {OperatorSpec...} {
 		local result = OperatorSpec();
 		local baseClasses = parseBaseClassList().frozen;
-		if (tok == ".") {
-			next();
-			result.operatorName = parseSymbol();
-		} else {
-			result.operatorName = "0";
-		}
 		skip(":");
 		local field = parseFieldDesc();
 		if (tok == "->") {

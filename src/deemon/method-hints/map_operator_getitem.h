@@ -61,7 +61,7 @@ err:
 )]
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_getitem)]]
+[[operator(Mapping: tp_seq->tp_getitem)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_getitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key)
@@ -168,7 +168,7 @@ map_operator_getitem = {
 
 
 /* Returns `ITER_DONE' if `key' doesn't exist. */
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_trygetitem)]]
+[[operator(Mapping: tp_seq->tp_trygetitem)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_trygetitem([[nonnull]] DeeObject *self,
                                         [[nonnull]] DeeObject *key)
@@ -286,7 +286,7 @@ map_operator_trygetitem = {
 
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_getitem_index)]]
+[[operator(Mapping: tp_seq->tp_getitem_index)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_getitem_index([[nonnull]] DeeObject *self, size_t key)
 %{unsupported(auto("operator []"))}
@@ -318,7 +318,7 @@ map_operator_getitem_index = {
 
 
 /* Returns `ITER_DONE' if `key' doesn't exist. */
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_trygetitem_index)]]
+[[operator(Mapping: tp_seq->tp_trygetitem_index)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_trygetitem_index([[nonnull]] DeeObject *self, size_t key)
 %{unsupported_alias("default__map_operator_getitem_index__unsupported")}
@@ -388,7 +388,7 @@ default_map_getitem_string_hash_with_enumerate_cb(void *arg, DeeObject *key, Dee
 )]
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_getitem_string_hash)]]
+[[operator(Mapping: tp_seq->tp_getitem_string_hash)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_getitem_string_hash([[nonnull]] DeeObject *self,
                                                  [[nonnull]] char const *key, Dee_hash_t hash)
@@ -445,7 +445,7 @@ map_operator_getitem_string_hash = {
 
 
 /* Returns `ITER_DONE' if `key' doesn't exist. */
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_trygetitem_string_hash)]]
+[[operator(Mapping: tp_seq->tp_trygetitem_string_hash)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_trygetitem_string_hash([[nonnull]] DeeObject *self,
                                                     [[nonnull]] char const *key, Dee_hash_t hash)
@@ -535,7 +535,7 @@ default_map_getitem_string_len_hash_with_enumerate_cb(void *arg, DeeObject *key,
 )]
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_getitem_string_len_hash)]]
+[[operator(Mapping: tp_seq->tp_getitem_string_len_hash)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_getitem_string_len_hash([[nonnull]] DeeObject *self,
                                                      char const *key, size_t keylen,
@@ -594,7 +594,7 @@ map_operator_getitem_string_len_hash = {
 
 
 /* Returns `ITER_DONE' if `key' doesn't exist. */
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_trygetitem_string_len_hash)]]
+[[operator(Mapping: tp_seq->tp_trygetitem_string_len_hash)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_trygetitem_string_len_hash([[nonnull]] DeeObject *self,
                                                         char const *key, size_t keylen,
@@ -666,7 +666,7 @@ err:
 
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_bounditem)]]
+[[operator(Mapping: tp_seq->tp_bounditem)]]
 [[wunused]] int
 __map_getitem__.map_operator_bounditem([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *key)
@@ -737,7 +737,7 @@ map_operator_bounditem = {
 
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_bounditem_index)]]
+[[operator(Mapping: tp_seq->tp_bounditem_index)]]
 [[wunused]] int
 __map_getitem__.map_operator_bounditem_index([[nonnull]] DeeObject *self, size_t key)
 %{unsupported({
@@ -785,7 +785,7 @@ map_operator_bounditem_index = {
 
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_bounditem_string_hash)]]
+[[operator(Mapping: tp_seq->tp_bounditem_string_hash)]]
 [[wunused]] int
 __map_getitem__.map_operator_bounditem_string_hash([[nonnull]] DeeObject *self,
                                                    [[nonnull]] char const *key,
@@ -833,7 +833,7 @@ map_operator_bounditem_string_hash = {
 };
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_bounditem_string_len_hash)]]
+[[operator(Mapping: tp_seq->tp_bounditem_string_len_hash)]]
 [[wunused]] int
 __map_getitem__.map_operator_bounditem_string_len_hash([[nonnull]] DeeObject *self,
                                                        char const *key, size_t keylen,
@@ -884,7 +884,7 @@ map_operator_bounditem_string_len_hash = {
 
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_hasitem)]]
+[[operator(Mapping: tp_seq->tp_hasitem)]]
 [[wunused]] int
 __map_getitem__.map_operator_hasitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key)
@@ -910,7 +910,7 @@ map_operator_hasitem = {
 
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_hasitem_index)]]
+[[operator(Mapping: tp_seq->tp_hasitem_index)]]
 [[wunused]] int
 __map_getitem__.map_operator_hasitem_index([[nonnull]] DeeObject *self, size_t key)
 %{$empty = 0}
@@ -935,7 +935,7 @@ map_operator_hasitem_index = {
 
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_hasitem_string_hash)]]
+[[operator(Mapping: tp_seq->tp_hasitem_string_hash)]]
 [[wunused]] int
 __map_getitem__.map_operator_hasitem_string_hash([[nonnull]] DeeObject *self,
                                                  [[nonnull]] char const *key,
@@ -962,7 +962,7 @@ map_operator_hasitem_string_hash = {
 
 
 
-[[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_hasitem_string_len_hash)]]
+[[operator(Mapping: tp_seq->tp_hasitem_string_len_hash)]]
 [[wunused]] int
 __map_getitem__.map_operator_hasitem_string_len_hash([[nonnull]] DeeObject *self,
                                                      char const *key, size_t keylen,

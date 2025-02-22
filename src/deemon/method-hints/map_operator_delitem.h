@@ -32,7 +32,7 @@ err:
 	return NULL;
 }
 
-[[operator(Mapping.OPERATOR_DELITEM: tp_seq->tp_delitem)]]
+[[operator(Mapping: tp_seq->tp_delitem)]]
 [[wunused]] int
 __map_delitem__.map_operator_delitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key)
@@ -147,7 +147,7 @@ map_operator_delitem = {
 
 
 
-[[operator(Mapping.OPERATOR_DELITEM: tp_seq->tp_delitem_index)]]
+[[operator(Mapping: tp_seq->tp_delitem_index)]]
 [[wunused]] int
 __map_delitem__.map_operator_delitem_index([[nonnull]] DeeObject *self, size_t key)
 %{unsupported(auto("operator del[]"))}
@@ -176,7 +176,7 @@ map_operator_delitem_index = {
 
 
 
-[[operator(Mapping.OPERATOR_DELITEM: tp_seq->tp_delitem_string_hash)]]
+[[operator(Mapping: tp_seq->tp_delitem_string_hash)]]
 [[wunused]] int
 __map_delitem__.map_operator_delitem_string_hash([[nonnull]] DeeObject *self,
                                                  [[nonnull]] char const *key, Dee_hash_t hash)
@@ -208,7 +208,7 @@ map_operator_delitem_string_hash = {
 
 
 
-[[operator(Mapping.OPERATOR_DELITEM: tp_seq->tp_delitem_string_len_hash)]]
+[[operator(Mapping: tp_seq->tp_delitem_string_len_hash)]]
 [[wunused]] int
 __map_delitem__.map_operator_delitem_string_len_hash([[nonnull]] DeeObject *self,
                                                      char const *key, size_t keylen,
