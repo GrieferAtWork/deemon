@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.operator + ()                                         */
 /************************************************************************/
-[[alias(Mapping.union -> "map_union")]]
+[[alias(Mapping.union)]]
 __map_add__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?DMapping {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__map_add__", &rhs))

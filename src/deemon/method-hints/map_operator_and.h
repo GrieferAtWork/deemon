@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.operator & ()                                         */
 /************************************************************************/
-[[alias(Mapping.intersection -> "map_intersection")]]
+[[alias(Mapping.intersection)]]
 __map_and__(keys:?X2?DSet?S?O)->?DMapping {
 	DeeObject *keys;
 	if (DeeArg_Unpack(argc, argv, "o:__map_and__", &keys))

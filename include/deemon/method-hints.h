@@ -774,16 +774,16 @@ typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_map_operator_g
 /* __map_ge__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_map_operator_ge_t)(DeeObject *lhs, DeeObject *rhs);
 
-/* Mapping_union, map_union, __map_add__ */
+/* Mapping_union, __map_add__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_map_operator_add_t)(DeeObject *lhs, DeeObject *rhs);
 
-/* Mapping_difference, map_difference, __map_sub__ */
+/* Mapping_difference, __map_sub__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_map_operator_sub_t)(DeeObject *lhs, DeeObject *keys);
 
-/* Mapping_intersection, map_intersection, __map_and__ */
+/* Mapping_intersection, __map_and__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_map_operator_and_t)(DeeObject *lhs, DeeObject *keys);
 
-/* Mapping_symmetric_difference, map_symmetric_difference, __map_xor__ */
+/* Mapping_symmetric_difference, __map_xor__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_map_operator_xor_t)(DeeObject *lhs, DeeObject *rhs);
 
 /* __map_inplace_add__ */
@@ -1928,10 +1928,6 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_add__(DeeObject *__restri
 #define DeeMA_Mapping_union_doc   DeeMA___map_add___doc
 #define DeeMA_Mapping_union       DeeMA___map_add__
 DDATDEF char const DeeMA_Mapping_union_name[]; /* "union" */
-#define DeeMA_map_union_flags DeeMA_Mapping_union_flags
-#define DeeMA_map_union_name  DeeMA_Mapping_union_name
-#define DeeMA_map_union_doc   DeeMA_Mapping_union_doc
-#define DeeMA_map_union       DeeMA_Mapping_union
 
 #define DeeMA___map_sub___flags Dee_TYPE_METHOD_FNORMAL
 DDATDEF char const DeeMA___map_sub___name[]; /* "__map_sub__" */
@@ -1941,10 +1937,6 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_sub__(DeeObject *__restri
 #define DeeMA_Mapping_difference_doc   DeeMA___map_sub___doc
 #define DeeMA_Mapping_difference       DeeMA___map_sub__
 DDATDEF char const DeeMA_Mapping_difference_name[]; /* "difference" */
-#define DeeMA_map_difference_flags DeeMA_Mapping_difference_flags
-#define DeeMA_map_difference_name  DeeMA_Mapping_difference_name
-#define DeeMA_map_difference_doc   DeeMA_Mapping_difference_doc
-#define DeeMA_map_difference       DeeMA_Mapping_difference
 
 #define DeeMA___map_and___flags Dee_TYPE_METHOD_FNORMAL
 DDATDEF char const DeeMA___map_and___name[]; /* "__map_and__" */
@@ -1954,10 +1946,6 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_and__(DeeObject *__restri
 #define DeeMA_Mapping_intersection_doc   DeeMA___map_and___doc
 #define DeeMA_Mapping_intersection       DeeMA___map_and__
 DDATDEF char const DeeMA_Mapping_intersection_name[]; /* "intersection" */
-#define DeeMA_map_intersection_flags DeeMA_Mapping_intersection_flags
-#define DeeMA_map_intersection_name  DeeMA_Mapping_intersection_name
-#define DeeMA_map_intersection_doc   DeeMA_Mapping_intersection_doc
-#define DeeMA_map_intersection       DeeMA_Mapping_intersection
 
 #define DeeMA___map_xor___flags Dee_TYPE_METHOD_FNORMAL
 DDATDEF char const DeeMA___map_xor___name[]; /* "__map_xor__" */
@@ -1967,10 +1955,6 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_xor__(DeeObject *__restri
 #define DeeMA_Mapping_symmetric_difference_doc   DeeMA___map_xor___doc
 #define DeeMA_Mapping_symmetric_difference       DeeMA___map_xor__
 DDATDEF char const DeeMA_Mapping_symmetric_difference_name[]; /* "symmetric_difference" */
-#define DeeMA_map_symmetric_difference_flags DeeMA_Mapping_symmetric_difference_flags
-#define DeeMA_map_symmetric_difference_name  DeeMA_Mapping_symmetric_difference_name
-#define DeeMA_map_symmetric_difference_doc   DeeMA_Mapping_symmetric_difference_doc
-#define DeeMA_map_symmetric_difference       DeeMA_Mapping_symmetric_difference
 
 #define DeeMA___map_inplace_add___flags Dee_TYPE_METHOD_FNORMAL
 DDATDEF char const DeeMA___map_inplace_add___name[]; /* "__map_inplace_add__" */

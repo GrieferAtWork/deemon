@@ -132,22 +132,22 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	            "In other words: If @this and @with_ have no items in common"),
 
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_METHOD(DeeMA_set_union_name, &DeeMA_set_union,
+	TYPE_METHOD(STR_union, &DeeMA_Set_union,
 	            "(with_:?.)->?.\n"
 	            "Same as ${(this as Set) | with_}"),
-	TYPE_METHOD(DeeMA_set_symmetric_difference_name, &DeeMA_set_symmetric_difference,
+	TYPE_METHOD(STR_symmetric_difference, &DeeMA_Set_symmetric_difference,
 	            "(with_:?.)->?.\n"
 	            "Same as ${(this as Set) ^ with_}"),
-	TYPE_METHOD(DeeMA_set_difference_name, &DeeMA_set_difference,
+	TYPE_METHOD(STR_difference, &DeeMA_Set_difference,
 	            "(to:?.)->?.\n"
 	            "Same as ${(this as Set) - to}"),
-	TYPE_METHOD(DeeMA_set_intersection_name, &DeeMA_set_intersection,
+	TYPE_METHOD(STR_intersection, &DeeMA_Set_intersection,
 	            "(with_:?.)->?.\n"
 	            "Same as ${(this as Set) & with_}"),
-	TYPE_METHOD(DeeMA_set_issubset_name, &DeeMA_set_issubset,
+	TYPE_METHOD(STR_issubset, &DeeMA_Set_issubset,
 	            "(of:?.)->?Dbool\n"
 	            "Same as ${(this as Set) <= of}"),
-	TYPE_METHOD(DeeMA_set_issuperset_name, &DeeMA_set_issuperset,
+	TYPE_METHOD(STR_issuperset, &DeeMA_Set_issuperset,
 	            "(of:?.)->?Dbool\n"
 	            "Same as ${(this as Set) >= of}"),
 #else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */

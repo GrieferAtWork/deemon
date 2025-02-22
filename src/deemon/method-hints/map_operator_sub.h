@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.operator - ()                                         */
 /************************************************************************/
-[[alias(Mapping.difference -> "map_difference")]]
+[[alias(Mapping.difference)]]
 __map_sub__(keys:?X2?DSet?S?O)->?DMapping {
 	DeeObject *keys;
 	if (DeeArg_Unpack(argc, argv, "o:__map_sub__", &keys))

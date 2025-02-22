@@ -263,7 +263,7 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	TYPE_KWMETHOD("byhash", &map_byhash, DOC_GET(map_byhash_doc)),
 
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_KWMETHOD("enumerate", &map_enumerate,
+	TYPE_KWMETHOD(STR_enumerate, &map_enumerate,
 	              "->?S?T2?O?O\n"
 	              "(start,end)->?S?T2?O?O\n"
 	              "(cb:?DCallable)->?X2?O?N\n"
@@ -271,6 +271,18 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	              "Enumerate keys and associated values of @this mapping\n"
 	              "This function can be used to easily enumerate mapping keys and values, "
 	              /**/ "including being able to enumerate keys that are currently unbound"),
+	TYPE_METHOD(STR_union, &DeeMA_Mapping_union,
+	            "(rhs:?X3?.?M?O?O?S?T2?O?O)->?.\n"
+	            "Same as ${(this as Mapping) | rhs}"),
+	TYPE_METHOD(STR_difference, &DeeMA_Mapping_difference,
+	            "(keys:?X2?DSet?S?O)->?.\n"
+	            "Same as ${(this as Mapping) - keys}"),
+	TYPE_METHOD(STR_intersection, &DeeMA_Mapping_intersection,
+	            "(keys:?X2?DSet?S?O)->?.\n"
+	            "Same as ${(this as Mapping) & keys}"),
+	TYPE_METHOD(STR_symmetric_difference, &DeeMA_Mapping_symmetric_difference,
+	            "(rhs:?X2?M?O?O?S?T2?O?O)->?.\n"
+	            "Same as ${(this as Mapping) ^ rhs}"),
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Default operations for modifiable mappings. */
@@ -324,10 +336,19 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	TYPE_METHOD("__setitem__", &default_map___setitem__,
 	            "(key,value)\n"
 	            "Alias for ${(this as Mapping)[key] = value}"),
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD("__enumerate__", &default_map___enumerate__,
+	            "(cb)->?X2?O?N\n"
+	            "(cb,start,end)->?X2?O?N\n"
+	            "Alias for ${(this as Mapping).enumerate(cb[,start,end])}"),
+	TYPE_METHOD("__enumerate_items__", &DeeMA___map_enumerate_items__,
+	            "()->?T2?O?O\n"
+	            "(start,end)->?T2?O?O\n"
+	            "Alias for ${(this as Mapping).enumerate([start,end])}"),
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__enumerate__", &default_map___enumerate__,
 	            "(cb)->\n"
 	            "Alias for ${(this as Mapping).enumerate(cb)}"),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_KWMETHOD("__enumerate_index__", &default_map___enumerate_index__,
 	              "(cb,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->\n"
 	              "Alias for ${Mapping.enumerate(this, cb, start, end)}"),
