@@ -17057,7 +17057,7 @@ default__map_operator_bounditem(DeeObject *self, DeeObject *key) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_bounditem__unsupported(DeeObject *self, DeeObject *key) {
-	default__map_operator_getitem__unsupported(self, key);
+	COMPILER_UNUSED(default__map_operator_getitem__unsupported(self, key));
 	return Dee_BOUND_ERR;
 }
 
@@ -17139,7 +17139,7 @@ default__map_operator_bounditem_index(DeeObject *self, size_t key) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__map_operator_bounditem_index__unsupported(DeeObject *self, size_t key) {
-	default__map_operator_getitem_index__unsupported(self, key);
+	COMPILER_UNUSED(default__map_operator_getitem_index__unsupported(self, key));
 	return Dee_BOUND_ERR;
 }
 
@@ -17187,7 +17187,7 @@ default__map_operator_bounditem_string_hash(DeeObject *self, char const *key, De
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_bounditem_string_hash__unsupported(DeeObject *self, char const *key, Dee_hash_t hash) {
-	default__map_operator_getitem_string_hash__unsupported(self, key, hash);
+	COMPILER_UNUSED(default__map_operator_getitem_string_hash__unsupported(self, key, hash));
 	return Dee_BOUND_ERR;
 }
 
@@ -17235,7 +17235,7 @@ default__map_operator_bounditem_string_len_hash(DeeObject *self, char const *key
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__map_operator_bounditem_string_len_hash__unsupported(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	default__map_operator_getitem_string_len_hash__unsupported(self, key, keylen, hash);
+	COMPILER_UNUSED(default__map_operator_getitem_string_len_hash__unsupported(self, key, keylen, hash));
 	return Dee_BOUND_ERR;
 }
 
