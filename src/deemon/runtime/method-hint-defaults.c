@@ -9384,6 +9384,17 @@ err:
 
 /* seq_contains */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__seq_contains__with_callattr_contains(DeeObject *self, DeeObject *item) {
+	DREF DeeObject *result;
+	result = DeeObject_CallAttr(self, (DeeObject *)&str_contains, 1, &item);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_contains__with_callattr___seq_contains__(DeeObject *self, DeeObject *item) {
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_contains__, 1, &item);
@@ -9481,6 +9492,22 @@ default__seq_contains__with__seq_find(DeeObject *self, DeeObject *item) {
 
 
 /* seq_contains_with_key */
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+default__seq_contains_with_key__with_callattr_contains(DeeObject *self, DeeObject *item, DeeObject *key) {
+	DREF DeeObject *result;
+	DeeObject *args[4];
+	args[0] = item;
+	args[1] = DeeInt_Zero;
+	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[3] = key;
+	result = DeeObject_CallAttr(self, (DeeObject *)&str_contains, 4, args);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 default__seq_contains_with_key__with_callattr___seq_contains__(DeeObject *self, DeeObject *item, DeeObject *key) {
 	DREF DeeObject *result;
@@ -9581,6 +9608,17 @@ default__seq_contains_with_key__with__seq_find_with_key(DeeObject *self, DeeObje
 
 /* seq_contains_with_range */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__seq_contains_with_range__with_callattr_contains(DeeObject *self, DeeObject *item, size_t start, size_t end) {
+	DREF DeeObject *result;
+	result = DeeObject_CallAttrf(self, (DeeObject *)&str_contains, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_contains_with_range__with_callattr___seq_contains__(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	DREF DeeObject *result;
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_contains__, "o" PCKuSIZ PCKuSIZ, item, start, end);
@@ -9655,6 +9693,17 @@ err:
 
 
 /* seq_contains_with_range_and_key */
+INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
+default__seq_contains_with_range_and_key__with_callattr_contains(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	DREF DeeObject *result;
+	result = DeeObject_CallAttrf(self, (DeeObject *)&str_contains, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 default__seq_contains_with_range_and_key__with_callattr___seq_contains__(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	DREF DeeObject *result;

@@ -502,7 +502,7 @@ typedef WUNUSED_T NONNULL_T((1, 2, 3)) size_t (DCALL *DeeMH_seq_count_with_key_t
 typedef WUNUSED_T NONNULL_T((1, 2)) size_t (DCALL *DeeMH_seq_count_with_range_t)(DeeObject *self, DeeObject *item, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1, 2, 5)) size_t (DCALL *DeeMH_seq_count_with_range_and_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
-/* __seq_contains__ */
+/* Sequence_contains, __seq_contains__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_contains_t)(DeeObject *self, DeeObject *item);
 typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_contains_with_key_t)(DeeObject *self, DeeObject *item, DeeObject *key);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_contains_with_range_t)(DeeObject *self, DeeObject *item, size_t start, size_t end);
@@ -1127,6 +1127,10 @@ DDATDEF char const DeeMA_Sequence_count_name[]; /* "count" */
 DDATDEF char const DeeMA___seq_contains___name[]; /* "__seq_contains__" */
 DDATDEF char const DeeMA___seq_contains___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_contains__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define DeeMA_Sequence_contains_flags DeeMA___seq_contains___flags
+#define DeeMA_Sequence_contains_doc   DeeMA___seq_contains___doc
+#define DeeMA_Sequence_contains       DeeMA___seq_contains__
+DDATDEF char const DeeMA_Sequence_contains_name[]; /* "contains" */
 
 #define DeeMA___seq_locate___flags Dee_TYPE_METHOD_FKWDS
 DDATDEF char const DeeMA___seq_locate___name[]; /* "__seq_locate__" */

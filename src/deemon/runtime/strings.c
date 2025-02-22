@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_STRINGS_C 1
 
 #include <deemon/api.h>
-#include <deemon/object.h>
 #include <deemon/string.h>
 
 #define DEF_STRING(name, str, hash32, hash64) \

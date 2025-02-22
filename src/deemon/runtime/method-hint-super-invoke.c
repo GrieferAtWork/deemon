@@ -1408,7 +1408,8 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_count_with_range_an
 	MH_SUPER_MAP_TYPED_INIT(&default__seq_count_with_range_and_key__with_callobjectcache___seq_count__, &tdefault__seq_count_with_range_and_key__with_callobjectcache___seq_count__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_contains[8] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_contains[9] = {
+	(Dee_funptr_t)&default__seq_contains__with_callattr_contains,
 	(Dee_funptr_t)&default__seq_contains__with_callattr___seq_contains__,
 	(Dee_funptr_t)&default__seq_contains__unsupported,
 	(Dee_funptr_t)&default__seq_contains__with__seq_operator_contains,
@@ -1422,7 +1423,8 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_contains[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__seq_contains__with_callobjectcache___seq_contains__, &tdefault__seq_contains__with_callobjectcache___seq_contains__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_contains_with_key[6] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_contains_with_key[7] = {
+	(Dee_funptr_t)&default__seq_contains_with_key__with_callattr_contains,
 	(Dee_funptr_t)&default__seq_contains_with_key__with_callattr___seq_contains__,
 	(Dee_funptr_t)&default__seq_contains_with_key__unsupported,
 	(Dee_funptr_t)&default__seq_contains_with_key__empty,
@@ -1434,7 +1436,8 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_contains_with_key[2
 	MH_SUPER_MAP_TYPED_INIT(&default__seq_contains_with_key__with_callobjectcache___seq_contains__, &tdefault__seq_contains_with_key__with_callobjectcache___seq_contains__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_contains_with_range[6] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_contains_with_range[7] = {
+	(Dee_funptr_t)&default__seq_contains_with_range__with_callattr_contains,
 	(Dee_funptr_t)&default__seq_contains_with_range__with_callattr___seq_contains__,
 	(Dee_funptr_t)&default__seq_contains_with_range__unsupported,
 	(Dee_funptr_t)&default__seq_contains_with_range__empty,
@@ -1446,7 +1449,8 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_contains_with_range
 	MH_SUPER_MAP_TYPED_INIT(&default__seq_contains_with_range__with_callobjectcache___seq_contains__, &tdefault__seq_contains_with_range__with_callobjectcache___seq_contains__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_contains_with_range_and_key[6] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_contains_with_range_and_key[7] = {
+	(Dee_funptr_t)&default__seq_contains_with_range_and_key__with_callattr_contains,
 	(Dee_funptr_t)&default__seq_contains_with_range_and_key__with_callattr___seq_contains__,
 	(Dee_funptr_t)&default__seq_contains_with_range_and_key__unsupported,
 	(Dee_funptr_t)&default__seq_contains_with_range_and_key__empty,
@@ -1458,7 +1462,8 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_contains_with_range
 	MH_SUPER_MAP_TYPED_INIT(&default__seq_contains_with_range_and_key__with_callobjectcache___seq_contains__, &tdefault__seq_contains_with_range_and_key__with_callobjectcache___seq_contains__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_contains[5] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_contains[6] = {
+	(Dee_funptr_t)&default__seq_operator_contains__with_callattr_contains,
 	(Dee_funptr_t)&default__seq_operator_contains__with_callattr___seq_contains__,
 	(Dee_funptr_t)&default__seq_operator_contains__unsupported,
 	(Dee_funptr_t)&default__seq_operator_contains__with__seq_contains,

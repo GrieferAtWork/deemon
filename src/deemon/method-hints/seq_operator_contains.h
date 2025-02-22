@@ -23,7 +23,7 @@
 /* deemon.Sequence.operator contains()                                  */
 /************************************************************************/
 
-[[kw]]
+[[kw, alias(Sequence.contains)]]
 __seq_contains__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 	int result;
 	DeeObject *item, *key = Dee_None;

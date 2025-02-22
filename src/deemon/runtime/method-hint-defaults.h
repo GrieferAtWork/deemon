@@ -1000,6 +1000,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_count_with_range_and
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL default__seq_count_with_range_and_key__with__seq_find_with_key(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
 /* seq_contains */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_contains__with_callattr_contains(DeeObject *self, DeeObject *item);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_contains__with_callattr___seq_contains__(DeeObject *self, DeeObject *item);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_contains__with_callobjectcache___seq_contains__(DeeObject *self, DeeObject *item);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__seq_contains__with_callobjectcache___seq_contains__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item);
@@ -1011,6 +1012,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_contains__with__seq_operat
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_contains__with__seq_find(DeeObject *self, DeeObject *item);
 
 /* seq_contains_with_key */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__seq_contains_with_key__with_callattr_contains(DeeObject *self, DeeObject *item, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__seq_contains_with_key__with_callattr___seq_contains__(DeeObject *self, DeeObject *item, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__seq_contains_with_key__with_callobjectcache___seq_contains__(DeeObject *self, DeeObject *item, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tdefault__seq_contains_with_key__with_callobjectcache___seq_contains__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item, DeeObject *key);
@@ -1020,6 +1022,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__seq_contains_with_key__with
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__seq_contains_with_key__with__seq_find_with_key(DeeObject *self, DeeObject *item, DeeObject *key);
 
 /* seq_contains_with_range */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_contains_with_range__with_callattr_contains(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_contains_with_range__with_callattr___seq_contains__(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_contains_with_range__with_callobjectcache___seq_contains__(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__seq_contains_with_range__with_callobjectcache___seq_contains__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item, size_t start, size_t end);
@@ -1029,6 +1032,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_contains_with_range__with_
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_contains_with_range__with__seq_find(DeeObject *self, DeeObject *item, size_t start, size_t end);
 
 /* seq_contains_with_range_and_key */
+INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__seq_contains_with_range_and_key__with_callattr_contains(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__seq_contains_with_range_and_key__with_callattr___seq_contains__(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__seq_contains_with_range_and_key__with_callobjectcache___seq_contains__(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int DCALL tdefault__seq_contains_with_range_and_key__with_callobjectcache___seq_contains__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
@@ -1039,6 +1043,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__seq_contains_with_range_and
 
 /* seq_operator_contains */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_contains(DeeObject *self, DeeObject *item);
+#define default__seq_operator_contains__with_callattr_contains (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_contains__with__seq_contains)
 #define default__seq_operator_contains__with_callattr___seq_contains__ (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_contains__with__seq_contains)
 #define default__seq_operator_contains__with_callobjectcache___seq_contains__ (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_contains__with__seq_contains)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_contains__unsupported(DeeObject *self, DeeObject *item);

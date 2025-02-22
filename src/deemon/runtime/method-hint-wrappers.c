@@ -692,6 +692,7 @@ err:
 
 PUBLIC_CONST char const DeeMA___seq_contains___name[] = "__seq_contains__";
 PUBLIC_CONST char const DeeMA___seq_contains___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool";
+PUBLIC_CONST char const DeeMA_Sequence_contains_name[] = "contains";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_contains__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
 	int result;
