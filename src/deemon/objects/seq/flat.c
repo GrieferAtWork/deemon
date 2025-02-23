@@ -554,6 +554,50 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sf_getitem_index(SeqFlat *__restrict self, size_t index) {
+	size_t end_index;
+	Dee_ssize_t status;
+	DREF DeeObject *result;
+	struct sf_enumerate_index_data data;
+	if (OVERFLOW_UADD(index, 1, &end_index)) {
+		size_t size = sf_size(self);
+		if unlikely(size == (size_t)-1)
+			goto err;
+		err_index_out_of_bounds((DeeObject *)self, index, size);
+		goto err;
+	}
+#ifndef NDEBUG
+	result = NULL;
+#endif /* !NDEBUG */
+
+	//status = sf_enumerate_index(self, &sf_trygetitem_index_cb, &result, index, index + 1);
+	data.sfeid_proc   = &sf_trygetitem_index_cb;
+	data.sfeid_arg    = &result;
+	data.sfeid_result = 0;
+	data.sfeid_index  = index;
+	data.sfeid_skip   = index;
+	data.sfeid_end    = end_index;
+	status = sf_foreachseq(self, &sf_enumerate_index_foreach_cb, &data);
+	if (status == 0 || status == SF_ENUMERATE_INDEX_FOREACH_DONE) {
+		status = data.sfeid_result;
+	} else {
+		ASSERT(status < 0);
+	}
+	ASSERT(status == 0 || status == -1 || status == SF_TRYGETITEM_INDEX_FOUND);
+	if likely(status == SF_TRYGETITEM_INDEX_FOUND) {
+#ifndef NDEBUG
+		ASSERT(result != NULL);
+#endif /* !NDEBUG */
+		return result;
+	}
+	if unlikely(status < 0)
+		goto err;
+	err_index_out_of_bounds((DeeObject *)self, index, data.sfeid_index);
+err:
+	return NULL;
+}
+
 
 struct sf_interact_withitem_data {
 	WUNUSED_T NONNULL_T((1)) int (DCALL *sfiwid_interact)(DeeObject *__restrict subseq, size_t subseq_index, DeeObject *cookie);
@@ -675,11 +719,7 @@ PRIVATE struct type_seq sf_seq = {
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&sf_size,
 	/* .tp_size_fast          = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_getitem_index      = */ &default__getitem_index__with__trygetitem_index,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_getitem_index      = */ &DeeObject_DefaultGetItemIndexWithTryGetItemIndex,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&sf_getitem_index,
 	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&sf_delitem_index,
 	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&sf_setitem_index,
