@@ -7137,6 +7137,21 @@ default__seq_any_with_range__unsupported(DeeObject *__restrict self, size_t star
 	return err_seq_unsupportedf(self, "__seq_any__(%" PRFuSIZ ", %" PRFuSIZ ")", start, end);
 }
 
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__seq_any_with_range__with__seqclass_map__and__seq_operator_bool__and__map_operator_size(DeeObject *__restrict self, size_t start, size_t end) {
+	size_t map_size;
+	if (start <= end)
+		return 0;
+	if (start == 0)
+		return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_bool))(self);
+	map_size = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_size))(self);
+	if unlikely(map_size == (size_t)-1)
+		goto err;
+	return start < map_size;
+err:
+	return -1;
+}
+
 #ifndef DEFINED_seq_any_foreach_cb
 #define DEFINED_seq_any_foreach_cb
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL

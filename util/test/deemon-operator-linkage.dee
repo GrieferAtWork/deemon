@@ -260,20 +260,14 @@ Type_assert(deemon.Dict, {
 	"mh_seq_setlast":                             "dict_setlast",
 	"mh_seq_cached":                              "default__seq_cached__with__seq_operator_iter", // TODO: Should be "(this as Sequence)"
 	"mh_seq_frozen":                              "default__seq_frozen__with__map_frozen",
-	// TODO: Reason the following are set incorrectly is because inter-type substitution (correctly)
-	//       happens *before* inheritance -- so because "Dict" is able to sustain "seq_operator_foreach",
-	//       the default impl using that method hint always gets assigned.
-	// Solution: instead of overwriting "seq_any" & friends in "Mapping", the method hint's selector
-	//           callback should check if "SEQ_CLASS == Dee_SEQCLASS_MAP" and load optimized impls
-	//           then and there.
-	"mh_seq_any":                                 "default__seq_any__with__seq_operator_foreach", // TODO: Wrong! (should be custom cb from "Mapping")
-	"mh_seq_any_with_key":                        "default__seq_any_with_key__with__seq_operator_foreach", // TODO: Wrong! (should be custom cb from "Mapping")
-	"mh_seq_any_with_range":                      "default__seq_any_with_range__with__seq_enumerate_index", // TODO: Wrong! (should be custom cb from "Mapping")
-	"mh_seq_any_with_range_and_key":              "default__seq_any_with_range_and_key__with__seq_enumerate_index", // TODO: Wrong! (should be custom cb from "Mapping")
-	"mh_seq_all":                                 "default__seq_all__with__seq_operator_foreach", // TODO: Wrong! (should be custom cb from "Mapping")
-	"mh_seq_all_with_key":                        "default__seq_all_with_key__with__seq_operator_foreach", // TODO: Wrong! (should be custom cb from "Mapping")
-	"mh_seq_all_with_range":                      "default__seq_all_with_range__with__seq_enumerate_index", // TODO: Wrong! (should be custom cb from "Mapping")
-	"mh_seq_all_with_range_and_key":              "default__seq_all_with_range_and_key__with__seq_enumerate_index", // TODO: Wrong! (should be custom cb from "Mapping")
+	"mh_seq_any":                                 "dict_bool",
+	"mh_seq_any_with_key":                        "default__seq_any_with_key__with__seq_operator_foreach",
+	"mh_seq_any_with_range":                      "default__seq_any_with_range__with__seqclass_map__and__seq_operator_bool__and__map_operator_size",
+	"mh_seq_any_with_range_and_key":              "default__seq_any_with_range_and_key__with__seq_enumerate_index",
+	"mh_seq_all":                                 "_DeeNone_reti1_1",
+	"mh_seq_all_with_key":                        "default__seq_all_with_key__with__seq_operator_foreach",
+	"mh_seq_all_with_range":                      "_DeeNone_reti1_3",
+	"mh_seq_all_with_range_and_key":              "default__seq_all_with_range_and_key__with__seq_enumerate_index",
 	"mh_seq_parity":                              "default__seq_parity__with__seq_count",
 	"mh_seq_parity_with_key":                     "default__seq_parity_with_key__with__seq_operator_foreach",
 	"mh_seq_parity_with_range":                   "default__seq_parity_with_range__with__seq_enumerate_index",

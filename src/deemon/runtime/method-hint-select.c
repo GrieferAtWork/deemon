@@ -296,6 +296,10 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_hasitem_index_t DCAL
 mh_select_seq_operator_hasitem_index(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_size_t seq_operator_size = (DeeMH_seq_operator_size_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_size);
 	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
+	if (DeeType_HasTraitHint(self, __seq_getitem_always_bound__)) {
+		if ((DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size) != &default__seq_operator_size__unsupported)
+			return default__seq_operator_hasitem_index__with__seq_operator_size;
+	}
 	if (seq_operator_size == &default__seq_operator_size__empty)
 		return &default__seq_operator_hasitem_index__empty;
 	if (seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach)
@@ -310,7 +314,11 @@ mh_select_seq_operator_hasitem_index(DeeTypeObject *self, DeeTypeObject *orig_ty
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_bounditem_t DCALL
 mh_select_seq_operator_bounditem(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_operator_bounditem_index_t seq_operator_bounditem_index = (DeeMH_seq_operator_bounditem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bounditem_index);
+	DeeMH_seq_operator_bounditem_index_t seq_operator_bounditem_index;
+	if (DeeType_HasTraitHint(self, __seq_getitem_always_bound__)) {
+		/* TODO: Optimizations */
+	}
+	seq_operator_bounditem_index = (DeeMH_seq_operator_bounditem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bounditem_index);
 	if (seq_operator_bounditem_index == &default__seq_operator_bounditem_index__empty)
 		return &default__seq_operator_bounditem__empty;
 	if (seq_operator_bounditem_index == &default__seq_operator_bounditem_index__with__seq_operator_getitem_index)
@@ -322,7 +330,11 @@ mh_select_seq_operator_bounditem(DeeTypeObject *self, DeeTypeObject *orig_type) 
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_bounditem_index_t DCALL
 mh_select_seq_operator_bounditem_index(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = (DeeMH_seq_operator_getitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem_index);
+	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
+	if (DeeType_HasTraitHint(self, __seq_getitem_always_bound__)) {
+		/* TODO: Optimizations */
+	}
+	seq_operator_getitem_index = (DeeMH_seq_operator_getitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem_index);
 	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
 		return &default__seq_operator_bounditem_index__empty;
 	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__map_enumerate)
@@ -1244,7 +1256,18 @@ mh_select_seq_frozen(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_any_t DCALL
 mh_select_seq_any(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP) {
+		/* All sequence-like map items are "true" (because they
+		 * are non-empty (2-element) tuples). As such, so-long as
+		 * a mapping itself is non-empty, there will always exist
+		 * an **item** (the 2-element tuple) that evaluations to
+		 * true. */
+		DeeMH_seq_operator_bool_t seq_operator_bool = (DeeMH_seq_operator_bool_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bool);
+		if (seq_operator_bool)
+			return seq_operator_bool;
+	}
+	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &default__seq_any__empty;
 	if (seq_operator_foreach)
@@ -1264,7 +1287,17 @@ mh_select_seq_any_with_key(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_any_with_range_t DCALL
 mh_select_seq_any_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_enumerate_index_t seq_enumerate_index = (DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_enumerate_index);
+	DeeMH_seq_enumerate_index_t seq_enumerate_index;
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP) {
+		/* All sequence-like map items are "true" (because they
+		 * are non-empty (2-element) tuples). As such, so-long as
+		 * a mapping itself is non-empty, there will always exist
+		 * an **item** (the 2-element tuple) that evaluations to
+		 * true. */
+		if ((DeeMH_seq_operator_bool_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bool) || (DeeMH_map_operator_size_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_size))
+			return &default__seq_any_with_range__with__seqclass_map__and__seq_operator_bool__and__map_operator_size;
+	}
+	seq_enumerate_index = (DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_enumerate_index);
 	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &default__seq_any_with_range__empty;
 	if (seq_enumerate_index)
@@ -1284,7 +1317,14 @@ mh_select_seq_any_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_ty
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_all_t DCALL
 mh_select_seq_all(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP) {
+		/* Mappings are made up of non-empty (2-element) tuples, so they can never
+		 * have items (the 2-element tuples) that evaluate to "false". As such, the
+		 * Sequence.all() operator for mappings can return a constant "true". */
+		return (DeeMH_seq_all_t)&_DeeNone_reti1_1;
+	}
+	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &default__seq_all__empty;
 	if (seq_operator_foreach)
@@ -1304,7 +1344,14 @@ mh_select_seq_all_with_key(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_all_with_range_t DCALL
 mh_select_seq_all_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_enumerate_index_t seq_enumerate_index = (DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_enumerate_index);
+	DeeMH_seq_enumerate_index_t seq_enumerate_index;
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP) {
+		/* Mappings are made up of non-empty (2-element) tuples, so they can never
+		 * have items (the 2-element tuples) that evaluate to "false". As such, the
+		 * Sequence.all() operator for mappings can return a constant "true". */
+		return (DeeMH_seq_all_with_range_t)&_DeeNone_reti1_3;
+	}
+	seq_enumerate_index = (DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_enumerate_index);
 	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &default__seq_all_with_range__empty;
 	if (seq_enumerate_index)

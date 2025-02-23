@@ -142,6 +142,19 @@ seq_any_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 int __seq_any__.seq_any_with_range([[nonnull]] DeeObject *__restrict self,
                                    size_t start, size_t end)
 %{unsupported(auto)} %{$empty = 0}
+%{$with__seqclass_map__and__seq_operator_bool__and__map_operator_size = {
+	size_t map_size;
+	if (start <= end)
+		return 0;
+	if (start == 0)
+		return CALL_DEPENDENCY(seq_operator_bool, self);
+	map_size = CALL_DEPENDENCY(map_operator_size, self);
+	if unlikely(map_size == (size_t)-1)
+		goto err;
+	return start < map_size;
+err:
+	return -1;
+}}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_any_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_any_enumerate_cb, NULL, start, end);
@@ -194,7 +207,18 @@ err:
 
 
 seq_any = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
+	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	if (SEQ_CLASS == Dee_SEQCLASS_MAP) {
+		/* All sequence-like map items are "true" (because they
+		 * are non-empty (2-element) tuples). As such, so-long as
+		 * a mapping itself is non-empty, there will always exist
+		 * an **item** (the 2-element tuple) that evaluations to
+		 * true. */
+		DeeMH_seq_operator_bool_t seq_operator_bool = REQUIRE(seq_operator_bool);
+		if (seq_operator_bool)
+			return seq_operator_bool;
+	}
+	seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
 	if (seq_operator_foreach)
@@ -210,7 +234,17 @@ seq_any_with_key = {
 };
 
 seq_any_with_range = {
-	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	DeeMH_seq_enumerate_index_t seq_enumerate_index;
+	if (SEQ_CLASS == Dee_SEQCLASS_MAP) {
+		/* All sequence-like map items are "true" (because they
+		 * are non-empty (2-element) tuples). As such, so-long as
+		 * a mapping itself is non-empty, there will always exist
+		 * an **item** (the 2-element tuple) that evaluations to
+		 * true. */
+		if (REQUIRE(seq_operator_bool) || REQUIRE(map_operator_size))
+			return &$with__seqclass_map__and__seq_operator_bool__and__map_operator_size;
+	}
+	seq_enumerate_index = REQUIRE(seq_enumerate_index);
 	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
 	if (seq_enumerate_index)

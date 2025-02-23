@@ -469,11 +469,14 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	            "A deprecated alias for ?#update"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD_HINTREF(explicit_seq_any),
 	TYPE_METHOD_HINTREF(explicit_seq_all),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_END
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 map_mh_seq_any_with_range(DeeObject *self, size_t start, size_t end) {
 	size_t map_size;
@@ -510,6 +513,7 @@ PRIVATE struct type_method_hint tpconst map_method_hints[] = {
 
 	TYPE_METHOD_HINT_END
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
@@ -1019,7 +1023,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ map_class_getsets,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ map_method_hints,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ map_operators,

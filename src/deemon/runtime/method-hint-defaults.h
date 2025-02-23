@@ -748,6 +748,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_any_with_range__with_callobje
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__seq_any_with_range__with_callobjectcache___seq_any__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_any_with_range__unsupported(DeeObject *__restrict self, size_t start, size_t end);
 #define default__seq_any_with_range__empty (*(int (DCALL *)(DeeObject *__restrict, size_t, size_t))&_DeeNone_reti0_3)
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_any_with_range__with__seqclass_map__and__seq_operator_bool__and__map_operator_size(DeeObject *__restrict self, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_any_with_range__with__seq_enumerate_index(DeeObject *__restrict self, size_t start, size_t end);
 
 /* seq_any_with_range_and_key */

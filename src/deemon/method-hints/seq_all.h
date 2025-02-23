@@ -203,7 +203,14 @@ err:
 
 
 seq_all = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
+	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	if (SEQ_CLASS == Dee_SEQCLASS_MAP) {
+		/* Mappings are made up of non-empty (2-element) tuples, so they can never
+		 * have items (the 2-element tuples) that evaluate to "false". As such, the
+		 * Sequence.all() operator for mappings can return a constant "true". */
+		return (DeeMH_seq_all_t)&_DeeNone_reti1_1;
+	}
+	seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
 	if (seq_operator_foreach)
@@ -219,7 +226,14 @@ seq_all_with_key = {
 };
 
 seq_all_with_range = {
-	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	DeeMH_seq_enumerate_index_t seq_enumerate_index;
+	if (SEQ_CLASS == Dee_SEQCLASS_MAP) {
+		/* Mappings are made up of non-empty (2-element) tuples, so they can never
+		 * have items (the 2-element tuples) that evaluate to "false". As such, the
+		 * Sequence.all() operator for mappings can return a constant "true". */
+		return (DeeMH_seq_all_with_range_t)&_DeeNone_reti1_3;
+	}
+	seq_enumerate_index = REQUIRE(seq_enumerate_index);
 	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
 	if (seq_enumerate_index)

@@ -1066,11 +1066,12 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_any_with_key[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__seq_any_with_key__with_callobjectcache___seq_any__, &tdefault__seq_any_with_key__with_callobjectcache___seq_any__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_any_with_range[6] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_any_with_range[7] = {
 	(Dee_funptr_t)&default__seq_any_with_range__with_callattr_any,
 	(Dee_funptr_t)&default__seq_any_with_range__with_callattr___seq_any__,
 	(Dee_funptr_t)&default__seq_any_with_range__unsupported,
 	(Dee_funptr_t)&default__seq_any_with_range__empty,
+	(Dee_funptr_t)&default__seq_any_with_range__with__seqclass_map__and__seq_operator_bool__and__map_operator_size,
 	(Dee_funptr_t)&default__seq_any_with_range__with__seq_enumerate_index,
 	NULL
 };
