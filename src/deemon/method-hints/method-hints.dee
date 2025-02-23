@@ -984,21 +984,21 @@ final class MethodHint: WeakRefAble {
 			yield f"mhc_{attr}";
 		}
 	}
-
+#
 	public printMethodAttributeDecls() {
 		if (call2native is none)
 			return;
 		print("#define DeeMA_", name, "_flags ", typeMethodFlags);
-		print(f"DDATDEF char const DeeMA_{name}_name[]; /* {repr attr} */");
-		print(f"DDATDEF char const DeeMA_{name}_doc[];  /* {repr doc} */");
+		print("#define DeeMA_", name, "_name  _DeeMA_ATTRSTR(", attr, ")");
+		print("#define DeeMA_", name, "_doc   ", repr doc);
 		print("DFUNDEF "),;
 		call2native.printDecl(f"DeeMA_{name}");
 		print(";");
 		for (local alias: aliases) {
 			print("#define DeeMA_", alias.name, "_flags DeeMA_", name, "_flags");
+			print("#define DeeMA_", alias.name, "_name  _DeeMA_ATTRSTR(", alias.attr, ")");
 			print("#define DeeMA_", alias.name, "_doc   DeeMA_", name, "_doc");
 			print("#define DeeMA_", alias.name, "       DeeMA_", name);
-			print(f"DDATDEF char const DeeMA_{alias.name}_name[]; /* {repr alias.attr} */");
 			for (local nameAlias: alias.nameAliases) {
 				print("#define DeeMA_", nameAlias, "_flags DeeMA_", alias.name, "_flags");
 				print("#define DeeMA_", nameAlias, "_name  DeeMA_", alias.name, "_name");
@@ -1018,10 +1018,6 @@ final class MethodHint: WeakRefAble {
 	public printMethodAttributeImpls() {
 		if (call2native is none)
 			return;
-		print(f"PUBLIC_CONST char const DeeMA_{name}_name[] = {repr attr};");
-		print(f"PUBLIC_CONST char const DeeMA_{name}_doc[] = {repr doc};");
-		for (local alias: aliases)
-			print(f"PUBLIC_CONST char const DeeMA_{alias.name}_name[] = {repr alias.attr};");
 		local tpSelfExpr = call2native.tpSelfExpr;
 		local preloadedDependencies: {string...} = HashSet();
 		local body = call2native.callAttrImpl.formatImpl("$", {

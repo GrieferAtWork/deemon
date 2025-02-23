@@ -837,130 +837,143 @@ typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_seq_foreach_revers
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_seq_enumerate_index_reverse_t)(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end);
 /*[[[end]]]*/
 
+#ifdef CONFIG_BUILDING_DEEMON
+#ifdef __INTELLISENSE__
+#define _DeeMA_ATTRSTR(x) (#x)
+#else /* __INTELLISENSE__ */
+/* Load attribute names from built-in string constants
+ * (where all of these attributes have to appear also) */
+#include "../../src/deemon/runtime/strings.h"
+#define _DeeMA_ATTRSTR(x) STR_##x
+#endif /* !__INTELLISENSE__ */
+#else /* CONFIG_BUILDING_DEEMON */
+#define _DeeMA_ATTRSTR(x) #x
+#endif /* !CONFIG_BUILDING_DEEMON */
+
 /*[[[deemon (printMethodAttributeDecls from "...src.deemon.method-hints.method-hints")();]]]*/
 #define DeeMA___seq_bool___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_bool___name[]; /* "__seq_bool__" */
-DDATDEF char const DeeMA___seq_bool___doc[];  /* "->?Dbool" */
+#define DeeMA___seq_bool___name  _DeeMA_ATTRSTR(__seq_bool__)
+#define DeeMA___seq_bool___doc   "->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_size___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_size___name[]; /* "__seq_size__" */
-DDATDEF char const DeeMA___seq_size___doc[];  /* "->?Dint" */
+#define DeeMA___seq_size___name  _DeeMA_ATTRSTR(__seq_size__)
+#define DeeMA___seq_size___doc   "->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_iter___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_iter___name[]; /* "__seq_iter__" */
-DDATDEF char const DeeMA___seq_iter___doc[];  /* "->?DIterator" */
+#define DeeMA___seq_iter___name  _DeeMA_ATTRSTR(__seq_iter__)
+#define DeeMA___seq_iter___doc   "->?DIterator"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_getitem___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_getitem___name[]; /* "__seq_getitem__" */
-DDATDEF char const DeeMA___seq_getitem___doc[];  /* "(index:?Dint)->" */
+#define DeeMA___seq_getitem___name  _DeeMA_ATTRSTR(__seq_getitem__)
+#define DeeMA___seq_getitem___doc   "(index:?Dint)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_getitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_delitem___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_delitem___name[]; /* "__seq_delitem__" */
-DDATDEF char const DeeMA___seq_delitem___doc[];  /* "(index:?Dint)" */
+#define DeeMA___seq_delitem___name  _DeeMA_ATTRSTR(__seq_delitem__)
+#define DeeMA___seq_delitem___doc   "(index:?Dint)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_delitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_setitem___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_setitem___name[]; /* "__seq_setitem__" */
-DDATDEF char const DeeMA___seq_setitem___doc[];  /* "(index:?Dint,value)" */
+#define DeeMA___seq_setitem___name  _DeeMA_ATTRSTR(__seq_setitem__)
+#define DeeMA___seq_setitem___doc   "(index:?Dint,value)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_setitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_getrange___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_getrange___name[]; /* "__seq_getrange__" */
-DDATDEF char const DeeMA___seq_getrange___doc[];  /* "(start?:?X2?Dint?N,end?:?X2?Dint?N)->?S" */
+#define DeeMA___seq_getrange___name  _DeeMA_ATTRSTR(__seq_getrange__)
+#define DeeMA___seq_getrange___doc   "(start?:?X2?Dint?N,end?:?X2?Dint?N)->?S"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_getrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
 #define DeeMA___seq_delrange___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_delrange___name[]; /* "__seq_delrange__" */
-DDATDEF char const DeeMA___seq_delrange___doc[];  /* "(start?:?X2?Dint?N,end?:?X2?Dint?N)" */
+#define DeeMA___seq_delrange___name  _DeeMA_ATTRSTR(__seq_delrange__)
+#define DeeMA___seq_delrange___doc   "(start?:?X2?Dint?N,end?:?X2?Dint?N)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_delrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
 #define DeeMA___seq_setrange___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_setrange___name[]; /* "__seq_setrange__" */
-DDATDEF char const DeeMA___seq_setrange___doc[];  /* "(start:?X2?Dint?N,end:?X2?Dint?N,items:?X2?DSequence?S?O)" */
+#define DeeMA___seq_setrange___name  _DeeMA_ATTRSTR(__seq_setrange__)
+#define DeeMA___seq_setrange___doc   "(start:?X2?Dint?N,end:?X2?Dint?N,items:?X2?DSequence?S?O)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_setrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
 #define DeeMA___seq_assign___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_assign___name[]; /* "__seq_assign__" */
-DDATDEF char const DeeMA___seq_assign___doc[];  /* "(items:?X2?DSequence?S?O)" */
+#define DeeMA___seq_assign___name  _DeeMA_ATTRSTR(__seq_assign__)
+#define DeeMA___seq_assign___doc   "(items:?X2?DSequence?S?O)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_assign__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_hash___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_hash___name[]; /* "__seq_hash__" */
-DDATDEF char const DeeMA___seq_hash___doc[];  /* "->?Dint" */
+#define DeeMA___seq_hash___name  _DeeMA_ATTRSTR(__seq_hash__)
+#define DeeMA___seq_hash___doc   "->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_hash__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_compare___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_compare___name[]; /* "__seq_compare__" */
-DDATDEF char const DeeMA___seq_compare___doc[];  /* "(rhs:?S?O)->?Dint" */
+#define DeeMA___seq_compare___name  _DeeMA_ATTRSTR(__seq_compare__)
+#define DeeMA___seq_compare___doc   "(rhs:?S?O)->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_compare__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_compare_eq___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_compare_eq___name[]; /* "__seq_compare_eq__" */
-DDATDEF char const DeeMA___seq_compare_eq___doc[];  /* "(rhs:?S?O)->?X2?Dbool?Dint" */
+#define DeeMA___seq_compare_eq___name  _DeeMA_ATTRSTR(__seq_compare_eq__)
+#define DeeMA___seq_compare_eq___doc   "(rhs:?S?O)->?X2?Dbool?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_eq___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_eq___name[]; /* "__seq_eq__" */
-DDATDEF char const DeeMA___seq_eq___doc[];  /* "(rhs:?S?O)->?Dbool" */
+#define DeeMA___seq_eq___name  _DeeMA_ATTRSTR(__seq_eq__)
+#define DeeMA___seq_eq___doc   "(rhs:?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_ne___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_ne___name[]; /* "__seq_ne__" */
-DDATDEF char const DeeMA___seq_ne___doc[];  /* "(rhs:?S?O)->?Dbool" */
+#define DeeMA___seq_ne___name  _DeeMA_ATTRSTR(__seq_ne__)
+#define DeeMA___seq_ne___doc   "(rhs:?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_lo___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_lo___name[]; /* "__seq_lo__" */
-DDATDEF char const DeeMA___seq_lo___doc[];  /* "(rhs:?S?O)->?Dbool" */
+#define DeeMA___seq_lo___name  _DeeMA_ATTRSTR(__seq_lo__)
+#define DeeMA___seq_lo___doc   "(rhs:?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_lo__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_le___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_le___name[]; /* "__seq_le__" */
-DDATDEF char const DeeMA___seq_le___doc[];  /* "(rhs:?S?O)->?Dbool" */
+#define DeeMA___seq_le___name  _DeeMA_ATTRSTR(__seq_le__)
+#define DeeMA___seq_le___doc   "(rhs:?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_le__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_gr___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_gr___name[]; /* "__seq_gr__" */
-DDATDEF char const DeeMA___seq_gr___doc[];  /* "(rhs:?S?O)->?Dbool" */
+#define DeeMA___seq_gr___name  _DeeMA_ATTRSTR(__seq_gr__)
+#define DeeMA___seq_gr___doc   "(rhs:?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_gr__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_ge___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_ge___name[]; /* "__seq_ge__" */
-DDATDEF char const DeeMA___seq_ge___doc[];  /* "(rhs:?S?O)->?Dbool" */
+#define DeeMA___seq_ge___name  _DeeMA_ATTRSTR(__seq_ge__)
+#define DeeMA___seq_ge___doc   "(rhs:?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_inplace_add___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_inplace_add___name[]; /* "__seq_inplace_add__" */
-DDATDEF char const DeeMA___seq_inplace_add___doc[];  /* "(rhs:?S?O)->?." */
+#define DeeMA___seq_inplace_add___name  _DeeMA_ATTRSTR(__seq_inplace_add__)
+#define DeeMA___seq_inplace_add___doc   "(rhs:?S?O)->?."
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_inplace_mul___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_inplace_mul___name[]; /* "__seq_inplace_mul__" */
-DDATDEF char const DeeMA___seq_inplace_mul___doc[];  /* "(repeat:?Dint)->?." */
+#define DeeMA___seq_inplace_mul___name  _DeeMA_ATTRSTR(__seq_inplace_mul__)
+#define DeeMA___seq_inplace_mul___doc   "(repeat:?Dint)->?."
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_inplace_mul__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_enumerate___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_enumerate___name[]; /* "__seq_enumerate__" */
-DDATDEF char const DeeMA___seq_enumerate___doc[];  /* "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N" */
+#define DeeMA___seq_enumerate___name  _DeeMA_ATTRSTR(__seq_enumerate__)
+#define DeeMA___seq_enumerate___doc   "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_enumerate_items___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_enumerate_items___name[]; /* "__seq_enumerate_items__" */
-DDATDEF char const DeeMA___seq_enumerate_items___doc[];  /* "(start?:?X2?Dint?O,end?:?X2?Dint?O)->?S?T2?Dint" */
+#define DeeMA___seq_enumerate_items___name  _DeeMA_ATTRSTR(__seq_enumerate_items__)
+#define DeeMA___seq_enumerate_items___doc   "(start?:?X2?Dint?O,end?:?X2?Dint?O)->?S?T2?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_unpack___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_unpack___name[]; /* "__seq_unpack__" */
-DDATDEF char const DeeMA___seq_unpack___doc[];  /* "(min:?Dint,max?:?Dint)->?DTuple" */
+#define DeeMA___seq_unpack___name  _DeeMA_ATTRSTR(__seq_unpack__)
+#define DeeMA___seq_unpack___doc   "(min:?Dint,max?:?Dint)->?DTuple"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_unpack__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Sequence_unpack_flags DeeMA___seq_unpack___flags
+#define DeeMA_Sequence_unpack_name  _DeeMA_ATTRSTR(unpack)
 #define DeeMA_Sequence_unpack_doc   DeeMA___seq_unpack___doc
 #define DeeMA_Sequence_unpack       DeeMA___seq_unpack__
-DDATDEF char const DeeMA_Sequence_unpack_name[]; /* "unpack" */
 #define DeeMA_unpack_flags DeeMA_Sequence_unpack_flags
 #define DeeMA_unpack_name  DeeMA_Sequence_unpack_name
 #define DeeMA_unpack_doc   DeeMA_Sequence_unpack_doc
@@ -971,13 +984,13 @@ DDATDEF char const DeeMA_Sequence_unpack_name[]; /* "unpack" */
 #define DeeMA_explicit_seq_unpack       DeeMA___seq_unpack__
 
 #define DeeMA___seq_unpackub___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_unpackub___name[]; /* "__seq_unpackub__" */
-DDATDEF char const DeeMA___seq_unpackub___doc[];  /* "(min:?Dint,max?:?Dint)->?Ert:NullableTuple" */
+#define DeeMA___seq_unpackub___name  _DeeMA_ATTRSTR(__seq_unpackub__)
+#define DeeMA___seq_unpackub___doc   "(min:?Dint,max?:?Dint)->?Ert:NullableTuple"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_unpackub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Sequence_unpackub_flags DeeMA___seq_unpackub___flags
+#define DeeMA_Sequence_unpackub_name  _DeeMA_ATTRSTR(unpackub)
 #define DeeMA_Sequence_unpackub_doc   DeeMA___seq_unpackub___doc
 #define DeeMA_Sequence_unpackub       DeeMA___seq_unpackub__
-DDATDEF char const DeeMA_Sequence_unpackub_name[]; /* "unpackub" */
 #define DeeMA_unpackub_flags DeeMA_Sequence_unpackub_flags
 #define DeeMA_unpackub_name  DeeMA_Sequence_unpackub_name
 #define DeeMA_unpackub_doc   DeeMA_Sequence_unpackub_doc
@@ -988,13 +1001,13 @@ DDATDEF char const DeeMA_Sequence_unpackub_name[]; /* "unpackub" */
 #define DeeMA_explicit_seq_unpackub       DeeMA___seq_unpackub__
 
 #define DeeMA___seq_any___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_any___name[]; /* "__seq_any__" */
-DDATDEF char const DeeMA___seq_any___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
+#define DeeMA___seq_any___name  _DeeMA_ATTRSTR(__seq_any__)
+#define DeeMA___seq_any___doc   "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_any_flags DeeMA___seq_any___flags
+#define DeeMA_Sequence_any_name  _DeeMA_ATTRSTR(any)
 #define DeeMA_Sequence_any_doc   DeeMA___seq_any___doc
 #define DeeMA_Sequence_any       DeeMA___seq_any__
-DDATDEF char const DeeMA_Sequence_any_name[]; /* "any" */
 #define DeeMA_seq_any_flags DeeMA_Sequence_any_flags
 #define DeeMA_seq_any_name  DeeMA_Sequence_any_name
 #define DeeMA_seq_any_doc   DeeMA_Sequence_any_doc
@@ -1005,13 +1018,13 @@ DDATDEF char const DeeMA_Sequence_any_name[]; /* "any" */
 #define DeeMA_explicit_seq_any       DeeMA___seq_any__
 
 #define DeeMA___seq_all___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_all___name[]; /* "__seq_all__" */
-DDATDEF char const DeeMA___seq_all___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
+#define DeeMA___seq_all___name  _DeeMA_ATTRSTR(__seq_all__)
+#define DeeMA___seq_all___doc   "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_all_flags DeeMA___seq_all___flags
+#define DeeMA_Sequence_all_name  _DeeMA_ATTRSTR(all)
 #define DeeMA_Sequence_all_doc   DeeMA___seq_all___doc
 #define DeeMA_Sequence_all       DeeMA___seq_all__
-DDATDEF char const DeeMA_Sequence_all_name[]; /* "all" */
 #define DeeMA_seq_all_flags DeeMA_Sequence_all_flags
 #define DeeMA_seq_all_name  DeeMA_Sequence_all_name
 #define DeeMA_seq_all_doc   DeeMA_Sequence_all_doc
@@ -1022,13 +1035,13 @@ DDATDEF char const DeeMA_Sequence_all_name[]; /* "all" */
 #define DeeMA_explicit_seq_all       DeeMA___seq_all__
 
 #define DeeMA___seq_parity___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_parity___name[]; /* "__seq_parity__" */
-DDATDEF char const DeeMA___seq_parity___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
+#define DeeMA___seq_parity___name  _DeeMA_ATTRSTR(__seq_parity__)
+#define DeeMA___seq_parity___doc   "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_parity_flags DeeMA___seq_parity___flags
+#define DeeMA_Sequence_parity_name  _DeeMA_ATTRSTR(parity)
 #define DeeMA_Sequence_parity_doc   DeeMA___seq_parity___doc
 #define DeeMA_Sequence_parity       DeeMA___seq_parity__
-DDATDEF char const DeeMA_Sequence_parity_name[]; /* "parity" */
 #define DeeMA_seq_parity_flags DeeMA_Sequence_parity_flags
 #define DeeMA_seq_parity_name  DeeMA_Sequence_parity_name
 #define DeeMA_seq_parity_doc   DeeMA_Sequence_parity_doc
@@ -1039,13 +1052,13 @@ DDATDEF char const DeeMA_Sequence_parity_name[]; /* "parity" */
 #define DeeMA_explicit_seq_parity       DeeMA___seq_parity__
 
 #define DeeMA___seq_reduce___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_reduce___name[]; /* "__seq_reduce__" */
-DDATDEF char const DeeMA___seq_reduce___doc[];  /* "(combine:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,init?)->" */
+#define DeeMA___seq_reduce___name  _DeeMA_ATTRSTR(__seq_reduce__)
+#define DeeMA___seq_reduce___doc   "(combine:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,init?)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_reduce__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_reduce_flags DeeMA___seq_reduce___flags
+#define DeeMA_Sequence_reduce_name  _DeeMA_ATTRSTR(reduce)
 #define DeeMA_Sequence_reduce_doc   DeeMA___seq_reduce___doc
 #define DeeMA_Sequence_reduce       DeeMA___seq_reduce__
-DDATDEF char const DeeMA_Sequence_reduce_name[]; /* "reduce" */
 #define DeeMA_seq_reduce_flags DeeMA_Sequence_reduce_flags
 #define DeeMA_seq_reduce_name  DeeMA_Sequence_reduce_name
 #define DeeMA_seq_reduce_doc   DeeMA_Sequence_reduce_doc
@@ -1056,13 +1069,13 @@ DDATDEF char const DeeMA_Sequence_reduce_name[]; /* "reduce" */
 #define DeeMA_explicit_seq_reduce       DeeMA___seq_reduce__
 
 #define DeeMA___seq_min___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_min___name[]; /* "__seq_min__" */
-DDATDEF char const DeeMA___seq_min___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->" */
+#define DeeMA___seq_min___name  _DeeMA_ATTRSTR(__seq_min__)
+#define DeeMA___seq_min___doc   "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_min__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_min_flags DeeMA___seq_min___flags
+#define DeeMA_Sequence_min_name  _DeeMA_ATTRSTR(min)
 #define DeeMA_Sequence_min_doc   DeeMA___seq_min___doc
 #define DeeMA_Sequence_min       DeeMA___seq_min__
-DDATDEF char const DeeMA_Sequence_min_name[]; /* "min" */
 #define DeeMA_seq_min_flags DeeMA_Sequence_min_flags
 #define DeeMA_seq_min_name  DeeMA_Sequence_min_name
 #define DeeMA_seq_min_doc   DeeMA_Sequence_min_doc
@@ -1073,13 +1086,13 @@ DDATDEF char const DeeMA_Sequence_min_name[]; /* "min" */
 #define DeeMA_explicit_seq_min       DeeMA___seq_min__
 
 #define DeeMA___seq_max___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_max___name[]; /* "__seq_max__" */
-DDATDEF char const DeeMA___seq_max___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->" */
+#define DeeMA___seq_max___name  _DeeMA_ATTRSTR(__seq_max__)
+#define DeeMA___seq_max___doc   "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_max__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_max_flags DeeMA___seq_max___flags
+#define DeeMA_Sequence_max_name  _DeeMA_ATTRSTR(max)
 #define DeeMA_Sequence_max_doc   DeeMA___seq_max___doc
 #define DeeMA_Sequence_max       DeeMA___seq_max__
-DDATDEF char const DeeMA_Sequence_max_name[]; /* "max" */
 #define DeeMA_seq_max_flags DeeMA_Sequence_max_flags
 #define DeeMA_seq_max_name  DeeMA_Sequence_max_name
 #define DeeMA_seq_max_doc   DeeMA_Sequence_max_doc
@@ -1090,13 +1103,13 @@ DDATDEF char const DeeMA_Sequence_max_name[]; /* "max" */
 #define DeeMA_explicit_seq_max       DeeMA___seq_max__
 
 #define DeeMA___seq_sum___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_sum___name[]; /* "__seq_sum__" */
-DDATDEF char const DeeMA___seq_sum___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->" */
+#define DeeMA___seq_sum___name  _DeeMA_ATTRSTR(__seq_sum__)
+#define DeeMA___seq_sum___doc   "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_sum__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_sum_flags DeeMA___seq_sum___flags
+#define DeeMA_Sequence_sum_name  _DeeMA_ATTRSTR(sum)
 #define DeeMA_Sequence_sum_doc   DeeMA___seq_sum___doc
 #define DeeMA_Sequence_sum       DeeMA___seq_sum__
-DDATDEF char const DeeMA_Sequence_sum_name[]; /* "sum" */
 #define DeeMA_seq_sum_flags DeeMA_Sequence_sum_flags
 #define DeeMA_seq_sum_name  DeeMA_Sequence_sum_name
 #define DeeMA_seq_sum_doc   DeeMA_Sequence_sum_doc
@@ -1107,13 +1120,13 @@ DDATDEF char const DeeMA_Sequence_sum_name[]; /* "sum" */
 #define DeeMA_explicit_seq_sum       DeeMA___seq_sum__
 
 #define DeeMA___seq_count___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_count___name[]; /* "__seq_count__" */
-DDATDEF char const DeeMA___seq_count___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
+#define DeeMA___seq_count___name  _DeeMA_ATTRSTR(__seq_count__)
+#define DeeMA___seq_count___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_count__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_count_flags DeeMA___seq_count___flags
+#define DeeMA_Sequence_count_name  _DeeMA_ATTRSTR(count)
 #define DeeMA_Sequence_count_doc   DeeMA___seq_count___doc
 #define DeeMA_Sequence_count       DeeMA___seq_count__
-DDATDEF char const DeeMA_Sequence_count_name[]; /* "count" */
 #define DeeMA_seq_count_flags DeeMA_Sequence_count_flags
 #define DeeMA_seq_count_name  DeeMA_Sequence_count_name
 #define DeeMA_seq_count_doc   DeeMA_Sequence_count_doc
@@ -1124,22 +1137,22 @@ DDATDEF char const DeeMA_Sequence_count_name[]; /* "count" */
 #define DeeMA_explicit_seq_count       DeeMA___seq_count__
 
 #define DeeMA___seq_contains___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_contains___name[]; /* "__seq_contains__" */
-DDATDEF char const DeeMA___seq_contains___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
+#define DeeMA___seq_contains___name  _DeeMA_ATTRSTR(__seq_contains__)
+#define DeeMA___seq_contains___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_contains__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_contains_flags DeeMA___seq_contains___flags
+#define DeeMA_Sequence_contains_name  _DeeMA_ATTRSTR(contains)
 #define DeeMA_Sequence_contains_doc   DeeMA___seq_contains___doc
 #define DeeMA_Sequence_contains       DeeMA___seq_contains__
-DDATDEF char const DeeMA_Sequence_contains_name[]; /* "contains" */
 
 #define DeeMA___seq_locate___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_locate___name[]; /* "__seq_locate__" */
-DDATDEF char const DeeMA___seq_locate___doc[];  /* "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]" */
+#define DeeMA___seq_locate___name  _DeeMA_ATTRSTR(__seq_locate__)
+#define DeeMA___seq_locate___doc   "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_locate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_locate_flags DeeMA___seq_locate___flags
+#define DeeMA_Sequence_locate_name  _DeeMA_ATTRSTR(locate)
 #define DeeMA_Sequence_locate_doc   DeeMA___seq_locate___doc
 #define DeeMA_Sequence_locate       DeeMA___seq_locate__
-DDATDEF char const DeeMA_Sequence_locate_name[]; /* "locate" */
 #define DeeMA_seq_locate_flags DeeMA_Sequence_locate_flags
 #define DeeMA_seq_locate_name  DeeMA_Sequence_locate_name
 #define DeeMA_seq_locate_doc   DeeMA_Sequence_locate_doc
@@ -1150,13 +1163,13 @@ DDATDEF char const DeeMA_Sequence_locate_name[]; /* "locate" */
 #define DeeMA_explicit_seq_locate       DeeMA___seq_locate__
 
 #define DeeMA___seq_rlocate___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_rlocate___name[]; /* "__seq_rlocate__" */
-DDATDEF char const DeeMA___seq_rlocate___doc[];  /* "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]" */
+#define DeeMA___seq_rlocate___name  _DeeMA_ATTRSTR(__seq_rlocate__)
+#define DeeMA___seq_rlocate___doc   "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_rlocate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_rlocate_flags DeeMA___seq_rlocate___flags
+#define DeeMA_Sequence_rlocate_name  _DeeMA_ATTRSTR(rlocate)
 #define DeeMA_Sequence_rlocate_doc   DeeMA___seq_rlocate___doc
 #define DeeMA_Sequence_rlocate       DeeMA___seq_rlocate__
-DDATDEF char const DeeMA_Sequence_rlocate_name[]; /* "rlocate" */
 #define DeeMA_seq_rlocate_flags DeeMA_Sequence_rlocate_flags
 #define DeeMA_seq_rlocate_name  DeeMA_Sequence_rlocate_name
 #define DeeMA_seq_rlocate_doc   DeeMA_Sequence_rlocate_doc
@@ -1167,13 +1180,13 @@ DDATDEF char const DeeMA_Sequence_rlocate_name[]; /* "rlocate" */
 #define DeeMA_explicit_seq_rlocate       DeeMA___seq_rlocate__
 
 #define DeeMA___seq_startswith___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_startswith___name[]; /* "__seq_startswith__" */
-DDATDEF char const DeeMA___seq_startswith___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
+#define DeeMA___seq_startswith___name  _DeeMA_ATTRSTR(__seq_startswith__)
+#define DeeMA___seq_startswith___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_startswith__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_startswith_flags DeeMA___seq_startswith___flags
+#define DeeMA_Sequence_startswith_name  _DeeMA_ATTRSTR(startswith)
 #define DeeMA_Sequence_startswith_doc   DeeMA___seq_startswith___doc
 #define DeeMA_Sequence_startswith       DeeMA___seq_startswith__
-DDATDEF char const DeeMA_Sequence_startswith_name[]; /* "startswith" */
 #define DeeMA_seq_startswith_flags DeeMA_Sequence_startswith_flags
 #define DeeMA_seq_startswith_name  DeeMA_Sequence_startswith_name
 #define DeeMA_seq_startswith_doc   DeeMA_Sequence_startswith_doc
@@ -1184,13 +1197,13 @@ DDATDEF char const DeeMA_Sequence_startswith_name[]; /* "startswith" */
 #define DeeMA_explicit_seq_startswith       DeeMA___seq_startswith__
 
 #define DeeMA___seq_endswith___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_endswith___name[]; /* "__seq_endswith__" */
-DDATDEF char const DeeMA___seq_endswith___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
+#define DeeMA___seq_endswith___name  _DeeMA_ATTRSTR(__seq_endswith__)
+#define DeeMA___seq_endswith___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_endswith__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_endswith_flags DeeMA___seq_endswith___flags
+#define DeeMA_Sequence_endswith_name  _DeeMA_ATTRSTR(endswith)
 #define DeeMA_Sequence_endswith_doc   DeeMA___seq_endswith___doc
 #define DeeMA_Sequence_endswith       DeeMA___seq_endswith__
-DDATDEF char const DeeMA_Sequence_endswith_name[]; /* "endswith" */
 #define DeeMA_seq_endswith_flags DeeMA_Sequence_endswith_flags
 #define DeeMA_seq_endswith_name  DeeMA_Sequence_endswith_name
 #define DeeMA_seq_endswith_doc   DeeMA_Sequence_endswith_doc
@@ -1201,13 +1214,13 @@ DDATDEF char const DeeMA_Sequence_endswith_name[]; /* "endswith" */
 #define DeeMA_explicit_seq_endswith       DeeMA___seq_endswith__
 
 #define DeeMA___seq_find___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_find___name[]; /* "__seq_find__" */
-DDATDEF char const DeeMA___seq_find___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
+#define DeeMA___seq_find___name  _DeeMA_ATTRSTR(__seq_find__)
+#define DeeMA___seq_find___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_find__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_find_flags DeeMA___seq_find___flags
+#define DeeMA_Sequence_find_name  _DeeMA_ATTRSTR(find)
 #define DeeMA_Sequence_find_doc   DeeMA___seq_find___doc
 #define DeeMA_Sequence_find       DeeMA___seq_find__
-DDATDEF char const DeeMA_Sequence_find_name[]; /* "find" */
 #define DeeMA_seq_find_flags DeeMA_Sequence_find_flags
 #define DeeMA_seq_find_name  DeeMA_Sequence_find_name
 #define DeeMA_seq_find_doc   DeeMA_Sequence_find_doc
@@ -1218,13 +1231,13 @@ DDATDEF char const DeeMA_Sequence_find_name[]; /* "find" */
 #define DeeMA_explicit_seq_find       DeeMA___seq_find__
 
 #define DeeMA___seq_rfind___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_rfind___name[]; /* "__seq_rfind__" */
-DDATDEF char const DeeMA___seq_rfind___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
+#define DeeMA___seq_rfind___name  _DeeMA_ATTRSTR(__seq_rfind__)
+#define DeeMA___seq_rfind___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_rfind__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_rfind_flags DeeMA___seq_rfind___flags
+#define DeeMA_Sequence_rfind_name  _DeeMA_ATTRSTR(rfind)
 #define DeeMA_Sequence_rfind_doc   DeeMA___seq_rfind___doc
 #define DeeMA_Sequence_rfind       DeeMA___seq_rfind__
-DDATDEF char const DeeMA_Sequence_rfind_name[]; /* "rfind" */
 #define DeeMA_seq_rfind_flags DeeMA_Sequence_rfind_flags
 #define DeeMA_seq_rfind_name  DeeMA_Sequence_rfind_name
 #define DeeMA_seq_rfind_doc   DeeMA_Sequence_rfind_doc
@@ -1235,13 +1248,13 @@ DDATDEF char const DeeMA_Sequence_rfind_name[]; /* "rfind" */
 #define DeeMA_explicit_seq_rfind       DeeMA___seq_rfind__
 
 #define DeeMA___seq_erase___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_erase___name[]; /* "__seq_erase__" */
-DDATDEF char const DeeMA___seq_erase___doc[];  /* "(index:?Dint,count=!1)" */
+#define DeeMA___seq_erase___name  _DeeMA_ATTRSTR(__seq_erase__)
+#define DeeMA___seq_erase___doc   "(index:?Dint,count=!1)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_erase__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_erase_flags DeeMA___seq_erase___flags
+#define DeeMA_Sequence_erase_name  _DeeMA_ATTRSTR(erase)
 #define DeeMA_Sequence_erase_doc   DeeMA___seq_erase___doc
 #define DeeMA_Sequence_erase       DeeMA___seq_erase__
-DDATDEF char const DeeMA_Sequence_erase_name[]; /* "erase" */
 #define DeeMA_seq_erase_flags DeeMA_Sequence_erase_flags
 #define DeeMA_seq_erase_name  DeeMA_Sequence_erase_name
 #define DeeMA_seq_erase_doc   DeeMA_Sequence_erase_doc
@@ -1252,13 +1265,13 @@ DDATDEF char const DeeMA_Sequence_erase_name[]; /* "erase" */
 #define DeeMA_explicit_seq_erase       DeeMA___seq_erase__
 
 #define DeeMA___seq_insert___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_insert___name[]; /* "__seq_insert__" */
-DDATDEF char const DeeMA___seq_insert___doc[];  /* "(index:?Dint,item)" */
+#define DeeMA___seq_insert___name  _DeeMA_ATTRSTR(__seq_insert__)
+#define DeeMA___seq_insert___doc   "(index:?Dint,item)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_insert__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_insert_flags DeeMA___seq_insert___flags
+#define DeeMA_Sequence_insert_name  _DeeMA_ATTRSTR(insert)
 #define DeeMA_Sequence_insert_doc   DeeMA___seq_insert___doc
 #define DeeMA_Sequence_insert       DeeMA___seq_insert__
-DDATDEF char const DeeMA_Sequence_insert_name[]; /* "insert" */
 #define DeeMA_seq_insert_flags DeeMA_Sequence_insert_flags
 #define DeeMA_seq_insert_name  DeeMA_Sequence_insert_name
 #define DeeMA_seq_insert_doc   DeeMA_Sequence_insert_doc
@@ -1269,13 +1282,13 @@ DDATDEF char const DeeMA_Sequence_insert_name[]; /* "insert" */
 #define DeeMA_explicit_seq_insert       DeeMA___seq_insert__
 
 #define DeeMA___seq_insertall___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_insertall___name[]; /* "__seq_insertall__" */
-DDATDEF char const DeeMA___seq_insertall___doc[];  /* "(index:?Dint,items:?S?O)" */
+#define DeeMA___seq_insertall___name  _DeeMA_ATTRSTR(__seq_insertall__)
+#define DeeMA___seq_insertall___doc   "(index:?Dint,items:?S?O)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_insertall__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_insertall_flags DeeMA___seq_insertall___flags
+#define DeeMA_Sequence_insertall_name  _DeeMA_ATTRSTR(insertall)
 #define DeeMA_Sequence_insertall_doc   DeeMA___seq_insertall___doc
 #define DeeMA_Sequence_insertall       DeeMA___seq_insertall__
-DDATDEF char const DeeMA_Sequence_insertall_name[]; /* "insertall" */
 #define DeeMA_seq_insertall_flags DeeMA_Sequence_insertall_flags
 #define DeeMA_seq_insertall_name  DeeMA_Sequence_insertall_name
 #define DeeMA_seq_insertall_doc   DeeMA_Sequence_insertall_doc
@@ -1286,13 +1299,13 @@ DDATDEF char const DeeMA_Sequence_insertall_name[]; /* "insertall" */
 #define DeeMA_explicit_seq_insertall       DeeMA___seq_insertall__
 
 #define DeeMA___seq_pushfront___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_pushfront___name[]; /* "__seq_pushfront__" */
-DDATDEF char const DeeMA___seq_pushfront___doc[];  /* "(item)" */
+#define DeeMA___seq_pushfront___name  _DeeMA_ATTRSTR(__seq_pushfront__)
+#define DeeMA___seq_pushfront___doc   "(item)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_pushfront__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Sequence_pushfront_flags DeeMA___seq_pushfront___flags
+#define DeeMA_Sequence_pushfront_name  _DeeMA_ATTRSTR(pushfront)
 #define DeeMA_Sequence_pushfront_doc   DeeMA___seq_pushfront___doc
 #define DeeMA_Sequence_pushfront       DeeMA___seq_pushfront__
-DDATDEF char const DeeMA_Sequence_pushfront_name[]; /* "pushfront" */
 #define DeeMA_seq_pushfront_flags DeeMA_Sequence_pushfront_flags
 #define DeeMA_seq_pushfront_name  DeeMA_Sequence_pushfront_name
 #define DeeMA_seq_pushfront_doc   DeeMA_Sequence_pushfront_doc
@@ -1303,21 +1316,21 @@ DDATDEF char const DeeMA_Sequence_pushfront_name[]; /* "pushfront" */
 #define DeeMA_explicit_seq_pushfront       DeeMA___seq_pushfront__
 
 #define DeeMA___seq_append___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_append___name[]; /* "__seq_append__" */
-DDATDEF char const DeeMA___seq_append___doc[];  /* "(item)" */
+#define DeeMA___seq_append___name  _DeeMA_ATTRSTR(__seq_append__)
+#define DeeMA___seq_append___doc   "(item)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_append__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Sequence_append_flags DeeMA___seq_append___flags
+#define DeeMA_Sequence_append_name  _DeeMA_ATTRSTR(append)
 #define DeeMA_Sequence_append_doc   DeeMA___seq_append___doc
 #define DeeMA_Sequence_append       DeeMA___seq_append__
-DDATDEF char const DeeMA_Sequence_append_name[]; /* "append" */
 #define DeeMA_seq_append_flags DeeMA_Sequence_append_flags
 #define DeeMA_seq_append_name  DeeMA_Sequence_append_name
 #define DeeMA_seq_append_doc   DeeMA_Sequence_append_doc
 #define DeeMA_seq_append       DeeMA_Sequence_append
 #define DeeMA_Sequence_pushback_flags DeeMA___seq_append___flags
+#define DeeMA_Sequence_pushback_name  _DeeMA_ATTRSTR(pushback)
 #define DeeMA_Sequence_pushback_doc   DeeMA___seq_append___doc
 #define DeeMA_Sequence_pushback       DeeMA___seq_append__
-DDATDEF char const DeeMA_Sequence_pushback_name[]; /* "pushback" */
 #define DeeMA_seq_pushback_flags DeeMA_Sequence_pushback_flags
 #define DeeMA_seq_pushback_name  DeeMA_Sequence_pushback_name
 #define DeeMA_seq_pushback_doc   DeeMA_Sequence_pushback_doc
@@ -1328,13 +1341,13 @@ DDATDEF char const DeeMA_Sequence_pushback_name[]; /* "pushback" */
 #define DeeMA_explicit_seq_append       DeeMA___seq_append__
 
 #define DeeMA___seq_extend___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_extend___name[]; /* "__seq_extend__" */
-DDATDEF char const DeeMA___seq_extend___doc[];  /* "(items:?S?O)" */
+#define DeeMA___seq_extend___name  _DeeMA_ATTRSTR(__seq_extend__)
+#define DeeMA___seq_extend___doc   "(items:?S?O)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_extend__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Sequence_extend_flags DeeMA___seq_extend___flags
+#define DeeMA_Sequence_extend_name  _DeeMA_ATTRSTR(extend)
 #define DeeMA_Sequence_extend_doc   DeeMA___seq_extend___doc
 #define DeeMA_Sequence_extend       DeeMA___seq_extend__
-DDATDEF char const DeeMA_Sequence_extend_name[]; /* "extend" */
 #define DeeMA_seq_extend_flags DeeMA_Sequence_extend_flags
 #define DeeMA_seq_extend_name  DeeMA_Sequence_extend_name
 #define DeeMA_seq_extend_doc   DeeMA_Sequence_extend_doc
@@ -1345,13 +1358,13 @@ DDATDEF char const DeeMA_Sequence_extend_name[]; /* "extend" */
 #define DeeMA_explicit_seq_extend       DeeMA___seq_extend__
 
 #define DeeMA___seq_xchitem___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_xchitem___name[]; /* "__seq_xchitem__" */
-DDATDEF char const DeeMA___seq_xchitem___doc[];  /* "(index:?Dint,item)->" */
+#define DeeMA___seq_xchitem___name  _DeeMA_ATTRSTR(__seq_xchitem__)
+#define DeeMA___seq_xchitem___doc   "(index:?Dint,item)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_xchitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_xchitem_flags DeeMA___seq_xchitem___flags
+#define DeeMA_Sequence_xchitem_name  _DeeMA_ATTRSTR(xchitem)
 #define DeeMA_Sequence_xchitem_doc   DeeMA___seq_xchitem___doc
 #define DeeMA_Sequence_xchitem       DeeMA___seq_xchitem__
-DDATDEF char const DeeMA_Sequence_xchitem_name[]; /* "xchitem" */
 #define DeeMA_seq_xchitem_flags DeeMA_Sequence_xchitem_flags
 #define DeeMA_seq_xchitem_name  DeeMA_Sequence_xchitem_name
 #define DeeMA_seq_xchitem_doc   DeeMA_Sequence_xchitem_doc
@@ -1362,38 +1375,38 @@ DDATDEF char const DeeMA_Sequence_xchitem_name[]; /* "xchitem" */
 #define DeeMA_explicit_seq_xchitem       DeeMA___seq_xchitem__
 
 #define DeeMA___seq_clear___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___seq_clear___name[]; /* "__seq_clear__" */
-DDATDEF char const DeeMA___seq_clear___doc[];  /* "" */
+#define DeeMA___seq_clear___name  _DeeMA_ATTRSTR(__seq_clear__)
+#define DeeMA___seq_clear___doc   ""
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_clear__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Sequence_clear_flags DeeMA___seq_clear___flags
+#define DeeMA_Sequence_clear_name  _DeeMA_ATTRSTR(clear)
 #define DeeMA_Sequence_clear_doc   DeeMA___seq_clear___doc
 #define DeeMA_Sequence_clear       DeeMA___seq_clear__
-DDATDEF char const DeeMA_Sequence_clear_name[]; /* "clear" */
 #define DeeMA_seq_clear_flags DeeMA_Sequence_clear_flags
 #define DeeMA_seq_clear_name  DeeMA_Sequence_clear_name
 #define DeeMA_seq_clear_doc   DeeMA_Sequence_clear_doc
 #define DeeMA_seq_clear       DeeMA_Sequence_clear
 #define DeeMA_Set_clear_flags DeeMA___seq_clear___flags
+#define DeeMA_Set_clear_name  _DeeMA_ATTRSTR(clear)
 #define DeeMA_Set_clear_doc   DeeMA___seq_clear___doc
 #define DeeMA_Set_clear       DeeMA___seq_clear__
-DDATDEF char const DeeMA_Set_clear_name[]; /* "clear" */
 #define DeeMA_Mapping_clear_flags DeeMA___seq_clear___flags
+#define DeeMA_Mapping_clear_name  _DeeMA_ATTRSTR(clear)
 #define DeeMA_Mapping_clear_doc   DeeMA___seq_clear___doc
 #define DeeMA_Mapping_clear       DeeMA___seq_clear__
-DDATDEF char const DeeMA_Mapping_clear_name[]; /* "clear" */
 #define DeeMA_explicit_seq_clear_flags DeeMA___seq_clear___flags
 #define DeeMA_explicit_seq_clear_name  DeeMA___seq_clear___name
 #define DeeMA_explicit_seq_clear_doc   DeeMA___seq_clear___doc
 #define DeeMA_explicit_seq_clear       DeeMA___seq_clear__
 
 #define DeeMA___seq_pop___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_pop___name[]; /* "__seq_pop__" */
-DDATDEF char const DeeMA___seq_pop___doc[];  /* "(index=!-1)->" */
+#define DeeMA___seq_pop___name  _DeeMA_ATTRSTR(__seq_pop__)
+#define DeeMA___seq_pop___doc   "(index=!-1)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_pop_flags DeeMA___seq_pop___flags
+#define DeeMA_Sequence_pop_name  _DeeMA_ATTRSTR(pop)
 #define DeeMA_Sequence_pop_doc   DeeMA___seq_pop___doc
 #define DeeMA_Sequence_pop       DeeMA___seq_pop__
-DDATDEF char const DeeMA_Sequence_pop_name[]; /* "pop" */
 #define DeeMA_seq_pop_flags DeeMA_Sequence_pop_flags
 #define DeeMA_seq_pop_name  DeeMA_Sequence_pop_name
 #define DeeMA_seq_pop_doc   DeeMA_Sequence_pop_doc
@@ -1404,13 +1417,13 @@ DDATDEF char const DeeMA_Sequence_pop_name[]; /* "pop" */
 #define DeeMA_explicit_seq_pop       DeeMA___seq_pop__
 
 #define DeeMA___seq_remove___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_remove___name[]; /* "__seq_remove__" */
-DDATDEF char const DeeMA___seq_remove___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
+#define DeeMA___seq_remove___name  _DeeMA_ATTRSTR(__seq_remove__)
+#define DeeMA___seq_remove___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_remove_flags DeeMA___seq_remove___flags
+#define DeeMA_Sequence_remove_name  _DeeMA_ATTRSTR(remove)
 #define DeeMA_Sequence_remove_doc   DeeMA___seq_remove___doc
 #define DeeMA_Sequence_remove       DeeMA___seq_remove__
-DDATDEF char const DeeMA_Sequence_remove_name[]; /* "remove" */
 #define DeeMA_seq_remove_flags DeeMA_Sequence_remove_flags
 #define DeeMA_seq_remove_name  DeeMA_Sequence_remove_name
 #define DeeMA_seq_remove_doc   DeeMA_Sequence_remove_doc
@@ -1421,13 +1434,13 @@ DDATDEF char const DeeMA_Sequence_remove_name[]; /* "remove" */
 #define DeeMA_explicit_seq_remove       DeeMA___seq_remove__
 
 #define DeeMA___seq_rremove___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_rremove___name[]; /* "__seq_rremove__" */
-DDATDEF char const DeeMA___seq_rremove___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
+#define DeeMA___seq_rremove___name  _DeeMA_ATTRSTR(__seq_rremove__)
+#define DeeMA___seq_rremove___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_rremove__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_rremove_flags DeeMA___seq_rremove___flags
+#define DeeMA_Sequence_rremove_name  _DeeMA_ATTRSTR(rremove)
 #define DeeMA_Sequence_rremove_doc   DeeMA___seq_rremove___doc
 #define DeeMA_Sequence_rremove       DeeMA___seq_rremove__
-DDATDEF char const DeeMA_Sequence_rremove_name[]; /* "rremove" */
 #define DeeMA_seq_rremove_flags DeeMA_Sequence_rremove_flags
 #define DeeMA_seq_rremove_name  DeeMA_Sequence_rremove_name
 #define DeeMA_seq_rremove_doc   DeeMA_Sequence_rremove_doc
@@ -1438,13 +1451,13 @@ DDATDEF char const DeeMA_Sequence_rremove_name[]; /* "rremove" */
 #define DeeMA_explicit_seq_rremove       DeeMA___seq_rremove__
 
 #define DeeMA___seq_removeall___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_removeall___name[]; /* "__seq_removeall__" */
-DDATDEF char const DeeMA___seq_removeall___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
+#define DeeMA___seq_removeall___name  _DeeMA_ATTRSTR(__seq_removeall__)
+#define DeeMA___seq_removeall___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_removeall__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_removeall_flags DeeMA___seq_removeall___flags
+#define DeeMA_Sequence_removeall_name  _DeeMA_ATTRSTR(removeall)
 #define DeeMA_Sequence_removeall_doc   DeeMA___seq_removeall___doc
 #define DeeMA_Sequence_removeall       DeeMA___seq_removeall__
-DDATDEF char const DeeMA_Sequence_removeall_name[]; /* "removeall" */
 #define DeeMA_seq_removeall_flags DeeMA_Sequence_removeall_flags
 #define DeeMA_seq_removeall_name  DeeMA_Sequence_removeall_name
 #define DeeMA_seq_removeall_doc   DeeMA_Sequence_removeall_doc
@@ -1455,13 +1468,13 @@ DDATDEF char const DeeMA_Sequence_removeall_name[]; /* "removeall" */
 #define DeeMA_explicit_seq_removeall       DeeMA___seq_removeall__
 
 #define DeeMA___seq_removeif___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_removeif___name[]; /* "__seq_removeif__" */
-DDATDEF char const DeeMA___seq_removeif___doc[];  /* "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint" */
+#define DeeMA___seq_removeif___name  _DeeMA_ATTRSTR(__seq_removeif__)
+#define DeeMA___seq_removeif___doc   "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_removeif__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_removeif_flags DeeMA___seq_removeif___flags
+#define DeeMA_Sequence_removeif_name  _DeeMA_ATTRSTR(removeif)
 #define DeeMA_Sequence_removeif_doc   DeeMA___seq_removeif___doc
 #define DeeMA_Sequence_removeif       DeeMA___seq_removeif__
-DDATDEF char const DeeMA_Sequence_removeif_name[]; /* "removeif" */
 #define DeeMA_seq_removeif_flags DeeMA_Sequence_removeif_flags
 #define DeeMA_seq_removeif_name  DeeMA_Sequence_removeif_name
 #define DeeMA_seq_removeif_doc   DeeMA_Sequence_removeif_doc
@@ -1472,13 +1485,13 @@ DDATDEF char const DeeMA_Sequence_removeif_name[]; /* "removeif" */
 #define DeeMA_explicit_seq_removeif       DeeMA___seq_removeif__
 
 #define DeeMA___seq_resize___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_resize___name[]; /* "__seq_resize__" */
-DDATDEF char const DeeMA___seq_resize___doc[];  /* "(size:?Dint,filler=!N)" */
+#define DeeMA___seq_resize___name  _DeeMA_ATTRSTR(__seq_resize__)
+#define DeeMA___seq_resize___doc   "(size:?Dint,filler=!N)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_resize__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_resize_flags DeeMA___seq_resize___flags
+#define DeeMA_Sequence_resize_name  _DeeMA_ATTRSTR(resize)
 #define DeeMA_Sequence_resize_doc   DeeMA___seq_resize___doc
 #define DeeMA_Sequence_resize       DeeMA___seq_resize__
-DDATDEF char const DeeMA_Sequence_resize_name[]; /* "resize" */
 #define DeeMA_seq_resize_flags DeeMA_Sequence_resize_flags
 #define DeeMA_seq_resize_name  DeeMA_Sequence_resize_name
 #define DeeMA_seq_resize_doc   DeeMA_Sequence_resize_doc
@@ -1489,13 +1502,13 @@ DDATDEF char const DeeMA_Sequence_resize_name[]; /* "resize" */
 #define DeeMA_explicit_seq_resize       DeeMA___seq_resize__
 
 #define DeeMA___seq_fill___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_fill___name[]; /* "__seq_fill__" */
-DDATDEF char const DeeMA___seq_fill___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)" */
+#define DeeMA___seq_fill___name  _DeeMA_ATTRSTR(__seq_fill__)
+#define DeeMA___seq_fill___doc   "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_fill__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_fill_flags DeeMA___seq_fill___flags
+#define DeeMA_Sequence_fill_name  _DeeMA_ATTRSTR(fill)
 #define DeeMA_Sequence_fill_doc   DeeMA___seq_fill___doc
 #define DeeMA_Sequence_fill       DeeMA___seq_fill__
-DDATDEF char const DeeMA_Sequence_fill_name[]; /* "fill" */
 #define DeeMA_seq_fill_flags DeeMA_Sequence_fill_flags
 #define DeeMA_seq_fill_name  DeeMA_Sequence_fill_name
 #define DeeMA_seq_fill_doc   DeeMA_Sequence_fill_doc
@@ -1506,13 +1519,13 @@ DDATDEF char const DeeMA_Sequence_fill_name[]; /* "fill" */
 #define DeeMA_explicit_seq_fill       DeeMA___seq_fill__
 
 #define DeeMA___seq_reverse___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_reverse___name[]; /* "__seq_reverse__" */
-DDATDEF char const DeeMA___seq_reverse___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)" */
+#define DeeMA___seq_reverse___name  _DeeMA_ATTRSTR(__seq_reverse__)
+#define DeeMA___seq_reverse___doc   "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_reverse__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_reverse_flags DeeMA___seq_reverse___flags
+#define DeeMA_Sequence_reverse_name  _DeeMA_ATTRSTR(reverse)
 #define DeeMA_Sequence_reverse_doc   DeeMA___seq_reverse___doc
 #define DeeMA_Sequence_reverse       DeeMA___seq_reverse__
-DDATDEF char const DeeMA_Sequence_reverse_name[]; /* "reverse" */
 #define DeeMA_seq_reverse_flags DeeMA_Sequence_reverse_flags
 #define DeeMA_seq_reverse_name  DeeMA_Sequence_reverse_name
 #define DeeMA_seq_reverse_doc   DeeMA_Sequence_reverse_doc
@@ -1523,13 +1536,13 @@ DDATDEF char const DeeMA_Sequence_reverse_name[]; /* "reverse" */
 #define DeeMA_explicit_seq_reverse       DeeMA___seq_reverse__
 
 #define DeeMA___seq_reversed___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_reversed___name[]; /* "__seq_reversed__" */
-DDATDEF char const DeeMA___seq_reversed___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?DSequence" */
+#define DeeMA___seq_reversed___name  _DeeMA_ATTRSTR(__seq_reversed__)
+#define DeeMA___seq_reversed___doc   "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?DSequence"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_reversed__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_reversed_flags DeeMA___seq_reversed___flags
+#define DeeMA_Sequence_reversed_name  _DeeMA_ATTRSTR(reversed)
 #define DeeMA_Sequence_reversed_doc   DeeMA___seq_reversed___doc
 #define DeeMA_Sequence_reversed       DeeMA___seq_reversed__
-DDATDEF char const DeeMA_Sequence_reversed_name[]; /* "reversed" */
 #define DeeMA_seq_reversed_flags DeeMA_Sequence_reversed_flags
 #define DeeMA_seq_reversed_name  DeeMA_Sequence_reversed_name
 #define DeeMA_seq_reversed_doc   DeeMA_Sequence_reversed_doc
@@ -1540,13 +1553,13 @@ DDATDEF char const DeeMA_Sequence_reversed_name[]; /* "reversed" */
 #define DeeMA_explicit_seq_reversed       DeeMA___seq_reversed__
 
 #define DeeMA___seq_sort___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_sort___name[]; /* "__seq_sort__" */
-DDATDEF char const DeeMA___seq_sort___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)" */
+#define DeeMA___seq_sort___name  _DeeMA_ATTRSTR(__seq_sort__)
+#define DeeMA___seq_sort___doc   "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_sort__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_sort_flags DeeMA___seq_sort___flags
+#define DeeMA_Sequence_sort_name  _DeeMA_ATTRSTR(sort)
 #define DeeMA_Sequence_sort_doc   DeeMA___seq_sort___doc
 #define DeeMA_Sequence_sort       DeeMA___seq_sort__
-DDATDEF char const DeeMA_Sequence_sort_name[]; /* "sort" */
 #define DeeMA_seq_sort_flags DeeMA_Sequence_sort_flags
 #define DeeMA_seq_sort_name  DeeMA_Sequence_sort_name
 #define DeeMA_seq_sort_doc   DeeMA_Sequence_sort_doc
@@ -1557,13 +1570,13 @@ DDATDEF char const DeeMA_Sequence_sort_name[]; /* "sort" */
 #define DeeMA_explicit_seq_sort       DeeMA___seq_sort__
 
 #define DeeMA___seq_sorted___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_sorted___name[]; /* "__seq_sorted__" */
-DDATDEF char const DeeMA___seq_sorted___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)" */
+#define DeeMA___seq_sorted___name  _DeeMA_ATTRSTR(__seq_sorted__)
+#define DeeMA___seq_sorted___doc   "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_sorted__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_sorted_flags DeeMA___seq_sorted___flags
+#define DeeMA_Sequence_sorted_name  _DeeMA_ATTRSTR(sorted)
 #define DeeMA_Sequence_sorted_doc   DeeMA___seq_sorted___doc
 #define DeeMA_Sequence_sorted       DeeMA___seq_sorted__
-DDATDEF char const DeeMA_Sequence_sorted_name[]; /* "sorted" */
 #define DeeMA_seq_sorted_flags DeeMA_Sequence_sorted_flags
 #define DeeMA_seq_sorted_name  DeeMA_Sequence_sorted_name
 #define DeeMA_seq_sorted_doc   DeeMA_Sequence_sorted_doc
@@ -1574,13 +1587,13 @@ DDATDEF char const DeeMA_Sequence_sorted_name[]; /* "sorted" */
 #define DeeMA_explicit_seq_sorted       DeeMA___seq_sorted__
 
 #define DeeMA___seq_bfind___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_bfind___name[]; /* "__seq_bfind__" */
-DDATDEF char const DeeMA___seq_bfind___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N" */
+#define DeeMA___seq_bfind___name  _DeeMA_ATTRSTR(__seq_bfind__)
+#define DeeMA___seq_bfind___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_bfind__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_bfind_flags DeeMA___seq_bfind___flags
+#define DeeMA_Sequence_bfind_name  _DeeMA_ATTRSTR(bfind)
 #define DeeMA_Sequence_bfind_doc   DeeMA___seq_bfind___doc
 #define DeeMA_Sequence_bfind       DeeMA___seq_bfind__
-DDATDEF char const DeeMA_Sequence_bfind_name[]; /* "bfind" */
 #define DeeMA_seq_bfind_flags DeeMA_Sequence_bfind_flags
 #define DeeMA_seq_bfind_name  DeeMA_Sequence_bfind_name
 #define DeeMA_seq_bfind_doc   DeeMA_Sequence_bfind_doc
@@ -1591,13 +1604,13 @@ DDATDEF char const DeeMA_Sequence_bfind_name[]; /* "bfind" */
 #define DeeMA_explicit_seq_bfind       DeeMA___seq_bfind__
 
 #define DeeMA___seq_bposition___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_bposition___name[]; /* "__seq_bposition__" */
-DDATDEF char const DeeMA___seq_bposition___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
+#define DeeMA___seq_bposition___name  _DeeMA_ATTRSTR(__seq_bposition__)
+#define DeeMA___seq_bposition___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_bposition__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_bposition_flags DeeMA___seq_bposition___flags
+#define DeeMA_Sequence_bposition_name  _DeeMA_ATTRSTR(bposition)
 #define DeeMA_Sequence_bposition_doc   DeeMA___seq_bposition___doc
 #define DeeMA_Sequence_bposition       DeeMA___seq_bposition__
-DDATDEF char const DeeMA_Sequence_bposition_name[]; /* "bposition" */
 #define DeeMA_seq_bposition_flags DeeMA_Sequence_bposition_flags
 #define DeeMA_seq_bposition_name  DeeMA_Sequence_bposition_name
 #define DeeMA_seq_bposition_doc   DeeMA_Sequence_bposition_doc
@@ -1608,13 +1621,13 @@ DDATDEF char const DeeMA_Sequence_bposition_name[]; /* "bposition" */
 #define DeeMA_explicit_seq_bposition       DeeMA___seq_bposition__
 
 #define DeeMA___seq_brange___flags Dee_TYPE_METHOD_FKWDS
-DDATDEF char const DeeMA___seq_brange___name[]; /* "__seq_brange__" */
-DDATDEF char const DeeMA___seq_brange___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint" */
+#define DeeMA___seq_brange___name  _DeeMA_ATTRSTR(__seq_brange__)
+#define DeeMA___seq_brange___doc   "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_brange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_brange_flags DeeMA___seq_brange___flags
+#define DeeMA_Sequence_brange_name  _DeeMA_ATTRSTR(brange)
 #define DeeMA_Sequence_brange_doc   DeeMA___seq_brange___doc
 #define DeeMA_Sequence_brange       DeeMA___seq_brange__
-DDATDEF char const DeeMA_Sequence_brange_name[]; /* "brange" */
 #define DeeMA_seq_brange_flags DeeMA_Sequence_brange_flags
 #define DeeMA_seq_brange_name  DeeMA_Sequence_brange_name
 #define DeeMA_seq_brange_doc   DeeMA_Sequence_brange_doc
@@ -1625,365 +1638,365 @@ DDATDEF char const DeeMA_Sequence_brange_name[]; /* "brange" */
 #define DeeMA_explicit_seq_brange       DeeMA___seq_brange__
 
 #define DeeMA___set_iter___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_iter___name[]; /* "__set_iter__" */
-DDATDEF char const DeeMA___set_iter___doc[];  /* "->?DIterator" */
+#define DeeMA___set_iter___name  _DeeMA_ATTRSTR(__set_iter__)
+#define DeeMA___set_iter___doc   "->?DIterator"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_size___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_size___name[]; /* "__set_size__" */
-DDATDEF char const DeeMA___set_size___doc[];  /* "->?Dint" */
+#define DeeMA___set_size___name  _DeeMA_ATTRSTR(__set_size__)
+#define DeeMA___set_size___doc   "->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_hash___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_hash___name[]; /* "__set_hash__" */
-DDATDEF char const DeeMA___set_hash___doc[];  /* "->?Dint" */
+#define DeeMA___set_hash___name  _DeeMA_ATTRSTR(__set_hash__)
+#define DeeMA___set_hash___doc   "->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_hash__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_compare_eq___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_compare_eq___name[]; /* "__set_compare_eq__" */
-DDATDEF char const DeeMA___set_compare_eq___doc[];  /* "(rhs:?X2?DSet?S?O)->?X2?Dbool?Dint" */
+#define DeeMA___set_compare_eq___name  _DeeMA_ATTRSTR(__set_compare_eq__)
+#define DeeMA___set_compare_eq___doc   "(rhs:?X2?DSet?S?O)->?X2?Dbool?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_eq___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_eq___name[]; /* "__set_eq__" */
-DDATDEF char const DeeMA___set_eq___doc[];  /* "(rhs:?X2?DSet?S?O)->?Dbool" */
+#define DeeMA___set_eq___name  _DeeMA_ATTRSTR(__set_eq__)
+#define DeeMA___set_eq___doc   "(rhs:?X2?DSet?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_ne___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_ne___name[]; /* "__set_ne__" */
-DDATDEF char const DeeMA___set_ne___doc[];  /* "(rhs:?X2?DSet?S?O)->?Dbool" */
+#define DeeMA___set_ne___name  _DeeMA_ATTRSTR(__set_ne__)
+#define DeeMA___set_ne___doc   "(rhs:?X2?DSet?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_lo___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_lo___name[]; /* "__set_lo__" */
-DDATDEF char const DeeMA___set_lo___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?Dbool" */
+#define DeeMA___set_lo___name  _DeeMA_ATTRSTR(__set_lo__)
+#define DeeMA___set_lo___doc   "(rhs:?X3?DSet?DSequence?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_lo__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_le___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_le___name[]; /* "__set_le__" */
-DDATDEF char const DeeMA___set_le___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?Dbool" */
+#define DeeMA___set_le___name  _DeeMA_ATTRSTR(__set_le__)
+#define DeeMA___set_le___doc   "(rhs:?X3?DSet?DSequence?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_le__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_issubset_flags DeeMA___set_le___flags
+#define DeeMA_Set_issubset_name  _DeeMA_ATTRSTR(issubset)
 #define DeeMA_Set_issubset_doc   DeeMA___set_le___doc
 #define DeeMA_Set_issubset       DeeMA___set_le__
-DDATDEF char const DeeMA_Set_issubset_name[]; /* "issubset" */
 #define DeeMA_set_issubset_flags DeeMA_Set_issubset_flags
 #define DeeMA_set_issubset_name  DeeMA_Set_issubset_name
 #define DeeMA_set_issubset_doc   DeeMA_Set_issubset_doc
 #define DeeMA_set_issubset       DeeMA_Set_issubset
 
 #define DeeMA___set_gr___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_gr___name[]; /* "__set_gr__" */
-DDATDEF char const DeeMA___set_gr___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?Dbool" */
+#define DeeMA___set_gr___name  _DeeMA_ATTRSTR(__set_gr__)
+#define DeeMA___set_gr___doc   "(rhs:?X3?DSet?DSequence?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_gr__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_ge___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_ge___name[]; /* "__set_ge__" */
-DDATDEF char const DeeMA___set_ge___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?Dbool" */
+#define DeeMA___set_ge___name  _DeeMA_ATTRSTR(__set_ge__)
+#define DeeMA___set_ge___doc   "(rhs:?X3?DSet?DSequence?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_issuperset_flags DeeMA___set_ge___flags
+#define DeeMA_Set_issuperset_name  _DeeMA_ATTRSTR(issuperset)
 #define DeeMA_Set_issuperset_doc   DeeMA___set_ge___doc
 #define DeeMA_Set_issuperset       DeeMA___set_ge__
-DDATDEF char const DeeMA_Set_issuperset_name[]; /* "issuperset" */
 #define DeeMA_set_issuperset_flags DeeMA_Set_issuperset_flags
 #define DeeMA_set_issuperset_name  DeeMA_Set_issuperset_name
 #define DeeMA_set_issuperset_doc   DeeMA_Set_issuperset_doc
 #define DeeMA_set_issuperset       DeeMA_Set_issuperset
 
 #define DeeMA___set_inv___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_inv___name[]; /* "__set_inv__" */
-DDATDEF char const DeeMA___set_inv___doc[];  /* "->?DSet" */
+#define DeeMA___set_inv___name  _DeeMA_ATTRSTR(__set_inv__)
+#define DeeMA___set_inv___doc   "->?DSet"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_inv__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_add___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_add___name[]; /* "__set_add__" */
-DDATDEF char const DeeMA___set_add___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?DSet" */
+#define DeeMA___set_add___name  _DeeMA_ATTRSTR(__set_add__)
+#define DeeMA___set_add___doc   "(rhs:?X3?DSet?DSequence?S?O)->?DSet"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_union_flags DeeMA___set_add___flags
+#define DeeMA_Set_union_name  _DeeMA_ATTRSTR(union)
 #define DeeMA_Set_union_doc   DeeMA___set_add___doc
 #define DeeMA_Set_union       DeeMA___set_add__
-DDATDEF char const DeeMA_Set_union_name[]; /* "union" */
 #define DeeMA_set_union_flags DeeMA_Set_union_flags
 #define DeeMA_set_union_name  DeeMA_Set_union_name
 #define DeeMA_set_union_doc   DeeMA_Set_union_doc
 #define DeeMA_set_union       DeeMA_Set_union
 
 #define DeeMA___set_sub___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_sub___name[]; /* "__set_sub__" */
-DDATDEF char const DeeMA___set_sub___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?DSet" */
+#define DeeMA___set_sub___name  _DeeMA_ATTRSTR(__set_sub__)
+#define DeeMA___set_sub___doc   "(rhs:?X3?DSet?DSequence?S?O)->?DSet"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_sub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_difference_flags DeeMA___set_sub___flags
+#define DeeMA_Set_difference_name  _DeeMA_ATTRSTR(difference)
 #define DeeMA_Set_difference_doc   DeeMA___set_sub___doc
 #define DeeMA_Set_difference       DeeMA___set_sub__
-DDATDEF char const DeeMA_Set_difference_name[]; /* "difference" */
 #define DeeMA_set_difference_flags DeeMA_Set_difference_flags
 #define DeeMA_set_difference_name  DeeMA_Set_difference_name
 #define DeeMA_set_difference_doc   DeeMA_Set_difference_doc
 #define DeeMA_set_difference       DeeMA_Set_difference
 
 #define DeeMA___set_and___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_and___name[]; /* "__set_and__" */
-DDATDEF char const DeeMA___set_and___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?DSet" */
+#define DeeMA___set_and___name  _DeeMA_ATTRSTR(__set_and__)
+#define DeeMA___set_and___doc   "(rhs:?X3?DSet?DSequence?S?O)->?DSet"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_and__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_intersection_flags DeeMA___set_and___flags
+#define DeeMA_Set_intersection_name  _DeeMA_ATTRSTR(intersection)
 #define DeeMA_Set_intersection_doc   DeeMA___set_and___doc
 #define DeeMA_Set_intersection       DeeMA___set_and__
-DDATDEF char const DeeMA_Set_intersection_name[]; /* "intersection" */
 #define DeeMA_set_intersection_flags DeeMA_Set_intersection_flags
 #define DeeMA_set_intersection_name  DeeMA_Set_intersection_name
 #define DeeMA_set_intersection_doc   DeeMA_Set_intersection_doc
 #define DeeMA_set_intersection       DeeMA_Set_intersection
 
 #define DeeMA___set_xor___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_xor___name[]; /* "__set_xor__" */
-DDATDEF char const DeeMA___set_xor___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?DSet" */
+#define DeeMA___set_xor___name  _DeeMA_ATTRSTR(__set_xor__)
+#define DeeMA___set_xor___doc   "(rhs:?X3?DSet?DSequence?S?O)->?DSet"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_xor__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_symmetric_difference_flags DeeMA___set_xor___flags
+#define DeeMA_Set_symmetric_difference_name  _DeeMA_ATTRSTR(symmetric_difference)
 #define DeeMA_Set_symmetric_difference_doc   DeeMA___set_xor___doc
 #define DeeMA_Set_symmetric_difference       DeeMA___set_xor__
-DDATDEF char const DeeMA_Set_symmetric_difference_name[]; /* "symmetric_difference" */
 #define DeeMA_set_symmetric_difference_flags DeeMA_Set_symmetric_difference_flags
 #define DeeMA_set_symmetric_difference_name  DeeMA_Set_symmetric_difference_name
 #define DeeMA_set_symmetric_difference_doc   DeeMA_Set_symmetric_difference_doc
 #define DeeMA_set_symmetric_difference       DeeMA_Set_symmetric_difference
 
 #define DeeMA___set_inplace_add___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_inplace_add___name[]; /* "__set_inplace_add__" */
-DDATDEF char const DeeMA___set_inplace_add___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?." */
+#define DeeMA___set_inplace_add___name  _DeeMA_ATTRSTR(__set_inplace_add__)
+#define DeeMA___set_inplace_add___doc   "(rhs:?X3?DSet?DSequence?S?O)->?."
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_inplace_sub___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_inplace_sub___name[]; /* "__set_inplace_sub__" */
-DDATDEF char const DeeMA___set_inplace_sub___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?." */
+#define DeeMA___set_inplace_sub___name  _DeeMA_ATTRSTR(__set_inplace_sub__)
+#define DeeMA___set_inplace_sub___doc   "(rhs:?X3?DSet?DSequence?S?O)->?."
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_inplace_sub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_inplace_and___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_inplace_and___name[]; /* "__set_inplace_and__" */
-DDATDEF char const DeeMA___set_inplace_and___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?." */
+#define DeeMA___set_inplace_and___name  _DeeMA_ATTRSTR(__set_inplace_and__)
+#define DeeMA___set_inplace_and___doc   "(rhs:?X3?DSet?DSequence?S?O)->?."
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_inplace_and__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_inplace_xor___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_inplace_xor___name[]; /* "__set_inplace_xor__" */
-DDATDEF char const DeeMA___set_inplace_xor___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?." */
+#define DeeMA___set_inplace_xor___name  _DeeMA_ATTRSTR(__set_inplace_xor__)
+#define DeeMA___set_inplace_xor___doc   "(rhs:?X3?DSet?DSequence?S?O)->?."
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_inplace_xor__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_unify___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_unify___name[]; /* "__set_unify__" */
-DDATDEF char const DeeMA___set_unify___doc[];  /* "(key)->" */
+#define DeeMA___set_unify___name  _DeeMA_ATTRSTR(__set_unify__)
+#define DeeMA___set_unify___doc   "(key)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_unify__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_unify_flags DeeMA___set_unify___flags
+#define DeeMA_Set_unify_name  _DeeMA_ATTRSTR(unify)
 #define DeeMA_Set_unify_doc   DeeMA___set_unify___doc
 #define DeeMA_Set_unify       DeeMA___set_unify__
-DDATDEF char const DeeMA_Set_unify_name[]; /* "unify" */
 #define DeeMA_set_unify_flags DeeMA_Set_unify_flags
 #define DeeMA_set_unify_name  DeeMA_Set_unify_name
 #define DeeMA_set_unify_doc   DeeMA_Set_unify_doc
 #define DeeMA_set_unify       DeeMA_Set_unify
 
 #define DeeMA___set_insert___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_insert___name[]; /* "__set_insert__" */
-DDATDEF char const DeeMA___set_insert___doc[];  /* "(key)->?Dbool" */
+#define DeeMA___set_insert___name  _DeeMA_ATTRSTR(__set_insert__)
+#define DeeMA___set_insert___doc   "(key)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_insert__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_insert_flags DeeMA___set_insert___flags
+#define DeeMA_Set_insert_name  _DeeMA_ATTRSTR(insert)
 #define DeeMA_Set_insert_doc   DeeMA___set_insert___doc
 #define DeeMA_Set_insert       DeeMA___set_insert__
-DDATDEF char const DeeMA_Set_insert_name[]; /* "insert" */
 #define DeeMA_set_insert_flags DeeMA_Set_insert_flags
 #define DeeMA_set_insert_name  DeeMA_Set_insert_name
 #define DeeMA_set_insert_doc   DeeMA_Set_insert_doc
 #define DeeMA_set_insert       DeeMA_Set_insert
 
 #define DeeMA___set_insertall___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_insertall___name[]; /* "__set_insertall__" */
-DDATDEF char const DeeMA___set_insertall___doc[];  /* "(keys:?X3?DSet?DSequence?S?O)->?Dbool" */
+#define DeeMA___set_insertall___name  _DeeMA_ATTRSTR(__set_insertall__)
+#define DeeMA___set_insertall___doc   "(keys:?X3?DSet?DSequence?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_insertall__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_insertall_flags DeeMA___set_insertall___flags
+#define DeeMA_Set_insertall_name  _DeeMA_ATTRSTR(insertall)
 #define DeeMA_Set_insertall_doc   DeeMA___set_insertall___doc
 #define DeeMA_Set_insertall       DeeMA___set_insertall__
-DDATDEF char const DeeMA_Set_insertall_name[]; /* "insertall" */
 #define DeeMA_set_insertall_flags DeeMA_Set_insertall_flags
 #define DeeMA_set_insertall_name  DeeMA_Set_insertall_name
 #define DeeMA_set_insertall_doc   DeeMA_Set_insertall_doc
 #define DeeMA_set_insertall       DeeMA_Set_insertall
 
 #define DeeMA___set_remove___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_remove___name[]; /* "__set_remove__" */
-DDATDEF char const DeeMA___set_remove___doc[];  /* "(key)->?Dbool" */
+#define DeeMA___set_remove___name  _DeeMA_ATTRSTR(__set_remove__)
+#define DeeMA___set_remove___doc   "(key)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_remove_flags DeeMA___set_remove___flags
+#define DeeMA_Set_remove_name  _DeeMA_ATTRSTR(remove)
 #define DeeMA_Set_remove_doc   DeeMA___set_remove___doc
 #define DeeMA_Set_remove       DeeMA___set_remove__
-DDATDEF char const DeeMA_Set_remove_name[]; /* "remove" */
 #define DeeMA_set_remove_flags DeeMA_Set_remove_flags
 #define DeeMA_set_remove_name  DeeMA_Set_remove_name
 #define DeeMA_set_remove_doc   DeeMA_Set_remove_doc
 #define DeeMA_set_remove       DeeMA_Set_remove
 
 #define DeeMA___set_removeall___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_removeall___name[]; /* "__set_removeall__" */
-DDATDEF char const DeeMA___set_removeall___doc[];  /* "(keys:?X3?DSet?DSequence?S?O)" */
+#define DeeMA___set_removeall___name  _DeeMA_ATTRSTR(__set_removeall__)
+#define DeeMA___set_removeall___doc   "(keys:?X3?DSet?DSequence?S?O)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_removeall__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_removeall_flags DeeMA___set_removeall___flags
+#define DeeMA_Set_removeall_name  _DeeMA_ATTRSTR(removeall)
 #define DeeMA_Set_removeall_doc   DeeMA___set_removeall___doc
 #define DeeMA_Set_removeall       DeeMA___set_removeall__
-DDATDEF char const DeeMA_Set_removeall_name[]; /* "removeall" */
 #define DeeMA_set_removeall_flags DeeMA_Set_removeall_flags
 #define DeeMA_set_removeall_name  DeeMA_Set_removeall_name
 #define DeeMA_set_removeall_doc   DeeMA_Set_removeall_doc
 #define DeeMA_set_removeall       DeeMA_Set_removeall
 
 #define DeeMA___set_pop___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___set_pop___name[]; /* "__set_pop__" */
-DDATDEF char const DeeMA___set_pop___doc[];  /* "(def?)->" */
+#define DeeMA___set_pop___name  _DeeMA_ATTRSTR(__set_pop__)
+#define DeeMA___set_pop___doc   "(def?)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Set_pop_flags DeeMA___set_pop___flags
+#define DeeMA_Set_pop_name  _DeeMA_ATTRSTR(pop)
 #define DeeMA_Set_pop_doc   DeeMA___set_pop___doc
 #define DeeMA_Set_pop       DeeMA___set_pop__
-DDATDEF char const DeeMA_Set_pop_name[]; /* "pop" */
 #define DeeMA_set_pop_flags DeeMA_Set_pop_flags
 #define DeeMA_set_pop_name  DeeMA_Set_pop_name
 #define DeeMA_set_pop_doc   DeeMA_Set_pop_doc
 #define DeeMA_set_pop       DeeMA_Set_pop
 
 #define DeeMA___map_iter___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_iter___name[]; /* "__map_iter__" */
-DDATDEF char const DeeMA___map_iter___doc[];  /* "->?DIterator" */
+#define DeeMA___map_iter___name  _DeeMA_ATTRSTR(__map_iter__)
+#define DeeMA___map_iter___doc   "->?DIterator"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_size___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_size___name[]; /* "__map_size__" */
-DDATDEF char const DeeMA___map_size___doc[];  /* "->?Dint" */
+#define DeeMA___map_size___name  _DeeMA_ATTRSTR(__map_size__)
+#define DeeMA___map_size___doc   "->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_getitem___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_getitem___name[]; /* "__map_getitem__" */
-DDATDEF char const DeeMA___map_getitem___doc[];  /* "(key)->" */
+#define DeeMA___map_getitem___name  _DeeMA_ATTRSTR(__map_getitem__)
+#define DeeMA___map_getitem___doc   "(key)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_getitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_delitem___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_delitem___name[]; /* "__map_delitem__" */
-DDATDEF char const DeeMA___map_delitem___doc[];  /* "(key)->" */
+#define DeeMA___map_delitem___name  _DeeMA_ATTRSTR(__map_delitem__)
+#define DeeMA___map_delitem___doc   "(key)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_delitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_setitem___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_setitem___name[]; /* "__map_setitem__" */
-DDATDEF char const DeeMA___map_setitem___doc[];  /* "(key,value)->" */
+#define DeeMA___map_setitem___name  _DeeMA_ATTRSTR(__map_setitem__)
+#define DeeMA___map_setitem___doc   "(key,value)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_setitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_contains___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_contains___name[]; /* "__map_contains__" */
-DDATDEF char const DeeMA___map_contains___doc[];  /* "(key)->?Dbool" */
+#define DeeMA___map_contains___name  _DeeMA_ATTRSTR(__map_contains__)
+#define DeeMA___map_contains___doc   "(key)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_contains__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_enumerate___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_enumerate___name[]; /* "__map_enumerate__" */
-DDATDEF char const DeeMA___map_enumerate___doc[];  /* "(cb:?DCallable,start?,end?)->?X2?O?N" */
+#define DeeMA___map_enumerate___name  _DeeMA_ATTRSTR(__map_enumerate__)
+#define DeeMA___map_enumerate___doc   "(cb:?DCallable,start?,end?)->?X2?O?N"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_enumerate_items___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_enumerate_items___name[]; /* "__map_enumerate_items__" */
-DDATDEF char const DeeMA___map_enumerate_items___doc[];  /* "(start?,end?)->?S?T2" */
+#define DeeMA___map_enumerate_items___name  _DeeMA_ATTRSTR(__map_enumerate_items__)
+#define DeeMA___map_enumerate_items___doc   "(start?,end?)->?S?T2"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_compare_eq___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_compare_eq___name[]; /* "__map_compare_eq__" */
-DDATDEF char const DeeMA___map_compare_eq___doc[];  /* "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?X2?Dbool?Dint" */
+#define DeeMA___map_compare_eq___name  _DeeMA_ATTRSTR(__map_compare_eq__)
+#define DeeMA___map_compare_eq___doc   "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?X2?Dbool?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_eq___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_eq___name[]; /* "__map_eq__" */
-DDATDEF char const DeeMA___map_eq___doc[];  /* "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool" */
+#define DeeMA___map_eq___name  _DeeMA_ATTRSTR(__map_eq__)
+#define DeeMA___map_eq___doc   "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_ne___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_ne___name[]; /* "__map_ne__" */
-DDATDEF char const DeeMA___map_ne___doc[];  /* "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool" */
+#define DeeMA___map_ne___name  _DeeMA_ATTRSTR(__map_ne__)
+#define DeeMA___map_ne___doc   "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_lo___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_lo___name[]; /* "__map_lo__" */
-DDATDEF char const DeeMA___map_lo___doc[];  /* "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool" */
+#define DeeMA___map_lo___name  _DeeMA_ATTRSTR(__map_lo__)
+#define DeeMA___map_lo___doc   "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_lo__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_le___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_le___name[]; /* "__map_le__" */
-DDATDEF char const DeeMA___map_le___doc[];  /* "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool" */
+#define DeeMA___map_le___name  _DeeMA_ATTRSTR(__map_le__)
+#define DeeMA___map_le___doc   "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_le__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_gr___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_gr___name[]; /* "__map_gr__" */
-DDATDEF char const DeeMA___map_gr___doc[];  /* "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool" */
+#define DeeMA___map_gr___name  _DeeMA_ATTRSTR(__map_gr__)
+#define DeeMA___map_gr___doc   "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_gr__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_ge___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_ge___name[]; /* "__map_ge__" */
-DDATDEF char const DeeMA___map_ge___doc[];  /* "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool" */
+#define DeeMA___map_ge___name  _DeeMA_ATTRSTR(__map_ge__)
+#define DeeMA___map_ge___doc   "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_add___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_add___name[]; /* "__map_add__" */
-DDATDEF char const DeeMA___map_add___doc[];  /* "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?DMapping" */
+#define DeeMA___map_add___name  _DeeMA_ATTRSTR(__map_add__)
+#define DeeMA___map_add___doc   "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?DMapping"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_union_flags DeeMA___map_add___flags
+#define DeeMA_Mapping_union_name  _DeeMA_ATTRSTR(union)
 #define DeeMA_Mapping_union_doc   DeeMA___map_add___doc
 #define DeeMA_Mapping_union       DeeMA___map_add__
-DDATDEF char const DeeMA_Mapping_union_name[]; /* "union" */
 
 #define DeeMA___map_sub___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_sub___name[]; /* "__map_sub__" */
-DDATDEF char const DeeMA___map_sub___doc[];  /* "(keys:?X2?DSet?S?O)->?DMapping" */
+#define DeeMA___map_sub___name  _DeeMA_ATTRSTR(__map_sub__)
+#define DeeMA___map_sub___doc   "(keys:?X2?DSet?S?O)->?DMapping"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_sub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_difference_flags DeeMA___map_sub___flags
+#define DeeMA_Mapping_difference_name  _DeeMA_ATTRSTR(difference)
 #define DeeMA_Mapping_difference_doc   DeeMA___map_sub___doc
 #define DeeMA_Mapping_difference       DeeMA___map_sub__
-DDATDEF char const DeeMA_Mapping_difference_name[]; /* "difference" */
 
 #define DeeMA___map_and___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_and___name[]; /* "__map_and__" */
-DDATDEF char const DeeMA___map_and___doc[];  /* "(keys:?X2?DSet?S?O)->?DMapping" */
+#define DeeMA___map_and___name  _DeeMA_ATTRSTR(__map_and__)
+#define DeeMA___map_and___doc   "(keys:?X2?DSet?S?O)->?DMapping"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_and__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_intersection_flags DeeMA___map_and___flags
+#define DeeMA_Mapping_intersection_name  _DeeMA_ATTRSTR(intersection)
 #define DeeMA_Mapping_intersection_doc   DeeMA___map_and___doc
 #define DeeMA_Mapping_intersection       DeeMA___map_and__
-DDATDEF char const DeeMA_Mapping_intersection_name[]; /* "intersection" */
 
 #define DeeMA___map_xor___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_xor___name[]; /* "__map_xor__" */
-DDATDEF char const DeeMA___map_xor___doc[];  /* "(rhs:?X2?M?O?O?S?T2?O?O)->?DMapping" */
+#define DeeMA___map_xor___name  _DeeMA_ATTRSTR(__map_xor__)
+#define DeeMA___map_xor___doc   "(rhs:?X2?M?O?O?S?T2?O?O)->?DMapping"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_xor__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_symmetric_difference_flags DeeMA___map_xor___flags
+#define DeeMA_Mapping_symmetric_difference_name  _DeeMA_ATTRSTR(symmetric_difference)
 #define DeeMA_Mapping_symmetric_difference_doc   DeeMA___map_xor___doc
 #define DeeMA_Mapping_symmetric_difference       DeeMA___map_xor__
-DDATDEF char const DeeMA_Mapping_symmetric_difference_name[]; /* "symmetric_difference" */
 
 #define DeeMA___map_inplace_add___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_inplace_add___name[]; /* "__map_inplace_add__" */
-DDATDEF char const DeeMA___map_inplace_add___doc[];  /* "(items:?X3?DMapping?M?O?O?S?T2?O?O)->?." */
+#define DeeMA___map_inplace_add___name  _DeeMA_ATTRSTR(__map_inplace_add__)
+#define DeeMA___map_inplace_add___doc   "(items:?X3?DMapping?M?O?O?S?T2?O?O)->?."
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_inplace_sub___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_inplace_sub___name[]; /* "__map_inplace_sub__" */
-DDATDEF char const DeeMA___map_inplace_sub___doc[];  /* "(keys:?X2?DSet?DSequence?S?O)->?." */
+#define DeeMA___map_inplace_sub___name  _DeeMA_ATTRSTR(__map_inplace_sub__)
+#define DeeMA___map_inplace_sub___doc   "(keys:?X2?DSet?DSequence?S?O)->?."
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_inplace_sub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_inplace_and___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_inplace_and___name[]; /* "__map_inplace_and__" */
-DDATDEF char const DeeMA___map_inplace_and___doc[];  /* "(keys:?X2?DSet?DSequence?S?O)->?." */
+#define DeeMA___map_inplace_and___name  _DeeMA_ATTRSTR(__map_inplace_and__)
+#define DeeMA___map_inplace_and___doc   "(keys:?X2?DSet?DSequence?S?O)->?."
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_inplace_and__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_inplace_xor___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_inplace_xor___name[]; /* "__map_inplace_xor__" */
-DDATDEF char const DeeMA___map_inplace_xor___doc[];  /* "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?." */
+#define DeeMA___map_inplace_xor___name  _DeeMA_ATTRSTR(__map_inplace_xor__)
+#define DeeMA___map_inplace_xor___doc   "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?."
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_inplace_xor__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_setold___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_setold___name[]; /* "__map_setold__" */
-DDATDEF char const DeeMA___map_setold___doc[];  /* "(key,value)->?Dbool" */
+#define DeeMA___map_setold___name  _DeeMA_ATTRSTR(__map_setold__)
+#define DeeMA___map_setold___doc   "(key,value)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_setold__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_setold_flags DeeMA___map_setold___flags
+#define DeeMA_Mapping_setold_name  _DeeMA_ATTRSTR(setold)
 #define DeeMA_Mapping_setold_doc   DeeMA___map_setold___doc
 #define DeeMA_Mapping_setold       DeeMA___map_setold__
-DDATDEF char const DeeMA_Mapping_setold_name[]; /* "setold" */
 #define DeeMA_map_setold_flags DeeMA_Mapping_setold_flags
 #define DeeMA_map_setold_name  DeeMA_Mapping_setold_name
 #define DeeMA_map_setold_doc   DeeMA_Mapping_setold_doc
@@ -1994,13 +2007,13 @@ DDATDEF char const DeeMA_Mapping_setold_name[]; /* "setold" */
 #define DeeMA_explicit_map_setold       DeeMA___map_setold__
 
 #define DeeMA___map_setold_ex___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_setold_ex___name[]; /* "__map_setold_ex__" */
-DDATDEF char const DeeMA___map_setold_ex___doc[];  /* "(key,value)->?T2?Dbool?X2?O?N" */
+#define DeeMA___map_setold_ex___name  _DeeMA_ATTRSTR(__map_setold_ex__)
+#define DeeMA___map_setold_ex___doc   "(key,value)->?T2?Dbool?X2?O?N"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_setold_ex__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_setold_ex_flags DeeMA___map_setold_ex___flags
+#define DeeMA_Mapping_setold_ex_name  _DeeMA_ATTRSTR(setold_ex)
 #define DeeMA_Mapping_setold_ex_doc   DeeMA___map_setold_ex___doc
 #define DeeMA_Mapping_setold_ex       DeeMA___map_setold_ex__
-DDATDEF char const DeeMA_Mapping_setold_ex_name[]; /* "setold_ex" */
 #define DeeMA_map_setold_ex_flags DeeMA_Mapping_setold_ex_flags
 #define DeeMA_map_setold_ex_name  DeeMA_Mapping_setold_ex_name
 #define DeeMA_map_setold_ex_doc   DeeMA_Mapping_setold_ex_doc
@@ -2011,13 +2024,13 @@ DDATDEF char const DeeMA_Mapping_setold_ex_name[]; /* "setold_ex" */
 #define DeeMA_explicit_map_setold_ex       DeeMA___map_setold_ex__
 
 #define DeeMA___map_setnew___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_setnew___name[]; /* "__map_setnew__" */
-DDATDEF char const DeeMA___map_setnew___doc[];  /* "(key,value)->?Dbool" */
+#define DeeMA___map_setnew___name  _DeeMA_ATTRSTR(__map_setnew__)
+#define DeeMA___map_setnew___doc   "(key,value)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_setnew__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_setnew_flags DeeMA___map_setnew___flags
+#define DeeMA_Mapping_setnew_name  _DeeMA_ATTRSTR(setnew)
 #define DeeMA_Mapping_setnew_doc   DeeMA___map_setnew___doc
 #define DeeMA_Mapping_setnew       DeeMA___map_setnew__
-DDATDEF char const DeeMA_Mapping_setnew_name[]; /* "setnew" */
 #define DeeMA_map_setnew_flags DeeMA_Mapping_setnew_flags
 #define DeeMA_map_setnew_name  DeeMA_Mapping_setnew_name
 #define DeeMA_map_setnew_doc   DeeMA_Mapping_setnew_doc
@@ -2028,13 +2041,13 @@ DDATDEF char const DeeMA_Mapping_setnew_name[]; /* "setnew" */
 #define DeeMA_explicit_map_setnew       DeeMA___map_setnew__
 
 #define DeeMA___map_setnew_ex___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_setnew_ex___name[]; /* "__map_setnew_ex__" */
-DDATDEF char const DeeMA___map_setnew_ex___doc[];  /* "(key,value)->?T2?Dbool?X2?O?N" */
+#define DeeMA___map_setnew_ex___name  _DeeMA_ATTRSTR(__map_setnew_ex__)
+#define DeeMA___map_setnew_ex___doc   "(key,value)->?T2?Dbool?X2?O?N"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_setnew_ex__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_setnew_ex_flags DeeMA___map_setnew_ex___flags
+#define DeeMA_Mapping_setnew_ex_name  _DeeMA_ATTRSTR(setnew_ex)
 #define DeeMA_Mapping_setnew_ex_doc   DeeMA___map_setnew_ex___doc
 #define DeeMA_Mapping_setnew_ex       DeeMA___map_setnew_ex__
-DDATDEF char const DeeMA_Mapping_setnew_ex_name[]; /* "setnew_ex" */
 #define DeeMA_map_setnew_ex_flags DeeMA_Mapping_setnew_ex_flags
 #define DeeMA_map_setnew_ex_name  DeeMA_Mapping_setnew_ex_name
 #define DeeMA_map_setnew_ex_doc   DeeMA_Mapping_setnew_ex_doc
@@ -2045,13 +2058,13 @@ DDATDEF char const DeeMA_Mapping_setnew_ex_name[]; /* "setnew_ex" */
 #define DeeMA_explicit_map_setnew_ex       DeeMA___map_setnew_ex__
 
 #define DeeMA___map_setdefault___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_setdefault___name[]; /* "__map_setdefault__" */
-DDATDEF char const DeeMA___map_setdefault___doc[];  /* "(key,value)->" */
+#define DeeMA___map_setdefault___name  _DeeMA_ATTRSTR(__map_setdefault__)
+#define DeeMA___map_setdefault___doc   "(key,value)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_setdefault__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_setdefault_flags DeeMA___map_setdefault___flags
+#define DeeMA_Mapping_setdefault_name  _DeeMA_ATTRSTR(setdefault)
 #define DeeMA_Mapping_setdefault_doc   DeeMA___map_setdefault___doc
 #define DeeMA_Mapping_setdefault       DeeMA___map_setdefault__
-DDATDEF char const DeeMA_Mapping_setdefault_name[]; /* "setdefault" */
 #define DeeMA_map_setdefault_flags DeeMA_Mapping_setdefault_flags
 #define DeeMA_map_setdefault_name  DeeMA_Mapping_setdefault_name
 #define DeeMA_map_setdefault_doc   DeeMA_Mapping_setdefault_doc
@@ -2062,13 +2075,13 @@ DDATDEF char const DeeMA_Mapping_setdefault_name[]; /* "setdefault" */
 #define DeeMA_explicit_map_setdefault       DeeMA___map_setdefault__
 
 #define DeeMA___map_update___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_update___name[]; /* "__map_update__" */
-DDATDEF char const DeeMA___map_update___doc[];  /* "(items:?X3?DMapping?M?O?O?S?T2?O?O)" */
+#define DeeMA___map_update___name  _DeeMA_ATTRSTR(__map_update__)
+#define DeeMA___map_update___doc   "(items:?X3?DMapping?M?O?O?S?T2?O?O)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_update__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_update_flags DeeMA___map_update___flags
+#define DeeMA_Mapping_update_name  _DeeMA_ATTRSTR(update)
 #define DeeMA_Mapping_update_doc   DeeMA___map_update___doc
 #define DeeMA_Mapping_update       DeeMA___map_update__
-DDATDEF char const DeeMA_Mapping_update_name[]; /* "update" */
 #define DeeMA_map_update_flags DeeMA_Mapping_update_flags
 #define DeeMA_map_update_name  DeeMA_Mapping_update_name
 #define DeeMA_map_update_doc   DeeMA_Mapping_update_doc
@@ -2079,13 +2092,13 @@ DDATDEF char const DeeMA_Mapping_update_name[]; /* "update" */
 #define DeeMA_explicit_map_update       DeeMA___map_update__
 
 #define DeeMA___map_remove___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_remove___name[]; /* "__map_remove__" */
-DDATDEF char const DeeMA___map_remove___doc[];  /* "(key)->?Dbool" */
+#define DeeMA___map_remove___name  _DeeMA_ATTRSTR(__map_remove__)
+#define DeeMA___map_remove___doc   "(key)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_remove_flags DeeMA___map_remove___flags
+#define DeeMA_Mapping_remove_name  _DeeMA_ATTRSTR(remove)
 #define DeeMA_Mapping_remove_doc   DeeMA___map_remove___doc
 #define DeeMA_Mapping_remove       DeeMA___map_remove__
-DDATDEF char const DeeMA_Mapping_remove_name[]; /* "remove" */
 #define DeeMA_map_remove_flags DeeMA_Mapping_remove_flags
 #define DeeMA_map_remove_name  DeeMA_Mapping_remove_name
 #define DeeMA_map_remove_doc   DeeMA_Mapping_remove_doc
@@ -2096,39 +2109,39 @@ DDATDEF char const DeeMA_Mapping_remove_name[]; /* "remove" */
 #define DeeMA_explicit_map_remove       DeeMA___map_remove__
 
 #define DeeMA___map_removekeys___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_removekeys___name[]; /* "__map_removekeys__" */
-DDATDEF char const DeeMA___map_removekeys___doc[];  /* "(keys:?X3?DSet?DSequence?S?O)" */
+#define DeeMA___map_removekeys___name  _DeeMA_ATTRSTR(__map_removekeys__)
+#define DeeMA___map_removekeys___doc   "(keys:?X3?DSet?DSequence?S?O)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_removekeys__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_removekeys_flags DeeMA___map_removekeys___flags
+#define DeeMA_Mapping_removekeys_name  _DeeMA_ATTRSTR(removekeys)
 #define DeeMA_Mapping_removekeys_doc   DeeMA___map_removekeys___doc
 #define DeeMA_Mapping_removekeys       DeeMA___map_removekeys__
-DDATDEF char const DeeMA_Mapping_removekeys_name[]; /* "removekeys" */
 #define DeeMA_map_removekeys_flags DeeMA_Mapping_removekeys_flags
 #define DeeMA_map_removekeys_name  DeeMA_Mapping_removekeys_name
 #define DeeMA_map_removekeys_doc   DeeMA_Mapping_removekeys_doc
 #define DeeMA_map_removekeys       DeeMA_Mapping_removekeys
 
 #define DeeMA___map_pop___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_pop___name[]; /* "__map_pop__" */
-DDATDEF char const DeeMA___map_pop___doc[];  /* "(key,def?)->" */
+#define DeeMA___map_pop___name  _DeeMA_ATTRSTR(__map_pop__)
+#define DeeMA___map_pop___doc   "(key,def?)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_pop_flags DeeMA___map_pop___flags
+#define DeeMA_Mapping_pop_name  _DeeMA_ATTRSTR(pop)
 #define DeeMA_Mapping_pop_doc   DeeMA___map_pop___doc
 #define DeeMA_Mapping_pop       DeeMA___map_pop__
-DDATDEF char const DeeMA_Mapping_pop_name[]; /* "pop" */
 #define DeeMA_map_pop_flags DeeMA_Mapping_pop_flags
 #define DeeMA_map_pop_name  DeeMA_Mapping_pop_name
 #define DeeMA_map_pop_doc   DeeMA_Mapping_pop_doc
 #define DeeMA_map_pop       DeeMA_Mapping_pop
 
 #define DeeMA___map_popitem___flags Dee_TYPE_METHOD_FNORMAL
-DDATDEF char const DeeMA___map_popitem___name[]; /* "__map_popitem__" */
-DDATDEF char const DeeMA___map_popitem___doc[];  /* "->?X2?T2?O?O?N" */
+#define DeeMA___map_popitem___name  _DeeMA_ATTRSTR(__map_popitem__)
+#define DeeMA___map_popitem___doc   "->?X2?T2?O?O?N"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_popitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Mapping_popitem_flags DeeMA___map_popitem___flags
+#define DeeMA_Mapping_popitem_name  _DeeMA_ATTRSTR(popitem)
 #define DeeMA_Mapping_popitem_doc   DeeMA___map_popitem___doc
 #define DeeMA_Mapping_popitem       DeeMA___map_popitem__
-DDATDEF char const DeeMA_Mapping_popitem_name[]; /* "popitem" */
 #define DeeMA_map_popitem_flags DeeMA_Mapping_popitem_flags
 #define DeeMA_map_popitem_name  DeeMA_Mapping_popitem_name
 #define DeeMA_map_popitem_doc   DeeMA_Mapping_popitem_doc
