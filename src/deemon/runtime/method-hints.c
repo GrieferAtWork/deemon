@@ -128,11 +128,12 @@ struct mh_init_spec {
 	Dee_funptr_t                                mis_withattr_prim;      /* [1..1][valid_if(mis_attr_prim)] Fallback for direct CallAttr(mis_attr_prim) (e.g. `default__seq_operator_bool__with_callattr___seq_bool__') */
 	__UINTPTR_HALF_TYPE__                       mis_offsetof_cache;     /* [1..1][valid_if(mis_attr_prim || mis_attr_seco)] Offset of the cache-slot in `struct Dee_type_mh_cache' (e.g. "mhc___seq_bool__") */
 	__UINTPTR_HALF_TYPE__                       mis_attr_kind;          /* [valid_if(mis_attr_prim || mis_attr_seco)] Attribute kind (one of `MH_KIND_*') */
-#define MH_KIND_METHOD       0 /* Attribute is a method */
-#define MH_KIND_GETSET_GET   1 /* Attribute is getset (get). The get/del/set and bound-callbacks are loaded. */
-#define MH_KIND_GETSET_DEL   2 /* Attribute is getset (del). The get/del/set and bound-callbacks are loaded. */
-#define MH_KIND_GETSET_SET   3 /* Attribute is getset (set). The get/del/set and bound-callbacks are loaded. */
-#define MH_KIND_GETSET_BOUND 4 /* Attribute is getset (bound). The get/del/set and bound-callbacks are loaded. */
+#define MH_KIND_METHOD        0 /* Attribute is a method */
+#define MH_KIND_GETSET_GET    1 /* Attribute is getset (get). The get/del/set and bound-callbacks are loaded. */
+#define MH_KIND_GETSET_DEL    2 /* Attribute is getset (del). The get/del/set and bound-callbacks are loaded. */
+#define MH_KIND_GETSET_SET    3 /* Attribute is getset (set). The get/del/set and bound-callbacks are loaded. */
+#define MH_KIND_GETSET_BOUND  4 /* Attribute is getset (bound). The get/del/set and bound-callbacks are loaded. */
+#define MH_KIND_GETSET_TRYGET 5 /* Attribute is getset (tryget). The get/del/set and bound-callbacks are loaded. */
 	Dee_funptr_t                                mis_withcache_object;   /* [1..1][valid_if(mis_attr_prim || mis_attr_seco)] default__seq_operator_bool__with_callobjectcache___seq_bool__ */
 	mh_init_select_t                            mis_select;             /* [0..1] Custom fallback resolver function (used when there are no attribute matches) */
 };
@@ -2158,12 +2159,12 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[238] = {
 	MH_INIT_SPEC_INIT(&str___seq_unpack__, mh_secondary_seq_unpack, mh_using_seq_unpack, NULL, &default__seq_unpack__with_callattr___seq_unpack__, offsetof(struct Dee_type_mh_cache, mhc___seq_unpack__), MH_KIND_METHOD, &default__seq_unpack__with_callobjectcache___seq_unpack__, &mh_select_seq_unpack),
 	MH_INIT_SPEC_INIT(&str___seq_unpack__, mh_secondary_seq_unpack_ex, NULL, NULL, &default__seq_unpack_ex__with_callattr___seq_unpack__, offsetof(struct Dee_type_mh_cache, mhc___seq_unpack__), MH_KIND_METHOD, &default__seq_unpack_ex__with_callobjectcache___seq_unpack__, &mh_select_seq_unpack_ex),
 	MH_INIT_SPEC_INIT(&str___seq_unpackub__, mh_secondary_seq_unpack_ub, NULL, NULL, &default__seq_unpack_ub__with_callattr___seq_unpackub__, offsetof(struct Dee_type_mh_cache, mhc___seq_unpackub__), MH_KIND_METHOD, &default__seq_unpack_ub__with_callobjectcache___seq_unpackub__, &mh_select_seq_unpack_ub),
-	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_trygetfirst, NULL, NULL, &default__seq_trygetfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_first__), MH_KIND_GETSET_GET, &default__seq_trygetfirst__with_callobjectcache___seq_first__, &mh_select_seq_trygetfirst),
+	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_trygetfirst, NULL, NULL, &default__seq_trygetfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_first__), MH_KIND_GETSET_TRYGET, &default__seq_trygetfirst__with_callobjectcache___seq_first__, &mh_select_seq_trygetfirst),
 	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_getfirst, NULL, NULL, &default__seq_getfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_first__), MH_KIND_GETSET_GET, &default__seq_getfirst__with_callobjectcache___seq_first__, &mh_select_seq_getfirst),
 	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_boundfirst, NULL, NULL, &default__seq_boundfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_first__), MH_KIND_GETSET_BOUND, &default__seq_boundfirst__with_callobjectcache___seq_first__, &mh_select_seq_boundfirst),
 	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_delfirst, NULL, NULL, &default__seq_delfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_del___seq_first__), MH_KIND_GETSET_DEL, &default__seq_delfirst__with_callobjectcache___seq_first__, &mh_select_seq_delfirst),
 	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_setfirst, NULL, NULL, &default__seq_setfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_set___seq_first__), MH_KIND_GETSET_SET, &default__seq_setfirst__with_callobjectcache___seq_first__, &mh_select_seq_setfirst),
-	MH_INIT_SPEC_INIT(&str___seq_last__, mh_secondary_seq_trygetlast, NULL, NULL, &default__seq_trygetlast__with_callattr___seq_last__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_last__), MH_KIND_GETSET_GET, &default__seq_trygetlast__with_callobjectcache___seq_last__, &mh_select_seq_trygetlast),
+	MH_INIT_SPEC_INIT(&str___seq_last__, mh_secondary_seq_trygetlast, NULL, NULL, &default__seq_trygetlast__with_callattr___seq_last__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_last__), MH_KIND_GETSET_TRYGET, &default__seq_trygetlast__with_callobjectcache___seq_last__, &mh_select_seq_trygetlast),
 	MH_INIT_SPEC_INIT(&str___seq_last__, mh_secondary_seq_getlast, NULL, NULL, &default__seq_getlast__with_callattr___seq_last__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_last__), MH_KIND_GETSET_GET, &default__seq_getlast__with_callobjectcache___seq_last__, &mh_select_seq_getlast),
 	MH_INIT_SPEC_INIT(&str___seq_last__, mh_secondary_seq_boundlast, NULL, NULL, &default__seq_boundlast__with_callattr___seq_last__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_last__), MH_KIND_GETSET_BOUND, &default__seq_boundlast__with_callobjectcache___seq_last__, &mh_select_seq_boundlast),
 	MH_INIT_SPEC_INIT(&str___seq_last__, mh_secondary_seq_dellast, NULL, NULL, &default__seq_dellast__with_callattr___seq_last__, offsetof(struct Dee_type_mh_cache, mhc_del___seq_last__), MH_KIND_GETSET_DEL, &default__seq_dellast__with_callobjectcache___seq_last__, &mh_select_seq_dellast),
@@ -2530,6 +2531,9 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 				break;
 			case MH_KIND_GETSET_BOUND:
 				result = (Dee_funptr_t)info->ai_value.v_getset->gs_bound;
+				break;
+			case MH_KIND_GETSET_TRYGET:
+				result = NULL; /* Cannot be defined natively... */
 				break;
 			default: break;
 			}

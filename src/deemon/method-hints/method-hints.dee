@@ -1726,7 +1726,7 @@ function printMhInitSpecs() {
 			f"&default__{native.name}__with_callattr_{methodHint.attr}"),;
 		print(", ", methodHint is none ? "0" : f"offsetof(struct Dee_type_mh_cache, mhc_{
 			!methodHint.getset ? methodHint.attr :
-				f"{native.getsetMember in ["bound", ""] ? "get" : native.getsetMember}_{methodHint.attr}"
+				f"{native.getsetMember in ["bound", "tryget", ""] ? "get" : native.getsetMember}_{methodHint.attr}"
 		})"),;
 		print(", ", (!methodHint.getset || !native.getsetMember)
 			? "MH_KIND_METHOD"
@@ -2988,7 +2988,7 @@ done:
 				next();
 				skip("(");
 				local name = parseString();
-				if (name !in ["get", "del", "set", "bound"])
+				if (name !in ["get", "del", "set", "bound", "tryget"])
 					err(f"Invalid getset member name {repr name}");
 				skip(")");
 				attrib.getsetMember = name;
