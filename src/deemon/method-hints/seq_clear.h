@@ -66,23 +66,19 @@ err:
 }
 
 seq_clear = {
-	DeeMH_seq_erase_t seq_erase;
-	DeeMH_seq_operator_delrange_index_n_t seq_operator_delrange_index_n;
-
-	seq_erase = REQUIRE(seq_erase);
+	DeeMH_seq_erase_t seq_erase = REQUIRE(seq_erase);
 	if (seq_erase == &default__seq_erase__empty)
 		return &$empty;
-	if (seq_erase != &default__seq_erase__with__seq_operator_delrange_index &&
-	    seq_erase != &default__seq_erase__with__seq_pop)
-		return &$with__seq_erase;
-
-	seq_operator_delrange_index_n = REQUIRE(seq_operator_delrange_index_n);
-	if (seq_operator_delrange_index_n == &default__seq_operator_delrange_index_n__empty)
-		return &$empty;
-	if (seq_operator_delrange_index_n == &default__seq_operator_delrange_index_n__with__seq_operator_delrange)
-		return &$with__seq_operator_delrange;
-	if (seq_operator_delrange_index_n)
-		return &$with__seq_operator_delrange_index_n;
+	if (seq_erase == &default__seq_erase__with__seq_operator_delrange_index ||
+	    seq_erase == &default__seq_erase__with__seq_pop) {
+		DeeMH_seq_operator_delrange_index_n_t seq_operator_delrange_index_n = REQUIRE(seq_operator_delrange_index_n);
+		if (seq_operator_delrange_index_n == &default__seq_operator_delrange_index_n__empty)
+			return &$empty;
+		if (seq_operator_delrange_index_n == &default__seq_operator_delrange_index_n__with__seq_operator_delrange)
+			return &$with__seq_operator_delrange;
+		if (seq_operator_delrange_index_n)
+			return &$with__seq_operator_delrange_index_n;
+	}
 	if (seq_erase)
 		return &$with__seq_erase;
 };

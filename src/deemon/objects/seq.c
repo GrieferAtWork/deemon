@@ -2771,11 +2771,12 @@ PRIVATE struct type_method tpconst seq_class_methods[] = {
 	TYPE_METHOD_END
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 generic_seq_assign(DeeObject *self, DeeObject *other) {
-	/* TODO: Fully virtualize this operator */
 	return DeeSeq_OperatorSetRange(self, Dee_None, Dee_None, other);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 PRIVATE struct type_operator const seq_operators[] = {
@@ -3462,7 +3463,11 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 			}
 		},
 		/* .tp_dtor        = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+		/* .tp_assign      = */ &default__seq_operator_assign,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 		/* .tp_assign      = */ &generic_seq_assign,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 		/* .tp_move_assign = */ NULL
 	},
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS

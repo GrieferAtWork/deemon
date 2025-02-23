@@ -2539,6 +2539,16 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 			}
 			if (result)
 				return result;
+			if (specs->mis_attr_kind == MH_KIND_GETSET_DEL ||
+			    specs->mis_attr_kind == MH_KIND_GETSET_SET) {
+				/* Optimize to *__unsupported -- using the default (e.g.
+				 * "default__seq_setlast__with_callattr_last") would just
+				 * throw an AttributeError, but we actually want that to be
+				 * "NotImplemented" (because the access is not implemented) */
+				result = DeeType_GetUnsupportedMethodHint(id);
+				if likely(result)
+					return result;
+			}
 			result = withattr;
 		}
 		break;

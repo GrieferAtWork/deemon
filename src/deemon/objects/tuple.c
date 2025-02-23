@@ -1625,7 +1625,7 @@ tuple_sizeof(Tuple *self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_first(Tuple *__restrict self) {
+tuple_getfirst(Tuple *__restrict self) {
 	if unlikely(DeeTuple_IsEmpty(self))
 		goto err_empty;
 	return_reference_(DeeTuple_GET(self, 0));
@@ -1635,13 +1635,32 @@ err_empty:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_last(Tuple *__restrict self) {
+tuple_getlast(Tuple *__restrict self) {
 	if unlikely(DeeTuple_IsEmpty(self))
 		goto err_empty;
 	return_reference_(DeeTuple_GET(self, DeeTuple_SIZE(self) - 1));
 err_empty:
 	err_empty_sequence((DeeObject *)self);
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+tuple_nonempty_as_bound(Tuple *__restrict self) {
+	return Dee_BOUND_FROMPRESENT_BOUND(self->t_size != 0);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tuple_trygetfirst(Tuple *__restrict self) {
+	if unlikely(DeeTuple_IsEmpty(self))
+		return ITER_DONE;
+	return_reference_(DeeTuple_GET(self, 0));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tuple_trygetlast(Tuple *__restrict self) {
+	if unlikely(DeeTuple_IsEmpty(self))
+		return ITER_DONE;
+	return_reference_(DeeTuple_GET(self, DeeTuple_SIZE(self) - 1));
 }
 
 
@@ -1826,12 +1845,14 @@ PRIVATE struct type_method_hint tpconst tuple_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_rfind_with_key, &tuple_mh_rfind_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_sorted, &tuple_mh_sorted, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_sorted_with_key, &tuple_mh_sorted_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_trygetfirst, &tuple_trygetfirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_trygetlast, &tuple_trygetlast, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_getset tpconst tuple_getsets[] = {
-	TYPE_GETTER_F_NODOC(STR_first, &tuple_first, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
-	TYPE_GETTER_F_NODOC(STR_last, &tuple_last, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_GETTER_BOUND_F_NODOC(STR_first, &tuple_getfirst, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_GETTER_BOUND_F_NODOC(STR_last, &tuple_getlast, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 #define nullable_tuple_getsets (tuple_getsets + 2)
 	TYPE_GETTER_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),

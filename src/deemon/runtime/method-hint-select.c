@@ -1976,23 +1976,19 @@ mh_select_seq_xchitem_index(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_clear_t DCALL
 mh_select_seq_clear(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_erase_t seq_erase;
-	DeeMH_seq_operator_delrange_index_n_t seq_operator_delrange_index_n;
-
-	seq_erase = (DeeMH_seq_erase_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_erase);
+	DeeMH_seq_erase_t seq_erase = (DeeMH_seq_erase_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_erase);
 	if (seq_erase == &default__seq_erase__empty)
 		return &default__seq_clear__empty;
-	if (seq_erase != &default__seq_erase__with__seq_operator_delrange_index &&
-	    seq_erase != &default__seq_erase__with__seq_pop)
-		return &default__seq_clear__with__seq_erase;
-
-	seq_operator_delrange_index_n = (DeeMH_seq_operator_delrange_index_n_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delrange_index_n);
-	if (seq_operator_delrange_index_n == &default__seq_operator_delrange_index_n__empty)
-		return &default__seq_clear__empty;
-	if (seq_operator_delrange_index_n == &default__seq_operator_delrange_index_n__with__seq_operator_delrange)
-		return &default__seq_clear__with__seq_operator_delrange;
-	if (seq_operator_delrange_index_n)
-		return &default__seq_clear__with__seq_operator_delrange_index_n;
+	if (seq_erase == &default__seq_erase__with__seq_operator_delrange_index ||
+	    seq_erase == &default__seq_erase__with__seq_pop) {
+		DeeMH_seq_operator_delrange_index_n_t seq_operator_delrange_index_n = (DeeMH_seq_operator_delrange_index_n_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delrange_index_n);
+		if (seq_operator_delrange_index_n == &default__seq_operator_delrange_index_n__empty)
+			return &default__seq_clear__empty;
+		if (seq_operator_delrange_index_n == &default__seq_operator_delrange_index_n__with__seq_operator_delrange)
+			return &default__seq_clear__with__seq_operator_delrange;
+		if (seq_operator_delrange_index_n)
+			return &default__seq_clear__with__seq_operator_delrange_index_n;
+	}
 	if (seq_erase)
 		return &default__seq_clear__with__seq_erase;
 	return NULL;
