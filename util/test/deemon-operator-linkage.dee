@@ -105,8 +105,10 @@ function Type_assert(typ: Type, impls: {string: string}) {
 	for (local hintOrOperator, expectedImpl: impls) {
 		local actualImpl: string | none = Type_getImplName(typ, hintOrOperator);
 		if (actualImpl !is none) {
-			assert expectedImpl in actualImpl,
-				f"'{typ}.<native>.{hintOrOperator}' should be "
+			assert (expectedImpl is string
+					? expectedImpl in actualImpl
+					: (for (local x: expectedImpl) x in actualImpl) || ...
+			),	f"'{typ}.<native>.{hintOrOperator}' should be "
 				f"'{expectedImpl}', but is '{actualImpl}'";
 		}
 	}
@@ -264,9 +266,9 @@ Type_assert(deemon.Dict, {
 	"mh_seq_any_with_key":                        "default__seq_any_with_key__with__seq_operator_foreach",
 	"mh_seq_any_with_range":                      "default__seq_any_with_range__with__seqclass_map__and__seq_operator_bool__and__map_operator_size",
 	"mh_seq_any_with_range_and_key":              "default__seq_any_with_range_and_key__with__seq_enumerate_index",
-	"mh_seq_all":                                 "_DeeNone_reti1_1",
+	"mh_seq_all":                                 {"_DeeNone_reti1_1", "_DeeNone_reti1"},
 	"mh_seq_all_with_key":                        "default__seq_all_with_key__with__seq_operator_foreach",
-	"mh_seq_all_with_range":                      "_DeeNone_reti1_3",
+	"mh_seq_all_with_range":                      {"_DeeNone_reti1_3", "_DeeNone_reti1"},
 	"mh_seq_all_with_range_and_key":              "default__seq_all_with_range_and_key__with__seq_enumerate_index",
 	"mh_seq_parity":                              "default__seq_parity__with__seq_count",
 	"mh_seq_parity_with_key":                     "default__seq_parity_with_key__with__seq_operator_foreach",
