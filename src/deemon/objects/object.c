@@ -3162,8 +3162,6 @@ type_fini(DeeTypeObject *__restrict self) {
 	/* Clear weak references and check for revival. */
 	Dee_weakref_fini(&self->tp_module);
 	weakref_support_fini(self);
-	if (Dee_IncrefIfNotZero(self))
-		return;
 	ASSERTF(self->tp_flags & TP_FHEAP,
 	        "Non heap-allocated type %s is being destroyed (This shouldn't happen)",
 	        self->tp_name);
@@ -3209,9 +3207,9 @@ type_fini(DeeTypeObject *__restrict self) {
 
 	/* Cleanup name & doc objects should those have been used. */
 	if (self->tp_flags & TP_FNAMEOBJECT)
-		Dee_XDecref_likely(COMPILER_CONTAINER_OF(self->tp_name, DeeStringObject, s_str));
+		Dee_Decref_likely(COMPILER_CONTAINER_OF(self->tp_name, DeeStringObject, s_str));
 	if (self->tp_flags & TP_FDOCOBJECT)
-		Dee_XDecref_likely(COMPILER_CONTAINER_OF(self->tp_doc, DeeStringObject, s_str));
+		Dee_Decref_likely(COMPILER_CONTAINER_OF(self->tp_doc, DeeStringObject, s_str));
 	Dee_XDecref_unlikely(self->tp_base);
 }
 
