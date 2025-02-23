@@ -1356,23 +1356,22 @@ type_tno_get(DeeTypeObject const *__restrict self, enum Dee_tno_id id) {
 PRIVATE ATTR_CONST WUNUSED size_t DCALL
 type_tno_sizeof_table(__UINTPTR_HALF_TYPE__ offsetof_table) {
 	switch (offsetof_table) {
-		/* TODO: Print these case switches dynamically */
-	case offsetof(DeeTypeObject, tp_gc):
-		return sizeof(struct type_gc);
+		/* clang-format off */
+/*[[[deemon (printTypeTnoSizeofTableCases from "..method-hints.method-hints")();]]]*/
+	case offsetof(DeeTypeObject, tp_iterator):
+		return sizeof(struct type_iterator);
 	case offsetof(DeeTypeObject, tp_math):
 		return sizeof(struct type_math);
 	case offsetof(DeeTypeObject, tp_cmp):
 		return sizeof(struct type_cmp);
 	case offsetof(DeeTypeObject, tp_seq):
 		return sizeof(struct type_seq);
-	case offsetof(DeeTypeObject, tp_iterator):
-		return sizeof(struct type_iterator);
-	case offsetof(DeeTypeObject, tp_attr):
-		return sizeof(struct type_attr);
 	case offsetof(DeeTypeObject, tp_with):
 		return sizeof(struct type_with);
-	case offsetof(DeeTypeObject, tp_buffer):
-		return sizeof(struct type_buffer);
+	case offsetof(DeeTypeObject, tp_attr):
+		return sizeof(struct type_attr);
+/*[[[end]]]*/
+		/* clang-format on */
 	default: break;
 	}
 #ifdef NDEBUG
@@ -2029,6 +2028,7 @@ INTERN WUNUSED NONNULL((1)) DeeTypeObject *
 		struct oh_init_spec_class const *usrtype = specs->ohis_class;
 		for (; usrtype->ohisc_usertyp; ++usrtype) {
 			if (usrtype->ohisc_usertyp == funptr) {
+				/* TODO: What should we return when dependencies come from different types? */
 				if (usrtype->ohisc_dep1 != OPERATOR_USERCOUNT)
 					return DeeClass_GetOperatorOrigin(self, usrtype->ohisc_dep1);
 				if (usrtype->ohisc_dep2 != OPERATOR_USERCOUNT)
@@ -2066,8 +2066,8 @@ INTERN WUNUSED NONNULL((1)) DeeTypeObject *
 
 	/* There doesn't seem to be anything special about "funptr".
 	 * Iow: it appears to be a custom C implementation. As such,
-	 *      check if it has been inherited from one of its direct
-	 *      bases */
+	 *      check if it has been inherited from one of the type's
+	 *      direct bases */
 	iter = DeeTypeMRO_Init(&mro, self);
 	while ((iter = DeeTypeMRO_NextDirectBase(&mro, iter)) != NULL) {
 		Dee_funptr_t base_impl = DeeType_GetNativeOperatorWithoutInherit(iter, id);

@@ -1063,6 +1063,14 @@ final class NativeOperatorName {
 	public member table: string | none = none; /* tp_seq */
 	public member field: string;               /* tp_foreach */
 
+	public property tableStruct: string = {
+		get(): string {
+			return table is none
+				? "DeeTypeObject"
+				: f"struct type_{table.lstrip("tp_")}";
+		}
+	}
+
 	public property TNO_id: string = {
 		get(): string {
 			return f"Dee_TNO_{name}";
@@ -1898,10 +1906,7 @@ function printNativeOperatorHintSpecs() {
 				nativeMethodsByOperatorName.get(name);
 		print("	/* ", name.locExpr.ljust(longestNameLength), " */ OH_INIT_SPEC_INIT("),;
 		print(name.table is none ? "0" : f"offsetof(DeeTypeObject, {name.table})"),;
-		local subTableTypeName = name.table is none
-			? "DeeTypeObject"
-			: f"struct type_{name.table.lsstrip("tp_")}";
-		print(f", offsetof({subTableTypeName}, {name.field}), "),;
+		print(f", offsetof({name.tableStruct}, {name.field}), "),;
 		print(method.usrtypeImpls ? f"oh_class_{name.name}" : "NULL", ", "),;
 		print(method.impls ? f"oh_impls_{name.name}" : "NULL", ", "),;
 		print(nativeMethods ? f"oh_mhints_{name.name}" : "NULL", ", "),;
@@ -1909,6 +1914,23 @@ function printNativeOperatorHintSpecs() {
 		print("),");
 	}
 	print("};");
+}
+
+
+function printTypeTnoSizeofTableCases() {
+	RESET_PREFIX();
+	local usedSubTables: {(string, string)...} = [];
+	for (local name, none /*: NativeOperator*/: NATIVE_OPERATORS) {
+		if (name.table !is none) {
+			local pair = (name.table, name.tableStruct);
+			if (pair !in usedSubTables)
+				usedSubTables.append(pair);
+		}
+	}
+	for (local table, tableStruct: usedSubTables) {
+		print(f"	case offsetof(DeeTypeObject, {table}):");
+		print(f"		return sizeof({tableStruct});");
+	}
 }
 
 
@@ -2030,8 +2052,7 @@ function printNativeOperatorHintErrorImpls(decls: bool) {
 						: "");
 		}
 		if (nativeOperator.name.table && !nativeOperator.customBadAllocImplName) {
-			local sizeofExpr = f"sizeof(struct type_{
-					nativeOperator.name.table.lsstrip("tp_")})";
+			local sizeofExpr = f"sizeof({nativeOperator.name.tableStruct})";
 			local key: ErrorMethodKey = makeKey(false);
 			key.body = makeBodyWithMinus1Expr(key, f"Dee_BadAlloc({sizeofExpr})");
 			addKey(key, f"default__{nativeOperator.name.name}__badalloc");
