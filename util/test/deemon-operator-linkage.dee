@@ -41,6 +41,7 @@ local final deemonExe = ShLib(ipc.Process.current.exe);
 local final DeeType_GetMethodHint = (Dee_funptr_t(DeeObject_ptr, int).ptr)(
 	Mapping.get(deemonExe, "DeeType_GetMethodHint") ??
 	Mapping.get(deemonExe, "_DeeType_GetMethodHint") ??
+	Mapping.get(deemonExe, "DeeType_GetMethodHint@8") ??
 	Mapping.get(deemonExe, "_DeeType_GetMethodHint@8") ??
 	none
 );
@@ -48,6 +49,7 @@ local final DeeType_GetMethodHint = (Dee_funptr_t(DeeObject_ptr, int).ptr)(
 local final DeeType_GetNativeOperatorWithoutUnsupported = (Dee_funptr_t(DeeObject_ptr, int).ptr)(
 	Mapping.get(deemonExe, "DeeType_GetNativeOperatorWithoutUnsupported") ??
 	Mapping.get(deemonExe, "_DeeType_GetNativeOperatorWithoutUnsupported") ??
+	Mapping.get(deemonExe, "DeeType_GetNativeOperatorWithoutUnsupported@8") ??
 	Mapping.get(deemonExe, "_DeeType_GetNativeOperatorWithoutUnsupported@8") ??
 	none
 );

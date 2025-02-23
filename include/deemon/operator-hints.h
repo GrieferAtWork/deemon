@@ -528,7 +528,7 @@ INTDEF Dee_operator_t const _DeeType_GetOperatorOfTno[Dee_TNO_COUNT];
 /* Find the type where native operator "id" has been inherited from.
  * This function correctly handles:
  * - when "id" is implemented as an alias for another operator (in which case it
- *   return the origin of the operator's first dependency, or "self" if there are
+ *   returns the origin of the operator's first dependency, or "self" if there are
  *   no dependencies)
  * - when "id" is implemented using a method hint, return the origin of that hint
  * - when "id" is not implemented at all, return "NULL" */
