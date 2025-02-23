@@ -422,7 +422,7 @@ INTERN WUNUSED NONNULL((1)) struct Dee_type_mh_cache *
  * native version for that attribute (or `NULL' if it doesn't have one)
  *
  * This function can also be used to query the optimized, internal
- * implementation of built-in sequence (TSC) functions.
+ * implementation of built-in sequence (previously: TSC) functions.
  *
  * Never returns NULL when `id' has an "%{unsupported}" implementation. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t

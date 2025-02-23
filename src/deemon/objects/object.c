@@ -4479,7 +4479,7 @@ type_issingleton(DeeTypeObject *__restrict self) {
 		if (!self->tp_init.tp_alloc.tp_ctor &&
 		    !self->tp_init.tp_alloc.tp_any_ctor &&
 		    !self->tp_init.tp_alloc.tp_any_ctor_kw)
-			return_true; /* The type is isn't constructible. */
+			return_true; /* The type isn't constructible. */
 	}
 	return_false;
 }
