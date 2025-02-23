@@ -45,6 +45,7 @@ struct Dee_hashset_item {
 };
 
 struct Dee_hashset_object {
+	/* TODO: Re-write to become order-sensitive */
 	Dee_OBJECT_HEAD /* GC Object */
 	size_t                   hs_mask; /* [lock(hs_lock)][> hs_size || hs_mask == 0] Allocated set size minus 1. */
 	size_t                   hs_size; /* [lock(hs_lock)][< hs_mask || hs_mask == 0] Amount of non-NULL keys. */
