@@ -56,16 +56,17 @@ struct oh_init_spec_class {
 	}
 
 struct oh_init_spec_impl {
-	Dee_funptr_t           ohisi_impl; /* [1..1] Default impl (e.g. `default__seq_iter__with__seq_foreach') */
-	__UINTPTR_HALF_TYPE__  ohisi_dep1; /* First dependent operator (or `>= Dee_TNO_COUNT' if unused) */
-	__UINTPTR_HALF_TYPE__  ohisi_dep2; /* Second dependent operator (or `>= Dee_TNO_COUNT' if unused) */
+	Dee_funptr_t           ohisi_impl;    /* [1..1] Default impl (e.g. `default__seq_iter__with__seq_foreach') */
+	__UINTPTR_HALF_TYPE__  ohisi_deps[2]; /* Dependent operators (or `>= Dee_TNO_COUNT' if unused) */
 };
-#define OH_INIT_SPEC_IMPL_END { NULL, (__UINTPTR_HALF_TYPE__)Dee_TNO_COUNT, (__UINTPTR_HALF_TYPE__)Dee_TNO_COUNT }
+#define OH_INIT_SPEC_IMPL_END { NULL, { (__UINTPTR_HALF_TYPE__)Dee_TNO_COUNT, (__UINTPTR_HALF_TYPE__)Dee_TNO_COUNT } }
 #define OH_INIT_SPEC_IMPL_INIT(ohisi_impl, ohisi_dep1, ohisi_dep2) \
 	{                                                              \
 		/* .ohisi_impl = */ (Dee_funptr_t)(ohisi_impl),            \
-		/* .ohisi_dep1 = */ (__UINTPTR_HALF_TYPE__)(ohisi_dep1),   \
-		/* .ohisi_dep2 = */ (__UINTPTR_HALF_TYPE__)(ohisi_dep2)    \
+		/* .ohisi_deps = */ {                                      \
+			(__UINTPTR_HALF_TYPE__)(ohisi_dep1),                   \
+			(__UINTPTR_HALF_TYPE__)(ohisi_dep2)                    \
+		}                                                          \
 	}
 
 struct oh_init_inherit_as {
@@ -1496,8 +1497,8 @@ INTERN WUNUSED NONNULL((1)) size_t
 		actions[actions_count].tnoa_cb = impl->ohisi_impl;
 
 		/* Load dependencies of this impl. */
-		missing_dependencies[0] = (enum Dee_tno_id)impl->ohisi_dep1;
-		missing_dependencies[1] = (enum Dee_tno_id)impl->ohisi_dep2;
+		missing_dependencies[0] = (enum Dee_tno_id)impl->ohisi_deps[0];
+		missing_dependencies[1] = (enum Dee_tno_id)impl->ohisi_deps[1];
 		actions[actions_count].tnoa_pres_dep[0] = Dee_TNO_COUNT;
 		actions[actions_count].tnoa_pres_dep[1] = Dee_TNO_COUNT;
 		for (dep_i = 0; dep_i < COMPILER_LENOF(missing_dependencies); ++dep_i) {
@@ -1772,29 +1773,32 @@ DeeType_MapTMHInTNOForInherit(DeeTypeObject *__restrict from,
 }
 
 
+struct Dee_tno_inherit {
+	enum Dee_tno_id tnoi_id; /* Operator slot ID to write to */
+	Dee_funptr_t    tnoi_cb; /* [1..1] Function pointer to write to `tnoi_id' */
+};
 
-PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_funptr_t
-(DCALL do_DeeType_InheritNativeOperatorWithoutHints2)(DeeTypeObject *__restrict from,
-                                                      DeeTypeObject *__restrict into,
-                                                      enum Dee_tno_id id, Dee_funptr_t impl,
-                                                      bool first_call);
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_funptr_t
-(DCALL do_DeeType_InheritNativeOperatorWithoutHints)(DeeTypeObject *__restrict from,
-                                                     DeeTypeObject *__restrict into,
-                                                     enum Dee_tno_id id) {
-	Dee_funptr_t funptr = type_tno_get(from, id);
-	ASSERTF(funptr, "Transitive operator '%u' used as dependency was not initialized in '%s'",
-	        (unsigned int)id, from->tp_name);
-	return do_DeeType_InheritNativeOperatorWithoutHints2(from, into, id, funptr, false);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+Dee_tno_inherit_contains(struct Dee_tno_inherit const actions[Dee_TNO_ASSIGN_MAXLEN],
+                         size_t actions_count, enum Dee_tno_id id) {
+	size_t i;
+	for (i = 0; i < actions_count; ++i) {
+		if (actions[i].tnoi_id == id)
+			return true;
+	}
+	return false;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_funptr_t
-(DCALL do_DeeType_InheritNativeOperatorWithoutHints2)(DeeTypeObject *__restrict from,
-                                                      DeeTypeObject *__restrict into,
-                                                      enum Dee_tno_id id, Dee_funptr_t impl,
-                                                      bool first_call) {
+
+
+/* @return: * :   Actual, inherited implementation
+ * @return: NULL: Operator cannot be inherited (not implemented for type "into") */
+PRIVATE WUNUSED NONNULL((1, 2, 4, 5, 6)) Dee_funptr_t
+(DCALL do_DeeType_InheritNativeOperatorWithoutHints)(DeeTypeObject *__restrict from,
+                                                     DeeTypeObject *__restrict into, enum Dee_tno_id id,
+                                                     struct Dee_tno_inherit actions[Dee_TNO_ASSIGN_MAXLEN],
+                                                     size_t *__restrict p_nactions, Dee_funptr_t impl) {
 	struct oh_init_spec const *specs = &oh_init_specs[id];
-	struct oh_init_spec_impl const *impls = specs->ohis_impls;
 	ASSERT(from != into);
 	ASSERT(DeeType_GetNativeOperatorWithoutHints(from, id) == impl);
 
@@ -1824,47 +1828,48 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_funptr_t
 	 * We're allowed to assume that "impl" is the only correct impl, so there is
 	 * no need to check if some other impl should be used instead (no other impl
 	 * should be) */
-	if (impls) {
-		for (; impls->ohisi_impl; ++impls) {
-			if (impls->ohisi_impl != impl)
+	if (specs->ohis_impls) {
+		struct oh_init_spec_impl const *iter = specs->ohis_impls;
+		for (; iter->ohisi_impl; ++iter) {
+			size_t dep_i;
+			if (iter->ohisi_impl != impl)
 				continue;
 
 			/* Found the impl in question -> must now also inherit *its* dependencies */
-			if (impls->ohisi_dep1 < Dee_TNO_COUNT &&
-			    !type_tno_get(into, (enum Dee_tno_id)impls->ohisi_dep1) &&
-			    (do_DeeType_InheritNativeOperatorWithoutHints(from, into, (enum Dee_tno_id)impls->ohisi_dep1) ==
-			     DeeType_GetNativeOperatorOOM((enum Dee_tno_id)impls->ohisi_dep1)))
-				return false;
-			if (impls->ohisi_dep2 < Dee_TNO_COUNT &&
-			    !type_tno_get(into, (enum Dee_tno_id)impls->ohisi_dep2) &&
-			    (do_DeeType_InheritNativeOperatorWithoutHints(from, into, (enum Dee_tno_id)impls->ohisi_dep2) ==
-			     DeeType_GetNativeOperatorOOM((enum Dee_tno_id)impls->ohisi_dep2)))
-				return false;
+			for (dep_i = 0; dep_i < COMPILER_LENOF(iter->ohisi_deps); ++dep_i) {
+				Dee_funptr_t dep_impl;
+				enum Dee_tno_id dep = (enum Dee_tno_id)iter->ohisi_deps[dep_i];
+				if (dep >= Dee_TNO_COUNT)
+					break;
+
+				/* Check if the dependency is already present in "into". */
+				if (type_tno_get(into, dep))
+					continue;
+
+				/* Also skip if "dep" is already appears in "actions"
+				 * (because it will be present by the time "impl" gets written) */
+				if (Dee_tno_inherit_contains(actions, *p_nactions, dep))
+					continue;
+
+				dep_impl = type_tno_get(from, dep);
+				ASSERTF(dep_impl, "Transitive operator '%u' used as dependency was not initialized in '%s'",
+				        (unsigned int)dep, from->tp_name);
+				dep_impl = do_DeeType_InheritNativeOperatorWithoutHints(from, into, dep, actions, p_nactions, dep_impl);
+				if unlikely(!dep_impl)
+					return NULL; /* Unsatisfied dependency */
+			}
 			break;
 		}
 	}
 
-#ifndef Dee_DPRINT_IS_NOOP
+	/* Append the assignment action. */
 	{
-		struct Dee_opinfo const *info;
-		Dee_operator_t op = DeeType_GetOperatorOfTno(id);
-		info = op < OPERATOR_USERCOUNT
-		       ? DeeTypeType_GetOperatorById(Dee_TYPE(from), op)
-		       : NULL;
-		Dee_DPRINTF("[RT] Inherit '%s.operator %s' into '%s' [tno: %u, ptr: %p]\n",
-		            from->tp_name ? from->tp_name : "<anonymous>",
-		            info ? info->oi_sname : "?",
-		            into->tp_name ? into->tp_name : "<anonymous>",
-		            (unsigned int)id, *(void **)&impl);
+		size_t n = (*p_nactions)++;
+		ASSERT(n < Dee_TNO_ASSIGN_MAXLEN);
+		actions[n].tnoi_id = id;
+		actions[n].tnoi_cb = impl;
 	}
-#endif /* !Dee_DPRINT_IS_NOOP */
-
-	/* It's OK if the last write fails (because we still hand the correct pointer
-	 * to our caller), but it's not OK if any of the intermediate writes fail (as
-	 * in that case, the returned callback would try to access unallocated memory) */
-	if (type_tno_tryset(into, id, impl) || first_call)
-		return impl;
-	return DeeType_GetNativeOperatorOOM(id);
+	return impl;
 }
 
 /* Ignoring method hints that might have been able to implement "id" along
@@ -1881,7 +1886,42 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_funptr_t
 (DCALL DeeType_InheritNativeOperatorWithoutHints)(DeeTypeObject *__restrict from,
                                                   DeeTypeObject *__restrict into,
                                                   enum Dee_tno_id id, Dee_funptr_t impl) {
-	return do_DeeType_InheritNativeOperatorWithoutHints2(from, into, id, impl, true);
+	size_t n_actions = 0;
+	Dee_funptr_t result;
+	struct Dee_tno_inherit actions[Dee_TNO_ASSIGN_MAXLEN];
+	result = do_DeeType_InheritNativeOperatorWithoutHints(from, into, id, actions, &n_actions, impl);
+	if likely(result) {
+		size_t i;
+		/* Perform inherit actions. */
+		ASSERT(n_actions >= 1);
+		ASSERT(actions[n_actions - 1].tnoi_id == id);
+		ASSERT(actions[n_actions - 1].tnoi_cb == result);
+		for (i = 0; i < n_actions; ++i) {
+			bool ok;
+#ifndef Dee_DPRINT_IS_NOOP
+			Dee_operator_t op = DeeType_GetOperatorOfTno(actions[i].tnoi_id);
+			struct Dee_opinfo const *info = op < OPERATOR_USERCOUNT
+			    ? DeeTypeType_GetOperatorById(Dee_TYPE(from), op)
+			    : NULL;
+			Dee_DPRINTF("[RT] Inherit '%s.operator %s' into '%s' [tno: %u, ptr: %p]\n",
+			            from->tp_name ? from->tp_name : "<anonymous>",
+			            info ? info->oi_sname : "?",
+			            into->tp_name ? into->tp_name : "<anonymous>",
+			            (unsigned int)actions[i].tnoi_id,
+			            *(void **)&actions[i].tnoi_cb);
+#endif /* !Dee_DPRINT_IS_NOOP */
+			ok = type_tno_tryset(into, actions[i].tnoi_id, actions[i].tnoi_cb);
+			if likely(ok)
+				continue;
+			/* It's OK if the last write fails (because we still hand the correct pointer
+			 * to our caller), but it's not OK if any of the intermediate writes fail (as
+			 * in that case, the returned callback would try to access unallocated memory) */
+			if (i == n_actions - 1)
+				break;
+			return DeeType_GetNativeOperatorOOM(id);
+		}
+	}
+	return result;
 }
 
 
@@ -2003,10 +2043,11 @@ INTERN WUNUSED NONNULL((1)) DeeTypeObject *
 	if (impls) {
 		for (; impls->ohisi_impl; ++impls) {
 			if (impls->ohisi_impl == funptr) {
-				if (impls->ohisi_dep1 < Dee_TNO_COUNT)
-					return DeeType_GetNativeOperatorOrigin(self, (enum Dee_tno_id)impls->ohisi_dep1);
-				if (impls->ohisi_dep2 < Dee_TNO_COUNT)
-					return DeeType_GetNativeOperatorOrigin(self, (enum Dee_tno_id)impls->ohisi_dep2);
+				/* TODO: What should we return when dependencies come from different types? */
+				if (impls->ohisi_deps[0] < Dee_TNO_COUNT)
+					return DeeType_GetNativeOperatorOrigin(self, (enum Dee_tno_id)impls->ohisi_deps[0]);
+				if (impls->ohisi_deps[1] < Dee_TNO_COUNT)
+					return DeeType_GetNativeOperatorOrigin(self, (enum Dee_tno_id)impls->ohisi_deps[1]);
 				return self;
 			}
 		}
