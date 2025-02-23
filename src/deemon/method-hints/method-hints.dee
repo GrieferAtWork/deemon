@@ -2485,6 +2485,13 @@ final class DependencyChain {
 	@@The method to assign
 	public member method: string;
 
+	operator copy(other: DependencyChain) {
+		length = other.length;
+		name = other.name;
+		method = other.method;
+		before = copy other.before;
+	}
+
 	operator == (rhs: DependencyChain): bool -> length == rhs.length;
 	operator != (rhs: DependencyChain): bool -> length != rhs.length;
 	operator <  (rhs: DependencyChain): bool -> length <  rhs.length;
@@ -2499,10 +2506,21 @@ final class DependencyChain {
 
 	public property assignments: {(string, string)...} = {
 		get(): {(string, string)...} {
-			local result = [];
 			for (local x: before)
-				result.extend(x.assignments);
-			result.append((name.name, method));
+				yield x.assignments...;
+			yield (name.name, method);
+		}
+	}
+
+	@@Same as @assignments, but removes duplicate assignments
+	@@(s.a. blurb in @OperatorImplChain._getLongestChainLength)
+	public property optimizedAssignments: {(string, string)...} = {
+		get(): {(string, string)...} {
+			local result = [];
+			for (local ass: assignments) {
+				if (ass !in result)
+					result.append(ass);
+			}
 			return result;
 		}
 	}
@@ -2532,42 +2550,56 @@ final class OperatorImplChain {
 	public member using: {{OperatorImplChain...}...} = [];
 
 	function getLongestChainLength(): DependencyChain | none {
-		return _getLongestChainLength(HashSet({ name }), HashSet());
+		return _getLongestChainLength(HashSet({}));
 	}
+
+	private _savedLongestChain: {
+		HashSet with NativeOperatorName | WrappedName: DependencyChain
+	} = Dict();
+
 	function _getLongestChainLength(
-			unassigned: HashSet with NativeOperatorName | WrappedName,
-			assigned: HashSet with NativeOperatorName | WrappedName
+			encountered: HashSet with NativeOperatorName | WrappedName
 	): DependencyChain | none {
-		local result: DependencyChain | none = none;
-		local addedNotAssigned: HashSet with NativeOperatorName | WrappedName = HashSet();
+		/* This impl produces slightly sub-optimal results (since the returned chain
+		 * only accounts for assignments that happened earlier within the chain, but
+		 * not within sub-branches from earlier in the chain).
+		 *
+		 * However, this also keeps the # of possible initial "encountered" values
+		 * lower, to the point where if we were to including accounting for sub-branch
+		 * assignments, there would be such a high number of possible assignments,
+		 * that the "_savedLongestChain" cache would become basically useless, and
+		 * this function would (once again) take around 10 seconds each time hints
+		 * are generated. */
+		if (!encountered.insert(name))
+			return none;
+		local result: DependencyChain | none = _savedLongestChain.get(encountered);
+		if (result !is none)
+			return result;
+		local template: DependencyChain = DependencyChain(
+				1, name, f"default__{name.name}__with__");
 		for (local dependencies: using) {
+			local item: DependencyChain = copy template;
+			item.method += "__and__".join(dependencies.each.name.name);
 			for (local dependency: dependencies) {
-				if (dependency.name in unassigned)
-					goto next_dependencies;
-			}
-			local chainWithDependencies: DependencyChain = DependencyChain(1, name,
-					f"default__{name.name}__with__{
-						"__and__".join(dependencies.each.name.name)}");
-			unassigned.insertall(dependencies.each.name);
-			addedNotAssigned.insertall(dependencies.each.name);
-			local newAssigned = copy assigned;
-			for (local dependency: dependencies) {
+				local dependencyChain: DependencyChain | none;
 				try {
-					if (newAssigned.insert(name)) {
-						local depChain: DependencyChain = dependency
-								._getLongestChainLength(unassigned, newAssigned);
-						chainWithDependencies.addBefore(depChain);
-					}
+					dependencyChain = dependency._getLongestChainLength(encountered);
 				} @[interrupt] catch (...) {
 					print File.stderr: "HERE", name, " -> ", dependency.name;
 					throw;
 				}
+				if (dependencyChain is none) {
+					// item.assumePresent(dependency)
+				} else {
+					item.addBefore(dependencyChain);
+				}
 			}
-			if (result is none || result.length < chainWithDependencies.length)
-				result = chainWithDependencies;
-next_dependencies:;
+			if (result is none || result < item)
+				result = item;
 		}
-		unassigned.removeall(addedNotAssigned);
+		if (result !is none)
+			_savedLongestChain[copy encountered] = result;
+		encountered.remove(name);
 		return result;
 	}
 }
@@ -2590,17 +2622,17 @@ function print_TMH_USING_MAXLEN() {
 				chain.using.append(deps);
 		}
 	}
-	local longestChainLength = chains.values.each.getLongestChainLength() > ...;
-	local isFirst = true;
-	local assignments = longestChainLength.assignments;
+	local longestChain = chains.values.each.getLongestChainLength() > ...;
+	local assignments = longestChain.optimizedAssignments.cached;
 	local longestAssignmentNameLength = assignments.each.first.length > ...;
+	local isFirst = true;
 	for (local i, _data: assignments.reversed().enumerate()) {
 		local name, cb = _data...;
 		print(i ? " * " : "/* ", f"\{ Dee_TMH_{
 			(name + ",").ljust(longestAssignmentNameLength + 1)
 		} &{cb} \}", i == (#assignments - 1) ? " */" : "");
 	}
-	print("#define Dee_TMH_USING_MAXLEN ", longestChainLength.length);
+	print("#define Dee_TMH_USING_MAXLEN ", #assignments, " /* ", longestChain.length, " with duplicates */");
 }
 
 @@Prints the "Dee_TNO_ASSIGN_MAXLEN" macro
@@ -2620,17 +2652,17 @@ function print_TNO_ASSIGN_MAXLEN() {
 				chain.using.append(deps);
 		}
 	}
-	local longestChainLength = chains.values.each.getLongestChainLength() > ...;
-	local isFirst = true;
-	local assignments = longestChainLength.assignments;
+	local longestChain = chains.values.each.getLongestChainLength() > ...;
+	local assignments = longestChain.optimizedAssignments.cached;
 	local longestAssignmentNameLength = assignments.each.first.length > ...;
+	local isFirst = true;
 	for (local i, _data: assignments.reversed().enumerate()) {
 		local name, cb = _data...;
 		print(i ? " * " : "/* ", f"\{ Dee_TNO_{
 			(name + ",").ljust(longestAssignmentNameLength + 1)
 		} &{cb} \}", i == (#assignments - 1) ? " */" : "");
 	}
-	print("#define Dee_TNO_ASSIGN_MAXLEN ", longestChainLength.length);
+	print("#define Dee_TNO_ASSIGN_MAXLEN ", #assignments, " /* ", longestChain.length, " with duplicates */");
 }
 
 @@Print the initializer of `_DeeType_GetOperatorOfTno`

@@ -2351,15 +2351,13 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[238] = {
 /* clang-format on */
 
 /*[[[deemon (print_TMH_USING_MAXLEN from "..method-hints.method-hints")();]]]*/
-/* { Dee_TMH_map_operator_hasitem_index,   &default__map_operator_hasitem_index__with__map_operator_bounditem_index }
- * { Dee_TMH_map_operator_bounditem_index, &default__map_operator_bounditem_index__with__map_operator_bounditem }
- * { Dee_TMH_map_operator_bounditem,       &default__map_operator_bounditem__with__map_operator_getitem }
- * { Dee_TMH_map_operator_getitem,         &default__map_operator_getitem__with__map_operator_getitem_index__and__map_operator_getitem_string_len_hash } */
-#define Dee_TMH_USING_MAXLEN 4
+/* { Dee_TMH_seq_operator_getrange,         &default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n }
+ * { Dee_TMH_seq_operator_getrange_index_n, &default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_getrange_index }
+ * { Dee_TMH_seq_operator_size,             &default__seq_operator_size__with__seq_operator_sizeob }
+ * { Dee_TMH_seq_operator_sizeob,           &default__seq_operator_sizeob__with__seq_operator_size }
+ * { Dee_TMH_seq_operator_getrange_index,   &default__seq_operator_getrange_index__with__seq_operator_getrange } */
+#define Dee_TMH_USING_MAXLEN 5 /* 6 with duplicates */
 /*[[[end]]]*/
-
-/* +1 here because "Dee_TMH_USING_MAXLEN" counts edges, but we need the max # of nodes */
-#define Dee_TMH_ABSENT_MAXLEN (Dee_TMH_USING_MAXLEN + 1)
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 Dee_tmh_id_array_contains(enum Dee_tmh_id const values[],
@@ -2377,7 +2375,7 @@ __pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 3, 5)) Dee_funptr_t DCALL
 find_method_hint_in_using(DeeTypeObject *__restrict self, enum Dee_tmh_id id,
-                          enum Dee_tmh_id absent[Dee_TMH_ABSENT_MAXLEN],
+                          enum Dee_tmh_id absent[Dee_TMH_USING_MAXLEN],
                           size_t absent_count, size_t *__restrict p_nactions) {
 	struct mh_init_spec const *specs = &mh_init_specs[id];
 	struct mh_init_using const *iter = specs->mis_using;
@@ -2389,7 +2387,7 @@ find_method_hint_in_using(DeeTypeObject *__restrict self, enum Dee_tmh_id id,
 	winner_actions = (size_t)-1;
 
 	/* Remember that "id" is considered as absent, so-as to prevent recursion */
-	ASSERT(absent_count < Dee_TMH_ABSENT_MAXLEN);
+	ASSERT(absent_count < Dee_TMH_USING_MAXLEN);
 	absent[absent_count] = id;
 	++absent_count;
 	for (; iter->miu_impl; ++iter) {
@@ -2459,7 +2457,7 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 		struct mh_init_spec const *specs = &mh_init_specs[id];
 		if (specs->mis_using) {
 			size_t n_absent;
-			enum Dee_tmh_id absent[Dee_TMH_ABSENT_MAXLEN];
+			enum Dee_tmh_id absent[Dee_TMH_USING_MAXLEN];
 			result = find_method_hint_in_using(self, id, absent, 0, &n_absent);
 		}
 	}

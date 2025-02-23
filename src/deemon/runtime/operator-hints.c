@@ -557,12 +557,12 @@ PRIVATE struct oh_init_spec_class tpconst oh_class_getitem[2] = {
 	OH_INIT_SPEC_CLASS_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_getitem[7] = {
-	OH_INIT_SPEC_IMPL_INIT(&default__getitem__with__trygetitem, Dee_TNO_trygetitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__getitem__with__getitem_index__and__getitem_string_len_hash, Dee_TNO_getitem_index, Dee_TNO_getitem_string_len_hash),
 	OH_INIT_SPEC_IMPL_INIT(&default__getitem__with__getitem_index__and__getitem_string_hash, Dee_TNO_getitem_index, Dee_TNO_getitem_string_hash),
 	OH_INIT_SPEC_IMPL_INIT(&default__getitem__with__getitem_index, Dee_TNO_getitem_index, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__getitem__with__getitem_string_len_hash, Dee_TNO_getitem_string_len_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__getitem__with__getitem_string_hash, Dee_TNO_getitem_string_hash, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__getitem__with__trygetitem__and__hasitem, Dee_TNO_trygetitem, Dee_TNO_hasitem),
 	OH_INIT_SPEC_IMPL_END
 };
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_getitem[3] = {
@@ -571,12 +571,12 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_getitem[3] = {
 	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_trygetitem[7] = {
-	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem__with__getitem, Dee_TNO_getitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem__with__trygetitem_index__and__trygetitem_string_len_hash, Dee_TNO_trygetitem_index, Dee_TNO_trygetitem_string_len_hash),
 	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem__with__trygetitem_index__and__trygetitem_string_hash, Dee_TNO_trygetitem_index, Dee_TNO_trygetitem_string_hash),
 	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem__with__trygetitem_index, Dee_TNO_trygetitem_index, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem__with__trygetitem_string_len_hash, Dee_TNO_trygetitem_string_len_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem__with__trygetitem_string_hash, Dee_TNO_trygetitem_string_hash, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem__with__getitem, Dee_TNO_getitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_trygetitem[3] = {
@@ -586,7 +586,7 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_trygetitem[3] = {
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_getitem_index[4] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__getitem_index__with__size__and__getitem_index_fast, Dee_TNO_size, Dee_TNO_getitem_index_fast),
-	OH_INIT_SPEC_IMPL_INIT(&default__getitem_index__with__trygetitem_index, Dee_TNO_trygetitem_index, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__getitem_index__with__trygetitem_index__and__hasitem_index, Dee_TNO_trygetitem_index, Dee_TNO_hasitem_index),
 	OH_INIT_SPEC_IMPL_INIT(&default__getitem_index__with__getitem, Dee_TNO_getitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
@@ -606,8 +606,9 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_trygetitem_index[3] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_trygetitem_index, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
-PRIVATE struct oh_init_spec_impl tpconst oh_impls_getitem_string_hash[3] = {
-	OH_INIT_SPEC_IMPL_INIT(&default__getitem_string_hash__with__trygetitem_string_hash, Dee_TNO_trygetitem_string_hash, Dee_TNO_COUNT),
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_getitem_string_hash[4] = {
+	OH_INIT_SPEC_IMPL_INIT(&default__getitem_string_hash__with__getitem_string_len_hash, Dee_TNO_getitem_string_len_hash, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash, Dee_TNO_trygetitem_string_hash, Dee_TNO_hasitem_string_hash),
 	OH_INIT_SPEC_IMPL_INIT(&default__getitem_string_hash__with__getitem, Dee_TNO_getitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
@@ -615,7 +616,8 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_getitem_string_hash[2] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_getitem_string_hash, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
-PRIVATE struct oh_init_spec_impl tpconst oh_impls_trygetitem_string_hash[3] = {
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_trygetitem_string_hash[4] = {
+	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem_string_hash__with__trygetitem_string_len_hash, Dee_TNO_trygetitem_string_len_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem_string_hash__with__getitem_string_hash, Dee_TNO_getitem_string_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem_string_hash__with__trygetitem, Dee_TNO_trygetitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
@@ -625,9 +627,9 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_trygetitem_string_hash[2] = 
 	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_getitem_string_len_hash[4] = {
-	OH_INIT_SPEC_IMPL_INIT(&default__getitem_string_len_hash__with__trygetitem_string_len_hash, Dee_TNO_trygetitem_string_len_hash, Dee_TNO_COUNT),
-	OH_INIT_SPEC_IMPL_INIT(&default__getitem_string_len_hash__with__getitem, Dee_TNO_getitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__getitem_string_len_hash__with__getitem_string_hash, Dee_TNO_getitem_string_hash, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash, Dee_TNO_trygetitem_string_len_hash, Dee_TNO_hasitem_string_len_hash),
+	OH_INIT_SPEC_IMPL_INIT(&default__getitem_string_len_hash__with__getitem, Dee_TNO_getitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_getitem_string_len_hash[2] = {
@@ -635,25 +637,24 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_getitem_string_len_hash[2] =
 	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_trygetitem_string_len_hash[4] = {
+	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem_string_len_hash__with__trygetitem_string_hash, Dee_TNO_trygetitem_string_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem_string_len_hash__with__getitem_string_len_hash, Dee_TNO_getitem_string_len_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem_string_len_hash__with__trygetitem, Dee_TNO_trygetitem, Dee_TNO_COUNT),
-	OH_INIT_SPEC_IMPL_INIT(&default__trygetitem_string_len_hash__with__trygetitem_string_hash, Dee_TNO_trygetitem_string_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_trygetitem_string_len_hash[2] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_trygetitem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
-PRIVATE struct oh_init_spec_impl tpconst oh_impls_bounditem[10] = {
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_bounditem[9] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem__with__size__and__getitem_index_fast, Dee_TNO_size, Dee_TNO_getitem_index_fast),
-	OH_INIT_SPEC_IMPL_INIT(&default__bounditem__with__getitem, Dee_TNO_getitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem__with__bounditem_index__and__bounditem_string_len_hash, Dee_TNO_bounditem_index, Dee_TNO_bounditem_string_len_hash),
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem__with__bounditem_index__and__bounditem_string_hash, Dee_TNO_bounditem_index, Dee_TNO_bounditem_string_hash),
+	OH_INIT_SPEC_IMPL_INIT(&default__bounditem__with__getitem, Dee_TNO_getitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem__with__trygetitem__and__hasitem, Dee_TNO_trygetitem, Dee_TNO_hasitem),
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem__with__bounditem_index, Dee_TNO_bounditem_index, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem__with__bounditem_string_len_hash, Dee_TNO_bounditem_string_len_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem__with__bounditem_string_hash, Dee_TNO_bounditem_string_hash, Dee_TNO_COUNT),
-	OH_INIT_SPEC_IMPL_INIT(&default__bounditem__with__trygetitem, Dee_TNO_trygetitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_bounditem[3] = {
@@ -661,12 +662,11 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_bounditem[3] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_bounditem, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
-PRIVATE struct oh_init_spec_impl tpconst oh_impls_bounditem_index[6] = {
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_bounditem_index[5] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_index__with__size__and__getitem_index_fast, Dee_TNO_size, Dee_TNO_getitem_index_fast),
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_index__with__getitem_index, Dee_TNO_getitem_index, Dee_TNO_COUNT),
-	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_index__with__bounditem, Dee_TNO_bounditem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_index__with__trygetitem_index__and__hasitem_index, Dee_TNO_trygetitem_index, Dee_TNO_hasitem_index),
-	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_index__with__trygetitem_index, Dee_TNO_trygetitem_index, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_index__with__bounditem, Dee_TNO_bounditem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_bounditem_index[3] = {
@@ -676,21 +676,20 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_bounditem_index[3] = {
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_bounditem_string_hash[5] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_hash__with__getitem_string_hash, Dee_TNO_getitem_string_hash, Dee_TNO_COUNT),
-	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_hash__with__bounditem, Dee_TNO_bounditem, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_hash__with__bounditem_string_len_hash, Dee_TNO_bounditem_string_len_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash, Dee_TNO_trygetitem_string_hash, Dee_TNO_hasitem_string_hash),
-	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_hash__with__trygetitem_string_hash, Dee_TNO_trygetitem_string_hash, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_hash__with__bounditem, Dee_TNO_bounditem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_bounditem_string_hash[2] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_bounditem_string_hash, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
-PRIVATE struct oh_init_spec_impl tpconst oh_impls_bounditem_string_len_hash[6] = {
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_bounditem_string_len_hash[5] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_len_hash__with__getitem_string_len_hash, Dee_TNO_getitem_string_len_hash, Dee_TNO_COUNT),
-	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_len_hash__with__bounditem, Dee_TNO_bounditem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash, Dee_TNO_trygetitem_string_len_hash, Dee_TNO_hasitem_string_len_hash),
-	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_len_hash__with__trygetitem_string_len_hash, Dee_TNO_trygetitem_string_len_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_len_hash__with__bounditem_string_hash, Dee_TNO_bounditem_string_hash, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__bounditem_string_len_hash__with__bounditem, Dee_TNO_bounditem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_bounditem_string_len_hash[2] = {
@@ -698,14 +697,14 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_bounditem_string_len_hash[2]
 	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_hasitem[9] = {
-	OH_INIT_SPEC_IMPL_INIT(&default__hasitem__with__size__and__getitem_index_fast, Dee_TNO_size, Dee_TNO_getitem_index_fast),
-	OH_INIT_SPEC_IMPL_INIT(&default__hasitem__with__trygetitem, Dee_TNO_trygetitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem__with__bounditem, Dee_TNO_bounditem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem__with__hasitem_index__and__hasitem_string_len_hash, Dee_TNO_hasitem_index, Dee_TNO_hasitem_string_len_hash),
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem__with__hasitem_index__and__hasitem_string_hash, Dee_TNO_hasitem_index, Dee_TNO_hasitem_string_hash),
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem__with__hasitem_index, Dee_TNO_hasitem_index, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem__with__hasitem_string_len_hash, Dee_TNO_hasitem_string_len_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem__with__hasitem_string_hash, Dee_TNO_hasitem_string_hash, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__hasitem__with__size__and__getitem_index_fast, Dee_TNO_size, Dee_TNO_getitem_index_fast),
+	OH_INIT_SPEC_IMPL_INIT(&default__hasitem__with__trygetitem, Dee_TNO_trygetitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_hasitem[3] = {
@@ -713,10 +712,9 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_hasitem[3] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_hasitem, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
-PRIVATE struct oh_init_spec_impl tpconst oh_impls_hasitem_index[5] = {
-	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_index__with__size__and__getitem_index_fast, Dee_TNO_size, Dee_TNO_getitem_index_fast),
-	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_index__with__trygetitem_index, Dee_TNO_trygetitem_index, Dee_TNO_COUNT),
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_hasitem_index[4] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_index__with__bounditem_index, Dee_TNO_bounditem_index, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_index__with__size__and__getitem_index_fast, Dee_TNO_size, Dee_TNO_getitem_index_fast),
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_index__with__hasitem, Dee_TNO_hasitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
@@ -726,8 +724,8 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_hasitem_index[3] = {
 	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_hasitem_string_hash[4] = {
-	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_string_hash__with__trygetitem_string_hash, Dee_TNO_trygetitem_string_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_string_hash__with__bounditem_string_hash, Dee_TNO_bounditem_string_hash, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_string_hash__with__hasitem_string_len_hash, Dee_TNO_hasitem_string_len_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_string_hash__with__hasitem, Dee_TNO_hasitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
@@ -735,11 +733,10 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_hasitem_string_hash[2] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_hasitem_string_hash, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
-PRIVATE struct oh_init_spec_impl tpconst oh_impls_hasitem_string_len_hash[5] = {
-	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_string_len_hash__with__trygetitem_string_len_hash, Dee_TNO_trygetitem_string_len_hash, Dee_TNO_COUNT),
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_hasitem_string_len_hash[4] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_string_len_hash__with__bounditem_string_len_hash, Dee_TNO_bounditem_string_len_hash, Dee_TNO_COUNT),
-	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_string_len_hash__with__hasitem, Dee_TNO_hasitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_string_len_hash__with__hasitem_string_hash, Dee_TNO_hasitem_string_hash, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__hasitem_string_len_hash__with__hasitem, Dee_TNO_hasitem, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_hasitem_string_len_hash[2] = {
@@ -1434,30 +1431,31 @@ struct Dee_tno_assign {
 
 /* The max # of operator slots that might ever need to be assigned at once.
  * iow: this is the length of the longest non-looping dependency chain that
- *      can be formed using `default__*__with__*' callbacks below.
- * Example:
- *  - default__hasitem__with__bounditem
- *  - default__bounditem__with__getitem
- *  - default__getitem__with__getitem_index
- * Note that the following doesn't count because is can be shortened:
- *  - default__hasitem_index__with__hasitem
- *  - default__hasitem__with__bounditem
- *  - default__bounditem__with__getitem
- *  - default__getitem__with__getitem_index
- * Shorter version is:
- *  - default__hasitem_index__with__bounditem_index
- *  - default__bounditem_index__with__getitem_index */
+ *      can be formed using `default__*__with__*' callbacks below. */
 /*[[[deemon (print_TNO_ASSIGN_MAXLEN from "..method-hints.method-hints")();]]]*/
-/* { Dee_TNO_hasitem_string_len_hash,   &default__hasitem_string_len_hash__with__bounditem_string_len_hash }
- * { Dee_TNO_bounditem_string_len_hash, &default__bounditem_string_len_hash__with__bounditem_string_hash }
- * { Dee_TNO_bounditem_string_hash,     &default__bounditem_string_hash__with__getitem_string_hash }
- * { Dee_TNO_getitem_string_hash,       &default__getitem_string_hash__with__trygetitem_string_hash }
- * { Dee_TNO_trygetitem_string_hash,    &default__trygetitem_string_hash__with__trygetitem }
- * { Dee_TNO_trygetitem,                &default__trygetitem__with__getitem }
- * { Dee_TNO_getitem,                   &default__getitem__with__getitem_index }
- * { Dee_TNO_getitem_index,             &default__getitem_index__with__size__and__getitem_index_fast }
- * { Dee_TNO_size,                      &default__size__with__sizeob } */
-#define Dee_TNO_ASSIGN_MAXLEN 9
+/* { Dee_TNO_getitem,                    &default__getitem__with__getitem_index__and__getitem_string_len_hash }
+ * { Dee_TNO_hasitem_string_len_hash,    &default__hasitem_string_len_hash__with__hasitem }
+ * { Dee_TNO_bounditem,                  &default__bounditem__with__trygetitem__and__hasitem }
+ * { Dee_TNO_trygetitem_index,           &default__trygetitem_index__with__getitem_index }
+ * { Dee_TNO_getitem_index,              &default__getitem_index__with__size__and__getitem_index_fast }
+ * { Dee_TNO_getitem_index,              &default__getitem_index__with__trygetitem_index__and__hasitem_index }
+ * { Dee_TNO_trygetitem_index,           &default__trygetitem_index__with__trygetitem }
+ * { Dee_TNO_trygetitem,                 &default__trygetitem__with__trygetitem_index__and__trygetitem_string_len_hash }
+ * { Dee_TNO_trygetitem_string_len_hash, &default__trygetitem_string_len_hash__with__trygetitem_string_hash }
+ * { Dee_TNO_trygetitem_string_hash,     &default__trygetitem_string_hash__with__getitem_string_hash }
+ * { Dee_TNO_getitem_string_hash,        &default__getitem_string_hash__with__getitem_string_len_hash }
+ * { Dee_TNO_getitem_string_len_hash,    &default__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash }
+ * { Dee_TNO_hasitem_string_len_hash,    &default__hasitem_string_len_hash__with__bounditem_string_len_hash }
+ * { Dee_TNO_bounditem_string_len_hash,  &default__bounditem_string_len_hash__with__bounditem_string_hash }
+ * { Dee_TNO_bounditem_string_hash,      &default__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash }
+ * { Dee_TNO_hasitem_string_hash,        &default__hasitem_string_hash__with__hasitem }
+ * { Dee_TNO_hasitem,                    &default__hasitem__with__bounditem }
+ * { Dee_TNO_bounditem,                  &default__bounditem__with__bounditem_index__and__bounditem_string_len_hash }
+ * { Dee_TNO_bounditem_index,            &default__bounditem_index__with__trygetitem_index__and__hasitem_index }
+ * { Dee_TNO_hasitem_index,              &default__hasitem_index__with__size__and__getitem_index_fast }
+ * { Dee_TNO_size,                       &default__size__with__sizeob }
+ * { Dee_TNO_sizeob,                     &default__sizeob__with__size } */
+#define Dee_TNO_ASSIGN_MAXLEN 22 /* 25 with duplicates */
 /*[[[end]]]*/
 
 
@@ -1475,7 +1473,7 @@ Dee_tno_assign_contains(struct Dee_tno_assign const actions[Dee_TNO_ASSIGN_MAXLE
 INTERN WUNUSED NONNULL((1)) size_t
 (DCALL do_DeeType_SelectMissingNativeOperator)(DeeTypeObject const *__restrict self, enum Dee_tno_id id,
                                                struct Dee_tno_assign actions[Dee_TNO_ASSIGN_MAXLEN],
-                                               size_t actions_count) {
+                                               size_t actions_count, size_t max_actions_count) {
 #ifdef Dee_Allocac
 	struct Dee_tno_assign *winner_actions = (struct Dee_tno_assign *)Dee_Allocac(Dee_TNO_ASSIGN_MAXLEN - actions_count,
 	                                                                             sizeof(struct Dee_tno_assign));
@@ -1538,14 +1536,18 @@ INTERN WUNUSED NONNULL((1)) size_t
 			if (missing_dependencies[dep_i] >= Dee_TNO_COUNT)
 				break; /* No more dependencies... */
 			dependency_score = do_DeeType_SelectMissingNativeOperator(self, missing_dependencies[dep_i],
-			                                                          actions, dependency_score);
+			                                                          actions, dependency_score,
+			                                                          max_actions_count);
 			if (dependency_score == 0) /* Implementation not possible due to missing dependencies */
 				goto next_implementation;
+			if (dependency_score >= max_actions_count)
+				goto next_implementation; /* No need to keep digging here -> caller already has something better! */
 		}
 
 		/* See if we got a better winner impl! */
 		if (winner_action_count > dependency_score) {
 			winner_action_count = dependency_score;
+			max_actions_count   = dependency_score;
 			memcpyc(winner_actions, actions + actions_count,
 			        winner_action_count - actions_count,
 			        sizeof(struct Dee_tno_assign));
@@ -1584,7 +1586,7 @@ next_implementation:;
 PRIVATE WUNUSED NONNULL((1)) size_t
 (DCALL DeeType_SelectMissingNativeOperator)(DeeTypeObject const *__restrict self, enum Dee_tno_id id,
                                             struct Dee_tno_assign actions[Dee_TNO_ASSIGN_MAXLEN]) {
-	return do_DeeType_SelectMissingNativeOperator(self, id, actions, 0);
+	return do_DeeType_SelectMissingNativeOperator(self, id, actions, 0, Dee_TNO_ASSIGN_MAXLEN);
 }
 
 
