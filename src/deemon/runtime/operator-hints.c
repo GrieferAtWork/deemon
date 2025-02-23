@@ -1385,7 +1385,7 @@ type_tno_sizeof_table(__UINTPTR_HALF_TYPE__ offsetof_table) {
 PRIVATE WUNUSED byte_t *DCALL
 type_tno_tryalloc_table(__UINTPTR_HALF_TYPE__ offsetof_table) {
 	size_t size = type_tno_sizeof_table(offsetof_table);
-	return (byte_t *)Dee_UntrackAlloc(Dee_TryCalloc(size));
+	return (byte_t *)Dee_TryCalloc(size);
 }
 
 /* @return false: OOM */
