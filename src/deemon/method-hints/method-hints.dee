@@ -1934,6 +1934,21 @@ function printTypeTnoSizeofTableCases() {
 }
 
 
+function printFreeAllocatedOperatorTables(self: string) {
+	RESET_PREFIX();
+	local usedSubTables: {(string, string)...} = [];
+	for (local name, none /*: NativeOperator*/: NATIVE_OPERATORS) {
+		if (name.table !is none) {
+			local pair = (name.table, name.tableStruct);
+			if (pair !in usedSubTables)
+				usedSubTables.append(pair);
+		}
+	}
+	for (local table, tableStruct: usedSubTables)
+		print(f"	Dee_Free({self}->{table});");
+}
+
+
 function getCTypeMediumSimplified(typ: string, after: string = ""): string {
 	local result = getCTypeSimplified(typ, after);
 	if (result.endswith("*"))

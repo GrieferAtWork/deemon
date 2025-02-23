@@ -171,8 +171,16 @@ again:
 		Dee_Free(my_class->cd_ops[i]);
 	Dee_Decref(my_class->cd_desc);
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* Hide pre-defined operator tables from "self"
+	 * (so our caller won't try to Dee_Free() them) */
+	if (self->tp_cmp == &instance_builtin_cmp)
+		self->tp_cmp = NULL;
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
 	/* Free operator containers that aren't inherited. */
 	{
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 		unsigned int base_inherited = 0;
 #define BASE_INHERITED_MATH 0x0001
 #define BASE_INHERITED_CMP  0x0002
@@ -209,6 +217,7 @@ again:
 #undef BASE_INHERITED_SEQ
 #undef BASE_INHERITED_ATTR
 #undef BASE_INHERITED_WITH
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 		/* Custom operators. */
 		Dee_Free((void *)self->tp_operators);

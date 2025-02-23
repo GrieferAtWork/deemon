@@ -3182,6 +3182,19 @@ type_fini(DeeTypeObject *__restrict self) {
 	if (DeeType_IsClass(self))
 		class_fini(self);
 
+#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
+	/* clang-format off */
+/*[[[deemon (printFreeAllocatedOperatorTables from "..method-hints.method-hints")("self");]]]*/
+	Dee_Free(self->tp_iterator);
+	Dee_Free(self->tp_math);
+	Dee_Free(self->tp_cmp);
+	Dee_Free(self->tp_seq);
+	Dee_Free(self->tp_with);
+	Dee_Free(self->tp_attr);
+/*[[[end]]]*/
+	/* clang-format off */
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS || __DEEMON__ */
+
 	/* Finalize the type's member caches. */
 	Dee_membercache_fini(&self->tp_cache);
 	Dee_membercache_fini(&self->tp_class_cache);

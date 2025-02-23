@@ -117,6 +117,7 @@ method-hints:
 		include/deemon/operator-hints.h \
 		src/deemon/objects/generic-proxy.h \
 		src/deemon/objects/generic-proxy.c \
+		src/deemon/objects/object.c \
 		src/deemon/runtime/method-hint-defaults.h \
 		src/deemon/runtime/method-hint-defaults.c \
 		src/deemon/runtime/method-hints.h \
