@@ -102,6 +102,37 @@ endif
 
 
 # Misc script invocations
+
+ifndef DEEMON
+DEEMON := ./deemon
+endif
+
 vs-proj:
-	./deemon util/make-vs-proj.dee
+	$(DEEMON) util/make-vs-proj.dee
 .PHONY: vs-proj
+
+method-hints:
+	$(DEEMON) -F \
+		include/deemon/method-hints.h \
+		include/deemon/operator-hints.h \
+		src/deemon/objects/generic-proxy.h \
+		src/deemon/objects/generic-proxy.c \
+		src/deemon/runtime/method-hint-defaults.h \
+		src/deemon/runtime/method-hint-defaults.c \
+		src/deemon/runtime/method-hints.h \
+		src/deemon/runtime/method-hints.c \
+		src/deemon/runtime/method-hint-select.h \
+		src/deemon/runtime/method-hint-select.c \
+		src/deemon/runtime/method-hint-super.h \
+		src/deemon/runtime/method-hint-super.c \
+		src/deemon/runtime/method-hint-super-invoke.c \
+		src/deemon/runtime/method-hint-wrappers.c \
+		src/deemon/runtime/operator-hints.c \
+		src/deemon/runtime/operator-hint-defaults.c \
+		src/deemon/runtime/operator-hint-errors.h \
+		src/deemon/runtime/operator-hint-errors.c \
+		src/deemon/runtime/operator-hint-invoke.c \
+		src/deemon/runtime/strings.h \
+		lib/rt/hints/method.dee \
+		lib/rt/hints/operator.dee
+.PHONY: method-hints
