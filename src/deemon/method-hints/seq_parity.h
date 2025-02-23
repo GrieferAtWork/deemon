@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.parity()                                                */
 /************************************************************************/
-[[kw, alias(Sequence.parity -> "seq_parity"), declNameAlias("explicit_seq_parity")]]
+[[kw, alias(Sequence.parity -> "seq_parity")]]
 __seq_parity__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 	int result;
 	DeeObject *key = Dee_None;

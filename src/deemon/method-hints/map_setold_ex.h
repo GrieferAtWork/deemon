@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.setold_ex()                                           */
 /************************************************************************/
-[[alias(Mapping.setold_ex -> "map_setold_ex"), declNameAlias("explicit_map_setold_ex")]]
+[[alias(Mapping.setold_ex -> "map_setold_ex")]]
 __map_setold_ex__(key,value)->?T2?Dbool?X2?O?N {
 	PRIVATE DEFINE_TUPLE(setold_failed_result, 2, { Dee_False, Dee_None });
 	DeeObject *key, *value;

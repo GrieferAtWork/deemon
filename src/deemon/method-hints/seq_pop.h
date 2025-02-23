@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.pop()                                          */
 /************************************************************************/
-[[kw, alias(Sequence.pop -> "seq_pop"), declNameAlias("explicit_seq_pop")]]
+[[kw, alias(Sequence.pop -> "seq_pop")]]
 __seq_pop__(index=!-1)->?O {
 	Dee_ssize_t index = -1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index,

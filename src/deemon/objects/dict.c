@@ -4038,6 +4038,23 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	                "#r{Indicative of the ?. having sufficient preallocated space on return}"
 	                "Try to preallocate buffer space for ${({#this, total} > ...) + more} items"),
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINTREF_DOC(__seq_xchitem__, "(index:?Dint,item:" D_TItem ")->" D_TItem),
+	TYPE_METHOD_HINTREF(__seq_erase__),
+	TYPE_METHOD_HINTREF_DOC(__seq_insert__, "(index:?Dint,item:" D_TItem ")"),
+	TYPE_METHOD_HINTREF_DOC(__seq_append__, "(item:" D_TItem ")"),
+	TYPE_METHOD_HINTREF_DOC(__seq_pushfront__, "(item:" D_TItem ")"),
+	TYPE_METHOD_HINTREF_DOC(__seq_pop__, "(index=!-1)->" D_TItem),
+	TYPE_METHOD_HINTREF(__seq_removeif__),
+	TYPE_METHOD_HINTREF(__seq_reverse__),
+	TYPE_METHOD_HINTREF(__seq_iter__),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_HINTREF(__seq_getitem__),
+	TYPE_METHOD_HINTREF(__seq_delitem__),
+	TYPE_METHOD_HINTREF(__seq_setitem__),
+	TYPE_METHOD_HINTREF(__seq_compare__),
+	TYPE_METHOD_HINTREF(__seq_compare_eq__),
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINTREF_DOC(explicit_seq_xchitem, "(index:?Dint,item:" D_TItem ")->" D_TItem),
 	TYPE_METHOD_HINTREF(explicit_seq_erase),
 	TYPE_METHOD_HINTREF_DOC(explicit_seq_insert, "(index:?Dint,item:" D_TItem ")"),
@@ -4046,15 +4063,7 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	TYPE_METHOD_HINTREF_DOC(explicit_seq_pop, "(index=!-1)->" D_TItem),
 	TYPE_METHOD_HINTREF(explicit_seq_removeif),
 	TYPE_METHOD_HINTREF(explicit_seq_reverse),
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_METHOD_HINTREF(__seq_iter__),
-	TYPE_METHOD_HINTREF(__seq_enumerate__),
-	TYPE_METHOD_HINTREF(__seq_getitem__),
-	TYPE_METHOD_HINTREF(__seq_delitem__),
-	TYPE_METHOD_HINTREF(__seq_setitem__),
-	TYPE_METHOD_HINTREF(__seq_compare__),
-	TYPE_METHOD_HINTREF(__seq_compare_eq__),
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_END
 };
 

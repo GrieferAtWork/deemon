@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.find()                                               */
 /************************************************************************/
-[[kw, alias(Sequence.find -> "seq_find"), declNameAlias("explicit_seq_find")]]
+[[kw, alias(Sequence.find -> "seq_find")]]
 __seq_find__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint {
 	DeeObject *item, *key = Dee_None;
 	size_t result, start = 0, end = (size_t)-1;

@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.setold()                                              */
 /************************************************************************/
-[[alias(Mapping.setold -> "map_setold"), declNameAlias("explicit_map_setold")]]
+[[alias(Mapping.setold -> "map_setold")]]
 __map_setold__(key,value)->?Dbool {
 	int result;
 	DeeObject *key, *value;

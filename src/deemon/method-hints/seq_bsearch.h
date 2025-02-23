@@ -19,7 +19,7 @@
  */
 
 
-[[kw, alias(Sequence.bfind -> "seq_bfind"), declNameAlias("explicit_seq_bfind")]]
+[[kw, alias(Sequence.bfind)]]
 __seq_bfind__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N {
 	DeeObject *item, *key = Dee_None;
 	size_t result, start = 0, end = (size_t)-1;
@@ -40,7 +40,7 @@ err:
 }
 
 
-[[kw, alias(Sequence.bposition -> "seq_bposition"), declNameAlias("explicit_seq_bposition")]]
+[[kw, alias(Sequence.bposition)]]
 __seq_bposition__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint {
 	DeeObject *item, *key = Dee_None;
 	size_t result, start = 0, end = (size_t)-1;
@@ -58,7 +58,7 @@ err:
 	return NULL;
 }
 
-[[kw, alias(Sequence.brange -> "seq_brange"), declNameAlias("explicit_seq_brange")]]
+[[kw, alias(Sequence.brange)]]
 __seq_brange__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint {
 	DeeObject *item, *key = Dee_None;
 	size_t start = 0, end = (size_t)-1, result_range[2];

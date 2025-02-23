@@ -24,7 +24,6 @@
 [[alias(Sequence.clear -> "seq_clear")]]
 [[alias(Set.clear)]]
 [[alias(Mapping.clear)]]
-[[declNameAlias("explicit_seq_clear")]]
 __seq_clear__() {
 	if (DeeArg_Unpack(argc, argv, ":__seq_clear__"))
 		goto err;

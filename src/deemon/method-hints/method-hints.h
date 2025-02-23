@@ -52,16 +52,8 @@
 %[include("object_operator_setattr.h")]
 
 
-/* TODO: Get rid of all the `explicit_*' "declNameAlias" once
- *       `CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS' becomes
- *       mandatory.
- *
- * Instead of:
- * >> TYPE_METHOD_HINTREF(explicit_seq_removeif)
- *
- * Types should need to write the actual name of the explicit attribute:
- * >> TYPE_METHOD_HINTREF(__seq_removeif__)
- */
+/* TODO: Get rid of all the "-> seq_foo" part in "[[alias(Sequence.foo -> seq_foo)]]"
+ * Instead of "seq_foo", the standard "Sequence_foo" attribute identifier should be used! */
 
 /************************************************************************/
 /* For `deemon.Sequence'                                                */

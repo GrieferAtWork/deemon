@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.unpack()                                             */
 /************************************************************************/
-[[alias(Sequence.unpack -> "unpack"), declNameAlias("explicit_seq_unpack")]]
+[[alias(Sequence.unpack)]]
 __seq_unpack__(min:?Dint,max?:?Dint)->?DTuple {
 	DREF DeeTupleObject *result;
 	size_t min_count, max_count;

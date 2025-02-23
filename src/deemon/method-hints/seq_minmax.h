@@ -43,7 +43,7 @@ function g(p) {
 g('/' '************************************************************************' '/
 /' '* deemon.Sequence.{m}()                                                *' '/
 /' '************************************************************************' '/
-[[kw, alias(Sequence.{m} -> "seq_{m}"), declNameAlias("explicit_seq_{m}")]]
+[[kw, alias(Sequence.{m} -> "seq_{m}")]]
 __seq_{m}__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?O {
 	DREF DeeObject *result;
 	DeeObject *key = Dee_None;
@@ -310,7 +310,7 @@ seq_{m}_with_range_and_key = {
 /************************************************************************/
 /* deemon.Sequence.min()                                                */
 /************************************************************************/
-[[kw, alias(Sequence.min -> "seq_min"), declNameAlias("explicit_seq_min")]]
+[[kw, alias(Sequence.min -> "seq_min")]]
 __seq_min__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?O {
 	DREF DeeObject *result;
 	DeeObject *key = Dee_None;
@@ -581,7 +581,7 @@ seq_min_with_range_and_key = {
 /************************************************************************/
 /* deemon.Sequence.max()                                                */
 /************************************************************************/
-[[kw, alias(Sequence.max -> "seq_max"), declNameAlias("explicit_seq_max")]]
+[[kw, alias(Sequence.max -> "seq_max")]]
 __seq_max__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?O {
 	DREF DeeObject *result;
 	DeeObject *key = Dee_None;

@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.setnew()                                              */
 /************************************************************************/
-[[alias(Mapping.setnew -> "map_setnew"), declNameAlias("explicit_map_setnew")]]
+[[alias(Mapping.setnew -> "map_setnew")]]
 __map_setnew__(key,value)->?Dbool {
 	int result;
 	DeeObject *key, *value;

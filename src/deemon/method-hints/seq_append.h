@@ -23,7 +23,6 @@
 /************************************************************************/
 [[alias(Sequence.append -> "seq_append")]]
 [[alias(Sequence.pushback -> "seq_pushback")]]
-[[declNameAlias("explicit_seq_append")]]
 __seq_append__(item) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_append__", &item))

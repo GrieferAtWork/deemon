@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.reversed()                                            */
 /************************************************************************/
-[[kw, alias(Sequence.reversed -> "seq_reversed"), declNameAlias("explicit_seq_reversed")]]
+[[kw, alias(Sequence.reversed -> "seq_reversed")]]
 __seq_reversed__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?DSequence {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,

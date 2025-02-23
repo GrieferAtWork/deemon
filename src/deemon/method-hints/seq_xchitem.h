@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.xchitem()                                            */
 /************************************************************************/
-[[kw, alias(Sequence.xchitem -> "seq_xchitem"), declNameAlias("explicit_seq_xchitem")]]
+[[kw, alias(Sequence.xchitem -> "seq_xchitem")]]
 __seq_xchitem__(index:?Dint,item)->?O {
 	size_t index;
 	DeeObject *item;

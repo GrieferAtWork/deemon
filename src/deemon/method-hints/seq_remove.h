@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.remove()                                             */
 /************************************************************************/
-[[kw, alias(Sequence.remove -> "seq_remove"), declNameAlias("explicit_seq_remove")]]
+[[kw, alias(Sequence.remove -> "seq_remove")]]
 __seq_remove__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 	int result;
 	DeeObject *item, *key = Dee_None;

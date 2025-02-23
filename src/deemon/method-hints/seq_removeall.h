@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.removeall()                                          */
 /************************************************************************/
-[[kw, alias(Sequence.removeall -> "seq_removeall"), declNameAlias("explicit_seq_removeall")]]
+[[kw, alias(Sequence.removeall -> "seq_removeall")]]
 __seq_removeall__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint {
 	size_t result;
 	DeeObject *item, *key = Dee_None;

@@ -22,7 +22,6 @@
 /* deemon.Sequence.extend()                                             */
 /************************************************************************/
 [[alias(Sequence.extend -> "seq_extend")]]
-[[declNameAlias("explicit_seq_extend")]]
 __seq_extend__(items:?S?O) {
 	DeeObject *items;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_extend__", &items))

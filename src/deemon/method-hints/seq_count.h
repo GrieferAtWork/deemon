@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.count()                                                */
 /************************************************************************/
-[[kw, alias(Sequence.count -> "seq_count"), declNameAlias("explicit_seq_count")]]
+[[kw, alias(Sequence.count)]]
 __seq_count__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint {
 	size_t result;
 	DeeObject *item, *key = Dee_None;

@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.remove()                                              */
 /************************************************************************/
-[[alias(Mapping.remove -> "map_remove"), declNameAlias("explicit_map_remove")]]
+[[alias(Mapping.remove -> "map_remove")]]
 __map_remove__(key)->?Dbool {
 	int result;
 	DeeObject *key;

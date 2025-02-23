@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.erase()                                              */
 /************************************************************************/
-[[kw, alias(Sequence.erase -> "seq_erase"), declNameAlias("explicit_seq_erase")]]
+[[kw, alias(Sequence.erase -> "seq_erase")]]
 __seq_erase__(index:?Dint,count=!1) {
 	size_t index, count = 1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_count,

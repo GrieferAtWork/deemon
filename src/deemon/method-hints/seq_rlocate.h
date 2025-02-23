@@ -22,7 +22,7 @@
 /* deemon.Sequence.rlocate()                                            */
 /************************************************************************/
 
-[[kw, alias(Sequence.rlocate -> "seq_rlocate"), declNameAlias("explicit_seq_rlocate")]]
+[[kw, alias(Sequence.rlocate)]]
 __seq_rlocate__(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef] {
 	DeeObject *match, *def = Dee_None;
 	size_t start = 0, end = (size_t)-1;

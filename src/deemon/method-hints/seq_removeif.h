@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.removeif()                                           */
 /************************************************************************/
-[[kw, alias(Sequence.removeif -> "seq_removeif"), declNameAlias("explicit_seq_removeif")]]
+[[kw, alias(Sequence.removeif -> "seq_removeif")]]
 __seq_removeif__(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint {
 	size_t result;
 	DeeObject *should;

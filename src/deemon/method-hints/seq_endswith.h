@@ -22,7 +22,7 @@
 /* deemon.Sequence.endswith()                                           */
 /************************************************************************/
 
-[[kw, alias(Sequence.endswith -> "seq_endswith"), declNameAlias("explicit_seq_endswith")]]
+[[kw, alias(Sequence.endswith)]]
 __seq_endswith__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 	int result;
 	DeeObject *item, *key = Dee_None;

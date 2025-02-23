@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.setnew_ex()                                           */
 /************************************************************************/
-[[alias(Mapping.setnew_ex -> "map_setnew_ex"), declNameAlias("explicit_map_setnew_ex")]]
+[[alias(Mapping.setnew_ex -> "map_setnew_ex")]]
 __map_setnew_ex__(key,value)->?T2?Dbool?X2?O?N {
 	PRIVATE DEFINE_TUPLE(setnew_success_result, 2, { Dee_True, Dee_None });
 	DeeObject *key, *value;

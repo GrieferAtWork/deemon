@@ -3092,7 +3092,7 @@ done:
 				attrib.noSelfInvocationWrapper = true;
 				break;
 
-			case "declNameAlias": {
+			case "decl_name_alias": { // Unused
 				next();
 				skip("(");
 				do {

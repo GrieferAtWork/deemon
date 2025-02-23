@@ -19,9 +19,9 @@
  */
 
 /************************************************************************/
-/* deemon.Mapping.popitem()                                          */
+/* deemon.Mapping.popitem()                                             */
 /************************************************************************/
-[[alias(Mapping.popitem -> "map_popitem"), declNameAlias("explicit_map_popitem")]]
+[[alias(Mapping.popitem -> "map_popitem")]]
 __map_popitem__()->?X2?T2?O?O?N {
 	if (DeeArg_Unpack(argc, argv, ":__map_popitem__"))
 		goto err;

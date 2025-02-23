@@ -18,6 +18,17 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+/*******************************************************************************************************/
+/*******************************************************************************************************/
+/*                                                                                                     */
+/* ==== !!! DEPRECATED FILE !!!  --  Use code generation via /src/deemon/method-hints/method-hints.dee */
+/*                                                                                                     */
+/*******************************************************************************************************/
+/*******************************************************************************************************/
+
+
+
+
 /* Define a type method hint function */
 #ifndef Dee_DEFINE_TYPE_METHOD_HINT_FUNC
 #define Dee_DEFINE_TYPE_METHOD_HINT_FUNC(attr, Treturn, cc, func_name, params)
