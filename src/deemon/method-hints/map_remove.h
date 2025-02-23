@@ -72,6 +72,32 @@ err:
 	return old_size == new_size ? 0 : 1;
 err:
 	return -1;
+}}
+%{$with__seq_enumerate__and__seq_operator_delitem = [[prefix(DEFINE_map_pop_with_seq_enumerate_cb)]] {
+	Dee_ssize_t status;
+	struct map_pop_with_seq_enumerate_data data;
+	data.mpwse_seq = self;
+	data.mpwse_key = key;
+	status = CALL_DEPENDENCY(seq_enumerate, self, &map_pop_with_seq_enumerate_cb, &data);
+	if (status == MAP_POP_WITH_SEQ_ENUMERATE__SUCCESS) {
+		Dee_Decref(data.mpwse_key);
+		return 1;
+	}
+	ASSERT(status == 0 || status == -1);
+	return (int)status;
+}}
+%{$with__seq_enumerate_index__and__seq_operator_delitem_index = [[prefix(DEFINE_map_pop_with_seq_enumerate_index_cb)]] {
+	Dee_ssize_t status;
+	struct map_pop_with_seq_enumerate_index_data data;
+	data.mpwsei_seq = self;
+	data.mpwsei_key = key;
+	status = CALL_DEPENDENCY(seq_enumerate_index, self, &map_pop_with_seq_enumerate_index_cb, &data, 0, (size_t)-1);
+	if (status == MAP_POP_WITH_SEQ_ENUMERATE_INDEX__SUCCESS) {
+		Dee_Decref(data.mpwsei_key);
+		return 1;
+	}
+	ASSERT(status == 0 || status == -1);
+	return (int)status;
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 1, &key);
 	if unlikely(!result)
@@ -82,13 +108,26 @@ err:
 }
 
 map_remove = {
+	DeeMH_seq_operator_delitem_t seq_operator_delitem;
 	DeeMH_map_operator_delitem_t map_operator_delitem = REQUIRE(map_operator_delitem);
 	if (map_operator_delitem == &default__map_operator_delitem__empty)
 		return &$empty;
-	if (map_operator_delitem) {
+	if (map_operator_delitem != NULL &&
+	    map_operator_delitem != &default__map_operator_delitem__with__map_remove) {
 		if (REQUIRE_ANY(map_operator_bounditem) != &default__map_operator_bounditem__unsupported)
 			return &$with__map_operator_bounditem__and__map_operator_delitem;
 		if (REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
 			return &$with__seq_operator_size__and__map_operator_delitem;
+	}
+
+	seq_operator_delitem = REQUIRE(seq_operator_delitem);
+	if (seq_operator_delitem) {
+		if (seq_operator_delitem == &default__seq_operator_delitem__empty)
+			return &$empty;
+		if (seq_operator_delitem == &default__seq_operator_delitem__with__seq_operator_delitem_index &&
+		    REQUIRE_ANY(seq_enumerate_index) != &default__seq_enumerate_index__unsupported)
+			return &$with__seq_enumerate_index__and__seq_operator_delitem_index;
+		if (REQUIRE_ANY(seq_enumerate) != &default__seq_enumerate__unsupported)
+			return &$with__seq_enumerate__and__seq_operator_delitem;
 	}
 };

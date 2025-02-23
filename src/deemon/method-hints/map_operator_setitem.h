@@ -98,6 +98,56 @@ err:
 	return CALL_DEPENDENCY(map_operator_setitem_index, self, key_value, value);
 err:
 	return -1;
+}}
+%{$with__seq_enumerate__and__seq_operator_setitem__and__seq_append = [[prefix(DEFINE_map_setold_ex_with_seq_enumerate_cb)]] {
+	int result;
+	Dee_ssize_t status;
+	DREF DeeObject *new_pair;
+	struct map_setold_ex_with_seq_enumerate_data data;
+	data.msoxwse_seq = self;
+	data.msoxwse_key_and_value[0] = key;
+	data.msoxwse_key_and_value[1] = value;
+	status = CALL_DEPENDENCY(seq_enumerate, self, &map_setold_ex_with_seq_enumerate_cb, &data);
+	if (status == MAP_SETOLD_EX_WITH_SEQ_ENUMERATE__SUCCESS) {
+		Dee_Decref(data.msoxwse_key_and_value[1]);
+		return 0;
+	}
+	ASSERT(status == 0 || status == -1);
+	if unlikely(status < 0)
+		goto err;
+	new_pair = DeeTuple_NewVector(2, data.msoxwse_key_and_value);
+	if unlikely(!new_pair)
+		goto err;
+	result = CALL_DEPENDENCY(seq_append, self, new_pair);
+	Dee_Decref_unlikely(new_pair);
+	return result;
+err:
+	return -1;
+}}
+%{$with__seq_enumerate_index__and__seq_operator_setitem_index__and__seq_append = [[prefix(DEFINE_map_setold_ex_with_seq_enumerate_index_cb)]] {
+	int result;
+	Dee_ssize_t status;
+	DREF DeeObject *new_pair;
+	struct map_setold_ex_with_seq_enumerate_index_data data;
+	data.msoxwsei_seq = self;
+	data.msoxwsei_key_and_value[0] = key;
+	data.msoxwsei_key_and_value[1] = value;
+	status = CALL_DEPENDENCY(seq_enumerate_index, self, &map_setold_ex_with_seq_enumerate_index_cb, &data, 0, (size_t)-1);
+	if (status == MAP_SETOLD_EX_WITH_SEQ_ENUMERATE_INDEX__SUCCESS) {
+		Dee_Decref(data.msoxwsei_key_and_value[1]);
+		return 0;
+	}
+	ASSERT(status == 0 || status == -1);
+	if unlikely(status < 0)
+		goto err;
+	new_pair = DeeTuple_NewVector(2, data.msoxwsei_key_and_value);
+	if unlikely(!new_pair)
+		goto err;
+	result = CALL_DEPENDENCY(seq_append, self, new_pair);
+	Dee_Decref_unlikely(new_pair);
+	return result;
+err:
+	return -1;
 }} {
 	DREF DeeObject *result;
 	DeeObject *args[2];
@@ -115,6 +165,7 @@ err:
 
 map_operator_setitem = {
 	DeeMH_map_enumerate_t map_enumerate;
+	DeeMH_seq_operator_setitem_t seq_operator_setitem;
 	/*if (REQUIRE_NODEFAULT(map_operator_setitem_string_len_hash)) {
 		return REQUIRE_NODEFAULT(map_operator_setitem_index)
 		       ? &$with__map_operator_setitem_index__and__map_operator_setitem_string_len_hash
@@ -126,6 +177,18 @@ map_operator_setitem = {
 	} else if (REQUIRE_NODEFAULT(map_operator_setitem_index)) {
 		return &$with__map_operator_setitem_index;
 	}*/
+	if (((seq_operator_setitem = REQUIRE(seq_operator_setitem)) != NULL &&
+	     (REQUIRE_ANY(seq_append) != &default__seq_append__unsupported)) ||
+	    ((REQUIRE(seq_append) != NULL) &&
+	     (seq_operator_setitem = REQUIRE_ANY(seq_operator_setitem)) != &default__seq_operator_setitem__unsupported)) {
+		if (seq_operator_setitem == &default__seq_operator_setitem__empty)
+			return &$empty;
+		if (seq_operator_setitem == &default__seq_operator_setitem__with__seq_operator_setitem_index &&
+		    REQUIRE_ANY(seq_enumerate_index) != &default__seq_enumerate_index__unsupported)
+			return &$with__seq_enumerate_index__and__seq_operator_setitem_index__and__seq_append;
+		if (REQUIRE_ANY(seq_enumerate) != &default__seq_enumerate__unsupported)
+			return &$with__seq_enumerate__and__seq_operator_setitem__and__seq_append;
+	}
 	map_enumerate = REQUIRE(map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)
 		return &$empty;

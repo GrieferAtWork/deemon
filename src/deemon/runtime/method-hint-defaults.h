@@ -1995,6 +1995,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_delitem__with__ma
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_delitem__with__map_operator_delitem_index(DeeObject *self, DeeObject *key);
 #define default__map_operator_delitem__empty (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_delitem__with__map_remove(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_delitem__with__map_pop_with_default(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_delitem__with__map_removekeys(DeeObject *self, DeeObject *key);
 
 /* map_operator_delitem_index */
@@ -2033,6 +2034,8 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__map_operator_setitem__with_
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__map_operator_setitem__with__map_operator_setitem_string_hash(DeeObject *self, DeeObject *key, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__map_operator_setitem__with__map_operator_setitem_index(DeeObject *self, DeeObject *key, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__map_operator_setitem__empty(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__map_operator_setitem__with__seq_enumerate__and__seq_operator_setitem__and__seq_append(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__map_operator_setitem__with__seq_enumerate_index__and__seq_operator_setitem_index__and__seq_append(DeeObject *self, DeeObject *key, DeeObject *value);
 
 /* map_operator_setitem_index */
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__map_operator_setitem_index(DeeObject *self, size_t key, DeeObject *value);
@@ -2330,6 +2333,8 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_setold_ex__
 #define default__map_setold_ex__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&default__map_setold_ex__unsupported)
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_setold_ex__with__map_operator_trygetitem__and__map_setold(DeeObject *self, DeeObject *key, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_setold_ex__with__map_operator_trygetitem__and__map_operator_setitem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_setold_ex__with__seq_enumerate__and__seq_operator_setitem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_setold_ex__with__seq_enumerate_index__and__seq_operator_setitem_index(DeeObject *self, DeeObject *key, DeeObject *value);
 
 /* map_setnew */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__map_setnew__with_callattr_setnew(DeeObject *self, DeeObject *key, DeeObject *value);
@@ -2352,6 +2357,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_setnew_ex__
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_setnew_ex__with__map_operator_trygetitem__and__map_setnew(DeeObject *self, DeeObject *key, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_setnew_ex__with__map_operator_trygetitem__and__map_setdefault(DeeObject *self, DeeObject *key, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_setnew_ex__with__map_operator_trygetitem__and__map_operator_setitem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_setnew_ex__with__map_operator_trygetitem__and__seq_append(DeeObject *self, DeeObject *key, DeeObject *value);
 
 /* map_setdefault */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_setdefault__with_callattr_setdefault(DeeObject *self, DeeObject *key, DeeObject *value);
@@ -2383,6 +2389,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_remove__unsupported(DeeObj
 #define default__map_remove__empty (*(int (DCALL *)(DeeObject *, DeeObject *))&default__map_remove__unsupported)
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_remove__with__map_operator_bounditem__and__map_operator_delitem(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_remove__with__seq_operator_size__and__map_operator_delitem(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_remove__with__seq_enumerate__and__seq_operator_delitem(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_remove__with__seq_enumerate_index__and__seq_operator_delitem_index(DeeObject *self, DeeObject *key);
 
 /* map_removekeys */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_removekeys__with_callattr_removekeys(DeeObject *self, DeeObject *keys);
@@ -2402,6 +2410,8 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__map_pop__with_
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_pop__unsupported(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_pop__empty(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_pop__with__map_operator_getitem__and__map_operator_delitem(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_pop__with__seq_enumerate__and__seq_operator_delitem(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_pop__with__seq_enumerate_index__and__seq_operator_delitem_index(DeeObject *self, DeeObject *key);
 
 /* map_pop_with_default */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_pop_with_default__with_callattr_pop(DeeObject *self, DeeObject *key, DeeObject *default_);
@@ -2411,6 +2421,8 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL tdefault__map_pop_wit
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_pop_with_default__unsupported(DeeObject *self, DeeObject *key, DeeObject *default_);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_pop_with_default__empty(DeeObject *self, DeeObject *key, DeeObject *default_);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_pop_with_default__with__map_operator_trygetitem__and__map_operator_delitem(DeeObject *self, DeeObject *key, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_pop_with_default__with__seq_enumerate__and__seq_operator_delitem(DeeObject *self, DeeObject *key, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_pop_with_default__with__seq_enumerate_index__and__seq_operator_delitem_index(DeeObject *self, DeeObject *key, DeeObject *default_);
 
 /* map_popitem */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with_callattr_popitem(DeeObject *self);
@@ -2421,6 +2433,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__unsuppor
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__empty(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__seq_trygetlast__and__map_operator_delitem(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__seq_trygetfirst__and__map_operator_delitem(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__seq_pop(DeeObject *self);
 /*[[[end]]]*/
 /* clang-format on */
 

@@ -119,9 +119,9 @@ set_remove = {
 		if (REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
 			return &$with__seq_operator_size__and__set_removeall;
 	}
+	if (REQUIRE(seq_removeall))
+		return &$with__seq_removeall;
 	if (REQUIRE(map_operator_delitem) &&
 	    REQUIRE_ANY(map_operator_trygetitem) != &default__map_operator_trygetitem__unsupported)
 		return &$with__map_operator_trygetitem__and__map_operator_delitem;
-	if (REQUIRE(seq_removeall))
-		return &$with__seq_removeall;
 };

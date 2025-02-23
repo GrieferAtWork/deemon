@@ -17571,6 +17571,17 @@ default__map_operator_delitem__with__map_remove(DeeObject *self, DeeObject *key)
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__map_operator_delitem__with__map_pop_with_default(DeeObject *self, DeeObject *key) {
+	DREF DeeObject *oldvalue = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_pop_with_default))(self, key, Dee_None);
+	if unlikely(!oldvalue)
+		goto err;
+	Dee_Decref(oldvalue);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_delitem__with__map_removekeys(DeeObject *self, DeeObject *key) {
 	int result;
 	DREF DeeTupleObject *keys = DeeTuple_NewUninitialized(1);
@@ -17766,6 +17777,146 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 default__map_operator_setitem__empty(DeeObject *self, DeeObject *key, DeeObject *value) {
 	(void)value;
 	return err_unknown_key(self, key);
+}
+
+#ifndef DEFINED_map_setold_ex_with_seq_enumerate_cb
+#define DEFINED_map_setold_ex_with_seq_enumerate_cb
+#define MAP_SETOLD_EX_WITH_SEQ_ENUMERATE__SUCCESS (-2)
+struct map_setold_ex_with_seq_enumerate_data {
+	DeeObject *msoxwse_seq;              /* [1..1] Sequence to override "msoxwse_key_and_value[0]" in */
+	DeeObject *msoxwse_key_and_value[2]; /* [1..1] Key to override in "<msoxwse_seq> as Mapping" */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+map_setold_ex_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
+	int status;
+	DREF DeeObject *this_key_and_value[2];
+	struct map_setold_ex_with_seq_enumerate_data *data;
+	data = (struct map_setold_ex_with_seq_enumerate_data *)arg;
+	if (value) {
+		if (DeeObject_Unpack(value, 2, this_key_and_value))
+			goto err;
+		status = DeeObject_TryCompareEq(data->msoxwse_key_and_value[0], this_key_and_value[0]);
+		Dee_Decref(this_key_and_value[0]);
+		if unlikely(status == Dee_COMPARE_ERR)
+			goto err_this_value;
+		if (status == 0) {
+			/* Found it! (now to override it) */
+			DREF DeeObject *new_pair;
+			new_pair = DeeTuple_NewVector(2, data->msoxwse_key_and_value);
+			if unlikely(!new_pair)
+				goto err_this_value;
+			status = DeeObject_InvokeMethodHint(seq_operator_setitem, data->msoxwse_seq, index, new_pair);
+			Dee_Decref_unlikely(new_pair);
+			if unlikely(status < 0)
+				goto err_this_value;
+			data->msoxwse_key_and_value[1] = this_key_and_value[1]; /* Inherit reference */
+			return MAP_SETOLD_EX_WITH_SEQ_ENUMERATE__SUCCESS;
+		}
+		Dee_Decref(this_key_and_value[1]);
+	}
+	return 0;
+err_this_value:
+	Dee_Decref(this_key_and_value[1]);
+err:
+	return -1;
+}
+#endif /* !DEFINED_map_setold_ex_with_seq_enumerate_cb */
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+default__map_operator_setitem__with__seq_enumerate__and__seq_operator_setitem__and__seq_append(DeeObject *self, DeeObject *key, DeeObject *value) {
+	int result;
+	Dee_ssize_t status;
+	DREF DeeObject *new_pair;
+	struct map_setold_ex_with_seq_enumerate_data data;
+	data.msoxwse_seq = self;
+	data.msoxwse_key_and_value[0] = key;
+	data.msoxwse_key_and_value[1] = value;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &map_setold_ex_with_seq_enumerate_cb, &data);
+	if (status == MAP_SETOLD_EX_WITH_SEQ_ENUMERATE__SUCCESS) {
+		Dee_Decref(data.msoxwse_key_and_value[1]);
+		return 0;
+	}
+	ASSERT(status == 0 || status == -1);
+	if unlikely(status < 0)
+		goto err;
+	new_pair = DeeTuple_NewVector(2, data.msoxwse_key_and_value);
+	if unlikely(!new_pair)
+		goto err;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_append))(self, new_pair);
+	Dee_Decref_unlikely(new_pair);
+	return result;
+err:
+	return -1;
+}
+
+#ifndef DEFINED_map_setold_ex_with_seq_enumerate_index_cb
+#define DEFINED_map_setold_ex_with_seq_enumerate_index_cb
+#define MAP_SETOLD_EX_WITH_SEQ_ENUMERATE_INDEX__SUCCESS (-2)
+struct map_setold_ex_with_seq_enumerate_index_data {
+	DeeObject *msoxwsei_seq;              /* [1..1] Sequence to override "msoxwsei_key_and_value[0]" in */
+	DeeObject *msoxwsei_key_and_value[2]; /* [1..1] Key to override in "<msoxwsei_seq> as Mapping" */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+map_setold_ex_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	int status;
+	DREF DeeObject *this_key_and_value[2];
+	struct map_setold_ex_with_seq_enumerate_index_data *data;
+	data = (struct map_setold_ex_with_seq_enumerate_index_data *)arg;
+	if (value) {
+		if (DeeObject_Unpack(value, 2, this_key_and_value))
+			goto err;
+		status = DeeObject_TryCompareEq(data->msoxwsei_key_and_value[0], this_key_and_value[0]);
+		Dee_Decref(this_key_and_value[0]);
+		if unlikely(status == Dee_COMPARE_ERR)
+			goto err_this_value;
+		if (status == 0) {
+			/* Found it! (now to override it) */
+			DREF DeeObject *new_pair;
+			new_pair = DeeTuple_NewVector(2, data->msoxwsei_key_and_value);
+			if unlikely(!new_pair)
+				goto err_this_value;
+			status = DeeObject_InvokeMethodHint(seq_operator_setitem_index, data->msoxwsei_seq, index, new_pair);
+			Dee_Decref_unlikely(new_pair);
+			if unlikely(status < 0)
+				goto err_this_value;
+			data->msoxwsei_key_and_value[1] = this_key_and_value[1]; /* Inherit reference */
+			return MAP_SETOLD_EX_WITH_SEQ_ENUMERATE_INDEX__SUCCESS;
+		}
+		Dee_Decref(this_key_and_value[1]);
+	}
+	return 0;
+err_this_value:
+	Dee_Decref(this_key_and_value[1]);
+err:
+	return -1;
+}
+#endif /* !DEFINED_map_setold_ex_with_seq_enumerate_index_cb */
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+default__map_operator_setitem__with__seq_enumerate_index__and__seq_operator_setitem_index__and__seq_append(DeeObject *self, DeeObject *key, DeeObject *value) {
+	int result;
+	Dee_ssize_t status;
+	DREF DeeObject *new_pair;
+	struct map_setold_ex_with_seq_enumerate_index_data data;
+	data.msoxwsei_seq = self;
+	data.msoxwsei_key_and_value[0] = key;
+	data.msoxwsei_key_and_value[1] = value;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &map_setold_ex_with_seq_enumerate_index_cb, &data, 0, (size_t)-1);
+	if (status == MAP_SETOLD_EX_WITH_SEQ_ENUMERATE_INDEX__SUCCESS) {
+		Dee_Decref(data.msoxwsei_key_and_value[1]);
+		return 0;
+	}
+	ASSERT(status == 0 || status == -1);
+	if unlikely(status < 0)
+		goto err;
+	new_pair = DeeTuple_NewVector(2, data.msoxwsei_key_and_value);
+	if unlikely(!new_pair)
+		goto err;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_append))(self, new_pair);
+	Dee_Decref_unlikely(new_pair);
+	return result;
+err:
+	return -1;
 }
 
 
@@ -19554,6 +19705,42 @@ err_old_value:
 	return NULL;
 }
 
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__map_setold_ex__with__seq_enumerate__and__seq_operator_setitem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	Dee_ssize_t status;
+	struct map_setold_ex_with_seq_enumerate_data data;
+	data.msoxwse_seq = self;
+	data.msoxwse_key_and_value[0] = key;
+	data.msoxwse_key_and_value[1] = value;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &map_setold_ex_with_seq_enumerate_cb, &data);
+	if (status == MAP_SETOLD_EX_WITH_SEQ_ENUMERATE__SUCCESS)
+		return data.msoxwse_key_and_value[1];
+	ASSERT(status == 0 || status == -1);
+	if unlikely(status < 0)
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__map_setold_ex__with__seq_enumerate_index__and__seq_operator_setitem_index(DeeObject *self, DeeObject *key, DeeObject *value) {
+	Dee_ssize_t status;
+	struct map_setold_ex_with_seq_enumerate_index_data data;
+	data.msoxwsei_seq = self;
+	data.msoxwsei_key_and_value[0] = key;
+	data.msoxwsei_key_and_value[1] = value;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &map_setold_ex_with_seq_enumerate_index_cb, &data, 0, (size_t)-1);
+	if (status == MAP_SETOLD_EX_WITH_SEQ_ENUMERATE_INDEX__SUCCESS)
+		return data.msoxwsei_key_and_value[1];
+	ASSERT(status == 0 || status == -1);
+	if unlikely(status < 0)
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
 
 /* map_setnew */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -19797,6 +19984,27 @@ err:
 	return NULL;
 }
 
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__map_setnew_ex__with__map_operator_trygetitem__and__seq_append(DeeObject *self, DeeObject *key, DeeObject *value) {
+	int append_status;
+	DREF DeeObject *new_pair;
+	DREF DeeObject *old_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_trygetitem))(self, key);
+	if unlikely(!old_value)
+		goto err;
+	if (old_value != ITER_DONE)
+		return old_value;
+	new_pair = DeeTuple_PackPair(key, value);
+	if unlikely(!new_pair)
+		goto err;
+	append_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_append))(self, new_pair);
+	Dee_Decref_unlikely(new_pair);
+	if unlikely(append_status)
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
 
 /* map_setdefault */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -20024,6 +20232,110 @@ err:
 	return -1;
 }
 
+#ifndef DEFINED_map_pop_with_seq_enumerate_cb
+#define DEFINED_map_pop_with_seq_enumerate_cb
+#define MAP_POP_WITH_SEQ_ENUMERATE__SUCCESS (-2)
+struct map_pop_with_seq_enumerate_data {
+	DeeObject *mpwse_seq; /* [1..1] Sequence to pop "mpwse_key" from */
+	DeeObject *mpwse_key; /* [1..1] Key to pop from "<mpwse_seq> as Mapping" */
+};
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+map_pop_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
+	int status;
+	DREF DeeObject *this_key_and_value[2];
+	struct map_pop_with_seq_enumerate_data *data;
+	data = (struct map_pop_with_seq_enumerate_data *)arg;
+	if (value) {
+		if (DeeObject_Unpack(value, 2, this_key_and_value))
+			goto err;
+		status = DeeObject_TryCompareEq(data->mpwse_key, this_key_and_value[0]);
+		Dee_Decref(this_key_and_value[0]);
+		if unlikely(status == Dee_COMPARE_ERR)
+			goto err_this_value;
+		if (status == 0) {
+			/* Found it! */
+			status = DeeObject_InvokeMethodHint(seq_operator_delitem, data->mpwse_seq, index);
+			if unlikely(status < 0)
+				goto err_this_value;
+			data->mpwse_key = this_key_and_value[1]; /* Inherit reference */
+			return MAP_POP_WITH_SEQ_ENUMERATE__SUCCESS;
+		}
+		Dee_Decref(this_key_and_value[1]);
+	}
+	return 0;
+err_this_value:
+	Dee_Decref(this_key_and_value[1]);
+err:
+	return -1;
+}
+#endif /* !DEFINED_map_pop_with_seq_enumerate_cb */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__map_remove__with__seq_enumerate__and__seq_operator_delitem(DeeObject *self, DeeObject *key) {
+	Dee_ssize_t status;
+	struct map_pop_with_seq_enumerate_data data;
+	data.mpwse_seq = self;
+	data.mpwse_key = key;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &map_pop_with_seq_enumerate_cb, &data);
+	if (status == MAP_POP_WITH_SEQ_ENUMERATE__SUCCESS) {
+		Dee_Decref(data.mpwse_key);
+		return 1;
+	}
+	ASSERT(status == 0 || status == -1);
+	return (int)status;
+}
+
+#ifndef DEFINED_map_pop_with_seq_enumerate_index_cb
+#define DEFINED_map_pop_with_seq_enumerate_index_cb
+#define MAP_POP_WITH_SEQ_ENUMERATE_INDEX__SUCCESS (-2)
+struct map_pop_with_seq_enumerate_index_data {
+	DeeObject *mpwsei_seq; /* [1..1] Sequence to pop "mpwsei_key" from */
+	DeeObject *mpwsei_key; /* [1..1] Key to pop from "<mpwsei_seq> as Mapping" */
+};
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+map_pop_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	int status;
+	DREF DeeObject *this_key_and_value[2];
+	struct map_pop_with_seq_enumerate_index_data *data;
+	data = (struct map_pop_with_seq_enumerate_index_data *)arg;
+	if (value) {
+		if (DeeObject_Unpack(value, 2, this_key_and_value))
+			goto err;
+		status = DeeObject_TryCompareEq(data->mpwsei_key, this_key_and_value[0]);
+		Dee_Decref(this_key_and_value[0]);
+		if unlikely(status == Dee_COMPARE_ERR)
+			goto err_this_value;
+		if (status == 0) {
+			/* Found it! */
+			status = DeeObject_InvokeMethodHint(seq_operator_delitem_index, data->mpwsei_seq, index);
+			if unlikely(status < 0)
+				goto err_this_value;
+			data->mpwsei_key = this_key_and_value[1]; /* Inherit reference */
+			return MAP_POP_WITH_SEQ_ENUMERATE_INDEX__SUCCESS;
+		}
+		Dee_Decref(this_key_and_value[1]);
+	}
+	return 0;
+err_this_value:
+	Dee_Decref(this_key_and_value[1]);
+err:
+	return -1;
+}
+#endif /* !DEFINED_map_pop_with_seq_enumerate_index_cb */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__map_remove__with__seq_enumerate_index__and__seq_operator_delitem_index(DeeObject *self, DeeObject *key) {
+	Dee_ssize_t status;
+	struct map_pop_with_seq_enumerate_index_data data;
+	data.mpwsei_seq = self;
+	data.mpwsei_key = key;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &map_pop_with_seq_enumerate_index_cb, &data, 0, (size_t)-1);
+	if (status == MAP_POP_WITH_SEQ_ENUMERATE_INDEX__SUCCESS) {
+		Dee_Decref(data.mpwsei_key);
+		return 1;
+	}
+	ASSERT(status == 0 || status == -1);
+	return (int)status;
+}
+
 
 /* map_removekeys */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -20144,6 +20456,40 @@ err:
 	return NULL;
 }
 
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__map_pop__with__seq_enumerate__and__seq_operator_delitem(DeeObject *self, DeeObject *key) {
+	Dee_ssize_t status;
+	struct map_pop_with_seq_enumerate_data data;
+	data.mpwse_seq = self;
+	data.mpwse_key = key;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &map_pop_with_seq_enumerate_cb, &data);
+	if (status == MAP_POP_WITH_SEQ_ENUMERATE__SUCCESS)
+		return data.mpwse_key;
+	ASSERT(status == 0 || status == -1);
+	if unlikely(status < 0)
+		goto err;
+	err_unknown_key(self, key);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__map_pop__with__seq_enumerate_index__and__seq_operator_delitem_index(DeeObject *self, DeeObject *key) {
+	Dee_ssize_t status;
+	struct map_pop_with_seq_enumerate_index_data data;
+	data.mpwsei_seq = self;
+	data.mpwsei_key = key;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &map_pop_with_seq_enumerate_index_cb, &data, 0, (size_t)-1);
+	if (status == MAP_POP_WITH_SEQ_ENUMERATE_INDEX__SUCCESS)
+		return data.mpwsei_key;
+	ASSERT(status == 0 || status == -1);
+	if unlikely(status < 0)
+		goto err;
+	err_unknown_key(self, key);
+err:
+	return NULL;
+}
+
 
 /* map_pop_with_default */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -20197,6 +20543,40 @@ default__map_pop_with_default__with__map_operator_trygetitem__and__map_operator_
 	return result;
 err_r:
 	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__map_pop_with_default__with__seq_enumerate__and__seq_operator_delitem(DeeObject *self, DeeObject *key, DeeObject *default_) {
+	Dee_ssize_t status;
+	struct map_pop_with_seq_enumerate_data data;
+	data.mpwse_seq = self;
+	data.mpwse_key = key;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &map_pop_with_seq_enumerate_cb, &data);
+	if (status == MAP_POP_WITH_SEQ_ENUMERATE__SUCCESS)
+		return data.mpwse_key;
+	ASSERT(status == 0 || status == -1);
+	if unlikely(status < 0)
+		goto err;
+	return_reference_(default_);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__map_pop_with_default__with__seq_enumerate_index__and__seq_operator_delitem_index(DeeObject *self, DeeObject *key, DeeObject *default_) {
+	Dee_ssize_t status;
+	struct map_pop_with_seq_enumerate_index_data data;
+	data.mpwsei_seq = self;
+	data.mpwsei_key = key;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &map_pop_with_seq_enumerate_index_cb, &data, 0, (size_t)-1);
+	if (status == MAP_POP_WITH_SEQ_ENUMERATE_INDEX__SUCCESS)
+		return data.mpwsei_key;
+	ASSERT(status == 0 || status == -1);
+	if unlikely(status < 0)
+		goto err;
+	return_reference_(default_);
 err:
 	return NULL;
 }
@@ -20275,6 +20655,19 @@ default__map_popitem__with__seq_trygetfirst__and__map_operator_delitem(DeeObject
 	return result;
 err_r:
 	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__map_popitem__with__seq_pop(DeeObject *self) {
+	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_pop))(self, -1);
+	if unlikely(!result) {
+		if (DeeError_Catch(&DeeError_IndexError))
+			return_none;
+		goto err;
+	}
+	return result;
 err:
 	return NULL;
 }

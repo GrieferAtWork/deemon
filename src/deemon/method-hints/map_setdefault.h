@@ -88,6 +88,6 @@ map_setdefault = {
 		return &$with__map_setnew__and__map_operator_getitem;
 	if (map_setnew_ex == &default__map_setnew_ex__with__map_operator_trygetitem__and__map_operator_setitem)
 		return &$with__map_operator_trygetitem__and__map_operator_setitem;
-	if (map_setnew_ex == &default__map_setnew_ex__with__map_operator_trygetitem__and__map_operator_setitem)
+	if (map_setnew_ex)
 		return &$with__map_setnew_ex;
 };

@@ -78,16 +78,35 @@ err_r:
 	Dee_Decref(result);
 err:
 	return NULL;
+}}
+%{$with__seq_pop = {
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_pop, self, -1);
+	if unlikely(!result) {
+		if (DeeError_Catch(&DeeError_IndexError))
+			return_none;
+		goto err;
+	}
+	return result;
+err:
+	return NULL;
 }} {
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
 
 map_popitem = {
 	DeeMH_map_operator_delitem_t map_operator_delitem = REQUIRE(map_operator_delitem);
-	if (map_operator_delitem == &default__map_operator_delitem__empty)
-		return &$empty;
 	if (map_operator_delitem) {
 		DeeMH_seq_trygetfirst_t seq_trygetfirst;
+		if (map_operator_delitem == &default__map_operator_delitem__empty)
+			return &$empty;
+		if (map_operator_delitem == &default__map_operator_delitem__with__map_remove) {
+			DeeMH_map_remove_t map_remove = REQUIRE(map_remove);
+			if (map_remove == &default__map_remove__empty)
+				return &$empty;
+			if (map_remove == &default__map_remove__with__seq_enumerate_index__and__seq_operator_delitem_index ||
+			    map_remove == &default__map_remove__with__seq_enumerate__and__seq_operator_delitem)
+				return &$with__seq_pop;
+		}
 		if (REQUIRE_NODEFAULT(seq_trygetlast))
 			return &$with__seq_trygetlast__and__map_operator_delitem;
 		seq_trygetfirst = REQUIRE(seq_trygetfirst);
@@ -99,4 +118,6 @@ map_popitem = {
 			return &$with__seq_trygetfirst__and__map_operator_delitem;
 		}
 	}
+	if (REQUIRE(seq_pop))
+		return &$with__seq_pop;
 };

@@ -2702,11 +2702,11 @@ mh_select_set_remove(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		if ((DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size) != &default__seq_operator_size__unsupported)
 			return &default__set_remove__with__seq_operator_size__and__set_removeall;
 	}
+	if ((DeeMH_seq_removeall_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_removeall))
+		return &default__set_remove__with__seq_removeall;
 	if ((DeeMH_map_operator_delitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_delitem) &&
 	    (DeeMH_map_operator_trygetitem_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_operator_trygetitem) != &default__map_operator_trygetitem__unsupported)
 		return &default__set_remove__with__map_operator_trygetitem__and__map_operator_delitem;
-	if ((DeeMH_seq_removeall_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_removeall))
-		return &default__set_remove__with__seq_removeall;
 	return NULL;
 }
 
@@ -3038,11 +3038,8 @@ mh_select_map_operator_hasitem_string_len_hash(DeeTypeObject *self, DeeTypeObjec
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_delitem_t DCALL
 mh_select_map_operator_delitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_delitem_t seq_operator_delitem;
 	DeeMH_map_enumerate_t map_enumerate;
-	if ((DeeMH_map_remove_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_remove))
-		return &default__map_operator_delitem__with__map_remove;
-	if ((DeeMH_map_removekeys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_removekeys))
-		return &default__map_operator_delitem__with__map_removekeys;
 	/*if (REQUIRE_NODEFAULT(map_operator_delitem_string_len_hash)) {
 		return REQUIRE_NODEFAULT(map_operator_delitem_index)
 		       ? &$with__map_operator_delitem_index__and__map_operator_delitem_string_len_hash
@@ -3054,6 +3051,19 @@ mh_select_map_operator_delitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	} else if (REQUIRE_NODEFAULT(map_operator_delitem_index)) {
 		return &$with__map_operator_delitem_index;
 	}*/
+	if ((DeeMH_map_remove_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_remove))
+		return &default__map_operator_delitem__with__map_remove;
+	if ((DeeMH_map_pop_with_default_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_pop_with_default))
+		return &default__map_operator_delitem__with__map_pop_with_default;
+	if ((DeeMH_map_removekeys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_removekeys))
+		return &default__map_operator_delitem__with__map_removekeys;
+	seq_operator_delitem = (DeeMH_seq_operator_delitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delitem);
+	if (seq_operator_delitem) {
+		if (seq_operator_delitem == &default__seq_operator_delitem__empty)
+			return &default__map_operator_delitem__empty;
+		if ((DeeMH_seq_enumerate_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_enumerate) != &default__seq_enumerate__unsupported)
+			return &default__map_operator_delitem__with__map_remove; /* See selector in `map_remove' */
+	}
 	map_enumerate = (DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)
 		return &default__map_operator_delitem__empty;
@@ -3093,6 +3103,7 @@ mh_select_map_operator_delitem_string_len_hash(DeeTypeObject *self, DeeTypeObjec
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_setitem_t DCALL
 mh_select_map_operator_setitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_map_enumerate_t map_enumerate;
+	DeeMH_seq_operator_setitem_t seq_operator_setitem;
 	/*if (REQUIRE_NODEFAULT(map_operator_setitem_string_len_hash)) {
 		return REQUIRE_NODEFAULT(map_operator_setitem_index)
 		       ? &$with__map_operator_setitem_index__and__map_operator_setitem_string_len_hash
@@ -3104,6 +3115,18 @@ mh_select_map_operator_setitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	} else if (REQUIRE_NODEFAULT(map_operator_setitem_index)) {
 		return &$with__map_operator_setitem_index;
 	}*/
+	if (((seq_operator_setitem = (DeeMH_seq_operator_setitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setitem)) != NULL &&
+	     ((DeeMH_seq_append_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_append) != &default__seq_append__unsupported)) ||
+	    (((DeeMH_seq_append_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_append) != NULL) &&
+	     (seq_operator_setitem = (DeeMH_seq_operator_setitem_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_setitem)) != &default__seq_operator_setitem__unsupported)) {
+		if (seq_operator_setitem == &default__seq_operator_setitem__empty)
+			return &default__map_operator_setitem__empty;
+		if (seq_operator_setitem == &default__seq_operator_setitem__with__seq_operator_setitem_index &&
+		    (DeeMH_seq_enumerate_index_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_enumerate_index) != &default__seq_enumerate_index__unsupported)
+			return &default__map_operator_setitem__with__seq_enumerate_index__and__seq_operator_setitem_index__and__seq_append;
+		if ((DeeMH_seq_enumerate_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_enumerate) != &default__seq_enumerate__unsupported)
+			return &default__map_operator_setitem__with__seq_enumerate__and__seq_operator_setitem__and__seq_append;
+	}
 	map_enumerate = (DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)
 		return &default__map_operator_setitem__empty;
@@ -3455,11 +3478,29 @@ mh_select_map_setold(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_setold_ex_t DCALL
 mh_select_map_setold_ex(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	if ((DeeMH_map_operator_trygetitem_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_operator_trygetitem) != &default__map_operator_trygetitem__unsupported) {
-		if ((DeeMH_map_setold_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_setold))
-			return &default__map_setold_ex__with__map_operator_trygetitem__and__map_setold;
-		if ((DeeMH_map_operator_setitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_setitem))
+	DeeMH_map_operator_setitem_t map_operator_setitem;
+	DeeMH_seq_operator_setitem_t seq_operator_setitem;
+	if ((DeeMH_map_setold_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_setold) &&
+	    (DeeMH_map_operator_trygetitem_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_operator_trygetitem) != &default__map_operator_trygetitem__unsupported)
+		return &default__map_setold_ex__with__map_operator_trygetitem__and__map_setold;
+	map_operator_setitem = (DeeMH_map_operator_setitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_setitem);
+	if (map_operator_setitem) {
+		if (map_operator_setitem == &default__map_operator_setitem__with__seq_enumerate_index__and__seq_operator_setitem_index__and__seq_append)
+			return &default__map_setold_ex__with__seq_enumerate_index__and__seq_operator_setitem_index;
+		if (map_operator_setitem == &default__map_operator_setitem__with__seq_enumerate__and__seq_operator_setitem__and__seq_append)
+			return &default__map_setold_ex__with__seq_enumerate__and__seq_operator_setitem;
+		if ((DeeMH_map_operator_trygetitem_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_operator_trygetitem) != &default__map_operator_trygetitem__unsupported)
 			return &default__map_setold_ex__with__map_operator_trygetitem__and__map_operator_setitem;
+	}
+	seq_operator_setitem = (DeeMH_seq_operator_setitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setitem);
+	if (seq_operator_setitem) {
+		if (seq_operator_setitem == &default__seq_operator_setitem__empty)
+			return &default__map_setold_ex__empty;
+		if (seq_operator_setitem == &default__seq_operator_setitem__with__seq_operator_setitem_index &&
+		    (DeeMH_seq_enumerate_index_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_enumerate_index) != &default__seq_enumerate_index__unsupported)
+			return &default__map_setold_ex__with__seq_enumerate_index__and__seq_operator_setitem_index;
+		if ((DeeMH_seq_enumerate_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_enumerate) != &default__seq_enumerate__unsupported)
+			return &default__map_setold_ex__with__seq_enumerate__and__seq_operator_setitem;
 	}
 	return NULL;
 }
@@ -3481,12 +3522,20 @@ mh_select_map_setnew(DeeTypeObject *self, DeeTypeObject *orig_type) {
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_setnew_ex_t DCALL
 mh_select_map_setnew_ex(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if ((DeeMH_map_operator_trygetitem_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_operator_trygetitem) != &default__map_operator_trygetitem__unsupported) {
+		DeeMH_map_operator_setitem_t map_operator_setitem;
 		if ((DeeMH_map_setnew_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_setnew))
 			return &default__map_setnew_ex__with__map_operator_trygetitem__and__map_setnew;
 		if ((DeeMH_map_setdefault_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_setdefault))
 			return &default__map_setnew_ex__with__map_operator_trygetitem__and__map_setdefault;
-		if ((DeeMH_map_operator_setitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_setitem))
+		map_operator_setitem = (DeeMH_map_operator_setitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_setitem);
+		if (map_operator_setitem) {
+			if (map_operator_setitem == &default__map_operator_setitem__with__seq_enumerate__and__seq_operator_setitem__and__seq_append ||
+			    map_operator_setitem == &default__map_operator_setitem__with__seq_enumerate_index__and__seq_operator_setitem_index__and__seq_append)
+				return &default__map_setnew_ex__with__map_operator_trygetitem__and__seq_append;
 			return &default__map_setnew_ex__with__map_operator_trygetitem__and__map_operator_setitem;
+		}
+		if ((DeeMH_seq_append_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_append))
+			return &default__map_setnew_ex__with__map_operator_trygetitem__and__seq_append;
 	}
 	return NULL;
 }
@@ -3500,7 +3549,7 @@ mh_select_map_setdefault(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		return &default__map_setdefault__with__map_setnew__and__map_operator_getitem;
 	if (map_setnew_ex == &default__map_setnew_ex__with__map_operator_trygetitem__and__map_operator_setitem)
 		return &default__map_setdefault__with__map_operator_trygetitem__and__map_operator_setitem;
-	if (map_setnew_ex == &default__map_setnew_ex__with__map_operator_trygetitem__and__map_operator_setitem)
+	if (map_setnew_ex)
 		return &default__map_setdefault__with__map_setnew_ex;
 	return NULL;
 }
@@ -3520,14 +3569,27 @@ mh_select_map_update(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_remove_t DCALL
 mh_select_map_remove(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_delitem_t seq_operator_delitem;
 	DeeMH_map_operator_delitem_t map_operator_delitem = (DeeMH_map_operator_delitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_delitem);
 	if (map_operator_delitem == &default__map_operator_delitem__empty)
 		return &default__map_remove__empty;
-	if (map_operator_delitem) {
+	if (map_operator_delitem != NULL &&
+	    map_operator_delitem != &default__map_operator_delitem__with__map_remove) {
 		if ((DeeMH_map_operator_bounditem_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_operator_bounditem) != &default__map_operator_bounditem__unsupported)
 			return &default__map_remove__with__map_operator_bounditem__and__map_operator_delitem;
 		if ((DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size) != &default__seq_operator_size__unsupported)
 			return &default__map_remove__with__seq_operator_size__and__map_operator_delitem;
+	}
+
+	seq_operator_delitem = (DeeMH_seq_operator_delitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delitem);
+	if (seq_operator_delitem) {
+		if (seq_operator_delitem == &default__seq_operator_delitem__empty)
+			return &default__map_remove__empty;
+		if (seq_operator_delitem == &default__seq_operator_delitem__with__seq_operator_delitem_index &&
+		    (DeeMH_seq_enumerate_index_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_enumerate_index) != &default__seq_enumerate_index__unsupported)
+			return &default__map_remove__with__seq_enumerate_index__and__seq_operator_delitem_index;
+		if ((DeeMH_seq_enumerate_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_enumerate) != &default__seq_enumerate__unsupported)
+			return &default__map_remove__with__seq_enumerate__and__seq_operator_delitem;
 	}
 	return NULL;
 }
@@ -3546,6 +3608,15 @@ mh_select_map_pop(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_map_operator_delitem_t map_operator_delitem = (DeeMH_map_operator_delitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_delitem);
 	if (map_operator_delitem == &default__map_operator_delitem__empty)
 		return &default__map_pop__empty;
+	if (map_operator_delitem == &default__map_operator_delitem__with__map_remove) {
+		DeeMH_map_remove_t map_remove = (DeeMH_map_remove_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_remove);
+		if (map_remove == &default__map_remove__empty)
+			return &default__map_pop__empty;
+		if (map_remove == &default__map_remove__with__seq_enumerate_index__and__seq_operator_delitem_index)
+			return &default__map_pop__with__seq_enumerate_index__and__seq_operator_delitem_index;
+		if (map_remove == &default__map_remove__with__seq_enumerate__and__seq_operator_delitem)
+			return &default__map_pop__with__seq_enumerate__and__seq_operator_delitem;
+	}
 	if (map_operator_delitem &&
 	    (DeeMH_map_operator_getitem_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_operator_getitem) != &default__map_operator_getitem__unsupported)
 		return &default__map_pop__with__map_operator_getitem__and__map_operator_delitem;;
@@ -3557,6 +3628,15 @@ mh_select_map_pop_with_default(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_map_operator_delitem_t map_operator_delitem = (DeeMH_map_operator_delitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_delitem);
 	if (map_operator_delitem == &default__map_operator_delitem__empty)
 		return &default__map_pop_with_default__empty;
+	if (map_operator_delitem == &default__map_operator_delitem__with__map_remove) {
+		DeeMH_map_remove_t map_remove = (DeeMH_map_remove_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_remove);
+		if (map_remove == &default__map_remove__empty)
+			return &default__map_pop_with_default__empty;
+		if (map_remove == &default__map_remove__with__seq_enumerate_index__and__seq_operator_delitem_index)
+			return &default__map_pop_with_default__with__seq_enumerate_index__and__seq_operator_delitem_index;
+		if (map_remove == &default__map_remove__with__seq_enumerate__and__seq_operator_delitem)
+			return &default__map_pop_with_default__with__seq_enumerate__and__seq_operator_delitem;
+	}
 	if (map_operator_delitem &&
 	    (DeeMH_map_operator_trygetitem_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_operator_trygetitem) != &default__map_operator_trygetitem__unsupported)
 		return &default__map_pop_with_default__with__map_operator_trygetitem__and__map_operator_delitem;;
@@ -3566,10 +3646,18 @@ mh_select_map_pop_with_default(DeeTypeObject *self, DeeTypeObject *orig_type) {
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_popitem_t DCALL
 mh_select_map_popitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_map_operator_delitem_t map_operator_delitem = (DeeMH_map_operator_delitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_delitem);
-	if (map_operator_delitem == &default__map_operator_delitem__empty)
-		return &default__map_popitem__empty;
 	if (map_operator_delitem) {
 		DeeMH_seq_trygetfirst_t seq_trygetfirst;
+		if (map_operator_delitem == &default__map_operator_delitem__empty)
+			return &default__map_popitem__empty;
+		if (map_operator_delitem == &default__map_operator_delitem__with__map_remove) {
+			DeeMH_map_remove_t map_remove = (DeeMH_map_remove_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_remove);
+			if (map_remove == &default__map_remove__empty)
+				return &default__map_popitem__empty;
+			if (map_remove == &default__map_remove__with__seq_enumerate_index__and__seq_operator_delitem_index ||
+			    map_remove == &default__map_remove__with__seq_enumerate__and__seq_operator_delitem)
+				return &default__map_popitem__with__seq_pop;
+		}
 		if ((DeeMH_seq_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_trygetlast))
 			return &default__map_popitem__with__seq_trygetlast__and__map_operator_delitem;
 		seq_trygetfirst = (DeeMH_seq_trygetfirst_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_trygetfirst);
@@ -3581,6 +3669,8 @@ mh_select_map_popitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 			return &default__map_popitem__with__seq_trygetfirst__and__map_operator_delitem;
 		}
 	}
+	if ((DeeMH_seq_pop_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_pop))
+		return &default__map_popitem__with__seq_pop;
 	return NULL;
 }
 /*[[[end]]]*/

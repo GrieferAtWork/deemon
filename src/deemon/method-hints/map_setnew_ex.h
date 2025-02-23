@@ -95,6 +95,25 @@ err:
 	return ITER_DONE;
 err:
 	return NULL;
+}}
+%{$with__map_operator_trygetitem__and__seq_append = {
+	int append_status;
+	DREF DeeObject *new_pair;
+	DREF DeeObject *old_value = CALL_DEPENDENCY(map_operator_trygetitem, self, key);
+	if unlikely(!old_value)
+		goto err;
+	if (old_value != ITER_DONE)
+		return old_value;
+	new_pair = DeeTuple_PackPair(key, value);
+	if unlikely(!new_pair)
+		goto err;
+	append_status = CALL_DEPENDENCY(seq_append, self, new_pair);
+	Dee_Decref_unlikely(new_pair);
+	if unlikely(append_status)
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
 }} {
 	int temp;
 	DeeObject *args[2];
@@ -124,11 +143,19 @@ err:
 
 map_setnew_ex = {
 	if (REQUIRE_ANY(map_operator_trygetitem) != &default__map_operator_trygetitem__unsupported) {
+		DeeMH_map_operator_setitem_t map_operator_setitem;
 		if (REQUIRE_NODEFAULT(map_setnew))
 			return &$with__map_operator_trygetitem__and__map_setnew;
 		if (REQUIRE_NODEFAULT(map_setdefault))
 			return &$with__map_operator_trygetitem__and__map_setdefault;
-		if (REQUIRE(map_operator_setitem))
+		map_operator_setitem = REQUIRE(map_operator_setitem);
+		if (map_operator_setitem) {
+			if (map_operator_setitem == &default__map_operator_setitem__with__seq_enumerate__and__seq_operator_setitem__and__seq_append ||
+			    map_operator_setitem == &default__map_operator_setitem__with__seq_enumerate_index__and__seq_operator_setitem_index__and__seq_append)
+				return &$with__map_operator_trygetitem__and__seq_append;
 			return &$with__map_operator_trygetitem__and__map_operator_setitem;
+		}
+		if (REQUIRE(seq_append))
+			return &$with__map_operator_trygetitem__and__seq_append;
 	}
 };

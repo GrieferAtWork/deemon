@@ -44,6 +44,15 @@ __map_delitem__.map_operator_delitem([[nonnull]] DeeObject *self,
 		result = 0;
 	return result;
 }}
+%{$with__map_pop_with_default = {
+	DREF DeeObject *oldvalue = CALL_DEPENDENCY(map_pop_with_default, self, key, Dee_None);
+	if unlikely(!oldvalue)
+		goto err;
+	Dee_Decref(oldvalue);
+	return 0;
+err:
+	return -1;
+}}
 %{$with__map_removekeys = {
 	int result;
 	DREF DeeTupleObject *keys = DeeTuple_NewUninitialized(1);
@@ -122,11 +131,8 @@ err:
 
 
 map_operator_delitem = {
+	DeeMH_seq_operator_delitem_t seq_operator_delitem;
 	DeeMH_map_enumerate_t map_enumerate;
-	if (REQUIRE_NODEFAULT(map_remove))
-		return &$with__map_remove;
-	if (REQUIRE_NODEFAULT(map_removekeys))
-		return &$with__map_removekeys;
 	/*if (REQUIRE_NODEFAULT(map_operator_delitem_string_len_hash)) {
 		return REQUIRE_NODEFAULT(map_operator_delitem_index)
 		       ? &$with__map_operator_delitem_index__and__map_operator_delitem_string_len_hash
@@ -138,6 +144,19 @@ map_operator_delitem = {
 	} else if (REQUIRE_NODEFAULT(map_operator_delitem_index)) {
 		return &$with__map_operator_delitem_index;
 	}*/
+	if (REQUIRE_NODEFAULT(map_remove))
+		return &$with__map_remove;
+	if (REQUIRE_NODEFAULT(map_pop_with_default))
+		return &$with__map_pop_with_default;
+	if (REQUIRE_NODEFAULT(map_removekeys))
+		return &$with__map_removekeys;
+	seq_operator_delitem = REQUIRE(seq_operator_delitem);
+	if (seq_operator_delitem) {
+		if (seq_operator_delitem == &default__seq_operator_delitem__empty)
+			return &$empty;
+		if (REQUIRE_ANY(seq_enumerate) != &default__seq_enumerate__unsupported)
+			return &$with__map_remove; /* See selector in `map_remove' */
+	}
 	map_enumerate = REQUIRE(map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)
 		return &$empty;
