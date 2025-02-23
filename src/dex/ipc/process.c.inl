@@ -4246,6 +4246,7 @@ process_get_exe(Process *__restrict self) {
 		result = ipc_nt_GetModuleFileName(NULL);
 		if unlikely(!result)
 			goto err;
+		Dee_UntrackAlloc(result); /* Not a leak! */
 	} else {
 		HANDLE hProcess;
 		hProcess = process_nt_gethandle_or_unlock(self);
@@ -4277,13 +4278,19 @@ process_get_exe(Process *__restrict self) {
 			ipc_unimplemented();
 			goto err;
 		}
+#ifndef NDEBUG
+		if (atomic_read(&self->p_state) & PROCESS_FLAG_SELF)
+			Dee_UntrackAlloc(result); /* Not a leak! */
+#endif /* !NDEBUG */
 	}
 #else /* ... */
-	Process_LockEndWrite(self);
 	if (self->p_state & PROCESS_FLAG_SELF) {
+		Process_LockEndWrite(self);
 		result = (DREF DeeObject *)DeeModule_GetDeemon()->mo_name;
 		Dee_Incref(result);
+		/*Dee_UntrackAlloc(result);*/
 	} else {
+		Process_LockEndWrite(self);
 		ipc_unimplemented();
 		goto err;
 	}
@@ -4469,6 +4476,7 @@ process_get_argv(Process *__restrict self)
 		                           STRING_ERROR_FIGNORE);
 		if unlikely(!result)
 			goto err;
+		Dee_UntrackAlloc(result); /* Not a leak! */
 	} else {
 		HANDLE hProcess;
 		hProcess = process_nt_gethandle_or_unlock(self);
@@ -4508,6 +4516,10 @@ process_get_argv(Process *__restrict self)
 		                                                               DeeBytes_SIZE(cmdline_content));
 		if unlikely(!result)
 			goto err;
+#ifndef NDEBUG
+		if (atomic_read(&self->p_state) & PROCESS_FLAG_SELF)
+			Dee_UntrackAlloc(result); /* Not a leak! */
+#endif /* !NDEBUG */
 	}
 #else /* ... */
 #ifdef ipc_Process_USE_cmdline
@@ -4523,6 +4535,9 @@ process_get_argv(Process *__restrict self)
 		Dee_Incref(name);
 		DeeTuple_SET(result, 0, name);
 		Dee_Movrefv(DeeTuple_ELEM(result) + 1, DeeTuple_ELEM(argv), DeeTuple_SIZE(argv));
+#ifndef NDEBUG
+		Dee_UntrackAlloc(result); /* Not a leak! */
+#endif /* !NDEBUG */
 	} else {
 		ipc_unimplemented();
 		goto err;
@@ -4828,7 +4843,7 @@ process_get_pwd(Process *__restrict self) {
 	/* Special case: current process */
 	if (self->p_state & PROCESS_FLAG_SELF) {
 		Process_LockEndWrite(self);
-		return DeeModule_CallExternStringf("posix", "getcwd", "");
+		return DeeModule_CallExternString("posix", "getcwd", 0, NULL);
 	}
 
 	/* OS-specific part... */
