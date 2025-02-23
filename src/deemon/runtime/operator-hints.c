@@ -1409,6 +1409,10 @@ type_tno_tryset(DeeTypeObject const *__restrict self,
 				table = atomic_read((byte_t **)table);
 			} else {
 #ifndef NDEBUG
+				/* If the table was allocated for a static (non-heap) type,
+				 * then untrack it from the memory leak detector, since we
+				 * don't care that it (most definitely) won't be freed on
+				 * program exit. */
 				if (!(self->tp_flags & TP_FHEAP))
 					Dee_UntrackAlloc(new_table);
 #endif /* !NDEBUG */

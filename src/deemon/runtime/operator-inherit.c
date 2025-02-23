@@ -1115,7 +1115,7 @@ DeeType_Optimize_tp_inplace_xor(DeeTypeObject *__restrict dst, DeeType_tp_inplac
  * check if that class has been inherited from a direct base of `self'.
  *
  * If so, return that base-type. If not, return `NULL'. */
-INTERN WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeType_GetOpClassOrigin(DeeTypeObject *__restrict self, uint16_t oi_class) {
 	DeeTypeMRO mro;
 	void *cls = *(void **)((byte_t *)self + oi_class);
