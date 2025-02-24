@@ -1312,11 +1312,6 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_operator_trygetitem__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(index)) {
-	return ITER_DONE;
-}
-
 
 /* seq_operator_trygetitem_index */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1333,11 +1328,6 @@ default__seq_operator_trygetitem_index__with__seq_operator_getitem_index(DeeObje
 			result = ITER_DONE;
 	}
 	return result;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_operator_trygetitem_index__empty(DeeObject *__restrict UNUSED(self), size_t UNUSED(index)) {
-	return ITER_DONE;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -6347,11 +6337,6 @@ err:
 
 /* seq_trygetfirst */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetfirst__empty(DeeObject *__restrict UNUSED(self)) {
-	return ITER_DONE;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_trygetfirst__with__seq_getfirst(DeeObject *__restrict self) {
 	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_getfirst))(self);
 	if (!result && (DeeError_Catch(&DeeError_UnboundAttribute) ||
@@ -8989,11 +8974,6 @@ default__seq_sum__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum__empty(DeeObject *__restrict UNUSED(self)) {
-	return_none;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_sum__with__seq_operator_foreach(DeeObject *__restrict self) {
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
@@ -9032,11 +9012,6 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_sum_with_range__unsupported(DeeObject *__restrict self, size_t start, size_t end) {
 	err_seq_unsupportedf(self, "__seq_sum__(%" PRFuSIZ ", %" PRFuSIZ ")", start, end);
 	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum_with_range__empty(DeeObject *__restrict UNUSED(self), size_t UNUSED(start), size_t UNUSED(end)) {
-	return_none;
 }
 
 #ifndef DEFINED_seq_sum_enumerate_cb
@@ -10851,11 +10826,6 @@ INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_find__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	err_seq_unsupportedf(self, "__seq_find__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 	return (size_t)Dee_COMPARE_ERR;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-default__seq_find__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end)) {
-	return (size_t)-1;
 }
 
 #ifndef DEFINED_seq_find_cb
@@ -13749,11 +13719,6 @@ INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_bfind__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 	return (size_t)Dee_COMPARE_ERR;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-default__seq_bfind__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end)) {
-	return (size_t)-1;
 }
 
 #ifndef DEFINED_overflowsafe_mid
@@ -16848,11 +16813,6 @@ default__map_operator_trygetitem__with__map_operator_getitem(DeeObject *self, De
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__map_operator_trygetitem__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(key)) {
-	return ITER_DONE;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_trygetitem__with__map_enumerate(DeeObject *self, DeeObject *key) {
 	Dee_ssize_t status;
 	struct default_map_getitem_with_enumerate_data data;
@@ -16916,11 +16876,6 @@ default__map_operator_trygetitem_index__with__map_operator_trygetitem(DeeObject 
 	return result;
 err:
 	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__map_operator_trygetitem_index__empty(DeeObject *UNUSED(self), size_t UNUSED(key)) {
-	return ITER_DONE;
 }
 
 
@@ -17029,11 +16984,6 @@ default__map_operator_trygetitem_string_hash__with__map_operator_trygetitem(DeeO
 	return result;
 err:
 	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__map_operator_trygetitem_string_hash__empty(DeeObject *UNUSED(self), char const *UNUSED(key), Dee_hash_t UNUSED(hash)) {
-	return ITER_DONE;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -17161,11 +17111,6 @@ default__map_operator_trygetitem_string_len_hash__with__map_operator_trygetitem(
 	return result;
 err:
 	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__map_operator_trygetitem_string_len_hash__empty(DeeObject *UNUSED(self), char const *UNUSED(key), size_t UNUSED(keylen), Dee_hash_t UNUSED(hash)) {
-	return ITER_DONE;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -20606,11 +20551,6 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__map_popitem__unsupported(DeeObject *self) {
 	err_map_unsupportedf(self, "__map_popitem__()");
 	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__map_popitem__empty(DeeObject *UNUSED(self)) {
-	return_none;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL

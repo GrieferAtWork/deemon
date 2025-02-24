@@ -268,7 +268,7 @@ final class NativeMethodParam {
 	};
 };
 
-function detectConstantReturnValue(body: string): int | none {
+function detectConstantReturnValue(body: string): string | int | none {
 	local parser = _SpecParser(data: body, dataLen: #body, filename: "<inline>");
 	parser.next();
 	for (;;) {
@@ -285,11 +285,28 @@ function detectConstantReturnValue(body: string): int | none {
 			parser.next();
 			parser.next();
 			break;
+		case "return_none":
+		case "Dee_return_none":
+			return "DeeNone_NewRef";
 		case "return": {
 			local returnExpr = parser.next();
+			if (returnExpr == "(") {
+				parser.next();
+				if (parser.next() != ")")
+					goto nope;
+				returnExpr = parser.next();
+			}
 			if (returnExpr == "-") {
 				returnExpr = parser.next();
 				return try -int(returnExpr) catch (...) none;
+			} else {
+				switch (returnExpr) {
+				case "DeeNone_NewRef":
+					if (parser.next() == "(" && parser.next() == ")")
+						return "DeeNone_NewRef";
+					break;
+				default: break;
+				}
 			}
 			if (returnExpr == "NULL")
 				return 0;
@@ -361,36 +378,54 @@ final class NativeMethodImpl {
 		if (impl is none)
 			return;
 		origImpl = impl;
-		local constReturnVal: int = detectConstantReturnValue(impl);
+		local constReturnVal: int | string = detectConstantReturnValue(impl);
 		if (constReturnVal !is none) {
 			@@true:  returns int
 			@@false: returns size_t/pointer
-			local returnsInt: bool;
 			local returnType: string = method.returnType;
-			if (returnType in ["int", "unsigned int"]) {
-				returnsInt = true;
+			local returnClass: string;
+			if (returnType.startswith("DREF")) {
+				returnClass = "DREF";
+			} else if (returnType in ["int", "unsigned int"]) {
+				returnClass = "int";
 			} else if (returnType in ["Dee_ssize_t", "size_t"] || returnType.endswith("*")) {
-				returnsInt = false;
+				returnClass = "size_t";
 			} else {
 				goto done;
 			}
-			final local KNOWN_ALIASES: {int: {int: (string | none, string | none)}} = {
-				0: {
-					1: ("_DeeNone_rets0_1", "_DeeNone_reti0_1"),
-					2: ("_DeeNone_rets0_2", "_DeeNone_reti0_2"),
-					3: ("_DeeNone_rets0_3", "_DeeNone_reti0_3"),
-					4: ("_DeeNone_rets0_4", "_DeeNone_reti0_4"),
-					5: ("_DeeNone_rets0_5", "_DeeNone_reti0_5"),
-					6: (none,               "_DeeNone_reti0_6"),
-				},
-				1: {
-					1: (none, "_DeeNone_reti1_1"),
-					2: (none, "_DeeNone_reti1_2"),
-					3: (none, "_DeeNone_reti1_3"),
-					4: (none, "_DeeNone_reti1_4"),
-				},
+			final local KNOWN_ALIASES: {(string, int | string, int): string} = {
+				("int", 0, 1): "_DeeNone_reti0_1",
+				("int", 0, 2): "_DeeNone_reti0_2",
+				("int", 0, 3): "_DeeNone_reti0_3",
+				("int", 0, 4): "_DeeNone_reti0_4",
+				("int", 0, 5): "_DeeNone_reti0_5",
+				("int", 0, 6): "_DeeNone_reti0_6",
+				("size_t", 0, 1): "_DeeNone_rets0_1",
+				("size_t", 0, 2): "_DeeNone_rets0_2",
+				("size_t", 0, 3): "_DeeNone_rets0_3",
+				("size_t", 0, 4): "_DeeNone_rets0_4",
+				("size_t", 0, 5): "_DeeNone_rets0_5",
+				("size_t", -1, 1): "_DeeNone_retsm1_1",
+				("size_t", -1, 2): "_DeeNone_retsm1_2",
+				("size_t", -1, 3): "_DeeNone_retsm1_3",
+				("size_t", -1, 4): "_DeeNone_retsm1_4",
+				("int", 1, 1): "_DeeNone_reti1_1",
+				("int", 1, 2): "_DeeNone_reti1_2",
+				("int", 1, 3): "_DeeNone_reti1_3",
+				("int", 1, 4): "_DeeNone_reti1_4",
+				("DREF", "DeeNone_NewRef", 0): "DeeNone_NewRef",
+				("DREF", "DeeNone_NewRef", 1): "_DeeNone_NewRef1",
+				("DREF", "DeeNone_NewRef", 2): "_DeeNone_NewRef2",
+				("DREF", "DeeNone_NewRef", 3): "_DeeNone_NewRef3",
+				("DREF", "DeeNone_NewRef", 4): "_DeeNone_NewRef4",
+				("DREF", "DeeNone_NewRef", 5): "_DeeNone_NewRef5",
+				("DREF", "DeeNone_NewRef", 6): "_DeeNone_NewRef6",
+				("DREF", "DeeNone_NewRef", 7): "_DeeNone_NewRef7",
 			};
-			local knownAlias = KNOWN_ALIASES.get(constReturnVal).get(#method.params)[returnsInt];
+			local key: (string, int | string, int) = (returnClass, constReturnVal, #method.params);
+			local knownAlias = KNOWN_ALIASES.get(key);
+			if (knownAlias is none && returnClass == "DREF")
+				knownAlias = KNOWN_ALIASES.get(("size_t", constReturnVal, #method.params));
 			if (knownAlias !is none) {
 				alias = knownAlias;
 				impl = none;

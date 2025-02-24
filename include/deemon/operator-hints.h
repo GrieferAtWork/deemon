@@ -926,9 +926,9 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL default__size__with__sizeob(DeeObject *
 #define maketyped__size(tp_size) ((tp_size) == &default__size__with__sizeob ? &tdefault__size__with__sizeob : &tdefault__size)
 
 /* tp_seq->tp_size_fast */
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL tdefault__size_fast__with__(DeeTypeObject *tp_self, DeeObject *self);
+#define tdefault__size_fast__with__ (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *))&_DeeNone_retsm1_2)
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL tdefault__size_fast(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__size_fast__with__(DeeObject *__restrict self);
+#define default__size_fast__with__ (*(size_t (DCALL *)(DeeObject *__restrict))&_DeeNone_retsm1_1)
 #define isdefault__size_fast(tp_size_fast) ((tp_size_fast) == &default__size_fast__with__)
 
 /* tp_seq->tp_contains */

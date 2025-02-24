@@ -3415,24 +3415,8 @@ err:
 
 /* tp_seq->tp_size_fast */
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-tdefault__size_fast__with__(DeeTypeObject *UNUSED(tp_self), DeeObject *self) {
-	(void)self;
-	return (size_t)-1; /* Not fast */
-}
-
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 tdefault__size_fast(DeeTypeObject *tp_self, DeeObject *self) {
 	return (*tp_self->tp_seq->tp_size_fast)(self);
-}
-
-INTERN WUNUSED NONNULL((1)) size_t DCALL
-default__size_fast__with__(DeeObject *__restrict self) {
-#ifdef __OPTIMIZE_SIZE__
-	return tdefault__size_fast__with__(Dee_TYPE(self), self);
-#else /* __OPTIMIZE_SIZE__ */
-	(void)self;
-	return (size_t)-1; /* Not fast */
-#endif /* __OPTIMIZE_SIZE__ */
 }
 
 /* tp_seq->tp_contains */

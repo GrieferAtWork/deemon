@@ -57,8 +57,8 @@ PUBLIC int (DCALL _DeeNone_reti1)(void) {
 	return 1;
 }
 
-PUBLIC int (DCALL _DeeNone_reti2)(void) {
-	return 2;
+PUBLIC size_t (DCALL _DeeNone_retsm1)(void) {
+	return (size_t)-1;
 }
 
 #if !defined(DCALL_RETURN_COMMON) && __SIZEOF_SIZE_T__ != __SIZEOF_INT__
@@ -131,6 +131,22 @@ PUBLIC int (DCALL _DeeNone_reti1_4)(void *UNUSED(a), void *UNUSED(b), void *UNUS
 	return 1;
 }
 
+PUBLIC size_t (DCALL _DeeNone_retsm1_1)(void *UNUSED(a)) {
+	return (size_t)-1;
+}
+
+PUBLIC size_t (DCALL _DeeNone_retsm1_2)(void *UNUSED(a), void *UNUSED(b)) {
+	return (size_t)-1;
+}
+
+PUBLIC size_t (DCALL _DeeNone_retsm1_3)(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c)) {
+	return (size_t)-1;
+}
+
+PUBLIC size_t (DCALL _DeeNone_retsm1_4)(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d)) {
+	return (size_t)-1;
+}
+
 #if !defined(DCALL_RETURN_COMMON) && __SIZEOF_SIZE_T__ != __SIZEOF_INT__
 PUBLIC int (DCALL _DeeNone_reti0_1)(void *UNUSED(a)) {
 	return 0;
@@ -158,13 +174,6 @@ PUBLIC int (DCALL _DeeNone_reti0_6)(void *UNUSED(a), void *UNUSED(b), void *UNUS
 }
 
 #endif /* !DCALL_CALLER_CLEANUP */
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeNone_OperatorIterNext(DeeObject *__restrict UNUSED(self)) {
-	return ITER_DONE;
-}
-
-
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeNone_OperatorInt32(DeeObject *__restrict UNUSED(self), int32_t *__restrict result) {
@@ -226,33 +235,6 @@ DeeNone_OperatorGetItemNRStringLenHash(DeeObject *__restrict UNUSED(self),
 	err_unknown_key_str_len(Dee_None, key, keylen);
 	return NULL;
 }
-
-#ifdef DCALL_CALLER_CLEANUP
-#define DeeNone_OperatorTryGetItemNR              (*(DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&DeeNone_OperatorIterNext)
-#define DeeNone_OperatorTryGetItemNRStringHash    (*(DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&DeeNone_OperatorIterNext)
-#define DeeNone_OperatorTryGetItemNRStringLenHash (*(DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&DeeNone_OperatorIterNext)
-#else /* DCALL_CALLER_CLEANUP */
-PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeNone_OperatorTryGetItemNR(DeeObject *__restrict UNUSED(self),
-                             /*string*/ DeeObject *__restrict UNUSED(key)) {
-	return ITER_DONE;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeNone_OperatorTryGetItemNRStringHash(DeeObject *__restrict UNUSED(self),
-                                       char const *__restrict UNUSED(key),
-                                       Dee_hash_t UNUSED(hash)) {
-	return ITER_DONE;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeNone_OperatorTryGetItemNRStringLenHash(DeeObject *__restrict UNUSED(self),
-                                          char const *__restrict UNUSED(key),
-                                          size_t UNUSED(keylen),
-                                          Dee_hash_t UNUSED(hash)) {
-	return ITER_DONE;
-}
-#endif /* !DCALL_CALLER_CLEANUP */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeNone_OperatorUnpack(DeeObject *UNUSED(self), size_t dst_length, /*out*/ DREF DeeObject **dst) {
@@ -380,6 +362,9 @@ DeeNone_OperatorUnpackEx(DeeObject *UNUSED(self), size_t dst_length_min,
 #define DeeNone_OperatorCallAttrTuple             (*(DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&_DeeNone_NewRef3)
 #define DeeNone_OperatorCallAttrTupleKw           (*(DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *, DeeObject *))&_DeeNone_NewRef4)
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define DeeNone_OperatorTryGetItemNR              (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&_DeeNone_retsm1_2)
+#define DeeNone_OperatorTryGetItemNRStringHash    (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&_DeeNone_retsm1_3)
+#define DeeNone_OperatorTryGetItemNRStringLenHash (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&_DeeNone_retsm1_4)
 
 #define DeeNone_OperatorEnter (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1)
 #define DeeNone_OperatorLeave (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1)
@@ -390,6 +375,10 @@ DeeNone_OperatorUnpackEx(DeeObject *UNUSED(self), size_t dst_length_min,
 #define DeeNone_OperatorCall       (*(DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&_DeeNone_NewRef3)
 #define DeeNone_OperatorCallKw     (*(DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&_DeeNone_NewRef4)
 
+STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1,
+                  "NOTE: This is also assumed by 'method-hints.dee' "
+                  "at 'if (returnExpr == \"ITER_DONE\")'");
+#define DeeNone_OperatorIterNext (*(DREF DeeObject *(DCALL *)(DeeObject *))&_DeeNone_retsm1_1)
 
 PRIVATE struct type_iterator none_iterator = {
 	/* .tp_nextpair  = */ &DeeNone_OperatorNextPair,
