@@ -57,6 +57,7 @@ __set_inplace_and__.set_operator_inplace_and([[nonnull]] DREF DeeObject **__rest
 err:
 	return -1;
 })}
+%{$none = 0}
 %{$empty = "default__set_operator_inplace_and__unsupported"}
 %{$with__set_operator_foreach__and__set_removeall = {
 	int result;

@@ -38,6 +38,7 @@ __map_setitem__.map_operator_setitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key,
                                      [[nonnull]] DeeObject *value)
 %{unsupported(auto("operator []="))}
+%{$none = 0}
 %{$empty = {
 	(void)value;
 	return err_unknown_key(self, key);
@@ -203,6 +204,7 @@ map_operator_setitem = {
 __map_setitem__.map_operator_setitem_index([[nonnull]] DeeObject *self, size_t key,
                                            [[nonnull]] DeeObject *value)
 %{unsupported(auto("operator []="))}
+%{$none = 0}
 %{$empty = {
 	(void)value;
 	return err_unknown_key_int(self, key);
@@ -239,6 +241,7 @@ __map_setitem__.map_operator_setitem_string_hash([[nonnull]] DeeObject *self,
 %{unsupported({
 	return err_map_unsupportedf(self, "operator []=(%q)", key);
 })}
+%{$none = 0}
 %{$empty = {
 	(void)hash;
 	(void)value;
@@ -277,6 +280,7 @@ __map_setitem__.map_operator_setitem_string_len_hash([[nonnull]] DeeObject *self
 %{unsupported({
 	return err_map_unsupportedf(self, "operator []=(%$q)", keylen, key);
 })}
+%{$none = 0}
 %{$empty = {
 	(void)hash;
 	(void)value;

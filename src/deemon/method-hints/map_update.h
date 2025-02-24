@@ -57,6 +57,7 @@ map_update_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
 __map_update__.map_update([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *items)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = {
 	int items_empty = DeeObject_InvokeMethodHint(seq_operator_bool, items);
 	if unlikely(items_empty < 0)

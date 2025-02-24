@@ -41,6 +41,7 @@ __seq_getrange__.seq_operator_getrange([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *start,
                                        [[nonnull]] DeeObject *end)
 %{unsupported(auto("operator [:]"))}
+%{$none = return_none}
 %{$empty = return_empty_seq}
 %{using [seq_operator_getrange_index, seq_operator_getrange_index_n]: {
 	Dee_ssize_t start_index, end_index;
@@ -117,6 +118,7 @@ seq_operator_getrange = {
 __seq_getrange__.seq_operator_getrange_index([[nonnull]] DeeObject *self,
                                              Dee_ssize_t start, Dee_ssize_t end)
 %{unsupported(auto("operator [:]"))}
+%{$none = return_none}
 %{$empty = return_empty_seq}
 %{using seq_operator_getrange: {
 	DREF DeeObject *startob, *endob, *result;
@@ -293,6 +295,7 @@ __seq_getrange__.seq_operator_getrange_index_n([[nonnull]] DeeObject *self,
 	err_seq_unsupportedf(self, "operator [:](%" PCKdSIZ ", none)", start);
 	return NULL;
 })}
+%{$none = return_none}
 %{$empty = return_empty_seq}
 %{using seq_operator_getrange: {
 	DREF DeeObject *startob, *result;

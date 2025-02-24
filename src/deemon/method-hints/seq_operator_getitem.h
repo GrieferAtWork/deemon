@@ -39,6 +39,7 @@ err:
 __seq_getitem__.seq_operator_getitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *index)
 %{unsupported(auto("operator []"))}
+%{$none = return_none}
 %{$empty = {
 	err_index_out_of_bounds_ob(self, index);
 	return NULL;
@@ -122,6 +123,7 @@ err:
 __seq_getitem__.seq_operator_getitem_index([[nonnull]] DeeObject *__restrict self,
                                            size_t index)
 %{unsupported(auto("operator []"))}
+%{$none = return_none}
 %{$empty = {
 	err_index_out_of_bounds(self, index, 0);
 	return NULL;
@@ -238,6 +240,7 @@ seq_operator_getitem_index = {
 __seq_getitem__.seq_operator_trygetitem([[nonnull]] DeeObject *self,
                                         [[nonnull]] DeeObject *index)
 %{unsupported_alias("default__seq_operator_getitem__unsupported")}
+%{$none = return_none}
 %{$empty = ITER_DONE}
 %{using seq_operator_getitem: {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_getitem, self, index);
@@ -276,6 +279,7 @@ seq_operator_trygetitem = {
 __seq_getitem__.seq_operator_trygetitem_index([[nonnull]] DeeObject *__restrict self,
                                               size_t index)
 %{unsupported_alias("default__seq_operator_getitem_index__unsupported")}
+%{$none = return_none}
 %{$empty = ITER_DONE}
 %{using seq_operator_getitem_index: {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_getitem_index, self, index);
@@ -346,6 +350,7 @@ seq_operator_trygetitem_index = {
 __seq_getitem__.seq_operator_hasitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *index)
 %{unsupported(auto("operator []"))}
+%{$none = 1}
 %{$empty = 0}
 %{$with__seq_operator_sizeob = {
 	int result;
@@ -396,6 +401,7 @@ seq_operator_hasitem = {
 __seq_getitem__.seq_operator_hasitem_index([[nonnull]] DeeObject *__restrict self,
                                            size_t index)
 %{unsupported(auto("operator []"))}
+%{$none = 1}
 %{$empty = 0}
 %{$with__seq_operator_size = {
 	size_t seqsize = CALL_DEPENDENCY(seq_operator_size, self);
@@ -445,7 +451,8 @@ __seq_getitem__.seq_operator_bounditem([[nonnull]] DeeObject *self,
 	err_seq_unsupportedf(self, "operator [](%r)", index);
 	return Dee_BOUND_ERR;
 })}
-%{$empty = 0}
+%{$none = Dee_BOUND_YES}
+%{$empty = Dee_BOUND_MISSING}
 %{using seq_operator_bounditem_index: {
 	size_t index_value;
 	if (DeeObject_AsSize(index, &index_value))
@@ -491,7 +498,8 @@ __seq_getitem__.seq_operator_bounditem_index([[nonnull]] DeeObject *__restrict s
 	err_seq_unsupportedf(self, "operator [](%" PRFuSIZ ")", index);
 	return Dee_BOUND_ERR;
 })}
-%{$empty = 0}
+%{$none = Dee_BOUND_YES}
+%{$empty = Dee_BOUND_MISSING}
 %{using seq_operator_getitem_index: {
 	DREF DeeObject *value = CALL_DEPENDENCY(seq_operator_getitem_index, self, index);
 	if (value) {

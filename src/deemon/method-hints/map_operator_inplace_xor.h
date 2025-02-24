@@ -52,6 +52,7 @@ __map_inplace_xor__.map_operator_inplace_xor([[nonnull]] DREF DeeObject **__rest
 err:
 	return -1;
 })}
+%{$none = 0}
 %{$empty = "default__map_operator_inplace_xor__unsupported"}
 %{$with__map_operator_foreach_pair__and__map_update__and__map_removekeys = {
 	/* >> a ^= b

@@ -63,7 +63,9 @@ seq_all_foreach_cb(void *arg, DeeObject *item) {
 
 [[wunused]]
 int __seq_all__.seq_all([[nonnull]] DeeObject *__restrict self)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported(auto)}
+/*%{$none = 0}*/
+%{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_all_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_all_foreach_cb, NULL);
@@ -104,7 +106,9 @@ err:
 [[wunused]]
 int __seq_all__.seq_all_with_key([[nonnull]] DeeObject *self,
                                  [[nonnull]] DeeObject *key)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported(auto)}
+/*%{$none = 0}*/
+%{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_all_with_key_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_all_with_key_foreach_cb, key);
@@ -145,7 +149,9 @@ seq_all_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 [[wunused]]
 int __seq_all__.seq_all_with_range([[nonnull]] DeeObject *__restrict self,
                                    size_t start, size_t end)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported(auto)}
+/*%{$none = 0}*/
+%{$empty = 0}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_all_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_all_enumerate_cb, NULL, start, end);
@@ -182,7 +188,9 @@ seq_all_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 int __seq_all__.seq_all_with_range_and_key([[nonnull]] DeeObject *self,
                                            size_t start, size_t end,
                                            [[nonnull]] DeeObject *key)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported(auto)}
+/*%{$none = 0}*/
+%{$empty = 0}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_all_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_all_with_key_enumerate_cb, key, start, end);

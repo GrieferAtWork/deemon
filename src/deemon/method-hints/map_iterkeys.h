@@ -30,6 +30,7 @@ __map_iterkeys__->?DIterator;
 __map_iterkeys__.map_iterkeys([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$empty = "default__seq_operator_iter__empty"}
+%{$none = return_none}
 %{$with__map_keys = {
 	DREF DeeObject *result, *keys = CALL_DEPENDENCY(map_keys, self);
 	if unlikely(!keys)

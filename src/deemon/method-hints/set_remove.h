@@ -43,6 +43,7 @@ err:
 __set_remove__.set_remove([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = "default__set_remove__unsupported"}
 %{$with__map_operator_trygetitem__and__map_operator_delitem = {
 	int temp;

@@ -37,6 +37,7 @@ err:
 [[wunused]] DREF DeeObject *
 __seq_pop__.seq_pop([[nonnull]] DeeObject *self, Dee_ssize_t index)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = "default__seq_pop__unsupported"}
 %{$with__seq_operator_size__and__seq_operator_getitem_index__and__seq_erase = {
 	size_t used_index = (size_t)index;

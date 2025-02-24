@@ -59,7 +59,8 @@ seq_parity_foreach_cb(void *arg, DeeObject *item) {
 
 [[wunused]]
 int __seq_parity__.seq_parity([[nonnull]] DeeObject *__restrict self)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported(auto)}
+%{$empty = 0}
 %{$with__seq_count = {
 	size_t count = CALL_DEPENDENCY(seq_count, self, Dee_True);
 	if unlikely(count == (size_t)-1)
@@ -105,7 +106,8 @@ err:
 [[wunused]]
 int __seq_parity__.seq_parity_with_key([[nonnull]] DeeObject *self,
                                  [[nonnull]] DeeObject *key)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported(auto)}
+%{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_parity_foreach_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_parity_foreach_with_key_cb, key);
@@ -146,7 +148,8 @@ seq_parity_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 [[wunused]]
 int __seq_parity__.seq_parity_with_range([[nonnull]] DeeObject *__restrict self,
                                          size_t start, size_t end)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported(auto)}
+%{$empty = 0}
 %{$with__seq_count_with_range = {
 	size_t count = CALL_DEPENDENCY(seq_count_with_range, self, Dee_True, start, end);
 	if unlikely(count == (size_t)-1)
@@ -191,7 +194,8 @@ seq_parity_enumerate_with_key_cb(void *arg, size_t index, DeeObject *item) {
 int __seq_parity__.seq_parity_with_range_and_key([[nonnull]] DeeObject *self,
                                                  size_t start, size_t end,
                                                  [[nonnull]] DeeObject *key)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported(auto)}
+%{$empty = 0}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_parity_enumerate_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_parity_enumerate_with_key_cb, key, start, end);

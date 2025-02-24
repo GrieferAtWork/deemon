@@ -41,6 +41,7 @@ err:
 __seq_resize__.seq_resize([[nonnull]] DeeObject *self, size_t newsize,
                           [[nonnull]] DeeObject *filler)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = {
 	return likely(newsize == 0) ? 0 : default__seq_resize__unsupported(self, newsize, filler);
 }}

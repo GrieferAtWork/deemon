@@ -57,6 +57,7 @@ map_removekeys_foreach_cb(void *arg, DeeObject *elem) {
 __map_removekeys__.map_removekeys([[nonnull]] DeeObject *self,
                                   [[nonnull]] DeeObject *keys)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = "default__map_removekeys__unsupported"}
 %{$with__map_operator_inplace_sub = {
 	int result;

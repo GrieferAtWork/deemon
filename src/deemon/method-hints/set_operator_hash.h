@@ -70,6 +70,7 @@ set_handle_hash_error(DeeObject *self) {
 [[wunused]] Dee_hash_t
 __set_hash__.set_operator_hash([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias("default__seq_operator_hash__unsupported")}
+%{$none = 0}
 %{$empty = DEE_HASHOF_EMPTY_SEQUENCE}
 %{$with__set_operator_foreach =
 [[prefix(DEFINE_default_set_hash_with_foreach_cb)]]

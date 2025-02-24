@@ -47,6 +47,7 @@ __map_and__.map_operator_and([[nonnull]] DeeObject *lhs,
 		return_reference_(Dee_EmptyMapping); /* `a & {}' -> `{}' */
 	return (DREF DeeObject *)MapIntersection_New(lhs, keys);
 })}
+%{$none = return_none}
 %{$empty = "default__map_operator_and__unsupported"} {
 	return LOCAL_CALLATTR(lhs, 1, &keys);
 }

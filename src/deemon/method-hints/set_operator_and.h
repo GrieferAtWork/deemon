@@ -47,6 +47,7 @@ __set_and__.set_operator_and([[nonnull]] DeeObject *lhs,
 		return_reference_(Dee_EmptySet); /* `a & {}' -> `{}' */
 	return (DREF DeeObject *)SetIntersection_New(lhs, rhs);
 })}
+%{$none = return_none}
 %{$empty = "default__set_operator_and__unsupported"} {
 	return LOCAL_CALLATTR(lhs, 1, &rhs);
 }

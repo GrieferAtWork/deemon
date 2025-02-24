@@ -37,6 +37,7 @@ err:
 int __seq_assign__.seq_operator_assign([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *items)
 %{unsupported(auto("operator :="))}
+%{$none = 0}
 %{$empty = {
 	int items_empty = DeeObject_InvokeMethodHint(seq_operator_bool, items);
 	if unlikely(items_empty < 0)

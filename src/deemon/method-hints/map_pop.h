@@ -124,6 +124,7 @@ err:
 __map_pop__.map_pop([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = {
 	err_unknown_key(self, key);
 	return NULL;
@@ -181,6 +182,7 @@ __map_pop__.map_pop_with_default([[nonnull]] DeeObject *self,
                                  [[nonnull]] DeeObject *key,
                                  [[nonnull]] DeeObject *default_)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = return_reference_(default_)}
 %{$with__map_operator_trygetitem__and__map_operator_delitem = {
 	DREF DeeObject *result = CALL_DEPENDENCY(map_operator_trygetitem, self, key);

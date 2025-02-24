@@ -46,6 +46,7 @@ __map_setold__.map_setold([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *key,
                           [[nonnull]] DeeObject *value)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = "default__map_setold__unsupported"}
 %{$with__map_setold_ex = {
 	DREF DeeObject *old_value;

@@ -33,6 +33,7 @@ err:
 [[wunused]] DREF DeeObject *
 __map_size__.map_operator_sizeob([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
+%{$none = return_none}
 %{$empty = "default__seq_operator_sizeob__empty"}
 %{using map_operator_size: {
 	size_t mapsize = CALL_DEPENDENCY(map_operator_size, self);
@@ -50,6 +51,7 @@ err:
 [[wunused]] size_t
 __map_size__.map_operator_size([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
+%{$none = 0}
 %{$empty = "default__seq_operator_size__empty"}
 %{$with__map_operator_foreach_pair = [[prefix(DEFINE_default_seq_size_with_foreach_pair_cb)]] {
 	return (size_t)CALL_DEPENDENCY(map_operator_foreach_pair, self, &default_seq_size_with_foreach_pair_cb, NULL);

@@ -30,6 +30,7 @@ __map_keys__->?DSet;
 __map_keys__.map_keys([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$empty = return_reference_(Dee_EmptySet)}
+%{$none = return_none}
 %{$with__map_iterkeys = {
 	DREF DefaultSequence_MapProxy *result;
 	result = DeeObject_MALLOC(DefaultSequence_MapProxy);

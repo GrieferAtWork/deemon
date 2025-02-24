@@ -39,6 +39,7 @@ err:
 __seq_xchitem__.seq_xchitem_index([[nonnull]] DeeObject *self, size_t index,
                                   [[nonnull]] DeeObject *item)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = "default__seq_xchitem_index__unsupported"}
 %{$with__seq_operator_getitem_index__and__seq_operator_setitem_index = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_getitem_index, self, index);

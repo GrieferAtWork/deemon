@@ -291,6 +291,7 @@ function detectConstantReturnValue(body: string): string | int | none {
 		case "return": {
 			local returnExpr = parser.next();
 			if (returnExpr == "(") {
+				/* Cast expression, as in "(size_t)-1" */
 				parser.next();
 				if (parser.next() != ")")
 					goto nope;
@@ -302,16 +303,26 @@ function detectConstantReturnValue(body: string): string | int | none {
 			} else {
 				switch (returnExpr) {
 				case "DeeNone_NewRef":
+					/* Special case for: "return DeeNone_NewRef()" */
 					if (parser.next() == "(" && parser.next() == ")")
 						return "DeeNone_NewRef";
 					break;
 				default: break;
 				}
 			}
-			if (returnExpr == "NULL")
+			switch (returnExpr) {
+			case "NULL":
+			case "DEE_HASHOF_EMPTY_SEQUENCE":
+			case "DEE_HASHOF_UNBOUND_ITEM":
+			case "DEE_HASHOF_RECURSIVE_ITEM":
 				return 0;
-			if (returnExpr == "ITER_DONE")
+			case "ITER_DONE":
 				return -1;
+			case "Dee_BOUND_YES":
+				return 1;
+			/* TODO: Dee_BOUND_MISSING (dependent on CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS) */
+			/* TODO: Dee_BOUND_NO (dependent on CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS) */
+			}
 			return try int(returnExpr) catch (...) none;
 		}	break;
 		default:
@@ -388,7 +399,7 @@ final class NativeMethodImpl {
 				returnClass = "DREF";
 			} else if (returnType in ["int", "unsigned int"]) {
 				returnClass = "int";
-			} else if (returnType in ["Dee_ssize_t", "size_t"] || returnType.endswith("*")) {
+			} else if (returnType in ["Dee_ssize_t", "size_t", "Dee_hash_t"] || returnType.endswith("*")) {
 				returnClass = "size_t";
 			} else {
 				goto done;
@@ -405,10 +416,12 @@ final class NativeMethodImpl {
 				("size_t", 0, 3): "_DeeNone_rets0_3",
 				("size_t", 0, 4): "_DeeNone_rets0_4",
 				("size_t", 0, 5): "_DeeNone_rets0_5",
+				("size_t", 0, 6): "_DeeNone_rets0_6",
 				("size_t", -1, 1): "_DeeNone_retsm1_1",
 				("size_t", -1, 2): "_DeeNone_retsm1_2",
 				("size_t", -1, 3): "_DeeNone_retsm1_3",
 				("size_t", -1, 4): "_DeeNone_retsm1_4",
+				("size_t", -1, 5): "_DeeNone_retsm1_5",
 				("int", 1, 1): "_DeeNone_reti1_1",
 				("int", 1, 2): "_DeeNone_reti1_2",
 				("int", 1, 3): "_DeeNone_reti1_3",
@@ -631,7 +644,7 @@ final class NativeMethod {
 		if (cc)
 			print(cc, " "),;
 		print("*", name, ")", "("),;
-		print(", ".join(params.each.typ)),;
+		print(", ".join(params.each.fullTyp)),;
 		print(")"),;
 	}
 
@@ -2294,14 +2307,23 @@ function printNativeOperatorExportedApi() {
 @@Print the initializer of a "struct Dee_type_mh_cache" where all
 @@hints are implemented using their @("$" + impl) variant. Method
 @@hints that don't have such a variant are intialized to `NULL`
-function printSpecialTypeMhCacheBody(impl: string) {
+function printSpecialTypeMhCacheBody(impl: string | {string...}) {
+	if (impl is string)
+		impl = {impl};
 	RESET_PREFIX();
 	local longestNameLength = NATIVE_METHOD_HINTS.keys.each.length > ...;
 	for (local name, nativeMethod /*: NativeMethod*/: NATIVE_METHOD_HINTS) {
-		local implName = nativeMethod.normalizeSymbolName(impl);
-		local customImpl: NativeMethodImpl | none = nativeMethod.customImpls.get(implName);
+		local customImplName: string | none = none;
+		for (local implName: impl) {
+			implName = nativeMethod.normalizeSymbolName(implName);
+			local customImpl: NativeMethodImpl | none = nativeMethod.customImpls.get(implName);
+			if (customImpl !is none) {
+				customImplName = implName;
+				break;
+			}
+		}
 		print(f"	/* .mh_{name.ljust(longestNameLength)} = */ ",
-			customImpl is none ? "NULL" : f"&{implName}",
+			customImplName is none ? "NULL" : f"&{customImplName}",
 			",");
 	}
 }
@@ -2481,6 +2503,9 @@ function printMhSuperMap() {
 		}
 		if (superAsSelfImpls) {
 			nativeMethodsWith__msm_with_super.insert(name);
+			// TODO: This listing here also includes "$none" and "$empty" callbacks,
+			//       even though it really doesn't need to. I could simply exclude
+			//       those impls here by-name, but that doesn't feel generic enough...
 			print(f"PRIVATE Dee_funptr_t tpconst msm_with_super__{
 					name}[{#superAsSelfImpls + 1}] = \{");
 			for (local impl: superAsSelfImpls)

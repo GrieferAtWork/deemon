@@ -43,6 +43,7 @@ err:
 __set_insert__.set_insert([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = "default__set_insert__unsupported"}
 %{$with__map_setnew = {
 	int result;

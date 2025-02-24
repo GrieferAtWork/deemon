@@ -47,6 +47,7 @@ __set_sub__.set_operator_sub([[nonnull]] DeeObject *lhs,
 		return_reference_(lhs); /* `a - {}' -> `a' */
 	return (DREF DeeObject *)SetDifference_New(lhs, rhs);
 })}
+%{$none = return_none}
 %{$empty = "default__set_operator_sub__unsupported"} {
 	return LOCAL_CALLATTR(lhs, 1, &rhs);
 }

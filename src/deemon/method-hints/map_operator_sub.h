@@ -47,6 +47,7 @@ __map_sub__.map_operator_sub([[nonnull]] DeeObject *lhs,
 		return_reference_(lhs); /* `a - {}' -> `a' */
 	return (DREF DeeObject *)MapDifference_New(lhs, keys);
 })}
+%{$none = return_none}
 %{$empty = "default__map_operator_sub__unsupported"} {
 	return LOCAL_CALLATTR(lhs, 1, &keys);
 }

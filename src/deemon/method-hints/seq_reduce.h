@@ -127,6 +127,7 @@ seq_reduce_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 __seq_reduce__.seq_reduce([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *combine)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = {
 	(void)combine;
 	err_empty_sequence(self);
@@ -188,6 +189,7 @@ __seq_reduce__.seq_reduce_with_range([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *combine,
                                      size_t start, size_t end)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = {
 	(void)combine;
 	(void)start;

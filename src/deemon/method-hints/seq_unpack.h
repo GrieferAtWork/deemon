@@ -106,6 +106,11 @@ int __seq_unpack__.seq_unpack([[nonnull]] DeeObject *__restrict self, size_t cou
 %{unsupported({
 	return err_seq_unsupportedf(self, "__seq_unpack__(%" PRFuSIZ ")", count);
 })}
+%{$none = {
+	/* "none" can be unpacked into any number of none-s. */
+	Dee_Setrefv(result, Dee_None, count);
+	return 0;
+}}
 %{$empty = {
 	if unlikely(count != 0)
 		return err_invalid_unpack_size(self, count, 0);
@@ -285,6 +290,11 @@ size_t __seq_unpack__.seq_unpack_ex([[nonnull]] DeeObject *__restrict self,
 %{unsupported({
 	return err_seq_unsupportedf(self, "__seq_unpack__(%" PRFuSIZ ", %" PRFuSIZ ")", min_count, max_count);
 })}
+%{$none = {
+	/* "none" always turns everything into more "none", so unpack to the max # of objects. */
+	Dee_Setrefv(result, Dee_None, max_count);
+	return max_count;
+}}
 %{$empty = {
 	if unlikely(min_count > 0)
 		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);

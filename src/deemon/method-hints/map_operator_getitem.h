@@ -66,6 +66,7 @@ err:
 __map_getitem__.map_operator_getitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key)
 %{unsupported(auto("operator []"))}
+%{$none = return_none}
 %{$empty = {
 	err_unknown_key(self, key);
 	return NULL;
@@ -173,6 +174,7 @@ map_operator_getitem = {
 __map_getitem__.map_operator_trygetitem([[nonnull]] DeeObject *self,
                                         [[nonnull]] DeeObject *key)
 %{unsupported_alias("default__map_operator_getitem__unsupported")}
+%{$none = return_none}
 %{$empty = ITER_DONE}
 %{using [map_operator_trygetitem_index, map_operator_trygetitem_string_len_hash]: {
 	size_t key_value;
@@ -290,6 +292,7 @@ map_operator_trygetitem = {
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_getitem_index([[nonnull]] DeeObject *self, size_t key)
 %{unsupported(auto("operator []"))}
+%{$none = return_none}
 %{$empty = {
 	err_unknown_key_int(self, key);
 	return NULL;
@@ -322,6 +325,7 @@ map_operator_getitem_index = {
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_trygetitem_index([[nonnull]] DeeObject *self, size_t key)
 %{unsupported_alias("default__map_operator_getitem_index__unsupported")}
+%{$none = return_none}
 %{$empty = ITER_DONE}
 %{using map_operator_trygetitem: {
 	DREF DeeObject *result, *keyob;
@@ -396,6 +400,7 @@ __map_getitem__.map_operator_getitem_string_hash([[nonnull]] DeeObject *self,
 	err_map_unsupportedf(self, "operator [](%q)", key);
 	return NULL;
 })}
+%{$none = return_none}
 %{$empty = {
 	err_unknown_key_str(self, key);
 	return NULL;
@@ -450,6 +455,7 @@ map_operator_getitem_string_hash = {
 __map_getitem__.map_operator_trygetitem_string_hash([[nonnull]] DeeObject *self,
                                                     [[nonnull]] char const *key, Dee_hash_t hash)
 %{unsupported_alias("default__map_operator_getitem_string_hash__unsupported")}
+%{$none = return_none}
 %{$empty = ITER_DONE}
 %{$with__map_enumerate = [[prefix(DEFINE_default_map_getitem_string_hash_with_enumerate_cb)]] {
 	struct default_map_getitem_string_hash_with_enumerate_data data;
@@ -544,6 +550,7 @@ __map_getitem__.map_operator_getitem_string_len_hash([[nonnull]] DeeObject *self
 	err_map_unsupportedf(self, "operator [](%$q)", keylen, key);
 	return NULL;
 })}
+%{$none = return_none}
 %{$empty = {
 	err_unknown_key_str_len(self, key, keylen);
 	return NULL;
@@ -600,6 +607,7 @@ __map_getitem__.map_operator_trygetitem_string_len_hash([[nonnull]] DeeObject *s
                                                         char const *key, size_t keylen,
                                                         Dee_hash_t hash)
 %{unsupported_alias("default__map_operator_getitem_string_len_hash__unsupported")}
+%{$none = return_none}
 %{$empty = ITER_DONE}
 %{$with__map_enumerate = [[prefix(DEFINE_default_map_getitem_string_len_hash_with_enumerate_cb)]] {
 	struct default_map_getitem_string_len_hash_with_enumerate_data data;
@@ -674,6 +682,7 @@ __map_getitem__.map_operator_bounditem([[nonnull]] DeeObject *self,
 	COMPILER_UNUSED(default__map_operator_getitem__unsupported(self, key));
 	return Dee_BOUND_ERR;
 })}
+%{$none = Dee_BOUND_YES}
 %{$empty = Dee_BOUND_MISSING}
 %{$with__map_enumerate = [[prefix(DEFINE_default_map_bounditem_with_enumerate_cb)]] {
 	Dee_ssize_t status;
@@ -744,6 +753,7 @@ __map_getitem__.map_operator_bounditem_index([[nonnull]] DeeObject *self, size_t
 	COMPILER_UNUSED(default__map_operator_getitem_index__unsupported(self, key));
 	return Dee_BOUND_ERR;
 })}
+%{$none = Dee_BOUND_YES}
 %{$empty = Dee_BOUND_MISSING}
 %{using map_operator_bounditem: {
 	int result;
@@ -794,6 +804,7 @@ __map_getitem__.map_operator_bounditem_string_hash([[nonnull]] DeeObject *self,
 	COMPILER_UNUSED(default__map_operator_getitem_string_hash__unsupported(self, key, hash));
 	return Dee_BOUND_ERR;
 })}
+%{$none = Dee_BOUND_YES}
 %{$empty = Dee_BOUND_MISSING}
 %{using map_operator_bounditem: {
 	int result;
@@ -842,6 +853,7 @@ __map_getitem__.map_operator_bounditem_string_len_hash([[nonnull]] DeeObject *se
 	COMPILER_UNUSED(default__map_operator_getitem_string_len_hash__unsupported(self, key, keylen, hash));
 	return Dee_BOUND_ERR;
 })}
+%{$none = Dee_BOUND_YES}
 %{$empty = Dee_BOUND_MISSING}
 %{using map_operator_bounditem: {
 	int result;
@@ -888,6 +900,7 @@ map_operator_bounditem_string_len_hash = {
 [[wunused]] int
 __map_getitem__.map_operator_hasitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key)
+%{$none = 1}
 %{$empty = 0}
 %{using map_operator_bounditem: {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
@@ -913,6 +926,7 @@ map_operator_hasitem = {
 [[operator(Mapping: tp_seq->tp_hasitem_index)]]
 [[wunused]] int
 __map_getitem__.map_operator_hasitem_index([[nonnull]] DeeObject *self, size_t key)
+%{$none = 1}
 %{$empty = 0}
 %{using map_operator_bounditem_index: {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
@@ -940,6 +954,7 @@ map_operator_hasitem_index = {
 __map_getitem__.map_operator_hasitem_string_hash([[nonnull]] DeeObject *self,
                                                  [[nonnull]] char const *key,
                                                  Dee_hash_t hash)
+%{$none = 1}
 %{$empty = 0}
 %{using map_operator_bounditem_string_hash: {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
@@ -967,6 +982,7 @@ map_operator_hasitem_string_hash = {
 __map_getitem__.map_operator_hasitem_string_len_hash([[nonnull]] DeeObject *self,
                                                      char const *key, size_t keylen,
                                                      Dee_hash_t hash)
+%{$none = 1}
 %{$empty = 0}
 %{using map_operator_bounditem_string_len_hash: {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */

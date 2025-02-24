@@ -49,6 +49,7 @@ seq_default_getlast_with_foreach_cb(void *arg, DeeObject *item) {
 [[wunused, getset_member("tryget")]] DREF DeeObject *
 __seq_last__.seq_trygetlast([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias(default__seq_getlast__unsupported)}
+%{$none = return_none}
 %{$empty = "default__seq_trygetfirst__empty"}
 %{$with__seq_getlast = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_getlast, self);
@@ -101,6 +102,7 @@ err:
 [[wunused, getset_member("get")]] DREF DeeObject *
 __seq_last__.seq_getlast([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("last"))}
+%{$none = return_none}
 %{$empty = {
 	err_unbound_attribute_string(THIS_TYPE, "last");
 	return NULL;
@@ -128,7 +130,9 @@ err:
 /* Check if the last element of the sequence is bound */
 [[wunused, getset_member("bound")]] int
 __seq_last__.seq_boundlast([[nonnull]] DeeObject *__restrict self)
-%{unsupported_alias($empty)} %{$empty = Dee_BOUND_MISSING}
+%{unsupported_alias($empty)}
+%{$none = Dee_BOUND_YES}
+%{$empty = Dee_BOUND_MISSING}
 %{$with__seq_operator_size__and__seq_operator_bounditem_index = {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
@@ -156,6 +160,7 @@ err:
 [[wunused, getset_member("del")]] int
 __seq_last__.seq_dellast([[nonnull]] DeeObject *__restrict self)
 %{unsupported({ return err_seq_unsupportedf(self, "del last"); })}
+%{$none = 0}
 %{$empty = 0}
 %{$with__seq_operator_size__and__seq_operator_delitem_index = {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
@@ -175,8 +180,13 @@ err:
 [[wunused, getset_member("set")]] int
 __seq_last__.seq_setlast([[nonnull]] DeeObject *self,
                          [[nonnull]] DeeObject *value)
-%{unsupported({ return err_seq_unsupportedf(self, "last = %r", value); })}
-%{$empty = { return err_empty_sequence(self); }}
+%{unsupported({
+	return err_seq_unsupportedf(self, "last = %r", value);
+})}
+%{$none = 0}
+%{$empty = {
+	return err_empty_sequence(self);
+}}
 %{$with__seq_operator_size__and__seq_operator_setitem_index = {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)

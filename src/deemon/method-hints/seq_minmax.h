@@ -209,7 +209,9 @@ seq_{m}_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 [[wunused]] DREF DeeObject *
 __seq_{m}__.seq_{m}_with_range([[nonnull]] DeeObject *__restrict self,
                                size_t start, size_t end)
-%{unsupported(auto)} %{$empty = return_none}
+%{unsupported(auto)}
+%{$none = return_none}
+%{$empty = return_none}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_{m}_enumerate_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
@@ -244,7 +246,9 @@ seq_{m}_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 __seq_{m}__.seq_{m}_with_range_and_key([[nonnull]] DeeObject *self,
                                        size_t start, size_t end,
                                        [[nonnull]] DeeObject *key)
-%{unsupported(auto)} %{$empty = return_none}
+%{unsupported(auto)}
+%{$none = return_none}
+%{$empty = return_none}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_{m}_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;

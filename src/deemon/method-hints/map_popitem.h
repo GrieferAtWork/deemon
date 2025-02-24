@@ -36,6 +36,7 @@ err:
 [[wunused]] DREF DeeObject *
 __map_popitem__.map_popitem([[nonnull]] DeeObject *self)
 %{unsupported(auto)}
+/*%{$none = return_none}*/
 %{$empty = return_none}
 %{$with__seq_trygetlast__and__map_operator_delitem = {
 	int temp;

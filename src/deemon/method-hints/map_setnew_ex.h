@@ -56,6 +56,7 @@ __map_setnew_ex__.map_setnew_ex([[nonnull]] DeeObject *self,
                                 [[nonnull]] DeeObject *key,
                                 [[nonnull]] DeeObject *value)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = "default__map_setnew_ex__unsupported"}
 %{$with__map_operator_trygetitem__and__map_setnew = {
 	DREF DeeObject *old_value = CALL_DEPENDENCY(map_operator_trygetitem, self, key);

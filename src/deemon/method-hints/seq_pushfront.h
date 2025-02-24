@@ -38,6 +38,7 @@ err:
 int __seq_pushfront__.seq_pushfront([[nonnull]] DeeObject *self,
                                     [[nonnull]] DeeObject *item)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = "default__seq_pushfront__unsupported"}
 %{$with__seq_insert = {
 	return CALL_DEPENDENCY(seq_insert, self, 0, item);

@@ -29,6 +29,7 @@ __set_frozen__->?O;
 [[wunused, getset_member("get")]] DREF DeeObject *
 __set_frozen__.set_frozen([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = "DeeObject_NewRef"}
 %{$with__set_operator_foreach = "DeeRoSet_FromSequence"}
 %{$with__map_frozen = {

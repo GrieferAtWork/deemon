@@ -32,6 +32,11 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#include "../runtime/method-hint-defaults.h"
+#include "../runtime/method-hints.h"
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
 DECL_BEGIN
 
 STATIC_ASSERT(__SIZEOF_POINTER__ == __SIZEOF_SIZE_T__);
@@ -115,6 +120,10 @@ PUBLIC size_t (DCALL _DeeNone_rets0_5)(void *UNUSED(a), void *UNUSED(b), void *U
 	return 0;
 }
 
+PUBLIC size_t (DCALL _DeeNone_rets0_6)(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d), void *UNUSED(e), void *UNUSED(f)) {
+	return 0;
+}
+
 PUBLIC int (DCALL _DeeNone_reti1_1)(void *UNUSED(a)) {
 	return 1;
 }
@@ -144,6 +153,10 @@ PUBLIC size_t (DCALL _DeeNone_retsm1_3)(void *UNUSED(a), void *UNUSED(b), void *
 }
 
 PUBLIC size_t (DCALL _DeeNone_retsm1_4)(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d)) {
+	return (size_t)-1;
+}
+
+PUBLIC size_t (DCALL _DeeNone_retsm1_5)(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d), void *UNUSED(e)) {
 	return (size_t)-1;
 }
 
@@ -236,6 +249,7 @@ DeeNone_OperatorGetItemNRStringLenHash(DeeObject *__restrict UNUSED(self),
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeNone_OperatorUnpack(DeeObject *UNUSED(self), size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	Dee_Setrefv(dst, Dee_None, dst_length);
@@ -250,6 +264,7 @@ DeeNone_OperatorUnpackEx(DeeObject *UNUSED(self), size_t dst_length_min,
 	Dee_Setrefv(dst, Dee_None, dst_length_max);
 	return dst_length_max;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #define DeeNone_OperatorVarCtor    DeeNone_NewRef
 #define DeeNone_OperatorVarCopy    (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_NewRef1)
@@ -296,9 +311,11 @@ DeeNone_OperatorUnpackEx(DeeObject *UNUSED(self), size_t dst_length_min,
 #define DeeNone_OperatorSetRange                (*(int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&_DeeNone_reti0_4)
 #define DeeNone_OperatorForeach                 (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&_DeeNone_rets0_3)
 #define DeeNone_OperatorForeachPair             (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&_DeeNone_rets0_3)
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define DeeNone_OperatorEnumerate               (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&_DeeNone_rets0_3)
 #define DeeNone_OperatorEnumerateIndex          (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&_DeeNone_rets0_5)
 #define DeeNone_OperatorIterKeys                DeeNone_OperatorVarCopy
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #define DeeNone_OperatorBoundItem               (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)
 #define DeeNone_OperatorHasItem                 (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)
 #define DeeNone_OperatorSize                    (*(size_t (DCALL *)(DeeObject *__restrict))&_DeeNone_rets0_1)
@@ -375,9 +392,7 @@ DeeNone_OperatorUnpackEx(DeeObject *UNUSED(self), size_t dst_length_min,
 #define DeeNone_OperatorCall       (*(DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&_DeeNone_NewRef3)
 #define DeeNone_OperatorCallKw     (*(DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&_DeeNone_NewRef4)
 
-STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1,
-                  "NOTE: This is also assumed by 'method-hints.dee' "
-                  "at 'if (returnExpr == \"ITER_DONE\")'");
+STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by definition of `DeeNone_OperatorIterNext'");
 #define DeeNone_OperatorIterNext (*(DREF DeeObject *(DCALL *)(DeeObject *))&_DeeNone_retsm1_1)
 
 PRIVATE struct type_iterator none_iterator = {
@@ -446,9 +461,15 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_setrange                     = */ &DeeNone_OperatorSetRange,
 	/* .tp_foreach                      = */ &DeeNone_OperatorForeach,
 	/* .tp_foreach_pair                 = */ &DeeNone_OperatorForeachPair,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* ._deprecated_tp_enumerate        = */ NULL,
+	/* ._deprecated_tp_enumerate_index  = */ NULL,
+	/* ._deprecated_tp_iterkeys         = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_enumerate                    = */ &DeeNone_OperatorEnumerate,
 	/* .tp_enumerate_index              = */ &DeeNone_OperatorEnumerateIndex,
 	/* .tp_iterkeys                     = */ &DeeNone_OperatorIterKeys,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_bounditem                    = */ &DeeNone_OperatorBoundItem,
 	/* .tp_hasitem                      = */ &DeeNone_OperatorHasItem,
 	/* .tp_size                         = */ &DeeNone_OperatorSize,
@@ -481,9 +502,15 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_hasitem_string_len_hash      = */ &DeeNone_OperatorHasItemStringLenHash,
 	/* .tp_asvector                     = */ &DeeNone_OperatorAsVector,
 	/* .tp_asvector_nothrow             = */ &DeeNone_OperatorAsVectorNothrow,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* ._deprecated_tp_unpack           = */ NULL,
+	/* ._deprecated_tp_unpack_ex        = */ NULL,
+	/* ._deprecated_tp_unpack_ub        = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_unpack                       = */ &DeeNone_OperatorUnpack,
 	/* .tp_unpack_ex                    = */ &DeeNone_OperatorUnpackEx,
 	/* .tp_unpack_ub                    = */ &DeeNone_OperatorUnpack,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_getitemnr                    = */ &DeeNone_OperatorGetItemNR,
 	/* .tp_getitemnr_string_hash        = */ &DeeNone_OperatorGetItemNRStringHash,
 	/* .tp_getitemnr_string_len_hash    = */ &DeeNone_OperatorGetItemNRStringLenHash,
@@ -647,6 +674,253 @@ PRIVATE struct type_operator const none_operators[] = {
 	TYPE_OPERATOR_CUSTOM(OPERATOR_FILE_000A_PUTC, &invoke_none_file_char_operator, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 };
 
+#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
+PRIVATE struct Dee_type_mh_cache mh_cache_none = {
+	/* clang-format off */
+/*[[[deemon (printSpecialTypeMhCacheBody from "..method-hints.method-hints")({"$none", "$empty"});]]]*/
+	/* .mh_seq_operator_bool                       = */ &default__seq_operator_bool__none,
+	/* .mh_seq_operator_sizeob                     = */ &default__seq_operator_sizeob__none,
+	/* .mh_seq_operator_size                       = */ &default__seq_operator_size__empty,
+	/* .mh_seq_operator_iter                       = */ &default__seq_operator_iter__none,
+	/* .mh_seq_operator_foreach                    = */ &default__seq_operator_foreach__empty,
+	/* .mh_seq_operator_foreach_pair               = */ &default__seq_operator_foreach_pair__empty,
+	/* .mh_seq_operator_getitem                    = */ &default__seq_operator_getitem__none,
+	/* .mh_seq_operator_getitem_index              = */ &default__seq_operator_getitem_index__none,
+	/* .mh_seq_operator_trygetitem                 = */ &default__seq_operator_trygetitem__none,
+	/* .mh_seq_operator_trygetitem_index           = */ &default__seq_operator_trygetitem_index__none,
+	/* .mh_seq_operator_hasitem                    = */ &default__seq_operator_hasitem__none,
+	/* .mh_seq_operator_hasitem_index              = */ &default__seq_operator_hasitem_index__none,
+	/* .mh_seq_operator_bounditem                  = */ &default__seq_operator_bounditem__none,
+	/* .mh_seq_operator_bounditem_index            = */ &default__seq_operator_bounditem_index__none,
+	/* .mh_seq_operator_delitem                    = */ &default__seq_operator_delitem__none,
+	/* .mh_seq_operator_delitem_index              = */ &default__seq_operator_delitem_index__none,
+	/* .mh_seq_operator_setitem                    = */ &default__seq_operator_setitem__none,
+	/* .mh_seq_operator_setitem_index              = */ &default__seq_operator_setitem_index__none,
+	/* .mh_seq_operator_getrange                   = */ &default__seq_operator_getrange__none,
+	/* .mh_seq_operator_getrange_index             = */ &default__seq_operator_getrange_index__none,
+	/* .mh_seq_operator_getrange_index_n           = */ &default__seq_operator_getrange_index_n__none,
+	/* .mh_seq_operator_delrange                   = */ &default__seq_operator_delrange__none,
+	/* .mh_seq_operator_delrange_index             = */ &default__seq_operator_delrange_index__none,
+	/* .mh_seq_operator_delrange_index_n           = */ &default__seq_operator_delrange_index_n__none,
+	/* .mh_seq_operator_setrange                   = */ &default__seq_operator_setrange__none,
+	/* .mh_seq_operator_setrange_index             = */ &default__seq_operator_setrange_index__none,
+	/* .mh_seq_operator_setrange_index_n           = */ &default__seq_operator_setrange_index_n__none,
+	/* .mh_seq_operator_assign                     = */ &default__seq_operator_assign__none,
+	/* .mh_seq_operator_hash                       = */ &default__seq_operator_hash__none,
+	/* .mh_seq_operator_compare                    = */ &default__seq_operator_compare__empty,
+	/* .mh_seq_operator_compare_eq                 = */ &default__seq_operator_compare_eq__empty,
+	/* .mh_seq_operator_trycompare_eq              = */ &default__seq_operator_trycompare_eq__empty,
+	/* .mh_seq_operator_eq                         = */ &default__seq_operator_eq__empty,
+	/* .mh_seq_operator_ne                         = */ &default__seq_operator_ne__empty,
+	/* .mh_seq_operator_lo                         = */ &default__seq_operator_lo__empty,
+	/* .mh_seq_operator_le                         = */ &default__seq_operator_le__empty,
+	/* .mh_seq_operator_gr                         = */ &default__seq_operator_gr__empty,
+	/* .mh_seq_operator_ge                         = */ &default__seq_operator_ge__empty,
+	/* .mh_seq_operator_inplace_add                = */ &default__seq_operator_inplace_add__none,
+	/* .mh_seq_operator_inplace_mul                = */ &default__seq_operator_inplace_mul__none,
+	/* .mh_seq_enumerate                           = */ &default__seq_enumerate__empty,
+	/* .mh_seq_enumerate_index                     = */ &default__seq_enumerate_index__empty,
+	/* .mh_seq_makeenumeration                     = */ &default__seq_makeenumeration__none,
+	/* .mh_seq_makeenumeration_with_range          = */ &default__seq_makeenumeration_with_range__none,
+	/* .mh_seq_makeenumeration_with_intrange       = */ &default__seq_makeenumeration_with_intrange__none,
+	/* .mh_seq_foreach_reverse                     = */ &default__seq_foreach_reverse__empty,
+	/* .mh_seq_enumerate_index_reverse             = */ &default__seq_enumerate_index_reverse__empty,
+	/* .mh_seq_unpack                              = */ &default__seq_unpack__none,
+	/* .mh_seq_unpack_ex                           = */ &default__seq_unpack_ex__none,
+	/* .mh_seq_unpack_ub                           = */ &default__seq_unpack_ub__none,
+	/* .mh_seq_trygetfirst                         = */ &default__seq_trygetfirst__none,
+	/* .mh_seq_getfirst                            = */ &default__seq_getfirst__none,
+	/* .mh_seq_boundfirst                          = */ &default__seq_boundfirst__none,
+	/* .mh_seq_delfirst                            = */ &default__seq_delfirst__none,
+	/* .mh_seq_setfirst                            = */ &default__seq_setfirst__none,
+	/* .mh_seq_trygetlast                          = */ &default__seq_trygetlast__none,
+	/* .mh_seq_getlast                             = */ &default__seq_getlast__none,
+	/* .mh_seq_boundlast                           = */ &default__seq_boundlast__none,
+	/* .mh_seq_dellast                             = */ &default__seq_dellast__none,
+	/* .mh_seq_setlast                             = */ &default__seq_setlast__none,
+	/* .mh_seq_cached                              = */ &default__seq_cached__none,
+	/* .mh_seq_frozen                              = */ &default__seq_frozen__none,
+	/* .mh_seq_any                                 = */ &default__seq_any__empty,
+	/* .mh_seq_any_with_key                        = */ &default__seq_any_with_key__empty,
+	/* .mh_seq_any_with_range                      = */ &default__seq_any_with_range__empty,
+	/* .mh_seq_any_with_range_and_key              = */ &default__seq_any_with_range_and_key__empty,
+	/* .mh_seq_all                                 = */ &default__seq_all__empty,
+	/* .mh_seq_all_with_key                        = */ &default__seq_all_with_key__empty,
+	/* .mh_seq_all_with_range                      = */ &default__seq_all_with_range__empty,
+	/* .mh_seq_all_with_range_and_key              = */ &default__seq_all_with_range_and_key__empty,
+	/* .mh_seq_parity                              = */ &default__seq_parity__empty,
+	/* .mh_seq_parity_with_key                     = */ &default__seq_parity_with_key__empty,
+	/* .mh_seq_parity_with_range                   = */ &default__seq_parity_with_range__empty,
+	/* .mh_seq_parity_with_range_and_key           = */ &default__seq_parity_with_range_and_key__empty,
+	/* .mh_seq_reduce                              = */ &default__seq_reduce__none,
+	/* .mh_seq_reduce_with_init                    = */ &default__seq_reduce_with_init__empty,
+	/* .mh_seq_reduce_with_range                   = */ &default__seq_reduce_with_range__none,
+	/* .mh_seq_reduce_with_range_and_init          = */ &default__seq_reduce_with_range_and_init__empty,
+	/* .mh_seq_min                                 = */ &default__seq_min__empty,
+	/* .mh_seq_min_with_key                        = */ &default__seq_min_with_key__empty,
+	/* .mh_seq_min_with_range                      = */ &default__seq_min_with_range__empty,
+	/* .mh_seq_min_with_range_and_key              = */ &default__seq_min_with_range_and_key__empty,
+	/* .mh_seq_max                                 = */ &default__seq_max__empty,
+	/* .mh_seq_max_with_key                        = */ &default__seq_max_with_key__empty,
+	/* .mh_seq_max_with_range                      = */ &default__seq_max_with_range__empty,
+	/* .mh_seq_max_with_range_and_key              = */ &default__seq_max_with_range_and_key__empty,
+	/* .mh_seq_sum                                 = */ &default__seq_sum__none,
+	/* .mh_seq_sum_with_range                      = */ &default__seq_sum_with_range__none,
+	/* .mh_seq_count                               = */ &default__seq_count__empty,
+	/* .mh_seq_count_with_key                      = */ &default__seq_count_with_key__empty,
+	/* .mh_seq_count_with_range                    = */ &default__seq_count_with_range__empty,
+	/* .mh_seq_count_with_range_and_key            = */ &default__seq_count_with_range_and_key__empty,
+	/* .mh_seq_contains                            = */ &default__seq_contains__empty,
+	/* .mh_seq_contains_with_key                   = */ &default__seq_contains_with_key__empty,
+	/* .mh_seq_contains_with_range                 = */ &default__seq_contains_with_range__empty,
+	/* .mh_seq_contains_with_range_and_key         = */ &default__seq_contains_with_range_and_key__empty,
+	/* .mh_seq_operator_contains                   = */ &default__seq_operator_contains__none,
+	/* .mh_seq_locate                              = */ &default__seq_locate__none,
+	/* .mh_seq_locate_with_range                   = */ &default__seq_locate_with_range__none,
+	/* .mh_seq_rlocate                             = */ &default__seq_rlocate__none,
+	/* .mh_seq_rlocate_with_range                  = */ &default__seq_rlocate_with_range__none,
+	/* .mh_seq_startswith                          = */ &default__seq_startswith__empty,
+	/* .mh_seq_startswith_with_key                 = */ &default__seq_startswith_with_key__empty,
+	/* .mh_seq_startswith_with_range               = */ &default__seq_startswith_with_range__empty,
+	/* .mh_seq_startswith_with_range_and_key       = */ &default__seq_startswith_with_range_and_key__empty,
+	/* .mh_seq_endswith                            = */ &default__seq_endswith__empty,
+	/* .mh_seq_endswith_with_key                   = */ &default__seq_endswith_with_key__empty,
+	/* .mh_seq_endswith_with_range                 = */ &default__seq_endswith_with_range__empty,
+	/* .mh_seq_endswith_with_range_and_key         = */ &default__seq_endswith_with_range_and_key__empty,
+	/* .mh_seq_find                                = */ &default__seq_find__empty,
+	/* .mh_seq_find_with_key                       = */ &default__seq_find_with_key__empty,
+	/* .mh_seq_rfind                               = */ &default__seq_rfind__empty,
+	/* .mh_seq_rfind_with_key                      = */ &default__seq_rfind_with_key__empty,
+	/* .mh_seq_erase                               = */ &default__seq_erase__empty,
+	/* .mh_seq_insert                              = */ &default__seq_insert__none,
+	/* .mh_seq_insertall                           = */ &default__seq_insertall__none,
+	/* .mh_seq_pushfront                           = */ &default__seq_pushfront__none,
+	/* .mh_seq_append                              = */ &default__seq_append__none,
+	/* .mh_seq_extend                              = */ &default__seq_extend__none,
+	/* .mh_seq_xchitem_index                       = */ &default__seq_xchitem_index__none,
+	/* .mh_seq_clear                               = */ &default__seq_clear__none,
+	/* .mh_seq_pop                                 = */ &default__seq_pop__none,
+	/* .mh_seq_remove                              = */ &default__seq_remove__none,
+	/* .mh_seq_remove_with_key                     = */ &default__seq_remove_with_key__none,
+	/* .mh_seq_rremove                             = */ &default__seq_rremove__none,
+	/* .mh_seq_rremove_with_key                    = */ &default__seq_rremove_with_key__none,
+	/* .mh_seq_removeall                           = */ &default__seq_removeall__none,
+	/* .mh_seq_removeall_with_key                  = */ &default__seq_removeall_with_key__none,
+	/* .mh_seq_removeif                            = */ &default__seq_removeif__none,
+	/* .mh_seq_resize                              = */ &default__seq_resize__none,
+	/* .mh_seq_fill                                = */ &default__seq_fill__empty,
+	/* .mh_seq_reverse                             = */ &default__seq_reverse__none,
+	/* .mh_seq_reversed                            = */ &default__seq_reversed__none,
+	/* .mh_seq_sort                                = */ &default__seq_sort__none,
+	/* .mh_seq_sort_with_key                       = */ &default__seq_sort_with_key__none,
+	/* .mh_seq_sorted                              = */ &default__seq_sorted__none,
+	/* .mh_seq_sorted_with_key                     = */ &default__seq_sorted_with_key__none,
+	/* .mh_seq_bfind                               = */ &default__seq_bfind__empty,
+	/* .mh_seq_bfind_with_key                      = */ &default__seq_bfind_with_key__empty,
+	/* .mh_seq_bposition                           = */ &default__seq_bposition__empty,
+	/* .mh_seq_bposition_with_key                  = */ &default__seq_bposition_with_key__empty,
+	/* .mh_seq_brange                              = */ &default__seq_brange__empty,
+	/* .mh_seq_brange_with_key                     = */ &default__seq_brange_with_key__empty,
+	/* .mh_set_operator_iter                       = */ &default__set_operator_iter__none,
+	/* .mh_set_operator_foreach                    = */ &default__set_operator_foreach__empty,
+	/* .mh_set_operator_sizeob                     = */ &default__set_operator_sizeob__none,
+	/* .mh_set_operator_size                       = */ &default__set_operator_size__empty,
+	/* .mh_set_operator_hash                       = */ &default__set_operator_hash__none,
+	/* .mh_set_operator_compare_eq                 = */ &default__set_operator_compare_eq__empty,
+	/* .mh_set_operator_trycompare_eq              = */ &default__set_operator_trycompare_eq__empty,
+	/* .mh_set_operator_eq                         = */ &default__set_operator_eq__empty,
+	/* .mh_set_operator_ne                         = */ &default__set_operator_ne__empty,
+	/* .mh_set_operator_lo                         = */ &default__set_operator_lo__empty,
+	/* .mh_set_operator_le                         = */ &default__set_operator_le__empty,
+	/* .mh_set_operator_gr                         = */ &default__set_operator_gr__empty,
+	/* .mh_set_operator_ge                         = */ &default__set_operator_ge__empty,
+	/* .mh_set_operator_inv                        = */ &default__set_operator_inv__none,
+	/* .mh_set_operator_add                        = */ &default__set_operator_add__none,
+	/* .mh_set_operator_sub                        = */ &default__set_operator_sub__none,
+	/* .mh_set_operator_and                        = */ &default__set_operator_and__none,
+	/* .mh_set_operator_xor                        = */ &default__set_operator_xor__none,
+	/* .mh_set_operator_inplace_add                = */ &default__set_operator_inplace_add__none,
+	/* .mh_set_operator_inplace_sub                = */ &default__set_operator_inplace_sub__none,
+	/* .mh_set_operator_inplace_and                = */ &default__set_operator_inplace_and__none,
+	/* .mh_set_operator_inplace_xor                = */ &default__set_operator_inplace_xor__none,
+	/* .mh_set_frozen                              = */ &default__set_frozen__none,
+	/* .mh_set_unify                               = */ &default__set_unify__none,
+	/* .mh_set_insert                              = */ &default__set_insert__none,
+	/* .mh_set_insertall                           = */ &default__set_insertall__none,
+	/* .mh_set_remove                              = */ &default__set_remove__none,
+	/* .mh_set_removeall                           = */ &default__set_removeall__none,
+	/* .mh_set_pop                                 = */ &default__set_pop__none,
+	/* .mh_set_pop_with_default                    = */ &default__set_pop_with_default__none,
+	/* .mh_map_operator_iter                       = */ &default__map_operator_iter__none,
+	/* .mh_map_operator_foreach_pair               = */ &default__map_operator_foreach_pair__empty,
+	/* .mh_map_operator_sizeob                     = */ &default__map_operator_sizeob__none,
+	/* .mh_map_operator_size                       = */ &default__map_operator_size__none,
+	/* .mh_map_operator_getitem                    = */ &default__map_operator_getitem__none,
+	/* .mh_map_operator_trygetitem                 = */ &default__map_operator_trygetitem__none,
+	/* .mh_map_operator_getitem_index              = */ &default__map_operator_getitem_index__none,
+	/* .mh_map_operator_trygetitem_index           = */ &default__map_operator_trygetitem_index__none,
+	/* .mh_map_operator_getitem_string_hash        = */ &default__map_operator_getitem_string_hash__none,
+	/* .mh_map_operator_trygetitem_string_hash     = */ &default__map_operator_trygetitem_string_hash__none,
+	/* .mh_map_operator_getitem_string_len_hash    = */ &default__map_operator_getitem_string_len_hash__none,
+	/* .mh_map_operator_trygetitem_string_len_hash = */ &default__map_operator_trygetitem_string_len_hash__none,
+	/* .mh_map_operator_bounditem                  = */ &default__map_operator_bounditem__none,
+	/* .mh_map_operator_bounditem_index            = */ &default__map_operator_bounditem_index__none,
+	/* .mh_map_operator_bounditem_string_hash      = */ &default__map_operator_bounditem_string_hash__none,
+	/* .mh_map_operator_bounditem_string_len_hash  = */ &default__map_operator_bounditem_string_len_hash__none,
+	/* .mh_map_operator_hasitem                    = */ &default__map_operator_hasitem__none,
+	/* .mh_map_operator_hasitem_index              = */ &default__map_operator_hasitem_index__none,
+	/* .mh_map_operator_hasitem_string_hash        = */ &default__map_operator_hasitem_string_hash__none,
+	/* .mh_map_operator_hasitem_string_len_hash    = */ &default__map_operator_hasitem_string_len_hash__none,
+	/* .mh_map_operator_delitem                    = */ &default__map_operator_delitem__empty,
+	/* .mh_map_operator_delitem_index              = */ &default__map_operator_delitem_index__empty,
+	/* .mh_map_operator_delitem_string_hash        = */ &default__map_operator_delitem_string_hash__empty,
+	/* .mh_map_operator_delitem_string_len_hash    = */ &default__map_operator_delitem_string_len_hash__empty,
+	/* .mh_map_operator_setitem                    = */ &default__map_operator_setitem__none,
+	/* .mh_map_operator_setitem_index              = */ &default__map_operator_setitem_index__none,
+	/* .mh_map_operator_setitem_string_hash        = */ &default__map_operator_setitem_string_hash__none,
+	/* .mh_map_operator_setitem_string_len_hash    = */ &default__map_operator_setitem_string_len_hash__none,
+	/* .mh_map_operator_contains                   = */ &default__map_operator_contains__none,
+	/* .mh_map_keys                                = */ &default__map_keys__none,
+	/* .mh_map_iterkeys                            = */ &default__map_iterkeys__none,
+	/* .mh_map_values                              = */ &default__map_values__none,
+	/* .mh_map_itervalues                          = */ &default__map_itervalues__none,
+	/* .mh_map_enumerate                           = */ &default__map_enumerate__empty,
+	/* .mh_map_enumerate_range                     = */ &default__map_enumerate_range__empty,
+	/* .mh_map_makeenumeration                     = */ &default__map_makeenumeration__none,
+	/* .mh_map_makeenumeration_with_range          = */ &default__map_makeenumeration_with_range__none,
+	/* .mh_map_operator_compare_eq                 = */ &default__map_operator_compare_eq__empty,
+	/* .mh_map_operator_trycompare_eq              = */ &default__map_operator_trycompare_eq__empty,
+	/* .mh_map_operator_eq                         = */ &default__map_operator_eq__empty,
+	/* .mh_map_operator_ne                         = */ &default__map_operator_ne__empty,
+	/* .mh_map_operator_lo                         = */ &default__map_operator_lo__empty,
+	/* .mh_map_operator_le                         = */ &default__map_operator_le__empty,
+	/* .mh_map_operator_gr                         = */ &default__map_operator_gr__empty,
+	/* .mh_map_operator_ge                         = */ &default__map_operator_ge__empty,
+	/* .mh_map_operator_add                        = */ &default__map_operator_add__none,
+	/* .mh_map_operator_sub                        = */ &default__map_operator_sub__none,
+	/* .mh_map_operator_and                        = */ &default__map_operator_and__none,
+	/* .mh_map_operator_xor                        = */ &default__map_operator_xor__none,
+	/* .mh_map_operator_inplace_add                = */ &default__map_operator_inplace_add__none,
+	/* .mh_map_operator_inplace_sub                = */ &default__map_operator_inplace_sub__none,
+	/* .mh_map_operator_inplace_and                = */ &default__map_operator_inplace_and__none,
+	/* .mh_map_operator_inplace_xor                = */ &default__map_operator_inplace_xor__none,
+	/* .mh_map_frozen                              = */ &default__map_frozen__none,
+	/* .mh_map_setold                              = */ &default__map_setold__none,
+	/* .mh_map_setold_ex                           = */ &default__map_setold_ex__none,
+	/* .mh_map_setnew                              = */ &default__map_setnew__none,
+	/* .mh_map_setnew_ex                           = */ &default__map_setnew_ex__none,
+	/* .mh_map_setdefault                          = */ &default__map_setdefault__none,
+	/* .mh_map_update                              = */ &default__map_update__none,
+	/* .mh_map_remove                              = */ &default__map_remove__none,
+	/* .mh_map_removekeys                          = */ &default__map_removekeys__none,
+	/* .mh_map_pop                                 = */ &default__map_pop__none,
+	/* .mh_map_pop_with_default                    = */ &default__map_pop_with_default__none,
+	/* .mh_map_popitem                             = */ &default__map_popitem__empty,
+/*[[[end]]]*/
+	/* clang-format on */
+};
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
 PUBLIC DeeTypeObject DeeNone_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_none),
@@ -775,7 +1049,10 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	/* .tp_call_kw       = */ &DeeNone_OperatorCallKw,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ none_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(none_operators)
+	/* .tp_operators_size= */ COMPILER_LENOF(none_operators),
+#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
+	/* .tp_mhcache       = */ &mh_cache_none,
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 PUBLIC DeeNoneObject DeeNone_Singleton = {

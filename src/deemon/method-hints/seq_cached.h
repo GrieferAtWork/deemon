@@ -29,6 +29,7 @@ __seq_cached__->?DSequence;
 [[wunused, getset_member("get")]] DREF DeeObject *
 __seq_cached__.seq_cached([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias(DeeObject_NewRef)}
+%{$none = return_none}
 %{$empty = "DeeObject_NewRef"}
 %{$with__seq_operator_iter = {
 	DREF DeeObject *iter = CALL_DEPENDENCY(seq_operator_iter, self);

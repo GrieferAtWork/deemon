@@ -39,6 +39,7 @@ err:
 __seq_delitem__.seq_operator_delitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *index)
 %{unsupported(auto("operator del[]"))}
+%{$none = 0}
 %{$empty = err_index_out_of_bounds_ob(self, index)}
 %{using seq_operator_delitem_index: {
 	size_t index_value;
@@ -66,6 +67,7 @@ err:
 __seq_delitem__.seq_operator_delitem_index([[nonnull]] DeeObject *__restrict self,
                                            size_t index)
 %{unsupported(auto("operator del[]"))}
+%{$none = 0}
 %{$empty = err_index_out_of_bounds(self, index, 0)}
 %{$with__seq_operator_delrange_index = {
 	return CALL_DEPENDENCY(seq_operator_delrange_index, self, (Dee_ssize_t)index, (Dee_ssize_t)index + 1);

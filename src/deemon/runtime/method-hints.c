@@ -2840,7 +2840,7 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 3)) Dee_funptr_t
  * such that direct instances of these types behave as "empty" instances with
  * the respective typing. */
 INTERN struct Dee_type_mh_cache mh_cache_empty = {
-/* clang-format off */
+	/* clang-format off */
 /*[[[deemon (printSpecialTypeMhCacheBody from "..method-hints.method-hints")("$empty");]]]*/
 	/* .mh_seq_operator_bool                       = */ &default__seq_operator_bool__empty,
 	/* .mh_seq_operator_sizeob                     = */ &default__seq_operator_sizeob__empty,
@@ -3081,7 +3081,7 @@ INTERN struct Dee_type_mh_cache mh_cache_empty = {
 	/* .mh_map_pop_with_default                    = */ &default__map_pop_with_default__empty,
 	/* .mh_map_popitem                             = */ &default__map_popitem__empty,
 /*[[[end]]]*/
-/* clang-format on */
+	/* clang-format on */
 };
 
 

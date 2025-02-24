@@ -42,6 +42,7 @@ __map_setdefault__.map_setdefault([[nonnull]] DeeObject *self,
                                   [[nonnull]] DeeObject *key,
                                   [[nonnull]] DeeObject *value)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = "default__map_setdefault__unsupported"}
 %{$with__map_setnew_ex = {
 	DREF DeeObject *old_value = CALL_DEPENDENCY(map_setnew_ex, self, key, value);

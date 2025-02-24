@@ -38,6 +38,7 @@ err:
 [[wunused]] int
 __seq_clear__.seq_clear([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = 0}
 %{$with__seq_operator_delrange = {
 	return CALL_DEPENDENCY(seq_operator_delrange, self, DeeInt_Zero, Dee_None);

@@ -61,6 +61,7 @@ __set_add__.set_operator_add([[nonnull]] DeeObject *lhs,
 err:
 	return NULL;
 })}
+%{$none = return_none}
 %{$empty = "default__set_operator_add__unsupported"} {
 	return LOCAL_CALLATTR(lhs, 1, &rhs);
 }

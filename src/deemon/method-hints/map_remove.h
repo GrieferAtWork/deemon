@@ -44,6 +44,7 @@ err:
 __map_remove__.map_remove([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = "default__map_remove__unsupported"}
 %{$with__map_operator_bounditem__and__map_operator_delitem = {
 	int bound = CALL_DEPENDENCY(map_operator_bounditem, self, key);

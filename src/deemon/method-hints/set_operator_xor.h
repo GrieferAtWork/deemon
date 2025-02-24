@@ -56,6 +56,7 @@ __set_xor__.set_operator_xor([[nonnull]] DeeObject *lhs,
 err:
 	return NULL;
 })}
+%{$none = return_none}
 %{$empty = "default__set_operator_xor__unsupported"} {
 	return LOCAL_CALLATTR(lhs, 1, &rhs);
 }

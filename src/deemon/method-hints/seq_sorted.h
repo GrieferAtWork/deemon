@@ -44,7 +44,8 @@ err:
 __seq_sorted__.seq_sorted([[nonnull]] DeeObject *self,
                           size_t start, size_t end)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$none = return_none}
+%{$empty = return_empty_seq}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DeeTupleObject *result;
@@ -150,7 +151,8 @@ __seq_sorted__.seq_sorted_with_key([[nonnull]] DeeObject *self,
                                    size_t start, size_t end,
                                    [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$none = return_none}
+%{$empty = return_empty_seq}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DeeTupleObject *result;

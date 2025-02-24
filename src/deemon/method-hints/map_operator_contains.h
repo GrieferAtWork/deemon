@@ -35,6 +35,7 @@ err:
 __map_contains__.map_operator_contains([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *key)
 %{unsupported(auto("operator contains"))}
+%{$none = return_none}
 %{$empty = return_false}
 %{$with__map_operator_trygetitem = {
 	DREF DeeObject *value = CALL_DEPENDENCY(map_operator_trygetitem, self, key);

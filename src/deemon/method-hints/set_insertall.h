@@ -57,6 +57,7 @@ set_insertall_foreach_cb(void *arg, DeeObject *elem) {
 __set_insertall__.set_insertall([[nonnull]] DeeObject *self,
                                 [[nonnull]] DeeObject *keys)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = "default__set_insertall__unsupported"}
 %{$with__set_operator_inplace_add = {
 	int result;

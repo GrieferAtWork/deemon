@@ -38,6 +38,7 @@ __seq_setitem__.seq_operator_setitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *index,
                                      [[nonnull]] DeeObject *value)
 %{unsupported(auto("operator []="))}
+%{$none = 0}
 %{$empty = err_index_out_of_bounds_ob(self, index)}
 %{using seq_operator_setitem_index: {
 	size_t index_value;
@@ -69,6 +70,7 @@ __seq_setitem__.seq_operator_setitem_index([[nonnull]] DeeObject *self,
                                            size_t index,
                                            [[nonnull]] DeeObject *value)
 %{unsupported(auto("operator []="))}
+%{$none = 0}
 %{$empty = err_index_out_of_bounds(self, index, 0)}
 %{$with__seq_operator_setrange_index = {
 	int result;

@@ -29,6 +29,7 @@ __map_values__->?DSequence;
 [[wunused, getset_member("get")]] DREF DeeObject *
 __map_values__.map_values([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = return_empty_seq}
 %{$with__map_itervalues = {
 	DREF DefaultSequence_MapProxy *result;

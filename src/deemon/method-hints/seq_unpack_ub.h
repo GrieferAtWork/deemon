@@ -78,6 +78,7 @@ size_t __seq_unpackub__.seq_unpack_ub([[nonnull]] DeeObject *__restrict self,
 %{unsupported({
 	return err_seq_unsupportedf(self, "__seq_unpackub__(%" PRFuSIZ ", %" PRFuSIZ ")", min_count, max_count);
 })}
+%{$none = "default__seq_unpack_ex__none"}
 %{$empty = {
 	if unlikely(min_count > 0)
 		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);

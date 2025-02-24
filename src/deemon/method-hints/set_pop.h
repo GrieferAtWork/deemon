@@ -37,6 +37,7 @@ err:
 [[wunused]] DREF DeeObject *
 __set_pop__.set_pop([[nonnull]] DeeObject *self)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = {
 	err_empty_sequence(self);
 	return NULL;
@@ -82,6 +83,7 @@ err:
 __set_pop__.set_pop_with_default([[nonnull]] DeeObject *self,
                                  [[nonnull]] DeeObject *default_)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = return_reference_(default_)}
 %{$with__seq_trygetfirst__and__set_remove = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_trygetfirst, self);

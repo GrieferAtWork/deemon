@@ -29,6 +29,7 @@ __seq_frozen__->?O;
 [[wunused, getset_member("get")]] DREF DeeObject *
 __seq_frozen__.seq_frozen([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = "DeeObject_NewRef"}
 %{$with__seq_operator_foreach = "DeeTuple_FromSequence"}
 %{$with__set_frozen = {

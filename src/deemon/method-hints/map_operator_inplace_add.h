@@ -52,6 +52,7 @@ __map_inplace_add__.map_operator_inplace_add([[nonnull]] DREF DeeObject **__rest
 err:
 	return -1;
 })}
+%{$none = 0}
 %{$empty = "default__map_operator_inplace_add__unsupported"}
 %{$with__map_update = {
 	return CALL_DEPENDENCY(map_update, *p_self, items);

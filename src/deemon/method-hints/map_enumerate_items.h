@@ -39,6 +39,7 @@ err:
 [[wunused]] DREF DeeObject *
 __map_enumerate_items__.map_makeenumeration([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
+%{$none = "default__seq_makeenumeration__none"}
 %{$empty = "default__seq_makeenumeration__empty"}
 %{$with__operator_iter = [[inherit_as(default__map_makeenumeration__with__map_operator_iter)]] "DeeObject_NewRef"}
 %{$with__map_operator_iter = {
@@ -63,6 +64,7 @@ __map_enumerate_items__.map_makeenumeration_with_range([[nonnull]] DeeObject *se
                                                        [[nonnull]] DeeObject *start,
                                                        [[nonnull]] DeeObject *end)
 %{unsupported(auto)}
+%{$none = "default__seq_makeenumeration_with_range__none"}
 %{$empty = "default__seq_makeenumeration_with_range__empty"}
 %{$with__map_operator_iter = {
 	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack, self, start, end);

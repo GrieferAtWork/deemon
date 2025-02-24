@@ -56,6 +56,7 @@ seq_extend_with_foreach_append_cb(void *arg, DeeObject *item) {
 int __seq_extend__.seq_extend([[nonnull]] DeeObject *self,
                               [[nonnull]] DeeObject *items)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = "default__seq_extend__unsupported"}
 %{$with__seq_operator_size__and__seq_operator_setrange_index = {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);

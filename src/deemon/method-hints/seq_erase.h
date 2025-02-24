@@ -38,7 +38,8 @@ err:
 [[wunused]]
 int __seq_erase__.seq_erase([[nonnull]] DeeObject *__restrict self,
                             size_t index, size_t count)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported(auto)}
+%{$empty = 0}
 %{$with__seq_operator_delrange_index = {
 	size_t end_index;
 	if unlikely(OVERFLOW_UADD(index, count, &end_index))

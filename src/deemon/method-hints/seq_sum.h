@@ -41,7 +41,9 @@ err:
 
 [[wunused]] DREF DeeObject *
 __seq_sum__.seq_sum([[nonnull]] DeeObject *__restrict self)
-%{unsupported(auto)} %{$empty = return_none}
+%{unsupported(auto)}
+%{$none = return_none}
+%{$empty = return_none}
 %{$with__seq_operator_foreach = {
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
@@ -75,7 +77,9 @@ seq_sum_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 [[wunused]] DREF DeeObject *
 __seq_sum__.seq_sum_with_range([[nonnull]] DeeObject *__restrict self,
                                size_t start, size_t end)
-%{unsupported(auto)} %{$empty = return_none}
+%{unsupported(auto)}
+%{$none = return_none}
+%{$empty = return_none}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_sum_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;

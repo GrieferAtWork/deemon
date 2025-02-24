@@ -41,6 +41,7 @@ err:
 int __seq_insert__.seq_insert([[nonnull]] DeeObject *self, size_t index,
                               [[nonnull]] DeeObject *item)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = "default__seq_insert__unsupported"}
 %{$with__seq_insertall = {
 	int result;

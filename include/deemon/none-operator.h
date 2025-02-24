@@ -59,10 +59,12 @@ DFUNDEF int (DCALL _DeeNone_reti0)(void);
 #define _DeeNone_rets0_3  (*(size_t (DCALL *)(void *, void *, void *))&_DeeNone_rets0)
 #define _DeeNone_rets0_4  (*(size_t (DCALL *)(void *, void *, void *, void *))&_DeeNone_rets0)
 #define _DeeNone_rets0_5  (*(size_t (DCALL *)(void *, void *, void *, void *, void *))&_DeeNone_rets0)
+#define _DeeNone_rets0_6  (*(size_t (DCALL *)(void *, void *, void *, void *, void *, void *))&_DeeNone_rets0)
 #define _DeeNone_retsm1_1 (*(size_t (DCALL *)(void *))&_DeeNone_retsm1)
 #define _DeeNone_retsm1_2 (*(size_t (DCALL *)(void *, void *))&_DeeNone_retsm1)
 #define _DeeNone_retsm1_3 (*(size_t (DCALL *)(void *, void *, void *))&_DeeNone_retsm1)
 #define _DeeNone_retsm1_4 (*(size_t (DCALL *)(void *, void *, void *, void *))&_DeeNone_retsm1)
+#define _DeeNone_retsm1_5 (*(size_t (DCALL *)(void *, void *, void *, void *, void *))&_DeeNone_retsm1)
 #else /* DCALL_CALLER_CLEANUP */
 DFUNDEF ATTR_RETNONNULL WUNUSED DREF DeeObject *(DCALL _DeeNone_NewRef1)(void *);
 DFUNDEF ATTR_RETNONNULL WUNUSED DREF DeeObject *(DCALL _DeeNone_NewRef2)(void *, void *);
@@ -76,6 +78,7 @@ DFUNDEF size_t (DCALL _DeeNone_rets0_2)(void *, void *);
 DFUNDEF size_t (DCALL _DeeNone_rets0_3)(void *, void *, void *);
 DFUNDEF size_t (DCALL _DeeNone_rets0_4)(void *, void *, void *, void *);
 DFUNDEF size_t (DCALL _DeeNone_rets0_5)(void *, void *, void *, void *, void *);
+DFUNDEF size_t (DCALL _DeeNone_rets0_6)(void *, void *, void *, void *, void *, void *);
 DFUNDEF int (DCALL _DeeNone_reti1_1)(void *);
 DFUNDEF int (DCALL _DeeNone_reti1_2)(void *, void *);
 DFUNDEF int (DCALL _DeeNone_reti1_3)(void *, void *, void *);
@@ -84,6 +87,7 @@ DFUNDEF size_t (DCALL _DeeNone_retsm1_1)(void *);
 DFUNDEF size_t (DCALL _DeeNone_retsm1_2)(void *, void *);
 DFUNDEF size_t (DCALL _DeeNone_retsm1_3)(void *, void *, void *);
 DFUNDEF size_t (DCALL _DeeNone_retsm1_4)(void *, void *, void *, void *);
+DFUNDEF size_t (DCALL _DeeNone_retsm1_5)(void *, void *, void *, void *, void *);
 #if defined(DCALL_RETURN_COMMON) || __SIZEOF_SIZE_T__ == __SIZEOF_INT__
 #define _DeeNone_reti0_1 (*(int (DCALL *)(void *))&_DeeNone_rets0_1)
 #define _DeeNone_reti0_2 (*(int (DCALL *)(void *, void *))&_DeeNone_rets0_2)

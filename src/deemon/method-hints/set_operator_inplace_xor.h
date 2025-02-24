@@ -52,6 +52,7 @@ __set_inplace_xor__.set_operator_inplace_xor([[nonnull]] DREF DeeObject **__rest
 err:
 	return -1;
 })}
+%{$none = 0}
 %{$empty = "default__set_operator_inplace_xor__unsupported"}
 %{$with__set_operator_foreach__and__set_insertall__and__set_removeall = {
 	DREF DeeObject *only_in_rhs_proxy;

@@ -60,6 +60,7 @@ seq_insertall_with_foreach_insert_cb(void *arg, DeeObject *item) {
 int __seq_insertall__.seq_insertall([[nonnull]] DeeObject *self, size_t index,
                                     [[nonnull]] DeeObject *items)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = {
 	int items_empty = CALL_DEPENDENCY(seq_operator_bool, items);
 	if unlikely(items_empty < 0)

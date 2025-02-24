@@ -57,6 +57,7 @@ __map_inplace_sub__.map_operator_inplace_sub([[nonnull]] DREF DeeObject **__rest
 err:
 	return -1;
 })}
+%{$none = 0}
 %{$empty = "default__map_operator_inplace_sub__unsupported"}
 %{$with__map_removekeys = {
 	if (SetInversion_CheckExact(keys)) {

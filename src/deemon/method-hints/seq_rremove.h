@@ -51,7 +51,9 @@ err:
 __seq_rremove__.seq_rremove([[nonnull]] DeeObject *self,
                             [[nonnull]] DeeObject *item,
                             size_t start, size_t end)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported(auto)}
+%{$none = 0}
+%{$empty = 0}
 %{$with__seq_enumerate_index_reverse__and__seq_operator_delitem_index =
 [[prefix(DEFINE_default_remove_with_enumerate_index_and_delitem_index_cb)]] {
 	Dee_ssize_t foreach_status;
@@ -100,7 +102,9 @@ __seq_rremove__.seq_rremove_with_key([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *item,
                                      size_t start, size_t end,
                                      [[nonnull]] DeeObject *key)
-%{unsupported(auto)} %{$empty = 0}
+%{unsupported(auto)}
+%{$none = 0}
+%{$empty = 0}
 %{$with__seq_enumerate_index_reverse__and__seq_operator_delitem_index =
 [[prefix(DEFINE_default_remove_with_key_with_enumerate_index_and_delitem_index_cb)]] {
 	Dee_ssize_t foreach_status;

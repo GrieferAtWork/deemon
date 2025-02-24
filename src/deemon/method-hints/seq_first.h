@@ -48,6 +48,7 @@ seq_default_getfirst_with_foreach_cb(void *arg, DeeObject *item) {
 [[wunused, getset_member("tryget")]] DREF DeeObject *
 __seq_first__.seq_trygetfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias(default__seq_getfirst__unsupported)}
+%{$none = return_none}
 %{$empty = ITER_DONE}
 %{$with__seq_getfirst = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_getfirst, self);
@@ -92,6 +93,7 @@ err:
 [[wunused, getset_member("get")]] DREF DeeObject *
 __seq_first__.seq_getfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("first"))}
+%{$none = return_none}
 %{$empty = {
 	err_unbound_attribute_string(THIS_TYPE, "first");
 	return NULL;
@@ -114,7 +116,9 @@ __seq_first__.seq_getfirst([[nonnull]] DeeObject *__restrict self)
 /* Check if the first element of the sequence is bound */
 [[wunused, getset_member("bound")]] int
 __seq_first__.seq_boundfirst([[nonnull]] DeeObject *__restrict self)
-%{unsupported_alias($empty)} %{$empty = Dee_BOUND_MISSING}
+%{unsupported_alias($empty)}
+%{$none = Dee_BOUND_YES}
+%{$empty = Dee_BOUND_MISSING}
 %{$with__seq_operator_bounditem_index = {
 	return CALL_DEPENDENCY(seq_operator_bounditem_index, self, 0);
 }}
@@ -135,6 +139,7 @@ __seq_first__.seq_boundfirst([[nonnull]] DeeObject *__restrict self)
 [[wunused, getset_member("del")]] int
 __seq_first__.seq_delfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported({ return err_seq_unsupportedf(self, "del first"); })}
+%{$none = 0}
 %{$empty = 0}
 %{$with__seq_operator_delitem_index = {
 	int result = CALL_DEPENDENCY(seq_operator_delitem_index, self, 0);
@@ -150,8 +155,13 @@ __seq_first__.seq_delfirst([[nonnull]] DeeObject *__restrict self)
 [[wunused, getset_member("set")]] int
 __seq_first__.seq_setfirst([[nonnull]] DeeObject *self,
                            [[nonnull]] DeeObject *value)
-%{unsupported({ return err_seq_unsupportedf(self, "first = %r", value); })}
-%{$empty = { return err_empty_sequence(self); }}
+%{unsupported({
+	return err_seq_unsupportedf(self, "first = %r", value);
+})}
+%{$none = 0}
+%{$empty = {
+	return err_empty_sequence(self);
+}}
 %{$with__seq_operator_setitem_index = {
 	return CALL_DEPENDENCY(seq_operator_setitem_index, self, 0, value);
 }} {

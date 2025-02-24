@@ -43,6 +43,7 @@ __map_add__.map_operator_add([[nonnull]] DeeObject *lhs,
 		return_reference_(lhs);
 	return (DREF DeeObject *)MapUnion_New(lhs, rhs);
 })}
+%{$none = return_none}
 %{$empty = "default__map_operator_add__unsupported"} {
 	return LOCAL_CALLATTR(lhs, 1, &rhs);
 }

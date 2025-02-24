@@ -39,6 +39,7 @@ err:
 int __seq_append__.seq_append([[nonnull]] DeeObject *self,
                               [[nonnull]] DeeObject *item)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = "default__seq_append__unsupported"}
 %{$with__seq_extend = {
 	int result;

@@ -75,6 +75,7 @@ __seq_locate__.seq_locate([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *match,
                           [[nonnull]] DeeObject *def)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = return_reference_(def)}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_locate_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
@@ -122,6 +123,7 @@ __seq_locate__.seq_locate_with_range([[nonnull]] DeeObject *self,
                                      size_t start, size_t end,
                                      [[nonnull]] DeeObject *def)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = return_reference_(def)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_locate_enumerate_index_cb)]] {
 	Dee_ssize_t foreach_status;

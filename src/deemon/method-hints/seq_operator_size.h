@@ -35,7 +35,8 @@ err:
 [[wunused]]
 DREF DeeObject *__seq_size__.seq_operator_sizeob([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
-%{$empty = { return_reference_(DeeInt_Zero); }}
+%{$none = return_none}
+%{$empty = return_reference_(DeeInt_Zero)}
 %{using seq_operator_size: {
 	size_t seqsize = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(seqsize == (size_t)-1)

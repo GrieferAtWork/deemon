@@ -55,6 +55,7 @@ set_removeall_foreach_cb(void *arg, DeeObject *elem) {
 __set_removeall__.set_removeall([[nonnull]] DeeObject *self,
                                 [[nonnull]] DeeObject *keys)
 %{unsupported(auto)}
+%{$none = 0}
 %{$empty = "default__set_removeall__unsupported"}
 %{$with__set_operator_inplace_sub = {
 	int result;

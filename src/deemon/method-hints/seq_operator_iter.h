@@ -43,7 +43,8 @@ err:
 [[wunused]] DREF DeeObject *
 __seq_iter__.seq_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
-%{$empty = { return_empty_iterator; }}
+%{$none = return_none}
+%{$empty = return_empty_iterator}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DefaultIterator_WithSizeAndGetItemIndex *result;

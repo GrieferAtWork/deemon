@@ -395,6 +395,7 @@ seq_contains_with_range_and_key = {
 __seq_contains__.seq_operator_contains([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *item)
 %{unsupported(auto("operator contains"))}
+%{$none = return_none}
 %{$empty = return_false}
 %{using seq_contains: {
 	int result = CALL_DEPENDENCY(seq_contains, self, item);

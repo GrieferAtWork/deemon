@@ -96,6 +96,9 @@ err:
 __set_unify__.set_unify([[nonnull]] DeeObject *self,
                         [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
+%{$none = {
+	return_reference_(key);
+}}
 %{$empty = "default__set_unify__unsupported"}
 %{$with__seq_operator_foreach__and__set_insert = [[prefix(DEFINE_set_unify_foreach_cb)]] {
 	int status = CALL_DEPENDENCY(set_insert, self, key);

@@ -33,6 +33,7 @@ err:
 [[wunused]] DREF DeeObject *
 __set_size__.set_operator_sizeob([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
+%{$none = return_none}
 %{$empty = "default__seq_operator_sizeob__empty"}
 %{using set_operator_size: {
 	size_t setsize = CALL_DEPENDENCY(set_operator_size, self);

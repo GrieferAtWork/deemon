@@ -100,6 +100,7 @@ __seq_hash__.seq_operator_hash([[nonnull]] DeeObject *__restrict self)
 %{unsupported({
 	return DeeObject_HashGeneric(self);
 })}
+%{$none = 0}
 %{$empty = DEE_HASHOF_EMPTY_SEQUENCE}
 %{$with__seq_operator_foreach =
 [[prefix(DEFINE_default_seq_hash_with_foreach_cb)]]

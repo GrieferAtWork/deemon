@@ -30,6 +30,7 @@ __map_frozen__->?O;
 __map_frozen__.map_frozen([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$empty = "DeeObject_NewRef"}
+%{$none = return_none}
 %{$with__map_operator_foreach_pair = "DeeRoDict_FromSequence"} {
 	return LOCAL_GETATTR(self);
 }

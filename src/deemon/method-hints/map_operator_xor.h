@@ -42,6 +42,7 @@ __map_xor__.map_operator_xor([[nonnull]] DeeObject *lhs,
 		return_reference_(lhs);
 	return (DREF DeeObject *)MapSymmetricDifference_New(lhs, rhs);
 })}
+%{$none = return_none}
 %{$empty = "default__map_operator_xor__unsupported"} {
 	return LOCAL_CALLATTR(lhs, 1, &rhs);
 }

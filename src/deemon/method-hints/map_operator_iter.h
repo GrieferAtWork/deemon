@@ -34,6 +34,7 @@ err:
 [[wunused]] DREF DeeObject *
 __map_iter__.map_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
+%{$none = return_none}
 %{$empty = "default__seq_operator_iter__empty"}
 %{$with__seq_operator_iter = {
 	DREF DeeObject *iter;

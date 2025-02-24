@@ -86,6 +86,11 @@ DECL_BEGIN
 #define do_fix_negative_range_index(index, size) \
 	((size) - ((size_t)(-(index)) % (size)))
 
+STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by `detectConstantReturnValue()'");
+STATIC_ASSERT_MSG(DEE_HASHOF_EMPTY_SEQUENCE == 0, "Assumed by `detectConstantReturnValue()'");
+STATIC_ASSERT_MSG(DEE_HASHOF_UNBOUND_ITEM == 0, "Assumed by `detectConstantReturnValue()'");
+STATIC_ASSERT_MSG(DEE_HASHOF_RECURSIVE_ITEM == 0, "Assumed by `detectConstantReturnValue()'");
+
 /* Mutable sequence functions */
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_api_vunsupportedf(char const *api, DeeObject *self, char const *method_format, va_list args) {
@@ -427,7 +432,9 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_operator_sizeob__empty(DeeObject *__restrict UNUSED(self)) { return_reference_(DeeInt_Zero); }
+default__seq_operator_sizeob__empty(DeeObject *__restrict UNUSED(self)) {
+	return_reference_(DeeInt_Zero);
+}
 
 
 /* seq_operator_size */
@@ -525,7 +532,9 @@ default__seq_operator_iter__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_operator_iter__empty(DeeObject *__restrict UNUSED(self)) { return_empty_iterator; }
+default__seq_operator_iter__empty(DeeObject *__restrict UNUSED(self)) {
+	return_empty_iterator;
+}
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self) {
@@ -1489,6 +1498,11 @@ default__seq_operator_bounditem__with__seq_operator_getitem(DeeObject *self, Dee
 	return Dee_BOUND_ERR;
 }
 
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__seq_operator_bounditem__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(index)) {
+	return Dee_BOUND_MISSING;
+}
+
 
 /* seq_operator_bounditem_index */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1514,6 +1528,11 @@ default__seq_operator_bounditem_index__with__seq_operator_getitem_index(DeeObjec
 	if (DeeError_Catch(&DeeError_IndexError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__seq_operator_bounditem_index__empty(DeeObject *__restrict UNUSED(self), size_t UNUSED(index)) {
+	return Dee_BOUND_MISSING;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -2727,11 +2746,6 @@ err:
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 default__seq_operator_hash__unsupported(DeeObject *__restrict self) {
 	return DeeObject_HashGeneric(self);
-}
-
-INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
-default__seq_operator_hash__empty(DeeObject *__restrict UNUSED(self)) {
-	return DEE_HASHOF_EMPTY_SEQUENCE;
 }
 
 #ifndef DEFINED_default_seq_hash_with_foreach_cb
@@ -5741,6 +5755,13 @@ default__seq_unpack__with__seq_unpack_ex(DeeObject *__restrict self, size_t coun
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__none(DeeObject *__restrict UNUSED(self), size_t count, DREF DeeObject *result[]) {
+	/* "none" can be unpacked into any number of none-s. */
+	Dee_Setrefv(result, Dee_None, count);
+	return 0;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
 default__seq_unpack__empty(DeeObject *__restrict self, size_t count, DREF DeeObject *UNUSED2(result, [])) {
 	if unlikely(count != 0)
 		return err_invalid_unpack_size(self, count, 0);
@@ -5988,6 +6009,13 @@ err:
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
 default__seq_unpack_ex__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED2(result, [])) {
 	return err_seq_unsupportedf(self, "__seq_unpack__(%" PRFuSIZ ", %" PRFuSIZ ")", min_count, max_count);
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__none(DeeObject *__restrict UNUSED(self), size_t UNUSED(min_count), size_t max_count, DREF DeeObject *result[]) {
+	/* "none" always turns everything into more "none", so unpack to the max # of objects. */
+	Dee_Setrefv(result, Dee_None, max_count);
+	return max_count;
 }
 
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
@@ -6551,10 +6579,14 @@ default__seq_setfirst__with_callobjectcache___seq_first__(DeeObject *self, DeeOb
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_setfirst__unsupported(DeeObject *self, DeeObject *value) { return err_seq_unsupportedf(self, "first = %r", value); }
+default__seq_setfirst__unsupported(DeeObject *self, DeeObject *value) {
+	return err_seq_unsupportedf(self, "first = %r", value);
+}
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_setfirst__empty(DeeObject *self, DeeObject *UNUSED(value)) { return err_empty_sequence(self); }
+default__seq_setfirst__empty(DeeObject *self, DeeObject *UNUSED(value)) {
+	return err_empty_sequence(self);
+}
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_setfirst__with__seq_operator_setitem_index(DeeObject *self, DeeObject *value) {
@@ -6805,10 +6837,14 @@ default__seq_setlast__with_callobjectcache___seq_last__(DeeObject *self, DeeObje
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_setlast__unsupported(DeeObject *self, DeeObject *value) { return err_seq_unsupportedf(self, "last = %r", value); }
+default__seq_setlast__unsupported(DeeObject *self, DeeObject *value) {
+	return err_seq_unsupportedf(self, "last = %r", value);
+}
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_setlast__empty(DeeObject *self, DeeObject *UNUSED(value)) { return err_empty_sequence(self); }
+default__seq_setlast__empty(DeeObject *self, DeeObject *UNUSED(value)) {
+	return err_empty_sequence(self);
+}
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_setlast__with__seq_operator_size__and__seq_operator_setitem_index(DeeObject *self, DeeObject *value) {
@@ -10942,11 +10978,6 @@ default__seq_find_with_key__unsupported(DeeObject *self, DeeObject *item, size_t
 	return (size_t)Dee_COMPARE_ERR;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-default__seq_find_with_key__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end), DeeObject *UNUSED(key)) {
-	return (size_t)-1;
-}
-
 #ifndef DEFINED_seq_find_with_key_cb
 #define DEFINED_seq_find_with_key_cb
 struct seq_find_with_key_data {
@@ -12475,11 +12506,6 @@ default__seq_removeall_with_key__unsupported(DeeObject *self, DeeObject *item, s
 }
 
 INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
-default__seq_removeall_with_key__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end), size_t UNUSED(max), DeeObject *UNUSED(key)) {
-	return 0;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
 default__seq_removeall_with_key__with__seq_removeif(DeeObject *self, DeeObject *item, size_t start, size_t end, size_t max, DeeObject *key) {
 	/* >> local keyedElem = key(item);
 	 * >> return !!self.removeallif(x -> deemon.equals(keyedElem, key(x)), start, end, max); */
@@ -13429,6 +13455,11 @@ default__seq_sorted__unsupported(DeeObject *self, size_t start, size_t end) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_sorted__empty(DeeObject *UNUSED(self), size_t UNUSED(start), size_t UNUSED(end)) {
+	return_empty_seq;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_sorted__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *self, size_t start, size_t end) {
 	DREF DeeTupleObject *result;
 	size_t selfsize = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
@@ -13550,6 +13581,11 @@ INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
 default__seq_sorted_with_key__unsupported(DeeObject *self, size_t start, size_t end, DeeObject *key) {
 	err_seq_unsupportedf(self, "__seq_sorted__(%" PRFuSIZ ", %" PRFuSIZ ", %r)", start, end, key);
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_sorted_with_key__empty(DeeObject *UNUSED(self), size_t UNUSED(start), size_t UNUSED(end), DeeObject *UNUSED(key)) {
+	return_empty_seq;
 }
 
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
@@ -13851,11 +13887,6 @@ INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_bfind_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *UNUSED(key)) {
 	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 	return (size_t)Dee_COMPARE_ERR;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-default__seq_bfind_with_key__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end), DeeObject *UNUSED(key)) {
-	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
@@ -14773,11 +14804,6 @@ default__set_operator_hash__with_callobjectcache___set_hash__(DeeObject *__restr
 err:
 	return set_handle_hash_error(self);
 #endif /* !__OPTIMIZE_SIZE__ */
-}
-
-INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
-default__set_operator_hash__empty(DeeObject *__restrict UNUSED(self)) {
-	return DEE_HASHOF_EMPTY_SEQUENCE;
 }
 
 #ifndef DEFINED_default_set_hash_with_foreach_cb
@@ -15840,6 +15866,11 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__set_unify__unsupported(DeeObject *self, DeeObject *key) {
 	err_set_unsupportedf(self, "__set_unify__(%r)", key);
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__set_unify__none(DeeObject *UNUSED(self), DeeObject *key) {
+	return_reference_(key);
 }
 
 #ifndef DEFINED_set_unify_foreach_cb

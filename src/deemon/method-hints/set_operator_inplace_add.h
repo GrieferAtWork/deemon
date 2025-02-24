@@ -52,6 +52,7 @@ __set_inplace_add__.set_operator_inplace_add([[nonnull]] DREF DeeObject **__rest
 err:
 	return -1;
 })}
+%{$none = 0}
 %{$empty = "default__set_operator_inplace_add__unsupported"}
 %{$with__set_insertall = {
 	return CALL_DEPENDENCY(set_insertall, *p_self, rhs);
