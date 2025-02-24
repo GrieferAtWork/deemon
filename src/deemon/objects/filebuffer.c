@@ -851,17 +851,17 @@ buffer_seek_or_unlock(Buffer *__restrict self,
 		}
 		if (new_abspos < old_abspos)
 			goto full_seek;
-#if __SIZEOF_POINTER__ < 8
+#if __SIZEOF_SIZE_T__ < Dee_SIZEOF_POS_T
 		if ((new_abspos - old_abspos) >= SIZE_MAX)
 			goto full_seek;
-#endif /* ZEOF_POINTER__ < 8 */
+#endif /* ZEOF_POINTER__ < Dee_SIZEOF_POS_T */
 
 		/* Seek-ahead-in-buffer. */
 		new_pos = self->fb_base + (size_t)(new_abspos - self->fb_fblk);
-#if __SIZEOF_POINTER__ < 8
+#if __SIZEOF_SIZE_T__ < Dee_SIZEOF_POS_T
 		if (new_pos < self->fb_base)
 			goto full_seek;
-#endif /* __SIZEOF_POINTER__ < 8 */
+#endif /* __SIZEOF_SIZE_T__ < Dee_SIZEOF_POS_T */
 
 		/* Truncate the read buffer */
 		if (new_pos < self->fb_ptr) {

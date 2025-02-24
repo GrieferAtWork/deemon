@@ -1186,18 +1186,18 @@ DeeInt_NewUInt64(uint64_t val) {
 
 	/* When the CPU wasn't designed for 64-bit
 	 * integers, prefer using 32-bit path. */
-#if __SIZEOF_POINTER__ < 8
+#if __SIZEOF_REGISTER__ < 8
 	if (val <= UINT32_MAX)
 		return DeeInt_NewUInt32((uint32_t)val);
-#else /* __SIZEOF_POINTER__ < 8 */
+#else /* __SIZEOF_REGISTER__ < 8 */
 #ifdef DeeInt_8bit
 	if (val <= 0xff)
 		return_reference(DeeInt_8bit + val);
 #endif /* DeeInt_8bit */
-#endif /* __SIZEOF_POINTER__ >= 8 */
+#endif /* __SIZEOF_REGISTER__ >= 8 */
 
 		/* NOTE: 32 == Bits required to display everything in the range 0..UINT32_MAX */
-#if __SIZEOF_POINTER__ >= 8 || DIGIT_BITS > 32
+#if __SIZEOF_REGISTER__ >= 8 || DIGIT_BITS > 32
 	if (!(val >> DIGIT_BITS)) {
 		if (!val)
 			return_reference_(DeeInt_Zero);
@@ -1208,7 +1208,7 @@ DeeInt_NewUInt64(uint64_t val) {
 			result->ob_digit[0] = (digit)val;
 		}
 	} else
-#endif /* __SIZEOF_POINTER__ >= 8 || DIGIT_BITS > 32 */
+#endif /* __SIZEOF_REGISTER__ >= 8 || DIGIT_BITS > 32 */
 	{
 		for (iter = val, req_digits = 0; iter;
 		     iter >>= DIGIT_BITS, ++req_digits)
@@ -1323,17 +1323,17 @@ DeeInt_NewInt64(int64_t val) {
 	int sign;
 	size_t req_digits;
 	uint64_t iter, abs_val;
-#if __SIZEOF_POINTER__ < 8
+#if __SIZEOF_REGISTER__ < 8
 	/* When the CPU wasn't designed for 64-bit
 	 * integers, prefer using 32-bit path. */
 	if (val >= INT32_MIN && val <= INT32_MAX)
 		return DeeInt_NewInt32((int32_t)val);
-#else /* __SIZEOF_POINTER__ < 8 */
+#else /* __SIZEOF_REGISTER__ < 8 */
 #ifdef DeeInt_8bit
 	if (val >= -128 && val <= 255)
 		return_reference(DeeInt_8bit + val);
 #endif /* DeeInt_8bit */
-#endif /* __SIZEOF_POINTER__ >= 8 */
+#endif /* __SIZEOF_REGISTER__ >= 8 */
 
 	sign = 1;
 	abs_val = (uint64_t)val;
@@ -1342,7 +1342,7 @@ DeeInt_NewInt64(int64_t val) {
 		abs_val = (uint64_t)0 - (uint64_t)val;
 	}
 	/* NOTE: 32 == Bits required to display everything in the range 0..MAX(-INT32_MIN, INT32_MAX) */
-#if __SIZEOF_POINTER__ >= 8 || DIGIT_BITS > 32
+#if __SIZEOF_REGISTER__ >= 8 || DIGIT_BITS > 32
 	if (!(abs_val >> DIGIT_BITS)) {
 		if (!val)
 			return_reference_(DeeInt_Zero);
@@ -1353,7 +1353,7 @@ DeeInt_NewInt64(int64_t val) {
 			result->ob_digit[0] = (digit)abs_val;
 		}
 	} else
-#endif /* __SIZEOF_POINTER__ >= 8 || DIGIT_BITS > 32 */
+#endif /* __SIZEOF_REGISTER__ >= 8 || DIGIT_BITS > 32 */
 	{
 		for (iter = abs_val, req_digits = 0; iter;
 		     iter >>= DIGIT_BITS, ++req_digits)
@@ -3358,7 +3358,7 @@ done_decr:
 #endif
 	return 0;
 err_overflow:
-	err_integer_overflow((DeeObject *)me, length * 8, true);
+	err_integer_overflow((DeeObject *)me, length * __CHAR_BIT__, true);
 err:
 	return -1;
 }
@@ -3990,7 +3990,7 @@ int_hash(DeeIntObject *__restrict self) {
 	}
 	do {
 		--i;
-		x = (x << DIGIT_BITS) | (x >> ((__SIZEOF_POINTER__ * 8) - DIGIT_BITS));
+		x = (x << DIGIT_BITS) | (x >> ((Dee_SIZEOF_HASH_T * __CHAR_BIT__) - DIGIT_BITS));
 		x += self->ob_digit[(size_t)i];
 	} while ((size_t)i);
 	return x * sign;

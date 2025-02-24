@@ -736,7 +736,7 @@ handle_int32(DeeHandleObject *__restrict self,
 #endif /* __SIZEOF_POINTER__ <= 4 */
 
 
-PRIVATE struct Dee_type_math handle_math = {
+PRIVATE struct type_math handle_math = {
 #if __SIZEOF_POINTER__ > 4
 	/* .tp_int32 = */ (int (DCALL *)(DeeObject *__restrict, int32_t *__restrict))NULL,
 	/* .tp_int64 = */ (int (DCALL *)(DeeObject *__restrict, int64_t *__restrict))&handle_int64

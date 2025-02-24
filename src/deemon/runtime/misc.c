@@ -126,11 +126,11 @@ STATIC_ASSERT(sizeof(Dee_int128_t) == 16);
 PUBLIC ATTR_CONST WUNUSED Dee_hash_t
 (DFCALL Dee_HashCombine)(Dee_hash_t a, Dee_hash_t b) {
 	/* Taken from https://stackoverflow.com/a/27952689/3296587 */
-#if __SIZEOF_POINTER__ >= 8
+#if Dee_SIZEOF_HASH_T >= 8
 	a ^= b + UINT64_C(0x517cc1b727220a95) + (a << 6) + (a >> 2);
-#else /* __SIZEOF_POINTER__ >= 8 */
+#else /* Dee_SIZEOF_HASH_T >= 8 */
 	a ^= b + UINT32_C(0x9e3779b9) + (a << 6) + (a >> 2);
-#endif /* __SIZEOF_POINTER__ < 8 */
+#endif /* Dee_SIZEOF_HASH_T < 8 */
 	return a;
 }
 

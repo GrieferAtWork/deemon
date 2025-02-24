@@ -257,30 +257,26 @@ PRIVATE struct type_math float_math = {
 	/* .tp_pow    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL
 };
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+STATIC_ASSERT(sizeof(double) == __SIZEOF_DOUBLE__);
+
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 float_hash(Float *__restrict self) {
-	__STATIC_IF (sizeof(double) == sizeof(dhash_t)) {
-		return *(dhash_t *)&self->f_value;
-	} __STATIC_ELSE (sizeof(double) == sizeof(dhash_t)) {
-		__STATIC_IF (sizeof(double) >= sizeof(uint64_t)) {
-#if __SIZEOF_POINTER__ == 4
-			return ((dhash_t)((uint32_t *)&self->f_value)[0] ^
-			        (dhash_t)((uint32_t *)&self->f_value)[1]);
-#else /* __SIZEOF_POINTER__ == 4 */
-			return (dhash_t)(*(uint64_t *)&self->f_value);
-#endif /* __SIZEOF_POINTER__ != 4 */
-		} __STATIC_ELSE (sizeof(double) >= sizeof(uint64_t)) {
-			__STATIC_IF (sizeof(double) >= sizeof(uint32_t)) {
-				return (dhash_t)(*(uint32_t *)&self->f_value);
-			} __STATIC_ELSE (sizeof(double) >= sizeof(uint32_t)) {
-				__STATIC_IF (sizeof(double) >= sizeof(uint16_t)) {
-					return (dhash_t)(*(uint16_t *)&self->f_value);
-				} __STATIC_ELSE (sizeof(double) >= sizeof(uint16_t)) {
-					return (dhash_t)(*(uint8_t *)&self->f_value);
-				}
-			}
-		}
-	}
+#if __SIZEOF_DOUBLE__ == Dee_SIZEOF_HASH_T
+	return *(Dee_hash_t const *)&self->f_value;
+#elif __SIZEOF_DOUBLE__ >= 8
+#if Dee_SIZEOF_HASH_T >= 8
+	return (Dee_hash_t)(*(uint64_t const *)&self->f_value);
+#else /* Dee_SIZEOF_HASH_T >= 8 */
+	return ((Dee_hash_t)((uint32_t const *)&self->f_value)[0] ^
+	        (Dee_hash_t)((uint32_t const *)&self->f_value)[1]);
+#endif /* Dee_SIZEOF_HASH_T < 8 */
+#elif __SIZEOF_DOUBLE__ >= 4
+	return (Dee_hash_t)(*(uint32_t const *)&self->f_value);
+#elif __SIZEOF_DOUBLE__ >= 2
+	return (Dee_hash_t)(*(uint16_t const *)&self->f_value);
+#else /* __SIZEOF_DOUBLE__ >= ... */
+	return (Dee_hash_t)(*(uint8_t const *)&self->f_value);
+#endif /* __SIZEOF_DOUBLE__ < ... */
 }
 
 
@@ -313,7 +309,7 @@ DEFINE_FLOAT_COMPARE(float_ge, >=)
 #undef DEFINE_FLOAT_COMPARE
 
 PRIVATE struct type_cmp float_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&float_hash,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&float_hash,
 	/* .tp_compare_eq    = */ NULL,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&float_compare,
 	/* .tp_trycompare_eq = */ NULL,

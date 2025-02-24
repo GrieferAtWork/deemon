@@ -4150,7 +4150,7 @@ default__seq_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_operator_trycompare_eq__with__seq_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_compare_eq))(lhs, rhs);
-	if (result == Dee_COMPARE_ERR) {
+	if unlikely(result == Dee_COMPARE_ERR) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
@@ -14982,7 +14982,7 @@ default__set_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_operator_trycompare_eq__with__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_compare_eq))(lhs, rhs);
-	if (result == Dee_COMPARE_ERR) {
+	if unlikely(result == Dee_COMPARE_ERR) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
@@ -18709,7 +18709,7 @@ default__map_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_trycompare_eq__with__map_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_compare_eq))(lhs, rhs);
-	if (result == Dee_COMPARE_ERR) {
+	if unlikely(result == Dee_COMPARE_ERR) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))

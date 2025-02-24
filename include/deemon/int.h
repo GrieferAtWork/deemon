@@ -445,11 +445,11 @@ struct _Dee_int_1digit_object {
 	Dee_digit_t ob_digit[1];
 
 	/* Pad to whole pointers. */
-#if __SIZEOF_POINTER__ == 4 && Dee_DIGIT_BITS == 15
+#if __SIZEOF_POINTER__ == 4 && Dee_SIZEOF_DIGIT == 2
 	uint16_t _ob_pad;
-#elif __SIZEOF_POINTER__ == 8 && Dee_DIGIT_BITS == 30
+#elif __SIZEOF_POINTER__ == 8 && Dee_SIZEOF_DIGIT == 4
 	uint32_t _ob_pad;
-#elif __SIZEOF_POINTER__ == 8 && Dee_DIGIT_BITS == 15
+#elif __SIZEOF_POINTER__ == 8 && Dee_SIZEOF_DIGIT == 2
 	uint16_t _ob_pad[3];
 #endif /* ... */
 };

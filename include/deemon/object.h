@@ -851,17 +851,17 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
  *       they have a rather large compile-time overhead and add a lot of unnecessary
  *       debug information when the resulting code isn't getting optimized.
  *       Therefor, try to bypass them here to speed up compile-time and ease debugging. */
-#if __SIZEOF_POINTER__ == __SIZEOF_LONG__
+#if Dee_SIZEOF_REFCNT_T == __SIZEOF_LONG__
 #   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)_InterlockedIncrement((long volatile *)(x)) - 1)
 #   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)_InterlockedDecrement((long volatile *)(x)) + 1)
 #   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)_InterlockedIncrement((long volatile *)(x)))
 #   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)_InterlockedDecrement((long volatile *)(x)))
-#elif __SIZEOF_POINTER__ == 8
+#elif Dee_SIZEOF_REFCNT_T == 8
 #   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)_InterlockedIncrement64((__int64 volatile *)(x)) - 1)
 #   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)_InterlockedDecrement64((__int64 volatile *)(x)) + 1)
 #   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)_InterlockedIncrement64((__int64 volatile *)(x)))
 #   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)_InterlockedDecrement64((__int64 volatile *)(x)))
-#endif
+#endif /* Dee_SIZEOF_REFCNT_T == ... */
 #endif /* _MSC_VER */
 #ifndef _DeeRefcnt_FetchInc
 #define _DeeRefcnt_FetchInc(x) __hybrid_atomic_fetchinc(x, __ATOMIC_SEQ_CST)

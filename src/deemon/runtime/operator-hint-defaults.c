@@ -2685,7 +2685,7 @@ tusrtype__trycompare_eq__with__(DeeTypeObject *tp_self, DeeObject *lhs, DeeObjec
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__trycompare_eq__with__compare_eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	int result = (*(tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__compare ? &tdefault__compare_eq__with__compare : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__eq ? &tdefault__compare_eq__with__eq : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__ne ? &tdefault__compare_eq__with__ne : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__lo__and__gr ? &tdefault__compare_eq__with__lo__and__gr : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__le__and__ge ? &tdefault__compare_eq__with__le__and__ge : &tdefault__compare_eq))(tp_self, lhs, rhs);
-	if (result == Dee_COMPARE_ERR) {
+	if unlikely(result == Dee_COMPARE_ERR) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
@@ -2723,7 +2723,7 @@ default__trycompare_eq__with__compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	return tdefault__trycompare_eq__with__compare_eq(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	int result = (*Dee_TYPE(lhs)->tp_cmp->tp_compare_eq)(lhs, rhs);
-	if (result == Dee_COMPARE_ERR) {
+	if unlikely(result == Dee_COMPARE_ERR) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))

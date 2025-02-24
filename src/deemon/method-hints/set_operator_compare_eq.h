@@ -140,7 +140,7 @@ __set_compare_eq__.set_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
 %{$empty = "default__seq_operator_trycompare_eq__empty"}
 %{using set_operator_compare_eq: {
 	int result = CALL_DEPENDENCY(set_operator_compare_eq, lhs, rhs);
-	if (result == Dee_COMPARE_ERR) {
+	if unlikely(result == Dee_COMPARE_ERR) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))

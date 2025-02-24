@@ -549,7 +549,7 @@ tp_cmp->tp_trycompare_eq([[nonnull]] DeeObject *lhs,
 }}
 %{using tp_cmp->tp_compare_eq: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare_eq, lhs, rhs);
-	if (result == Dee_COMPARE_ERR) {
+	if unlikely(result == Dee_COMPARE_ERR) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))

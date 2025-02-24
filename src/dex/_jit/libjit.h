@@ -1534,7 +1534,7 @@ struct jit_state {
 	uint16_t          js_flag; /* State flags (Set of `JIT_STATE_FLAG_*') */
 #if __SIZEOF_POINTER__ > 4
 	uint8_t           js_pad[sizeof(void *) - 4]; /* ... */
-#endif
+#endif /* __SIZEOF_POINTER__ > 4 */
 	union {
 		struct {
 			unsigned char *f_loop;  /* [1..1] Pointer to the statement's loop-statement. */

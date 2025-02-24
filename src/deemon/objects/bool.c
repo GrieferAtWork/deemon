@@ -73,15 +73,15 @@ bool_bool(DeeObject *__restrict self) {
 	return DeeBool_IsTrue(self);
 }
 
-#if __SIZEOF_INT__ == __SIZEOF_POINTER__
+#if __SIZEOF_INT__ == Dee_SIZEOF_HASH_T
 #define bool_hash_PTR ((Dee_hash_t (DCALL *)(DeeObject *__restrict))&bool_bool)
-#else /* __SIZEOF_INT__ == __SIZEOF_POINTER__ */
+#else /* __SIZEOF_INT__ == Dee_SIZEOF_HASH_T */
 #define bool_hash_PTR &bool_hash
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 bool_hash(DeeObject *__restrict self) {
 	return DeeBool_IsTrue(self);
 }
-#endif /* __SIZEOF_INT__ != __SIZEOF_POINTER__ */
+#endif /* __SIZEOF_INT__ != Dee_SIZEOF_HASH_T */
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
