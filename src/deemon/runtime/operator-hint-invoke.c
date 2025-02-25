@@ -302,15 +302,6 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	return (*tp_getitem)(self, index);
 }
 
-PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
-(DCALL DeeObject_TryGetItem)(DeeObject *self, DeeObject *index) {
-	__register DeeNO_trygetitem_t tp_trygetitem;
-	__register DeeTypeObject *tp_self = Dee_TYPE(self);
-	if unlikely(!tp_self->tp_seq || (tp_trygetitem = tp_self->tp_seq->tp_trygetitem) == NULL)
-		tp_trygetitem = _DeeType_RequireNativeOperator(tp_self, trygetitem);
-	return (*tp_trygetitem)(self, index);
-}
-
 PUBLIC ATTR_HOT WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_GetItemIndex)(DeeObject *self, size_t index) {
 	__register DeeNO_getitem_index_t tp_getitem_index;
@@ -318,15 +309,6 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1)) DREF DeeObject *
 	if unlikely(!tp_self->tp_seq || (tp_getitem_index = tp_self->tp_seq->tp_getitem_index) == NULL)
 		tp_getitem_index = _DeeType_RequireNativeOperator(tp_self, getitem_index);
 	return (*tp_getitem_index)(self, index);
-}
-
-PUBLIC ATTR_HOT WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL DeeObject_TryGetItemIndex)(DeeObject *self, size_t index) {
-	__register DeeNO_trygetitem_index_t tp_trygetitem_index;
-	__register DeeTypeObject *tp_self = Dee_TYPE(self);
-	if unlikely(!tp_self->tp_seq || (tp_trygetitem_index = tp_self->tp_seq->tp_trygetitem_index) == NULL)
-		tp_trygetitem_index = _DeeType_RequireNativeOperator(tp_self, trygetitem_index);
-	return (*tp_trygetitem_index)(self, index);
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
@@ -339,21 +321,39 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
-(DCALL DeeObject_TryGetItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash) {
-	__register DeeNO_trygetitem_string_hash_t tp_trygetitem_string_hash;
-	__register DeeTypeObject *tp_self = Dee_TYPE(self);
-	if unlikely(!tp_self->tp_seq || (tp_trygetitem_string_hash = tp_self->tp_seq->tp_trygetitem_string_hash) == NULL)
-		tp_trygetitem_string_hash = _DeeType_RequireNativeOperator(tp_self, trygetitem_string_hash);
-	return (*tp_trygetitem_string_hash)(self, key, hash);
-}
-
-PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_GetItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	__register DeeNO_getitem_string_len_hash_t tp_getitem_string_len_hash;
 	__register DeeTypeObject *tp_self = Dee_TYPE(self);
 	if unlikely(!tp_self->tp_seq || (tp_getitem_string_len_hash = tp_self->tp_seq->tp_getitem_string_len_hash) == NULL)
 		tp_getitem_string_len_hash = _DeeType_RequireNativeOperator(tp_self, getitem_string_len_hash);
 	return (*tp_getitem_string_len_hash)(self, key, keylen, hash);
+}
+
+PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_TryGetItem)(DeeObject *self, DeeObject *index) {
+	__register DeeNO_trygetitem_t tp_trygetitem;
+	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+	if unlikely(!tp_self->tp_seq || (tp_trygetitem = tp_self->tp_seq->tp_trygetitem) == NULL)
+		tp_trygetitem = _DeeType_RequireNativeOperator(tp_self, trygetitem);
+	return (*tp_trygetitem)(self, index);
+}
+
+PUBLIC ATTR_HOT WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_TryGetItemIndex)(DeeObject *self, size_t index) {
+	__register DeeNO_trygetitem_index_t tp_trygetitem_index;
+	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+	if unlikely(!tp_self->tp_seq || (tp_trygetitem_index = tp_self->tp_seq->tp_trygetitem_index) == NULL)
+		tp_trygetitem_index = _DeeType_RequireNativeOperator(tp_self, trygetitem_index);
+	return (*tp_trygetitem_index)(self, index);
+}
+
+PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_TryGetItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash) {
+	__register DeeNO_trygetitem_string_hash_t tp_trygetitem_string_hash;
+	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+	if unlikely(!tp_self->tp_seq || (tp_trygetitem_string_hash = tp_self->tp_seq->tp_trygetitem_string_hash) == NULL)
+		tp_trygetitem_string_hash = _DeeType_RequireNativeOperator(tp_self, trygetitem_string_hash);
+	return (*tp_trygetitem_string_hash)(self, key, hash);
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
@@ -1202,18 +1202,6 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 	return (*maketyped__getitem(tp_getitem))(tp_self, self, index);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
-(DCALL DeeObject_TTryGetItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
-	__register DeeNO_trygetitem_t tp_trygetitem;
-	if unlikely(!tp_self->tp_seq || (tp_trygetitem = tp_self->tp_seq->tp_trygetitem) == NULL) {
-		tp_trygetitem = _DeeType_RequireNativeOperator(tp_self, trygetitem);
-		if unlikely(tp_trygetitem == (DeeNO_trygetitem_t)&default__trygetitem__badalloc ||
-		            tp_trygetitem == (DeeNO_trygetitem_t)&default__trygetitem__unsupported)
-			return (*tp_trygetitem)(self, index);
-	}
-	return (*maketyped__trygetitem(tp_trygetitem))(tp_self, self, index);
-}
-
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_TGetItemIndex)(DeeTypeObject *tp_self, DeeObject *self, size_t index) {
 	__register DeeNO_getitem_index_t tp_getitem_index;
@@ -1224,18 +1212,6 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 			return (*tp_getitem_index)(self, index);
 	}
 	return (*maketyped__getitem_index(tp_getitem_index))(tp_self, self, index);
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
-(DCALL DeeObject_TTryGetItemIndex)(DeeTypeObject *tp_self, DeeObject *self, size_t index) {
-	__register DeeNO_trygetitem_index_t tp_trygetitem_index;
-	if unlikely(!tp_self->tp_seq || (tp_trygetitem_index = tp_self->tp_seq->tp_trygetitem_index) == NULL) {
-		tp_trygetitem_index = _DeeType_RequireNativeOperator(tp_self, trygetitem_index);
-		if unlikely(tp_trygetitem_index == (DeeNO_trygetitem_index_t)&default__trygetitem_index__badalloc ||
-		            tp_trygetitem_index == (DeeNO_trygetitem_index_t)&default__trygetitem_index__unsupported)
-			return (*tp_trygetitem_index)(self, index);
-	}
-	return (*maketyped__trygetitem_index(tp_trygetitem_index))(tp_self, self, index);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
@@ -1251,18 +1227,6 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
-(DCALL DeeObject_TTryGetItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash) {
-	__register DeeNO_trygetitem_string_hash_t tp_trygetitem_string_hash;
-	if unlikely(!tp_self->tp_seq || (tp_trygetitem_string_hash = tp_self->tp_seq->tp_trygetitem_string_hash) == NULL) {
-		tp_trygetitem_string_hash = _DeeType_RequireNativeOperator(tp_self, trygetitem_string_hash);
-		if unlikely(tp_trygetitem_string_hash == (DeeNO_trygetitem_string_hash_t)&default__trygetitem_string_hash__badalloc ||
-		            tp_trygetitem_string_hash == (DeeNO_trygetitem_string_hash_t)&default__trygetitem_string_hash__unsupported)
-			return (*tp_trygetitem_string_hash)(self, key, hash);
-	}
-	return (*maketyped__trygetitem_string_hash(tp_trygetitem_string_hash))(tp_self, self, key, hash);
-}
-
-PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 (DCALL DeeObject_TGetItemStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	__register DeeNO_getitem_string_len_hash_t tp_getitem_string_len_hash;
 	if unlikely(!tp_self->tp_seq || (tp_getitem_string_len_hash = tp_self->tp_seq->tp_getitem_string_len_hash) == NULL) {
@@ -1272,6 +1236,42 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 			return (*tp_getitem_string_len_hash)(self, key, keylen, hash);
 	}
 	return (*maketyped__getitem_string_len_hash(tp_getitem_string_len_hash))(tp_self, self, key, keylen, hash);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_TTryGetItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
+	__register DeeNO_trygetitem_t tp_trygetitem;
+	if unlikely(!tp_self->tp_seq || (tp_trygetitem = tp_self->tp_seq->tp_trygetitem) == NULL) {
+		tp_trygetitem = _DeeType_RequireNativeOperator(tp_self, trygetitem);
+		if unlikely(tp_trygetitem == (DeeNO_trygetitem_t)&default__trygetitem__badalloc ||
+		            tp_trygetitem == (DeeNO_trygetitem_t)&default__trygetitem__unsupported)
+			return (*tp_trygetitem)(self, index);
+	}
+	return (*maketyped__trygetitem(tp_trygetitem))(tp_self, self, index);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_TTryGetItemIndex)(DeeTypeObject *tp_self, DeeObject *self, size_t index) {
+	__register DeeNO_trygetitem_index_t tp_trygetitem_index;
+	if unlikely(!tp_self->tp_seq || (tp_trygetitem_index = tp_self->tp_seq->tp_trygetitem_index) == NULL) {
+		tp_trygetitem_index = _DeeType_RequireNativeOperator(tp_self, trygetitem_index);
+		if unlikely(tp_trygetitem_index == (DeeNO_trygetitem_index_t)&default__trygetitem_index__badalloc ||
+		            tp_trygetitem_index == (DeeNO_trygetitem_index_t)&default__trygetitem_index__unsupported)
+			return (*tp_trygetitem_index)(self, index);
+	}
+	return (*maketyped__trygetitem_index(tp_trygetitem_index))(tp_self, self, index);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_TTryGetItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash) {
+	__register DeeNO_trygetitem_string_hash_t tp_trygetitem_string_hash;
+	if unlikely(!tp_self->tp_seq || (tp_trygetitem_string_hash = tp_self->tp_seq->tp_trygetitem_string_hash) == NULL) {
+		tp_trygetitem_string_hash = _DeeType_RequireNativeOperator(tp_self, trygetitem_string_hash);
+		if unlikely(tp_trygetitem_string_hash == (DeeNO_trygetitem_string_hash_t)&default__trygetitem_string_hash__badalloc ||
+		            tp_trygetitem_string_hash == (DeeNO_trygetitem_string_hash_t)&default__trygetitem_string_hash__unsupported)
+			return (*tp_trygetitem_string_hash)(self, key, hash);
+	}
+	return (*maketyped__trygetitem_string_hash(tp_trygetitem_string_hash))(tp_self, self, key, hash);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *

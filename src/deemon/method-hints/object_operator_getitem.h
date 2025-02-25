@@ -24,6 +24,18 @@
 
 operator {
 
+/* Same as `tp_getitem_index', but never throws an exception:
+ * NOTE: This operator can NOT be used to substitute `tp_getitem_index'!
+ * @param: index: Index of item to access. Guarantied to be `<' some preceding
+ *                call to `tp_size_fast', `tp_size', or `tp_sizeob' (from the
+ *                same type; i.e. the size operator will not be from a sub-class).
+ * @return: * :   A reference to the index.
+ * @return: NULL: The sequence is resizable and `index >= CURRENT_SIZE'
+ * @return: NULL: Sequence indices can be unbound, and nothing is bound to `index' right now. */
+[[wunused]] DREF DeeObject *
+tp_seq->tp_getitem_index_fast([[nonnull]] DeeObject *self, size_t index); /* !!! NOT INHERITABLE !!! */
+
+
 [[export("DeeObject_{|T}GetItem")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getitem([[nonnull]] DeeObject *self,
@@ -97,93 +109,17 @@ err:
 		result = NULL;
 	}
 	return result;
-}} = OPERATOR_GETITEM;
-
-
-
-/* Same as `tp_getitem', but returns `ITER_DONE' instead of throwing
- * `KeyError' or `IndexError' (or `UnboundItem', which is a given
- * since that one's a sub-class of `IndexError') */
-[[export("DeeObject_{|T}TryGetItem")]]
-[[wunused]] DREF DeeObject *
-tp_seq->tp_trygetitem([[nonnull]] DeeObject *self,
-                      [[nonnull]] DeeObject *index)
-%{using [tp_seq->tp_trygetitem_index, tp_seq->tp_trygetitem_string_len_hash]: {
-	size_t index_value;
-	if (DeeString_Check(index)) {
-		return CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self,
-		                       DeeString_STR(index),
-		                       DeeString_SIZE(index),
-		                       DeeString_Hash(index));
-	}
-	if (DeeObject_AsSize(index, &index_value))
-		goto err;
-	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index_value);
-err:
-	return NULL;
 }}
-%{using [tp_seq->tp_trygetitem_index, tp_seq->tp_trygetitem_string_hash]: {
-	size_t index_value;
-	if (DeeString_Check(index)) {
-		return CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_hash, self,
-		                       DeeString_STR(index),
-		                       DeeString_Hash(index));
-	}
-	if (DeeObject_AsSize(index, &index_value))
-		goto err;
-	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index_value);
-err:
-	return NULL;
-}}
-%{using tp_seq->tp_trygetitem_index: {
-	size_t index_value;
-	if (DeeObject_AsSize(index, &index_value))
-		goto err;
-	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index_value);
-err:
-	return NULL;
-}}
-%{using tp_seq->tp_trygetitem_string_len_hash: {
-	if (DeeObject_AssertTypeExact(index, &DeeString_Type))
-		goto err;
-	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self,
-	                       DeeString_STR(index),
-	                       DeeString_SIZE(index),
-	                       DeeString_Hash(index));
-err:
-	return NULL;
-}}
-%{using tp_seq->tp_trygetitem_string_hash: {
-	if (DeeObject_AssertTypeExact(index, &DeeString_Type))
-		goto err;
-	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_hash, self,
-	                       DeeString_STR(index),
-	                       DeeString_Hash(index));
-err:
-	return NULL;
-}}
-%{using tp_seq->tp_getitem: {
-	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_getitem, self, index);
-	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_IndexError) ||
-		    DeeError_Catch(&DeeError_KeyError) /*||
-		    DeeError_Catch(&DeeError_UnboundItem)*/)
-			result = ITER_DONE;
+%{using tp_seq->tp_trygetitem: {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem, self, index);
+	if unlikely(result == ITER_DONE) {
+		/* Assume that there is no such thing as unbound indices */
+		err_unknown_key(self, index);
+		result = NULL;
 	}
 	return result;
-}} = OPERATOR_GETITEM;
-
-
-/* Same as `tp_getitem_index', but never throws an exception:
- * NOTE: This operator can NOT be used to substitute `tp_getitem_index'!
- * @param: index: Index of item to access. Guarantied to be `<' some preceding
- *                call to `tp_size_fast', `tp_size', or `tp_sizeob' (from the
- *                same type; i.e. the size operator will not be from a sub-class).
- * @return: * :   A reference to the index.
- * @return: NULL: The sequence is resizable and `index >= CURRENT_SIZE'
- * @return: NULL: Sequence indices can be unbound, and nothing is bound to `index' right now. */
-[[wunused]] DREF DeeObject *
-tp_seq->tp_getitem_index_fast([[nonnull]] DeeObject *self, size_t index); /* !!! NOT INHERITABLE !!! */
+}}
+= OPERATOR_GETITEM;
 
 
 [[export("DeeObject_{|T}GetItemIndex")]]
@@ -218,7 +154,7 @@ err:
 	}
 	return result;
 }}
-%{using tp_seq->tp_getitem: {
+%{using tp_seq->tp_getitem: [[disliked]] {
 	DREF DeeObject *result;
 	DREF DeeObject *indexob = DeeInt_NewSize(index);
 	if unlikely(!indexob)
@@ -228,47 +164,15 @@ err:
 	return result;
 err:
 	return NULL;
-}} = OPERATOR_GETITEM;
-
-
-
-[[export("DeeObject_{|T}TryGetItemIndex")]]
-[[wunused]] DREF DeeObject *
-tp_seq->tp_trygetitem_index([[nonnull]] DeeObject *self, size_t index)
-%{using [tp_seq->tp_size, tp_seq->tp_getitem_index_fast]: {
-	DREF DeeObject *result;
-	size_t size = CALL_DEPENDENCY(tp_seq->tp_size, self);
-	if unlikely(size == (size_t)-1)
-		goto err;
-	if unlikely(index >= size)
-		return ITER_DONE;
-	result = CALL_DEPENDENCY(tp_seq->tp_getitem_index_fast, self, index);
-	if (result == NULL)
-		result = ITER_DONE;
-	return result;
-err:
-	return NULL;
 }}
-%{using tp_seq->tp_getitem_index: {
-	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_getitem_index, self, index);
-	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_IndexError) ||
-		    DeeError_Catch(&DeeError_KeyError) /*||
-		    DeeError_Catch(&DeeError_UnboundItem)*/)
-			result = ITER_DONE;
+%{using tp_seq->tp_trygetitem_index: {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index);
+	if unlikely(result == ITER_DONE) {
+		/* Assume that there is no such thing as unbound indices */
+		err_unknown_key_int(self, index);
+		result = NULL;
 	}
 	return result;
-}}
-%{using tp_seq->tp_trygetitem: {
-	DREF DeeObject *result;
-	DREF DeeObject *indexob = DeeInt_NewSize(index);
-	if unlikely(!indexob)
-		goto err;
-	result = CALL_DEPENDENCY(tp_seq->tp_trygetitem, self, indexob);
-	Dee_Decref(indexob);
-	return result;
-err:
-	return NULL;
 }} = OPERATOR_GETITEM;
 
 
@@ -293,7 +197,7 @@ tp_seq->tp_getitem_string_hash([[nonnull]] DeeObject *self,
 	}
 	return result;
 }}
-%{using tp_seq->tp_getitem: {
+%{using tp_seq->tp_getitem: [[disliked]] {
 	DREF DeeObject *result;
 	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
@@ -303,36 +207,15 @@ tp_seq->tp_getitem_string_hash([[nonnull]] DeeObject *self,
 	return result;
 err:
 	return NULL;
-}} = OPERATOR_GETITEM;
-
-
-[[export("DeeObject_{|T}TryGetItemStringHash")]]
-[[wunused]] DREF DeeObject *
-tp_seq->tp_trygetitem_string_hash([[nonnull]] DeeObject *self,
-                                  [[nonnull]] char const *key, Dee_hash_t hash)
-%{using tp_seq->tp_trygetitem_string_len_hash: {
-	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self, key, strlen(key), hash);
 }}
-%{using tp_seq->tp_getitem_string_hash: {
-	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_getitem_string_hash, self, key, hash);
-	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_IndexError) ||
-		    DeeError_Catch(&DeeError_KeyError) /*||
-		    DeeError_Catch(&DeeError_UnboundItem)*/)
-			result = ITER_DONE;
+%{using tp_seq->tp_trygetitem_string_hash: {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_hash, self, key, hash);
+	if unlikely(result == ITER_DONE) {
+		/* Assume that there is no such thing as unbound indices */
+		err_unknown_key_str(self, key);
+		result = NULL;
 	}
 	return result;
-}}
-%{using tp_seq->tp_trygetitem: {
-	DREF DeeObject *result;
-	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);
-	if unlikely(!keyob)
-		goto err;
-	result = CALL_DEPENDENCY(tp_seq->tp_trygetitem, self, keyob);
-	Dee_Decref_likely(keyob);
-	return result;
-err:
-	return NULL;
 }} = OPERATOR_GETITEM;
 
 
@@ -413,12 +296,168 @@ err:
 	}
 	return result;
 }}
-%{using tp_seq->tp_getitem: {
+%{using tp_seq->tp_getitem: [[disliked]] {
 	DREF DeeObject *result;
 	DREF DeeObject *keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)
 		goto err;
 	result = CALL_DEPENDENCY(tp_seq->tp_getitem, self, keyob);
+	Dee_Decref_likely(keyob);
+	return result;
+err:
+	return NULL;
+}}
+%{using tp_seq->tp_trygetitem_string_len_hash: {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self, key, keylen, hash);
+	if unlikely(result == ITER_DONE) {
+		/* Assume that there is no such thing as unbound indices */
+		err_unknown_key_str_len(self, key, keylen);
+		result = NULL;
+	}
+	return result;
+}} = OPERATOR_GETITEM;
+
+
+
+
+
+
+/* Same as `tp_getitem', but returns `ITER_DONE' instead of throwing
+ * `KeyError' or `IndexError' (or `UnboundItem', which is a given
+ * since that one's a sub-class of `IndexError') */
+[[export("DeeObject_{|T}TryGetItem")]]
+[[wunused]] DREF DeeObject *
+tp_seq->tp_trygetitem([[nonnull]] DeeObject *self,
+                      [[nonnull]] DeeObject *index)
+%{using [tp_seq->tp_trygetitem_index, tp_seq->tp_trygetitem_string_len_hash]: {
+	size_t index_value;
+	if (DeeString_Check(index)) {
+		return CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self,
+		                       DeeString_STR(index),
+		                       DeeString_SIZE(index),
+		                       DeeString_Hash(index));
+	}
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index_value);
+err:
+	return NULL;
+}}
+%{using [tp_seq->tp_trygetitem_index, tp_seq->tp_trygetitem_string_hash]: {
+	size_t index_value;
+	if (DeeString_Check(index)) {
+		return CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_hash, self,
+		                       DeeString_STR(index),
+		                       DeeString_Hash(index));
+	}
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index_value);
+err:
+	return NULL;
+}}
+%{using tp_seq->tp_trygetitem_index: {
+	size_t index_value;
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index_value);
+err:
+	return NULL;
+}}
+%{using tp_seq->tp_trygetitem_string_len_hash: {
+	if (DeeObject_AssertTypeExact(index, &DeeString_Type))
+		goto err;
+	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self,
+	                       DeeString_STR(index),
+	                       DeeString_SIZE(index),
+	                       DeeString_Hash(index));
+err:
+	return NULL;
+}}
+%{using tp_seq->tp_trygetitem_string_hash: {
+	if (DeeObject_AssertTypeExact(index, &DeeString_Type))
+		goto err;
+	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_hash, self,
+	                       DeeString_STR(index),
+	                       DeeString_Hash(index));
+err:
+	return NULL;
+}}
+%{using tp_seq->tp_getitem: {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_getitem, self, index);
+	if unlikely(!result) {
+		if (DeeError_Catch(&DeeError_IndexError) ||
+		    DeeError_Catch(&DeeError_KeyError) /*||
+		    DeeError_Catch(&DeeError_UnboundItem)*/)
+			result = ITER_DONE;
+	}
+	return result;
+}} = OPERATOR_GETITEM;
+
+
+[[export("DeeObject_{|T}TryGetItemIndex")]]
+[[wunused]] DREF DeeObject *
+tp_seq->tp_trygetitem_index([[nonnull]] DeeObject *self, size_t index)
+%{using [tp_seq->tp_size, tp_seq->tp_getitem_index_fast]: {
+	DREF DeeObject *result;
+	size_t size = CALL_DEPENDENCY(tp_seq->tp_size, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if unlikely(index >= size)
+		return ITER_DONE;
+	result = CALL_DEPENDENCY(tp_seq->tp_getitem_index_fast, self, index);
+	if (result == NULL)
+		result = ITER_DONE;
+	return result;
+err:
+	return NULL;
+}}
+%{using tp_seq->tp_getitem_index: {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_getitem_index, self, index);
+	if unlikely(!result) {
+		if (DeeError_Catch(&DeeError_IndexError) ||
+		    DeeError_Catch(&DeeError_KeyError) /*||
+		    DeeError_Catch(&DeeError_UnboundItem)*/)
+			result = ITER_DONE;
+	}
+	return result;
+}}
+%{using tp_seq->tp_trygetitem: [[disliked]] {
+	DREF DeeObject *result;
+	DREF DeeObject *indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	result = CALL_DEPENDENCY(tp_seq->tp_trygetitem, self, indexob);
+	Dee_Decref(indexob);
+	return result;
+err:
+	return NULL;
+}} = OPERATOR_GETITEM;
+
+
+[[export("DeeObject_{|T}TryGetItemStringHash")]]
+[[wunused]] DREF DeeObject *
+tp_seq->tp_trygetitem_string_hash([[nonnull]] DeeObject *self,
+                                  [[nonnull]] char const *key, Dee_hash_t hash)
+%{using tp_seq->tp_trygetitem_string_len_hash: {
+	return CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self, key, strlen(key), hash);
+}}
+%{using tp_seq->tp_getitem_string_hash: {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_getitem_string_hash, self, key, hash);
+	if unlikely(!result) {
+		if (DeeError_Catch(&DeeError_IndexError) ||
+		    DeeError_Catch(&DeeError_KeyError) /*||
+		    DeeError_Catch(&DeeError_UnboundItem)*/)
+			result = ITER_DONE;
+	}
+	return result;
+}}
+%{using tp_seq->tp_trygetitem: [[disliked]] {
+	DREF DeeObject *result;
+	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);
+	if unlikely(!keyob)
+		goto err;
+	result = CALL_DEPENDENCY(tp_seq->tp_trygetitem, self, keyob);
 	Dee_Decref_likely(keyob);
 	return result;
 err:
@@ -449,7 +488,7 @@ err:
 	}
 	return result;
 }}
-%{using tp_seq->tp_trygetitem: {
+%{using tp_seq->tp_trygetitem: [[disliked]] {
 	DREF DeeObject *result;
 	DREF DeeObject *keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)
@@ -460,6 +499,7 @@ err:
 err:
 	return NULL;
 }} = OPERATOR_GETITEM;
+
 
 
 
@@ -558,9 +598,18 @@ err:
 	                       DeeString_Hash(index));
 err:
 	return Dee_BOUND_ERR;
+}}
+%{using tp_seq->tp_trygetitem: {
+	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem, self, index);
+	if unlikely(!value)
+		goto err;
+	if (value == ITER_DONE)
+		return Dee_BOUND_MISSING;
+	Dee_Decref(value);
+	return Dee_BOUND_YES;
+err:
+	return Dee_BOUND_ERR;
 }} = OPERATOR_GETITEM;
-
-
 
 
 [[export("DeeObject_{|T}BoundItemIndex")]]
@@ -608,7 +657,7 @@ err:
 err:
 	return Dee_BOUND_ERR;
 }}
-%{using tp_seq->tp_bounditem: {
+%{using tp_seq->tp_bounditem: [[disliked]] {
 	int result;
 	DREF DeeObject *indexob = DeeInt_NewSize(index);
 	if unlikely(!indexob)
@@ -618,8 +667,18 @@ err:
 	return result;
 err:
 	return Dee_BOUND_ERR;
+}}
+%{using tp_seq->tp_trygetitem_index: {
+	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index);
+	if unlikely(!value)
+		goto err;
+	if (value == ITER_DONE)
+		return Dee_BOUND_MISSING;
+	Dee_Decref(value);
+	return Dee_BOUND_YES;
+err:
+	return Dee_BOUND_ERR;
 }} = OPERATOR_GETITEM;
-
 
 
 [[export("DeeObject_{|T}BoundItemStringHash")]]
@@ -656,7 +715,7 @@ tp_seq->tp_bounditem_string_hash([[nonnull]] DeeObject *self,
 err:
 	return Dee_BOUND_ERR;
 }}
-%{using tp_seq->tp_bounditem: {
+%{using tp_seq->tp_bounditem: [[disliked]] {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
@@ -666,8 +725,18 @@ err:
 	return result;
 err:
 	return Dee_BOUND_ERR;
+}}
+%{using tp_seq->tp_trygetitem_string_hash: {
+	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_hash, self, key, hash);
+	if unlikely(!value)
+		goto err;
+	if (value == ITER_DONE)
+		return Dee_BOUND_MISSING;
+	Dee_Decref(value);
+	return Dee_BOUND_YES;
+err:
+	return Dee_BOUND_ERR;
 }} = OPERATOR_GETITEM;
-
 
 
 [[export("DeeObject_{|T}BoundItemStringLenHash")]]
@@ -710,7 +779,7 @@ err:
 err:
 	return Dee_BOUND_ERR;
 }}
-%{using tp_seq->tp_bounditem: {
+%{using tp_seq->tp_bounditem: [[disliked]] {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)
@@ -720,8 +789,18 @@ err:
 	return result;
 err:
 	return Dee_BOUND_ERR;
+}}
+%{using tp_seq->tp_trygetitem_string_len_hash: {
+	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self, key, keylen, hash);
+	if unlikely(!value)
+		goto err;
+	if (value == ITER_DONE)
+		return Dee_BOUND_MISSING;
+	Dee_Decref(value);
+	return Dee_BOUND_YES;
+err:
+	return Dee_BOUND_ERR;
 }} = OPERATOR_GETITEM;
-
 
 
 
@@ -798,20 +877,7 @@ err:
 	                     default__hasitem_index__with__size__and__getitem_index_fast(self, index_value));
 err:
 	return -1;
-}}
-%{using tp_seq->tp_trygetitem: {
-	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem, self, index);
-	if unlikely(!value)
-		goto err;
-	if (value == ITER_DONE)
-		return 0;
-	Dee_Decref(value);
-	return 1;
-err:
-	return -1;
 }} = OPERATOR_GETITEM;
-
-
 
 
 [[export("DeeObject_{|T}HasItemIndex")]]
@@ -829,7 +895,7 @@ tp_seq->tp_hasitem_index([[nonnull]] DeeObject *self, size_t index)
 err:
 	return -1;
 }}
-%{using tp_seq->tp_hasitem: {
+%{using tp_seq->tp_hasitem: [[disliked]] {
 	int result;
 	DREF DeeObject *indexob = DeeInt_NewSize(index);
 	if unlikely(!indexob)
@@ -840,8 +906,6 @@ err:
 err:
 	return -1;
 }} = OPERATOR_GETITEM;
-
-
 
 
 [[export("DeeObject_{|T}HasItemStringHash")]]
@@ -855,7 +919,7 @@ tp_seq->tp_hasitem_string_hash([[nonnull]] DeeObject *self,
 %{using tp_seq->tp_hasitem_string_len_hash: {
 	return CALL_DEPENDENCY(tp_seq->tp_hasitem_string_len_hash, self, key, strlen(key), hash);
 }}
-%{using tp_seq->tp_hasitem: {
+%{using tp_seq->tp_hasitem: [[disliked]] {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
@@ -885,7 +949,7 @@ tp_seq->tp_hasitem_string_len_hash([[nonnull]] DeeObject *self,
 err:
 	return -1;
 }}
-%{using tp_seq->tp_hasitem: {
+%{using tp_seq->tp_hasitem: [[disliked]] {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)

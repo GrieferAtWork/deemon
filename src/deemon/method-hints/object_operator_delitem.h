@@ -96,7 +96,7 @@ err:
 [[export("DeeObject_{|T}DelItemIndex")]]
 [[wunused]] int
 tp_seq->tp_delitem_index([[nonnull]] DeeObject *self, size_t index)
-%{using tp_seq->tp_delitem: {
+%{using tp_seq->tp_delitem: [[disliked]] {
 	int result;
 	DREF DeeObject *indexob = DeeInt_NewSize(index);
 	if unlikely(!indexob)
@@ -114,7 +114,7 @@ err:
 [[wunused]] int
 tp_seq->tp_delitem_string_hash([[nonnull]] DeeObject *self,
                                [[nonnull]] char const *key, Dee_hash_t hash)
-%{using tp_seq->tp_delitem: {
+%{using tp_seq->tp_delitem: [[disliked]] {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
@@ -132,7 +132,7 @@ err:
 tp_seq->tp_delitem_string_len_hash([[nonnull]] DeeObject *self,
                                    [[nonnull]] char const *key,
                                    size_t keylen, Dee_hash_t hash)
-%{using tp_seq->tp_delitem: {
+%{using tp_seq->tp_delitem: [[disliked]] {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)

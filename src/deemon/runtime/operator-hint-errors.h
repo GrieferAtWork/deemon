@@ -110,16 +110,16 @@ INTDEF void*DCALL default__sizeob__unsupported(DeeObject*);
 INTDEF Dee_ssize_t DCALL default__size__badalloc(void*);
 INTDEF Dee_ssize_t DCALL default__size__unsupported(DeeObject*);
 INTDEF void*DCALL default__contains__badalloc(void*, void*);
-#define default__getitem__badalloc default__contains__badalloc
-#define default__trygetitem__badalloc default__contains__badalloc
 #define default__getitem_index_fast__badalloc default__contains__badalloc
+#define default__getitem__badalloc default__contains__badalloc
 #define default__getitem_index__badalloc default__contains__badalloc
+#define default__trygetitem__badalloc default__contains__badalloc
 #define default__trygetitem_index__badalloc default__contains__badalloc
 #define default__getrange_index_n__badalloc default__contains__badalloc
 INTDEF void*DCALL default__contains__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__getitem__unsupported(DeeObject*, void*);
-#define default__trygetitem__unsupported default__getitem__unsupported
 #define default__getitem_index__unsupported default__getitem__unsupported
+#define default__trygetitem__unsupported default__getitem__unsupported
 #define default__trygetitem_index__unsupported default__getitem__unsupported
 INTDEF void*DCALL default__getitem_string_hash__badalloc(void*, void*, void*);
 #define default__trygetitem_string_hash__badalloc default__getitem_string_hash__badalloc

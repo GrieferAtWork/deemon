@@ -1167,6 +1167,9 @@ final class NativeOperatorImpl {
 	public member dependencies: {NativeOperatorName...} = [];
 	public member impl: NativeMethodImpl;
 
+	@@When true, encode this impl as disliked
+	public member disliked: bool = false;
+
 	public optimize(method: NativeOperator) {
 		impl.optimize(method);
 	}
@@ -1174,7 +1177,8 @@ final class NativeOperatorImpl {
 	public _makeTyped(): NativeOperatorImpl {
 		return NativeOperatorImpl(
 				dependencies: dependencies,
-				impl: impl._makeTyped());
+				impl: impl._makeTyped(),
+				disliked: disliked);
 	}
 }
 
@@ -1900,13 +1904,22 @@ function printNativeOperatorHintSpecs() {
 			print(f"PRIVATE struct oh_init_spec_impl tpconst oh_impls_{
 					name.name}[{#method.impls + 1}] = \{");
 			for (local impl/*: NativeOperatorImpl*/: method.impls) {
+				local symName = method.nativeSymbolNameForImpl(impl);
 				local deps = Tuple(impl.dependencies.each.TNO_id);
 				local dep1 = #deps >= 1 ? deps[0] : "Dee_TNO_COUNT";
 				local dep2 = #deps >= 2 ? deps[1] : "Dee_TNO_COUNT";
-				local symName = method.nativeSymbolNameForImpl(impl);
 				if (#deps >= 3) {
 					throw Error(f"Max 2 dependencies are supported for default operators, but {
 							repr symName} has {#deps}");
+				}
+				if (dep2 == dep1)
+					dep2 = "Dee_TNO_COUNT";
+				if (impl.disliked) {
+					if (dep2 != "Dee_TNO_COUNT") {
+						throw Error(f"[[disliked]] impls can have at most 1 dependency, but {
+								repr symName} has 2");
+					}
+					dep2 = dep1;
 				}
 				print(f"	OH_INIT_SPEC_IMPL_INIT(&{symName}, {dep1}, {dep2}),");
 			}
@@ -2776,6 +2789,7 @@ final class _SpecParserAttrib {
 	this = default;
 	public member kw: bool = false;
 	public member wunused: bool = false;
+	public member disliked: bool = false;
 	public member tpSelfExpr: string = "";
 	public member nonnull: bool = false;
 	public member getset: bool = false;
@@ -3073,6 +3087,7 @@ done:
 			switch (tok) {
 			case "kw":
 			case "wunused":
+			case "disliked":
 			case "nonnull":
 			case "getset": {
 				local key = tok;
@@ -3234,7 +3249,6 @@ done:
 		local result: NativeMethodImpl = NativeMethodImpl(alias: aliasName);
 		result.implPrefix = attrib.prefix;
 		result.inheritAs = attrib.inheritAs;
-		resetContext();
 		return result;
 	}
 
@@ -3270,7 +3284,6 @@ done:
 		result.inheritAs = attrib.inheritAs;
 		tokEnd = implEnd;
 		next();
-		resetContext();
 		return result;
 	}
 
@@ -3521,6 +3534,7 @@ done:
 		} else {
 			err(f"Expected ':' or '=' after dependency in native operator implementation, but for {repr tok}");
 		}
+		impl.disliked = attrib.disliked;
 		(isClass ? method.usrtypeImpls : method.impls).append(impl);
 	}
 

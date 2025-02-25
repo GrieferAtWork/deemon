@@ -66,14 +66,14 @@ typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_sizeob_t)(DeeObje
 typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeNO_size_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeNO_size_fast_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_contains_t)(DeeObject *self, DeeObject *item);
-typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_getitem_t)(DeeObject *self, DeeObject *index);
-typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_trygetitem_t)(DeeObject *self, DeeObject *index);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_getitem_index_fast_t)(DeeObject *self, size_t index);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_getitem_t)(DeeObject *self, DeeObject *index);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_getitem_index_t)(DeeObject *self, size_t index);
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_trygetitem_index_t)(DeeObject *self, size_t index);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_getitem_string_hash_t)(DeeObject *self, char const *key, Dee_hash_t hash);
-typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_trygetitem_string_hash_t)(DeeObject *self, char const *key, Dee_hash_t hash);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_getitem_string_len_hash_t)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_trygetitem_t)(DeeObject *self, DeeObject *index);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_trygetitem_index_t)(DeeObject *self, size_t index);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_trygetitem_string_hash_t)(DeeObject *self, char const *key, Dee_hash_t hash);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_trygetitem_string_len_hash_t)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_bounditem_t)(DeeObject *self, DeeObject *index);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_bounditem_index_t)(DeeObject *self, size_t index);
@@ -188,14 +188,14 @@ enum Dee_tno_id {
 	Dee_TNO_size,
 	Dee_TNO_size_fast,
 	Dee_TNO_contains,
-	Dee_TNO_getitem,
-	Dee_TNO_trygetitem,
 	Dee_TNO_getitem_index_fast,
+	Dee_TNO_getitem,
 	Dee_TNO_getitem_index,
-	Dee_TNO_trygetitem_index,
 	Dee_TNO_getitem_string_hash,
-	Dee_TNO_trygetitem_string_hash,
 	Dee_TNO_getitem_string_len_hash,
+	Dee_TNO_trygetitem,
+	Dee_TNO_trygetitem_index,
+	Dee_TNO_trygetitem_string_hash,
 	Dee_TNO_trygetitem_string_len_hash,
 	Dee_TNO_bounditem,
 	Dee_TNO_bounditem_index,
@@ -385,14 +385,14 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_funptr_t
 #define _Dee_TNO_PATH_size(_)                       PATH2(_, tp_seq, tp_size)
 #define _Dee_TNO_PATH_size_fast(_)                  PATH2(_, tp_seq, tp_size_fast)
 #define _Dee_TNO_PATH_contains(_)                   PATH2(_, tp_seq, tp_contains)
-#define _Dee_TNO_PATH_getitem(_)                    PATH2(_, tp_seq, tp_getitem)
-#define _Dee_TNO_PATH_trygetitem(_)                 PATH2(_, tp_seq, tp_trygetitem)
 #define _Dee_TNO_PATH_getitem_index_fast(_)         PATH2(_, tp_seq, tp_getitem_index_fast)
+#define _Dee_TNO_PATH_getitem(_)                    PATH2(_, tp_seq, tp_getitem)
 #define _Dee_TNO_PATH_getitem_index(_)              PATH2(_, tp_seq, tp_getitem_index)
-#define _Dee_TNO_PATH_trygetitem_index(_)           PATH2(_, tp_seq, tp_trygetitem_index)
 #define _Dee_TNO_PATH_getitem_string_hash(_)        PATH2(_, tp_seq, tp_getitem_string_hash)
-#define _Dee_TNO_PATH_trygetitem_string_hash(_)     PATH2(_, tp_seq, tp_trygetitem_string_hash)
 #define _Dee_TNO_PATH_getitem_string_len_hash(_)    PATH2(_, tp_seq, tp_getitem_string_len_hash)
+#define _Dee_TNO_PATH_trygetitem(_)                 PATH2(_, tp_seq, tp_trygetitem)
+#define _Dee_TNO_PATH_trygetitem_index(_)           PATH2(_, tp_seq, tp_trygetitem_index)
+#define _Dee_TNO_PATH_trygetitem_string_hash(_)     PATH2(_, tp_seq, tp_trygetitem_string_hash)
 #define _Dee_TNO_PATH_trygetitem_string_len_hash(_) PATH2(_, tp_seq, tp_trygetitem_string_len_hash)
 #define _Dee_TNO_PATH_bounditem(_)                  PATH2(_, tp_seq, tp_bounditem)
 #define _Dee_TNO_PATH_bounditem_index(_)            PATH2(_, tp_seq, tp_bounditem_index)
@@ -938,6 +938,8 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__contains__with__CO
 #define isusrtype__contains(tp_contains) ((tp_contains) == &usrtype__contains__with__CONTAINS)
 #define maketyped__contains(tp_contains) ((tp_contains) == &usrtype__contains__with__CONTAINS ? &tusrtype__contains__with__CONTAINS : &tdefault__contains)
 
+/* tp_seq->tp_getitem_index_fast */
+
 /* tp_seq->tp_getitem */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__getitem__with__GETITEM(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with__getitem_index__and__getitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
@@ -946,6 +948,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with_
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with__getitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with__getitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with__trygetitem__and__hasitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with__trygetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__getitem__with__GETITEM(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__getitem_index__and__getitem_string_len_hash(DeeObject *self, DeeObject *index);
@@ -954,9 +957,49 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__get
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__getitem_string_len_hash(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__getitem_string_hash(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__trygetitem__and__hasitem(DeeObject *self, DeeObject *index);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__trygetitem(DeeObject *self, DeeObject *index);
 #define isusrtype__getitem(tp_getitem) ((tp_getitem) == &usrtype__getitem__with__GETITEM)
-#define isdefault__getitem(tp_getitem) ((tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_len_hash || (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_hash || (tp_getitem) == &default__getitem__with__getitem_index || (tp_getitem) == &default__getitem__with__getitem_string_len_hash || (tp_getitem) == &default__getitem__with__getitem_string_hash || (tp_getitem) == &default__getitem__with__trygetitem__and__hasitem)
-#define maketyped__getitem(tp_getitem) ((tp_getitem) == &usrtype__getitem__with__GETITEM ? &tusrtype__getitem__with__GETITEM : (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_len_hash ? &tdefault__getitem__with__getitem_index__and__getitem_string_len_hash : (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_hash ? &tdefault__getitem__with__getitem_index__and__getitem_string_hash : (tp_getitem) == &default__getitem__with__getitem_index ? &tdefault__getitem__with__getitem_index : (tp_getitem) == &default__getitem__with__getitem_string_len_hash ? &tdefault__getitem__with__getitem_string_len_hash : (tp_getitem) == &default__getitem__with__getitem_string_hash ? &tdefault__getitem__with__getitem_string_hash : (tp_getitem) == &default__getitem__with__trygetitem__and__hasitem ? &tdefault__getitem__with__trygetitem__and__hasitem : &tdefault__getitem)
+#define isdefault__getitem(tp_getitem) ((tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_len_hash || (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_hash || (tp_getitem) == &default__getitem__with__getitem_index || (tp_getitem) == &default__getitem__with__getitem_string_len_hash || (tp_getitem) == &default__getitem__with__getitem_string_hash || (tp_getitem) == &default__getitem__with__trygetitem__and__hasitem || (tp_getitem) == &default__getitem__with__trygetitem)
+#define maketyped__getitem(tp_getitem) ((tp_getitem) == &usrtype__getitem__with__GETITEM ? &tusrtype__getitem__with__GETITEM : (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_len_hash ? &tdefault__getitem__with__getitem_index__and__getitem_string_len_hash : (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_hash ? &tdefault__getitem__with__getitem_index__and__getitem_string_hash : (tp_getitem) == &default__getitem__with__getitem_index ? &tdefault__getitem__with__getitem_index : (tp_getitem) == &default__getitem__with__getitem_string_len_hash ? &tdefault__getitem__with__getitem_string_len_hash : (tp_getitem) == &default__getitem__with__getitem_string_hash ? &tdefault__getitem__with__getitem_string_hash : (tp_getitem) == &default__getitem__with__trygetitem__and__hasitem ? &tdefault__getitem__with__trygetitem__and__hasitem : (tp_getitem) == &default__getitem__with__trygetitem ? &tdefault__getitem__with__trygetitem : &tdefault__getitem)
+
+/* tp_seq->tp_getitem_index */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getitem_index__with__size__and__getitem_index_fast(DeeTypeObject *tp_self, DeeObject *self, size_t index);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getitem_index__with__trygetitem_index__and__hasitem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getitem_index__with__getitem(DeeTypeObject *tp_self, DeeObject *self, size_t index);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getitem_index__with__trygetitem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getitem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getitem_index__with__size__and__getitem_index_fast(DeeObject *self, size_t index);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getitem_index__with__trygetitem_index__and__hasitem_index(DeeObject *self, size_t index);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getitem_index__with__getitem(DeeObject *self, size_t index);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getitem_index__with__trygetitem_index(DeeObject *self, size_t index);
+#define isdefault__getitem_index(tp_getitem_index) ((tp_getitem_index) == &default__getitem_index__with__size__and__getitem_index_fast || (tp_getitem_index) == &default__getitem_index__with__trygetitem_index__and__hasitem_index || (tp_getitem_index) == &default__getitem_index__with__getitem || (tp_getitem_index) == &default__getitem_index__with__trygetitem_index)
+#define maketyped__getitem_index(tp_getitem_index) ((tp_getitem_index) == &default__getitem_index__with__size__and__getitem_index_fast ? &tdefault__getitem_index__with__size__and__getitem_index_fast : (tp_getitem_index) == &default__getitem_index__with__trygetitem_index__and__hasitem_index ? &tdefault__getitem_index__with__trygetitem_index__and__hasitem_index : (tp_getitem_index) == &default__getitem_index__with__getitem ? &tdefault__getitem_index__with__getitem : (tp_getitem_index) == &default__getitem_index__with__trygetitem_index ? &tdefault__getitem_index__with__trygetitem_index : &tdefault__getitem_index)
+
+/* tp_seq->tp_getitem_string_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_hash__with__getitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_hash__with__getitem(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_hash__with__trygetitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_hash__with__getitem_string_len_hash(DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_hash__with__getitem(DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_hash__with__trygetitem_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
+#define isdefault__getitem_string_hash(tp_getitem_string_hash) ((tp_getitem_string_hash) == &default__getitem_string_hash__with__getitem_string_len_hash || (tp_getitem_string_hash) == &default__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash || (tp_getitem_string_hash) == &default__getitem_string_hash__with__getitem || (tp_getitem_string_hash) == &default__getitem_string_hash__with__trygetitem_string_hash)
+#define maketyped__getitem_string_hash(tp_getitem_string_hash) ((tp_getitem_string_hash) == &default__getitem_string_hash__with__getitem_string_len_hash ? &tdefault__getitem_string_hash__with__getitem_string_len_hash : (tp_getitem_string_hash) == &default__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash ? &tdefault__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash : (tp_getitem_string_hash) == &default__getitem_string_hash__with__getitem ? &tdefault__getitem_string_hash__with__getitem : (tp_getitem_string_hash) == &default__getitem_string_hash__with__trygetitem_string_hash ? &tdefault__getitem_string_hash__with__trygetitem_string_hash : &tdefault__getitem_string_hash)
+
+/* tp_seq->tp_getitem_string_len_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_len_hash__with__getitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_len_hash__with__getitem(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_len_hash__with__trygetitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_len_hash__with__getitem_string_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_len_hash__with__getitem(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_len_hash__with__trygetitem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+#define isdefault__getitem_string_len_hash(tp_getitem_string_len_hash) ((tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__getitem_string_hash || (tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash || (tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__getitem || (tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__trygetitem_string_len_hash)
+#define maketyped__getitem_string_len_hash(tp_getitem_string_len_hash) ((tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__getitem_string_hash ? &tdefault__getitem_string_len_hash__with__getitem_string_hash : (tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash ? &tdefault__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash : (tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__getitem ? &tdefault__getitem_string_len_hash__with__getitem : (tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__trygetitem_string_len_hash ? &tdefault__getitem_string_len_hash__with__trygetitem_string_len_hash : &tdefault__getitem_string_len_hash)
 
 /* tp_seq->tp_trygetitem */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__trygetitem__with__trygetitem_index__and__trygetitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
@@ -975,19 +1018,6 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__trygetitem__with__
 #define isdefault__trygetitem(tp_trygetitem) ((tp_trygetitem) == &default__trygetitem__with__trygetitem_index__and__trygetitem_string_len_hash || (tp_trygetitem) == &default__trygetitem__with__trygetitem_index__and__trygetitem_string_hash || (tp_trygetitem) == &default__trygetitem__with__trygetitem_index || (tp_trygetitem) == &default__trygetitem__with__trygetitem_string_len_hash || (tp_trygetitem) == &default__trygetitem__with__trygetitem_string_hash || (tp_trygetitem) == &default__trygetitem__with__getitem)
 #define maketyped__trygetitem(tp_trygetitem) ((tp_trygetitem) == &default__trygetitem__with__trygetitem_index__and__trygetitem_string_len_hash ? &tdefault__trygetitem__with__trygetitem_index__and__trygetitem_string_len_hash : (tp_trygetitem) == &default__trygetitem__with__trygetitem_index__and__trygetitem_string_hash ? &tdefault__trygetitem__with__trygetitem_index__and__trygetitem_string_hash : (tp_trygetitem) == &default__trygetitem__with__trygetitem_index ? &tdefault__trygetitem__with__trygetitem_index : (tp_trygetitem) == &default__trygetitem__with__trygetitem_string_len_hash ? &tdefault__trygetitem__with__trygetitem_string_len_hash : (tp_trygetitem) == &default__trygetitem__with__trygetitem_string_hash ? &tdefault__trygetitem__with__trygetitem_string_hash : (tp_trygetitem) == &default__trygetitem__with__getitem ? &tdefault__trygetitem__with__getitem : &tdefault__trygetitem)
 
-/* tp_seq->tp_getitem_index_fast */
-
-/* tp_seq->tp_getitem_index */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getitem_index__with__size__and__getitem_index_fast(DeeTypeObject *tp_self, DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getitem_index__with__trygetitem_index__and__hasitem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getitem_index__with__getitem(DeeTypeObject *tp_self, DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getitem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getitem_index__with__size__and__getitem_index_fast(DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getitem_index__with__trygetitem_index__and__hasitem_index(DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getitem_index__with__getitem(DeeObject *self, size_t index);
-#define isdefault__getitem_index(tp_getitem_index) ((tp_getitem_index) == &default__getitem_index__with__size__and__getitem_index_fast || (tp_getitem_index) == &default__getitem_index__with__trygetitem_index__and__hasitem_index || (tp_getitem_index) == &default__getitem_index__with__getitem)
-#define maketyped__getitem_index(tp_getitem_index) ((tp_getitem_index) == &default__getitem_index__with__size__and__getitem_index_fast ? &tdefault__getitem_index__with__size__and__getitem_index_fast : (tp_getitem_index) == &default__getitem_index__with__trygetitem_index__and__hasitem_index ? &tdefault__getitem_index__with__trygetitem_index__and__hasitem_index : (tp_getitem_index) == &default__getitem_index__with__getitem ? &tdefault__getitem_index__with__getitem : &tdefault__getitem_index)
-
 /* tp_seq->tp_trygetitem_index */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__trygetitem_index__with__size__and__getitem_index_fast(DeeTypeObject *tp_self, DeeObject *self, size_t index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__trygetitem_index__with__getitem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index);
@@ -999,17 +1029,6 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__trygetitem_index__wit
 #define isdefault__trygetitem_index(tp_trygetitem_index) ((tp_trygetitem_index) == &default__trygetitem_index__with__size__and__getitem_index_fast || (tp_trygetitem_index) == &default__trygetitem_index__with__getitem_index || (tp_trygetitem_index) == &default__trygetitem_index__with__trygetitem)
 #define maketyped__trygetitem_index(tp_trygetitem_index) ((tp_trygetitem_index) == &default__trygetitem_index__with__size__and__getitem_index_fast ? &tdefault__trygetitem_index__with__size__and__getitem_index_fast : (tp_trygetitem_index) == &default__trygetitem_index__with__getitem_index ? &tdefault__trygetitem_index__with__getitem_index : (tp_trygetitem_index) == &default__trygetitem_index__with__trygetitem ? &tdefault__trygetitem_index__with__trygetitem : &tdefault__trygetitem_index)
 
-/* tp_seq->tp_getitem_string_hash */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_hash__with__getitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_hash__with__getitem(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_hash__with__getitem_string_len_hash(DeeObject *self, char const *key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_hash__with__getitem(DeeObject *self, char const *key, Dee_hash_t hash);
-#define isdefault__getitem_string_hash(tp_getitem_string_hash) ((tp_getitem_string_hash) == &default__getitem_string_hash__with__getitem_string_len_hash || (tp_getitem_string_hash) == &default__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash || (tp_getitem_string_hash) == &default__getitem_string_hash__with__getitem)
-#define maketyped__getitem_string_hash(tp_getitem_string_hash) ((tp_getitem_string_hash) == &default__getitem_string_hash__with__getitem_string_len_hash ? &tdefault__getitem_string_hash__with__getitem_string_len_hash : (tp_getitem_string_hash) == &default__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash ? &tdefault__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash : (tp_getitem_string_hash) == &default__getitem_string_hash__with__getitem ? &tdefault__getitem_string_hash__with__getitem : &tdefault__getitem_string_hash)
-
 /* tp_seq->tp_trygetitem_string_hash */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__trygetitem_string_hash__with__trygetitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__trygetitem_string_hash__with__getitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
@@ -1020,17 +1039,6 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__trygetitem_string_
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__trygetitem_string_hash__with__trygetitem(DeeObject *self, char const *key, Dee_hash_t hash);
 #define isdefault__trygetitem_string_hash(tp_trygetitem_string_hash) ((tp_trygetitem_string_hash) == &default__trygetitem_string_hash__with__trygetitem_string_len_hash || (tp_trygetitem_string_hash) == &default__trygetitem_string_hash__with__getitem_string_hash || (tp_trygetitem_string_hash) == &default__trygetitem_string_hash__with__trygetitem)
 #define maketyped__trygetitem_string_hash(tp_trygetitem_string_hash) ((tp_trygetitem_string_hash) == &default__trygetitem_string_hash__with__trygetitem_string_len_hash ? &tdefault__trygetitem_string_hash__with__trygetitem_string_len_hash : (tp_trygetitem_string_hash) == &default__trygetitem_string_hash__with__getitem_string_hash ? &tdefault__trygetitem_string_hash__with__getitem_string_hash : (tp_trygetitem_string_hash) == &default__trygetitem_string_hash__with__trygetitem ? &tdefault__trygetitem_string_hash__with__trygetitem : &tdefault__trygetitem_string_hash)
-
-/* tp_seq->tp_getitem_string_len_hash */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_len_hash__with__getitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_len_hash__with__getitem(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_len_hash__with__getitem_string_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem_string_len_hash__with__getitem(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-#define isdefault__getitem_string_len_hash(tp_getitem_string_len_hash) ((tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__getitem_string_hash || (tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash || (tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__getitem)
-#define maketyped__getitem_string_len_hash(tp_getitem_string_len_hash) ((tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__getitem_string_hash ? &tdefault__getitem_string_len_hash__with__getitem_string_hash : (tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash ? &tdefault__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash : (tp_getitem_string_len_hash) == &default__getitem_string_len_hash__with__getitem ? &tdefault__getitem_string_len_hash__with__getitem : &tdefault__getitem_string_len_hash)
 
 /* tp_seq->tp_trygetitem_string_len_hash */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__trygetitem_string_len_hash__with__trygetitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
@@ -1052,6 +1060,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem__with__trygetite
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem__with__bounditem_index(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem__with__bounditem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem__with__bounditem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem__with__trygetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem__with__size__and__getitem_index_fast(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem__with__bounditem_index__and__bounditem_string_len_hash(DeeObject *self, DeeObject *index);
@@ -1061,47 +1070,54 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem__with__trygetitem__a
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem__with__bounditem_index(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem__with__bounditem_string_len_hash(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem__with__bounditem_string_hash(DeeObject *self, DeeObject *index);
-#define isdefault__bounditem(tp_bounditem) ((tp_bounditem) == &default__bounditem__with__size__and__getitem_index_fast || (tp_bounditem) == &default__bounditem__with__bounditem_index__and__bounditem_string_len_hash || (tp_bounditem) == &default__bounditem__with__bounditem_index__and__bounditem_string_hash || (tp_bounditem) == &default__bounditem__with__getitem || (tp_bounditem) == &default__bounditem__with__trygetitem__and__hasitem || (tp_bounditem) == &default__bounditem__with__bounditem_index || (tp_bounditem) == &default__bounditem__with__bounditem_string_len_hash || (tp_bounditem) == &default__bounditem__with__bounditem_string_hash)
-#define maketyped__bounditem(tp_bounditem) ((tp_bounditem) == &default__bounditem__with__bounditem_index__and__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_len_hash : (tp_bounditem) == &default__bounditem__with__bounditem_index__and__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_hash : (tp_bounditem) == &default__bounditem__with__getitem ? &tdefault__bounditem__with__getitem : (tp_bounditem) == &default__bounditem__with__trygetitem__and__hasitem ? &tdefault__bounditem__with__trygetitem__and__hasitem : (tp_bounditem) == &default__bounditem__with__bounditem_index ? &tdefault__bounditem__with__bounditem_index : (tp_bounditem) == &default__bounditem__with__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_string_len_hash : (tp_bounditem) == &default__bounditem__with__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_string_hash : &tdefault__bounditem)
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem__with__trygetitem(DeeObject *self, DeeObject *index);
+#define isdefault__bounditem(tp_bounditem) ((tp_bounditem) == &default__bounditem__with__size__and__getitem_index_fast || (tp_bounditem) == &default__bounditem__with__bounditem_index__and__bounditem_string_len_hash || (tp_bounditem) == &default__bounditem__with__bounditem_index__and__bounditem_string_hash || (tp_bounditem) == &default__bounditem__with__getitem || (tp_bounditem) == &default__bounditem__with__trygetitem__and__hasitem || (tp_bounditem) == &default__bounditem__with__bounditem_index || (tp_bounditem) == &default__bounditem__with__bounditem_string_len_hash || (tp_bounditem) == &default__bounditem__with__bounditem_string_hash || (tp_bounditem) == &default__bounditem__with__trygetitem)
+#define maketyped__bounditem(tp_bounditem) ((tp_bounditem) == &default__bounditem__with__bounditem_index__and__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_len_hash : (tp_bounditem) == &default__bounditem__with__bounditem_index__and__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_hash : (tp_bounditem) == &default__bounditem__with__getitem ? &tdefault__bounditem__with__getitem : (tp_bounditem) == &default__bounditem__with__trygetitem__and__hasitem ? &tdefault__bounditem__with__trygetitem__and__hasitem : (tp_bounditem) == &default__bounditem__with__bounditem_index ? &tdefault__bounditem__with__bounditem_index : (tp_bounditem) == &default__bounditem__with__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_string_len_hash : (tp_bounditem) == &default__bounditem__with__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_string_hash : (tp_bounditem) == &default__bounditem__with__trygetitem ? &tdefault__bounditem__with__trygetitem : &tdefault__bounditem)
 
 /* tp_seq->tp_bounditem_index */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__bounditem_index__with__size__and__getitem_index_fast(DeeTypeObject *tp_self, DeeObject *self, size_t index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__bounditem_index__with__getitem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__bounditem_index__with__trygetitem_index__and__hasitem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__bounditem_index__with__bounditem(DeeTypeObject *tp_self, DeeObject *self, size_t index);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__bounditem_index__with__trygetitem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__bounditem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__bounditem_index__with__size__and__getitem_index_fast(DeeObject *self, size_t index);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__bounditem_index__with__getitem_index(DeeObject *self, size_t index);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__bounditem_index__with__trygetitem_index__and__hasitem_index(DeeObject *self, size_t index);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__bounditem_index__with__bounditem(DeeObject *self, size_t index);
-#define isdefault__bounditem_index(tp_bounditem_index) ((tp_bounditem_index) == &default__bounditem_index__with__size__and__getitem_index_fast || (tp_bounditem_index) == &default__bounditem_index__with__getitem_index || (tp_bounditem_index) == &default__bounditem_index__with__trygetitem_index__and__hasitem_index || (tp_bounditem_index) == &default__bounditem_index__with__bounditem)
-#define maketyped__bounditem_index(tp_bounditem_index) ((tp_bounditem_index) == &default__bounditem_index__with__size__and__getitem_index_fast ? &tdefault__bounditem_index__with__size__and__getitem_index_fast : (tp_bounditem_index) == &default__bounditem_index__with__getitem_index ? &tdefault__bounditem_index__with__getitem_index : (tp_bounditem_index) == &default__bounditem_index__with__trygetitem_index__and__hasitem_index ? &tdefault__bounditem_index__with__trygetitem_index__and__hasitem_index : (tp_bounditem_index) == &default__bounditem_index__with__bounditem ? &tdefault__bounditem_index__with__bounditem : &tdefault__bounditem_index)
+INTDEF WUNUSED NONNULL((1)) int DCALL default__bounditem_index__with__trygetitem_index(DeeObject *self, size_t index);
+#define isdefault__bounditem_index(tp_bounditem_index) ((tp_bounditem_index) == &default__bounditem_index__with__size__and__getitem_index_fast || (tp_bounditem_index) == &default__bounditem_index__with__getitem_index || (tp_bounditem_index) == &default__bounditem_index__with__trygetitem_index__and__hasitem_index || (tp_bounditem_index) == &default__bounditem_index__with__bounditem || (tp_bounditem_index) == &default__bounditem_index__with__trygetitem_index)
+#define maketyped__bounditem_index(tp_bounditem_index) ((tp_bounditem_index) == &default__bounditem_index__with__size__and__getitem_index_fast ? &tdefault__bounditem_index__with__size__and__getitem_index_fast : (tp_bounditem_index) == &default__bounditem_index__with__getitem_index ? &tdefault__bounditem_index__with__getitem_index : (tp_bounditem_index) == &default__bounditem_index__with__trygetitem_index__and__hasitem_index ? &tdefault__bounditem_index__with__trygetitem_index__and__hasitem_index : (tp_bounditem_index) == &default__bounditem_index__with__bounditem ? &tdefault__bounditem_index__with__bounditem : (tp_bounditem_index) == &default__bounditem_index__with__trygetitem_index ? &tdefault__bounditem_index__with__trygetitem_index : &tdefault__bounditem_index)
 
 /* tp_seq->tp_bounditem_string_hash */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_hash__with__getitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_hash__with__bounditem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_hash__with__bounditem(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_hash__with__trygetitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem_string_hash__with__getitem_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem_string_hash__with__bounditem_string_len_hash(DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem_string_hash__with__bounditem(DeeObject *self, char const *key, Dee_hash_t hash);
-#define isdefault__bounditem_string_hash(tp_bounditem_string_hash) ((tp_bounditem_string_hash) == &default__bounditem_string_hash__with__getitem_string_hash || (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__bounditem_string_len_hash || (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash || (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__bounditem)
-#define maketyped__bounditem_string_hash(tp_bounditem_string_hash) ((tp_bounditem_string_hash) == &default__bounditem_string_hash__with__getitem_string_hash ? &tdefault__bounditem_string_hash__with__getitem_string_hash : (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__bounditem_string_len_hash ? &tdefault__bounditem_string_hash__with__bounditem_string_len_hash : (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash ? &tdefault__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash : (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__bounditem ? &tdefault__bounditem_string_hash__with__bounditem : &tdefault__bounditem_string_hash)
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem_string_hash__with__trygetitem_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
+#define isdefault__bounditem_string_hash(tp_bounditem_string_hash) ((tp_bounditem_string_hash) == &default__bounditem_string_hash__with__getitem_string_hash || (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__bounditem_string_len_hash || (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash || (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__bounditem || (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__trygetitem_string_hash)
+#define maketyped__bounditem_string_hash(tp_bounditem_string_hash) ((tp_bounditem_string_hash) == &default__bounditem_string_hash__with__getitem_string_hash ? &tdefault__bounditem_string_hash__with__getitem_string_hash : (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__bounditem_string_len_hash ? &tdefault__bounditem_string_hash__with__bounditem_string_len_hash : (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash ? &tdefault__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash : (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__bounditem ? &tdefault__bounditem_string_hash__with__bounditem : (tp_bounditem_string_hash) == &default__bounditem_string_hash__with__trygetitem_string_hash ? &tdefault__bounditem_string_hash__with__trygetitem_string_hash : &tdefault__bounditem_string_hash)
 
 /* tp_seq->tp_bounditem_string_len_hash */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_len_hash__with__getitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_len_hash__with__bounditem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_len_hash__with__bounditem(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_len_hash__with__trygetitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__bounditem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem_string_len_hash__with__getitem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem_string_len_hash__with__bounditem_string_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem_string_len_hash__with__bounditem(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-#define isdefault__bounditem_string_len_hash(tp_bounditem_string_len_hash) ((tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__getitem_string_len_hash || (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash || (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__bounditem_string_hash || (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__bounditem)
-#define maketyped__bounditem_string_len_hash(tp_bounditem_string_len_hash) ((tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__getitem_string_len_hash ? &tdefault__bounditem_string_len_hash__with__getitem_string_len_hash : (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash ? &tdefault__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash : (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__bounditem_string_hash ? &tdefault__bounditem_string_len_hash__with__bounditem_string_hash : (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__bounditem ? &tdefault__bounditem_string_len_hash__with__bounditem : &tdefault__bounditem_string_len_hash)
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__bounditem_string_len_hash__with__trygetitem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+#define isdefault__bounditem_string_len_hash(tp_bounditem_string_len_hash) ((tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__getitem_string_len_hash || (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash || (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__bounditem_string_hash || (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__bounditem || (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__trygetitem_string_len_hash)
+#define maketyped__bounditem_string_len_hash(tp_bounditem_string_len_hash) ((tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__getitem_string_len_hash ? &tdefault__bounditem_string_len_hash__with__getitem_string_len_hash : (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash ? &tdefault__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash : (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__bounditem_string_hash ? &tdefault__bounditem_string_len_hash__with__bounditem_string_hash : (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__bounditem ? &tdefault__bounditem_string_len_hash__with__bounditem : (tp_bounditem_string_len_hash) == &default__bounditem_string_len_hash__with__trygetitem_string_len_hash ? &tdefault__bounditem_string_len_hash__with__trygetitem_string_len_hash : &tdefault__bounditem_string_len_hash)
 
 /* tp_seq->tp_hasitem */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasitem__with__bounditem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
@@ -1111,7 +1127,6 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasitem__with__hasitem_ind
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasitem__with__hasitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasitem__with__hasitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasitem__with__size__and__getitem_index_fast(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasitem__with__trygetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__hasitem__with__bounditem(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__hasitem__with__hasitem_index__and__hasitem_string_len_hash(DeeObject *self, DeeObject *index);
@@ -1120,9 +1135,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__hasitem__with__hasitem_index(D
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__hasitem__with__hasitem_string_len_hash(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__hasitem__with__hasitem_string_hash(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__hasitem__with__size__and__getitem_index_fast(DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__hasitem__with__trygetitem(DeeObject *self, DeeObject *index);
-#define isdefault__hasitem(tp_hasitem) ((tp_hasitem) == &default__hasitem__with__bounditem || (tp_hasitem) == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash || (tp_hasitem) == &default__hasitem__with__hasitem_index__and__hasitem_string_hash || (tp_hasitem) == &default__hasitem__with__hasitem_index || (tp_hasitem) == &default__hasitem__with__hasitem_string_len_hash || (tp_hasitem) == &default__hasitem__with__hasitem_string_hash || (tp_hasitem) == &default__hasitem__with__size__and__getitem_index_fast || (tp_hasitem) == &default__hasitem__with__trygetitem)
-#define maketyped__hasitem(tp_hasitem) ((tp_hasitem) == &default__hasitem__with__bounditem ? &tdefault__hasitem__with__bounditem : (tp_hasitem) == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash : (tp_hasitem) == &default__hasitem__with__hasitem_index__and__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash : (tp_hasitem) == &default__hasitem__with__hasitem_index ? &tdefault__hasitem__with__hasitem_index : (tp_hasitem) == &default__hasitem__with__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_string_len_hash : (tp_hasitem) == &default__hasitem__with__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_string_hash : (tp_hasitem) == &default__hasitem__with__trygetitem ? &tdefault__hasitem__with__trygetitem : &tdefault__hasitem)
+#define isdefault__hasitem(tp_hasitem) ((tp_hasitem) == &default__hasitem__with__bounditem || (tp_hasitem) == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash || (tp_hasitem) == &default__hasitem__with__hasitem_index__and__hasitem_string_hash || (tp_hasitem) == &default__hasitem__with__hasitem_index || (tp_hasitem) == &default__hasitem__with__hasitem_string_len_hash || (tp_hasitem) == &default__hasitem__with__hasitem_string_hash || (tp_hasitem) == &default__hasitem__with__size__and__getitem_index_fast)
+#define maketyped__hasitem(tp_hasitem) ((tp_hasitem) == &default__hasitem__with__bounditem ? &tdefault__hasitem__with__bounditem : (tp_hasitem) == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash : (tp_hasitem) == &default__hasitem__with__hasitem_index__and__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash : (tp_hasitem) == &default__hasitem__with__hasitem_index ? &tdefault__hasitem__with__hasitem_index : (tp_hasitem) == &default__hasitem__with__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_string_len_hash : (tp_hasitem) == &default__hasitem__with__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_string_hash : &tdefault__hasitem)
 
 /* tp_seq->tp_hasitem_index */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__hasitem_index__with__bounditem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index);

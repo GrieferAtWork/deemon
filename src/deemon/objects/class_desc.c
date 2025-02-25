@@ -400,6 +400,7 @@ cot_trygetitem_byid(ClassOperatorTable *self, Dee_operator_t opname) {
 	return ITER_DONE;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cot_trygetitem(ClassOperatorTable *self, DeeObject *key) {
 	Dee_operator_t opname;
@@ -419,6 +420,14 @@ nope:
 	return ITER_DONE;
 err:
 	return NULL;
+}
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cot_trygetitem_index(ClassOperatorTable *self, size_t key) {
+	if unlikely(key > (size_t)(Dee_operator_t)-1)
+		return ITER_DONE;
+	return cot_trygetitem_byid(self, (Dee_operator_t)key);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -519,8 +528,12 @@ PRIVATE struct type_seq cot_seq = {
 	/* .tp_getrange_index_n           = */ NULL,
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_trygetitem                 = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cot_trygetitem,
-	/* .tp_trygetitem_index           = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&cot_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&cot_trygetitem_string_hash,
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,
@@ -811,11 +824,12 @@ cat_size(ClassAttributeTable *__restrict self) {
 	return result;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_trygetitem(ClassAttributeTable *self, DeeObject *key) {
 	Dee_hash_t hash, i, perturb;
-	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
-		goto err;
+	if unlikely(!DeeString_Check(key))
+		goto nope;
 	hash = DeeString_Hash(key);
 	i = perturb = hash & self->ca_mask;
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
@@ -832,10 +846,8 @@ cat_trygetitem(ClassAttributeTable *self, DeeObject *key) {
 			continue;
 		return (DREF DeeObject *)cattr_new(self->ca_desc, at);
 	}
-/*nope:*/
+nope:
 	return ITER_DONE;
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -857,6 +869,7 @@ cat_trygetitem_string_hash(ClassAttributeTable *self,
 /*nope:*/
 	return ITER_DONE;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_trygetitem_string_len_hash(ClassAttributeTable *self, char const *key,
@@ -1166,9 +1179,17 @@ PRIVATE struct type_seq cat_seq = {
 	/* .tp_getrange_index_n           = */ NULL,
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_trygetitem                 = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_trygetitem,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_trygetitem_index           = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_trygetitem_string_hash     = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&cat_trygetitem_string_hash,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,
 	/* .tp_setitem_string_hash        = */ NULL,

@@ -36,7 +36,7 @@ tp_attr->tp_getattr([[nonnull]] DeeObject *self,
 [[wunused]] DREF DeeObject *
 tp_attr->tp_getattr_string_hash([[nonnull]] DeeObject *self,
                                 [[nonnull]] char const *attr, Dee_hash_t hash)
-%{using tp_attr->tp_getattr: {
+%{using tp_attr->tp_getattr: /*[[disliked]]*/ {
 	DREF DeeObject *result;
 	DREF DeeObject *attrob = DeeString_NewWithHash(attr, hash);
 	if unlikely(!attrob)
@@ -53,7 +53,7 @@ err:
 tp_attr->tp_getattr_string_len_hash([[nonnull]] DeeObject *self,
                                     [[nonnull]] char const *attr,
                                     size_t attrlen, Dee_hash_t hash)
-%{using tp_attr->tp_getattr: {
+%{using tp_attr->tp_getattr: /*[[disliked]]*/ {
 	DREF DeeObject *result;
 	DREF DeeObject *attrob = DeeString_NewSizedWithHash(attr, attrlen, hash);
 	if unlikely(!attrob)
@@ -105,7 +105,7 @@ tp_attr->tp_boundattr_string_hash([[nonnull]] DeeObject *self,
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }}
-%{using tp_attr->tp_boundattr: {
+%{using tp_attr->tp_boundattr: [[disliked]] {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
@@ -136,7 +136,7 @@ tp_attr->tp_boundattr_string_len_hash([[nonnull]] DeeObject *self,
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }}
-%{using tp_attr->tp_boundattr: {
+%{using tp_attr->tp_boundattr: [[disliked]] {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)

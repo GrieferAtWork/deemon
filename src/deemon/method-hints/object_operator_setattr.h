@@ -46,7 +46,7 @@ err:
 tp_attr->tp_setattr_string_hash([[nonnull]] DeeObject *self,
                                 [[nonnull]] char const *attr, Dee_hash_t hash,
                                 [[nonnull]] DeeObject *value)
-%{using tp_attr->tp_setattr: {
+%{using tp_attr->tp_setattr: /*[[disliked]]*/ {
 	int result;
 	DREF DeeObject *attrob = DeeString_NewWithHash(attr, hash);
 	if unlikely(!attrob)
@@ -64,7 +64,7 @@ tp_attr->tp_setattr_string_len_hash([[nonnull]] DeeObject *self,
                                     [[nonnull]] char const *attr,
                                     size_t attrlen, Dee_hash_t hash,
                                     [[nonnull]] DeeObject *value)
-%{using tp_attr->tp_setattr: {
+%{using tp_attr->tp_setattr: /*[[disliked]]*/ {
 	int result;
 	DREF DeeObject *attrob = DeeString_NewSizedWithHash(attr, attrlen, hash);
 	if unlikely(!attrob)

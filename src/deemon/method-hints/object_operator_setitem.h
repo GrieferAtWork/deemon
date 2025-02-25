@@ -101,7 +101,7 @@ err:
 [[wunused]] int
 tp_seq->tp_setitem_index([[nonnull]] DeeObject *self, size_t index,
                          [[nonnull]] DeeObject *value)
-%{using tp_seq->tp_setitem: {
+%{using tp_seq->tp_setitem: [[disliked]] {
 	int result;
 	DREF DeeObject *indexob = DeeInt_NewSize(index);
 	if unlikely(!indexob)
@@ -120,7 +120,7 @@ err:
 tp_seq->tp_setitem_string_hash([[nonnull]] DeeObject *self,
                                [[nonnull]] char const *key, Dee_hash_t hash,
                                [[nonnull]] DeeObject *value)
-%{using tp_seq->tp_setitem: {
+%{using tp_seq->tp_setitem: [[disliked]] {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
@@ -139,7 +139,7 @@ tp_seq->tp_setitem_string_len_hash([[nonnull]] DeeObject *self,
                                    [[nonnull]] char const *key,
                                    size_t keylen, Dee_hash_t hash,
                                    [[nonnull]] DeeObject *value)
-%{using tp_seq->tp_setitem: {
+%{using tp_seq->tp_setitem: [[disliked]] {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)

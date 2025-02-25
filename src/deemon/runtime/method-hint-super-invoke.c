@@ -190,7 +190,7 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_getitem[6] = {
 	(Dee_funptr_t)&default__seq_operator_getitem__empty,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_getitem[9] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_getitem[10] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__seq_operator_getitem__with_callobjectcache___seq_getitem__, &tdefault__seq_operator_getitem__with_callobjectcache___seq_getitem__),
 	MH_SUPER_MAP_TYPED_INIT(&usrtype__getitem__with__GETITEM, &tusrtype__getitem__with__GETITEM),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem__with__getitem_index__and__getitem_string_len_hash, &tdefault__getitem__with__getitem_index__and__getitem_string_len_hash),
@@ -199,6 +199,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_getitem[9]
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem__with__getitem_string_len_hash, &tdefault__getitem__with__getitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem__with__getitem_string_hash, &tdefault__getitem__with__getitem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem__with__trygetitem__and__hasitem, &tdefault__getitem__with__trygetitem__and__hasitem),
+	MH_SUPER_MAP_TYPED_INIT(&default__getitem__with__trygetitem, &tdefault__getitem__with__trygetitem),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_getitem_index[9] = {
@@ -212,10 +213,11 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_getitem_index[9] = {
 	(Dee_funptr_t)&default__seq_operator_getitem_index__with__map_enumerate,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_getitem_index[4] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_getitem_index[5] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_index__with__size__and__getitem_index_fast, &tdefault__getitem_index__with__size__and__getitem_index_fast),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_index__with__trygetitem_index__and__hasitem_index, &tdefault__getitem_index__with__trygetitem_index__and__hasitem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_index__with__getitem, &tdefault__getitem_index__with__getitem),
+	MH_SUPER_MAP_TYPED_INIT(&default__getitem_index__with__trygetitem_index, &tdefault__getitem_index__with__trygetitem_index),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_trygetitem[7] = {
@@ -262,14 +264,13 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_hasitem[8] = {
 	(Dee_funptr_t)&default__seq_operator_hasitem__with__seq_operator_sizeob,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_hasitem[8] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_hasitem[7] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__bounditem, &tdefault__hasitem__with__bounditem),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index__and__hasitem_string_len_hash, &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index__and__hasitem_string_hash, &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index, &tdefault__hasitem__with__hasitem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_string_len_hash, &tdefault__hasitem__with__hasitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_string_hash, &tdefault__hasitem__with__hasitem_string_hash),
-	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__trygetitem, &tdefault__hasitem__with__trygetitem),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_hasitem_index[7] = {
@@ -296,7 +297,7 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_bounditem[7] = {
 	(Dee_funptr_t)&default__seq_operator_bounditem__empty,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_bounditem[8] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_bounditem[9] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__bounditem_index__and__bounditem_string_len_hash, &tdefault__bounditem__with__bounditem_index__and__bounditem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__bounditem_index__and__bounditem_string_hash, &tdefault__bounditem__with__bounditem_index__and__bounditem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__getitem, &tdefault__bounditem__with__getitem),
@@ -304,6 +305,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_bounditem[
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__bounditem_index, &tdefault__bounditem__with__bounditem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__bounditem_string_len_hash, &tdefault__bounditem__with__bounditem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__bounditem_string_hash, &tdefault__bounditem__with__bounditem_string_hash),
+	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__trygetitem, &tdefault__bounditem__with__trygetitem),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_bounditem_index[7] = {
@@ -315,11 +317,12 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_bounditem_index[7] = {
 	(Dee_funptr_t)&default__seq_operator_bounditem_index__with__map_enumerate,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_bounditem_index[5] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_bounditem_index[6] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_index__with__size__and__getitem_index_fast, &tdefault__bounditem_index__with__size__and__getitem_index_fast),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_index__with__getitem_index, &tdefault__bounditem_index__with__getitem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_index__with__trygetitem_index__and__hasitem_index, &tdefault__bounditem_index__with__trygetitem_index__and__hasitem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_index__with__bounditem, &tdefault__bounditem_index__with__bounditem),
+	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_index__with__trygetitem_index, &tdefault__bounditem_index__with__trygetitem_index),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_delitem[6] = {
@@ -2645,7 +2648,7 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_getitem[11] = {
 	(Dee_funptr_t)&default__map_operator_getitem__with__map_enumerate,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_getitem[9] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_getitem[10] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__map_operator_getitem__with_callobjectcache___map_getitem__, &tdefault__map_operator_getitem__with_callobjectcache___map_getitem__),
 	MH_SUPER_MAP_TYPED_INIT(&usrtype__getitem__with__GETITEM, &tusrtype__getitem__with__GETITEM),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem__with__getitem_index__and__getitem_string_len_hash, &tdefault__getitem__with__getitem_index__and__getitem_string_len_hash),
@@ -2654,6 +2657,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_getitem[9]
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem__with__getitem_string_len_hash, &tdefault__getitem__with__getitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem__with__getitem_string_hash, &tdefault__getitem__with__getitem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem__with__trygetitem__and__hasitem, &tdefault__getitem__with__trygetitem__and__hasitem),
+	MH_SUPER_MAP_TYPED_INIT(&default__getitem__with__trygetitem, &tdefault__getitem__with__trygetitem),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_trygetitem[12] = {
@@ -2687,10 +2691,11 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_getitem_index[6] = {
 	(Dee_funptr_t)&default__map_operator_getitem_index__empty,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_getitem_index[4] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_getitem_index[5] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_index__with__size__and__getitem_index_fast, &tdefault__getitem_index__with__size__and__getitem_index_fast),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_index__with__trygetitem_index__and__hasitem_index, &tdefault__getitem_index__with__trygetitem_index__and__hasitem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_index__with__getitem, &tdefault__getitem_index__with__getitem),
+	MH_SUPER_MAP_TYPED_INIT(&default__getitem_index__with__trygetitem_index, &tdefault__getitem_index__with__trygetitem_index),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_trygetitem_index[6] = {
@@ -2716,10 +2721,11 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_getitem_string_hash[7]
 	(Dee_funptr_t)&default__map_operator_getitem_string_hash__with__map_enumerate,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_getitem_string_hash[4] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_getitem_string_hash[5] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_string_hash__with__getitem_string_len_hash, &tdefault__getitem_string_hash__with__getitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash, &tdefault__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_string_hash__with__getitem, &tdefault__getitem_string_hash__with__getitem),
+	MH_SUPER_MAP_TYPED_INIT(&default__getitem_string_hash__with__trygetitem_string_hash, &tdefault__getitem_string_hash__with__trygetitem_string_hash),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_trygetitem_string_hash[7] = {
@@ -2746,10 +2752,11 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_getitem_string_len_has
 	(Dee_funptr_t)&default__map_operator_getitem_string_len_hash__with__map_enumerate,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_getitem_string_len_hash[4] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_getitem_string_len_hash[5] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_string_len_hash__with__getitem_string_hash, &tdefault__getitem_string_len_hash__with__getitem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash, &tdefault__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__getitem_string_len_hash__with__getitem, &tdefault__getitem_string_len_hash__with__getitem),
+	MH_SUPER_MAP_TYPED_INIT(&default__getitem_string_len_hash__with__trygetitem_string_len_hash, &tdefault__getitem_string_len_hash__with__trygetitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_trygetitem_string_len_hash[7] = {
@@ -2777,7 +2784,7 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_bounditem[8] = {
 	(Dee_funptr_t)&default__map_operator_bounditem__with__map_operator_contains,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_bounditem[8] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_bounditem[9] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__bounditem_index__and__bounditem_string_len_hash, &tdefault__bounditem__with__bounditem_index__and__bounditem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__bounditem_index__and__bounditem_string_hash, &tdefault__bounditem__with__bounditem_index__and__bounditem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__getitem, &tdefault__bounditem__with__getitem),
@@ -2785,6 +2792,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_bounditem[
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__bounditem_index, &tdefault__bounditem__with__bounditem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__bounditem_string_len_hash, &tdefault__bounditem__with__bounditem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__bounditem_string_hash, &tdefault__bounditem__with__bounditem_string_hash),
+	MH_SUPER_MAP_TYPED_INIT(&default__bounditem__with__trygetitem, &tdefault__bounditem__with__trygetitem),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_bounditem_index[7] = {
@@ -2796,11 +2804,12 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_bounditem_index[7] = {
 	(Dee_funptr_t)&default__map_operator_bounditem_index__empty,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_bounditem_index[5] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_bounditem_index[6] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_index__with__size__and__getitem_index_fast, &tdefault__bounditem_index__with__size__and__getitem_index_fast),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_index__with__getitem_index, &tdefault__bounditem_index__with__getitem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_index__with__trygetitem_index__and__hasitem_index, &tdefault__bounditem_index__with__trygetitem_index__and__hasitem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_index__with__bounditem, &tdefault__bounditem_index__with__bounditem),
+	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_index__with__trygetitem_index, &tdefault__bounditem_index__with__trygetitem_index),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_bounditem_string_hash[7] = {
@@ -2812,11 +2821,12 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_bounditem_string_hash[
 	(Dee_funptr_t)&default__map_operator_bounditem_string_hash__empty,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_bounditem_string_hash[5] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_bounditem_string_hash[6] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_string_hash__with__getitem_string_hash, &tdefault__bounditem_string_hash__with__getitem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_string_hash__with__bounditem_string_len_hash, &tdefault__bounditem_string_hash__with__bounditem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash, &tdefault__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_string_hash__with__bounditem, &tdefault__bounditem_string_hash__with__bounditem),
+	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_string_hash__with__trygetitem_string_hash, &tdefault__bounditem_string_hash__with__trygetitem_string_hash),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_bounditem_string_len_hash[7] = {
@@ -2828,11 +2838,12 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_bounditem_string_len_h
 	(Dee_funptr_t)&default__map_operator_bounditem_string_len_hash__empty,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_bounditem_string_len_hash[5] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_bounditem_string_len_hash[6] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_string_len_hash__with__getitem_string_len_hash, &tdefault__bounditem_string_len_hash__with__getitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash, &tdefault__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_string_len_hash__with__bounditem_string_hash, &tdefault__bounditem_string_len_hash__with__bounditem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_string_len_hash__with__bounditem, &tdefault__bounditem_string_len_hash__with__bounditem),
+	MH_SUPER_MAP_TYPED_INIT(&default__bounditem_string_len_hash__with__trygetitem_string_len_hash, &tdefault__bounditem_string_len_hash__with__trygetitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_hasitem[6] = {
@@ -2843,14 +2854,13 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_hasitem[6] = {
 	(Dee_funptr_t)&default__map_operator_hasitem__empty,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_hasitem[8] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_hasitem[7] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__bounditem, &tdefault__hasitem__with__bounditem),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index__and__hasitem_string_len_hash, &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index__and__hasitem_string_hash, &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index, &tdefault__hasitem__with__hasitem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_string_len_hash, &tdefault__hasitem__with__hasitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_string_hash, &tdefault__hasitem__with__hasitem_string_hash),
-	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__trygetitem, &tdefault__hasitem__with__trygetitem),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_hasitem_index[6] = {
