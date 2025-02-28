@@ -1362,6 +1362,30 @@ Type_assert(rt.ClassOperatorTable, {
 	"tp_hasitem_string_len_hash":    "default__hasitem_string_len_hash__with__bounditem_string_len_hash",
 });
 
+Type_assert(deemon.Sequence, {
+	"tp_mul":         "seq_mul",
+	"tp_inplace_mul": "default__seq_operator_inplace_mul",
+});
+
+Type_assert(rt.FunctionSymbolsByName, {
+	/*FIXME:"tp_inplace_mul": "default__inplace_mul__with__mul",
+	 * ^ For some reason, "tp_inplace_mul" is set to "NULL" here...
+	 * Problem seems to be that using-style default operator impls
+	 * should actually still be when the dependent operator was
+	 * inherited, but the core operator could not be inherited
+	 * iow:
+	 * - when loading "tp_inplace_mul"...
+	 * - default__seq_operator_inplace_mul cannot be inherited
+	 *   here, because "rt.FunctionSymbolsByName.__seqclass__"
+	 *   isn't "Sequence"
+	 * - but the "tp_mul" from the same source type (Sequence)
+	 *   can be inherited...
+	 * - ... and after it has been, "tp_inplace_mul" can be
+	 *   implemented using "default__inplace_mul__with__mul"
+	 */
+	"tp_mul":         "seq_mul",
+});
+
 #endif  /* !__MAIN__ */
 
 #ifdef __MAIN__
@@ -1388,7 +1412,7 @@ function dumpType(typ: Type) {
 	print(f"\});");
 }
 
-dumpType(rt.ClassOperatorTable);
+dumpType(rt.FunctionSymbolsByName);
 
 #endif /* __MAIN__ */
 
