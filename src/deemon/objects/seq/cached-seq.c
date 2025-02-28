@@ -24,7 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/class.h>
-#include <deemon/gc.h>
+#include <deemon/computed-operators.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -33,14 +33,12 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
 
-#include <hybrid/align.h>
 #include <hybrid/overflow.h>
 
 /**/
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-#include "../int_logic.h"
 
 /**/
 #include "cached-seq.h"

@@ -34,6 +34,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/int.h>

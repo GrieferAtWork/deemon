@@ -2647,6 +2647,9 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__se
 
 DECL_END
 
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#include "../objects/seq/default-api.h"
+#include <deemon/class.h>
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_METHOD_HINT_DEFAULTS_H */

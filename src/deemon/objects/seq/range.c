@@ -20,28 +20,30 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_RANGE_C
 #define GUARD_DEEMON_OBJECTS_SEQ_RANGE_C 1
 
-#include "range.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/string.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
 
+/**/
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../gc_inspect.h"
 #include "repeat.h"
+
+/**/
+#include "range.h"
 
 DECL_BEGIN
 

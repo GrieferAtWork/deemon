@@ -26,6 +26,7 @@
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -48,8 +49,8 @@
 
 #include <stdint.h>
 
-#include "../runtime/kwlist.h"
 #include "../objects/seq/svec.h"
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 

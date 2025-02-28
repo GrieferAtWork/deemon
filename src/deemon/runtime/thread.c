@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/format.h>
@@ -43,7 +44,6 @@
 #include <deemon/util/futex.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/once.h>
-#include <deemon/util/rlock.h>
 
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>

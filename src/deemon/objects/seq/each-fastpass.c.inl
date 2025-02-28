@@ -25,6 +25,7 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/map.h>
+#include <deemon/system-features.h> /* mempcpyc */
 
 #ifdef DEFINE_SeqEachGetAttr
 #define LOCAL_ssX(x)               ssa_##x

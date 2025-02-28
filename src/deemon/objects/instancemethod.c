@@ -23,16 +23,15 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/instancemethod.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/util/atomic.h>
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"

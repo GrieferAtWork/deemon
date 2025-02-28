@@ -24,15 +24,14 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/computed-operators.h>
 #include <deemon/int.h>
+#include <deemon/method-hints.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/string.h>
 
-#include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-#include "default-api.h"
 
 /**/
 #include "simpleproxy.h"

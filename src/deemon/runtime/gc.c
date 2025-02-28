@@ -27,12 +27,12 @@
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
+#include <deemon/computed-operators.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -43,9 +43,6 @@
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
 #endif /* !CONFIG_NO_DEX */
-
-#include <stddef.h>
-#include <stdint.h>
 
 #include "../objects/gc_inspect.h"
 #include "strings.h"

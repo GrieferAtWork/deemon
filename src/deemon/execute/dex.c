@@ -28,6 +28,7 @@
 #ifndef CONFIG_NO_DEX
 #include <deemon/alloc.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/gc.h>

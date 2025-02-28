@@ -20,21 +20,16 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_BYATTR_C
 #define GUARD_DEEMON_OBJECTS_SEQ_BYATTR_C 1
 
-#include "byattr.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
-#include <deemon/bool.h>
+#include <deemon/computed-operators.h>
 #include <deemon/format.h>
 #include <deemon/map.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
 #include <deemon/string.h>
 
-#include <stddef.h>
-
-#include "../../runtime/strings.h"
+/**/
+#include "byattr.h"
 
 DECL_BEGIN
 

@@ -24,12 +24,12 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/util/atomic.h>
 #include <deemon/weakref.h>
 
 #include "../runtime/kwlist.h"

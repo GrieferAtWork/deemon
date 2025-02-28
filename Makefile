@@ -138,3 +138,7 @@ method-hints:
 		lib/rt/hints/method.dee \
 		lib/rt/hints/operator.dee
 .PHONY: method-hints
+
+computed-operators:
+	$(DEEMON) util/scripts/computed-operators.dee
+.PHONY: computed-operators

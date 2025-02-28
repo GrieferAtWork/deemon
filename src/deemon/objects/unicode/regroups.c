@@ -20,22 +20,17 @@
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_REGROUPS_C
 #define GUARD_DEEMON_OBJECTS_UNICODE_REGROUPS_C 1
 
-#include "regroups.h"
-
-#include <deemon/arg.h>
-#include <deemon/bool.h>
+#include <deemon/api.h>
 #include <deemon/bytes.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
+#include <deemon/computed-operators.h>
+#include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
 
 #include "../../runtime/runtime_error.h"
-#include "../../runtime/strings.h"
 
-/* Proxy sequence objects for `struct DeeRegexMatch'-arrays */
+/**/
+#include "regroups.h"
 
 DECL_BEGIN
 

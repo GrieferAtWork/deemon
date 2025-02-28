@@ -20,19 +20,19 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_HASHFILTER_C
 #define GUARD_DEEMON_OBJECTS_SEQ_HASHFILTER_C 1
 
-#include "hashfilter.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/bool.h>
+#include <deemon/computed-operators.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/string.h>
 
+/**/
 #include "../../runtime/strings.h"
+
+/**/
+#include "hashfilter.h"
 
 DECL_BEGIN
 

@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/computed-operators.h>
 #include <deemon/gc.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>

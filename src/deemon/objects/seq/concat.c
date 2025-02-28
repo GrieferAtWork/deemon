@@ -24,13 +24,11 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/error.h>
+#include <deemon/computed-operators.h>
 #include <deemon/gc.h>
-#include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
@@ -42,7 +40,6 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../gc_inspect.h"
-#include "svec.h"
 
 /**/
 #include "concat.h"

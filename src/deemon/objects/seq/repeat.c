@@ -20,14 +20,10 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_REPEAT_C
 #define GUARD_DEEMON_OBJECTS_SEQ_REPEAT_C 1
 
-#include "repeat.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
+#include <deemon/computed-operators.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
@@ -36,14 +32,16 @@
 #include <deemon/seq.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
-#include "../seq_functions.h"
+
+/**/
+#include "repeat.h"
 
 #undef SSIZE_MAX
+#include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
 
 DECL_BEGIN

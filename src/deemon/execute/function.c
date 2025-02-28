@@ -28,6 +28,7 @@
 #include <deemon/callable.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>

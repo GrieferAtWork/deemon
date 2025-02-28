@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
@@ -33,7 +34,6 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 

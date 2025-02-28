@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
@@ -36,7 +37,6 @@
 
 /**/
 #include "../../runtime/runtime_error.h"
-#include "../../runtime/strings.h"
 
 DECL_BEGIN
 

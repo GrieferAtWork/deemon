@@ -26,6 +26,7 @@
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/list.h>
@@ -1134,15 +1135,17 @@ DeeModule_GlobalName(DeeObject *__restrict self, uint16_t gid) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-module_str(DeeModuleObject *__restrict self) {
-	return_reference_((DeeObject *)self->mo_name);
+DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+module_str(DeeObject *__restrict self) {
+	DeeModuleObject *me = (DeeModuleObject *)self;
+	return_reference_((DeeObject *)me->mo_name);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-module_printrepr(DeeModuleObject *__restrict self,
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) dssize_t DCALL
+module_printrepr(DeeObject *__restrict self,
                  dformatprinter printer, void *arg) {
-	return DeeFormat_Printf(printer, arg, "import(%r)", self->mo_name);
+	DeeModuleObject *me = (DeeModuleObject *)self;
+	return DeeFormat_Printf(printer, arg, "import(%r)", me->mo_name);
 }
 
 
@@ -1737,34 +1740,6 @@ PRIVATE struct type_gc tpconst module_gc = {
 
 
 
-/* Single module objects are unique, comparing/hashing
- * them is as single as comparing their memory locations. */
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-module_hash(DeeModuleObject *__restrict self) {
-	return DeeObject_HashGeneric(self);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-module_compare_eq(DeeModuleObject *self, DeeModuleObject *other) {
-	if (DeeObject_AssertType(other, &DeeModule_Type))
-		goto err;
-	return self == other ? 0 : 1;
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-module_trycompare_eq(DeeModuleObject *self, DeeModuleObject *other) {
-	return self == other ? 0 : 1;
-}
-
-PRIVATE struct type_cmp module_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&module_hash,
-	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_compare_eq,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_trycompare_eq,
-};
-
 PUBLIC DeeTypeObject DeeModule_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Module),
@@ -1799,7 +1774,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&module_visit,
 	/* .tp_gc            = */ &module_gc,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &module_cmp,
+	/* .tp_cmp           = */ &DeeObject_GenericCmpByAddr,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,

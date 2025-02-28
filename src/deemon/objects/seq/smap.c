@@ -24,10 +24,8 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
+#include <deemon/computed-operators.h>
 #include <deemon/map.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
@@ -37,7 +35,6 @@
 
 #include <hybrid/overflow.h>
 
-#include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "svec.h"

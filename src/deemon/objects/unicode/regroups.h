@@ -21,9 +21,11 @@
 #define GUARD_DEEMON_OBJECTS_UNICODE_REGROUPS_H 1
 
 #include <deemon/alloc.h>
+#include <deemon/format.h> /* PCKuSIZ */
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/regex.h>
+#include <deemon/tuple.h> /* DeeTuple_Newf */
 
 /* Proxy sequence objects for `struct DeeRegexMatch'-arrays */
 

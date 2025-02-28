@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/callable.h>
+#include <deemon/computed-operators.h>
 #include <deemon/none-operator.h>
 #include <deemon/object.h>
 #include <deemon/string.h>

@@ -230,11 +230,9 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-iterator_iternext(DeeObject *__restrict UNUSED(self)) {
-	/* A default-constructed, raw iterator object behaves as empty. */
-	return ITER_DONE;
-}
+/* A default-constructed, raw iterator object behaves as empty. */
+STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by definition of `iterator_iternext'");
+#define iterator_iternext (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_retsm1_1)
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 get_remaining_iterations(DeeObject *__restrict self) {
@@ -260,7 +258,7 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) int DCALL
 iterator_compare(DeeObject *self, DeeObject *other) {
 	size_t mylen, otlen;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))

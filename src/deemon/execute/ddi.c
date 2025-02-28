@@ -25,6 +25,7 @@
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
+#include <deemon/computed-operators.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>

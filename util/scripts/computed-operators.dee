@@ -33,7 +33,7 @@ import errors;
 import "...src.deemon.method-hints.method-hints" as mh;
 
 #undef DRY_RUN
-#if 1 /* TODO: Disable this */
+#if 0
 #define DRY_RUN
 #endif
 
@@ -62,7 +62,11 @@ function isPredefinedSymbol(symName: string): bool {
 }
 
 function mustCastSymbol(symName: string): bool {
-	return symName.startswith("DeeObject_New");
+	if (symName.startswith("DeeObject_New"))
+		return true;
+	if (symName.startswith("_DeeNone_"))
+		return true;
+	return false;
 }
 
 global final TYPE_SOURCE_MODULES: {Module...} = { deemon, rt, errors };

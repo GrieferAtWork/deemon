@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/object.h>

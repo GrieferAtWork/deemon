@@ -29,7 +29,7 @@
 #undef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
 #undef CONFIG_WITH_COMPUTED_DEFAULT_OPERATORS
 #define CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
-#elif defined(CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS) || 0
+#elif defined(CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS) || 0 /*<<< change to "1" to quickly disable */
 #undef CONFIG_WITH_COMPUTED_DEFAULT_OPERATORS
 #undef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
 #define CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
@@ -70,6 +70,10 @@
  *
  * Obviously, this magic script can only run when deemon was
  * built with `CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS'.
+ *
+ * To re-generate computed operators:
+ * #1: Build deemon with CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
+ * #2: `$ make computed-operators`
  */
 #define DEFIMPL(x) x
 #include "../../src/deemon/runtime/method-hint-defaults.h" /*!KEEPME*/
@@ -83,6 +87,8 @@ DECL_BEGIN
 /* Reusable default operators (and operator callbacks that get inherited) */
 /*[[[begin::computer-operator-decls]]]*/
 /*[[[end::computer-operator-decls]]]*/
+
+INTDEF Dee_hash_t DCALL default__hash__unsupported(DeeObject *__restrict self);
 
 DECL_END
 #else /* !CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS */

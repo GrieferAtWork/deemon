@@ -28,6 +28,7 @@
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/map.h>
 #include <deemon/module.h>
