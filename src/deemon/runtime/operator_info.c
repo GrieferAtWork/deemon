@@ -1128,7 +1128,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 	}	break;
 #else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	case OPERATOR_STR: {
-		PRIVATE ptrdiff_t const str_group[] = {
+		static ptrdiff_t const str_group[] = {
 			offsetof(DeeTypeObject, tp_cast.tp_str),
 			offsetof(DeeTypeObject, tp_cast.tp_print),
 		};
@@ -1136,7 +1136,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 	}	break;
 
 	case OPERATOR_REPR: {
-		PRIVATE ptrdiff_t const repr_group[] = {
+		static ptrdiff_t const repr_group[] = {
 			offsetof(DeeTypeObject, tp_cast.tp_repr),
 			offsetof(DeeTypeObject, tp_cast.tp_printrepr),
 		};
@@ -1144,7 +1144,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 	}	break;
 
 	case OPERATOR_CALL: {
-		PRIVATE ptrdiff_t const call_group[] = {
+		static ptrdiff_t const call_group[] = {
 			offsetof(DeeTypeObject, tp_call),
 			offsetof(DeeTypeObject, tp_call_kw),
 		};
@@ -1153,7 +1153,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 	case OPERATOR_INT:
 	case OPERATOR_FLOAT: {
-		PRIVATE ptrdiff_t const int_group[] = {
+		static ptrdiff_t const int_group[] = {
 			offsetof(struct type_math, tp_int),
 			offsetof(struct type_math, tp_int32),
 			offsetof(struct type_math, tp_int64),
@@ -1169,7 +1169,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 	case OPERATOR_DEC:
 	case OPERATOR_INPLACE_ADD:
 	case OPERATOR_INPLACE_SUB: {
-		PRIVATE ptrdiff_t const sum_group[] = {
+		static ptrdiff_t const sum_group[] = {
 			offsetof(struct type_math, tp_add),
 			offsetof(struct type_math, tp_sub),
 			offsetof(struct type_math, tp_inc),
@@ -1183,7 +1183,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 	case OPERATOR_MUL:
 	case OPERATOR_INPLACE_MUL: {
-		PRIVATE ptrdiff_t const mul_group[] = {
+		static ptrdiff_t const mul_group[] = {
 			offsetof(struct type_math, tp_mul),
 			offsetof(struct type_math, tp_inplace_mul),
 		};
@@ -1193,7 +1193,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 	case OPERATOR_DIV:
 	case OPERATOR_INPLACE_DIV: {
-		PRIVATE ptrdiff_t const div_group[] = {
+		static ptrdiff_t const div_group[] = {
 			offsetof(struct type_math, tp_div),
 			offsetof(struct type_math, tp_inplace_div),
 		};
@@ -1203,7 +1203,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 	case OPERATOR_MOD:
 	case OPERATOR_INPLACE_MOD: {
-		PRIVATE ptrdiff_t const mod_group[] = {
+		static ptrdiff_t const mod_group[] = {
 			offsetof(struct type_math, tp_mod),
 			offsetof(struct type_math, tp_inplace_mod),
 		};
@@ -1213,7 +1213,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 	case OPERATOR_SHL:
 	case OPERATOR_INPLACE_SHL: {
-		PRIVATE ptrdiff_t const shl_group[] = {
+		static ptrdiff_t const shl_group[] = {
 			offsetof(struct type_math, tp_shl),
 			offsetof(struct type_math, tp_inplace_shl),
 		};
@@ -1223,7 +1223,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 	case OPERATOR_SHR:
 	case OPERATOR_INPLACE_SHR: {
-		PRIVATE ptrdiff_t const shr_group[] = {
+		static ptrdiff_t const shr_group[] = {
 			offsetof(struct type_math, tp_shr),
 			offsetof(struct type_math, tp_inplace_shr),
 		};
@@ -1233,7 +1233,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 	case OPERATOR_AND:
 	case OPERATOR_INPLACE_AND: {
-		PRIVATE ptrdiff_t const and_group[] = {
+		static ptrdiff_t const and_group[] = {
 			offsetof(struct type_math, tp_and),
 			offsetof(struct type_math, tp_inplace_and),
 		};
@@ -1243,7 +1243,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 	case OPERATOR_OR:
 	case OPERATOR_INPLACE_OR: {
-		PRIVATE ptrdiff_t const or_group[] = {
+		static ptrdiff_t const or_group[] = {
 			offsetof(struct type_math, tp_or),
 			offsetof(struct type_math, tp_inplace_or),
 		};
@@ -1253,7 +1253,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 	case OPERATOR_XOR:
 	case OPERATOR_INPLACE_XOR: {
-		PRIVATE ptrdiff_t const xor_group[] = {
+		static ptrdiff_t const xor_group[] = {
 			offsetof(struct type_math, tp_xor),
 			offsetof(struct type_math, tp_inplace_xor),
 		};
@@ -1263,7 +1263,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 	case OPERATOR_POW:
 	case OPERATOR_INPLACE_POW: {
-		PRIVATE ptrdiff_t const pow_group[] = {
+		static ptrdiff_t const pow_group[] = {
 			offsetof(struct type_math, tp_pow),
 			offsetof(struct type_math, tp_inplace_pow),
 		};
@@ -1307,7 +1307,7 @@ find_origin_of_iter:
 
 #define FIND_ORIGIN_WITH_INFO(oi_class, oi_offset)                           \
 	do {                                                                     \
-		PRIVATE struct opinfo const custom_info =                            \
+		static struct opinfo const custom_info =                            \
 		OPINFO_INIT(0, oi_class, oi_offset, OPCC_SPECIAL, "", "", "", NULL); \
 		info = &custom_info;                                                 \
 		goto find_origin_with_info;                                          \
@@ -1323,12 +1323,12 @@ find_origin_of_compare_eq:
 		if (tp_eq == &DeeObject_DefaultEqWithNe)
 			return DeeType_GetOperatorOrigin(self, OPERATOR_NE);
 		if (tp_eq == &DeeObject_DefaultEqWithLoAndGr) {
-			PRIVATE Dee_operator_t ops[] = { OPERATOR_LO, OPERATOR_GR };
+			static Dee_operator_t ops[] = { OPERATOR_LO, OPERATOR_GR };
 find_origin_of_lo_and_gr:
 			return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
 		}
 		if (tp_eq == &DeeObject_DefaultEqWithLeAndGe) {
-			PRIVATE Dee_operator_t ops[] = { OPERATOR_LE, OPERATOR_GE };
+			static Dee_operator_t ops[] = { OPERATOR_LE, OPERATOR_GE };
 find_origin_of_le_and_ge:
 			return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
 		}
@@ -1389,35 +1389,35 @@ find_origin_of_compare:
 find_origin_of_compare_default:
 			tp_compare = self->tp_cmp->tp_compare;
 			if (tp_compare == &DeeObject_DefaultCompareWithEqAndLo) {
-				PRIVATE Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_LO };
+				static Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_LO };
 				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
 			}
 			if (tp_compare == &DeeObject_DefaultCompareWithEqAndLe) {
-				PRIVATE Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_LE };
+				static Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_LE };
 				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
 			}
 			if (tp_compare == &DeeObject_DefaultCompareWithEqAndGr) {
-				PRIVATE Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_GR };
+				static Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_GR };
 				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
 			}
 			if (tp_compare == &DeeObject_DefaultCompareWithEqAndGe) {
-				PRIVATE Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_GE };
+				static Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_GE };
 				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
 			}
 			if (tp_compare == &DeeObject_DefaultCompareWithNeAndLo) {
-				PRIVATE Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_LO };
+				static Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_LO };
 				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
 			}
 			if (tp_compare == &DeeObject_DefaultCompareWithNeAndLe) {
-				PRIVATE Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_LE };
+				static Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_LE };
 				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
 			}
 			if (tp_compare == &DeeObject_DefaultCompareWithNeAndGr) {
-				PRIVATE Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_GR };
+				static Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_GR };
 				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
 			}
 			if (tp_compare == &DeeObject_DefaultCompareWithNeAndGe) {
-				PRIVATE Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_GE };
+				static Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_GE };
 				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
 			}
 			if (tp_compare == &DeeObject_DefaultCompareWithLoAndGr)
@@ -1488,7 +1488,7 @@ find_origin_of_compare_default:
 	}	break;
 
 	case OPERATOR_ITER: {
-		PRIVATE ptrdiff_t const iter_group[] = {
+		static ptrdiff_t const iter_group[] = {
 			offsetof(struct type_seq, tp_iter),
 			offsetof(struct type_seq, tp_foreach),
 			offsetof(struct type_seq, tp_foreach_pair),
@@ -1504,7 +1504,7 @@ find_origin_of_compare_default:
 		if (tp_iter == &DeeSeq_DefaultIterWithSizeAndTryGetItemIndex ||
 		    tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndex ||
 		    tp_iter == &DeeSeq_DefaultIterWithSizeObAndGetItem) {
-			PRIVATE Dee_operator_t ops[] = { OPERATOR_SIZE, OPERATOR_GETITEM };
+			static Dee_operator_t ops[] = { OPERATOR_SIZE, OPERATOR_GETITEM };
 			return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
 		}
 		if (tp_iter == &DeeSeq_DefaultIterWithGetItemIndex ||
@@ -1515,7 +1515,7 @@ find_origin_of_compare_default:
 	}	break;
 
 	case OPERATOR_SIZE: {
-		PRIVATE ptrdiff_t const size_group[] = {
+		static ptrdiff_t const size_group[] = {
 			offsetof(struct type_seq, tp_size),
 			offsetof(struct type_seq, tp_sizeob),
 		};
@@ -1579,7 +1579,7 @@ find_origin_of_compare_default:
 	}	break;
 
 	case OPERATOR_GETITEM: {
-		PRIVATE ptrdiff_t const getitem_group[] = {
+		static ptrdiff_t const getitem_group[] = {
 			offsetof(struct type_seq, tp_getitem),
 			offsetof(struct type_seq, tp_getitem_index),
 			offsetof(struct type_seq, tp_getitem_index_fast),
@@ -1609,7 +1609,7 @@ find_origin_of_compare_default:
 	}	break;
 
 	case OPERATOR_DELITEM: {
-		PRIVATE ptrdiff_t const delitem_group[] = {
+		static ptrdiff_t const delitem_group[] = {
 			offsetof(struct type_seq, tp_delitem),
 			offsetof(struct type_seq, tp_delitem_index),
 			offsetof(struct type_seq, tp_delitem_string_hash),
@@ -1624,7 +1624,7 @@ find_origin_of_compare_default:
 	}	break;
 
 	case OPERATOR_SETITEM: {
-		PRIVATE ptrdiff_t const setitem_group[] = {
+		static ptrdiff_t const setitem_group[] = {
 			offsetof(struct type_seq, tp_setitem),
 			offsetof(struct type_seq, tp_setitem_index),
 			offsetof(struct type_seq, tp_setitem_string_hash),
@@ -1639,7 +1639,7 @@ find_origin_of_compare_default:
 	}	break;
 
 	case OPERATOR_GETRANGE: {
-		PRIVATE ptrdiff_t const getrange_group[] = {
+		static ptrdiff_t const getrange_group[] = {
 			offsetof(struct type_seq, tp_getrange),
 			offsetof(struct type_seq, tp_getrange_index),
 			offsetof(struct type_seq, tp_getrange_index_n),
@@ -1661,7 +1661,7 @@ find_origin_of_compare_default:
 	}	break;
 
 	case OPERATOR_DELRANGE: {
-		PRIVATE ptrdiff_t const delrange_group[] = {
+		static ptrdiff_t const delrange_group[] = {
 			offsetof(struct type_seq, tp_delrange),
 			offsetof(struct type_seq, tp_delrange_index),
 			offsetof(struct type_seq, tp_delrange_index_n),
@@ -1676,7 +1676,7 @@ find_origin_of_compare_default:
 	}	break;
 
 	case OPERATOR_SETRANGE: {
-		PRIVATE ptrdiff_t const setrange_group[] = {
+		static ptrdiff_t const setrange_group[] = {
 			offsetof(struct type_seq, tp_setrange),
 			offsetof(struct type_seq, tp_setrange_index),
 			offsetof(struct type_seq, tp_setrange_index_n),
@@ -1692,7 +1692,7 @@ find_origin_of_compare_default:
 		/* TODO: OPERATOR_ITERNEXT -- tp_iter_next and tp_nextpair form a group */
 
 	case OPERATOR_GETATTR: {
-		PRIVATE ptrdiff_t const getattr_group[] = {
+		static ptrdiff_t const getattr_group[] = {
 			offsetof(struct type_attr, tp_getattr),
 			offsetof(struct type_attr, tp_getattr_string_hash),
 			offsetof(struct type_attr, tp_getattr_string_len_hash),
@@ -1702,7 +1702,7 @@ find_origin_of_compare_default:
 	}	break;
 
 	case OPERATOR_DELATTR: {
-		PRIVATE ptrdiff_t const delattr_group[] = {
+		static ptrdiff_t const delattr_group[] = {
 			offsetof(struct type_attr, tp_delattr),
 			offsetof(struct type_attr, tp_delattr_string_hash),
 			offsetof(struct type_attr, tp_delattr_string_len_hash),
@@ -1712,7 +1712,7 @@ find_origin_of_compare_default:
 	}	break;
 
 	case OPERATOR_SETATTR: {
-		PRIVATE ptrdiff_t const setattr_group[] = {
+		static ptrdiff_t const setattr_group[] = {
 			offsetof(struct type_attr, tp_setattr),
 			offsetof(struct type_attr, tp_setattr_string_hash),
 			offsetof(struct type_attr, tp_setattr_string_len_hash),
@@ -1723,7 +1723,7 @@ find_origin_of_compare_default:
 
 	case OPERATOR_ENTER:
 	case OPERATOR_LEAVE: {
-		PRIVATE ptrdiff_t const with_group[] = {
+		static ptrdiff_t const with_group[] = {
 			offsetof(struct type_with, tp_enter),
 			offsetof(struct type_with, tp_leave),
 		};
