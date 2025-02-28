@@ -959,28 +959,38 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_g_deepcopy(DefaultIterator_WithGetItem *__restrict self,
               DefaultIterator_WithGetItem *__restrict other) {
-	DREF DeeObject *index, *index_copy;
+	DREF DeeObject *index;
+	self->dig_seq = DeeObject_DeepCopy(other->dig_seq);
+	if unlikely(!self->dig_seq)
+		goto err;
 	DefaultIterator_WithGetItem_LockAcquire(other);
 	index = other->dig_index;
 	Dee_Incref(index);
 	DefaultIterator_WithGetItem_LockRelease(other);
-	index_copy = DeeObject_DeepCopy(index);
-	Dee_Decref_unlikely(index);
-	if unlikely(!index_copy)
-		goto err;
-	self->dig_seq = DeeObject_DeepCopy(other->dig_seq);
-	if unlikely(!self->dig_seq)
-		goto err_index_copy;
-
-	self->dig_index = index_copy;
+	self->dig_index = index; /* Inherit reference */
 	Dee_atomic_lock_init(&self->dig_lock);
 	self->dig_tp_getitem = other->dig_tp_getitem;
 	return 0;
-err_index_copy:
-	Dee_Decref(index_copy);
 err:
 	return -1;
 }
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_g_deepload(DefaultIterator_WithGetItem *__restrict self) {
+	return DeeObject_InplaceDeepCopyWithLock(&self->dig_index, &self->dig_lock);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+di_g_clear(DefaultIterator_WithGetItem *__restrict self) {
+	DREF DeeObject *index;
+	Dee_Incref(Dee_None);
+	DefaultIterator_WithGetItem_LockAcquire(self);
+	index = self->dig_index;
+	self->dig_index = Dee_None;
+	DefaultIterator_WithGetItem_LockRelease(self);
+	Dee_Decref(index);
+}
+
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -991,6 +1001,7 @@ di_tg_copy(DefaultIterator_WithTGetItem *__restrict self,
 	                 (DefaultIterator_WithGetItem *)other);
 }
 
+#define di_tg_deepload di_g_deepload
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_tg_deepcopy(DefaultIterator_WithTGetItem *__restrict self,
                DefaultIterator_WithTGetItem *__restrict other) {
@@ -1220,12 +1231,17 @@ err_new_index:
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tg_cmp di_g_cmp
+#define di_tg_gc  di_g_gc
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE struct type_cmp di_g_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&di_g_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
 	/* .tp_trycompare_eq = */ NULL,
+};
+
+PRIVATE struct type_gc tpconst di_g_gc = {
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&di_g_clear
 };
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
@@ -1268,12 +1284,13 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_g_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_g_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&di_g_init,
-				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithGetItem)
+				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithGetItem),
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_g_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&di_g_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1282,7 +1299,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_g_visit,
-	/* .tp_gc            = */ NULL,
+	/* .tp_gc            = */ &di_g_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &di_g_cmp,
 	/* .tp_seq           = */ NULL,
@@ -1319,7 +1336,8 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_g_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&di_g_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1328,7 +1346,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_g_visit,
-	/* .tp_gc            = */ NULL,
+	/* .tp_gc            = */ &di_g_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &di_g_cmp,
 	/* .tp_seq           = */ NULL,
@@ -1366,7 +1384,8 @@ INTERN DeeTypeObject DefaultIterator_WithTGetItem_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_tg_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&di_tg_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1375,7 +1394,7 @@ INTERN DeeTypeObject DefaultIterator_WithTGetItem_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_tg_visit,
-	/* .tp_gc            = */ NULL,
+	/* .tp_gc            = */ &di_tg_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &di_tg_cmp,
 	/* .tp_seq           = */ NULL,
@@ -1517,33 +1536,32 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_sg_deepcopy(DefaultIterator_WithSizeObAndGetItem *__restrict self,
                DefaultIterator_WithSizeObAndGetItem *__restrict other) {
-	DREF DeeObject *index, *index_copy, *end_copy;
-	DefaultIterator_WithSizeAndGetItem_LockAcquire(other);
-	index = other->disg_index;
-	Dee_Incref(index);
-	DefaultIterator_WithSizeAndGetItem_LockRelease(other);
-	index_copy = DeeObject_DeepCopy(index);
-	Dee_Decref_unlikely(index);
-	if unlikely(!index_copy)
+	self->disg_end = DeeObject_DeepCopy(other->disg_end);
+	if unlikely(!self->disg_end)
 		goto err;
-	end_copy = DeeObject_DeepCopy(other->disg_end);
-	if unlikely(!end_copy)
-		goto err_index_copy;
 	self->disg_seq = DeeObject_DeepCopy(other->disg_seq);
 	if unlikely(!self->disg_seq)
-		goto err_index_copy_end_copy;
-	self->disg_index = index_copy;
-	self->disg_end   = end_copy;
+		goto err_end_copy;
 	Dee_atomic_lock_init(&self->disg_lock);
 	self->disg_tp_getitem = other->disg_tp_getitem;
+	DefaultIterator_WithSizeAndGetItem_LockAcquire(other);
+	self->disg_index = other->disg_index;
+	Dee_Incref(self->disg_index);
+	DefaultIterator_WithSizeAndGetItem_LockRelease(other);
 	return 0;
-err_index_copy_end_copy:
-	Dee_Decref(end_copy);
-err_index_copy:
-	Dee_Decref(index_copy);
+err_end_copy:
+	Dee_Decref(self->disg_end);
 err:
 	return -1;
 }
+
+STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_index) ==
+              offsetof(DefaultIterator_WithGetItem, dig_index));
+#ifndef CONFIG_NO_THREADS
+STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_lock) ==
+              offsetof(DefaultIterator_WithGetItem, dig_lock));
+#endif /* !CONFIG_NO_THREADS */
+#define di_sg_deepload di_g_deepload
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1554,6 +1572,7 @@ di_tsg_copy(DefaultIterator_WithSizeObAndTGetItem *__restrict self,
 	                  (DefaultIterator_WithSizeObAndGetItem *)other);
 }
 
+#define di_tsg_deepload di_sg_deepload
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_tsg_deepcopy(DefaultIterator_WithSizeObAndTGetItem *__restrict self,
                 DefaultIterator_WithSizeObAndTGetItem *__restrict other) {
@@ -1754,8 +1773,10 @@ err_new_index:
 
 
 #define di_sg_cmp di_g_cmp
+#define di_sg_gc  di_g_gc
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tsg_cmp di_g_cmp
+#define di_tsg_gc  di_g_gc
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #define di_sg_members di_g_members
@@ -1797,7 +1818,8 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sg_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&di_sg_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1806,7 +1828,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_sg_visit,
-	/* .tp_gc            = */ NULL,
+	/* .tp_gc            = */ &di_sg_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &di_sg_cmp,
 	/* .tp_seq           = */ NULL,
@@ -1843,7 +1865,8 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sg_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&di_sg_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1852,7 +1875,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_sg_visit,
-	/* .tp_gc            = */ NULL,
+	/* .tp_gc            = */ &di_sg_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &di_sg_cmp,
 	/* .tp_seq           = */ NULL,
@@ -1890,7 +1913,8 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndTGetItem_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_tsg_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&di_tsg_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1899,7 +1923,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndTGetItem_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_tsg_visit,
-	/* .tp_gc            = */ NULL,
+	/* .tp_gc            = */ &di_tsg_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &di_tsg_cmp,
 	/* .tp_seq           = */ NULL,
