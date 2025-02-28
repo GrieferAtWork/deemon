@@ -104,6 +104,7 @@ print define_Dee_HashStr("AttributeTable");
 print define_Dee_HashStr("ObjectTable");
 print define_Dee_HashStr("OperatorTable");
 print define_Dee_HashStr("Typed");
+print define_Dee_HashStr("KeysIterator");
 print define_Dee_HashStr("__args__");
 print define_Dee_HashStr("__bases__");
 print define_Dee_HashStr("__exports__");
@@ -116,6 +117,8 @@ print define_Dee_HashStr("__stack__");
 print define_Dee_HashStr("__statics__");
 print define_Dee_HashStr("__symbols__");
 print define_Dee_HashStr("byattr");
+print define_Dee_HashStr("keys");
+print define_Dee_HashStr("values");
 print define_Dee_HashStr("byhash");
 print define_Dee_HashStr("casefindall");
 print define_Dee_HashStr("casesplit");
@@ -166,6 +169,7 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 #define Dee_HashStr__ObjectTable _Dee_HashSelectC(0xc5d943d2, 0x8cda148232a1cdb2)
 #define Dee_HashStr__OperatorTable _Dee_HashSelectC(0xee6c4bef, 0x7987fd5ae34b3d62)
 #define Dee_HashStr__Typed _Dee_HashSelectC(0x395fa9a3, 0xedfc41bdb118b779)
+#define Dee_HashStr__KeysIterator _Dee_HashSelectC(0x4414d7ed, 0xb21fd2b052003297)
 #define Dee_HashStr____args__ _Dee_HashSelectC(0x938e1f4c, 0x78969e2a67f8471d)
 #define Dee_HashStr____bases__ _Dee_HashSelectC(0xff4ac0d2, 0x56bdc053fa64e4c9)
 #define Dee_HashStr____exports__ _Dee_HashSelectC(0x1d7df2db, 0x304ed10433cd0d26)
@@ -178,6 +182,8 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 #define Dee_HashStr____statics__ _Dee_HashSelectC(0x4147b465, 0x61d855a2a9645021)
 #define Dee_HashStr____symbols__ _Dee_HashSelectC(0x81659df, 0xf4073184aaae4c4c)
 #define Dee_HashStr__byattr _Dee_HashSelectC(0x7f16cf28, 0x58b9e1994d29c7ca)
+#define Dee_HashStr__keys _Dee_HashSelectC(0x97e36be1, 0x654d31bc4825131c)
+#define Dee_HashStr__values _Dee_HashSelectC(0x33b551c8, 0xf6e3e991b86d1574)
 #define Dee_HashStr__byhash _Dee_HashSelectC(0x7b5277ce, 0x773c8074445a28d9)
 #define Dee_HashStr__casefindall _Dee_HashSelectC(0x68f0403d, 0x2aa76ae718f34e43)
 #define Dee_HashStr__casesplit _Dee_HashSelectC(0x8d4e9c87, 0x69205bfad60e0e61)
@@ -368,6 +374,16 @@ get_Iterator_of(DREF DeeObject *ob) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+get_KeysIterator_of(DREF DeeObject *ob) {
+	DREF DeeObject *result = NULL;
+	if likely(ob) {
+		result = DeeObject_GetAttrStringHash((DeeObject *)ob, STR_AND_HASH(KeysIterator));
+		Dee_Decref_unlikely(ob);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 get_ItemType_of(DREF DeeObject *ob) {
 	DREF DeeObject *result = NULL;
 	if likely(ob) {
@@ -389,6 +405,57 @@ get_Typed_of(DREF DeeObject *ob) {
 	return result;
 }
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
+
+
+
+PRIVATE struct nonempty_roset_instance_struct {
+	Dee_OBJECT_HEAD
+	size_t                rs_mask;    /* [>= rs_size] Allocated set size. */
+	size_t                rs_size;    /* [<= rs_mask] Amount of non-NULL keys. */
+	struct Dee_roset_item rs_elem[2]; /* [1..rs_mask+1] Set key hash-vector. */
+} nonempty_roset_instance = {
+	OBJECT_HEAD_INIT(&DeeRoSet_Type),
+	/* .rs_mask = */ 1,
+	/* .rs_size = */ 1,
+	/* .rs_elem = */ { { DeeInt_Zero, 0 } } /* hash(int(0)) == 0 */
+};
+
+STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_mask) == offsetof(DeeRoSetObject, rs_mask));
+STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_size) == offsetof(DeeRoSetObject, rs_size));
+STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_elem) == offsetof(DeeRoSetObject, rs_elem));
+
+#define nonempty_stub_set ((DeeObject *)&nonempty_roset_instance)
+
+
+
+PRIVATE struct nonempty_rodict_instance_struct {
+	Dee_OBJECT_HEAD /* All of the below fields are [const] */
+	/*real*/Dee_dict_vidx_t rd_vsize;        /* # of key-value pairs in the dict. */
+	Dee_hash_t              rd_hmask;        /* [>= rd_vsize] Hash-mask */
+	Dee_dict_gethidx_t      rd_hidxget;      /* [1..1] Getter for "rd_htab" */
+	void                   *rd_htab;         /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
+	struct Dee_dict_item    rd_vtab[1];      /* [rd_vsize] Dict key-item pairs (never contains deleted keys). */
+	byte_t                  rd_htab_data[2]; /* Dict hash-table. */
+} nonempty_rodict_instance = {
+	OBJECT_HEAD_INIT(&DeeRoDict_Type),
+	/* .rd_vsize     = */ 1,
+	/* .rd_hmask     = */ 1,
+	/* .rd_hidxget   = */ &Dee_dict_gethidx8,
+	/* .rd_htab      = */ nonempty_rodict_instance.rd_htab_data,
+	/* .rd_vtab      = */ { Dee_DICT_ITEM_INIT(0, DeeInt_Zero, DeeInt_Zero) }, /* hash(int(0)) == 0 */
+	/* .rd_htab_data = */ { Dee_dict_vidx_tovirt(0), Dee_DICT_HTAB_EOF },
+};
+
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_vsize) == offsetof(DeeRoDictObject, rd_vsize));
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_hmask) == offsetof(DeeRoDictObject, rd_hmask));
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_hidxget) == offsetof(DeeRoDictObject, rd_hidxget));
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_htab) == offsetof(DeeRoDictObject, rd_htab));
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_vtab) == offsetof(DeeRoDictObject, rd_vtab));
+
+#define nonempty_stub_map ((DeeObject *)&nonempty_rodict_instance)
+
+
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -578,8 +645,23 @@ librt_get_TracebackIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_GCEnum_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+librt_get_GCEnum_impl_f(void) {
 	return_reference((DREF DeeObject *)Dee_TYPE(&DeeGCEnumTracked_Singleton));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_GCIter_impl_f(void) {
+	return_cached(get_Iterator_of(librt_get_GCEnum_impl_f()));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_GCEnum_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_GCEnum_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_GCIter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_GCIter_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -726,7 +808,7 @@ librt_get_DocKwdsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv))
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapHashFilter_uncached_impl_f(void) {
 	DeeObject *argv[] = { DeeInt_Zero };
-	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyMapping, STR_AND_HASH(byhash), 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(nonempty_stub_map, STR_AND_HASH(byhash), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -736,7 +818,25 @@ librt_get_MapHashFilter_impl_f(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapByAttr_impl_f(void) {
-	return_cached(get_type_of(DeeObject_GetAttrStringHash(Dee_EmptyMapping, STR_AND_HASH(byattr))));
+	return_cached(get_type_of(DeeObject_GetAttrStringHash(nonempty_stub_map, STR_AND_HASH(byattr))));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapKeys_impl_f(void) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	return_cached(get_type_of(DeeObject_InvokeMethodHint(map_keys, nonempty_stub_map)));
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	return_cached(get_type_of(DeeObject_GetAttrStringHash(nonempty_stub_map, STR_AND_HASH(keys))));
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapValues_impl_f(void) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	return_cached(get_type_of(DeeObject_InvokeMethodHint(map_values, nonempty_stub_map)));
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	return_cached(get_type_of(DeeObject_GetAttrStringHash(nonempty_stub_map, STR_AND_HASH(values))));
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -752,6 +852,16 @@ librt_get_MapHashFilterIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapByAttr_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MapByAttr_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapKeys_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_MapKeys_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapValues_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_MapValues_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1259,9 +1369,7 @@ librt_get_SeqEachCallAttrKw_stub_instance(void) {
 	if likely(result) {
 		DREF DeeObject *temp;
 		temp = DeeObject_CallAttrKw(result, (DeeObject *)&str_Iterator,
-		                            0,
-		                            NULL,
-		                            Dee_EmptyMapping);
+		                            0, NULL, Dee_EmptyMapping);
 		Dee_Decref(result);
 		result = temp;
 	}
@@ -2722,53 +2830,6 @@ librt_get_CachedSeqWithIterIterator_f(size_t UNUSED(argc), DeeObject *const *UNU
 }
 
 
-PRIVATE struct nonempty_roset_instance_struct {
-	Dee_OBJECT_HEAD
-	size_t                rs_mask;    /* [>= rs_size] Allocated set size. */
-	size_t                rs_size;    /* [<= rs_mask] Amount of non-NULL keys. */
-	struct Dee_roset_item rs_elem[2]; /* [1..rs_mask+1] Set key hash-vector. */
-} nonempty_roset_instance = {
-	OBJECT_HEAD_INIT(&DeeRoSet_Type),
-	/* .rs_mask = */ 1,
-	/* .rs_size = */ 1,
-	/* .rs_elem = */ { { DeeInt_Zero, 0 } } /* hash(int(0)) == 0 */
-};
-
-STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_mask) == offsetof(DeeRoSetObject, rs_mask));
-STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_size) == offsetof(DeeRoSetObject, rs_size));
-STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_elem) == offsetof(DeeRoSetObject, rs_elem));
-
-#define nonempty_stub_set ((DeeObject *)&nonempty_roset_instance)
-
-
-
-PRIVATE struct nonempty_rodict_instance_struct {
-	Dee_OBJECT_HEAD /* All of the below fields are [const] */
-	/*real*/Dee_dict_vidx_t rd_vsize;        /* # of key-value pairs in the dict. */
-	Dee_hash_t              rd_hmask;        /* [>= rd_vsize] Hash-mask */
-	Dee_dict_gethidx_t      rd_hidxget;      /* [1..1] Getter for "rd_htab" */
-	void                   *rd_htab;         /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
-	struct Dee_dict_item    rd_vtab[1];      /* [rd_vsize] Dict key-item pairs (never contains deleted keys). */
-	byte_t                  rd_htab_data[2]; /* Dict hash-table. */
-} nonempty_rodict_instance = {
-	OBJECT_HEAD_INIT(&DeeRoDict_Type),
-	/* .rd_vsize     = */ 1,
-	/* .rd_hmask     = */ 1,
-	/* .rd_hidxget   = */ &Dee_dict_gethidx8,
-	/* .rd_htab      = */ nonempty_rodict_instance.rd_htab_data,
-	/* .rd_vtab      = */ { Dee_DICT_ITEM_INIT(0, DeeInt_Zero, DeeInt_Zero) }, /* hash(int(0)) == 0 */
-	/* .rd_htab_data = */ { Dee_dict_vidx_tovirt(0), Dee_DICT_HTAB_EOF },
-};
-
-STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_vsize) == offsetof(DeeRoDictObject, rd_vsize));
-STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_hmask) == offsetof(DeeRoDictObject, rd_hmask));
-STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_hidxget) == offsetof(DeeRoDictObject, rd_hidxget));
-STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_htab) == offsetof(DeeRoDictObject, rd_htab));
-STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_vtab) == offsetof(DeeRoDictObject, rd_vtab));
-
-#define nonempty_stub_map ((DeeObject *)&nonempty_rodict_instance)
-
-
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SetInversion_uncached_impl_f(void) {
 	return get_type_of(DeeObject_Inv(nonempty_stub_set));
@@ -3613,6 +3674,11 @@ librt_get_FunctionSymbolsByNameIterator_f(size_t UNUSED(argc), DeeObject *const 
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_FunctionSymbolsByNameKeysIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return_cached(get_KeysIterator_of(librt_get_FunctionSymbolsByName_impl_f()));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_YieldFunctionSymbolsByName_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_YieldFunctionSymbolsByName_impl_f();
 }
@@ -3620,6 +3686,11 @@ librt_get_YieldFunctionSymbolsByName_f(size_t UNUSED(argc), DeeObject *const *UN
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_YieldFunctionSymbolsByNameIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return_cached(get_Iterator_of(librt_get_YieldFunctionSymbolsByName_impl_f()));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_YieldFunctionSymbolsByNameKeysIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return_cached(get_KeysIterator_of(librt_get_YieldFunctionSymbolsByName_impl_f()));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -3645,6 +3716,11 @@ librt_get_FrameSymbolsByName_f(size_t UNUSED(argc), DeeObject *const *UNUSED(arg
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_FrameSymbolsByNameIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return_cached(get_Iterator_of(librt_get_FrameSymbolsByName_impl_f()));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_FrameSymbolsByNameKeysIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return_cached(get_KeysIterator_of(librt_get_FrameSymbolsByName_impl_f()));
 }
 
 
@@ -3856,6 +3932,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_Code_empty, &librt_get_Code_empty_f, METHOD_FCO
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListKwdsIterator, &librt_get_BlackListKwdsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListKwIterator, &librt_get_BlackListKwIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_GCEnum, &librt_get_GCEnum_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_GCIter, &librt_get_GCIter_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_Traceback_empty, &librt_get_Traceback_empty_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_Module_empty, &librt_get_Module_empty_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_DocKwds, &librt_get_DocKwds_f, METHOD_FCONSTCALL);
@@ -3863,6 +3940,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_DocKwdsIterator, &librt_get_DocKwdsIterator_f, 
 PRIVATE DEFINE_CMETHOD(librt_get_MapHashFilter, &librt_get_MapHashFilter_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MapHashFilterIterator, &librt_get_MapHashFilterIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MapByAttr, &librt_get_MapByAttr_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapKeys, &librt_get_MapKeys_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapValues, &librt_get_MapValues_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedVectorIterator, &librt_get_SharedVectorIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedMapIterator, &librt_get_SharedMapIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_RefVector, &librt_get_RefVector_f, METHOD_FCONSTCALL);
@@ -3922,13 +4001,16 @@ PRIVATE DEFINE_CMETHOD(librt_get_FunctionStatics, &librt_get_FunctionStatics_f, 
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionStaticsIterator, &librt_get_FunctionStaticsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionSymbolsByName, &librt_get_FunctionSymbolsByName_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionSymbolsByNameIterator, &librt_get_FunctionSymbolsByNameIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_FunctionSymbolsByNameKeysIterator, &librt_get_FunctionSymbolsByNameKeysIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_YieldFunctionSymbolsByName, &librt_get_YieldFunctionSymbolsByName_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_YieldFunctionSymbolsByNameIterator, &librt_get_YieldFunctionSymbolsByNameIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_YieldFunctionSymbolsByNameKeysIterator, &librt_get_YieldFunctionSymbolsByNameKeysIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameArgs, &librt_get_FrameArgs_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameLocals, &librt_get_FrameLocals_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameStack, &librt_get_FrameStack_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByName, &librt_get_FrameSymbolsByName_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByNameIterator, &librt_get_FrameSymbolsByNameIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByNameKeysIterator, &librt_get_FrameSymbolsByNameKeysIterator_f, METHOD_FCONSTCALL);
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -4195,6 +4277,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqWithTIterAndLimit", (DeeObject *)&librt_get_SeqWithTIterAndLimit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultSequence_WithTIterAndLimit_Type */
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+	/* Misc. helper types for sequences */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+//TODO:	{ "EnumerateWrapper", (DeeObject *)&librt_get_EnumerateWrapper, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* EnumerateWrapper_Type */
+//TODO:	{ "EnumerateIndexWrapper", (DeeObject *)&librt_get_EnumerateIndexWrapper_Type, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                            /* EnumerateIndexWrapper_Type */
+//TODO:	{ "SeqRemoveWithRemoveIfPredicate", (DeeObject *)&librt_get_SeqRemoveWithRemoveIfPredicate, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* SeqRemoveWithRemoveIfPredicate_Type */
+//TODO:	{ "SeqRemoveWithRemoveIfPredicateWithKey", (DeeObject *)&librt_get_SeqRemoveWithRemoveIfPredicateWithKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* SeqRemoveWithRemoveIfPredicateWithKey_Type */
+//TODO:	{ "SeqRemoveIfWithRemoveAllItem", (DeeObject *)&librt_get_SeqRemoveIfWithRemoveAllItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SeqRemoveIfWithRemoveAllItem_Type */
+//TODO:	{ "SeqRemoveIfWithRemoveAllKey", (DeeObject *)&librt_get_SeqRemoveIfWithRemoveAllKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* SeqRemoveIfWithRemoveAllKey_Type */
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
 	/* Default iterator types */
 	{ "IterWithGetItemIndex", (DeeObject *)&librt_get_IterWithGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultIterator_WithGetItemIndex_Type */
 	{ "IterWithGetItemIndexPair", (DeeObject *)&librt_get_IterWithGetItemIndexPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* DefaultIterator_WithGetItemIndexPair_Type */
@@ -4286,6 +4378,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "MapHashFilter", (DeeObject *)&librt_get_MapHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* MapHashFilter_Type */
 	{ "MapHashFilterIterator", (DeeObject *)&librt_get_MapHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapHashFilterIterator_Type */
 	{ "MapByAttr", (DeeObject *)&librt_get_MapByAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* MapByAttr_Type */
+	{ "MapKeys", (DeeObject *)&librt_get_MapKeys, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* DefaultSequence_MapKeys_Type */
+	{ "MapValues", (DeeObject *)&librt_get_MapValues, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* DefaultSequence_MapValues_Type */
 
 	/* The special "nullable" tuple sequence type. */
 	{ "NullableTuple", (DeeObject *)&DeeNullableTuple_Type, MODSYM_FREADONLY },
@@ -4517,6 +4611,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("The gc-singleton which can also be found under ?Dgc") }, /* DeeGCEnumTracked_Singleton */
 	{ "GCEnum", (DeeObject *)&librt_get_GCEnum, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("The result of ${type(gc from deemon)}") }, /* GCEnum_Type */
+	{ "GCIter", (DeeObject *)&librt_get_GCIter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
+	  DOC("The result of ${type((gc from deemon)operator iter())}") }, /* GCIter_Type */
 	{ "Traceback_empty", (DeeObject *)&librt_get_Traceback_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("->?GTraceback\n"
 	      "The fallback #Iempty traceback") }, /* DeeTraceback_Empty */
@@ -4587,13 +4683,23 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "FunctionStaticsIterator", (DeeObject *)&librt_get_FunctionStaticsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* FunctionStatics_Type */
 	{ "FunctionSymbolsByName", (DeeObject *)&librt_get_FunctionSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* FunctionSymbolsByName_Type */
 	{ "FunctionSymbolsByNameIterator", (DeeObject *)&librt_get_FunctionSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* FunctionSymbolsByName_Type */
+	{ "FunctionSymbolsByNameKeysIterator", (DeeObject *)&librt_get_FunctionSymbolsByNameKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* FunctionSymbolsByNameKeysIterator_Type */
 	{ "YieldFunctionSymbolsByName", (DeeObject *)&librt_get_YieldFunctionSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* YieldFunctionSymbolsByName_Type */
 	{ "YieldFunctionSymbolsByNameIterator", (DeeObject *)&librt_get_YieldFunctionSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* YieldFunctionSymbolsByName_Type */
+	{ "YieldFunctionSymbolsByNameKeysIterator", (DeeObject *)&librt_get_YieldFunctionSymbolsByNameKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* YieldFunctionSymbolsByNameKeysIterator_Type */
 	{ "FrameArgs", (DeeObject *)&librt_get_FrameArgs, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                   /* FrameArgs_Type */
 	{ "FrameLocals", (DeeObject *)&librt_get_FrameLocals, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                               /* FrameLocals_Type */
 	{ "FrameStack", (DeeObject *)&librt_get_FrameStack, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                 /* FrameStack_Type */
 	{ "FrameSymbolsByName", (DeeObject *)&librt_get_FrameSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* FrameSymbolsByName_Type */
 	{ "FrameSymbolsByNameIterator", (DeeObject *)&librt_get_FrameSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* FrameSymbolsByName_Type */
+	{ "FrameSymbolsByNameKeysIterator", (DeeObject *)&librt_get_FrameSymbolsByNameKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* FrameSymbolsByNameKeysIterator_Type */
+
+	/* Some more aliases... */
+	{ "gc", (DeeObject *)&DeeGCEnumTracked_Singleton, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
+	{ "enumattr", (DeeObject *)&DeeEnumAttr_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
+	{ "bool", (DeeObject *)&DeeBool_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
+	{ "string", (DeeObject *)&DeeString_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
+	{ "int", (DeeObject *)&DeeInt_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
 
 	/* Special constants */
 	RT_HASHOF_EMPTY_SEQUENCE_DEF

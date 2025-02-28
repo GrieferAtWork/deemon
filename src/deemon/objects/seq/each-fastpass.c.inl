@@ -796,11 +796,7 @@ PRIVATE struct type_method_hint LOCAL_seX(method_hints)[] = {
 PRIVATE struct type_seq LOCAL_seX(seq) = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&LOCAL_seX(iter),
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_sizeob,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_contains                   = */ &default__seq_operator_contains,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_contains,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_operator_contains,
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(getitem),
 #else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */

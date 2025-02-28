@@ -28,6 +28,7 @@
 #include <deemon/callable.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
@@ -1744,7 +1745,7 @@ object_any_ctor(DeeObject *__restrict UNUSED(self),
 	return DeeArg_Unpack(argc, argv, ":Object");
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_str(DeeObject *__restrict self) {
 #if 1
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -1755,27 +1756,27 @@ object_str(DeeObject *__restrict self) {
 			                               DeeStringObject,
 			                               s_str);
 			Dee_Incref(result);
-			return result;
+			return (DREF DeeObject *)result;
 		}
-		return (DREF DeeStringObject *)DeeString_New(tp_self->tp_name);
+		return DeeString_New(tp_self->tp_name);
 	}
 	Dee_Incref(&str_Object);
-	return &str_Object;
+	return (DREF DeeObject *)&str_Object;
 #else
 	if (Dee_TYPE(self) != &DeeObject_Type)
 		goto err_noimp;
 	Dee_Incref(&str_Object);
-	return &str_Object;
+	return (DREF DeeObject *)&str_Object;
 err_noimp:
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_STR);
 	return NULL;
 #endif
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_repr(DeeObject *__restrict self) {
 	if (Dee_TYPE(self) == &DeeObject_Type)
-		return (DREF DeeStringObject *)DeeString_New("Object()");
+		return DeeString_New("Object()");
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_REPR);
 	return NULL;
 }
@@ -2527,9 +2528,9 @@ err:
 	return NULL;
 }
 
-INTDEF WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 object_format_generic(DeeObject *__restrict self,
-                      dformatprinter printer, void *arg,
+                      Dee_formatprinter_t printer, void *arg,
                       /*utf-8*/ char const *__restrict format_str,
                       size_t format_len);
 
@@ -2544,7 +2545,7 @@ object_format_method(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely((format_utf8 = DeeString_AsUtf8(format_str)) == NULL)
 		goto err;
 	{
-		dssize_t error;
+		Dee_ssize_t error;
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		error = object_format_generic(self,
 		                              &unicode_printer_print,
@@ -3068,66 +3069,70 @@ type_ctor(DeeTypeObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-type_str(DeeTypeObject *__restrict self) {
-	if (self->tp_flags & TP_FNAMEOBJECT) {
+DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_str(DeeObject *__restrict self) {
+	DeeTypeObject *me = (DeeTypeObject *)self;
+	if (me->tp_flags & TP_FNAMEOBJECT) {
 		DREF DeeStringObject *result;
-		result = COMPILER_CONTAINER_OF(self->tp_name,
+		result = COMPILER_CONTAINER_OF(me->tp_name,
 		                               DeeStringObject,
 		                               s_str);
 		Dee_Incref(result);
-		return result;
+		return (DREF DeeObject *)result;
 	}
-	if likely(self->tp_name)
-		return (DREF DeeStringObject *)DeeString_New(self->tp_name);
-	return_reference_(&str_Type);
+	if likely(me->tp_name)
+		return DeeString_New(me->tp_name);
+	return_reference_((DREF DeeObject *)&str_Type);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeType_Print(DeeTypeObject *__restrict self, dformatprinter printer, void *arg) {
-	if (self->tp_flags & TP_FNAMEOBJECT) {
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+type_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	DeeTypeObject *me = (DeeTypeObject *)self;
+	if (me->tp_flags & TP_FNAMEOBJECT) {
 		DREF DeeStringObject *nameob;
-		nameob = COMPILER_CONTAINER_OF(self->tp_name,
+		nameob = COMPILER_CONTAINER_OF(me->tp_name,
 		                               DeeStringObject,
 		                               s_str);
 		return DeeString_PrintUtf8((DeeObject *)nameob, printer, arg);
 	}
-	if likely(self->tp_name)
-		return DeeFormat_PrintStr(printer, arg, self->tp_name);
+	if likely(me->tp_name)
+		return DeeFormat_PrintStr(printer, arg, me->tp_name);
 	return DeeString_PrintAscii(&str_Type, printer, arg);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-type_repr(DeeTypeObject *__restrict self) {
+DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_repr(DeeObject *__restrict self) {
+	DeeTypeObject *me = (DeeTypeObject *)self;
 	DREF DeeObject *mod;
 	DREF DeeStringObject *result;
 	DeeStringObject *modname;
-	if unlikely(!self->tp_name)
+	if unlikely(!me->tp_name)
 		goto fallback;
-	mod = DeeType_GetModule(self);
+	mod = DeeType_GetModule(me);
 	if (!mod)
 		goto fallback;
 	modname = ((DeeModuleObject *)mod)->mo_name;
-	result  = (DREF DeeStringObject *)DeeString_Newf("%k.%s", modname, self->tp_name);
+	result  = (DREF DeeStringObject *)DeeString_Newf("%k.%s", modname, me->tp_name);
 	Dee_Decref(mod);
-	return result;
+	return (DREF DeeObject *)result;
 fallback:
 	return type_str(self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-type_printrepr(DeeTypeObject *__restrict self, dformatprinter printer, void *arg) {
-	dssize_t result, temp;
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+type_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	DeeTypeObject *me = (DeeTypeObject *)self;
+	Dee_ssize_t result, temp;
 	DREF DeeModuleObject *mod;
 	char const *name;
-	mod = (DREF DeeModuleObject *)DeeType_GetModule(self);
+	mod = (DREF DeeModuleObject *)DeeType_GetModule(me);
 	if (!mod)
 		goto fallback;
 	result = DeeString_PrintUtf8((DeeObject *)mod->mo_name, printer, arg);
 	Dee_Decref(mod);
 	if unlikely(result < 0)
 		goto done;
-	name = self->tp_name;
+	name = me->tp_name;
 	if (name == NULL)
 		name = "<anonymous type>";
 	temp = DeeFormat_Printf(printer, arg, ".%s", name);
@@ -3139,7 +3144,7 @@ done:
 err:
 	return temp;
 fallback:
-	return DeeType_Print(self, printer, arg);
+	return type_print(self, printer, arg);
 }
 
 
@@ -4918,12 +4923,17 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 
 
 
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+INTDEF Dee_hash_t DCALL default__hash__unsupported(DeeObject *__restrict self);
+#define generic_object_hash default__hash__unsupported
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+DEFAULT_OPDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL
 generic_object_hash(DeeObject *__restrict self) {
 	return Dee_HashPointer(self);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) int DCALL
 generic_object_compare_eq(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, Dee_TYPE(self)))
 		goto err;
@@ -4932,12 +4942,12 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) int DCALL
 generic_object_trycompare_eq(DeeObject *self, DeeObject *some_object) {
 	return self == some_object ? 0 : 1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_object_eq(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, Dee_TYPE(self)))
 		goto err;
@@ -4946,7 +4956,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_object_ne(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, Dee_TYPE(self)))
 		goto err;
@@ -4971,7 +4981,7 @@ PUBLIC struct Dee_type_cmp DeeObject_GenericCmpByAddr = {
 
 
 #define type_hash generic_object_hash
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) int DCALL
 type_compare_eq(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))
 		goto err;
@@ -4981,7 +4991,7 @@ err:
 }
 
 #define type_trycompare_eq generic_object_trycompare_eq
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_eq(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))
 		goto err;
@@ -4990,7 +5000,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_ne(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))
 		goto err;
@@ -5025,7 +5035,7 @@ type_setattr(DeeObject *self, DeeObject *name, DeeObject *value) {
 	return DeeType_SetAttr((DeeTypeObject *)self, name, value);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 type_enumattr(DeeTypeObject *UNUSED(tp_self),
               DeeObject *self, denum_t proc, void *arg) {
 	return DeeType_EnumAttr((DeeTypeObject *)self, proc, arg);
@@ -5091,7 +5101,7 @@ PRIVATE struct type_attr type_attr_data = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&type_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&type_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&type_setattr,
-	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&type_enumattr,
+	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&type_enumattr,
 	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct attribute_info *__restrict, struct attribute_lookup_rules const *__restrict))&type_findattr,
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&type_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&type_boundattr,
@@ -5140,7 +5150,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* .tp_flags    = */ TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeTypeObject),
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeObject_Type, /* class Type extends Object { ... } */
+	/* .tp_base     = */ &DeeObject_Type, /* class Type: Object { ... } */
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
@@ -5156,11 +5166,11 @@ PUBLIC DeeTypeObject DeeType_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&type_str,
-		/* .tp_repr      = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&type_repr,
+		/* .tp_str       = */ &type_str,
+		/* .tp_repr      = */ &type_repr,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&DeeType_Print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&type_printrepr
+		/* .tp_print     = */ &type_print,
+		/* .tp_printrepr = */ &type_printrepr
 	},
 	/* .tp_call          = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeObject_New,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&type_visit,

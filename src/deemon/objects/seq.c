@@ -27,6 +27,7 @@
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
@@ -297,7 +298,7 @@ default_set_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, v
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_mul(DeeObject *self, DeeObject *countob) {
 	size_t count;
 	if (DeeObject_AsSize(countob, &count))

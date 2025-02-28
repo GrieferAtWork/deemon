@@ -1249,7 +1249,9 @@ PRIVATE struct type_member tpconst di_g_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithTGetItem_Type),
 	TYPE_MEMBER_END,
 };
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#else /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define di_g_class_members NULL
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1294,11 +1296,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 	/* .tp_members       = */ di_g_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_class_members = */ NULL
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_class_members = */ di_g_class_members
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
@@ -1344,11 +1342,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
 	/* .tp_members       = */ di_g_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_class_members = */ NULL
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_class_members = */ di_g_class_members
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
@@ -1779,6 +1773,8 @@ PRIVATE struct type_member tpconst di_sg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithSizeObAndTGetItem_Type),
 	TYPE_MEMBER_END
 };
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define di_sg_class_members NULL
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
@@ -1824,11 +1820,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 	/* .tp_members       = */ di_sg_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_class_members = */ NULL
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_class_members = */ di_sg_class_members
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
@@ -2915,6 +2907,8 @@ PRIVATE struct type_member tpconst di_ikgim_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithIterKeysAndTGetItemMap_Type),
 	TYPE_MEMBER_END
 };
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define di_ikgim_class_members NULL
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
@@ -2961,11 +2955,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 	/* .tp_members       = */ di_ikgim_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_class_members = */ NULL
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_class_members = */ di_ikgim_class_members
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
@@ -3020,6 +3010,8 @@ PRIVATE struct type_member tpconst di_iktrgim_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithIterKeysAndTTryGetItemMap_Type),
 	TYPE_MEMBER_END
 };
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define di_iktrgim_class_members NULL
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
@@ -3066,11 +3058,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 	/* .tp_members       = */ di_iktrgim_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_class_members = */ NULL
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_class_members = */ di_iktrgim_class_members
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS

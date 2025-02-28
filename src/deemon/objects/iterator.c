@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -137,18 +138,18 @@ done:
 
 
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL iterator_inc(DeeObject **__restrict p_self);
-PRIVATE WUNUSED NONNULL((1)) int DCALL iterator_dec(DeeObject **__restrict p_self);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL iterator_inplace_add(DeeObject **__restrict p_self, DeeObject *countob);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL iterator_inplace_sub(DeeObject **__restrict p_self, DeeObject *countob);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_add(DeeObject *self, DeeObject *countob);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_sub(DeeObject *self, DeeObject *countob);
+DEFAULT_OPDEF WUNUSED NONNULL((1)) int DCALL iterator_inc(DeeObject **__restrict p_self);
+DEFAULT_OPDEF WUNUSED NONNULL((1)) int DCALL iterator_dec(DeeObject **__restrict p_self);
+DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) int DCALL iterator_inplace_add(DeeObject **__restrict p_self, DeeObject *countob);
+DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) int DCALL iterator_inplace_sub(DeeObject **__restrict p_self, DeeObject *countob);
+DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_add(DeeObject *self, DeeObject *countob);
+DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_sub(DeeObject *self, DeeObject *countob);
 
 
 
 
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1)) int DCALL
 iterator_bool(DeeObject *__restrict self) {
 	DeeObject *elem;
 	/* Check if the Iterator has been exhausted
@@ -167,7 +168,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 iterator_printrepr(DeeObject *__restrict self,
                    dformatprinter printer, void *arg) {
 	Dee_ssize_t temp, result;
@@ -283,7 +284,7 @@ PRIVATE struct type_cmp iterator_cmp = {
 	/* .tp_compare    = */ &iterator_compare,
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_next(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *defl = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:next", &defl))
@@ -2309,19 +2310,19 @@ PRIVATE struct type_getset tpconst iterator_getsets[] = {
 	TYPE_GETSET_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1)) int DCALL
 iterator_inc(DeeObject **__restrict p_self) {
 	/* Simply advance the Iterator. */
 	return iterator_do_advance(*p_self, 1, DeeInt_One, DeeInt_MinusOne);
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1)) int DCALL
 iterator_dec(DeeObject **__restrict p_self) {
 	/* Simply revert the Iterator. */
 	return iterator_do_revert(*p_self, 1, DeeInt_One, DeeInt_MinusOne);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) int DCALL
 iterator_inplace_add(DeeObject **__restrict p_self,
                      DeeObject *countob) {
 	Dee_ssize_t count;
@@ -2338,7 +2339,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) int DCALL
 iterator_inplace_sub(DeeObject **__restrict p_self,
                      DeeObject *countob) {
 	Dee_ssize_t count;
@@ -2355,9 +2356,8 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-iterator_add(DeeObject *self,
-             DeeObject *countob) {
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+iterator_add(DeeObject *self, DeeObject *countob) {
 	DREF DeeObject *result;
 	Dee_ssize_t count;
 	/* Increment the Iterator by `count.operator int()' */
@@ -2378,9 +2378,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-iterator_sub(DeeObject *self,
-             DeeObject *countob) {
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+iterator_sub(DeeObject *self, DeeObject *countob) {
 	DREF DeeObject *result;
 	Dee_ssize_t count;
 	/* Increment the Iterator by `count.operator int()' */

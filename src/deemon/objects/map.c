@@ -27,6 +27,7 @@
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -518,7 +519,7 @@ PRIVATE struct type_method_hint tpconst map_method_hints[] = {
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 map_printrepr(DeeObject *__restrict self,
               dformatprinter printer, void *arg) {
 	Dee_ssize_t temp, result;

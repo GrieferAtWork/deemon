@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
@@ -1223,6 +1224,7 @@ err_bounds:
 }
 
 #ifdef DeeInt_8bit
+#define bytes_getitem_index_fast_PTR &bytes_getitem_index_fast
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_getitem_index_fast(Bytes *__restrict self, size_t index) {
 	byte_t value;
@@ -1231,6 +1233,10 @@ bytes_getitem_index_fast(Bytes *__restrict self, size_t index) {
 	return_reference(DeeInt_8bit + value);
 }
 #endif /* DeeInt_8bit */
+
+#ifndef bytes_getitem_index_fast_PTR
+#define bytes_getitem_index_fast_PTR NULL
+#endif /* !bytes_getitem_index_fast_PTR */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytes_delitem_index(Bytes *__restrict self, size_t index) {
@@ -1407,7 +1413,12 @@ err_temp:
 
 #ifdef DeeInt_8bit
 #define bytes_asvector_nothrow bytes_asvector
+#define bytes_asvector_nothrow_PTR &bytes_asvector_nothrow
 #endif /* DeeInt_8bit */
+#ifndef bytes_asvector_nothrow_PTR
+#define bytes_asvector_nothrow_PTR NULL
+#endif /* !bytes_asvector_nothrow_PTR */
+
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 bytes_asvector(Bytes *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t size = DeeBytes_SIZE(self);
@@ -1452,11 +1463,7 @@ PRIVATE struct type_seq bytes_seq = {
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&bytes_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&bytes_size,
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&bytes_getitem_index,
-#ifdef DeeInt_8bit
-	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&bytes_getitem_index_fast,
-#else /* DeeInt_8bit */
-	/* .tp_getitem_index_fast         = */ NULL,
-#endif /* !DeeInt_8bit */
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))bytes_getitem_index_fast_PTR,
 	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&bytes_delitem_index,
 	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&bytes_setitem_index,
 	/* .tp_bounditem_index            = */ NULL,
@@ -1482,11 +1489,7 @@ PRIVATE struct type_seq bytes_seq = {
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
 	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&bytes_asvector,
-#ifdef bytes_asvector_nothrow
-	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&bytes_asvector_nothrow,
-#else /* bytes_asvector_nothrow */
-	/* .tp_asvector_nothrow           = */ NULL,
-#endif /* !bytes_asvector_nothrow */
+	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))bytes_asvector_nothrow_PTR,
 };
 
 

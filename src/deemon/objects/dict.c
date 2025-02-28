@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/dict.h>
 #include <deemon/gc.h>
 #include <deemon/hashset.h>
@@ -2453,6 +2454,7 @@ err_temp:
 }
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define dict_enumerate_index_PTR &dict_enumerate_index
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 dict_enumerate_index(Dict *__restrict self, Dee_seq_enumerate_index_t cb,
                      void *arg, size_t start, size_t end) {
@@ -2544,7 +2546,11 @@ err_temp:
 err:
 	return -1;
 }
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define dict_iterkeys_PTR &DeeMap_DefaultIterKeysWithIter
+#else /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define dict_enumerate_index_PTR NULL
+#define dict_iterkeys_PTR        NULL
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3465,15 +3471,9 @@ PRIVATE struct type_seq dict_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&dict_mh_seq_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&dict_enumerate_index,
-	/* .tp_iterkeys                   = */ &DeeMap_DefaultIterKeysWithIter,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))dict_enumerate_index_PTR,
+	/* .tp_iterkeys                   = */ dict_iterkeys_PTR,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&dict_size,

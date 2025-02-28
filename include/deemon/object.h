@@ -4667,14 +4667,6 @@ DFUNDEF WUNUSED NONNULL((1, 2, 5)) bool DCALL DeeObject_TGenericFindPrivateAttrI
 DDATDEF struct Dee_type_cmp DeeObject_GenericCmpByAddr;
 
 
-#ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeType_Print(DeeTypeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
-#else /* CONFIG_BUILDING_DEEMON */
-#define DeeType_Print(self, printer, arg) DeeObject_Print((DeeObject *)(self), printer, arg)
-#endif /* !CONFIG_BUILDING_DEEMON */
-
-
 DDATDEF DeeTypeObject DeeObject_Type; /* `Object' */
 DDATDEF DeeTypeObject DeeType_Type;   /* `type(Object)' */
 #define DeeType_Check(ob)      DeeObject_InstanceOf(ob, &DeeType_Type)

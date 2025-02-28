@@ -299,7 +299,7 @@ PRIVATE struct type_member tpconst ds_mk_members[] = {
 
 INTERN DeeTypeObject DefaultSequence_MapKeys_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqMapKeys",
+	/* .tp_name     = */ "_MapKeys",
 	/* .tp_doc      = */ DOC("(map)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
@@ -345,7 +345,7 @@ INTERN DeeTypeObject DefaultSequence_MapKeys_Type = {
 
 INTERN DeeTypeObject DefaultSequence_MapValues_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqMapValues",
+	/* .tp_name     = */ "_MapValues",
 	/* .tp_doc      = */ DOC("(map)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,

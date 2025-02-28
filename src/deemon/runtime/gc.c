@@ -1844,7 +1844,7 @@ PRIVATE struct type_method tpconst gcenum_methods[] = {
 
 PRIVATE DeeTypeObject GCEnum_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ DeeString_STR(&str_gc),
+	/* .tp_name     = */ "_GCEnum",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FNAMEOBJECT | TP_FABSTRACT,
 	/* .tp_weakrefs = */ 0,

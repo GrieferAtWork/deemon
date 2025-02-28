@@ -992,6 +992,8 @@
 #define DPRINTER_CC
 #define DFUNDEF
 #define DDATDEF extern
+#define DEFAULT_OPDEF extern
+#define DEFAULT_OPIMP
 #define DCALL_ASSEMBLY_NAME(x,s) x
 #define Dee_DOC(x) x
 #define Dee_DOC_DEF(n,x) char const n[]=x

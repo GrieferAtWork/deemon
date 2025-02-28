@@ -27,6 +27,7 @@
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/instancemethod.h>
@@ -401,6 +402,7 @@ cot_trygetitem_byid(ClassOperatorTable *self, Dee_operator_t opname) {
 }
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define cot_trygetitem_PTR &cot_trygetitem
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cot_trygetitem(ClassOperatorTable *self, DeeObject *key) {
 	Dee_operator_t opname;
@@ -421,7 +423,9 @@ nope:
 err:
 	return NULL;
 }
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#else /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define cot_trygetitem_PTR NULL
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cot_trygetitem_index(ClassOperatorTable *self, size_t key) {
@@ -528,11 +532,7 @@ PRIVATE struct type_seq cot_seq = {
 	/* .tp_getrange_index_n           = */ NULL,
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_trygetitem                 = */ NULL,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cot_trygetitem,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))cot_trygetitem_PTR,
 	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&cot_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&cot_trygetitem_string_hash,
 	/* .tp_getitem_string_hash        = */ NULL,
@@ -825,6 +825,7 @@ cat_size(ClassAttributeTable *__restrict self) {
 }
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define cat_trygetitem_PTR &cat_trygetitem
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_trygetitem(ClassAttributeTable *self, DeeObject *key) {
 	Dee_hash_t hash, i, perturb;
@@ -850,6 +851,7 @@ nope:
 	return ITER_DONE;
 }
 
+#define cat_trygetitem_string_hash_PTR &cat_trygetitem_string_hash
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_trygetitem_string_hash(ClassAttributeTable *self,
                            char const *key, Dee_hash_t hash) {
@@ -869,7 +871,10 @@ cat_trygetitem_string_hash(ClassAttributeTable *self,
 /*nope:*/
 	return ITER_DONE;
 }
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#else /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define cat_trygetitem_PTR             NULL
+#define cat_trygetitem_string_hash_PTR NULL
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_trygetitem_string_len_hash(ClassAttributeTable *self, char const *key,
@@ -1179,17 +1184,9 @@ PRIVATE struct type_seq cat_seq = {
 	/* .tp_getrange_index_n           = */ NULL,
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_trygetitem                 = */ NULL,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_trygetitem,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))cat_trygetitem_PTR,
 	/* .tp_trygetitem_index           = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_trygetitem_string_hash     = */ NULL,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&cat_trygetitem_string_hash,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))cat_trygetitem_string_hash_PTR,
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,
 	/* .tp_setitem_string_hash        = */ NULL,

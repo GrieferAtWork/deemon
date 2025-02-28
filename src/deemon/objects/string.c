@@ -26,13 +26,14 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
-#include <deemon/operator-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>

@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/computed-operators.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/method-hints.h>
@@ -2231,6 +2232,13 @@ PRIVATE struct type_operator const tuple_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0035_GETRANGE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
 };
 
+#if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
+#define tuple_tp_free_PTR &tuple_tp_free
+#else /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
+#define tuple_tp_free_PTR NULL
+#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT == 0 */
+
+
 PUBLIC DeeTypeObject DeeTuple_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Tuple),
@@ -2328,11 +2336,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (dfunptr_t)&tuple_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&tuple_init,
-#if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
-				/* .tp_free      = */ (dfunptr_t)&tuple_tp_free
-#else /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
-				/* .tp_free      = */ (dfunptr_t)NULL
-#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT == 0 */
+				/* .tp_free      = */ (dfunptr_t)tuple_tp_free_PTR
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tuple_fini,
@@ -2701,11 +2705,7 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (dfunptr_t)&nullable_tuple_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&nullable_tuple_init,
-#if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
-				/* .tp_free      = */ (dfunptr_t)&tuple_tp_free
-#else /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
-				/* .tp_free      = */ (dfunptr_t)NULL
-#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT == 0 */
+				/* .tp_free      = */ (dfunptr_t)tuple_tp_free_PTR
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&nullable_tuple_fini,

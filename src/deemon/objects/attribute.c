@@ -50,6 +50,7 @@ __pragma_GCC_diagnostic_ignored(Wmaybe_uninitialized)
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/module.h>

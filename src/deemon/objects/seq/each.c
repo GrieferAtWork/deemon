@@ -3120,27 +3120,49 @@ seo_getitem_string_len_hash(SeqEachOperator *self, char const *key, size_t keyle
 
 #endif /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define seo_operator_contains default__seq_operator_contains
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define seo_operator_contains sew_contains
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
+#define seo_operator_getitem                        seo_getitem
+#define seo_operator_getrange                       seo_getrange
+#define seo_operator_size_PTR                       &sew_size
+#define seo_operator_getitem_index_PTR              &seo_getitem_index
+#define seo_operator_getrange_index_PTR             &seo_getrange_index
+#define seo_operator_getrange_index_n_PTR           &seo_getrange_index_n
+#define seo_operator_trygetitem_PTR                 &seo_trygetitem
+#define seo_operator_trygetitem_index_PTR           &seo_trygetitem_index
+#define seo_operator_trygetitem_string_hash_PTR     &seo_trygetitem_string_hash
+#define seo_operator_getitem_string_hash_PTR        &seo_getitem_string_hash
+#define seo_operator_trygetitem_string_len_hash_PTR &seo_trygetitem_string_len_hash
+#define seo_operator_getitem_string_len_hash_PTR    &seo_getitem_string_len_hash
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+#define seo_operator_getitem                        sew_getitem
+#define seo_operator_getrange                       sew_getrange
+#define seo_operator_size_PTR                       NULL
+#define seo_operator_getitem_index_PTR              NULL
+#define seo_operator_getrange_index_PTR             NULL
+#define seo_operator_getrange_index_n_PTR           NULL
+#define seo_operator_trygetitem_PTR                 NULL
+#define seo_operator_trygetitem_index_PTR           NULL
+#define seo_operator_trygetitem_string_hash_PTR     NULL
+#define seo_operator_getitem_string_hash_PTR        NULL
+#define seo_operator_trygetitem_string_len_hash_PTR NULL
+#define seo_operator_getitem_string_len_hash_PTR    NULL
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+
 
 PRIVATE struct type_seq seo_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seo_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_sizeob,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* .tp_contains                   = */ &default__seq_operator_contains,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_contains,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_getitem,
-#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
-	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_getitem,
-#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_operator_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_operator_getitem,
 	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_delitem,
 	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_setitem,
-#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_getrange,
-#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
-	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
-#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_operator_getrange,
 	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_delrange,
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&seo_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&seo_foreach,
@@ -3150,58 +3172,30 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_hasitem,
-#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&sew_size,
-#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
-	/* .tp_size                       = */ NULL,
-#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))seo_operator_size_PTR,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&sew_size_fast,
-#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&seo_getitem_index,
-#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
-	/* .tp_getitem_index              = */ NULL,
-#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))seo_operator_getitem_index_PTR,
 	/* .tp_getitem_index_fast         = */ NULL,
 	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&seo_delitem_index,
 	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&seo_setitem_index,
 	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&seo_bounditem_index,
 	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&seo_hasitem_index,
-#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&seo_getrange_index,
-#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
-	/* .tp_getrange_index             = */ NULL,
-#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))seo_operator_getrange_index_PTR,
 	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&seo_delrange_index,
 	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&seo_setrange_index,
-#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&seo_getrange_index_n,
-#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
-	/* .tp_getrange_index_n           = */ NULL,
-#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))seo_operator_getrange_index_n_PTR,
 	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&seo_delrange_index_n,
 	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&seo_setrange_index_n,
-#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_trygetitem,
-	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&seo_trygetitem_index,
-	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&seo_trygetitem_string_hash,
-	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&seo_getitem_string_hash,
-#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
-	/* .tp_trygetitem                 = */ NULL,
-	/* .tp_trygetitem_index           = */ NULL,
-	/* .tp_trygetitem_string_hash     = */ NULL,
-	/* .tp_getitem_string_hash        = */ NULL,
-#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))seo_operator_trygetitem_PTR,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))seo_operator_trygetitem_index_PTR,
+	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))seo_operator_trygetitem_string_hash_PTR,
+	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))seo_operator_getitem_string_hash_PTR,
 	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&seo_delitem_string_hash,
 	/* .tp_setitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&seo_setitem_string_hash,
 	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&seo_bounditem_string_hash,
 	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&seo_hasitem_string_hash,
-#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&seo_trygetitem_string_len_hash,
-	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&seo_getitem_string_len_hash,
-#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
-	/* .tp_trygetitem_string_len_hash = */ NULL,
-	/* .tp_getitem_string_len_hash    = */ NULL,
-#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))seo_operator_trygetitem_string_len_hash_PTR,
+	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))seo_operator_getitem_string_len_hash_PTR,
 	/* .tp_delitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&seo_delitem_string_len_hash,
 	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&seo_setitem_string_len_hash,
 	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&seo_bounditem_string_len_hash,
@@ -3266,6 +3260,12 @@ PRIVATE struct type_member tpconst seo_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+#ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
+#define SeqEachOperator__tp_printrepr seo_printrepr
+#else /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
+#define SeqEachOperator__tp_printrepr default_seq_printrepr
+#endif /* !CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
+
 
 INTERN DeeTypeObject SeqEachOperator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -3295,11 +3295,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&seo_bool,
 		/* .tp_print     = */ NULL,
-#ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&seo_printrepr,
-#else /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
-		/* .tp_printrepr = */ &default_seq_printrepr,
-#endif /* !CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&SeqEachOperator__tp_printrepr,
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sew_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seo_visit,
@@ -3312,11 +3308,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	/* .tp_attr          = */ &seo_attr,
 	/* .tp_with          = */ &sew_with,
 	/* .tp_buffer        = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	/* .tp_methods       = */ sew_methods,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_methods       = */ NULL,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ seo_members,
 	/* .tp_class_methods = */ NULL,

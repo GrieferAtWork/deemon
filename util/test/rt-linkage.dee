@@ -117,6 +117,9 @@ if (hasattr(rt, "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast")) {
 	assertRtTypeName("SeqWithIter");
 	assertRtTypeName("SeqWithIterAndLimit");
 
+	//TODO:assertRtTypeName("EnumerateWrapper");
+	//TODO:assertRtTypeName("EnumerateIndexWrapper");
+
 	assertRtTypeName("IterWithGetItemIndex");
 	assertRtTypeName("IterWithGetItemIndexPair");
 	assertRtTypeName("IterWithSizeAndGetItemIndex");
@@ -243,6 +246,8 @@ assertRtTypeName("MapDifferenceIterator");
 assertRtTypeName("MapHashFilter");
 assertRtTypeName("MapHashFilterIterator");
 assertRtTypeName("MapByAttr");
+assertRtTypeName("MapKeys");
+assertRtTypeName("MapValues");
 
 assertRtTypeName("SharedVector");
 assertRtTypeName("SharedVectorIterator");
@@ -374,11 +379,17 @@ assertRtTypeName("FunctionStatics");
 assertRtTypeName("FunctionStaticsIterator");
 assertRtTypeName("FunctionSymbolsByName");
 assertRtTypeName("FunctionSymbolsByNameIterator");
+assertRtTypeName("FunctionSymbolsByNameKeysIterator");
 assertRtTypeName("YieldFunctionSymbolsByName");
 assertRtTypeName("YieldFunctionSymbolsByNameIterator");
+assertRtTypeName("YieldFunctionSymbolsByNameKeysIterator");
 assertRtTypeName("FrameArgs");
 assertRtTypeName("FrameLocals");
 assertRtTypeName("FrameStack");
 assertRtTypeName("FrameSymbolsByName");
 assertRtTypeName("FrameSymbolsByNameIterator");
+assertRtTypeName("FrameSymbolsByNameKeysIterator");
+
+assert rt.GCEnum === type(gc);
+assert rt.GCIter === type(gc.operator iter());
 #endif /* __DEEMON_VARIANT__ == "gatw" */

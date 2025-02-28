@@ -321,6 +321,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "util", "util", "{2360741E-F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{2360741E-FB49-40D4-B684-00F42E7A6DD3}"
 	ProjectSection(SolutionItems) = preProject
+		..\util\scripts\computed-operators.dee = ..\util\scripts\computed-operators.dee
 		..\util\scripts\fib.dee = ..\util\scripts\fib.dee
 		..\util\scripts\fixlinefeeds.dee = ..\util\scripts\fixlinefeeds.dee
 		..\util\scripts\migrate-tag-descriptions.dee = ..\util\scripts\migrate-tag-descriptions.dee

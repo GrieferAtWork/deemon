@@ -28,6 +28,7 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/tpp.h>
+#include <deemon/computed-operators.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>

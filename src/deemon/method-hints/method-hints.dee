@@ -1032,7 +1032,7 @@ final class MethodHint: WeakRefAble {
 			yield f"mhc_{attr}";
 		}
 	}
-#
+
 	public printMethodAttributeDecls() {
 		if (call2native is none)
 			return;

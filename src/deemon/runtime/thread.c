@@ -4360,7 +4360,9 @@ PRIVATE struct type_getset tpconst thread_class_getsets[] = {
 	 *    deemon-threads; s.a. `add_running_thread()' */
 	TYPE_GETSET_END
 };
-#endif /* !DeeThread_USE_SINGLE_THREADED */
+#else /* !DeeThread_USE_SINGLE_THREADED */
+#define thread_class_getsets NULL
+#endif /* DeeThread_USE_SINGLE_THREADED */
 
 PRIVATE struct type_member tpconst thread_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("main", &DeeThread_Main.ot_thread, "The main (initial) thread"),
@@ -4815,53 +4817,58 @@ PRIVATE struct type_member tpconst thread_members[] = {
 
 
 #ifdef HAVE_thread_clear
+#define thread_gc_PTR &thread_gc
 PRIVATE struct type_gc tpconst thread_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&thread_clear
 };
-#endif /* HAVE_thread_clear */
+#else /* HAVE_thread_clear */
+#define thread_gc_PTR NULL
+#endif /* !HAVE_thread_clear */
 
+#ifdef CONFIG_NO_DOC
+#define thread_doc NULL
+#else /* CONFIG_NO_DOC */
+PRIVATE char const thread_doc[] =
+"The core object type for enabling parallel computation\n"
+"\n"
+
+#ifdef Dee_pid_t
+"(tid:?Dint)\n"
+"Construct an unmanaged thread descriptor for @tid\n"
+#endif /* Dee_pid_t */
+#ifndef DeeThread_USE_SINGLE_THREADED
+"()\n"
+"(name:?Dstring)\n"
+"(main:?DCallable,args:?DTuple=!N)\n"
+"(name:?Dstring,main:?DCallable,args:?DTuple=!N)\n"
+"Construct a new thread that that has yet to be started.\n"
+"When no @main callable has been provided, invoke a $run "
+/**/ "member which must be implemented by a sub-class:\n"
+"${"
+/**/ "import Thread, Callable from deemon;\n"
+/**/ "class MyWorker: Thread {\n"
+/**/ "	private member m_jobs: {Callable...};\n"
+/**/ "\\\n"
+/**/ "	this(jobs: {Callable...})\n"
+/**/ "		: m_jobs = jobs\n"
+/**/ "	{}\n"
+/**/ "\\\n"
+/**/ "	@@Thread entry point\n"
+/**/ "	function run() {\n"
+/**/ "		for (local j: m_jobs)\n"
+/**/ "			j();\n"
+/**/ "		return 42;\n"
+/**/ "	}\n"
+/**/ "}"
+"}"
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+"";
+#endif /* !CONFIG_NO_DOC */
 
 PUBLIC DeeTypeObject DeeThread_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Thread),
-#ifdef CONFIG_NO_DOC
-	/* .tp_doc      = */ NULL,
-#else /* CONFIG_NO_DOC */
-	/* .tp_doc      = */ "The core object type for enabling parallel computation\n"
-	                     "\n"
-
-#ifdef Dee_pid_t
-	                     "(tid:?Dint)\n"
-	                     "Construct an unmanaged thread descriptor for @tid\n"
-#endif /* Dee_pid_t */
-#ifndef DeeThread_USE_SINGLE_THREADED
-	                     "()\n"
-	                     "(name:?Dstring)\n"
-	                     "(main:?DCallable,args:?DTuple=!N)\n"
-	                     "(name:?Dstring,main:?DCallable,args:?DTuple=!N)\n"
-	                     "Construct a new thread that that has yet to be started.\n"
-	                     "When no @main callable has been provided, invoke a $run "
-	                     /**/ "member which must be implemented by a sub-class:\n"
-	                     "${"
-	                     /**/ "import Thread, Callable from deemon;\n"
-	                     /**/ "class MyWorker: Thread {\n"
-	                     /**/ "	private member m_jobs: {Callable...};\n"
-	                     /**/ "\\\n"
-	                     /**/ "	this(jobs: {Callable...})\n"
-	                     /**/ "		: m_jobs = jobs\n"
-	                     /**/ "	{}\n"
-	                     /**/ "\\\n"
-	                     /**/ "	@@Thread entry point\n"
-	                     /**/ "	function run() {\n"
-	                     /**/ "		for (local j: m_jobs)\n"
-	                     /**/ "			j();\n"
-	                     /**/ "		return 42;\n"
-	                     /**/ "	}\n"
-	                     /**/ "}"
-	                     "}"
-#endif /* !DeeThread_USE_SINGLE_THREADED */
-	                     "",
-#endif /* !CONFIG_NO_DOC */
+	/* .tp_doc      = */ thread_doc,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -4889,11 +4896,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&thread_visit,
-#ifdef HAVE_thread_clear
-	/* .tp_gc            = */ &thread_gc,
-#else /* HAVE_thread_clear */
-	/* .tp_gc            = */ NULL,
-#endif /* !HAVE_thread_clear */
+	/* .tp_gc            = */ thread_gc_PTR,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
@@ -4906,11 +4909,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 	/* .tp_getsets       = */ thread_getsets,
 	/* .tp_members       = */ thread_members,
 	/* .tp_class_methods = */ thread_class_methods,
-#ifdef HAVE_thread_class_getsets
 	/* .tp_class_getsets = */ thread_class_getsets,
-#else /* HAVE_thread_class_getsets */
-	/* .tp_class_getsets = */ NULL,
-#endif /* !HAVE_thread_class_getsets */
 	/* .tp_class_members = */ thread_class_members
 };
 

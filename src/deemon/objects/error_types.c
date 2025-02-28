@@ -322,13 +322,16 @@ error_str(DeeErrorObject *__restrict self) {
 	return DeeObject_Str((DeeObject *)Dee_TYPE(self));
 }
 
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
+type_print(DeeObject *__restrict self, dformatprinter printer, void *arg);
+
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 error_print(DeeErrorObject *__restrict self, dformatprinter printer, void *arg) {
 	if (self->e_message)
 		return DeeString_PrintUtf8((DeeObject *)self->e_message, printer, arg);
 	if (self->e_inner)
 		return DeeFormat_Printf(printer, arg, "%k -> %k", Dee_TYPE(self), self->e_inner);
-	return DeeType_Print(Dee_TYPE(self), printer, arg);
+	return type_print((DeeObject *)Dee_TYPE(self), printer, arg);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
@@ -1006,14 +1009,16 @@ PRIVATE struct type_member tpconst systemerror_members[] = {
 	TYPE_MEMBER_END
 };
 
+#ifdef CONFIG_HOST_WINDOWS
+#define systemerror_doc DOC("(message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring,nterr_np?:?Dint)")
+#else /* CONFIG_HOST_WINDOWS */
+#define systemerror_doc DOC("(message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring)")
+#endif /* !CONFIG_HOST_WINDOWS */
+
 PUBLIC DeeTypeObject DeeError_SystemError = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "SystemError",
-#ifdef CONFIG_HOST_WINDOWS
-	/* .tp_doc      = */ DOC("(message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring,nterr_np?:?Dint)"),
-#else /* CONFIG_HOST_WINDOWS */
-	/* .tp_doc      = */ DOC("(message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring)"),
-#endif /* !CONFIG_HOST_WINDOWS */
+	/* .tp_doc      = */ systemerror_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

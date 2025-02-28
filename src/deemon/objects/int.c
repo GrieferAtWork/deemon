@@ -5174,6 +5174,12 @@ PRIVATE struct type_operator const int_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
 };
 
+#if CONFIG_INT_CACHE_MAXCOUNT != 0
+#define int_free_PTR &DeeInt_Free
+#else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
+#define int_free_PTR NULL
+#endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
+
 PUBLIC DeeTypeObject DeeInt_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_int),
@@ -5291,11 +5297,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef, /* No need to actually copy. - Integers are immutable! */
 				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
 				/* .tp_any_ctor  = */ (dfunptr_t)&int_new,
-#if CONFIG_INT_CACHE_MAXCOUNT != 0
-				/* .tp_free      = */ (dfunptr_t)&DeeInt_Free
-#else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
-				/* .tp_free      = */ (dfunptr_t)NULL
-#endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
+				/* .tp_free      = */ (dfunptr_t)int_free_PTR
 			}
 		},
 		/* .tp_dtor        = */ NULL,

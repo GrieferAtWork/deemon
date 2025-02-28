@@ -28,6 +28,7 @@
 #include <deemon/bytes.h>
 #include <deemon/cached-dict.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>

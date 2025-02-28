@@ -2952,7 +2952,9 @@ PRIVATE struct type_member tpconst yfi_members[] = {
 	                      /**/ "and arguments that are being executed"),
 	TYPE_MEMBER_END
 };
-#endif /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
+#define yfi_members NULL
+#endif /* !CONFIG_NO_THREADS */
 
 PRIVATE struct type_gc tpconst yfi_gc = {
 	/* .tp_gc = */ (void (DCALL *)(DeeObject *__restrict))&yfi_clear
@@ -3000,11 +3002,7 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ yfi_getsets,
-#ifdef CONFIG_NO_THREADS
 	/* .tp_members       = */ yfi_members,
-#else /* CONFIG_NO_THREADS */
-	/* .tp_members       = */ NULL,
-#endif /* !CONFIG_NO_THREADS */
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL

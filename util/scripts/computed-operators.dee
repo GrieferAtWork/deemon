@@ -1,0 +1,1097 @@
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+import * from "rt.hints.method";
+import * from "rt.hints.operator";
+import int, * from ctypes;
+import hashlib;
+import posix;
+import deemon;
+import ipc;
+import rt;
+import fs;
+import errors;
+import "...src.deemon.method-hints.method-hints" as mh;
+
+#undef DRY_RUN
+#if 1 /* TODO: Disable this */
+#define DRY_RUN
+#endif
+
+
+global final FILES_AND_PATHS = {
+	"../../src/deemon/runtime/*.c",
+	"../../src/deemon/objects/*.c",
+	"../../src/deemon/objects/seq/*.c",
+	"../../src/deemon/objects/unicode/*.c",
+	"../../src/deemon/compiler/*.c",
+	"../../src/deemon/execute/*.c",
+	"../../src/deemon/system/*.c",
+};
+
+global final mh_NATIVE_OPERATORS_BYNAME: {string: mh.NativeOperator} = Dict
+		.Frozen(for (local name, op: mh.NATIVE_OPERATORS) (name.name, op));
+
+function isPredefinedSymbol(symName: string): bool {
+	if (symName.startswith("_DeeNone_"))
+		return true;
+	if (symName.startswith("default__"))
+		return true;
+	if (symName.startswith("DeeObject_"))
+		return true;
+	return false;
+}
+
+function mustCastSymbol(symName: string): bool {
+	return symName.startswith("DeeObject_New");
+}
+
+global final TYPE_SOURCE_MODULES: {Module...} = { deemon, rt, errors };
+function findTypeByName(name: string): Type | none {
+	for (local mod: TYPE_SOURCE_MODULES) {
+		try {
+			return mod.operator . (name);
+		} catch (AttributeError) {
+		}
+	}
+}
+
+
+function makeRelPath(path: string): string {
+	return posix.relpath(posix.normalpath(posix.joinpath(
+			posix.headof(__FILE__), path)));
+}
+
+function withStdout(newStdout: File, cb: Callable): Object {
+	local oldStdout = File.stdout;
+	File.stdout = newStdout;
+	try {
+		return cb();
+	} finally {
+		File.stdout = oldStdout;
+	}
+}
+
+
+function captureStdout(cb: Callable): string {
+	File.Writer fp;
+	withStdout(fp, cb);
+	return fp.string;
+}
+
+
+
+final class RegexAlign {
+	this = default;
+	public final member pattern: string;
+}
+
+@@Regular field (e.g. @"tp_name")
+final class Field {
+	this = default;
+	public final member name: string;
+}
+
+@@Native operator (e.g. @"tp_bool")
+final class NativeOperator {
+	this = default;
+	public final member name: string;
+
+	@@Name of the operator (same as @name, but with the @"tp_" prefix removed)
+	public property operatorName: string = {
+		get(): string {
+			return name.lsstrip("tp_");
+		}
+	}
+}
+
+@@Sub-table field (e.g. @"tp_seq", "type_seq")
+final class SubTable {
+	this = default;
+	@@Name of the type field (e.g. @"tp_seq")
+	public final member name: string;
+	@@Name of the struct type (e.g. @"type_seq")
+	public final member typ: string;
+}
+
+#define InitializerSpec RegexAlign | Field | NativeOperator | SubTable | Object/*InitializerSpecs*/
+#define InitializerSpecs {InitializerSpec...}
+
+global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
+	"DeeTypeObject": {
+		RegexAlign(r"OBJECT_HEAD_INIT\([^)]*\)"),
+		Field("tp_name"),
+		Field("tp_doc"),
+		Field("tp_flags"),
+		Field("tp_weakrefs"),
+		Field("tp_features"),
+		Field("tp_base"),
+		/* .tp_init = */ {
+			Field("__tp_alloc"),
+			Field("tp_dtor"),
+			Field("tp_assign"),      /* NativeOperator("tp_assign") */
+			Field("tp_move_assign"), /* NativeOperator("tp_move_assign") */
+			Field("tp_deepload"),
+			Field("tp_destroy"),
+		},
+		/* .tp_cast = */ {
+			NativeOperator("tp_str"),
+			NativeOperator("tp_repr"),
+			NativeOperator("tp_bool"),
+			NativeOperator("tp_print"),
+			NativeOperator("tp_printrepr"),
+		},
+		NativeOperator("tp_call"),
+		Field("tp_visit"),
+		Field("tp_gc"),
+		SubTable("tp_math", "type_math"),
+		SubTable("tp_cmp", "type_cmp"),
+		SubTable("tp_seq", "type_seq"),
+		NativeOperator("tp_iter_next"),
+		SubTable("tp_iterator", "type_iterator"),
+		Field("tp_attr"), // SubTable("tp_attr", "type_attr"),
+		SubTable("tp_with", "type_with"),
+		Field("tp_buffer"),
+		Field("tp_methods"),
+		Field("tp_getsets"),
+		Field("tp_members"),
+		Field("tp_class_methods"),
+		Field("tp_class_getsets"),
+		Field("tp_class_members"),
+		Field("tp_method_hints"),
+		NativeOperator("tp_call_kw"),
+		Field("tp_mro"),
+		Field("tp_operators"),
+		Field("tp_operators_size"),
+	},
+	"type_math": {
+		NativeOperator("tp_int32"),
+		NativeOperator("tp_int64"),
+		NativeOperator("tp_double"),
+		NativeOperator("tp_int"),
+		NativeOperator("tp_inv"),
+		NativeOperator("tp_pos"),
+		NativeOperator("tp_neg"),
+		NativeOperator("tp_add"),
+		NativeOperator("tp_sub"),
+		NativeOperator("tp_mul"),
+		NativeOperator("tp_div"),
+		NativeOperator("tp_mod"),
+		NativeOperator("tp_shl"),
+		NativeOperator("tp_shr"),
+		NativeOperator("tp_and"),
+		NativeOperator("tp_or"),
+		NativeOperator("tp_xor"),
+		NativeOperator("tp_pow"),
+		NativeOperator("tp_inc"),
+		NativeOperator("tp_dec"),
+		NativeOperator("tp_inplace_add"),
+		NativeOperator("tp_inplace_sub"),
+		NativeOperator("tp_inplace_mul"),
+		NativeOperator("tp_inplace_div"),
+		NativeOperator("tp_inplace_mod"),
+		NativeOperator("tp_inplace_shl"),
+		NativeOperator("tp_inplace_shr"),
+		NativeOperator("tp_inplace_and"),
+		NativeOperator("tp_inplace_or"),
+		NativeOperator("tp_inplace_xor"),
+		NativeOperator("tp_inplace_pow"),
+	},
+	"type_cmp": {
+		NativeOperator("tp_hash"),
+		NativeOperator("tp_compare_eq"),
+		NativeOperator("tp_compare"),
+		NativeOperator("tp_trycompare_eq"),
+		NativeOperator("tp_eq"),
+		NativeOperator("tp_ne"),
+		NativeOperator("tp_lo"),
+		NativeOperator("tp_le"),
+		NativeOperator("tp_gr"),
+		NativeOperator("tp_ge"),
+		Field("tp_nii"), // DEPRECATED!
+	},
+	"type_seq": {
+		NativeOperator("tp_iter"),
+		NativeOperator("tp_sizeob"),
+		NativeOperator("tp_contains"),
+		NativeOperator("tp_getitem"),
+		NativeOperator("tp_delitem"),
+		NativeOperator("tp_setitem"),
+		NativeOperator("tp_getrange"),
+		NativeOperator("tp_delrange"),
+		NativeOperator("tp_setrange"),
+		NativeOperator("tp_foreach"),
+		NativeOperator("tp_foreach_pair"),
+		Field("tp_enumerate"),
+		Field("tp_enumerate_index"),
+		Field("tp_iterkeys"),
+		NativeOperator("tp_bounditem"),
+		NativeOperator("tp_hasitem"),
+		NativeOperator("tp_size"),
+		Field("tp_size_fast"), // NativeOperator("tp_size_fast"),
+		NativeOperator("tp_getitem_index"),
+		Field("tp_getitem_index_fast"), // NativeOperator("tp_getitem_index_fast"),
+		NativeOperator("tp_delitem_index"),
+		NativeOperator("tp_setitem_index"),
+		NativeOperator("tp_bounditem_index"),
+		NativeOperator("tp_hasitem_index"),
+		NativeOperator("tp_getrange_index"),
+		NativeOperator("tp_delrange_index"),
+		NativeOperator("tp_setrange_index"),
+		NativeOperator("tp_getrange_index_n"),
+		NativeOperator("tp_delrange_index_n"),
+		NativeOperator("tp_setrange_index_n"),
+		NativeOperator("tp_trygetitem"),
+		NativeOperator("tp_trygetitem_index"),
+		NativeOperator("tp_trygetitem_string_hash"),
+		NativeOperator("tp_getitem_string_hash"),
+		NativeOperator("tp_delitem_string_hash"),
+		NativeOperator("tp_setitem_string_hash"),
+		NativeOperator("tp_bounditem_string_hash"),
+		NativeOperator("tp_hasitem_string_hash"),
+		NativeOperator("tp_trygetitem_string_len_hash"),
+		NativeOperator("tp_getitem_string_len_hash"),
+		NativeOperator("tp_delitem_string_len_hash"),
+		NativeOperator("tp_setitem_string_len_hash"),
+		NativeOperator("tp_bounditem_string_len_hash"),
+		NativeOperator("tp_hasitem_string_len_hash"),
+		Field("tp_asvector"),
+		Field("tp_asvector_nothrow"),
+		Field("tp_unpack"),
+		Field("tp_unpack_ex"),
+		Field("tp_unpack_ub"),
+		Field("tp_getitemnr"),
+		Field("tp_getitemnr_string_hash"),
+		Field("tp_getitemnr_string_len_hash"),
+		Field("tp_trygetitemnr"),
+		Field("tp_trygetitemnr_string_hash"),
+		Field("tp_trygetitemnr_string_len_hash"),
+	},
+	"type_iterator": {
+		NativeOperator("tp_nextpair"),
+		NativeOperator("tp_nextkey"),
+		NativeOperator("tp_nextvalue"),
+		NativeOperator("tp_advance"),
+	},
+	"type_attr": {
+		NativeOperator("tp_getattr"),
+		NativeOperator("tp_delattr"),
+		NativeOperator("tp_setattr"),
+		Field("tp_enumattr"), // NativeOperator("tp_enumattr"),
+		Field("tp_findattr"), // NativeOperator("tp_findattr"),
+		NativeOperator("tp_hasattr"),
+		NativeOperator("tp_boundattr"),
+		Field("tp_callattr"), // NativeOperator("tp_callattr")
+		Field("tp_callattr_kw"), // NativeOperator("tp_callattr_kw")
+		Field("tp_vcallattrf"), // NativeOperator("tp_vcallattrf")
+		NativeOperator("tp_getattr_string_hash"),
+		NativeOperator("tp_delattr_string_hash"),
+		NativeOperator("tp_setattr_string_hash"),
+		NativeOperator("tp_hasattr_string_hash"),
+		NativeOperator("tp_boundattr_string_hash"),
+		Field("tp_callattr_string_hash"), // NativeOperator("tp_callattr_string_hash"),
+		Field("tp_callattr_string_hash_kw"), // NativeOperator("tp_callattr_string_hash_kw"),
+		Field("tp_vcallattr_string_hashf"), // NativeOperator("tp_vcallattr_string_hashf"),
+		NativeOperator("tp_getattr_string_len_hash"),
+		NativeOperator("tp_delattr_string_len_hash"),
+		NativeOperator("tp_setattr_string_len_hash"),
+		NativeOperator("tp_hasattr_string_len_hash"),
+		NativeOperator("tp_boundattr_string_len_hash"),
+		Field("tp_callattr_string_len_hash"), // NativeOperator("tp_callattr_string_len_hash")
+		Field("tp_callattr_string_len_hash_kw"), // NativeOperator("tp_callattr_string_len_hash_kw")
+		Field("tp_findattr_info_string_len_hash"), // NativeOperator("tp_findattr_info_string_len_hash")
+		Field("tp_callattr_tuple"), // NativeOperator("tp_callattr_tuple")
+	},
+	"type_with": {
+		NativeOperator("tp_enter"),
+		NativeOperator("tp_leave"),
+	},
+};
+
+
+
+local final DeeObject_ptr = void.ptr;
+local final Dee_funptr_t = try void.func(void).ptr catch (NotImplemented) ({
+	/* NotImplemented: ctypes was built without C-functions being enabled */
+	return;
+});
+local final deemonExe = ShLib(ipc.Process.current.exe);
+local final DeeType_GetNativeOperatorWithoutUnsupported = (Dee_funptr_t(DeeObject_ptr, int).ptr)(
+	Mapping.get(deemonExe, "DeeType_GetNativeOperatorWithoutUnsupported") ??
+	Mapping.get(deemonExe, "_DeeType_GetNativeOperatorWithoutUnsupported") ??
+	Mapping.get(deemonExe, "DeeType_GetNativeOperatorWithoutUnsupported@8") ??
+	Mapping.get(deemonExe, "_DeeType_GetNativeOperatorWithoutUnsupported@8") ??
+	none
+);
+
+if (!DeeType_GetNativeOperatorWithoutUnsupported)
+	return;
+
+function _addr2name(addr: void.ptr): string | none {
+	if (!addr)
+		return "NULL";
+	local nameAndDelta: (string, int) | none = ShLib.addr2name(addr);
+	if (nameAndDelta is none)
+		return none;
+	local name, delta = nameAndDelta...;
+	if (delta == 0)
+		return name;
+	return none;
+}
+
+final class SubTableImpl {
+	this = default;
+	@@The table that is being implemented
+	public final member subTable: SubTable;
+	@@Initializer expressions for members of this table
+	public final member initializers: {string...};
+
+	private member _hashName: string;
+
+	@@The hash-name of this table (e.g. @"tp_seq__543256585ADCF120")
+	public property hashName: string = {
+		get(): string {
+			if (_hashName !is bound) {
+				local data = "\n".join(initializers);
+				local hash = hashlib.hash("CRC-64", data);
+				_hashName = f"default__{subTable.name}__{hash.tostr(16, 16, "X")}";
+			}
+			return _hashName;
+		}
+	}
+}
+
+@@C symbol names and the names of the native operators they are used for
+global final USED_SYMBOL_OPERATORS: {string: HashSet with string} = Dict();
+
+@@Returns the name of the function used to implement native operator @op of @type
+@@If name cannot be determined (e.g. debug info not available/supported), return @none
+@@If the operator isn't supported, return @"NULL"
+function _Type_getNativeOperatorName(typ: Type, op: string): string | none {
+	if (!DeeType_GetNativeOperatorWithoutUnsupported)
+		return none;
+	local typAddr: void.ptr = rt.ctypes_addrof(typ);
+	local hintAddr = DeeType_GetNativeOperatorWithoutUnsupported(
+			typAddr, TNO_BYNAME[op]);
+	local result = _addr2name(hintAddr);
+	if (result !is none && result != "NULL")
+		USED_SYMBOL_OPERATORS.setdefault(result, HashSet()).insert(op);
+	return result;
+}
+
+
+
+@@Used default tables, mapped by their hashed names
+global final USED_DEFAULT_TABLES: {string: SubTableImpl} = Dict();
+
+function _buildDefaultOperatorSubTable(subTable: SubTable, typ: Type)
+		: SubTableImpl | none {
+	local specs: InitializerSpecs = STRUCT_INITIALIZERS[subTable.typ];
+	local initializers: {string...} = [];
+	for (local spec: specs) {
+		if (spec is Field) {
+			initializers.append("NULL");
+		} else if (spec is NativeOperator) {
+			local init = _Type_getNativeOperatorName(typ, spec.operatorName);
+			if (init is none)
+				throw Error(f"Failed to load name of '{typ}.<native>.{spec.operatorName}'");
+			if (init != "NULL")
+				init = f"&{init}";
+			initializers.append(init);
+		} else {
+			throw Error(f"Unsupported member type in sub-table: {type spec}");
+		}
+	}
+	if (initializers.some != "NULL")
+		return SubTableImpl(subTable: subTable, initializers: initializers);
+	return none;
+}
+
+@@Build a default sub-table impl for @subTable in @typ
+function buildDefaultOperatorSubTable(subTable: SubTable, typ: Type)
+		: SubTableImpl | none {
+	local result = _buildDefaultOperatorSubTable(subTable, typ);
+	if (result !is none) {
+		local name = result.hashName;
+		local cached = USED_DEFAULT_TABLES.get(name);
+		if (cached !is none)
+			return cached;
+		USED_DEFAULT_TABLES[name] = result;
+	}
+	return result;
+}
+
+
+function textAdvance(data: string, i: int): int {
+	if (i >= #data)
+		return i;
+	local ch = data[i];
+	switch (ch) {
+
+	case "'":
+	case '"': {
+		++i;
+		while (i < #data) {
+			local ch2 = data[i];
+			if (ch2 == ch) {
+				++i;
+				break;
+			}
+			if (ch2 == "\\")
+				++i;
+			++i;
+		}
+	}	break;
+
+	case "/":
+		if (data.startswith("/*", i)) {
+			local eoc = data.find("*/", i + 2);
+			if (eoc < 0) {
+				i = #data;
+			} else {
+				i = eoc + 2;
+			}
+			break;
+		}
+		if (!data.startswith("//", i)) {
+			++i;
+			break;
+		}
+		/* FALLTHRU */
+	case "#": {
+		local eol = data.find("\n", i);
+		if (eol < 0) {
+			i = #data;
+		} else {
+			i = eol + 1;
+		}
+	}	break;
+
+	default:
+		++i;
+		break;
+	}
+	return i;
+}
+
+function skipSpaceAndComments(data: string, i: int): int {
+again:
+	local result = textAdvance(data, i);
+	local minResult = i + 1;
+	if (result > minResult || (result > i && data.isspace(i))) {
+		i = result;
+		goto again;
+	}
+	return i;
+}
+
+
+
+global StructInitializer;
+final class InitAbort: Error { this = super; }
+final class InitAbortWarning: Error { this = super; }
+final class InitParser {
+	this = default;
+
+	public final member data: string;
+	public final member struct: StructInitializer;
+	public final member allParts: {string: StructInitializer};
+	public final member out: File;
+	public member i: int;
+	public member len: int;
+	public member flushStart: int;
+	public member typ: Type;
+
+	public flushUntil(offset: int) {
+		if (flushStart < offset) {
+			print out: data[flushStart:offset],;
+			flushStart = offset;
+		}
+	}
+
+	public flushUntilHereBeforeSpace() {
+		local flushTo = i;
+		while (i > 0 && data.isspace(flushTo - 1))
+			--flushTo;
+		flushUntil(flushTo);
+	}
+
+	public flushUntilHere() {
+		flushUntil(i);
+	}
+
+	public flushRemainder() {
+		flushUntil(len);
+	}
+
+	public err(message: string, warning: bool = false) {
+		local sol = data.rfind("\n", 0, i) + 1;
+		local eol = data.find("\n", i);
+		if (eol < 0)
+			eol = len;
+		local currentLine = data[sol:eol].replace("\t", " ");
+		throw (warning ? InitAbortWarning : InitAbort)(
+				f"Init abort: {message}\n{currentLine}\n{" " * (i - sol)}^");
+	}
+
+	public advance() {
+		i = textAdvance(data, i);
+	}
+
+	public skipSpace() {
+		i = skipSpaceAndComments(data, i);
+	}
+
+	public nextCh() {
+		advance();
+		skipSpace();
+	}
+
+	public property currCh: string = {
+		get(): string {
+			if (i >= len)
+				return "";
+			return data[i];
+		}
+	}
+
+	public require1(ch: string) {
+		if (currCh != ch)
+			err(f"Unexpected character {repr currCh} when {repr ch} was expected");
+	}
+
+	public skip1(ch: string) {
+		require1(ch);
+		nextCh();
+	}
+
+	@@Returns index of trailing @"," or @"}"
+	public findEndOfInitializer(start: int | none = none): int {
+		if (start is none)
+			start = i;
+		local recursion = 0;
+		while (start < len) {
+			local ch = data[start];
+			if (ch in ",})]") {
+				if (recursion == 0)
+					break;
+				if (ch in "})]")
+					--recursion;
+			} else if (ch in "{([") {
+				++recursion;
+			}
+			start = textAdvance(data, start);
+		}
+		return start;
+	}
+
+	private getDefaultSubTableInitializer(subTable: SubTable): string {
+		local impl: SubTableImpl = buildDefaultOperatorSubTable(subTable, typ);
+		if (impl is none)
+			return "NULL";
+		return f"&{impl.hashName}";
+	}
+
+	@@Output @"\n<indent>/* .<field> = */ <init>," for @spec
+	public insertMissingSpec(spec: InitializerSpec,
+	                         specs: InitializerSpecs,
+	                         indent: int): bool {
+		if (spec is SubTable || spec is Field || spec is NativeOperator) {
+			local relevantSpecsMaxNameLen = 0;
+			local inRelevantBlock = false;
+			for (local relevantSpec: specs) {
+				if (hasattr(relevantSpec, "name")) {
+					local len = #relevantSpec.name;
+					if (relevantSpecsMaxNameLen < len)
+						relevantSpecsMaxNameLen = len;
+					if (relevantSpec === spec)
+						inRelevantBlock = true;
+				} else {
+					if (inRelevantBlock)
+						break;
+					relevantSpecsMaxNameLen = 0;
+				}
+			}
+			print out:;
+			print out: ("\t" * indent, "/* .",
+					spec.name.ljust(relevantSpecsMaxNameLen),
+					" = */ "),;
+			if (spec is SubTable) {
+				print out: (getDefaultSubTableInitializer(spec), ","),;
+			} else if (spec is Field) {
+				print out: ("NULL,"),;
+			} else {
+				print out: (formatDefImpl(spec.operatorName), ","),;
+			}
+			return true;
+		} else if (spec is Sequence) {
+			local result = true;
+			print out:;
+			print out: ("\t" * indent, "{"),;
+			insertMissingSpecs(spec, spec, indent + 1);
+			print out:;
+			print out: ("\t" * indent, "},"),;
+			return result;
+		}
+		return false;
+	}
+
+	private formatDefImpl(operatorName: string): string {
+		local computedImpl: string | none =
+			_Type_getNativeOperatorName(typ, operatorName);
+		if (computedImpl is none) {
+			err(f"Unable to resolve '{typ}.<native>.{operatorName}' "
+			    f"(missing debug info?)", warning: true);
+		}
+		if (computedImpl != "NULL") {
+			if (mustCastSymbol(computedImpl)) {
+				local natOp: mh.NativeOperator =
+						mh_NATIVE_OPERATORS_BYNAME[operatorName];
+				return f"DEFIMPL(({
+						captureStdout(() -> natOp.printFunctionPointerType())
+				})&{computedImpl})";
+			}
+			return f"DEFIMPL(&{computedImpl})";
+		}
+		return computedImpl;
+	}
+
+	public insertMissingSpecs(missingSpecs: InitializerSpecs,
+	                          specs: InitializerSpecs,
+	                          indent: int): bool {
+		local usedMissingSpecs = List(missingSpecs);
+		while (usedMissingSpecs) {
+			local last = usedMissingSpecs.last;
+			if (last is Field) {
+				/* ... */
+			} else if (last is NativeOperator) {
+				local name = _Type_getNativeOperatorName(typ, last.operatorName);
+				if (name !is none && name != "NULL")
+					break;
+			} else {
+				break;
+			}
+			usedMissingSpecs.popback();
+		}
+		if (!usedMissingSpecs)
+			return true;
+		local relevantAlignmentSpecs = [];
+		for (local spec: specs) {
+			if (spec === usedMissingSpecs.first)
+				break;
+			relevantAlignmentSpecs.append(spec);
+		}
+		relevantAlignmentSpecs.extend(usedMissingSpecs);
+		local result = true;
+		for (local part: usedMissingSpecs) {
+			if (!insertMissingSpec(part, relevantAlignmentSpecs, indent)) {
+				result = false;
+				break;
+			}
+		}
+		return result;
+	}
+
+	public parseInitializer(): (string, int) {
+		local initStart = i;
+		local initEnd = findEndOfInitializer();
+		i = initEnd;
+		while (initEnd > initStart && data.isspace(initEnd - 1))
+			--initEnd;
+		return (data[initStart:initEnd], initEnd);
+	}
+
+	public processSpec(spec: InitializerSpec, indent: int = 1) {
+		if (spec is RegexAlign) {
+			local none, alignEnd = data.refind(spec.pattern, i, len)...;
+			if (alignEnd is none)
+				err(f"Failed to align to regex '{spec.pattern}'");
+			i = alignEnd;
+			skipSpace();
+		} else if (spec is Field) {
+			i = findEndOfInitializer();
+		} else if (spec is NativeOperator) {
+			flushUntilHere();
+			local initializer: string, initializerEnd: int = parseInitializer()...;
+			if (initializer == "NULL" || (
+					initializer.startswith("DEFIMPL(") &&
+					initializer.endswith(")")
+			)) {
+				print out: formatDefImpl(spec.operatorName),;
+				flushStart = initializerEnd;
+			}
+		} else if (spec is SubTable) {
+			flushUntilHere();
+			local initializer: string, initializerEnd: int = parseInitializer()...;
+			if (initializer.startswith("&")) {
+				local subTableSymbolName = initializer[1:].strip();
+				local subTableSymbol: StructInitializer | none =
+						allParts.get(subTableSymbolName);
+				if (subTableSymbol !is none)
+					subTableSymbol.optimizeBodyImpl(allParts: allParts, typ: typ);
+			} else if (initializer == "NULL" || (
+					initializer.startswith("DEFIMPL(") &&
+					initializer.endswith(")")
+			)) {
+				local init = getDefaultSubTableInitializer(spec);
+				if (init == "NULL") {
+					print out: ("NULL"),;
+				} else {
+					print out: ("DEFIMPL(", init, ")"),;
+				}
+				flushStart = initializerEnd;
+			}
+		} else if (spec is Sequence) {
+			skip1("{");
+			local specIter = spec.operator iter();
+			foreach (local seqPart: specIter) {
+				if (currCh == "}")
+					goto handle_end_of_seq;
+				processSpec(seqPart, indent: indent + 1);
+				if (currCh == ",") {
+					nextCh();
+					if (currCh == "}") {
+						flushUntilHereBeforeSpace();
+						goto handle_end_of_seq_after_comma;
+					}
+				} else {
+handle_end_of_seq:
+					require1("}");
+					flushUntilHereBeforeSpace();
+					out << ",";
+handle_end_of_seq_after_comma:
+					insertMissingSpecs(specIter.pending, spec, indent);
+					break;
+				}
+			}
+			skip1("}");
+		} else {
+			err(f"Unsupported initializer spec type: {type spec}");
+		}
+	}
+}
+
+final class StructInitializer {
+	this = default;
+
+	@@Struct type (e.g. @"DeeTypeObject" or @"type_seq")
+	public final member structTyp: string;
+
+	@@Qualifiers for @structTyp (e.g. @"tpconst")
+	public final member structTypQualifiers: string;
+
+	@@Struct symbol name
+	public final member symbolName: string;
+
+	@@Struct initializer body (including leading/trailing branches. iow: @"{ ... }")
+	public member body: string;
+
+	operator str(fp: File) {
+		print fp: (structTyp, " "),;
+		if (structTypQualifiers)
+			print fp: (structTypQualifiers, " "),;
+		print fp: (symbolName, " = ", body),;
+	}
+
+	public optimizeBody(allParts: {string: StructInitializer}) {
+		/* Starting point for computed operator initialization:
+		 * - Ensure that this is the intializer for a "DeeTypeObject"
+		 * - Extract the value of "tp_name"
+		 * - Use the type's "tp_name" to find its runtime representation
+		 */
+		if (structTyp != "DeeTypeObject")
+			return;
+		local typeTpName;
+		try {
+			typeTpName = body.rescanf(
+					r'.*\/\*\s*\.\s*tp_name\s*=\s*\*\/\s*"([^"]*)"')...;
+		} catch (UnpackError) {
+			try {
+				typeTpName = body.rescanf(
+						r'.*\/\*\s*\.\s*tp_name\s*=\s*\*\/\s*DeeString_STR\s*'
+						r'\(\s*&\s*str_([^\s)]*)\s*\)')...;
+			} catch (UnpackError) {
+				return;
+			}
+		}
+		typeTpName = typeTpName.decode("c-escape");
+
+		/* Every built-in type from the deemon core should be exported from
+		 * "rt" given its name (and having "_" l-stripped from that name) */
+		local exportSymbolname = typeTpName.lstrip("_");
+		local typ: Type |  none = findTypeByName(exportSymbolname);
+		if (typ is none) {
+			print("Type ", repr symbolName, " not found: ", repr exportSymbolname);
+			return;
+		}
+		local rtTypeName = Type.__name__(typ);
+		if (rtTypeName != typeTpName) {
+			print("Type ", repr symbolName, " with name ", repr exportSymbolname,
+			      " has a different name ", repr typeTpName, " in exports");
+			return;
+		}
+		try {
+			optimizeBodyImpl(allParts, typ);
+		} catch (InitAbortWarning as e) {
+			print("Precomputation failed in ", symbolName, ": ", e);
+		} catch (InitAbort as e) {
+			print("Precomputation failed in ", symbolName, ": ", e);
+			print Traceback.current;
+		}
+	}
+
+	@@Actual optimization impl (where @typ is the type for which to compute operators)
+	public optimizeBodyImpl(allParts: {string: StructInitializer}, typ: Type) {
+		local initSpecs: InitializerSpecs = STRUCT_INITIALIZERS[structTyp];
+//		print("	Optimizing operators for: ", symbolName, " (", repr typ, ")");
+		local parser = InitParser(
+				data: body,
+				struct: this,
+				allParts: allParts,
+				out: File.Writer(),
+				i: 0,
+				len: #body,
+				flushStart: 0,
+				typ: typ);
+		/* Don't do anything if the initializer contains preprocessor directives! */
+		local start = body.refind(r'\n\s*#').last;
+		if (start !is none) {
+			parser.i = start;
+			parser.err(
+					f"Unable to optimize {repr symbolName}: "
+					f"initializer contains preprocessor directive",
+					warning: true);
+		}
+		parser.skipSpace();
+		parser.processSpec(initSpecs);
+		parser.flushRemainder();
+		body = parser.out.string;
+	}
+}
+
+function parseSourceFileData(data: string): {string | StructInitializer...} {
+	local i = 0, len = #data, flushStart = 0;
+	while (i < len) {
+		if (!data.startswith("=", i)) {
+			i = textAdvance(data, i);
+			continue;
+		}
+
+		/* Check if this is a struct initializer:
+		 * >> INTERN DeeTypeObject TypeOperatorsIterator_Type = { */
+		local braceStart = i + 1;
+		while (braceStart < len && data.isspace(braceStart))
+			++braceStart;
+		if (!data.startswith("{", braceStart)) {
+continue_after_brace:
+			i = braceStart;
+			continue;
+		}
+		/* Jup! It sure looks like a struct initializer! */
+		local symbolNameEnd = i;
+		while (symbolNameEnd > 0 && data.isspace(symbolNameEnd - 1))
+			--symbolNameEnd;
+		local symbolNameStart = symbolNameEnd;
+		while (symbolNameStart > 0 && data.issymcont(symbolNameStart - 1))
+			--symbolNameStart;
+		local symbolName: string = data[symbolNameStart:symbolNameEnd];
+		if (!symbolName)
+			goto continue_after_brace;
+
+		local structTypEnd = symbolNameStart;
+		while (structTypEnd > 0 && data.isspace(structTypEnd - 1))
+			--structTypEnd;
+		local qualStart = structTypEnd;
+		local qualEnd = structTypEnd;
+		local structTypStart = structTypEnd;
+find_structTypStart:
+		while (structTypStart > 0 && data.issymcont(structTypStart - 1))
+			--structTypStart;
+		local structTyp: string = data[structTypStart:structTypEnd];
+		if (!structTyp)
+			goto continue_after_brace;
+
+		if (structTyp in ["const", "tpconst", "volatile"]) {
+			qualStart = structTypStart;
+			while (structTypStart > 0 && data.isspace(structTypStart - 1))
+				--structTypStart;
+			structTypEnd = structTypStart;
+			goto find_structTypStart;
+		}
+		local qual: string = data[qualStart:qualEnd];
+
+		local afterBraceEnd = braceStart + 1;
+		local recursion = 0;
+		while (afterBraceEnd < len) {
+			local ch = data[afterBraceEnd];
+			if (ch == "}") {
+				if (recursion == 0) {
+					++afterBraceEnd;
+					break;
+				}
+				--recursion;
+			} else if (ch == "{") {
+				++recursion;
+			}
+			afterBraceEnd = textAdvance(data, afterBraceEnd);
+		}
+
+		if (flushStart < structTypStart)
+			yield data[flushStart:structTypStart];
+		yield StructInitializer(
+				structTyp: structTyp,
+				structTypQualifiers: qual,
+				symbolName: symbolName,
+				body: data[braceStart:afterBraceEnd]);
+		i = flushStart = afterBraceEnd;
+	}
+	if (flushStart < len)
+		yield data[flushStart:len];
+}
+
+function updateFile(filename: string, cb: Callable with Bytes) {
+	/* Load file data */
+	print "Checking file:", repr filename, "...";
+	local oldBytes: Bytes = File.open(filename, "rb").readall();
+	local newBytes: Bytes | string = cb(oldBytes);
+	if (newBytes is string)
+		newBytes = newBytes.encode("utf-8");
+	assert newBytes is Bytes;
+	if (oldBytes != newBytes) {
+		print "Updating file:", repr filename;
+#ifndef DRY_RUN
+		with (local fp = File.open(filename, "wb"))
+			fp.write(newBytes);
+#endif /* !DRY_RUN */
+	}
+}
+
+
+function processSourceFile(filename: string) {
+	updateFile(filename, oldBytes -> {
+		/* Split file contents into raw text and struct initializers */
+		local parts: {string | StructInitializer...} = Tuple(parseSourceFileData(
+				oldBytes.unifylines().decode("utf-8")));
+
+		/* Gather structs being initialized in this file */
+		local structsByName: {string: StructInitializer} = Dict();
+		for (local part: parts) {
+			if (part is StructInitializer)
+				structsByName[part.symbolName] = part;
+		}
+
+		/* Optimize struct initializers */
+		for (local part: parts) {
+			if (part is StructInitializer)
+				part.optimizeBody(structsByName);
+		}
+
+		/* Re-join file parts. */
+		return parts + ...;
+	});
+}
+
+
+function doPrintComputedOperators(impl: bool) {
+	if (!impl) {
+		for (local symName: USED_SYMBOL_OPERATORS.keys.sorted()) {
+			local operatorNames = USED_SYMBOL_OPERATORS[symName];
+			if (isPredefinedSymbol(symName))
+				continue;
+			local opName = operatorNames.sorted().first;
+			local natOp: mh.NativeOperator = mh_NATIVE_OPERATORS_BYNAME[opName];
+			print("INTDEF "),;
+			natOp.printDecl(symName);
+			print(";");
+		}
+	}
+	for (local defTabName: USED_DEFAULT_TABLES.keys.sorted()) {
+		local defTab: SubTableImpl = USED_DEFAULT_TABLES[defTabName];
+		print(impl ? "INTERN " : "INTDEF ", "struct ",
+				defTab.subTable.typ, " ", defTabName),;
+		if (impl) {
+			local specs: InitializerSpecs = STRUCT_INITIALIZERS[defTab.subTable.typ];
+			print(" = {");
+			local specsMaxNameLen = specs.each.name.length > ...;
+			for (local i, spec: specs.enumerate()) {
+				local init = defTab.initializers[i];
+				local inRelevantBlock = false;
+				print("	/* .", spec.name.ljust(specsMaxNameLen), " = */ ", init, ",");
+			}
+			print("}"),;
+		}
+		print(";");
+	}
+}
+
+function printComputedOperators(filename: string) {
+	updateFile(filename, oldBytes -> {
+		local final DECL_START = "/*[[[begin::computer-operator-decls]]]*/";
+		local final DECL_END   = "/*[[[end::computer-operator-decls]]]*/";
+		local final IMPL_START = "/*[[[begin::computer-operator-impls]]]*/";
+		local final IMPL_END   = "/*[[[end::computer-operator-impls]]]*/";
+		local newBytes = oldBytes;
+		local declStart = oldBytes.find(DECL_START);
+		if (declStart >= 0) {
+			declStart += #DECL_START;
+			local declEnd = oldBytes.index(DECL_END, declStart);
+			File.Writer out;
+			out << newBytes[:declStart].decode("utf-8") << "\n";
+			withStdout(out, () -> doPrintComputedOperators(false));
+			out << newBytes[declEnd:].decode("utf-8");
+			newBytes = out.string.encode("utf-8");
+		}
+		local implStart = oldBytes.find(IMPL_START);
+		if (implStart >= 0) {
+			implStart += #IMPL_START;
+			local implEnd = oldBytes.index(IMPL_END, implStart);
+			File.Writer out;
+			out << newBytes[:implStart].decode("utf-8") << "\n";
+			withStdout(out, () -> doPrintComputedOperators(true));
+			out << newBytes[implEnd:].decode("utf-8");
+			newBytes = out.string.encode("utf-8");
+		}
+		return newBytes;
+	});
+}
+
+
+function main() {
+	for (local file: FILES_AND_PATHS) {
+		file = makeRelPath(file);
+		local tail = posix.tailof(file);
+		if ("*" in tail) {
+			local head = posix.headof(file);
+			for (local inDirFilename: fs.query(file))
+				processSourceFile(head + inDirFilename);
+			continue;
+		}
+		processSourceFile(file);
+	}
+	printComputedOperators(makeRelPath("../../include/deemon/computed-operators.h"));
+	printComputedOperators(makeRelPath("../../src/deemon/runtime/computed-operators.c"));
+}
+
+
+#ifdef __MAIN__
+main();
+#endif /* __MAIN__ */

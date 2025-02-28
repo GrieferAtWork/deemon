@@ -66,6 +66,7 @@
 		<ClInclude Include="..\include\deemon\compiler\symbol.h" />
 		<ClInclude Include="..\include\deemon\compiler\tpp.h" />
 		<ClInclude Include="..\include\deemon\compiler\traits.h" />
+		<ClInclude Include="..\include\deemon\computed-operators.h" />
 		<ClInclude Include="..\include\deemon\cxx.h" />
 		<ClInclude Include="..\include\deemon\cxx\api.h" />
 		<ClInclude Include="..\include\deemon\cxx\bool.h" />
@@ -651,6 +652,7 @@
 		<ClCompile Include="..\src\deemon\runtime\build_value.c" />
 		<ClCompile Include="..\src\deemon\runtime\builtin.c" />
 		<ClCompile Include="..\src\deemon\runtime\builtin_functions.c" />
+		<ClCompile Include="..\src\deemon\runtime\computed-operators.c" />
 		<ClCompile Include="..\src\deemon\runtime\error.c" />
 		<ClCompile Include="..\src\deemon\runtime\format.c" />
 		<ClCompile Include="..\src\deemon\runtime\gc.c" />

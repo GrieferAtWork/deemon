@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/cached-dict.h>
+#include <deemon/computed-operators.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
