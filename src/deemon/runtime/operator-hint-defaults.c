@@ -3414,11 +3414,6 @@ err:
 }
 
 /* tp_seq->tp_size_fast */
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-tdefault__size_fast(DeeTypeObject *tp_self, DeeObject *self) {
-	return (*tp_self->tp_seq->tp_size_fast)(self);
-}
-
 /* tp_seq->tp_contains */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__contains__with__CONTAINS(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item) {

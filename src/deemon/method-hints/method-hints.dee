@@ -1345,6 +1345,15 @@ final class NativeOperator {
 		}
 	}
 
+	@@Should the default typed-wrapper be generated (e.g. @"tdefault__size")
+	public property hasGenericTypedImpl: bool = {
+		get(): bool {
+			/* Default wrapper is only needed if there are impls that need
+			 * to be mapped, where it then represents the fallback mapping. */
+			return hasMakeTypedMacro;
+		}
+	}
+
 	@@Returns symbol names of impls that must appear in `maketyped__*`
 	function doPrintNativeOperatorHintDecl(skipPrint: bool = false): {string...} {
 		local result: {string...} = [];
@@ -1363,7 +1372,7 @@ final class NativeOperator {
 	function printNativeOperatorHintDecl() {
 		print("/* ", name.locExpr, " */");
 		local typedNames = typed.doPrintNativeOperatorHintDecl();
-		if (usrtypeImpls || impls)
+		if (hasGenericTypedImpl)
 			typed.printIntdefDeclOrAlias(f"{typed.namePrefix}default__{name.name}", none);
 		local normalNames = doPrintNativeOperatorHintDecl();
 		assert #normalNames == #typedNames;
@@ -1507,7 +1516,7 @@ final class NativeOperator {
 	function printNativeOperatorHintImpl() {
 		print("/* ", name.locExpr, " */");
 		local typedNames = typed.doPrintNativeOperatorHintImpl();
-		if (usrtypeImpls || impls)
+		if (hasGenericTypedImpl)
 			typed.printDefaultTypedCallforward(params);
 		doPrintNativeOperatorHintImpl(typedNames);
 	}
