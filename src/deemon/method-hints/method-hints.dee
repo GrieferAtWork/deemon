@@ -547,6 +547,8 @@ final class NativeMethod {
 	@@Enumerate all impls as the name by which they get declared, and the actual impl
 	public property allImpls: {(string, NativeMethodImpl)...} = {
 		get(): {(string, NativeMethodImpl)...} {
+			if (defineSelfInvocationWrapper)
+				yield (f"default__{name}", selfInvocationWrapperImpl);
 			for (local attr: methodHint.allAttributes.distinct())
 				yield (f"default__{name}__with_callattr_{attr}", callAttrImpl);
 			if (unsupportedImpl !is none)
@@ -697,11 +699,23 @@ final class NativeMethod {
 		print(");");
 	}
 
+	@@When true, define an impl @f"default__{name}"
 	public property defineSelfInvocationWrapper: bool = {
 		get(): bool {
 			return (operatorSpecs || getsetMember) && !noSelfInvocationWrapper;
 		}
 	}
+
+	public property selfInvocationWrapperImpl: NativeMethodImpl = {
+		get(): NativeMethodImpl {
+			return NativeMethodImpl(impl:
+				f"\{\n"
+				f"\treturn (*DeeType_RequireMethodHint({tpSelfExpr}, {
+						name}))({", ".join(params.each.name)});\n"
+				f"\}");
+		}
+	}
+
 
 	public printDefaultImplDecls() {
 		print(f"/* {name} */");
@@ -736,14 +750,7 @@ final class NativeMethod {
 		print(f"/* {name} */");
 		local methodHint = this.methodHint;
 		if (defineSelfInvocationWrapper) {
-			local ind = params.first.typ.count("*") - 1;
-			if (params.first.typAfter)
-				++ind;
-			local selfArg = f"{"*" * ind}{params.first.name}";
-			printInternImpl(f"default__{name}", NativeMethodImpl(impl:
-				f"\{\n\treturn (*DeeType_RequireMethodHint(Dee_TYPE({
-					selfArg}), {name}))({", ".join(params.each.name)});\n\}"
-			));
+			printInternImpl(f"default__{name}", selfInvocationWrapperImpl);
 			print;
 		}
 		for (local attr: methodHint.allAttributes.distinct()) {
@@ -1739,16 +1746,12 @@ function printMhInitSpecs() {
 			print("};");
 		}
 		if (native.operatorSpecs) {
-			print(f"PRIVATE struct_mh_init_spec_operators({#native.operatorSpecs + 1
-				}) tpconst mh_operators_{native.name} = \{");
-			print("	/* .misos_default   = */ ", native.defineSelfInvocationWrapper
-					? f"(Dee_funptr_t)&default__{native.name}"
-					: "NULL", ",");
-			print("	/* .misos_operators = */ {");
+			print(f"PRIVATE struct mh_init_spec_operator tpconst mh_operators_{
+					native.name}[{#native.operatorSpecs + 1}] = \{");
 			local lines: {string...} = [];
 			for (local spec: native.operatorSpecs) {
 				File.Writer line;
-				print line: ("		MH_INIT_SPEC_OPERATOR_INIT("),;
+				print line: ("	MH_INIT_SPEC_OPERATOR_INIT("),;
 				local opName = NativeOperatorName(
 						table: spec.operatorTable,
 						field: spec.operatorField);
@@ -1775,8 +1778,7 @@ function printMhInitSpecs() {
 			}
 			for (local line: lines)
 				print line,;
-			print("		MH_INIT_SPEC_OPERATOR_END");
-			print("	}");
+			print("	MH_INIT_SPEC_OPERATOR_END");
 			print("};");
 		}
 	}
@@ -1787,7 +1789,7 @@ function printMhInitSpecs() {
 		print(methodHint is none ? "NULL" : f"&str_{methodHint.attr}"),;
 		print(", ", !methodHint.aliases ? "NULL" : f"mh_secondary_{native.name}"),;
 		print(", ", !native.usingImpls ? "NULL" : f"mh_using_{native.name}"),;
-		print(", ", !native.operatorSpecs ? "NULL" : f"&mh_operators_{native.name}"),;
+		print(", ", !native.operatorSpecs ? "NULL" : f"mh_operators_{native.name}"),;
 		print(", ", methodHint is none ? "NULL" :
 			f"&default__{native.name}__with_callattr_{methodHint.attr}"),;
 		print(", ", methodHint is none ? "0" : f"offsetof(struct Dee_type_mh_cache, mhc_{

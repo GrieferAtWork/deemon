@@ -1710,7 +1710,7 @@ PRIVATE WUNUSED NONNULL((1)) size_t
 }
 
 
-INTDEF WUNUSED bool DCALL /* Implemented in "./method-hint-super-invoke.c" */
+INTDEF ATTR_CONST WUNUSED bool DCALL /* Implemented in "./method-hint-super-invoke.c" */
 Dee_tmh_isdefault_or_usrtype(enum Dee_tmh_id id, Dee_funptr_t funptr);
 
 /* Return an actual, user-defined operator "id"
@@ -1855,53 +1855,62 @@ perform_actions:
 
 
 
-/* Check if "value" is a method-hint implementation that needs to be transformed when inherited.
- * If so, return the transformed function pointer, but if not: re-return "value" as-is.
+/* Check if "impl" is a method-hint implementation that needs to be transformed when inherited.
+ * If so, return the transformed function pointer, but if not: re-return "impl" as-is.
  *
  * Returns "NULL" if the operator cannot be inherited due to dependency conflicts. */
 PRIVATE ATTR_PURE NONNULL((1, 2, 4)) Dee_funptr_t DCALL
 DeeType_MapTMHInTNOForInherit(DeeTypeObject *__restrict from,
                               DeeTypeObject *__restrict into,
-                              enum Dee_tno_id id, Dee_funptr_t value) {
+                              enum Dee_tno_id id, Dee_funptr_t impl) {
 	struct oh_init_spec const *specs = &oh_init_specs[id];
 	if (specs->ohis_inherit) {
 		struct oh_init_inherit_as const *iter = specs->ohis_inherit;
 		for (; iter->ohia_optr; ++iter) {
-			if (value == iter->ohia_optr) {
-				value = iter->ohia_nptr;
+			if (impl == iter->ohia_optr) {
+				impl = iter->ohia_nptr;
 				break;
 			}
 		}
 	}
 
 	if (specs->ohis_mhints) {
-		bool is_unsupported_default = false;
+		bool has_unsupported_default = false;
 		struct oh_init_spec_mhint const *iter = specs->ohis_mhints;
 
 		/* When inheriting method hint wrappers, map them to their full method hints.
 		 * e.g.: Replace "default__set_operator_add" (or any other default impl such
 		 * as "tdefault__set_operator_add__with_callobjectcache___set_add__") with
 		 * its relevant default impl for "into". If "into" doesn't support such a
-		 * default impl, must inherit as "default__set_operator_add". */
+		 * default impl, must inherit as "default__set_operator_add".
+		 *
+		 * This is also the trick that allows types to inherit set math operators
+		 * from "Sequence" (although they don't get mapped here)
+		 *
+		 * If we were to map operators here, even when "from" isn't supposed to
+		 * support them, then we might confused "default__seq_operator_iter__empty"
+		 * with "default__set_operator_iter__empty" (because the later is an alias
+		 * for the former, so "default__set_operator_iter" has to stay as-is if
+		 * not natively supported by the "from" type) */
 		for (; iter->ohismh_id < Dee_TMH_COUNT; ++iter) {
 			Dee_funptr_t mapped;
 			if (!oh_init_spec_mhint_caninherit(iter, from))
 				continue; /* The hint must obviously be usable by "from" */
-			mapped = DeeType_MapDefaultMethodHintOperatorImplForInherit(into, iter->ohismh_id, value);
+			mapped = DeeType_MapDefaultMethodHintOperatorImplForInherit(into, iter->ohismh_id, impl);
 			if (mapped) {
 				/* In order to allow being inherited by "into",
 				 * that type must support the operator, too! */
 				if (!oh_init_spec_mhint_canuse(iter, into)) {
-					is_unsupported_default = true;
+					has_unsupported_default = true;
 					continue;
 				}
 				return mapped;
 			}
 		}
-		if (is_unsupported_default)
+		if (has_unsupported_default)
 			return NULL;
 	}
-	return value;
+	return impl;
 }
 
 
@@ -1950,8 +1959,10 @@ PRIVATE WUNUSED NONNULL((1, 2, 4, 5, 6)) Dee_funptr_t
 	 * map method hint default impls that assume the presence of specific
 	 * operators within `Dee_TYPE(into)'). */
 	impl = DeeType_MapTMHInTNOForInherit(from, into, id, impl);
-	if unlikely(!impl)
-		return NULL; /* Unfulfilled conditions */
+	if unlikely(!impl) {
+		/* Unfulfilled conditions */
+		return NULL;
+	}
 
 	/* Check if the given "impl" is one of the defaults that has dependencies.
 	 * If that is the case, then we must ensure that those dependencies are also

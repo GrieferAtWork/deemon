@@ -88,7 +88,7 @@ mh_select_seq_operator_sizeob(DeeTypeObject *self, DeeTypeObject *orig_type) {
 			return &default__seq_operator_sizeob__empty;
 		if (seq_operator_size == &default__seq_operator_size__with__set_operator_sizeob ||
 		    seq_operator_size == (DeeMH_set_operator_size_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_size))
-			return (DeeMH_set_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_sizeob);
+			return (DeeMH_set_operator_sizeob_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_operator_sizeob);
 		return &default__seq_operator_sizeob__with__seq_operator_size;
 	}
 	return NULL;

@@ -104,15 +104,27 @@ function Type_getImplName(typ: Type, hintOrOperator: string): string | none {
 }
 
 function Type_assert(typ: Type, impls: {string: string}) {
+	local wrongImpls = [];
 	for (local hintOrOperator, expectedImpl: impls) {
 		local actualImpl: string | none = Type_getImplName(typ, hintOrOperator);
 		if (actualImpl !is none) {
-			assert (expectedImpl is string
+			if (!(
+				expectedImpl is string
 					? expectedImpl in actualImpl
 					: (for (local x: expectedImpl) x in actualImpl) || ...
-			),	f"'{typ}.<native>.{hintOrOperator}' should be "
-				f"'{expectedImpl}', but is '{actualImpl}'";
+			)) {
+				wrongImpls.append((hintOrOperator, expectedImpl, actualImpl));
+			}
 		}
+	}
+	if (wrongImpls) {
+		local longestHintOrOperator = wrongImpls.each[0].length > ...;
+		local longestActualImpl = wrongImpls.each[2].length > ...;
+		throw AssertionError((
+			for (local hintOrOperator, expectedImpl, actualImpl: wrongImpls)
+				f"\n{typ}.<native>.{hintOrOperator.ljust(longestHintOrOperator)} = "
+				f"{actualImpl.ljust(longestActualImpl)} (should be {expectedImpl})"
+		) + ...);
 	}
 }
 
@@ -444,7 +456,7 @@ Type_assert(deemon.HashSet, {
 	"tp_bool":                                    "hashset_bool",
 	"tp_hash":                                    "default__set_operator_hash__with__set_operator_foreach",
 	"tp_compare_eq":                              "default__set_operator_compare_eq__with__set_operator_foreach",
-	"tp_compare":                                 "default__compare__with__eq__and__lo",
+	"tp_compare":                                 "NULL", // TODO: Should be default__compare__with__eq__and__lo
 	"tp_trycompare_eq":                           "default__set_operator_trycompare_eq__with__set_operator_compare_eq",
 	"tp_eq":                                      "default__set_operator_eq__with__set_operator_compare_eq",
 	"tp_ne":                                      "default__set_operator_ne__with__set_operator_compare_eq",
@@ -482,7 +494,7 @@ Type_assert(deemon.HashSet, {
 	"tp_xor":                                     "default__set_operator_xor__unsupported",
 	"tp_inplace_xor":                             "default__set_operator_inplace_xor__with__set_operator_foreach__and__set_insertall__and__set_removeall",
 	"mh_seq_operator_bool":                       "hashset_bool",
-	"mh_seq_operator_sizeob":                     "default__seq_operator_sizeob__with__seq_operator_size",
+	"mh_seq_operator_sizeob":                     "default__set_operator_sizeob__with__set_operator_size",
 	"mh_seq_operator_size":                       "hashset_size",
 	"mh_seq_operator_iter":                       "hashset_iter",
 	"mh_seq_operator_foreach":                    "hashset_foreach",
@@ -734,7 +746,7 @@ Type_assert(deemon.Dict, {
 	"tp_bool":                                    "dict_bool",
 	"tp_hash":                                    "default__set_operator_hash__with__map_operator_foreach_pair",
 	"tp_compare_eq":                              "default__map_operator_compare_eq__with__map_operator_foreach_pair",
-	"tp_compare":                                 "default__compare__with__eq__and__lo",
+	"tp_compare":                                 "NULL", // TODO: Should be default__compare__with__eq__and__lo
 	"tp_trycompare_eq":                           "default__map_operator_trycompare_eq__with__map_operator_compare_eq",
 	"tp_eq":                                      "default__map_operator_eq__with__map_operator_compare_eq",
 	"tp_ne":                                      "default__map_operator_ne__with__map_operator_compare_eq",
@@ -1077,8 +1089,8 @@ Type_assert(deemon.Tuple, {
 	"tp_setrange_index_n":                        "default__seq_operator_setrange_index_n__unsupported",
 	"tp_add":                                     "tuple_concat",
 	"tp_inplace_add":                             "default__inplace_add__with__add",
-	"tp_sub":                                     "default__set_operator_sub",
-	"tp_inplace_sub":                             "default__inplace_sub__with__sub",
+	"tp_sub":                                     "default__set_operator_sub", /* Not "default__set_operator_sub__unsupported" -- see blurb in "DeeType_MapTMHInTNOForInherit" */
+	"tp_inplace_sub":                             "default__set_operator_inplace_sub", /* Not "default__set_operator_inplace_sub__unsupported" -- see blurb in "DeeType_MapTMHInTNOForInherit" */
 	"tp_mul":                                     "tuple_repeat",
 	"tp_inplace_mul":                             "default__inplace_mul__with__mul",
 	"mh_seq_operator_bool":                       "tuple_bool",
@@ -1385,6 +1397,35 @@ Type_assert(rt.FunctionSymbolsByName, {
 	"mh_map_operator_setitem": "funcsymbolsbyname_setitem",
 });
 
+/* Inverse sets must not offer any way of enumeration */
+Type_assert(rt.SetInversion, {
+	"tp_iter":                        "default__set_operator_iter__unsupported",
+	"tp_foreach":                     "default__set_operator_foreach__with__set_operator_iter",
+	"tp_foreach_pair":                "NULL",
+	"tp_size":                        "default__set_operator_size__unsupported",
+	"tp_sizeob":                      "default__set_operator_sizeob__unsupported",
+	"mh_seq_operator_iter":           "default__seq_operator_iter__unsupported",
+	"mh_seq_operator_foreach":        "default__seq_operator_foreach__with__seq_operator_iter",
+	"mh_seq_operator_foreach_pair":   "default__seq_operator_foreach_pair__with__seq_operator_foreach",
+	"mh_seq_enumerate":               "default__seq_enumerate__unsupported",
+	"mh_seq_enumerate_index":         "default__seq_enumerate_index__unsupported",
+	"mh_seq_enumerate_index_reverse": "NULL",
+	"mh_seq_foreach_reverse":         "NULL",
+	"mh_seq_operator_getitem":        "default__seq_operator_getitem__unsupported",
+	"mh_seq_operator_getitem_index":  "default__seq_operator_getitem_index__unsupported",
+	"mh_seq_operator_size":           "default__seq_operator_size__unsupported",
+	"mh_seq_operator_sizeob":         "default__seq_operator_sizeob__unsupported",
+	"mh_set_operator_iter":           "default__set_operator_iter__unsupported",
+	"mh_set_operator_foreach":        "default__set_operator_foreach__with__set_operator_iter",
+	"mh_set_operator_size":           "default__set_operator_size__unsupported",
+	"mh_set_operator_sizeob":         "default__set_operator_sizeob__unsupported",
+	"mh_map_operator_foreach_pair":   "default__map_operator_foreach_pair__with__map_operator_iter",
+	"mh_map_enumerate":               "default__map_enumerate__unsupported",
+	"mh_map_enumerate_range":         "default__map_enumerate_range__unsupported",
+	"mh_map_operator_size":           "default__map_operator_size__unsupported",
+	"mh_map_operator_sizeob":         "default__map_operator_sizeob__unsupported",
+});
+
 #endif  /* !__MAIN__ */
 
 #ifdef __MAIN__
@@ -1411,7 +1452,7 @@ function dumpType(typ: Type) {
 	print(f"\});");
 }
 
-dumpType(rt.FunctionSymbolsByName);
+dumpType(rt.SetInversion);
 
 #endif /* __MAIN__ */
 

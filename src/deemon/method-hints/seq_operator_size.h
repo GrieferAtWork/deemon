@@ -118,7 +118,7 @@ seq_operator_sizeob = {
 			return &$empty;
 		if (seq_operator_size == &default__seq_operator_size__with__set_operator_sizeob ||
 		    seq_operator_size == REQUIRE_NODEFAULT(set_operator_size))
-			return REQUIRE_NODEFAULT(set_operator_sizeob);
+			return REQUIRE(set_operator_sizeob);
 		return &$with__seq_operator_size;
 	}
 };

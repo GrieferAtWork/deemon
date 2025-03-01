@@ -340,7 +340,7 @@ PRIVATE struct type_math seq_math = {
 	/* .tp_inc         = */ NULL,
 	/* .tp_dec         = */ NULL,
 	/* .tp_inplace_add = */ &default__seq_operator_inplace_add,
-	/* .tp_inplace_sub = */ NULL,
+	/* .tp_inplace_sub = */ IF_HAVE_SET_OPERATORS_IN_SEQ(&default__set_operator_inplace_sub),
 	/* .tp_inplace_mul = */ &default__seq_operator_inplace_mul,
 	/* .tp_inplace_div = */ NULL,
 	/* .tp_inplace_mod = */ NULL,
@@ -3460,7 +3460,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ &default__seq_operator_assign,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ &default__move_assign__with__assign
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
