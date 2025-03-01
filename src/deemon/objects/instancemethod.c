@@ -335,14 +335,14 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&im_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&im_printrepr
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&im_printrepr,
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&im_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&im_visit,
@@ -365,7 +365,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&im_callkw,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ im_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(im_operators)
+	/* .tp_operators_size= */ COMPILER_LENOF(im_operators),
 };
 
 DECL_END

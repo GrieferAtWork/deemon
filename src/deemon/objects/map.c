@@ -861,7 +861,7 @@ PRIVATE struct type_math map_math = {
 	/* .tp_int64       = */ NULL,
 	/* .tp_double      = */ NULL,
 	/* .tp_int         = */ NULL,
-	/* .tp_inv         = */ NULL,
+	/* .tp_inv         = */ DEFIMPL(&default__set_operator_inv),
 	/* .tp_pos         = */ NULL,
 	/* .tp_neg         = */ NULL,
 	/* .tp_add         = */ &default__map_operator_add,
@@ -1007,14 +1007,14 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ &default__seq_operator_bool,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&map_printrepr
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&map_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -1038,7 +1038,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ map_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(map_operators),
-	/* .tp_mhcache       = */ &mh_cache_empty
+	/* .tp_mhcache       = */ &mh_cache_empty,
 };
 #else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /* Prevent the computed-operator system from seeing this one */

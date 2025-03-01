@@ -388,11 +388,11 @@ PUBLIC DeeTypeObject DeeError_Error = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&error_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&error_str,
-		/* .tp_repr      = */ NULL,
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&error_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&error_printrepr,
@@ -413,7 +413,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
 	/* .tp_members       = */ error_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ error_class_members
+	/* .tp_class_members = */ error_class_members,
 };
 /* END::Error */
 
@@ -1037,14 +1037,14 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&systemerror_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&systemerror_printrepr
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&systemerror_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -1062,7 +1062,7 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 	/* .tp_members       = */ systemerror_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ systemerror_class_members
+	/* .tp_class_members = */ systemerror_class_members,
 };
 
 PUBLIC DeeTypeObject DeeError_UnsupportedAPI =
@@ -1324,11 +1324,11 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str      = */ NULL,
-		/* .tp_repr     = */ NULL,
+		/* .tp_str      = */ DEFIMPL(&default__str__with__print),
+		/* .tp_repr     = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool     = */ NULL,
 		/* .tp_strrepr  = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&appexit_print,
 		/* .tp_reprrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&appexit_printrepr,
@@ -1349,7 +1349,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	/* .tp_members       = */ appexit_members,
 	/* .tp_class_methods = */ appexit_class_methods,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
 };
 
 
@@ -1457,13 +1457,13 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ NULL,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&signal_printrepr,
 	},
 	/* .tp_call          = */ NULL,
@@ -1482,7 +1482,7 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ signal_class_members
+	/* .tp_class_members = */ signal_class_members,
 };
 
 PUBLIC DeeSignalObject DeeError_StopIteration_instance = {

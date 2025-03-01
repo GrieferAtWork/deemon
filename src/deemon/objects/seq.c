@@ -3460,14 +3460,14 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ &default__seq_operator_assign,
-		/* .tp_move_assign = */ &default__move_assign__with__assign
+		/* .tp_move_assign = */ &default__move_assign__with__assign,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ &default__seq_operator_bool,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ &default_seq_printrepr
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ &default_seq_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -3491,7 +3491,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ seq_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(seq_operators),
-	/* .tp_mhcache       = */ &mh_cache_empty
+	/* .tp_mhcache       = */ &mh_cache_empty,
 };
 #else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /* Prevent the computed-operator system from seeing this one */

@@ -731,6 +731,8 @@ PRIVATE struct type_cmp ddi_cmp = {
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&ddi_compare_eq,
 	/* .tp_compare       = */ NULL,
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&ddi_trycompare_eq,
+	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
+	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
 };
 
 
@@ -761,14 +763,14 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ddi_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ddi_printrepr
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ddi_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ddi_visit,
@@ -786,7 +788,7 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 	/* .tp_members       = */ ddi_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
 };
 
 DECL_END

@@ -272,17 +272,19 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&smapiter_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&smapiter_bool
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&smapiter_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&smapiter_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
 	/* .tp_cmp           = */ &smapiter_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smapiter_next,
@@ -295,7 +297,9 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 	/* .tp_members       = */ smapiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
 };
 
 
@@ -753,29 +757,29 @@ not_found:
 
 PRIVATE struct type_seq smap_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_iter,
-	/* .tp_sizeob                     = */ NULL,
+	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_contains,
-	/* .tp_getitem                    = */ NULL, /* default */
-	/* .tp_delitem                    = */ NULL,
-	/* .tp_setitem                    = */ NULL,
+	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__trygetitem), /* default */
+	/* .tp_delitem                    = */ DEFIMPL(&default__map_operator_delitem__unsupported),
+	/* .tp_setitem                    = */ DEFIMPL(&default__map_operator_setitem__unsupported),
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&smap_foreach,
 	/* .tp_enumerate                  = */ NULL,
 	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_iterkeys                   = */ NULL,
-	/* .tp_bounditem                  = */ NULL, /* default */
-	/* .tp_hasitem                    = */ NULL, /* default */
+	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__trygetitem), /* default */
+	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__bounditem), /* default */
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&smap_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&smap_size,
-	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index              = */ DEFIMPL(&default__getitem_index__with__getitem),
 	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ NULL,
-	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ NULL,
-	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_delitem_index              = */ DEFIMPL(&default__map_operator_delitem_index__unsupported),
+	/* .tp_setitem_index              = */ DEFIMPL(&default__map_operator_setitem_index__unsupported),
+	/* .tp_bounditem_index            = */ DEFIMPL(&default__bounditem_index__with__bounditem),
+	/* .tp_hasitem_index              = */ DEFIMPL(&default__hasitem_index__with__bounditem_index),
 	/* .tp_getrange_index             = */ NULL,
 	/* .tp_delrange_index             = */ NULL,
 	/* .tp_setrange_index             = */ NULL,
@@ -783,19 +787,19 @@ PRIVATE struct type_seq smap_seq = {
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_trygetitem,
-	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_index           = */ DEFIMPL(&default__trygetitem_index__with__trygetitem),
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&smap_trygetitem_string_hash,
-	/* .tp_getitem_string_hash        = */ NULL, /* default */
-	/* .tp_delitem_string_hash        = */ NULL,
-	/* .tp_setitem_string_hash        = */ NULL,
-	/* .tp_bounditem_string_hash      = */ NULL, /* default */
-	/* .tp_hasitem_string_hash        = */ NULL, /* default */
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__trygetitem_string_hash), /* default */
+	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__map_operator_delitem_string_hash__unsupported),
+	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__map_operator_setitem_string_hash__unsupported),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__trygetitem_string_hash), /* default */
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__bounditem_string_hash), /* default */
 	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&smap_trygetitem_string_len_hash,
-	/* .tp_getitem_string_len_hash    = */ NULL, /* default */
-	/* .tp_delitem_string_len_hash    = */ NULL,
-	/* .tp_setitem_string_len_hash    = */ NULL,
-	/* .tp_bounditem_string_len_hash  = */ NULL, /* default */
-	/* .tp_hasitem_string_len_hash    = */ NULL, /* default */
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__trygetitem_string_len_hash), /* default */
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__map_operator_delitem_string_len_hash__unsupported),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__map_operator_setitem_string_len_hash__unsupported),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__trygetitem_string_len_hash), /* default */
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__bounditem_string_len_hash), /* default */
 };
 
 PRIVATE struct type_getset tpconst smap_getsets[] = {
@@ -830,18 +834,20 @@ PUBLIC DeeTypeObject DeeSharedMap_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&smap_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
+		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&smap_bool
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&smap_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&smap_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__667432E5904B49F8),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__40D3D60A1F18CAE2),
 	/* .tp_seq           = */ &smap_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
@@ -853,7 +859,7 @@ PUBLIC DeeTypeObject DeeSharedMap_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ smap_class_members
+	/* .tp_class_members = */ smap_class_members,
 };
 
 

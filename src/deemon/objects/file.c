@@ -1129,18 +1129,20 @@ PUBLIC DeeTypeObject DeeFileType_Type = {
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str  = */ DEFIMPL(&type_str),
+		/* .tp_repr = */ DEFIMPL(&type_repr),
+		/* .tp_bool = */ NULL,
+		/* .tp_print     = */ DEFIMPL(&type_print),
+		/* .tp_printrepr = */ DEFIMPL(&type_printrepr),
 	},
-	/* .tp_call          = */ NULL,
+	/* .tp_call          = */ DEFIMPL((DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeObject_New),
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__50A436E90E5A2AF0),
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
@@ -1154,10 +1156,10 @@ PUBLIC DeeTypeObject DeeFileType_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL((DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeObject_NewKw),
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ file_type_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(file_type_operators)
+	/* .tp_operators_size= */ COMPILER_LENOF(file_type_operators),
 };
 
 

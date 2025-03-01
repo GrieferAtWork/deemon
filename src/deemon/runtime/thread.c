@@ -4885,14 +4885,14 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&thread_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&thread_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&thread_printrepr
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&thread_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&thread_visit,
@@ -4910,7 +4910,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 	/* .tp_members       = */ thread_members,
 	/* .tp_class_methods = */ thread_class_methods,
 	/* .tp_class_getsets = */ thread_class_getsets,
-	/* .tp_class_members = */ thread_class_members
+	/* .tp_class_members = */ thread_class_members,
 };
 
 

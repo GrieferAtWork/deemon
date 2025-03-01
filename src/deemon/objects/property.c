@@ -179,6 +179,10 @@ err:
 PRIVATE struct type_cmp property_cmp = {
 	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&property_hash,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&property_compare_eq,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
+	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
+	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
 };
 
 PRIVATE struct type_member tpconst property_members[] = {
@@ -571,14 +575,14 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&property_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&property_printrepr
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&property_printrepr,
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&property_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&property_visit,
@@ -598,7 +602,7 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&property_call_kw
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&property_call_kw,
 };
 
 DECL_END

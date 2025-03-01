@@ -1761,14 +1761,14 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&module_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&module_str,
-		/* .tp_repr      = */ NULL,
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&module_printrepr
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&module_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&module_visit,
@@ -1786,7 +1786,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 	/* .tp_members       = */ module_members,
 	/* .tp_class_methods = */ module_class_methods,
 	/* .tp_class_getsets = */ module_class_getsets,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
 };
 
 #ifdef __INTELLISENSE__

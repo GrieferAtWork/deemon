@@ -1245,13 +1245,14 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&frame_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
+		/* .tp_str  = */ DEFIMPL(&default__str__with__print),
+		/* .tp_repr = */ DEFIMPL(&object_repr),
 		/* .tp_bool = */ NULL,
-		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&frame_print
+		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&frame_print,
+		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&frame_visit,
@@ -1269,7 +1270,7 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
 	/* .tp_members       = */ frame_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
 };
 
 DECL_END

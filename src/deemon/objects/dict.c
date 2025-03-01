@@ -298,8 +298,15 @@ err:
 
 PRIVATE struct type_cmp diter_cmp = {
 	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&diter_hash,
-	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare_eq = */ DEFIMPL(&default__compare_eq__with__compare),
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&diter_compare,
+	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
+	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
+	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
+	/* .tp_lo            = */ DEFIMPL(&default__lo__with__compare),
+	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
+	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
+	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
 };
 
 
@@ -331,20 +338,22 @@ INTERN DeeTypeObject DictIterator_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&diter_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&diter_bool
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&diter_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&diter_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
 	/* .tp_cmp           = */ &diter_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
+	/* .tp_iter_next     = */ DEFIMPL(&default__iter_next__with__nextpair),
 	/* .tp_iterator      = */ &diter_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
@@ -354,7 +363,9 @@ INTERN DeeTypeObject DictIterator_Type = {
 	/* .tp_members       = */ diter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
 };
 
 
@@ -4240,20 +4251,20 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dict_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_moveassign,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&dict_deepload
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&dict_deepload,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&dict_bool,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&dict_printrepr
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&dict_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dict_visit,
 	/* .tp_gc            = */ &dict_gc,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL, /* TODO */
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__56685E2B01B76756),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__40D3D60A1F18CAE2), /* TODO */
 	/* .tp_seq           = */ &dict_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
@@ -4270,7 +4281,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ dict_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(dict_operators)
+	/* .tp_operators_size= */ COMPILER_LENOF(dict_operators),
 };
 
 DECL_END

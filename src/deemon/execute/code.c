@@ -1717,6 +1717,8 @@ PRIVATE struct type_cmp code_cmp = {
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&code_compare_eq,
 	/* .tp_compare       = */ NULL,
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&code_trycompare_eq,
+	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
+	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
 };
 
 PRIVATE WUNUSED DREF DeeObject *DCALL code_ctor(void) {
@@ -2526,14 +2528,14 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&code_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&code_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&code_printrepr
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&code_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&code_visit,
@@ -2551,7 +2553,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	/* .tp_members       = */ code_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
 };
 
 

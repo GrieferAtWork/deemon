@@ -1909,7 +1909,17 @@ imod_iter(InteractiveModule *__restrict self) {
 }
 
 PRIVATE struct type_seq imod_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&imod_iter
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&imod_iter,
+	/* .tp_sizeob       = */ NULL,
+	/* .tp_contains     = */ NULL,
+	/* .tp_getitem      = */ NULL,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
+	/* .tp_foreach      = */ DEFIMPL(&default__foreach__with__iter),
+	/* .tp_foreach_pair = */ DEFIMPL(&default__foreach_pair__with__iter),
 };
 
 PRIVATE struct type_gc tpconst imod_gc = {
@@ -1937,21 +1947,23 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&imod_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str  = */ DEFIMPL(&module_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ NULL,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&module_printrepr),
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&imod_visit,
 	/* .tp_gc            = */ &imod_gc,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__6F3C9C45873AB01F),
 	/* .tp_seq           = */ &imod_seq,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&imod_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -1960,7 +1972,7 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
 };
 
 

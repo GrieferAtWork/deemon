@@ -267,6 +267,19 @@ PRIVATE struct type_math bool_math = {
 	                               * 0, 1 -> 0 ** 1 = 0;
 	                               * 1, 0 -> 1 ** 0 = 1;
 	                               * 1, 1 -> 1 ** 1 = 1; */
+	/* .tp_inc         = */ DEFIMPL(&default__inc__with__add),
+	/* .tp_dec         = */ DEFIMPL(&default__dec__with__sub),
+	/* .tp_inplace_add = */ DEFIMPL(&default__inplace_add__with__add),
+	/* .tp_inplace_sub = */ DEFIMPL(&default__inplace_sub__with__sub),
+	/* .tp_inplace_mul = */ DEFIMPL(&default__inplace_mul__with__mul),
+	/* .tp_inplace_div = */ DEFIMPL(&default__inplace_div__with__div),
+	/* .tp_inplace_mod = */ DEFIMPL(&default__inplace_mod__with__mod),
+	/* .tp_inplace_shl = */ DEFIMPL(&default__inplace_shl__with__shl),
+	/* .tp_inplace_shr = */ DEFIMPL(&default__inplace_shr__with__shr),
+	/* .tp_inplace_and = */ DEFIMPL(&default__inplace_and__with__and),
+	/* .tp_inplace_or  = */ DEFIMPL(&default__inplace_or__with__or),
+	/* .tp_inplace_xor = */ DEFIMPL(&default__inplace_xor__with__xor),
+	/* .tp_inplace_pow = */ DEFIMPL(&default__inplace_pow__with__pow),
 };
 
 
@@ -372,13 +385,13 @@ PRIVATE struct type_cmp bool_cmp = {
 	/* .tp_hash          = */ bool_hash_PTR,
 	/* .tp_compare_eq    = */ &bool_compare_eq,
 	/* .tp_compare       = */ &bool_compare,
-	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
 	/* .tp_eq            = */ &bool_eq,
 	/* .tp_ne            = */ &bool_ne,
 	/* .tp_lo            = */ &bool_lo,
 	/* .tp_le            = */ &bool_le,
 	/* .tp_gr            = */ &bool_gr,
-	/* .tp_ge            = */ &bool_ge
+	/* .tp_ge            = */ &bool_ge,
 };
 
 PRIVATE struct type_member tpconst bool_members[] = {
@@ -449,14 +462,14 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ &bool_str,
 		/* .tp_repr      = */ &bool_str,
 		/* .tp_bool      = */ &bool_bool,
 		/* .tp_print     = */ &bool_print,
-		/* .tp_printrepr = */ &bool_print
+		/* .tp_printrepr = */ &bool_print,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -479,7 +492,7 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ bool_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(bool_operators)
+	/* .tp_operators_size= */ COMPILER_LENOF(bool_operators),
 };
 
 PUBLIC DeeBoolObject Dee_FalseTrue[2] = {

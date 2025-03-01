@@ -255,7 +255,13 @@ PRIVATE struct type_math float_math = {
 	/* .tp_and    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
 	/* .tp_or     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
 	/* .tp_xor    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_pow    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL
+	/* .tp_pow    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_inc         = */ DEFIMPL(&default__inc__with__add),
+	/* .tp_dec         = */ DEFIMPL(&default__dec__with__sub),
+	/* .tp_inplace_add = */ DEFIMPL(&default__inplace_add__with__add),
+	/* .tp_inplace_sub = */ DEFIMPL(&default__inplace_sub__with__sub),
+	/* .tp_inplace_mul = */ DEFIMPL(&default__inplace_mul__with__mul),
+	/* .tp_inplace_div = */ DEFIMPL(&default__inplace_div__with__div),
 };
 
 STATIC_ASSERT(sizeof(double) == __SIZEOF_DOUBLE__);
@@ -311,9 +317,9 @@ DEFINE_FLOAT_COMPARE(float_ge, >=)
 
 PRIVATE struct type_cmp float_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&float_hash,
-	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare_eq    = */ DEFIMPL(&default__compare_eq__with__compare),
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&float_compare,
-	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
 	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_eq,
 	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_ne,
 	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_lo,
@@ -857,14 +863,14 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_str,
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_str,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&float_bool,
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&float_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&float_print
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&float_print,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -887,7 +893,7 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ float_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(float_operators)
+	/* .tp_operators_size= */ COMPILER_LENOF(float_operators),
 };
 #else /* CONFIG_HAVE_FPU */
 /* Prevent the computed-operator system from seeing this one */

@@ -723,6 +723,13 @@ PRIVATE struct type_cmp rditer_cmp = {
 	/* .tp_hash          = */ NULL,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&rditer_compare,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&rditer_compare,
+	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
+	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
+	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
+	/* .tp_lo            = */ DEFIMPL(&default__lo__with__compare),
+	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
+	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
+	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
 };
 
 PRIVATE struct type_iterator rditer_iterator = {
@@ -761,20 +768,22 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rditer_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&rditer_bool
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&rditer_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rditer_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
 	/* .tp_cmp           = */ &rditer_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
+	/* .tp_iter_next     = */ DEFIMPL(&default__iter_next__with__nextpair),
 	/* .tp_iterator      = */ &rditer_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
@@ -784,7 +793,9 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 	/* .tp_members       = */ rditer_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
 };
 
 
@@ -2094,8 +2105,8 @@ PRIVATE struct type_seq rodict_seq = {
 	/* .tp_sizeob                       = */ NULL_IF_Os((DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_sizeob),
 	/* .tp_contains                     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_contains,
 	/* .tp_getitem                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_getitem,
-	/* .tp_delitem                      = */ NULL,
-	/* .tp_setitem                      = */ NULL,
+	/* .tp_delitem                      = */ DEFIMPL(&default__map_operator_delitem__unsupported),
+	/* .tp_setitem                      = */ DEFIMPL(&default__map_operator_setitem__unsupported),
 	/* .tp_getrange                     = */ NULL,
 	/* .tp_delrange                     = */ NULL,
 	/* .tp_setrange                     = */ NULL,
@@ -2110,8 +2121,8 @@ PRIVATE struct type_seq rodict_seq = {
 	/* .tp_size_fast                    = */ (size_t (DCALL *)(DeeObject *__restrict))&rodict_size_fast,
 	/* .tp_getitem_index                = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rodict_getitem_index,
 	/* .tp_getitem_index_fast           = */ NULL,
-	/* .tp_delitem_index                = */ NULL,
-	/* .tp_setitem_index                = */ NULL,
+	/* .tp_delitem_index                = */ DEFIMPL(&default__map_operator_delitem_index__unsupported),
+	/* .tp_setitem_index                = */ DEFIMPL(&default__map_operator_setitem_index__unsupported),
 	/* .tp_bounditem_index              = */ (int (DCALL *)(DeeObject *, size_t))&rodict_bounditem_index,
 	/* .tp_hasitem_index                = */ (int (DCALL *)(DeeObject *, size_t))&rodict_hasitem_index,
 	/* .tp_getrange_index               = */ NULL,
@@ -2124,14 +2135,14 @@ PRIVATE struct type_seq rodict_seq = {
 	/* .tp_trygetitem_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rodict_trygetitem_index,
 	/* .tp_trygetitem_string_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_trygetitem_string_hash,
 	/* .tp_getitem_string_hash          = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_getitem_string_hash,
-	/* .tp_delitem_string_hash          = */ NULL,
-	/* .tp_setitem_string_hash          = */ NULL,
+	/* .tp_delitem_string_hash          = */ DEFIMPL(&default__map_operator_delitem_string_hash__unsupported),
+	/* .tp_setitem_string_hash          = */ DEFIMPL(&default__map_operator_setitem_string_hash__unsupported),
 	/* .tp_bounditem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_bounditem_string_hash,
 	/* .tp_hasitem_string_hash          = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_hasitem_string_hash,
 	/* .tp_trygetitem_string_len_hash   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_trygetitem_string_len_hash,
 	/* .tp_getitem_string_len_hash      = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_getitem_string_len_hash,
-	/* .tp_delitem_string_len_hash      = */ NULL,
-	/* .tp_setitem_string_len_hash      = */ NULL,
+	/* .tp_delitem_string_len_hash      = */ DEFIMPL(&default__map_operator_delitem_string_len_hash__unsupported),
+	/* .tp_setitem_string_len_hash      = */ DEFIMPL(&default__map_operator_setitem_string_len_hash__unsupported),
 	/* .tp_bounditem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_bounditem_string_len_hash,
 	/* .tp_hasitem_string_len_hash      = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_hasitem_string_len_hash,
 	/* .tp_asvector                     = */ NULL,
@@ -2271,20 +2282,20 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rodict_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
+		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&rodict_bool,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rodict_printrepr
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rodict_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rodict_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL, /* TODO: &rodict_cmp */
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__667432E5904B49F8),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__40D3D60A1F18CAE2), /* TODO: &rodict_cmp */
 	/* .tp_seq           = */ &rodict_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
@@ -2301,7 +2312,7 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ rodict_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(rodict_operators)
+	/* .tp_operators_size= */ COMPILER_LENOF(rodict_operators),
 };
 
 DECL_END

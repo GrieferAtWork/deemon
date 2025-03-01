@@ -184,21 +184,23 @@ INTERN DeeTypeObject DistinctIterator_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_visit,
 	/* .tp_gc            = */ &di_gc,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
 	/* .tp_cmp           = */ &di_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -207,7 +209,9 @@ INTERN DeeTypeObject DistinctIterator_Type = {
 	/* .tp_members       = */ di_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
 };
 
 
@@ -352,21 +356,23 @@ INTERN DeeTypeObject DistinctIteratorWithKey_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&uqiwk_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uqiwk_visit,
 	/* .tp_gc            = */ &uqiwk_gc,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
 	/* .tp_cmp           = */ &uqiwk_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uqiwk_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -375,7 +381,9 @@ INTERN DeeTypeObject DistinctIteratorWithKey_Type = {
 	/* .tp_members       = */ uqiwk_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
 };
 
 
@@ -427,6 +435,22 @@ err:
 
 PRIVATE struct type_seq dswk_seq = {
 	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dswk_iter,
+	/* .tp_sizeob          = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
+	/* .tp_contains        = */ DEFIMPL(&default__seq_operator_contains),
+	/* .tp_getitem         = */ NULL,
+	/* .tp_delitem         = */ NULL,
+	/* .tp_setitem         = */ NULL,
+	/* .tp_getrange        = */ NULL,
+	/* .tp_delrange        = */ NULL,
+	/* .tp_setrange        = */ NULL,
+	/* .tp_foreach         = */ DEFIMPL(&default__foreach__with__iter),
+	/* .tp_foreach_pair    = */ DEFIMPL(&default__foreach_pair__with__iter),
+	/* .tp_enumerate       = */ NULL,
+	/* .tp_enumerate_index = */ NULL,
+	/* .tp_iterkeys        = */ NULL,
+	/* .tp_bounditem       = */ NULL,
+	/* .tp_hasitem         = */ NULL,
+	/* .tp_size            = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
 };
 
 PRIVATE struct type_member tpconst dswk_members[] = {
@@ -460,18 +484,20 @@ INTERN DeeTypeObject DistinctSetWithKey_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dswk_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_foreach),
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&default_set_printrepr),
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dswk_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__AFC6A8FA89E9F0A6),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__7188129899C2A8D6),
 	/* .tp_seq           = */ &dswk_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
@@ -483,7 +509,7 @@ INTERN DeeTypeObject DistinctSetWithKey_Type = {
 	/* .tp_members       = */ dswk_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ dswk_class_members
+	/* .tp_class_members = */ dswk_class_members,
 };
 
 
@@ -539,7 +565,10 @@ err:
 }
 
 PRIVATE struct type_iterator dmi_iterator = {
-	/* .tp_nextpair = */ (int (DCALL *)(DeeObject *__restrict, /*out*/ DREF DeeObject *[2]))&dmi_nextpair
+	/* .tp_nextpair = */ (int (DCALL *)(DeeObject *__restrict, /*out*/ DREF DeeObject *[2]))&dmi_nextpair,
+	/* .tp_nextkey   = */ DEFIMPL(&default__nextkey__with__nextpair),
+	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__nextpair),
+	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextpair),
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -583,20 +612,22 @@ INTERN DeeTypeObject DistinctMappingIterator_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dmi_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dmi_visit,
 	/* .tp_gc            = */ &dmi_gc,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
 	/* .tp_cmp           = */ &dmi_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
+	/* .tp_iter_next     = */ DEFIMPL(&default__iter_next__with__nextpair),
 	/* .tp_iterator      = */ &dmi_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
@@ -606,7 +637,9 @@ INTERN DeeTypeObject DistinctMappingIterator_Type = {
 	/* .tp_members       = */ dmi_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
 };
 
 DECL_END

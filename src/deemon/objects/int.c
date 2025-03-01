@@ -3725,7 +3725,7 @@ int_bool(DeeIntObject *__restrict self) {
 PRIVATE struct type_math int_math = {
 	/* .tp_int32       = */ &DeeInt_Get32Bit,
 	/* .tp_int64       = */ &DeeInt_Get64Bit,
-	/* .tp_double      = */ NULL, /* TODO */
+	/* .tp_double      = */ DEFIMPL(&default__double__with__int), /* TODO */
 	/* .tp_int         = */ &DeeObject_NewRef,
 	/* .tp_inv         = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&int_inv,
 	/* .tp_pos         = */ &DeeObject_NewRef,
@@ -3743,17 +3743,17 @@ PRIVATE struct type_math int_math = {
 	/* .tp_pow         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_pow,
 	/* .tp_inc         = */ (int (DCALL *)(DREF DeeObject **__restrict))&int_inc,
 	/* .tp_dec         = */ (int (DCALL *)(DREF DeeObject **__restrict))&int_dec,
-	/* .tp_inplace_add = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
-	/* .tp_inplace_sub = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
-	/* .tp_inplace_mul = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
-	/* .tp_inplace_div = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
-	/* .tp_inplace_mod = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
-	/* .tp_inplace_shl = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
-	/* .tp_inplace_shr = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
-	/* .tp_inplace_and = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
-	/* .tp_inplace_or  = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
-	/* .tp_inplace_xor = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
-	/* .tp_inplace_pow = */ NULL  /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_add = */ DEFIMPL(&default__inplace_add__with__add), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_sub = */ DEFIMPL(&default__inplace_sub__with__sub), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_mul = */ DEFIMPL(&default__inplace_mul__with__mul), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_div = */ DEFIMPL(&default__inplace_div__with__div), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_mod = */ DEFIMPL(&default__inplace_mod__with__mod), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_shl = */ DEFIMPL(&default__inplace_shl__with__shl), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_shr = */ DEFIMPL(&default__inplace_shr__with__shr), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_and = */ DEFIMPL(&default__inplace_and__with__and), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_or  = */ DEFIMPL(&default__inplace_or__with__or), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_xor = */ DEFIMPL(&default__inplace_xor__with__xor), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_pow = */ NULL  /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */,
 };
 
 
@@ -5303,14 +5303,14 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&int_bool,
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&int_print,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&int_print
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&int_print,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -5333,7 +5333,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ int_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(int_operators)
+	/* .tp_operators_size= */ COMPILER_LENOF(int_operators),
 };
 
 DECL_END

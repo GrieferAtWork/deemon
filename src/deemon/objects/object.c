@@ -3027,12 +3027,14 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&object_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&object_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_bool = */ NULL,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -3055,7 +3057,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ object_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(object_operators)
+	/* .tp_operators_size= */ COMPILER_LENOF(object_operators),
 };
 
 
@@ -5163,14 +5165,14 @@ PUBLIC DeeTypeObject DeeType_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&type_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ &type_str,
 		/* .tp_repr      = */ &type_repr,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ &type_print,
-		/* .tp_printrepr = */ &type_printrepr
+		/* .tp_printrepr = */ &type_printrepr,
 	},
 	/* .tp_call          = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeObject_New,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&type_visit,
@@ -5193,7 +5195,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* .tp_call_kw       = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeObject_NewKw,
 	/* .tp_mro           = */ type_mro,
 	/* .tp_operators     = */ type_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(type_operators)
+	/* .tp_operators_size= */ COMPILER_LENOF(type_operators),
 };
 
 
