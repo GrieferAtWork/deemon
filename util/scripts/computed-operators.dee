@@ -186,6 +186,7 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 		Field("tp_mro"),
 		Field("tp_operators"),
 		Field("tp_operators_size"),
+		Field("tp_mhcache"),
 	},
 	"type_math": {
 		NativeOperator("tp_int32"),

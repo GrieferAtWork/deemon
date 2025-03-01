@@ -835,6 +835,7 @@ PRIVATE struct type_operator const float_operators[] = {
 #endif /* CONFIG_HAVE_FPU */
 
 
+#ifdef CONFIG_HAVE_FPU
 PUBLIC DeeTypeObject DeeFloat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_float),
@@ -843,44 +844,6 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeNumeric_Type,
-#ifndef CONFIG_HAVE_FPU
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
-				TYPE_FIXED_ALLOCATOR(Float)
-			}
-		},
-		/* .tp_dtor        = */ NULL,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ &float_math,
-	/* .tp_cmp           = */ &float_cmp,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
-#else /* !CONFIG_HAVE_FPU */
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
@@ -924,8 +887,57 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ float_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(float_operators)
-#endif /* CONFIG_HAVE_FPU */
 };
+#else /* CONFIG_HAVE_FPU */
+/* Prevent the computed-operator system from seeing this one */
+#define _nofpu_DeeFloat_Type DeeFloat_Type
+#define _nofpu_DeeFloat_name DeeString_STR(&str_float)
+PUBLIC DeeTypeObject _nofpu_DeeFloat_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ _nofpu_DeeFloat_name,
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FFINAL | TP_FNAMEOBJECT,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeNumeric_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ NULL,
+				TYPE_FIXED_ALLOCATOR(Float)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ &float_math,
+	/* .tp_cmp           = */ &float_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+#endif /* !CONFIG_HAVE_FPU */
 
 DECL_END
 

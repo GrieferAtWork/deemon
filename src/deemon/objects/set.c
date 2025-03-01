@@ -502,98 +502,106 @@ PRIVATE struct type_seq set_seq = {
 };
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+#ifdef CONFIG_NO_DOC
+#define set_doc NULL
+#else /* CONFIG_NO_DOC */
+PRIVATE char const set_doc[] =
+"A recommended abstract base class for any set type "
+/**/ "that wishes to implement the Object-Set protocol\n"
+"An object derived from this class must implement "
+/**/ "${operator contains}, and preferrably ${operator iter}\n"
+"\n"
+
+"()\n"
+"A no-op default constructor that is implicitly called by sub-classes\n"
+"When invoked manually, a general-purpose, empty ?. is returned\n"
+"\n"
+
+"repr->\n"
+"Returns the representation of all sequence elements, "
+/**/ "using abstract sequence syntax\n"
+"e.g.: ${{ \"foo\", \"bar\", \"baz\" }}\n"
+"\n"
+
+"contains->\n"
+"Returns ?t indicative of @item being apart of @this ?.\n"
+"\n"
+
+"bool->\n"
+"Returns ?t if @this ?. is non-empty\n"
+"\n"
+
+"iter->\n"
+"Returns an iterator for enumerating all items apart of @this ?.\n"
+"Note that some set types do not implement this functionality, most "
+/**/ "notably symbolically inversed sets\n"
+"\n"
+
+"sub->\n"
+"Returns a ?. of all objects from @this, excluding those also found in @other\n"
+"\n"
+
+"&->\n"
+"Returns the intersection of @this and @other\n"
+"\n"
+
+"|->\n"
+"add->\n"
+"Returns the union of @this and @other\n"
+"\n"
+
+"^->\n"
+"Returns a ?. containing objects only found in either "
+/**/ "@this or @other, but not those found in both\n"
+"\n"
+
+"<=->\n"
+"Returns ?t if all items found in @this ?. can also be found in @other\n"
+"\n"
+
+"==->\n"
+"Returns ?t if @this ?. contains the same items as @other, and not any more than that\n"
+"\n"
+
+"!=->\n"
+"Returns ?t if @this contains different, or less items than @other\n"
+"\n"
+
+"<->\n"
+"The result of ${this <= other && this != other}\n"
+"\n"
+
+">=->\n"
+"Returns ?t if all items found in @other can also be found in @this ?.\n"
+"\n"
+
+">->\n"
+"The result of ${this >= other && this != other}\n"
+"\n"
+
+"~->\n"
+"Returns a symbolic ?. that behaves as though it contained "
+/**/ "any feasible object that isn't already apart of @this ?.\n"
+"Note however that due to the impossibility of such a ?., you "
+/**/ "cannot iterate its elements, and the only ~real~ operator "
+/**/ "implemented by it is ?#{op:contains}\n"
+"Its main purpose is for being used in conjunction with "
+/**/ "?#{op:and} in order to create a sub-set that doesn't "
+/**/ "contain a certain set of sub-elements:\n"
+"${"
+/**/ "import Set from deemon;\n"
+/**/ "local x = { 10, 11, 15, 20, 30 };\n"
+/**/ "local y = { 11, 15 };\n"
+/**/ "print repr((x as Set) & ~(y as Set)); // { 10, 20, 30 }"
+"}";
+#endif /* !CONFIG_NO_DOC */
+
 /* `Set from deemon' */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PUBLIC DeeTypeObject DeeSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Set),
-	/* .tp_doc      = */ DOC("A recommended abstract base class for any set type "
-	                         /**/ "that wishes to implement the Object-Set protocol\n"
-	                         "An object derived from this class must implement "
-	                         /**/ "${operator contains}, and preferrably ${operator iter}\n"
-	                         "\n"
-
-	                         "()\n"
-	                         "A no-op default constructor that is implicitly called by sub-classes\n"
-	                         "When invoked manually, a general-purpose, empty ?. is returned\n"
-	                         "\n"
-
-	                         "repr->\n"
-	                         "Returns the representation of all sequence elements, "
-	                         /**/ "using abstract sequence syntax\n"
-	                         "e.g.: ${{ \"foo\", \"bar\", \"baz\" }}\n"
-	                         "\n"
-
-	                         "contains->\n"
-	                         "Returns ?t indicative of @item being apart of @this ?.\n"
-	                         "\n"
-
-	                         "bool->\n"
-	                         "Returns ?t if @this ?. is non-empty\n"
-	                         "\n"
-
-	                         "iter->\n"
-	                         "Returns an iterator for enumerating all items apart of @this ?.\n"
-	                         "Note that some set types do not implement this functionality, most "
-	                         /**/ "notably symbolically inversed sets\n"
-	                         "\n"
-
-	                         "sub->\n"
-	                         "Returns a ?. of all objects from @this, excluding those also found in @other\n"
-	                         "\n"
-
-	                         "&->\n"
-	                         "Returns the intersection of @this and @other\n"
-	                         "\n"
-
-	                         "|->\n"
-	                         "add->\n"
-	                         "Returns the union of @this and @other\n"
-	                         "\n"
-
-	                         "^->\n"
-	                         "Returns a ?. containing objects only found in either "
-	                         /**/ "@this or @other, but not those found in both\n"
-	                         "\n"
-
-	                         "<=->\n"
-	                         "Returns ?t if all items found in @this ?. can also be found in @other\n"
-	                         "\n"
-
-	                         "==->\n"
-	                         "Returns ?t if @this ?. contains the same items as @other, and not any more than that\n"
-	                         "\n"
-
-	                         "!=->\n"
-	                         "Returns ?t if @this contains different, or less items than @other\n"
-	                         "\n"
-
-	                         "<->\n"
-	                         "The result of ${this <= other && this != other}\n"
-	                         "\n"
-
-	                         ">=->\n"
-	                         "Returns ?t if all items found in @other can also be found in @this ?.\n"
-	                         "\n"
-
-	                         ">->\n"
-	                         "The result of ${this >= other && this != other}\n"
-	                         "\n"
-
-	                         "~->\n"
-	                         "Returns a symbolic ?. that behaves as though it contained "
-	                         /**/ "any feasible object that isn't already apart of @this ?.\n"
-	                         "Note however that due to the impossibility of such a ?., you "
-	                         /**/ "cannot iterate its elements, and the only ~real~ operator "
-	                         /**/ "implemented by it is ?#{op:contains}\n"
-	                         "Its main purpose is for being used in conjunction with "
-	                         /**/ "?#{op:and} in order to create a sub-set that doesn't "
-	                         /**/ "contain a certain set of sub-elements:\n"
-	                         "${"
-	                         /**/ "import Set from deemon;\n"
-	                         /**/ "local x = { 10, 11, 15, 20, 30 };\n"
-	                         /**/ "local y = { 11, 15 };\n"
-	                         /**/ "print repr((x as Set) & ~(y as Set)); // { 10, 20, 30 }"
-	                         "}"),
+	/* .tp_doc      = */ set_doc,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT | TP_FNAMEOBJECT, /* Generic base class type. */
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE | (Dee_SEQCLASS_SET << Dee_TF_SEQCLASS_SHFT),
@@ -612,7 +620,6 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
@@ -643,7 +650,35 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	/* .tp_operators     = */ set_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(set_operators),
 	/* .tp_mhcache       = */ &mh_cache_empty
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+};
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+/* Prevent the computed-operator system from seeing this one */
+#define _old_DeeSet_Type DeeSet_Type
+#define _old_DeeSet_name DeeString_STR(&str_Set)
+PUBLIC DeeTypeObject _old_DeeSet_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ _old_DeeSet_name,
+	/* .tp_doc      = */ set_doc,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT | TP_FNAMEOBJECT, /* Generic base class type. */
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE | (Dee_SEQCLASS_SET << Dee_TF_SEQCLASS_SHFT),
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor, /* Allow default-construction of sequence objects. */
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR_S(DeeObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
@@ -673,8 +708,8 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ set_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(set_operators)
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PUBLIC DeeObject DeeSet_EmptyInstance = {
 	OBJECT_HEAD_INIT(&DeeSet_Type)

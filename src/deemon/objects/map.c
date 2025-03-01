@@ -953,34 +953,44 @@ PRIVATE struct type_seq map_seq = {
 };
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+#ifdef CONFIG_NO_DOC
+#define map_doc NULL
+#else /* CONFIG_NO_DOC */
+PRIVATE char const map_doc[] =
+"A recommended abstract base class for any Mapping "
+/**/ "type that wishes to implement a key-value protocol\n"
+"An object derived from this class must implement ${operator iter}, "
+/**/ "and preferrably (but optionally) or ${operator []} (getitem)\n"
+"The abstract declaration of a mapping-like sequence is ${{Object: Object}} or ${{(Object, Object)...}}\n"
+"\n"
+
+"()\n"
+"A no-op default constructor that is implicitly called by sub-classes\n"
+"When invoked manually, a general-purpose, empty ?. is returned\n"
+"\n"
+
+"repr->\n"
+"Returns the representation of all sequence elements, "
+/**/ "using abstract mapping syntax\n"
+"e.g.: ${{ \"foo\": 10, \"bar\": \"baz\" }}\n"
+"\n"
+
+"[:]->!D\n"
+"\n"
+
+"iter->\n"
+"Returns an iterator for enumerating key-value pairs as 2-elements sequences";
+#endif /* !CONFIG_NO_DOC */
+
+
+
 
 /* `Mapping from deemon' */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PUBLIC DeeTypeObject DeeMapping_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Mapping),
-	/* .tp_doc      = */ DOC("A recommended abstract base class for any Mapping "
-	                         /**/ "type that wishes to implement a key-value protocol\n"
-	                         "An object derived from this class must implement ${operator iter}, "
-	                         /**/ "and preferrably (but optionally) or ${operator []} (getitem)\n"
-	                         "The abstract declaration of a mapping-like sequence is ${{Object: Object}} or ${{(Object, Object)...}}\n"
-	                         "\n"
-
-	                         "()\n"
-	                         "A no-op default constructor that is implicitly called by sub-classes\n"
-	                         "When invoked manually, a general-purpose, empty ?. is returned\n"
-	                         "\n"
-
-	                         "repr->\n"
-	                         "Returns the representation of all sequence elements, "
-	                         /**/ "using abstract mapping syntax\n"
-	                         "e.g.: ${{ \"foo\": 10, \"bar\": \"baz\" }}\n"
-	                         "\n"
-
-	                         "[:]->!D\n"
-	                         "\n"
-
-	                         "iter->\n"
-	                         "Returns an iterator for enumerating key-value pairs as 2-elements sequences"),
+	/* .tp_doc      = */ map_doc,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT | TP_FNAMEOBJECT, /* Generic base class type. */
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE | (Dee_SEQCLASS_MAP << Dee_TF_SEQCLASS_SHFT),
@@ -999,7 +1009,6 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
@@ -1030,7 +1039,33 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_operators     = */ map_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(map_operators),
 	/* .tp_mhcache       = */ &mh_cache_empty
+};
 #else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+/* Prevent the computed-operator system from seeing this one */
+#define _old_DeeMapping_Type DeeMapping_Type
+#define _old_DeeMapping_name DeeString_STR(&str_Mapping)
+PUBLIC DeeTypeObject _old_DeeMapping_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ _old_DeeMapping_name,
+	/* .tp_doc      = */ map_doc,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT | TP_FNAMEOBJECT, /* Generic base class type. */
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE | (Dee_SEQCLASS_MAP << Dee_TF_SEQCLASS_SHFT),
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor, /* Allow default-construction of sequence objects. */
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR_S(DeeObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
@@ -1060,8 +1095,8 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ map_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(map_operators)
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 /* An empty instance of a generic mapping object.

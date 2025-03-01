@@ -39,6 +39,10 @@
 #define CONFIG_WITH_COMPUTED_DEFAULT_OPERATORS
 #else /* ... */
 #include <hybrid/host.h> /* __pic__ */
+/* Disable computed operators when the deemon core is built as position-independent code.
+ * Reason is that position-independent code requires relocations being generated for every
+ * function pointer that appears in program data, so computed operators would add a heap
+ * of overhead to program startup time. */
 #ifdef __pic__
 #define CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
 #else /* __pic__ */
