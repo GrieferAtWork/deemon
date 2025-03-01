@@ -133,6 +133,8 @@ enum Dee_tmh_id {
 	Dee_TMH_seq_operator_le,
 	Dee_TMH_seq_operator_gr,
 	Dee_TMH_seq_operator_ge,
+	Dee_TMH_seq_operator_add,
+	Dee_TMH_seq_operator_mul,
 	Dee_TMH_seq_operator_inplace_add,
 	Dee_TMH_seq_operator_inplace_mul,
 	Dee_TMH_seq_enumerate,
@@ -414,11 +416,17 @@ typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_g
 /* __seq_ge__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_ge_t)(DeeObject *lhs, DeeObject *rhs);
 
+/* __seq_add__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_add_t)(DeeObject *lhs, DeeObject *rhs);
+
+/* __seq_mul__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_mul_t)(DeeObject *self, DeeObject *repeat);
+
 /* __seq_inplace_add__ */
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_inplace_add_t)(DREF DeeObject **__restrict p_self, DeeObject *rhs);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_inplace_add_t)(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 
 /* __seq_inplace_mul__ */
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_inplace_mul_t)(DREF DeeObject **__restrict p_self, DeeObject *repeat);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_inplace_mul_t)(DREF DeeObject **__restrict p_lhs, DeeObject *repeat);
 
 /* __seq_enumerate__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_seq_enumerate_t)(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);
@@ -945,6 +953,16 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_gr__(DeeObject *__restric
 #define DeeMA___seq_ge___name  _DeeMA_ATTRSTR(__seq_ge__)
 #define DeeMA___seq_ge___doc   "(rhs:?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_add___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___seq_add___name  _DeeMA_ATTRSTR(__seq_add__)
+#define DeeMA___seq_add___doc   "(rhs:?S?O)->?."
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_mul___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___seq_mul___name  _DeeMA_ATTRSTR(__seq_mul__)
+#define DeeMA___seq_mul___doc   "(repeat:?Dint)->?."
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_mul__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_inplace_add___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___seq_inplace_add___name  _DeeMA_ATTRSTR(__seq_inplace_add__)

@@ -36,6 +36,7 @@
 
 /**/
 #include "method-hint-defaults.h"
+#include "method-hints.h"
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -957,7 +958,8 @@ PRIVATE struct oh_init_spec_class tpconst oh_class_add[2] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__add__with__ADD, OPERATOR_ADD, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_add[3] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_add[4] = {
+	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_add, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_add, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_add, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
@@ -1001,6 +1003,10 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_inplace_sub[3] = {
 PRIVATE struct oh_init_spec_class tpconst oh_class_mul[2] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__mul__with__MUL, OPERATOR_MUL, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
+};
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_mul[2] = {
+	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_mul, NULL, Dee_SEQCLASS_SEQ),
+	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_spec_class tpconst oh_class_inplace_mul[2] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__inplace_mul__with__INPLACE_MUL, OPERATOR_INPLACE_MUL, OPERATOR_USERCOUNT),
@@ -1313,7 +1319,7 @@ INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[113] = {
 	/* tp_math->tp_inplace_add               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_add), oh_class_inplace_add, oh_impls_inplace_add, oh_mhints_inplace_add, NULL),
 	/* tp_math->tp_sub                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_sub), oh_class_sub, NULL, oh_mhints_sub, NULL),
 	/* tp_math->tp_inplace_sub               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_sub), oh_class_inplace_sub, oh_impls_inplace_sub, oh_mhints_inplace_sub, NULL),
-	/* tp_math->tp_mul                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_mul), oh_class_mul, NULL, NULL, NULL),
+	/* tp_math->tp_mul                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_mul), oh_class_mul, NULL, oh_mhints_mul, NULL),
 	/* tp_math->tp_inplace_mul               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_mul), oh_class_inplace_mul, oh_impls_inplace_mul, oh_mhints_inplace_mul, NULL),
 	/* tp_math->tp_div                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_div), oh_class_div, NULL, NULL, NULL),
 	/* tp_math->tp_inplace_div               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_div), oh_class_inplace_div, oh_impls_inplace_div, NULL, NULL),

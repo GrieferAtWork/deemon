@@ -736,9 +736,10 @@ final class NativeMethod {
 		print(f"/* {name} */");
 		local methodHint = this.methodHint;
 		if (defineSelfInvocationWrapper) {
-			local selfArg = params.first.name;
-			if (selfArg == "p_self")
-				selfArg = "*p_self";
+			local ind = params.first.typ.count("*") - 1;
+			if (params.first.typAfter)
+				++ind;
+			local selfArg = f"{"*" * ind}{params.first.name}";
 			printInternImpl(f"default__{name}", NativeMethodImpl(impl:
 				f"\{\n\treturn (*DeeType_RequireMethodHint(Dee_TYPE({
 					selfArg}), {name}))({", ".join(params.each.name)});\n\}"

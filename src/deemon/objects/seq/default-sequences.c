@@ -26,6 +26,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
+#include <deemon/method-hints.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>

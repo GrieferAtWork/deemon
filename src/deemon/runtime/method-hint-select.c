@@ -31,6 +31,7 @@
 /**/
 #include "method-hint-defaults.h"
 #include "method-hint-select.h"
+#include "method-hints.h"
 
 DECL_BEGIN
 
@@ -729,22 +730,24 @@ mh_select_seq_operator_ge(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_inplace_add_t DCALL
 mh_select_seq_operator_inplace_add(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_extend_t seq_extend = (DeeMH_seq_extend_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_extend);
-	if (seq_extend)
+	if ((DeeMH_seq_extend_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_extend))
 		return &default__seq_operator_inplace_add__with__seq_extend;
+	if ((DeeMH_seq_operator_add_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_add))
+		return &default__seq_operator_inplace_add__with__seq_operator_add;
 	return NULL;
 }
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_inplace_mul_t DCALL
 mh_select_seq_operator_inplace_mul(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_extend_t seq_extend = (DeeMH_seq_extend_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_extend);
-	if (seq_extend) {
+	if ((DeeMH_seq_extend_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_extend)) {
 		DeeMH_seq_clear_t seq_clear = (DeeMH_seq_clear_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_clear);
 		if (seq_clear == &default__seq_clear__empty)
 			return &default__seq_operator_inplace_mul__empty;
 		if (seq_clear != &default__seq_clear__unsupported)
 			return &default__seq_operator_inplace_mul__with__seq_clear__and__seq_extend;
 	}
+	if ((DeeMH_seq_operator_mul_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_mul))
+		return &default__seq_operator_inplace_mul__with__seq_operator_mul;
 	return NULL;
 }
 

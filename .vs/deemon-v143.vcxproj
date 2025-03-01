@@ -320,6 +320,7 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_last.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_locate.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_minmax.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_operator_add.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_assign.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_bool.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_cmp.h" />
@@ -333,6 +334,7 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_inplace_add.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_inplace_mul.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_iter.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_operator_mul.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_setitem.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_setrange.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_size.h" />

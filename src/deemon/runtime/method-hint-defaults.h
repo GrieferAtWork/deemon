@@ -29,7 +29,7 @@
 #include <deemon/roset.h>
 #include <deemon/tuple.h>
 
-#include "method-hints.h"
+#include "../objects/seq/concat.h" /* DeeSeq_Concat */
 
 DECL_BEGIN
 
@@ -477,27 +477,47 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_ge__u
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_ge__with__seq_operator_lo(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_ge__with__seq_operator_compare(DeeObject *lhs, DeeObject *rhs);
 
+/* seq_operator_add */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_add(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_add__with_callattr___seq_add__(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_add__with_callobjectcache___seq_add__(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__seq_operator_add__with_callobjectcache___seq_add__(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+#define default__seq_operator_add__unsupported (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_add__with__DeeSeq_Concat)
+#define default__seq_operator_add__none (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&_DeeNone_NewRef2)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_add__empty(DeeObject *lhs, DeeObject *rhs);
+#define default__seq_operator_add__with__DeeSeq_Concat (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&DeeSeq_Concat)
+
+/* seq_operator_mul */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_mul(DeeObject *self, DeeObject *repeat);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_mul__with_callattr___seq_mul__(DeeObject *self, DeeObject *repeat);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_mul__with_callobjectcache___seq_mul__(DeeObject *self, DeeObject *repeat);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__seq_operator_mul__with_callobjectcache___seq_mul__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *repeat);
+#define default__seq_operator_mul__unsupported (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_mul__with__DeeSeq_Repeat)
+#define default__seq_operator_mul__none (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&_DeeNone_NewRef2)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_mul__empty(DeeObject *self, DeeObject *repeat);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_mul__with__DeeSeq_Repeat(DeeObject *self, DeeObject *repeat);
+
 /* seq_operator_inplace_add */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_add(DREF DeeObject **__restrict p_self, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_add__with_callattr___seq_inplace_add__(DREF DeeObject **__restrict p_self, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_add__with_callobjectcache___seq_inplace_add__(DREF DeeObject **__restrict p_self, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__seq_operator_inplace_add__with_callobjectcache___seq_inplace_add__(DeeTypeObject *tp_self, DREF DeeObject **p_self, DeeObject *rhs);
-#define default__seq_operator_inplace_add__unsupported (*(int (DCALL *)(DREF DeeObject **__restrict, DeeObject *))&default__seq_operator_inplace_add__with__DeeSeq_Concat)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_add__with__seq_extend(DREF DeeObject **__restrict p_self, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_add(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_add__with_callattr___seq_inplace_add__(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_add__with_callobjectcache___seq_inplace_add__(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__seq_operator_inplace_add__with_callobjectcache___seq_inplace_add__(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs);
+#define default__seq_operator_inplace_add__unsupported (*(int (DCALL *)(DREF DeeObject **__restrict, DeeObject *))&default__seq_operator_inplace_add__with__seq_operator_add)
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_add__with__seq_extend(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 #define default__seq_operator_inplace_add__none (*(int (DCALL *)(DREF DeeObject **__restrict, DeeObject *))&_DeeNone_reti0_2)
-#define default__seq_operator_inplace_add__empty (*(int (DCALL *)(DREF DeeObject **__restrict, DeeObject *))&default__seq_operator_inplace_add__with__DeeSeq_Concat)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_add__with__DeeSeq_Concat(DREF DeeObject **__restrict p_self, DeeObject *rhs);
+#define default__seq_operator_inplace_add__empty (*(int (DCALL *)(DREF DeeObject **__restrict, DeeObject *))&default__seq_operator_inplace_add__with__seq_operator_add)
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_add__with__seq_operator_add(DREF DeeObject **__restrict p_lhs, DeeObject *rhs);
 
 /* seq_operator_inplace_mul */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_mul(DREF DeeObject **__restrict p_self, DeeObject *repeat);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_mul__with_callattr___seq_inplace_mul__(DREF DeeObject **__restrict p_self, DeeObject *repeat);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_mul__with_callobjectcache___seq_inplace_mul__(DREF DeeObject **__restrict p_self, DeeObject *repeat);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__seq_operator_inplace_mul__with_callobjectcache___seq_inplace_mul__(DeeTypeObject *tp_self, DREF DeeObject **p_self, DeeObject *repeat);
-#define default__seq_operator_inplace_mul__unsupported (*(int (DCALL *)(DREF DeeObject **__restrict, DeeObject *))&default__seq_operator_inplace_mul__with__DeeSeq_Repeat)
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_mul(DREF DeeObject **__restrict p_lhs, DeeObject *repeat);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_mul__with_callattr___seq_inplace_mul__(DREF DeeObject **__restrict p_lhs, DeeObject *repeat);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_mul__with_callobjectcache___seq_inplace_mul__(DREF DeeObject **__restrict p_lhs, DeeObject *repeat);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__seq_operator_inplace_mul__with_callobjectcache___seq_inplace_mul__(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *repeat);
+#define default__seq_operator_inplace_mul__unsupported (*(int (DCALL *)(DREF DeeObject **__restrict, DeeObject *))&default__seq_operator_inplace_mul__with__seq_operator_mul)
 #define default__seq_operator_inplace_mul__none (*(int (DCALL *)(DREF DeeObject **__restrict, DeeObject *))&_DeeNone_reti0_2)
 #define default__seq_operator_inplace_mul__empty (*(int (DCALL *)(DREF DeeObject **__restrict, DeeObject *))&_DeeNone_reti0_2)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_mul__with__seq_clear__and__seq_extend(DREF DeeObject **__restrict p_self, DeeObject *repeat);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_mul__with__DeeSeq_Repeat(DREF DeeObject **__restrict p_self, DeeObject *repeat);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_mul__with__seq_clear__and__seq_extend(DREF DeeObject **__restrict p_lhs, DeeObject *repeat);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_inplace_mul__with__seq_operator_mul(DREF DeeObject **__restrict p_lhs, DeeObject *repeat);
 
 /* seq_enumerate */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_enumerate__with_callattr___seq_enumerate__(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);

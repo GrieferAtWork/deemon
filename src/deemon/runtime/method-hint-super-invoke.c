@@ -29,6 +29,7 @@
 
 /**/
 #include "method-hint-defaults.h"
+#include "method-hints.h"
 
 DECL_BEGIN
 
@@ -731,13 +732,39 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_ge[5] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__ge__with__compare, &tdefault__ge__with__compare),
 	MH_SUPER_MAP_TYPED_END
 };
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_add[6] = {
+	(Dee_funptr_t)&default__seq_operator_add__with_callattr___seq_add__,
+	(Dee_funptr_t)&default__seq_operator_add__unsupported,
+	(Dee_funptr_t)&default__seq_operator_add__none,
+	(Dee_funptr_t)&default__seq_operator_add__empty,
+	(Dee_funptr_t)&default__seq_operator_add__with__DeeSeq_Concat,
+	NULL
+};
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_add[3] = {
+	MH_SUPER_MAP_TYPED_INIT(&default__seq_operator_add__with_callobjectcache___seq_add__, &tdefault__seq_operator_add__with_callobjectcache___seq_add__),
+	MH_SUPER_MAP_TYPED_INIT(&usrtype__add__with__ADD, &tusrtype__add__with__ADD),
+	MH_SUPER_MAP_TYPED_END
+};
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_mul[6] = {
+	(Dee_funptr_t)&default__seq_operator_mul__with_callattr___seq_mul__,
+	(Dee_funptr_t)&default__seq_operator_mul__unsupported,
+	(Dee_funptr_t)&default__seq_operator_mul__none,
+	(Dee_funptr_t)&default__seq_operator_mul__empty,
+	(Dee_funptr_t)&default__seq_operator_mul__with__DeeSeq_Repeat,
+	NULL
+};
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_mul[3] = {
+	MH_SUPER_MAP_TYPED_INIT(&default__seq_operator_mul__with_callobjectcache___seq_mul__, &tdefault__seq_operator_mul__with_callobjectcache___seq_mul__),
+	MH_SUPER_MAP_TYPED_INIT(&usrtype__mul__with__MUL, &tusrtype__mul__with__MUL),
+	MH_SUPER_MAP_TYPED_END
+};
 PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_inplace_add[7] = {
 	(Dee_funptr_t)&default__seq_operator_inplace_add__with_callattr___seq_inplace_add__,
 	(Dee_funptr_t)&default__seq_operator_inplace_add__unsupported,
 	(Dee_funptr_t)&default__seq_operator_inplace_add__with__seq_extend,
 	(Dee_funptr_t)&default__seq_operator_inplace_add__none,
 	(Dee_funptr_t)&default__seq_operator_inplace_add__empty,
-	(Dee_funptr_t)&default__seq_operator_inplace_add__with__DeeSeq_Concat,
+	(Dee_funptr_t)&default__seq_operator_inplace_add__with__seq_operator_add,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_inplace_add[4] = {
@@ -752,7 +779,7 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_inplace_mul[7] = {
 	(Dee_funptr_t)&default__seq_operator_inplace_mul__none,
 	(Dee_funptr_t)&default__seq_operator_inplace_mul__empty,
 	(Dee_funptr_t)&default__seq_operator_inplace_mul__with__seq_clear__and__seq_extend,
-	(Dee_funptr_t)&default__seq_operator_inplace_mul__with__DeeSeq_Repeat,
+	(Dee_funptr_t)&default__seq_operator_inplace_mul__with__seq_operator_mul,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_inplace_mul[4] = {
@@ -3560,7 +3587,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_popitem[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__map_popitem__with_callobjectcache___map_popitem__, &tdefault__map_popitem__with_callobjectcache___map_popitem__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE struct mh_super_map tpconst mh_super_maps[238] = {
+PRIVATE struct mh_super_map tpconst mh_super_maps[240] = {
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_bool, msm_with_type__seq_operator_bool),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_sizeob, msm_with_type__seq_operator_sizeob),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_size, msm_with_type__seq_operator_size),
@@ -3599,6 +3626,8 @@ PRIVATE struct mh_super_map tpconst mh_super_maps[238] = {
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_le, msm_with_type__seq_operator_le),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_gr, msm_with_type__seq_operator_gr),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_ge, msm_with_type__seq_operator_ge),
+	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_add, msm_with_type__seq_operator_add),
+	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_mul, msm_with_type__seq_operator_mul),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_inplace_add, msm_with_type__seq_operator_inplace_add),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_inplace_mul, msm_with_type__seq_operator_inplace_mul),
 	MH_SUPER_MAP_INIT(msm_replace__seq_enumerate, msm_with_super__seq_enumerate, msm_with_type__seq_enumerate),

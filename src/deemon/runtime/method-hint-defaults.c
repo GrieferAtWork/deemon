@@ -52,7 +52,6 @@
 /**/
 #include "../objects/int_logic.h" /* int_inc() */
 #include "../objects/seq/cached-seq.h"
-#include "../objects/seq/concat.h"
 #include "../objects/seq/default-compare.h"
 #include "../objects/seq/default-enumerate.h"
 #include "../objects/seq/default-iterators.h"
@@ -4450,36 +4449,102 @@ err:
 }
 
 
+/* seq_operator_add */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_operator_add(DeeObject *lhs, DeeObject *rhs) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_add))(lhs, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_operator_add__with_callattr___seq_add__(DeeObject *lhs, DeeObject *rhs) {
+	return DeeObject_CallAttr(lhs, (DeeObject *)&str___seq_add__, 1, &rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_operator_add__with_callobjectcache___seq_add__(DeeObject *lhs, DeeObject *rhs) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__seq_operator_add__with_callobjectcache___seq_add__(Dee_TYPE(lhs), lhs, rhs);
+#else /* __OPTIMIZE_SIZE__ */
+	return mhcache_thiscall(Dee_TYPE(lhs), Dee_TYPE(lhs)->tp_mhcache->mhc___seq_add__, lhs, 1, &rhs);
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_operator_add__empty(DeeObject *UNUSED(lhs), DeeObject *rhs) {
+	return_reference_(rhs);
+}
+
+
+/* seq_operator_mul */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_operator_mul(DeeObject *self, DeeObject *repeat) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_mul))(self, repeat);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_operator_mul__with_callattr___seq_mul__(DeeObject *self, DeeObject *repeat) {
+	return DeeObject_CallAttr(self, (DeeObject *)&str___seq_mul__, 1, &repeat);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_operator_mul__with_callobjectcache___seq_mul__(DeeObject *self, DeeObject *repeat) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__seq_operator_mul__with_callobjectcache___seq_mul__(Dee_TYPE(self), self, repeat);
+#else /* __OPTIMIZE_SIZE__ */
+	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_mul__, self, 1, &repeat);
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_operator_mul__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(repeat)) {
+	return_empty_seq;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_operator_mul__with__DeeSeq_Repeat(DeeObject *self, DeeObject *repeat) {
+	size_t repeatval;
+	if (DeeObject_AsSize(repeat, &repeatval))
+		goto err;
+	if (repeatval == 0)
+		return_empty_seq;
+	if (repeatval == 1)
+		return_reference_(self);
+	return DeeSeq_Repeat(self, repeatval);
+err:
+	return NULL;
+}
+
+
 /* seq_operator_inplace_add */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_inplace_add(DREF DeeObject **__restrict p_self, DeeObject *rhs) {
-	return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), seq_operator_inplace_add))(p_self, rhs);
+default__seq_operator_inplace_add(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(*p_lhs), seq_operator_inplace_add))(p_lhs, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_inplace_add__with_callattr___seq_inplace_add__(DREF DeeObject **__restrict p_self, DeeObject *rhs) {
+default__seq_operator_inplace_add__with_callattr___seq_inplace_add__(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	result = DeeObject_CallAttr(*p_self, (DeeObject *)&str___seq_inplace_add__, 1, &rhs);
+	result = DeeObject_CallAttr(*p_lhs, (DeeObject *)&str___seq_inplace_add__, 1, &rhs);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(*p_self);
-	*p_self = result; /* Inherit reference */
+	Dee_Decref(*p_lhs);
+	*p_lhs = result; /* Inherit reference */
 	return 0;
 err:
 	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_inplace_add__with_callobjectcache___seq_inplace_add__(DREF DeeObject **__restrict p_self, DeeObject *rhs) {
+default__seq_operator_inplace_add__with_callobjectcache___seq_inplace_add__(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_operator_inplace_add__with_callobjectcache___seq_inplace_add__(Dee_TYPE(*p_self), p_self, rhs);
+	return tdefault__seq_operator_inplace_add__with_callobjectcache___seq_inplace_add__(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	result = mhcache_thiscall(Dee_TYPE(*p_self), Dee_TYPE(*p_self)->tp_mhcache->mhc___seq_inplace_add__, *p_self, 1, &rhs);
+	result = mhcache_thiscall(Dee_TYPE(*p_lhs), Dee_TYPE(*p_lhs)->tp_mhcache->mhc___seq_inplace_add__, *p_lhs, 1, &rhs);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(*p_self);
-	*p_self = result; /* Inherit reference */
+	Dee_Decref(*p_lhs);
+	*p_lhs = result; /* Inherit reference */
 	return 0;
 err:
 	return -1;
@@ -4487,17 +4552,17 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_inplace_add__with__seq_extend(DREF DeeObject **__restrict p_self, DeeObject *rhs) {
-	return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), seq_extend))(*p_self, rhs);
+default__seq_operator_inplace_add__with__seq_extend(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(*p_lhs), seq_extend))(*p_lhs, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_inplace_add__with__DeeSeq_Concat(DREF DeeObject **__restrict p_self, DeeObject *rhs) {
-	DREF DeeObject *result = DeeSeq_Concat(*p_self, rhs);
+default__seq_operator_inplace_add__with__seq_operator_add(DREF DeeObject **__restrict p_lhs, DeeObject *rhs) {
+	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(*p_lhs), seq_operator_add))(*p_lhs, rhs);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(*p_self);
-	*p_self = result; /* Inherit reference */
+	Dee_Decref_unlikely(*p_lhs);
+	*p_lhs = result; /* Inherit reference */
 	return 0;
 err:
 	return -1;
@@ -4506,34 +4571,34 @@ err:
 
 /* seq_operator_inplace_mul */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_inplace_mul(DREF DeeObject **__restrict p_self, DeeObject *repeat) {
-	return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), seq_operator_inplace_mul))(p_self, repeat);
+default__seq_operator_inplace_mul(DREF DeeObject **__restrict p_lhs, DeeObject *repeat) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(*p_lhs), seq_operator_inplace_mul))(p_lhs, repeat);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_inplace_mul__with_callattr___seq_inplace_mul__(DREF DeeObject **__restrict p_self, DeeObject *repeat) {
+default__seq_operator_inplace_mul__with_callattr___seq_inplace_mul__(DREF DeeObject **__restrict p_lhs, DeeObject *repeat) {
 	DREF DeeObject *result;
-	result = DeeObject_CallAttr(*p_self, (DeeObject *)&str___seq_inplace_mul__, 1, &repeat);
+	result = DeeObject_CallAttr(*p_lhs, (DeeObject *)&str___seq_inplace_mul__, 1, &repeat);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(*p_self);
-	*p_self = result; /* Inherit reference */
+	Dee_Decref(*p_lhs);
+	*p_lhs = result; /* Inherit reference */
 	return 0;
 err:
 	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_inplace_mul__with_callobjectcache___seq_inplace_mul__(DREF DeeObject **__restrict p_self, DeeObject *repeat) {
+default__seq_operator_inplace_mul__with_callobjectcache___seq_inplace_mul__(DREF DeeObject **__restrict p_lhs, DeeObject *repeat) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_operator_inplace_mul__with_callobjectcache___seq_inplace_mul__(Dee_TYPE(*p_self), p_self, repeat);
+	return tdefault__seq_operator_inplace_mul__with_callobjectcache___seq_inplace_mul__(Dee_TYPE(*p_lhs), p_lhs, repeat);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	result = mhcache_thiscall(Dee_TYPE(*p_self), Dee_TYPE(*p_self)->tp_mhcache->mhc___seq_inplace_mul__, *p_self, 1, &repeat);
+	result = mhcache_thiscall(Dee_TYPE(*p_lhs), Dee_TYPE(*p_lhs)->tp_mhcache->mhc___seq_inplace_mul__, *p_lhs, 1, &repeat);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(*p_self);
-	*p_self = result; /* Inherit reference */
+	Dee_Decref(*p_lhs);
+	*p_lhs = result; /* Inherit reference */
 	return 0;
 err:
 	return -1;
@@ -4541,20 +4606,20 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_inplace_mul__with__seq_clear__and__seq_extend(DREF DeeObject **__restrict p_self, DeeObject *repeat) {
+default__seq_operator_inplace_mul__with__seq_clear__and__seq_extend(DREF DeeObject **__restrict p_lhs, DeeObject *repeat) {
 	int result;
 	DREF DeeObject *extend_with_this;
 	size_t repeatval;
 	if (DeeObject_AsSize(repeat, &repeatval))
 		goto err;
 	if (repeatval == 0)
-		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), seq_clear))(*p_self);
+		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_lhs), seq_clear))(*p_lhs);
 	if (repeatval == 1)
 		return 0;
-	extend_with_this = DeeSeq_Repeat(*p_self, repeatval - 1);
+	extend_with_this = DeeSeq_Repeat(*p_lhs, repeatval - 1);
 	if unlikely(!extend_with_this)
 		goto err;
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), seq_extend))(*p_self, extend_with_this);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(*p_lhs), seq_extend))(*p_lhs, extend_with_this);
 	Dee_Decref_likely(extend_with_this);
 	return result;
 err:
@@ -4562,23 +4627,12 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_inplace_mul__with__DeeSeq_Repeat(DREF DeeObject **__restrict p_self, DeeObject *repeat) {
-	size_t repeatval;
-	DREF DeeObject *result;
-	if (DeeObject_AsSize(repeat, &repeatval))
+default__seq_operator_inplace_mul__with__seq_operator_mul(DREF DeeObject **__restrict p_lhs, DeeObject *repeat) {
+	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(*p_lhs), seq_operator_mul))(*p_lhs, repeat);
+	if unlikely(!result)
 		goto err;
-	if (repeatval == 0) {
-		result = Dee_EmptySeq;
-		Dee_Incref(Dee_EmptySeq);
-	} else if (repeatval == 1) {
-		return 0;
-	} else {
-		result = DeeSeq_Repeat(*p_self, repeatval);
-		if unlikely(!result)
-			goto err;
-	}
-	Dee_Decref_unlikely(*p_self);
-	*p_self = result; /* Inherit reference */
+	Dee_Decref_unlikely(*p_lhs);
+	*p_lhs = result; /* Inherit reference */
 	return 0;
 err:
 	return -1;
@@ -20931,15 +20985,27 @@ tdefault__seq_operator_ge__with_callobjectcache___seq_ge__(DeeTypeObject *tp_sel
 	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_ge__, lhs, 1, &rhs);
 }
 
+/* seq_operator_add */
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__seq_operator_add__with_callobjectcache___seq_add__(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
+	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_add__, lhs, 1, &rhs);
+}
+
+/* seq_operator_mul */
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__seq_operator_mul__with_callobjectcache___seq_mul__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *repeat) {
+	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_mul__, self, 1, &repeat);
+}
+
 /* seq_operator_inplace_add */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-tdefault__seq_operator_inplace_add__with_callobjectcache___seq_inplace_add__(DeeTypeObject *tp_self, DREF DeeObject **p_self, DeeObject *rhs) {
+tdefault__seq_operator_inplace_add__with_callobjectcache___seq_inplace_add__(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_inplace_add__, *p_self, 1, &rhs);
+	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_inplace_add__, *p_lhs, 1, &rhs);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(*p_self);
-	*p_self = result; /* Inherit reference */
+	Dee_Decref(*p_lhs);
+	*p_lhs = result; /* Inherit reference */
 	return 0;
 err:
 	return -1;
@@ -20947,13 +21013,13 @@ err:
 
 /* seq_operator_inplace_mul */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-tdefault__seq_operator_inplace_mul__with_callobjectcache___seq_inplace_mul__(DeeTypeObject *tp_self, DREF DeeObject **p_self, DeeObject *repeat) {
+tdefault__seq_operator_inplace_mul__with_callobjectcache___seq_inplace_mul__(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *repeat) {
 	DREF DeeObject *result;
-	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_inplace_mul__, *p_self, 1, &repeat);
+	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_inplace_mul__, *p_lhs, 1, &repeat);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(*p_self);
-	*p_self = result; /* Inherit reference */
+	Dee_Decref(*p_lhs);
+	*p_lhs = result; /* Inherit reference */
 	return 0;
 err:
 	return -1;

@@ -70,8 +70,10 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__seq_operator_lo(D
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__seq_operator_le(DeeSuperObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__seq_operator_gr(DeeSuperObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__seq_operator_ge(DeeSuperObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__seq_operator_inplace_add(DREF DeeSuperObject **__restrict p_self, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__seq_operator_inplace_mul(DREF DeeSuperObject **__restrict p_self, DeeObject *repeat);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__seq_operator_add(DeeSuperObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__seq_operator_mul(DeeSuperObject *self, DeeObject *repeat);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__seq_operator_inplace_add(DREF DeeSuperObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__seq_operator_inplace_mul(DREF DeeSuperObject **__restrict p_lhs, DeeObject *repeat);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL super_mh__seq_enumerate(DeeSuperObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL super_mh__seq_enumerate_index(DeeSuperObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__seq_makeenumeration(DeeSuperObject *__restrict self);

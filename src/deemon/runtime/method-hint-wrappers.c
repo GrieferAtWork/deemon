@@ -257,6 +257,26 @@ err:
 }
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__seq_add__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_add))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_mul__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *repeat;
+	if (DeeArg_Unpack(argc, argv, "o:__seq_mul__", &repeat))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_mul))(self, repeat);
+err:
+	return NULL;
+}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_inplace_add__", &rhs))

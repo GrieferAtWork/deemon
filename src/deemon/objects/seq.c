@@ -298,6 +298,7 @@ default_set_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, v
 }
 
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_mul(DeeObject *self, DeeObject *countob) {
 	size_t count;
@@ -307,6 +308,7 @@ seq_mul(DeeObject *self, DeeObject *countob) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
@@ -322,13 +324,13 @@ PRIVATE struct type_math seq_math = {
 #endif /* !CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
 	/* .tp_pos         = */ NULL,
 	/* .tp_neg         = */ NULL,
-	/* .tp_add         = */ &DeeSeq_Concat,
+	/* .tp_add         = */ &default__seq_operator_add,
 #ifdef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
 	/* .tp_sub         = */ &default__set_operator_sub,
 #else /* CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
 	/* .tp_sub         = */ NULL,
 #endif /* !CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
-	/* .tp_mul         = */ &seq_mul,
+	/* .tp_mul         = */ &default__seq_operator_mul,
 	/* .tp_div         = */ NULL,
 	/* .tp_mod         = */ NULL,
 	/* .tp_shl         = */ NULL,

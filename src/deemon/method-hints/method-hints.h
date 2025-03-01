@@ -76,6 +76,8 @@
 %[include("seq_operator_compare.h")]
 %[include("seq_operator_cmp.h")]
 
+%[include("seq_operator_add.h")]
+%[include("seq_operator_mul.h")]
 %[include("seq_operator_inplace_add.h")]
 %[include("seq_operator_inplace_mul.h")]
 

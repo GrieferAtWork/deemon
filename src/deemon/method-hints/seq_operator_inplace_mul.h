@@ -37,9 +37,9 @@ err:
 
 [[operator(Sequence: tp_math->tp_inplace_mul)]]
 [[wunused]] int
-__seq_inplace_mul__.seq_operator_inplace_mul([[nonnull]] DREF DeeObject **__restrict p_self,
+__seq_inplace_mul__.seq_operator_inplace_mul([[nonnull]] DREF DeeObject **__restrict p_lhs,
                                              [[nonnull]] DeeObject *repeat)
-%{unsupported_alias("default__seq_operator_inplace_mul__with__DeeSeq_Repeat")}
+%{unsupported_alias("default__seq_operator_inplace_mul__with__seq_operator_mul")}
 %{$none = 0}
 %{$empty = 0}
 %{$with__seq_clear__and__seq_extend = {
@@ -49,58 +49,48 @@ __seq_inplace_mul__.seq_operator_inplace_mul([[nonnull]] DREF DeeObject **__rest
 	if (DeeObject_AsSize(repeat, &repeatval))
 		goto err;
 	if (repeatval == 0)
-		return CALL_DEPENDENCY(seq_clear, *p_self);
+		return CALL_DEPENDENCY(seq_clear, *p_lhs);
 	if (repeatval == 1)
 		return 0;
-	extend_with_this = DeeSeq_Repeat(*p_self, repeatval - 1);
+	extend_with_this = DeeSeq_Repeat(*p_lhs, repeatval - 1);
 	if unlikely(!extend_with_this)
 		goto err;
-	result = CALL_DEPENDENCY(seq_extend, *p_self, extend_with_this);
+	result = CALL_DEPENDENCY(seq_extend, *p_lhs, extend_with_this);
 	Dee_Decref_likely(extend_with_this);
 	return result;
 err:
 	return -1;
 }}
-%{$with__DeeSeq_Repeat = {
-	size_t repeatval;
-	DREF DeeObject *result;
-	if (DeeObject_AsSize(repeat, &repeatval))
+%{$with__seq_operator_mul = {
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_mul, *p_lhs, repeat);
+	if unlikely(!result)
 		goto err;
-	if (repeatval == 0) {
-		result = Dee_EmptySeq;
-		Dee_Incref(Dee_EmptySeq);
-	} else if (repeatval == 1) {
-		return 0;
-	} else {
-		result = DeeSeq_Repeat(*p_self, repeatval);
-		if unlikely(!result)
-			goto err;
-	}
-	Dee_Decref_unlikely(*p_self);
-	*p_self = result; /* Inherit reference */
+	Dee_Decref_unlikely(*p_lhs);
+	*p_lhs = result; /* Inherit reference */
 	return 0;
 err:
 	return -1;
 }} {
 	DREF DeeObject *result;
-	result = LOCAL_CALLATTR(*p_self, 1, &repeat);
+	result = LOCAL_CALLATTR(*p_lhs, 1, &repeat);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(*p_self);
-	*p_self = result; /* Inherit reference */
+	Dee_Decref(*p_lhs);
+	*p_lhs = result; /* Inherit reference */
 	return 0;
 err:
 	return -1;
 }
 
 seq_operator_inplace_mul = {
-	DeeMH_seq_extend_t seq_extend = REQUIRE(seq_extend);
-	if (seq_extend) {
+	if (REQUIRE(seq_extend)) {
 		DeeMH_seq_clear_t seq_clear = REQUIRE_ANY(seq_clear);
 		if (seq_clear == &default__seq_clear__empty)
 			return &$empty;
 		if (seq_clear != &default__seq_clear__unsupported)
 			return &$with__seq_clear__and__seq_extend;
 	}
+	if (REQUIRE(seq_operator_mul))
+		return &$with__seq_operator_mul;
 };
 

@@ -106,6 +106,8 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_operator_le_t mh_seq_operator_le;
 	DeeMH_seq_operator_gr_t mh_seq_operator_gr;
 	DeeMH_seq_operator_ge_t mh_seq_operator_ge;
+	DeeMH_seq_operator_add_t mh_seq_operator_add;
+	DeeMH_seq_operator_mul_t mh_seq_operator_mul;
 	DeeMH_seq_operator_inplace_add_t mh_seq_operator_inplace_add;
 	DeeMH_seq_operator_inplace_mul_t mh_seq_operator_inplace_mul;
 	DeeMH_seq_enumerate_t mh_seq_enumerate;
@@ -316,7 +318,7 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 134
+#define MHC_COUNT 136
 #define MHC_FIRST mhc___seq_bool__
 	Dee_mhc_slot_t mhc___seq_bool__;
 	Dee_mhc_slot_t mhc___seq_size__;
@@ -337,6 +339,8 @@ struct Dee_type_mh_cache {
 	Dee_mhc_slot_t mhc___seq_le__;
 	Dee_mhc_slot_t mhc___seq_gr__;
 	Dee_mhc_slot_t mhc___seq_ge__;
+	Dee_mhc_slot_t mhc___seq_add__;
+	Dee_mhc_slot_t mhc___seq_mul__;
 	Dee_mhc_slot_t mhc___seq_inplace_add__;
 	Dee_mhc_slot_t mhc___seq_inplace_mul__;
 	Dee_mhc_slot_t mhc___seq_enumerate__;

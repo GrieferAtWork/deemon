@@ -19,59 +19,35 @@
  */
 
 /************************************************************************/
-/* deemon.Sequence.operator +=()                                        */
+/* deemon.Sequence.operator * ()                                        */
 /************************************************************************/
-__seq_inplace_add__(rhs:?S?O)->?. {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_inplace_add__", &rhs))
+__seq_mul__(repeat:?Dint)->?. {
+	DeeObject *repeat;
+	if (DeeArg_Unpack(argc, argv, "o:__seq_mul__", &repeat))
 		goto err;
-	Dee_Incref(self);
-	if unlikely(CALL_DEPENDENCY(seq_operator_inplace_add, (DeeObject **)&self, rhs))
-		goto err_self;
-	return self;
-err_self:
-	Dee_Decref_unlikely(self);
+	return CALL_DEPENDENCY(seq_operator_mul, self, repeat);
 err:
 	return NULL;
 }
 
-
-
-[[operator(Sequence: tp_math->tp_inplace_add)]]
-[[wunused]] int
-__seq_inplace_add__.seq_operator_inplace_add([[nonnull]] DREF DeeObject **__restrict p_lhs,
-                                             [[nonnull]] DeeObject *rhs)
-%{unsupported_alias("default__seq_operator_inplace_add__with__seq_operator_add")}
-%{$with__seq_extend = {
-	return CALL_DEPENDENCY(seq_extend, *p_lhs, rhs);
-}}
-%{$none = 0}
-%{$empty = "$with__seq_operator_add"}
-%{$with__seq_operator_add = {
-	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_add, *p_lhs, rhs);
-	if unlikely(!result)
+[[operator(Sequence: tp_math->tp_mul)]]
+[[wunused]] DREF DeeObject *
+__seq_mul__.seq_operator_mul([[nonnull]] DeeObject *self,
+                             [[nonnull]] DeeObject *repeat)
+%{unsupported_alias("default__seq_operator_mul__with__DeeSeq_Repeat")}
+%{$none = return_none}
+%{$empty = return_empty_seq}
+%{$with__DeeSeq_Repeat = {
+	size_t repeatval;
+	if (DeeObject_AsSize(repeat, &repeatval))
 		goto err;
-	Dee_Decref_unlikely(*p_lhs);
-	*p_lhs = result; /* Inherit reference */
-	return 0;
+	if (repeatval == 0)
+		return_empty_seq;
+	if (repeatval == 1)
+		return_reference_(self);
+	return DeeSeq_Repeat(self, repeatval);
 err:
-	return -1;
+	return NULL;
 }} {
-	DREF DeeObject *result;
-	result = LOCAL_CALLATTR(*p_lhs, 1, &rhs);
-	if unlikely(!result)
-		goto err;
-	Dee_Decref(*p_lhs);
-	*p_lhs = result; /* Inherit reference */
-	return 0;
-err:
-	return -1;
+	return LOCAL_CALLATTR(self, 1, &repeat);
 }
-
-seq_operator_inplace_add = {
-	if (REQUIRE(seq_extend))
-		return &$with__seq_extend;
-	if (REQUIRE(seq_operator_add))
-		return &$with__seq_operator_add;
-};
-

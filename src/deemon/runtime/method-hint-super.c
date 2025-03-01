@@ -666,26 +666,58 @@ super_mh__seq_operator_ge(DeeSuperObject *lhs, DeeObject *rhs) {
 	__builtin_unreachable();
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-super_mh__seq_operator_inplace_add(DREF DeeSuperObject **__restrict p_self, DeeObject *rhs) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_mh__seq_operator_add(DeeSuperObject *lhs, DeeObject *rhs) {
 	struct Dee_super_method_hint specs;
-	DeeType_GetMethodHintForSuper((*p_self), Dee_TMH_seq_operator_inplace_add, &specs);
+	DeeType_GetMethodHintForSuper(lhs, Dee_TMH_seq_operator_add, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_seq_operator_add_t)specs.smh_cb)(lhs->s_self, rhs);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_seq_operator_add_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
+	default: break;
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_mh__seq_operator_mul(DeeSuperObject *self, DeeObject *repeat) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_operator_mul, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_seq_operator_mul_t)specs.smh_cb)(self->s_self, repeat);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_seq_operator_mul_t)specs.smh_cb)((DeeObject *)self, repeat);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, repeat);
+	default: break;
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+super_mh__seq_operator_inplace_add(DREF DeeSuperObject **__restrict p_lhs, DeeObject *rhs) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper((*p_lhs), Dee_TMH_seq_operator_inplace_add, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF: {
 		int _res;
-		DREF DeeObject *_self = (*p_self)->s_self;
+		DREF DeeObject *_self = (*p_lhs)->s_self;
 		Dee_Incref(_self);
 		_res = (*(DeeMH_seq_operator_inplace_add_t)specs.smh_cb)(&_self, rhs);
-		return repack_super_after_inplace_int(_res, _self, p_self);
+		return repack_super_after_inplace_int(_res, _self, p_lhs);
 	}	break;
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_inplace_add_t)specs.smh_cb)((DREF DeeObject **)p_self, rhs);
+		return (*(DeeMH_seq_operator_inplace_add_t)specs.smh_cb)((DREF DeeObject **)p_lhs, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE: {
 		int _res;
-		DREF DeeObject *_self = (*p_self)->s_self;
+		DREF DeeObject *_self = (*p_lhs)->s_self;
 		Dee_Incref(_self);
-		_res = (*(int (DCALL *)(DeeTypeObject *, DREF DeeObject **, DeeObject *))specs.smh_cb)((*p_self)->s_type, &_self, rhs);
-		return repack_super_after_inplace_int(_res, _self, p_self);
+		_res = (*(int (DCALL *)(DeeTypeObject *, DREF DeeObject **, DeeObject *))specs.smh_cb)((*p_lhs)->s_type, &_self, rhs);
+		return repack_super_after_inplace_int(_res, _self, p_lhs);
 	}	break;
 	default: break;
 	}
@@ -693,25 +725,25 @@ super_mh__seq_operator_inplace_add(DREF DeeSuperObject **__restrict p_self, DeeO
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-super_mh__seq_operator_inplace_mul(DREF DeeSuperObject **__restrict p_self, DeeObject *repeat) {
+super_mh__seq_operator_inplace_mul(DREF DeeSuperObject **__restrict p_lhs, DeeObject *repeat) {
 	struct Dee_super_method_hint specs;
-	DeeType_GetMethodHintForSuper((*p_self), Dee_TMH_seq_operator_inplace_mul, &specs);
+	DeeType_GetMethodHintForSuper((*p_lhs), Dee_TMH_seq_operator_inplace_mul, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF: {
 		int _res;
-		DREF DeeObject *_self = (*p_self)->s_self;
+		DREF DeeObject *_self = (*p_lhs)->s_self;
 		Dee_Incref(_self);
 		_res = (*(DeeMH_seq_operator_inplace_mul_t)specs.smh_cb)(&_self, repeat);
-		return repack_super_after_inplace_int(_res, _self, p_self);
+		return repack_super_after_inplace_int(_res, _self, p_lhs);
 	}	break;
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_inplace_mul_t)specs.smh_cb)((DREF DeeObject **)p_self, repeat);
+		return (*(DeeMH_seq_operator_inplace_mul_t)specs.smh_cb)((DREF DeeObject **)p_lhs, repeat);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE: {
 		int _res;
-		DREF DeeObject *_self = (*p_self)->s_self;
+		DREF DeeObject *_self = (*p_lhs)->s_self;
 		Dee_Incref(_self);
-		_res = (*(int (DCALL *)(DeeTypeObject *, DREF DeeObject **, DeeObject *))specs.smh_cb)((*p_self)->s_type, &_self, repeat);
-		return repack_super_after_inplace_int(_res, _self, p_self);
+		_res = (*(int (DCALL *)(DeeTypeObject *, DREF DeeObject **, DeeObject *))specs.smh_cb)((*p_lhs)->s_type, &_self, repeat);
+		return repack_super_after_inplace_int(_res, _self, p_lhs);
 	}	break;
 	default: break;
 	}
@@ -3975,6 +4007,8 @@ INTERN struct Dee_type_mh_cache super_mhcache = {
 	(DeeMH_seq_operator_le_t)&super_mh__seq_operator_le,
 	(DeeMH_seq_operator_gr_t)&super_mh__seq_operator_gr,
 	(DeeMH_seq_operator_ge_t)&super_mh__seq_operator_ge,
+	(DeeMH_seq_operator_add_t)&super_mh__seq_operator_add,
+	(DeeMH_seq_operator_mul_t)&super_mh__seq_operator_mul,
 	(DeeMH_seq_operator_inplace_add_t)&super_mh__seq_operator_inplace_add,
 	(DeeMH_seq_operator_inplace_mul_t)&super_mh__seq_operator_inplace_mul,
 	(DeeMH_seq_enumerate_t)&super_mh__seq_enumerate,

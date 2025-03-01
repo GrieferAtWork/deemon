@@ -473,7 +473,8 @@ Type_assert(deemon.HashSet, {
 	"tp_inplace_add":                             "default__set_operator_inplace_add__with__set_insertall",
 	"tp_sub":                                     "default__set_operator_sub__unsupported",
 	"tp_inplace_sub":                             "default__set_operator_inplace_sub__with__set_operator_foreach__and__set_removeall",
-	"tp_mul":                                     "seq_mul", // TODO: This should get deleted in "Set"
+	"tp_mul":                                     "NULL",
+	"tp_inplace_mul":                             "NULL",
 	"tp_and":                                     "default__set_operator_and__unsupported",
 	"tp_inplace_and":                             "default__set_operator_inplace_and__with__set_operator_foreach__and__set_removeall",
 	"tp_or":                                      "default__set_operator_add__unsupported",
@@ -518,8 +519,10 @@ Type_assert(deemon.HashSet, {
 	"mh_seq_operator_le":                         "default__seq_operator_le__with__seq_operator_compare",
 	"mh_seq_operator_gr":                         "default__seq_operator_gr__with__seq_operator_compare",
 	"mh_seq_operator_ge":                         "default__seq_operator_ge__with__seq_operator_compare",
-	"mh_seq_operator_inplace_add":                "default__seq_operator_inplace_add__with__DeeSeq_Concat",
-	"mh_seq_operator_inplace_mul":                "default__seq_operator_inplace_mul__with__DeeSeq_Repeat",
+	"mh_seq_operator_add":                        "DeeSeq_Concat",
+	"mh_seq_operator_mul":                        "default__seq_operator_mul__with__DeeSeq_Repeat",
+	"mh_seq_operator_inplace_add":                "default__seq_operator_inplace_add__with__seq_operator_add",
+	"mh_seq_operator_inplace_mul":                "default__seq_operator_inplace_mul__with__seq_operator_mul",
 	"mh_seq_enumerate":                           "default__seq_enumerate__with__seq_operator_foreach__and__counter",
 	"mh_seq_enumerate_index":                     "default__seq_enumerate_index__with__seq_operator_foreach__and__counter",
 	"mh_seq_makeenumeration":                     "default__seq_makeenumeration__with__seq_operator_iter__and__counter",
@@ -820,6 +823,8 @@ Type_assert(deemon.Dict, {
 	"mh_seq_operator_le":                         "default__seq_operator_le__with__seq_operator_compare",
 	"mh_seq_operator_gr":                         "default__seq_operator_gr__with__seq_operator_compare",
 	"mh_seq_operator_ge":                         "default__seq_operator_ge__with__seq_operator_compare",
+	"mh_seq_operator_add":                        "DeeSeq_Concat",
+	"mh_seq_operator_mul":                        "default__seq_operator_mul__with__DeeSeq_Repeat",
 	"mh_seq_operator_inplace_add":                "default__seq_operator_inplace_add__with__seq_extend",
 	"mh_seq_operator_inplace_mul":                "default__seq_operator_inplace_mul__with__seq_clear__and__seq_extend",
 	"mh_seq_enumerate":                           "default__seq_enumerate__with__seq_enumerate_index",
@@ -1114,8 +1119,10 @@ Type_assert(deemon.Tuple, {
 	"mh_seq_operator_le":                         "default__seq_operator_le__with__seq_operator_compare",
 	"mh_seq_operator_gr":                         "default__seq_operator_gr__with__seq_operator_compare",
 	"mh_seq_operator_ge":                         "default__seq_operator_ge__with__seq_operator_compare",
-	"mh_seq_operator_inplace_add":                "default__seq_operator_inplace_add__with__DeeSeq_Concat",
-	"mh_seq_operator_inplace_mul":                "default__seq_operator_inplace_mul__with__DeeSeq_Repeat",
+	"mh_seq_operator_add":                        "tuple_concat",
+	"mh_seq_operator_mul":                        "tuple_repeat",
+	"mh_seq_operator_inplace_add":                "default__seq_operator_inplace_add__with__seq_operator_add",
+	"mh_seq_operator_inplace_mul":                "default__seq_operator_inplace_mul__with__seq_operator_mul",
 	"mh_seq_enumerate":                           "default__seq_enumerate__with__seq_operator_size__and__operator_getitem_index_fast",
 	"mh_seq_enumerate_index":                     "default__seq_enumerate_index__with__seq_operator_size__and__operator_getitem_index_fast",
 	"mh_seq_makeenumeration":                     "default__seq_makeenumeration__with__seq_operator_size__and__operator_getitem_index_fast",
@@ -1363,27 +1370,19 @@ Type_assert(rt.ClassOperatorTable, {
 });
 
 Type_assert(deemon.Sequence, {
-	"tp_mul":         "seq_mul",
+	"tp_add":         "default__seq_operator_add",
+	"tp_mul":         "default__seq_operator_mul",
+	"tp_inplace_add": "default__seq_operator_inplace_add",
 	"tp_inplace_mul": "default__seq_operator_inplace_mul",
 });
 
 Type_assert(rt.FunctionSymbolsByName, {
-	/*FIXME:"tp_inplace_mul": "default__inplace_mul__with__mul",
-	 * ^ For some reason, "tp_inplace_mul" is set to "NULL" here...
-	 * Problem seems to be that using-style default operator impls
-	 * should actually still be when the dependent operator was
-	 * inherited, but the core operator could not be inherited
-	 * iow:
-	 * - when loading "tp_inplace_mul"...
-	 * - default__seq_operator_inplace_mul cannot be inherited
-	 *   here, because "rt.FunctionSymbolsByName.__seqclass__"
-	 *   isn't "Sequence"
-	 * - but the "tp_mul" from the same source type (Sequence)
-	 *   can be inherited...
-	 * - ... and after it has been, "tp_inplace_mul" can be
-	 *   implemented using "default__inplace_mul__with__mul"
-	 */
-	"tp_mul":         "seq_mul",
+	"tp_add":                  "default__map_operator_add__unsupported",
+	"tp_mul":                  "NULL",
+	"tp_inplace_add":          "default__map_operator_inplace_add__with__map_update",
+	"tp_inplace_mul":          "NULL",
+	"mh_map_update":           "default__map_update__with__map_operator_setitem",
+	"mh_map_operator_setitem": "funcsymbolsbyname_setitem",
 });
 
 #endif  /* !__MAIN__ */
