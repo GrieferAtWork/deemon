@@ -435,13 +435,8 @@ function _buildDefaultOperatorSubTable(subTable: SubTable, typ: Type)
 function buildDefaultOperatorSubTable(subTable: SubTable, typ: Type)
 		: SubTableImpl | none {
 	local result = _buildDefaultOperatorSubTable(subTable, typ);
-	if (result !is none) {
-		local name = result.hashName;
-		local cached = USED_DEFAULT_TABLES.get(name);
-		if (cached !is none)
-			return cached;
-		USED_DEFAULT_TABLES[name] = result;
-	}
+	if (result !is none)
+		result = USED_DEFAULT_TABLES.setdefault(result.hashName, result);
 	return result;
 }
 
@@ -1081,17 +1076,20 @@ function printComputedOperators(filename: string) {
 
 
 function main() {
+	import ThreadPool from threading.pool;
+	local pool = ThreadPool();
 	for (local file: FILES_AND_PATHS) {
 		file = makeRelPath(file);
 		local tail = posix.tailof(file);
 		if ("*" in tail) {
 			local head = posix.headof(file);
 			for (local inDirFilename: fs.query(file))
-				processSourceFile(head + inDirFilename);
+				pool.run(() -> processSourceFile(head + inDirFilename));
 			continue;
 		}
 		processSourceFile(file);
 	}
+	pool.waitfor();
 	printComputedOperators(makeRelPath("../../include/deemon/computed-operators.h"));
 	printComputedOperators(makeRelPath("../../src/deemon/runtime/computed-operators.c"));
 }

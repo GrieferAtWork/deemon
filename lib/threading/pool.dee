@@ -1,0 +1,169 @@
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+import * from threading;
+import posix;
+
+class Task {
+	this(cb: Callable, args: Tuple = ()) {
+		this.cb = cb;
+		this.args = args;
+	}
+	public final member cb: Callable;
+	public final member args: Tuple;
+
+	public _run() {
+		try {
+			_result = cb(args...);
+		} catch (e...) {
+			_error = e;
+		}
+		_reslock.set();
+	}
+
+	private final member _error: Object;
+	private final member _result: Object;
+	private final member _reslock: Event = Event();
+
+	public _getResult(): Object {
+		if (_error is bound)
+			throw _error;
+		return _result;
+	}
+
+	public waitfor(): Object {
+		_reslock.waitfor();
+		return _getResult();
+	}
+
+	public timedwaitfor(timeout_nanoseconds: int, def: Object = none): Object {
+		return _reslock.timedwaitfor() ? _getResult() : def;
+	}
+
+	public property result: Object = {
+		get(): Object {
+			return waitfor();
+		}
+	}
+}
+
+@@Thread pool controller:
+@@
+@@> local pool = ThreadPool(4);
+@@> local t1 = pool.run(() -> expensiveCalcuation1());
+@@> local t2 = pool.run(() -> expensiveCalcuation2());
+@@> local t3 = pool.run(() -> expensiveCalcuation3());
+@@> pool.waitfor();
+@@>
+@@> print t1.result;
+@@> print t2.result;
+@@> print t3.result;
+class ThreadPool {
+
+	this(maxPoolSize: int | none = none) {
+		this.maxPoolSize = (maxPoolSize ?? posix.cpu_count() * 2) ?: 1;
+	}
+
+	private final member maxPoolSize: int;
+	private final member threads: {Thread...} = HashSet();
+	private final member tasks: {Task...} = [];
+	private final member allTasksDone: Event = Event(isset: true);
+
+	private threadMain() {
+again:
+		try {
+			if (#threads <= maxPoolSize) {
+				for (;;) {
+					local task: Task;
+					try {
+						task = tasks.popfront();
+					} catch (ValueError) {
+						break; /* No more tasks */
+					}
+					task._run();
+				}
+			}
+		} finally {
+			threads.remove(Thread.current);
+		}
+
+		/* Check for race condition: did more tasks show up in the mean time? */
+		local reaminingThreads = #threads;
+		if (tasks && reaminingThreads < maxPoolSize)
+			goto insert_current_and_again;
+		if (!reaminingThreads) {
+			/* Last thread is exiting -> indicate that everything is done */
+			allTasksDone.set();
+			if (tasks) {
+				allTasksDone.clear();
+insert_current_and_again:
+				threads.insert(Thread.current);
+				goto again;
+			}
+		}
+	}
+
+	private doSpawnThread() {
+		local thread = Thread(threadMain);
+		threads.insert(thread);
+		try {
+			thread.start();
+		} @[interrupt] catch (...) {
+			threads.remove(thread);
+			if (!threads)
+				allTasksDone.set();
+			throw;
+		}
+		thread.detach();
+	}
+
+	private maybeSpawnThread() {
+		local nThreads = #threads;
+		if (#tasks >= nThreads && nThreads < maxPoolSize)
+			doSpawnThread();
+	}
+
+	public run(cb: Callable, args: Tuple = ()): Task {
+		return runTask(Task(cb, args));
+	}
+
+	public runTask(task: Task): Task {
+		tasks.append(task);
+		allTasksDone.clear();
+		maybeSpawnThread();
+		return task;
+	}
+
+	@@Wait for all tasks to be done
+	public waitfor() {
+		return allTasksDone.waitfor();
+	}
+
+	public timedwaitfor(timeout_nanoseconds: int): bool {
+		return allTasksDone.timedwaitfor();
+	}
+
+}
+
+
+
+
