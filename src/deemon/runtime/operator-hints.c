@@ -480,10 +480,8 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_iter[3] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__iter__with__foreach_pair, Dee_TNO_foreach_pair, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_iter[6] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_iter[4] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_iter, NULL, Dee_SEQCLASS_SEQ),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_iter, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_iter, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_iter, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_iter, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
@@ -497,10 +495,8 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_foreach[3] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__foreach__with__foreach_pair, Dee_TNO_foreach_pair, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_foreach[5] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_foreach[3] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach, NULL, Dee_SEQCLASS_SEQ),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_foreach, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_END
 };
@@ -513,10 +509,8 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_foreach_pair[3] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__foreach_pair__with__iter, Dee_TNO_iter, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_foreach_pair[6] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_foreach_pair[4] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach_pair, NULL, Dee_SEQCLASS_SEQ),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach_pair, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_foreach_pair, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_foreach_pair, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_enumerate, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
@@ -1853,6 +1847,20 @@ perform_actions:
 	return result;
 }
 
+#if 0
+PRIVATE ATTR_CONST WUNUSED bool DCALL
+is_native_operator_default_impl(enum Dee_tno_id id, Dee_funptr_t impl) {
+	struct oh_init_spec const *specs = &oh_init_specs[id];
+	if (specs->ohis_impls) {
+		struct oh_init_spec_impl const *iter;
+		for (iter = specs->ohis_impls; iter->ohisi_impl; ++iter) {
+			if (iter->ohisi_impl == impl)
+				return true;
+		}
+	}
+	return false;
+}
+#endif
 
 
 /* Check if "impl" is a method-hint implementation that needs to be transformed when inherited.
@@ -1874,7 +1882,8 @@ DeeType_MapTMHInTNOForInherit(DeeTypeObject *__restrict from,
 		}
 	}
 
-	if (specs->ohis_mhints) {
+	/* Manually exclude native operator default impls here! */
+	if (specs->ohis_mhints /*&& !is_native_operator_default_impl(id, impl)*/) {
 		bool has_unsupported_default = false;
 		struct oh_init_spec_mhint const *iter = specs->ohis_mhints;
 
@@ -1910,7 +1919,29 @@ DeeType_MapTMHInTNOForInherit(DeeTypeObject *__restrict from,
 		if (has_unsupported_default)
 			return NULL;
 	}
+
+	/* Super-special case: "tp_getitem_index_fast" can only be inherited
+	 * if certain method hints are shared between "from" and "into". */
+	if (id == Dee_TNO_getitem_index_fast) {
+		static enum Dee_tmh_id const giif_deps[] = {
+			Dee_TMH_seq_operator_getitem_index,
+			Dee_TMH_seq_operator_getitem,
+		};
+		size_t i;
+		for (i = 0; i < COMPILER_LENOF(giif_deps); ++i) {
+			enum Dee_tmh_id dep = giif_deps[i];
+			Dee_funptr_t from_ptr, into_ptr;
+			if ((from_ptr = DeeType_GetMethodHint(from, dep)) == NULL)
+				goto nope;
+			if ((into_ptr = DeeType_GetMethodHint(into, dep)) == NULL)
+				goto nope;
+			if (from_ptr != into_ptr)
+				goto nope;
+		}
+	}
 	return impl;
+nope:
+	return NULL;
 }
 
 

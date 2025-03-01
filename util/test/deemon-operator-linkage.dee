@@ -1401,7 +1401,7 @@ Type_assert(rt.FunctionSymbolsByName, {
 Type_assert(rt.SetInversion, {
 	"tp_iter":                        "default__set_operator_iter__unsupported",
 	"tp_foreach":                     "default__set_operator_foreach__with__set_operator_iter",
-	"tp_foreach_pair":                "NULL",
+	"tp_foreach_pair":                "default__foreach_pair__with__foreach",
 	"tp_size":                        "default__set_operator_size__unsupported",
 	"tp_sizeob":                      "default__set_operator_sizeob__unsupported",
 	"mh_seq_operator_iter":           "default__seq_operator_iter__unsupported",
@@ -1425,6 +1425,75 @@ Type_assert(rt.SetInversion, {
 	"mh_map_operator_size":           "default__map_operator_size__unsupported",
 	"mh_map_operator_sizeob":         "default__map_operator_sizeob__unsupported",
 });
+
+class SetList: Set, List {}
+assert SetList.__seqclass__ == Set;
+Type_assert(SetList, {
+	"tp_iter":                        "default__set_operator_iter__with__seq_operator_iter",
+	"tp_foreach":                     "default__set_operator_foreach__with__seq_operator_foreach",
+	"tp_foreach_pair":                "default__foreach_pair__with__foreach",
+	"tp_size":                        "default__set_operator_size__with__set_operator_foreach",
+	"tp_sizeob":                      "default__set_operator_sizeob__with__set_operator_size",
+	"tp_getitem_index_fast":          "list_getitem_index_fast",
+	"mh_seq_operator_iter":           "list_iter",
+	"mh_seq_operator_foreach":        "list_foreach",
+	"mh_seq_operator_foreach_pair":   "default__seq_operator_foreach_pair__with__seq_operator_foreach",
+	"mh_seq_enumerate":               "default__seq_enumerate__with__seq_operator_size__and__operator_getitem_index_fast",
+	"mh_seq_enumerate_index":         "default__seq_enumerate_index__with__seq_operator_size__and__operator_getitem_index_fast",
+	"mh_seq_enumerate_index_reverse": "default__seq_enumerate_index_reverse__with__seq_operator_size__and__operator_getitem_index_fast",
+	"mh_seq_foreach_reverse":         "default__seq_foreach_reverse__with__seq_operator_size__and__operator_getitem_index_fast",
+	"mh_seq_operator_getitem":        "list_getitem",
+	"mh_seq_operator_getitem_index":  "list_getitem_index",
+	"mh_seq_operator_size":           "list_size",
+	"mh_seq_operator_sizeob":         "list_sizeob",
+	"mh_set_operator_iter":           "default__set_operator_iter__with__seq_operator_iter",
+	"mh_set_operator_foreach":        "default__set_operator_foreach__with__seq_operator_foreach",
+	"mh_set_operator_size":           "default__set_operator_size__with__set_operator_foreach",
+	"mh_set_operator_sizeob":         "default__set_operator_sizeob__with__set_operator_size",
+	"mh_map_operator_foreach_pair":   "default__map_operator_foreach_pair__with__seq_operator_foreach_pair",
+	"mh_map_enumerate":               "default__map_operator_foreach_pair__with__seq_operator_foreach_pair",
+	"mh_map_enumerate_range":         "default__map_enumerate_range__with__map_enumerate",
+	"mh_map_operator_size":           "default__map_operator_size__with__map_operator_foreach_pair",
+	"mh_map_operator_sizeob":         "default__map_operator_sizeob__with__map_operator_size",
+});
+
+
+class SetListWithCustomGetItem: Set, List {
+	__seq_size__() -> #(this as List);
+	__seq_getitem__(index) -> (this as List)[index];
+}
+assert SetListWithCustomGetItem.__seqclass__ == Set;
+Type_assert(SetListWithCustomGetItem, {
+	"tp_iter":                          "default__set_operator_iter__with__seq_operator_iter",
+	"tp_foreach":                       "default__set_operator_foreach__with__seq_operator_foreach",
+	"tp_foreach_pair":                  "default__foreach_pair__with__foreach",
+	"tp_size":                          "default__seq_operator_size__with__seq_operator_sizeob",
+	"tp_sizeob":                        "default__seq_operator_sizeob__with_callobjectcache___seq_size__",
+	"tp_getitem_index_fast":            "NULL", /* Special case: this operator mustn't get inherited */
+	"mh_seq_operator_iter":             "default__seq_operator_iter__with__seq_operator_size__and__seq_operator_getitem_index",
+	"mh_seq_operator_foreach":          "default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index",
+	"mh_seq_operator_foreach_pair":     "default__seq_operator_foreach_pair__with__seq_operator_foreach",
+	"mh_seq_enumerate":                 "default__seq_enumerate__with__seq_operator_sizeob__and__seq_operator_getitem",
+	"mh_seq_enumerate_index":           "default__seq_enumerate_index__with__seq_operator_size__and__seq_operator_getitem_index",
+	"mh_seq_enumerate_index_reverse":   "default__seq_enumerate_index_reverse__with__seq_operator_sizeob__and__seq_operator_getitem",
+	"mh_seq_foreach_reverse":           "default__seq_foreach_reverse__with__seq_operator_sizeob__and__seq_operator_getitem",
+	"mh_seq_operator_getitem":          "default__seq_operator_getitem__with_callobjectcache___seq_getitem__",
+	"mh_seq_operator_getitem_index":    "default__seq_operator_getitem_index__with__seq_operator_getitem",
+	"mh_seq_operator_trygetitem":       "default__seq_operator_trygetitem__with__seq_operator_getitem",
+	"mh_seq_operator_trygetitem_index": "default__seq_operator_trygetitem_index__with__seq_operator_getitem_index",
+	"mh_seq_operator_size":             "default__seq_operator_size__with__seq_operator_sizeob",
+	"mh_seq_operator_sizeob":           "default__seq_operator_sizeob__with_callobjectcache___seq_size__",
+	"mh_set_operator_iter":             "default__set_operator_iter__with__seq_operator_iter",
+	"mh_set_operator_foreach":          "default__set_operator_foreach__with__seq_operator_foreach",
+	"mh_set_operator_size":             "default__set_operator_size__with__set_operator_foreach",
+	"mh_set_operator_sizeob":           "default__set_operator_sizeob__with__set_operator_size",
+	"mh_map_operator_foreach_pair":     "default__map_operator_foreach_pair__with__seq_operator_foreach_pair",
+	"mh_map_enumerate":                 "default__map_operator_foreach_pair__with__seq_operator_foreach_pair",
+	"mh_map_enumerate_range":           "default__map_enumerate_range__with__map_enumerate",
+	"mh_map_operator_size":             "default__map_operator_size__with__map_operator_foreach_pair",
+	"mh_map_operator_sizeob":           "default__map_operator_sizeob__with__map_operator_size",
+});
+
 
 #endif  /* !__MAIN__ */
 
@@ -1452,7 +1521,9 @@ function dumpType(typ: Type) {
 	print(f"\});");
 }
 
-dumpType(rt.SetInversion);
+
+class SetList: Set, List {}
+dumpType(SetList);
 
 #endif /* __MAIN__ */
 

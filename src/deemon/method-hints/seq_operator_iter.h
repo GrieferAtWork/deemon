@@ -39,7 +39,7 @@ err:
  * very special cases of "rt.SeqEach", that type can just provide
  * a custom "__seq_iter__" method which would be used here instead) */
 [[accept_any_base_class_for_method_hint]]
-[[operator([Sequence, Set, Mapping]: tp_seq->tp_iter)]]
+[[operator(Sequence: tp_seq->tp_iter)]]
 [[wunused]] DREF DeeObject *
 __seq_iter__.seq_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
@@ -260,7 +260,7 @@ err:
 
 /* accept_any_base_class_for_method_hint -- see comment on "seq_operator_iter" */
 [[accept_any_base_class_for_method_hint]]
-[[operator([Sequence, Set, Mapping]: tp_seq->tp_foreach)]]
+[[operator(Sequence: tp_seq->tp_foreach)]]
 [[wunused]] Dee_ssize_t
 __seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *__restrict self,
                                   [[nonnull]] Dee_foreach_t cb,
@@ -504,7 +504,7 @@ default_foreach_pair_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject 
 
 /* accept_any_base_class_for_method_hint -- see comment on "seq_operator_iter" */
 [[accept_any_base_class_for_method_hint]]
-[[operator([Sequence, Set, Mapping]: tp_seq->tp_foreach_pair)]]
+[[operator(Sequence: tp_seq->tp_foreach_pair)]]
 [[wunused]] Dee_ssize_t
 __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
                                        [[nonnull]] Dee_foreach_pair_t cb,
@@ -543,13 +543,18 @@ seq_operator_iter = {
 	DeeMH_set_operator_iter_t set_operator_iter;
 	DeeMH_seq_operator_size_t seq_operator_size = REQUIRE_NODEFAULT(seq_operator_size);
 	if (seq_operator_size) {
+		DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
 		if (seq_operator_size == &default__seq_operator_size__empty)
 			return &$empty;
 with_seq_operator_size:
 		if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast)
 			return &$with__seq_operator_size__and__operator_getitem_index_fast;
-		if (REQUIRE_NODEFAULT(seq_operator_trygetitem_index))
+		seq_operator_trygetitem_index = REQUIRE_NODEFAULT(seq_operator_trygetitem_index);
+		if (seq_operator_trygetitem_index) {
+			if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_operator_getitem_index)
+				return &$with__seq_operator_size__and__seq_operator_getitem_index;
 			return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+		}
 		if (REQUIRE_NODEFAULT(seq_operator_getitem_index))
 			return &$with__seq_operator_size__and__seq_operator_getitem_index;
 		if (REQUIRE_NODEFAULT(seq_operator_getitem) || REQUIRE_NODEFAULT(seq_operator_trygetitem))

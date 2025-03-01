@@ -26,6 +26,7 @@
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -463,7 +464,7 @@ PRIVATE struct type_seq set_seq = {
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ &default__set_operator_foreach,
-	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_foreach_pair               = */ &default__foreach_pair__with__foreach,
 	/* ._deprecated_tp_enumerate      = */ NULL,
 	/* ._deprecated_tp_enumerate_index= */ NULL,
 	/* ._deprecated_tp_iterkeys       = */ NULL,
