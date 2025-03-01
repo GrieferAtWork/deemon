@@ -29,13 +29,12 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dict.h>
-#include <deemon/gc.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/rodict.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>

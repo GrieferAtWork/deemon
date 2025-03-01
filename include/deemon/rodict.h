@@ -21,11 +21,13 @@
 #define GUARD_DEEMON_RODICT_H 1
 
 #include "api.h"
+/**/
 
 #include "dict.h"
 #include "object.h"
+/**/
 
-#include <stddef.h>
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

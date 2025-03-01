@@ -23,14 +23,10 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/float.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
-#include <deemon/int.h>
 #include <deemon/kwds.h>
 #include <deemon/module.h>
 #include <deemon/none.h>

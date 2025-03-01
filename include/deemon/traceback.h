@@ -21,26 +21,25 @@
 #define GUARD_DEEMON_TRACEBACK_H 1
 
 #include "api.h"
+/**/
 
-#include <stdarg.h>
-#include <stddef.h>
-
-#include "code.h"
+#include "code.h" /* struct Dee_code_frame */
 #include "object.h"
 #include "util/lock.h"
 #include "util/rlock.h"
+/**/
+
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
 #define Dee_traceback_object traceback_object
 #define Dee_thread_object    thread_object
-#define Dee_code_frame       code_frame
 #endif /* DEE_SOURCE */
 
 typedef struct Dee_traceback_object DeeTracebackObject;
 struct Dee_thread_object;
-struct Dee_code_frame;
 
 struct Dee_traceback_object {
 	Dee_OBJECT_HEAD /* GC object. */

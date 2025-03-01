@@ -29,6 +29,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
+#include <deemon/format.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
@@ -41,7 +42,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/sched/yield.h>
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>

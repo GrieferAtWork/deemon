@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>

@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_CELL_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
 #include "util/lock.h"

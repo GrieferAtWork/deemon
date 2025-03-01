@@ -26,21 +26,18 @@
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/futex.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
-#include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 #include <hybrid/unaligned.h>
 

@@ -21,16 +21,20 @@
 #define GUARD_DEEMON_DICT_H 1
 
 #include "api.h"
-
-#include <hybrid/host.h> /* __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC */
-#include <hybrid/typecore.h>
+/**/
 
 #include "object.h"
 #include "util/lock.h"
-
 #ifndef __INTELLISENSE__
 #include "util/atomic.h"
 #endif /* !__INTELLISENSE__ */
+/**/
+
+#include <hybrid/host.h> /* __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC */
+#include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

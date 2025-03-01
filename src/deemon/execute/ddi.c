@@ -23,7 +23,6 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/asm.h>
-#include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
 #include <deemon/format.h>
@@ -32,8 +31,6 @@
 #include <deemon/system-features.h> /* memcpyc(), ... */
 
 #include <hybrid/minmax.h>
-
-#include <stddef.h>
 
 DECL_BEGIN
 
@@ -228,7 +225,7 @@ Dee_ddi_next_regs(uint8_t *__restrict ip,
 
 
 
-LOCAL NONNULL((1)) int DCALL
+PRIVATE NONNULL((1)) int DCALL
 ddi_xrealloc_sp(struct ddi_xregs *__restrict regs,
                 uint16_t min_size, unsigned int flags) {
 	uint16_t new_alloc, *new_vec;

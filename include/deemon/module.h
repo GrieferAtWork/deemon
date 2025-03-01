@@ -21,21 +21,22 @@
 #define GUARD_DEEMON_MODULE_H 1
 
 #include "api.h"
-
-#include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>
-
-#include <stdbool.h>
-#include <stddef.h>
+/**/
 
 #include "gc.h"
 #include "object.h"
 #include "system.h" /* DEE_SYSTEM_FS_ICASE */
 #include "util/lock.h"
+/**/
+
+#include <hybrid/sequence/list.h>
 
 #ifdef GUARD_DEEMON_EXECUTE_MODPATH_C
 #include "list.h"
 #endif /* GUARD_DEEMON_EXECUTE_MODPATH_C */
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

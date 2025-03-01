@@ -26,10 +26,8 @@
 #include <hybrid/__overflow.h>
 #include <hybrid/typecore.h>
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H

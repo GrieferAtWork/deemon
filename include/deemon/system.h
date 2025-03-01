@@ -21,10 +21,13 @@
 #define GUARD_DEEMON_SYSTEM_H 1
 
 #include "api.h"
-
-#include <stdbool.h>
+/**/
 
 #include "object.h"
+/**/
+
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H

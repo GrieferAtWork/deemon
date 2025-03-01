@@ -30,7 +30,7 @@
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
-#include <deemon/map.h>
+#include <deemon/format.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -43,7 +43,7 @@
 
 #include <hybrid/sequence/list.h>
 
-#include <stdbool.h>
+#include <stdbool.h> /* bool */
 
 #undef SWAP
 #define SWAP(p_a, p_b)     \

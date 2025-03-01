@@ -21,9 +21,13 @@
 #define GUARD_DEEMON_ERROR_TYPES_H 1
 
 #include "api.h"
+/**/
 
 #include "error.h"
 #include "object.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

@@ -21,8 +21,12 @@
 #define GUARD_DEEMON_METHOD_HINTS_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

@@ -21,12 +21,12 @@
 #define GUARD_DEEMON_MAP_H 1
 
 #include "api.h"
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+/**/
 
 #include "object.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

@@ -25,17 +25,14 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
-#include <deemon/string.h>
-#include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 

@@ -21,13 +21,16 @@
 #define GUARD_DEEMON_THREAD_H 1
 
 #include "api.h"
-
-#include <hybrid/typecore.h>
-
-#include <stdbool.h>
-#include <stddef.h>
+/**/
 
 #include "object.h"
+/**/
+
+#include <hybrid/typecore.h>
+/**/
+
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 
 #undef Dee_pid_t
 #ifdef CONFIG_HOST_WINDOWS

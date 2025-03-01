@@ -21,12 +21,16 @@
 #define GUARD_DEEMON_STRINGUTILS_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
 /**/
 
 #include <hybrid/byteorder.h>
 #include <hybrid/__byteswap.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 #ifdef DEE_SOURCE
 #ifdef CONFIG_NO_UNICODE_H

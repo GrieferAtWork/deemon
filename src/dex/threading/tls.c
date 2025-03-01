@@ -26,8 +26,8 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/dex.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/none.h>
 #include <deemon/system-features.h> /* bzeroc(), ... */
 #include <deemon/thread.h>

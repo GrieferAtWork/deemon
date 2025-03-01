@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/bytes.h>
+#include <deemon/format.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/file.h>

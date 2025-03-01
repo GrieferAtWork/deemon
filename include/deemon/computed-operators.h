@@ -52,6 +52,7 @@
 
 
 #ifndef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
+#include "object.h"
 
 /* Have a deemon program that:
  * - scans the deemon source code for type declarations

@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_GC_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
 
@@ -36,9 +37,10 @@ LOCAL ATTR_CONST WUNUSED size_t DCALL _Dee_MalloccBufsizeSafe(size_t elem_count,
 LOCAL ATTR_CONST WUNUSED size_t DCALL _Dee_MallococBufsizeSafe(size_t base_offset, size_t elem_count, size_t elem_size);
 DECL_END
 #endif /* __INTELLISENSE__ */
+/**/
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN
 

@@ -26,8 +26,9 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
+/**/
 
-#include <stddef.h>
+#include <stddef.h> /* size_t, NULL */
 
 #ifdef CONFIG_NO_FPU
 #undef CONFIG_HAVE_FPU

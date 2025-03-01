@@ -28,14 +28,12 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
-#include <deemon/map.h>
 #include <deemon/none.h>
-#include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero(), ... */
-#include <deemon/thread.h>
 
 DECL_BEGIN
 

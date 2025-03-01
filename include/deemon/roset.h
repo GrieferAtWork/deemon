@@ -21,11 +21,12 @@
 #define GUARD_DEEMON_ROSET_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
+/**/
 
-#include <stdbool.h>
-#include <stddef.h>
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

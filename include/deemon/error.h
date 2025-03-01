@@ -21,11 +21,12 @@
 #define GUARD_DEEMON_ERROR_H 1
 
 #include "api.h"
-
-#include <stdbool.h>
-#include <stdint.h>
+/**/
 
 #include "object.h"
+/**/
+
+#include <stdbool.h> /* bool */
 
 DECL_BEGIN
 

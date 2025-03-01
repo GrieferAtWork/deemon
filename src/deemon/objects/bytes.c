@@ -27,6 +27,7 @@
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
@@ -46,7 +47,6 @@
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
-#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 /**/

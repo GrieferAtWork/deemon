@@ -21,22 +21,24 @@
 #define GUARD_DEEMON_STRING_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
-
 #ifndef __INTELLISENSE__
 #include "alloc.h"
 #endif /* !__INTELLISENSE__ */
+/**/
 
 #include <hybrid/__overflow.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
+/**/
 
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint32_t */
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H

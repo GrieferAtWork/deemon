@@ -26,7 +26,6 @@
 
 #ifndef CONFIG_NO_DEC
 #include <deemon/alloc.h>
-#include <deemon/arg.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
@@ -36,7 +35,6 @@
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
-#include <deemon/file.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -66,11 +64,6 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
-#include <hybrid/wordbits.h>
-
-#include <stdarg.h>
-
-#include "../runtime/runtime_error.h"
 
 DECL_BEGIN
 

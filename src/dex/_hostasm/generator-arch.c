@@ -30,6 +30,7 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
+#include <deemon/gc.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
 #include <deemon/object.h>
@@ -39,7 +40,6 @@
 
 #include <hybrid/bitset.h>
 #include <hybrid/sched/__yield.h>
-#include <hybrid/unaligned.h>
 
 #ifdef HOSTASM_X86
 #include "libgen86/gen.h"

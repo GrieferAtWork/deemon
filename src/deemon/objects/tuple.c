@@ -25,12 +25,12 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
@@ -51,7 +51,6 @@
 #include "seq/sort.h"
 
 /**/
-#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"

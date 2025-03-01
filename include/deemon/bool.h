@@ -21,9 +21,7 @@
 #define GUARD_DEEMON_BOOL_H 1
 
 #include "api.h"
-
-#include <stdbool.h>
-#include <stddef.h>
+/**/
 
 #include "object.h"
 

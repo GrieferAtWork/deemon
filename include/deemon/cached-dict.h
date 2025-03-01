@@ -21,13 +21,13 @@
 #define GUARD_DEEMON_CACHED_DICT_H 1
 
 #include "api.h"
-
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
+/**/
 
 #include "object.h"
 #include "util/lock.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

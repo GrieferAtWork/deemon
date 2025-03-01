@@ -21,8 +21,8 @@
 #define GUARD_DEEMON_NONE_OPERATOR_H 1
 
 #include "api.h"
+/**/
 
-#include "none.h"
 #include "object.h"
 
 DECL_BEGIN

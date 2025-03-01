@@ -28,21 +28,15 @@
 #include <deemon/computed-operators.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
-#include <deemon/int.h>
 #include <deemon/map.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
-#include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/sched/yield.h>
-
-#include "../runtime/runtime_error.h"
-#include "../runtime/strings.h"
 
 DECL_BEGIN
 

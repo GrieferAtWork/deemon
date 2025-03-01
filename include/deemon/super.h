@@ -21,10 +21,12 @@
 #define GUARD_DEEMON_SUPER_H 1
 
 #include "api.h"
-
-#include <stddef.h>
+/**/
 
 #include "object.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

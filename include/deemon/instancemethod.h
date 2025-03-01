@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_INSTANCEMETHOD_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
 
@@ -52,7 +53,6 @@ DDATDEF DeeTypeObject DeeInstanceMethod_Type;
 		(DREF DeeObject *)(thisarg)                    \
 	}
 
-
 /* Create a new instance method.
  * This is a simple wrapper object that simply invokes a thiscall on
  * `im_func', using `this_arg' as the this-argument when called normally.
@@ -61,7 +61,6 @@ DDATDEF DeeTypeObject DeeInstanceMethod_Type;
  * as an object, rather than being called directly. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMethod_New(DeeObject *func, DeeObject *this_arg);
-
 
 DECL_END
 

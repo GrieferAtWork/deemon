@@ -29,6 +29,7 @@
 #include <deemon/float.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/none.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>

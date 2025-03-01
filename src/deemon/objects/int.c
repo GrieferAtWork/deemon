@@ -36,7 +36,7 @@
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
-#include <deemon/float.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/numeric.h>

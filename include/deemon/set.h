@@ -21,10 +21,7 @@
 #define GUARD_DEEMON_SET_H 1
 
 #include "api.h"
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+/**/
 
 #include "object.h"
 

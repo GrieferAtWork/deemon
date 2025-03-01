@@ -20,14 +20,13 @@
 #ifndef GUARD_DEEMON_UTIL_OBJECTLIST_H
 #define GUARD_DEEMON_UTIL_OBJECTLIST_H 1
 
-#include <stddef.h>
+#include "../api.h"
+/**/
 
 #include "../alloc.h"
-#include "../api.h"
-#include "../gc.h"
 #include "../object.h"
 #include "../seq.h"
-#include "../system-features.h"
+#include "../system-features.h" /* memchrp */
 #include "../tuple.h"
 
 DECL_BEGIN

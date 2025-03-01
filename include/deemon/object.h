@@ -21,19 +21,23 @@
 #define GUARD_DEEMON_OBJECT_H 1
 
 #include "api.h"
+/**/
+
+#include "util/lock.h"
+/**/
 
 #include <hybrid/__atomic.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/int128.h>
 #include <hybrid/typecore.h>
+/**/
 
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t, NULL */
+#include <stdint.h>  /* intX_t, uintX_t */
 
-#include "util/lock.h"
-
+#ifndef __INTELLISENSE__
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H
 #elif (!defined(CONFIG_HAVE_STRING_H) && \
@@ -48,8 +52,9 @@
 #endif
 
 #ifdef CONFIG_HAVE_STRING_H
-#include <string.h>
+#include <string.h> /* strlen */
 #endif /* CONFIG_HAVE_STRING_H */
+#endif /* !__INTELLISENSE__ */
 
 /* Const modifier for static type callback-table declaration */
 #ifndef Dee_tpconst
@@ -79,6 +84,7 @@
 
 DECL_BEGIN
 
+#ifndef __INTELLISENSE__
 #ifndef CONFIG_HAVE_strlen
 #define CONFIG_HAVE_strlen
 #undef strlen
@@ -90,6 +96,7 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 	return result;
 }
 #endif /* !CONFIG_HAVE_strlen */
+#endif /* !__INTELLISENSE__ */
 
 #ifdef __INTELLISENSE__
 typedef __INTPTR_TYPE__  intptr_t;
@@ -1168,6 +1175,7 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #define CONFIG_HAVE_memsetl
 #endif
 #ifndef CONFIG_HAVE_memsetl
+#include <hybrid/host.h>
 #if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
 #define CONFIG_HAVE_memsetl
 DECL_BEGIN
@@ -4147,6 +4155,7 @@ struct Dee_type_operator {
 #endif /* DEE_SOURCE */
 
 
+struct Dee_type_method_hint;
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 struct Dee_type_mh_cache;
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */

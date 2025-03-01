@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_SYSTEM_ERROR_H 1
 
 #include "api.h"
+/**/
 
 #include "system-features.h"
 

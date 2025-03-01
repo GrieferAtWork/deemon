@@ -29,10 +29,10 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dict.h> /* DeeDict_Dummy */
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/hashset.h>
 #include <deemon/method-hints.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>

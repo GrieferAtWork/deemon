@@ -21,9 +21,13 @@
 #define GUARD_DEEMON_ARG_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
-#include "util/lock.h"
+/**/
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

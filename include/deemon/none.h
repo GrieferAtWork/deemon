@@ -21,8 +21,7 @@
 #define GUARD_DEEMON_NONE_H 1
 
 #include "api.h"
-
-#include <stddef.h>
+/**/
 
 #include "object.h"
 

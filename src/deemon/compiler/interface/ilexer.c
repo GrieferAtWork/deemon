@@ -30,11 +30,11 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>

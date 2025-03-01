@@ -23,7 +23,6 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/class.h>
@@ -40,10 +39,11 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/futex.h>
+#include <deemon/util/rlock.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -2073,7 +2073,7 @@ err:
 	return -1;
 }
 
-LOCAL WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 inplace_deepcopy_noarg(DREF DeeObject **__restrict p_ob,
                        size_t argc1, DeeObject *const *argv1,
                        size_t argc2, DeeObject *const *argv2) {

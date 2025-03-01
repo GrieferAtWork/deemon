@@ -21,10 +21,16 @@
 #define GUARD_DEEMON_BYTES_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
+/**/
 
 #include <hybrid/typecore.h>
+/**/
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

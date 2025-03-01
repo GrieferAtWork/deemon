@@ -25,7 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
-#include <deemon/int.h>
+#include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/util/atomic.h>

@@ -21,14 +21,14 @@
 #define GUARD_DEEMON_SEQ_H 1
 
 #include "api.h"
+/**/
 
 #include "alloc.h" /* Dee_MallocUsableSize */
 #include "object.h"
 /**/
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 
 DECL_BEGIN
 

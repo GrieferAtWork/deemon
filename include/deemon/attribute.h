@@ -72,8 +72,9 @@
 #include "util/lock.h"
 #endif /* CONFIG_LONGJMP_ENUMATTR */
 #endif /* CONFIG_LONGJMP_ENUMATTR */
+/**/
 
-#include <stddef.h>
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

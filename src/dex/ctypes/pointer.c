@@ -29,11 +29,11 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
-#include <deemon/super.h>
 #include <deemon/system-features.h> /* memcpy() */
 
 #include <hybrid/overflow.h>

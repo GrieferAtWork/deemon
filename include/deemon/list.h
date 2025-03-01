@@ -21,16 +21,20 @@
 #define GUARD_DEEMON_LIST_H 1
 
 #include "api.h"
+/**/
 
-#include "alloc.h" /* Dee_MallocUsableSize */
 #include "object.h"
 #include "util/atomic.h"
 #include "util/lock.h"
 #include "util/objectlist.h"
 /**/
 
-#include <stdarg.h>
-#include <stddef.h>
+#ifndef __INTELLISENSE__
+#include "gc.h" /* DeeGC_Track */
+#endif /* !__INTELLISENSE__ */
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

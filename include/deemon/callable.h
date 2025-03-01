@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_CALLABLE_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
 

@@ -24,17 +24,17 @@
 /**/
 
 #include "object.h"
-
 #ifndef CONFIG_NO_DEX
 #include "module.h"
 #ifndef CONFIG_NO_NOTIFICATIONS
 #include "notify.h"
 #endif /* !CONFIG_NO_NOTIFICATIONS */
+/**/
 
 #include <hybrid/typecore.h>
+/**/
 
-#include <stdbool.h>
-#include <stddef.h>
+#include <stdbool.h> /* bool */
 
 DECL_BEGIN
 

@@ -21,12 +21,13 @@
 #define GUARD_DEEMON_NOTIFY_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
 
 #ifndef CONFIG_NO_NOTIFICATIONS
 #include "int.h"
-#include "string.h"
+#include "string.h" /* DeeString_AsUtf8 */
 #endif /* !CONFIG_NO_NOTIFICATIONS */
 
 DECL_BEGIN

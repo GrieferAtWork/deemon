@@ -21,16 +21,20 @@
 #define GUARD_DEEMON_DEC_H 1
 
 #include "api.h"
-
-#include <hybrid/byteorder.h>
-
-#include <stdint.h>
+/**/
 
 #ifdef CONFIG_BUILDING_DEEMON
 #ifndef CONFIG_NO_DEC
 #include "object.h"
 #endif /* !CONFIG_NO_DEC */
 #endif /* CONFIG_BUILDING_DEEMON */
+/**/
+
+#include <hybrid/byteorder.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintX_t */
 
 
 DECL_BEGIN

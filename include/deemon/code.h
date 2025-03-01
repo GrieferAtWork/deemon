@@ -21,16 +21,17 @@
 #define GUARD_DEEMON_CODE_H 1
 
 #include "api.h"
+/**/
 
-#include <hybrid/typecore.h>
-
-#include <stdbool.h>
-#include <stddef.h>
-
-#include "gc.h"
 #include "object.h"
 #include "util/lock.h"
 #include "util/rlock.h"
+/**/
+
+#include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

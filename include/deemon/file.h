@@ -21,13 +21,14 @@
 #define GUARD_DEEMON_FILE_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
 
 /**/
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* NULL */
+#include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint32_t */
 
 #if (!defined(DEESYSTEM_FILE_USE_WINDOWS) && \

@@ -26,12 +26,12 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/tuple.h>
 
-/**/
 #include "../objects/seq/enumerate-cb.h"
 #include "runtime_error.h"
 

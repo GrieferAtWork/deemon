@@ -21,11 +21,15 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_ITERATORS_C 1
 
 #include <deemon/api.h>
+/**/
+
 #include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>

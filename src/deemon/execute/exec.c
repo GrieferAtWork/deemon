@@ -27,10 +27,11 @@
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
-#include <deemon/list.h>
+#include <deemon/gc.h>
 #include <deemon/module.h>
 #include <deemon/notify.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
@@ -43,9 +44,8 @@
  * to force the timestamp of the builtin `deemon' module to be
  * incremented if anything in these headers changed. */
 #include <deemon/asm.h>
-/**/
-
 #include "../runtime/builtin.h"
+/**/
 
 DECL_BEGIN
 

@@ -21,12 +21,14 @@
 #define GUARD_DEEMON_OBJMETHOD_H 1
 
 #include "api.h"
-
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
+/**/
 
 #include "object.h"
+/**/
+
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 
 DECL_BEGIN
 

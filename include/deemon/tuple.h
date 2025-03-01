@@ -21,13 +21,14 @@
 #define GUARD_DEEMON_TUPLE_H 1
 
 #include "api.h"
-
-#include <hybrid/__overflow.h>
-
-#include <stdarg.h>
-#include <stddef.h>
+/**/
 
 #include "object.h"
+/**/
+
+#include <stdbool.h> /* bool */
+#include <stdarg.h>  /* va_list */
+#include <stddef.h>  /* size_t */
 
 DECL_BEGIN
 

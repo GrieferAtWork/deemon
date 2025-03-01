@@ -22,10 +22,10 @@
 
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
 #include <deemon/mro.h>
@@ -36,11 +36,11 @@
 #include <deemon/system-features.h> /* strlen() */
 #include <deemon/util/atomic.h>
 
-#include <stdarg.h>
-#include <stdbool.h>
-
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
+
+/**/
+#include <stdarg.h>
 
 /* Type member access. */
 

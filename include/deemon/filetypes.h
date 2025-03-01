@@ -21,14 +21,19 @@
 #define GUARD_DEEMON_FILETYPES_H 1
 
 #include "api.h"
+/**/
 
 #include "file.h"
 #include "object.h"
-#include "string.h"
+#include "string.h" /* struct Dee_unicode_printer */
 #include "util/lock.h"
 #include "util/rlock.h"
+/**/
 
 #include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

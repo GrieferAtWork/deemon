@@ -21,11 +21,16 @@
 #define GUARD_DEEMON_MRO_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
 #include "util/lock.h"
+/**/
 
 #include <hybrid/sched/__yield.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

@@ -30,18 +30,19 @@
 #define GUARD_DEEMON_INT_H 1
 
 #include "api.h"
+/**/
+
+#include "object.h"
+/**/
 
 #include <hybrid/byteorder.h>
-#include <hybrid/int128.h>
 #include <hybrid/limitcore.h>
 #include <hybrid/typecore.h>
+/**/
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
-#include "format.h"
-#include "object.h"
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* intX_t */
 
 /* NOTE: Integer objects have been completely reworked in deemon 2.0,
  *       no longer being split between 8 different types for different

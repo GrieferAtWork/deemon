@@ -30,7 +30,7 @@
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
@@ -41,9 +41,7 @@
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
-#include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
-#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
@@ -55,7 +53,6 @@
 #include "generic-proxy.h"
 #include "seq/default-compare.h"
 #include "seq/default-map-proxy.h"
-#include "seq/hashfilter.h"
 
 /**/
 #include "dict.h"

@@ -21,11 +21,17 @@
 #define GUARD_DEEMON_OPERATOR_HINTS_H 1
 
 #include "api.h"
+/**/
+
 #include "object.h"
+/**/
 
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #include "none-operator.h"
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

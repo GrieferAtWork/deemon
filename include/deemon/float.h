@@ -21,11 +21,15 @@
 #define GUARD_DEEMON_FLOAT_H 1
 
 #include "api.h"
+/**/
 
 #include "object.h"
 /**/
 
 #include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 #ifdef CONFIG_NO_FPU
 #undef CONFIG_HAVE_FPU

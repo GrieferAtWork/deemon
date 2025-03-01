@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/code.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>

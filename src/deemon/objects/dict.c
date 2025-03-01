@@ -27,6 +27,7 @@
 #include <deemon/class.h>
 #include <deemon/computed-operators.h>
 #include <deemon/dict.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
@@ -52,7 +53,6 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
-#include "seq/default-api.h"
 #include "seq/default-compare.h"
 #include "seq/default-map-proxy.h"
 
