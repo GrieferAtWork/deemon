@@ -861,25 +861,27 @@ mh_select_seq_makeenumeration(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach &&
 		    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach_pair &&
 		    seq_operator_size != &default__seq_operator_size__with__map_enumerate) {
-			DeeMH_seq_operator_getitem_t seq_operator_getitem = (DeeMH_seq_operator_getitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem);
-			if (seq_operator_getitem) {
+			DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = (DeeMH_seq_operator_getitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem_index);
+			if (seq_operator_getitem_index) {
 				/* Yes! We *do* also have a getitem operator!
 				 * Now just make sure that it's O(1), and then we can actually use it! */
-				if (seq_operator_getitem == &default__seq_operator_getitem__empty)
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
 					return &default__seq_makeenumeration__empty;
-				if (seq_operator_getitem == &default__seq_operator_getitem__with__seq_operator_getitem_index) {
-					DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = (DeeMH_seq_operator_getitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem_index);
-					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_getitem) {
+					DeeMH_seq_operator_getitem_t seq_operator_getitem = (DeeMH_seq_operator_getitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem);
+					if (seq_operator_getitem == &default__seq_operator_getitem__empty)
 						return &default__seq_makeenumeration__empty;
-					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_foreach)
-						goto use__seq_enumerate;
-					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__map_enumerate)
-						goto use__seq_enumerate;
-					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
-						return &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index;
-					return &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index;
+					return &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem;
 				}
-				return &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem;
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_foreach)
+					goto use__seq_enumerate;
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__map_enumerate)
+					goto use__seq_enumerate;
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+					return &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index;
+				if (self->tp_seq && self->tp_seq->tp_getitem_index_fast)
+					return &default__seq_makeenumeration__with__seq_operator_size__and__operator_getitem_index_fast;
+				return &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index;
 			}
 		}
 use__seq_enumerate:

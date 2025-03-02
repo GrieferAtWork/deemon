@@ -25,6 +25,7 @@
 #endif /* !__INTELLISENSE__ */
 
 #include <deemon/bytes.h>
+#include <deemon/computed-operators.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy() */

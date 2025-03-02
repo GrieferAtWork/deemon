@@ -1836,6 +1836,7 @@ PRIVATE struct type_method tpconst tuple_methods[] = {
 	TYPE_METHOD_HINTREF(seq_find),
 	TYPE_METHOD_HINTREF(seq_rfind),
 	TYPE_METHOD_HINTREF(seq_sorted),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
 
@@ -2648,6 +2649,11 @@ PRIVATE struct type_method_hint tpconst nullable_tuple_method_hints[] = {
 	TYPE_METHOD_HINT_END
 };
 
+PRIVATE struct type_method tpconst nullable_tuple_methods[] = {
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_END
+};
+
 PRIVATE struct type_method tpconst nullable_tuple_class_methods[] = {
 	TYPE_METHOD("unpack", &nullable_tuple_unpack,
 	            "(num:?Dint,seq:?S?O)->?.\n"
@@ -2757,7 +2763,7 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ nullable_tuple_methods,
 	/* .tp_getsets       = */ nullable_tuple_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ nullable_tuple_class_methods,

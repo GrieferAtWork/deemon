@@ -25,6 +25,7 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/alloc.h>
+#include <deemon/computed-operators.h>
 #include <deemon/seq.h>
 #include <deemon/util/atomic.h>
 

@@ -3661,25 +3661,6 @@ seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 
 
 PRIVATE struct type_method tpconst list_methods[] = {
-	TYPE_METHOD_HINTREF(seq_extend),
-	TYPE_METHOD_HINTREF(seq_resize),
-	TYPE_METHOD_HINTREF(seq_insert),
-	TYPE_METHOD_HINTREF(seq_insertall),
-	TYPE_METHOD_HINTREF(seq_erase),
-	TYPE_METHOD_HINTREF(seq_pop),
-	TYPE_METHOD_HINTREF(seq_xchitem),
-	TYPE_METHOD_HINTREF(seq_clear),
-	TYPE_METHOD_HINTREF(seq_find),
-	TYPE_METHOD_HINTREF(seq_rfind),
-	TYPE_METHOD_HINTREF(seq_remove),
-	TYPE_METHOD_HINTREF(seq_rremove),
-	TYPE_METHOD_HINTREF(seq_removeall),
-	TYPE_METHOD_HINTREF(seq_removeif),
-	TYPE_METHOD_HINTREF(seq_fill),
-	TYPE_METHOD_HINTREF(seq_reverse),
-	TYPE_METHOD_HINTREF(seq_sort),
-	TYPE_METHOD_HINTREF(seq_sorted),
-
 	/* `List.append()' is a little different from `Sequence.append', in that
 	 * it is a varargs function, and will append *all* given arguments to the
 	 * list in order.
@@ -3706,6 +3687,28 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	              "#r{Returns !t if memory was freed}"
 	              "Release any pre-allocated, but unused memory, setting "
 	              /**/ "?#allocated to the length of @this List"),
+
+	TYPE_METHOD_HINTREF(seq_extend),
+	TYPE_METHOD_HINTREF(seq_resize),
+	TYPE_METHOD_HINTREF(seq_insert),
+	TYPE_METHOD_HINTREF(seq_insertall),
+	TYPE_METHOD_HINTREF(seq_erase),
+	TYPE_METHOD_HINTREF(seq_pop),
+	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_HINTREF(seq_clear),
+	TYPE_METHOD_HINTREF(seq_find),
+	TYPE_METHOD_HINTREF(seq_rfind),
+	TYPE_METHOD_HINTREF(seq_remove),
+	TYPE_METHOD_HINTREF(seq_rremove),
+	TYPE_METHOD_HINTREF(seq_removeall),
+	TYPE_METHOD_HINTREF(seq_removeif),
+	TYPE_METHOD_HINTREF(seq_fill),
+	TYPE_METHOD_HINTREF(seq_reverse),
+	TYPE_METHOD_HINTREF(seq_sort),
+	TYPE_METHOD_HINTREF(seq_sorted),
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINTREF(__seq_append__),
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Deprecated aliases / functions. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT

@@ -2199,6 +2199,14 @@ PRIVATE struct type_member tpconst rodict_class_members[] = {
 
 PRIVATE struct type_method tpconst rodict_methods[] = {
 //	TYPE_KWMETHOD("byhash", &rodict_byhash, DOC_GET(map_byhash_doc)), /* TODO */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINTREF(__seq_iter__),
+	TYPE_METHOD_HINTREF(__seq_size__),
+	TYPE_METHOD_HINTREF(__seq_getitem__),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_HINTREF(__seq_compare__),
+	TYPE_METHOD_HINTREF(__seq_compare_eq__),
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_END
 };
 
@@ -2208,6 +2216,7 @@ PRIVATE struct type_method_hint tpconst rodict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &rodict_mh_seq_enumerate_index_reverse, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS | METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &rodict_trygetfirst, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &rodict_trygetlast, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_METHOD_HINT_F(seq_operator_iter, &rodict_iter, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 	TYPE_METHOD_HINT_F(seq_operator_foreach, &rodict_mh_seq_foreach, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 	TYPE_METHOD_HINT_F(seq_operator_foreach_pair, &rodict_foreach_pair, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 	TYPE_METHOD_HINT_F(seq_operator_enumerate_index, &rodict_mh_seq_enumerate_index, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS | METHOD_FNOREFESCAPE),

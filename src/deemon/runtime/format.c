@@ -34,8 +34,8 @@
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
 
-#include <stdarg.h>
-#include <stddef.h>
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
 
 #ifndef PP_CAT2
 #define PP_PRIVATE_CAT2(a, b)    a##b
@@ -335,7 +335,7 @@ end:
 }
 
 
-PRIVATE uint8_t const null8[]   = { '(', 'n', 'u', 'l', 'l', ')', 0 };
+PRIVATE uint8_t const null8[] = { '(', 'n', 'u', 'l', 'l', ')', 0 };
 PRIVATE uint16_t const null16[] = { '(', 'n', 'u', 'l', 'l', ')', 0 };
 PRIVATE uint32_t const null32[] = { '(', 'n', 'u', 'l', 'l', ')', 0 };
 PRIVATE char const dquote[] = { '"' };

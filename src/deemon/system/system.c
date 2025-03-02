@@ -1047,7 +1047,7 @@ static LPGETSYSTEMTIMEPRECISEASFILETIME pdyn_GetSystemTimePreciseAsFileTime = NU
 
 #ifndef DEFINED_GET_KERNEL32_HANDLE
 #define DEFINED_GET_KERNEL32_HANDLE 1
-PRIVATE WCHAR const wKernel32[]    = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
+PRIVATE WCHAR const wKernel32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
 PRIVATE WCHAR const wKernel32Dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', '.', 'd', 'l', 'l', 0 };
 PRIVATE HMODULE DCALL GetKernel32Handle(void) {
 	HMODULE hKernel32;

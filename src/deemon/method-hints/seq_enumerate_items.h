@@ -186,25 +186,27 @@ seq_makeenumeration = {
 		    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach &&
 		    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach_pair &&
 		    seq_operator_size != &default__seq_operator_size__with__map_enumerate) {
-			DeeMH_seq_operator_getitem_t seq_operator_getitem = REQUIRE(seq_operator_getitem);
-			if (seq_operator_getitem) {
+			DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
+			if (seq_operator_getitem_index) {
 				/* Yes! We *do* also have a getitem operator!
 				 * Now just make sure that it's O(1), and then we can actually use it! */
-				if (seq_operator_getitem == &default__seq_operator_getitem__empty)
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
 					return &$empty;
-				if (seq_operator_getitem == &default__seq_operator_getitem__with__seq_operator_getitem_index) {
-					DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
-					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_getitem) {
+					DeeMH_seq_operator_getitem_t seq_operator_getitem = REQUIRE(seq_operator_getitem);
+					if (seq_operator_getitem == &default__seq_operator_getitem__empty)
 						return &$empty;
-					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_foreach)
-						goto use__seq_enumerate;
-					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__map_enumerate)
-						goto use__seq_enumerate;
-					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
-						return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
-					return &$with__seq_operator_size__and__seq_operator_getitem_index;
+					return &$with__seq_operator_sizeob__and__seq_operator_getitem;
 				}
-				return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_foreach)
+					goto use__seq_enumerate;
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__map_enumerate)
+					goto use__seq_enumerate;
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+					return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+				if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast)
+					return &$with__seq_operator_size__and__operator_getitem_index_fast;
+				return &$with__seq_operator_size__and__seq_operator_getitem_index;
 			}
 		}
 use__seq_enumerate:

@@ -4074,6 +4074,7 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	TYPE_METHOD_HINTREF_DOC(explicit_seq_pop, "(index=!-1)->" D_TItem),
 	TYPE_METHOD_HINTREF(explicit_seq_removeif),
 	TYPE_METHOD_HINTREF(explicit_seq_reverse),
+//	TYPE_METHOD_HINTREF(explicit_seq_size),
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_END
 };

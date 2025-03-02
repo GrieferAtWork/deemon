@@ -43,6 +43,7 @@ global final FILES_AND_PATHS = {
 	"../../src/deemon/objects/*.c",
 	"../../src/deemon/objects/seq/*.c",
 	"../../src/deemon/objects/unicode/*.c",
+	"../../src/deemon/objects/unicode/*.c.inl",
 	"../../src/deemon/compiler/*.c",
 	"../../src/deemon/execute/*.c",
 	"../../src/deemon/system/*.c",
@@ -71,6 +72,8 @@ function mustCastSymbol(symName: string): bool {
 
 global final TYPE_SOURCE_MODULES: {Module...} = { deemon, rt, errors };
 function findTypeByName(name: string): Type | none {
+	if (name == "none")
+		return type none;
 	for (local mod: TYPE_SOURCE_MODULES) {
 		try {
 			return mod.operator . (name);
@@ -504,6 +507,30 @@ again:
 	return i;
 }
 
+function stripSpaceAndComments(data: string): string {
+	local start = skipSpaceAndComments(data, 0);
+	local end = start;
+	while (end < #data && skipSpaceAndComments(data, end) == end)
+		++end;
+	return data[start:end];
+}
+
+function stripAllCommentsAndNormalizeSpace(data: string): string {
+	File.Writer fp;
+	local i = 0, flushStart = 0, len = #data;
+	while (i < len) {
+		local newI = skipSpaceAndComments(data, i);
+		if (newI != i) {
+			fp << data[flushStart:i] << " ";
+			flushStart = i = newI;
+		} else {
+			++i;
+		}
+	}
+	fp << data[flushStart:len];
+	return fp.string.strip();
+}
+
 
 
 global StructInitializer;
@@ -520,6 +547,9 @@ final class InitParser {
 	public member len: int;
 	public member flushStart: int;
 	public member typ: Type;
+
+	@@Initializers for @Field components
+	public member fieldInitializers: {string: string} = Dict();
 
 	public flushUntil(offset: int) {
 		if (flushStart < offset) {
@@ -728,7 +758,9 @@ final class InitParser {
 			i = alignEnd;
 			skipSpace();
 		} else if (spec is Field) {
+			local fieldStart = i;
 			i = findEndOfInitializer();
+			fieldInitializers[spec.name] = data[fieldStart:i];
 		} else if (spec is NativeOperator) {
 			flushUntilHere();
 			local initializer: string, initializerEnd: int = parseInitializer()...;
@@ -799,6 +831,9 @@ final class StructInitializer {
 	@@Qualifiers for @structTyp (e.g. @"tpconst")
 	public final member structTypQualifiers: string;
 
+	@@Qualifiers that appear after @symbolName (e.g. @"[]")
+	public final member structTypPostQualifiers: string;
+
 	@@Struct symbol name
 	public final member symbolName: string;
 
@@ -809,7 +844,7 @@ final class StructInitializer {
 		print fp: (structTyp, " "),;
 		if (structTypQualifiers)
 			print fp: (structTypQualifiers, " "),;
-		print fp: (symbolName, " = ", body),;
+		print fp: (symbolName, structTypPostQualifiers, " = ", body),;
 	}
 
 	public optimizeBody(allParts: {string: StructInitializer}) {
@@ -885,6 +920,102 @@ final class StructInitializer {
 		parser.processSpec(initSpecs);
 		parser.flushRemainder();
 		body = parser.out.string;
+
+		/* When loading the body for a DeeTypeObject, figure out the structs linked
+		 * to its "tp_methods" and "tp_method_hints" fields, and assert that every
+		 * "TYPE_METHOD_HINT" has a corresponding "TYPE_METHOD_HINTREF" */
+		if (structTyp == "DeeTypeObject") {
+			local tp_methods_init: string = parser.fieldInitializers.get("tp_methods") ?? "";
+			local tp_getsets_init: string = parser.fieldInitializers.get("tp_getsets") ?? "";
+			local tp_method_hints_init: string | none = parser.fieldInitializers.get("tp_method_hints");
+			if (tp_method_hints_init !is none) {
+				tp_methods_init = stripSpaceAndComments(tp_methods_init);
+				tp_getsets_init = stripSpaceAndComments(tp_getsets_init);
+				tp_method_hints_init = stripSpaceAndComments(tp_method_hints_init);
+				if (tp_method_hints_init !in ["", "NULL"]) {
+					verifyMethoHintsAndMethods(tp_method_hints_init, tp_methods_init, tp_getsets_init, allParts);
+				}
+			}
+		}
+	}
+
+	public verifyMethoHintsAndMethods(tp_method_hints_init: string,
+	                                  tp_methods_init: string,
+	                                  tp_getsets_init: string,
+	                                  allParts: {string: StructInitializer}) {
+		local tpMethodHints = allParts.get(tp_method_hints_init).body;
+		local tpMethods = allParts.get(tp_methods_init).body ?? "";
+		local tpGetsets = allParts.get(tp_getsets_init).body ?? "";
+		if (tpMethodHints !is none) {
+			tpMethodHints = stripAllCommentsAndNormalizeSpace(tpMethodHints).strip("{}").strip();
+			tpMethods = stripAllCommentsAndNormalizeSpace(tpMethods).strip("{}").strip();
+			tpGetsets = stripAllCommentsAndNormalizeSpace(tpGetsets).strip("{}").strip();
+			local hasTpMethods = !!tpMethods;
+			local hasTpGetsets = !!tpGetsets;
+			if (tpMethodHints) {
+				tpMethodHints = (
+					for (local start, end: tpMethodHints.regfindall(
+							r"(Dee_)?TYPE_METHOD_HINT(_F)?\s*\(\s*(\w+)\s*,").each[3])
+						if (start !is none && end !is none)
+							tpMethodHints[start:end]
+				).cached;
+				tpMethods = (
+					for (local start, end: tpMethods.regfindall(
+							r"(Dee_)?TYPE_METHOD_HINTREF(_DOC)?\s*\(\s*(\w+)\s*[),]").each[3])
+						if (start !is none && end !is none)
+							tpMethods[start:end]
+				).cached;
+				tpGetsets = (
+					for (local start, end: tpGetsets.regfindall(
+							r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*(STR_[a-zA-Z0-9_]+|"[^"]*")').each[2])
+						if (start !is none && end !is none)
+							tpGetsets[start:end]
+				).map(e -> e.startswith('"') ? e.decode("c-escape") : e.lsstrip("STR_")).cached;
+
+				for (local hint: tpMethodHints) {
+					hint = {
+						"seq_operator_enumerate_index": "seq_enumerate_index"
+					}.get(hint, hint);
+					if (hint in mh.ANONYMOUS_METHOD_HINTS)
+						continue; /* No attribute needed here! */
+					local nativeMethod: mh.NativeMethod | none = mh.NATIVE_METHOD_HINTS.get(hint);
+					if (nativeMethod is none) {
+						print("WARNING: ", structTyp, " ", symbolName,
+								": 'tp_method_hints' defines unknown hint: '", hint, "'");
+						continue;
+					}
+					local methodHint: mh.MethodHint | none = nativeMethod.methodHint;
+					assert methodHint !is none;
+					if (methodHint.getset) {
+						if (!hasTpGetsets)
+							continue; /* Ignore... */
+						local requiredAttributes = methodHint.allAttributes.cached;
+						if (!((
+							for (local x: requiredAttributes)
+								x in tpGetsets
+						) || ...)) {
+							print("WARNING: ", structTyp, " ", symbolName,
+									": 'tp_method_hints' defines '", hint, "', but "
+									"'tp_getsets' does NOT contain one of ",
+									repr requiredAttributes, " ", repr tpGetsets);
+						}
+						continue;
+					}
+					if (!hasTpMethods)
+						continue; /* Ignore... */
+					local requiredNames = methodHint.allNames.cached;
+					if (!((
+						for (local x: requiredNames)
+							x in tpMethods
+					) || ...)) {
+						print("WARNING: ", structTyp, " ", symbolName,
+								": 'tp_method_hints' defines '", hint, "', but "
+								"'tp_methods' does NOT contain one of ",
+								repr requiredNames);
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -907,7 +1038,13 @@ continue_after_brace:
 			continue;
 		}
 		/* Jup! It sure looks like a struct initializer! */
-		local symbolNameEnd = i;
+		local postQualiferEnd = i;
+		while (postQualiferEnd > 0 && data.isspace(postQualiferEnd - 1))
+			--postQualiferEnd;
+		local postQualiferStart = postQualiferEnd;
+		while (postQualiferStart > 0 && data[postQualiferStart - 1] in "[0123456789]")
+			--postQualiferStart;
+		local symbolNameEnd = postQualiferStart;
 		while (symbolNameEnd > 0 && data.isspace(symbolNameEnd - 1))
 			--symbolNameEnd;
 		local symbolNameStart = symbolNameEnd;
@@ -961,6 +1098,7 @@ find_structTypStart:
 				structTyp: structTyp,
 				structTypQualifiers: qual,
 				symbolName: symbolName,
+				structTypPostQualifiers: data[postQualiferStart:postQualiferEnd],
 				body: data[braceStart:afterBraceEnd]);
 		i = flushStart = afterBraceEnd;
 	}
@@ -987,27 +1125,32 @@ function updateFile(filename: string, cb: Callable with Bytes) {
 
 
 function processSourceFile(filename: string) {
-	updateFile(filename, oldBytes -> {
-		/* Split file contents into raw text and struct initializers */
-		local parts: {string | StructInitializer...} = Tuple(parseSourceFileData(
-				oldBytes.unifylines().decode("utf-8")));
+	try {
+		updateFile(filename, oldBytes -> {
+			/* Split file contents into raw text and struct initializers */
+			local parts: {string | StructInitializer...} = Tuple(parseSourceFileData(
+					oldBytes.unifylines().decode("utf-8")));
 
-		/* Gather structs being initialized in this file */
-		local structsByName: {string: StructInitializer} = Dict();
-		for (local part: parts) {
-			if (part is StructInitializer)
-				structsByName[part.symbolName] = part;
-		}
+			/* Gather structs being initialized in this file */
+			local structsByName: {string: StructInitializer} = Dict();
+			for (local part: parts) {
+				if (part is StructInitializer)
+					structsByName[part.symbolName] = part;
+			}
 
-		/* Optimize struct initializers */
-		for (local part: parts) {
-			if (part is StructInitializer)
-				part.optimizeBody(structsByName);
-		}
+			/* Optimize struct initializers */
+			for (local part: parts) {
+				if (part is StructInitializer)
+					part.optimizeBody(structsByName);
+			}
 
-		/* Re-join file parts. */
-		return parts + ...;
-	});
+			/* Re-join file parts. */
+			return parts + ...;
+		});
+	} catch (e...) {
+		print("Unhandled error while processing ", repr filename, ": ", e);
+		print(Traceback.current);
+	}
 }
 
 
@@ -1087,7 +1230,7 @@ function main() {
 				pool.run(() -> processSourceFile(head + inDirFilename));
 			continue;
 		}
-		processSourceFile(file);
+		pool.run(() -> processSourceFile(file));
 	}
 	pool.waitfor();
 	printComputedOperators(makeRelPath("../../include/deemon/computed-operators.h"));

@@ -24,6 +24,7 @@
 #include "string_functions.c"
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/computed-operators.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
