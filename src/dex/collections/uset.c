@@ -703,11 +703,11 @@ uset_sizeof(USet *self) {
 }
 
 PRIVATE struct type_getset tpconst uset_getsets[] = {
-	TYPE_GETTER_F("frozen", &URoSet_FromUSet, METHOD_FNOREFESCAPE,
-	              "->?AFrozen?.\n"
-	              "Returns a read-only (frozen) copy of @this set"),
-	TYPE_GETTER("cached", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &uset_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB_F("frozen", &URoSet_FromUSet, METHOD_FNOREFESCAPE,
+	                 "->?AFrozen?.\n"
+	                 "Returns a read-only (frozen) copy of @this set"),
+	TYPE_GETTER_AB("cached", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F("__sizeof__", &uset_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1982,9 +1982,9 @@ uroset_sizeof(URoSet *self) {
 }
 
 PRIVATE struct type_getset tpconst uroset_getsets[] = {
-	TYPE_GETTER("frozen", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER("cached", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &uroset_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB("frozen", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB("cached", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F("__sizeof__", &uroset_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

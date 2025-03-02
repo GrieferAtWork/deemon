@@ -544,8 +544,8 @@ PRIVATE struct type_method tpconst cswi_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst cswi_getsets[] = {
-	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
-	TYPE_GETTER(STR_frozen, &cswi_getfrozen, "->?.\nFully populate the cache, then re-return it"),
+	TYPE_GETTER_AB(STR_cached, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB(STR_frozen, &cswi_getfrozen, "->?.\nFully populate the cache, then re-return it"),
 	TYPE_GETTER("__iter__", &cswi_getiter, "->?.\nThe iterator acting as cache source (throws :UnboundAttribute once exhausted)"),
 	TYPE_GETSET_END
 };

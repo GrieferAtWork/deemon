@@ -2325,6 +2325,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_get_isfrozen(DeeObject *__restrict self) {
+	/* TODO: This should be smarter than just this: */
 	return_bool(Dee_TYPE(self) == &DeeSeq_Type);
 }
 
@@ -2351,9 +2352,11 @@ err:
 
 PRIVATE struct type_getset tpconst seq_getsets[] = {
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_GETTER("length", &default__seq_operator_sizeob, "->?Dint\nAlias for ${##(this as Sequence)}"),
+	TYPE_GETTER("length", &default__seq_operator_sizeob,
+	            "->?Dint\nAlias for ${##(this as Sequence)}"),
 #else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	TYPE_GETTER("length", &DeeSeq_OperatorSizeOb, "->?Dint\nAlias for ${##(this as Sequence)}"),
+	TYPE_GETTER("length", &DeeSeq_OperatorSizeOb,
+	            "->?Dint\nAlias for ${##(this as Sequence)}"),
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_GETSET_BOUND(STR_first,
 	                  &default_seq_getfirst,
@@ -2457,80 +2460,80 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	                  /**/ "	}\n"
 	                  /**/ "}"
 	                  "}"),
-	TYPE_GETTER("each", &DeeSeq_Each,
-	            "->?Ert:SeqEach\n"
-	            "Returns a special proxy object that mirrors any operation performed on "
-	            /**/ "it onto each element of @this Sequence, evaluating to another proxy object "
-	            /**/ "that allows the same, but also allows being used as a regular Sequence:\n"
-	            "${"
-	            /**/ "local locks = { get_lock(\"a\"), get_lock(\"b\") };\n"
-	            /**/ "with (locks.each) { ... }\n"
-	            /**/ "local strings = { \"foo\", \"bar\", \"foobar\" };\n"
-	            /**/ "for (local x: strings.each.upper())\n"
-	            /**/ "	print x; /* \"FOO\", \"BAR\", \"FOOBAR\" */\n"
-	            /**/ "local lists = { [10, 20, 30], [1, 2, 3], [19, 41, 57] };\n"
-	            /**/ "del lists.each[0];\n"
-	            /**/ "print repr lists; /* { [20, 30], [2, 3], [41, 57] } */"
-	            "}\n"
-	            "WARNING: When invoking member functions, be sure to expand the generated "
-	            /**/ "Sequence to ensure that the operator actually gets applied. "
-	            /**/ "The only exception to this rule are operators that don't have an "
-	            /**/ "actual return value and thus cannot be used in expand expressions:\n"
-	            "${"
-	            /**/ "local lists = { [10, 20, 30], [1, 2, 3], [19, 41, 57] };\n"
-	            /**/ "lists.each.insert(0, 9)...; /* Expand the wrapped Sequence to ensure invocation */\n"
-	            /**/ "lists.each[0] = 8;          /* No need for (or way to) expand in this case */\n"
-	            /**/ "del lists.each[0];          /* No need for (or way to) expand in this case */"
-	            "}"),
-	TYPE_GETTER("some", &DeeSeq_Some,
-	            "->?Ert:SeqSome\n"
-	            "Returns a custom proxy object that chains and forwards operators applied to it to "
-	            /**/ "all of the items of @this ?., until a ${opreator bool} is used, at which point "
-	            /**/ "!t is returned if at least one item exists in the original sequence that matches "
-	            /**/ "the constructed condition:\n"
-	            "${"
-	            /**/ "local seq = { 1, 5, 9, 11 };\n"
-	            /**/ "if (seq.some > 10) {\n"
-	            /**/ "	...\n"
-	            /**/ "}\n"
-	            /**/ "\\\n"
-	            /**/ "/* Same as: */\n"
-	            /**/ "if (Sequence.any(seq.each > 10)) {\n"
-	            /**/ "	...\n"
-	            /**/ "}\n"
-	            /**/ "\\\n"
-	            /**/ "/* Similar to (assuming that `seq' doesn't contain `none') */\n"
-	            /**/ "if (seq.locate(x -\\> x > 10) !is none) {\n"
-	            /**/ "	...\n"
-	            /**/ "}"
-	            "}\n"
-	            "Also useful when wanting to find the first/last of a set of objects within some sequence. "
-	            /**/ "?. has no #Cfindany/#Cfind_first_of/etc. function because the same can be done like this:\n"
-	            "${"
-	            /**/ "local seq = { 1, 7, 13, 5, 99, 3 };\n"
-	            /**/ "print seq.find({ 5, 7 }.some);  /* 1 */\n"
-	            /**/ "print seq.rfind({ 5, 7 }.some); /* 3 */\n"
-	            /**/ "\\\n"
-	            /**/ "/* Similar to (except `seq' is only enumerated once) */\n"
-	            /**/ "print (for (local x: { 5, 7 }) seq.find(x)) < ...;  /* 1 -- (would break if `seq' didn't contain both 5 and 7) */\n"
-	            /**/ "print (for (local x: { 5, 7 }) seq.rfind(x)) > ...; /* 3 */"
-	            "}\n"
-	            "This works because ?#find and similar functions always perform comparisons with the "
-	            /**/ "item being searched on the left-hand-side, meaning #Iits compare operators are "
-	            /**/ "invoked in order to determine equality. As such, ${(seq.some == foo).operator bool()} "
-	            /**/ "has been programmed to return the same as ${(foo in seq).operator bool()}"),
-	TYPE_GETTER("ids", &SeqIds_New,
-	            "->?S?Dint\n"
-	            "Returns a special proxy object for accessing the ids of Sequence elements\n"
-	            "This is equivalent to ${this.transform(x -\\> Object.id(x))}"),
-	TYPE_GETTER("types", &SeqTypes_New,
-	            "->?S?DType\n"
-	            "Returns a special proxy object for accessing the types of Sequence elements\n"
-	            "This is equivalent to ${this.transform(x -\\> type(x))}"),
-	TYPE_GETTER("classes", &SeqClasses_New,
-	            "->?S?DType\n"
-	            "Returns a special proxy object for accessing the classes of Sequence elements\n"
-	            "This is equivalent to ${this.transform(x -\\> x.class)}"),
+	TYPE_GETTER_AB("each", &DeeSeq_Each,
+	               "->?Ert:SeqEach\n"
+	               "Returns a special proxy object that mirrors any operation performed on "
+	               /**/ "it onto each element of @this Sequence, evaluating to another proxy object "
+	               /**/ "that allows the same, but also allows being used as a regular Sequence:\n"
+	               "${"
+	               /**/ "local locks = { get_lock(\"a\"), get_lock(\"b\") };\n"
+	               /**/ "with (locks.each) { ... }\n"
+	               /**/ "local strings = { \"foo\", \"bar\", \"foobar\" };\n"
+	               /**/ "for (local x: strings.each.upper())\n"
+	               /**/ "	print x; /* \"FOO\", \"BAR\", \"FOOBAR\" */\n"
+	               /**/ "local lists = { [10, 20, 30], [1, 2, 3], [19, 41, 57] };\n"
+	               /**/ "del lists.each[0];\n"
+	               /**/ "print repr lists; /* { [20, 30], [2, 3], [41, 57] } */"
+	               "}\n"
+	               "WARNING: When invoking member functions, be sure to expand the generated "
+	               /**/ "Sequence to ensure that the operator actually gets applied. "
+	               /**/ "The only exception to this rule are operators that don't have an "
+	               /**/ "actual return value and thus cannot be used in expand expressions:\n"
+	               "${"
+	               /**/ "local lists = { [10, 20, 30], [1, 2, 3], [19, 41, 57] };\n"
+	               /**/ "lists.each.insert(0, 9)...; /* Expand the wrapped Sequence to ensure invocation */\n"
+	               /**/ "lists.each[0] = 8;          /* No need for (or way to) expand in this case */\n"
+	               /**/ "del lists.each[0];          /* No need for (or way to) expand in this case */"
+	               "}"),
+	TYPE_GETTER_AB("some", &DeeSeq_Some,
+	               "->?Ert:SeqSome\n"
+	               "Returns a custom proxy object that chains and forwards operators applied to it to "
+	               /**/ "all of the items of @this ?., until a ${opreator bool} is used, at which point "
+	               /**/ "!t is returned if at least one item exists in the original sequence that matches "
+	               /**/ "the constructed condition:\n"
+	               "${"
+	               /**/ "local seq = { 1, 5, 9, 11 };\n"
+	               /**/ "if (seq.some > 10) {\n"
+	               /**/ "	...\n"
+	               /**/ "}\n"
+	               /**/ "\\\n"
+	               /**/ "/* Same as: */\n"
+	               /**/ "if (Sequence.any(seq.each > 10)) {\n"
+	               /**/ "	...\n"
+	               /**/ "}\n"
+	               /**/ "\\\n"
+	               /**/ "/* Similar to (assuming that `seq' doesn't contain `none') */\n"
+	               /**/ "if (seq.locate(x -\\> x > 10) !is none) {\n"
+	               /**/ "	...\n"
+	               /**/ "}"
+	               "}\n"
+	               "Also useful when wanting to find the first/last of a set of objects within some sequence. "
+	               /**/ "?. has no #Cfindany/#Cfind_first_of/etc. function because the same can be done like this:\n"
+	               "${"
+	               /**/ "local seq = { 1, 7, 13, 5, 99, 3 };\n"
+	               /**/ "print seq.find({ 5, 7 }.some);  /* 1 */\n"
+	               /**/ "print seq.rfind({ 5, 7 }.some); /* 3 */\n"
+	               /**/ "\\\n"
+	               /**/ "/* Similar to (except `seq' is only enumerated once) */\n"
+	               /**/ "print (for (local x: { 5, 7 }) seq.find(x)) < ...;  /* 1 -- (would break if `seq' didn't contain both 5 and 7) */\n"
+	               /**/ "print (for (local x: { 5, 7 }) seq.rfind(x)) > ...; /* 3 */"
+	               "}\n"
+	               "This works because ?#find and similar functions always perform comparisons with the "
+	               /**/ "item being searched on the left-hand-side, meaning #Iits compare operators are "
+	               /**/ "invoked in order to determine equality. As such, ${(seq.some == foo).operator bool()} "
+	               /**/ "has been programmed to return the same as ${(foo in seq).operator bool()}"),
+	TYPE_GETTER_AB("ids", &SeqIds_New,
+	               "->?S?Dint\n"
+	               "Returns a special proxy object for accessing the ids of Sequence elements\n"
+	               "This is equivalent to ${this.transform(x -\\> Object.id(x))}"),
+	TYPE_GETTER_AB("types", &SeqTypes_New,
+	               "->?S?DType\n"
+	               "Returns a special proxy object for accessing the types of Sequence elements\n"
+	               "This is equivalent to ${this.transform(x -\\> type(x))}"),
+	TYPE_GETTER_AB("classes", &SeqClasses_New,
+	               "->?S?DType\n"
+	               "Returns a special proxy object for accessing the classes of Sequence elements\n"
+	               "This is equivalent to ${this.transform(x -\\> x.class)}"),
 	TYPE_GETTER("isempty", &seq_get_isempty,
 	            "->?Dbool\n"
 	            "Returns ?t if @this Sequence is empty\n"
@@ -2545,13 +2548,13 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER("isnonempty", &seq_get_isnonempty,
 	            "->?Dbool\n"
 	            "Alias for ?#{op:bool}"),
-	TYPE_GETTER("flatten", &DeeSeq_Flat,
-	            "->?Ert:SeqFlat\n"
-	            "Flatten a sequence ${{{T...}...}} to ${{T...}}:"
-	            "${"
-	            /**/ "local x = { {0, 1, 2}, {5, 7, 9}, {1, 10, 1} };\n"
-	            /**/ "print repr x.flatten; /* { 0, 1, 2, 5, 7, 9, 1, 10, 1 } */"
-	            "}"),
+	TYPE_GETTER_AB("flatten", &DeeSeq_Flat,
+	               "->?Ert:SeqFlat\n"
+	               "Flatten a sequence ${{{T...}...}} to ${{T...}}:"
+	               "${"
+	               /**/ "local x = { {0, 1, 2}, {5, 7, 9}, {1, 10, 1} };\n"
+	               /**/ "print repr x.flatten; /* { 0, 1, 2, 5, 7, 9, 1, 10, 1 } */"
+	               "}"),
 
 	/* TODO: Variants of this need to be added for `Set' and `Mapping' */
 	TYPE_GETTER(STR_cached, &default_seq_cached,

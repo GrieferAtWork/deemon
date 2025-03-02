@@ -1349,8 +1349,8 @@ PRIVATE struct type_method_hint tpconst deq_method_hints[] = {
 };
 
 PRIVATE struct type_getset tpconst deq_getsets[] = {
-	TYPE_GETTER_F("__sizeof__", &deq_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
-	TYPE_GETTER("cached", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F("__sizeof__", &deq_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB("cached", &DeeObject_NewRef, "->?."),
 	TYPE_GETSET_END
 };
 

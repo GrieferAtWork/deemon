@@ -243,7 +243,7 @@ PRIVATE struct type_cmp funcstaticsiter_cmp = {
 };
 
 PRIVATE struct type_getset tpconst funcstaticsiter_getsets[] = {
-	TYPE_GETTER_ALWAYSBOUND(STR_seq, &funcstaticsiter_getseq, "->?Ert:FunctionStatics"),
+	TYPE_GETTER_AB(STR_seq, &funcstaticsiter_getseq, "->?Ert:FunctionStatics"),
 	TYPE_GETSET_END
 };
 
@@ -1538,7 +1538,7 @@ PRIVATE struct type_method tpconst funcsymbolsbyname_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst funcsymbolsbyname_getsets[] = {
-	TYPE_GETTER_ALWAYSBOUND(STR_iterkeys, &funcsymbolsbyname_mh_map_iterkeys, "->?#KeysIterator"),
+	TYPE_GETTER_AB(STR_iterkeys, &funcsymbolsbyname_mh_map_iterkeys, "->?#KeysIterator"),
 	TYPE_METHOD_END
 };
 
@@ -2070,8 +2070,8 @@ PRIVATE struct type_cmp yfuncsymbolsbynameiter_cmp = {
 };
 
 PRIVATE struct type_getset tpconst yfuncsymbolsbynameiter_getsets[] = {
-	TYPE_GETTER_ALWAYSBOUND("__yfunc__", &yfuncsymbolsbynameiter_get_yfunc, "->?Ert:YieldFunction"),
-	TYPE_GETTER_ALWAYSBOUND("__func__", &yfuncsymbolsbynameiter_get_func, "->?DFunction"),
+	TYPE_GETTER_AB("__yfunc__", &yfuncsymbolsbynameiter_get_yfunc, "->?Ert:YieldFunction"),
+	TYPE_GETTER_AB("__func__", &yfuncsymbolsbynameiter_get_func, "->?DFunction"),
 	TYPE_GETSET_END
 };
 
@@ -2644,8 +2644,8 @@ PRIVATE struct type_method_hint tpconst yfuncsymbolsbyname_method_hints[] = {
 };
 
 PRIVATE struct type_getset tpconst yfuncsymbolsbyname_getsets[] = {
-	TYPE_GETTER_ALWAYSBOUND(STR_iterkeys, &yfuncsymbolsbyname_mh_map_iterkeys, "->?#KeysIterator"),
-	TYPE_GETTER_ALWAYSBOUND("__func__", &yfuncsymbolsbyname_getfunc, "->?DFunction"),
+	TYPE_GETTER_AB(STR_iterkeys, &yfuncsymbolsbyname_mh_map_iterkeys, "->?#KeysIterator"),
+	TYPE_GETTER_AB("__func__", &yfuncsymbolsbyname_getfunc, "->?DFunction"),
 	TYPE_GETSET_END
 };
 
@@ -4437,8 +4437,8 @@ PRIVATE struct type_cmp framesymbolsbynameiter_cmp = {
 };
 
 PRIVATE struct type_getset tpconst framesymbolsbynameiter_getsets[] = {
-	TYPE_GETTER("__frame__", &framesymbolsbynameiter_get_frame, "->?Ert:Frame"),
-	TYPE_GETTER("__func__", &framesymbolsbynameiter_get_func, "->?DFunction"),
+	TYPE_GETTER_AB("__frame__", &framesymbolsbynameiter_get_frame, "->?Ert:Frame"),
+	TYPE_GETTER_AB("__func__", &framesymbolsbynameiter_get_func, "->?DFunction"),
 	TYPE_GETSET_END
 };
 
@@ -5235,7 +5235,7 @@ PRIVATE struct type_method tpconst framesymbolsbyname_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst framesymbolsbyname_getsets[] = {
-	TYPE_GETTER_ALWAYSBOUND(STR_iterkeys, &framesymbolsbyname_mh_map_keysiter, "->?#KeysIterator"),
+	TYPE_GETTER_AB(STR_iterkeys, &framesymbolsbyname_mh_map_keysiter, "->?#KeysIterator"),
 	TYPE_GETSET_END
 };
 

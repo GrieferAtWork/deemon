@@ -668,15 +668,15 @@ PRIVATE struct type_method tpconst lvalue_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst lvalue_getsets[] = {
-	TYPE_GETTER("ref", &lvalue_ref,
-	            "->?Gpointer\n"
-	            "Returns a pointer for the object referred to by @this ?GLValue"),
-	TYPE_GETTER_F("sizeof", &lvalue_sizeof, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Returns the size of the structured objected pointed to by @this ?GLValue"),
-	TYPE_GETTER_F("alignof", &lvalue_alignof, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Returns the alignment of the structured objected pointed to by @this ?GLValue"),
+	TYPE_GETTER_AB("ref", &lvalue_ref,
+	               "->?Gpointer\n"
+	               "Returns a pointer for the object referred to by @this ?GLValue"),
+	TYPE_GETTER_AB_F("sizeof", &lvalue_sizeof, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Returns the size of the structured objected pointed to by @this ?GLValue"),
+	TYPE_GETTER_AB_F("alignof", &lvalue_alignof, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Returns the alignment of the structured objected pointed to by @this ?GLValue"),
 	TYPE_GETSET_END
 };
 

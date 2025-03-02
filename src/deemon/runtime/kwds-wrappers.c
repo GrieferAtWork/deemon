@@ -817,7 +817,7 @@ PRIVATE struct type_seq blv_seq = {
 };
 
 PRIVATE struct type_getset tpconst blv_getsets[] = {
-	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB(STR_frozen, &DeeObject_NewRef, "->?."),
 	TYPE_GETSET_END
 };
 

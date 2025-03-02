@@ -474,7 +474,7 @@ PRIVATE struct type_member tpconst di_sgif_members[] = {
 };
 
 PRIVATE struct type_getset tpconst di_sgif_getsets[] = {
-	TYPE_GETSET("__index__", &di_sgif_getindex, NULL, &di_sgif_setindex, "->?Dint"),
+	TYPE_GETSET_AB("__index__", &di_sgif_getindex, NULL, &di_sgif_setindex, "->?Dint"),
 	TYPE_GETSET_END,
 };
 

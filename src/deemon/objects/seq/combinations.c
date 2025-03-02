@@ -990,7 +990,7 @@ PRIVATE struct type_cmp sci_cmp = {
 #define srci_getsets sci_getsets
 #define spi_getsets  sci_getsets
 PRIVATE struct type_getset tpconst sci_getsets[] = {
-	TYPE_GETTER("__view__", &sci_getview, "->?Ert:SeqCombinationsView"),
+	TYPE_GETTER_AB("__view__", &sci_getview, "->?Ert:SeqCombinationsView"),
 	TYPE_GETSET_END
 };
 

@@ -514,13 +514,13 @@ PRIVATE struct type_member tpconst float_class_members[] = {
 #else /* !float_HAVE_VARIABLE */
 PRIVATE struct type_getset tpconst float_class_getsets[] = {
 #ifdef float_rounds_IS_VARIABLE
-	TYPE_GETTER("rounds", &float_rounds, "->?Dint\nRounding mode"),
+	TYPE_GETTER_AB("rounds", &float_rounds, "->?Dint\nRounding mode"),
 #endif /* float_rounds_IS_VARIABLE */
 #ifdef float_inf_IS_VARIABLE
-	TYPE_GETTER("inf", &float_inf, "->?.\nPositive infinity"),
+	TYPE_GETTER_AB("inf", &float_inf, "->?.\nPositive infinity"),
 #endif /* float_inf_IS_VARIABLE */
 #ifdef float_nan_IS_VARIABLE
-	TYPE_GETTER("nan", &float_nan, "->?.\nNot-a-number"),
+	TYPE_GETTER_AB("nan", &float_nan, "->?.\nNot-a-number"),
 #endif /* float_nan_IS_VARIABLE */
 	TYPE_GETSET_END
 };

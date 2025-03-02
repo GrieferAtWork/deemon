@@ -1104,7 +1104,7 @@ PRIVATE struct type_member tpconst repeatitem_members[] = {
 };
 
 PRIVATE struct type_getset tpconst repeatitem_getsets[] = {
-	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB(STR_frozen, &DeeObject_NewRef, "->?."),
 	TYPE_GETSET_END
 };
 

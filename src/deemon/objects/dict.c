@@ -3982,27 +3982,27 @@ PRIVATE struct type_getset tpconst dict_getsets[] = {
 	TYPE_GETSET_BOUND("firstvalue", &dict_getfirstvalue, &dict_delfirst, &dict_setfirstvalue, &dict_nonempty_as_bound, "->" D_TValue),
 	TYPE_GETSET_BOUND("lastvalue", &dict_getlastvalue, &dict_dellast, &dict_setlastvalue, &dict_nonempty_as_bound, "->" D_TValue),
 
-	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
-	TYPE_GETTER(STR_frozen, &DeeRoDict_FromDict, "->?#Frozen"),
-	TYPE_GETTER_F("__sizeof__", &dict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
-	TYPE_GETTER_F("__hidxio__", &dict___hidxio__, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Size shift-multipler for htab words (word size is ${1 << __hidxio__})\n"
-	              "#T{?#__hidxio__|htab word type~"
-	              /**/ "$0|?Ectypes:uint8_t"
-	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_2("&" "$1|?Ectypes:uint16_t")
-	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_3("&" "$2|?Ectypes:uint32_t")
-	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_4("&" "$3|?Ectypes:uint64_t")
-	              "}"),
+	TYPE_GETTER_AB(STR_cached, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB(STR_frozen, &DeeRoDict_FromDict, "->?#Frozen"),
+	TYPE_GETTER_AB_F("__sizeof__", &dict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB_F("__hidxio__", &dict___hidxio__, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Size shift-multipler for htab words (word size is ${1 << __hidxio__})\n"
+	                 "#T{?#__hidxio__|htab word type~"
+	                 /**/ "$0|?Ectypes:uint8_t"
+	                 /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_2("&" "$1|?Ectypes:uint16_t")
+	                 /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_3("&" "$2|?Ectypes:uint32_t")
+	                 /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_4("&" "$3|?Ectypes:uint64_t")
+	                 "}"),
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_GETSET_F("max_load_factor",
-	              &deprecated_d100_get_maxloadfactor,
-	              &deprecated_d100_del_maxloadfactor,
-	              &deprecated_d100_set_maxloadfactor,
-	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
-	              "->?Dfloat\n"
-	              "Deprecated. Always returns ${1.0}, with del/set being ignored"),
+	TYPE_GETSET_AB_F("max_load_factor",
+	                 &deprecated_d100_get_maxloadfactor,
+	                 &deprecated_d100_del_maxloadfactor,
+	                 &deprecated_d100_set_maxloadfactor,
+	                 METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	                 "->?Dfloat\n"
+	                 "Deprecated. Always returns ${1.0}, with del/set being ignored"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_GETSET_END
 };

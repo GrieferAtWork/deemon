@@ -619,7 +619,7 @@ bs_getsep(BytesSplit *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst bs_getsets[] = {
-	TYPE_GETTER("__sep__", &bs_getsep, "->?DBytes"),
+	TYPE_GETTER_AB("__sep__", &bs_getsep, "->?DBytes"),
 	TYPE_GETSET_END
 };
 

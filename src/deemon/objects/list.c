@@ -3199,6 +3199,11 @@ err_empty_endwrite:
 	return err_empty_sequence((DeeObject *)me);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+list_nonempty_as_bound(List *__restrict me) {
+	return Dee_BOUND_FROMBOOL(DeeList_SIZE_ATOMIC(me) != 0);
+}
+
 #ifdef __OPTIMIZE_SIZE__
 #define list_get_frozen DeeTuple_FromSequence
 #else /* __OPTIMIZE_SIZE__ */
@@ -3615,35 +3620,45 @@ err:
 
 
 PRIVATE struct type_getset tpconst list_getsets[] = {
-	TYPE_GETSET_F("allocated", &list_getallocated, &list_delallocated, &list_setallocated, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#tValueError{Attmpted to set the List preallocation size to a value lower than ${##this}}"
-	              "The number of allocated items\n"
-	              "When using performing a del-operation on this property, the allocation will "
-	              /**/ "be set to use the least amount of memory, which is achived by setting it to ${##this}.\n"
-	              "Note however that when lowering the amount of allocated vector space, failure to "
-	              /**/ "reallocate the internal List vector is ignored, and the allocated List size will "
-	              /**/ "not be modified\n"
-	              "Similarly, failure to allocate more memory when increasing the allocated size "
-	              /**/ "of a List is ignored, with the previously allocated size remaining unchanged.\n"
-	              "${"
-	              /**/ "del mylist.allocated;\n"
-	              /**/ "/* Same as this: */\n"
-	              /**/ "mylist.shrink();\n"
-	              /**/ "/* And same as an atomic variant of: */\n"
-	              /**/ "mylist.allocated = ##mylist;"
-	              "}"),
-	TYPE_GETSET_F(STR_first, &list_get_first, &list_del_first, &list_set_first, METHOD_FNOREFESCAPE,
-	              "->\n"
-	              "#r{The first item from @this List}"),
-	TYPE_GETSET_F(STR_last, &list_get_last, &list_del_last, &list_set_last, METHOD_FNOREFESCAPE,
-	              "->\n"
-	              "#r{The last item from @this List}"),
-	TYPE_GETTER_F(STR_frozen, &list_get_frozen, METHOD_FNOREFESCAPE,
-	              "->?DTuple\n"
-	              "Return a copy of the contents of @this List as an immutable sequence"),
-	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &list_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETSET_AB_F("allocated", &list_getallocated, &list_delallocated, &list_setallocated, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "#tValueError{Attmpted to set the List preallocation size to a value lower than ${##this}}"
+	                 "The number of allocated items\n"
+	                 "When using performing a del-operation on this property, the allocation will "
+	                 /**/ "be set to use the least amount of memory, which is achived by setting it to ${##this}.\n"
+	                 "Note however that when lowering the amount of allocated vector space, failure to "
+	                 /**/ "reallocate the internal List vector is ignored, and the allocated List size will "
+	                 /**/ "not be modified\n"
+	                 "Similarly, failure to allocate more memory when increasing the allocated size "
+	                 /**/ "of a List is ignored, with the previously allocated size remaining unchanged.\n"
+	                 "${"
+	                 /**/ "del mylist.allocated;\n"
+	                 /**/ "/* Same as this: */\n"
+	                 /**/ "mylist.shrink();\n"
+	                 /**/ "/* And same as an atomic variant of: */\n"
+	                 /**/ "mylist.allocated = ##mylist;"
+	                 "}"),
+	TYPE_GETSET_BOUND_F(STR_first,
+	                    &list_get_first,
+	                    &list_del_first,
+	                    &list_set_first,
+	                    &list_nonempty_as_bound,
+	                    METHOD_FNOREFESCAPE,
+	                    "->\n"
+	                    "#r{The first item from @this List}"),
+	TYPE_GETSET_BOUND_F(STR_last,
+	                    &list_get_last,
+	                    &list_del_last,
+	                    &list_set_last,
+	                    &list_nonempty_as_bound,
+	                    METHOD_FNOREFESCAPE,
+	                    "->\n"
+	                    "#r{The last item from @this List}"),
+	TYPE_GETTER_AB_F(STR_frozen, &list_get_frozen, METHOD_FNOREFESCAPE,
+	                 "->?DTuple\n"
+	                 "Return a copy of the contents of @this List as an immutable sequence"),
+	TYPE_GETTER_AB(STR_cached, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F("__sizeof__", &list_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -3657,8 +3672,6 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_binsert(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-
-
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 

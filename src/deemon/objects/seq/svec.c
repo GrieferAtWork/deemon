@@ -1243,7 +1243,7 @@ PRIVATE struct type_seq svec_seq = {
 };
 
 PRIVATE struct type_getset tpconst svec_getsets[] = {
-	TYPE_GETTER("frozen", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB("frozen", &DeeObject_NewRef, "->?."),
 	TYPE_GETSET_END
 };
 

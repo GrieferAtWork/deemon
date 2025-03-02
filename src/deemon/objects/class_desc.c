@@ -1639,33 +1639,35 @@ PRIVATE struct type_method tpconst cd_methods[] = {
 #endif
 
 PRIVATE struct type_getset tpconst cd_getsets[] = {
-	TYPE_GETTER_F("flags", &cd_getflags, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "Return a comma-separated string of flags used to describe the combination of "
-	              /**/ "properties described by ?#isfinal, ?#isinterrupt, ?#hassuperconstructor, "
-	              /**/ "?#__hassuperkwds__, ?#__isinttruncated__, and ?#__hasmoveany__\n"
-	              "#T{Flag|Property~"
-	              /**/ "$\"final\"|?#isfinal&"
-	              /**/ "$\"interrupt\"|?#isinterrupt&"
-	              /**/ "$\"superctor\"|?#hassuperconstructor&"
-	              /**/ "$\"superkwds\"|?#__hassuperkwds__&"
-	              /**/ "$\"autoinit\"|?#__hasautoinit__&"
-	              /**/ "$\"inttrunc\"|?#__isinttruncated__&"
-	              /**/ "$\"moveany\"|?#__hasmoveany__"
-	              "}"),
-	TYPE_GETTER(STR_operators, &cd_operators,
-	            "->?#OperatorTable\n"
-	            "Enumerate operators implemented by @this class, as well as their associated "
-	            /**/ "class object table indices which are holding the respective implementations\n"
-	            "Note that the class object table entry may be left unbound to explicitly "
-	            /**/ "define an operator as having been deleted"),
-	TYPE_GETTER("iattr", &cd_iattr,
-	            "->?#AttributeTable\n"
-	            "Enumerate user-defined instance attributes as a mapping-like ?Dstring-?#Attribute sequence"),
-	TYPE_GETTER("cattr", &cd_cattr,
-	            "->?#AttributeTable\n"
-	            "Enumerate user-defined class ($static) attributes as a mapping-like ?Dstring-?#Attribute sequence"),
-	TYPE_GETTER("__sizeof__", &cd_sizeof, "->?Dint"),
+	TYPE_GETTER_AB_F("flags", &cd_getflags, METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "Return a comma-separated string of flags used to describe the combination of "
+	                 /**/ "properties described by ?#isfinal, ?#isinterrupt, ?#hassuperconstructor, "
+	                 /**/ "?#__hassuperkwds__, ?#__isinttruncated__, and ?#__hasmoveany__\n"
+	                 "#T{Flag|Property~"
+	                 /**/ "$\"final\"|?#isfinal&"
+	                 /**/ "$\"interrupt\"|?#isinterrupt&"
+	                 /**/ "$\"superctor\"|?#hassuperconstructor&"
+	                 /**/ "$\"superkwds\"|?#__hassuperkwds__&"
+	                 /**/ "$\"autoinit\"|?#__hasautoinit__&"
+	                 /**/ "$\"inttrunc\"|?#__isinttruncated__&"
+	                 /**/ "$\"moveany\"|?#__hasmoveany__"
+	                 "}"),
+	TYPE_GETTER_AB(STR_operators, &cd_operators,
+	               "->?#OperatorTable\n"
+	               "Enumerate operators implemented by @this class, as well as their associated "
+	               /**/ "class object table indices which are holding the respective implementations\n"
+	               "Note that the class object table entry may be left unbound to explicitly "
+	               /**/ "define an operator as having been deleted"),
+	TYPE_GETTER_AB("iattr", &cd_iattr,
+	               "->?#AttributeTable\n"
+	               "Enumerate user-defined instance attributes as a mapping-like "
+	               /**/ "?Dstring-?#Attribute sequence"),
+	TYPE_GETTER_AB("cattr", &cd_cattr,
+	               "->?#AttributeTable\n"
+	               "Enumerate user-defined class ($static) attributes as a mapping-like "
+	               /**/ "?Dstring-?#Attribute sequence"),
+	TYPE_GETTER_AB("__sizeof__", &cd_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };
 

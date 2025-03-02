@@ -1523,7 +1523,7 @@ done:
 /* Return a file stream for a standard file number `id'.
  * @param: id:   One of `DEE_STD*' (Except `DEE_STDDBG')
  * @param: file: The file to use, or `NULL' to unbind that stream.
- * `DeeFile_GetStd()' will throw an `UnboundLocal' error if the stream isn't assigned. */
+ * `DeeFile_GetStd()' will throw an `UnboundAttribute' error if the stream isn't assigned. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_GetStd(unsigned int id) {
 	DREF DeeObject *result;
@@ -1673,30 +1673,48 @@ PUBLIC bool DCALL DeeFile_ResetStd(void) {
 	return result;
 }
 
-#define DEFINE_FILE_CLASS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)       \
-	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL            \
-	file_class_get_##stdxxx(DeeObject *__restrict UNUSED(self)) { \
-		return DeeFile_GetStd(DEE_STDXXX);                        \
-	}                                                             \
-	PRIVATE WUNUSED NONNULL((1)) int DCALL                        \
-	file_class_del_##stdxxx(DeeObject *__restrict self) {         \
-		DREF DeeObject *old_stream;                               \
-		old_stream = DeeFile_SetStd(DEE_STDXXX, NULL);            \
-		if unlikely(!old_stream)                                  \
-			goto err_unbound;                                     \
-		return 0;                                                 \
-	err_unbound:                                                  \
-		err_unbound_attribute_string(Dee_TYPE(self), #stdxxx);    \
-		return -1;                                                \
-	}                                                             \
-	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                     \
-	file_class_set_##stdxxx(DeeObject *UNUSED(self),              \
-	                        DeeObject *value) {                   \
-		DREF DeeObject *old_stream;                               \
-		old_stream = DeeFile_SetStd(DEE_STDXXX, value);           \
-		if (ITER_ISOK(old_stream))                                \
-			Dee_Decref(old_stream);                               \
-		return 0;                                                 \
+PRIVATE WUNUSED int DCALL
+file_std_isbound(unsigned int id) {
+	DeeObject *result;
+	ASSERT(id < DEE_STDCNT);
+#ifdef __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC
+	result = atomic_read(&dee_std[id]);
+#else /* __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC */
+	dee_std_lock_read();
+	result = dee_std[id];
+	dee_std_lock_endread();
+#endif /* !__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC */
+	return Dee_BOUND_FROMBOOL(result != NULL);
+}
+
+#define DEFINE_FILE_CLASS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)         \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL              \
+	file_class_get_##stdxxx(DeeObject *__restrict UNUSED(self)) {   \
+		return DeeFile_GetStd(DEE_STDXXX);                          \
+	}                                                               \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                          \
+	file_class_bound_##stdxxx(DeeObject *__restrict UNUSED(self)) { \
+		return file_std_isbound(DEE_STDXXX);                        \
+	}                                                               \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                          \
+	file_class_del_##stdxxx(DeeObject *__restrict self) {           \
+		DREF DeeObject *old_stream;                                 \
+		old_stream = DeeFile_SetStd(DEE_STDXXX, NULL);              \
+		if unlikely(!old_stream)                                    \
+			goto err_unbound;                                       \
+		return 0;                                                   \
+	err_unbound:                                                    \
+		err_unbound_attribute_string(Dee_TYPE(self), #stdxxx);      \
+		return -1;                                                  \
+	}                                                               \
+	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                       \
+	file_class_set_##stdxxx(DeeObject *UNUSED(self),                \
+	                        DeeObject *value) {                     \
+		DREF DeeObject *old_stream;                                 \
+		old_stream = DeeFile_SetStd(DEE_STDXXX, value);             \
+		if (ITER_ISOK(old_stream))                                  \
+			Dee_Decref(old_stream);                                 \
+		return 0;                                                   \
 	}
 DEFINE_FILE_CLASS_STD_FUNCTIONS(stdin, DEE_STDIN)
 DEFINE_FILE_CLASS_STD_FUNCTIONS(stdout, DEE_STDOUT)
@@ -1731,44 +1749,47 @@ file_class_getjoined(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset tpconst file_class_getsets[] = {
-	TYPE_GETSET("stdin",
-	            &file_class_get_stdin,
-	            &file_class_del_stdin,
-	            &file_class_set_stdin,
-	            "->?DFile\n"
-	            "The standard input stream"),
-	TYPE_GETSET("stdout",
-	            &file_class_get_stdout,
-	            &file_class_del_stdout,
-	            &file_class_set_stdout,
-	            "->?DFile\n"
-	            "The standard output stream\n"
-	            "This is also what $print statements will write to when used "
-	            /**/ "without an explicit file target:\n"
-	            "${"
-	            /**/ "print \"foo\";\n"
-	            /**/ "// Same as:\n"
-	            /**/ "import File from deemon;\n"
-	            /**/ "print File.stdout: \"foo\";"
-	            "}"),
-	TYPE_GETSET("stderr",
-	            &file_class_get_stderr,
-	            &file_class_del_stderr,
-	            &file_class_set_stderr,
-	            "->?DFile\n"
-	            "The standard error stream"),
-	TYPE_GETTER("default_stdin",
-	            &file_class_default_stdin,
-	            "->?DFile\n"
-	            "The default standard input stream"),
-	TYPE_GETTER("default_stdout",
-	            &file_class_default_stdout,
-	            "->?DFile\n"
-	            "The default standard output stream"),
-	TYPE_GETTER("default_stderr",
-	            &file_class_default_stderr,
-	            "->?DFile\n"
-	            "The default standard error stream"),
+	TYPE_GETSET_BOUND("stdin",
+	                  &file_class_get_stdin,
+	                  &file_class_del_stdin,
+	                  &file_class_set_stdin,
+	                  &file_class_bound_stdin,
+	                  "->?DFile\n"
+	                  "The standard input stream"),
+	TYPE_GETSET_BOUND("stdout",
+	                  &file_class_get_stdout,
+	                  &file_class_del_stdout,
+	                  &file_class_set_stdout,
+	                  &file_class_bound_stdout,
+	                  "->?DFile\n"
+	                  "The standard output stream\n"
+	                  "This is also what $print statements will write to when used "
+	                  /**/ "without an explicit file target:\n"
+	                  "${"
+	                  /**/ "print \"foo\";\n"
+	                  /**/ "// Same as:\n"
+	                  /**/ "import File from deemon;\n"
+	                  /**/ "print File.stdout: \"foo\";"
+	                  "}"),
+	TYPE_GETSET_BOUND("stderr",
+	                  &file_class_get_stderr,
+	                  &file_class_del_stderr,
+	                  &file_class_set_stderr,
+	                  &file_class_bound_stderr,
+	                  "->?DFile\n"
+	                  "The standard error stream"),
+	TYPE_GETTER_AB("default_stdin",
+	               &file_class_default_stdin,
+	               "->?DFile\n"
+	               "The default standard input stream"),
+	TYPE_GETTER_AB("default_stdout",
+	               &file_class_default_stdout,
+	               "->?DFile\n"
+	               "The default standard output stream"),
+	TYPE_GETTER_AB("default_stderr",
+	               &file_class_default_stderr,
+	               "->?DFile\n"
+	               "The default standard error stream"),
 #if DEE_STDDBG == DEE_STDERR
 #define LINKED_P_file_class_stddbg &file_class_default_stderr
 #else /* DEE_STDDBG == DEE_STDERR */

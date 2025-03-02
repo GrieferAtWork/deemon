@@ -1289,7 +1289,7 @@ sfi_set_curriter(SeqFlatIterator *self, DeeObject *value) {
 }
 
 PRIVATE struct type_getset sfi_getsets[] = {
-	TYPE_GETSET("__curriter__", &sfi_get_curriter, NULL, &sfi_set_curriter, "->?DIterator"),
+	TYPE_GETSET_AB("__curriter__", &sfi_get_curriter, NULL, &sfi_set_curriter, "->?DIterator"),
 	TYPE_GETSET_END
 };
 

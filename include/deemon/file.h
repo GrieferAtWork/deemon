@@ -501,7 +501,7 @@ DeeFile_OpenString(/*utf-8*/ char const *__restrict filename, int oflags, int mo
 /* Return a file stream for a standard file number `id'.
  * @param: id:   One of `DEE_STD*' (Except `DEE_STDDBG')
  * @param: file: The file to use, or `NULL' to unbind that stream.
- * `DeeFile_GetStd()' will throw an `UnboundLocal' error if the stream isn't assigned. */
+ * `DeeFile_GetStd()' will throw an `UnboundAttribute' error if the stream isn't assigned. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeFile_GetStd(unsigned int id);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeFile_TryGetStd(unsigned int id);
 /* Returns the old stream, `NULL' when none was assigned,

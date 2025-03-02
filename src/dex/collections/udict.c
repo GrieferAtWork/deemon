@@ -1266,11 +1266,11 @@ err_temp:
 
 
 PRIVATE struct type_getset tpconst udict_getsets[] = {
-	TYPE_GETTER_F("frozen", &URoDict_FromUDict, METHOD_FNOREFESCAPE,
-	              "->?AFrozen?.\n"
-	              "Returns a read-only (frozen) copy of @this dict"),
-	TYPE_GETTER("cached", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &udict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB_F("frozen", &URoDict_FromUDict, METHOD_FNOREFESCAPE,
+	                 "->?AFrozen?.\n"
+	                 "Returns a read-only (frozen) copy of @this dict"),
+	TYPE_GETTER_AB("cached", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F("__sizeof__", &udict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -2063,9 +2063,9 @@ urodict_sizeof(URoDict *self) {
 
 
 PRIVATE struct type_getset tpconst urodict_getsets[] = {
-	TYPE_GETTER("frozen", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER("cached", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &urodict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB("frozen", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB("cached", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F("__sizeof__", &urodict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

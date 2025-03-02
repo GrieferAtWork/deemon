@@ -2170,18 +2170,18 @@ PRIVATE struct type_getset tpconst rodict_getsets[] = {
 	TYPE_GETTER_BOUND("firstvalue", &rodict_getfirstvalue, &rodict_nonempty_as_bound, "->" D_TValue),
 	TYPE_GETTER_BOUND("lastvalue", &rodict_getlastvalue, &rodict_nonempty_as_bound, "->" D_TValue),
 
-	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
-	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &rodict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
-	TYPE_GETTER_F("__hidxio__", &rodict___hidxio__, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Size shift-multipler for htab words (word size is ${1 << __hidxio__})\n"
-	              "#T{?#__hidxio__|htab word type~"
-	              /**/ "$0|?Ectypes:uint8_t"
-	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_2("&" "$1|?Ectypes:uint16_t")
-	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_3("&" "$2|?Ectypes:uint32_t")
-	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_4("&" "$3|?Ectypes:uint64_t")
-	              "}"),
+	TYPE_GETTER_AB(STR_cached, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB(STR_frozen, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F("__sizeof__", &rodict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB_F("__hidxio__", &rodict___hidxio__, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Size shift-multipler for htab words (word size is ${1 << __hidxio__})\n"
+	                 "#T{?#__hidxio__|htab word type~"
+	                 /**/ "$0|?Ectypes:uint8_t"
+	                 /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_2("&" "$1|?Ectypes:uint16_t")
+	                 /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_3("&" "$2|?Ectypes:uint32_t")
+	                 /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_4("&" "$3|?Ectypes:uint64_t")
+	                 "}"),
 	TYPE_GETSET_END
 };
 

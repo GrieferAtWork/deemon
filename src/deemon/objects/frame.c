@@ -1093,27 +1093,27 @@ err:
 
 
 PRIVATE struct type_getset tpconst frame_getsets[] = {
-	TYPE_GETTER("location", &frame_getlocation,
-	            "->?S?T4?X2?Dstring?N?X2?Dint?N?X2?Dint?N?X2?Dstring?N\n"
-	            "Returns a sequence of tuples describing the Frame location, "
-	            /**/ "the first of which is identical to (?#file, ?#line, ?#col, ?#name)\n"
-	            "Rarely ever does the location consist of more than a single "
-	            /**/ "location tuple, however if a function call has been inlined "
-	            /**/ "as a call from another location, the compiler will generate DDI "
-	            /**/ "instrumentation to ensure consistent debug information for both "
-	            /**/ "the inlined function, as well as the call-site"),
-	TYPE_GETTER("file", &frame_getfile,
-	            "->?X2?Dstring?N\n"
-	            "The filename of this Frame's source file, or ?N when indeterminate"),
-	TYPE_GETTER("line", &frame_getline,
-	            "->?X2?Dint?N\n"
-	            "The 0-based line number within this Frame's source file, or ?N when indeterminate"),
-	TYPE_GETTER("col", &frame_getcol,
-	            "->?X2?Dint?N\n"
-	            "The 0-based column offset within this Frame's source file, or ?N when indeterminate"),
-	TYPE_GETTER("name", &frame_getname,
-	            "->?X2?Dstring?N\n"
-	            "The name of this Frame's function, or ?N when indeterminate"),
+	TYPE_GETTER_AB("location", &frame_getlocation,
+	               "->?S?T4?X2?Dstring?N?X2?Dint?N?X2?Dint?N?X2?Dstring?N\n"
+	               "Returns a sequence of tuples describing the Frame location, "
+	               /**/ "the first of which is identical to (?#file, ?#line, ?#col, ?#name)\n"
+	               "Rarely ever does the location consist of more than a single "
+	               /**/ "location tuple, however if a function call has been inlined "
+	               /**/ "as a call from another location, the compiler will generate DDI "
+	               /**/ "instrumentation to ensure consistent debug information for both "
+	               /**/ "the inlined function, as well as the call-site"),
+	TYPE_GETTER_AB("file", &frame_getfile,
+	               "->?X2?Dstring?N\n"
+	               "The filename of this Frame's source file, or ?N when indeterminate"),
+	TYPE_GETTER_AB("line", &frame_getline,
+	               "->?X2?Dint?N\n"
+	               "The 0-based line number within this Frame's source file, or ?N when indeterminate"),
+	TYPE_GETTER_AB("col", &frame_getcol,
+	               "->?X2?Dint?N\n"
+	               "The 0-based column offset within this Frame's source file, or ?N when indeterminate"),
+	TYPE_GETTER_AB("name", &frame_getname,
+	               "->?X2?Dstring?N\n"
+	               "The name of this Frame's function, or ?N when indeterminate"),
 	TYPE_GETTER("func", &frame_getfunc,
 	            "->?DFunction\n"
 	            DOC_ReferenceError
@@ -1170,46 +1170,46 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 	                  "->?M?X2?Dstring?Dint?O\n"
 	                  DOC_ReferenceError
 	                  "Alias for ?A__staticsbyname__?DFunction through ?#func"),
-	TYPE_GETTER("__stack__", &DeeFrame_GetStackWrapper,
-	            "->?S?O\n"
-	            "Returns (possibly) resizable (up to a certain limit), (possibly) mutable "
-	            /**/ "sequence that can be used to read/write the values of the stack"),
-	TYPE_GETTER("__args__", &DeeFrame_GetArgsWrapper,
-	            "->?S?O\n"
-	            "Returns a read-only sequence for accessing arguments passed to this frame. "
-	            /**/ "Use the 0-based index of the argument with this sequence to access an "
-	            /**/ "argument the same way the #C{push arg <n>} instruction would"),
-	TYPE_GETTER("__locals__", &DeeFrame_GetLocalsWrapper,
-	            "->?S?O\n"
-	            "Returns fixed-length, (possibly) mutable sequence that can be "
-	            /**/ "used to read/write the values of local variables. Note that "
-	            /**/ "depending on optimization, some local variables may not exist "
-	            /**/ "even when they should still be in-scope, and that some local "
-	            /**/ "variables may appear already be assigned prior to initialization "
-	            /**/ "as a result of local variable re-use"),
-	TYPE_GETTER("__argsbyname__", &DeeFrame_GetArgsByNameWrapper,
-	            "->?M?X2?Dstring?Dint?O\n"
-	            "Combine ?#__kwds__ with ?#__args__ to access the values of arguments"),
-	TYPE_GETTER("__localsbyname__", &DeeFrame_GetLocalsByNameWrapper,
-	            "->?M?X2?Dstring?Dint?O\n"
-	            "Combine ?#__locals__ with debug information to form a writable "
-	            /**/ "mapping that can be used to manipulate the values of named locals. "
-	            /**/ "(requires debug information to be present)"),
-	TYPE_GETTER("__stackbyname__", &DeeFrame_GetStackByNameWrapper,
-	            "->?M?X2?Dstring?Dint?O\n"
-	            "Combine ?#__stack__ with debug information to form a writable "
-	            /**/ "mapping that can be used to manipulate the values of named stack "
-	            /**/ "locations. (requires debug information to be present)"),
-	TYPE_GETTER("__variablesbyname__", &DeeFrame_GetVariablesByNameWrapper,
-	            "->?M?X2?Dstring?Dint?O\n"
-	            "Combine ?#__locals__ and ?#__stack__ with debug information to form a writable "
-	            /**/ "mapping that can be used to manipulate the values of named locals and stack "
-	            /**/ "locations. (requires debug information to be present)"),
-	TYPE_GETTER("__symbols__", &DeeFrame_GetSymbolsByNameWrapper,
-	            "->?M?X2?Dstring?Dint?O\n"
-	            "The combination of ?#__refsbyname__, ?#__staticsbyname__, ?#__argsbyname__ "
-	            /**/ "and ?#__variablesbyname__, allowing access to all named symbol. "
-	            /**/ "(requires debug information to be present)"),
+	TYPE_GETTER_AB("__stack__", &DeeFrame_GetStackWrapper,
+	               "->?S?O\n"
+	               "Returns (possibly) resizable (up to a certain limit), (possibly) mutable "
+	               /**/ "sequence that can be used to read/write the values of the stack"),
+	TYPE_GETTER_AB("__args__", &DeeFrame_GetArgsWrapper,
+	               "->?S?O\n"
+	               "Returns a read-only sequence for accessing arguments passed to this frame. "
+	               /**/ "Use the 0-based index of the argument with this sequence to access an "
+	               /**/ "argument the same way the #C{push arg <n>} instruction would"),
+	TYPE_GETTER_AB("__locals__", &DeeFrame_GetLocalsWrapper,
+	               "->?S?O\n"
+	               "Returns fixed-length, (possibly) mutable sequence that can be "
+	               /**/ "used to read/write the values of local variables. Note that "
+	               /**/ "depending on optimization, some local variables may not exist "
+	               /**/ "even when they should still be in-scope, and that some local "
+	               /**/ "variables may appear already be assigned prior to initialization "
+	               /**/ "as a result of local variable re-use"),
+	TYPE_GETTER_AB("__argsbyname__", &DeeFrame_GetArgsByNameWrapper,
+	               "->?M?X2?Dstring?Dint?O\n"
+	               "Combine ?#__kwds__ with ?#__args__ to access the values of arguments"),
+	TYPE_GETTER_AB("__localsbyname__", &DeeFrame_GetLocalsByNameWrapper,
+	               "->?M?X2?Dstring?Dint?O\n"
+	               "Combine ?#__locals__ with debug information to form a writable "
+	               /**/ "mapping that can be used to manipulate the values of named locals. "
+	               /**/ "(requires debug information to be present)"),
+	TYPE_GETTER_AB("__stackbyname__", &DeeFrame_GetStackByNameWrapper,
+	               "->?M?X2?Dstring?Dint?O\n"
+	               "Combine ?#__stack__ with debug information to form a writable "
+	               /**/ "mapping that can be used to manipulate the values of named stack "
+	               /**/ "locations. (requires debug information to be present)"),
+	TYPE_GETTER_AB("__variablesbyname__", &DeeFrame_GetVariablesByNameWrapper,
+	               "->?M?X2?Dstring?Dint?O\n"
+	               "Combine ?#__locals__ and ?#__stack__ with debug information to form a writable "
+	               /**/ "mapping that can be used to manipulate the values of named locals and stack "
+	               /**/ "locations. (requires debug information to be present)"),
+	TYPE_GETTER_AB("__symbols__", &DeeFrame_GetSymbolsByNameWrapper,
+	               "->?M?X2?Dstring?Dint?O\n"
+	               "The combination of ?#__refsbyname__, ?#__staticsbyname__, ?#__argsbyname__ "
+	               /**/ "and ?#__variablesbyname__, allowing access to all named symbol. "
+	               /**/ "(requires debug information to be present)"),
 	TYPE_GETTER_BOUND_F("__defaults__", &frame_get_code_defaults, &frame_bound_code_defaults,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?O\n"

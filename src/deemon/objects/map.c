@@ -596,12 +596,12 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	            "->?#Values\n"
 	            "Returns a ?DSequence that can be enumerated to view only the values of @this ?."),
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_GETTER("items", &map_items,
-	            "->?S?T2?O?O\n"
-	            "Returns a ?DSet that can be enumerated to view the key-item "
-	            /**/ "pairs as 2-element sequences, the same way they could be viewed "
-	            /**/ "if @this ?. itself was being iterated\n"
-	            "Same as ${this as Sequence}"),
+	TYPE_GETTER_AB("items", &map_items,
+	               "->?S?T2?O?O\n"
+	               "Returns a ?DSet that can be enumerated to view the key-item "
+	               /**/ "pairs as 2-element sequences, the same way they could be viewed "
+	               /**/ "if @this ?. itself was being iterated\n"
+	               "Same as ${this as Sequence}"),
 #else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_GETTER("items", &map_items,
 	            "->?S?T2?O?O\n"
@@ -617,19 +617,19 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	            "->?#IterValues\n"
 	            "Returns an iterator for ?#{values}. Same as ${this.values.operator iter()}"),
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#define default__set_operator_iter DeeObject_Iter
+#define default__map_operator_iter DeeObject_Iter
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	TYPE_GETTER("iteritems", &default__set_operator_iter,
+	TYPE_GETTER("iteritems", &default__map_operator_iter,
 	            "->?#Iterator\n"
 	            "Returns an iterator for ?#{items}. Same as ${this.operator iter()}"),
-	TYPE_GETTER("byattr", &MapByAttr_New,
-	            "->?Ert:MapByAttr\n"
-	            "Construct a wrapper for @this mapping that behaves like a generic class object, "
-	            /**/ "such that any attribute address ${this.byattr.foo} behaves like ${this[\"foo\"]} "
-	            /**/ "(during all of $get, $del and $set).\n"
-	            "Note that the returned object doesn't implement the ?DSequence- or ?. "
-	            /**/ "interfaces, but instead simply behaves like a completely generic object.\n"
-	            "This attribute only makes sense if @this mapping behaves like ${{string: Object}}."),
+	TYPE_GETTER_AB("byattr", &MapByAttr_New,
+	               "->?Ert:MapByAttr\n"
+	               "Construct a wrapper for @this mapping that behaves like a generic class object, "
+	               /**/ "such that any attribute address ${this.byattr.foo} behaves like ${this[\"foo\"]} "
+	               /**/ "(during all of $get, $del and $set).\n"
+	               "Note that the returned object doesn't implement the ?DSequence- or ?. "
+	               /**/ "interfaces, but instead simply behaves like a completely generic object.\n"
+	               "This attribute only makes sense if @this mapping behaves like ${{string: Object}}."),
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define default__map_frozen DeeRoDict_FromSequence
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */

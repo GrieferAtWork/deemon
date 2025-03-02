@@ -1476,28 +1476,28 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_ViewGlobals(DeeObject *__restrict self);
 
 PRIVATE struct type_getset tpconst module_getsets[] = {
-	TYPE_GETTER("__exports__", &DeeModule_ViewExports,
-	            "->?M?X2?Dstring?Dint?O\n"
-	            "Returns a modifiable mapping-like object containing @this "
-	            "Module's global variables accessible by name (and enumerable)\n"
-	            "Note that only existing exports can be modified, however no new symbols can be added:\n"
-	            "${"
-	            /**/ "import util;\n"
-	            /**/ "print util.min;                /* function */\n"
-	            /**/ "print util.__exports__[\"min\"]; /* function */\n"
-	            /**/ "del util.min;\n"
-	            /**/ "assert \"min\" !in util.__exports__;\n"
-	            /**/ "util.__exports__[\"min\"] = 42;\n"
-	            /**/ "print util.min;                /* 42 */"
-	            "}"),
-	TYPE_GETTER("__imports__", &module_get_imports,
-	            "->?S?DModule\n"
-	            "Returns an immutable sequence of all other modules imported by this one"),
-	TYPE_GETTER("__globals__", &DeeModule_ViewGlobals,
-	            "->?S?O\n"
-	            "Similar to ?#__exports__, however global variables are addressed using their "
-	            /**/ "internal index. Using this, anonymous global variables (such as property callbacks) "
-	            /**/ "can be accessed and modified"),
+	TYPE_GETTER_AB("__exports__", &DeeModule_ViewExports,
+	               "->?M?X2?Dstring?Dint?O\n"
+	               "Returns a modifiable mapping-like object containing @this "
+	               "Module's global variables accessible by name (and enumerable)\n"
+	               "Note that only existing exports can be modified, however no new symbols can be added:\n"
+	               "${"
+	               /**/ "import util;\n"
+	               /**/ "print util.min;                /* function */\n"
+	               /**/ "print util.__exports__[\"min\"]; /* function */\n"
+	               /**/ "del util.min;\n"
+	               /**/ "assert \"min\" !in util.__exports__;\n"
+	               /**/ "util.__exports__[\"min\"] = 42;\n"
+	               /**/ "print util.min;                /* 42 */"
+	               "}"),
+	TYPE_GETTER_AB("__imports__", &module_get_imports,
+	               "->?S?DModule\n"
+	               "Returns an immutable sequence of all other modules imported by this one"),
+	TYPE_GETTER_AB("__globals__", &DeeModule_ViewGlobals,
+	               "->?S?O\n"
+	               "Similar to ?#__exports__, however global variables are addressed using their "
+	               /**/ "internal index. Using this, anonymous global variables (such as property callbacks) "
+	               /**/ "can be accessed and modified"),
 	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FNOREFESCAPE,
 	              "->?Ert:Code\n"
 	              "#tValueError{The Module hasn't been fully loaded}"
@@ -1507,12 +1507,12 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	              "#tValueError{The Module hasn't been fully loaded}"
 	              "Returns the absolute filesystem path of the Module's source file, or ?N "
 	              /**/ "if the Module wasn't created from a file accessible via the filesystem"),
-	TYPE_GETTER_F("__isglobal__", &module_get_isglobal, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this Module is global (i.e. can be accessed as ${import(this.__name__)})"),
-	TYPE_GETTER_F("__haspath__", &module_get_haspath, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this Module has a path found within the filesystem"),
+	TYPE_GETTER_AB_F("__isglobal__", &module_get_isglobal, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this Module is global (i.e. can be accessed as ${import(this.__name__)})"),
+	TYPE_GETTER_AB_F("__haspath__", &module_get_haspath, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this Module has a path found within the filesystem"),
 	TYPE_GETSET_END
 };
 
@@ -1524,10 +1524,7 @@ module_class_getpath(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_class_gethome(DeeObject *__restrict UNUSED(self)) {
-	DREF DeeObject *result;
-	result = DeeExec_GetHome();
-	Dee_XIncref(result);
-	return result;
+	return DeeExec_GetHome();
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1538,16 +1535,19 @@ module_class_setpath(DeeObject *UNUSED(self),
 }
 
 PRIVATE struct type_getset tpconst module_class_getsets[] = {
-	TYPE_GETSET("path", &module_class_getpath, NULL, &module_class_setpath,
-	            "->?DList\n"
-	            "A list of strings describing the search path for system libraries"),
-	TYPE_GETTER("home", &module_class_gethome,
-	            "->?Dstring\n"
-	            "The deemon home path (usually the path where the deemon executable resides)"),
+	TYPE_GETSET_AB("path", &module_class_getpath, NULL, &module_class_setpath,
+	               "->?DList\n"
+	               "A list of strings describing the search path for system libraries"),
+	TYPE_GETTER_AB("home", &module_class_gethome,
+	               "->?Dstring\n"
+	               "The deemon home path (usually the path where the deemon executable resides)"),
+
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
-	TYPE_GETSET("search_path", &module_class_getpath, NULL, &module_class_setpath,
-	            "->?DList\n"
-	            "Deprecated alias for ?#path"),
+	TYPE_GETSET_AB("search_path", &module_class_getpath, NULL, &module_class_setpath,
+	               "->?DList\n"
+	               "Deprecated alias for ?#path"),
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_GETSET_END
 };
 

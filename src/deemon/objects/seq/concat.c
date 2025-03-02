@@ -476,8 +476,8 @@ err:
 }
 
 PRIVATE struct type_getset tpconst cat_getsets[] = {
-	TYPE_GETTER_F("__sequences__", &cat_get_sequences, METHOD_FNOREFESCAPE, "->?S?DSequence"),
-	TYPE_GETTER(STR_frozen, &cat_get_frozen, "->?."),
+	TYPE_GETTER_AB_F("__sequences__", &cat_get_sequences, METHOD_FNOREFESCAPE, "->?S?DSequence"),
+	TYPE_GETTER_AB(STR_frozen, &cat_get_frozen, "->?."),
 	TYPE_GETSET_END
 };
 

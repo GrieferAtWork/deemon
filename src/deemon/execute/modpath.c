@@ -3417,7 +3417,8 @@ PRIVATE DREF DeeStringObject *deemon_home = NULL;
  *          executable is used as home folder instead.
  * @return: NULL: Failed to determine the home folder (an error was set).
  * NOTE: The home path _MUST_ include a trailing slash! */
-PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeExec_GetHome(void) {
+PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL
+DeeExec_GetHome(void) {
 	DREF DeeStringObject *result;
 	deemon_home_lock_read();
 	result = deemon_home;

@@ -757,7 +757,7 @@ traceback_current(DeeObject *__restrict UNUSED(self)) {
 	Dee_Incref(result);
 	return result;
 err_no_except:
-	err_no_active_exception();
+	err_no_active_exception(); /* TODO: Throw UnboundAttribute */
 	return NULL;
 }
 

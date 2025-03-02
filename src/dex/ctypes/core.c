@@ -398,21 +398,21 @@ stype_alignof(DeeSTypeObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst stype_getsets[] = {
-	TYPE_GETTER("ptr", &DeeSType_Pointer,
-	            "->?GPointerType\n"
-	            "Returns the pointer type associated with @this ?GStructuredType"),
-	TYPE_GETTER("lvalue", &DeeSType_LValue,
-	            "->?GLValueType\n"
-	            "Returns the l-value type associated with @this ?GStructuredType"),
-	TYPE_GETTER_F("sizeof", &stype_sizeof, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Returns the size of @this ?GStructuredType in bytes"),
-	TYPE_GETTER_F("alignof", &stype_alignof, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Returns the alignment of @this ?GStructuredType in bytes"),
-	TYPE_GETTER("pointer", &DeeSType_Pointer,
-	            "->?GPointerType\n"
-	            "Alias for ?#ptr"),
+	TYPE_GETTER_AB("ptr", &DeeSType_Pointer,
+	               "->?GPointerType\n"
+	               "Returns the pointer type associated with @this ?GStructuredType"),
+	TYPE_GETTER_AB("lvalue", &DeeSType_LValue,
+	               "->?GLValueType\n"
+	               "Returns the l-value type associated with @this ?GStructuredType"),
+	TYPE_GETTER_AB_F("sizeof", &stype_sizeof, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Returns the size of @this ?GStructuredType in bytes"),
+	TYPE_GETTER_AB_F("alignof", &stype_alignof, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Returns the alignment of @this ?GStructuredType in bytes"),
+	TYPE_GETTER_AB("pointer", &DeeSType_Pointer,
+	               "->?GPointerType\n"
+	               "Alias for ?#ptr"),
 	TYPE_GETSET_END
 };
 
@@ -1270,15 +1270,15 @@ err:
 
 
 PRIVATE struct type_getset tpconst struct_getsets[] = {
-	TYPE_GETTER_F("sizeof", &struct_sizeof, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Returns the size of @this ?GStructured object"),
-	TYPE_GETTER_F("alignof", &struct_alignof, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Returns the alignment of @this ?GStructured object"),
-	TYPE_GETTER("ref", &struct_ref,
-	            "->?GPointer\n"
-	            "Returns a pointer to @this ?GStructured object"),
+	TYPE_GETTER_AB_F("sizeof", &struct_sizeof, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Returns the size of @this ?GStructured object"),
+	TYPE_GETTER_AB_F("alignof", &struct_alignof, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Returns the alignment of @this ?GStructured object"),
+	TYPE_GETTER_AB("ref", &struct_ref,
+	               "->?GPointer\n"
+	               "Returns a pointer to @this ?GStructured object"),
 	TYPE_GETSET_END
 };
 
@@ -2103,9 +2103,10 @@ ftype_args(DeeCFunctionTypeObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst ftype_getsets[] = {
-	TYPE_GETTER("args", &ftype_args,
-	            "->?S?Gstructured_type\n"
-	            "Returns an immutable sequence describing the argument types used by this function"),
+	TYPE_GETTER_AB("args", &ftype_args,
+	               "->?S?Gstructured_type\n"
+	               "Returns an immutable sequence describing "
+	               /**/ "the argument types used by this function"),
 	TYPE_GETSET_END
 };
 

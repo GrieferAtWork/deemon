@@ -356,10 +356,10 @@ ri_getfuture(RangeIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst ri_getsets[] = {
-	TYPE_GETSET_F_NODOC("__index__", &ri_index_get, NULL, &ri_index_set, METHOD_FNOREFESCAPE),
-	TYPE_GETTER("future", &ri_getfuture,
-	            "->?Ert:SeqRange\n"
-	            "Range for yet-to-be-enumerated indices"),
+	TYPE_GETSET_AB_F_NODOC("__index__", &ri_index_get, NULL, &ri_index_set, METHOD_FNOREFESCAPE),
+	TYPE_GETTER_AB("future", &ri_getfuture,
+	               "->?Ert:SeqRange\n"
+	               "Range for yet-to-be-enumerated indices"),
 	TYPE_GETSET_END
 };
 
@@ -1001,7 +1001,7 @@ PRIVATE struct type_member tpconst range_members[] = {
 };
 
 PRIVATE struct type_getset tpconst range_getsets[] = {
-	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB(STR_frozen, &DeeObject_NewRef, "->?."),
 	TYPE_GETSET_END
 };
 
@@ -1216,7 +1216,7 @@ iri_getfuture(IntRangeIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst iri_getsets[] = {
-	TYPE_GETTER("future", &iri_getfuture, "->?Ert:SeqIntRange\nRange for yet-to-be-enumerated indices"),
+	TYPE_GETTER_AB("future", &iri_getfuture, "->?Ert:SeqIntRange\nRange for yet-to-be-enumerated indices"),
 	TYPE_GETSET_END
 };
 

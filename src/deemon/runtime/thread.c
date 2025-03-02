@@ -4346,8 +4346,7 @@ err:
 #ifndef DeeThread_USE_SINGLE_THREADED
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_current_get(DeeObject *__restrict UNUSED(self)) {
-	DeeThreadObject *result;
-	result = DeeThread_Self();
+	DeeThreadObject *result = DeeThread_Self();
 	return_reference_((DeeObject *)result);
 }
 
@@ -4358,13 +4357,13 @@ thread_threaded_get(DeeObject *__restrict UNUSED(self)) {
 
 #define HAVE_thread_class_getsets
 PRIVATE struct type_getset tpconst thread_class_getsets[] = {
-	TYPE_GETTER("current", &thread_current_get,
-	            "->?.\n"
-	            "Returns a thread descriptor for the calling thread"),
-	TYPE_GETTER("threaded", &thread_threaded_get,
-	            "->?Dbool\n"
-	            "True if there are at least 2 running threads"),
-	/* TODO: enumerate -> {thread...} 
+	TYPE_GETTER_AB("current", &thread_current_get,
+	               "->?.\n"
+	               "Returns a thread descriptor for the calling thread"),
+	TYPE_GETTER_AB("threaded", &thread_threaded_get,
+	               "->?Dbool\n"
+	               "True if there are at least 2 running threads"),
+	/* TODO: property enumerate: {Thread...} = {...}
 	 * >> Returns a proxy sequence for enumerating all
 	 *    deemon-threads; s.a. `add_running_thread()' */
 	TYPE_GETSET_END

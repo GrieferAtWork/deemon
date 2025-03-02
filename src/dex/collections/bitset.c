@@ -1788,9 +1788,9 @@ PRIVATE struct type_method tpconst bs_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst bs_getsets[] = {
-	TYPE_GETTER_F("frozen", &bs_frozen, METHOD_FNOREFESCAPE, "->?#Frozen"),
-	TYPE_GETTER("cached", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &bs_sizeof, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB_F("frozen", &bs_frozen, METHOD_FNOREFESCAPE, "->?#Frozen"),
+	TYPE_GETTER_AB("cached", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F("__sizeof__", &bs_sizeof, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -2357,9 +2357,9 @@ PRIVATE struct type_method tpconst robs_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst robs_getsets[] = {
-	TYPE_GETTER_F("frozen", &DeeObject_NewRef, METHOD_FCONSTCALL, "->?Dint"),
-	TYPE_GETTER("cached", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &robs_sizeof, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB_F("frozen", &DeeObject_NewRef, METHOD_FCONSTCALL, "->?Dint"),
+	TYPE_GETTER_AB("cached", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F("__sizeof__", &robs_sizeof, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -4064,17 +4064,17 @@ PRIVATE struct type_method tpconst bsv_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst bsv_getsets[] = {
-	TYPE_GETTER_F("frozen", &bsv_frozen, METHOD_FNORMAL,
-	              "->?X2?.?AFrozen?GBitset\n"
-	              "Returns a frozen copy of @this ?., which is either @this when the view is "
-	              /**/ "read-only, and the underlying object is also read-only, or a @this view "
-	              /**/ "wrapped as a ?AFrozen?GBitset when the underlying bits may be modified "
-	              /**/ "by something"),
-	TYPE_GETTER("cached", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("nbits", &bsv_nbits, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
-	              "->?Dint\n"
-	              "The # of bits stored in this bitset. Attempting to alter the state of "
-	              /**/ "a bit greater than or equal to this value result in an :IndexError"),
+	TYPE_GETTER_AB_F("frozen", &bsv_frozen, METHOD_FNORMAL,
+	                 "->?X2?.?AFrozen?GBitset\n"
+	                 "Returns a frozen copy of @this ?., which is either @this when the view is "
+	                 /**/ "read-only, and the underlying object is also read-only, or a @this view "
+	                 /**/ "wrapped as a ?AFrozen?GBitset when the underlying bits may be modified "
+	                 /**/ "by something"),
+	TYPE_GETTER_AB("cached", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F("nbits", &bsv_nbits, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	                 "->?Dint\n"
+	                 "The # of bits stored in this bitset. Attempting to alter the state of "
+	                 /**/ "a bit greater than or equal to this value result in an :IndexError"),
 	TYPE_GETSET_END
 };
 

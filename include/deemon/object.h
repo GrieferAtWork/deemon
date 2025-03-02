@@ -29,6 +29,7 @@
 #include <hybrid/__atomic.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/int128.h>
+#include <hybrid/host.h>
 #include <hybrid/typecore.h>
 /**/
 
@@ -1170,7 +1171,6 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #define CONFIG_HAVE_memsetl
 #endif
 #ifndef CONFIG_HAVE_memsetl
-#include <hybrid/host.h>
 #if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
 #define CONFIG_HAVE_memsetl
 DECL_BEGIN
@@ -3335,42 +3335,53 @@ struct Dee_type_getset {
 #define Dee_TYPE_GETTER_F_NODOC(name, get, flags)                        { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL, flags }
 #define Dee_TYPE_GETTER_BOUND_F(name, get, bound, flags, doc)            { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_REQUIRES_BOUNDMETHOD(bound), DOC(doc), flags }
 #define Dee_TYPE_GETTER_BOUND_F_NODOC(name, get, bound, flags)           { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_REQUIRES_BOUNDMETHOD(bound), NULL, flags }
-/* TODO: Re-write more stuff to use "Dee_TYPE_GETTER_ALWAYSBOUND" instead of "Dee_TYPE_GETTER" */
-#define Dee_TYPE_GETSET_ALWAYSBOUND(name, get, del, set, doc)            { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_boundmethod__ALWAYS_PTR, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
-#define Dee_TYPE_GETSET_ALWAYSBOUND_NODOC(name, get, del, set)           { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_boundmethod__ALWAYS_PTR, NULL, Dee_TYPE_GETSET_FNORMAL }
-#define Dee_TYPE_GETTER_ALWAYSBOUND(name, get, doc)                      { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_boundmethod__ALWAYS_PTR, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
-#define Dee_TYPE_GETTER_ALWAYSBOUND_NODOC(name, get)                     { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_boundmethod__ALWAYS_PTR, NULL, Dee_TYPE_GETSET_FNORMAL }
-#define Dee_TYPE_GETSET_ALWAYSBOUND_F(name, get, del, set, flags, doc)   { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_boundmethod__ALWAYS_PTR, DOC(doc), flags }
-#define Dee_TYPE_GETSET_ALWAYSBOUND_F_NODOC(name, get, del, set, flags)  { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_boundmethod__ALWAYS_PTR, NULL, flags }
-#define Dee_TYPE_GETTER_ALWAYSBOUND_F(name, get, flags, doc)             { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_boundmethod__ALWAYS_PTR, DOC(doc), flags }
-#define Dee_TYPE_GETTER_ALWAYSBOUND_F_NODOC(name, get, flags)            { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_boundmethod__ALWAYS_PTR, NULL, flags }
+/* TODO: Re-write more stuff to use "Dee_TYPE_GETTER_AB" instead of "Dee_TYPE_GETTER" */
+#ifdef __pic__ /* Reduce the number of relocations (manually use "Dee_boundmethod__ALWAYS_PTR" if "always-bound" is required) */
+#define Dee_TYPE_GETSET_AB(name, get, del, set, doc)                     { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETSET_AB_NODOC(name, get, del, set)                    { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, NULL, Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETTER_AB(name, get, doc)                               { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETTER_AB_NODOC(name, get)                              { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL, Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETSET_AB_F(name, get, del, set, flags, doc)            { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, DOC(doc), flags }
+#define Dee_TYPE_GETSET_AB_F_NODOC(name, get, del, set, flags)           { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, NULL, flags }
+#define Dee_TYPE_GETTER_AB_F(name, get, flags, doc)                      { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc), flags }
+#define Dee_TYPE_GETTER_AB_F_NODOC(name, get, flags)                     { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL, flags }
+#else /* __pic__ */
+#define Dee_TYPE_GETSET_AB(name, get, del, set, doc)                     { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_boundmethod__ALWAYS_PTR, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETSET_AB_NODOC(name, get, del, set)                    { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_boundmethod__ALWAYS_PTR, NULL, Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETTER_AB(name, get, doc)                               { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_boundmethod__ALWAYS_PTR, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETTER_AB_NODOC(name, get)                              { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_boundmethod__ALWAYS_PTR, NULL, Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETSET_AB_F(name, get, del, set, flags, doc)            { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_boundmethod__ALWAYS_PTR, DOC(doc), flags }
+#define Dee_TYPE_GETSET_AB_F_NODOC(name, get, del, set, flags)           { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_boundmethod__ALWAYS_PTR, NULL, flags }
+#define Dee_TYPE_GETTER_AB_F(name, get, flags, doc)                      { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_boundmethod__ALWAYS_PTR, DOC(doc), flags }
+#define Dee_TYPE_GETTER_AB_F_NODOC(name, get, flags)                     { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_boundmethod__ALWAYS_PTR, NULL, flags }
+#endif /* !__pic__ */
 #define Dee_TYPE_GETSET_END                                              { NULL, NULL, NULL, NULL, NULL, NULL, 0 }
 #ifdef DEE_SOURCE
-#define TYPE_GETSET                     Dee_TYPE_GETSET
-#define TYPE_GETSET_NODOC               Dee_TYPE_GETSET_NODOC
-#define TYPE_GETSET_BOUND               Dee_TYPE_GETSET_BOUND
-#define TYPE_GETSET_BOUND_NODOC         Dee_TYPE_GETSET_BOUND_NODOC
-#define TYPE_GETTER                     Dee_TYPE_GETTER
-#define TYPE_GETTER_NODOC               Dee_TYPE_GETTER_NODOC
-#define TYPE_GETTER_BOUND               Dee_TYPE_GETTER_BOUND
-#define TYPE_GETTER_BOUND_NODOC         Dee_TYPE_GETTER_BOUND_NODOC
-#define TYPE_GETSET_F                   Dee_TYPE_GETSET_F
-#define TYPE_GETSET_F_NODOC             Dee_TYPE_GETSET_F_NODOC
-#define TYPE_GETSET_BOUND_F             Dee_TYPE_GETSET_BOUND_F
-#define TYPE_GETSET_BOUND_F_NODOC       Dee_TYPE_GETSET_BOUND_F_NODOC
-#define TYPE_GETTER_F                   Dee_TYPE_GETTER_F
-#define TYPE_GETTER_F_NODOC             Dee_TYPE_GETTER_F_NODOC
-#define TYPE_GETTER_BOUND_F             Dee_TYPE_GETTER_BOUND_F
-#define TYPE_GETTER_BOUND_F_NODOC       Dee_TYPE_GETTER_BOUND_F_NODOC
-#define TYPE_GETSET_ALWAYSBOUND         Dee_TYPE_GETSET_ALWAYSBOUND
-#define TYPE_GETSET_ALWAYSBOUND_NODOC   Dee_TYPE_GETSET_ALWAYSBOUND_NODOC
-#define TYPE_GETTER_ALWAYSBOUND         Dee_TYPE_GETTER_ALWAYSBOUND
-#define TYPE_GETTER_ALWAYSBOUND_NODOC   Dee_TYPE_GETTER_ALWAYSBOUND_NODOC
-#define TYPE_GETSET_ALWAYSBOUND_F       Dee_TYPE_GETSET_ALWAYSBOUND_F
-#define TYPE_GETSET_ALWAYSBOUND_F_NODOC Dee_TYPE_GETSET_ALWAYSBOUND_F_NODOC
-#define TYPE_GETTER_ALWAYSBOUND_F       Dee_TYPE_GETTER_ALWAYSBOUND_F
-#define TYPE_GETTER_ALWAYSBOUND_F_NODOC Dee_TYPE_GETTER_ALWAYSBOUND_F_NODOC
-#define TYPE_GETSET_END                 Dee_TYPE_GETSET_END
+#define TYPE_GETSET               Dee_TYPE_GETSET
+#define TYPE_GETSET_NODOC         Dee_TYPE_GETSET_NODOC
+#define TYPE_GETSET_BOUND         Dee_TYPE_GETSET_BOUND
+#define TYPE_GETSET_BOUND_NODOC   Dee_TYPE_GETSET_BOUND_NODOC
+#define TYPE_GETTER               Dee_TYPE_GETTER
+#define TYPE_GETTER_NODOC         Dee_TYPE_GETTER_NODOC
+#define TYPE_GETTER_BOUND         Dee_TYPE_GETTER_BOUND
+#define TYPE_GETTER_BOUND_NODOC   Dee_TYPE_GETTER_BOUND_NODOC
+#define TYPE_GETSET_F             Dee_TYPE_GETSET_F
+#define TYPE_GETSET_F_NODOC       Dee_TYPE_GETSET_F_NODOC
+#define TYPE_GETSET_BOUND_F       Dee_TYPE_GETSET_BOUND_F
+#define TYPE_GETSET_BOUND_F_NODOC Dee_TYPE_GETSET_BOUND_F_NODOC
+#define TYPE_GETTER_F             Dee_TYPE_GETTER_F
+#define TYPE_GETTER_F_NODOC       Dee_TYPE_GETTER_F_NODOC
+#define TYPE_GETTER_BOUND_F       Dee_TYPE_GETTER_BOUND_F
+#define TYPE_GETTER_BOUND_F_NODOC Dee_TYPE_GETTER_BOUND_F_NODOC
+#define TYPE_GETSET_AB            Dee_TYPE_GETSET_AB
+#define TYPE_GETSET_AB_NODOC      Dee_TYPE_GETSET_AB_NODOC
+#define TYPE_GETTER_AB            Dee_TYPE_GETTER_AB
+#define TYPE_GETTER_AB_NODOC      Dee_TYPE_GETTER_AB_NODOC
+#define TYPE_GETSET_AB_F          Dee_TYPE_GETSET_AB_F
+#define TYPE_GETSET_AB_F_NODOC    Dee_TYPE_GETSET_AB_F_NODOC
+#define TYPE_GETTER_AB_F          Dee_TYPE_GETTER_AB_F
+#define TYPE_GETTER_AB_F_NODOC    Dee_TYPE_GETTER_AB_F_NODOC
+#define TYPE_GETSET_END           Dee_TYPE_GETSET_END
 #endif /* DEE_SOURCE */
 
 

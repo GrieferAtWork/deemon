@@ -3635,12 +3635,12 @@ PRIVATE struct type_getset tpconst rbtree_getsets[] = {
 	              "->?#Iterator\n"
 	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	              "Return an ?#Iterator for the root node of the tree"),
-	TYPE_GETTER_F("__depth__", &rbtree_get_depth, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Depth of the left-most tree node (since the tree is balanced, "
-	              /**/ "this is either the tree's max-depth, or one less than that)"),
-	TYPE_GETTER_F("__sizeof__", &rbtree_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
-	TYPE_GETTER("cached", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F("__depth__", &rbtree_get_depth, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Depth of the left-most tree node (since the tree is balanced, "
+	                 /**/ "this is either the tree's max-depth, or one less than that)"),
+	TYPE_GETTER_AB_F("__sizeof__", &rbtree_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB("cached", &DeeObject_NewRef, "->?."),
 	TYPE_GETSET_END
 };
 

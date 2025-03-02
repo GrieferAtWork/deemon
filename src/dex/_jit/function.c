@@ -1180,21 +1180,21 @@ err_r:
 }
 
 PRIVATE struct type_getset tpconst jf_getsets[] = {
-	TYPE_GETTER_F("__name__", &jf_getname, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N"),
-	TYPE_GETTER_F("__doc__", &jf_getdoc, METHOD_FNOREFESCAPE,
-	              "->?N\nAlways returns ?N (doc strings aren't processed in JIT code)"),
-	TYPE_GETTER("__kwds__", &jf_getkwds,
-	            "->?S?Dstring"),
-	TYPE_GETTER_F("__text__", &jf_gettext, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "Returns the source text executed by @this function"),
-	TYPE_GETTER("__refs__", &jf_getrefs,
-	            "->?S?O\n"
-	            "Returns a sequence of all of the references used by @this function"),
-	TYPE_GETTER("__refsbyname__", &jf_getrefsbyname,
-	            "->?M?Dstring?O\n"
-	            "Similar to ?#__refs__, but return a mapping from symbol name to object"),
+	TYPE_GETTER_AB_F("__name__", &jf_getname, METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N"),
+	TYPE_GETTER_AB_F("__doc__", &jf_getdoc, METHOD_FNOREFESCAPE,
+	                 "->?N\nAlways returns ?N (doc strings aren't processed in JIT code)"),
+	TYPE_GETTER_AB("__kwds__", &jf_getkwds,
+	               "->?S?Dstring"),
+	TYPE_GETTER_AB_F("__text__", &jf_gettext, METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "Returns the source text executed by @this function"),
+	TYPE_GETTER_AB("__refs__", &jf_getrefs,
+	               "->?S?O\n"
+	               "Returns a sequence of all of the references used by @this function"),
+	TYPE_GETTER_AB("__refsbyname__", &jf_getrefsbyname,
+	               "->?M?Dstring?O\n"
+	               "Similar to ?#__refs__, but return a mapping from symbol name to object"),
 	/* TODO: __defaults__ */
 	/* TODO: __type__ */
 	/* TODO: __operator__ */
@@ -1203,14 +1203,14 @@ PRIVATE struct type_getset tpconst jf_getsets[] = {
 	/* TODO: __statics__ */
 	/* TODO: __staticsbyname__ */
 	/* TODO: __symbols__ */
-	TYPE_GETTER_F("hasvarargs", &jf_hasvarargs,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "Check if @this function accepts variable arguments as overflow"),
-	TYPE_GETTER_F("hasvarkwds", &jf_hasvarkwds,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "Check if @this function accepts variable keyword arguments as overflow"),
+	TYPE_GETTER_AB_F("hasvarargs", &jf_hasvarargs,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "Check if @this function accepts variable arguments as overflow"),
+	TYPE_GETTER_AB_F("hasvarkwds", &jf_hasvarkwds,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "Check if @this function accepts variable keyword arguments as overflow"),
 	TYPE_GETSET_END
 };
 

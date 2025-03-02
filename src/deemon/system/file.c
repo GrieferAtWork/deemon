@@ -2665,10 +2665,10 @@ PRIVATE struct type_getset tpconst sysfile_getsets[] = {
 	TYPE_GETTER_F(STR_fileno_np, &sysfile_fileno_np, METHOD_FNOREFESCAPE, "->?Dint"),
 #endif /* DEESYSTEM_FILE_USE_UNIX */
 #ifdef DEESYSTEM_FILE_USE_STDIO
-	TYPE_GETTER("file", &DeeObject_NewRef,
-	            "->?DFile\n"
-	            "Returns @this File, indicating the self-buffering "
-	            "behavior of system files on this host"),
+	TYPE_GETTER_AB("file", &DeeObject_NewRef,
+	               "->?DFile\n"
+	               "Returns @this File, indicating the self-buffering "
+	               "behavior of system files on this host"),
 #endif /* DEESYSTEM_FILE_USE_STDIO */
 	TYPE_GETSET_END
 };

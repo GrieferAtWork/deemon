@@ -2042,20 +2042,20 @@ deprecated_d100_get_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
 
 INTDEF struct type_getset tpconst hashset_getsets[];
 INTERN_TPCONST struct type_getset tpconst hashset_getsets[] = {
-	TYPE_GETTER_F(STR_frozen, &DeeRoSet_FromSequence, METHOD_FNOREFESCAPE,
-	              "->?Ert:RoSet\n"
-	              "Returns a read-only (frozen) copy of @this HashSet"),
-	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB_F(STR_frozen, &DeeRoSet_FromSequence, METHOD_FNOREFESCAPE,
+	                 "->?Ert:RoSet\n"
+	                 "Returns a read-only (frozen) copy of @this HashSet"),
+	TYPE_GETTER_AB(STR_cached, &DeeObject_NewRef, "->?."),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_GETSET_F("max_load_factor",
-	              &deprecated_d100_get_maxloadfactor,
-	              &deprecated_d100_del_maxloadfactor,
-	              &deprecated_d100_set_maxloadfactor,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dfloat\n"
-	              "Deprecated. Always returns ${1.0}, with del/set being ignored"),
+	TYPE_GETSET_AB_F("max_load_factor",
+	                 &deprecated_d100_get_maxloadfactor,
+	                 &deprecated_d100_del_maxloadfactor,
+	                 &deprecated_d100_set_maxloadfactor,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dfloat\n"
+	                 "Deprecated. Always returns ${1.0}, with del/set being ignored"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	TYPE_GETTER_F("__sizeof__", &hashset_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB_F("__sizeof__", &hashset_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
