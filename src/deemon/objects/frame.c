@@ -22,7 +22,6 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
@@ -36,12 +35,17 @@
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
 /**/
 #include "../execute/function-wrappers.h"
+
+/**/
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* UINT16_MAX */
 
 #ifndef UINT16_MAX
 #include <hybrid/limitcore.h>

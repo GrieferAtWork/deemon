@@ -31,6 +31,7 @@
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
+#include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
@@ -39,6 +40,7 @@
 #include <deemon/util/rlock.h>
 
 #include <hybrid/overflow.h>
+#include <hybrid/typecore.h>
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
@@ -46,6 +48,9 @@
 
 #include "../objects/gc_inspect.h"
 #include "strings.h"
+/**/
+
+#include <stdint.h> /* UINT32_C */
 
 DECL_BEGIN
 

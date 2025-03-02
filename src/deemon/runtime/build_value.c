@@ -23,7 +23,6 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
@@ -36,10 +35,15 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/__va_size.h>
-
-#include <stddef.h>
+#include <hybrid/int128.h>
+#include <hybrid/typecore.h>
 
 #include "runtime_error.h"
+/**/
+
+#include <stdarg.h> /* va_list, va_arg */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintN_t */
 
 DECL_BEGIN
 
@@ -1135,7 +1139,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 }
 
 
-LOCAL NONNULL((1, 2)) size_t DCALL
+PRIVATE NONNULL((1, 2)) size_t DCALL
 kwds_findstr(DeeKwdsObject *__restrict self,
              char const *__restrict name,
              dhash_t hash) {

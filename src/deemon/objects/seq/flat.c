@@ -35,6 +35,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 
 /**/
@@ -42,13 +43,13 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-
-/**/
 #include "flat.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
 #define SSIZE_MIN __SSIZE_MIN__
 #define SSIZE_MAX __SSIZE_MAX__
 

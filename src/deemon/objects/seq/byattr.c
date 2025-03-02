@@ -30,6 +30,10 @@
 
 /**/
 #include "byattr.h"
+#include "../generic-proxy.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
 
 DECL_BEGIN
 

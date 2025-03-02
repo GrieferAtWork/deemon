@@ -21,15 +21,22 @@
 #include "float.c"
 #define DEFINE_DeeFloat_LPrint
 //#define DEFINE_DeeFloat_Print
-#endif
+#endif /* __INTELLISENSE__ */
 
 #if (defined(DEFINE_DeeFloat_LPrint) + \
      defined(DEFINE_DeeFloat_Print)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
+#include <deemon/api.h>
+#include <deemon/float.h>
 #include <deemon/format.h>
+#include <deemon/object.h>
 #include <deemon/system-features.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintmax_t */
 
 #ifdef CONFIG_HAVE_MATH_H
 #include <math.h>

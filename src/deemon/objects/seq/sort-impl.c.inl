@@ -43,6 +43,8 @@
 #include <deemon/system-features.h> /* memcpyc */
 /**/
 
+#include <stddef.h> /* size_t */
+
 DECL_BEGIN
 
 #ifdef DEFINE_DeeSeq_SortVector

@@ -37,6 +37,9 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/sched/yield.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

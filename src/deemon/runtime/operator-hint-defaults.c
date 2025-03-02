@@ -22,23 +22,31 @@
 
 #include <deemon/api.h>
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
+#include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
+#include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
 /**/
 #include "runtime_error.h"
+
+/**/
+#include <stddef.h> /* uintptr_t */
+#include <stdint.h> /* int64_t */
 
 #define do_fix_negative_range_index(index, size) \
 	((size) - ((size_t)(-(index)) % (size)))

@@ -31,15 +31,17 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/util/lock.h>
 
 /**/
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-#include "default-iterators.h"
-
-/**/
 #include "default-enumerate.h"
+#include "default-iterators.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
 
 DECL_BEGIN
 

@@ -33,6 +33,9 @@
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memsetw/memsetl/... */
+/**/
+
+#include <stdint.h> /* uint32_t */
 
 DECL_BEGIN
 

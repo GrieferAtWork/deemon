@@ -22,12 +22,11 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/format.h>
 #include <deemon/bool.h>
 #include <deemon/cached-dict.h>
-#include <deemon/class.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
 #include <deemon/none.h>
@@ -43,7 +42,12 @@
 
 #include <hybrid/typecore.h>
 
+#include "method-hint-defaults.h"
 #include "strings.h"
+/**/
+
+#include <stdarg.h> /* va_start */
+#include <stddef.h> /* uintptr_t */
 
 DECL_BEGIN
 

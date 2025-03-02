@@ -20,29 +20,31 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_PARSEASM_C
 #define GUARD_DEEMON_COMPILER_ASM_PARSEASM_C 1
 
+#include <deemon/api.h>
+/**/
+
 #include <deemon/compiler/compiler.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
-#include <deemon/bool.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dict.h>
 #include <deemon/error.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/tuple.h>
 
-#include <stdint.h> /* UINT16_MAX, ... */
+#include <hybrid/sequence/list.h>
+/**/
 
 #include "../../runtime/strings.h"
+/**/
+
+#include <stdint.h> /* UINT16_MAX, ... */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 DECL_BEGIN

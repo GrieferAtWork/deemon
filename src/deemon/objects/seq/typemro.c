@@ -28,14 +28,18 @@
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/system-features.h> /* memcpy */
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
+/**/
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-
-/**/
 #include "typemro.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

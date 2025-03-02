@@ -24,8 +24,14 @@
 #include "string_functions.c"
 #endif /* !__INTELLISENSE__ */
 
+#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/arg.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
+#include <deemon/int.h>
+#include <deemon/object.h>
+#include <deemon/regex.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy() */
@@ -35,6 +41,10 @@
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "regroups.h"
+#include "string_functions.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
 
 
 /* Proxy sequence objects for `string.refindall',

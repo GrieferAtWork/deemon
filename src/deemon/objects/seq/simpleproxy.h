@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 #include <deemon/object.h>
-
 /**/
+
 #include "../generic-proxy.h"
 
 DECL_BEGIN

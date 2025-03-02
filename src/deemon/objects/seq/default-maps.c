@@ -29,21 +29,26 @@
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/set.h>
 #include <deemon/thread.h>
+#include <deemon/util/lock.h>
+
+#include <hybrid/limitcore.h>
+/**/
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-#include "default-api.h"
-#include "default-sets.h"
-
-/**/
 #include "default-maps.h"
+#include "default-sets.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 #undef SSIZE_MIN
-#include <hybrid/limitcore.h>
 #define SSIZE_MIN __SSIZE_MIN__
 
 DECL_BEGIN

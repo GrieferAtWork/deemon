@@ -37,7 +37,10 @@ local final Dee_funptr_t = try void.func(void).ptr catch (NotImplemented) ({
 	/* NotImplemented: ctypes was built without C-functions being enabled */
 	return;
 });
-local final deemonExe = ShLib(ipc.Process.current.exe);
+local final deemonExe = try ShLib(ipc.Process.current.exe) catch (...) ({
+	/* This can happen under cygwin, where dlopen() on seems to fail for the main binary? */
+	return;
+});
 local final DeeType_GetMethodHint = (Dee_funptr_t(DeeObject_ptr, int).ptr)(
 	Mapping.get(deemonExe, "DeeType_GetMethodHint") ??
 	Mapping.get(deemonExe, "_DeeType_GetMethodHint") ??

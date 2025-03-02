@@ -16,7 +16,6 @@
 
 #include "int_logic.h"
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
@@ -27,8 +26,13 @@
 #include <hybrid/align.h>
 #include <hybrid/bit.h>
 #include <hybrid/minmax.h>
+#include <hybrid/typecore.h>
 
 #include "../runtime/runtime_error.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t */
 
 #undef shift_t
 #define shift_t __SHIFT_TYPE__
@@ -323,7 +327,8 @@ x_add_int3(DeeIntObject *__restrict a, uint32_t b) {
 	ASSERT(size_a >= 2);
 	if (size_a == 2) {
 		uint64_t a_value;
-		a_value = a->ob_digit[0] | (a->ob_digit[1] << DIGIT_BITS);
+		a_value = a->ob_digit[0];
+		a_value |= (uint64_t)a->ob_digit[1] << DIGIT_BITS;
 		if (a->ob_size < 0)
 			return (DREF DeeIntObject *)DeeInt_NewInt64((-(int64_t)a_value) + (int64_t)b);
 		return (DREF DeeIntObject *)DeeInt_NewUInt64(a_value + b);
@@ -590,7 +595,7 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 			if unlikely(!z)
 				goto err;
 			z->ob_digit[0] = (digit)a_value;
-		} else if (a_value <= ((twodigits)1 << (DIGIT_BITS * 2)) - 1) {
+		} else if (a_value <= (((twodigits)1 << (DIGIT_BITS * 2)) - 1)) {
 			z = DeeInt_Alloc(2);
 			if unlikely(!z)
 				goto err;

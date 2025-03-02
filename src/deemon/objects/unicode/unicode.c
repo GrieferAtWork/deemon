@@ -30,13 +30,11 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+/**/
 
-#include <hybrid/minmax.h>
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t, offsetof */
+#include <stdint.h>  /* uint32_t */
 
 DECL_BEGIN
 

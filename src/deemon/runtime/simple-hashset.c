@@ -20,9 +20,13 @@
 #ifndef GUARD_DEEMON_RUNTIME_SIMPLE_HASHSET_C
 #define GUARD_DEEMON_RUNTIME_SIMPLE_HASHSET_C 1
 
-#include <stddef.h>
-
+#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/object.h>
 #include <deemon/util/simple-hashset.h>
+/**/
+
+#include <stddef.h> /* size-t */
 
 DECL_BEGIN
 

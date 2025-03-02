@@ -20,12 +20,16 @@
 #ifndef GUARD_CMDLINE_C
 #define GUARD_CMDLINE_C 1
 
-#include "cmdline.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
+/**/
+
+#include "cmdline.h"
+/**/
+
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -139,9 +143,8 @@ done:
 }
 
 
-INTERN int DCALL
-cmd_parse(int    *__restrict p_argc,
-          char ***__restrict p_argv,
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+cmd_parse(int *__restrict p_argc, char ***__restrict p_argv,
           struct cmd_option const *__restrict options,
           bool exec_all) {
 	struct cmd_option const *opt;

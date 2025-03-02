@@ -32,15 +32,18 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
+/**/
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-#include "svec.h"
-
-/**/
 #include "smap.h"
+#include "svec.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 #undef si_key
 #undef si_value

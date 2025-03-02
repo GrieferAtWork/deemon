@@ -39,14 +39,20 @@
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/system.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
+/**/
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "gc_inspect.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN
 

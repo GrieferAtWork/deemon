@@ -24,18 +24,17 @@
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/module.h>
-#include <deemon/none.h>
 #include <deemon/notify.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
-#include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
-
-#include <hybrid/limitcore.h>
-#include <hybrid/typecore.h>
+/**/
 
 #include "strings.h"
+/**/
+
+#include <stdint.h> /* uint16_t */
 
 #ifndef CONFIG_NO_NOTIFICATIONS
 DECL_BEGIN

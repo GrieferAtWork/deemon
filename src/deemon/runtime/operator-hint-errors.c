@@ -23,10 +23,10 @@
 #include <deemon/api.h>
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/alloc.h>
+#include <deemon/object.h>
 #include <deemon/operator-hints.h>
 
 /**/
-#include "method-hint-defaults.h"
 #include "operator-hint-errors.h"
 #include "runtime_error.h"
 

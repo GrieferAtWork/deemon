@@ -24,7 +24,6 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/class.h>
 #include <deemon/computed-operators.h>
 #include <deemon/dict.h>
 #include <deemon/format.h>
@@ -44,20 +43,27 @@
 #include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
 
 #include <hybrid/align.h>
 #include <hybrid/overflow.h>
+#include <hybrid/typecore.h>
 
 #include "../runtime/kwlist.h"
+#include "../runtime/method-hint-defaults.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 #include "seq/default-compare.h"
 #include "seq/default-map-proxy.h"
-
 /**/
+
 #include "dict.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* uint8_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

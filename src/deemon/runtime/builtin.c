@@ -25,11 +25,17 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/once.h>
+#include <deemon/system.h>
+#include <deemon/util/lock.h>
 
+#include <hybrid/sequence/list.h>
+
+/**/
 #include "builtin.h"
 #include "strings.h"
+
+/**/
+#include <stdint.h> /* UINT32_C */
 
 DECL_BEGIN
 

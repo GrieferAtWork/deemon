@@ -24,13 +24,13 @@
 /**/
 
 #include <deemon/accu.h>
-#include <deemon/alloc.h>
 #include <deemon/bytes.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
@@ -39,7 +39,9 @@
 
 /**/
 #include "../objects/int_logic.h"
-#include "runtime_error.h"
+
+/**/
+#include <stdint.h>
 
 #ifndef INT32_MIN
 #include <hybrid/limitcore.h>

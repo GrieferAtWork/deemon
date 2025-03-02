@@ -20,6 +20,7 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_REVERSED_C
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_REVERSED_C 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
@@ -30,10 +31,11 @@
 #include <deemon/seq.h>
 
 /**/
-#include "default-reversed.h"
-
-/**/
 #include "../../runtime/runtime_error.h"
+#include "default-reversed.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

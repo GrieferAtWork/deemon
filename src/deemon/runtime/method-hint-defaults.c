@@ -26,6 +26,7 @@
 #include <deemon/accu.h>
 #include <deemon/alloc.h>
 #include <deemon/bool.h>
+#include <deemon/bytes.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -44,6 +45,7 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/lock.h>
 #include <deemon/util/simple-hashset.h>
 
 #include <hybrid/overflow.h>
@@ -69,6 +71,11 @@
 #include "method-hints.h"
 #include "runtime_error.h"
 #include "strings.h"
+
+/**/
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* uintptr_t */
+#include <stdint.h> /* uint32_t */
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>

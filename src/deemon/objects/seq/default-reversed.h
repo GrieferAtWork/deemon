@@ -22,9 +22,9 @@
 
 #include <deemon/api.h>
 #include <deemon/object.h>
-
 /**/
-#include "../generic-proxy.h"
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

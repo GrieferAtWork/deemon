@@ -22,10 +22,12 @@
 
 #include <deemon/api.h>
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
+#include <deemon/alloc.h>
 #include <deemon/class.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/mro.h>
+#include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
@@ -33,12 +35,16 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/typecore.h>
-
 /**/
+
 #include "method-hint-defaults.h"
 #include "method-hint-select.h"
 #include "method-hints.h"
 #include "strings.h"
+/**/
+
+#include <stddef.h> /* offsetof */
+#include <stdint.h> /* uint16_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -422,7 +428,7 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id) {
 	Dee_funptr_t result;
 	struct Dee_type_mh_cache *mhcache;
-	ASSERT(id < Dee_TMH_COUNT);
+	ASSERT((unsigned int)id < (unsigned int)Dee_TMH_COUNT);
 	mhcache = atomic_read(&self->tp_mhcache);
 	if /*likely*/(mhcache) {
 read_from_mhcache:
@@ -486,7 +492,7 @@ done:
  * (if it has one). If not, return `NULL' instead. */
 PUBLIC ATTR_CONST WUNUSED Dee_funptr_t
 (DCALL DeeType_GetUnsupportedMethodHint)(enum Dee_tmh_id id) {
-	ASSERT(id < Dee_TMH_COUNT);
+	ASSERT((unsigned int)id < (unsigned int)Dee_TMH_COUNT);
 	return mh_unsupported_impls[id];
 }
 
@@ -2492,7 +2498,7 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 3)) Dee_funptr_t
                                                            enum Dee_tmh_id id,
                                                            Dee_funptr_t impl) {
 	Dee_funptr_t result;
-	ASSERT(id < Dee_TMH_COUNT);
+	ASSERT((unsigned int)id < (unsigned int)Dee_TMH_COUNT);
 
 	/* Only map default impls! (but also allow default wrappers like "default__set_operator_add") */
 	ASSERTF(mh_init_specs[id].mis_operators, "Method hint cannot be used for operators");

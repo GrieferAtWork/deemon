@@ -24,16 +24,24 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
+#include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
 #include <deemon/super.h>
 
+#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #include "../runtime/method-hint-super.h"
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* int32_t */
+
 
 /* Define type-specific object operators. */
 #define DEFINE_TYPED_OPERATORS 1

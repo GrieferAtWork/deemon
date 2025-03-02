@@ -41,6 +41,9 @@
 
 #include "gc_inspect.h"
 #include "type-operators.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
 
 DECL_BEGIN
 

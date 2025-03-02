@@ -21,7 +21,9 @@
 #define GUARD_CMDLINE_H 1
 
 #include <deemon/api.h>
-#include <deemon/object.h>
+/**/
+
+#include <stdint.h>
 
 DECL_BEGIN
 
@@ -111,9 +113,8 @@ struct cmd_option {
  * @return: -1:          An error was thrown.
  * NOTE: Options are always searched in ascending order, meaning that lower
  *       indices have a greater priority and may out-weigh greater indices. */
-INTDEF int DCALL
-cmd_parse(int    *__restrict p_argc,
-          char ***__restrict p_argv,
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+cmd_parse(int *__restrict p_argc, char ***__restrict p_argv,
           struct cmd_option const *__restrict options,
           bool exec_all);
 

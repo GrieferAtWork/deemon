@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_UNICODE_BYTES_FUNCTIONS_C_INL 1
 
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -29,21 +30,26 @@
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/regex.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h> /* memcpy(), memset(), ... */
-#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
+/**/
 
+#include "../../runtime/kwlist.h"
+#include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 #include "regroups.h"
 #include "string_functions.h"
-
 /**/
-#include "../../runtime/kwlist.h"
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN
 

@@ -26,6 +26,7 @@
 #include <deemon/file.h>
 #include <deemon/int.h>
 #include <deemon/mapfile.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-error.h>
@@ -34,9 +35,13 @@
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/byteorder.h>
 #include <hybrid/host.h>
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
+/**/
+
+#include <stdint.h>
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>

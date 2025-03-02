@@ -23,16 +23,16 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
-#include <deemon/format.h>
 #include <deemon/regex.h>
 #include <deemon/string.h>
-#include <deemon/stringutils.h>
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+/* Includes for libregex... */
 #include <hybrid/align.h>
 #include <hybrid/bit.h>
+#include <hybrid/host.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 #include <hybrid/unaligned.h>
@@ -40,9 +40,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 /**/
-
-#include <__stdinc.h>
-#include <hybrid/host.h>
 
 DECL_BEGIN
 

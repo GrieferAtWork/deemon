@@ -40,7 +40,8 @@
 #include "../runtime/runtime_error.h"
 
 /**/
-#include <stdarg.h>
+#include <stdarg.h> /* va_list */
+#include <stdint.h> /* uint16_t */
 
 /* Type member access. */
 

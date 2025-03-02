@@ -20,11 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_ITERATORS_C
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_ITERATORS_C 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
-/**/
-
 #include <deemon/arg.h>
-#include <deemon/class.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -35,12 +33,15 @@
 #include <deemon/seq.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 /**/
 
-#include "default-iterators.h"
-
-/**/
 #include "../../runtime/runtime_error.h"
+#include "../generic-proxy.h"
+#include "default-iterators.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

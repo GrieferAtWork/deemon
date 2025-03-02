@@ -36,6 +36,7 @@
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/dec.h>
+#include <deemon/compiler/error.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/tpp.h>
@@ -44,7 +45,9 @@
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
+#include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
@@ -57,9 +60,15 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/byteorder.h>
+#include <hybrid/debug-alignment.h>
+#include <hybrid/host.h>
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
+
+/**/
+#include <stddef.h> /* offsetof */
+#include <stdint.h> /* uint8_t */
 
 DECL_BEGIN
 
@@ -287,7 +296,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_O(char *arg) {
 		                                ASM_FPEEPHOLE | ASM_FOPTIMIZE |
 		                                ASM_FOPTIMIZE_SIZE);
 	} else {
-		level = atoi(arg);
+		if (Dee_TAtoi(int, arg, strlen(arg), 0, &level))
+			goto err;
 		/* Level #4: Disable features that hinder optimization (i.e. debug info) */
 		if (level >= 4) {
 			script_options.co_assembler |= ASM_FNODDI;
@@ -333,6 +343,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_O(char *arg) {
 		}
 	}
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED int DCALL cmd_i(char *UNUSED(arg)) {
@@ -432,8 +444,7 @@ PRIVATE WUNUSED int DCALL cmd_pp(char *UNUSED(arg)) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_ftabstop(char *arg) {
-	script_options.co_tabwidth = (uint16_t)atoi(arg);
-	return 0;
+	return Dee_TAtoi(uint16_t, arg, strlen(arg), 0, &script_options.co_tabwidth);
 }
 
 PRIVATE WUNUSED int TPPCALL emitpp_reemit_pragma(void);

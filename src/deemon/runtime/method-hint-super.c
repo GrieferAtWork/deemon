@@ -23,10 +23,13 @@
 #include <deemon/api.h>
 
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
+#include <deemon/method-hints.h>
+#include <deemon/object.h>
 #include <deemon/super.h>
 
 /**/
 #include "method-hint-super.h"
+#include "method-hints.h"
 
 DECL_BEGIN
 

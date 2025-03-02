@@ -30,14 +30,19 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/thread.h>
+#include <deemon/util/rlock.h>
 
+#include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
-
 /**/
+
 #include "enumerate-cb.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
 
 DECL_BEGIN

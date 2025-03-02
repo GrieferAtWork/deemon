@@ -31,10 +31,17 @@
 #include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
+#include <deemon/system-features.h> /* memcpy */
 #include <deemon/util/atomic.h>
+
+#include <hybrid/typecore.h>
+/**/
 
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 
@@ -56,7 +63,7 @@ typedef struct {
 
 INTDEF DeeTypeObject RoSetIterator_Type;
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rosetiterator_ctor(RoSetIterator *__restrict self) {
 	self->rosi_set = DeeRoSet_New();
 	if unlikely(!self->rosi_set)
@@ -67,7 +74,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rosetiterator_init(RoSetIterator *__restrict self,
                    size_t argc, DeeObject *const *argv) {
 	RoSet *set;
@@ -83,7 +90,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rosetiterator_copy(RoSetIterator *__restrict self,
                    RoSetIterator *__restrict other) {
 	self->rosi_set = other->rosi_set;

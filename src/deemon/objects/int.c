@@ -49,9 +49,11 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/__byteswap.h>
 #include <hybrid/align.h>
 #include <hybrid/bit.h>
 #include <hybrid/byteorder.h>
+#include <hybrid/host.h>
 #include <hybrid/int128.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
@@ -63,6 +65,10 @@
 #include "../runtime/strings.h"
 #include "int-8bit.h"
 #include "int_logic.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* uint8_t */
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>

@@ -38,15 +38,19 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 
+#include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq_functions.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* uintptr_t */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
 #define SSIZE_MIN __SSIZE_MIN__
 #define SSIZE_MAX __SSIZE_MAX__
 

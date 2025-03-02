@@ -26,6 +26,9 @@
 #include <deemon/alloc.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
+/**/
+
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

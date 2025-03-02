@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
-#include <deemon/class.h>
 #include <deemon/method-hints.h>
+#include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/super.h>
 

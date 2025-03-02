@@ -51,6 +51,10 @@
 #include "../runtime/strings.h"
 /**/
 
+#include <stddef.h> /* offsetof */
+#include <stdint.h> /* uint32_t */
+/**/
+
 #include "int-8bit.h"
 
 #undef SSIZE_MAX
@@ -1058,15 +1062,15 @@ err:
 }
 
 
-#define DEFINE_BYTES_COMPARE(name, op)                   \
-	INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
-	name(Bytes *self, DeeObject *other) {                \
-		int diff = bytes_compare(self, other);           \
-		if unlikely(diff == Dee_COMPARE_ERR)             \
-			goto err;                                    \
-		return_bool(diff op 0);                          \
-	err:                                                 \
-		return NULL;                                     \
+#define DEFINE_BYTES_COMPARE(name, op)                    \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
+	name(Bytes *self, DeeObject *other) {                 \
+		int diff = bytes_compare(self, other);            \
+		if unlikely(diff == Dee_COMPARE_ERR)              \
+			goto err;                                     \
+		return_bool(diff op 0);                           \
+	err:                                                  \
+		return NULL;                                      \
 	}
 DEFINE_BYTES_COMPARE(bytes_lo, <)
 DEFINE_BYTES_COMPARE(bytes_le, <=)

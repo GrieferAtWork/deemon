@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/tuple.h>
+#include <deemon/util/lock.h>
 
 DECL_BEGIN
 

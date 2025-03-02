@@ -23,7 +23,8 @@
 //#define DEFINE_Dee_Strtod
 #endif
 
-#include <deemon/system-features.h>
+#include <deemon/api.h>
+#include <deemon/system-features.h> /* isdigit */
 
 #if (defined(DEFINE_Dee_Strtold) + \
      defined(DEFINE_Dee_Strtod)) != 1

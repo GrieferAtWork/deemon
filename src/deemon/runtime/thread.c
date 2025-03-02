@@ -28,7 +28,9 @@
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
+#include <deemon/file.h>
 #include <deemon/format.h>
+#include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
@@ -46,12 +48,18 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/once.h>
 
+#include <hybrid/debug-alignment.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
+/**/
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* offsetof */
+#include <stdint.h> /* UINT32_C */
 
 #ifdef _WIN32_WCE
 #undef GetProcAddress

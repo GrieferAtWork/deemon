@@ -31,8 +31,12 @@
 #include <deemon/gc.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/util/lock.h>
 
 #include "../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

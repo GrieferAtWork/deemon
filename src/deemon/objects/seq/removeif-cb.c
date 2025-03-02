@@ -26,9 +26,14 @@
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/format.h>
-
+#include <deemon/object.h>
 /**/
+
+#include "../generic-proxy.h"
 #include "removeif-cb.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

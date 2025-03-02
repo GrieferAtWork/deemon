@@ -27,7 +27,6 @@
 #include <deemon/cached-dict.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
@@ -39,9 +38,13 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* offsetof */
 
 DECL_BEGIN
 

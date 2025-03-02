@@ -25,10 +25,12 @@
 #include <deemon/object.h>
 
 #include "../runtime/runtime_error.h"
-#include "seq/default-api.h"
 
 /**/
 #include "generic-proxy.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

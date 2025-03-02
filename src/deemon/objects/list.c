@@ -24,7 +24,6 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/class.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -37,12 +36,12 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
+#include <deemon/util/objectlist.h>
 
 #include <hybrid/limitcore.h>
-#include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 
 #include "../runtime/kwlist.h"
@@ -51,6 +50,9 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 #include "seq/sort.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

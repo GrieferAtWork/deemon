@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
+#include <deemon/object.h>
 #include <deemon/super.h>
 
 /**/

@@ -35,14 +35,17 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
-#include <deemon/super.h>
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
+/**/
 
 #include "kwlist.h"
 #include "runtime_error.h"
 #include "strings.h"
+/**/
+
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

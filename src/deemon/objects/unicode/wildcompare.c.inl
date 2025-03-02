@@ -31,6 +31,11 @@
 #define T       char
 #endif /* !T */
 
+#include <deemon/api.h>
+/**/
+
+#include "string_functions.h"
+
 #ifdef CASEFOLD
 PRIVATE ATTR_INOUT(1) ATTR_INOUT(2) int DCALL
 dee_wildcompare(unicode_foldreader(T) *string,

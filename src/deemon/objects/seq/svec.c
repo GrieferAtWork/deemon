@@ -34,14 +34,18 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/limitcore.h>
+/**/
+
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
-
-/**/
+#include "../generic-proxy.h"
 #include "svec.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
 
 #ifdef __OPTIMIZE_SIZE__
@@ -787,7 +791,7 @@ STATIC_ASSERT(offsetof(SharedVectorIterator, si_seq) == offsetof(ProxyObject, po
 #define sveciter_fini  generic_proxy__fini
 #define sveciter_visit generic_proxy__visit
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sveciter_next(SharedVectorIterator *__restrict self) {
 	DREF DeeObject *result = ITER_DONE;
 	SharedVector *vec      = self->si_seq;
@@ -828,7 +832,7 @@ sveciter_copy(SharedVectorIterator *__restrict self,
 	return 0;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_deep(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other) {
 	self->si_seq = (DREF SharedVector *)DeeObject_DeepCopy((DeeObject *)other->si_seq);

@@ -21,10 +21,16 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_EACH_H 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
-
+#include <hybrid/typecore.h>
 /**/
+
 #include "../generic-proxy.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

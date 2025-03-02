@@ -22,7 +22,9 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/code.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
@@ -32,8 +34,8 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/thread.h>
-#include <deemon/util/lock.h>
 
+#include <hybrid/debug-alignment.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 
@@ -52,7 +54,7 @@
 #ifndef CONFIG_HOST_WINDOWS
 #include <deemon/file.h>
 #else /* !CONFIG_HOST_WINDOWS */
-#include <hybrid/host.h>
+#include <hybrid/host.h> /* __ARCH_PAGESIZE_MIN */
 #include <hybrid/minmax.h>
 
 #include <Windows.h>
@@ -72,6 +74,11 @@
 #include <hybrid/unaligned.h>
 
 #include "runtime_error.h"
+/**/
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* uintptr_t */
+#include <stdint.h> /* UINT16_C, UINT32_C */
 
 #ifndef NDEBUG
 #ifdef CONFIG_HAVE_MALLOC_H

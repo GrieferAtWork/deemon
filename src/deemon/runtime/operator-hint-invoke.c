@@ -28,6 +28,9 @@
 /**/
 #include "operator-hint-errors.h"
 
+/**/
+#include <stdint.h>
+
 DECL_BEGIN
 
 /* clang-format off */

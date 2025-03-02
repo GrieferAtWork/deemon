@@ -24,8 +24,23 @@
 //#define DEFINE_SeqEachCallAttrKw
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/format.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
+#include <deemon/object.h>
+#include <deemon/seq.h>
 #include <deemon/system-features.h> /* mempcpyc */
+
+#include "../../runtime/strings.h"
+#include "../generic-proxy.h"
+#include "each.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* uintptr_t */
 
 #ifdef DEFINE_SeqEachGetAttr
 #define LOCAL_ssX(x)               ssa_##x

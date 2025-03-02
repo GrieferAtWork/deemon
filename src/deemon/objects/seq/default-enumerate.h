@@ -25,9 +25,12 @@
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #include <deemon/alloc.h>
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 /**/
+
 #include "../generic-proxy.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

@@ -87,6 +87,16 @@
 //#define DEFINE_DeeObject_EnumAttr
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+#include <deemon/class.h>
+#include <hybrid/compiler.h>
+#include <deemon/mro.h>
+#include <deemon/object.h>
+#include <deemon/operator-hints.h>
+#include <deemon/system-features.h>
+
+#include "runtime_error.h"
+
 #if (defined(DEFINE_DeeObject_GetAttr) +                           \
      defined(DEFINE_DeeObject_TGetAttr) +                          \
      defined(DEFINE_DeeObject_GetAttrStringHash) +                 \

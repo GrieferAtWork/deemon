@@ -24,6 +24,7 @@
 
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/method-hints.h>
+#include <deemon/none-operator.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>

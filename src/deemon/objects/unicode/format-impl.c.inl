@@ -24,12 +24,26 @@
 //#define DEFINE_DeeString_Format
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+#include <deemon/error.h>
+#include <deemon/object.h>
+#include <deemon/string.h>
+
+#include <hybrid/limitcore.h>
+/**/
+
+#include <stddef.h> /* size_t */
+
+#undef SSIZE_MIN
+#undef SSIZE_MAX
+#define SSIZE_MIN __SSIZE_MIN__
+#define SSIZE_MAX __SSIZE_MAX__
+
 #if (defined(DEFINE_DeeString_FormatPrinter) + \
      defined(DEFINE_DeeString_FormatWStr) +    \
      defined(DEFINE_DeeString_Format)) > 1
 #error "Must #define exactly one of these macros"
 #endif /* DEFINE_DeeString_Format... */
-
 
 #ifndef STRING_FORMAT_WSTR_FOREACH_DONE
 #define STRING_FORMAT_WSTR_FOREACH_DONE SSIZE_MIN

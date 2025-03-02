@@ -44,6 +44,11 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+/**/
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -2502,7 +2507,17 @@ fatal_invalid_except(DeeObject *__restrict return_value,
 	            return_value, callback_addr, excepted, DeeThread_Self()->t_exceptsz);
 	assert_print_usercode_trace();
 	Dee_BREAKPOINT();
+#if defined(CONFIG_HAVE_abort) && !defined(CONFIG_HAVE_abort_IS_ASSERT_XFAIL)
 	abort();
+#elif defined(CONFIG_HAVE__Exit)
+	_Exit(EXIT_FAILURE);
+#else /* ... */
+	for (;;) {
+		char volatile *volatile ptr;
+		ptr  = (char volatile *)NULL;
+		*ptr = 'X';
+	}
+#endif /* !... */
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL

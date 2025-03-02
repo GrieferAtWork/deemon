@@ -27,13 +27,16 @@
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/futex.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
 #include <hybrid/sched/atomic-once.h>
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
 
-#include <stdbool.h>
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* uintptr_t */
+#include <stdint.h>  /* INT32_MAX */
 
 #ifdef CONFIG_HAVE_LINUX_FUTEX_H
 #include <linux/futex.h>

@@ -20,33 +20,18 @@
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_FORMAT_C
 #define GUARD_DEEMON_OBJECTS_UNICODE_FORMAT_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/bool.h>
-#include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/super.h>
-#include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/objectlist.h>
+/**/
 
-#include <stdbool.h>
-
-#include "../../runtime/runtime_error.h"
-
-#undef SSIZE_MIN
-#undef SSIZE_MAX
-#include <hybrid/limitcore.h>
-#define SSIZE_MIN __SSIZE_MIN__
-#define SSIZE_MAX __SSIZE_MAX__
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint32_t */
 
 DECL_BEGIN
 

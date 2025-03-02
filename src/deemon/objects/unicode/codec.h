@@ -21,8 +21,6 @@
 #define GUARD_DEEMON_OBJECTS_UNICODE_CODEC_H 1
 
 #include <deemon/api.h>
-#include <deemon/error.h>
-#include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmp(), ... */
 
 DECL_BEGIN

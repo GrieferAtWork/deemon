@@ -165,6 +165,21 @@
 //#define DEFINE_DeeType_FindCachedClassAttr
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+#include <deemon/class.h>
+#include <deemon/error.h>
+#include <deemon/mro.h>
+#include <deemon/object.h>
+#include <deemon/system-features.h>
+#include <deemon/util/atomic.h>
+/**/
+
+#include "runtime_error.h"
+/**/
+
+#include <stdint.h>
+
+
 #if (defined(DEFINE_DeeType_GetCachedAttrStringHash) +                    \
      defined(DEFINE_DeeType_GetCachedAttrStringLenHash) +                 \
      defined(DEFINE_DeeType_GetCachedClassAttrStringHash) +               \

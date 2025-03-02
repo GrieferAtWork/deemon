@@ -26,11 +26,13 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+/**/
 
 #include "../../runtime/runtime_error.h"
-
-/**/
 #include "regroups.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

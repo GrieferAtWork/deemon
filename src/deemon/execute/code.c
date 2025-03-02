@@ -31,6 +31,7 @@
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
+#include <deemon/seq.h>
 #include <deemon/map.h>
 #include <deemon/module.h>
 #include <deemon/none.h>

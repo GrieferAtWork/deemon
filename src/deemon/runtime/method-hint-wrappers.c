@@ -30,6 +30,7 @@
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/tuple.h>
 
 #include "../objects/seq/enumerate-cb.h"

@@ -23,6 +23,9 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/util/rlock.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

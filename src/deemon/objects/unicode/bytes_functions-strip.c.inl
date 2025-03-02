@@ -45,6 +45,18 @@
 //#define DEFINE_bytes_casersstriplines
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/bytes.h>
+#include <deemon/object.h>
+#include <deemon/string.h>
+/**/
+
+#include "string_functions.h"
+/**/
+
+#include <stdint.h> /* SIZE_MAX */
+
 DECL_BEGIN
 
 #if (defined(DEFINE_bytes_strip) +            \

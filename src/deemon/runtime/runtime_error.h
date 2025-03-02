@@ -22,6 +22,11 @@
 
 #include <deemon/api.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

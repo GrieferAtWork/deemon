@@ -34,9 +34,9 @@
 #include <deemon/int.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
-#include <deemon/module.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/property.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
@@ -50,6 +50,10 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+/**/
+
+#include <stddef.h> /* offsetof, size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

@@ -20,9 +20,8 @@
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_STRING_FUNCTIONS_C
 #define GUARD_DEEMON_OBJECTS_UNICODE_STRING_FUNCTIONS_C 1
 
-#include "string_functions.h"
-
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -31,20 +30,27 @@
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/regex.h>
 #include <deemon/seq.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
-#include <deemon/thread.h>
 #include <deemon/tuple.h>
 
 #include <hybrid/byteswap.h>
+#include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
-
-#include "regroups.h"
-
 /**/
+
 #include "../../runtime/kwlist.h"
+#include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
+#include "regroups.h"
+#include "string_functions.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* SIZE_MAX */
 
 #ifndef SIZE_MAX
 #include <hybrid/limitcore.h>
@@ -1533,7 +1539,7 @@ err:
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                             \
 	string_##name(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) { \
 		size_t start = 0, end = (size_t)-1;                                           \
-		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,                            \
+		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,                        \
 		                    "|" UNPdSIZ UNPdSIZ ":" #name,                            \
 		                    &start, &end))                                            \
 			goto err;                                                                 \

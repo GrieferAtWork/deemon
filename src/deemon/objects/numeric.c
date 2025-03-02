@@ -20,7 +20,6 @@
 #ifndef GUARD_DEEMON_OBJECTS_NUMERIC_C
 #define GUARD_DEEMON_OBJECTS_NUMERIC_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
@@ -34,13 +33,20 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/int128.h>
-
-#include <math.h> /* FIXME: This needs a feature check! */
+/**/
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
+/**/
+
+#include <stdint.h> /* int8_t */
+
+#ifdef CONFIG_HAVE_MATH_H
+#include <math.h>
+#endif /* CONFIG_HAVE_MATH_H */
 
 DECL_BEGIN
 

@@ -20,14 +20,23 @@
 #ifndef GUARD_DEEMON_OBJECTS_DICT_H
 #define GUARD_DEEMON_OBJECTS_DICT_H 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/bytes.h>
 #include <deemon/dict.h>
+#include <deemon/int.h>
+#include <deemon/object.h>
+#include <deemon/rodict.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* CONFIG_HAVE_strcmp */
 
 #include <hybrid/bit.h>
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* SIZE_MAX */
 
 #undef shift_t
 #define shift_t __SHIFT_TYPE__

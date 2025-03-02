@@ -20,16 +20,12 @@
 #ifndef GUARD_DEEMON_OBJECTS_RODICT_C
 #define GUARD_DEEMON_OBJECTS_RODICT_C 1
 
-#include <deemon/api.h>
-
-#include <hybrid/typecore.h>
-/**/
-
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/class.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dict.h>
 #include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
@@ -46,6 +42,8 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/align.h>
+#include <hybrid/overflow.h>
+#include <hybrid/typecore.h>
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
@@ -53,9 +51,13 @@
 #include "generic-proxy.h"
 #include "seq/default-compare.h"
 #include "seq/default-map-proxy.h"
-
 /**/
+
 #include "dict.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t */
 
 #ifdef __OPTIMIZE_SIZE__
 #define NULL_IF_Os(v) NULL

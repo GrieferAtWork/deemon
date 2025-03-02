@@ -23,8 +23,8 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/util/lock.h>
-
 /**/
+
 #include "../generic-proxy.h"
 
 DECL_BEGIN

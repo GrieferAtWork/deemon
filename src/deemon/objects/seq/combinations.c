@@ -20,21 +20,27 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_COMBINATIONS_C
 #define GUARD_DEEMON_OBJECTS_SEQ_COMBINATIONS_C 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
+#include <deemon/method-hints.h>
+#include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/tuple.h>
-
+#include <deemon/util/atomic.h>
 /**/
+
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
-
-/**/
+#include "../generic-proxy.h"
 #include "combinations.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
 
 DECL_BEGIN
 

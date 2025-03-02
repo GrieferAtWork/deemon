@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/bytes.h>
+#include <deemon/dict.h>
 #include <deemon/instancemethod.h>
 #include <deemon/kwds.h>
 #include <deemon/object.h>
@@ -31,6 +32,9 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

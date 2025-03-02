@@ -32,14 +32,18 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
+/**/
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
 #include "../seq_functions.h"
-
-/**/
 #include "each.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

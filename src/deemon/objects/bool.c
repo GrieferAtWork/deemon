@@ -29,8 +29,13 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
+#include <hybrid/typecore.h>
+
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+/**/
+
+#include <stdint.h> /* int32_t */
 
 DECL_BEGIN
 

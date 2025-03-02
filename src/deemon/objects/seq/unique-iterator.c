@@ -34,13 +34,15 @@
 #include <deemon/super.h>
 #include <deemon/thread.h>
 #include <deemon/util/simple-hashset.h>
-
 /**/
+
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
-
-/**/
+#include "../generic-proxy.h"
 #include "unique-iterator.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

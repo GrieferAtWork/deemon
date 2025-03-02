@@ -1,0 +1,13 @@
+root = true
+
+[*]
+cpp_include_cleanup_add_missing_error_tag_type = suggestion
+cpp_include_cleanup_remove_unused_error_tag_type = dimmed
+cpp_include_cleanup_optimize_unused_error_tag_type = suggestion
+cpp_include_cleanup_sort_after_edits = false
+cpp_sort_includes_error_tag_type = none
+cpp_sort_includes_priority_case_sensitive = true
+cpp_sort_includes_priority_style = quoted
+cpp_includes_style = default
+cpp_includes_use_forward_slash = true
+cpp_include_cleanup_alternate_files = stddef.h:cstddef, stddef.h:vcruntime.h, stddef.h:vadefs.h, stdint.h:cstdint, stdarg.h:vadefs.h, stdarg.h:cstdarg, deemon/api.h:hybrid/compiler.h, deemon/api.h:compiler/msvc.h, deemon/api.h:__stdinc.h, deemon/system-features.h:string.h, deemon/system-features.h:cstring, deemon/system-features.h:memory.h, deemon/system-features.h:cstring

@@ -32,9 +32,14 @@
 #include <deemon/stringutils.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
+/**/
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t */
 
 DECL_BEGIN
 
@@ -72,7 +77,7 @@ INTDEF DeeTypeObject StringScanIterator_Type;
 INTDEF DeeTypeObject StringScan_Type;
 
 
-LOCAL WUNUSED NONNULL((1, 2)) bool DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 match_contains(char *sel_start, char *sel_end, uint32_t ch) {
 	while (sel_start < sel_end) {
 		uint32_t sel_ch = unicode_readutf8_n(&sel_start, sel_end);

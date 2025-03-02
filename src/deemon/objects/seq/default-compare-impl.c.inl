@@ -23,13 +23,18 @@
 #define DEFINE_compareeq
 #endif /* __INTELLISENSE__ */
 
-#include <deemon/int.h>
-#include <deemon/error.h>
+#include <deemon/api.h>
 #include <deemon/class.h>
-#include <deemon/thread.h>
+#include <deemon/error.h>
+#include <deemon/int.h>
+#include <deemon/object.h>
 #include <deemon/operator-hints.h>
+#include <deemon/thread.h>
 
 #include "../../runtime/runtime_error.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 #if (defined(DEFINE_compare) + defined(DEFINE_compareeq) != 1)
 #error "Must #define exactly one of these macros"

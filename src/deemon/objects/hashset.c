@@ -33,21 +33,24 @@
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none-operator.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
-#include <deemon/thread.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/sched/yield.h>
+#include <hybrid/typecore.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

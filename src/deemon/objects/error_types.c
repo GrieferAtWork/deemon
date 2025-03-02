@@ -38,6 +38,12 @@
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+/**/
+
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
 
@@ -137,10 +143,10 @@ get_slab_size(void (DCALL *tp_free)(void *__restrict ob)) {
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 error_try_init(DeeErrorObject *__restrict self,
                size_t argc, DeeObject *const *argv) {
-	size_t instance_size;
+	size_t sizeof_instance;
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	instance_size = GET_INSTANCE_SIZE(self);
-	ASSERT(instance_size >= sizeof(DeeErrorObject));
+	sizeof_instance = GET_INSTANCE_SIZE(self);
+	ASSERT(sizeof_instance >= sizeof(DeeErrorObject));
 	switch (argc) {
 
 	case 0:
@@ -172,7 +178,7 @@ error_try_init(DeeErrorObject *__restrict self,
 	return false;
 done_ok:
 	/* Clear our any additional fields. */
-	bzero(self + 1, instance_size - sizeof(DeeErrorObject));
+	bzero(self + 1, sizeof_instance - sizeof(DeeErrorObject));
 	return true;
 }
 
@@ -195,12 +201,12 @@ PRIVATE struct type_member tpconst error_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_ctor(DeeErrorObject *__restrict self) {
-	size_t instance_size;
+	size_t sizeof_instance;
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	instance_size = GET_INSTANCE_SIZE(self);
-	ASSERT(instance_size >= sizeof(DeeErrorObject));
+	sizeof_instance = GET_INSTANCE_SIZE(self);
+	ASSERT(sizeof_instance >= sizeof(DeeErrorObject));
 	bzero(&self->e_message,
-	      instance_size -
+	      sizeof_instance -
 	      offsetof(DeeErrorObject, e_message));
 	ASSERT(!self->e_inner);
 	ASSERT(!self->e_message);
@@ -210,16 +216,16 @@ error_ctor(DeeErrorObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 error_copy(DeeErrorObject *__restrict self,
            DeeErrorObject *__restrict other) {
-	size_t instance_size;
+	size_t sizeof_instance;
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	instance_size = GET_INSTANCE_SIZE(self);
-	ASSERT(instance_size >= sizeof(DeeErrorObject));
+	sizeof_instance = GET_INSTANCE_SIZE(self);
+	ASSERT(sizeof_instance >= sizeof(DeeErrorObject));
 	self->e_inner   = other->e_inner;
 	self->e_message = other->e_message;
 	Dee_XIncref(self->e_inner);
 	Dee_XIncref(self->e_message);
 	bzero(self + 1,
-	      instance_size -
+	      sizeof_instance -
 	      sizeof(DeeErrorObject));
 	return 0;
 }
@@ -227,10 +233,10 @@ error_copy(DeeErrorObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 error_deep(DeeErrorObject *__restrict self,
            DeeErrorObject *__restrict other) {
-	size_t instance_size;
+	size_t sizeof_instance;
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	instance_size = GET_INSTANCE_SIZE(self);
-	ASSERT(instance_size >= sizeof(DeeErrorObject));
+	sizeof_instance = GET_INSTANCE_SIZE(self);
+	ASSERT(sizeof_instance >= sizeof(DeeErrorObject));
 	self->e_inner = NULL;
 	if (other->e_inner) {
 		self->e_inner = DeeObject_DeepCopy(other->e_inner);
@@ -240,7 +246,7 @@ error_deep(DeeErrorObject *__restrict self,
 	self->e_message = other->e_message;
 	Dee_XIncref(self->e_message);
 	bzero(self + 1,
-	      instance_size -
+	      sizeof_instance -
 	      sizeof(DeeErrorObject));
 	return 0;
 err:
@@ -252,13 +258,13 @@ PRIVATE char const error_init_fmt[] = "|oo:Error";
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_init(DeeErrorObject *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	size_t instance_size;
+	size_t sizeof_instance;
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	instance_size = GET_INSTANCE_SIZE(self);
-	ASSERTF(instance_size >= sizeof(DeeErrorObject),
-	        "instance_size = %" PRFuSIZ "\n"
+	sizeof_instance = GET_INSTANCE_SIZE(self);
+	ASSERTF(sizeof_instance >= sizeof(DeeErrorObject),
+	        "sizeof_instance = %" PRFuSIZ "\n"
 	        "name          = %q\n",
-	        instance_size,
+	        sizeof_instance,
 	        Dee_TYPE(self)->tp_name);
 	self->e_message = NULL;
 	self->e_inner   = NULL;
@@ -270,7 +276,7 @@ error_init(DeeErrorObject *__restrict self,
 	Dee_XIncref(self->e_message);
 	Dee_XIncref(self->e_inner);
 	bzero(self + 1,
-	      instance_size -
+	      sizeof_instance -
 	      sizeof(DeeErrorObject));
 	return 0;
 err:
@@ -280,10 +286,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_init_kw(DeeErrorObject *__restrict self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	size_t instance_size;
+	size_t sizeof_instance;
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	instance_size = GET_INSTANCE_SIZE(self);
-	ASSERT(instance_size >= sizeof(DeeErrorObject));
+	sizeof_instance = GET_INSTANCE_SIZE(self);
+	ASSERT(sizeof_instance >= sizeof(DeeErrorObject));
 	self->e_message = NULL;
 	self->e_inner   = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__message_inner, error_init_fmt,
@@ -295,7 +301,7 @@ error_init_kw(DeeErrorObject *__restrict self, size_t argc,
 	Dee_XIncref(self->e_message);
 	Dee_XIncref(self->e_inner);
 	bzero(self + 1,
-	      instance_size -
+	      sizeof_instance -
 	      sizeof(DeeErrorObject));
 	return 0;
 err:

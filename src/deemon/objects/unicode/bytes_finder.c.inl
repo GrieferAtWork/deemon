@@ -25,11 +25,26 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
+#include <deemon/format.h>
+#include <deemon/int.h>
+#include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/typecore.h>
+/**/
+
+#include "../../runtime/strings.h"
 #include "../generic-proxy.h"
+#include "string_functions.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

@@ -41,10 +41,11 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../gc_inspect.h"
-#include "repeat.h"
-
-/**/
 #include "range.h"
+#include "repeat.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

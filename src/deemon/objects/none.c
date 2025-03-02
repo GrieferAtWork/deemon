@@ -22,12 +22,14 @@
 
 #include <deemon/api.h>
 #include <deemon/bool.h>
+#include <deemon/file.h>
 #include <deemon/int.h>
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
 #include <deemon/string.h>
+
+#include <hybrid/typecore.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -36,6 +38,10 @@
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* int32_t */
 
 DECL_BEGIN
 

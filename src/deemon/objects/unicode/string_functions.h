@@ -24,18 +24,17 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/stringutils.h>
+#include <deemon/stringutils.h>     /* DeeUni_FoldedLength */
 #include <deemon/system-features.h> /* memrchr(), memmem(), ... */
 
-#include <hybrid/minmax.h>
+#include <hybrid/limitcore.h>
+#include <hybrid/overflow.h>
+/**/
 
-#include <stddef.h>
-
-#include "../../runtime/runtime_error.h"
-#include "../../runtime/strings.h"
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t */
 
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
 
 DECL_BEGIN

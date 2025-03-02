@@ -45,6 +45,13 @@
 //#define DEFINE_DeeType_EnumAttr
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+#include <deemon/class.h>
+#include <deemon/mro.h>
+#include <deemon/object.h>
+
+#include "runtime_error.h"
+
 #if (defined(DEFINE_DeeType_GetAttrStringHash) +            \
      defined(DEFINE_DeeType_GetAttrStringLenHash) +         \
      defined(DEFINE_DeeType_BoundAttrStringHash) +          \

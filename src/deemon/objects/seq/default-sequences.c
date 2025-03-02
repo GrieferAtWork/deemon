@@ -20,9 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SEQUENCES_C
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SEQUENCES_C 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/class.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
@@ -31,18 +31,19 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
-#include <deemon/set.h>
 #include <deemon/thread.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
 /**/
 
+#include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 #include "default-iterators.h"
 #include "default-sequences.h"
 /**/
 
-#include "../../runtime/runtime_error.h"
-#include "../../runtime/strings.h"
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

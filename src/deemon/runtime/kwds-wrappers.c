@@ -36,13 +36,18 @@
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/typecore.h>
+/**/
 
 #include "../objects/generic-proxy.h"
 #include "kwlist.h"
 #include "runtime_error.h"
 #include "strings.h"
+/**/
+
+#include <stddef.h> /* offsetof */
 
 DECL_BEGIN
 

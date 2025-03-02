@@ -23,6 +23,9 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/util/lock.h>
+/**/
+
+#include <stdbool.h> /* bool */
 
 DECL_BEGIN
 

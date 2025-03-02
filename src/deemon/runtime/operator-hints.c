@@ -26,17 +26,20 @@
 #include <deemon/class.h>
 #include <deemon/format.h>
 #include <deemon/method-hints.h>
+#include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 
-/**/
 #include <hybrid/typecore.h>
 
 /**/
 #include "method-hint-defaults.h"
 #include "method-hints.h"
+
+/**/
+#include <stddef.h> /* offsetof */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -1541,7 +1544,7 @@ Dee_tno_assign_score(struct Dee_tno_assign const *actions,
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1)) size_t
+PRIVATE WUNUSED NONNULL((1)) size_t
 (DCALL do_DeeType_SelectMissingNativeOperator)(DeeTypeObject const *__restrict self, enum Dee_tno_id id,
                                                struct Dee_tno_assign actions[Dee_TNO_ASSIGN_MAXLEN],
                                                size_t actions_count) {

@@ -31,6 +31,7 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
+#include <deemon/none-operator.h> /* _DeeNone_reti1_3 */
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
@@ -45,12 +46,14 @@
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h>
-
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
-#include "seq/default-api.h"
+/**/
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

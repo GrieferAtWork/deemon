@@ -21,15 +21,16 @@
 #define GUARD_DEEMON_OBJECTS_CACHED_SEQ_H 1
 
 #include <deemon/api.h>
-#include <deemon/dict.h>
 #include <deemon/gc.h>
-#include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
 /**/
 
 #include "../generic-proxy.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

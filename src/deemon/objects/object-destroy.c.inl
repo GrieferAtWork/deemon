@@ -80,6 +80,10 @@
 #error "Must #define exactly 1 of these macros"
 #endif /* ... */
 
+#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/object.h>
+
 DECL_BEGIN
 
 

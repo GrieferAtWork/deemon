@@ -53,21 +53,26 @@ __pragma_GCC_diagnostic_ignored(Wmaybe_uninitialized)
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
-#include <deemon/module.h>
-#include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h>
+#include <deemon/system-sjlj.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/spcall.h>
+/**/
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* offsetof */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

@@ -23,7 +23,6 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/class.h>
 #include <deemon/computed-operators.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -42,6 +41,9 @@
 
 /**/
 #include "cached-seq.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
 
 DECL_BEGIN
 

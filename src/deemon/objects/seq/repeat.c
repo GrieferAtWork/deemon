@@ -31,17 +31,21 @@
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
+#include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
+/**/
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
-
-/**/
+#include "../generic-proxy.h"
 #include "repeat.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
 
 DECL_BEGIN

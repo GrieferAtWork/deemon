@@ -40,24 +40,24 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/limitcore.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sequence/list.h>
-
-#include <stddef.h>
-
 /**/
-#include "seq/default-compare.h"
-#include "seq/sort.h"
 
-/**/
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+#include "seq/default-compare.h"
+#include "seq/sort.h"
+/**/
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t, offsetof */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
 #define SSIZE_MIN __SSIZE_MIN__
 #define SSIZE_MAX __SSIZE_MAX__
 
@@ -82,15 +82,6 @@
 #undef CONFIG_TUPLE_CACHE_MAXCOUNT
 #define CONFIG_TUPLE_CACHE_MAXCOUNT 0
 #endif /* !CONFIG_TUPLE_CACHE_MAXSIZE */
-
-#include <hybrid/minmax.h>
-#if CONFIG_TUPLE_CACHE_MAXCOUNT && !defined(CONFIG_NO_THREADS)
-#include <hybrid/sched/yield.h>
-#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT && !CONFIG_NO_THREADS */
-
-#undef SSIZE_MAX
-#include <hybrid/limitcore.h>
-#define SSIZE_MAX __SSIZE_MAX__
 
 DECL_BEGIN
 

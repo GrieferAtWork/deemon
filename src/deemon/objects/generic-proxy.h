@@ -22,6 +22,9 @@
 
 #include <deemon/api.h>
 #include <deemon/object.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
 
 DECL_BEGIN
 

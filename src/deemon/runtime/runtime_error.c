@@ -20,11 +20,8 @@
 #ifndef GUARD_DEEMON_RUNTIME_RUNTIME_ERROR_C
 #define GUARD_DEEMON_RUNTIME_RUNTIME_ERROR_C 1
 
-#include "runtime_error.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/bytes.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
@@ -35,11 +32,13 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/tuple.h>
+/**/
 
-#ifdef CONFIG_HOST_WINDOWS
-#include <Windows.h>
-#endif /* CONFIG_HOST_WINDOWS */
+#include "runtime_error.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

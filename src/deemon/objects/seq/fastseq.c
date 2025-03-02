@@ -22,24 +22,19 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/bytes.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
-#include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/util/objectlist.h>
 
 #include <hybrid/overflow.h>
+/**/
 
 #include "../../runtime/runtime_error.h"
-#include "range.h"
-#include "svec.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

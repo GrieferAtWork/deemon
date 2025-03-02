@@ -20,16 +20,20 @@
 #ifndef GUARD_DEEMON_RUNTIME_LOCK_C
 #define GUARD_DEEMON_RUNTIME_LOCK_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/error.h>
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/once.h>
+#include <deemon/util/futex.h>
 #include <deemon/util/rlock.h>
 
 #include <hybrid/overflow.h>
+#include <hybrid/sched/__gettid.h>
+/**/
+
+#include <stddef.h> /* uintptr_t */
+#include <stdint.h> /* uint64_t */
 
 DECL_BEGIN
 
@@ -1407,7 +1411,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	return Dee_once_trybegin(self);
 #else /* CONFIG_NO_THREADS */
 	uint32_t state;
-	state = __hybrid_atomic_load(&self->oc_didrun, Dee_ATOMIC_ACQUIRE);
+	state = atomic_read(&self->oc_didrun);
 	if (state >= _DEE_ONCE_COMPLETED_THRESHOLD)
 		return 0; /* Already executed */
 

@@ -44,12 +44,16 @@
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
-
-#include <stddef.h>
+/**/
 
 #include "kwlist.h"
 #include "runtime_error.h"
 #include "strings.h"
+/**/
+
+#include <stddef.h>
+#include <stdarg.h>
+#include <stdint.h>
 
 #ifdef CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
 #define VALIST_ADDR(x) (&(x))

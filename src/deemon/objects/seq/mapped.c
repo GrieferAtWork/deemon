@@ -28,12 +28,14 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+/**/
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-
-/**/
 #include "mapped.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

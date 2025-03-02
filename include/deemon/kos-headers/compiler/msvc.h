@@ -552,6 +552,10 @@ void __builtin_va_end(__builtin_va_list &__ap);
 #pragma warning(disable: 4201) /* nonstandard extension used: nameless struct/union (they're standard now...) */
 #ifdef __cplusplus
 #pragma warning(disable: 4644) /* Annoying warning about use of `offsetof' in constant expressions (). */
+#pragma warning(disable: 26429)
+#pragma warning(disable: 26440)
+#pragma warning(disable: 26457)
+#pragma warning(disable: 6011) /* TODO: REMOVE THIS ONE */
 #define __SYSDECL_BEGIN __DECL_BEGIN
 #define __SYSDECL_END   __DECL_END
 #else /* __cplusplus */

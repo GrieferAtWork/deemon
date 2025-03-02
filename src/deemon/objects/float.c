@@ -33,9 +33,14 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
-#include <stdint.h>
+#include <hybrid/typecore.h>
+/**/
 
 #include "../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* INTPTR_MIN */
 
 #ifdef CONFIG_HAVE_FPU
 #include <hybrid/floatcore.h>

@@ -32,13 +32,15 @@
 #include <deemon/seq.h>
 
 #include <hybrid/limitcore.h>
+/**/
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-
-/**/
 #include "filter.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

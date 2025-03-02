@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_FORMAT_C 1
 
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/bytes.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
@@ -31,11 +30,13 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* strnlen(), memcpyc(), ... */
 
+#include <hybrid/int128.h>
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t */
 
 #ifndef PP_CAT2
 #define PP_PRIVATE_CAT2(a, b)    a##b
@@ -185,11 +186,11 @@ nextfmt:
 
 	case '?':
 #if __SIZEOF_POINTER__ > VA_SIZE
-		va_arg(args, size_t);
+		(void)va_arg(args, size_t);
 		goto nextfmt;
 #endif /* __SIZEOF_POINTER__ > VA_SIZE */
 	case '*':
-		va_arg(args, unsigned int);
+		(void)va_arg(args, unsigned int);
 		goto nextfmt;
 
 	case '.': /* Precision. */
@@ -197,14 +198,14 @@ nextfmt:
 		ch = *format++;
 #if __SIZEOF_POINTER__ > VA_SIZE
 		if (ch == '*') {
-			va_arg(args, unsigned int);
+			(void)va_arg(args, unsigned int);
 		} else if (ch == '?')
 #else /* __SIZEOF_POINTER__ > VA_SIZE */
 		if (ch == '*' || ch == '?')
 #endif /* __SIZEOF_POINTER__ <= VA_SIZE */
 		{
 	case '$':
-			va_arg(args, size_t);
+			(void)va_arg(args, size_t);
 		} else if (ch >= '0' && ch <= '9') {
 			while ((ch = *format, ch >= '0' && ch <= '9'))
 				++format;
@@ -267,33 +268,33 @@ nextfmt:
 	case 'i':
 #if VA_SIZE < 2
 		if (length == LENGTH_VASIZEOF(LENGTH_I8)) {
-			va_arg(args, uint8_t);
+			(void)va_arg(args, uint8_t);
 		} else
 #endif /* VA_SIZE < 2 */
 #if VA_SIZE < 4
 		if (length == LENGTH_VASIZEOF(LENGTH_I16)) {
-			va_arg(args, uint16_t);
+			(void)va_arg(args, uint16_t);
 		} else
 #endif /* VA_SIZE < 4 */
 #if VA_SIZE < 8
 		if (length == LENGTH_VASIZEOF(LENGTH_I32)) {
-			va_arg(args, uint32_t);
+			(void)va_arg(args, uint32_t);
 		} else
 #endif /* VA_SIZE < 8 */
 		{
-			va_arg(args, uint64_t);
+			(void)va_arg(args, uint64_t);
 		}
 		goto next;
 
 	case 'c':
-		va_arg(args, int);
+		(void)va_arg(args, int);
 		goto next;
 
 	case 'q':
 	case 's':
 	case 'k':
 	case 'r':
-		va_arg(args, char *);
+		(void)va_arg(args, char *);
 		goto next;
 
 	case 'f':
@@ -304,11 +305,11 @@ nextfmt:
 	case 'G':
 #ifdef __COMPILER_HAVE_LONGDOUBLE
 		if (length == LENGTH_L) {
-			va_arg(args, long double);
+			(void)va_arg(args, long double);
 		} else
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
 		{
-			va_arg(args, double);
+			(void)va_arg(args, double);
 		}
 		goto next;
 

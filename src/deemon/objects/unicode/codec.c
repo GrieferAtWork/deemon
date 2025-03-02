@@ -20,23 +20,27 @@
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_CODEC_C
 #define GUARD_DEEMON_OBJECTS_UNICODE_CODEC_C 1
 
-#include "codec.h"
-
-#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/module.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/util/lock.h>
 
-#include <hybrid/byteswap.h>
+#include <hybrid/byteorder.h>
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
+/**/
 
 #include "../../runtime/strings.h"
+#include "codec.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t */
 
 DECL_BEGIN
 

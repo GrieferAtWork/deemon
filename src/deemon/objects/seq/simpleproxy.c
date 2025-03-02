@@ -35,6 +35,9 @@
 
 /**/
 #include "simpleproxy.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
 
 DECL_BEGIN
 

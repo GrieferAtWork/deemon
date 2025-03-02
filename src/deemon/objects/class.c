@@ -22,7 +22,6 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -30,6 +29,7 @@
 #include <deemon/kwds.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
@@ -37,11 +37,18 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
 
 #include <hybrid/typecore.h>
 
 #include "../runtime/runtime_error.h"
+/**/
+
+#include <stdbool.h> /* bool */
+#include <stdarg.h>  /* va_start */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint16_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

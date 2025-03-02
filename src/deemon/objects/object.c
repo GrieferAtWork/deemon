@@ -56,20 +56,18 @@
 #include <hybrid/sched/yield.h>
 #include <hybrid/typecore.h>
 
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
 #include "../runtime/kwlist.h"
 #include "../runtime/method-hints.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-#include "seq/default-api.h"
 #include "seq/typemro.h"
+#include "type-operators.h"
 /**/
 
-#include "type-operators.h"
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t, offsetof */
+#include <stdint.h>  /* uintptr_t */
 
 DECL_BEGIN
 

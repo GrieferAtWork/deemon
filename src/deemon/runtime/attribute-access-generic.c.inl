@@ -47,6 +47,10 @@
 //#define DEFINE_DeeObject_TGenericEnumAttr
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+#include <deemon/mro.h>
+#include <deemon/object.h>
+
 #if (defined(DEFINE_DeeObject_TGenericGetAttrStringHash) +                \
      defined(DEFINE_DeeObject_TGenericGetAttrStringLenHash) +             \
      defined(DEFINE_DeeObject_TGenericBoundAttrStringHash) +              \

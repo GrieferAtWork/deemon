@@ -18,7 +18,6 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include "string_functions.c"
 //#define DEFINE_DeeString_StripSpc
 //#define DEFINE_DeeString_LStripSpc
 //#define DEFINE_DeeString_RStripSpc
@@ -50,6 +49,17 @@
 //#define DEFINE_DeeString_CaseLSStripLines
 //#define DEFINE_DeeString_CaseRSStripLines
 #endif /* __INTELLISENSE__ */
+
+#include <deemon/api.h>
+#include <deemon/object.h>
+#include <deemon/string.h>
+/**/
+
+#include "string_functions.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t */
 
 DECL_BEGIN
 

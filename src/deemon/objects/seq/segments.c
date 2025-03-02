@@ -28,13 +28,15 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/tuple.h>
+/**/
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-
-/**/
 #include "segments.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

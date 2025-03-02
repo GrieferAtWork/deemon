@@ -29,8 +29,13 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+/**/
 
 #include "../../runtime/runtime_error.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* int64_t */
 
 DECL_BEGIN
 

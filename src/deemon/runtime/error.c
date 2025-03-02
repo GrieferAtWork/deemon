@@ -23,24 +23,24 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
+#include <deemon/file.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* fprintf(stderr, ...) */
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
-#include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+/**/
 
-#include <hybrid/sched/yield.h>
-
+#include <stddef.h> /* offsetof, size_t */
+#include <stdarg.h> /* va_list */
+#include <stdint.h> /* uint8_t */
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
-
-#include "strings.h"
 
 DECL_BEGIN
 
