@@ -43,6 +43,9 @@
 
 #include <hybrid/__overflow.h>
 #include <hybrid/sched/__yield.h>
+/**/
+
+#include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN
 

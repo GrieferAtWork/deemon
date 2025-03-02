@@ -31,6 +31,7 @@
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uintptr_t */
 
 #undef Dee_pid_t
 #ifdef CONFIG_HOST_WINDOWS

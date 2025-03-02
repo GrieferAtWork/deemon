@@ -153,9 +153,10 @@ DECL_END
 #include <hybrid/__atomic.h>
 #include <hybrid/sched/__gettid.h>
 #include <hybrid/sched/__yield.h>
+/**/
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <stdbool.h> /* bool */
+#include <stdint.h>  /* uintptr_t */
 
 DECL_BEGIN
 

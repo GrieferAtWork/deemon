@@ -28,6 +28,7 @@
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uintptr_t */
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H

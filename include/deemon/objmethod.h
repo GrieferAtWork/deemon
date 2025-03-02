@@ -29,6 +29,7 @@
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uintptr_t */
 
 DECL_BEGIN
 

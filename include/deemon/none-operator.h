@@ -28,6 +28,9 @@
 DECL_BEGIN
 
 #ifdef DCALL_CALLER_CLEANUP
+DECL_END
+#include "none.h"
+DECL_BEGIN
 #define _DeeNone_NewRef1 (*(DREF DeeObject *(DCALL *)(void *))(Dee_funptr_t)&DeeNone_NewRef)
 #define _DeeNone_NewRef2 (*(DREF DeeObject *(DCALL *)(void *, void *))(Dee_funptr_t)&DeeNone_NewRef)
 #define _DeeNone_NewRef3 (*(DREF DeeObject *(DCALL *)(void *, void *, void *))(Dee_funptr_t)&DeeNone_NewRef)

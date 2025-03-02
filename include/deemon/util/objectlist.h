@@ -28,6 +28,9 @@
 #include "../seq.h"
 #include "../system-features.h" /* memchrp */
 #include "../tuple.h"
+/**/
+
+#include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN
 

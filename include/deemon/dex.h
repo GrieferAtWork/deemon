@@ -35,6 +35,7 @@
 /**/
 
 #include <stdbool.h> /* bool */
+#include <stdint.h>  /* uintptr_t */
 
 DECL_BEGIN
 

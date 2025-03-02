@@ -31,6 +31,7 @@
 /**/
 
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN
 

@@ -29,6 +29,7 @@
 /**/
 
 #include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* uintptr_t */
 
 #ifdef CONFIG_NO_FPU
 #undef CONFIG_HAVE_FPU

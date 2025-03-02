@@ -98,11 +98,6 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 #endif /* !CONFIG_HAVE_strlen */
 #endif /* !__INTELLISENSE__ */
 
-#ifdef __INTELLISENSE__
-typedef __INTPTR_TYPE__  intptr_t;
-typedef __UINTPTR_TYPE__ uintptr_t;
-#endif /* __INTELLISENSE__ */
-
 #ifdef DEE_SOURCE
 #define Dee_weakref                weakref
 #define Dee_object                 object_

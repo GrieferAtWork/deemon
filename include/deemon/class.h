@@ -30,7 +30,7 @@
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
-#include <stdint.h>  /* uint16_t */
+#include <stdint.h>  /* uint16_t, uintptr_t */
 #endif /* !_DEE_WITHOUT_INCLUDES */
 
 /*
