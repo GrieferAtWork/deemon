@@ -212,8 +212,15 @@ err:
 
 PRIVATE struct type_cmp splititer_cmp = {
 	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&splititer_hash,
-	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare_eq = */ DEFIMPL(&default__compare_eq__with__compare),
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&splititer_compare,
+	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
+	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
+	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
+	/* .tp_lo            = */ DEFIMPL(&default__lo__with__compare),
+	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
+	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
+	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
 };
 
 
@@ -335,21 +342,23 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&splititer_bool
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&splititer_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&splititer_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
 	/* .tp_cmp           = */ &splititer_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&splititer_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -358,7 +367,9 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 	/* .tp_members       = */ splititer_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
 };
 
 INTERN DeeTypeObject StringCaseSplitIterator_Type = {
@@ -383,21 +394,23 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 		},
 		/* .tp_dtor        = */ NULL, /* INHERITED */
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL  /* INHERITED */
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&splititer_bool, /* INHERITED */
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ NULL, /* INHERITED */
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL, /* INHERITED */
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
+	/* .tp_cmp           = */ &splititer_cmp, /* INHERITED */
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&casesplititer_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -406,7 +419,9 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
 };
 
 
@@ -503,26 +518,96 @@ PRIVATE struct type_member tpconst casesplit_class_members[] = {
 
 PRIVATE struct type_seq split_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&split_iter,
-	/* .tp_sizeob   = */ NULL,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL
+	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
+	/* .tp_contains = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
+	/* .tp_getitem  = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
+	/* .tp_delitem  = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
+	/* .tp_setitem  = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
+	/* .tp_getrange = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
+	/* .tp_delrange = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
+	/* .tp_setrange = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
+	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
+	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
+	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
+	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
+	/* .tp_bounditem_index            = */ DEFIMPL(&default__seq_operator_bounditem_index__with__seq_operator_getitem_index),
+	/* .tp_hasitem_index              = */ DEFIMPL(&default__seq_operator_hasitem_index__with__seq_operator_getitem_index),
+	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
+	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
+	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index_n           = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
+	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
+	/* .tp_trygetitem                 = */ DEFIMPL(&default__seq_operator_trygetitem__with__seq_operator_trygetitem_index),
+	/* .tp_trygetitem_index           = */ DEFIMPL(&default__seq_operator_trygetitem_index__with__seq_operator_foreach),
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
+	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
+	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__hasitem),
+	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__trygetitem),
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
 };
 
 PRIVATE struct type_seq casesplit_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&casesplit_iter,
-	/* .tp_sizeob   = */ NULL,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL
+	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
+	/* .tp_contains = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
+	/* .tp_getitem  = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
+	/* .tp_delitem  = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
+	/* .tp_setitem  = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
+	/* .tp_getrange = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
+	/* .tp_delrange = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
+	/* .tp_setrange = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
+	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
+	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
+	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
+	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
+	/* .tp_bounditem_index            = */ DEFIMPL(&default__seq_operator_bounditem_index__with__seq_operator_getitem_index),
+	/* .tp_hasitem_index              = */ DEFIMPL(&default__seq_operator_hasitem_index__with__seq_operator_getitem_index),
+	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
+	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
+	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index_n           = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
+	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
+	/* .tp_trygetitem                 = */ DEFIMPL(&default__seq_operator_trygetitem__with__seq_operator_trygetitem_index),
+	/* .tp_trygetitem_index           = */ DEFIMPL(&default__seq_operator_trygetitem_index__with__seq_operator_foreach),
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
+	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
+	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__hasitem),
+	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__trygetitem),
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -580,18 +665,20 @@ INTERN DeeTypeObject StringSplit_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&split_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&split_bool
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&split_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&split_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),
 	/* .tp_seq           = */ &split_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
@@ -603,7 +690,7 @@ INTERN DeeTypeObject StringSplit_Type = {
 	/* .tp_members       = */ split_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ split_class_members
+	/* .tp_class_members = */ split_class_members,
 };
 
 INTERN DeeTypeObject StringCaseSplit_Type = {
@@ -626,18 +713,20 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 		},
 		/* .tp_dtor        = */ NULL, /* INHERITED */
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&split_bool
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&split_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* INHERITED */
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),
 	/* .tp_seq           = */ &casesplit_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
@@ -649,7 +738,7 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ casesplit_class_members
+	/* .tp_class_members = */ casesplit_class_members,
 };
 
 /* @return: An abstract sequence type for enumerating the segments of a split string. */
@@ -897,21 +986,23 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini, /* offset:`s_split' == offset:`ls_split' */
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&splititer_bool /* offset:`s_next' == offset:`ls_next' */
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&splititer_bool /* offset:`s_next' == offset:`ls_next' */,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&splititer_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
 	/* .tp_cmp           = */ &splititer_cmp, /* offset:`s_next' == offset:`ls_next' */
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lineiter_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -920,7 +1011,9 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 	/* .tp_members       = */ splititer_members, /* offset:`s_split' == offset:`ls_split' */
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
 };
 
 PRIVATE struct type_member tpconst linesplit_class_members[] = {
@@ -949,7 +1042,50 @@ done:
 }
 
 PRIVATE struct type_seq linesplit_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&linesplit_iter
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&linesplit_iter,
+	/* .tp_sizeob                     = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
+	/* .tp_contains                   = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
+	/* .tp_getitem                    = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
+	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
+	/* .tp_setitem                    = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
+	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
+	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
+	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
+	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
+	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
+	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
+	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
+	/* .tp_bounditem_index            = */ DEFIMPL(&default__seq_operator_bounditem_index__with__seq_operator_getitem_index),
+	/* .tp_hasitem_index              = */ DEFIMPL(&default__seq_operator_hasitem_index__with__seq_operator_getitem_index),
+	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
+	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
+	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index_n           = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
+	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
+	/* .tp_trygetitem                 = */ DEFIMPL(&default__seq_operator_trygetitem__with__seq_operator_trygetitem_index),
+	/* .tp_trygetitem_index           = */ DEFIMPL(&default__seq_operator_trygetitem_index__with__seq_operator_foreach),
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
+	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
+	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__hasitem),
+	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__trygetitem),
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
 };
 
 STATIC_ASSERT(offsetof(LineSplit, ls_str) == offsetof(ProxyObject, po_obj));
@@ -1016,18 +1152,20 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&linesplit_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&linesplit_bool
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&linesplit_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&linesplit_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),
 	/* .tp_seq           = */ &linesplit_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
@@ -1039,7 +1177,7 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 	/* .tp_members       = */ linesplit_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ linesplit_class_members
+	/* .tp_class_members = */ linesplit_class_members,
 };
 
 /* @return: An abstract sequence type for enumerating
