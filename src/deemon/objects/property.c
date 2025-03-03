@@ -441,18 +441,18 @@ property_bound_module(Property *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst property_getsets[] = {
-	TYPE_GETTER_F("canget", &property_canget,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this Property has a getter callback"),
-	TYPE_GETTER_F("candel", &property_candel,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this Property has a delete callback"),
-	TYPE_GETTER_F("canset", &property_canset,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this Property has a setter callback"),
+	TYPE_GETTER_AB_F("canget", &property_canget,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this Property has a getter callback"),
+	TYPE_GETTER_AB_F("candel", &property_candel,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this Property has a delete callback"),
+	TYPE_GETTER_AB_F("canset", &property_canset,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this Property has a setter callback"),
 	TYPE_GETTER_BOUND_F(STR___name__, &property_get_name, &property_bound_name,
 	                    METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"

@@ -2036,6 +2036,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="..\.clang-format" />
+		<None Include="..\.editorconfig" />
 		<None Include="..\.gitattributes" />
 		<None Include="..\.gitignore" />
 		<None Include="..\.gitmodules" />

@@ -350,26 +350,26 @@ attr_printrepr(Attr *__restrict self,
 
 
 PRIVATE struct type_getset tpconst attr_getsets[] = {
-	TYPE_GETTER_F("name", &attr_get_name, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "The name of this ?."),
-	TYPE_GETTER_F("doc", &attr_get_doc, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "The documentation string of this ?., or ?N when no documentation is present"),
-	TYPE_GETTER_F("flags", &attr_getflags, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "Return a set of characters descripting the flags of @this ?.:\n"
-	              "#T{Character|Mnemonic|Field|Flag description~"
-	              /**/ "$\"g\"|get|?#canget|The ?. has a way of being read from&"
-	              /**/ "$\"d\"|del|?#candel|The ?. has a way of being deleted&"
-	              /**/ "$\"s\"|set|?#canset|The ?. has a way of being written to&"
-	              /**/ "$\"f\"|function|?#cancall|The ?. is intended to be called as a function&"
-	              /**/ "$\"i\"|instance|?#isinstance|The ?. requires an instance of the declaring object&"
-	              /**/ "$\"c\"|class|?#isclass|The ?. is accessed though the declaring type ?#decl&"
-	              /**/ "$\"h\"|hidden|?#isprivate|The ?. is considered to be private&"
-	              /**/ "$\"p\"|property|?#isproperty|The ?. is property-like&"
-	              /**/ "$\"w\"|wrapper|?#iswrapper|The ?. is provided by the type as a class member that wraps around an instance member"
-	              "}"),
+	TYPE_GETTER_AB_F("name", &attr_get_name, METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "The name of this ?."),
+	TYPE_GETTER_AB_F("doc", &attr_get_doc, METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "The documentation string of this ?., or ?N when no documentation is present"),
+	TYPE_GETTER_AB_F("flags", &attr_getflags, METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "Return a set of characters descripting the flags of @this ?.:\n"
+	                 "#T{Character|Mnemonic|Field|Flag description~"
+	                 /**/ "$\"g\"|get|?#canget|The ?. has a way of being read from&"
+	                 /**/ "$\"d\"|del|?#candel|The ?. has a way of being deleted&"
+	                 /**/ "$\"s\"|set|?#canset|The ?. has a way of being written to&"
+	                 /**/ "$\"f\"|function|?#cancall|The ?. is intended to be called as a function&"
+	                 /**/ "$\"i\"|instance|?#isinstance|The ?. requires an instance of the declaring object&"
+	                 /**/ "$\"c\"|class|?#isclass|The ?. is accessed though the declaring type ?#decl&"
+	                 /**/ "$\"h\"|hidden|?#isprivate|The ?. is considered to be private&"
+	                 /**/ "$\"p\"|property|?#isproperty|The ?. is property-like&"
+	                 /**/ "$\"w\"|wrapper|?#iswrapper|The ?. is provided by the type as a class member that wraps around an instance member"
+	                 "}"),
 	TYPE_GETSET_END
 };
 

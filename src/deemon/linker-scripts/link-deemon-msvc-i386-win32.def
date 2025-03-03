@@ -503,6 +503,7 @@ EXPORTS
 	DeeMA___map_sub__@12=_DeeMA___map_sub__@12
 	DeeMA___map_update__@12=_DeeMA___map_update__@12
 	DeeMA___map_xor__@12=_DeeMA___map_xor__@12
+	DeeMA___seq_add__@12=_DeeMA___seq_add__@12
 	DeeMA___seq_all__@16=_DeeMA___seq_all__@16
 	DeeMA___seq_any__@16=_DeeMA___seq_any__@16
 	DeeMA___seq_append__@12=_DeeMA___seq_append__@12
@@ -541,6 +542,7 @@ EXPORTS
 	DeeMA___seq_locate__@16=_DeeMA___seq_locate__@16
 	DeeMA___seq_max__@16=_DeeMA___seq_max__@16
 	DeeMA___seq_min__@16=_DeeMA___seq_min__@16
+	DeeMA___seq_mul__@12=_DeeMA___seq_mul__@12
 	DeeMA___seq_ne__@12=_DeeMA___seq_ne__@12
 	DeeMA___seq_parity__@16=_DeeMA___seq_parity__@16
 	DeeMA___seq_pop__@16=_DeeMA___seq_pop__@16
@@ -1246,6 +1248,7 @@ EXPORTS
 	DeeTuple_ExtendInherited@12=_DeeTuple_ExtendInherited@12
 	DeeTuple_FreeUninitialized@4=_DeeTuple_FreeUninitialized@4
 	DeeTuple_FromIterator@4=_DeeTuple_FromIterator@4
+	DeeTuple_FromList@4=_DeeTuple_FromList@4
 	DeeTuple_FromSequence@4=_DeeTuple_FromSequence@4
 	DeeTuple_NewUninitialized@4=_DeeTuple_NewUninitialized@4
 	DeeTuple_NewVector@8=_DeeTuple_NewVector@8
@@ -1533,10 +1536,12 @@ EXPORTS
 	_DeeNone_rets0_3@12=__DeeNone_rets0_3@12
 	_DeeNone_rets0_4@16=__DeeNone_rets0_4@16
 	_DeeNone_rets0_5@20=__DeeNone_rets0_5@20
+	_DeeNone_rets0_6@24=__DeeNone_rets0_6@24
 	_DeeNone_retsm1_1@4=__DeeNone_retsm1_1@4
 	_DeeNone_retsm1_2@8=__DeeNone_retsm1_2@8
 	_DeeNone_retsm1_3@12=__DeeNone_retsm1_3@12
 	_DeeNone_retsm1_4@16=__DeeNone_retsm1_4@16
+	_DeeNone_retsm1_5@20=__DeeNone_retsm1_5@20
 	_Dee_MalloccBufsizeDbg@16=__Dee_MalloccBufsizeDbg@16
 	_Dee_MallococBufsizeDbg@20=__Dee_MallococBufsizeDbg@20
 	_Dee_dprint@4=__Dee_dprint@4

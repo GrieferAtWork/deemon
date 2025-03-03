@@ -125,6 +125,7 @@ DeeTuple_FreeUninitialized(DREF DeeTupleObject *__restrict self);
 
 
 /* Create a new tuple object from a sequence or iterator. */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromList(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromSequence(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromIterator(DeeObject *__restrict self); /* TODO: Deprecated */
 
@@ -250,7 +251,7 @@ Dee_tuple_builder_reserve(struct Dee_tuple_builder *__restrict self, size_t n);
 #define Dee_tuple_builder_init_with_hint_symbolic  Dee_tuple_builder_init_with_hint
 #define Dee_tuple_builder_cinit_with_hint_symbolic Dee_tuple_builder_cinit_with_hint
 #define Dee_tuple_builder_fini_symbolic(self) \
-	(void)(!(self)->tb_tuple || DeeTuple_FreeUninitialized((self)->tb_tuple), 0)
+	(void)(!(self)->tb_tuple || (DeeTuple_FreeUninitialized((self)->tb_tuple), 0))
 #define Dee_tuple_builder_pack_symbolic   Dee_tuple_builder_pack
 #define Dee_tuple_builder_append_symbolic Dee_tuple_builder_append_inherited
 #define Dee_tuple_builder_extend_symbolic Dee_tuple_builder_extend_inherited

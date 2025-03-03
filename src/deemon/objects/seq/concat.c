@@ -337,8 +337,8 @@ catiterator_curr_set(CatIterator *__restrict self,
 }
 
 PRIVATE struct type_getset tpconst catiterator_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &catiterator_seq_get, METHOD_FNOREFESCAPE, "->?Ert:SeqConcat"),
-	TYPE_GETSET_F("__curr__", &catiterator_curr_get, NULL, &catiterator_curr_set, METHOD_FNOREFESCAPE, "->?DIterator"),
+	TYPE_GETTER_AB_F(STR_seq, &catiterator_seq_get, METHOD_FNOREFESCAPE, "->?Ert:SeqConcat"),
+	TYPE_GETSET_AB_F("__curr__", &catiterator_curr_get, NULL, &catiterator_curr_set, METHOD_FNOREFESCAPE, "->?DIterator"),
 	TYPE_GETSET_END
 };
 

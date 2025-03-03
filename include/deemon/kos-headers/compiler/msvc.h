@@ -87,6 +87,12 @@
 #define __has_include_next(x) 0
 #endif /* !__has_include */
 
+/* Try to detect the "Visual Assist X Inspector" (which uses a weird port of clang) */
+#if (defined(__cplusplus) && defined(__STDC_NO_THREADS__) && \
+     !defined(__NO_has_builtin) && __has_builtin(__builtin_choose_expr))
+#define __VASSISTX_INSPECT__
+#endif /* ... */
+
 
 
 #if __has_feature(cxx_auto_type) || \
@@ -450,7 +456,7 @@ extern void (__cdecl _ReadWriteBarrier)(void);
 #define __COMPILER_IMPURE() (void)0
 
 #ifdef __cplusplus
-#ifdef __INTELLISENSE__
+#if defined(__INTELLISENSE__) || defined(__VASSISTX_INSPECT__)
 #define __NULLPTR nullptr
 #else /* __INTELLISENSE__ */
 #define __NULLPTR 0

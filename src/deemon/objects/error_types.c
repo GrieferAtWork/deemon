@@ -987,19 +987,19 @@ err:
 #undef DO
 
 PRIVATE struct type_getset tpconst systemerror_getsets[] = {
-	TYPE_GETTER_F("strerrorname", &systemerror_getstrerrorname, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "The name of the associated ?#errno (s.a. ?Eposix:strerrorname)\n"
-	              "Returns ?N if ?#errno doesn't have a known name"),
-	TYPE_GETTER_F("strerror", &systemerror_getstrerror, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "A description of the associated ?#errno (s.a. ?Eposix:strerror)\n"
-	              "Returns ?N if ?#errno doesn't have a description"),
+	TYPE_GETTER_AB_F("strerrorname", &systemerror_getstrerrorname, METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "The name of the associated ?#errno (s.a. ?Eposix:strerrorname)\n"
+	                 "Returns ?N if ?#errno doesn't have a known name"),
+	TYPE_GETTER_AB_F("strerror", &systemerror_getstrerror, METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "A description of the associated ?#errno (s.a. ?Eposix:strerror)\n"
+	                 "Returns ?N if ?#errno doesn't have a description"),
 #ifdef CONFIG_HOST_WINDOWS
-	TYPE_GETTER_F("nterrmsg_np", &systemerror_getnterrmsg_np, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "A description of the associated ?#nterr_np (s.a. ?Ewin32:FormatErrorMessage)\n"
-	              "Returns ?N if no message description is available"),
+	TYPE_GETTER_AB_F("nterrmsg_np", &systemerror_getnterrmsg_np, METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "A description of the associated ?#nterr_np (s.a. ?Ewin32:FormatErrorMessage)\n"
+	                 "Returns ?N if no message description is available"),
 #endif /* CONFIG_HOST_WINDOWS */
 	TYPE_GETSET_END
 };

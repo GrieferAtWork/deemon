@@ -1519,10 +1519,10 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "Returns the name of @this ?. (s.a. ?A__name__?DFunction)"),
-	TYPE_GETTER_F(STR___doc__, &code_get_doc,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "Returns the documentation string of @this ?., or ?N if unknown (s.a. ?A__doc__?DFunction)"),
+	TYPE_GETTER_AB_F(STR___doc__, &code_get_doc,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "Returns the documentation string of @this ?., or ?N if unknown (s.a. ?A__doc__?DFunction)"),
 	TYPE_GETTER_BOUND_F(STR___type__, &code_get_type, &code_bound_type,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DType\n"
@@ -1558,15 +1558,15 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	                    "Returns an integer describing the kind if @this ?. is part of a property or getset, "
 	                    /**/ "or throw :UnboundAttribute if the function's property could not be found, or if "
 	                    /**/ "the function isn't declared as a property callback (s.a. ?A__property__?DFunction)"),
-	TYPE_GETTER_F("__defaults__", &code_getdefaults, METHOD_FCONSTCALL,
-	              "->?S?O\n"
-	              "Access to the default values of arguments"),
-	TYPE_GETTER_F("__constants__", &code_getconstants, METHOD_FCONSTCALL,
-	              "->?S?O\n"
-	              "Access to the constants of @this ?."),
-	TYPE_GETTER_F("__nstatic__", &code_get_nstatic, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Number of static variables during execution"),
+	TYPE_GETTER_AB_F("__defaults__", &code_getdefaults, METHOD_FCONSTCALL,
+	                "->?S?O\n"
+	                "Access to the default values of arguments"),
+	TYPE_GETTER_AB_F("__constants__", &code_getconstants, METHOD_FCONSTCALL,
+	                "->?S?O\n"
+	                "Access to the constants of @this ?."),
+	TYPE_GETTER_AB_F("__nstatic__", &code_get_nstatic, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                "->?Dint\n"
+	                "Number of static variables during execution"),
 	TYPE_GETSET_END
 };
 

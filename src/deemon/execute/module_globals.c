@@ -230,9 +230,9 @@ modexportsiter_getseq(ModuleExportsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst modexportsiter_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &modexportsiter_getseq,
-	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
-	              "->?Ert:ModuleExports"),
+	TYPE_GETTER_AB_F(STR_seq, &modexportsiter_getseq,
+	                 METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	                 "->?Ert:ModuleExports"),
 	TYPE_GETSET_END
 };
 

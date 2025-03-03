@@ -24,6 +24,7 @@
 /**/
 
 #include "object.h"
+#include "string.h"
 /**/
 
 #include <hybrid/byteorder.h>

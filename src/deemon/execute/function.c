@@ -743,10 +743,10 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "Returns the name of @this ?."),
-	TYPE_GETTER_F(STR___doc__, &function_get_doc,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "Returns the documentation string of @this ?., or ?N if there is none"),
+	TYPE_GETTER_AB_F(STR___doc__, &function_get_doc,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "Returns the documentation string of @this ?., or ?N if there is none"),
 	TYPE_GETTER_BOUND_F(STR___type__, &function_get_type, &function_bound_type,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DType\n"
@@ -787,107 +787,107 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	                    /**/ "$" PP_STR(CLASS_GETSET_DEL) "|Delete callback|${del(): none}&"
 	                    /**/ "$" PP_STR(CLASS_GETSET_SET) "|Setter callback|${set(value: Object): none}"
 	                    "}"),
-	TYPE_GETTER_F("__refs__", &function_get_refs, METHOD_FCONSTCALL,
-	              "->?S?O\n"
-	              "Returns a sequence of all of the references used by @this ?."),
-	TYPE_GETTER_F("__statics__", &DeeFunction_GetStaticsWrapper, METHOD_FCONSTCALL,
-	              "->?S?O\n"
-	              "Returns a (writable) sequence of all of the static variables that appear in @this ?."),
-	TYPE_GETTER_F("__refsbyname__", &DeeFunction_GetRefsByNameWrapper, METHOD_FCONSTCALL,
-	              "->?M?X2?Dstring?Dint?O\n"
-	              "Returns a read-only mapping to access ?#__refs__ by their name "
-	              /**/ "(requires debug information to be present)"),
-	TYPE_GETTER_F("__staticsbyname__", &DeeFunction_GetStaticsByNameWrapper, METHOD_FCONSTCALL,
-	              "->?M?X2?Dstring?Dint?O\n"
-	              "Returns a writable mapping to access ?#__statics__ by their name "
-	              /**/ "(requires debug information to be present)"),
-	TYPE_GETTER_F("__symbols__", &DeeFunction_GetSymbolsByNameWrapper, METHOD_FCONSTCALL,
-	              "->?M?X2?Dstring?Dint?O\n"
-	              "The combination of ?#__refsbyname__ and ?#__staticsbyname__, allowing "
-	              /**/ "access to all named symbol that need to maintain their value across "
-	              /**/ "different calls to ?. (requires debug information to be present)"),
-	TYPE_GETTER_F("__nstatic__", &function_get_code_nstatic,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Number of static variables during execution"),
+	TYPE_GETTER_AB_F("__refs__", &function_get_refs, METHOD_FCONSTCALL,
+	                 "->?S?O\n"
+	                 "Returns a sequence of all of the references used by @this ?."),
+	TYPE_GETTER_AB_F("__statics__", &DeeFunction_GetStaticsWrapper, METHOD_FCONSTCALL,
+	                 "->?S?O\n"
+	                 "Returns a (writable) sequence of all of the static variables that appear in @this ?."),
+	TYPE_GETTER_AB_F("__refsbyname__", &DeeFunction_GetRefsByNameWrapper, METHOD_FCONSTCALL,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Returns a read-only mapping to access ?#__refs__ by their name "
+	                 /**/ "(requires debug information to be present)"),
+	TYPE_GETTER_AB_F("__staticsbyname__", &DeeFunction_GetStaticsByNameWrapper, METHOD_FCONSTCALL,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Returns a writable mapping to access ?#__statics__ by their name "
+	                 /**/ "(requires debug information to be present)"),
+	TYPE_GETTER_AB_F("__symbols__", &DeeFunction_GetSymbolsByNameWrapper, METHOD_FCONSTCALL,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "The combination of ?#__refsbyname__ and ?#__staticsbyname__, allowing "
+	                 /**/ "access to all named symbol that need to maintain their value across "
+	                 /**/ "different calls to ?. (requires debug information to be present)"),
+	TYPE_GETTER_AB_F("__nstatic__", &function_get_code_nstatic,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Number of static variables during execution"),
 	TYPE_GETTER_BOUND_F(STR___kwds__, &function_get_kwds, &function_bound_kwds,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "Returns a sequence of keyword argument names accepted by @this ?.\n"
 	                    "If @this ?. doesn't accept keyword arguments, throw :UnboundAttribute"),
-	TYPE_GETTER_F("__defaults__", &function_get_code_defaults, METHOD_FCONSTCALL,
-	              "->?S?O\n"
-	              "Access to the default values of arguments"),
-	TYPE_GETTER_F("__constants__", &function_get_code_constants, METHOD_FCONSTCALL,
-	              "->?S?O\n"
-	              "Access to the constants of @this ?."),
-	TYPE_GETTER_F("__argc_min__", &function_get_code_argc_min, METHOD_FCONSTCALL,
-	              "->?Dint\n"
-	              "Min amount of arguments required to execute @this ?."),
-	TYPE_GETTER_F("__argc_max__", &function_get_code_argc_max, METHOD_FCONSTCALL,
-	              "->?Dint\n"
-	              "Max amount of arguments accepted by @this ?. (excluding a varargs or varkwds argument)"),
-	TYPE_GETTER_F("isyielding", &function_get_code_isyielding,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "Check if calls to @this ?. produce yield-functions"),
-	TYPE_GETTER_F("iscopyable", &function_get_code_iscopyable,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "Check if yield-function iterators of @this ?. are copyable (as per ${@[copyable]})"),
-	TYPE_GETTER_F("hasvarargs", &function_get_code_hasvarargs,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "Check if @this ?. accepts variable arguments as overflow"),
-	TYPE_GETTER_F("hasvarkwds", &function_get_code_hasvarkwds,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "Check if @this ?. accepts variable keyword arguments as overflow"),
-	TYPE_GETTER_F("__isthiscall__", &function_get_code_isthiscall,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "Check if @this ?. takes an extra leading $this-argument"),
-	TYPE_GETTER_F("__hasassembly__", &function_get_code_hasassembly,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "Check if assembly of @this ?. is executed in safe-mode"),
-	TYPE_GETTER_F("__islenient__", &function_get_code_islenient,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "Check if the runtime stack allocation allows for leniency"),
-	TYPE_GETTER_F("__hasheapframe__", &function_get_code_hasheapframe,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "Check if the runtime stack-frame must be allocated on the heap"),
-	TYPE_GETTER_F("__hasfinally__", &function_get_code_hasfinally,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "True if execution will jump to the nearest finally-block when a return instruction is encountered\n"
-	              "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in the "
-	              /**/ "user's source code, as the compiler may try to optimize this flag away to speed up runtime execution"),
-	TYPE_GETTER_F("__isconstructor__", &function_get_code_isconstructor,
-	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
-	              "->?Dbool\n"
-	              "True for class constructor ?. objects. - When set, don't include the this-argument in "
-	              /**/ "tracebacks, thus preventing incomplete instances from being leaked when the constructor "
-	              /**/ "causes some sort of exception to be thrown"),
-	TYPE_GETTER_F("__nlocal__", &function_get_code_nlocal,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Number of available local variables during execution"),
-	TYPE_GETTER_F("__nconst__", &function_get_code_nconst,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Number of constant objects during execution"),
-	TYPE_GETTER_F("__nref__", &function_get_code_nref,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Number of referenced objects during execution"),
-	TYPE_GETTER_F("__nexcept__", &function_get_code_nexcept,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Number of exception handlers"),
+	TYPE_GETTER_AB_F("__defaults__", &function_get_code_defaults, METHOD_FCONSTCALL,
+	                 "->?S?O\n"
+	                 "Access to the default values of arguments"),
+	TYPE_GETTER_AB_F("__constants__", &function_get_code_constants, METHOD_FCONSTCALL,
+	                 "->?S?O\n"
+	                 "Access to the constants of @this ?."),
+	TYPE_GETTER_AB_F("__argc_min__", &function_get_code_argc_min, METHOD_FCONSTCALL,
+	                 "->?Dint\n"
+	                 "Min amount of arguments required to execute @this ?."),
+	TYPE_GETTER_AB_F("__argc_max__", &function_get_code_argc_max, METHOD_FCONSTCALL,
+	                 "->?Dint\n"
+	                 "Max amount of arguments accepted by @this ?. (excluding a varargs or varkwds argument)"),
+	TYPE_GETTER_AB_F("isyielding", &function_get_code_isyielding,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "Check if calls to @this ?. produce yield-functions"),
+	TYPE_GETTER_AB_F("iscopyable", &function_get_code_iscopyable,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "Check if yield-function iterators of @this ?. are copyable (as per ${@[copyable]})"),
+	TYPE_GETTER_AB_F("hasvarargs", &function_get_code_hasvarargs,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "Check if @this ?. accepts variable arguments as overflow"),
+	TYPE_GETTER_AB_F("hasvarkwds", &function_get_code_hasvarkwds,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "Check if @this ?. accepts variable keyword arguments as overflow"),
+	TYPE_GETTER_AB_F("__isthiscall__", &function_get_code_isthiscall,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "Check if @this ?. takes an extra leading $this-argument"),
+	TYPE_GETTER_AB_F("__hasassembly__", &function_get_code_hasassembly,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "Check if assembly of @this ?. is executed in safe-mode"),
+	TYPE_GETTER_AB_F("__islenient__", &function_get_code_islenient,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "Check if the runtime stack allocation allows for leniency"),
+	TYPE_GETTER_AB_F("__hasheapframe__", &function_get_code_hasheapframe,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "Check if the runtime stack-frame must be allocated on the heap"),
+	TYPE_GETTER_AB_F("__hasfinally__", &function_get_code_hasfinally,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "True if execution will jump to the nearest finally-block when a return instruction is encountered\n"
+	                 "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in the "
+	                 /**/ "user's source code, as the compiler may try to optimize this flag away to speed up runtime execution"),
+	TYPE_GETTER_AB_F("__isconstructor__", &function_get_code_isconstructor,
+	                 METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	                 "->?Dbool\n"
+	                 "True for class constructor ?. objects. - When set, don't include the this-argument in "
+	                 /**/ "tracebacks, thus preventing incomplete instances from being leaked when the constructor "
+	                 /**/ "causes some sort of exception to be thrown"),
+	TYPE_GETTER_AB_F("__nlocal__", &function_get_code_nlocal,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Number of available local variables during execution"),
+	TYPE_GETTER_AB_F("__nconst__", &function_get_code_nconst,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Number of constant objects during execution"),
+	TYPE_GETTER_AB_F("__nref__", &function_get_code_nref,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Number of referenced objects during execution"),
+	TYPE_GETTER_AB_F("__nexcept__", &function_get_code_nexcept,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Number of exception handlers"),
 	TYPE_GETSET_END
 };
 
@@ -1660,22 +1660,22 @@ yf_get_code_constants(YFunction *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst yf_getsets[] = {
-	TYPE_GETTER_F("__args__", &yf_get_args,
-	              METHOD_FCONSTCALL,
-	              "->?S?O"),
-	TYPE_GETTER_F("__code__", &yf_get_code,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Ert:Code\n"
-	              "Alias for :Function.__code__ though ?#__func__"),
+	TYPE_GETTER_AB_F("__args__", &yf_get_args,
+	                 METHOD_FCONSTCALL,
+	                 "->?S?O"),
+	TYPE_GETTER_AB_F("__code__", &yf_get_code,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Ert:Code\n"
+	                 "Alias for :Function.__code__ though ?#__func__"),
 	TYPE_GETTER_BOUND_F(STR___name__, &yf_get_name, &yf_bound_name,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "Alias for :Function.__name__ though ?#__func__"),
-	TYPE_GETTER_F(STR___doc__, &yf_get_doc,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "Alias for :Function.__doc__ though ?#__func__"),
+	TYPE_GETTER_AB_F(STR___doc__, &yf_get_doc,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "Alias for :Function.__doc__ though ?#__func__"),
 	TYPE_GETTER_BOUND_F(STR___type__, &yf_get_type, &yf_bound_type,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DType\n"
@@ -1701,50 +1701,50 @@ PRIVATE struct type_getset tpconst yf_getsets[] = {
 	                    "->?Dint\n"
 	                    "#t{UnboundAttribute}"
 	                    "Alias for :Function.__property__ though ?#__func__"),
-	TYPE_GETTER_F("__refs__", &yf_get_refs,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?S?O\n"
-	              "Alias for :Function.__refs__ though ?#__func__"),
-	TYPE_GETTER_F("__statics__", &yf_get_statics,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?S?O\n"
-	              "Alias for :Function.__statics__ though ?#__func__"),
-	TYPE_GETTER_F("__refsbyname__", &yf_get_refsbyname,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?M?X2?Dstring?Dint?O\n"
-	              "Alias for :Function.__refsbyname__ though ?#__func__"),
-	TYPE_GETTER_F("__staticsbyname__", &yf_get_staticsbyname,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?M?X2?Dstring?Dint?O\n"
-	              "Alias for :Function.__staticsbyname__ though ?#__func__"),
-	TYPE_GETTER_F("__argsbyname__", &DeeYieldFunction_GetArgsByNameWrapper,
-	              METHOD_FCONSTCALL,
-	              "->?M?X2?Dstring?Dint?O\n"
-	              "Combine ?#__kwds__ with ?#__args__ to access the values of arguments"),
-	TYPE_GETTER_F("__symbols__", &DeeYieldFunction_GetSymbolsByNameWrapper,
-	              METHOD_FCONSTCALL,
-	              "->?M?X2?Dstring?Dint?O\n"
-	              "The combination of ?#__refsbyname__, ?#__staticsbyname__ and ?#__argsbyname__, "
-	              /**/ "allowing access to all named symbol that need to maintain their value across "
-	              /**/ "different calls to ?. (requires debug information to be present in the case "
-	              /**/ "of ?#__refsbyname__, ?#__staticsbyname__, and keyword argument support in the "
-	              /**/ "case of ?#__argsbyname__)"),
+	TYPE_GETTER_AB_F("__refs__", &yf_get_refs,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?S?O\n"
+	                 "Alias for :Function.__refs__ though ?#__func__"),
+	TYPE_GETTER_AB_F("__statics__", &yf_get_statics,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?S?O\n"
+	                 "Alias for :Function.__statics__ though ?#__func__"),
+	TYPE_GETTER_AB_F("__refsbyname__", &yf_get_refsbyname,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Alias for :Function.__refsbyname__ though ?#__func__"),
+	TYPE_GETTER_AB_F("__staticsbyname__", &yf_get_staticsbyname,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Alias for :Function.__staticsbyname__ though ?#__func__"),
+	TYPE_GETTER_AB_F("__argsbyname__", &DeeYieldFunction_GetArgsByNameWrapper,
+	                 METHOD_FCONSTCALL,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Combine ?#__kwds__ with ?#__args__ to access the values of arguments"),
+	TYPE_GETTER_AB_F("__symbols__", &DeeYieldFunction_GetSymbolsByNameWrapper,
+	                 METHOD_FCONSTCALL,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "The combination of ?#__refsbyname__, ?#__staticsbyname__ and ?#__argsbyname__, "
+	                 /**/ "allowing access to all named symbol that need to maintain their value across "
+	                 /**/ "different calls to ?. (requires debug information to be present in the case "
+	                 /**/ "of ?#__refsbyname__, ?#__staticsbyname__, and keyword argument support in the "
+	                 /**/ "case of ?#__argsbyname__)"),
 	TYPE_GETTER_BOUND_F(STR___kwds__, &yf_get_kwds, &yf_bound_kwds,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "Alias for :Function.__kwds__ though ?#__func__"),
-	TYPE_GETTER_F("__defaults__", &yf_get_code_defaults,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?S?O\n"
-	              "Alias for :Function.__defaults__ though ?#__func__"),
-	TYPE_GETTER_F("__constants__", &yf_get_code_constants,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?S?O\n"
-	              "Alias for :Function.__constants__ though ?#__func__"),
-	TYPE_GETTER_F("__sizeof__", &yf_get_sizeof,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint"),
+	TYPE_GETTER_AB_F("__defaults__", &yf_get_code_defaults,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?S?O\n"
+	                 "Alias for :Function.__defaults__ though ?#__func__"),
+	TYPE_GETTER_AB_F("__constants__", &yf_get_code_constants,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?S?O\n"
+	                 "Alias for :Function.__constants__ though ?#__func__"),
+	TYPE_GETTER_AB_F("__sizeof__", &yf_get_sizeof,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -2868,10 +2868,10 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                    "->?S?O\n"
 	                    "Alias for ?#__yfunc__"),
 #endif /* !CONFIG_NO_THREADS */
-	TYPE_GETTER_F("__frame__", &yfi_get_frame,
-	              METHOD_FCONSTCALL,
-	              "->?Dframe\n"
-	              "The execution stack-frame representing the current state of the iterator"),
+	TYPE_GETTER_AB_F("__frame__", &yfi_get_frame,
+	                 METHOD_FCONSTCALL,
+	                 "->?Dframe\n"
+	                 "The execution stack-frame representing the current state of the iterator"),
 	TYPE_GETTER_BOUND_F("__this__", &yfi_get_this, &yfi_bound_this,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "#tUnboundAttribute{No $this-argument available}"
@@ -2911,30 +2911,30 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?M?X2?Dstring?Dint?O\n"
 	                    "Alias for ?A__argsbyname__?Ert:YieldFunction though ?#__yfunc__"),
-	TYPE_GETTER_F("__locals__", &yfi_get_frame_locals,
-	              METHOD_FCONSTCALL,
-	              "->?S?O\n"
-	              "Alias for ?A__locals__?Ert:Frame through ?#__frame__"),
-	TYPE_GETTER_F("__stack__", &yfi_get_frame_stack,
-	              METHOD_FCONSTCALL,
-	              "->?S?O\n"
-	              "Alias for ?A__stack__?Ert:Frame through ?#__frame__"),
-	TYPE_GETTER_F("__localsbyname__", &yfi_get_frame_localsbyname,
-	              METHOD_FCONSTCALL,
-	              "->?M?X2?Dstring?Dint?O\n"
-	              "Alias for ?A__localsbyname__?Ert:Frame through ?#__frame__"),
-	TYPE_GETTER_F("__stackbyname__", &yfi_get_frame_stackbyname,
-	              METHOD_FCONSTCALL,
-	              "->?M?X2?Dstring?Dint?O\n"
-	              "Alias for ?A__stackbyname__?Ert:Frame through ?#__frame__"),
-	TYPE_GETTER_F("__variablesbyname__", &yfi_get_frame_variablesbyname,
-	              METHOD_FCONSTCALL,
-	              "->?M?X2?Dstring?Dint?O\n"
-	              "Alias for ?A__variablesbyname__?Ert:Frame through ?#__frame__"),
-	TYPE_GETTER_F("__symbols__", &yfi_get_frame_symbols,
-	              METHOD_FCONSTCALL,
-	              "->?M?X2?Dstring?Dint?O\n"
-	              "Alias for ?A__symbols__?Ert:Frame through ?#__frame__"),
+	TYPE_GETTER_AB_F("__locals__", &yfi_get_frame_locals,
+	                 METHOD_FCONSTCALL,
+	                 "->?S?O\n"
+	                 "Alias for ?A__locals__?Ert:Frame through ?#__frame__"),
+	TYPE_GETTER_AB_F("__stack__", &yfi_get_frame_stack,
+	                 METHOD_FCONSTCALL,
+	                 "->?S?O\n"
+	                 "Alias for ?A__stack__?Ert:Frame through ?#__frame__"),
+	TYPE_GETTER_AB_F("__localsbyname__", &yfi_get_frame_localsbyname,
+	                 METHOD_FCONSTCALL,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Alias for ?A__localsbyname__?Ert:Frame through ?#__frame__"),
+	TYPE_GETTER_AB_F("__stackbyname__", &yfi_get_frame_stackbyname,
+	                 METHOD_FCONSTCALL,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Alias for ?A__stackbyname__?Ert:Frame through ?#__frame__"),
+	TYPE_GETTER_AB_F("__variablesbyname__", &yfi_get_frame_variablesbyname,
+	                 METHOD_FCONSTCALL,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Alias for ?A__variablesbyname__?Ert:Frame through ?#__frame__"),
+	TYPE_GETTER_AB_F("__symbols__", &yfi_get_frame_symbols,
+	                 METHOD_FCONSTCALL,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Alias for ?A__symbols__?Ert:Frame through ?#__frame__"),
 	TYPE_GETTER_BOUND_F("__args__", &yfi_get_args, &yfi_bound_args,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?O\n"

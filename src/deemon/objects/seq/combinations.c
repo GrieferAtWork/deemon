@@ -398,8 +398,8 @@ err:
 #define src_getsets sc_getsets
 #define sp_getsets  sc_getsets
 PRIVATE struct type_getset tpconst sc_getsets[] = {
-	TYPE_GETTER_F("__seqsize__", &sc_getseqsize_ob, METHOD_FNOREFESCAPE, "->?Dint"),
-	TYPE_GETTER_F("__rparam__", &sc_getrparam_ob, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB_F("__seqsize__", &sc_getseqsize_ob, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_AB_F("__rparam__", &sc_getrparam_ob, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1374,7 +1374,7 @@ err:
 }
 
 PRIVATE struct type_seq scv_seq = {
-	/* .tp_iter               = */ DEFIMPL(&default__iter__with__foreach),
+	/* .tp_iter               = */ DEFIMPL(&default__iter__with__foreach), /* TODO */
 	/* .tp_sizeob             = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains           = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
 	/* .tp_getitem            = */ DEFIMPL(&default__getitem__with__getitem_index),

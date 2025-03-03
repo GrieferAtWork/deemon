@@ -265,10 +265,10 @@ PRIVATE struct type_getset tpconst im_getsets[] = {
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "The name of the function being bound"),
-	TYPE_GETTER_F(STR___doc__, &instancemethod_get_doc,
-	              METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "The documentation string of the function being bound, or ?N if unknown"),
+	TYPE_GETTER_AB_F(STR___doc__, &instancemethod_get_doc,
+	                 METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "The documentation string of the function being bound, or ?N if unknown"),
 	TYPE_GETTER_BOUND_F(STR___kwds__, &instancemethod_get_kwds, &instancemethod_bound_kwds,
 	                    METHOD_FNOREFESCAPE,
 	                    "->?S?Dstring\n"

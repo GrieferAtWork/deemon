@@ -1526,6 +1526,11 @@ bytes_isreadonly(Bytes *__restrict self) {
 	return_bool_(!(self->b_flags & Dee_BUFFER_FWRITABLE));
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+bytes_nonempty_as_bound(Bytes *__restrict self) {
+	return Dee_BOUND_FROMBOOL(!DeeBytes_IsEmpty(self));
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_getfirst(Bytes *__restrict self) {
 	if unlikely(DeeBytes_IsEmpty(self))
@@ -1606,25 +1611,33 @@ bytes_sizeof(Bytes *self) {
 
 
 PRIVATE struct type_getset tpconst bytes_getsets[] = {
-	TYPE_GETTER_F("isreadonly", &bytes_isreadonly,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Evaluates to ?t if @this ?. object cannot be written to"),
-	TYPE_GETSET_F(STR_first, &bytes_getfirst, &bytes_delfirst, &bytes_setfirst,
-	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#tValueError{@this ?. object is empty}"
-	              "#tBufferError{Attempted to modify the byte when @this ?. object is not writable}"
-	              "Access the first byte of @this ?. object"),
-	TYPE_GETSET_F(STR_last, &bytes_getlast, &bytes_dellast, &bytes_setlast,
-	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#tValueError{@this ?. object is empty}"
-	              "#tBufferError{Attempted to modify the byte when @this ?. object is not writable}"
-	              "Access the last byte of @this ?. object"),
-	TYPE_GETTER_F("__sizeof__", &bytes_sizeof,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint"),
+	TYPE_GETTER_AB_F("isreadonly", &bytes_isreadonly,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Evaluates to ?t if @this ?. object cannot be written to"),
+	TYPE_GETSET_BOUND_F(STR_first,
+	                    &bytes_getfirst,
+	                    &bytes_delfirst,
+	                    &bytes_setfirst,
+	                    &bytes_nonempty_as_bound,
+	                    METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#tValueError{@this ?. object is empty}"
+	                    "#tBufferError{Attempted to modify the byte when @this ?. object is not writable}"
+	                    "Access the first byte of @this ?. object"),
+	TYPE_GETSET_BOUND_F(STR_last,
+	                    &bytes_getlast,
+	                    &bytes_dellast,
+	                    &bytes_setlast,
+	                    &bytes_nonempty_as_bound,
+	                    METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#tValueError{@this ?. object is empty}"
+	                    "#tBufferError{Attempted to modify the byte when @this ?. object is not writable}"
+	                    "Access the last byte of @this ?. object"),
+	TYPE_GETTER_AB_F("__sizeof__", &bytes_sizeof,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint"),
 	TYPE_GETSET_END
 };
 

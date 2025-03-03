@@ -660,31 +660,31 @@ float_get_isnormal(Float *__restrict self) {
 
 PRIVATE struct type_getset tpconst float_getsets[] = {
 #ifdef HAVE_float_get_abs
-	TYPE_GETTER_F("abs", &float_get_abs, METHOD_FNOREFESCAPE, "->?."),
+	TYPE_GETTER_AB_F("abs", &float_get_abs, METHOD_FNOREFESCAPE, "->?."),
 #endif /* HAVE_float_get_abs */
 #ifdef HAVE_float_get_trunc
-	TYPE_GETTER_F("trunc", &float_get_trunc, METHOD_FNOREFESCAPE, "->?."),
+	TYPE_GETTER_AB_F("trunc", &float_get_trunc, METHOD_FNOREFESCAPE, "->?."),
 #endif /* HAVE_float_get_trunc */
 #ifdef HAVE_float_get_floor
-	TYPE_GETTER_F("floor", &float_get_floor, METHOD_FNOREFESCAPE, "->?."),
+	TYPE_GETTER_AB_F("floor", &float_get_floor, METHOD_FNOREFESCAPE, "->?."),
 #endif /* HAVE_float_get_floor */
 #ifdef HAVE_float_get_ceil
-	TYPE_GETTER_F("ceil", &float_get_ceil, METHOD_FNOREFESCAPE, "->?."),
+	TYPE_GETTER_AB_F("ceil", &float_get_ceil, METHOD_FNOREFESCAPE, "->?."),
 #endif /* HAVE_float_get_ceil */
 #ifdef HAVE_float_get_round
-	TYPE_GETTER_F("round", &float_get_round, METHOD_FNOREFESCAPE, "->?."),
+	TYPE_GETTER_AB_F("round", &float_get_round, METHOD_FNOREFESCAPE, "->?."),
 #endif /* HAVE_float_get_round */
 #ifdef HAVE_float_get_isnan
-	TYPE_GETTER_F("isnan", &float_get_isnan, METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_AB_F("isnan", &float_get_isnan, METHOD_FNOREFESCAPE, "->?Dbool"),
 #endif /* HAVE_float_get_isnan */
 #ifdef HAVE_float_get_isinf
-	TYPE_GETTER_F("isinf", &float_get_isinf, METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_AB_F("isinf", &float_get_isinf, METHOD_FNOREFESCAPE, "->?Dbool"),
 #endif /* HAVE_float_get_isinf */
 #ifdef HAVE_float_get_isfinite
-	TYPE_GETTER_F("isfinite", &float_get_isfinite, METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_AB_F("isfinite", &float_get_isfinite, METHOD_FNOREFESCAPE, "->?Dbool"),
 #endif /* HAVE_float_get_isfinite */
 #ifdef HAVE_float_get_isnormal
-	TYPE_GETTER_F("isnormal", &float_get_isnormal, METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_AB_F("isnormal", &float_get_isnormal, METHOD_FNOREFESCAPE, "->?Dbool"),
 #endif /* HAVE_float_get_isnormal */
 	TYPE_GETSET_END
 };

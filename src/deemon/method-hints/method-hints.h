@@ -281,6 +281,7 @@
 /************************************************************************/
 /* For `deemon.Iterator'                                                */
 /************************************************************************/
+/* TODO: Use this stuff to replace "struct type_nii" */
 /* TODO: __iter_index__ */
 /* TODO: __iter_peek__ */
 /* TODO: __iter_prev__ */

@@ -5031,84 +5031,85 @@ err_printer:
 
 
 PRIVATE struct type_getset tpconst int_getsets[] = {
-	TYPE_GETTER_F("__sizeof__", &int_sizeof, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?."),
-	TYPE_GETTER_F("abs", &int_get_abs, METHOD_FCONSTCALL, "->?."),
-	TYPE_GETTER_F("trunc", &DeeObject_NewRef, METHOD_FCONSTCALL | METHOD_FNOTHROW, "->?."),
-	TYPE_GETTER_F("floor", &DeeObject_NewRef, METHOD_FCONSTCALL | METHOD_FNOTHROW, "->?."),
-	TYPE_GETTER_F("ceil", &DeeObject_NewRef, METHOD_FCONSTCALL | METHOD_FNOTHROW, "->?."),
-	TYPE_GETTER_F("round", &DeeObject_NewRef, METHOD_FCONSTCALL | METHOD_FNOTHROW, "->?."),
-	TYPE_GETTER_F("isnormal", &int_return_nonzero,
-	              METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE,
-	              "->?Dbool\nSame as {this != 0}"),
+	TYPE_GETTER_AB_F("__sizeof__", &int_sizeof, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?."),
+	TYPE_GETTER_AB_F("abs", &int_get_abs, METHOD_FCONSTCALL, "->?."),
+	TYPE_GETTER_AB_F("trunc", &DeeObject_NewRef, METHOD_FCONSTCALL | METHOD_FNOTHROW, "->?."),
+	TYPE_GETTER_AB_F("floor", &DeeObject_NewRef, METHOD_FCONSTCALL | METHOD_FNOTHROW, "->?."),
+	TYPE_GETTER_AB_F("ceil", &DeeObject_NewRef, METHOD_FCONSTCALL | METHOD_FNOTHROW, "->?."),
+	TYPE_GETTER_AB_F("round", &DeeObject_NewRef, METHOD_FCONSTCALL | METHOD_FNOTHROW, "->?."),
+	TYPE_GETTER_AB_F("isnormal", &int_return_nonzero,
+	                 METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Same as {this != 0}"),
 
 	/* Binary property helper functions */
-	TYPE_GETTER_F("popcount", &int_get_popcount,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#tIntegerOverflow{When ${this < 0}}"
-	              "Return the number of 1-bits in this integer"),
-	TYPE_GETTER_F("ffs", &int_get_ffs,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}"),
-	TYPE_GETTER_F("fls", &int_get_fls,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#tIntegerOverflow{When ${this < 0}}"
-	              "FindLastSet: same as ?#msb +1, but returns $0 when ${this == 0}"),
-	TYPE_GETTER_F("parity", &int_get_parity,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#tIntegerOverflow{When ${this < 0}}"
-	              "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}"),
-	TYPE_GETTER_F("ctz", &int_get_ctz,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#tIntegerOverflow{When ${this == 0}}"
-	              "CountTrailingZeros: return the number of trailing zero-bits:\n"
-	              "${"
-	              /**/ "local n = this.ctz;\n"
-	              /**/ "assert this == (this >> n) << n;"
-	              "}"),
-	TYPE_GETTER_F("ct1", &int_get_ct1,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#tIntegerOverflow{When ${this == -1}}"
-	              "CountTrailingOnes: return the number of trailing 1-bits:\n"
-	              "${"
-	              /**/ "local n = this.ct1;\n"
-	              /**/ "assert this == ((this >> n) << n) | ((1 << ct1) - 1);"
-	              "}"),
-	TYPE_GETTER_F("msb", &int_get_msb,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#tIntegerOverflow{When ${this <= 0}}"
-	              "MostSignificantBit: return the index of the most significant 1-bit (0-based):\n"
-	              "${"
-	              /**/ "assert (this >> this.msb) == 1;"
-	              "}"),
-	TYPE_GETTER_F("bitmask", &int_get_bitmask,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#tIntegerOverflow{When ${this < 0}}"
-	              "Same as ${(1 << this) - 1}"),
-	TYPE_GETTER_F("nth", &int_get_nth,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "Returns the value of @this ?. as a string (as per ?#{op:str}), with the "
-	              /**/ "standard english enumeration suffix applicable to the value of @{this}:\n"
-	              "#T{Value|Return~"
-	              "$-3|$\"-3rd\"&"
-	              "$-2|$\"-2nd\"&"
-	              "$-1|$\"-1st\"&"
-	              "$1|$\"1st\"&"
-	              "$2|$\"2nd\"&"
-	              "$3|$\"3rd\"}\n"
-	              "All other integer values are returned as ${f\"{this}th\"}"),
+	TYPE_GETTER_AB_F("popcount", &int_get_popcount,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "#tIntegerOverflow{When ${this < 0}}"
+	                 "Return the number of 1-bits in this integer"),
+	TYPE_GETTER_AB_F("ffs", &int_get_ffs,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}"),
+	TYPE_GETTER_AB_F("fls", &int_get_fls,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "#tIntegerOverflow{When ${this < 0}}"
+	                 "FindLastSet: same as ?#msb +1, but returns $0 when ${this == 0}"),
+	TYPE_GETTER_AB_F("parity", &int_get_parity,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "#tIntegerOverflow{When ${this < 0}}"
+	                 "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}"),
+	TYPE_GETTER_AB_F("ctz", &int_get_ctz,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "#tIntegerOverflow{When ${this == 0}}"
+	                 "CountTrailingZeros: return the number of trailing zero-bits:\n"
+	                 "${"
+	                 /**/ "local n = this.ctz;\n"
+	                 /**/ "assert this == (this >> n) << n;"
+	                 "}"),
+	TYPE_GETTER_AB_F("ct1", &int_get_ct1,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "#tIntegerOverflow{When ${this == -1}}"
+	                 "CountTrailingOnes: return the number of trailing 1-bits:\n"
+	                 "${"
+	                 /**/ "local n = this.ct1;\n"
+	                 /**/ "assert this == ((this >> n) << n) | ((1 << ct1) - 1);"
+	                 "}"),
+	TYPE_GETTER_AB_F("msb", &int_get_msb,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "#tIntegerOverflow{When ${this <= 0}}"
+	                 "MostSignificantBit: return the index of the most significant 1-bit (0-based):\n"
+	                 "${"
+	                 /**/ "assert (this >> this.msb) == 1;"
+	                 "}"),
+	TYPE_GETTER_AB_F("bitmask", &int_get_bitmask,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "#tIntegerOverflow{When ${this < 0}}"
+	                 "Same as ${(1 << this) - 1}"),
+	TYPE_GETTER_AB_F("nth", &int_get_nth,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "Returns the value of @this ?. as a string (as per ?#{op:str}), with the "
+	                 /**/ "standard english enumeration suffix applicable to the value of @{this}:\n"
+	                 "#T{Value|Return~"
+	                 "$-3|$\"-3rd\"&"
+	                 "$-2|$\"-2nd\"&"
+	                 "$-1|$\"-1st\"&"
+	                 "$1|$\"1st\"&"
+	                 "$2|$\"2nd\"&"
+	                 "$3|$\"3rd\"}\n"
+	                 "All other integer values are returned as ${f\"{this}th\"}"),
 
-	TYPE_GETTER_F(STR_int, &DeeObject_NewRef, METHOD_FCONSTCALL,
-	              "->?Dint\n"
-	              "Always re-return @this"),
+	TYPE_GETTER_AB_F(STR_int, &DeeObject_NewRef, METHOD_FCONSTCALL,
+	                 "->?Dint\n"
+	                 "Always re-return @this"),
 	TYPE_GETSET_END
 };
 

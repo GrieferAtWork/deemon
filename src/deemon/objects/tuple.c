@@ -546,6 +546,33 @@ done:
 }
 
 
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeTuple_FromList(DeeObject *__restrict self) {
+	DREF DeeTupleObject *result;
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeList_Type);
+	DeeListObject *me = (DeeListObject *)self;
+	size_t seq_length = DeeList_SIZE_ATOMIC(me);
+list_size_changed:
+	result = DeeTuple_NewUninitialized(seq_length);
+	if unlikely(!result)
+		goto err;
+	COMPILER_READ_BARRIER();
+	DeeList_LockRead(me);
+	if unlikely(seq_length != DeeList_SIZE(me)) {
+		seq_length = DeeList_SIZE(me);
+		DeeList_LockEndRead(me);
+		DeeTuple_FreeUninitialized(result);
+		goto list_size_changed;
+	}
+	Dee_Movrefv(DeeTuple_ELEM(result),
+	            DeeList_ELEM(me),
+	            seq_length);
+	DeeList_LockEndRead(me);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
 /* Create a new tuple object from a sequence or iterator. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_FromSequence(DeeObject *__restrict self) {
@@ -555,26 +582,7 @@ DeeTuple_FromSequence(DeeObject *__restrict self) {
 	if (tp_seq == &DeeTuple_Type) {
 		return_reference_(self);
 	} else if (tp_seq == &DeeList_Type) {
-		DREF Tuple *result;
-		DeeListObject *seq = (DeeListObject *)self;
-		size_t seq_length = DeeList_SIZE_ATOMIC(seq);
-list_size_changed:
-		result = DeeTuple_NewUninitialized(seq_length);
-		if unlikely(!result)
-			goto err;
-		COMPILER_READ_BARRIER();
-		DeeList_LockRead(seq);
-		if unlikely(seq_length != DeeList_SIZE(seq)) {
-			seq_length = DeeList_SIZE(seq);
-			DeeList_LockEndRead(seq);
-			DeeTuple_FreeUninitialized(result);
-			goto list_size_changed;
-		}
-		Dee_Movrefv(DeeTuple_ELEM(result),
-		            DeeList_ELEM(seq),
-		            seq_length);
-		DeeList_LockEndRead(seq);
-		return (DREF DeeObject *)result;
+		return DeeTuple_FromList(self);
 	} else {
 		/* Fallback: use the generic tuple builder */
 		struct Dee_tuple_builder builder;

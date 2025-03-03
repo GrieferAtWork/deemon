@@ -3090,6 +3090,23 @@ list_sizeof(List *me) {
 	return DeeInt_NewSize(result);
 }
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+list_tryget_first(List *__restrict me) {
+	DREF DeeObject *result;
+	DeeList_LockRead(me);
+	if unlikely(DeeList_IsEmpty(me))
+		goto err_empty_endread;
+	result = DeeList_GET(me, 0);
+	Dee_Incref(result);
+	DeeList_LockEndRead(me);
+	return result;
+err_empty_endread:
+	DeeList_LockEndRead(me);
+	return ITER_DONE;
+}
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_get_first(List *__restrict me) {
 	DREF DeeObject *result;
@@ -3147,6 +3164,23 @@ err_empty_endwrite:
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+list_tryget_last(List *__restrict me) {
+	DREF DeeObject *result;
+	DeeList_LockRead(me);
+	if unlikely(DeeList_IsEmpty(me))
+		goto err_empty_endread;
+	result = DeeList_GET(me, DeeList_SIZE(me) - 1);
+	Dee_Incref(result);
+	DeeList_LockEndRead(me);
+	return result;
+err_empty_endread:
+	DeeList_LockEndRead(me);
+	return ITER_DONE;
+}
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_get_last(List *__restrict me) {
 	DREF DeeObject *result;
@@ -3203,33 +3237,6 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_nonempty_as_bound(List *__restrict me) {
 	return Dee_BOUND_FROMBOOL(DeeList_SIZE_ATOMIC(me) != 0);
 }
-
-#ifdef __OPTIMIZE_SIZE__
-#define list_get_frozen DeeTuple_FromSequence
-#else /* __OPTIMIZE_SIZE__ */
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-list_get_frozen(List *__restrict me) {
-	size_t count;
-	DREF DeeTupleObject *result;
-again:
-	DeeList_LockWrite(me);
-	count  = DeeList_SIZE(me);
-	result = DeeTuple_TryNewUninitialized(count);
-	if unlikely(!result) {
-		DeeList_LockEndWrite(me);
-		if (Dee_CollectMemory(DeeTuple_SIZEOF(count)))
-			goto again;
-		return NULL;
-	}
-
-	/* Copy elements and create new references. */
-	Dee_Movrefv(DeeTuple_ELEM(result), DeeList_ELEM(me), count);
-	DeeList_LockEndWrite(me);
-	return result;
-}
-#endif /* !__OPTIMIZE_SIZE__ */
-
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_getallocated(List *__restrict me) {
@@ -3654,7 +3661,7 @@ PRIVATE struct type_getset tpconst list_getsets[] = {
 	                    METHOD_FNOREFESCAPE,
 	                    "->\n"
 	                    "#r{The last item from @this List}"),
-	TYPE_GETTER_AB_F(STR_frozen, &list_get_frozen, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_AB_F(STR_frozen, &DeeTuple_FromList, METHOD_FNOREFESCAPE,
 	                 "->?DTuple\n"
 	                 "Return a copy of the contents of @this List as an immutable sequence"),
 	TYPE_GETTER_AB(STR_cached, &DeeObject_NewRef, "->?."),
@@ -3765,6 +3772,10 @@ PRIVATE struct type_method tpconst list_methods[] = {
 };
 
 PRIVATE struct type_method_hint tpconst list_method_hints[] = {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINT_F(seq_trygetfirst, &list_tryget_first, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_trygetlast, &list_tryget_last, METHOD_FNOREFESCAPE),
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_append, &DeeList_Append, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_extend, &DeeList_AppendSequence, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_resize, &DeeList_Resize, METHOD_FNOREFESCAPE),

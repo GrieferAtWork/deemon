@@ -295,15 +295,15 @@ DOC_DEF(objmethod_get_module_doc,
         "The module implementing the function that is being bound");
 
 PRIVATE struct type_getset tpconst objmethod_getsets[] = {
-	TYPE_GETTER_F("__func__", &objmethod_get_func,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              DOC_GET(objmethod_get_func_doc)),
+	TYPE_GETTER_BOUND_F("__func__", &objmethod_get_func, &objmethod_bound_func,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(objmethod_get_func_doc)),
 	TYPE_GETTER_BOUND_F(STR___name__, &objmethod_get_name, &objmethod_bound_name,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    DOC_GET(objmethod_get_name_doc)),
-	TYPE_GETTER_F(STR___doc__, &objmethod_get_doc,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              DOC_GET(objmethod_get_doc_doc)),
+	TYPE_GETTER_AB_F(STR___doc__, &objmethod_get_doc,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 DOC_GET(objmethod_get_doc_doc)),
 	TYPE_GETTER_BOUND_F(STR___type__, &objmethod_get_type, &objmethod_bound_type,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    DOC_GET(objmethod_get_type_doc)),
@@ -573,9 +573,9 @@ dockwdsiter_getdocstr(DocKwdsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst dockwdsiter_getsets[] = {
-	TYPE_GETTER_F("__doc__", &dockwdsiter_getdocstr,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dstring"),
+	TYPE_GETTER_AB_F("__doc__", &dockwdsiter_getdocstr,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dstring"),
 	TYPE_GETSET_END
 };
 
@@ -854,6 +854,7 @@ kwobjmethod_call_kw(DeeKwObjMethodObject *self, size_t argc,
 }
 #define kwobjmethod_cmp objmethod_cmp
 
+#define kwobjmethod_bound_func objmethod_bound_origin
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwobjmethod_get_func(DeeKwObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
@@ -888,15 +889,15 @@ kwobjmethod_get_kwds(DeeKwObjMethodObject *__restrict self) {
 #define kwobjmethod_get_module_doc objmethod_get_module_doc
 
 PRIVATE struct type_getset tpconst kwobjmethod_getsets[] = {
-	TYPE_GETTER_F("__func__", &kwobjmethod_get_func,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              DOC_GET(kwobjmethod_get_func_doc)),
+	TYPE_GETTER_BOUND_F("__func__", &kwobjmethod_get_func, &kwobjmethod_bound_func,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(kwobjmethod_get_func_doc)),
 	TYPE_GETTER_BOUND_F(STR___name__, &kwobjmethod_get_name, &kwobjmethod_bound_name,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    DOC_GET(kwobjmethod_get_name_doc)),
-	TYPE_GETTER_F(STR___doc__, &kwobjmethod_get_doc,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              DOC_GET(kwobjmethod_get_doc_doc)),
+	TYPE_GETTER_AB_F(STR___doc__, &kwobjmethod_get_doc,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 DOC_GET(kwobjmethod_get_doc_doc)),
 	TYPE_GETTER_BOUND_F(STR___kwds__, &kwobjmethod_get_kwds, &kwobjmethod_bound_kwds,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    DOC_GET(kwobjmethod_get_kwds_doc)),
@@ -1158,10 +1159,10 @@ PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "The name of @this method"),
-	TYPE_GETTER_F(STR___doc__, &clsmethod_get_doc,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "The documentation string of @this method, or ?N if unknown"),
+	TYPE_GETTER_AB_F(STR___doc__, &clsmethod_get_doc,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "The documentation string of @this method, or ?N if unknown"),
 	TYPE_GETTER_BOUND_F(STR___module__, &clsmethod_get_module, &clsmethod_bound_module,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DModule\n"
@@ -1613,27 +1614,27 @@ clsproperty_canset(DeeClsPropertyObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst clsproperty_getsets[] = {
-	TYPE_GETTER_F("canget", &clsproperty_canget,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this property has a getter callback"),
-	TYPE_GETTER_F("candel", &clsproperty_candel,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this property has a delete callback"),
-	TYPE_GETTER_F("canset", &clsproperty_canset,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this property has a setter callback"),
+	TYPE_GETTER_AB_F("canget", &clsproperty_canget,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this property has a getter callback"),
+	TYPE_GETTER_AB_F("candel", &clsproperty_candel,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this property has a delete callback"),
+	TYPE_GETTER_AB_F("canset", &clsproperty_canset,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this property has a setter callback"),
 	TYPE_GETTER_BOUND_F(STR___name__, &clsproperty_get_name, &clsproperty_bound_name,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "The name of @this property"),
-	TYPE_GETTER_F(STR___doc__, &clsproperty_get_doc,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "The documentation string of @this property, or ?N if unknown"),
+	TYPE_GETTER_AB_F(STR___doc__, &clsproperty_get_doc,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "The documentation string of @this property, or ?N if unknown"),
 	TYPE_GETTER_BOUND_F(STR___module__, &clsproperty_get_module, &clsproperty_bound_module,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DModule\n"
@@ -1889,14 +1890,14 @@ clsmember_bound_module(DeeClsMemberObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst clsmember_getsets[] = {
-	TYPE_GETTER_F("candel", &clsmember_canset,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Alias for #canset"),
-	TYPE_GETTER_F("canset", &clsmember_canset,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this member can be modified"),
+	TYPE_GETTER_AB_F("candel", &clsmember_canset,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Alias for #canset"),
+	TYPE_GETTER_AB_F("canset", &clsmember_canset,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this member can be modified"),
 	TYPE_GETTER_BOUND_F(STR___module__, &clsmember_get_module, &clsmember_bound_module,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DModule\n"
@@ -2219,10 +2220,10 @@ PRIVATE struct type_getset tpconst kwcmethod_getsets[] = {
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "Returns the name of @this method"),
-	TYPE_GETTER_F(STR___doc__, &cmethod_get_doc,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "Returns the documentation string of @this method, or ?N if unknown"),
+	TYPE_GETTER_AB_F(STR___doc__, &cmethod_get_doc,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "Returns the documentation string of @this method, or ?N if unknown"),
 	TYPE_GETSET_END
 };
 

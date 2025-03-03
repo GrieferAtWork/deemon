@@ -1120,10 +1120,14 @@ writer_sizeof(Writer *self) {
 }
 
 PRIVATE struct type_getset tpconst writer_getsets[] = {
-	TYPE_GETSET_F(STR_string, &DeeFileWriter_GetString, &writer_delstring, &writer_setstring, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "Get/set the currently written text string"),
-	TYPE_GETTER_F("__sizeof__", &writer_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETSET_AB_F(STR_string,
+	                 &DeeFileWriter_GetString,
+	                 &writer_delstring,
+	                 &writer_setstring,
+	                 METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "Get/set the currently written text string"),
+	TYPE_GETTER_AB_F("__sizeof__", &writer_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -2048,9 +2052,9 @@ PRIVATE struct type_method tpconst mapfile_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst mapfile_getsets[] = {
-	TYPE_GETTER_F("ismmap", &mapfile_get_ismmap, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this file map uses mmap to implement its buffer"),
+	TYPE_GETTER_AB_F("ismmap", &mapfile_get_ismmap, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this file map uses mmap to implement its buffer"),
 	TYPE_GETSET_END
 };
 

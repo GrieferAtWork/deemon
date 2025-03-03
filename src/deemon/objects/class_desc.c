@@ -282,7 +282,8 @@ PRIVATE struct type_cmp coti_cmp = {
 };
 
 PRIVATE struct type_getset tpconst coti_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &coti_getseq, METHOD_FNOREFESCAPE, "->?Ert:ClassOperatorTable"),
+	TYPE_GETTER_AB_F(STR_seq, &coti_getseq, METHOD_FNOREFESCAPE,
+	                 "->?Ert:ClassOperatorTable"),
 	TYPE_GETSET_END
 };
 
@@ -958,8 +959,8 @@ done:
 }
 
 PRIVATE struct type_getset tpconst cati_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &cati_getseq, METHOD_FNOREFESCAPE,
-	              "->?AAttributeTable?Ert:ClassDescriptor"),
+	TYPE_GETTER_AB_F(STR_seq, &cati_getseq, METHOD_FNOREFESCAPE,
+	                 "->?AAttributeTable?Ert:ClassDescriptor"),
 	TYPE_GETSET_END
 };
 
@@ -1097,73 +1098,77 @@ err:
 
 
 PRIVATE struct type_getset tpconst ca_getsets[] = {
-	TYPE_GETTER_F("name", &ca_getname, METHOD_FNOREFESCAPE, "->?Dstring"),
-	TYPE_GETTER_F("doc", &ca_getdoc, METHOD_FNOREFESCAPE, "->?X2?Dstring?N"),
-	TYPE_GETTER_F("addr", &ca_getaddr, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Index into the class/instance object table, where @this attribute is stored\n"
-	              "When ?#isclassmem or ?#isclassns are ?t, this index and any index offset from it "
-	              /**/ "refer to the class object table. Otherwise, the instance object table is dereferenced\n"
-	              "This is done so-as to allow instance attributes such as member functions to be stored "
-	              /**/ "within the class itself, rather than having to be copied into each and every instance "
-	              /**/ "of the class\n"
-	              "S.a. ?A__ctable__?DType and ?A__itable__?DType"),
-	TYPE_GETTER_F("isprivate", &ca_isprivate, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Evaluates to ?t if @this class attribute was declared as $private"),
-	TYPE_GETTER_F("isfinal", &ca_isfinal, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Evaluates to ?t if @this class attribute was declared as $final"),
-	TYPE_GETTER_F("isreadonly", &ca_isreadonly, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Evaluates to ?t if @this class attribute can only be read from\n"
-	              "When this is case, a property-like attribute can only ever have a getter "
-	              /**/ "associated with itself, while field- or method-like attribute can only be "
-	              /**/ "written once (aka. when not already bound)"),
-	TYPE_GETTER_F("ismethod", &ca_ismethod, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Evaluates to ?t if @this class attribute refers to a method\n"
-	              "When set, reading from the attribute will return a an object "
-	              /**/ "${InstanceMethod(obj.MEMBER_TABLE[this.addr], obj)}\n"
-	              "Note however that this is rarely ever required to be done, as method attributes "
-	              /**/ "are usually called directly, in which case a callattr instruction can silently "
-	              /**/ "prepend the this-argument before the passed argument list"),
-	TYPE_GETTER_F("isproperty", &ca_isproperty, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Evaluates to ?t if @this class attribute was defined as a property\n"
-	              "When this is the case, a ?#readonly attribute only has a single callback "
-	              /**/ "that may be stored at ?#addr + 0, with that callback being the getter\n"
-	              "Otherwise, up to " PP_STR(CLASS_GETSET_COUNT) " indices within the associated "
-	              /**/ "object table are used by @this attribute, each of which may be left unbound:\n"
-	              "#T{Offset|Callback|Description~"
-	              /**/ "$" PP_STR(CLASS_GETSET_GET) "|$get|The getter callback&"
-	              /**/ "$" PP_STR(CLASS_GETSET_DEL) "|$del|The delete callback&"
-	              /**/ "$" PP_STR(CLASS_GETSET_SET) "|$set|The setter callback"
-	              "}"),
-	TYPE_GETTER_F("isclassmem", &ca_isclassmem, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Set if ?#addr is an index into the class object table, rather than into "
-	              /**/ "the instance object table. Note however that when ?#isclassns"),
-	TYPE_GETTER_F("isclassns", &ca_getisclassns, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this class attribute is exclusive to the "
-	              /**/ "class-namespace (i.e. was declared as $static)\n"
-	              "During enumeration of attributes, all attributes where this is ?t "
-	              /**/ "are enumated by ?Acattr?Ert:ClassDescriptor, while all for which it isn't "
-	              /**/ "are enumated by ?Aiattr?Ert:ClassDescriptor"),
-	TYPE_GETTER_F("flags", &ca_getflags, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "Returns a comma-separated string describing the flags of @this class attribute\n"
-	              "#T{Flag|Property~"
-	              /**/ "$\"private\"|?#isprivate&"
-	              /**/ "$\"final\"|?#isfinal&"
-	              /**/ "$\"readonly\"|?#isreadonly&"
-	              /**/ "$\"method\"|?#ismethod&"
-	              /**/ "$\"property\"|?#isproperty&"
-	              /**/ "$\"classns\"|?#isclassns"
-	              "}"),
-	TYPE_GETTER_F("__name__", &ca_getname, METHOD_FNOREFESCAPE, "->?Dstring\nAlias for ?#name"),
-	TYPE_GETTER_F("__doc__", &ca_getdoc, METHOD_FNOREFESCAPE, "->?X2?Dstring?N\nAlias for ?#doc"),
+	TYPE_GETTER_AB_F("name", &ca_getname, METHOD_FNOREFESCAPE, "->?Dstring"),
+	TYPE_GETTER_AB_F("doc", &ca_getdoc, METHOD_FNOREFESCAPE, "->?X2?Dstring?N"),
+	TYPE_GETTER_AB_F("addr", &ca_getaddr, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Index into the class/instance object table, where @this attribute is stored\n"
+	                 "When ?#isclassmem or ?#isclassns are ?t, this index and any index offset from it "
+	                 /**/ "refer to the class object table. Otherwise, the instance object table is dereferenced\n"
+	                 "This is done so-as to allow instance attributes such as member functions to be stored "
+	                 /**/ "within the class itself, rather than having to be copied into each and every instance "
+	                 /**/ "of the class\n"
+	                 "S.a. ?A__ctable__?DType and ?A__itable__?DType"),
+	TYPE_GETTER_AB_F("isprivate", &ca_isprivate, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Evaluates to ?t if @this class attribute was declared as $private"),
+	TYPE_GETTER_AB_F("isfinal", &ca_isfinal, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Evaluates to ?t if @this class attribute was declared as $final"),
+	TYPE_GETTER_AB_F("isreadonly", &ca_isreadonly, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Evaluates to ?t if @this class attribute can only be read from\n"
+	                 "When this is case, a property-like attribute can only ever have a getter "
+	                 /**/ "associated with itself, while field- or method-like attribute can only be "
+	                 /**/ "written once (aka. when not already bound)"),
+	TYPE_GETTER_AB_F("ismethod", &ca_ismethod, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Evaluates to ?t if @this class attribute refers to a method\n"
+	                 "When set, reading from the attribute will return a an object "
+	                 /**/ "${InstanceMethod(obj.MEMBER_TABLE[this.addr], obj)}\n"
+	                 "Note however that this is rarely ever required to be done, as method attributes "
+	                 /**/ "are usually called directly, in which case a callattr instruction can silently "
+	                 /**/ "prepend the this-argument before the passed argument list"),
+	TYPE_GETTER_AB_F("isproperty", &ca_isproperty, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Evaluates to ?t if @this class attribute was defined as a property\n"
+	                 "When this is the case, a ?#readonly attribute only has a single callback "
+	                 /**/ "that may be stored at ?#addr + 0, with that callback being the getter\n"
+	                 "Otherwise, up to " PP_STR(CLASS_GETSET_COUNT) " indices within the associated "
+	                 /**/ "object table are used by @this attribute, each of which may be left unbound:\n"
+	                 "#T{Offset|Callback|Description~"
+	                 /**/ "$" PP_STR(CLASS_GETSET_GET) "|$get|The getter callback&"
+	                 /**/ "$" PP_STR(CLASS_GETSET_DEL) "|$del|The delete callback&"
+	                 /**/ "$" PP_STR(CLASS_GETSET_SET) "|$set|The setter callback"
+	                 "}"),
+	TYPE_GETTER_AB_F("isclassmem", &ca_isclassmem, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Set if ?#addr is an index into the class object table, rather than into "
+	                 /**/ "the instance object table. Note however that when ?#isclassns"),
+	TYPE_GETTER_AB_F("isclassns", &ca_getisclassns, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this class attribute is exclusive to the "
+	                 /**/ "class-namespace (i.e. was declared as $static)\n"
+	                 "During enumeration of attributes, all attributes where this is ?t "
+	                 /**/ "are enumated by ?Acattr?Ert:ClassDescriptor, while all for which it isn't "
+	                 /**/ "are enumated by ?Aiattr?Ert:ClassDescriptor"),
+	TYPE_GETTER_AB_F("flags", &ca_getflags, METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "Returns a comma-separated string describing the flags of @this class attribute\n"
+	                 "#T{Flag|Property~"
+	                 /**/ "$\"private\"|?#isprivate&"
+	                 /**/ "$\"final\"|?#isfinal&"
+	                 /**/ "$\"readonly\"|?#isreadonly&"
+	                 /**/ "$\"method\"|?#ismethod&"
+	                 /**/ "$\"property\"|?#isproperty&"
+	                 /**/ "$\"classns\"|?#isclassns"
+	                 "}"),
+	TYPE_GETTER_AB_F("__name__", &ca_getname, METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "Alias for ?#name"),
+	TYPE_GETTER_AB_F("__doc__", &ca_getdoc, METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "Alias for ?#doc"),
 	TYPE_GETSET_END
 };
 
@@ -2753,22 +2758,22 @@ ot_isitable(ObjectTable *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst ot_getsets[] = {
-	TYPE_GETTER_F(STR___type__, &ot_gettype,
-	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
-	              "->?DType\n"
-	              "The type describing @this object table"),
-	TYPE_GETTER_F("__class__", &ot_getclass,
-	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
-	              "->?Ert:ClassDescriptor\n\n"
-	              "Same as ${this.__type__.__class__}"),
-	TYPE_GETTER_F("__isctable__", &ot_isctable,
-	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
-	              "->?Dbool\n\n"
-	              "Evaluates to ?t if @this is a class object table"),
-	TYPE_GETTER_F("__isitable__", &ot_isitable,
-	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
-	              "->?Dbool\n\n"
-	              "Evaluates to ?t if @this is an instance object table"),
+	TYPE_GETTER_AB_F(STR___type__, &ot_gettype,
+	                 METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	                 "->?DType\n"
+	                 "The type describing @this object table"),
+	TYPE_GETTER_AB_F("__class__", &ot_getclass,
+	                 METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	                 "->?Ert:ClassDescriptor\n\n"
+	                 "Same as ${this.__type__.__class__}"),
+	TYPE_GETTER_AB_F("__isctable__", &ot_isctable,
+	                 METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	                 "->?Dbool\n\n"
+	                 "Evaluates to ?t if @this is a class object table"),
+	TYPE_GETTER_AB_F("__isitable__", &ot_isitable,
+	                 METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	                 "->?Dbool\n\n"
+	                 "Evaluates to ?t if @this is an instance object table"),
 	TYPE_GETSET_END
 };
 
@@ -3069,25 +3074,25 @@ instancemember_get_canset(DeeInstanceMemberObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst instancemember_getsets[] = {
-	TYPE_GETTER_F("canget", &instancemember_get_canget, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this member can be read from"),
-	TYPE_GETTER_F("candel", &instancemember_get_candel, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this member can be deleted"),
-	TYPE_GETTER_F("canset", &instancemember_get_canset, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Returns ?t if @this member can be written to"),
-	TYPE_GETTER_F(STR___name__, &instancemember_get_name, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "The name of @this instance member"),
-	TYPE_GETTER_F(STR___doc__, &instancemember_get_doc, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "The documentation string associated with @this instance member"),
-	TYPE_GETTER_F(STR___module__, &instancemember_get_module, METHOD_FNOREFESCAPE,
-	              "->?DModule\n"
-	              "#t{UnboundAttribute}"
-	              "Returns the module that is defining @this instance member"),
+	TYPE_GETTER_AB_F("canget", &instancemember_get_canget, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this member can be read from"),
+	TYPE_GETTER_AB_F("candel", &instancemember_get_candel, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this member can be deleted"),
+	TYPE_GETTER_AB_F("canset", &instancemember_get_canset, METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Returns ?t if @this member can be written to"),
+	TYPE_GETTER_AB_F(STR___name__, &instancemember_get_name, METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "The name of @this instance member"),
+	TYPE_GETTER_AB_F(STR___doc__, &instancemember_get_doc, METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "The documentation string associated with @this instance member"),
+	TYPE_GETTER_AB_F(STR___module__, &instancemember_get_module, METHOD_FNOREFESCAPE,
+	                 "->?DModule\n"
+	                 "#t{UnboundAttribute}"
+	                 "Returns the module that is defining @this instance member"),
 	TYPE_GETSET_END
 };
 

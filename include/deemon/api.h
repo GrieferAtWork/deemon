@@ -488,7 +488,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 
 #ifdef __CC__
 
-#if defined(__INTELLISENSE__) && defined(__cplusplus)
+#if (defined(__INTELLISENSE__) || defined(__VASSISTX_INSPECT__)) && defined(__cplusplus)
 /* Highlight invalid usage of `NULL' in functions returning `int' */
 #undef NULL
 #define NULL __NULLPTR
