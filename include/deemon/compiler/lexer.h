@@ -26,15 +26,24 @@
 #define PARSE_FLFSTMT 0x0001 /* Parse line-feeds as statement terminators in certain places. */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include <stdbool.h>
-
+#include "../object.h" /* Dee_operator_t */
 #include "../string.h"
+#include "../system-features.h" /* memcpy */
+#include "../types.h"
 #include "ast.h"
+#include "symbol.h"
 #include "tpp.h"
+/**/
+
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
 
 struct unicode_printer;
+struct compiler_options;
+struct module_symbol;
 
 /* Parser flags (Set of `PARSE_F*') */
 INTDEF uint16_t parser_flags;

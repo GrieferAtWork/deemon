@@ -2297,7 +2297,7 @@ PRIVATE struct type_method_hint tpconst string_method_hints[] = {
 	/* seq.all() is true if no sequence element evaluations to false.
 	 * Since the elements of strings are all 1-char strings, there can
 	 * never be an empty string (meaning all elements are always true) */
-	TYPE_METHOD_HINT_F(seq_all, &_DeeNone_reti1_1, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all, (int (DCALL *)(DeeObject *))&_DeeNone_reti1_1, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_all_with_key, &DeeSeq_DefaultAllWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_all_with_range, (int (DCALL *)(DeeObject *, size_t, size_t))&_DeeNone_reti1_3, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &DeeSeq_DefaultAllWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),

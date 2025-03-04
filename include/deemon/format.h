@@ -23,15 +23,16 @@
 #include "api.h"
 /**/
 
+#include "types.h"
+/**/
+
 #include <hybrid/__va_size.h> /* __VA_SIZE */
 #include <hybrid/typecore.h>
 /**/
 
-#include "object.h"
-/**/
-
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
 
@@ -568,6 +569,12 @@ DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) Dee_ssize_t
 (DCALL DeeFormat_PrintArgumentTypesKw)(Dee_formatprinter_t printer, void *arg,
                                        size_t argc, DeeObject *const *argv,
                                        DeeObject *kw);
+
+
+#ifndef Dee_operator_t_DEFINED
+#define Dee_operator_t_DEFINED
+typedef uint16_t Dee_operator_t;
+#endif /* !Dee_operator_t_DEFINED */
 
 /* Print a representation of invoking operator `name' on `self' with the given arguments.
  * This function is used to generate the representation of the expression in the default

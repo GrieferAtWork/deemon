@@ -23,7 +23,10 @@
 #include "api.h"
 /**/
 
+#include "types.h"
+#ifndef __INTELLISENSE__
 #include "object.h"
+#endif /* !__INTELLISENSE__ */
 /**/
 
 #include <stdarg.h>  /* va_list */
@@ -261,9 +264,14 @@ struct Dee_cmethod_origin {
 DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_cmethod_origin_init(struct Dee_cmethod_origin *__restrict self,
                         Dee_cmethod_t func);
+#ifdef __INTELLISENSE__
+DFUNDEF NONNULL((1)) void DCALL
+Dee_cmethod_origin_fini(struct Dee_cmethod_origin *__restrict self);
+#else /* __INTELLISENSE__ */
 #define Dee_cmethod_origin_fini(self) \
 	(Dee_XDecref((self)->cmo_module), \
 	 Dee_XDecref((self)->cmo_type))
+#endif /* !__INTELLISENSE__ */
 
 struct Dee_cmethod_object {
 	Dee_OBJECT_HEAD

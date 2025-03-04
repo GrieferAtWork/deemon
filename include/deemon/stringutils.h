@@ -23,8 +23,7 @@
 #include "api.h"
 /**/
 
-#include "object.h"
-#include "string.h"
+#include "types.h"
 /**/
 
 #include <hybrid/byteorder.h>
@@ -51,6 +50,12 @@
 
 
 DECL_BEGIN
+
+#ifdef DEE_SOURCE
+#define Dee_string_object string_object
+#endif /* DEE_SOURCE */
+struct Dee_string_object;
+
 
 #ifdef DEE_SOURCE
 #undef unicode_utf8seqlen
@@ -426,17 +431,17 @@ NOTHROW_NCX(DCALL Dee_unicode_readutf32_swap_rev_n)(/*utf-32*/ uint32_t const **
 
 
 /* Get/Set a character, given its index within the string. */
-#define DeeString_GetChar(self, index)        DeeString_GetChar((DeeStringObject *)Dee_REQUIRES_OBJECT(self), index)
-#define DeeString_SetChar(self, index, value) DeeString_SetChar((DeeStringObject *)Dee_REQUIRES_OBJECT(self), index, value)
-DFUNDEF WUNUSED NONNULL((1)) uint32_t (DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size_t index);
-DFUNDEF NONNULL((1)) void (DCALL DeeString_SetChar)(DeeStringObject *__restrict self, size_t index, uint32_t value);
+#define DeeString_GetChar(self, index)        DeeString_GetChar((struct Dee_string_object *)Dee_REQUIRES_OBJECT(self), index)
+#define DeeString_SetChar(self, index, value) DeeString_SetChar((struct Dee_string_object *)Dee_REQUIRES_OBJECT(self), index, value)
+DFUNDEF WUNUSED NONNULL((1)) uint32_t (DCALL DeeString_GetChar)(struct Dee_string_object *__restrict self, size_t index);
+DFUNDEF NONNULL((1)) void (DCALL DeeString_SetChar)(struct Dee_string_object *__restrict self, size_t index, uint32_t value);
 
 
 /* Move `num_chars' characters from `src' to `dst' */
 #define DeeString_Memmove(self, dst, src, num_chars) \
-	DeeString_Memmove((DeeStringObject *)Dee_REQUIRES_OBJECT(self), dst, src, num_chars)
+	DeeString_Memmove((struct Dee_string_object *)Dee_REQUIRES_OBJECT(self), dst, src, num_chars)
 DFUNDEF NONNULL((1)) void
-(DCALL DeeString_Memmove)(DeeStringObject *__restrict self,
+(DCALL DeeString_Memmove)(struct Dee_string_object *__restrict self,
                           size_t dst, size_t src, size_t num_chars);
 
 

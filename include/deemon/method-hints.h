@@ -23,10 +23,14 @@
 #include "api.h"
 /**/
 
-#include "object.h"
+#include "types.h"
+#if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
+#include "object.h" /* struct Dee_type_object::tp_mhcache */
+#endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
 /**/
 
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t */
 
 DECL_BEGIN
 
@@ -2050,7 +2054,7 @@ struct Dee_type_mh_cache_array {
 	Dee_funptr_t mh_funcs[Dee_TMH_COUNT];
 };
 
-#ifndef __OPTIMIZE_SIZE__
+#if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
 #undef DeeType_GetMethodHint
 #define DeeType_GetMethodHint(self, id) DeeType_GetMethodHint_inline(self, id)
 LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
@@ -2067,7 +2071,7 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 	}
 	return (DeeType_GetMethodHint)(self, id);
 }
-#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
 
 #define DeeType_RequireMethodHint(self, name) \
 	((DeeMH_##name##_t)DeeType_GetMethodHint(self, Dee_TMH_##name))

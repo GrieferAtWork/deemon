@@ -22,7 +22,9 @@
 
 #include "../api.h"
 #include "../code.h"
-#include "../object.h"
+#include "../object.h"          /* Dee_WEAKREF */
+#include "../system-features.h" /* memcpy */
+#include "../types.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include "tpp.h"
@@ -30,10 +32,12 @@
 #include <hybrid/__atomic.h>
 #endif /* !CONFIG_NO_THREADS */
 #endif /* CONFIG_BUILDING_DEEMON */
+#include <hybrid/typecore.h>
+/**/
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
 

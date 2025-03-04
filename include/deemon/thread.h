@@ -23,9 +23,15 @@
 #include "api.h"
 /**/
 
-#include "object.h"
+#include "types.h"
+#include "util/futex.h"
+#ifndef __INTELLISENSE__
+#include "object.h" /* DeeObject_NewPack */
+#endif /* !__INTELLISENSE__ */
 /**/
 
+#include <hybrid/__atomic.h>
+#include <hybrid/host.h>
 #include <hybrid/typecore.h>
 /**/
 
@@ -430,7 +436,11 @@ DDATDEF DeeTypeObject DeeThread_Type;
 /* Create a new thread that will invoke `main()' (without any arguments) once started.
  * @return: * :   The new thread object.
  * @return: NULL: An error occurred. (Always returned for `CONFIG_NO_THREADS') */
+#ifdef __INTELLISENSE__
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeThread_New(DeeObject *main);
+#else /* __INTELLISENSE__ */
 #define DeeThread_New(main) DeeObject_NewPack(&DeeThread_Type, 1, main)
+#endif /* !__INTELLISENSE__ */
 
 /* Construct a new wrapper for an external reference to `pid'
  * NOTE: The given `pid' is _NOT_ inherited! */

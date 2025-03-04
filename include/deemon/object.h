@@ -23,6 +23,7 @@
 #include "api.h"
 /**/
 
+#include "types.h"
 #include "util/lock.h"
 /**/
 
@@ -57,32 +58,6 @@
 #endif /* CONFIG_HAVE_STRING_H */
 #endif /* !__INTELLISENSE__ */
 
-/* Const modifier for static type callback-table declaration */
-#ifndef Dee_tpconst
-#if (defined(__PIC__) || defined(__PIE__) || \
-     defined(__pic__) || defined(__pie__))
-#undef Dee_tpconst_IS_const
-#define Dee_tpconst /* nothing */
-#elif defined(CONFIG_BUILDING_DEEMON)
-#define Dee_tpconst_IS_const
-#define Dee_tpconst const
-#else /* ... */
-#define Dee_tpconst_IS_const
-#define Dee_tpconst const
-#endif /* !... */
-#endif /* !Dee_tpconst */
-
-#ifdef DEE_SOURCE
-#define tpconst Dee_tpconst
-#ifdef Dee_tpconst_IS_const
-#define INTERN_TPCONST INTERN_CONST
-#define PUBLIC_TPCONST PUBLIC_CONST
-#else /* Dee_tpconst_IS_const */
-#define INTERN_TPCONST INTERN
-#define PUBLIC_TPCONST PUBLIC
-#endif /* !Dee_tpconst_IS_const */
-#endif /* DEE_SOURCE */
-
 DECL_BEGIN
 
 #ifndef __INTELLISENSE__
@@ -100,9 +75,6 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 #endif /* !__INTELLISENSE__ */
 
 #ifdef DEE_SOURCE
-#define Dee_weakref                weakref
-#define Dee_object                 object_
-#define Dee_type_object            type_object
 #define Dee_class_desc             class_desc
 #define Dee_type_method            type_method
 #define Dee_type_getset            type_getset
@@ -120,58 +92,10 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 #define Dee_type_with              type_with
 #define Dee_type_buffer            type_buffer
 #define Dee_type_operator          type_operator
-#define Dee_weakref_list           weakref_list
 #define Dee_opinfo                 opinfo
 #define Dee_attribute_info         attribute_info
 #define Dee_attribute_lookup_rules attribute_lookup_rules
 #define Dee_attrinfo               attrinfo
-#endif /* DEE_SOURCE */
-
-
-struct Dee_weakref;
-struct Dee_object;
-struct Dee_type_object;
-struct Dee_class_desc;
-struct Dee_attribute_info;
-struct Dee_attribute_lookup_rules;
-struct Dee_attrinfo;
-
-
-typedef struct Dee_object      DeeObject;     /* Common base for all deemon objects */
-typedef struct Dee_type_object DeeTypeObject; /* Common base for all deemon type objects */
-typedef __SSIZE_TYPE__         Dee_ssize_t;   /* Signed size type (s.a. `size_t') */
-typedef __ULONG64_TYPE__       Dee_pos_t;     /* File position */
-typedef __LONG64_TYPE__        Dee_off_t;     /* Delta between 2 file positions */
-typedef uintptr_t              Dee_refcnt_t;  /* Object reference count type */
-typedef uintptr_t              Dee_hash_t;    /* Object hash data type */
-typedef __hybrid_uint128_t     Dee_uint128_t; /* unsigned, 128-bit integer */
-typedef __hybrid_int128_t      Dee_int128_t;  /* signed, 128-bit integer */
-
-#define Dee_SIZEOF_POS_T    8                  /* == sizeof(Dee_pos_t) */
-#define Dee_SIZEOF_OFF_T    Dee_SIZEOF_POS_T   /* == sizeof(Dee_off_t) */
-#define Dee_SIZEOF_REFCNT_T __SIZEOF_POINTER__ /* == sizeof(Dee_refcnt_t) */
-#define Dee_SIZEOF_HASH_T   __SIZEOF_POINTER__ /* == sizeof(Dee_hash_t) */
-
-/* Generic print receiver.
- * @param: arg:     [?..?] Caller-provided cookie
- * @param: data:    [0..datalen] Chunk base-pointer (usually in utf-8)
- * @param: datalen: The number of *bytes* to consume, starting at "data"
- * @return: >= 0:   Success; return value gets added to total propagated by caller.
- * @return: < 0:    Error; abort printing and immediately propagate this value to caller. */
-typedef WUNUSED_T ATTR_INS_T(2, 3) Dee_ssize_t
-(DPRINTER_CC *Dee_formatprinter_t)(void *arg, char const *__restrict data, size_t datalen);
-
-#ifdef __cplusplus
-typedef void (*Dee_funptr_t)(void);
-#else /* __cplusplus */
-typedef void (*Dee_funptr_t)();
-#endif /* !__cplusplus */
-
-#ifdef DEE_SOURCE
-typedef Dee_ssize_t         dssize_t;       /* Deprecated! (use `Dee_ssize_t' instead) */
-typedef Dee_hash_t          dhash_t;        /* Deprecated! (use `Dee_hash_t' instead) */
-typedef Dee_funptr_t        dfunptr_t;      /* Deprecated! (use `Dee_funptr_t' instead) */
-typedef Dee_formatprinter_t dformatprinter; /* Deprecated! (use `Dee_formatprinter_t' instead) */
 #endif /* DEE_SOURCE */
 
 /* Hashing helpers. */
@@ -190,15 +114,6 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_IN(1) Dee_hash_t (DCALL Dee_HashCaseStr)(char con
  * >> Dee_HashCombine(a, b) != Dee_HashCombine(b, a) */
 DFUNDEF ATTR_CONST WUNUSED Dee_hash_t
 (DFCALL Dee_HashCombine)(Dee_hash_t a, Dee_hash_t b);
-
-/* Hash selection macros used by generated code */
-#if Dee_SIZEOF_HASH_T <= 4
-#define _Dee_HashSelect(hash32, hash64)  hash32
-#define _Dee_HashSelectC(hash32, hash64) UINT32_C(hash32)
-#else /* Dee_SIZEOF_HASH_T <= 4 */
-#define _Dee_HashSelect(hash32, hash64)  hash64
-#define _Dee_HashSelectC(hash32, hash64) UINT64_C(hash64)
-#endif /* Dee_SIZEOF_HASH_T > 4 */
 
 /* This is the special hash we assign to empty sequences.
  *
@@ -315,79 +230,8 @@ struct Dee_reftracker {
 	struct Dee_refchanges  *rt_last;   /* [1..1][lock(ATOMIC)] The current refcnt-change set. */
 	struct Dee_refchanges   rt_first;  /* The initial refcnt-change set. */
 };
-#define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA \
-	struct Dee_reftracker *ob_trace; /* [0..1][owned][lock(WRITE_ONCE)] Tracked reference counter data. */
-#define DEE_OBJECT_OFFSETOF_DATA  (__SIZEOF_POINTER__ * 3)
-#define DEE_REFTRACKER_UNTRACKED  ((struct Dee_reftracker  *)(uintptr_t)-1)
-
 DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
-#else /* CONFIG_TRACE_REFCHANGES */
-#define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA  /* nothing */
-#define DEE_OBJECT_OFFSETOF_DATA   (__SIZEOF_POINTER__ * 2)
-#endif /* !CONFIG_TRACE_REFCHANGES */
-
-/* Statically defined offsets within deemon objects. */
-#define DEE_OBJECT_OFFSETOF_REFCNT  0
-#define DEE_OBJECT_OFFSETOF_TYPE    __SIZEOF_POINTER__
-
-
-/* IDE hint for macros that require arguments types to implement `OBJECT_HEAD' */
-#ifdef __INTELLISENSE__
-#define Dee_REQUIRES_OBJECT(x) ((DeeObject *)&(x)->ob_refcnt)
-#else /* __INTELLISENSE__ */
-#define Dee_REQUIRES_OBJECT /* nothing */
-#endif /* !__INTELLISENSE__ */
-
-
-#ifdef __INTELLISENSE__
-#define Dee_OBJECT_HEAD       \
-	Dee_refcnt_t   ob_refcnt; \
-	DeeTypeObject *ob_type;   \
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-#define Dee_OBJECT_HEAD_EX(Ttype) \
-	Dee_refcnt_t ob_refcnt;       \
-	Ttype       *ob_type;         \
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-struct Dee_object {
-	Dee_refcnt_t   ob_refcnt;
-	DeeTypeObject *ob_type;
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-};
-#else /* __INTELLISENSE__ */
-#define Dee_OBJECT_HEAD            \
-	Dee_refcnt_t        ob_refcnt; \
-	DREF DeeTypeObject *ob_type;   \
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-#define Dee_OBJECT_HEAD_EX(Ttype) \
-	Dee_refcnt_t ob_refcnt;       \
-	DREF Ttype  *ob_type;         \
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-struct Dee_object {
-	Dee_OBJECT_HEAD
-};
-#endif /* !__INTELLISENSE__ */
-
-#ifndef Dee_STATIC_REFCOUNT_INIT
-#ifdef CONFIG_BUILDING_DEEMON
-/* We add +1 for all statically initialized objects, so
- * we can easily add them to deemon's builtin module. */
-#define Dee_STATIC_REFCOUNT_INIT 3
-#else /* CONFIG_BUILDING_DEEMON */
-#define Dee_STATIC_REFCOUNT_INIT 2
-#endif /* !CONFIG_BUILDING_DEEMON */
-#endif /* !Dee_STATIC_REFCOUNT_INIT */
-
-#ifdef CONFIG_TRACE_REFCHANGES
-#define Dee_OBJECT_HEAD_INIT(type) Dee_STATIC_REFCOUNT_INIT, type, DEE_REFTRACKER_UNTRACKED
-#else /* CONFIG_TRACE_REFCHANGES */
-#define Dee_OBJECT_HEAD_INIT(type) Dee_STATIC_REFCOUNT_INIT, type
-#endif /* !CONFIG_TRACE_REFCHANGES */
-
-#ifdef DEE_SOURCE
-#define OBJECT_HEAD      Dee_OBJECT_HEAD
-#define OBJECT_HEAD_EX   Dee_OBJECT_HEAD_EX
-#define OBJECT_HEAD_INIT Dee_OBJECT_HEAD_INIT
-#endif /* DEE_SOURCE */
+#endif /* CONFIG_TRACE_REFCHANGES */
 
 
 /* Check if the given object is being shared.
@@ -479,6 +323,7 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(DeeObject const *ob
 
 
 
+struct Dee_weakref;
 /* Prototype for callbacks to-be invoked when a weakref'd object gets destroyed. */
 typedef NONNULL_T((1)) void (DCALL *Dee_weakref_callback_t)(struct Dee_weakref *__restrict self);
 
@@ -573,39 +418,6 @@ struct Dee_weakref {
 #define DeeWeakref_UnlockCallback(x) \
 	__hybrid_atomic_store(&(x)->wr_next, (struct Dee_weakref *)_DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR, __ATOMIC_RELEASE)
 #endif /* !__cplusplus */
-
-
-
-struct Dee_weakref_list {
-	struct Dee_weakref *wl_nodes; /* [0..1][lock(BIT0(wl_nodes))] chain of weak references. */
-};
-
-/* Structure field: When present in an object, it supports weak referencing. */
-#define Dee_WEAKREF_SUPPORT         struct Dee_weakref_list ob_weakrefs;
-#define Dee_WEAKREF_SUPPORT_ADDR(T) offsetof(T, ob_weakrefs)
-#define Dee_WEAKREF_SUPPORT_INIT    { NULL }
-
-/* Initialize weakref support (must be called manually by
- * constructors of types implementing weakref support!) */
-#define Dee_weakref_support_init(x) ((x)->ob_weakrefs.wl_nodes = NULL)
-
-/* Finalize weakref support (must be called manually by
- * destructors of types implementing weakref support!) */
-DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restrict self);
-#ifndef __OPTIMIZE_SIZE__
-#define Dee_weakref_support_fini(x)                                     \
-	(__hybrid_atomic_load(&(x)->ob_weakrefs.wl_nodes, __ATOMIC_ACQUIRE) \
-	 ? (Dee_weakref_support_fini)(&(x)->ob_weakrefs)                    \
-	 : (void)0)
-#endif /* !__OPTIMIZE_SIZE__ */
-
-#ifdef DEE_SOURCE
-#define WEAKREF_SUPPORT      Dee_WEAKREF_SUPPORT
-#define WEAKREF_SUPPORT_ADDR Dee_WEAKREF_SUPPORT_ADDR
-#define WEAKREF_SUPPORT_INIT Dee_WEAKREF_SUPPORT_INIT
-#define weakref_support_init Dee_weakref_support_init
-#define weakref_support_fini Dee_weakref_support_fini
-#endif /* DEE_SOURCE */
 
 
 /* Initialize the given weak reference to NULL. */
@@ -705,15 +517,6 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_weakref_cmpxch)(struct Dee_weakref *__restrict self,
                            DeeObject *old_ob, DeeObject *new_ob);
 
-
-
-/* Iterator/tristate pointer helpers. */
-#define Dee_ITER_ISOK(x) (((uintptr_t)(x) - 1) < (uintptr_t)-2l) /* `x != NULL && x != Dee_ITER_DONE' */
-#define Dee_ITER_DONE    ((DeeObject *)-1l) /* Returned when the iterator has been exhausted. */
-#ifdef DEE_SOURCE
-#define ITER_ISOK Dee_ITER_ISOK /* `x != NULL && x != ITER_DONE' */
-#define ITER_DONE Dee_ITER_DONE /* Returned when the iterator has been exhausted. */
-#endif /* DEE_SOURCE */
 
 
 /* Type visit helpers.
@@ -2034,9 +1837,6 @@ struct Dee_type_cmp {
 	struct Dee_type_nii Dee_tpconst *tp_nii; /* TODO: Deprecated */
 };
 
-typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
-typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void *arg, DeeObject *key, DeeObject *value);
-
 #if !defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || 1
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_seq_enumerate_t)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value);
 typedef WUNUSED_T Dee_ssize_t (DCALL *Dee_seq_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
@@ -2907,6 +2707,10 @@ PRIVATE struct type_iterator myob_iterator = {
 };
 #endif
 
+struct Dee_attribute_info;
+struct Dee_attribute_lookup_rules;
+struct Dee_attrinfo;
+
 struct Dee_type_attr {
 	/* Basic attribute operators. */
 	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_getattr)(DeeObject *self, /*String*/ DeeObject *attr);
@@ -3700,7 +3504,10 @@ struct Dee_membercache {
 
 
 
+#ifndef Dee_operator_t_DEFINED
+#define Dee_operator_t_DEFINED
 typedef uint16_t Dee_operator_t;
+#endif /* !Dee_operator_t_DEFINED */
 
 #define Dee_OPERATOR_USERCOUNT    0x003e        /* Number of user-accessible operators. (Used by `class' types) */
 #define Dee_OPERATOR_EXTENDED(x) (0x1000 + (x)) /* Extended operator codes. (Type-specific; may be re-used) */
@@ -4161,6 +3968,7 @@ struct Dee_type_operator {
 #endif /* DEE_SOURCE */
 
 
+struct Dee_class_desc;
 struct Dee_type_method_hint;
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 struct Dee_type_mh_cache;
@@ -4721,44 +4529,11 @@ DFUNDEF ATTR_COLD NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TypeAssertFailed3)(
 #endif /* !__OPTIMIZE_SIZE__ */
 
 
-/* Object typeof(). */
-#define Dee_TYPE(self) (self)->ob_type
-
 /* Returns the class of `self', automatically
  * dereferencing super-objects and other wrappers.
  * Beyond that, this function returns the same as `Dee_TYPE()' */
 DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) DeeTypeObject *DCALL
 DeeObject_Class(DeeObject *__restrict self);
-
-/* Object inheritance checking:
- * - DeeObject_Implements:      Check if part of MRO
- * - DeeObject_InstanceOf:      Check if part of base-chain (implies MRO; enough for non-TP_FABSTRACT types)
- * - DeeObject_InstanceOfExact: Check if type matches exactly (fastest check; enough for TP_FFINAL/TP_FVARIABLE types) */
-#define DeeObject_Implements(self, super_type)       DeeType_Implements(Dee_TYPE(self), super_type)
-#define DeeObject_InstanceOf(self, super_type)       DeeType_Extends(Dee_TYPE(self), super_type)
-#define DeeObject_InstanceOfExact(self, object_type) (Dee_TYPE(self) == (object_type))
-
-/* Return true if `test_type' is equal to, or extends `extended_type'
- * NOTE: When `extended_type' is not a type, this function simply returns `false'
- * >> return test_type.extends(extended_type);
- *
- * HINT: Always returns either `0' or `1'!
- * @return: 0 : "test_type" does not inherit from `extended_type', or `extended_type' isn't a type
- * @return: 1 : "test_type" does inherit from `extended_type' */
-DFUNDEF WUNUSED NONNULL((1)) unsigned int DCALL
-DeeType_Extends(DeeTypeObject const *test_type,
-                DeeTypeObject const *extended_type);
-
-/* Same as `DeeType_Extends()', but also check `tp_mro' for matches.
- * This function should be used when `implemented_type' is an abstract type.
- * >> return test_type.implements(implemented_type);
- *
- * HINT: Always returns either `0' or `1'!
- * @return: 0 : "test_type" does not implement "implemented_type"
- * @return: 1 : "test_type" does implement "implemented_type" */
-DFUNDEF WUNUSED NONNULL((1)) unsigned int DCALL
-DeeType_Implements(DeeTypeObject const *test_type,
-                   DeeTypeObject const *implemented_type);
 
 /* Return the module used to define a given type `self',
  * or `NULL' if that module could not be determined.

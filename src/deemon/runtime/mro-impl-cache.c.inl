@@ -166,14 +166,21 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+#include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
+#include <deemon/instancemethod.h>
+#include <deemon/kwds.h>
 #include <deemon/mro.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h>
+#include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 /**/
 
+#include "kwlist.h" /* kwlist__thisarg */
 #include "runtime_error.h"
 /**/
 

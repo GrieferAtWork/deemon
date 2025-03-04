@@ -26,6 +26,9 @@
 #include "../format.h" /* DEE_PCKuPTR */
 #include "../module.h"
 #include "../object.h"
+/**/
+
+#include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN
 

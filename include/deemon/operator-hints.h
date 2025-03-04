@@ -23,7 +23,7 @@
 #include "api.h"
 /**/
 
-#include "object.h"
+#include "types.h"
 /**/
 
 #ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS

@@ -21,14 +21,11 @@
 #define GUARD_DEEMON_COMPILER_TRAITS_H 1
 
 #include "../api.h"
-#include "../object.h"
+#include "../types.h"
 #include "ast.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
 DECL_BEGIN
-
-#define AST_ENUMERATE_CHILD_BRANCHES(self, callback)
-
 
 /* Return true if a given `AST_MULTIPLE' contains expand ASTs. */
 INTDEF WUNUSED NONNULL((1)) bool DCALL
@@ -40,7 +37,6 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL
 ast_chk_maythrow(struct ast *__restrict self,
                  bool result_used,
                  DeeTypeObject *exception_type);
-
 
 DECL_END
 #endif /* CONFIG_BUILDING_DEEMON */

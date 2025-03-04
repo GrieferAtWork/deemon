@@ -26,15 +26,17 @@
 #include "../util/rlock.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "ast.h"
+#include "symbol.h"
 #include "error.h"
 #include "lexer.h"
 #include "tpp.h"
 #endif /* CONFIG_BUILDING_DEEMON */
 
 #include <hybrid/sequence/list.h>
+/**/
 
-#include <stdint.h>
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

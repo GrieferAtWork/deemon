@@ -21,8 +21,10 @@
 #define GUARD_DEEMON_ATTRIBUTE_H 1
 
 #include "api.h"
+/**/
 
-#include "object.h"
+#include "types.h"
+/**/
 
 #ifdef CONFIG_NO_LONGJMP_ENUMATTR
 #undef CONFIG_LONGJMP_ENUMATTR

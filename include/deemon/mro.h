@@ -23,8 +23,14 @@
 #include "api.h"
 /**/
 
-#include "object.h"
+#include "types.h"
 #include "util/lock.h"
+#ifdef CONFIG_BUILDING_DEEMON
+#include "object.h"
+#endif /* CONFIG_BUILDING_DEEMON */
+#ifndef __INTELLISENSE__
+#include "none.h"
+#endif /* !__INTELLISENSE__ */
 /**/
 
 #include <hybrid/sched/__yield.h>
@@ -47,10 +53,12 @@ DECL_BEGIN
 #define Dee_class_attribute class_attribute
 #define Dee_class_desc      class_desc
 #define Dee_module_symbol   module_symbol
+#define Dee_type_member     type_member
 #endif /* DEE_SOURCE */
 
 struct Dee_class_attribute;
 struct Dee_module_symbol;
+struct Dee_type_member;
 
 /* Possible values for `struct Dee_attrinfo::ai_type' */
 #define Dee_ATTRINFO_CUSTOM          0 /* Custom attribute operators are present. */
@@ -128,6 +136,52 @@ DeeObject_TFindPrivateAttrInfoStringLenHash(DeeTypeObject *tp_self, DeeObject *s
 #define DeeObject_FindPrivateAttrInfoStringHash(self, attr, hash, retinfo)             DeeObject_TFindPrivateAttrInfoStringHash(Dee_TYPE(self), self, attr, hash, retinfo)
 #define DeeObject_FindPrivateAttrInfoStringLen(self, attr, attrlen, retinfo)           DeeObject_TFindPrivateAttrInfoStringLen(Dee_TYPE(self), self, attr, attrlen, retinfo)
 #define DeeObject_FindPrivateAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo) DeeObject_TFindPrivateAttrInfoStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash, retinfo)
+
+
+/* Interact with type member definitions. */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL Dee_type_member_get(struct Dee_type_member const *desc, DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL Dee_type_member_bound(struct Dee_type_member const *desc, DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_type_member_set(struct Dee_type_member const *desc, DeeObject *self, DeeObject *value);
+#ifdef __INTELLISENSE__
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_type_member_del(struct Dee_type_member const *desc, DeeObject *self);
+#else /* __INTELLISENSE__ */
+#define Dee_type_member_del(desc, self) Dee_type_member_set(desc, self, Dee_None)
+#endif /* !__INTELLISENSE__ */
+
+
+/* Try to add the specified attribute to the cache of "self".
+ * - If this fails due to OOM, return `-1', but DON'T throw an exception
+ * If the MRO cache already contains an entry for the named attribute:
+ * - Verify that the existing entry is for the same type of attribute (`MEMBERCACHE_*'),
+ *   such that it can be patched without having to alter `mcs_type' (since having to do
+ *   so would result in a non-resolvable race condition where another thread is currently
+ *   dereferencing the function pointers from the existing entry).
+ *   If this verification fails, return `1'.
+ *   - For `DeeTypeMRO_Patch*Method', it is also verified that both the
+ *     old and new function pointers share a common `TYPE_METHOD_FKWDS'.
+ * - If the type matches, the pre-existing cache entries pointers are patched such that
+ *   they will now reference those from the given parameters.
+ *   Note that for this purpose, this exchange is atomic for each individual function
+ *   pointer (but not all pointers as a whole) -- in the case of `DeeTypeMRO_Patch*GetSet',
+ *   another thread may invoke (e.g.) an out-dated `gs_del' after `gs_get' was already
+ *   patched.
+ *
+ * NOTE: Generally, only use these functions for self-optimizing methods in base-classes
+ *       that wish to skip certain type-dependent verification steps during future calls.
+ *       (e.g. `Sequence.first', `Mapping.keys')
+ *
+ * @param: old_*: [0..1] When non-NULL, use these values for compare-exchange operations.
+ *                       But also note that when there are many function pointers, some may
+ *                       be set, while others cannot be -- here, an attempt to exchange
+ *                       pointers is made for *all* pointers, and success is indicated if
+ *                       at least 1 pointer could be exchanged.
+ * @return:  1:   Failure (cache entry cannot be patched like this)
+ * @return:  0:   Success
+ * @return: -1:   Patching failed due to OOM (but no error was thrown!) */
+DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *new_method, /*0..1*/ struct type_method const *old_method);
+DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *new_getset, /*0..1*/ struct type_getset const *old_getset);
+DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchClassMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *new_method, /*0..1*/ struct type_method const *old_method);
+DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *new_getset, /*0..1*/ struct type_getset const *old_getset);
 
 
 
@@ -1736,46 +1790,6 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetInstanceAttrStringHash)(
 #endif /* !__INTELLISENSE__ */
 
 #endif /* CONFIG_BUILDING_DEEMON */
-
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL Dee_type_member_get(struct Dee_type_member const *desc, DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL Dee_type_member_bound(struct Dee_type_member const *desc, DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_type_member_set(struct Dee_type_member const *desc, DeeObject *self, DeeObject *value);
-#define Dee_type_member_del(desc, self) Dee_type_member_set(desc, self, Dee_None)
-
-
-/* Try to add the specified attribute to the cache of "self".
- * - If this fails due to OOM, return `-1', but DON'T throw an exception
- * If the MRO cache already contains an entry for the named attribute:
- * - Verify that the existing entry is for the same type of attribute (`MEMBERCACHE_*'),
- *   such that it can be patched without having to alter `mcs_type' (since having to do
- *   so would result in a non-resolvable race condition where another thread is currently
- *   dereferencing the function pointers from the existing entry).
- *   If this verification fails, return `1'.
- *   - For `DeeTypeMRO_Patch*Method', it is also verified that both the
- *     old and new function pointers share a common `TYPE_METHOD_FKWDS'.
- * - If the type matches, the pre-existing cache entries pointers are patched such that
- *   they will now reference those from the given parameters.
- *   Note that for this purpose, this exchange is atomic for each individual function
- *   pointer (but not all pointers as a whole) -- in the case of `DeeTypeMRO_Patch*GetSet',
- *   another thread may invoke (e.g.) an out-dated `gs_del' after `gs_get' was already
- *   patched.
- *
- * NOTE: Generally, only use these functions for self-optimizing methods in base-classes
- *       that wish to skip certain type-dependent verification steps during future calls.
- *       (e.g. `Sequence.first', `Mapping.keys')
- *
- * @param: old_*: [0..1] When non-NULL, use these values for compare-exchange operations.
- *                       But also note that when there are many function pointers, some may
- *                       be set, while others cannot be -- here, an attempt to exchange
- *                       pointers is made for *all* pointers, and success is indicated if
- *                       at least 1 pointer could be exchanged.
- * @return:  1:   Failure (cache entry cannot be patched like this)
- * @return:  0:   Success
- * @return: -1:   Patching failed due to OOM (but no error was thrown!) */
-DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *new_method, /*0..1*/ struct type_method const *old_method);
-DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *new_getset, /*0..1*/ struct type_getset const *old_getset);
-DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchClassMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *new_method, /*0..1*/ struct type_method const *old_method);
-DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *new_getset, /*0..1*/ struct type_getset const *old_getset);
 
 DECL_END
 

@@ -97,9 +97,9 @@
 
 #include <__stdinc.h> /* __CC__ */
 
-#ifdef __CC__
+#if defined(__CC__) && !defined(__INTELLISENSE__)
 #include <stddef.h>
-#endif /* __CC__ */
+#endif /* __CC__ && !__INTELLISENSE__ */
 
 #ifndef __has_include
 #define __NO_has_include 1
@@ -125,18 +125,17 @@
 
 #include <hybrid/compiler.h>
 
-#include <hybrid/debug-alignment.h>
 #include <hybrid/host.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SSIZE_TYPE__ */
 
-#ifdef __CC__
+#if defined(__CC__) && !defined(__INTELLISENSE__)
 #include <stdarg.h>
 
 #if (defined(_CRTDBG_MAP_ALLOC) && \
      defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG))
 #include <crtdbg.h>
 #endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
-#endif /* __CC__ */
+#endif /* __CC__ && !__INTELLISENSE__ */
 
 
 /* Disable some problematic compiler warnings when DEE_SOURCE is defined.
@@ -517,6 +516,34 @@ DECL_END
 #define DDATDEF __IMPDEF
 #endif /* !CONFIG_BUILDING_DEEMON */
 
+/* Const modifier for static type callback-table declaration */
+#ifndef Dee_tpconst
+#if (defined(__PIC__) || defined(__PIE__) || \
+     defined(__pic__) || defined(__pie__))
+#undef Dee_tpconst_IS_const
+#define Dee_tpconst /* nothing */
+#elif defined(CONFIG_BUILDING_DEEMON)
+#define Dee_tpconst_IS_const
+#define Dee_tpconst const
+#else /* ... */
+#define Dee_tpconst_IS_const
+#define Dee_tpconst const
+#endif /* !... */
+#endif /* !Dee_tpconst */
+
+#ifdef DEE_SOURCE
+#define tpconst Dee_tpconst
+#ifdef Dee_tpconst_IS_const
+#define INTERN_TPCONST INTERN_CONST
+#define PUBLIC_TPCONST PUBLIC_CONST
+#else /* Dee_tpconst_IS_const */
+#define INTERN_TPCONST INTERN
+#define PUBLIC_TPCONST PUBLIC
+#endif /* !Dee_tpconst_IS_const */
+#endif /* DEE_SOURCE */
+
+
+
 #ifdef __GNUC__
 /* Define if the compiler allows labels to be
  * addressed: `foo: printf("foo = %p", &&foo);'
@@ -599,29 +626,29 @@ DECL_END
 #endif /* !DPRINTER_CC */
 #endif /* !DPRINTER_CC */
 
-#ifndef DREF
-#define DREF  /* Annotation for pointer: transfer/storage of a reference.
-               * NOTE: When returned by a function, a return value
-               *       of NULL indicates a newly raised exception. */
-#endif /* !DREF */
 #ifndef DWEAK
 #define DWEAK /* Annotation for data that is thread-volatile. */
 #endif /* !DWEAK */
 
-DECL_BEGIN
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && defined(_DEBUG)
-#ifdef CONFIG_HOST_WINDOWS
-#ifdef _MSC_VER
+#if defined(CONFIG_HOST_WINDOWS) && defined(_MSC_VER)
+#ifdef __INTELLISENSE__
+#define Dee_CHECKMEMORY() Dee_ASSERT((_CrtCheckMemory)())
+#else /* __INTELLISENSE__ */
+#include <hybrid/debug-alignment.h>
 #define Dee_CHECKMEMORY() (DBG_ALIGNMENT_DISABLE(), Dee_ASSERT((_CrtCheckMemory)()), DBG_ALIGNMENT_ENABLE())
+#endif /* !__INTELLISENSE__ */
+DECL_BEGIN
 #if !defined(_MSC_VER) || defined(_DLL)
 extern __ATTR_DLLIMPORT int (ATTR_CDECL _CrtCheckMemory)(void);
 #else /* !_MSC_VER || _DLL */
 extern int (ATTR_CDECL _CrtCheckMemory)(void);
 #endif /* _MSC_VER && !_DLL */
-#endif /* _MSC_VER */
-#endif /* CONFIG_HOST_WINDOWS */
+DECL_END
+#endif /* CONFIG_HOST_WINDOWS && _MSC_VER */
 #endif /* !NDEBUG */
 
+DECL_BEGIN
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
 extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
 #define Dee_REQUIRES_TYPE(T, x)  ____INTELLISENSE_req_type<T>(x)
@@ -638,8 +665,13 @@ extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
 DDATDEF int _Dee_dprint_enabled;
 DFUNDEF NONNULL((1)) void (DCALL _Dee_dprint)(char const *__restrict message);
 DFUNDEF NONNULL((1)) void (_Dee_dprintf)(char const *__restrict format, ...);
+#ifdef __INTELLISENSE__
+DFUNDEF NONNULL((1)) void (DCALL _Dee_vdprintf)(char const *__restrict format, __builtin_va_list args);
+DFUNDEF __SSIZE_TYPE__ (DPRINTER_CC _Dee_dprinter)(void *arg, char const *__restrict data, __SIZE_TYPE__ datalen);
+#else /* __INTELLISENSE__ */
 DFUNDEF NONNULL((1)) void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args);
 DFUNDEF __SSIZE_TYPE__ (DPRINTER_CC _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen);
+#endif /* !__INTELLISENSE__ */
 #endif /* !NDEBUG && !NDEBUG_DPRINT */
 
 /* Assertion handlers */

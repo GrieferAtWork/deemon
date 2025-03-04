@@ -23,7 +23,10 @@
 #include "api.h"
 /**/
 
+#include "types.h"
+#ifndef __INTELLISENSE__
 #include "object.h"
+#endif /* !__INTELLISENSE__ */
 /**/
 
 #include <stdbool.h> /* bool */
@@ -92,7 +95,11 @@ DDATDEF struct empty_tuple_object DeeTuple_Empty;
 DDATDEF DeeObject        DeeTuple_Empty;
 #define Dee_EmptyTuple (&DeeTuple_Empty)
 #endif /* !GUARD_DEEMON_OBJECTS_TUPLE_C */
-#define Dee_return_empty_tuple  Dee_return_reference_(Dee_EmptyTuple)
+#ifdef __INTELLISENSE__
+#define Dee_return_empty_tuple return Dee_EmptyTuple
+#else /* __INTELLISENSE__ */
+#define Dee_return_empty_tuple Dee_return_reference_(Dee_EmptyTuple)
+#endif /* !__INTELLISENSE__ */
 
 DDATDEF DeeTypeObject DeeTuple_Type;
 DDATDEF DeeTypeObject DeeNullableTuple_Type; /* Same as "DeeTuple_Type", but items are allowed to be NULL (meaning unbound) */

@@ -1374,7 +1374,7 @@ err:
 }
 
 PRIVATE struct type_seq scv_seq = {
-	/* .tp_iter               = */ DEFIMPL(&default__iter__with__foreach), /* TODO */
+	/* .tp_iter               = */ DEFIMPL(&default__iter__with__foreach),
 	/* .tp_sizeob             = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains           = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
 	/* .tp_getitem            = */ DEFIMPL(&default__getitem__with__getitem_index),

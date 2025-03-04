@@ -24,7 +24,7 @@
 /**/
 
 #include "gc.h"
-#include "object.h"
+#include "types.h"
 #include "system.h" /* DEE_SYSTEM_FS_ICASE */
 #include "util/lock.h"
 /**/

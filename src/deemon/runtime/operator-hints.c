@@ -1832,6 +1832,15 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 			}
 
 perform_actions:
+			/* TODO: Think about getting rid of "default__iter__with__foreach"
+			 * - It's not even fully implemented, and it would be super-slow.
+			 * - By not implementing it, our caller would be forced to use
+			 *   method hints (which are able to re-implement it for sequence
+			 *   types, but are also smart enough to use size+getitem instead
+			 *   if at all possible)
+			 * - Some stuff actually uses that impls:
+			 *   >> CRTL+SHIFT+F: DEFIMPL(&default__iter__with__foreach) */
+
 			while (n_actions > 1) {
 				struct Dee_tno_assign *action;
 				--n_actions;

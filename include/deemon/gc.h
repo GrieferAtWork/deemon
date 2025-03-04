@@ -23,7 +23,7 @@
 #include "api.h"
 /**/
 
-#include "object.h"
+#include "types.h"
 
 #ifndef __INTELLISENSE__
 #include "alloc.h"

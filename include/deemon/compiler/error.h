@@ -26,7 +26,12 @@
 #define PARSE_FNORMAL 0x0000 /* Normal parser flags. */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "../thread.h"
+#include <deemon/types.h>
+#include <deemon/system-features.h> /* bzero */
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

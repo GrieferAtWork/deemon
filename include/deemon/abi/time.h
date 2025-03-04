@@ -29,6 +29,9 @@
 /**/
 
 #include <hybrid/__unaligned.h>
+/**/
+
+#include <stdint.h> /* int64_t, uint32_t */
 
 /* Helpers for interfacing with Time-like objects, as defined by the `time' module */
 

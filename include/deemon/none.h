@@ -23,7 +23,10 @@
 #include "api.h"
 /**/
 
+#include "types.h"
+#if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
 #include "object.h"
+#endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
 
 DECL_BEGIN
 
@@ -57,9 +60,9 @@ DDATDEF DeeObject     DeeNone_Singleton;
 
 /* No-op/none function pointers */
 DFUNDEF ATTR_RETNONNULL WUNUSED DREF DeeObject *(DCALL DeeNone_NewRef)(void);
-#ifndef __OPTIMIZE_SIZE__
+#if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
 #define DeeNone_NewRef() (Dee_Incref(Dee_None), Dee_None)
-#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
 
 DECL_END
 

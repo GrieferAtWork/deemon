@@ -23,7 +23,10 @@
 #include "api.h"
 /**/
 
+#include "types.h"
+#ifndef __INTELLISENSE__
 #include "object.h"
+#endif /* !__INTELLISENSE__ */
 /**/
 
 #include <hybrid/typecore.h>
@@ -109,7 +112,11 @@ DDATDEF DeeBytesObject                DeeBytes_Empty;
 DDATDEF DeeObject                     DeeBytes_Empty;
 #define Dee_EmptyBytes              (&DeeBytes_Empty)
 #endif /* !GUARD_DEEMON_OBJECTS_BYTES_C */
-#define Dee_return_empty_bytes        Dee_return_reference_(Dee_EmptyBytes)
+#ifdef __INTELLISENSE__
+#define Dee_return_empty_bytes return Dee_EmptyBytes
+#else /* __INTELLISENSE__ */
+#define Dee_return_empty_bytes Dee_return_reference_(Dee_EmptyBytes)
+#endif /* !__INTELLISENSE__ */
 
 
 

@@ -21,7 +21,15 @@
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_H 1
 
 #include "../api.h"
+#ifdef CONFIG_BUILDING_DEEMON
+#include "../types.h"
 #include "ast.h"
+#include "symbol.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
+#endif /* CONFIG_BUILDING_DEEMON */
 
 DECL_BEGIN
 

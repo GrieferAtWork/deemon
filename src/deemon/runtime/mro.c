@@ -23,32 +23,20 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/class.h>
-#include <deemon/error.h>
 #include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/instancemethod.h>
-#include <deemon/kwds.h>
 #include <deemon/mro.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
-#include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
-/**/
-
-#include "kwlist.h"
-#include "runtime_error.h"
-#include "strings.h"
 /**/
 
 #include <stddef.h>

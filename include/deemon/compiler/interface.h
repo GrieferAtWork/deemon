@@ -21,10 +21,15 @@
 #define GUARD_DEEMON_COMPILER_INTERFACE_H 1
 
 #include "../api.h"
-#include "../object.h"
-#include "ast.h"
+#include "../object.h" /* struct type_member */
+#include "../types.h"
 #include "compiler.h"
+#include "symbol.h"
 #include "tpp.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

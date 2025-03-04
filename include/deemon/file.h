@@ -24,8 +24,8 @@
 /**/
 
 #include "object.h"
-
 /**/
+
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

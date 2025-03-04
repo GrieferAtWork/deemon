@@ -23,20 +23,20 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include <hybrid/byteorder.h>
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 /**/
 
 #include "../asm.h"
 #include "../code.h"
-#include "../format.h"
-#include "../object.h"
+#include "../object.h" /* Dee_operator_t */
+#include "../types.h"
 #include "ast.h"
 #include "symbol.h"
 #include "tpp.h"
 /**/
 
+#include <stddef.h> /* size_t */
 #include <stdint.h> /* intN_t, uintN_t, uintptr_t */
 
 DECL_BEGIN

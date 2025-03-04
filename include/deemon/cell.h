@@ -23,7 +23,7 @@
 #include "api.h"
 /**/
 
-#include "object.h"
+#include "types.h"
 #include "util/lock.h"
 
 DECL_BEGIN

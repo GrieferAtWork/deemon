@@ -23,9 +23,12 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include <stdbool.h>
 
-#include "../string.h"
+/**/
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint32_t */
 
 #ifdef GUARD_TPP_H
 #error "Don't #include `tpp.h' directly. - Deemon must configure it for itself!"

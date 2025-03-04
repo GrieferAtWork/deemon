@@ -23,7 +23,7 @@
 #include "api.h"
 /**/
 
-#include "object.h"
+#include "types.h"
 #include "util/lock.h"
 #ifndef __INTELLISENSE__
 #include "util/atomic.h"

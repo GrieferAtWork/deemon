@@ -24,7 +24,7 @@
 /**/
 
 #include "code.h" /* struct Dee_code_frame */
-#include "object.h"
+#include "types.h"
 #include "util/lock.h"
 #include "util/rlock.h"
 /**/

@@ -23,8 +23,11 @@
 #include "api.h"
 /**/
 
-#include "object.h"
+#include "types.h"
 #include "util/lock.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

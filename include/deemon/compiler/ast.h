@@ -21,15 +21,15 @@
 #define GUARD_DEEMON_COMPILER_AST_H 1
 
 #include "../api.h"
-#include "../code.h"
+#include "../types.h"
 #include "../object.h"
 #include "symbol.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include "tpp.h"
 #endif /* CONFIG_BUILDING_DEEMON */
+/**/
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 

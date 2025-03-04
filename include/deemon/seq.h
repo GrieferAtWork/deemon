@@ -24,7 +24,11 @@
 /**/
 
 #include "alloc.h" /* Dee_MallocUsableSize */
+#include "types.h"
+#include "util/lock.h"
+#ifndef __INTELLISENSE__
 #include "object.h"
+#endif /* !__INTELLISENSE__ */
 /**/
 
 #include <stdbool.h> /* bool */
@@ -94,11 +98,19 @@ DeeIterator_ForeachPair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void 
  *       but obviously something like an empty tuple is also an empty sequence. */
 DDATDEF DeeObject      DeeSeq_EmptyInstance;
 #define Dee_EmptySeq (&DeeSeq_EmptyInstance)
-#define Dee_return_empty_seq  Dee_return_reference_(Dee_EmptySeq)
+#ifdef __INTELLISENSE__
+#define Dee_return_empty_seq return Dee_EmptySeq
+#else /* __INTELLISENSE__ */
+#define Dee_return_empty_seq Dee_return_reference_(Dee_EmptySeq)
+#endif /* !__INTELLISENSE__ */
 
 DDATDEF DeeObject           DeeIterator_EmptyInstance;
 #define Dee_EmptyIterator (&DeeIterator_EmptyInstance)
+#ifdef __INTELLISENSE__
+#define Dee_return_empty_iterator return Dee_EmptyIterator
+#else /* __INTELLISENSE__ */
 #define Dee_return_empty_iterator Dee_return_reference_(Dee_EmptyIterator)
+#endif /* !__INTELLISENSE__ */
 
 
 

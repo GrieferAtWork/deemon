@@ -24,7 +24,7 @@
 /**/
 
 #include "file.h"
-#include "system-features.h"
+#include "system-features.h" /* E*, CONFIG_HAVE_* */
 /**/
 
 #include <stddef.h> /* size_t */

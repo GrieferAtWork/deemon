@@ -25,7 +25,7 @@
 
 #ifdef CONFIG_BUILDING_DEEMON
 #ifndef CONFIG_NO_DEC
-#include "object.h"
+#include "types.h"
 #endif /* !CONFIG_NO_DEC */
 #endif /* CONFIG_BUILDING_DEEMON */
 /**/

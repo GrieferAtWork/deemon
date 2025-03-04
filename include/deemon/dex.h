@@ -23,8 +23,8 @@
 #include "api.h"
 /**/
 
-#include "object.h"
 #ifndef CONFIG_NO_DEX
+#include "object.h"
 #include "module.h"
 #ifndef CONFIG_NO_NOTIFICATIONS
 #include "notify.h"

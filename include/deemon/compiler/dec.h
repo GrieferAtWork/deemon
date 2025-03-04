@@ -25,9 +25,15 @@
 #ifdef CONFIG_BUILDING_DEEMON
 #ifndef CONFIG_NO_DEC
 #include "../code.h"
-#include "../dec.h"
 #include "../module.h"
 #include "../object.h"
+/**/
+
+#include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

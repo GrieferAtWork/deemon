@@ -23,9 +23,10 @@
 #include "api.h"
 /**/
 
-#include "object.h"
+#include "types.h"
 #ifndef __INTELLISENSE__
 #include "alloc.h"
+#include "object.h"
 #endif /* !__INTELLISENSE__ */
 /**/
 
@@ -522,8 +523,12 @@ struct Dee_empty_string_struct {
 
 DDATDEF struct Dee_empty_string_struct DeeString_Empty;
 
-#define Dee_EmptyString         ((DeeObject *)&DeeString_Empty)
+#define Dee_EmptyString ((DeeObject *)&DeeString_Empty)
+#ifdef __INTELLISENSE__
+#define Dee_return_empty_string return Dee_EmptyString
+#else /* __INTELLISENSE__ */
 #define Dee_return_empty_string Dee_return_reference_(Dee_EmptyString)
+#endif /* !__INTELLISENSE__ */
 
 #ifdef DEE_SOURCE
 #define DEFINE_STRING       Dee_DEFINE_STRING
@@ -977,7 +982,9 @@ DeeDbgString_NewAuto(/*unsigned*/ char const *__restrict str, char const *file, 
 	DeeObject *result;
 	result = DeeString_IsObject(str);
 	if (result) {
+#ifndef __INTELLISENSE__
 		Dee_Incref(result);
+#endif /* !__INTELLISENSE__ */
 	} else {
 #ifdef NDEBUG
 		result = DeeString_New(str);
@@ -1008,7 +1015,9 @@ DeeDbgString_NewAutoWithHash(/*unsigned*/ char const *__restrict str,
 				goto return_new_string;
 			((DeeStringObject *)result)->s_hash = hash;
 		}
+#ifndef __INTELLISENSE__
 		Dee_Incref(result);
+#endif /* !__INTELLISENSE__ */
 	} else {
 return_new_string:
 #ifdef NDEBUG
@@ -1099,7 +1108,9 @@ DeeString_NewAutoUtf8(/*unsigned*/ char const *__restrict str) {
 	DeeObject *result;
 	result = DeeString_IsObject(str);
 	if (result) {
+#ifndef __INTELLISENSE__
 		Dee_Incref(result);
+#endif /* !__INTELLISENSE__ */
 	} else {
 		result = DeeString_NewUtf8(str, strlen(str), Dee_STRING_ERROR_FIGNORE);
 	}
