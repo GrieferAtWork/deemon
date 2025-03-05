@@ -18,9 +18,15 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include "decl.c"
 #define N 8
 #endif /* __INTELLISENSE__ */
+
+#include <deemon/api.h>
+#include <deemon/string.h>
+#include <deemon/system-features.h> /* memcpy */
+/**/
+
+#include <stddef.h> /* size_t */
 
 /* Print the given `text' as encoded documentation text.
  *  - Escape any line-feed immediately following after another

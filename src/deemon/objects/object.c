@@ -1162,7 +1162,12 @@ PUBLIC NONNULL((1)) void
 restart_clear_weakrefs:
 	LOCK_POINTER(list->wl_nodes);
 	iter = (struct weakref *)GET_POINTER(list->wl_nodes);
-	if (iter != NULL) {
+#ifdef __OPTIMIZE_SIZE__
+	if (iter != NULL)
+#else /* __OPTIMIZE_SIZE__ */
+	if likely(iter != NULL)
+#endif /* !__OPTIMIZE_SIZE__ */
+	{
 		if (!WEAKREF_TRYLOCK(iter)) {
 			/* Prevent deadlock. */
 			UNLOCK_POINTER(list->wl_nodes);

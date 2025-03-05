@@ -20,15 +20,16 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_GENASM_C
 #define GUARD_DEEMON_COMPILER_ASM_GENASM_C 1
 
-#include <deemon/compiler/compiler.h>
-
 #include <deemon/api.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/hashset.h>
@@ -37,12 +38,12 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/roset.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
 #include "../../runtime/builtin.h"
+/**/
+
+#include <stdint.h> /* uint16_t */
 
 #ifndef __INTELLISENSE__
 #include "genasm-yield.c.inl"

@@ -24,11 +24,16 @@
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
-#include <deemon/error.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/module.h>
+#include <deemon/object.h>
+#include <deemon/string.h>
 
 #include "../../runtime/builtin.h"
 #include "../../runtime/strings.h"
+/**/
+
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

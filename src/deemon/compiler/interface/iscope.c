@@ -35,10 +35,15 @@
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
+/**/
 
 #include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

@@ -24,10 +24,20 @@
 #include <deemon/api.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 
+#include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+
 DECL_BEGIN
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 INTDEF NONNULL((1)) void DCALL ast_incwrite(struct ast *__restrict self);
 INTDEF NONNULL((1)) void DCALL ast_decwrite(struct ast *__restrict self);
@@ -36,7 +46,7 @@ INTDEF NONNULL((1)) void DCALL ast_incwriteonly(struct ast *__restrict self);
 INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL ast_assign)(struct ast *__restrict self,
                    struct ast *__restrict other) {
-	uint8_t buffer[(sizeof(struct ast) - offsetof(struct ast, a_type))];
+	byte_t buffer[(sizeof(struct ast) - offsetof(struct ast, a_type))];
 	/* Use a temporary buffer for the variable portion of the AST.
 	 * Until we actually assign `other' to `self', we initialize it as a shallow copy of `other'. */
 #if defined(__INTELLISENSE__) || 1

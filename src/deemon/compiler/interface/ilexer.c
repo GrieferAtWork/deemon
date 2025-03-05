@@ -27,6 +27,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/compiler/interface.h>
+#include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
@@ -44,6 +45,10 @@
 #include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

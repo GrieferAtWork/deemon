@@ -20,28 +20,27 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_DIRECTIVES_C
 #define GUARD_DEEMON_COMPILER_ASM_DIRECTIVES_C 1
 
-#include <deemon/compiler/compiler.h>
-
 #include <deemon/api.h>
-#include <deemon/bool.h>
+#include <deemon/asm.h>
+#include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dict.h>
 #include <deemon/error.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/module.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/tuple.h>
-
-#include <stdint.h> /* INT8_MAX, ... */
+#include <deemon/types.h>
 
 #include "../../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t, INT8_MAX, INT16_MAX, INT32_MAX */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 DECL_BEGIN

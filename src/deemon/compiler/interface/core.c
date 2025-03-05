@@ -24,12 +24,15 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/compiler/ast.h>
 #include <deemon/compiler/interface.h>
-#include <deemon/compiler/symbol.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/util/atomic.h>
+
+#include <hybrid/sequence/list.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

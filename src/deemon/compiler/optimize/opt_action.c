@@ -24,9 +24,11 @@
 #include <deemon/bool.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/dec.h>
 #include <deemon/error.h>
-#include <deemon/module.h>
+#include <deemon/file.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -35,6 +37,9 @@
 #include <deemon/tuple.h>
 
 #include "../../runtime/builtin.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

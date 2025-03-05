@@ -22,13 +22,21 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/code.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
+#include <deemon/object.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t */
 
 DECL_BEGIN
 
-INTERN WUNUSED DREF struct ast *DCALL ast_parse_catchmask(void) {
+PRIVATE WUNUSED DREF struct ast *DCALL
+ast_parse_catchmask(void) {
 	size_t exprc, expra;
 	DREF struct ast **exprv, *result;
 	result = ast_parse_unary(LOOKUP_SYM_NORMAL);

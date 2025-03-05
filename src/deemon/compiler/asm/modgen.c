@@ -24,16 +24,11 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
-#include <deemon/compiler/tpp.h>
-#include <deemon/gc.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
 #include <deemon/system.h> /* DeeSystem_GetWalltime() */
 #include <deemon/util/atomic.h>
 
@@ -41,6 +36,9 @@
 #include <deemon/compiler/dec.h>
 #include <deemon/error.h>
 #endif /* !CONFIG_NO_DEC */
+/**/
+
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

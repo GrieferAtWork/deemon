@@ -21,14 +21,17 @@
 #define GUARD_DEEMON_COMPILER_ASM_GENINPLACE_C 1
 
 #include <deemon/api.h>
+#include <deemon/asm.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/error.h>
-#include <deemon/module.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/int.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/string.h>
+/**/
 
-#include "../../runtime/builtin.h"
-#include "../../runtime/strings.h"
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

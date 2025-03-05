@@ -23,11 +23,10 @@
 #include <deemon/compiler/compiler.h>
 
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
+#include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/dec.h>
 #include <deemon/dict.h>
@@ -45,6 +44,9 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

@@ -27,7 +27,7 @@
 #include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
-#include <deemon/compiler/lexer.h>
+#include <deemon/compiler/ast.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>
@@ -37,10 +37,14 @@
 #include <deemon/util/cache.h>
 
 #include <hybrid/minmax.h>
-
-#include <stdint.h>
+/**/
 
 #include "../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t, uint16_t */
+
 
 DECL_BEGIN
 

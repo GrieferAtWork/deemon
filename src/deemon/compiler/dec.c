@@ -30,17 +30,19 @@
 #include <deemon/dec.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
-#include <deemon/format.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memmem(), bzero(), ... */
 #include <deemon/system.h>          /* DeeSystem_SEP, DeeSystem_Unlink() */
 
-#include <hybrid/byteorder.h>
-#include <hybrid/byteswap.h>
-#include <hybrid/unaligned.h>
+#include <hybrid/byteswap.h>  /* UNALIGNED_SETLE16(), UNALIGNED_SETLE32() */
+#include <hybrid/unaligned.h> /* UNALIGNED_SETLE16(), UNALIGNED_SETLE32() */
 #include <hybrid/wordbits.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* intN_t, uintN_t */
 
 DECL_BEGIN
 

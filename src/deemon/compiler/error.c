@@ -24,9 +24,9 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/class.h>
 #include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
+#include <deemon/compiler/error.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
@@ -34,10 +34,17 @@
 #include <deemon/format.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
+/**/
 
-#include <stdarg.h>
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
+
+/* Includes for TPP */
+#include <deemon/class.h>
 
 DECL_BEGIN
 

@@ -23,6 +23,11 @@
 #include <deemon/api.h>
 #include <deemon/asm.h>
 #include <deemon/compiler/assembler.h>
+#include <deemon/compiler/ast.h>
+#include <deemon/object.h>
+/**/
+
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

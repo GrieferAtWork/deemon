@@ -21,9 +21,9 @@
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_TRY_C 1
 
 #include <deemon/api.h>
+#include <deemon/code.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
 #include <deemon/object.h>
 
 DECL_BEGIN

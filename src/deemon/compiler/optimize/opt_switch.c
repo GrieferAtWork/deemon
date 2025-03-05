@@ -23,8 +23,6 @@
 #include <deemon/api.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
-#include <deemon/object.h>
 
 DECL_BEGIN
 

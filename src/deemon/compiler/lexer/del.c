@@ -24,8 +24,12 @@
 #include <deemon/api.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/tuple.h>
+#include <deemon/object.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

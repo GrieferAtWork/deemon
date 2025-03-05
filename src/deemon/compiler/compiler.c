@@ -25,18 +25,23 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/error.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
-#include <deemon/tuple.h>
 #include <deemon/util/rlock.h>
 
-#include "../runtime/strings.h"
+#include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t */
 
 DECL_BEGIN
 
@@ -53,8 +58,9 @@ PUBLIC Dee_rshared_rwlock_t DeeCompiler_Lock = DEE_RSHARED_RWLOCK_INIT;
 PUBLIC struct weakref DeeCompiler_Active   = WEAKREF_INIT;
 PRIVATE DeeCompilerObject *compiler_loaded = NULL; /* == DeeCompiler_Active */
 
-PRIVATE void *DCALL memxch(void *a, void *b, size_t num_bytes) {
-	typedef unsigned int wordtype;
+PRIVATE void *DCALL
+memxch(void *a, void *b, size_t num_bytes) {
+	typedef __REGISTER_TYPE__ wordtype;
 	uint8_t *pa = (uint8_t *)a;
 	uint8_t *pb = (uint8_t *)b;
 	while (num_bytes >= sizeof(wordtype)) {

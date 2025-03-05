@@ -25,8 +25,11 @@
 #include <deemon/bytes.h>
 #include <deemon/callable.h>
 #include <deemon/cell.h>
+#include <deemon/code.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
@@ -42,7 +45,12 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

@@ -25,9 +25,11 @@
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 
-#include <hybrid/byteorder.h>
-#include <hybrid/byteswap.h>
-#include <hybrid/unaligned.h>
+#include <hybrid/byteswap.h> /* UNALIGNED_GETLE16 */
+#include <hybrid/unaligned.h> /* UNALIGNED_GETLE16 */
+/**/
+
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

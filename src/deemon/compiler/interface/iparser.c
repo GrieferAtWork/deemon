@@ -29,13 +29,18 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/lexer.h>
-#include <deemon/error.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
 #include <deemon/thread.h>
-
 /**/
+
 #include "../../runtime/kwlist.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

@@ -24,9 +24,15 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
-#include <deemon/error.h>
+#include <deemon/compiler/ast.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/module.h>
+#include <deemon/object.h>
+/**/
+
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

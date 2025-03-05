@@ -24,9 +24,14 @@
 #include <deemon/api.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

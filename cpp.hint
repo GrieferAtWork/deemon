@@ -1154,16 +1154,16 @@
 #define Dee_DEFINE_FLOAT(n,a)                      DeeFloatObject n={}
 
 
-#define _DeeSystem_DEFINE_memccpyT(rT,T,Tneedle,n) rT*n(void*restrict dst,void const*restrict src,Tneedle needle,size_t num_bytes){}
-#define _DeeSystem_DEFINE_memchrT(rT,T,Tneedle,n) rT*n(void const*restrict p,Tneedle c,size_t n){}
-#define _DeeSystem_DEFINE_memrchrT(rT,T,Tneedle,n) rT*n(void const*restrict p,Tneedle c,size_t n){}
-#define _DeeSystem_DEFINE_memcmpT(T,n) int n(void const*s1,void const*s2,size_t n){}
-#define _DeeSystem_DEFINE_strcmpT(T,unsignedT,n) int n(T const*s1,T const*s2){}
-#define _DeeSystem_DEFINE_strncmpT(T,unsignedT,n) int n(T const*s1,T const*s2,size_t maxlen){}
-#define _DeeSystem_DEFINE_strcasecmpT(T,unsignedT,n) int n(T const*s1,T const*s2){}
-#define _DeeSystem_DEFINE_strncasecmpT(T,unsignedT,n) int n(T const*s1,T const*s2,size_t maxlen){}
-#define _DeeSystem_DEFINE_stpncpyT(T,n,strnlen) T*n(T*buf,T const*src,size_t buflen){}
-#define _DeeSystem_DEFINE_strncpyT(T,n,strnlen) T*n(T*buf,T const*src,size_t buflen){}
+#define _DeeSystem_DEFINE_memccpyT(rT,T,Tneedle,n) static rT*n(void*restrict dst,void const*restrict src,Tneedle needle,size_t num_bytes){}
+#define _DeeSystem_DEFINE_memchrT(rT,T,Tneedle,n) static rT*n(void const*restrict p,Tneedle c,size_t n){}
+#define _DeeSystem_DEFINE_memrchrT(rT,T,Tneedle,n) static rT*n(void const*restrict p,Tneedle c,size_t n){}
+#define _DeeSystem_DEFINE_memcmpT(T,n) static int n(void const*s1,void const*s2,size_t n){}
+#define _DeeSystem_DEFINE_strcmpT(T,unsignedT,n) static int n(T const*s1,T const*s2){}
+#define _DeeSystem_DEFINE_strncmpT(T,unsignedT,n) static int n(T const*s1,T const*s2,size_t maxlen){}
+#define _DeeSystem_DEFINE_strcasecmpT(T,unsignedT,n) static int n(T const*s1,T const*s2){}
+#define _DeeSystem_DEFINE_strncasecmpT(T,unsignedT,n) static int n(T const*s1,T const*s2,size_t maxlen){}
+#define _DeeSystem_DEFINE_stpncpyT(T,n,strnlen) static T*n(T*buf,T const*src,size_t buflen){}
+#define _DeeSystem_DEFINE_strncpyT(T,n,strnlen) static T*n(T*buf,T const*src,size_t buflen){}
 #define DeeSystem_DEFINE_memccpy(n) _DeeSystem_DEFINE_memccpyT(void,uint8_t,int,n)
 #define DeeSystem_DEFINE_memrchr(n) _DeeSystem_DEFINE_memrchrT(void,uint8_t,int,n)
 #define DeeSystem_DEFINE_memrchrw(n) _DeeSystem_DEFINE_memrchrT(uint16_t,uint16_t,uint16_t,n)
@@ -1182,8 +1182,8 @@
 #define DeeSystem_DEFINE_strncasecmp(n) _DeeSystem_DEFINE_strncasecmpT(char,unsigned char,n)
 #define DeeSystem_DEFINE_stpncpy(n) _DeeSystem_DEFINE_stpncpyT(char,n,strnlen)
 #define DeeSystem_DEFINE_strncpy(n) _DeeSystem_DEFINE_strncpyT(char,n,strnlen)
-#define _DeeSystem_DEFINE_memmemT(rT,T,memchr,memeq,n) rT*n(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
-#define _DeeSystem_DEFINE_memrmemT(rT,T,memrchr,memeq,n) rT*n(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
+#define _DeeSystem_DEFINE_memmemT(rT,T,memchr,memeq,n) static rT*n(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
+#define _DeeSystem_DEFINE_memrmemT(rT,T,memrchr,memeq,n) static rT*n(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
 #define DeeSystem_DEFINE_memmem(n) _DeeSystem_DEFINE_memmemT(void,uint8_t,memchr,,n)
 #define DeeSystem_DEFINE_memmemw(n,memchrw,memeqw) _DeeSystem_DEFINE_memmemT(uint16_t,uint16_t,memchrw,memeqw,n)
 #define DeeSystem_DEFINE_memmeml(n,memchrl,memeql) _DeeSystem_DEFINE_memmemT(uint32_t,uint32_t,memchrl,memeql,n)
@@ -1192,40 +1192,40 @@
 #define DeeSystem_DEFINE_memrmemw(n,memrchrw,memeqw) _DeeSystem_DEFINE_memrmemT(uint16_t,uint16_t,memrchrw,memeqw,n)
 #define DeeSystem_DEFINE_memrmeml(n,memrchrl,memeql) _DeeSystem_DEFINE_memrmemT(uint32_t,uint32_t,memrchrl,memeql,n)
 #define DeeSystem_DEFINE_memrmemq(n,memrchrq,memeqq) _DeeSystem_DEFINE_memrmemT(uint64_t,uint64_t,memrchrq,memeqq,n)
-#define DeeSystem_DEFINE_strnlen(n) size_t n(char const*restrict str,size_t maxlen){}
-#define _DeeSystem_DEFINE_strlenT(T,n) size_t n(T const*restrict str){}
+#define DeeSystem_DEFINE_strnlen(n) static size_t n(char const*restrict str,size_t maxlen){}
+#define _DeeSystem_DEFINE_strlenT(T,n) static size_t n(T const*restrict str){}
 #define DeeSystem_DEFINE_wcslen(n) _DeeSystem_DEFINE_strlenT(Dee_wchar_t,n)
-#define _DeeSystem_DEFINE_strcmpzT(T,Tu,Tr,n) Tr n(T const*lhs,T const*rhs,size_t rhs_len){}
+#define _DeeSystem_DEFINE_strcmpzT(T,Tu,Tr,n) static Tr n(T const*lhs,T const*rhs,size_t rhs_len){}
 #define DeeSystem_DEFINE_strcmpz(n) _DeeSystem_DEFINE_strcmpzT(char,unsigned char,int,n)
-#define DeeSystem_DEFINE_rawmemchr(n) void*n(void const*restrict p,int c){}
-#define DeeSystem_DEFINE_rawmemrchr(n) void*n(void const*restrict p,int c){}
-#define DeeSystem_DEFINE_memend(n) void*n(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memxend(n) void*n(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memrend(n) void*n(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memlen(n) size_t n(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memxlen(n) size_t n(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memrlen(n) size_t n(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_rawmemlen(n) size_t n(void const*p,int byte){}
-#define DeeSystem_DEFINE_rawmemrlen(n) size_t n(void const*p,int byte){}
-#define DeeSystem_DEFINE_memxchr(n) void*n(void const*restrict p,int c,size_t n){}
-#define DeeSystem_DEFINE_rawmemxchr(n) void*n(void const*restrict p,int c){}
-#define DeeSystem_DEFINE_rawmemxlen(n) size_t n(void const*p,int byte){}
-#define DeeSystem_DEFINE_memcasecmp(n) int n(void const*a,void const*b,size_t n){}
-#define DeeSystem_DEFINE_memcasemem(n) void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
-#define DeeSystem_DEFINE_memrev(n) void*n(void*restrict buf,size_t n){}
-#define DeeSystem_DEFINE_memxrchr(n) void*n(void const*restrict p,int c,size_t n){}
-#define DeeSystem_DEFINE_memxrend(n) void*n(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memxrlen(n) size_t n(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_rawmemxrchr(n) void*n(void const*restrict p,int c){}
-#define DeeSystem_DEFINE_rawmemxrlen(n) size_t n(void const*p,int byte){}
-#define DeeSystem_DEFINE_memcasermem(n) void*_##n##_memlowerrchr(void const*restrict p,uint8_t c,size_t n){} void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
-#define DeeSystem_DEFINE_qsort(n) void _##n##_swapmemory(uint8_t*a,uint8_t*b,size_t num_bytes);void n(void*base,size_t count,size_t size,int (*compare)(void const*a,void const*b)){}
-#define _DeeSystem_DEFINE_memsetT(T,n) void*n(void*restrict p,T c,size_t n){}
+#define DeeSystem_DEFINE_rawmemchr(n) static void*n(void const*restrict p,int c){}
+#define DeeSystem_DEFINE_rawmemrchr(n) static void*n(void const*restrict p,int c){}
+#define DeeSystem_DEFINE_memend(n) static void*n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memxend(n) static void*n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memrend(n) static void*n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memlen(n) static size_t n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memxlen(n) static size_t n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memrlen(n) static size_t n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_rawmemlen(n) static size_t n(void const*p,int byte){}
+#define DeeSystem_DEFINE_rawmemrlen(n) static size_t n(void const*p,int byte){}
+#define DeeSystem_DEFINE_memxchr(n) static void*n(void const*restrict p,int c,size_t n){}
+#define DeeSystem_DEFINE_rawmemxchr(n) static void*n(void const*restrict p,int c){}
+#define DeeSystem_DEFINE_rawmemxlen(n) static size_t n(void const*p,int byte){}
+#define DeeSystem_DEFINE_memcasecmp(n) static int n(void const*a,void const*b,size_t n){}
+#define DeeSystem_DEFINE_memcasemem(n) static void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
+#define DeeSystem_DEFINE_memrev(n) static void*n(void*restrict buf,size_t n){}
+#define DeeSystem_DEFINE_memxrchr(n) static void*n(void const*restrict p,int c,size_t n){}
+#define DeeSystem_DEFINE_memxrend(n) static void*n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memxrlen(n) static size_t n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_rawmemxrchr(n) static void*n(void const*restrict p,int c){}
+#define DeeSystem_DEFINE_rawmemxrlen(n) static size_t n(void const*p,int byte){}
+#define DeeSystem_DEFINE_memcasermem(n) static void*_##n##_memlowerrchr(void const*restrict p,uint8_t c,size_t n){} void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
+#define DeeSystem_DEFINE_qsort(n) static void _##n##_swapmemory(uint8_t*a,uint8_t*b,size_t num_bytes);void n(void*base,size_t count,size_t size,int (*compare)(void const*a,void const*b)){}
+#define _DeeSystem_DEFINE_memsetT(T,n) static void*n(void*restrict p,T c,size_t n){}
 #define DeeSystem_DEFINE_memsetw(n) _DeeSystem_DEFINE_memsetT(uint16_t,n)
 #define DeeSystem_DEFINE_memsetl(n) _DeeSystem_DEFINE_memsetT(uint32_t,n)
 #define DeeSystem_DEFINE_memsetq(n) _DeeSystem_DEFINE_memsetT(uint64_t,n)
 #define DeeSystem_DEFINE_memsetp(n) _DeeSystem_DEFINE_memsetT(uintptr_t,n)
-#define _DeeSystem_DEFINE_mempsetT(T,n) void*n(void*restrict p,T c,size_t n){}
+#define _DeeSystem_DEFINE_mempsetT(T,n) static void*n(void*restrict p,T c,size_t n){}
 #define DeeSystem_DEFINE_mempsetw(n) _DeeSystem_DEFINE_mempsetT(uint16_t,n)
 #define DeeSystem_DEFINE_mempsetl(n) _DeeSystem_DEFINE_mempsetT(uint32_t,n)
 #define DeeSystem_DEFINE_mempsetq(n) _DeeSystem_DEFINE_mempsetT(uint64_t,n)

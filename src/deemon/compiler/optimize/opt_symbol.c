@@ -28,7 +28,6 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/util/lock.h>
 
 DECL_BEGIN
 

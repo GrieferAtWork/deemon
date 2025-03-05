@@ -23,7 +23,9 @@
 #include <deemon/api.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
-#include <deemon/object.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

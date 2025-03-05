@@ -248,7 +248,9 @@ struct Dee_weakref_list {
 /* Finalize weakref support (must be called manually by
  * destructors of types implementing weakref support!) */
 DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restrict self);
-#if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
+#if defined(__OPTIMIZE_SIZE__) || defined(__INTELLISENSE__)
+#define Dee_weakref_support_fini(x) (Dee_weakref_support_fini)(&(x)->ob_weakrefs)
+#else /* __OPTIMIZE_SIZE__ || __INTELLISENSE__ */
 DECL_END
 #include <hybrid/__atomic.h>
 DECL_BEGIN

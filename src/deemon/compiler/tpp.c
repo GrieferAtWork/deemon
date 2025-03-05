@@ -25,21 +25,15 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/compiler/error.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>
-#include <deemon/error_types.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
 #include <deemon/list.h>
-#include <deemon/module.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 
-#include <hybrid/byteorder.h>
-#include <hybrid/byteswap.h>
 
 #define PRIVDEF PRIVATE
 #undef PUBLIC
@@ -48,6 +42,15 @@
 #define TPPFUN  INTDEF
 #define TPP_USERDEFS                  <deemon/compiler/lexer.def>
 #define TPP_USERSTREAM_FCLOSE(stream) Dee_Decref(stream)
+
+/* Includes for TPP */
+#include <deemon/class.h>
+#include <deemon/compiler/error.h>
+#include <deemon/error.h>
+#include <deemon/error_types.h>
+#include <deemon/module.h>
+
+#include <hybrid/byteswap.h>
 
 DECL_BEGIN
 

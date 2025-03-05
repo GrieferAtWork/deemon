@@ -20,8 +20,6 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_UTIL_C
 #define GUARD_DEEMON_COMPILER_ASM_UTIL_C 1
 
-#include <deemon/compiler/compiler.h>
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/asm.h>
@@ -30,9 +28,11 @@
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/lexer.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
-#include <deemon/float.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
@@ -41,13 +41,20 @@
 #include <deemon/object.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
+#include <deemon/seq.h>
+#include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
 #include <hybrid/typecore.h>
 
 #include "../../objects/dict.h"
 #include "../../runtime/builtin.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 #undef shift_t
 #define shift_t __SHIFT_TYPE__

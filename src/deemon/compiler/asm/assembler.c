@@ -20,8 +20,6 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_ASSEMBER_C
 #define GUARD_DEEMON_COMPILER_ASM_ASSEMBER_C 1
 
-#include <deemon/compiler/compiler.h>
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/asm.h>
@@ -29,21 +27,32 @@
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/tpp.h>
+#include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/objmethod.h>
 #include <deemon/rodict.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/thread.h>
+#include <deemon/tuple.h>
 
-#include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
-#include <hybrid/minmax.h>
+#include <hybrid/sequence/list.h>
+#include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
 #include "../../runtime/builtin.h"
+
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t, uint32_t */
 
 #ifndef PP_CAT2
 #define PP_PRIVATE_CAT2(a, b) a##b

@@ -22,8 +22,10 @@
 
 #include <deemon/api.h>
 #include <deemon/compiler/assembler.h>
+/**/
 
-#include "../../runtime/strings.h"
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 #if !defined(__INTELLISENSE__)

@@ -23,7 +23,6 @@
 #include <deemon/api.h>
 
 #ifndef CONFIG_NO_DEC
-#include <deemon/arg.h>
 #include <deemon/cell.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
@@ -31,7 +30,6 @@
 #include <deemon/dec.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
-#include <deemon/file.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/hashset.h>
@@ -51,6 +49,10 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* uintN_t */
 
 DECL_BEGIN
 

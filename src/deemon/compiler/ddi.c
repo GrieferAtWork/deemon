@@ -20,9 +20,12 @@
 #ifndef GUARD_DEEMON_COMPILER_DDI_C
 #define GUARD_DEEMON_COMPILER_DDI_C 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/asm.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -30,8 +33,12 @@
 #include <deemon/system.h>          /* DeeSystem_BaseName() */
 #include <deemon/util/bytewriter.h>
 
-#include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
+#include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* intN_t, uintN_t, uintptr_t */
 
 DECL_BEGIN
 

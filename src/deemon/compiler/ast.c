@@ -26,16 +26,17 @@
 #include <deemon/api.h>
 #include <deemon/code.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
+/**/
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -957,6 +958,16 @@ cleanup_switch_cases(struct text_label *switch_cases,
 	}
 }
 
+#if defined(CONFIG_AST_IS_STRUCT) || 1
+#define ast_visit(x) ast_visit_impl(x, proc, arg)
+PRIVATE NONNULL((1, 2)) void DCALL
+ast_visit_impl(struct ast *__restrict self,
+               dvisit_t proc, void *arg);
+#else /* ... */
+#define ast_visit(x) Dee_Visit(x)
+#endif /* !... */
+
+
 INTERN NONNULL((2)) void DCALL
 visit_switch_cases(struct text_label *switch_cases,
                    dvisit_t proc, void *arg) {
@@ -1074,8 +1085,6 @@ do_xdecref_3:
 	case AST_ASSEMBLY: {
 		struct asm_operand *iter, *end;
 		size_t i;
-		iter = self->a_assembly.as_opv;
-		end  = iter + (self->a_assembly.as_num_o + self->a_assembly.as_num_i);
 		/* Track the writes to output operands. */
 		for (i = 0; i < self->a_assembly.as_num_o; ++i) {
 			struct asm_operand *op = &self->a_assembly.as_opv[i];
@@ -1085,6 +1094,8 @@ do_xdecref_3:
 				ast_decwrite(op->ao_expr);
 			}
 		}
+		iter = self->a_assembly.as_opv;
+		end  = iter + (self->a_assembly.as_num_o + self->a_assembly.as_num_i);
 		for (; iter < end; ++iter) {
 			ASSERT(iter->ao_type);
 			ASSERT(iter->ao_expr);
@@ -1109,7 +1120,8 @@ do_xdecref_3:
 	}
 }
 
-INTERN NONNULL((1, 2)) void DCALL
+
+PRIVATE NONNULL((1, 2)) void DCALL
 ast_visit_impl(struct ast *__restrict self,
                dvisit_t proc, void *arg) {
 	switch (self->a_type) {

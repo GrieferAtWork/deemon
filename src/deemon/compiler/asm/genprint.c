@@ -24,15 +24,19 @@
 #include <deemon/api.h>
 #include <deemon/asm.h>
 #include <deemon/bytes.h>
-#include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/error.h>
+#include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memset, ... */
 #include <deemon/tuple.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

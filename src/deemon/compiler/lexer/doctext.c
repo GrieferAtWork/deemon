@@ -20,14 +20,20 @@
 #ifndef GUARD_DEEMON_COMPILER_LEXER_DOCTEXT_C
 #define GUARD_DEEMON_COMPILER_LEXER_DOCTEXT_C 1
 
+#include <deemon/compiler/doctext.h>
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/compiler/doctext.h>
-
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+#include <deemon/compiler/tpp.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t */
 
 DECL_BEGIN
 

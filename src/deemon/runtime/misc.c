@@ -1589,14 +1589,15 @@ PRIVATE WUNUSED NONNULL((1)) bool DCALL
 validate_header(struct _CrtMemBlockHeader *__restrict hdr) {
 	unsigned int i;
 	__try {
+		struct _CrtMemBlockHeader *neighbor;
 		for (i = 0; i < no_mans_land_size; ++i)
 			if (hdr->gap[i] != 0xFD)
 				goto nope;
-		if (hdr->_block_header_next &&
-		    hdr->_block_header_next->_block_header_prev != hdr)
+		neighbor = hdr->_block_header_next;
+		if (neighbor && neighbor->_block_header_prev != hdr)
 			goto nope;
-		if (hdr->_block_header_prev &&
-		    hdr->_block_header_prev->_block_header_next != hdr)
+		neighbor = hdr->_block_header_prev;
+		if (neighbor && neighbor->_block_header_next != hdr)
 			goto nope;
 		/* Badly named. - Should be `_COUNT_BLOCKS' or `_NUM_BLOCKS'!
 		 * `_MAX_BLOCKS' would be the max-valid-block, but this is

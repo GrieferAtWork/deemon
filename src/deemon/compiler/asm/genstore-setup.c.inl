@@ -19,9 +19,23 @@
  */
 
 #ifdef __INTELLISENSE__
-#include "genstore.c"
 //#define ENTER 1
 #endif /* __INTELLISENSE__ */
+
+#include <deemon/api.h>
+#include <deemon/compiler/assembler.h>
+#include <deemon/compiler/ast.h>
+#include <deemon/compiler/lexer.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/tpp.h>
+#include <deemon/int.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/string.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 #ifndef ENTER
 #define LEAVE 1

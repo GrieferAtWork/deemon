@@ -28,6 +28,9 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/tuple.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
 
 DECL_BEGIN
 

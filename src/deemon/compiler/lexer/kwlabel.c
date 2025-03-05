@@ -22,12 +22,18 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/kwds.h>
+#include <deemon/object.h>
+#include <deemon/string.h>
 #include <deemon/tuple.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

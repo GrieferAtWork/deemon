@@ -24,16 +24,19 @@
 #include <deemon/api.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memrchr(), memcpy(), ... */
 #include <deemon/system.h>          /* DeeSystem_BaseName() */
+/**/
 
-#include "../../runtime/strings.h"
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t, uint32_t */
 
 DECL_BEGIN
 

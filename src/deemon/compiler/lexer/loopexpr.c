@@ -22,10 +22,16 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/code.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
+#include <deemon/object.h>
 #include <deemon/tuple.h>
+/**/
+
+#include <stdint.h> /* uint16_t, uint32_t */
 
 
 /* Loop statements in expressions are compiled as yield-function lambda expressions:

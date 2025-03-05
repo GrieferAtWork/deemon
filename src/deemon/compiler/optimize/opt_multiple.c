@@ -20,12 +20,12 @@
 #ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_MULTIPLE_C
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_MULTIPLE_C 1
 
-#include <deemon/api.h>
-/**/
-
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/hashset.h>
@@ -36,6 +36,9 @@
 #include <deemon/seq.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

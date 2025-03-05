@@ -22,16 +22,18 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/class.h>
+#include <deemon/code.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
-#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>
-#include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
-#include <deemon/tuple.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

@@ -21,14 +21,24 @@
 #define GUARD_DEEMON_COMPILER_ASM_GENSWITCH_C 1
 
 #include <deemon/api.h>
+#include <deemon/asm.h>
+#include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/tpp.h>
+#include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
+#include <deemon/object.h>
 #include <deemon/rodict.h>
 #include <deemon/tuple.h>
 
 #include "../../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

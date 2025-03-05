@@ -24,38 +24,20 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/callable.h>
-#include <deemon/cell.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
-#include <deemon/dec.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/float.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
-#include <deemon/numeric.h>
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/tuple.h>
+#include <deemon/thread.h>
+/**/
 
-#include <stdarg.h>
+#include <stdarg.h> /* va_list */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -205,7 +187,7 @@ again:
 		ast_value = ast_get_boolean(self->a_bool);
 		if (ast_value >= 0) {
 			if (self->a_flag & AST_FBOOL_NEGATE)
-				ast_value = !ast_value;
+				ast_value = ast_value ? 0 : 1;
 			if (ast_has_sideeffects(self->a_bool)) {
 				/* Replace this branch with `{ ...; true/false; }' */
 				elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));

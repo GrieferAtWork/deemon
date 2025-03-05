@@ -20,6 +20,8 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_GENCALL_C
 #define GUARD_DEEMON_COMPILER_ASM_GENCALL_C 1
 
+#include <deemon/compiler/compiler.h>
+
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/bool.h>
@@ -28,18 +30,24 @@
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/traits.h>
 #include <deemon/dict.h>
 #include <deemon/hashset.h>
-#include <deemon/int.h>
 #include <deemon/kwds.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/numeric.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
 #include "../../runtime/builtin.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

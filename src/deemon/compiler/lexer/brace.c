@@ -20,19 +20,18 @@
 #ifndef GUARD_DEEMON_COMPILER_LEXER_BRACE_C
 #define GUARD_DEEMON_COMPILER_LEXER_BRACE_C 1
 
-#include <deemon/hashset.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
 #include <deemon/none.h>
-#include <deemon/seq.h>
-#include <deemon/tuple.h>
+#include <deemon/object.h>
+#include <deemon/string.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

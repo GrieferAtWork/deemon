@@ -23,16 +23,22 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/asm.h>
+#include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
-#include <deemon/file.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/format.h>
 #include <deemon/system-features.h> /* memcpyc(), abort(), ... */
 
-#include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
+#include <hybrid/sequence/list.h>
 #include <hybrid/unaligned.h>
 
 #include "../../runtime/strings.h"
+/**/
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
