@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
+#include <deemon/object.h>
 #include <deemon/regex.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>

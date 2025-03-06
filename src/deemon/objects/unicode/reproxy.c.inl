@@ -402,7 +402,7 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 	/* .tp_name     = */ "_ReFindAllIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReFindAll)\n"
 	                         "\n"
-	                         "iter->?X2?Dint?Dint"),
+	                         "iter->?X2T2?Dint?Dint?N"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -454,7 +454,7 @@ INTERN DeeTypeObject ReBytesFindAllIterator_Type = {
 	/* .tp_name     = */ "_ReBytesFindAllIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReBytesFindAll)\n"
 	                         "\n"
-	                         "iter->?X2?Dint?Dint"),
+	                         "iter->?X2T2?Dint?Dint?N"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -539,9 +539,9 @@ again:
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH)
-		return (DREF ReGroups *)ITER_DONE;
+		goto return_ITER_DONE;
 	if (match_size == 0)
-		return (DREF ReGroups *)ITER_DONE; /* Prevent infinite loop on epsilon-match */
+		goto return_ITER_DONE; /* Prevent infinite loop on epsilon-match */
 	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
 		ReSequenceIterator_LockEndWrite(self);
@@ -558,6 +558,9 @@ again:
 	groups->rg_groups[0].rm_eo = match_size;
 	ReGroups_Init(groups, 1 + self->rsi_exec.rx_code->rc_ngrps);
 	return groups;
+return_ITER_DONE:
+	ReGroups_Free(groups);
+	return (DREF ReGroups *)ITER_DONE;
 err_g:
 	ReGroups_Free(groups);
 err:
@@ -583,9 +586,9 @@ again:
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH)
-		return (DREF ReGroups *)ITER_DONE;
+		goto return_ITER_DONE;
 	if (match_size == 0)
-		return (DREF ReGroups *)ITER_DONE; /* Prevent infinite loop on epsilon-match */
+		goto return_ITER_DONE; /* Prevent infinite loop on epsilon-match */
 	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
 		ReSequenceIterator_LockEndWrite(self);
@@ -598,6 +601,9 @@ again:
 	groups->rg_groups[0].rm_eo = match_size;
 	ReGroups_Init(groups, 1 + self->rsi_exec.rx_code->rc_ngrps);
 	return groups;
+return_ITER_DONE:
+	ReGroups_Free(groups);
+	return (DREF ReGroups *)ITER_DONE;
 err_g:
 	ReGroups_Free(groups);
 err:

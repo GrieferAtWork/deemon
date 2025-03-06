@@ -11430,6 +11430,50 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "#tValueError{The given @pattern is malformed}"
 	                "#tIndexError{No substring matching the given @pattern could be found}"
 	                "Same as ?#regrfind, but throw an :IndexError when no match can be found"),
+	/* TODO: reglocate(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?Dstring?N
+	 *       Wrapper around ?#regfind that returns a sequence of the sub-strings matched by each group,
+	 *       rather than the start/end bounds of each group (still returns !n for unmatched groups, and
+	 *       an empty sequence if @pattern isn't matched at all)
+	 * >> function reglocate(pattern: string, start: int = 0, end: int = int.SIZE_MAX, range: int = int.SIZE_MAX, rules: string = ""): {string | none...} {
+	 * >>     return this.regfind(pattern, start, end, range, rules).map(e -> {
+	 * >>         if (e is none)
+	 * >>             return none;
+	 * >>         local start, end = e...;
+	 * >>         return this[start, end];
+	 * >>     });
+	 * >> } */
+
+	/* TODO: regrlocate(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?Dstring?N
+	 *       Wrapper around ?#regrfind that returns a sequence of the sub-strings matched by each group,
+	 *       rather than the start/end bounds of each group (still returns !n for unmatched groups, and
+	 *       an empty sequence if @pattern isn't matched at all)
+	 * >> function regrlocate(pattern: string, start: int = 0, end: int = int.SIZE_MAX, range: int = int.SIZE_MAX, rules: string = ""): {string | none...} {
+	 * >>     return this.regrfind(pattern, start, end, range, rules).map(e -> {
+	 * >>         if (e is none)
+	 * >>             return none;
+	 * >>         local start, end = e...;
+	 * >>         return this[start, end];
+	 * >>     });
+	 * >> } */
+
+	/* TODO: reglocateall(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?S?X2?Dstring?N
+	 *       Wrapper around ?#regfindall that returns a sequence of the sub-strings matched by each group,
+	 *       rather than the start/end bounds of each group (still returns !n for unmatched groups)
+	 * >> function reglocateall(pattern: string, start: int = 0, end: int = int.SIZE_MAX, range: int = int.SIZE_MAX, rules: string = ""): {string | none...} {
+	 * >>     for (local match: this.regfindall(pattern, start, end, range, rules)) {
+	 * >>         yield match.map(e -> {
+	 * >>             if (e is none)
+	 * >>                 return none;
+	 * >>             local start, end = e...;
+	 * >>             return this[start, end];
+	 * >>         });
+	 * >>     }
+	 * >> } */
+
+
+
+
+
 	TYPE_METHOD_F("__forcecopy__", &string_forcecopy,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?.\n"
