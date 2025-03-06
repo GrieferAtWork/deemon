@@ -291,6 +291,8 @@ assertRtTypeName("RegFindAll");
 assertRtTypeName("RegFindAllIterator");
 assertRtTypeName("ReLocateAll");
 assertRtTypeName("ReLocateAllIterator");
+assertRtTypeName("RegLocateAll");
+assertRtTypeName("RegLocateAllIterator");
 assertRtTypeName("ReSplit");
 assertRtTypeName("ReSplitIterator");
 assertRtTypeName("ReGroups");
@@ -302,6 +304,8 @@ assertRtTypeName("RegBytesFindAll");
 assertRtTypeName("RegBytesFindAllIterator");
 assertRtTypeName("ReBytesLocateAll");
 assertRtTypeName("ReBytesLocateAllIterator");
+assertRtTypeName("RegBytesLocateAll");
+assertRtTypeName("RegBytesLocateAllIterator");
 assertRtTypeName("ReBytesSplit");
 assertRtTypeName("ReBytesSplitIterator");
 

@@ -3882,6 +3882,9 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bytes_re_locateall(DeeBytesObject *__restrict self,
                    struct DeeRegexBaseExec const *__restrict exec);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytes_reg_locateall(DeeBytesObject *__restrict self,
+                    struct DeeRegexBaseExec const *__restrict exec);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bytes_re_split(DeeBytesObject *__restrict self,
                struct DeeRegexBaseExec const *__restrict exec);
 #endif /* __INTELLISENSE__ */
@@ -4153,6 +4156,76 @@ bytes_regrfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	return (DREF DeeObject *)groups;
 err_g:
 	ReGroups_Free(groups);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_reglocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF ReSubBytes *subbytes;
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
+	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("reglocate"),
+	                                       &exec))
+		goto err;
+	subbytes = ReSubBytes_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!subbytes)
+		goto err;
+	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
+	exec.rewr_exec.rx_pmatch = subbytes->rss_groups + 1;
+	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH) {
+		ReGroups_Free(subbytes);
+		return_empty_seq;
+	}
+	match_size += (size_t)result;
+	subbytes->rss_groups[0].rm_so = (size_t)result;
+	subbytes->rss_groups[0].rm_eo = match_size;
+	ReSubBytes_Init(subbytes, (DeeObject *)self,
+	                exec.rewr_exec.rx_inbase,
+	                1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return (DREF DeeObject *)subbytes;
+err_g:
+	ReGroups_Free(subbytes);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_regrlocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF ReSubBytes *subbytes;
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
+	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("regrlocate"),
+	                                       &exec))
+		goto err;
+	subbytes = ReSubBytes_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!subbytes)
+		goto err;
+	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
+	exec.rewr_exec.rx_pmatch = subbytes->rss_groups + 1;
+	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH) {
+		ReGroups_Free(subbytes);
+		return_empty_seq;
+	}
+	match_size += (size_t)result;
+	subbytes->rss_groups[0].rm_so = (size_t)result;
+	subbytes->rss_groups[0].rm_eo = match_size;
+	ReSubBytes_Init(subbytes, (DeeObject *)self,
+	                exec.rewr_exec.rx_inbase,
+	                1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return (DREF DeeObject *)subbytes;
+err_g:
+	ReGroups_Free(subbytes);
 err:
 	return NULL;
 }
@@ -4625,6 +4698,18 @@ bytes_regfindall(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	                                     &exec))
 		goto err;
 	return bytes_reg_findall(self, &exec);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_reglocateall(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct DeeRegexBaseExec exec;
+	if unlikely(bytes_base_regex_getargs(self, argc, argv, kw,
+	                                     BYTES_BASE_REGEX_GETARGS_FMT("reglocateall"),
+	                                     &exec))
+		goto err;
+	return bytes_reg_locateall(self, &exec);
 err:
 	return NULL;
 }
@@ -6105,6 +6190,37 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "#tValueError{The given @pattern is malformed}"
 	                "#tIndexError{No substring matching the given @pattern could be found}"
 	                "Same as ?#regrfind, but throw an :IndexError when no match can be found"),
+
+	TYPE_KWMETHOD_F("reglocate", &bytes_reglocate,
+	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?.?N\n"
+	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	                "#prange{The max number of search attempts to perform}"
+	                "#prules{The regular expression rules (s.a. ?#rematch)}"
+	                "#tValueError{The given @pattern is malformed}"
+	                "Same as ?#regfind, but returns a sequence of the sub-strings matched by each group, "
+	                /**/ "rather than the start/end bounds of each group (still returns !n for unmatched "
+	                /**/ "groups, and an empty sequence if @pattern isn't matched at all)\n"
+	                "Behaves the same as ${this.rescanf(f\".*({pattern})\", ...)}"),
+	TYPE_KWMETHOD_F("regrlocate", &bytes_regrlocate,
+	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?.?N\n"
+	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	                "#prange{The max number of search attempts to perform}"
+	                "#prules{The regular expression rules (s.a. ?#rematch)}"
+	                "#tValueError{The given @pattern is malformed}"
+	                "Same as ?#regrfind, but returns a sequence of the sub-strings matched by each group, "
+	                /**/ "rather than the start/end bounds of each group (still returns !n for unmatched "
+	                /**/ "groups, and an empty sequence if @pattern isn't matched at all)"),
+	TYPE_KWMETHOD_F("reglocateall", &bytes_reglocateall,
+	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?S?X2?.?N\n"
+	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	                "#prange{The max number of search attempts to perform}"
+	                "#prules{The regular expression rules (s.a. ?#rematch)}"
+	                "#tValueError{The given @pattern is malformed}"
+	                "Same as ?#regfindall, but returns a sequence of the sub-strings matched by each group of each match, "
+	                /**/ "rather than the start/end bounds of each group (still returns !n for unmatched groups)"),
 
 	TYPE_METHOD_HINTREF(seq_xchitem),
 	TYPE_METHOD_END

@@ -58,12 +58,16 @@ INTDEF DeeTypeObject RegFindAll_Type;
 INTDEF DeeTypeObject RegFindAllIterator_Type;
 INTDEF DeeTypeObject ReLocateAll_Type;
 INTDEF DeeTypeObject ReLocateAllIterator_Type;
+INTDEF DeeTypeObject RegLocateAll_Type;
+INTDEF DeeTypeObject RegLocateAllIterator_Type;
 INTDEF DeeTypeObject ReSplit_Type;
 INTDEF DeeTypeObject ReSplitIterator_Type;
 INTDEF DeeTypeObject ReBytesFindAll_Type;
 INTDEF DeeTypeObject ReBytesFindAllIterator_Type;
 INTDEF DeeTypeObject RegBytesFindAll_Type;
 INTDEF DeeTypeObject RegBytesFindAllIterator_Type;
+INTDEF DeeTypeObject RegBytesLocateAll_Type;
+INTDEF DeeTypeObject RegBytesLocateAllIterator_Type;
 INTDEF DeeTypeObject ReBytesLocateAll_Type;
 INTDEF DeeTypeObject ReBytesLocateAllIterator_Type;
 INTDEF DeeTypeObject ReBytesSplit_Type;
@@ -89,6 +93,9 @@ bytes_reg_findall(DeeBytesObject *__restrict self,
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bytes_re_locateall(DeeBytesObject *__restrict self,
                    struct DeeRegexBaseExec const *__restrict exec);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytes_reg_locateall(DeeBytesObject *__restrict self,
+                    struct DeeRegexBaseExec const *__restrict exec);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bytes_re_split(DeeBytesObject *__restrict self,
                struct DeeRegexBaseExec const *__restrict exec);
@@ -172,12 +179,35 @@ refaiter_copy(ReSequenceIterator *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-refaiter_init(ReSequenceIterator *__restrict self,
-              size_t argc, DeeObject *const *argv) {
+ReSequenceIterator__init(ReSequenceIterator *__restrict self,
+                         size_t argc, DeeObject *const *argv) {
 	ReSequence *reseq;
-	if (DeeArg_Unpack(argc, argv, "o:_ReFindAllIterator", &reseq))
-		goto err;
-	if (DeeObject_AssertTypeExact(reseq, &ReFindAll_Type))
+	DeeTypeObject *tp_seq, *tp_self = Dee_TYPE(self);
+	if unlikely(argc != 1)
+		return err_invalid_argc(tp_self->tp_name, argc, 1, 1);
+	if (tp_self == &ReFindAllIterator_Type) {
+		tp_seq = &ReFindAll_Type;
+	} else if (tp_self == &RegFindAllIterator_Type) {
+		tp_seq = &RegFindAll_Type;
+	} else if (tp_self == &ReLocateAllIterator_Type) {
+		tp_seq = &ReLocateAll_Type;
+	} else if (tp_self == &RegLocateAllIterator_Type) {
+		tp_seq = &RegLocateAll_Type;
+	} else if (tp_self == &ReBytesFindAllIterator_Type) {
+		tp_seq = &ReBytesFindAll_Type;
+	} else if (tp_self == &RegBytesFindAllIterator_Type) {
+		tp_seq = &RegBytesFindAll_Type;
+	} else if (tp_self == &RegBytesLocateAllIterator_Type) {
+		tp_seq = &RegBytesLocateAll_Type;
+	} else if (tp_self == &ReBytesLocateAllIterator_Type) {
+		tp_seq = &ReBytesLocateAll_Type;
+	} else if (tp_self == &ReBytesSplitIterator_Type) {
+		tp_seq = &ReBytesSplit_Type;
+	} else {
+		__builtin_unreachable();
+	}
+	reseq = (ReSequence *)argv[0];
+	if (DeeObject_AssertTypeExact(reseq, tp_seq))
 		goto err;
 	memcpy(&self->rsi_data, &reseq->rs_data,
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
@@ -189,23 +219,8 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rebfaiter_init(ReSequenceIterator *__restrict self,
-               size_t argc, DeeObject *const *argv) {
-	ReSequence *reseq;
-	if (DeeArg_Unpack(argc, argv, "o:_ReBytesFindAllIterator", &reseq))
-		goto err;
-	if (DeeObject_AssertTypeExact(reseq, &ReBytesFindAll_Type))
-		goto err;
-	memcpy(&self->rsi_data, &reseq->rs_data,
-	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
-	Dee_Incref(self->rsi_data);
-	Dee_Incref(self->rsi_exec.rx_pattern);
-	Dee_atomic_rwlock_init(&self->rsi_lock);
-	return 0;
-err:
-	return -1;
-}
+#define refaiter_init  ReSequenceIterator__init
+#define rebfaiter_init ReSequenceIterator__init
 
 STATIC_ASSERT(offsetof(ReSequenceIterator, rsi_data) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(ReSequenceIterator, rsi_data) == offsetof(ProxyObject2, po_obj2));
@@ -743,6 +758,249 @@ INTERN DeeTypeObject RegBytesFindAllIterator_Type = {
 };
 
 
+
+/* LocateAllIterator wrapper (based on FindAll) */
+#define reglaiter_ctor    regfaiter_ctor
+#define reglaiter_copy    regfaiter_copy
+#define reglaiter_init    regfaiter_init
+#define reglaiter_fini    regfaiter_fini
+#define reglaiter_bool    regfaiter_bool
+#define reglaiter_visit   regfaiter_visit
+#define reglaiter_cmp     regfaiter_cmp
+#define reglaiter_members regfaiter_members
+
+#define regblaiter_ctor    regbfaiter_ctor
+#define regblaiter_copy    regbfaiter_copy
+#define regblaiter_init    regbfaiter_init
+#define regblaiter_fini    regbfaiter_fini
+#define regblaiter_bool    regbfaiter_bool
+#define regblaiter_visit   regbfaiter_visit
+#define regblaiter_cmp     regbfaiter_cmp
+#define regblaiter_members regbfaiter_members
+
+PRIVATE WUNUSED NONNULL((1)) DREF ReSubStrings *DCALL
+reglaiter_next(ReSequenceIterator *__restrict self) {
+	DREF ReSubStrings *substrings;
+	size_t match_size;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	substrings = ReSubStrings_Malloc(1 + self->rsi_exec.rx_code->rc_ngrps);
+	if unlikely(!substrings)
+		goto err;
+again:
+	ReSequenceIterator_LockRead(self);
+	DeeRegexBaseExec_Load(&self->rsi_exec, &exec,
+	                      self->rsi_exec.rx_code->rc_ngrps,
+	                      substrings->rss_groups + 1);
+	ReSequenceIterator_LockEndRead(self);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH)
+		goto return_ITER_DONE;
+	if (match_size == 0)
+		goto return_ITER_DONE; /* Prevent infinite loop on epsilon-match */
+	ReSequenceIterator_LockWrite(self);
+	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
+		ReSequenceIterator_LockEndWrite(self);
+		goto again;
+	}
+	self->rsi_exec.rx_startoff = (size_t)result + match_size;
+	ReSequenceIterator_LockEndWrite(self);
+	substrings->rss_groups[0].rm_so = (size_t)result;
+	substrings->rss_groups[0].rm_eo = (size_t)result + match_size;
+	ReSubStrings_Init(substrings, self->rsi_data, exec.rx_inbase,
+	                  1 + self->rsi_exec.rx_code->rc_ngrps);
+	return substrings;
+return_ITER_DONE:
+	ReSubStrings_Free(substrings);
+	return (DREF ReSubStrings *)ITER_DONE;
+err_g:
+	ReSubStrings_Free(substrings);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF ReSubBytes *DCALL
+regblaiter_next(ReSequenceIterator *__restrict self) {
+	DREF ReSubBytes *subbytes;
+	size_t match_size;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	subbytes = ReSubBytes_Malloc(1 + self->rsi_exec.rx_code->rc_ngrps);
+	if unlikely(!subbytes)
+		goto err;
+again:
+	ReSequenceIterator_LockRead(self);
+	DeeRegexBaseExec_Load(&self->rsi_exec, &exec,
+	                      self->rsi_exec.rx_code->rc_ngrps,
+	                      subbytes->rss_groups + 1);
+	ReSequenceIterator_LockEndRead(self);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH)
+		goto return_ITER_DONE;
+	if (match_size == 0)
+		goto return_ITER_DONE; /* Prevent infinite loop on epsilon-match */
+	ReSequenceIterator_LockWrite(self);
+	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
+		ReSequenceIterator_LockEndWrite(self);
+		goto again;
+	}
+	self->rsi_exec.rx_startoff = (size_t)result + match_size;
+	ReSequenceIterator_LockEndWrite(self);
+	subbytes->rss_groups[0].rm_so = (size_t)result;
+	subbytes->rss_groups[0].rm_eo = (size_t)result + match_size;
+	ReSubBytes_Init(subbytes, self->rsi_data, exec.rx_inbase,
+	                1 + self->rsi_exec.rx_code->rc_ngrps);
+	return subbytes;
+return_ITER_DONE:
+	ReSubBytes_Free(subbytes);
+	return (DREF ReSubBytes *)ITER_DONE;
+err_g:
+	ReSubBytes_Free(subbytes);
+err:
+	return NULL;
+}
+
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+reglaiter_getseq(ReSequenceIterator *__restrict self) {
+	struct DeeRegexBaseExec args_copy;
+	ReSequenceIterator_LockRead(self);
+	memcpy(&args_copy, &self->rsi_exec, sizeof(struct DeeRegexBaseExec));
+	ReSequenceIterator_LockEndRead(self);
+	return string_reg_locateall((String *)self->rsi_data, &args_copy);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+regblaiter_getseq(ReSequenceIterator *__restrict self) {
+	struct DeeRegexBaseExec args_copy;
+	ReSequenceIterator_LockRead(self);
+	memcpy(&args_copy, &self->rsi_exec, sizeof(struct DeeRegexBaseExec));
+	ReSequenceIterator_LockEndRead(self);
+	return bytes_reg_locateall((DeeBytesObject *)self->rsi_data, &args_copy);
+}
+
+
+PRIVATE struct type_getset tpconst reglaiter_getsets[] = {
+	TYPE_GETTER_F(STR_seq, &reglaiter_getseq, METHOD_FNOREFESCAPE, "->?Ert:RegLocateAll"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_getset tpconst regblaiter_getsets[] = {
+	TYPE_GETTER_F(STR_seq, &regblaiter_getseq, METHOD_FNOREFESCAPE, "->?Ert:RegBytesLocateAll"),
+	TYPE_GETSET_END
+};
+
+
+INTERN DeeTypeObject RegLocateAllIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_RegLocateAllIterator",
+	/* .tp_doc      = */ DOC("(reseq:?Ert:ReLocateAll)\n"
+	                         "\n"
+	                         "iter->?Ert:ReGroups"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONLOOPING,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&reglaiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&reglaiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&reglaiter_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&reglaiter_init,
+				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&reglaiter_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&reglaiter_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
+	},
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&reglaiter_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
+	/* .tp_cmp           = */ &reglaiter_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&reglaiter_next,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ reglaiter_getsets,
+	/* .tp_members       = */ reglaiter_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+};
+
+INTERN DeeTypeObject RegBytesLocateAllIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_RegBytesLocateAllIterator",
+	/* .tp_doc      = */ DOC("(reseq:?Ert:ReBytesLocateAll)\n"
+	                         "\n"
+	                         "iter->?Ert:ReGroups"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONLOOPING,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&regblaiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&regblaiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&regblaiter_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&regblaiter_init,
+				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regblaiter_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&regblaiter_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
+	},
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&regblaiter_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
+	/* .tp_cmp           = */ &regblaiter_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&regblaiter_next,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ regblaiter_getsets,
+	/* .tp_members       = */ regblaiter_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+};
+
+
 #define relaiter_ctor    refaiter_ctor
 #define relaiter_copy    refaiter_copy
 #define relaiter_fini    refaiter_fini
@@ -757,40 +1015,8 @@ INTERN DeeTypeObject RegBytesFindAllIterator_Type = {
 #define reblaiter_cmp     refaiter_cmp
 #define reblaiter_members refaiter_members
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-relaiter_init(ReSequenceIterator *__restrict self,
-              size_t argc, DeeObject *const *argv) {
-	ReSequence *reseq;
-	if (DeeArg_Unpack(argc, argv, "o:_ReLocateAllIterator", &reseq))
-		goto err;
-	if (DeeObject_AssertTypeExact(reseq, &ReLocateAll_Type))
-		goto err;
-	memcpy(&self->rsi_data, &reseq->rs_data, sizeof(ReSequence) - offsetof(ReSequence, rs_data));
-	Dee_Incref(self->rsi_data);
-	Dee_Incref(self->rsi_exec.rx_pattern);
-	Dee_atomic_rwlock_init(&self->rsi_lock);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-reblaiter_init(ReSequenceIterator *__restrict self,
-               size_t argc, DeeObject *const *argv) {
-	ReSequence *reseq;
-	if (DeeArg_Unpack(argc, argv, "o:_ReBytesLocateAllIterator", &reseq))
-		goto err;
-	if (DeeObject_AssertTypeExact(reseq, &ReBytesLocateAll_Type))
-		goto err;
-	memcpy(&self->rsi_data, &reseq->rs_data, sizeof(ReSequence) - offsetof(ReSequence, rs_data));
-	Dee_Incref(self->rsi_data);
-	Dee_Incref(self->rsi_exec.rx_pattern);
-	Dee_atomic_rwlock_init(&self->rsi_lock);
-	return 0;
-err:
-	return -1;
-}
-
+#define relaiter_init ReSequenceIterator__init
+#define reblaiter_init ReSequenceIterator__init
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 relaiter_getseq(ReSequenceIterator *__restrict self) {
@@ -998,45 +1224,16 @@ INTERN DeeTypeObject ReBytesLocateAllIterator_Type = {
 #define rebspiter_cmp     refaiter_cmp
 #define rebspiter_members refaiter_members
 
+#define rebspiter_init respiter_init
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 respiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	ReSequence *reseq;
-	if (DeeArg_Unpack(argc, argv, "o:_ReSplitIterator", &reseq))
-		goto err;
-	if (DeeObject_AssertTypeExact(reseq, &ReSplit_Type))
-		goto err;
-	memcpy(&self->rsi_data, &reseq->rs_data,
-	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
+	int result = ReSequenceIterator__init(self, argc, argv);
 	if (!self->rsi_exec.rx_insize)
 		self->rsi_exec.rx_inbase = NULL;
-	Dee_Incref(self->rsi_data);
-	Dee_Incref(self->rsi_exec.rx_pattern);
-	Dee_atomic_rwlock_init(&self->rsi_lock);
-	return 0;
-err:
-	return -1;
+	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rebspiter_init(ReSequenceIterator *__restrict self,
-               size_t argc, DeeObject *const *argv) {
-	ReSequence *reseq;
-	if (DeeArg_Unpack(argc, argv, "o:_ReBytesSplitIterator", &reseq))
-		goto err;
-	if (DeeObject_AssertTypeExact(reseq, &ReBytesSplit_Type))
-		goto err;
-	memcpy(&self->rsi_data, &reseq->rs_data,
-	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
-	if (!self->rsi_exec.rx_insize)
-		self->rsi_exec.rx_inbase = NULL;
-	Dee_Incref(self->rsi_data);
-	Dee_Incref(self->rsi_exec.rx_pattern);
-	Dee_atomic_rwlock_init(&self->rsi_lock);
-	return 0;
-err:
-	return -1;
-}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 respiter_getseq(ReSequenceIterator *__restrict self) {
@@ -1812,6 +2009,256 @@ INTERN DeeTypeObject RegBytesFindAll_Type = {
 };
 
 
+
+/* LocateAll wrapper (based on FindAll) */
+#define regla_ctor    regfa_ctor
+#define regla_fini    regfa_fini
+#define regla_bool    regfa_bool
+#define regla_visit   regfa_visit
+#define regla_members regfa_members
+#define regla_size    regfa_size
+
+#define regbla_ctor    regbfa_ctor
+#define regbla_fini    regbfa_fini
+#define regbla_bool    regbfa_bool
+#define regbla_visit   regbfa_visit
+#define regbla_members regbfa_members
+#define regbla_size    regbfa_size
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
+regla_iter(ReSequence *__restrict self) {
+	DREF ReSequenceIterator *result;
+	result = DeeObject_MALLOC(ReSequenceIterator);
+	if unlikely(!result)
+		goto done;
+	memcpy(&result->rsi_data, &self->rs_data,
+	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
+	Dee_Incref(result->rsi_data);
+	Dee_Incref(result->rsi_exec.rx_pattern);
+	DeeObject_Init(result, &RegLocateAllIterator_Type);
+	Dee_atomic_rwlock_init(&result->rsi_lock);
+done:
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
+regbla_iter(ReSequence *__restrict self) {
+	DREF ReSequenceIterator *result;
+	result = DeeObject_MALLOC(ReSequenceIterator);
+	if unlikely(!result)
+		goto done;
+	memcpy(&result->rsi_data, &self->rs_data,
+	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
+	Dee_Incref(result->rsi_data);
+	Dee_Incref(result->rsi_exec.rx_pattern);
+	DeeObject_Init(result, &RegBytesLocateAllIterator_Type);
+	Dee_atomic_rwlock_init(&result->rsi_lock);
+done:
+	return result;
+}
+
+PRIVATE struct type_seq regla_seq = {
+	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&regla_iter,
+	/* .tp_sizeob             = */ DEFIMPL(&default__sizeob__with__size),
+	/* .tp_contains           = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
+	/* .tp_getitem            = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
+	/* .tp_delitem            = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
+	/* .tp_setitem            = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
+	/* .tp_getrange           = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
+	/* .tp_delrange           = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
+	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
+	/* .tp_foreach            = */ DEFIMPL(&default__foreach__with__iter),
+	/* .tp_foreach_pair       = */ DEFIMPL(&default__foreach_pair__with__iter),
+	/* .tp_enumerate          = */ NULL,
+	/* .tp_enumerate_index    = */ NULL,
+	/* .tp_iterkeys           = */ NULL,
+	/* .tp_bounditem          = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
+	/* .tp_hasitem            = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_sizeob),
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&regla_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
+	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
+	/* .tp_bounditem_index            = */ DEFIMPL(&default__seq_operator_bounditem_index__with__seq_operator_getitem_index),
+	/* .tp_hasitem_index              = */ DEFIMPL(&default__seq_operator_hasitem_index__with__seq_operator_size),
+	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
+	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
+	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index_n           = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
+	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
+	/* .tp_trygetitem                 = */ DEFIMPL(&default__seq_operator_trygetitem__with__seq_operator_trygetitem_index),
+	/* .tp_trygetitem_index           = */ DEFIMPL(&default__seq_operator_trygetitem_index__with__seq_operator_foreach),
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
+	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
+	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__hasitem),
+	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__trygetitem),
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
+};
+
+PRIVATE struct type_seq regbla_seq = {
+	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&regbla_iter,
+	/* .tp_sizeob             = */ DEFIMPL(&default__sizeob__with__size),
+	/* .tp_contains           = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
+	/* .tp_getitem            = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
+	/* .tp_delitem            = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
+	/* .tp_setitem            = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
+	/* .tp_getrange           = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
+	/* .tp_delrange           = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
+	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
+	/* .tp_foreach            = */ DEFIMPL(&default__foreach__with__iter),
+	/* .tp_foreach_pair       = */ DEFIMPL(&default__foreach_pair__with__iter),
+	/* .tp_enumerate          = */ NULL,
+	/* .tp_enumerate_index    = */ NULL,
+	/* .tp_iterkeys           = */ NULL,
+	/* .tp_bounditem          = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
+	/* .tp_hasitem            = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_sizeob),
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&regbla_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
+	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
+	/* .tp_bounditem_index            = */ DEFIMPL(&default__seq_operator_bounditem_index__with__seq_operator_getitem_index),
+	/* .tp_hasitem_index              = */ DEFIMPL(&default__seq_operator_hasitem_index__with__seq_operator_size),
+	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
+	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
+	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index_n           = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
+	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
+	/* .tp_trygetitem                 = */ DEFIMPL(&default__seq_operator_trygetitem__with__seq_operator_trygetitem_index),
+	/* .tp_trygetitem_index           = */ DEFIMPL(&default__seq_operator_trygetitem_index__with__seq_operator_foreach),
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
+	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
+	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__hasitem),
+	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__trygetitem),
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
+};
+
+PRIVATE struct type_member tpconst regla_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &RegLocateAllIterator_Type),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst regbla_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &RegBytesLocateAllIterator_Type),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject RegLocateAll_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_RegLocateAll",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONLOOPING,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&regla_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(ReSequence)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regla_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&regla_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&regla_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),
+	/* .tp_seq           = */ &regla_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ regla_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ regla_class_members,
+};
+
+INTERN DeeTypeObject RegBytesLocateAll_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_RegBytesLocateAll",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONLOOPING,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&regbla_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(ReSequence)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regbla_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&regbla_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&regbla_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),
+	/* .tp_seq           = */ &regbla_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ regbla_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ regbla_class_members,
+};
+
+
 #define rela_ctor    refa_ctor
 #define rela_fini    refa_fini
 #define rela_visit   refa_visit
@@ -2376,6 +2823,22 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_reg_locateall(String *__restrict self,
+                     struct DeeRegexBaseExec const *__restrict exec) {
+	DREF ReSequence *result;
+	result = DeeObject_MALLOC(ReSequence);
+	if unlikely(!result)
+		goto done;
+	result->rs_data = (DREF DeeObject *)self;
+	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
+	Dee_Incref(self);
+	Dee_Incref(result->rs_exec.rx_pattern);
+	DeeObject_Init(result, &RegLocateAll_Type);
+done:
+	return (DREF DeeObject *)result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_re_locateall(String *__restrict self,
                     struct DeeRegexBaseExec const *__restrict exec) {
 	DREF ReSequence *result;
@@ -2438,6 +2901,22 @@ bytes_reg_findall(DeeBytesObject *__restrict self,
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &RegBytesFindAll_Type);
+done:
+	return (DREF DeeObject *)result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytes_reg_locateall(DeeBytesObject *__restrict self,
+                    struct DeeRegexBaseExec const *__restrict exec) {
+	DREF ReSequence *result;
+	result = DeeObject_MALLOC(ReSequence);
+	if unlikely(!result)
+		goto done;
+	result->rs_data = (DREF DeeObject *)self;
+	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
+	Dee_Incref(self);
+	Dee_Incref(result->rs_exec.rx_pattern);
+	DeeObject_Init(result, &RegBytesLocateAll_Type);
 done:
 	return (DREF DeeObject *)result;
 }

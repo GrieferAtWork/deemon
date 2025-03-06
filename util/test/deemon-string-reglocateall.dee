@@ -1,0 +1,91 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+*                                                                            *
+* This software is provided 'as-is', without any express or implied          *
+* warranty. In no event will the authors be held liable for any damages      *
+* arising from the use of this software.                                     *
+*                                                                            *
+* Permission is granted to anyone to use this software for any purpose,      *
+* including commercial applications, and to alter it and redistribute it     *
+* freely, subject to the following restrictions:                             *
+*                                                                            *
+* 1. The origin of this software must not be misrepresented; you must not    *
+*    claim that you wrote the original software. If you use this software    *
+*    in a product, an acknowledgement (see the following) in the product     *
+*    documentation is required:                                              *
+*    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+* 2. Altered source versions must be plainly marked as such, and must not be *
+*    misrepresented as being the original software.                          *
+* 3. This notice may not be removed or altered from any source distribution. *
+*/
+
+import * from deemon;
+import * from errors;
+
+function assertReglocateAll(f: Callable with string) {
+	local tpGetsets = f(r'Dfoo
+		STR_something
+		TYPE_GETTER_BOUND_F_NODOC(STR_first, &tuple_getfirst, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+		TYPE_GETTER_BOUND_F_NODOC(STR_last, &tuple_getlast, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	#define nullable_tuple_getsets (tuple_getsets + 2)
+		Dee_TYPE_GETTER_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
+		TYPE_GETTER_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
+		TYPE_GETTER_F("__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+		TYPE_GETSET_END
+	');
+
+	/* reglocateall */
+	assert {
+		{
+			r'TYPE_GETTER_BOUND_F_NODOC(STR_first, &tuple_getfirst, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL)',
+			none,
+			r'STR_first, &tuple_getfirst, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL'
+		}, {
+			r'TYPE_GETTER_BOUND_F_NODOC(STR_last, &tuple_getlast, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL)',
+			none,
+			r'STR_last, &tuple_getlast, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL'
+		}, {
+			r'Dee_TYPE_GETTER_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?.")',
+			r'Dee_',
+			r'STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."'
+		}, {
+			r'TYPE_GETTER_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?.")',
+			none,
+			r'STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."'
+		}, {
+			r'TYPE_GETTER_F("__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint")',
+			none,
+			r'"__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint"'
+		}
+	} == tpGetsets.reglocateall(r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*([^)]*)\s*\)');
+
+	/* reglocate */
+	assert {
+		r'TYPE_GETTER_BOUND_F_NODOC(STR_first, &tuple_getfirst, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL)',
+		none,
+		r'STR_first, &tuple_getfirst, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL'
+	} == tpGetsets.reglocate(r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*([^)]*)\s*\)');
+
+	/* regrlocate */
+	assert {
+		r'TYPE_GETTER_F("__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint")',
+		none,
+		r'"__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint"'
+	} == tpGetsets.regrlocate(r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*([^)]*)\s*\)');
+
+	/* reglocateall (used with a sequence each-expression) */
+	assert {
+		r'STR_first',
+		r'STR_last',
+		r'STR_frozen',
+		r'STR_cached',
+		r'"__sizeof__"'
+	} == tpGetsets.reglocateall(
+			r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*([^)]*)\s*\)'
+	).each.last.partition(",").first;
+}
+
+
+assertReglocateAll(x -> x);
+assertReglocateAll(x -> x.bytes());
+

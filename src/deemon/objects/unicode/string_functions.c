@@ -9205,6 +9205,70 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_reglocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF ReSubStrings *substrings;
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("reglocate"), &exec))
+		goto err;
+	substrings = ReSubStrings_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!substrings)
+		goto err;
+	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
+	exec.rewr_exec.rx_pmatch = substrings->rss_groups + 1;
+	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH) {
+		ReSubStrings_Free(substrings);
+		return_empty_seq;
+	}
+	substrings->rss_groups[0].rm_so = (size_t)result;
+	substrings->rss_groups[0].rm_eo = (size_t)result + match_size;
+	ReSubStrings_Init(substrings, (DeeObject *)self,
+	                  exec.rewr_exec.rx_inbase,
+	                  1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return (DREF DeeObject *)substrings;
+err_g:
+	ReSubStrings_Free(substrings);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_regrlocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF ReSubStrings *substrings;
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("regrlocate"), &exec))
+		goto err;
+	substrings = ReSubStrings_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!substrings)
+		goto err;
+	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
+	exec.rewr_exec.rx_pmatch = substrings->rss_groups + 1;
+	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH) {
+		ReSubStrings_Free(substrings);
+		return_empty_seq;
+	}
+	substrings->rss_groups[0].rm_so = (size_t)result;
+	substrings->rss_groups[0].rm_eo = (size_t)result + match_size;
+	ReSubStrings_Init(substrings, (DeeObject *)self,
+	                  exec.rewr_exec.rx_inbase,
+	                  1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return (DREF DeeObject *)substrings;
+err_g:
+	ReSubStrings_Free(substrings);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_reindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t result;
 	size_t match_size;
@@ -9630,7 +9694,10 @@ string_re_findall(String *__restrict self,
                   struct DeeRegexBaseExec const *__restrict exec);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_reg_findall(String *__restrict self,
-                  struct DeeRegexBaseExec const *__restrict exec);
+                   struct DeeRegexBaseExec const *__restrict exec);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_reg_locateall(String *__restrict self,
+                     struct DeeRegexBaseExec const *__restrict exec);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_re_locateall(String *__restrict self,
                     struct DeeRegexBaseExec const *__restrict exec);
@@ -9695,6 +9762,16 @@ string_regfindall(String *self, size_t argc, DeeObject *const *argv, DeeObject *
 	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("regfindall"), &exec))
 		goto err;
 	return string_reg_findall(self, &exec);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_reglocateall(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct DeeRegexBaseExec exec;
+	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("reglocateall"), &exec))
+		goto err;
+	return string_reg_locateall(self, &exec);
 err:
 	return NULL;
 }
@@ -11430,48 +11507,37 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "#tValueError{The given @pattern is malformed}"
 	                "#tIndexError{No substring matching the given @pattern could be found}"
 	                "Same as ?#regrfind, but throw an :IndexError when no match can be found"),
-	/* TODO: reglocate(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?Dstring?N
-	 *       Wrapper around ?#regfind that returns a sequence of the sub-strings matched by each group,
-	 *       rather than the start/end bounds of each group (still returns !n for unmatched groups, and
-	 *       an empty sequence if @pattern isn't matched at all)
-	 * >> function reglocate(pattern: string, start: int = 0, end: int = int.SIZE_MAX, range: int = int.SIZE_MAX, rules: string = ""): {string | none...} {
-	 * >>     return this.regfind(pattern, start, end, range, rules).map(e -> {
-	 * >>         if (e is none)
-	 * >>             return none;
-	 * >>         local start, end = e...;
-	 * >>         return this[start, end];
-	 * >>     });
-	 * >> } */
 
-	/* TODO: regrlocate(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?Dstring?N
-	 *       Wrapper around ?#regrfind that returns a sequence of the sub-strings matched by each group,
-	 *       rather than the start/end bounds of each group (still returns !n for unmatched groups, and
-	 *       an empty sequence if @pattern isn't matched at all)
-	 * >> function regrlocate(pattern: string, start: int = 0, end: int = int.SIZE_MAX, range: int = int.SIZE_MAX, rules: string = ""): {string | none...} {
-	 * >>     return this.regrfind(pattern, start, end, range, rules).map(e -> {
-	 * >>         if (e is none)
-	 * >>             return none;
-	 * >>         local start, end = e...;
-	 * >>         return this[start, end];
-	 * >>     });
-	 * >> } */
-
-	/* TODO: reglocateall(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?S?X2?Dstring?N
-	 *       Wrapper around ?#regfindall that returns a sequence of the sub-strings matched by each group,
-	 *       rather than the start/end bounds of each group (still returns !n for unmatched groups)
-	 * >> function reglocateall(pattern: string, start: int = 0, end: int = int.SIZE_MAX, range: int = int.SIZE_MAX, rules: string = ""): {string | none...} {
-	 * >>     for (local match: this.regfindall(pattern, start, end, range, rules)) {
-	 * >>         yield match.map(e -> {
-	 * >>             if (e is none)
-	 * >>                 return none;
-	 * >>             local start, end = e...;
-	 * >>             return this[start, end];
-	 * >>         });
-	 * >>     }
-	 * >> } */
-
-
-
+	TYPE_KWMETHOD_F("reglocate", &string_reglocate,
+	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?.?N\n"
+	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	                "#prange{The max number of search attempts to perform}"
+	                "#prules{The regular expression rules (s.a. ?#rematch)}"
+	                "#tValueError{The given @pattern is malformed}"
+	                "Same as ?#regfind, but returns a sequence of the sub-strings matched by each group, "
+	                /**/ "rather than the start/end bounds of each group (still returns !n for unmatched "
+	                /**/ "groups, and an empty sequence if @pattern isn't matched at all)\n"
+	                "Behaves the same as ${this.rescanf(f\".*({pattern})\", ...)}"),
+	TYPE_KWMETHOD_F("regrlocate", &string_regrlocate,
+	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?.?N\n"
+	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	                "#prange{The max number of search attempts to perform}"
+	                "#prules{The regular expression rules (s.a. ?#rematch)}"
+	                "#tValueError{The given @pattern is malformed}"
+	                "Same as ?#regrfind, but returns a sequence of the sub-strings matched by each group, "
+	                /**/ "rather than the start/end bounds of each group (still returns !n for unmatched "
+	                /**/ "groups, and an empty sequence if @pattern isn't matched at all)"),
+	TYPE_KWMETHOD_F("reglocateall", &string_reglocateall,
+	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?S?X2?.?N\n"
+	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	                "#prange{The max number of search attempts to perform}"
+	                "#prules{The regular expression rules (s.a. ?#rematch)}"
+	                "#tValueError{The given @pattern is malformed}"
+	                "Same as ?#regfindall, but returns a sequence of the sub-strings matched by each group of each match, "
+	                /**/ "rather than the start/end bounds of each group (still returns !n for unmatched groups)"),
 
 
 	TYPE_METHOD_F("__forcecopy__", &string_forcecopy,
@@ -11497,7 +11563,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                                 "When @key isn't given, always return true (because elements of "
 	                                 /**/ "${string as Sequence} as always 1-characters strings, which "
 	                                 /**/ "are non-empty and thus !t). S.a. ?Aall?DSequence"),
-	TYPE_METHOD_HINTREF_DOC(seq_sum, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dstring?N\n"
+	TYPE_METHOD_HINTREF_DOC(seq_sum, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?.?N\n"
 	                                 "Same as ?#substr, but return ?N if instead of $\"\" (an empty string). "
 	                                 /**/ "S.a. ?Asum?DSequence"),
 

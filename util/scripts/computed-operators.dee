@@ -953,24 +953,16 @@ final class StructInitializer {
 			local hasTpMethods = !!tpMethods;
 			local hasTpGetsets = !!tpGetsets;
 			if (tpMethodHints) {
-				tpMethodHints = (
-					for (local start, end: tpMethodHints.regfindall(
-							r"(Dee_)?TYPE_METHOD_HINT(_F)?\s*\(\s*(\w+)\s*,").each[3])
-						if (start !is none && end !is none)
-							tpMethodHints[start:end]
+				tpMethodHints = Sequence.cached(tpMethodHints.reglocateall(
+						r"(Dee_)?TYPE_METHOD_HINT(_F)?\s*\(\s*(\w+)\s*,").each.last);
+				tpMethods = Sequence.cached(tpMethods.reglocateall(
+						r"(Dee_)?TYPE_METHOD_HINTREF(_DOC)?\s*\(\s*(\w+)\s*[),]").each.last);
+				tpGetsets = Sequence.map(
+					tpGetsets.reglocateall(
+							r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*(STR_[a-zA-Z0-9_]+|"[^"]*")'
+					).each.last,
+					e -> e.startswith('"') ? e.decode("c-escape") : e.lsstrip("STR_")
 				).cached;
-				tpMethods = (
-					for (local start, end: tpMethods.regfindall(
-							r"(Dee_)?TYPE_METHOD_HINTREF(_DOC)?\s*\(\s*(\w+)\s*[),]").each[3])
-						if (start !is none && end !is none)
-							tpMethods[start:end]
-				).cached;
-				tpGetsets = (
-					for (local start, end: tpGetsets.regfindall(
-							r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*(STR_[a-zA-Z0-9_]+|"[^"]*")').each[2])
-						if (start !is none && end !is none)
-							tpGetsets[start:end]
-				).map(e -> e.startswith('"') ? e.decode("c-escape") : e.lsstrip("STR_")).cached;
 
 				for (local hint: tpMethodHints) {
 					hint = {
