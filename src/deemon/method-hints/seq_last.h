@@ -111,9 +111,9 @@ __seq_last__.seq_getlast([[nonnull]] DeeObject *__restrict self)
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if (!size)
+	if unlikely(!size)
 		return default__seq_getlast__empty(self);
-	return CALL_DEPENDENCY(seq_operator_getitem_index, self, 0);
+	return CALL_DEPENDENCY(seq_operator_getitem_index, self, size - 1);
 err:
 	return NULL;
 }}
@@ -166,7 +166,7 @@ __seq_last__.seq_dellast([[nonnull]] DeeObject *__restrict self)
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if (!size)
+	if unlikely(!size)
 		return 0;
 	return CALL_DEPENDENCY(seq_operator_delitem_index, self, size - 1);
 err:
@@ -191,7 +191,7 @@ __seq_last__.seq_setlast([[nonnull]] DeeObject *self,
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if (!size)
+	if unlikely(!size)
 		return err_empty_sequence(self);
 	return CALL_DEPENDENCY(seq_operator_setitem_index, self, size - 1, value);
 err:

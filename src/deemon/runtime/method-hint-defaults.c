@@ -6761,9 +6761,9 @@ default__seq_getlast__with__seq_operator_size__and__seq_operator_getitem_index(D
 	size_t size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if (!size)
+	if unlikely(!size)
 		return default__seq_getlast__empty(self);
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index))(self, 0);
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index))(self, size - 1);
 err:
 	return NULL;
 }
@@ -6864,7 +6864,7 @@ default__seq_dellast__with__seq_operator_size__and__seq_operator_delitem_index(D
 	size_t size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if (!size)
+	if unlikely(!size)
 		return 0;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_delitem_index))(self, size - 1);
 err:
@@ -6912,7 +6912,7 @@ default__seq_setlast__with__seq_operator_size__and__seq_operator_setitem_index(D
 	size_t size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if (!size)
+	if unlikely(!size)
 		return err_empty_sequence(self);
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_setitem_index))(self, size - 1, value);
 err:
