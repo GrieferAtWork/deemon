@@ -2145,9 +2145,9 @@ PUBLIC WUNUSED DREF DeeObject *
 	result = (DREF String *)DeeObject_Mallocc(offsetof(String, s_str),
 	                                          length + 1, sizeof(char));
 #else /* NDEBUG */
-	result = (DREF String *)DeeDbgObject_Malloc(offsetof(String, s_str) +
-	                                            (length + 1) * sizeof(char),
-	                                            file, line);
+	result = (DREF String *)DeeDbgObject_Mallocc(offsetof(String, s_str),
+	                                             length + 1, sizeof(char),
+	                                             file, line);
 #endif /* !NDEBUG */
 	if unlikely(!result)
 		goto err;

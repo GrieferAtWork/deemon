@@ -47,7 +47,7 @@ typedef struct {
 
 #define DeeRegexMatch_AsRangeObject(self) \
 	((self)->rm_so == (size_t)-1          \
-	 ? (Dee_Incref(Dee_None), Dee_None)   \
+	 ? DeeNone_NewRef()                   \
 	 : DeeTuple_Newf(PCKuSIZ PCKuSIZ,     \
 	                 (self)->rm_so,       \
 	                 (self)->rm_eo))
@@ -73,13 +73,13 @@ typedef struct {
 
 #define DeeRegexMatch_AsSubString(self, baseobj, baseptr)           \
 	((self)->rm_so == (size_t)-1                                    \
-	 ? (Dee_Incref(Dee_None), Dee_None)                             \
+	 ? DeeNone_NewRef()                                             \
 	 : DeeString_NewUtf8((char const *)((baseptr) + (self)->rm_so), \
 	                     (self)->rm_eo - (self)->rm_so,             \
 	                     Dee_STRING_ERROR_FSTRICT))
 #define DeeRegexMatch_AsSubBytes(self, baseobj, baseptr)        \
 	((self)->rm_so == (size_t)-1                                \
-	 ? (Dee_Incref(Dee_None), Dee_None)                         \
+	 ? DeeNone_NewRef()                                         \
 	 : DeeBytes_NewSubView(baseobj,                             \
 	                       (void *)((baseptr) + (self)->rm_so), \
 	                       (self)->rm_eo - (self)->rm_so))
