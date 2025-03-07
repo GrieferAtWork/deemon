@@ -21,17 +21,13 @@
 #define GUARD_DEX_TIME_LIBTIME_H 1
 
 #include <deemon/api.h>
-#include <deemon/arg.h> /* DEE_UNP* */
-#include <deemon/dex.h>
-#include <deemon/int.h>
 #include <deemon/object.h>
-#include <deemon/thread.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/int128.h>
-#include <hybrid/typecore.h>
 
-#include <stdbool.h>
+/**/
+#include <stdbool.h> /* bool */
 #include <stdint.h>
 
 DECL_BEGIN
@@ -392,7 +388,8 @@ INTDEF NONNULL((1)) void DFCALL time_inplace_nanosecond2month(Dee_int128_t *__re
 INTDEF NONNULL((1)) void DFCALL time_inplace_month2nanosecond(Dee_int128_t *__restrict p_value);
 
 /* Check if the year referenced by the year-counter `*p_year' is a leap-year */
-INTDEF NONNULL((1)) bool DFCALL time_years_isleapyear(Dee_int128_t const *__restrict p_year);
+INTDEF WUNUSED NONNULL((1)) bool DFCALL
+time_years_isleapyear(Dee_int128_t const *__restrict p_year);
 
 struct month {
 	uint64_t m_start; /* Nano-seconds into the year for when this month starts */

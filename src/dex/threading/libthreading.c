@@ -27,8 +27,11 @@
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
+#include <deemon/module.h>
 #include <deemon/objmethod.h>
+#include <deemon/system-features.h> /* memcpy */
 #include <deemon/thread.h>
+#include <deemon/types.h>
 
 DECL_BEGIN
 

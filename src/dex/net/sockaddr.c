@@ -21,23 +21,23 @@
 #define GUARD_DEX_SOCKET_SOCKADDR_C 1
 #define DEE_SOURCE
 
-#include "libnet.h"
+#include "libnet.h" /* Must come first to configure includes */
 /**/
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/bool.h>
-#include <deemon/dex.h>
 #include <deemon/error.h>
-#include <deemon/file.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcasecmp(), bzero(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
+
+#include <hybrid/debug-alignment.h>
 
 DECL_BEGIN
 

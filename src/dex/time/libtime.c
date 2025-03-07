@@ -22,8 +22,6 @@
 #define CONFIG_BUILDING_LIBTIME
 #define DEE_SOURCE
 
-#include "libtime.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -33,15 +31,27 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/numeric.h>
+#include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/system.h>
+#include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/byteorder.h>
+#include <hybrid/debug-alignment.h>
+#include <hybrid/int128.h>
 #include <hybrid/unaligned.h>
+/**/
+
+#include "libtime.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t, uint64_t */
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
@@ -466,7 +476,7 @@ INTERN_CONST struct month const month_info[2][MONTHS_PER_YEAR + 1] = {
 
 
 /* Check if the year referenced by the year-counter `*p_year' is a leap-year */
-INTERN NONNULL((1)) bool DFCALL
+INTERN WUNUSED NONNULL((1)) bool DFCALL
 time_years_isleapyear(Dee_int128_t const *__restrict p_year) {
 	Dee_int128_t year_mod_400;
 	Dee_int128_t year_mod_100;

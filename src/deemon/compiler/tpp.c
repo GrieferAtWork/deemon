@@ -863,7 +863,7 @@ parser_warn_pack_used(struct ast_loc *loc) {
 		file = loc->l_file;
 	if (file->f_kind != TPPFILE_KIND_TEXT)
 		return 0; /* Only warn inside of regular files */
-	return parser_warnatf(loc, W_PACKED_USED_OUTSIDE_OF_MACRO);
+	return parser_warnatf(loc, W_PACK_USED_OUTSIDE_OF_MACRO);
 
 }
 

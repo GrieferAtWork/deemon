@@ -1561,7 +1561,7 @@ err_basev:
 		 * I decided that it wouldn't merit its own keyword because
 		 * this may there is much less overhead. */
 		if (TPP_ISKEYWORD(tok) &&
-		    (tok == KWD_pack || !strcmp(token.t_kwd->k_name, "extends"))) {
+		    (tok == KWD_pack || strcmp(token.t_kwd->k_name, "extends") == 0)) {
 			if (tok == KWD_pack) {
 				struct ast_loc packloc;
 				if (WARN(W_DEPRECATED_CLASS_BASE_PARENS))

@@ -31,9 +31,14 @@
 #include <deemon/none.h>
 #include <deemon/system-features.h> /* bzeroc(), ... */
 #include <deemon/thread.h>
+#include <deemon/object.h>
 #include <deemon/util/lock.h>
 
 #include "libthreading.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t */
 
 DECL_BEGIN
 

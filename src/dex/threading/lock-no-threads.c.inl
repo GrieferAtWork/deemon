@@ -23,8 +23,10 @@
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/thread.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/rlock.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint64_t, uintptr_t */
 
 DECL_BEGIN
 

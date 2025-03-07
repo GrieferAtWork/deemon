@@ -104,9 +104,8 @@
 #endif /* !CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_HAVE_SYS_UN_H */
 
-#include <deemon/dex.h>
-#include <deemon/file.h>
 #include <deemon/format.h>
+#include <deemon/types.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/byteorder.h>

@@ -46,11 +46,14 @@
 
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
-
-#include <stdbool.h>
-#include <stddef.h>
+/**/
 
 #include "libthreading.h"
+/**/
+
+#include <stdbool.h> /* bool */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint64_t */
 
 #if (defined(DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type) +   \
      defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type) +   \

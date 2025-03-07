@@ -21,20 +21,11 @@
 #define GUARD_DEX_JSON_LIBJSON_H 1
 
 #include <deemon/api.h>
-#include <deemon/dex.h>
-#include <deemon/format.h>
+#include <deemon/float.h> /* CONFIG_HAVE_FPU */
 #include <deemon/hashset.h>
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
-
-#include <hybrid/byteorder.h>
-#include <hybrid/byteswap.h>
-#include <hybrid/typecore.h>
-#include <hybrid/unaligned.h>
-
 
 /* =======================================================================================
  * === JSON SUPPORT                                                                    ===
@@ -126,7 +117,7 @@
 #endif /* !CONFIG_HAVE_FPU */
 
 /* Enable KOS compatibility emulation */
-#include <deemon/util/kos-compat.h>
+#include <deemon/util/kos-compat.h> /* Needed for libjson */
 
 /* Declare everything with PRIVATE scoping. */
 #undef INTDEF

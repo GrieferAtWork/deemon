@@ -30,7 +30,6 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
-#include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/none.h>
@@ -40,6 +39,9 @@
 #include <deemon/util/once.h>
 
 #include <hybrid/sched/yield.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

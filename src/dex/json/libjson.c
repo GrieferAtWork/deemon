@@ -22,37 +22,50 @@
 #define CONFIG_BUILDING_LIBWIN32
 #define DEE_SOURCE
 
-#include "libjson.h"
+#include "libjson.h" /* Must be first to configure libjson */
 /**/
 
+#include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/class.h>
+#include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
+#include <deemon/format.h>
 #include <deemon/hashset.h>
+#include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
-#include <deemon/mapfile.h>
+#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/numeric.h>
+#include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
-#include <deemon/stringutils.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
+/**/
 
-#include <hybrid/byteswap.h>
-
-#include <stdint.h>
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+/**/
 
 /* Enable KOS compatibility emulation */
 #include <deemon/util/kos-compat.h>
+
+/* Extra includes needed by libjson */
+#include <hybrid/byteorder.h>
+#include <hybrid/byteswap.h>
+#include <hybrid/unaligned.h>
 
 /* Define everything with PRIVATE scoping. */
 #undef INTDEF
@@ -63,8 +76,10 @@
 #define DEFINE_PUBLIC_ALIAS(new, old) /* Disable exports */
 
 /* clang-format off */
-#include "../../libjson/parser.c" /* 1 */
-#include "../../libjson/writer.c" /* 2 */
+#include "../../libjson/include/parser.h" /* 1 */
+#include "../../libjson/include/writer.h" /* 2 */
+#include "../../libjson/parser.c"         /* 3 */
+#include "../../libjson/writer.c"         /* 4 */
 /* clang-format on */
 
 /* Restore normal binding macros */

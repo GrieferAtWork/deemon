@@ -21,7 +21,6 @@
 #define GUARD_DEX_THREADING_LIBTHREADING_H 1
 
 #include <deemon/api.h>
-#include <deemon/dex.h>
 #include <deemon/object.h>
 
 DECL_BEGIN

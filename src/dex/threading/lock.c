@@ -45,11 +45,15 @@
 
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
+#include <hybrid/typecore.h>
 
-#include <stdbool.h>
-#include <stddef.h>
-
+/**/
 #include "libthreading.h"
+
+/**/
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint64_t */
 
 #ifdef CONFIG_NO_THREADS
 /* Override the lock-API to emulate semantically correct LOCK functions. */

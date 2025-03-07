@@ -26,6 +26,7 @@
 #include <deemon/compiler/compiler.h>
 
 #include <deemon/abi/ctypes.h>
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/asm.h>
@@ -69,9 +70,15 @@
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
+#include <deemon/util/rlock.h>
 #include <deemon/weakref.h>
 
 #include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

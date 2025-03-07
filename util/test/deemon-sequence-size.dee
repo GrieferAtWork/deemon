@@ -1,4 +1,5 @@
-/* Copyright (c) 2018-2025 Griefer@Work                                       *
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,18 +13,17 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_FILES_LIBMATH_H
-#define GUARD_DEX_FILES_LIBMATH_H 1
 
-#include <deemon/api.h>
+import * from deemon;
 
-DECL_BEGIN
+assert 3 == #({ ("foo", 10), ("foo", 20), ("foo", 20) });
+assert 3 == #({ ("foo", 10), ("foo", 20), ("foo", 20) } as Sequence);
+assert 2 == #({ ("foo", 10), ("foo", 20), ("foo", 20) } as Set);
+assert 1 == #({ ("foo", 10), ("foo", 20), ("foo", 20) } as Mapping);
 
-DECL_END
 
-#endif /* !GUARD_DEX_FILES_LIBMATH_H */

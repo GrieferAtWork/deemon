@@ -26,10 +26,8 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/dex.h>
 #include <deemon/error.h>
-#include <deemon/error_types.h>
-#include <deemon/file.h>
+#include <deemon/error_types.h> /* DeeSystemErrorObject */
 #include <deemon/object.h>
 
 DECL_BEGIN

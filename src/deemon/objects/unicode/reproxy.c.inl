@@ -1503,8 +1503,8 @@ refa_iter(ReSequence *__restrict self) {
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
-	DeeObject_Init(result, &ReFindAllIterator_Type);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
+	DeeObject_Init(result, &ReFindAllIterator_Type);
 done:
 	return result;
 }
@@ -1519,8 +1519,8 @@ rebfa_iter(ReSequence *__restrict self) {
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
-	DeeObject_Init(result, &ReBytesFindAllIterator_Type);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
+	DeeObject_Init(result, &ReBytesFindAllIterator_Type);
 done:
 	return result;
 }
@@ -1769,12 +1769,12 @@ INTERN DeeTypeObject ReBytesFindAll_Type = {
 #define regfa_size    refa_size
 #define regfa_members refa_members
 
-#define regbfa_ctor    refa_ctor
-#define regbfa_fini    refa_fini
-#define regbfa_bool    refa_bool
-#define regbfa_visit   refa_visit
-#define regbfa_size    refa_size
-#define regbfa_members refa_members
+#define regbfa_ctor    rebfa_ctor
+#define regbfa_fini    rebfa_fini
+#define regbfa_bool    rebfa_bool
+#define regbfa_visit   rebfa_visit
+#define regbfa_size    rebfa_size
+#define regbfa_members rebfa_members
 
 PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
 regfa_iter(ReSequence *__restrict self) {
@@ -1786,8 +1786,8 @@ regfa_iter(ReSequence *__restrict self) {
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
-	DeeObject_Init(result, &RegFindAllIterator_Type);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
+	DeeObject_Init(result, &RegFindAllIterator_Type);
 done:
 	return result;
 }
@@ -1802,8 +1802,8 @@ regbfa_iter(ReSequence *__restrict self) {
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
-	DeeObject_Init(result, &RegBytesFindAllIterator_Type);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
+	DeeObject_Init(result, &RegBytesFindAllIterator_Type);
 done:
 	return result;
 }
@@ -2036,8 +2036,8 @@ regla_iter(ReSequence *__restrict self) {
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
-	DeeObject_Init(result, &RegLocateAllIterator_Type);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
+	DeeObject_Init(result, &RegLocateAllIterator_Type);
 done:
 	return result;
 }
@@ -2052,8 +2052,8 @@ regbla_iter(ReSequence *__restrict self) {
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
-	DeeObject_Init(result, &RegBytesLocateAllIterator_Type);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
+	DeeObject_Init(result, &RegBytesLocateAllIterator_Type);
 done:
 	return result;
 }
@@ -2283,8 +2283,8 @@ rela_iter(ReSequence *__restrict self) {
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
-	DeeObject_Init(result, &ReLocateAllIterator_Type);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
+	DeeObject_Init(result, &ReLocateAllIterator_Type);
 done:
 	return result;
 }
@@ -2299,8 +2299,8 @@ rebla_iter(ReSequence *__restrict self) {
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
-	DeeObject_Init(result, &ReBytesLocateAllIterator_Type);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
+	DeeObject_Init(result, &ReBytesLocateAllIterator_Type);
 done:
 	return result;
 }
@@ -2514,19 +2514,8 @@ INTERN DeeTypeObject ReBytesLocateAll_Type = {
 #define rebsp_visit   refa_visit
 #define rebsp_members refa_members
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-resp_ctor(ReSequence *__restrict self) {
-	int result = refa_ctor(self);
-	self->rs_exec.rx_inbase = NULL;
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rebsp_ctor(ReSequence *__restrict self) {
-	int result = rebfa_ctor(self);
-	self->rs_exec.rx_inbase = NULL;
-	return result;
-}
+#define resp_ctor  refa_ctor
+#define rebsp_ctor rebfa_ctor
 
 #define rebsp_bool resp_bool
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2548,8 +2537,8 @@ resp_iter(ReSequence *__restrict self) {
 	       : result->rsi_exec.rx_inbase == NULL);
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
-	DeeObject_Init(result, &ReSplitIterator_Type);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
+	DeeObject_Init(result, &ReSplitIterator_Type);
 done:
 	return result;
 }
@@ -2568,8 +2557,8 @@ rebsp_iter(ReSequence *__restrict self) {
 	       : result->rsi_exec.rx_inbase == NULL);
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
-	DeeObject_Init(result, &ReBytesSplitIterator_Type);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
+	DeeObject_Init(result, &ReBytesSplitIterator_Type);
 done:
 	return result;
 }

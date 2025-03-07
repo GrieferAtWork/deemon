@@ -24,10 +24,14 @@
 /**/
 
 #include "error.h"
+#include "object.h" /* Dee_WEAKREF */
 #include "types.h"
 /**/
 
 #include <stddef.h> /* size_t */
+#ifdef CONFIG_HOST_WINDOWS
+#include <stdint.h> /* uint32_t */
+#endif /* CONFIG_HOST_WINDOWS */
 
 DECL_BEGIN
 

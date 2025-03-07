@@ -479,19 +479,19 @@ for (local locks: {
 }
 
 /* Assert that built-in lock types are derived from each other in a proper manner. */
-assert LockUnion.derivedfrom(Lock);
-assert AtomicLock.derivedfrom(Lock);
-assert SharedLock.derivedfrom(Lock);
-assert SharedLock.derivedfrom(AtomicLock);
-assert RAtomicLock.derivedfrom(Lock);
-assert RSharedLock.derivedfrom(Lock);
-assert RSharedLock.derivedfrom(RAtomicLock);
-assert AtomicRWLock.derivedfrom(RWLock);
-assert SharedRWLock.derivedfrom(RWLock);
-assert SharedRWLock.derivedfrom(AtomicRWLock);
-assert RAtomicRWLock.derivedfrom(RWLock);
-assert RSharedRWLock.derivedfrom(RWLock);
-assert RSharedRWLock.derivedfrom(RAtomicRWLock);
+assert LockUnion.extends(Lock);
+assert AtomicLock.extends(Lock);
+assert SharedLock.extends(Lock);
+assert SharedLock.extends(AtomicLock);
+assert RAtomicLock.extends(Lock);
+assert RSharedLock.extends(Lock);
+assert RSharedLock.extends(RAtomicLock);
+assert AtomicRWLock.extends(RWLock);
+assert SharedRWLock.extends(RWLock);
+assert SharedRWLock.extends(AtomicRWLock);
+assert RAtomicRWLock.extends(RWLock);
+assert RSharedRWLock.extends(RWLock);
+assert RSharedRWLock.extends(RAtomicRWLock);
 
 
 function testEvent(e: Event) {

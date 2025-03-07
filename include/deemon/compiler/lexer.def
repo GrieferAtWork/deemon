@@ -62,18 +62,18 @@ DEF_K(as)
  * >>     if (bound(foo.attribute_name)) {
  * >>     }
  * >> }
+ *
  * An alternate way of writing a bound-expression is:
  * >> if (foo is bound) {
  * >>     if (foo.attribute_name is bound) {
  * >>     }
  * >> }
- * However in this encoded, you may not surround `bound' with parenthesis.
  */
 DEF_K(bound)
 
 /* Statement keywords. */
 DEF_K(from)
-DEF_K(break) /* WARNING: Next token number be `continue' (keep these together) */
+DEF_K(break) /* WARNING: Next token must be `continue' (keep these together) */
 DEF_K(continue)
 DEF_K(return)
 DEF_K(yield)
@@ -128,7 +128,7 @@ DEF_K(F)
  * >> function set_x() {
  * >>     x = 42;        // Ok
  * >>     global x = 42; // Ok (Does the same)
- * >>     local x = 10;  // 
+ * >>     local x = 10;  // this is a different "x"
  * >> }
  * >> 
  * >> local y;  // Define a local variable not exported by the module.
@@ -293,7 +293,7 @@ DEF_WARNING(W_EXPECTED_LPAREN_AFTER_CATCH, (WG_SYNTAX), WSTATE_ERROR, WARNF("Exp
 DEF_WARNING(W_EXPECTED_RPAREN_AFTER_CATCH, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `)' after `catch', but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_CATCH_AS, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected a keyword after `as' in `catch', but got " TOK_S, TOK_A))
 
-DEF_WARNING(W_EXPECTED_LBRACE_AFTER_FUNCTION, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Expected `{' or `->' after `function' or `[](...)', but got " TOK_S " (Missing function bodies are deprecated since deemon 200)", TOK_A))
+DEF_WARNING(W_EXPECTED_LBRACE_AFTER_FUNCTION, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Expected `{' or `->' after `function' or `[](...)', but got " TOK_S " (Missing function bodies are deprecated in deemon 200)", TOK_A))
 DEF_WARNING(W_EXPECTED_RBRACE_AFTER_FUNCTION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `}' to end function code, but got " TOK_S, TOK_A))
 
 DEF_WARNING(W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT, (WG_SYNTAX), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Positional argument `%s' following an optional or default argument", SYMBOL_NAME(sym)); /*PRINT_SYMBOL_DECLARATION(sym);*/ })
@@ -360,21 +360,21 @@ DEF_WARNING(W_UNCLEAR_CAST_INTENT, (WG_QUALITY), WSTATE_DISABLED, /* Leave this 
             WARNF("Intended code behavior of potential cast expression is ambiguous and not compiled as a cast. "
                   "To suppress this warning, add a second pair of parenthesis to the previous expression"))
 DEF_WARNING(W_PROBABLY_MISSING_ARROW, (WG_QUALITY), WSTATE_WARN,
-            WARNF("Encountered `{' after parenthesis (`(*) {'). This will compile as `Tuple({*})({ ...', "
-                  "which probably isn't what you want. Insert `->' if this is meant to be a lambda, or "
-                  "write `(...)({ ... })' if you really want to call a tuple"))
+            WARNF("Encountered `{' after parenthesis (`(...) {'). This will compile as `Tuple({...})({ ...', "
+                  "which probably isn't what you want. Insert `->' if this is meant to be a lambda, or write "
+                  "`(...)({ ... })' if you really want to call a tuple and get the resulting NotImplemented error"))
 DEF_WARNING(W_UNCLEAR_SYMBOL_FROM_MODULE, (WG_QUALITY), WSTATE_WARN, {
 	char const *sym = ARG(char const *);
 	char const *mod = ARG(char const *);
 	WARNF("Consider writing `(%s from %s)' to prevent confusion on where the module name ends", sym, mod);
 })
-DEF_WARNING(W_PACKED_USED_OUTSIDE_OF_MACRO, (WG_QUALITY), WSTATE_WARN,
+DEF_WARNING(W_PACK_USED_OUTSIDE_OF_MACRO, (WG_QUALITY), WSTATE_WARN,
             WARNF("Using `pack' outside of macros makes code harder to read. Consider using parenthesis instead"))
 DEF_WARNING(W_INCONSISTENT_THOUSANDS_SEPERATORS, (WG_QUALITY), WSTATE_WARN, {
 	size_t s1 = ARG(size_t);
 	size_t s2 = ARG(size_t);
 	WARNF("Thousands/grouping character `_' is used inconsistently in " TOK_S ": "
-	      "grouping with width %" PRFuSIZ " and %" PRFuSIZ " are present",
+	      "groupings of width %" PRFuSIZ " and %" PRFuSIZ " are present",
 	      TOK_A, s1, s2);
 })
 DEF_WARNING(W_INCORRECT_THOUSANDS_SEPERATORS, (WG_QUALITY), WSTATE_WARN, {

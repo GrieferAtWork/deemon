@@ -25,7 +25,7 @@
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
             <Keywords name="Keywords1">pack str repr copy deepcopy type try catch throw finally in is as from import print del return yield break continue goto for foreach while do switch case default assert with if else elif</Keywords>
-            <Keywords name="Keywords2">function global local static __nth __stack final varying class extends private public operator property member</Keywords>
+            <Keywords name="Keywords2">function global local static __nth __stack final varying class private public operator property member</Keywords>
             <Keywords name="Keywords3">true false none this super bound</Keywords>
             <Keywords name="Keywords4">__attribute __attribute__ _declspec __declspec</Keywords>
             <Keywords name="Keywords5">_Pragma __BASE_FILE__ __has_include __has_include_next __TPP_LOAD_FILE __TPP_COUNTER __TPP_RANDOM __TPP_EVAL __TPP_STR_DECOMPILE __TPP_STR_AT __TPP_STR_SUBSTR __TPP_STR_PACK __TPP_STR_SIZE __FILE__ __LINE__ __DATE__ __TIME__ __TIMESTAMP__ __INCLUDE_LEVEL__ __INCLUDE_DEPTH__ __TIME_SEC__ __TIME_MIN__ __TIME_HOUR__ __DATE_DAY__ __DATE_WDAY__ __DATE_YDAY__ __DATE_MONTH__ __DATE_YEAR__ __COUNTER__ __is_identifier __is_builtin_identifier __is_deprecated __has_attribute __has_builtin __has_declspec_attribute __has_extension __has_feature __has_tpp_builtin __has_cpp_attribute __has_warning __has_known_extension __has_known_warning</Keywords>

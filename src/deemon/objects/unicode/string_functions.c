@@ -11817,7 +11817,7 @@ string_mul(String *self, DeeObject *other) {
 		src = (uint8_t *)DeeString_STR(self);
 		dst = (uint8_t *)DeeString_STR(result);
 		while (repeat--)
-			dst = (uint8_t *)mempcpyb(dst, src, my_length);
+			dst = mempcpyb(dst, src, my_length);
 		return result;
 	}	break;
 
