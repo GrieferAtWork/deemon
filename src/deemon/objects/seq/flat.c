@@ -663,11 +663,7 @@ sf_delitem_index(SeqFlat *__restrict self, size_t index) {
 	return sf_interact_withitem(self, index, &sf_delitem_index_cb, NULL);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define sf_setitem_index_cb default__seq_operator_setitem_index
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-#define sf_setitem_index_cb DeeSeq_OperatorSetItemIndex
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 sf_setitem_index(SeqFlat *__restrict self, size_t index, DeeObject *value) {

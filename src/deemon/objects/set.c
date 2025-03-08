@@ -20,30 +20,20 @@
 #ifndef GUARD_DEEMON_OBJECTS_SET_C
 #define GUARD_DEEMON_OBJECTS_SET_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
 #include <deemon/none-operator.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
-#include <deemon/thread.h>
 
 #include "../runtime/method-hints.h"
-#include "../runtime/operator-require.h"
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-#include "seq/default-api.h"
 #include "seq/default-sets.h"
 #include "seq/unique-iterator.h"
 
@@ -63,76 +53,12 @@ err:
 	return NULL;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_difference(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	if (DeeArg_Unpack(argc, argv, "o:difference", &other))
-		goto err;
-	return DeeSet_OperatorSub(self, other);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_intersection(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	if (DeeArg_Unpack(argc, argv, "o:intersection", &other))
-		goto err;
-	return DeeSet_OperatorAnd(self, other);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_union(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	if (DeeArg_Unpack(argc, argv, "o:union", &other))
-		goto err;
-	return DeeSet_OperatorAdd(self, other);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_symmetric_difference(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	if (DeeArg_Unpack(argc, argv, "o:symmetric_difference", &other))
-		goto err;
-	return DeeSet_OperatorXor(self, other);
-err:
-	return NULL;
-}
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_issubset(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	if (DeeArg_Unpack(argc, argv, "o:issubset", &other))
-		goto err;
-	return DeeSet_OperatorLe(self, other);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_issuperset(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	if (DeeArg_Unpack(argc, argv, "o:issuperset", &other))
-		goto err;
-	return DeeSet_OperatorGe(self, other);
-err:
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 PRIVATE struct type_method tpconst set_methods[] = {
 	TYPE_METHOD("isdisjoint", &set_isdisjoint,
 	            "(with_:?.)->?Dbool\n"
 	            "Returns ?t if ${!((this as Set) & with_)}\n"
 	            "In other words: If @this and @with_ have no items in common"),
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD(STR_union, &DeeMA_Set_union,
 	            "(with_:?.)->?.\n"
 	            "Same as ${(this as Set) | with_}"),
@@ -151,26 +77,6 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	TYPE_METHOD(STR_issuperset, &DeeMA_Set_issuperset,
 	            "(of:?.)->?Dbool\n"
 	            "Same as ${(this as Set) >= of}"),
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	TYPE_METHOD("union", &set_union,
-	            "(with_:?.)->?.\n"
-	            "Same as ${(this as Set) | with_}"),
-	TYPE_METHOD("symmetric_difference", &set_symmetric_difference,
-	            "(with_:?.)->?.\n"
-	            "Same as ${(this as Set) ^ with_}"),
-	TYPE_METHOD("difference", &set_difference,
-	            "(to:?.)->?.\n"
-	            "Same as ${(this as Set) - to}"),
-	TYPE_METHOD("intersection", &set_intersection,
-	            "(with_:?.)->?.\n"
-	            "Same as ${(this as Set) & with_}"),
-	TYPE_METHOD("issubset", &set_issubset,
-	            "(of:?.)->?Dbool\n"
-	            "Same as ${(this as Set) <= of}"),
-	TYPE_METHOD("issuperset", &set_issuperset,
-	            "(of:?.)->?Dbool\n"
-	            "Same as ${(this as Set) >= of}"),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Default functions for mutable sets */
 	TYPE_METHOD(STR_insert, &DeeMH_set_insert,
@@ -185,12 +91,6 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	TYPE_METHOD(STR_removeall, &DeeMH_set_removeall,
 	            "(keys:?S?O)\n"
 	            "Remove all elements from @keys from @this set"),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_METHOD(STR_unify, &DeeMH_set_unify,
-	            "(key)->\n"
-	            "Insert @key into @this set if it wasn't contained already, and "
-	            /**/ "return the (potential) copy of @key that is part of the set"),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD(STR_pop, &DeeMH_set_pop,
 	            "(def?)->\n"
 	            "#tValueError{Set is empty and no @def was given}\n"
@@ -203,29 +103,12 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	TYPE_METHOD("__size__", &default_set___size__,
 	            "->?Dint\n"
 	            "Alias for ${#(this as Set)}"),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_METHOD("__foreach__", &default_set___foreach__,
-	            "(cb)->\n"
-	            "Alias for:\n"
-	            "${"
-	            /**/ "for (local item: this as Set) {\n"
-	            /**/ "	local res = cb(item);\n"
-	            /**/ "	if (res !is none)\n"
-	            /**/ "		return res;\n"
-	            /**/ "}"
-	            "}"),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__hash__", &default_set___hash__,
 	            "->?Dint\n"
 	            "Alias for ${(this as Set).operator hash()}"),
 	TYPE_METHOD("__compare_eq__", &default_set___compare_eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Set).operator == (rhs)}"),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_METHOD("__trycompare_eq__", &default_set___trycompare_eq__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${deemon.equals(this as Set, rhs)}"),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__eq__", &default_set___eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Set) == rhs}"),
@@ -283,9 +166,6 @@ PRIVATE struct type_method tpconst set_methods[] = {
 
 INTDEF struct type_getset tpconst set_getsets[];
 INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#define default__set_frozen DeeRoSet_FromSequence
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_GETTER(STR_frozen, &default__set_frozen,
 	            "->?#Frozen\n"
 	            "Returns a copy of @this ?., with all of its current elements frozen in place, "
@@ -297,7 +177,6 @@ INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
 };
 
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 set_Frozen_get(DeeTypeObject *__restrict self) {
 	DeeTypeObject *result = &DeeSet_Type;
@@ -319,53 +198,6 @@ set_Iterator_get(DeeTypeObject *__restrict self) {
 	}
 	return_reference_(result);
 }
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-/*[[[deemon
-import define_Dee_HashStr from rt.gen.hash;
-print define_Dee_HashStr("Frozen");
-]]]*/
-#define Dee_HashStr__Frozen _Dee_HashSelectC(0xa7ed3902, 0x16013e56a91991ea)
-/*[[[end]]]*/
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-set_Frozen_get(DeeTypeObject *__restrict self) {
-	int error;
-	DREF DeeTypeObject *result;
-	struct attribute_info info;
-	struct attribute_lookup_rules rules;
-	rules.alr_name       = "Frozen";
-	rules.alr_hash       = Dee_HashStr__Frozen;
-	rules.alr_decl       = NULL;
-	rules.alr_perm_mask  = ATTR_PERMGET | ATTR_IMEMBER;
-	rules.alr_perm_value = ATTR_PERMGET | ATTR_IMEMBER;
-	error = DeeObject_FindAttr(Dee_TYPE(self),
-	                           (DeeObject *)self,
-	                           &info,
-	                           &rules);
-	if unlikely(error < 0)
-		goto err;
-	if (error != 0)
-		return_reference_(&DeeRoSet_Type);
-	if (info.a_attrtype) {
-		result = info.a_attrtype;
-		Dee_Incref(result);
-	} else if (info.a_decl == (DeeObject *)&DeeSet_Type) {
-		result = &DeeRoSet_Type;
-		Dee_Incref(&DeeRoSet_Type);
-	} else {
-		if (info.a_doc) {
-			/* TODO: Use doc meta-information to determine the return type! */
-		}
-		/* Fallback: just tell the caller what they already know: a set will be returned... */
-		result = &DeeSet_Type;
-		Dee_Incref(&DeeSet_Type);
-	}
-	attribute_info_fini(&info);
-	return result;
-err:
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
@@ -373,11 +205,9 @@ PRIVATE struct type_getset tpconst set_class_getsets[] = {
 	TYPE_GETTER("Frozen", &set_Frozen_get,
 	            "->?DType\n"
 	            "Returns the type of ?DSet returned by the ?#frozen property"),
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_GETTER(STR_Iterator, &set_Iterator_get,
 	            "->?DType\n"
 	            "Returns the type of ?DIterator returned by the ?#{op:iter}"),
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_GETSET_END
 };
 
@@ -405,7 +235,6 @@ PRIVATE struct type_operator const set_operators[] = {
 };
 
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE struct type_math set_math = {
 	/* .tp_int32       = */ NULL,
 	/* .tp_int64       = */ NULL,
@@ -465,9 +294,9 @@ PRIVATE struct type_seq set_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ &default__set_operator_foreach,
 	/* .tp_foreach_pair               = */ &default__foreach_pair__with__foreach,
-	/* ._deprecated_tp_enumerate      = */ NULL,
-	/* ._deprecated_tp_enumerate_index= */ NULL,
-	/* ._deprecated_tp_iterkeys       = */ NULL,
+	/* .tp_enumerate      = */ NULL,
+	/* .tp_enumerate_index= */ NULL,
+	/* .tp_iterkeys       = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ &default__set_operator_size,
@@ -501,7 +330,6 @@ PRIVATE struct type_seq set_seq = {
 	/* .tp_asvector                   = */ NULL,
 	/* .tp_asvector_nothrow           = */ NULL,
 };
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #ifdef CONFIG_NO_DOC
 #define set_doc NULL
@@ -598,7 +426,6 @@ PRIVATE char const set_doc[] =
 #endif /* !CONFIG_NO_DOC */
 
 /* `Set from deemon' */
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PUBLIC DeeTypeObject DeeSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Set),
@@ -652,65 +479,6 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	/* .tp_operators_size= */ COMPILER_LENOF(set_operators),
 	/* .tp_mhcache       = */ &mh_cache_empty,
 };
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-/* Prevent the computed-operator system from seeing this one */
-#define _old_DeeSet_Type DeeSet_Type
-#define _old_DeeSet_name DeeString_STR(&str_Set)
-PUBLIC DeeTypeObject _old_DeeSet_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ _old_DeeSet_name,
-	/* .tp_doc      = */ set_doc,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT | TP_FNAMEOBJECT, /* Generic base class type. */
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE | (Dee_SEQCLASS_SET << Dee_TF_SEQCLASS_SHFT),
-	/* .tp_base     = */ &DeeSeq_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor, /* Allow default-construction of sequence objects. */
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_S(DeeObject)
-			}
-		},
-		/* .tp_dtor        = */ NULL,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
-		/* .tp_bool      = */ &DeeSet_OperatorBool,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ &default_set_printrepr,
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ &DeeSet_OperatorMath,
-	/* .tp_cmp           = */ &DeeSet_OperatorCmp,
-	/* .tp_seq           = */ &DeeSet_OperatorSeq,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ set_methods,
-	/* .tp_getsets       = */ set_getsets,
-	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ set_class_getsets,
-	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ NULL,
-	/* .tp_mro           = */ NULL,
-	/* .tp_operators     = */ set_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(set_operators)
-};
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PUBLIC DeeObject DeeSet_EmptyInstance = {
 	OBJECT_HEAD_INIT(&DeeSet_Type)

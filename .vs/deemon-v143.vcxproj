@@ -402,15 +402,6 @@
 		<ClInclude Include="..\src\deemon\objects\seq\cached-seq.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\combinations.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\concat.h" />
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-attrproxy-impl.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-bsearch-impl.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-first.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-last.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-operator-methods.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-operators.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-method-impl.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-operator-impl.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\default-api.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-enumerate.h" />
@@ -470,7 +461,6 @@
 		<ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\operator-hint-errors.h" />
-		<ClInclude Include="..\src\deemon\runtime\operator-require.h" />
 		<ClInclude Include="..\src\deemon\runtime\runtime_error.h" />
 		<ClInclude Include="..\src\deemon\runtime\slab-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\slab.c.inl" />
@@ -607,8 +597,6 @@
 		<ClCompile Include="..\src\deemon\objects\seq\cached-seq.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\combinations.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\concat.c" />
-		<ClCompile Include="..\src\deemon\objects\seq\default-api-methods.c" />
-		<ClCompile Include="..\src\deemon\objects\seq\default-api.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-compare.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-enumerate.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-iterators.c" />
@@ -698,7 +686,6 @@
 		<None Include="..\README.md" />
 		<None Include="..\cpp.hint" />
 		<None Include="..\include\deemon\compiler\lexer.def" />
-		<None Include="..\include\deemon\method-hints.def" />
 		<None Include="..\src\deemon\compiler\asm\userdb.def" />
 		<CustomBuild Include="..\src\deemon\execute\asm\altstack.ms-x64.S">
 			<FileType>Document</FileType>

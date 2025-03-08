@@ -1461,12 +1461,7 @@ list_setrange_index(List *me, Dee_ssize_t start,
 	struct Dee_seq_range range;
 
 	/* Check if "items" can be appended in-place. */
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	if (Dee_TYPE(items)->tp_seq)
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	if (Dee_TYPE(items)->tp_seq || DeeType_InheritSize(Dee_TYPE(items)))
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	{
+	if (Dee_TYPE(items)->tp_seq) {
 		size_t items_size_fast;
 		size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 		tp_asvector_nothrow = Dee_TYPE(items)->tp_seq->tp_asvector_nothrow;
@@ -1719,12 +1714,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	size_t used_index;
 
 	/* Check if "items" can be appended in-place. */
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	if (Dee_TYPE(items)->tp_seq)
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	if (Dee_TYPE(items)->tp_seq || DeeType_InheritSize(Dee_TYPE(items)))
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	{
+	if (Dee_TYPE(items)->tp_seq) {
 		size_t items_size_fast;
 		size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 		tp_asvector_nothrow = Dee_TYPE(items)->tp_seq->tp_asvector_nothrow;
@@ -1905,12 +1895,7 @@ list_setrange_index_n(List *me, Dee_ssize_t start, DeeObject *items) {
 	size_t start_index;
 
 	/* Check if "items" can be appended in-place. */
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	if (Dee_TYPE(items)->tp_seq)
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	if (Dee_TYPE(items)->tp_seq || DeeType_InheritSize(Dee_TYPE(items)))
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	{
+	if (Dee_TYPE(items)->tp_seq) {
 		size_t items_size_fast;
 		size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 		tp_asvector_nothrow = Dee_TYPE(items)->tp_seq->tp_asvector_nothrow;
@@ -2139,12 +2124,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	size_t old_size, insert_c;
 
 	/* Check if "items" can be appended in-place. */
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	if (Dee_TYPE(items)->tp_seq)
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	if (Dee_TYPE(items)->tp_seq || DeeType_InheritSize(Dee_TYPE(items)))
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	{
+	if (Dee_TYPE(items)->tp_seq) {
 		size_t items_size_fast;
 		size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 		tp_asvector_nothrow = Dee_TYPE(items)->tp_seq->tp_asvector_nothrow;
@@ -3090,7 +3070,6 @@ list_sizeof(List *me) {
 	return DeeInt_NewSize(result);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_tryget_first(List *__restrict me) {
 	DREF DeeObject *result;
@@ -3105,7 +3084,6 @@ err_empty_endread:
 	DeeList_LockEndRead(me);
 	return ITER_DONE;
 }
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_get_first(List *__restrict me) {
@@ -3164,7 +3142,6 @@ err_empty_endwrite:
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_tryget_last(List *__restrict me) {
 	DREF DeeObject *result;
@@ -3179,7 +3156,6 @@ err_empty_endread:
 	DeeList_LockEndRead(me);
 	return ITER_DONE;
 }
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_get_last(List *__restrict me) {
@@ -3728,9 +3704,7 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	TYPE_METHOD_HINTREF(seq_reverse),
 	TYPE_METHOD_HINTREF(seq_sort),
 	TYPE_METHOD_HINTREF(seq_sorted),
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD_HINTREF(__seq_append__),
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Deprecated aliases / functions. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
@@ -3772,10 +3746,8 @@ PRIVATE struct type_method tpconst list_methods[] = {
 };
 
 PRIVATE struct type_method_hint tpconst list_method_hints[] = {
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &list_tryget_first, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &list_tryget_last, METHOD_FNOREFESCAPE),
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_append, &DeeList_Append, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_extend, &DeeList_AppendSequence, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_resize, &DeeList_Resize, METHOD_FNOREFESCAPE),
@@ -4051,7 +4023,6 @@ list_compare_v(List *lhs, DeeObject *const *rhsv, size_t rhsc) {
 	return 1; /* COUNT(lhs) > COUNT(rhs) */
 }
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 list_compare_eq(List *lhs, DeeObject *rhs) {
 	if (DeeList_CheckExact(lhs)) {
@@ -4071,21 +4042,6 @@ list_compare(List *lhs, DeeObject *rhs) {
 	}
 	return default__seq_operator_compare__with__seq_operator_size__and__seq_operator_getitem_index((DeeObject *)lhs, rhs);
 }
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-list_compare_eq(List *lhs, DeeObject *rhs) {
-	if (DeeList_CheckExact(lhs) && DeeTuple_Check(rhs))
-		return list_compare_eq_v(lhs, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
-	return DeeSeq_TDefaultCompareEqWithSizeAndGetItemIndexFast(&DeeList_Type, (DeeObject *)lhs, rhs);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-list_compare(List *lhs, DeeObject *rhs) {
-	if (DeeList_CheckExact(lhs) && DeeTuple_Check(rhs))
-		return list_compare_v(lhs, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
-	return DeeSeq_TDefaultCompareWithSizeAndGetItemIndexFast(&DeeList_Type, (DeeObject *)lhs, rhs);
-}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 list_hash(List *__restrict me) {

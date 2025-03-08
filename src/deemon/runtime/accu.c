@@ -140,15 +140,7 @@ PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 	DeeObject *first = self->acu_value.v_object;
 	DeeTypeObject *tp_first = Dee_TYPE(first);
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	DeeNO_add_t tp_add = DeeType_RequireNativeOperator(tp_first, add);
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	DeeNO_add_t tp_add = DeeType_RequireSupportedNativeOperator(tp_first, add);
-	if unlikely(!tp_add) {
-		err_unimplemented_operator(tp_first, OPERATOR_ADD);
-		goto err;
-	}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Select special (more efficient) implementations for specific types. */
 	if (tp_add == (DeeNO_add_t)&string_cat) {

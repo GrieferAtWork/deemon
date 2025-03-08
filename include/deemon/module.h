@@ -26,6 +26,7 @@
 #include "gc.h"
 #include "types.h"
 #include "system.h" /* DEE_SYSTEM_FS_ICASE */
+#include "system-features.h" /* bcmp */
 #include "util/lock.h"
 /**/
 

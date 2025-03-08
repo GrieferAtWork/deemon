@@ -30,13 +30,10 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 
+#include "../runtime/method-hint-super.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
-
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#include "../runtime/method-hint-super.h"
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /**/
 
 #include <stddef.h> /* size_t, offsetof */
@@ -624,24 +621,6 @@ super_foreach_pair(Super *me, Dee_foreach_pair_t proc, void *arg) {
 	return DeeObject_TForeachPair(me->s_type, me->s_self, proc, arg);
 }
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-super_enumerate(Super *__restrict me, Dee_seq_enumerate_t proc, void *arg) {
-	return DeeObject_TEnumerate(me->s_type, me->s_self, proc, arg);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-super_enumerate_index(Super *__restrict me, Dee_seq_enumerate_index_t proc,
-                      void *arg, size_t start, size_t end) {
-	return DeeObject_TEnumerateIndex(me->s_type, me->s_self, proc, arg, start, end);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-super_iterkeys(Super *__restrict self) {
-	return DeeObject_TIterKeys(self->s_type, self->s_self);
-}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_bounditem(Super *self, DeeObject *index) {
 	return DeeObject_TBoundItem(self->s_type, self->s_self, index);
@@ -787,24 +766,6 @@ super_hasitem_string_len_hash(Super *self, char const *key, size_t keylen, Dee_h
 	return DeeObject_THasItemStringLenHash(self->s_type, self->s_self, key, keylen, hash);
 }
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-super_unpack(Super *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
-	return DeeObject_TUnpack(self->s_type, self->s_self, dst_length, dst);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-super_unpack_ex(Super *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst) {
-	return DeeObject_TUnpackEx(self->s_type, self->s_self, dst_length_min, dst_length_max, dst);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-super_unpack_ub(Super *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
-	return DeeObject_TUnpackWithUnbound(self->s_type, self->s_self, dst_length, dst);
-}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
-
 PRIVATE struct type_seq super_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_sizeob,
@@ -817,15 +778,9 @@ PRIVATE struct type_seq super_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&super_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&super_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&super_foreach_pair,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* ._deprecated_tp_enumerate      = */ NULL,
-	/* ._deprecated_tp_enumerate_index= */ NULL,
-	/* ._deprecated_tp_iterkeys       = */ NULL,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&super_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&super_enumerate_index,
-	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_iterkeys,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	/* .tp_enumerate      = */ NULL,
+	/* .tp_enumerate_index= */ NULL,
+	/* .tp_iterkeys       = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&super_size,
@@ -858,15 +813,9 @@ PRIVATE struct type_seq super_seq = {
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&super_hasitem_string_len_hash,
 	/* .tp_asvector                   = */ NULL,
 	/* .tp_asvector_nothrow           = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	/* .tp_unpack                     = */ NULL,
 	/* .tp_unpack_ex                  = */ NULL,
 	/* .tp_unpack_ub                  = */ NULL,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_unpack                     = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&super_unpack,
-	/* .tp_unpack_ex                  = */ (size_t (DCALL *)(DeeObject *, size_t, size_t, DREF DeeObject **))&super_unpack_ex,
-	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&super_unpack_ub,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1314,9 +1263,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ NULL,
 	/* .tp_operators_size= */ 0,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	/* .tp_mhcache       = */ &super_mhcache,
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 

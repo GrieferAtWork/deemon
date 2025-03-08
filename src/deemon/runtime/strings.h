@@ -1279,11 +1279,6 @@ DEF_STRING(str_this_function, "this_function", 0xe2b69fa3, 0xdf2ba17d58877ece)
 #ifndef STR_this_function
 #define STR_this_function "this_function"
 #endif /* !STR_this_function */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#ifndef STR_Typed
-#define STR_Typed "Typed"
-#endif /* !STR_Typed */
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #ifndef STR_ItemType
 #define STR_ItemType "ItemType"
 #endif /* !STR_ItemType */

@@ -11573,7 +11573,6 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	 * will behave as expected (and not call "string.find")
 	 *
 	 * s.a. "string_method_hints" */
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD_HINTREF(__seq_compare__),
 	TYPE_METHOD_HINTREF(__seq_compare_eq__),
 	TYPE_METHOD_HINTREF(__seq_eq__),
@@ -11591,14 +11590,6 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_METHOD_HINTREF(__seq_endswith__),
 	TYPE_METHOD_HINTREF(__seq_find__),
 	TYPE_METHOD_HINTREF(__seq_rfind__),
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	TYPE_METHOD_HINTREF(explicit_seq_count),
-	TYPE_METHOD_HINTREF(explicit_seq_contains),
-	TYPE_METHOD_HINTREF(explicit_seq_startswith),
-	TYPE_METHOD_HINTREF(explicit_seq_endswith),
-	TYPE_METHOD_HINTREF(explicit_seq_find),
-	TYPE_METHOD_HINTREF(explicit_seq_rfind),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_END
 };
 

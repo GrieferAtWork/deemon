@@ -1903,17 +1903,8 @@ INTERN WUNUSED NONNULL((1, 2)) DREF Tuple *DCALL
 tuple_concat(Tuple *self, DeeObject *other) {
 	DREF Tuple *result;
 	size_t other_sizehint, total_size;
-	DeeTypeObject *tp_other = Dee_TYPE(other);
-	DeeNO_foreach_t tp_other_foreach;
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	tp_other_foreach = DeeType_RequireNativeOperator(tp_other, foreach);
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	tp_other_foreach = DeeType_RequireSupportedNativeOperator(tp_other, foreach);
-	if unlikely(!tp_other_foreach) {
-		err_unimplemented_operator(tp_other, OPERATOR_ITER);
-		goto err;
-	}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	DeeTypeObject *tp_other          = Dee_TYPE(other);
+	DeeNO_foreach_t tp_other_foreach = DeeType_RequireNativeOperator(tp_other, foreach);
 
 	/* Try to get an idea of how large the final sequence will be. */
 	if (tp_other->tp_seq && tp_other->tp_seq->tp_size_fast) {
@@ -2000,16 +1991,8 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 		return (DREF DeeObject *)result;
 	}
 
-	tp_sequence = Dee_TYPE(sequence);
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	tp_sequence         = Dee_TYPE(sequence);
 	tp_sequence_foreach = DeeType_RequireNativeOperator(tp_sequence, foreach);
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	tp_sequence_foreach = DeeType_RequireSupportedNativeOperator(tp_sequence, foreach);
-	if unlikely(!tp_sequence_foreach) {
-		err_unimplemented_operator(tp_sequence, OPERATOR_ITER);
-		goto err_me;
-	}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Try to get an idea of how large the final sequence will be. */
 	if (tp_sequence->tp_seq && tp_sequence->tp_seq->tp_size_fast) {

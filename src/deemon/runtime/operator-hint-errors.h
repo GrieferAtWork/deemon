@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINT_ERRORS_H 1
 
 #include <deemon/api.h>
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/object.h>
 
 /**/
@@ -241,6 +240,5 @@ INTDEF int DCALL default__setattr_string_len_hash__badalloc(void*, void*, void*,
 /* clang-format on */
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_OPERATOR_HINT_ERRORS_H */

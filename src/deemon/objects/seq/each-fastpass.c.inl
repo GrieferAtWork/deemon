@@ -778,8 +778,7 @@ LOCAL_seX(getitem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t 
 PRIVATE struct type_method_hint LOCAL_seX(method_hints)[] = {
 	TYPE_METHOD_HINT(seq_enumerate, &LOCAL_seX(mh_seq_enumerate)),
 	TYPE_METHOD_HINT(seq_enumerate_index, &LOCAL_seX(mh_seq_enumerate_index)),
-	/* TODO: These all still use the default `DeeObject_*' API -- change them to use the method hint API */
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* TODO: CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: These all still use the default `DeeObject_*' API -- change them to use the method hint API */
 	TYPE_METHOD_HINT(seq_operator_iter, &LOCAL_seX(iter)),
 	TYPE_METHOD_HINT(seq_operator_foreach, &LOCAL_seX(foreach)),
 	TYPE_METHOD_HINT(seq_operator_getitem, &LOCAL_seX(getitem)),
@@ -805,7 +804,6 @@ PRIVATE struct type_method_hint LOCAL_seX(method_hints)[] = {
 	TYPE_METHOD_HINT(seq_operator_setrange_index_n, &LOCAL_seX(setrange_index_n)),
 	TYPE_METHOD_HINT(seq_operator_size, &sew_size),
 	TYPE_METHOD_HINT(seq_operator_sizeob, &sew_sizeob),
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_END
 };
 

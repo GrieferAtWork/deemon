@@ -23,17 +23,12 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
-#include <deemon/class.h>
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -42,12 +37,8 @@
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-
-#include <hybrid/overflow.h>
 
 #include "../runtime/kwlist.h"
 #include "../runtime/method-hint-defaults.h"
@@ -55,10 +46,7 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/combinations.h"
-#include "seq/concat.h"
-#include "seq/default-api.h"
 #include "seq/default-iterators.h"
-#include "seq/default-reversed.h"
 #include "seq/default-sequences.h"
 #include "seq/each.h"
 #include "seq/enumerate-cb.h"
@@ -69,7 +57,6 @@
 #include "seq/repeat.h"
 #include "seq/segments.h"
 #include "seq/simpleproxy.h"
-#include "seq/svec.h"
 #include "seq/unique-iterator.h"
 
 #undef SSIZE_MAX
@@ -164,7 +151,6 @@ empty_range:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 	DeeTypeObject *result = &DeeIterator_Type;
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	DeeMH_seq_operator_iter_t seq_operator_iter = DeeType_RequireMethodHint(self, seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty) {
 		/*result = &DeeIterator_Type;*/
@@ -189,49 +175,6 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 	} else if (seq_operator_iter == &default__set_operator_iter__with__seq_operator_iter) {
 		result = &DistinctIterator_Type;
 	}
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	if ((self->tp_seq && self->tp_seq->tp_iter) || DeeType_InheritIter(self)) {
-		DREF DeeObject *(DCALL *tp_iter)(DeeObject *__restrict self);
-		tp_iter = self->tp_seq->tp_iter;
-		if (tp_iter == &DeeObject_DefaultIterWithForeach) {
-			result = &DefaultIterator_WithForeach_Type;
-		} else if (tp_iter == &DeeObject_DefaultIterWithForeachPair) {
-			result = &DefaultIterator_WithForeachPair_Type;
-		} else if (tp_iter == &DeeObject_DefaultIterWithEnumerate) {
-			result = &DefaultIterator_WithEnumerateSeq_Type;
-		} else if (tp_iter == &DeeObject_DefaultIterWithEnumerateIndex) {
-			result = &DefaultIterator_WithEnumerateIndexSeq_Type;
-		} else if (tp_iter == &DeeObject_DefaultIterWithIterKeysAndTryGetItem) {
-			result = &DefaultIterator_WithIterKeysAndTryGetItemSeq_Type;
-		} else if (tp_iter == &DeeObject_DefaultIterWithIterKeysAndGetItem) {
-			result = &DefaultIterator_WithIterKeysAndGetItemSeq_Type; /* or: DefaultIterator_WithIterKeysAndTGetItemSeq_Type */
-		} else if (tp_iter == &DeeObject_DefaultIterWithIterKeysAndTryGetItemDefault) {
-			result = &DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type; /* or: DefaultIterator_WithIterKeysAndTryGetItemSeq_Type */
-		} else if (tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast) {
-			result = &DefaultIterator_WithSizeAndGetItemIndexFast_Type;
-		} else if (tp_iter == &DeeSeq_DefaultIterWithSizeAndTryGetItemIndex) {
-			result = &DefaultIterator_WithSizeAndTryGetItemIndex_Type;
-		} else if (tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndex) {
-			result = &DefaultIterator_WithSizeAndGetItemIndex_Type;
-		} else if (tp_iter == &DeeSeq_DefaultIterWithGetItemIndex) {
-			result = &DefaultIterator_WithGetItemIndex_Type;
-		} else if (tp_iter == &DeeSeq_DefaultIterWithSizeObAndGetItem) {
-			result = &DefaultIterator_WithSizeObAndGetItem_Type; /*or: DefaultIterator_WithSizeObAndTGetItem_Type */
-		} else if (tp_iter == &DeeSeq_DefaultIterWithGetItem) {
-			result = &DefaultIterator_WithGetItem_Type; /* or: DefaultIterator_WithTGetItem_Type */
-		} else if (tp_iter == &DeeMap_DefaultIterWithEnumerate) {
-			result = &DefaultIterator_WithEnumerateMap_Type;
-		} else if (tp_iter == &DeeMap_DefaultIterWithEnumerateIndex) {
-			result = &DefaultIterator_WithEnumerateIndexMap_Type;
-		} else if (tp_iter == &DeeMap_DefaultIterWithIterKeysAndTryGetItem) {
-			result = &DefaultIterator_WithIterKeysAndTryGetItemMap_Type;
-		} else if (tp_iter == &DeeMap_DefaultIterWithIterKeysAndGetItem) {
-			result = &DefaultIterator_WithIterKeysAndGetItemMap_Type; /* or: DefaultIterator_WithIterKeysAndTGetItemMap_Type */
-		} else if (tp_iter == &DeeMap_DefaultIterWithIterKeysAndTryGetItemDefault) {
-			result = &DefaultIterator_WithIterKeysAndTTryGetItemMap_Type; /* or: DefaultIterator_WithIterKeysAndTryGetItemMap_Type */
-		}
-	}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	return_reference_(result);
 }
 
@@ -299,20 +242,6 @@ default_set_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, v
 }
 
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-seq_mul(DeeObject *self, DeeObject *countob) {
-	size_t count;
-	if (DeeObject_AsSize(countob, &count))
-		goto err;
-	return DeeSeq_Repeat(self, count);
-err:
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
-
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #ifdef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
 #define IF_HAVE_SET_OPERATORS_IN_SEQ(x) x
 #else /* CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
@@ -352,60 +281,10 @@ PRIVATE struct type_math seq_math = {
 	/* .tp_inplace_xor = */ IF_HAVE_SET_OPERATORS_IN_SEQ(&default__set_operator_inplace_xor),
 	/* .tp_inplace_pow = */ NULL,
 };
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-PRIVATE struct type_math _old_seq_math = {
-	/* .tp_int32       = */ NULL,
-	/* .tp_int64       = */ NULL,
-	/* .tp_double      = */ NULL,
-	/* .tp_int         = */ NULL,
-#ifdef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
-	/* .tp_inv         = */ &DeeSet_OperatorInv,
-#else /* CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
-	/* .tp_inv         = */ NULL,
-#endif /* !CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
-	/* .tp_pos         = */ NULL,
-	/* .tp_neg         = */ NULL,
-	/* .tp_add         = */ &DeeSeq_Concat,
-#ifdef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
-	/* .tp_inv         = */ &DeeSet_OperatorSub,
-#else /* CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
-	/* .tp_sub         = */ NULL,
-#endif /* !CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
-	/* .tp_mul         = */ &seq_mul,
-	/* .tp_div         = */ NULL,
-	/* .tp_mod         = */ NULL,
-	/* .tp_shl         = */ NULL,
-	/* .tp_shr         = */ NULL,
-#ifdef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
-	/* .tp_and         = */ &DeeSet_OperatorAnd,
-	/* .tp_or          = */ &DeeSet_OperatorAdd,
-	/* .tp_xor         = */ &DeeSet_OperatorXor,
-#else /* CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
-	/* .tp_and         = */ NULL,
-	/* .tp_or          = */ NULL,
-	/* .tp_xor         = */ NULL,
-#endif /* !CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
-	/* .tp_pow         = */ NULL,
-	/* .tp_inc         = */ NULL,
-	/* .tp_dec         = */ NULL,
-	/* .tp_inplace_add = */ &DeeSeq_OperatorInplaceAdd,
-	/* .tp_inplace_sub = */ NULL,
-	/* .tp_inplace_mul = */ &DeeSeq_OperatorInplaceMul,
-	/* .tp_inplace_div = */ NULL,
-	/* .tp_inplace_mod = */ NULL,
-	/* .tp_inplace_shl = */ NULL,
-	/* .tp_inplace_shr = */ NULL,
-	/* .tp_inplace_and = */ NULL,
-	/* .tp_inplace_or  = */ NULL,
-	/* .tp_inplace_xor = */ NULL,
-	/* .tp_inplace_pow = */ NULL,
-};
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 seq_Frozen_get(DeeTypeObject *__restrict self) {
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	DeeTypeObject *result = &DeeSeq_Type;
 	DeeMH_seq_frozen_t seq_frozen = DeeType_RequireMethodHint(self, seq_frozen);
 	if (seq_frozen == &DeeObject_NewRef) {
@@ -414,55 +293,6 @@ seq_Frozen_get(DeeTypeObject *__restrict self) {
 		result = &DeeTuple_Type;
 	}
 	return_reference_(result);
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-/*[[[deemon
-import define_Dee_HashStr from rt.gen.hash;
-print define_Dee_HashStr("Frozen");
-]]]*/
-#define Dee_HashStr__Frozen _Dee_HashSelectC(0xa7ed3902, 0x16013e56a91991ea)
-/*[[[end]]]*/
-	int error;
-	DREF DeeTypeObject *result;
-	struct attribute_info info;
-	struct attribute_lookup_rules rules;
-	rules.alr_name       = "Frozen";
-	rules.alr_hash       = Dee_HashStr__Frozen;
-	rules.alr_decl       = NULL;
-	rules.alr_perm_mask  = ATTR_PERMGET | ATTR_IMEMBER;
-	rules.alr_perm_value = ATTR_PERMGET | ATTR_IMEMBER;
-	error = DeeObject_FindAttr(Dee_TYPE(self),
-	                           (DeeObject *)self,
-	                           &info,
-	                           &rules);
-	if unlikely(error < 0)
-		goto err;
-	if (error != 0) {
-		/* If the type doesn't provide its own override for `Frozen', the default
-		 * implementation provided by us will return information via a tuple instead. */
-		return_reference_(&DeeTuple_Type);
-	}
-	if (info.a_attrtype) {
-		result = info.a_attrtype;
-		Dee_Incref(result);
-	} else if (info.a_decl == (DeeObject *)&DeeSeq_Type) {
-		/* We've the ones implementing the attribute, and since we know that we're
-		 * already implementing it by casting ourself to a tuple, inform the caller
-		 * of exactly that. */
-		result = &DeeTuple_Type;
-		Dee_Incref(&DeeTuple_Type);
-	} else {
-		if (info.a_doc) {
-			/* TODO: Use doc meta-information to determine the return type! */
-		}
-		/* Fallback: just tell the caller what they already know: a Sequence will be returned... */
-		result = &DeeSeq_Type;
-		Dee_Incref(&DeeSeq_Type);
-	}
-	attribute_info_fini(&info);
-	return result;
-err:
-	return NULL;
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
 PRIVATE struct type_getset tpconst seq_class_getsets[] = {
@@ -909,7 +739,6 @@ print define_Dee_HashStr("end");
 #define Dee_HashStr__end _Dee_HashSelectC(0x37fb4a05, 0x6de935c204dc3d01)
 /*[[[end]]]*/
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 do_seq_enumerate_with_kw(DeeObject *self, size_t argc,
                          DeeObject *const *argv, DeeObject *kw) {
@@ -1095,10 +924,6 @@ err_bad_args:
 err:
 	return NULL;
 }
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-#define seq_enumerate DeeMH_seq_enumerate
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 
 #define DOC_throws_ValueError_if_empty \
 	"#tValueError{The specified range is empty}"
@@ -2139,11 +1964,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_METHOD("__size__", &default_seq___size__,
 	            "->?Dint\n"
 	            "Alias for ${##(this as Sequence)}"),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_METHOD("__contains__", &default_seq___contains__,
-	            "(item)->?Dbool\n"
-	            "Alias for ${item in (this as Sequence)}"),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__getitem__", &default_seq___getitem__,
 	            "(index:?Dint)->\n"
 	            "Alias for ${(this as Sequence)[index]}"),
@@ -2162,92 +1982,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_KWMETHOD("__setrange__", &default_seq___setrange__,
 	              "(start=!0,end?:?X2?N?Dint,values:?S?O)\n"
 	              "Alias for ${(this as Sequence)[start:end] = values}"),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_METHOD("__foreach__", &default_seq___foreach__,
-	            "(cb)->\n"
-	            "Alias for:\n"
-	            "${"
-	            /**/ "for (local item: this as Sequence) {\n"
-	            /**/ "	local res = cb(item);\n"
-	            /**/ "	if (res !is none)\n"
-	            /**/ "		return res;\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_METHOD("__foreach_pair__", &default_seq___foreach_pair__,
-	            "(cb)->\n"
-	            "Alias for:\n"
-	            "${"
-	            /**/ "for (local key, value: this as Sequence) {\n"
-	            /**/ "	local res = cb(key, value);\n"
-	            /**/ "	if (res !is none)\n"
-	            /**/ "		return res;\n"
-	            /**/ "}"
-	            "}"),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__enumerate__", &default_seq___enumerate__,
 	            "(cb)->\n"
 	            "Alias for ${(this as Sequence).enumerate(cb)}"),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_KWMETHOD("__enumerate_index__", &default_seq___enumerate_index__,
-	              "(cb,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->\n"
-	              "Alias for ${Sequence.enumerate(this, cb, start, end)}"),
-	TYPE_METHOD("__iterkeys__", &default_seq___iterkeys__,
-	            "->?DIterator\n"
-	            "Alias for (with special optimizations for known types):\n"
-	            "${"
-	            /**/ "// When indices cannot be unbound (enumerate all indices)\n"
-	            /**/ "return [:##(this as Sequence)].operator iter();\n"
-	            /**/ "\n"
-	            /**/ "// When indices can be unbound (enumerate bound indices)\n"
-	            /**/ "return (() -\\> {\n"
-	            /**/ "	local keys = [];\n"
-	            /**/ "	Sequence.enumerate(this, (key, ...) -\\> {\n"
-	            /**/ "		keys.append(key);\n"
-	            /**/ "	});\n"
-	            /**/ "	return keys;\n"
-	            /**/ "})().operator iter()"
-	            "}"),
-	TYPE_METHOD("__bounditem__", &default_seq___bounditem__,
-	            "(index:?Dint,allow_missing=!t)->?Dbool\n"
-	            "Alias for ${deemon.bounditem(this as Sequence, index, allow_missing)}"),
-	TYPE_METHOD("__hasitem__", &default_seq___hasitem__,
-	            "(index:?Dint)->?Dbool\n"
-	            "Alias for ${deemon.hasitem(this as Sequence, index)}"),
-	TYPE_METHOD("__size_fast__", &default_seq___size_fast__,
-	            "->?X2?N?Dint\n"
-	            "Returns the same as ?#{op:size}, but do so in #C{O(1)} time. "
-	            /**/ "If the size cannot be computed in that time, return !N instead."),
-	TYPE_METHOD("__getitem_index__", &default_seq___getitem_index__,
-	            "(index:?Dint)->\n"
-	            "Alias for ${(this as Sequence)[index]}"),
-	TYPE_METHOD("__delitem_index__", &default_seq___delitem_index__,
-	            "(index:?Dint)\n"
-	            "Alias for ${del (this as Sequence)[index]}"),
-	TYPE_METHOD("__setitem_index__", &default_seq___setitem_index__,
-	            "(index:?Dint,value)\n"
-	            "Alias for ${(this as Sequence)[index] = value}"),
-	TYPE_METHOD("__bounditem_index__", &default_seq___bounditem_index__,
-	            "(index:?Dint,allow_missing=!t)->?Dbool\n"
-	            "Alias for ${deemon.bounditem(this as Sequence, index, allow_missing)}"),
-	TYPE_METHOD("__hasitem_index__", &default_seq___hasitem_index__,
-	            "(index:?Dint)->?Dbool\n"
-	            "Alias for ${deemon.hasitem(this as Sequence, index)}"),
-	TYPE_KWMETHOD("__getrange_index__", &default_seq___getrange_index__,
-	              "(start=!0,end?:?X2?N?Dint)->?S?O\n"
-	              "Alias for ${(this as Sequence)[start:end]}"),
-	TYPE_KWMETHOD("__delrange_index__", &default_seq___delrange_index__,
-	              "(start=!0,end?:?X2?N?Dint)\n"
-	              "Alias for ${del (this as Sequence)[start:end]}"),
-	TYPE_KWMETHOD("__setrange_index__", &default_seq___setrange_index__,
-	              "(start=!0,end?:?X2?N?Dint,values:?S?O)\n"
-	              "Alias for ${(this as Sequence)[start:end] = values}"),
-	TYPE_METHOD("__trygetitem__", &default_seq___trygetitem__,
-	            "(index:?Dint,def=!N)->\n"
-	            "Alias for ${try (this as Sequence)[index] catch (IndexError | UnboundItem) def}"),
-	TYPE_METHOD("__trygetitem_index__", &default_seq___trygetitem_index__,
-	            "(index:?Dint,def=!N)->\n"
-	            "Alias for ${try (this as Sequence)[index] catch (IndexError | UnboundItem) def}"),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__hash__", &default_seq___hash__,
 	            "->?Dint\n"
 	            "Alias for ${(this as Sequence).operator hash()}"),
@@ -2257,11 +1994,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_METHOD("__compare__", &default_seq___compare__,
 	            "(rhs:?S?O)->?Dint\n"
 	            "Alias for ${deemon.compare(this as Sequence, rhs)}"),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_METHOD("__trycompare_eq__", &default_seq___trycompare_eq__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${deemon.equals(this as Sequence, rhs)}"),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__eq__", &default_seq___eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Sequence) == (rhs)}"),
@@ -2351,13 +2083,8 @@ err:
 
 
 PRIVATE struct type_getset tpconst seq_getsets[] = {
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_GETTER("length", &default__seq_operator_sizeob,
 	            "->?Dint\nAlias for ${##(this as Sequence)}"),
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	TYPE_GETTER("length", &DeeSeq_OperatorSizeOb,
-	            "->?Dint\nAlias for ${##(this as Sequence)}"),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_GETSET_BOUND(STR_first,
 	                  &default_seq_getfirst,
 	                  &default_seq_delfirst,
@@ -2629,9 +2356,6 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	            /**/ "of a proxy Sequence, this property depends on the underlying "
 	            /**/ "Sequence, and the kind of transformation applied to it, rather "
 	            /**/ "than what is exposed by the proxy itself"),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#define default__seq_frozen DeeTuple_FromSequence
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_GETTER(STR_frozen, &default__seq_frozen,
 	            "->?#Frozen\n"
 	            "Returns a copy of @this Sequence, with all of its current elements, as well as "
@@ -2764,13 +2488,6 @@ PRIVATE struct type_method tpconst seq_class_methods[] = {
 	TYPE_METHOD_END
 };
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-generic_seq_assign(DeeObject *self, DeeObject *other) {
-	return DeeSeq_OperatorSetRange(self, Dee_None, Dee_None, other);
-}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 
 PRIVATE struct type_operator const seq_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR),
@@ -2797,15 +2514,11 @@ PRIVATE struct type_member tpconst seq_class_members[] = {
 	TYPE_MEMBER_CONST("__IterWithEnumerateMap__", &DefaultIterator_WithEnumerateMap_Type),
 	TYPE_MEMBER_CONST("__IterWithEnumerateIndexSeq__", &DefaultIterator_WithEnumerateIndexSeq_Type),
 	TYPE_MEMBER_CONST("__IterWithEnumerateSeq__", &DefaultIterator_WithEnumerateSeq_Type),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_MEMBER_CONST("__IterWithEnumerateIndexMap__", &DefaultIterator_WithEnumerateIndexMap_Type),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_MEMBER_END
 };
 
 
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE struct type_cmp seq_cmp = {
 	/* .tp_hash          = */ &default__seq_operator_hash,
 	/* .tp_compare_eq    = */ &default__seq_operator_compare_eq,
@@ -2831,9 +2544,9 @@ PRIVATE struct type_seq seq_seq = {
 	/* .tp_setrange                   = */ &default__seq_operator_setrange,
 	/* .tp_foreach                    = */ &default__seq_operator_foreach,
 	/* .tp_foreach_pair               = */ &default__seq_operator_foreach_pair,
-	/* ._deprecated_tp_enumerate      = */ NULL,
-	/* ._deprecated_tp_enumerate_index= */ NULL,
-	/* ._deprecated_tp_iterkeys       = */ NULL,
+	/* .tp_enumerate      = */ NULL,
+	/* .tp_enumerate_index= */ NULL,
+	/* .tp_iterkeys       = */ NULL,
 	/* .tp_bounditem                  = */ &default__seq_operator_bounditem,
 	/* .tp_hasitem                    = */ &default__seq_operator_hasitem,
 	/* .tp_size                       = */ &default__seq_operator_size,
@@ -2867,7 +2580,6 @@ PRIVATE struct type_seq seq_seq = {
 	/* .tp_asvector                   = */ NULL,
 	/* .tp_asvector_nothrow           = */ NULL,
 };
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 #ifdef CONFIG_NO_DOC
@@ -3443,7 +3155,6 @@ PRIVATE char const seq_doc[] =
 
 
 /* `Sequence from deemon' */
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PUBLIC DeeTypeObject DeeSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Sequence),
@@ -3497,63 +3208,6 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	/* .tp_operators_size= */ COMPILER_LENOF(seq_operators),
 	/* .tp_mhcache       = */ &mh_cache_empty,
 };
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-/* Prevent the computed-operator system from seeing this one */
-#define _old_DeeSeq_Type DeeSeq_Type
-#define _old_DeeSeq_name DeeString_STR(&str_Sequence)
-PUBLIC DeeTypeObject _old_DeeSeq_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ _old_DeeSeq_name,
-	/* .tp_doc      = */ seq_doc,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT | TP_FNAMEOBJECT, /* Generic base class type. */
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE | (Dee_SEQCLASS_SEQ << Dee_TF_SEQCLASS_SHFT),
-	/* .tp_base     = */ &DeeObject_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor, /* Allow default-construction of Sequence objects. */
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_S(DeeObject)
-			}
-		},
-		/* .tp_dtor        = */ NULL,
-		/* .tp_assign      = */ &generic_seq_assign,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
-		/* .tp_bool      = */ &DeeSeq_OperatorBool,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ &default_seq_printrepr
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ &_old_seq_math,
-	/* .tp_cmp           = */ &DeeSeq_OperatorCmp,
-	/* .tp_seq           = */ &DeeSeq_OperatorSeq,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ seq_methods,
-	/* .tp_getsets       = */ seq_getsets,
-	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ seq_class_methods,
-	/* .tp_class_getsets = */ seq_class_getsets,
-	/* .tp_class_members = */ seq_class_members,
-	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ NULL,
-	/* .tp_mro           = */ NULL,
-	/* .tp_operators     = */ seq_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(seq_operators)
-};
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 /* An empty instance of a generic sequence object.
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by
@@ -3598,7 +3252,6 @@ DeeType_GetSeqClass(DeeTypeObject const *__restrict self) {
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Sum(DeeObject *__restrict self) {
 	return DeeObject_InvokeMethodHint(seq_sum, self);
@@ -3623,8 +3276,6 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Max(DeeObject *self) {
 	return DeeObject_InvokeMethodHint(seq_max, self);
 }
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 
 DECL_END
 

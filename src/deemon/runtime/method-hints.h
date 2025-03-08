@@ -21,8 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINTS_H 1
 
 #include <deemon/api.h>
-
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/alloc.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
@@ -486,6 +484,5 @@ INTDEF struct Dee_type_mh_cache mh_cache_empty;
 INTDEF DeeTypeObject const *tpconst _Dee_SEQCLASS_BASES[];
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_METHOD_HINTS_H */

@@ -2470,106 +2470,6 @@ err_temp:
 	return temp;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#define dict_enumerate_index_PTR &dict_enumerate_index
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_enumerate_index(Dict *__restrict self, Dee_seq_enumerate_index_t cb,
-                     void *arg, size_t start, size_t end) {
-	Dee_hash_t hash;
-	Dee_ssize_t temp, result = 0;
-	DeeDict_LockRead(self);
-
-	/* Take advantage of the fact that "hash(int) == int" */
-	for (hash = start; hash < end; ++hash) {
-		Dee_hash_t hs, perturb;
-		DREF DeeObject *value;
-again_search_for_hash:
-
-		/* Search for an integer-key matching "hash" */
-		_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
-		for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
-			struct Dee_dict_item *item;
-			DREF DeeObject *key;
-			size_t key_value;
-			/*virt*/ Dee_dict_vidx_t vtab_idx = _DeeDict_HTabGet(self, hs);
-			if (vtab_idx == Dee_DICT_HTAB_EOF)
-				goto continue_with_next_hash;
-			item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
-			if unlikely(item->di_hash != hash)
-				continue;
-			key = item->di_key;
-			if likely(DeeInt_Check(key)) {
-				if unlikely(!DeeInt_TryAsSize(key, &key_value))
-					continue;
-				if unlikely(key_value != hash)
-					continue;
-				value = item->di_value;
-				Dee_Incref(value);
-				DeeDict_LockEndRead(self);
-			} else {
-#ifndef __OPTIMIZE_SIZE__
-				/* Check: can "key" be converted to an integer; if not, then it can't be correct.
-				 * NOTE: This same check is semantically repeated by the
-				 *       `DeeError_Catch(&DeeError_NotImplemented)' below. */
-				DeeTypeObject *tp_key = Dee_TYPE(key);
-				if ((!tp_key->tp_math || !tp_key->tp_math->tp_int) && !DeeType_InheritInt(tp_key))
-					continue;
-#endif /* !__OPTIMIZE_SIZE__ */
-				value = item->di_value;
-				Dee_Incref(key);
-				Dee_Incref(value);
-				DeeDict_LockEndRead(self);
-				key = DeeObject_IntInherited(key);
-				if unlikely(!key) {
-					Dee_Decref_unlikely(value);
-					if (DeeError_Catch(&DeeError_NotImplemented))
-						goto continue_searching;
-					goto err;
-				}
-				if unlikely(!DeeInt_TryAsSize(key, &key_value) || key_value != hash) {
-					Dee_Decref_unlikely(key);
-					Dee_Decref_unlikely(value);
-continue_searching:
-					DeeDict_LockRead(self);
-					if unlikely(item < _DeeDict_GetRealVTab(self))
-						goto again_search_for_hash;
-					if unlikely(item >= _DeeDict_GetRealVTab(self) + self->d_vsize)
-						goto again_search_for_hash;
-					if unlikely(item->di_hash != hash)
-						goto again_search_for_hash;
-					if unlikely(item->di_key != key)
-						goto again_search_for_hash;
-					if unlikely(item->di_value != value)
-						goto again_search_for_hash;
-					continue;
-				}
-				/* Found the relevant item! */
-				Dee_Decref_unlikely(key);
-			}
-			break;
-		}
-		temp = (*cb)(arg, hash, value);
-		Dee_Decref_unlikely(value);
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-		DeeDict_LockRead(self);
-continue_with_next_hash:;
-	}
-	DeeDict_LockEndRead(self);
-	return result;
-err_temp:
-	return temp;
-err:
-	return -1;
-}
-#define dict_iterkeys_PTR &DeeMap_DefaultIterKeysWithIter
-#else /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-#define dict_enumerate_index_PTR NULL
-#define dict_iterkeys_PTR        NULL
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_mh_popitem(Dict *__restrict self) {
 	DREF DeeTupleObject *result;
@@ -3489,8 +3389,8 @@ PRIVATE struct type_seq dict_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&dict_mh_seq_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))dict_enumerate_index_PTR,
-	/* .tp_iterkeys                   = */ dict_iterkeys_PTR,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))NULL,
+	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&dict_size,
@@ -4055,7 +3955,6 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	                "#r{Indicative of the ?. having sufficient preallocated space on return}"
 	                "Try to preallocate buffer space for ${({#this, total} > ...) + more} items"),
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD_HINTREF_DOC(__seq_xchitem__, "(index:?Dint,item:" D_TItem ")->" D_TItem),
 	TYPE_METHOD_HINTREF(__seq_erase__),
 	TYPE_METHOD_HINTREF_DOC(__seq_insert__, "(index:?Dint,item:" D_TItem ")"),
@@ -4071,17 +3970,6 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	TYPE_METHOD_HINTREF(__seq_setitem__),
 	TYPE_METHOD_HINTREF(__seq_compare__),
 	TYPE_METHOD_HINTREF(__seq_compare_eq__),
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	TYPE_METHOD_HINTREF_DOC(explicit_seq_xchitem, "(index:?Dint,item:" D_TItem ")->" D_TItem),
-	TYPE_METHOD_HINTREF(explicit_seq_erase),
-	TYPE_METHOD_HINTREF_DOC(explicit_seq_insert, "(index:?Dint,item:" D_TItem ")"),
-	TYPE_METHOD_HINTREF_DOC(explicit_seq_append, "(item:" D_TItem ")"),
-	TYPE_METHOD_HINTREF_DOC(explicit_seq_pushfront, "(item:" D_TItem ")"),
-	TYPE_METHOD_HINTREF_DOC(explicit_seq_pop, "(index=!-1)->" D_TItem),
-	TYPE_METHOD_HINTREF(explicit_seq_removeif),
-	TYPE_METHOD_HINTREF(explicit_seq_reverse),
-//	TYPE_METHOD_HINTREF(explicit_seq_size),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_END
 };
 
@@ -4102,18 +3990,11 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &dict_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &dict_trygetfirst, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &dict_trygetlast, METHOD_FNOREFESCAPE),
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD_HINT_F(seq_operator_iter, &dict_iter, METHOD_FNORMAL),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_operator_foreach, &dict_mh_seq_foreach, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_foreach_pair, &dict_foreach_pair, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_enumerate_index, &dict_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_METHOD_HINT_F(seq_operator_size, &dict_size, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_operator_size_fast, &dict_size_fast, METHOD_FNOREFESCAPE),
-#else /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_operator_hasitem_index, &default__seq_operator_hasitem_index__with__seq_operator_size, METHOD_FNOREFESCAPE),
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_operator_getitem_index, &dict_mh_seq_getitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_trygetitem_index, &dict_mh_seq_trygetitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_delitem_index, &dict_mh_seq_delitem_index, METHOD_FNOREFESCAPE),

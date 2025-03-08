@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_SUPER_INVOKE_C 1
 
 #include <deemon/api.h>
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
@@ -4106,6 +4105,5 @@ fallback:
 }
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_METHOD_HINT_SUPER_INVOKE_C */

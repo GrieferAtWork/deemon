@@ -411,18 +411,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #define CONFIG_NO_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-
-
-/* Experimental feature switch: Use the new, generated + unified method hint (and operator) system. */
-#if (!defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_UNIFIED_METHOD_HINTS))
-#if 1
-#define CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#else
-#define CONFIG_NO_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 /************************************************************************/
 
 

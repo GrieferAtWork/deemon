@@ -21,8 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_WRAPPERS_C 1
 
 #include <deemon/api.h>
-
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
@@ -1832,6 +1830,5 @@ err:
 /* clang-format on */
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_METHOD_HINT_WRAPPERS_C */

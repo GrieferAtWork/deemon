@@ -2230,15 +2230,9 @@ DEFINE_SEW_BINARY(sew_ge, OPERATOR_GE)
 #endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#define sew_contains DeeSeq_DefaultContainsWithForeachDefault
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #define sew_size   generic_proxy__seq_operator_size
 #define sew_sizeob generic_proxy__seq_operator_sizeob
 #else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-DEFINE_SEW_BINARY(sew_contains, OPERATOR_CONTAINS)
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 DEFINE_SEW_BINARY(sew_sizeob, OPERATOR_GETITEM)
 DEFINE_SEW_BINARY(sew_getitem, OPERATOR_GETITEM)
 DEFINE_SEW_TRINARY(sew_getrange, OPERATOR_GETRANGE)
@@ -2392,7 +2386,6 @@ PRIVATE struct type_math seo_math = {
 };
 
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE struct type_cmp sew_cmp = {
 	/* .tp_hash          = */ &DeeSeq_DefaultHashWithForeachDefault,
 	/* .tp_compare_eq    = */ &DeeSeq_DefaultCompareEqWithForeachDefault,
@@ -2405,9 +2398,6 @@ PRIVATE struct type_cmp sew_cmp = {
 	/* .tp_gr            = */ &DeeObject_DefaultGrWithCompareDefault,
 	/* .tp_ge            = */ &DeeObject_DefaultGeWithCompareDefault,
 };
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-#define sew_cmp DeeSeq_DefaultCmpWithForeachDefault
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 PRIVATE struct type_cmp sew_cmp = {
 	/* .tp_hash          = */ DEFIMPL(&default__seq_operator_hash__with__seq_operator_foreach),
@@ -3123,11 +3113,7 @@ seo_getitem_string_len_hash(SeqEachOperator *self, char const *key, size_t keyle
 
 #endif /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define seo_operator_contains default__seq_operator_contains
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-#define seo_operator_contains sew_contains
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 #define seo_operator_getitem                        seo_getitem
@@ -3207,7 +3193,6 @@ PRIVATE struct type_seq seo_seq = {
 
 PRIVATE struct type_method tpconst sew_methods[] = {
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD_HINTREF(__seq_iter__),
 	TYPE_METHOD_HINTREF(__seq_getitem__),
 	TYPE_METHOD_HINTREF(__seq_delitem__),
@@ -3216,15 +3201,13 @@ PRIVATE struct type_method tpconst sew_methods[] = {
 	TYPE_METHOD_HINTREF(__seq_delrange__),
 	TYPE_METHOD_HINTREF(__seq_setrange__),
 	TYPE_METHOD_HINTREF(__seq_size__),
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst seo_method_hints[] = {
 	TYPE_METHOD_HINT(seq_enumerate, &seo_mh_seq_enumerate),
 	TYPE_METHOD_HINT(seq_enumerate_index, &seo_mh_seq_enumerate_index),
-	/* TODO: These all still use the default `DeeObject_*' API -- change them to use the method hint API */
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* TODO: CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: These all still use the default `DeeObject_*' API -- change them to use the method hint API */
 	TYPE_METHOD_HINT(seq_operator_iter, &seo_iter),
 	TYPE_METHOD_HINT(seq_operator_foreach, &seo_foreach),
 	TYPE_METHOD_HINT(seq_operator_getitem, &seo_getitem),
@@ -3250,7 +3233,6 @@ PRIVATE struct type_method_hint tpconst seo_method_hints[] = {
 	TYPE_METHOD_HINT(seq_operator_setrange_index_n, &seo_setrange_index_n),
 	TYPE_METHOD_HINT(seq_operator_size, &sew_size),
 	TYPE_METHOD_HINT(seq_operator_sizeob, &sew_sizeob),
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_END
 };
 

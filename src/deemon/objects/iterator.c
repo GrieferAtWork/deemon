@@ -3042,14 +3042,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeIterator_Foreach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
 	Dee_ssize_t temp, result = 0;
 	DREF DeeObject *elem;
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	DeeNO_iter_next_t tp_iter_next = DeeType_RequireNativeOperator(Dee_TYPE(self), iter_next);
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	DREF DeeObject *(DCALL *tp_iter_next)(DeeObject *__restrict self);
-	if unlikely(!Dee_TYPE(self)->tp_iter_next && !DeeType_InheritIterNext(Dee_TYPE(self)))
-		goto err_no_iternext;
-	tp_iter_next = Dee_TYPE(self)->tp_iter_next;
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	while (ITER_ISOK(elem = (*tp_iter_next)(self))) {
 		temp = (*cb)(arg, elem);
 		Dee_Decref(elem);
@@ -3065,10 +3058,6 @@ DeeIterator_Foreach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
 	return result;
 err_temp:
 	return temp;
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-err_no_iternext:
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERNEXT);
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 err:
 	return -1;
 }
@@ -3078,13 +3067,7 @@ DeeIterator_ForeachPair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void 
 	int status;
 	Dee_ssize_t temp, result = 0;
 	DREF DeeObject *pair[2];
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	DeeNO_nextpair_t tp_nextpair = DeeType_RequireNativeOperator(Dee_TYPE(self), nextpair);
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	DeeNO_nextpair_t tp_nextpair = DeeType_RequireSupportedNativeOperator(Dee_TYPE(self), nextpair);
-	if unlikely(!tp_nextpair)
-		goto err_no_iternext;
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	while ((status = (*tp_nextpair)(self, pair)) == 0) {
 		temp = (*cb)(arg, pair[0], pair[1]);
 		Dee_Decref(pair[1]);
@@ -3101,10 +3084,6 @@ DeeIterator_ForeachPair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void 
 	return result;
 err_temp:
 	return temp;
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-err_no_iternext:
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERNEXT);
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 err:
 	return -1;
 }

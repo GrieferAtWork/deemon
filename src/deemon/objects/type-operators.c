@@ -85,40 +85,6 @@ do_DeeType_InheritUninheritable(DeeTypeObject *self,
 	(void)info;
 }
 
-#if defined(DCALL_CALLER_CLEANUP) && !defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS)
-#define do_DeeType_InheritConstructors (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritConstructors)
-#define do_DeeType_InheritStr          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritStr)
-#define do_DeeType_InheritRepr         (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritRepr)
-#define do_DeeType_InheritBool         (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritBool)
-#define do_DeeType_InheritCall         (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritCall)
-#define do_DeeType_InheritInt          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritInt)
-#define do_DeeType_InheritInv          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritInv)
-#define do_DeeType_InheritPos          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritPos)
-#define do_DeeType_InheritNeg          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritNeg)
-#define do_DeeType_InheritAdd          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritAdd)
-#define do_DeeType_InheritMul          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritMul)
-#define do_DeeType_InheritDiv          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritDiv)
-#define do_DeeType_InheritMod          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritMod)
-#define do_DeeType_InheritShl          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritShl)
-#define do_DeeType_InheritShr          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritShr)
-#define do_DeeType_InheritAnd          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritAnd)
-#define do_DeeType_InheritOr           (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritOr)
-#define do_DeeType_InheritXor          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritXor)
-#define do_DeeType_InheritPow          (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritPow)
-#define do_DeeType_InheritCompare      (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritCompare)
-#define do_DeeType_InheritIterNext     (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritIterNext)
-#define do_DeeType_InheritIter         (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritIter)
-#define do_DeeType_InheritSize         (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritSize)
-#define do_DeeType_InheritContains     (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritContains)
-#define do_DeeType_InheritGetItem      (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritGetItem)
-#define do_DeeType_InheritDelItem      (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritDelItem)
-#define do_DeeType_InheritSetItem      (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritSetItem)
-#define do_DeeType_InheritGetRange     (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritGetRange)
-#define do_DeeType_InheritDelRange     (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritDelRange)
-#define do_DeeType_InheritSetRange     (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritSetRange)
-#define do_DeeType_InheritWith         (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritWith)
-#define do_DeeType_InheritBuffer       (*(void (DCALL *)(DeeTypeObject *, DeeTypeObject *, struct Dee_opinfo const *))&DeeType_InheritBuffer)
-#else /* DCALL_CALLER_CLEANUP */
 #define DEFINE_TYPE_INHERIT_HOOK(name, impl)            \
 	PRIVATE NONNULL((1, 2, 3)) void DCALL               \
 	name(DeeTypeObject *self, DeeTypeObject *type_type, \
@@ -161,7 +127,6 @@ DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritSetRange, DeeType_InheritSetRange);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritWith, DeeType_InheritWith);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritBuffer, DeeType_InheritBuffer);
 #undef DEFINE_TYPE_INHERIT_HOOK
-#endif /* !DCALL_CALLER_CLEANUP */
 
 
 DEFINE_OPERATOR_INVOKE(operator_constructor, &instance_ctor, &do_DeeType_InheritConstructors) {

@@ -21,8 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_SELECT_C 1
 
 #include <deemon/api.h>
-
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/method-hints.h>
 #include <deemon/none-operator.h>
 #include <deemon/object.h>
@@ -3684,6 +3682,5 @@ mh_select_map_popitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 /* clang-format on */
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_METHOD_HINT_SELECT_C */

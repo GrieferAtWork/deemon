@@ -21,8 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_DEFAULTS_H 1
 
 #include <deemon/api.h>
-
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/none-operator.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
@@ -2666,10 +2664,5 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__se
 #define default_map_itervalues default__map_itervalues
 
 DECL_END
-
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-#include "../objects/seq/default-api.h"
-#include <deemon/class.h>
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_METHOD_HINT_DEFAULTS_H */

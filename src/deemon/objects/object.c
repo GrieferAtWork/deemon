@@ -3167,21 +3167,14 @@ type_fini(DeeTypeObject *__restrict self) {
 	        "Non heap-allocated type %s is being destroyed (This shouldn't happen)",
 	        self->tp_name);
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	/* Free the method hint cache */
 	if (self->tp_mhcache)
 		Dee_type_mh_cache_destroy(self->tp_mhcache);
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* Free the sequence method cache (if it was allocated and belongs to this type) */
-	if (self->tp_seq && self->tp_seq->_tp_seqcache && (DeeType_GetSeqOrigin(self) == self))
-		Dee_type_seq_cache_destroy(self->tp_seq->_tp_seqcache);
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Finalize class data if the type is actually a user-defined class. */
 	if (DeeType_IsClass(self))
 		class_fini(self);
 
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 	/* clang-format off */
 /*[[[deemon (printFreeAllocatedOperatorTables from "..method-hints.method-hints")("self");]]]*/
 	Dee_Free(self->tp_iterator);
@@ -3192,7 +3185,6 @@ type_fini(DeeTypeObject *__restrict self) {
 	Dee_Free(self->tp_attr);
 /*[[[end]]]*/
 	/* clang-format off */
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS || __DEEMON__ */
 
 	/* Finalize the type's member caches. */
 	Dee_membercache_fini(&self->tp_cache);
@@ -4928,15 +4920,7 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 
 
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTDEF Dee_hash_t DCALL default__hash__unsupported(DeeObject *__restrict self);
-#define generic_object_hash default__hash__unsupported
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-DEFAULT_OPDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL
-generic_object_hash(DeeObject *__restrict self) {
-	return Dee_HashPointer(self);
-}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) int DCALL
 generic_object_compare_eq(DeeObject *self, DeeObject *some_object) {
@@ -4974,7 +4958,7 @@ err:
  * Use this instead of re-inventing the wheel in order to allow for special optimization
  * to be possible when your type appears in compare operations. */
 PUBLIC struct Dee_type_cmp DeeObject_GenericCmpByAddr = {
-	/* .tp_hash          = */ &generic_object_hash,
+	/* .tp_hash          = */ &default__hash__unsupported,
 	/* .tp_compare_eq    = */ &generic_object_compare_eq,
 	/* .tp_compare       = */ NULL,
 	/* .tp_trycompare_eq = */ &generic_object_trycompare_eq,
@@ -4985,7 +4969,7 @@ PUBLIC struct Dee_type_cmp DeeObject_GenericCmpByAddr = {
 
 
 
-#define type_hash generic_object_hash
+#define type_hash default__hash__unsupported
 DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) int DCALL
 type_compare_eq(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))

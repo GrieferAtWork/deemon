@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINTS_C 1
 
 #include <deemon/api.h>
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/alloc.h>
 #include <deemon/class.h>
 #include <deemon/format.h>
@@ -2465,8 +2464,6 @@ INTERN Dee_operator_t const _DeeType_GetOperatorOfTno[Dee_TNO_COUNT] = {
 /* clang-format on */
 };
 
-
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_OPERATOR_HINTS_C */

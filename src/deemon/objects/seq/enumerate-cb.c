@@ -192,7 +192,6 @@ err:
 
 
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* Helpers for enumerating a mapping by invoking a given callback. */
 INTERN NONNULL((1, 2)) DREF DeeObject *DCALL
 map_call_enumerate(DeeObject *self, DeeObject *cb) {
@@ -225,7 +224,6 @@ map_call_enumerate_with_range(DeeObject *self, DeeObject *cb,
 err:
 	return NULL;
 }
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 

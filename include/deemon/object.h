@@ -1837,53 +1837,6 @@ struct Dee_type_cmp {
 	struct Dee_type_nii Dee_tpconst *tp_nii; /* TODO: Deprecated */
 };
 
-#if !defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || 1
-typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_seq_enumerate_t)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value);
-typedef WUNUSED_T Dee_ssize_t (DCALL *Dee_seq_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
-#if 0
-struct my_foreach_data {
-};
-
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-my_foreach_cb(void *arg, DeeObject *elem) {
-	struct my_foreach_data *data;
-	data = (struct my_foreach_data *)arg;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-struct my_foreach_pair_data {
-};
-
-PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
-my_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
-	struct my_foreach_pair_data *data;
-	data = (struct my_foreach_pair_data *)arg;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-struct my_enumerate_data {
-};
-
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-my_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
-	struct my_enumerate_data *data;
-	data = (struct my_enumerate_data *)arg;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-struct my_enumerate_index_data {
-};
-
-PRIVATE WUNUSED Dee_ssize_t DCALL
-my_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
-	struct my_enumerate_index_data *data;
-	data = (struct my_enumerate_index_data *)arg;
-	return DeeError_NOTIMPLEMENTED();
-}
-#endif
-
 /* Possible values returned by C-API isbound checking functions. */
 #define Dee_BOUND_ERR      (-1)
 #ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
@@ -2001,10 +1954,11 @@ my_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 #define Dee_BOUND_FROMHAS_UNBOUND(has_value) \
 	(unlikely(has_value) < 0 ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_UNBOUND(has_value))
 
+#if 1 /* TODO: CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: REMOVE ME */
+typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_seq_enumerate_t)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value);
+typedef WUNUSED_T Dee_ssize_t (DCALL *Dee_seq_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
+#endif
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-struct Dee_type_seq_cache;
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 struct Dee_type_seq {
 	/* Sequence operators. */
 	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *tp_iter)(DeeObject *__restrict self);
@@ -2029,26 +1983,13 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach_pair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#if 1 /* TODO: CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: REMOVE ME */
 	/* These will go away and only be accessible via method hints.
 	 * Reason: Not perfectly equivalent to "tp_foreach", so user-impl must happen via attributes. */
-	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t  (DCALL *_deprecated_tp_enumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg);
-	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t  (DCALL *_deprecated_tp_enumerate_index)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end);
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *_deprecated_tp_iterkeys)(DeeObject *__restrict self);
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* Alternate forms for `tp_foreach' (these are inherited by `DeeType_InheritIter()').
-	 * For enumerating available indices/keys, and their current values (which may be NULL if `this[index] !is bound') */
-	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg);
-	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate_index)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end);
-
-	/* Similar to "tp_iter", but create an iterator for enumerating the "keys" of this object.
-	 * The keys of an object are all of the values that exist as items (as per "tp_hasitem"),
-	 * meaning that "tp_getitem" will return something other than "IndexError" / "KeyError"
-	 * for them (though it may still return "UnboundItem" if a key exists but doesn't have
-	 * any value assigned to it).
-	 * The keys enumerated by the returned iterator as the same as also yielded by `tp_enumerate' */
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t  (DCALL *tp_enumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg);
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t  (DCALL *tp_enumerate_index)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end);
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_iterkeys)(DeeObject *__restrict self);
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#endif
 
 	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem')
 	 * Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
@@ -2162,48 +2103,13 @@ struct Dee_type_seq {
 	 *                         to hold at least "return" elements, and call this operator again. */
 	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#if 1 /* TODO: CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: REMOVE ME */
 	/* These will go away and only be accessible via method hints.
 	 * Reason: Not perfectly equivalent to "tp_foreach", so user-impl must happen via attributes. */
 	WUNUSED_T NONNULL_T((1)) int (DCALL *_deprecated_tp_unpack)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 	WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *_deprecated_tp_unpack_ex)(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
 	WUNUSED_T NONNULL_T((1)) int (DCALL *_deprecated_tp_unpack_ub)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* >> tp_unpack
-	 * Operator for `DeeObject_Unpack()', following
-	 * `DeeObject_Foreach()' semantics (unbound elements are skipped)
-	 * Default impls use:
-	 * - tp_asvector
-	 * - tp_unpack_ex
-	 * - tp_size + tp_getitem_index_fast
-	 * - tp_size + tp_trygetitem_index
-	 * - tp_size + tp_getitem_index
-	 * - tp_sizeob + tp_trygetitem
-	 * - tp_sizeob + tp_getitem
-	 * - tp_foreach
-	 * - tp_iter
-	 * - tp_foreach (default impl) */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_unpack)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
-	WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *tp_unpack_ex)(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
-
-	/* >> tp_unpack_ub
-	 * Operator for `DeeObject_UnpackWithUnbound()', following
-	 * `DeeObject_Enumerate()' semantics (unbound elements are included)
-	 * Default impls use:
-	 * - tp_unpack
-	 * - tp_unpack_ex
-	 * - tp_size + tp_getitem_index_fast
-	 * - tp_size + tp_trygetitem_index
-	 * - tp_size + tp_getitem_index
-	 * - tp_sizeob + tp_trygetitem
-	 * - tp_sizeob + tp_getitem
-	 * - tp_size/tp_sizeob + tp_enumerate_index
-	 * - tp_size/tp_sizeob + tp_enumerate
-	 * - tp_asvector
-	 * - tp_foreach
-	 * - tp_iter */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_unpack_ub)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#endif
 
 	/* All of the following are *always* and *unconditionally* implemented
 	 * when the associated type has the "tp_features & TF_KW" flag set,
@@ -2221,12 +2127,6 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_trygetitemnr)(DeeObject *__restrict self, /*string*/ DeeObject *__restrict name);
 	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_trygetitemnr_string_hash)(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
 	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_trygetitemnr_string_len_hash)(DeeObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
-
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* [0..1][owned][lock(WRITE_ONCE)]
-	 * Internal cache for how sequence functions are implemented for this type. */
-	struct Dee_type_seq_cache *_tp_seqcache;
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 #if 0
@@ -2589,9 +2489,9 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&myob_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&myob_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&myob_foreach_pair,
-	/* ._deprecated_tp_enumerate      = */ NULL,
-	/* ._deprecated_tp_enumerate_index= */ NULL,
-	/* ._deprecated_tp_iterkeys       = */ NULL,
+	/* .tp_enumerate      = */ NULL,
+	/* .tp_enumerate_index= */ NULL,
+	/* .tp_iterkeys       = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&myob_size,
@@ -3970,9 +3870,7 @@ struct Dee_type_operator {
 
 struct Dee_class_desc;
 struct Dee_type_method_hint;
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 struct Dee_type_mh_cache;
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 struct Dee_type_object {
 	Dee_OBJECT_HEAD
 #ifdef __INTELLISENSE__
@@ -4056,9 +3954,9 @@ struct Dee_type_object {
 	 *            types already defined by DeeType_Type) */
 	struct Dee_type_operator const *tp_operators;
 	size_t tp_operators_size; /* Size of "tp_operators" in items. */
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	struct Dee_type_mh_cache *tp_mhcache; /* [0..1][owned][lock(WRITE_ONCE)] Method hint cache. */
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
+	/* [0..1][owned][lock(WRITE_ONCE)] Method hint cache. */
+	struct Dee_type_mh_cache *tp_mhcache;
 
 	/* Lazily-filled hash-table of instance members.
 	 * >> The member vectors are great for static allocation, but walking
@@ -4246,73 +4144,9 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
  *
  * s.a. `DeeType_InheritOperator()' */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritConstructors(DeeTypeObject *__restrict self); /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritStr(DeeTypeObject *__restrict self);          /* tp_str, tp_print */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritRepr(DeeTypeObject *__restrict self);         /* tp_repr, tp_printrepr */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritBool(DeeTypeObject *__restrict self);         /* tp_bool */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritCall(DeeTypeObject *__restrict self);         /* tp_call, tp_call_kw */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritInt(DeeTypeObject *__restrict self);          /* tp_int, tp_int32, tp_int64, tp_double */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritInv(DeeTypeObject *__restrict self);          /* tp_inv */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritPos(DeeTypeObject *__restrict self);          /* tp_pos */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritNeg(DeeTypeObject *__restrict self);          /* tp_neg */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritAdd(DeeTypeObject *__restrict self);          /* tp_add, tp_sub, tp_inplace_add, tp_inplace_sub, tp_inc, tp_dec */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritMul(DeeTypeObject *__restrict self);          /* tp_mul, tp_inplace_mul */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDiv(DeeTypeObject *__restrict self);          /* tp_div, tp_inplace_div */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritMod(DeeTypeObject *__restrict self);          /* tp_mod, tp_inplace_mod */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritShl(DeeTypeObject *__restrict self);          /* tp_shl, tp_inplace_shl */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritShr(DeeTypeObject *__restrict self);          /* tp_shr, tp_inplace_shr */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritAnd(DeeTypeObject *__restrict self);          /* tp_and, tp_inplace_and */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritOr(DeeTypeObject *__restrict self);           /* tp_or, tp_inplace_or */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritXor(DeeTypeObject *__restrict self);          /* tp_xor, tp_inplace_xor */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritPow(DeeTypeObject *__restrict self);          /* tp_pow, tp_inplace_pow */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritCompare(DeeTypeObject *__restrict self);      /* tp_hash, tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge, tp_compare_eq, tp_compare */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict self);     /* tp_iter_next, tp_nextpair, tp_nextkey, tp_nextvalue, tp_advance */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritIter(DeeTypeObject *__restrict self);         /* tp_iter, tp_foreach, tp_foreach_pair, tp_unpack, tp_unpack_ex, tp_unpack_ub */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);         /* tp_sizeob, tp_size */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritContains(DeeTypeObject *__restrict self);     /* tp_contains */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);      /* tp_getitem, tp_getitem_index, tp_bounditem, tp_bounditem_index, tp_hasitem, tp_hasitem_index, tp_getitem_index_fast, tp_trygetitem, tp_trygetitem_string_hash, tp_getitem_string_hash, tp_bounditem_string_hash, tp_hasitem_string_hash, tp_trygetitem_string_len_hash, tp_getitem_string_len_hash, tp_bounditem_string_len_hash, tp_hasitem_string_len_hash */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelItem(DeeTypeObject *__restrict self);      /* tp_delitem, tp_delitem_index, tp_delitem_string_hash, tp_delitem_string_len_hash */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict self);      /* tp_setitem, tp_setitem_index, tp_setitem_string_hash, tp_setitem_string_len_hash */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);     /* tp_getrange, tp_getrange_index, tp_getrange_index_n */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);     /* tp_delrange, tp_delrange_index, tp_delrange_index_n */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);     /* tp_setrange, tp_setrange_index, tp_setrange_index_n */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritWith(DeeTypeObject *__restrict self);         /* tp_enter, tp_leave */
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict self);       /* tp_getbuf, tp_putbuf, tp_buffer_flags */
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeType_InheritConstructors(self) DeeType_InheritOperator(self, OPERATOR_CONSTRUCTOR)
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#define DeeType_InheritStr(self)          DeeType_InheritOperator(self, OPERATOR_STR)
-#define DeeType_InheritRepr(self)         DeeType_InheritOperator(self, OPERATOR_REPR)
-#define DeeType_InheritBool(self)         DeeType_InheritOperator(self, OPERATOR_BOOL)
-#define DeeType_InheritCall(self)         DeeType_InheritOperator(self, OPERATOR_CALL)
-#define DeeType_InheritInt(self)          DeeType_InheritOperator(self, OPERATOR_INT)
-#define DeeType_InheritInv(self)          DeeType_InheritOperator(self, OPERATOR_INV)
-#define DeeType_InheritPos(self)          DeeType_InheritOperator(self, OPERATOR_POS)
-#define DeeType_InheritNeg(self)          DeeType_InheritOperator(self, OPERATOR_NEG)
-#define DeeType_InheritAdd(self)          DeeType_InheritOperator(self, OPERATOR_ADD)
-#define DeeType_InheritMul(self)          DeeType_InheritOperator(self, OPERATOR_MUL)
-#define DeeType_InheritDiv(self)          DeeType_InheritOperator(self, OPERATOR_DIV)
-#define DeeType_InheritMod(self)          DeeType_InheritOperator(self, OPERATOR_MOD)
-#define DeeType_InheritShl(self)          DeeType_InheritOperator(self, OPERATOR_SHL)
-#define DeeType_InheritShr(self)          DeeType_InheritOperator(self, OPERATOR_SHR)
-#define DeeType_InheritAnd(self)          DeeType_InheritOperator(self, OPERATOR_AND)
-#define DeeType_InheritOr(self)           DeeType_InheritOperator(self, OPERATOR_OR)
-#define DeeType_InheritXor(self)          DeeType_InheritOperator(self, OPERATOR_XOR)
-#define DeeType_InheritPow(self)          DeeType_InheritOperator(self, OPERATOR_POW)
-#define DeeType_InheritCompare(self)      DeeType_InheritOperator(self, OPERATOR_EQ)
-#define DeeType_InheritIterNext(self)     DeeType_InheritOperator(self, OPERATOR_ITERNEXT)
-#define DeeType_InheritIter(self)         DeeType_InheritOperator(self, OPERATOR_ITER)
-#define DeeType_InheritSize(self)         DeeType_InheritOperator(self, OPERATOR_SIZE)
-#define DeeType_InheritContains(self)     DeeType_InheritOperator(self, OPERATOR_CONTAINS)
-#define DeeType_InheritGetItem(self)      DeeType_InheritOperator(self, OPERATOR_GETITEM)
-#define DeeType_InheritDelItem(self)      DeeType_InheritOperator(self, OPERATOR_DELITEM)
-#define DeeType_InheritSetItem(self)      DeeType_InheritOperator(self, OPERATOR_SETITEM)
-#define DeeType_InheritGetRange(self)     DeeType_InheritOperator(self, OPERATOR_GETRANGE)
-#define DeeType_InheritDelRange(self)     DeeType_InheritOperator(self, OPERATOR_DELRANGE)
-#define DeeType_InheritSetRange(self)     DeeType_InheritOperator(self, OPERATOR_SETRANGE)
-#define DeeType_InheritWith(self)         DeeType_InheritOperator(self, OPERATOR_ENTER)
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #define DeeType_InheritBuffer(self)       DeeType_InheritOperator(self, OPERATOR_GETBUF)
 #endif /* !CONFIG_BUILDING_DEEMON */
 
@@ -5096,32 +4930,6 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use t
 /* Same as `DeeObject_Foreach()', but meant for enumeration of mapping key/value pairs. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_Unpack()' */
 (DCALL DeeObject_ForeachPair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
-
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-/* Enumerate valid keys/indices of "self", as well as their current value.
- * @return: * : Sum of return values of `*proc'
- * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL DeeObject_Enumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg);
-
-/* Construct an iterator for the keys of "self". That is:
- * - everything for which `DeeObject_HasItem()' returns true
- * - everything passed as "key"-argumented to the callback taken by `DeeObject_Enumerate()' */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL DeeObject_IterKeys)(DeeObject *__restrict self);
-
-/* Same as `DeeObject_Enumerate()', but only valid when "self" uses integers for indices
- * or is a mapping where all keys are integers. In the former case, [start,end) can be
- * given in order to only enumerate indices that fall within that range (any index that
- * doesn't fall within this range isn't enumerated). If you want to always enumerate all
- * indices (like is also done by `DeeObject_Enumerate', then simply pass `0, (size_t)-1')
- * @return: * : Sum of return values of `*proc'
- * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL DeeObject_EnumerateIndex)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc,
-                                 void *arg, size_t start, size_t end);
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 
 /* Unpack the given sequence `self' into `dst_length' items then stored within the `dst' vector.
  * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.

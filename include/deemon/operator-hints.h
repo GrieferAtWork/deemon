@@ -26,9 +26,7 @@
 #include "types.h"
 /**/
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #include "none-operator.h"
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /**/
 
 #include <stddef.h> /* size_t */
@@ -153,7 +151,6 @@ typedef WUNUSED_T NONNULL_T((1, 2, 5)) int (DCALL *DeeNO_setattr_string_len_hash
 /*[[[end]]]*/
 /* clang-format on */
 
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 
 /* Dee_TypeNativeOperator_ID */
 enum Dee_tno_id {
@@ -2004,35 +2001,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__setattr_string_len_hash__wi
 #define DeeType_invoke_attr_tp_delattr(tp_self, tp_delattr, self, name)        (*maketyped__delattr(tp_delattr))(tp_self, self, name)
 #define DeeType_invoke_attr_tp_setattr(tp_self, tp_setattr, self, name, value) (*maketyped__setattr(tp_setattr))(tp_self, self, name, value)
 
-
 #endif /* CONFIG_BUILDING_DEEMON */
-
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
-/* Forward compat */
-#define DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_table, tp_field, require) \
-	(((self)->tp_table && (self)->tp_table->tp_field) ? (self)->tp_table->tp_field : require(self) ? (self)->tp_table->tp_field : NULL)
-#define DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_1(self, tp_field, require) \
-	((self)->tp_field ? (self)->tp_field : require(self) ? (self)->tp_field : NULL)
-
-#define _DeeType_RequireSupportedNativeOperator__int(self)              DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_math, tp_int, DeeType_InheritInt)
-#define _DeeType_RequireSupportedNativeOperator__add(self)              DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_math, tp_add, DeeType_InheritAdd)
-#define _DeeType_RequireSupportedNativeOperator__iter(self)             DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_iter, DeeType_InheritIter)
-#define _DeeType_RequireSupportedNativeOperator__foreach(self)          DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_foreach, DeeType_InheritIter)
-#define _DeeType_RequireSupportedNativeOperator__foreach_pair(self)     DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_foreach_pair, DeeType_InheritIter)
-#define _DeeType_RequireSupportedNativeOperator__getitem(self)          DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_getitem, DeeType_InheritGetItem)
-#define _DeeType_RequireSupportedNativeOperator__getitem_index(self)    DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_getitem_index, DeeType_InheritGetItem)
-#define _DeeType_RequireSupportedNativeOperator__trygetitem(self)       DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_trygetitem, DeeType_InheritGetItem)
-#define _DeeType_RequireSupportedNativeOperator__trygetitem_index(self) DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_trygetitem_index, DeeType_InheritGetItem)
-#define _DeeType_RequireSupportedNativeOperator__iter_next(self)        DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_1(self, tp_iter_next, DeeType_InheritIterNext)
-#define _DeeType_RequireSupportedNativeOperator__nextkey(self)          DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_iterator, tp_nextkey, DeeType_InheritIterNext)
-#define _DeeType_RequireSupportedNativeOperator__nextvalue(self)        DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_iterator, tp_nextvalue, DeeType_InheritIterNext)
-#define _DeeType_RequireSupportedNativeOperator__nextpair(self)         DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_iterator, tp_nextpair, DeeType_InheritIterNext)
-
-#define _DeeType_RequireSupportedNativeOperator(self, name) _DeeType_RequireSupportedNativeOperator__##name(self)
-#define DeeType_RequireSupportedNativeOperator(self, name) _DeeType_RequireSupportedNativeOperator(self, name)
-
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 DECL_END
 

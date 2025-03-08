@@ -21,8 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_SUPER_H 1
 
 #include <deemon/api.h>
-
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/object.h>
 #include <deemon/super.h>
 
@@ -278,6 +276,5 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_popitem(DeeSuper
 INTDEF struct Dee_type_mh_cache super_mhcache;
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_METHOD_HINT_SUPER_H */

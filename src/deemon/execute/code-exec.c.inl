@@ -2208,7 +2208,6 @@ do_push_module:
 
 			/* Required handling for object repr streaming into a file via `<<' */
 			case ASM_SHL: {
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 				DREF DeeObject *other;
 				DeeNO_shl_t tp_shl;
 				++ip.u8;
@@ -2233,43 +2232,6 @@ do_push_module:
 				Dee_Decref(TOP);
 				TOP = other;
 				DISPATCH();
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-				DeeTypeMRO mro;
-				DeeTypeObject *tp_temp;
-				tp_temp = DeeTypeMRO_Init(&mro, Dee_TYPE(SECOND));
-				for (;;) {
-					DREF DeeObject *other;
-					DREF DeeObject *(DCALL *tp_shl)(DeeObject *, DeeObject *);
-					if (!tp_temp->tp_math ||
-					    (tp_shl = tp_temp->tp_math->tp_shl) == NULL) {
-						tp_temp = DeeTypeMRO_Next(&mro, tp_temp);
-						if (!tp_temp)
-							break;
-						continue;
-					}
-					++ip.u8;
-					if (tp_shl == &file_shl) {
-						/* Special case: `fp << repr foo'
-						 * In this case, we can do a special optimization
-						 * to directly print the repr to the file. */
-						if (DeeObject_PrintRepr(TOP, (dformatprinter)&DeeFile_WriteAll, SECOND) < 0)
-							HANDLE_EXCEPT();
-						POPREF();
-						DISPATCH();
-					}
-					temp = DeeObject_Repr(TOP);
-					if unlikely(!temp)
-						HANDLE_EXCEPT();
-					POPREF();
-					other = (*tp_shl)(TOP, temp);
-					Dee_Decref(temp);
-					if unlikely(!other)
-						HANDLE_EXCEPT();
-					Dee_Decref(TOP);
-					TOP = other;
-					DISPATCH();
-				}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 			}	break;
 
 			/* Required handling for object repr streaming to stdout */

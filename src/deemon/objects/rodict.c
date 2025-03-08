@@ -1373,72 +1373,6 @@ err_temp:
 	return temp;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#define rodict_enumerate_index_PTR &rodict_enumerate_index
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rodict_enumerate_index(RoDict *__restrict self, Dee_seq_enumerate_index_t cb,
-                       void *arg, size_t start, size_t end) {
-	Dee_ssize_t temp, result = 0;
-	Dee_hash_t hash;
-	for (hash = start; hash < end; ++hash) {
-		Dee_hash_t hs, perturb;
-		struct Dee_dict_item *item;
-		/* Search for an integer-key matching "hash" */
-		_DeeRoDict_HashIdxInit(self, &hs, &perturb, hash);
-		for (;; _DeeRoDict_HashIdxAdv(self, &hs, &perturb)) {
-			size_t key_value;
-			/*virt*/ Dee_dict_vidx_t vtab_idx = _DeeRoDict_HTabGet(self, hs);
-			if (vtab_idx == Dee_DICT_HTAB_EOF)
-				goto continue_with_next_hash;
-			item = &_DeeRoDict_GetVirtVTab(self)[vtab_idx];
-			if unlikely(item->di_hash != hash)
-				continue;
-			if likely(DeeInt_Check(item->di_key)) {
-				if unlikely(!DeeInt_TryAsSize(item->di_key, &key_value))
-					continue;
-				if unlikely(key_value != hash)
-					continue;
-			} else {
-				bool matches;
-				DREF DeeObject *int_key;
-#ifndef __OPTIMIZE_SIZE__
-				/* Check: can "key" be converted to an integer; if not, then it can't be correct.
-				 * NOTE: This same check is semantically repeated by the
-				 *       `DeeError_Catch(&DeeError_NotImplemented)' below. */
-				DeeTypeObject *tp_key = Dee_TYPE(item->di_key);
-				if ((!tp_key->tp_math || !tp_key->tp_math->tp_int) && !DeeType_InheritInt(tp_key))
-					continue;
-#endif /* !__OPTIMIZE_SIZE__ */
-				int_key = DeeObject_Int(item->di_key);
-				if unlikely(!int_key) {
-					if (DeeError_Catch(&DeeError_NotImplemented))
-						continue;
-					goto err;
-				}
-				matches = DeeInt_TryAsSize(int_key, &key_value) && key_value == hash;
-				Dee_Decref(int_key);
-				if unlikely(!matches)
-					continue;
-			}
-			break;
-		}
-		ASSERT(item->di_hash == hash);
-		temp = (*cb)(arg, hash, item->di_value);
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-continue_with_next_hash:;
-	}
-	return result;
-err_temp:
-	return temp;
-err:
-	return -1;
-}
-#else /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-#define rodict_enumerate_index_PTR NULL
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rodict_nonempty_as_bound(RoDict *__restrict self) {
@@ -2093,12 +2027,6 @@ err:
 	return NULL;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#define rodict_iterkeys_PTR NULL
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-#define rodict_iterkeys_PTR &DeeMap_DefaultIterKeysWithIter
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 PRIVATE struct type_seq rodict_seq = {
 	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_iter,
 	/* .tp_sizeob                       = */ NULL_IF_Os((DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_sizeob),
@@ -2112,8 +2040,8 @@ PRIVATE struct type_seq rodict_seq = {
 	/* .tp_foreach                      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rodict_mh_seq_foreach,
 	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rodict_foreach_pair,
 	/* .tp_enumerate                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rodict_foreach_pair,
-	/* .tp_enumerate_index              = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))rodict_enumerate_index_PTR,
-	/* .tp_iterkeys                     = */ rodict_iterkeys_PTR,
+	/* .tp_enumerate_index              = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))NULL,
+	/* .tp_iterkeys                     = */ NULL,
 	/* .tp_bounditem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&rodict_bounditem,
 	/* .tp_hasitem                      = */ (int (DCALL *)(DeeObject *, DeeObject *))&rodict_hasitem,
 	/* .tp_size                         = */ (size_t (DCALL *)(DeeObject *__restrict))&rodict_size,
@@ -2201,14 +2129,12 @@ PRIVATE struct type_member tpconst rodict_class_members[] = {
 
 PRIVATE struct type_method tpconst rodict_methods[] = {
 //	TYPE_KWMETHOD("byhash", &rodict_byhash, DOC_GET(map_byhash_doc)), /* TODO */
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD_HINTREF(__seq_iter__),
 	TYPE_METHOD_HINTREF(__seq_size__),
 	TYPE_METHOD_HINTREF(__seq_getitem__),
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_HINTREF(__seq_compare__),
 	TYPE_METHOD_HINTREF(__seq_compare_eq__),
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_END
 };
 
@@ -2223,9 +2149,6 @@ PRIVATE struct type_method_hint tpconst rodict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_operator_foreach_pair, &rodict_foreach_pair, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 	TYPE_METHOD_HINT_F(seq_operator_enumerate_index, &rodict_mh_seq_enumerate_index, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS | METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_size, &rodict_size, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	TYPE_METHOD_HINT_F(seq_operator_size_fast, &rodict_size_fast, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_operator_getitem_index, &rodict_mh_seq_getitem_index, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS | METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_trygetitem_index, &rodict_mh_seq_trygetitem_index, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS | METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_compare_eq, &rodict_mh_seq_compare_eq, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ | METHOD_FNOREFESCAPE),

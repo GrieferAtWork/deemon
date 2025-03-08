@@ -21,8 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_SUPER_C 1
 
 #include <deemon/api.h>
-
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
 #include <deemon/super.h>
@@ -4216,8 +4214,6 @@ INTERN struct Dee_type_mh_cache super_mhcache = {
 /* clang-format on */
 };
 
-
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_METHOD_HINT_SUPER_C */

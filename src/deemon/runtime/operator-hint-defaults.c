@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINT_DEFAULTS_C 1
 
 #include <deemon/api.h>
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
@@ -8373,8 +8372,6 @@ err:
 /*[[[end]]]*/
 /* clang-format on */
 
-
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_OPERATOR_HINT_DEFAULTS_C */

@@ -47,18 +47,6 @@ typedef struct {
 	DREF DeeObject *dssg_end;   /* [1..1][const] Enumeration stop index. */
 } DefaultSequence_WithSizeObAndGetItem;
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *dstsg_seq;    /* [1..1][const] The sequence being iterated. */
-	/* [1..1][const] Callback to load the `index'th element of `dstsg_seq'. */
-	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *dstsg_tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
-	DREF DeeObject *dstsg_start;  /* [1..1][const] Starting index for enumeration. */
-	DREF DeeObject *dstsg_end;    /* [1..1][const] Enumeration stop index. */
-	DeeTypeObject  *dstsg_tp_seq; /* [1..1][const] The type to pass to `dstsg_tp_tgetitem'. */
-} DefaultSequence_WithTSizeAndGetItem;
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *dsi_seq;   /* [1..1][const] The sequence being iterated. */
@@ -75,28 +63,12 @@ typedef struct {
 	size_t          dsial_limit; /* [const] Max # of items to enumerate starting with `dsial_start' */
 } DefaultSequence_WithIterAndLimit;
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *dsti_seq;    /* [1..1][const] The sequence being iterated. */
-	/* [1..1][const] Callback to construct an iterator for `dsti_seq'. */
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *dsti_tp_titer)(DeeTypeObject *tp_self, DeeObject *self);
-	size_t          dsti_start;  /* [const] # of items to skip in constructed iterators. */
-	size_t          dsti_limit;  /* [const] Max # of items to enumerate starting with `dsti_start' (but enumeration may stop earlier than that) */
-	DeeTypeObject  *dsti_tp_seq; /* [1..1][const] The type to pass to `dsti_tp_titer'. */
-} DefaultSequence_WithTIterAndLimit;
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type;     /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type; /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type;  /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeObAndGetItem_Type;        /* DefaultSequence_WithSizeObAndGetItem */
 INTDEF DeeTypeObject DefaultSequence_WithIter_Type;                    /* DefaultSequence_WithIter */
 INTDEF DeeTypeObject DefaultSequence_WithIterAndLimit_Type;            /* DefaultSequence_WithIterAndLimit */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-INTDEF DeeTypeObject DefaultSequence_WithTSizeAndGetItem_Type;         /* DefaultSequence_WithTSizeAndGetItem */
-INTDEF DeeTypeObject DefaultSequence_WithTIterAndLimit_Type;           /* DefaultSequence_WithTIterAndLimit */
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 DECL_END
 

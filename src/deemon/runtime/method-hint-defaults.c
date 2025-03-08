@@ -20,11 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_METHOD_HINT_DEFAULTS_C
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_DEFAULTS_C 1
 
-#include <deemon/api.h>
-
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/accu.h>
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/class.h>
@@ -22880,6 +22878,5 @@ tdefault__map_popitem__with_callobjectcache___map_popitem__(DeeTypeObject *tp_se
 /* clang-format on */
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_METHOD_HINT_DEFAULTS_C */

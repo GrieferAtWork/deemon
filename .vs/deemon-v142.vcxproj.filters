@@ -1182,33 +1182,6 @@
 		<ClInclude Include="..\src\deemon\objects\seq\concat.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-attrproxy-impl.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-bsearch-impl.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-first.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-last.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-operator-methods.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-operators.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-method-impl.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-operator-impl.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-api.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare-impl.c.inl">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
@@ -1384,9 +1357,6 @@
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\operator-hint-errors.h">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\operator-require.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\runtime_error.h">
@@ -1793,12 +1763,6 @@
 		<ClCompile Include="..\src\deemon\objects\seq\concat.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\default-api-methods.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\default-api.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\default-compare.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
@@ -2047,9 +2011,6 @@
 		<None Include="..\cpp.hint" />
 		<None Include="..\include\deemon\compiler\lexer.def">
 			<Filter>include\compiler</Filter>
-		</None>
-		<None Include="..\include\deemon\method-hints.def">
-			<Filter>include</Filter>
 		</None>
 		<None Include="..\src\deemon\compiler\asm\userdb.def">
 			<Filter>src\compiler\asm</Filter>

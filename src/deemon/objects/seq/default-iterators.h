@@ -65,26 +65,6 @@ typedef struct {
 #define DefaultIterator_WithGetItem_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->dig_lock)
 #define DefaultIterator_WithGetItem_LockRelease(self)    Dee_atomic_lock_release(&(self)->dig_lock)
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-typedef struct {
-	OBJECT_HEAD /* GC Object */
-	DREF DeeObject   *ditg_seq;    /* [1..1][const] The sequence being iterated. */
-	/* [1..1][const] Callback to load the `index'th element of `ditg_seq'. */
-	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *ditg_tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
-	DREF DeeObject   *ditg_index;  /* [1..1][lock(ditg_lock)] Next index to enumerate. */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t ditg_lock;   /* Lock for `ditg_index' */
-#endif /* !CONFIG_NO_THREADS */
-	DeeTypeObject    *ditg_tp_seq; /* [1..1][const] The type to pass to `ditg_tp_tgetitem'. */
-} DefaultIterator_WithTGetItem;
-#define DefaultIterator_WithTGetItem_LockAvailable(self)  Dee_atomic_lock_available(&(self)->ditg_lock)
-#define DefaultIterator_WithTGetItem_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->ditg_lock)
-#define DefaultIterator_WithTGetItem_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->ditg_lock)
-#define DefaultIterator_WithTGetItem_LockAcquire(self)    Dee_atomic_lock_acquire(&(self)->ditg_lock)
-#define DefaultIterator_WithTGetItem_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->ditg_lock)
-#define DefaultIterator_WithTGetItem_LockRelease(self)    Dee_atomic_lock_release(&(self)->ditg_lock)
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 typedef struct {
 	OBJECT_HEAD /* GC Object */
 	DREF DeeObject   *disg_seq;   /* [1..1][const] The sequence being iterated. */
@@ -103,27 +83,6 @@ typedef struct {
 #define DefaultIterator_WithSizeAndGetItem_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->disg_lock)
 #define DefaultIterator_WithSizeAndGetItem_LockRelease(self)    Dee_atomic_lock_release(&(self)->disg_lock)
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-typedef struct {
-	OBJECT_HEAD /* GC Object */
-	DREF DeeObject   *distg_seq;    /* [1..1][const] The sequence being iterated. */
-	/* [1..1][const] Callback to load the `index'th element of `distg_seq'. */
-	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *distg_tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
-	DREF DeeObject   *distg_index;  /* [1..1][lock(distg_lock)] Next index to enumerate. */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t distg_lock;   /* Lock for `distg_index' */
-#endif /* !CONFIG_NO_THREADS */
-	DREF DeeObject   *distg_end;    /* [1..1][const] Iteration stop index. */
-	DeeTypeObject    *distg_tp_seq; /* [1..1][const] The type to pass to `distg_tp_tgetitem'. */
-} DefaultIterator_WithSizeObAndTGetItem;
-#define DefaultIterator_WithSizeObAndTGetItem_LockAvailable(self)  Dee_atomic_lock_available(&(self)->distg_lock)
-#define DefaultIterator_WithSizeObAndTGetItem_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->distg_lock)
-#define DefaultIterator_WithSizeObAndTGetItem_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->distg_lock)
-#define DefaultIterator_WithSizeObAndTGetItem_LockAcquire(self)    Dee_atomic_lock_acquire(&(self)->distg_lock)
-#define DefaultIterator_WithSizeObAndTGetItem_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->distg_lock)
-#define DefaultIterator_WithSizeObAndTGetItem_LockRelease(self)    Dee_atomic_lock_release(&(self)->distg_lock)
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 typedef struct {
 	PROXY_OBJECT_HEAD(dinl_iter)   /* [1..1][const] The underlying iterator */
 	/* [1..1][const] Callback to load the next element from `dinl_iter'. */
@@ -140,18 +99,6 @@ typedef struct {
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *diikgi_tp_getitem)(DeeObject *self, DeeObject *key);
 } DefaultIterator_WithIterKeysAndGetItem;
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-typedef struct {
-	PROXY_OBJECT_HEAD2(diiktgi_iter, /* [1..1][const] Sequence to read key values from */
-	                   diiktgi_seq)  /* [1..1][const] Key iterator */
-	/* [1..1][const] Callback to load the next key from `diiktgi_iter'. */
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *diiktgi_tp_next)(DeeObject *self);
-	/* [1..1][const] Callback to load a key value from `diiktgi_seq'. */
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *diiktgi_tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *key);
-	DeeTypeObject    *diiktgi_tp_seq; /* [1..1][const] The type to pass to `diiktgi_tp_tgetitem'. */
-} DefaultIterator_WithIterKeysAndTGetItem;
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 INTDEF DeeTypeObject DefaultIterator_WithGetItemIndex_Type;                /* DefaultIterator_WithGetItemIndex */
 INTDEF DeeTypeObject DefaultIterator_WithGetItemIndexPair_Type;            /* DefaultIterator_WithGetItemIndex */
 INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type;         /* DefaultIterator_WithSizeAndGetItemIndex */
@@ -163,37 +110,20 @@ INTDEF DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndexPair_Type;  /* De
 
 INTDEF DeeTypeObject DefaultIterator_WithGetItem_Type;     /* DefaultIterator_WithGetItem */
 INTDEF DeeTypeObject DefaultIterator_WithGetItemPair_Type; /* DefaultIterator_WithGetItem */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-INTDEF DeeTypeObject DefaultIterator_WithTGetItem_Type;    /* DefaultIterator_WithTGetItem */
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTDEF DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type;     /* DefaultIterator_WithSizeObAndGetItem */
 INTDEF DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type; /* DefaultIterator_WithSizeObAndGetItem */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-INTDEF DeeTypeObject DefaultIterator_WithSizeObAndTGetItem_Type;    /* DefaultIterator_WithSizeObAndTGetItem */
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTDEF DeeTypeObject DefaultIterator_WithNextAndLimit_Type; /* DefaultIterator_WithNextAndLimit */
 
 INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type;     /* DefaultIterator_WithIterKeysAndGetItem (yields 2-element (key, value) tuples) */
 INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type;  /* DefaultIterator_WithIterKeysAndGetItem (yields 2-element (key, value) tuples) */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndGetItemSeq_Type;     /* DefaultIterator_WithIterKeysAndGetItem (yields only the value-part) */
-INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type;  /* DefaultIterator_WithIterKeysAndGetItem (yields only the value-part) */
-INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemSeq_Type;    /* DefaultIterator_WithIterKeysAndTGetItem (yields only the value-part) */
-INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type; /* DefaultIterator_WithIterKeysAndTGetItem (yields only the value-part) */
-INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemMap_Type;    /* DefaultIterator_WithIterKeysAndTGetItem (yields 2-element (key, value) tuples) */
-INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type; /* DefaultIterator_WithIterKeysAndTGetItem (yields 2-element (key, value) tuples) */
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTDEF DeeTypeObject DefaultIterator_WithForeach_Type;           /* DefaultIterator_WithForeach */
 INTDEF DeeTypeObject DefaultIterator_WithForeachPair_Type;       /* DefaultIterator_WithForeachPair */
 INTDEF DeeTypeObject DefaultIterator_WithEnumerateSeq_Type;      /* DefaultIterator_WithEnumerate */
 INTDEF DeeTypeObject DefaultIterator_WithEnumerateMap_Type;      /* DefaultIterator_WithEnumerate */
 INTDEF DeeTypeObject DefaultIterator_WithEnumerateIndexSeq_Type; /* DefaultIterator_WithEnumerateIndex */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-INTDEF DeeTypeObject DefaultIterator_WithEnumerateIndexMap_Type; /* DefaultIterator_WithEnumerateIndex */
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 /************************************************************************/
@@ -224,15 +154,6 @@ typedef struct {
 	/* [1..1][const] Callback to load the next element from `dinuf_iter'.
 	 * This must *ALWAYS* be `DeeType_RequireSupportedNativeOperator(Dee_TYPE(dinuf_iter), iter_next)' */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dinuf_tp_next)(DeeObject *self);
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* [1..1][const] Extra iterator operators for `dinuf_iter'
-	 * It is assumed that the following operators are defined (all
-	 * of which have default impl when `tp_iter_next' is defined):
-	 * - tp_nextpair
-	 * - tp_nextkey
-	 */
-	struct type_iterator *dinuf_tp_iterator;
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	DREF DeeObject   *dinuf_start;   /* [1..1][const] Range start for unpack pair key. */
 	DREF DeeObject   *dinuf_end;     /* [1..1][const] Range end for unpack pair key. */
 } DefaultIterator_WithNextAndUnpackFilter;

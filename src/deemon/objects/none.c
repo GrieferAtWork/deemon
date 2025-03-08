@@ -34,10 +34,8 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /**/
 
 #include <stddef.h> /* size_t */
@@ -255,23 +253,6 @@ DeeNone_OperatorGetItemNRStringLenHash(DeeObject *__restrict UNUSED(self),
 	return NULL;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeNone_OperatorUnpack(DeeObject *UNUSED(self), size_t dst_length, /*out*/ DREF DeeObject **dst) {
-	Dee_Setrefv(dst, Dee_None, dst_length);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-DeeNone_OperatorUnpackEx(DeeObject *UNUSED(self), size_t dst_length_min,
-                         size_t dst_length_max, /*out*/ DREF DeeObject **dst) {
-	(void)dst_length_min;
-	/* "none" always turns everything into more "none", so unpack to the max # of objects. */
-	Dee_Setrefv(dst, Dee_None, dst_length_max);
-	return dst_length_max;
-}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 #define DeeNone_OperatorVarCtor    DeeNone_NewRef
 #define DeeNone_OperatorVarCopy    (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_NewRef1)
 #define DeeNone_OperatorVarInit    (*(DREF DeeObject *(DCALL *)(size_t, DeeObject *const *))&_DeeNone_NewRef2)
@@ -317,11 +298,6 @@ DeeNone_OperatorUnpackEx(DeeObject *UNUSED(self), size_t dst_length_min,
 #define DeeNone_OperatorSetRange                (*(int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&_DeeNone_reti0_4)
 #define DeeNone_OperatorForeach                 (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&_DeeNone_rets0_3)
 #define DeeNone_OperatorForeachPair             (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&_DeeNone_rets0_3)
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-#define DeeNone_OperatorEnumerate               (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&_DeeNone_rets0_3)
-#define DeeNone_OperatorEnumerateIndex          (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&_DeeNone_rets0_5)
-#define DeeNone_OperatorIterKeys                DeeNone_OperatorVarCopy
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #define DeeNone_OperatorBoundItem               (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)
 #define DeeNone_OperatorHasItem                 (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)
 #define DeeNone_OperatorSize                    (*(size_t (DCALL *)(DeeObject *__restrict))&_DeeNone_rets0_1)
@@ -467,15 +443,9 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_setrange                     = */ &DeeNone_OperatorSetRange,
 	/* .tp_foreach                      = */ &DeeNone_OperatorForeach,
 	/* .tp_foreach_pair                 = */ &DeeNone_OperatorForeachPair,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	/* ._deprecated_tp_enumerate        = */ NULL,
-	/* ._deprecated_tp_enumerate_index  = */ NULL,
-	/* ._deprecated_tp_iterkeys         = */ NULL,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_enumerate                    = */ &DeeNone_OperatorEnumerate,
-	/* .tp_enumerate_index              = */ &DeeNone_OperatorEnumerateIndex,
-	/* .tp_iterkeys                     = */ &DeeNone_OperatorIterKeys,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	/* .tp_enumerate        = */ NULL,
+	/* .tp_enumerate_index  = */ NULL,
+	/* .tp_iterkeys         = */ NULL,
 	/* .tp_bounditem                    = */ &DeeNone_OperatorBoundItem,
 	/* .tp_hasitem                      = */ &DeeNone_OperatorHasItem,
 	/* .tp_size                         = */ &DeeNone_OperatorSize,
@@ -508,15 +478,9 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_hasitem_string_len_hash      = */ &DeeNone_OperatorHasItemStringLenHash,
 	/* .tp_asvector                     = */ &DeeNone_OperatorAsVector,
 	/* .tp_asvector_nothrow             = */ &DeeNone_OperatorAsVectorNothrow,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	/* ._deprecated_tp_unpack           = */ NULL,
 	/* ._deprecated_tp_unpack_ex        = */ NULL,
 	/* ._deprecated_tp_unpack_ub        = */ NULL,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_unpack                       = */ &DeeNone_OperatorUnpack,
-	/* .tp_unpack_ex                    = */ &DeeNone_OperatorUnpackEx,
-	/* .tp_unpack_ub                    = */ &DeeNone_OperatorUnpack,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_getitemnr                    = */ &DeeNone_OperatorGetItemNR,
 	/* .tp_getitemnr_string_hash        = */ &DeeNone_OperatorGetItemNRStringHash,
 	/* .tp_getitemnr_string_len_hash    = */ &DeeNone_OperatorGetItemNRStringLenHash,
@@ -680,7 +644,6 @@ PRIVATE struct type_operator const none_operators[] = {
 	TYPE_OPERATOR_CUSTOM(OPERATOR_FILE_000A_PUTC, &invoke_none_file_char_operator, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 };
 
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 PRIVATE struct Dee_type_mh_cache mh_cache_none = {
 	/* clang-format off */
 /*[[[deemon (printSpecialTypeMhCacheBody from "..method-hints.method-hints")({"$none", "$empty"});]]]*/
@@ -927,7 +890,6 @@ PRIVATE struct Dee_type_mh_cache mh_cache_none = {
 /*[[[end]]]*/
 	/* clang-format on */
 };
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PUBLIC DeeTypeObject DeeNone_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1058,9 +1020,7 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ none_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(none_operators),
-#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 	/* .tp_mhcache       = */ &mh_cache_none,
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 PUBLIC DeeNoneObject DeeNone_Singleton = {

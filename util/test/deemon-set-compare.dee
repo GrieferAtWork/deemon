@@ -30,13 +30,10 @@ for (local set: {
 	HashSet({ 10, 10 }),
 	({ 10 } as Set).frozen,
 	({ 10, 10 } as Set).frozen,
-	/* TODO: These 2 should start working once "set_cached" is a method
-	 *       hint under "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" */
-	//TODO: ({ 10 } as Set).cached,
-	//TODO: ({ 10, 10 } as Set).cached,
+//	({ 10 } as Set).cached, // TODO: Need a method hint __set_cached__
+//	({ 10, 10 } as Set).cached, // TODO: Need a method hint __set_cached__
 	{ 10 } as Set,
-	/* TODO: This one works, but only under "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" */
-	//{ 10, 10 } as Set,
+	{ 10, 10 } as Set,
 }) {
 	assert ((set == {10}));
 	assert !(set != {10});
@@ -54,13 +51,12 @@ for (local set: {
 
 	/* Make sure that a set does not equal a sequence containing all elements
 	 * of the set, when some of the elements appear as duplicates. */
-	// TODO: Comment these in under "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS"
-//	assert !(set == {10, 10});
-//	assert ((set != {10, 10}));
-//	assert ((set <  {10, 10}));
-//	assert ((set <= {10, 10}));
-//	assert !(set >  {10, 10});
-//	assert !(set >= {10, 10});
+	assert !(set == {10, 10});
+	assert ((set != {10, 10}));
+	assert ((set <  {10, 10}));
+	assert ((set <= {10, 10}));
+	assert !(set >  {10, 10});
+	assert !(set >= {10, 10});
 
 	assert !(set == {10, 20});
 	assert ((set != {10, 20}));

@@ -110,18 +110,11 @@ rs_giif_init(DefaultReversed_WithGetItemIndex *__restrict self,
 	if unlikely(verify_max_and_size(self))
 		goto err;
 	seqtyp = Dee_TYPE(self->drwgii_seq);
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	if unlikely(!seqtyp->tp_seq)
 		goto err_no_getitem;
 	self->drwgii_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index_fast;
 	if unlikely(!self->drwgii_tp_getitem_index)
 		goto err_no_getitem;
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast) &&
-	    (!DeeType_InheritGetItem(seqtyp) || !seqtyp->tp_seq->tp_getitem_index_fast))
-		goto err_no_getitem;
-	self->drwgii_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index_fast;
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	Dee_Incref(self->drwgii_seq);
 	return 0;
 err_no_getitem:

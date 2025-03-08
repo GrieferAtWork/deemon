@@ -27,10 +27,6 @@ import deemon;
 import ipc;
 import rt;
 
-/* Tests for stuff that only works under "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" */
-if (!hasattr(rt, "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast"))
-	return; // "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" isn't enabled; don't run this test
-
 local final DeeObject_ptr = void.ptr;
 local final Dee_funptr_t = try void.func(void).ptr catch (NotImplemented) ({
 	/* NotImplemented: ctypes was built without C-functions being enabled */

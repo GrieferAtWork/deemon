@@ -92,9 +92,6 @@ again:
 	if (tp_seq->tp_seq &&
 	    tp_seq->tp_seq->tp_getitem_index_fast &&
 	    tp_seq->tp_seq->tp_size_fast) {
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-have_operators:
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 		self->fsq_self               = seq;
 		self->fsq_getitem_index_fast = tp_seq->tp_seq->tp_getitem_index_fast;
 		return (*tp_seq->tp_seq->tp_size_fast)(seq);
@@ -103,15 +100,6 @@ have_operators:
 		seq    = DeeSuper_SELF(seq);
 		goto again;
 	}
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-	else if (!tp_seq->tp_seq && (DeeType_InheritSize(tp_seq) ||
-	                               DeeType_InheritGetItem(tp_seq))) {
-		if (tp_seq->tp_seq &&
-		    tp_seq->tp_seq->tp_getitem_index_fast &&
-		    tp_seq->tp_seq->tp_size_fast)
-			goto have_operators;
-	}
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	return (size_t)-1;
 }
 

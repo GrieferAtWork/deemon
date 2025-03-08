@@ -55,14 +55,12 @@ INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 seq_call_enumerate_with_range(DeeObject *self, DeeObject *cb,
                               DeeObject *start, DeeObject *end);
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* Helpers for enumerating a mapping by invoking a given callback. */
 INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL
 map_call_enumerate(DeeObject *self, DeeObject *cb);
 INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 map_call_enumerate_with_range(DeeObject *self, DeeObject *cb,
                               DeeObject *start, DeeObject *end);
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 

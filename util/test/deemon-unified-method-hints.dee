@@ -22,11 +22,6 @@ import * from deemon;
 import * from errors;
 import rt;
 
-/* Tests for stuff that only works under "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" */
-if (!hasattr(rt, "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast"))
-	return; // "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" isn't enabled; don't run this test
-
-
 class MyClass1 {
 	this = default;
 	final member mySize; /* "final" so "__seq_size__" needs a ref to "MyClass1" */

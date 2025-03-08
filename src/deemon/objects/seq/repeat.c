@@ -528,13 +528,7 @@ repeat_foreach(Repeat *__restrict self, Dee_foreach_t proc, void *arg) {
 	DeeNO_foreach_t foreach;
 	size_t i;
 	tp_seq  = Dee_TYPE(self->rp_seq);
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	foreach = DeeType_RequireNativeOperator(tp_seq, foreach);
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	foreach = DeeType_RequireSupportedNativeOperator(tp_seq, foreach);
-	if unlikely(!foreach)
-		return err_unimplemented_operator(tp_seq, OPERATOR_ITER);
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	i = 0;
 	result = 0;
 	do {
@@ -555,13 +549,7 @@ repeat_foreach_pair(Repeat *__restrict self, Dee_foreach_pair_t proc, void *arg)
 	DeeNO_foreach_pair_t foreach_pair;
 	size_t i;
 	tp_seq  = Dee_TYPE(self->rp_seq);
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	foreach_pair = DeeType_RequireNativeOperator(tp_seq, foreach_pair);
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	foreach_pair = DeeType_RequireSupportedNativeOperator(tp_seq, foreach_pair);
-	if unlikely(!foreach_pair)
-		return err_unimplemented_operator(tp_seq, OPERATOR_ITER);
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	i = 0;
 	result = 0;
 	do {

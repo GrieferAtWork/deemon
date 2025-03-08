@@ -100,13 +100,10 @@ DDATDEF DeeObject          DeeMapping_EmptyInstance;
 #define Dee_EmptyMapping (&DeeMapping_EmptyInstance)
 
 
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* Wrapper for `DeeObject_BoolInherited(DeeObject_InvokeMethodHint(map_operator_contains, self, key))' */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeMap_OperatorContainsAsBool(DeeObject *self,
                               DeeObject *key);
-#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 
 
 #undef si_key
