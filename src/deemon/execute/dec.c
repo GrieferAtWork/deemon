@@ -63,7 +63,13 @@
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
+#include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
+/**/
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
