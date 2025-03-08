@@ -23,6 +23,14 @@
 #define DEE_SOURCE
 
 #include "libposix.h"
+/**/
+
+#include <deemon/system.h>
+
+#include <hybrid/debug-alignment.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

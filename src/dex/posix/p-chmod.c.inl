@@ -27,6 +27,12 @@
 
 #include "p-readlink.c.inl" /* For `posix_chmod_USE_posix_readlink__AND__posix_lchmod()' */
 #include "p-path.c.inl"     /* For `posix_chmod_USE_posix_readlink__AND__posix_lchmod()' */
+/**/
+
+#include <hybrid/debug-alignment.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

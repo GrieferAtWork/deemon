@@ -28,8 +28,13 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 
+#include <hybrid/debug-alignment.h>
+
 #include "p-path.c.inl"     /* For `DeeString_IsAbsPath()' */
 #include "p-readlink.c.inl" /* For `posix_readlink()' */
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

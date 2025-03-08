@@ -23,7 +23,12 @@
 #define DEE_SOURCE
 
 #include "libposix.h"
+/**/
+
 #include <deemon/system-features.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

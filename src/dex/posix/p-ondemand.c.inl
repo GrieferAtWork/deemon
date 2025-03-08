@@ -205,12 +205,15 @@
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
+#include <hybrid/debug-alignment.h>
+/**/
+
+#include <stddef.h> /* size_t */
 #ifdef CONFIG_HAVE_sendfile
 #ifdef CONFIG_HAVE_SYS_SENDFILE_H
 #include <sys/sendfile.h>
 #endif /* CONFIG_HAVE_SYS_SENDFILE_H */
 #endif /* CONFIG_HAVE_sendfile */
-
 
 DECL_BEGIN
 

@@ -43,17 +43,20 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/debug-alignment.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
+/**/
+
+#include "libipc.h"
+/**/
 
 #include <stdbool.h>
+#include <stddef.h> /* size_t */
 #ifdef CONFIG_HAVE_PATHS_H
 #include <paths.h> /* _PATH_SHELLS */
 #endif /* CONFIG_HAVE_PATHS_H */
-
-#include "libipc.h"
-
 #ifdef CONFIG_HAVE_VFORK_H
 #include <vfork.h>
 #endif /* CONFIG_HAVE_VFORK_H */

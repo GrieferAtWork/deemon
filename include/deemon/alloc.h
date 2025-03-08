@@ -25,6 +25,9 @@
 #ifdef __CC__
 #include <hybrid/__overflow.h>
 #include <hybrid/typecore.h>
+#ifndef __INTELLISENSE__
+#include <hybrid/debug-alignment.h>
+#endif /* !__INTELLISENSE__ */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
@@ -1113,15 +1116,15 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 
 /* Define the deemon api's alloca() function (if it can be implemented) */
 #if !defined(Dee_Alloca) && defined(CONFIG_HAVE_alloca)
-#ifdef NO_DBG_ALIGNMENT
+#if defined(NO_DBG_ALIGNMENT) || defined(__INTELLISENSE__)
 #define Dee_Alloca(num_bytes) alloca(num_bytes)
-#else /* NO_DBG_ALIGNMENT */
+#else /* NO_DBG_ALIGNMENT || __INTELLISENSE__ */
 FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 	DBG_ALIGNMENT_ENABLE();
 	return ptr;
 }
 #define Dee_Alloca(num_bytes) (DBG_ALIGNMENT_DISABLE(), DeeDbg_AllocaCleanup(alloca(num_bytes)))
-#endif /* !NO_DBG_ALIGNMENT */
+#endif /* !NO_DBG_ALIGNMENT && !__INTELLISENSE__ */
 #endif /* !Dee_Alloca && CONFIG_HAVE_alloca */
 #if !defined(Dee_Allocac) && defined(Dee_Alloca)
 #define Dee_Allocac(elem_count, elem_size) \

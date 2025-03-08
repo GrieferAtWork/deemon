@@ -31,7 +31,6 @@ import rt;
 if (!hasattr(rt, "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast"))
 	return; // "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" isn't enabled; don't run this test
 
-
 local final DeeObject_ptr = void.ptr;
 local final Dee_funptr_t = try void.func(void).ptr catch (NotImplemented) ({
 	/* NotImplemented: ctypes was built without C-functions being enabled */
@@ -58,7 +57,7 @@ local final DeeType_GetNativeOperatorWithoutUnsupported = (Dee_funptr_t(DeeObjec
 );
 
 /* If neither of these methods could be loaded, then don't run this test. */
-if (!DeeType_GetMethodHint && !DeeType_GetNativeOperatorWithoutUnsupported)
+if (!DeeType_GetMethodHint || !DeeType_GetNativeOperatorWithoutUnsupported)
 	return;
 
 function _addr2name(addr: void.ptr): string | none {
@@ -77,8 +76,6 @@ function _addr2name(addr: void.ptr): string | none {
 @@If name cannot be determined (e.g. debug info not available/supported), return @none
 @@If the hint isn't supported, return @"NULL"
 function _Type_getMethodHintName(typ: Type, hint: string): string | none {
-	if (!DeeType_GetMethodHint)
-		return none;
 	local typAddr: void.ptr = rt.ctypes_addrof(typ);
 	local hintAddr = DeeType_GetMethodHint(typAddr, TMH_BYNAME[hint]);
 	return _addr2name(hintAddr);
@@ -89,8 +86,6 @@ function _Type_getMethodHintName(typ: Type, hint: string): string | none {
 @@If name cannot be determined (e.g. debug info not available/supported), return @none
 @@If the operator isn't supported, return @"NULL"
 function _Type_getNativeOperatorName(typ: Type, op: string): string | none {
-	if (!DeeType_GetNativeOperatorWithoutUnsupported)
-		return none;
 	local typAddr: void.ptr = rt.ctypes_addrof(typ);
 	local hintAddr = DeeType_GetNativeOperatorWithoutUnsupported(typAddr, TNO_BYNAME[op]);
 	return _addr2name(hintAddr);
@@ -133,6 +128,25 @@ function Type_assert(typ: Type, impls: {string: string}) {
 
 
 #ifndef __MAIN__
+
+/* This test normally fails when "Release-MSVC" builds, but not because operator inheritance
+ * breaks, but because visual C(++) reduces functions with duplicate bodies into a single
+ * instance (that that instance's name then becomes random)
+ *
+ * e.g.: "list_nonempty_as_bound" and "frame_bound_frame", 2 functions for completely
+ *       different types, are actually binary-compatible, so and so the tests below tend
+ *       to fail because of that.
+ *
+ * The CLI option that causes this is "/OPT:ICF"
+ *
+ * Solution: Check if 2 unrelated, but known identical functions share bodies.
+ */
+if (DeeType_GetNativeOperatorWithoutUnsupported(rt.ctypes_addrof(rt.RoDict), TNO_BYNAME["sizeob"]) ==
+    DeeType_GetNativeOperatorWithoutUnsupported(rt.ctypes_addrof(rt.Tuple), TNO_BYNAME["sizeob"]))
+	return; /* rodict_sizeob == tuple_sizeob */
+
+
+
 
 /* Assert that operators that are inherited also have their  */
 

@@ -36,6 +36,9 @@
 #include "p-readlink.c.inl" /* Needed for `lcopyfile()' to check for symbolic links. */
 #include "p-remove.c.inl"   /* Needed for `lcopyfile()' to remove existing files when `RENAME_NOREPLACE' isn't given. */
 #include "p-symlink.c.inl"  /* Needed for `lcopyfile()' to create copies of symbolic links. */
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

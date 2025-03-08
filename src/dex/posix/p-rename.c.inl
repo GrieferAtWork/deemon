@@ -26,6 +26,12 @@
 /**/
 
 #include "p-stat.c.inl"
+/**/
+
+#include <hybrid/debug-alignment.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

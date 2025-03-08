@@ -27,8 +27,13 @@
 
 #include <deemon/seq.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
+/**/
 
-#include <hybrid/sync/atomic-rwlock.h>
+#include <hybrid/debug-alignment.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

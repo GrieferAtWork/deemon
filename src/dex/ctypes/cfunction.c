@@ -38,7 +38,11 @@
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 
+#include <hybrid/debug-alignment.h>
 #include <hybrid/minmax.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 
