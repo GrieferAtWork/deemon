@@ -21,6 +21,7 @@
 #include "parser-impl.c.inl"
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/seq.h>
 #include <deemon/util/objectlist.h>
 
 DECL_BEGIN
@@ -581,7 +582,7 @@ err_store_source:
 					Dee_Decref(store_source);
 					goto err;
 				}
-				error = DeeObject_Unpack(store_source,
+				error = DeeSeq_Unpack(store_source,
 				                         expand_count,
 				                         buf);
 				if unlikely(error) {

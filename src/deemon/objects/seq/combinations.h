@@ -35,8 +35,8 @@ typedef struct seq_combinations_view SeqCombinationsView;
 
 struct seq_combinations {
 	PROXY_OBJECT_HEAD(sc_seq)                                   /* [1..1][const] Underlying sequence */
-	Dee_mh_seq_operator_trygetitem_index_t sc_trygetitem_index; /* [1..1][const] trygetitem_index operator for "sc_seq" */
-	size_t                                 sc_seqsize;          /* [valid_if(!= (size_t)-1)][lock(WRITE_ONCE)] Cache for `DeeSeq_OperatorSize(sc_seq)' */
+	DeeMH_seq_operator_trygetitem_index_t sc_trygetitem_index; /* [1..1][const] trygetitem_index operator for "sc_seq" */
+	size_t                                 sc_seqsize;          /* [valid_if(!= (size_t)-1)][lock(WRITE_ONCE)] Cache for `DeeObject_InvokeMethodHint(seq_operator_size, sc_seq)' */
 	size_t                                 sc_rparam;           /* [!0][valid_if(!= (size_t)-1)][lock(WRITE_ONCE)] the "r" parameter (or `(size_t)-1' when `sc_seqsize ?: 1' should be used)
 	                                                             * NOTE: Guarantied to be valid when accessed by an iterator. */
 };

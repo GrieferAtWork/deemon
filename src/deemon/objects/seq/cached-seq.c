@@ -450,9 +450,6 @@ PRIVATE struct type_seq cswi_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cswi_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__hasitem_index),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&cswi_size,
@@ -1428,10 +1425,10 @@ err_prev_index:
 }
 
 
-#define cswsogi_enumerate cswgi_enumerate
-#define cswsgi_enumerate  cswgi_enumerate
+#define cswsogi_mh_seq_enumerate cswgi_mh_seq_enumerate
+#define cswsgi_mh_seq_enumerate  cswgi_mh_seq_enumerate
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-cswgi_enumerate(CachedSeq_WithGetItem *self, Dee_seq_enumerate_t cb, void *arg) {
+cswgi_mh_seq_enumerate(CachedSeq_WithGetItem *self, Dee_seq_enumerate_t cb, void *arg) {
 	Dee_ssize_t temp, result = 0;
 	struct cachedseq_index prev_index;
 	cachedseq_index_init_index(&prev_index, 0);
@@ -1483,11 +1480,11 @@ err_prev_index:
 	return -1;
 }
 
-#define cswsogi_enumerate_index cswgi_enumerate_index
-#define cswsgi_enumerate_index  cswgi_enumerate_index
+#define cswsogi_mh_seq_enumerate_index cswgi_mh_seq_enumerate_index
+#define cswsgi_mh_seq_enumerate_index  cswgi_mh_seq_enumerate_index
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-cswgi_enumerate_index(CachedSeq_WithGetItem *self, Dee_seq_enumerate_index_t cb,
-                      void *arg, size_t start, size_t end) {
+cswgi_mh_seq_enumerate_index(CachedSeq_WithGetItem *self, Dee_seq_enumerate_index_t cb,
+                             void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	struct cachedseq_index prev_index;
 	struct cachedseq_index end_index;
@@ -1654,6 +1651,7 @@ PRIVATE struct type_method cswgi_methods[] = {
 	            "(end:?Dint)\n"
 	            "(start:?Dint,end:?Dint)\n"
 	            "Populate the entire cache, or the specified range of indices"),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
 
@@ -1696,9 +1694,6 @@ PRIVATE struct type_seq cswgi_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cswgi_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&cswgi_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&cswgi_enumerate_index,
-	/* .tp_iterkeys                   = */ &DeeSeq_DefaultIterKeysWithSizeOb,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&cswgi_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&cswgi_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&cswgi_size,
@@ -1732,6 +1727,13 @@ PRIVATE struct type_seq cswgi_seq = {
 	/* .tp_asvector                   = */ NULL
 };
 
+#define cswsogi_method_hints cswgi_method_hints
+#define cswsgi_method_hints  cswgi_method_hints
+PRIVATE struct type_method_hint tpconst cswgi_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_enumerate, &cswgi_mh_seq_enumerate, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &cswgi_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
 
 INTERN DeeTypeObject CachedSeq_WithGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1779,6 +1781,7 @@ INTERN DeeTypeObject CachedSeq_WithGetItem_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ cswgi_class_members,
+	/* .tp_method_hints  = */ cswgi_method_hints,
 };
 
 INTERN DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type = {
@@ -1827,6 +1830,7 @@ INTERN DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ cswsogi_class_members,
+	/* .tp_method_hints  = */ cswsogi_method_hints,
 };
 
 INTERN DeeTypeObject CachedSeq_WithSizeAndGetItem_Type = {
@@ -1875,6 +1879,7 @@ INTERN DeeTypeObject CachedSeq_WithSizeAndGetItem_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ cswsgi_class_members,
+	/* .tp_method_hints  = */ cswsgi_method_hints,
 };
 
 

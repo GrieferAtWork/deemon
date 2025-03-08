@@ -2374,8 +2374,35 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-list_enumerate_index(List *self, Dee_seq_enumerate_index_t proc,
-                     void *arg, size_t start, size_t end) {
+list_mh_foreach_reverse(List *self, Dee_foreach_t proc, void *arg) {
+	size_t i;
+	Dee_ssize_t temp, result = 0;
+	DeeList_LockRead(self);
+	i = self->l_list.ol_elemc;
+	while (i) {
+		DREF DeeObject *list_elem;
+		--i;
+		list_elem = self->l_list.ol_elemv[i];
+		Dee_Incref(list_elem);
+		DeeList_LockEndRead(self);
+		temp = (*proc)(arg, list_elem);
+		Dee_Decref_unlikely(list_elem);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+		DeeList_LockRead(self);
+		if (i > self->l_list.ol_elemc)
+			i = self->l_list.ol_elemc;
+	}
+	DeeList_LockEndRead(self);
+	return result;
+err:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+list_mh_seq_enumerate_index(List *self, Dee_seq_enumerate_index_t proc,
+                            void *arg, size_t start, size_t end) {
 	size_t i = start;
 	Dee_ssize_t temp, result = 0;
 	DeeList_LockRead(self);
@@ -2387,6 +2414,34 @@ list_enumerate_index(List *self, Dee_seq_enumerate_index_t proc,
 		Dee_Incref(list_elem);
 		DeeList_LockEndRead(self);
 		temp = (*proc)(arg, i, list_elem);
+		Dee_Decref_unlikely(list_elem);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+		DeeList_LockRead(self);
+	}
+	DeeList_LockEndRead(self);
+	return result;
+err:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+list_mh_seq_enumerate_index_reverse(List *self, Dee_seq_enumerate_index_t proc,
+                                    void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	DeeList_LockRead(self);
+	for (;;) {
+		DREF DeeObject *list_elem;
+		if (end > self->l_list.ol_elemc)
+			end = self->l_list.ol_elemc;
+		if (end <= start)
+			break;
+		--end;
+		list_elem = self->l_list.ol_elemv[end];
+		Dee_Incref(list_elem);
+		DeeList_LockEndRead(self);
+		temp = (*proc)(arg, end, list_elem);
 		Dee_Decref_unlikely(list_elem);
 		if unlikely(temp < 0)
 			goto err;
@@ -2422,9 +2477,6 @@ PRIVATE struct type_seq list_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&list_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&list_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&list_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast), /* default */
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__hasitem_index), /* default */
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&list_size,
@@ -3686,41 +3738,42 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	              "Release any pre-allocated, but unused memory, setting "
 	              /**/ "?#allocated to the length of @this List"),
 
-	TYPE_METHOD_HINTREF(seq_extend),
-	TYPE_METHOD_HINTREF(seq_resize),
-	TYPE_METHOD_HINTREF(seq_insert),
-	TYPE_METHOD_HINTREF(seq_insertall),
-	TYPE_METHOD_HINTREF(seq_erase),
-	TYPE_METHOD_HINTREF(seq_pop),
-	TYPE_METHOD_HINTREF(seq_xchitem),
-	TYPE_METHOD_HINTREF(seq_clear),
-	TYPE_METHOD_HINTREF(seq_find),
-	TYPE_METHOD_HINTREF(seq_rfind),
-	TYPE_METHOD_HINTREF(seq_remove),
-	TYPE_METHOD_HINTREF(seq_rremove),
-	TYPE_METHOD_HINTREF(seq_removeall),
-	TYPE_METHOD_HINTREF(seq_removeif),
-	TYPE_METHOD_HINTREF(seq_fill),
-	TYPE_METHOD_HINTREF(seq_reverse),
-	TYPE_METHOD_HINTREF(seq_sort),
-	TYPE_METHOD_HINTREF(seq_sorted),
+	TYPE_METHOD_HINTREF(Sequence_extend),
+	TYPE_METHOD_HINTREF(Sequence_resize),
+	TYPE_METHOD_HINTREF(Sequence_insert),
+	TYPE_METHOD_HINTREF(Sequence_insertall),
+	TYPE_METHOD_HINTREF(Sequence_erase),
+	TYPE_METHOD_HINTREF(Sequence_pop),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_clear),
+	TYPE_METHOD_HINTREF(Sequence_find),
+	TYPE_METHOD_HINTREF(Sequence_rfind),
+	TYPE_METHOD_HINTREF(Sequence_remove),
+	TYPE_METHOD_HINTREF(Sequence_rremove),
+	TYPE_METHOD_HINTREF(Sequence_removeall),
+	TYPE_METHOD_HINTREF(Sequence_removeif),
+	TYPE_METHOD_HINTREF(Sequence_fill),
+	TYPE_METHOD_HINTREF(Sequence_reverse),
+	TYPE_METHOD_HINTREF(Sequence_sort),
+	TYPE_METHOD_HINTREF(Sequence_sorted),
 	TYPE_METHOD_HINTREF(__seq_append__),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
 
 	/* Deprecated aliases / functions. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_KWMETHOD_F("remove_if", &DeeMH_seq_removeif, METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("remove_if", &DeeMA_Sequence_removeif, METHOD_FNOREFESCAPE,
 	                "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "Deprecated alias for ?#removeif"),
-	TYPE_KWMETHOD_F("insert_list", &DeeMH_seq_insertall, METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("insert_list", &DeeMA_Sequence_insertall, METHOD_FNOREFESCAPE,
 	                "(index:?Dint,items:?S?O)\n"
 	                "Deprecated alias for ?#insertall"),
 	TYPE_METHOD_F("insert_iter", &list_insertiter_deprecated, METHOD_FNOREFESCAPE,
 	              "(index:?Dint,iter:?DIterator)\n"
 	              "Deprecated alias for ${this.insertall(index, (iter as iterator from deemon).future)}"),
-	TYPE_METHOD_F("push_front", &DeeMH_seq_pushfront, METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("push_front", &DeeMA_Sequence_pushfront, METHOD_FNOREFESCAPE,
 	              "(item)\n"
 	              "Deprecated alias for ?#pushfront"),
-	TYPE_METHOD_F("push_back", &DeeMH_seq_append, METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("push_back", &DeeMA_Sequence_append, METHOD_FNOREFESCAPE,
 	              "(item)\n"
 	              "Deprecated alias for ?#pushback"),
 	TYPE_METHOD_F("pop_front", &seq_popfront, METHOD_FNOREFESCAPE,
@@ -3746,6 +3799,9 @@ PRIVATE struct type_method tpconst list_methods[] = {
 };
 
 PRIVATE struct type_method_hint tpconst list_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &list_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &list_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_foreach_reverse, &list_mh_foreach_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &list_tryget_first, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &list_tryget_last, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_append, &DeeList_Append, METHOD_FNOREFESCAPE),

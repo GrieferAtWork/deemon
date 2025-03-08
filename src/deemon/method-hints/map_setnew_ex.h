@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.setnew_ex()                                           */
 /************************************************************************/
-[[alias(Mapping.setnew_ex -> "map_setnew_ex")]]
+[[alias(Mapping.setnew_ex)]]
 __map_setnew_ex__(key,value)->?T2?Dbool?X2?O?N {
 	PRIVATE DEFINE_TUPLE(setnew_success_result, 2, { Dee_True, Dee_None });
 	DeeObject *key, *value;
@@ -124,7 +124,7 @@ err:
 	result = LOCAL_CALLATTR(self, 2, args);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_Unpack(result, 2, status);
+	temp = DeeSeq_Unpack(result, 2, status);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;

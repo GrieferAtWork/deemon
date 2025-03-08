@@ -3405,13 +3405,13 @@ target_unpack:
 	ADJUST_CFA_OFFSET(4)
 	pushl  %eax            /* backup... (objc) */
 	ADJUST_CFA_OFFSET(4)
-	pushl  SP              /* DeeObject_Unpack:objv */
+	pushl  SP              /* DeeSeq_Unpack:objv */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %eax            /* DeeObject_Unpack:objc */
+	pushl  %eax            /* DeeSeq_Unpack:objc */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx            /* DeeObject_Unpack:self */
+	pushl  %edx            /* DeeSeq_Unpack:self */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_Unpack,12)
+	call   fSYM(DeeSeq_Unpack,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
 	jnz    99f

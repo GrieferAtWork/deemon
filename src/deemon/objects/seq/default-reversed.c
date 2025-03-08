@@ -26,6 +26,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/method-hints.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
@@ -160,8 +161,9 @@ rs_gii_visit(DefaultReversed_WithGetItemIndex *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rs_gii_enumerate_index(DefaultReversed_WithGetItemIndex *__restrict self,
-                       Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+rs_gii_mh_seq_enumerate_index(DefaultReversed_WithGetItemIndex *__restrict self,
+                              Dee_seq_enumerate_index_t proc, void *arg,
+                              size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (end > self->drwgii_size)
@@ -191,8 +193,40 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rs_giif_enumerate_index(DefaultReversed_WithGetItemIndex *__restrict self,
-                        Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+rs_gii_mh_seq_enumerate_index_reverse(DefaultReversed_WithGetItemIndex *__restrict self,
+                                      Dee_seq_enumerate_index_t proc, void *arg,
+                                      size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	if (end > self->drwgii_size)
+		end = self->drwgii_size;
+	while (end > start) {
+		size_t real_index = self->drwgii_max - (--end);
+		DREF DeeObject *item;
+		item = (*self->drwgii_tp_getitem_index)(self->drwgii_seq, real_index);
+		if (item) {
+			temp = (*proc)(arg, end, item);
+			Dee_Decref(item);
+		} else if (DeeError_Catch(&DeeError_IndexError) ||
+		           DeeError_Catch(&DeeError_UnboundItem)) {
+			temp = (*proc)(arg, end, NULL);
+		} else {
+			goto err;
+		}
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+rs_giif_mh_seq_enumerate_index(DefaultReversed_WithGetItemIndex *__restrict self,
+                               Dee_seq_enumerate_index_t proc, void *arg,
+                               size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (end > self->drwgii_size)
@@ -213,8 +247,31 @@ err_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rs_tgii_enumerate_index(DefaultReversed_WithGetItemIndex *__restrict self,
-                        Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+rs_giif_mh_seq_enumerate_index_reverse(DefaultReversed_WithGetItemIndex *__restrict self,
+                                       Dee_seq_enumerate_index_t proc, void *arg,
+                                       size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	if (end > self->drwgii_size)
+		end = self->drwgii_size;
+	while (end > start) {
+		size_t real_index = self->drwgii_max - (--end);
+		DREF DeeObject *item;
+		item = (*self->drwgii_tp_getitem_index)(self->drwgii_seq, real_index);
+		temp = (*proc)(arg, end, item);
+		Dee_XDecref(item);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+rs_tgii_mh_seq_enumerate_index(DefaultReversed_WithGetItemIndex *__restrict self,
+                               Dee_seq_enumerate_index_t proc, void *arg,
+                               size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (end > self->drwgii_size)
@@ -227,6 +284,36 @@ rs_tgii_enumerate_index(DefaultReversed_WithGetItemIndex *__restrict self,
 			temp = (*proc)(arg, i, NULL);
 		} else if (item) {
 			temp = (*proc)(arg, i, item);
+			Dee_Decref(item);
+		} else {
+			goto err;
+		}
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+rs_tgii_mh_seq_enumerate_index_reverse(DefaultReversed_WithGetItemIndex *__restrict self,
+                                       Dee_seq_enumerate_index_t proc, void *arg,
+                                       size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	if (end > self->drwgii_size)
+		end = self->drwgii_size;
+	while (end > start) {
+		size_t real_index = self->drwgii_max - (--end);
+		DREF DeeObject *item;
+		item = (*self->drwgii_tp_getitem_index)(self->drwgii_seq, real_index);
+		if (item == ITER_DONE) {
+			temp = (*proc)(arg, end, NULL);
+		} else if (item) {
+			temp = (*proc)(arg, end, item);
 			Dee_Decref(item);
 		} else {
 			goto err;
@@ -379,6 +466,17 @@ err:
 
 
 
+PRIVATE struct type_method tpconst rs_gii_methods[] = {
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst rs_gii_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &rs_gii_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &rs_gii_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_seq rs_gii_seq = {
 	/* .tp_iter                       = */ DEFIMPL(&default__seq_operator_iter__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
@@ -391,9 +489,6 @@ PRIVATE struct type_seq rs_gii_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&rs_gii_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__hasitem_index),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rs_gii_size,
@@ -427,6 +522,21 @@ PRIVATE struct type_seq rs_gii_seq = {
 };
 
 
+#if 1
+#define rs_giif_methods rs_gii_methods
+#else
+PRIVATE struct type_method tpconst rs_giif_methods[] = {
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_END
+};
+#endif
+
+PRIVATE struct type_method_hint tpconst rs_giif_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &rs_giif_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &rs_giif_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_seq rs_giif_seq = {
 	/* .tp_iter                       = */ DEFIMPL(&default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast),
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
@@ -439,9 +549,6 @@ PRIVATE struct type_seq rs_giif_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&rs_giif_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__hasitem_index),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rs_giif_size,
@@ -474,6 +581,21 @@ PRIVATE struct type_seq rs_giif_seq = {
 	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
 };
 
+#if 1
+#define rs_tgii_methods rs_gii_methods
+#else
+PRIVATE struct type_method tpconst rs_tgii_methods[] = {
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_END
+};
+#endif
+
+PRIVATE struct type_method_hint tpconst rs_tgii_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &rs_tgii_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &rs_tgii_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_seq rs_tgii_seq = {
 	/* .tp_iter                       = */ DEFIMPL(&default__seq_operator_iter__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
@@ -486,9 +608,6 @@ PRIVATE struct type_seq rs_tgii_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&rs_tgii_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__hasitem_index),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rs_tgii_size,
@@ -572,12 +691,13 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndex_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ rs_gii_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ rs_gii_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ rs_gii_method_hints,
 };
 
 INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
@@ -620,12 +740,13 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ rs_giif_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ rs_giif_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ rs_giif_method_hints,
 };
 
 INTERN DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type = {
@@ -668,12 +789,13 @@ INTERN DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ rs_tgii_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ rs_tgii_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ rs_tgii_method_hints,
 };
 
 DECL_END

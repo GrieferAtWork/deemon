@@ -35,6 +35,7 @@
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/seq.h>
 #include <deemon/string.h>
 /**/
 
@@ -90,7 +91,7 @@ get_astloc_from_obj(DeeObject *obj,
 		result->l_file = NULL;
 		goto done;
 	}
-	if (DeeObject_Unpack(obj, 3, args))
+	if (DeeSeq_Unpack(obj, 3, args))
 		goto err;
 	if (DeeNone_Check(args[0])) {
 		result->l_file = NULL;

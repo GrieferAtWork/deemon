@@ -11554,18 +11554,21 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 
 	/* Override specific sequence functions whilst retaining original behavior.
 	 * s.a. "string_method_hints" */
-	TYPE_METHOD_HINTREF_DOC(seq_any, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
-	                                 "When @key isn't given, always true if the effective index-range is "
-	                                 /**/ "non-empty (since elements of ${string as Sequence} as always "
-	                                 /**/ "1-characters strings, which are non-empty and thus !t). "
-	                                 /**/ "S.a. ?Aany?DSequence"),
-	TYPE_METHOD_HINTREF_DOC(seq_all, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
-	                                 "When @key isn't given, always return true (because elements of "
-	                                 /**/ "${string as Sequence} as always 1-characters strings, which "
-	                                 /**/ "are non-empty and thus !t). S.a. ?Aall?DSequence"),
-	TYPE_METHOD_HINTREF_DOC(seq_sum, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?.?N\n"
-	                                 "Same as ?#substr, but return ?N if instead of $\"\" (an empty string). "
-	                                 /**/ "S.a. ?Asum?DSequence"),
+	TYPE_METHOD_HINTREF_DOC(Sequence_any,
+	                        "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	                        "When @key isn't given, always true if the effective index-range is "
+	                        /**/ "non-empty (since elements of ${string as Sequence} as always "
+	                        /**/ "1-characters strings, which are non-empty and thus !t). "
+	                        /**/ "S.a. ?Aany?DSequence"),
+	TYPE_METHOD_HINTREF_DOC(Sequence_all,
+	                        "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	                        "When @key isn't given, always return true (because elements of "
+	                        /**/ "${string as Sequence} as always 1-characters strings, which "
+	                        /**/ "are non-empty and thus !t). S.a. ?Aall?DSequence"),
+	TYPE_METHOD_HINTREF_DOC(Sequence_sum,
+	                        "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?.?N\n"
+	                        "Same as ?#substr, but return ?N if instead of $\"\" (an empty string). "
+	                        /**/ "S.a. ?Asum?DSequence"),
 
 	/* Explicit references to sequence functions whose names we re-use whilst
 	 * implementing different behavior. By also explicitly defining variants
@@ -11590,6 +11593,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_METHOD_HINTREF(__seq_endswith__),
 	TYPE_METHOD_HINTREF(__seq_find__),
 	TYPE_METHOD_HINTREF(__seq_rfind__),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
 

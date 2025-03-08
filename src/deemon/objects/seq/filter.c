@@ -726,9 +726,6 @@ PRIVATE struct type_seq filter_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&filter_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&filter_mh_seq_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__hasitem_index),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&filter_size,
@@ -773,9 +770,6 @@ PRIVATE struct type_seq filterub_seq = {
 	/* .tp_setrange           = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&filterub_setrange,
 	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&filterub_foreach,
 	/* .tp_foreach_pair       = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate          = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&filterub_mh_seq_enumerate,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&filterub_mh_seq_enumerate_index,
-	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ (int (DCALL *)(DeeObject *, DeeObject *))&filterub_bounditem,
 	/* .tp_hasitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&filterub_hasitem,
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&filterub_size,
@@ -824,7 +818,7 @@ PRIVATE DeeObject filter_locate_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 filter_trygetfirst(Filter *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeSeq_InvokeLocate(self->f_seq, self->f_fun, &filter_locate_dummy);
+	result = DeeObject_InvokeMethodHint(seq_locate, self->f_seq, self->f_fun, &filter_locate_dummy);
 	if (result == &filter_locate_dummy) {
 		Dee_DecrefNokill(&filter_locate_dummy);
 		result = ITER_DONE;
@@ -835,7 +829,7 @@ filter_trygetfirst(Filter *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 filter_trygetlast(Filter *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeSeq_InvokeRLocateWithRange(self->f_seq, self->f_fun, 0, (size_t)-1, &filter_locate_dummy);
+	result = DeeObject_InvokeMethodHint(seq_rlocate_with_range, self->f_seq, self->f_fun, 0, (size_t)-1, &filter_locate_dummy);
 	if (result == &filter_locate_dummy) {
 		Dee_DecrefNokill(&filter_locate_dummy);
 		result = ITER_DONE;

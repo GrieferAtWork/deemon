@@ -89,7 +89,6 @@
 
 #include <deemon/api.h>
 #include <deemon/class.h>
-#include <hybrid/compiler.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
@@ -742,15 +741,15 @@ DECL_BEGIN
 #elif defined(LOCAL_IS_SET)
 #define LOCAL_tp_accessattr                                                         tp_setattr
 #define LOCAL_DECLARE_tp_accessattr(tp_accessattr)                                  int (DCALL *tp_accessattr)(DeeObject *, DeeObject *, DeeObject *)
-#define LOCAL_DeeType_invoke_attr_tp_accessattr(tp_iter, tp_accessattr, self, attr) DeeType_invoke_attr_tp_setattr(tp_iter, tp_accessattr, self, attr, value)
+#define LOCAL_DeeType_invoke_attr_tp_accessattr(tp_iter, tp_accessattr, self, attr) (*maketyped__setattr(tp_accessattr))(tp_iter, self, attr, value)
 #elif defined(LOCAL_IS_DEL)
 #define LOCAL_tp_accessattr                                                         tp_delattr
 #define LOCAL_DECLARE_tp_accessattr(tp_accessattr)                                  int (DCALL *tp_accessattr)(DeeObject *, DeeObject *)
-#define LOCAL_DeeType_invoke_attr_tp_accessattr(tp_iter, tp_accessattr, self, attr) DeeType_invoke_attr_tp_delattr(tp_iter, tp_accessattr, self, attr)
+#define LOCAL_DeeType_invoke_attr_tp_accessattr(tp_iter, tp_accessattr, self, attr) (*maketyped__delattr(tp_accessattr))(tp_iter, self, attr)
 #else /* ... */
 #define LOCAL_tp_accessattr                                                         tp_getattr
 #define LOCAL_DECLARE_tp_accessattr(tp_accessattr)                                  DREF DeeObject *(DCALL *tp_accessattr)(DeeObject *, DeeObject *)
-#define LOCAL_DeeType_invoke_attr_tp_accessattr(tp_iter, tp_accessattr, self, attr) DeeType_invoke_attr_tp_getattr(tp_iter, tp_accessattr, self, attr)
+#define LOCAL_DeeType_invoke_attr_tp_accessattr(tp_iter, tp_accessattr, self, attr) (*maketyped__getattr(tp_accessattr))(tp_iter, self, attr)
 #define LOCAL_type_accessattr                                                       type_getattr
 #endif /* !... */
 

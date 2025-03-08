@@ -30,7 +30,7 @@ for (local lo, ge, alias: {
 	("ge", "lo", 'issuperset'),
 }) {
 	if (alias !is none)
-		print('[[alias(Set.', alias, ' -> "set_', alias, '")]]');
+		print('[[alias(Set.', alias, ')]]');
 	print('__set_', lo, '__(rhs:?X3?DSet?DSequence?S?O)->?Dbool {');
 	print('	DeeObject *rhs;');
 	print('	if (DeeArg_Unpack(argc, argv, "o:__set_', lo, '__", &rhs))');
@@ -182,7 +182,7 @@ set_operator_lo = {
 };
 
 
-[[alias(Set.issubset -> "set_issubset")]]
+[[alias(Set.issubset)]]
 __set_le__(rhs:?X3?DSet?DSequence?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__set_le__", &rhs))
@@ -283,7 +283,7 @@ set_operator_gr = {
 };
 
 
-[[alias(Set.issuperset -> "set_issuperset")]]
+[[alias(Set.issuperset)]]
 __set_ge__(rhs:?X3?DSet?DSequence?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__set_ge__", &rhs))

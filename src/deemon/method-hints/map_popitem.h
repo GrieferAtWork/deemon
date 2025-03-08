@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.popitem()                                             */
 /************************************************************************/
-[[alias(Mapping.popitem -> "map_popitem")]]
+[[alias(Mapping.popitem)]]
 __map_popitem__()->?X2?T2?O?O?N {
 	if (DeeArg_Unpack(argc, argv, ":__map_popitem__"))
 		goto err;
@@ -46,7 +46,7 @@ __map_popitem__.map_popitem([[nonnull]] DeeObject *self)
 		return_none;
 	if unlikely(!result)
 		goto err;
-	if unlikely(DeeObject_Unpack(result, 2, key_and_value))
+	if unlikely(DeeSeq_Unpack(result, 2, key_and_value))
 		goto err_r;
 	Dee_Decref(key_and_value[1]);
 	temp = CALL_DEPENDENCY(map_operator_delitem, self, key_and_value[0]);
@@ -67,7 +67,7 @@ err:
 		return_none;
 	if unlikely(!result)
 		goto err;
-	if unlikely(DeeObject_Unpack(result, 2, key_and_value))
+	if unlikely(DeeSeq_Unpack(result, 2, key_and_value))
 		goto err_r;
 	Dee_Decref(key_and_value[1]);
 	temp = CALL_DEPENDENCY(map_operator_delitem, self, key_and_value[0]);

@@ -2870,7 +2870,7 @@ rbtree_insert_iterator(RBTree *self, DeeObject *iter) {
 		int temp;
 		size_t count;
 		DREF DeeObject *items[3];
-		count = DeeObject_UnpackEx(elem, 2, 3, items);
+		count = DeeObject_InvokeMethodHint(seq_unpack_ex, elem, 2, 3, items);
 		Dee_Decref(elem);
 		if unlikely(count == (size_t)-1)
 			goto err;
@@ -3479,9 +3479,6 @@ PRIVATE struct type_seq rbtree_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&rbtree_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rbtree_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rbtree_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *))&rbtree_size,
@@ -3499,23 +3496,6 @@ PRIVATE struct type_seq rbtree_seq = {
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_trygetitem,
-	/* .tp_trygetitem_index           = */ NULL,
-	/* .tp_trygetitem_string_hash     = */ NULL,
-	/* .tp_getitem_string_hash        = */ NULL,
-	/* .tp_delitem_string_hash        = */ NULL,
-	/* .tp_setitem_string_hash        = */ NULL,
-	/* .tp_bounditem_string_hash      = */ NULL,
-	/* .tp_hasitem_string_hash        = */ NULL,
-	/* .tp_trygetitem_string_len_hash = */ NULL,
-	/* .tp_getitem_string_len_hash    = */ NULL,
-	/* .tp_delitem_string_len_hash    = */ NULL,
-	/* .tp_setitem_string_len_hash    = */ NULL,
-	/* .tp_bounditem_string_len_hash  = */ NULL,
-	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ NULL,
-	/* .tp_unpack                     = */ NULL,
-	/* .tp_unpack_ex                  = */ NULL,
-	/* .tp_unpack_ub                  = */ NULL,
 };
 
 PRIVATE struct type_gc tpconst rbtree_gc = {
@@ -3610,8 +3590,8 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 	              DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	              "Iterate @items and unpack each element into 3 others, "
 	              /**/ "using them as #C{minkey,maxkey,value} to insert into @this ?."),
-	TYPE_METHOD_HINTREF(map_setold_ex),
-	TYPE_METHOD_HINTREF(map_setnew_ex),
+	TYPE_METHOD_HINTREF(Mapping_setold_ex),
+	TYPE_METHOD_HINTREF(Mapping_setnew_ex),
 	TYPE_METHOD_END
 };
 

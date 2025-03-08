@@ -30,6 +30,7 @@
 #include <deemon/format.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
+#include <deemon/operator-hints.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h> /* mempcpyc */
@@ -117,7 +118,8 @@ LOCAL_seX(inplace)(LOCAL_SeqEach *self,
 	data.sifd_attr  = self->sg_attr;
 	data.sifd_op    = op;
 	data.sifd_other = other;
-	return (int)DeeSeq_OperatorForeach(self->se_seq, &LOCAL_seX(inplace_foreach_cb), &data);
+	return (int)DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                       &LOCAL_seX(inplace_foreach_cb), &data);
 }
 
 #define DEFINE_SEA_BINARY_INPLACE(name, func)                   \
@@ -826,10 +828,7 @@ PRIVATE struct type_seq LOCAL_seX(seq) = {
 	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&LOCAL_seX(delrange),
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&LOCAL_seX(setrange),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&LOCAL_seX(foreach),
-	/* .tp_foreach_pair               = */ &DeeObject_DefaultForeachPairWithForeach,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&LOCAL_seX(mh_seq_enumerate),
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&LOCAL_seX(mh_seq_enumerate_index),
-	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_foreach_pair               = */ &default__foreach_pair__with__foreach,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(bounditem),
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(hasitem),
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
@@ -1595,10 +1594,7 @@ PRIVATE struct type_seq LOCAL_ssX(seq) = {
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&LOCAL_seX(foreach), /* Needed for recursion! */
-	/* .tp_foreach_pair               = */ &DeeObject_DefaultForeachPairWithForeach,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_foreach_pair               = */ &default__foreach_pair__with__foreach,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_ssX(bounditem),
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_ssX(hasitem),
 	/* .tp_size                       = */ NULL,

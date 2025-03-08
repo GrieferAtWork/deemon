@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.reduce()                                                */
 /************************************************************************/
-[[kw, alias(Sequence.reduce -> "seq_reduce")]]
+[[kw, alias(Sequence.reduce)]]
 __seq_reduce__(combine:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,init?)->?O {
 	DeeObject *combine, *init = NULL;
 	size_t start = 0, end = (size_t)-1;

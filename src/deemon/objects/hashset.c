@@ -1891,9 +1891,6 @@ PRIVATE struct type_seq hashset_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&hashset_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&hashset_size,
@@ -1991,27 +1988,27 @@ hashset_sizeof(HashSet *self) {
 
 PRIVATE struct type_method tpconst hashset_methods[] = {
 	/* TODO: HashSet.byhash(template:?O)->?DSequence */
-	TYPE_METHOD_HINTREF(set_insert),
-	TYPE_METHOD_HINTREF(set_remove),
-	TYPE_METHOD_HINTREF(set_unify),
-	TYPE_METHOD_HINTREF(set_pop),
-	TYPE_METHOD_HINTREF(seq_clear),
+	TYPE_METHOD_HINTREF(Set_insert),
+	TYPE_METHOD_HINTREF(Set_remove),
+	TYPE_METHOD_HINTREF(Set_unify),
+	TYPE_METHOD_HINTREF(Set_pop),
+	TYPE_METHOD_HINTREF(Sequence_clear),
 
 	/* Alternative function names. */
-	TYPE_METHOD(STR_popitem, &DeeMH_set_pop,
+	TYPE_METHOD(STR_popitem, &DeeMA_Set_pop,
 	            "(def?)->\n"
 	            "Deprecated alias for ?#pop"),
-	TYPE_METHOD("add", &DeeMH_set_insert,
+	TYPE_METHOD("add", &DeeMA_Set_insert,
 	            "(ob)->?Dbool\n"
 	            "Deprecated alias for ?#insert"),
-	TYPE_METHOD("discard", &DeeMH_set_remove,
+	TYPE_METHOD("discard", &DeeMA_Set_remove,
 	            "(ob)->?Dbool\n"
 	            "Deprecated alias for ?#remove"),
-	TYPE_METHOD("update", &DeeMH_set_insertall,
+	TYPE_METHOD("update", &DeeMA_Set_insertall,
 	            "(items:?S?O)->?Dint\n"
 	            "Deprecated alias for ?#insertall"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_METHOD("insert_all", &DeeMH_set_insertall,
+	TYPE_METHOD("insert_all", &DeeMA_Set_insertall,
 	            "(ob)->?Dbool\n"
 	            "Deprecated alias for ?#insertall"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */

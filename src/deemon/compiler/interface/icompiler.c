@@ -738,7 +738,7 @@ unpack_catch_expression(DeeObject *__restrict triple,
                         DeeBaseScopeObject *__restrict base_scope) {
 	/* (flags:?Dstring,mask:?#Ast,code:?#Ast) */
 	DeeCompilerAstObject *args[3];
-	if (DeeObject_Unpack(triple, 3, (DeeObject **)args))
+	if (DeeSeq_Unpack(triple, 3, (DeeObject **)args))
 		goto err;
 	if (!DeeNone_Check(args[1])) {
 		if (DeeObject_AssertTypeExact(args[1], &DeeCompilerAst_Type))

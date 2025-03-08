@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.any()                                                */
 /************************************************************************/
-[[kw, alias(Sequence.any -> "seq_any")]]
+[[kw, alias(Sequence.any)]]
 __seq_any__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 	int result;
 	DeeObject *key = Dee_None;

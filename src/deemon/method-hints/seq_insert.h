@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.insert()                                             */
 /************************************************************************/
-[[kw, alias(Sequence.insert -> "seq_insert")]]
+[[kw, alias(Sequence.insert)]]
 __seq_insert__(index:?Dint,item) {
 	size_t index;
 	DeeObject *item;

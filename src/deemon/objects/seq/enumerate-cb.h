@@ -33,7 +33,8 @@ DECL_BEGIN
 /* USER -> NATIVE                                                       */
 /************************************************************************/
 
-/* For calling the native "tp_enumerate" / "tp_enumerate_index" with user-defined callbacks. */
+/* For calling the native "seq_enumerate" / "seq_enumerate_index"
+ * method hints with user-code function callbacks. */
 struct seq_enumerate_data {
 	DeeObject      *sed_cb;     /* [1..1] Enumeration callback */
 	DREF DeeObject *sed_result; /* [?..1][valid_if(return == -2)] Enumeration result */
@@ -70,7 +71,8 @@ map_call_enumerate_with_range(DeeObject *self, DeeObject *cb,
 /* NATIVE -> USER                                                       */
 /************************************************************************/
 
-/* For passing a native "tp_enumerate" / "tp_enumerate_index" to user-defined callbacks. */
+/* For passing a native "seq_enumerate" / "seq_enumerate_index"
+ * callback to wrapped within a deemon object to user-code callbacks. */
 typedef struct {
 	OBJECT_HEAD
 	union {

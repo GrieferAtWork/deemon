@@ -33,9 +33,11 @@
 #include <deemon/int.h>
 #include <deemon/seq.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/thread.h>
@@ -2053,7 +2055,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			                                                   sizeof(DREF DeeStringObject *));
 			if unlikely(!keyword_vec)
 				goto err_r;
-			if unlikely(DeeObject_Unpack(keywords, coargc, (DeeObject **)keyword_vec)) {
+			if unlikely(DeeSeq_Unpack(keywords, coargc, (DeeObject **)keyword_vec)) {
 				Dee_Free(keyword_vec);
 				goto err_r;
 			}
@@ -2086,7 +2088,8 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		default_vec = (DREF DeeObject **)Dee_Mallocc(default_c, sizeof(DREF DeeObject *));
 		if unlikely(!default_vec)
 			goto err_r_keywords;
-		if unlikely(DeeObject_UnpackWithUnbound(defaults, default_c, default_vec)) {
+		if unlikely(DeeObject_InvokeMethodHint(seq_unpack_ub, defaults, default_c,
+		                                       default_c, default_vec) == (size_t)-1) {
 			Dee_Free(default_vec);
 			goto err_r_keywords;
 		}

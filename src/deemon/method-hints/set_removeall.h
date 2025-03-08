@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Set.removeall()                                               */
 /************************************************************************/
-[[alias(Set.removeall -> "set_removeall")]]
+[[alias(Set.removeall)]]
 __set_removeall__(keys:?X3?DSet?DSequence?S?O) {
 	DeeObject *keys;
 	if (DeeArg_Unpack(argc, argv, "o:__set_removeall__", &keys))

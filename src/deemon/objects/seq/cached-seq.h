@@ -157,8 +157,8 @@ typedef struct {
 #define CachedSeq_WithGetItem_LockRelease(self)    Dee_atomic_lock_release(&(self)->cswgi_lock)
 
 INTDEF DeeTypeObject CachedSeq_WithGetItem_Type;          /* Uses a lazily-allocated vector for small integers, and a mapping for large ones */
-INTDEF DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type; /* Like `CachedSeq_WithGetItem_Type', but also uses+caches `DeeSeq_OperatorSizeOb' */
-INTDEF DeeTypeObject CachedSeq_WithSizeAndGetItem_Type;   /* Like `CachedSeq_WithSizeObAndGetItem_Type', but uses `DeeSeq_OperatorSize' instead of `DeeSeq_OperatorSizeOb' */
+INTDEF DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type; /* Like `CachedSeq_WithGetItem_Type', but also uses+caches `seq_operator_sizeob' */
+INTDEF DeeTypeObject CachedSeq_WithSizeAndGetItem_Type;   /* Like `CachedSeq_WithSizeObAndGetItem_Type', but uses `seq_operator_Size' instead of `seq_operator_sizeob' */
 
 
 typedef struct {

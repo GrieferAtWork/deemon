@@ -2040,7 +2040,7 @@ do_pack_list:
 do_unpack:
 			ASSERT_USAGE(-1, +(int)imm_val);
 			sequence = POP();
-			error    = DeeObject_Unpack(sequence, imm_val, sp);
+			error    = DeeSeq_Unpack(sequence, imm_val, sp);
 			Dee_Decref(sequence);
 			if unlikely(error)
 				HANDLE_EXCEPT();
@@ -6204,7 +6204,7 @@ prefix_do_unpack:
 					sequence = get_prefix_object();
 					if unlikely(!sequence)
 						HANDLE_EXCEPT();
-					error = DeeObject_Unpack(sequence, imm_val, sp);
+					error = DeeSeq_Unpack(sequence, imm_val, sp);
 					Dee_Decref(sequence);
 					if unlikely(error)
 						HANDLE_EXCEPT();

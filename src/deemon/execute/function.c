@@ -407,7 +407,7 @@ function_init(size_t argc, DeeObject *const *argv) {
 	}
 	if unlikely(!result)
 		goto err;
-	if (DeeObject_Unpack(refs, code->co_refc, result->fo_refv))
+	if (DeeSeq_Unpack(refs, code->co_refc, result->fo_refv))
 		goto err_r;
 	result->fo_code = code;
 	Dee_Incref(code);
@@ -1495,9 +1495,6 @@ PRIVATE struct type_seq yf_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),

@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Set.operator + ()                                             */
 /************************************************************************/
-[[alias(Set.union -> "set_union")]]
+[[alias(Set.union)]]
 __set_add__(rhs:?X3?DSet?DSequence?S?O)->?DSet {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__set_add__", &rhs))

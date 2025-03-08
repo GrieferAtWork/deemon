@@ -93,7 +93,7 @@ err:
 	int result;
 	DREF DeeObject *real_value;
 	DREF DeeObject *key_and_value[2];
-	if (DeeObject_Unpack(item, 2, key_and_value))
+	if (DeeSeq_Unpack(item, 2, key_and_value))
 		goto err_trycatch;
 	real_value = CALL_DEPENDENCY(map_operator_trygetitem, self, key_and_value[0]);
 	Dee_Decref(key_and_value[0]);

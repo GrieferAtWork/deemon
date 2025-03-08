@@ -33,6 +33,7 @@
 #include <deemon/int.h>
 #include <deemon/kwds.h>
 #include <deemon/none.h>
+#include <deemon/seq.h>
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -915,7 +916,7 @@ JITLValueList_UnpackAssign(JITLValueList *__restrict self,
 	unpacked_values = (DREF DeeObject **)Dee_Mallocac(count, sizeof(DREF DeeObject *));
 	if unlikely(!unpacked_values)
 		goto err;
-	if unlikely(DeeObject_Unpack(values, count, unpacked_values))
+	if unlikely(DeeSeq_Unpack(values, count, unpacked_values))
 		goto err_unpacked_values;
 	for (i = 0; i < count; ++i) {
 		if unlikely(JITLValue_SetValue(&self->ll_list[i], context, unpacked_values[i]))

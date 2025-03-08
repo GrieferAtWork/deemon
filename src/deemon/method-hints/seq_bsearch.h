@@ -281,7 +281,7 @@ if (hasKey) {
 	print('	if unlikely(!resultob)');
 	print('		goto err;');
 	if (isRange) {
-		print('	if (DeeObject_Unpack(resultob, 2, result_start_and_end))');
+		print('	if (DeeSeq_Unpack(resultob, 2, result_start_and_end))');
 		print('		goto err_r;');
 		print('	Dee_Decref(resultob);');
 		print('	if (DeeObject_AsSize(result_start_and_end[0], &result_range[0]))');
@@ -837,7 +837,7 @@ err:
 	DREF DeeObject *resultob = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!resultob)
 		goto err;
-	if (DeeObject_Unpack(resultob, 2, result_start_and_end))
+	if (DeeSeq_Unpack(resultob, 2, result_start_and_end))
 		goto err_r;
 	Dee_Decref(resultob);
 	if (DeeObject_AsSize(result_start_and_end[0], &result_range[0]))
@@ -988,7 +988,7 @@ err:
 	DREF DeeObject *resultob = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!resultob)
 		goto err;
-	if (DeeObject_Unpack(resultob, 2, result_start_and_end))
+	if (DeeSeq_Unpack(resultob, 2, result_start_and_end))
 		goto err_r;
 	Dee_Decref(resultob);
 	if (DeeObject_AsSize(result_start_and_end[0], &result_range[0]))

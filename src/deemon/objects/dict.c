@@ -2708,7 +2708,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 dict_mh_seq_setitem_index(Dict *self, size_t index, DeeObject *key_and_value_tuple) {
 	int result;
 	DREF DeeObject *key_and_value[2];
-	if (DeeObject_Unpack(key_and_value_tuple, 2, key_and_value))
+	if (DeeSeq_Unpack(key_and_value_tuple, 2, key_and_value))
 		goto err;
 	result = dict_mh_seq_setitem_index_impl(self, index, key_and_value[0], key_and_value[1]);
 	Dee_Decref_unlikely(key_and_value[1]);
@@ -2722,7 +2722,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeTupleObject *DCALL
 dict_mh_seq_xchitem_index(Dict *self, size_t index, DeeObject *key_and_value_tuple) {
 	DREF DeeTupleObject *result;
 	DREF DeeObject *key_and_value[2];
-	if (DeeObject_Unpack(key_and_value_tuple, 2, key_and_value))
+	if (DeeSeq_Unpack(key_and_value_tuple, 2, key_and_value))
 		goto err;
 	result = dict_mh_seq_xchitem_index_impl(self, index, key_and_value[0], key_and_value[1]);
 	Dee_Decref_unlikely(key_and_value[1]);
@@ -2736,7 +2736,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 dict_mh_seq_insert(Dict *self, size_t index, DeeObject *key_and_value_tuple) {
 	int result;
 	DREF DeeObject *key_and_value[2];
-	if (DeeObject_Unpack(key_and_value_tuple, 2, key_and_value))
+	if (DeeSeq_Unpack(key_and_value_tuple, 2, key_and_value))
 		goto err;
 	result = dict_mh_seq_insert_impl(self, index, key_and_value[0], key_and_value[1]);
 	Dee_Decref_unlikely(key_and_value[1]);
@@ -2755,7 +2755,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_mh_seq_append(Dict *self, DeeObject *key_and_value_tuple) {
 	int result;
 	DREF DeeObject *key_and_value[2];
-	if (DeeObject_Unpack(key_and_value_tuple, 2, key_and_value))
+	if (DeeSeq_Unpack(key_and_value_tuple, 2, key_and_value))
 		goto err;
 	result = dict_setitem(self, key_and_value[0], key_and_value[1]);
 	Dee_Decref_unlikely(key_and_value[1]);
@@ -3388,9 +3388,6 @@ PRIVATE struct type_seq dict_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&dict_mh_seq_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&dict_size,
@@ -3929,15 +3926,15 @@ PRIVATE struct type_member tpconst dict_class_members[] = {
 
 PRIVATE struct type_method tpconst dict_methods[] = {
 //	TYPE_KWMETHOD("byhash", &dict_byhash, DOC_GET(map_byhash_doc)), /* TODO */
-	TYPE_METHOD_HINTREF(seq_clear),
-	TYPE_METHOD_HINTREF(map_pop),
-	TYPE_METHOD_HINTREF(map_setold),
-	TYPE_METHOD_HINTREF(map_setnew),
-	TYPE_METHOD_HINTREF(map_setold_ex),
-	TYPE_METHOD_HINTREF(map_setnew_ex),
-	TYPE_METHOD_HINTREF(map_setdefault),
-	TYPE_METHOD_HINTREF(map_popitem),
-	TYPE_METHOD_HINTREF(map_remove),
+	TYPE_METHOD_HINTREF(Sequence_clear),
+	TYPE_METHOD_HINTREF(Mapping_pop),
+	TYPE_METHOD_HINTREF(Mapping_setold),
+	TYPE_METHOD_HINTREF(Mapping_setnew),
+	TYPE_METHOD_HINTREF(Mapping_setold_ex),
+	TYPE_METHOD_HINTREF(Mapping_setnew_ex),
+	TYPE_METHOD_HINTREF(Mapping_setdefault),
+	TYPE_METHOD_HINTREF(Mapping_popitem),
+	TYPE_METHOD_HINTREF(Mapping_remove),
 
 	TYPE_KWMETHOD_F("shrink", &dict_shrink, METHOD_FNOREFESCAPE,
 	                "(fully=!t)->?Dbool\n"
@@ -3990,10 +3987,10 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &dict_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &dict_trygetfirst, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &dict_trygetlast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &dict_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_iter, &dict_iter, METHOD_FNORMAL),
 	TYPE_METHOD_HINT_F(seq_operator_foreach, &dict_mh_seq_foreach, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_foreach_pair, &dict_foreach_pair, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_operator_enumerate_index, &dict_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_hasitem_index, &default__seq_operator_hasitem_index__with__seq_operator_size, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_getitem_index, &dict_mh_seq_getitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_trygetitem_index, &dict_mh_seq_trygetitem_index, METHOD_FNOREFESCAPE),

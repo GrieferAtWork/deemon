@@ -901,7 +901,7 @@ tdefault__nextpair__with__iter_next(DeeTypeObject *tp_self, DeeObject *self, DRE
 		return 1;
 	if unlikely(item == NULL)
 		goto err;
-	result = DeeObject_Unpack(item, 2, key_and_value);
+	result = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref_likely(item);
 	return result;
 err:
@@ -924,7 +924,7 @@ default__nextpair__with__iter_next(DeeObject *__restrict self, DREF DeeObject *k
 		return 1;
 	if unlikely(item == NULL)
 		goto err;
-	result = DeeObject_Unpack(item, 2, key_and_value);
+	result = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref_likely(item);
 	return result;
 err:
@@ -940,7 +940,7 @@ tdefault__nextkey__with__iter_next(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *item = (*(tp_self->tp_iter_next == &usrtype__iter_next__with__ITERNEXT ? &tusrtype__iter_next__with__ITERNEXT : tp_self->tp_iter_next == &default__iter_next__with__nextpair ? &tdefault__iter_next__with__nextpair : &tdefault__iter_next))(tp_self, self);
 	if unlikely(!ITER_ISOK(item))
 		return item;
-	unpack_status = DeeObject_Unpack(item, 2, key_and_value);
+	unpack_status = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref_likely(item);
 	if unlikely(unpack_status)
 		goto err;
@@ -980,7 +980,7 @@ default__nextkey__with__iter_next(DeeObject *__restrict self) {
 	DREF DeeObject *item = (*Dee_TYPE(self)->tp_iter_next)(self);
 	if unlikely(!ITER_ISOK(item))
 		return item;
-	unpack_status = DeeObject_Unpack(item, 2, key_and_value);
+	unpack_status = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref_likely(item);
 	if unlikely(unpack_status)
 		goto err;
@@ -1018,7 +1018,7 @@ tdefault__nextvalue__with__iter_next(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *item = (*(tp_self->tp_iter_next == &usrtype__iter_next__with__ITERNEXT ? &tusrtype__iter_next__with__ITERNEXT : tp_self->tp_iter_next == &default__iter_next__with__nextpair ? &tdefault__iter_next__with__nextpair : &tdefault__iter_next))(tp_self, self);
 	if unlikely(!ITER_ISOK(item))
 		return item;
-	unpack_status = DeeObject_Unpack(item, 2, key_and_value);
+	unpack_status = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref_likely(item);
 	if unlikely(unpack_status)
 		goto err;
@@ -1058,7 +1058,7 @@ default__nextvalue__with__iter_next(DeeObject *__restrict self) {
 	DREF DeeObject *item = (*Dee_TYPE(self)->tp_iter_next)(self);
 	if unlikely(!ITER_ISOK(item))
 		return item;
-	unpack_status = DeeObject_Unpack(item, 2, key_and_value);
+	unpack_status = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref_likely(item);
 	if unlikely(unpack_status)
 		goto err;
@@ -3281,7 +3281,7 @@ default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem) {
 		                           DeeTuple_GET(elem, 1));
 	} else {
 		DREF DeeObject *pair[2];
-		if unlikely(DeeObject_Unpack(elem, 2, pair))
+		if unlikely(DeeSeq_Unpack(elem, 2, pair))
 			goto err;
 		result = (*data->dfpwf_cb)(data->dfpwf_arg, pair[0], pair[1]);
 		Dee_Decref_unlikely(pair[1]);

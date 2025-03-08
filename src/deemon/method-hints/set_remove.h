@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Set.remove()                                                  */
 /************************************************************************/
-[[alias(Set.remove -> "set_remove")]]
+[[alias(Set.remove)]]
 __set_remove__(key)->?Dbool {
 	int result;
 	DeeObject *key;
@@ -49,7 +49,7 @@ __set_remove__.set_remove([[nonnull]] DeeObject *self,
 	int temp;
 	DREF DeeObject *current_value;
 	DREF DeeObject *map_key_and_value[2];
-	if unlikely(DeeObject_Unpack(key, 2, map_key_and_value))
+	if unlikely(DeeSeq_Unpack(key, 2, map_key_and_value))
 		goto err;
 	current_value = CALL_DEPENDENCY(map_operator_trygetitem, self, map_key_and_value[0]);
 	if unlikely(!current_value)

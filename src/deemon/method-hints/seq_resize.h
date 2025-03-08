@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.resize()                                             */
 /************************************************************************/
-[[kw, alias(Sequence.resize -> "seq_resize")]]
+[[kw, alias(Sequence.resize)]]
 __seq_resize__(size:?Dint,filler=!N) {
 	size_t size;
 	DeeObject *filler = Dee_None;

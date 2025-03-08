@@ -29,6 +29,7 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/method-hints.h>
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -206,7 +207,7 @@ foreach_seq_printrepr_cb(void *arg, DeeObject *elem) {
 PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 default_seq_printrepr_impl(DeeObject *__restrict self,
                            Dee_formatprinter_t printer, void *arg,
-                           Dee_mh_seq_operator_foreach_t seq_foreach) {
+                           DeeMH_seq_operator_foreach_t seq_foreach) {
 #define DO(err, expr)                    \
 	do {                                 \
 		if unlikely((temp = (expr)) < 0) \
@@ -233,12 +234,12 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_seq_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	return default_seq_printrepr_impl(self, printer, arg, DeeType_RequireSeqOperatorForeach(Dee_TYPE(self)));
+	return default_seq_printrepr_impl(self, printer, arg, DeeObject_RequireMethodHint(self, seq_operator_foreach));
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_set_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	return default_seq_printrepr_impl(self, printer, arg, DeeType_RequireSetOperatorForeach(Dee_TYPE(self)));
+	return default_seq_printrepr_impl(self, printer, arg, DeeObject_RequireMethodHint(self, set_operator_foreach));
 }
 
 
@@ -314,7 +315,7 @@ seq_empty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":empty"))
 		goto err;
-	result = DeeSeq_OperatorBool(self);
+	result = DeeObject_InvokeMethodHint(seq_operator_bool, self);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result == 0);
@@ -326,7 +327,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_front_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":front"))
 		goto err;
-	return DeeSeq_InvokeGetFirst(self);
+	return DeeObject_InvokeMethodHint(seq_getfirst, self);
 err:
 	return NULL;
 }
@@ -335,7 +336,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_back_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":back"))
 		goto err;
-	return DeeSeq_InvokeGetLast(self);
+	return DeeObject_InvokeMethodHint(seq_getlast, self);
 err:
 	return NULL;
 }
@@ -392,7 +393,7 @@ seq_distribute(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if unlikely(!segsize)
 		goto err_invalid_segsize;
-	mylen = DeeSeq_OperatorSize(self);
+	mylen = DeeObject_InvokeMethodHint(seq_operator_size, self);
 	if unlikely(mylen == (size_t)-1)
 		goto err;
 	mylen += segsize - 1;
@@ -413,7 +414,7 @@ seq_combinations(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__r_cached, UNPuSIZ "|b:combinations", &r, &cached))
 		goto err;
 	if (cached) {
-		self = DeeSeq_InvokeCached(self);
+		self = DeeObject_InvokeMethodHint(seq_cached, self);
 		if unlikely(!self)
 			goto err;
 	} else {
@@ -431,7 +432,7 @@ seq_repeatcombinations(DeeObject *self, size_t argc, DeeObject *const *argv, Dee
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__r_cached, UNPuSIZ "|b:repeatcombinations", &r, &cached))
 		goto err;
 	if (cached) {
-		self = DeeSeq_InvokeCached(self);
+		self = DeeObject_InvokeMethodHint(seq_cached, self);
 		if unlikely(!self)
 			goto err;
 	} else {
@@ -449,7 +450,7 @@ seq_permutations(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__r_cached, "|" UNPuSIZ "b:permutations", &r, &cached))
 		goto err;
 	if (cached) {
-		self = DeeSeq_InvokeCached(self);
+		self = DeeObject_InvokeMethodHint(seq_cached, self);
 		if unlikely(!self)
 			goto err;
 	} else {
@@ -471,8 +472,8 @@ seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? DeeSeq_InvokeFindWithKey(self, item, start, end, key)
-	         : DeeSeq_InvokeFind(self, item, start, end);
+	         ? DeeObject_InvokeMethodHint(seq_find_with_key, self, item, start, end, key)
+	         : DeeObject_InvokeMethodHint(seq_find, self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -493,8 +494,8 @@ seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? DeeSeq_InvokeRFindWithKey(self, item, start, end, key)
-	         : DeeSeq_InvokeRFind(self, item, start, end);
+	         ? DeeObject_InvokeMethodHint(seq_rfind_with_key, self, item, start, end, key)
+	         : DeeObject_InvokeMethodHint(seq_rfind, self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -558,7 +559,7 @@ seq_unpack(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		result = DeeTuple_NewUninitialized(size_or_minsize);
 		if unlikely(!result)
 			goto err;
-		if unlikely(DeeObject_Unpack(self, size_or_minsize, DeeTuple_ELEM(result)))
+		if unlikely(DeeSeq_Unpack(self, size_or_minsize, DeeTuple_ELEM(result)))
 			goto err_r;
 	} else {
 		size_t maxsize, realsize;
@@ -577,8 +578,9 @@ seq_unpack(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		result = DeeTuple_NewUninitialized(maxsize);
 		if unlikely(!result)
 			goto err;
-		realsize = DeeObject_UnpackEx(self, size_or_minsize, maxsize,
-		                              DeeTuple_ELEM(result));
+		realsize = DeeObject_InvokeMethodHint(seq_unpack_ex, self,
+		                                      size_or_minsize, maxsize,
+		                                      DeeTuple_ELEM(result));
 		if unlikely(realsize == (size_t)-1)
 			goto err_r;
 		result = DeeTuple_TruncateUninitialized(result, realsize);
@@ -626,8 +628,8 @@ seq_bcontains(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? DeeSeq_InvokeBFindWithKey(self, item, start, end, key)
-	         : DeeSeq_InvokeBFind(self, item, start, end);
+	         ? DeeObject_InvokeMethodHint(seq_bfind_with_key, self, item, start, end, key)
+	         : DeeObject_InvokeMethodHint(seq_bfind, self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result != (size_t)-1);
@@ -644,8 +646,8 @@ seq_bindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? DeeSeq_InvokeBFindWithKey(self, item, start, end, key)
-	         : DeeSeq_InvokeBFind(self, item, start, end);
+	         ? DeeObject_InvokeMethodHint(seq_bfind_with_key, self, item, start, end, key)
+	         : DeeObject_InvokeMethodHint(seq_bfind, self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -666,10 +668,11 @@ seq_blocateall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *
 	                    &item, &start, &end, &key))
 		goto err;
 	if (!DeeNone_Check(key)
-	    ? DeeSeq_InvokeBRangeWithKey(self, item, start, end, key, result_range)
-	    : DeeSeq_InvokeBRange(self, item, start, end, result_range))
+	    ? DeeObject_InvokeMethodHint(seq_brange_with_key, self, item, start, end, key, result_range)
+	    : DeeObject_InvokeMethodHint(seq_brange, self, item, start, end, result_range))
 		goto err;
-	return DeeSeq_OperatorGetRangeIndex(self, result_range[0], result_range[1]);
+	return DeeObject_InvokeMethodHint(seq_operator_getrange_index, self,
+	                                  result_range[0], result_range[1]);
 err:
 	return NULL;
 }
@@ -687,10 +690,10 @@ seq_binsert(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	                    "o|" UNPuSIZ UNPuSIZ "o:binsert",
 	                    &item, &start, &end))
 		goto err;
-	index = DeeSeq_InvokeBPosition(self, item, start, end);
+	index = DeeObject_InvokeMethodHint(seq_bposition, self, item, start, end);
 	if unlikely(index == (size_t)Dee_COMPARE_ERR)
 		goto err;
-	if unlikely(DeeSeq_InvokeInsert(self, index, item))
+	if unlikely(DeeObject_InvokeMethodHint(seq_insert, self, index, item))
 		goto err;
 	return_none;
 err:
@@ -701,7 +704,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by
 seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":popfront"))
 		goto err;
-	return DeeSeq_InvokePop(self, 0);
+	return DeeObject_InvokeMethodHint(seq_pop, self, 0);
 err:
 	return NULL;
 }
@@ -710,7 +713,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by
 seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":popback"))
 		goto err;
-	return DeeSeq_InvokePop(self, -1);
+	return DeeObject_InvokeMethodHint(seq_pop, self, -1);
 err:
 	return NULL;
 }
@@ -790,27 +793,27 @@ handle_with_cb:
 				if (startob != ITER_DONE) {
 					if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
 					    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
-						result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, end);
+						result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, start, end);
 					} else {
-						result = DeeSeq_InvokeMakeEnumerationWithRange(self, startob, endob);
+						result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_range, self, startob, endob);
 					}
 				} else if (DeeInt_Check(endob) && DeeInt_TryAsSize(endob, &end)) {
-					result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, 0, end);
+					result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, 0, end);
 				} else {
 					startob = DeeObject_NewDefault(Dee_TYPE(endob));
 					if unlikely(!startob)
 						goto err;
-					result = DeeSeq_InvokeMakeEnumerationWithRange(self, startob, endob);
+					result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_range, self, startob, endob);
 					Dee_Decref(startob);
 				}
 			} else if (startob == ITER_DONE) {
-				result = DeeSeq_InvokeMakeEnumeration(self);
+				result = DeeObject_InvokeMethodHint(seq_makeenumeration, self);
 			} else {
 				ASSERT(startob != ITER_DONE);
 				ASSERT(endob == ITER_DONE);
 				if (DeeObject_AsSize(startob, &start))
 					goto err;
-				result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, (size_t)-1);
+				result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, start, (size_t)-1);
 			}
 		}
 	}	break;
@@ -828,14 +831,14 @@ handle_with_cb:
 		if (endob != ITER_DONE) {
 			if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
 			    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
-				result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, end);
+				result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, start, end);
 			} else {
-				result = DeeSeq_InvokeMakeEnumerationWithRange(self, startob, endob);
+				result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_range, self, startob, endob);
 			}
 		} else {
 			if (DeeObject_AsSize(startob, &start))
 				goto err;
-			result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, (size_t)-1);
+			result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, start, (size_t)-1);
 		}
 	}	break;
 
@@ -851,9 +854,9 @@ handle_with_cb:
 		endob   = argv[1];
 		if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
 		    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
-			result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, end);
+			result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, start, end);
 		} else {
-			result = DeeSeq_InvokeMakeEnumerationWithRange(self, startob, endob);
+			result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_range, self, startob, endob);
 		}
 	}	break;
 
@@ -890,7 +893,7 @@ seq_enumerate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	if unlikely(kw)
 		return do_seq_enumerate_with_kw(self, argc, argv, kw);
 	if likely(argc == 0)
-		return DeeSeq_InvokeMakeEnumeration(self);
+		return DeeObject_InvokeMethodHint(seq_makeenumeration, self);
 	if (DeeCallable_Check(argv[0])) {
 		if (argc == 1)
 			return seq_call_enumerate(self, argv[0]);
@@ -909,14 +912,14 @@ seq_enumerate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *k
 		if unlikely(argc == 1) {
 			if (DeeObject_AsSize(argv[0], &start))
 				goto err;
-			return DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, (size_t)-1);
+			return DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, start, (size_t)-1);
 		}
 		if (argc != 2)
 			goto err_bad_args;
 		if ((DeeInt_Check(argv[0]) && DeeInt_Check(argv[1])) &&
 		    (DeeInt_TryAsSize(argv[0], &start) && DeeInt_TryAsSize(argv[1], &end)))
-			return DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, end);
-		return DeeSeq_InvokeMakeEnumerationWithRange(self, argv[0], argv[1]);
+			return DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, start, end);
+		return DeeObject_InvokeMethodHint(seq_makeenumeration_with_range, self, argv[0], argv[1]);
 	}
 	__builtin_unreachable();
 err_bad_args:
@@ -936,7 +939,7 @@ err:
 
 INTDEF struct type_method tpconst seq_methods[];
 INTERN_TPCONST struct type_method tpconst seq_methods[] = {
-	TYPE_KWMETHOD(STR_reduce, &DeeMH_seq_reduce,
+	TYPE_KWMETHOD(DeeMA_Sequence_reduce_name, &DeeMA_Sequence_reduce,
 	              "(combine:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,init?)->\n"
 	              DOC_throws_ValueError_if_empty
 	              "Combines consecutive elements of @this Sequence by passing them as pairs of 2 to @combine, "
@@ -1057,7 +1060,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
 	              /**/ "{³}Only when ?A__seqclass__?DType is ?DMapping"
 	              "}"),
-	TYPE_KWMETHOD(STR_sum, &DeeMH_seq_sum,
+	TYPE_KWMETHOD(DeeMA_Sequence_sum_name, &DeeMA_Sequence_sum,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N\n"
 	              "Returns the sum of all elements, or ?N if the Sequence is empty\n"
 	              "This, alongside ?Ajoin?Dstring is the preferred way of merging lists "
@@ -1090,7 +1093,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_any, &DeeMH_seq_any,
+	TYPE_KWMETHOD(DeeMA_Sequence_any_name, &DeeMA_Sequence_any,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              "Returns ?t if any element of @this Sequence evaluates to ?t\n"
 	              "If @this Sequence is empty, ?f is returned\n"
@@ -1125,7 +1128,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_all, &DeeMH_seq_all,
+	TYPE_KWMETHOD(DeeMA_Sequence_all_name, &DeeMA_Sequence_all,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_key
 	              "Returns ?t if all elements of @this Sequence evaluate to ?t\n"
@@ -1161,7 +1164,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_parity, &DeeMH_seq_parity,
+	TYPE_KWMETHOD(DeeMA_Sequence_parity_name, &DeeMA_Sequence_parity,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_key
 	              "Returns ?t or ?f indicative of the parity of Sequence elements that are ?t\n"
@@ -1201,7 +1204,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_min, &DeeMH_seq_min,
+	TYPE_KWMETHOD(DeeMA_Sequence_min_name, &DeeMA_Sequence_min,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N\n"
 	              DOC_param_key
 	              "Returns the smallest element of @this Sequence. If @this Sequence is empty, ?N is returned.\n"
@@ -1266,7 +1269,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_max, &DeeMH_seq_max,
+	TYPE_KWMETHOD(DeeMA_Sequence_max_name, &DeeMA_Sequence_max,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N\n"
 	              DOC_param_key
 	              "Returns the greatest element of @this Sequence. If @this Sequence is empty, ?N is returned.\n"
@@ -1331,7 +1334,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_count, &DeeMH_seq_count,
+	TYPE_KWMETHOD(DeeMA_Sequence_count_name, &DeeMA_Sequence_count,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1376,7 +1379,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_locate, &DeeMH_seq_locate,
+	TYPE_KWMETHOD(DeeMA_Sequence_locate_name, &DeeMA_Sequence_locate,
 	              "(match:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]\n"
 	              "Locate and return the first element such that ${match(elem)} "
 	              /**/ "is true, or @def when no such element exists\n"
@@ -1406,7 +1409,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
 	              /**/ "{³}Only when ?A__seqclass__?DType is ?DSet or ?DMapping"
 	              "}"),
-	TYPE_KWMETHOD(STR_rlocate, &DeeMH_seq_rlocate,
+	TYPE_KWMETHOD(DeeMA_Sequence_rlocate_name, &DeeMA_Sequence_rlocate,
 	              "(match:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]\n"
 	              "Locate and return the last element such that ${match(elem)} "
 	              /**/ "is true, or @def when no such element exists\n"
@@ -1483,13 +1486,13 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "}"
 	            "}"),
 
-	TYPE_KWMETHOD(STR_contains, &DeeMH_seq_contains,
+	TYPE_KWMETHOD(DeeMA_Sequence_contains_name, &DeeMA_Sequence_contains,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Returns ?t if @this Sequence contains an element matching @item"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_startswith, &DeeMH_seq_startswith,
+	TYPE_KWMETHOD(DeeMA_Sequence_startswith_name, &DeeMA_Sequence_startswith,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1498,7 +1501,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "against @item, potentially through use of @{key}: ${key(first) == key(item)} or ${first == item}, "
 	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_endswith, &DeeMH_seq_endswith,
+	TYPE_KWMETHOD(DeeMA_Sequence_endswith_name, &DeeMA_Sequence_endswith,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1507,14 +1510,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "against @item, potentially through use of @{key}: ${key(last) == key(item)} or ${last == item}, "
 	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_find, &DeeMH_seq_find,
+	TYPE_KWMETHOD(DeeMA_Sequence_find_name, &DeeMA_Sequence_find,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Search for the first element matching @item and return its index. "
 	              /**/ "If no such element exists, return ${-1} instead"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_rfind, &DeeMH_seq_rfind,
+	TYPE_KWMETHOD(DeeMA_Sequence_rfind_name, &DeeMA_Sequence_rfind,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1733,48 +1736,48 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	/* TODO: endswithseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = SIZE_MAX, key: Callable = none): bool */
 
 	/* Functions for mutable sequences. */
-	TYPE_KWMETHOD(STR_reversed, &DeeMH_seq_reversed,
+	TYPE_KWMETHOD(DeeMA_Sequence_reversed_name, &DeeMA_Sequence_reversed,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?DSequence\n"
 	              "Return a Sequence that contains the elements of @this Sequence in reverse order\n"
 	              "The point at which @this Sequence is enumerated is implementation-defined"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_sorted, &DeeMH_seq_sorted,
+	TYPE_KWMETHOD(DeeMA_Sequence_sorted_name, &DeeMA_Sequence_sorted,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?DSequence\n"
 	              "Return a Sequence that contains all elements from @this Sequence, "
 	              /**/ "but sorted in ascending order, or in accordance to @key\n"
 	              "The point at which @this Sequence is enumerated is implementation-defined"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_insert, &DeeMH_seq_insert,
+	TYPE_KWMETHOD(DeeMA_Sequence_insert_name, &DeeMA_Sequence_insert,
 	              "(index:?Dint,item)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "Insert the given @item under @index"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_insertall, &DeeMH_seq_insertall,
+	TYPE_KWMETHOD(DeeMA_Sequence_insertall_name, &DeeMA_Sequence_insertall,
 	              "(index:?Dint,items:?DSequence)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "Insert all elements from @items at @index"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_append, &DeeMH_seq_append,
+	TYPE_METHOD(DeeMA_Sequence_append_name, &DeeMA_Sequence_append,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Append the given @item at the end of @this Sequence"
 	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_extend, &DeeMH_seq_extend,
+	TYPE_METHOD(DeeMA_Sequence_extend_name, &DeeMA_Sequence_extend,
 	            "(items:?DSequence)\n"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Append all elements from @items at the end of @this Sequence"
 	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_erase, &DeeMH_seq_erase,
+	TYPE_KWMETHOD(DeeMA_Sequence_erase_name, &DeeMA_Sequence_erase,
 	              "(index:?Dint,count=!1)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tIndexError{The given @index is out of bounds}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "Erase up to @count elements starting at @index"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_xchitem, &DeeMH_seq_xchitem,
+	TYPE_KWMETHOD(DeeMA_Sequence_xchitem_name, &DeeMA_Sequence_xchitem,
 	              "(index:?Dint,value)->\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tIndexError{The given @index is out of bounds}"
@@ -1782,7 +1785,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "Exchange the @index'th element of @this Sequence with the given "
 	              /**/ "@value, returning the old element found under that index"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_pop, &DeeMH_seq_pop,
+	TYPE_KWMETHOD(DeeMA_Sequence_pop_name, &DeeMA_Sequence_pop,
 	              "(index=!-1)->\n"
 	              "#tIntegerOverflow{The given @index is too large}"
 	              "#tIndexError{The given @index is out of bounds}"
@@ -1802,67 +1805,67 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Convenience wrapper for ${this.pop(-1)}"
 	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_pushfront, &DeeMH_seq_pushfront,
+	TYPE_METHOD(DeeMA_Sequence_pushfront_name, &DeeMA_Sequence_pushfront,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Convenience wrapper for ?#insert at position $0"
 	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_pushback, &DeeMH_seq_append,
+	TYPE_METHOD(DeeMA_Sequence_pushback_name, &DeeMA_Sequence_pushback,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Alias for ?#append"),
-	TYPE_KWMETHOD(STR_remove, &DeeMH_seq_remove,
+	TYPE_KWMETHOD(DeeMA_Sequence_remove_name, &DeeMA_Sequence_remove,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find the first instance of @item and remove it, returning ?t if an "
 	              /**/ "element got removed, or ?f if @item could not be found"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_rremove, &DeeMH_seq_rremove,
+	TYPE_KWMETHOD(DeeMA_Sequence_rremove_name, &DeeMA_Sequence_rremove,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find the last instance of @item and remove it, returning ?t if an "
 	              /**/ "element got removed, or ?f if @item could not be found"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_removeall, &DeeMH_seq_removeall,
+	TYPE_KWMETHOD(DeeMA_Sequence_removeall_name, &DeeMA_Sequence_removeall,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find all instance of @item and remove them, returning the number of "
 	              /**/ "instances found (and consequently removed)"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_removeif, &DeeMH_seq_removeif,
+	TYPE_KWMETHOD(DeeMA_Sequence_removeif_name, &DeeMA_Sequence_removeif,
 	              "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Remove all elements within the given sub-range, for which ${should(item)} "
 	              /**/ "evaluates to ?t, and return the number of elements found (and consequently removed)"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_clear, &DeeMH_seq_clear,
+	TYPE_METHOD(DeeMA_Sequence_clear_name, &DeeMA_Sequence_clear,
 	            "()\n"
 	            "#tSequenceError{@this Sequence is immutable}"
 	            "Clear all elements from the Sequence"
 	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_resize, &DeeMH_seq_resize,
+	TYPE_KWMETHOD(DeeMA_Sequence_resize_name, &DeeMA_Sequence_resize,
 	              "(size:?Dint,filler=!N)\n"
 	              "#tSequenceError{@this Sequence isn't resizable}"
 	              "Resize @this Sequence to have a new length of @size "
 	              /**/ "items, using @filler to initialize newly added entries"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_fill, &DeeMH_seq_fill,
+	TYPE_KWMETHOD(DeeMA_Sequence_fill_name, &DeeMA_Sequence_fill,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)\n"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Assign @filler to all elements within the given sub-range"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_reverse, &DeeMH_seq_reverse,
+	TYPE_KWMETHOD(DeeMA_Sequence_reverse_name, &DeeMA_Sequence_reverse,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Reverse the order of all elements within the given range"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_sort, &DeeMH_seq_sort,
+	TYPE_KWMETHOD(DeeMA_Sequence_sort_name, &DeeMA_Sequence_sort,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
@@ -1870,7 +1873,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              ""), /* TODO: Requirements|Implementation table */
 
 	/* Binary search API */
-	TYPE_KWMETHOD(STR_bfind, &DeeMH_seq_bfind,
+	TYPE_KWMETHOD(DeeMA_Sequence_bfind_name, &DeeMA_Sequence_bfind,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1892,14 +1895,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "#tValueError{The Sequence does not contain an item matching @item}"
 	              "Same as ?#bfind, but throw an :ValueError instead of returning ?N."
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_bposition, &DeeMH_seq_bposition,
+	TYPE_KWMETHOD(DeeMA_Sequence_bposition_name, &DeeMA_Sequence_bposition,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Same as ?#bfind, but return (an) index where @item should be inserted, rather "
 	              /**/ "than ?N when @this doesn't contain any matching object"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_brange, &DeeMH_seq_brange,
+	TYPE_KWMETHOD(DeeMA_Sequence_brange_name, &DeeMA_Sequence_brange,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1955,67 +1958,67 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	 * >> Sequence.__getitem__(ob, 42);
 	 * instead of (and needing to create a super-proxy):
 	 * >> (ob as Sequence)[42]; */
-	TYPE_METHOD("__bool__", &default_seq___bool__,
+	TYPE_METHOD("__bool__", &DeeMA___seq_bool__,
 	            "->?Dbool\n"
 	            "Alias for ${!!(this as Sequence)}"),
-	TYPE_METHOD("__iter__", &default_seq___iter__,
+	TYPE_METHOD("__iter__", &DeeMA___seq_iter__,
 	            "->?DIterator\n"
 	            "Alias for ${(this as Sequence).operator iter()}"),
-	TYPE_METHOD("__size__", &default_seq___size__,
+	TYPE_METHOD("__size__", &DeeMA___seq_size__,
 	            "->?Dint\n"
 	            "Alias for ${##(this as Sequence)}"),
-	TYPE_METHOD("__getitem__", &default_seq___getitem__,
+	TYPE_METHOD("__getitem__", &DeeMA___seq_getitem__,
 	            "(index:?Dint)->\n"
 	            "Alias for ${(this as Sequence)[index]}"),
-	TYPE_METHOD("__delitem__", &default_seq___delitem__,
+	TYPE_METHOD("__delitem__", &DeeMA___seq_delitem__,
 	            "(index:?Dint)\n"
 	            "Alias for ${del (this as Sequence)[index]}"),
-	TYPE_METHOD("__setitem__", &default_seq___setitem__,
+	TYPE_METHOD("__setitem__", &DeeMA___seq_setitem__,
 	            "(index:?Dint,value)\n"
 	            "Alias for ${(this as Sequence)[index] = value}"),
-	TYPE_KWMETHOD("__getrange__", &default_seq___getrange__,
+	TYPE_KWMETHOD("__getrange__", &DeeMA___seq_getrange__,
 	              "(start=!0,end?:?X2?N?Dint)->?S?O\n"
 	              "Alias for ${(this as Sequence)[start:end]}"),
-	TYPE_KWMETHOD("__delrange__", &default_seq___delrange__,
+	TYPE_KWMETHOD("__delrange__", &DeeMA___seq_delrange__,
 	              "(start=!0,end?:?X2?N?Dint)\n"
 	              "Alias for ${del (this as Sequence)[start:end]}"),
-	TYPE_KWMETHOD("__setrange__", &default_seq___setrange__,
+	TYPE_KWMETHOD("__setrange__", &DeeMA___seq_setrange__,
 	              "(start=!0,end?:?X2?N?Dint,values:?S?O)\n"
 	              "Alias for ${(this as Sequence)[start:end] = values}"),
-	TYPE_METHOD("__enumerate__", &default_seq___enumerate__,
+	TYPE_METHOD("__enumerate__", &DeeMA___seq_enumerate__,
 	            "(cb)->\n"
 	            "Alias for ${(this as Sequence).enumerate(cb)}"),
-	TYPE_METHOD("__hash__", &default_seq___hash__,
+	TYPE_METHOD("__hash__", &DeeMA___seq_hash__,
 	            "->?Dint\n"
 	            "Alias for ${(this as Sequence).operator hash()}"),
-	TYPE_METHOD("__compare_eq__", &default_seq___compare_eq__,
+	TYPE_METHOD("__compare_eq__", &DeeMA___seq_compare_eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Sequence).operator == (rhs)}"),
-	TYPE_METHOD("__compare__", &default_seq___compare__,
+	TYPE_METHOD("__compare__", &DeeMA___seq_compare__,
 	            "(rhs:?S?O)->?Dint\n"
 	            "Alias for ${deemon.compare(this as Sequence, rhs)}"),
-	TYPE_METHOD("__eq__", &default_seq___eq__,
+	TYPE_METHOD("__eq__", &DeeMA___seq_eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Sequence) == (rhs)}"),
-	TYPE_METHOD("__ne__", &default_seq___ne__,
+	TYPE_METHOD("__ne__", &DeeMA___seq_ne__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Sequence) != (rhs)}"),
-	TYPE_METHOD("__lo__", &default_seq___lo__,
+	TYPE_METHOD("__lo__", &DeeMA___seq_lo__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Sequence) < (rhs)}"),
-	TYPE_METHOD("__le__", &default_seq___le__,
+	TYPE_METHOD("__le__", &DeeMA___seq_le__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Sequence) <= (rhs)}"),
-	TYPE_METHOD("__gr__", &default_seq___gr__,
+	TYPE_METHOD("__gr__", &DeeMA___seq_gr__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Sequence) > (rhs)}"),
-	TYPE_METHOD("__ge__", &default_seq___ge__,
+	TYPE_METHOD("__ge__", &DeeMA___seq_ge__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Sequence) >= (rhs)}"),
-	TYPE_METHOD("__inplace_add__", &default_seq___inplace_add__,
+	TYPE_METHOD("__inplace_add__", &DeeMA___seq_inplace_add__,
 	            "(rhs:?S?O)->?.\n"
 	            "Alias for ${(this as Sequence) += rhs}"),
-	TYPE_METHOD("__inplace_mul__", &default_seq___inplace_mul__,
+	TYPE_METHOD("__inplace_mul__", &DeeMA___seq_inplace_mul__,
 	            "(factor:?Dint)->?.\n"
 	            "Alias for ${(this as Sequence) *= factor}"),
 
@@ -2023,7 +2026,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_METHOD("transform", &seq_map,
 	            "(mapper:?DCallable)->?DSequence\n"
 	            "Deprecated alias for ?#map"),
-	TYPE_KWMETHOD("xch", &DeeMH_seq_xchitem,
+	TYPE_KWMETHOD("xch", &DeeMA_Sequence_xchitem,
 	              "(index:?Dint,value)->\n"
 	              "Deprecated alias for ?#xchitem (will be removed soon)"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
@@ -2036,13 +2039,13 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_METHOD("empty", &seq_empty_deprecated,
 	            "->?Dbool\n"
 	            "Deprecated alias for ?#isempty"),
-	TYPE_METHOD("non_empty", &default_seq___bool__,
+	TYPE_METHOD("non_empty", &DeeMA___seq_bool__,
 	            "->?Dbool\n"
 	            "Deprecated alias for ?#isnonempty"),
-	TYPE_METHOD("at", &default_seq___getitem__,
+	TYPE_METHOD("at", &DeeMA___seq_getitem__,
 	            "(index:?Dint)->\n"
 	            "Deprecated alias for ${this[index]}"),
-	TYPE_METHOD(STR_get, &default_seq___getitem__,
+	TYPE_METHOD(STR_get, &DeeMA___seq_getitem__,
 	            "(index:?Dint)->\n"
 	            "Deprecated alias for ${this[index]}\n"
 	            "In older versions of deemon, this function (as well as ${operator []}) "
@@ -2063,7 +2066,7 @@ seq_get_isfrozen(DeeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_get_isempty(DeeObject *__restrict self) {
-	int result = DeeSeq_OperatorBool(self);
+	int result = DeeObject_InvokeMethodHint(seq_operator_bool, self);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(!result);
@@ -2073,7 +2076,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_get_isnonempty(DeeObject *__restrict self) {
-	int result = DeeSeq_OperatorBool(self);
+	int result = DeeObject_InvokeMethodHint(seq_operator_bool, self);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -2086,10 +2089,10 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER("length", &default__seq_operator_sizeob,
 	            "->?Dint\nAlias for ${##(this as Sequence)}"),
 	TYPE_GETSET_BOUND(STR_first,
-	                  &default_seq_getfirst,
-	                  &default_seq_delfirst,
-	                  &default_seq_setfirst,
-	                  &default_seq_boundfirst,
+	                  &default__seq_getfirst,
+	                  &default__seq_delfirst,
+	                  &default__seq_setfirst,
+	                  &default__seq_boundfirst,
 	                  "->\n"
 	                  "Access the first item of the Sequence\n"
 	                  "Depending on the nearest implemented group of operators, "
@@ -2136,10 +2139,10 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	                  /**/ "}"
 	                  "}"),
 	TYPE_GETSET_BOUND(STR_last,
-	                  &default_seq_getlast,
-	                  &default_seq_dellast,
-	                  &default_seq_setlast,
-	                  &default_seq_boundlast,
+	                  &default__seq_getlast,
+	                  &default__seq_dellast,
+	                  &default__seq_setlast,
+	                  &default__seq_boundlast,
 	                  "->\n"
 	                  "Access the last item of the Sequence\n"
 	                  "Depending on the nearest implemented group of operators, "
@@ -2284,7 +2287,7 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	               "}"),
 
 	/* TODO: Variants of this need to be added for `Set' and `Mapping' */
-	TYPE_GETTER(STR_cached, &default_seq_cached,
+	TYPE_GETTER(STR_cached, &default__seq_cached,
 	            "->?.\n"
 	            "Returns a sequence that is a lazily-populated, read-only proxy of @this ?..\n"
 	            "The returned proxy will ensure that any indirect side-effects¹ of accessing elements, "
@@ -2544,9 +2547,6 @@ PRIVATE struct type_seq seq_seq = {
 	/* .tp_setrange                   = */ &default__seq_operator_setrange,
 	/* .tp_foreach                    = */ &default__seq_operator_foreach,
 	/* .tp_foreach_pair               = */ &default__seq_operator_foreach_pair,
-	/* .tp_enumerate      = */ NULL,
-	/* .tp_enumerate_index= */ NULL,
-	/* .tp_iterkeys       = */ NULL,
 	/* .tp_bounditem                  = */ &default__seq_operator_bounditem,
 	/* .tp_hasitem                    = */ &default__seq_operator_hasitem,
 	/* .tp_size                       = */ &default__seq_operator_size,
@@ -3276,6 +3276,17 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Max(DeeObject *self) {
 	return DeeObject_InvokeMethodHint(seq_max, self);
 }
+
+/* Unpack the given sequence `self' into `dst_length' items then stored within the `dst' vector.
+ * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.
+ * @return: 0 : Success (`dst' now contains exactly `dst_length' references to [1..1] objects)
+ * @return: -1: An error was thrown (`dst' may have been modified, but contains no references) */
+PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
+(DCALL DeeSeq_Unpack)(DeeObject *__restrict self, size_t dst_length,
+                      /*out*/ DREF DeeObject **__restrict dst) {
+	return DeeObject_InvokeMethodHint(seq_unpack, self, dst_length, dst);
+}
+
 
 DECL_END
 

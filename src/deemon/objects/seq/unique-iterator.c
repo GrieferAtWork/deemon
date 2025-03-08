@@ -413,7 +413,7 @@ dswk_iter(DistinctSetWithKey *__restrict self) {
 	result = DeeGCObject_MALLOC(DistinctIteratorWithKey);
 	if unlikely(!result)
 		goto err;
-	result->diwk_iter = DeeSeq_OperatorIter(self->dswk_seq);
+	result->diwk_iter = DeeObject_InvokeMethodHint(seq_operator_iter, self->dswk_seq);
 	if unlikely(!result->diwk_iter)
 		goto err_r;
 	itertyp = Dee_TYPE(result->diwk_iter);
@@ -436,23 +436,20 @@ err:
 }
 
 PRIVATE struct type_seq dswk_seq = {
-	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dswk_iter,
-	/* .tp_sizeob          = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
-	/* .tp_contains        = */ DEFIMPL(&default__seq_operator_contains),
-	/* .tp_getitem         = */ NULL,
-	/* .tp_delitem         = */ NULL,
-	/* .tp_setitem         = */ NULL,
-	/* .tp_getrange        = */ NULL,
-	/* .tp_delrange        = */ NULL,
-	/* .tp_setrange        = */ NULL,
-	/* .tp_foreach         = */ DEFIMPL(&default__foreach__with__iter),
-	/* .tp_foreach_pair    = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate       = */ NULL,
-	/* .tp_enumerate_index = */ NULL,
-	/* .tp_iterkeys        = */ NULL,
-	/* .tp_bounditem       = */ NULL,
-	/* .tp_hasitem         = */ NULL,
-	/* .tp_size            = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dswk_iter,
+	/* .tp_sizeob       = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
+	/* .tp_contains     = */ DEFIMPL(&default__seq_operator_contains),
+	/* .tp_getitem      = */ NULL,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
+	/* .tp_foreach      = */ DEFIMPL(&default__foreach__with__iter),
+	/* .tp_foreach_pair = */ DEFIMPL(&default__foreach_pair__with__iter),
+	/* .tp_bounditem    = */ NULL,
+	/* .tp_hasitem      = */ NULL,
+	/* .tp_size         = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
 };
 
 PRIVATE struct type_member tpconst dswk_members[] = {

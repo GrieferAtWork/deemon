@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.remove()                                             */
 /************************************************************************/
-[[kw, alias(Sequence.remove -> "seq_remove")]]
+[[kw, alias(Sequence.remove)]]
 __seq_remove__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 	int result;
 	DeeObject *item, *key = Dee_None;
@@ -98,8 +98,9 @@ err:
 	struct default_remove_with_enumerate_index_and_delitem_index_data data;
 	data.drweiadiid_self = self;
 	data.drweiadiid_item = item;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &default_remove_with_enumerate_index_and_delitem_index_cb,
-	                                               &data, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self,
+	                                 &default_remove_with_enumerate_index_and_delitem_index_cb,
+	                                 &data, start, end);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
 	if unlikely(foreach_status == -1)
 		goto err;

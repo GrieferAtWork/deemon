@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Set.insertall()                                               */
 /************************************************************************/
-[[alias(Set.insertall -> "set_insertall")]]
+[[alias(Set.insertall)]]
 __set_insertall__(keys:?X3?DSet?DSequence?S?O)->?Dbool {
 	int result;
 	DeeObject *keys;

@@ -1139,9 +1139,6 @@ PRIVATE struct type_seq deq_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&deq_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&deq_size,
@@ -1281,12 +1278,12 @@ deq_sizeof(Deque *self) {
 
 
 PRIVATE struct type_method tpconst deq_methods[] = {
-	TYPE_METHOD_HINTREF(seq_xchitem),
-	TYPE_METHOD_HINTREF(seq_insert),
-	TYPE_METHOD_HINTREF(seq_erase),
-	TYPE_METHOD_HINTREF(seq_pop),
-	TYPE_METHOD_HINTREF(seq_pushfront),
-	TYPE_METHOD_HINTREF(seq_append),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_insert),
+	TYPE_METHOD_HINTREF(Sequence_erase),
+	TYPE_METHOD_HINTREF(Sequence_pop),
+	TYPE_METHOD_HINTREF(Sequence_pushfront),
+	TYPE_METHOD_HINTREF(Sequence_append),
 	TYPE_METHOD_F("popfront", &deq_popfront, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tValueError{@this deque is empty}"

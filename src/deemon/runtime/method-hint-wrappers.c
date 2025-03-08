@@ -336,14 +336,14 @@ DeeMA___seq_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject
 	if (endob) {
 		if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
 		    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end)))
-			return DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, end);
-		return DeeSeq_InvokeMakeEnumerationWithRange(self, startob, endob);
+			return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_makeenumeration_with_intrange))(self, start, end);
+		return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_makeenumeration_with_range))(self, startob, endob);
 	} else if (startob) {
 		if (DeeObject_AsSize(startob, &start))
 			goto err;
-		return DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, (size_t)-1);
+		return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_makeenumeration_with_intrange))(self, start, (size_t)-1);
 	}
-	return DeeSeq_InvokeMakeEnumeration(self);
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_makeenumeration))(self);
 err:
 	return NULL;
 }

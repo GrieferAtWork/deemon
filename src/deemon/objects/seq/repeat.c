@@ -577,9 +577,6 @@ PRIVATE struct type_seq repeat_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&repeat_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&repeat_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__bounditem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&repeat_size,
@@ -999,7 +996,7 @@ repeatitem_foreach_pair(RepeatItem *self, Dee_foreach_pair_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
 	if likely(self->rpit_num) {
 		size_t i = 0;
-		if (DeeObject_Unpack(self->rpit_obj, 2, pair))
+		if (DeeSeq_Unpack(self->rpit_obj, 2, pair))
 			goto err;
 		do {
 			temp = (*proc)(arg, pair[0], pair[1]);
@@ -1048,9 +1045,6 @@ PRIVATE struct type_seq repeatitem_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&repeatitem_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&repeatitem_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&repeatitem_size,

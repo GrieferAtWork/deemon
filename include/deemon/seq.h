@@ -299,6 +299,19 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_All(DeeObject *__restrict self);  
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Min(DeeObject *self);            /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_min, self) */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self);            /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_max, self) */
 
+/* Unpack the given sequence `self' into `dst_length' items then stored within the `dst' vector.
+ * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.
+ *
+ * Alias for: `DeeObject_InvokeMethodHint(seq_unpack, self, dst_length, dst)'
+ *
+ * @return: 0 : Success (`dst' now contains exactly `dst_length' references to [1..1] objects)
+ * @return: -1: An error was thrown (`dst' may have been modified, but contains no references) */
+DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
+(DCALL DeeSeq_Unpack)(DeeObject *__restrict self, size_t dst_length,
+                      /*out*/ DREF DeeObject **__restrict dst);
+
+
+
 
 /* Possible return values for `DeeType_GetSeqClass()' */
 #define Dee_SEQCLASS_UNKNOWN 0 /* Never returned by `DeeType_GetSeqClass()' (used internally) */
@@ -536,6 +549,12 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Some(DeeObject *__restr
 #define DeeSeq_Some(self) DeeObject_NewPack(&DeeSeqSome_Type, 1, self)
 #endif /* !CONFIG_BUILDING_DEEMON */
 
+
+#ifndef __INTELLISENSE__
+#ifndef __NO_builtin_expect
+#define DeeSeq_Unpack(self, dst_length, objv) __builtin_expect(DeeSeq_Unpack(self, dst_length, objv), 0)
+#endif /* !__NO_builtin_expect */
+#endif /* !__INTELLISENSE__ */
 
 DECL_END
 

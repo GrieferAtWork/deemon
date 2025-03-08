@@ -258,13 +258,13 @@ Type_assert(deemon.List, {
 	"mh_seq_operator_ge":                         "default__seq_operator_ge__with__seq_operator_compare",
 	"mh_seq_operator_inplace_add":                "list_inplace_add",
 	"mh_seq_operator_inplace_mul":                "list_inplace_mul",
-	"mh_seq_enumerate":                           "default__seq_enumerate__with__seq_operator_size__and__operator_getitem_index_fast",
-	"mh_seq_enumerate_index":                     "default__seq_enumerate_index__with__seq_operator_size__and__operator_getitem_index_fast",
+	"mh_seq_enumerate":                           "default__seq_enumerate__with__seq_enumerate_index",
+	"mh_seq_enumerate_index":                     "list_mh_seq_enumerate_index",
 	"mh_seq_makeenumeration":                     "default__seq_makeenumeration__with__seq_operator_size__and__operator_getitem_index_fast",
 	"mh_seq_makeenumeration_with_range":          "default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange",
 	"mh_seq_makeenumeration_with_intrange":       "default__seq_makeenumeration_with_intrange__with__seq_operator_size__and__operator_getitem_index_fast",
-	"mh_seq_foreach_reverse":                     "default__seq_foreach_reverse__with__seq_operator_size__and__operator_getitem_index_fast",
-	"mh_seq_enumerate_index_reverse":             "default__seq_enumerate_index_reverse__with__seq_operator_size__and__operator_getitem_index_fast",
+	"mh_seq_foreach_reverse":                     "list_mh_foreach_reverse",
+	"mh_seq_enumerate_index_reverse":             "list_mh_seq_enumerate_index_reverse",
 	"mh_seq_unpack":                              "default__seq_unpack__with__tp_asvector",
 	"mh_seq_unpack_ex":                           "default__seq_unpack_ex__with__tp_asvector",
 	"mh_seq_unpack_ub":                           "default__seq_unpack_ex__with__tp_asvector",
@@ -1354,6 +1354,7 @@ Type_assert(deemon.HashSet.Frozen, {
 
 Type_assert(deemon.Dict.Frozen, {
 	// TODO
+	"mh_map_enumerate": "rodict_foreach_pair",
 });
 
 Type_assert(rt.ClassAttributeTable, {

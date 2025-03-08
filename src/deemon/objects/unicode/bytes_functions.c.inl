@@ -6222,7 +6222,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "Same as ?#regfindall, but returns a sequence of the sub-strings matched by each group of each match, "
 	                /**/ "rather than the start/end bounds of each group (still returns !n for unmatched groups)"),
 
-	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
 	TYPE_METHOD_END
 };
 

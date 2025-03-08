@@ -330,7 +330,7 @@ udict_insert_iterator(UDict *self, DeeObject *iterator) {
 	DREF DeeObject *key_and_value[2];
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		/* Unpack the yielded element again. */
-		if unlikely(DeeObject_Unpack(elem, 2, key_and_value))
+		if unlikely(DeeSeq_Unpack(elem, 2, key_and_value))
 			goto err_elem;
 		Dee_Decref(elem);
 		if unlikely(udict_setitem(self, key_and_value[0], key_and_value[1]))
@@ -1287,12 +1287,12 @@ PRIVATE struct type_member tpconst udict_class_members[] = {
 };
 
 PRIVATE struct type_method tpconst udict_methods[] = {
-	TYPE_METHOD_HINTREF(map_pop),
-	TYPE_METHOD_HINTREF(seq_clear),
-	TYPE_METHOD_HINTREF(map_popitem),
-	TYPE_METHOD_HINTREF(map_update),
-	TYPE_METHOD_HINTREF(map_setold_ex),
-	TYPE_METHOD_HINTREF(map_setnew_ex),
+	TYPE_METHOD_HINTREF(Mapping_pop),
+	TYPE_METHOD_HINTREF(Sequence_clear),
+	TYPE_METHOD_HINTREF(Mapping_popitem),
+	TYPE_METHOD_HINTREF(Mapping_update),
+	TYPE_METHOD_HINTREF(Mapping_setold_ex),
+	TYPE_METHOD_HINTREF(Mapping_setnew_ex),
 	TYPE_METHOD_END
 };
 
@@ -1323,9 +1323,6 @@ PRIVATE struct type_seq udict_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&udict_foreach,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&udict_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&udict_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&udict_size,
@@ -1717,7 +1714,7 @@ URoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
 		int error;
 		DREF DeeObject *key_and_value[2];
-		error = DeeObject_Unpack(elem, 2, key_and_value);
+		error = DeeSeq_Unpack(elem, 2, key_and_value);
 		Dee_Decref(elem);
 		if unlikely(error)
 			goto err_r;
@@ -2017,9 +2014,6 @@ PRIVATE struct type_seq urodict_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&urodict_foreach,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&urodict_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&urodict_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&urodict_size,

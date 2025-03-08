@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Set.operator - ()                                             */
 /************************************************************************/
-[[alias(Set.difference -> "set_difference")]]
+[[alias(Set.difference)]]
 __set_sub__(rhs:?X3?DSet?DSequence?S?O)->?DSet {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__set_sub__", &rhs))

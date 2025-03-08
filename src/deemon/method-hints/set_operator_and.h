@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Set.operator & ()                                             */
 /************************************************************************/
-[[alias(Set.intersection -> "set_intersection")]]
+[[alias(Set.intersection)]]
 __set_and__(rhs:?X3?DSet?DSequence?S?O)->?DSet {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__set_and__", &rhs))

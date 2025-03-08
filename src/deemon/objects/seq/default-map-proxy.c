@@ -97,43 +97,9 @@ PRIVATE struct type_seq ds_mk_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter), // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_mk_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach), /* XXX: When the map can't have unbound keys, this is equal to its length */
-	/* .tp_size_fast                  = */ NULL,
-	/* .tp_getitem_index              = */ NULL,
-	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ NULL,
-	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ NULL,
-	/* .tp_hasitem_index              = */ NULL,
-	/* .tp_getrange_index             = */ NULL,
-	/* .tp_delrange_index             = */ NULL,
-	/* .tp_setrange_index             = */ NULL,
-	/* .tp_getrange_index_n           = */ NULL,
-	/* .tp_delrange_index_n           = */ NULL,
-	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ NULL,
-	/* .tp_trygetitem_index           = */ NULL,
-	/* .tp_trygetitem_string_hash     = */ NULL,
-	/* .tp_getitem_string_hash        = */ NULL,
-	/* .tp_delitem_string_hash        = */ NULL,
-	/* .tp_setitem_string_hash        = */ NULL,
-	/* .tp_bounditem_string_hash      = */ NULL,
-	/* .tp_hasitem_string_hash        = */ NULL,
-	/* .tp_trygetitem_string_len_hash = */ NULL,
-	/* .tp_getitem_string_len_hash    = */ NULL,
-	/* .tp_delitem_string_len_hash    = */ NULL,
-	/* .tp_setitem_string_len_hash    = */ NULL,
-	/* .tp_bounditem_string_len_hash  = */ NULL,
-	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ NULL,
-	/* .tp_unpack                     = */ NULL,
-	/* .tp_unpack_ex                  = */ NULL,
-	/* .tp_unpack_ub                  = */ NULL,
 };
 
 PRIVATE struct type_seq ds_mv_seq = {
@@ -148,9 +114,6 @@ PRIVATE struct type_seq ds_mv_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter), // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_mv_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ds_mv_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach), // TODO: (size_t (DCALL *)(DeeObject *__restrict))&ds_mv_size,
@@ -181,10 +144,6 @@ PRIVATE struct type_seq ds_mv_seq = {
 	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
 	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
 	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
-	/* .tp_asvector                   = */ NULL,
-	/* .tp_unpack                     = */ NULL,
-	/* .tp_unpack_ex                  = */ NULL,
-	/* .tp_unpack_ub                  = */ NULL,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -193,7 +152,7 @@ ds_mk_remove(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *argv
 	DeeObject *key;
 	if (DeeArg_Unpack(argc, argv, "o:remove", &key))
 		goto err;
-	result = DeeMap_InvokeRemove(self->dsmp_map, key);
+	result = DeeObject_InvokeMethodHint(map_remove, self->dsmp_map, key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -206,7 +165,7 @@ ds_mk_removeall(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *a
 	DeeObject *keys;
 	if (DeeArg_Unpack(argc, argv, "o:removeall", &keys))
 		goto err;
-	if unlikely(DeeMap_InvokeRemoveKeys(self->dsmp_map, keys))
+	if unlikely(DeeObject_InvokeMethodHint(map_removekeys, self->dsmp_map, keys))
 		goto err;
 	return_none;
 err:
@@ -219,12 +178,12 @@ ds_mk_pop(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *def = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:pop", &def))
 		goto err;
-	item = DeeMap_InvokePopItem(self->dsmp_map);
+	item = DeeObject_InvokeMethodHint(map_popitem, self->dsmp_map);
 	if unlikely(!item)
 		goto err;
 	if (!DeeNone_Check(item)) {
 		DREF DeeObject *key_and_value[2];
-		int temp = DeeObject_Unpack(item, 2, key_and_value);
+		int temp = DeeSeq_Unpack(item, 2, key_and_value);
 		Dee_Decref(item);
 		if unlikely(temp)
 			goto err;
@@ -244,7 +203,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_mk_clear(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		goto err;
-	if unlikely(DeeSeq_InvokeClear(self->dsmp_map))
+	if unlikely(DeeObject_InvokeMethodHint(seq_clear, self->dsmp_map))
 		goto err;
 	return_none;
 err:
@@ -253,6 +212,7 @@ err:
 
 PRIVATE struct type_method tpconst ds_mk_methods[] = {
 	/* TODO: byhash(ob) { return Mapping.byhash(this.__map__, ob).map(e -> e.first); } */
+	/* TODO: CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: Use method hints instead of explicit callbacks */
 	TYPE_METHOD(STR_remove, &ds_mk_remove,
 	            "(key)->?Dbool\n"
 	            "${"
@@ -394,6 +354,7 @@ INTERN DeeTypeObject DefaultSequence_MapValues_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL, /* TODO: seq_enumerate_index */
 };
 
 DECL_END

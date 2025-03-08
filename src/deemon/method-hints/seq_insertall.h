@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.insertall()                                          */
 /************************************************************************/
-[[kw, alias(Sequence.insertall -> "seq_insertall")]]
+[[kw, alias(Sequence.insertall)]]
 __seq_insertall__(index:?Dint,items:?S?O) {
 	size_t index;
 	DeeObject *items;

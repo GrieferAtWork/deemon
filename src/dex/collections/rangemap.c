@@ -155,7 +155,7 @@ rangemap_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg
 	is_first = true;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		DREF DeeObject *item[3];
-		if (DeeObject_Unpack(elem, 3, item))
+		if (DeeSeq_Unpack(elem, 3, item))
 			goto err_m1_iterator_elem;
 		Dee_Decref(elem);
 		temp = DeeFormat_Printf(printer, arg, "%s[%r:%r]: %r",
@@ -307,7 +307,7 @@ PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
 rangemap_insert_range(void *arg, DeeObject *elem) {
 	int result;
 	DREF DeeObject *item[3];
-	if (DeeObject_Unpack(elem, 3, item))
+	if (DeeSeq_Unpack(elem, 3, item))
 		goto err;
 	result = DeeObject_SetRange((DeeObject *)arg, item[0], item[1], item[2]);
 	Dee_Decrefv(item, 3);
@@ -333,7 +333,7 @@ rangemap_clear(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) 
 			goto err;
 		if (elem == ITER_DONE)
 			break;
-		temp = DeeObject_Unpack(elem, 3, item);
+		temp = DeeSeq_Unpack(elem, 3, item);
 		Dee_Decref(elem);
 		if unlikely(temp)
 			goto err;
@@ -480,7 +480,7 @@ rangemap_getitem(DeeObject *self, DeeObject *key) {
 		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
 		int unpack_error, temp;
-		unpack_error = DeeObject_Unpack(item, 3, item_data);
+		unpack_error = DeeSeq_Unpack(item, 3, item_data);
 		Dee_Decref(item);
 		if unlikely(unpack_error)
 			goto err_iter;
@@ -528,7 +528,7 @@ rangemap_trygetitem(DeeObject *self, DeeObject *key) {
 		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
 		int unpack_error, temp;
-		unpack_error = DeeObject_Unpack(item, 3, item_data);
+		unpack_error = DeeSeq_Unpack(item, 3, item_data);
 		Dee_Decref(item);
 		if unlikely(unpack_error)
 			goto err_iter;
@@ -603,9 +603,6 @@ PRIVATE struct type_seq rangemap_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL, // TODO: &rangemap_foreach,
 	/* .tp_foreach_pair               = */ NULL, // TODO: &rangemap_foreach_pair,
-	/* .tp_enumerate                  = */ NULL, // TODO: &rangemap_enumerate,
-	/* .tp_enumerate_index            = */ NULL, // TODO: &rangemap_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL, // TODO: &rangemap_iterkeys,
 	/* .tp_bounditem                  = */ NULL, // TODO: &rangemap_bounditem,
 	/* .tp_hasitem                    = */ NULL, // TODO: &rangemap_hasitem,
 	/* .tp_size                       = */ &rangemap_size,
@@ -1061,7 +1058,7 @@ PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
 rangemap_keys_getsize_foreach(void *arg, DeeObject *elem) {
 	size_t temp, *p_result = (size_t *)arg;
 	DREF DeeObject *item[3];
-	if unlikely(DeeObject_Unpack(elem, 3, item))
+	if unlikely(DeeSeq_Unpack(elem, 3, item))
 		goto err;
 	Dee_Decref(item[2]);
 	temp = rangemap_keys_sizeof_range(item[0], item[1]);
@@ -1106,9 +1103,6 @@ PRIVATE struct type_seq proxy_keys_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_keys_getsize,
@@ -1153,9 +1147,6 @@ PRIVATE struct type_seq proxy_values_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
@@ -1200,9 +1191,6 @@ PRIVATE struct type_seq proxy_items_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
@@ -1247,9 +1235,6 @@ PRIVATE struct type_seq proxy_nodes_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
@@ -1294,9 +1279,6 @@ PRIVATE struct type_seq proxy_ranges_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
@@ -1341,9 +1323,6 @@ PRIVATE struct type_seq proxy_mapitems_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_keys_getsize,
@@ -1388,9 +1367,6 @@ PRIVATE struct type_seq proxy_asmap_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_keys_getsize,
@@ -1476,7 +1452,7 @@ proxy_asmap_get_first(RangeMapProxy *__restrict self) {
 	triple = DeeObject_GetAttrStringHash(self->rmp_rmap, "first", Dee_HashStr__first);
 	if unlikely(!triple)
 		goto err;
-	error = DeeObject_Unpack(triple, 3, item);
+	error = DeeSeq_Unpack(triple, 3, item);
 	Dee_Decref(triple);
 	if unlikely(error)
 		goto err;
@@ -1500,7 +1476,7 @@ proxy_asmap_get_last(RangeMapProxy *__restrict self) {
 	triple = DeeObject_GetAttrStringHash(self->rmp_rmap, "last", Dee_HashStr__last);
 	if unlikely(!triple)
 		goto err;
-	error = DeeObject_Unpack(triple, 3, item);
+	error = DeeSeq_Unpack(triple, 3, item);
 	Dee_Decref(triple);
 	if unlikely(error)
 		goto err;
@@ -1524,7 +1500,7 @@ proxy_keys_get_first(RangeMapProxy *__restrict self) {
 	triple = DeeObject_GetAttrStringHash(self->rmp_rmap, "first", Dee_HashStr__first);
 	if unlikely(!triple)
 		goto err;
-	error = DeeObject_Unpack(triple, 3, item);
+	error = DeeSeq_Unpack(triple, 3, item);
 	Dee_Decref(triple);
 	if unlikely(error)
 		goto err;
@@ -1543,7 +1519,7 @@ proxy_keys_get_last(RangeMapProxy *__restrict self) {
 	triple = DeeObject_GetAttrStringHash(self->rmp_rmap, "last", Dee_HashStr__last);
 	if unlikely(!triple)
 		goto err;
-	error = DeeObject_Unpack(triple, 3, item);
+	error = DeeSeq_Unpack(triple, 3, item);
 	Dee_Decref(triple);
 	if unlikely(error)
 		goto err;
@@ -1562,7 +1538,7 @@ proxy_values_get_first(RangeMapProxy *__restrict self) {
 	triple = DeeObject_GetAttrStringHash(self->rmp_rmap, "first", Dee_HashStr__first);
 	if unlikely(!triple)
 		goto err;
-	error = DeeObject_Unpack(triple, 3, item);
+	error = DeeSeq_Unpack(triple, 3, item);
 	Dee_Decref(triple);
 	if unlikely(error)
 		goto err;
@@ -1581,7 +1557,7 @@ proxy_values_get_last(RangeMapProxy *__restrict self) {
 	triple = DeeObject_GetAttrStringHash(self->rmp_rmap, "last", Dee_HashStr__last);
 	if unlikely(!triple)
 		goto err;
-	error = DeeObject_Unpack(triple, 3, item);
+	error = DeeSeq_Unpack(triple, 3, item);
 	Dee_Decref(triple);
 	if unlikely(error)
 		goto err;
@@ -1610,7 +1586,7 @@ proxy_ranges_get_first(RangeMapProxy *__restrict self) {
 	triple = DeeObject_GetAttrStringHash(self->rmp_rmap, "first", Dee_HashStr__first);
 	if unlikely(!triple)
 		goto err;
-	error = DeeObject_Unpack(triple, 3, item);
+	error = DeeSeq_Unpack(triple, 3, item);
 	Dee_Decref(triple);
 	if unlikely(error)
 		goto err;
@@ -1634,7 +1610,7 @@ proxy_ranges_get_last(RangeMapProxy *__restrict self) {
 	triple = DeeObject_GetAttrStringHash(self->rmp_rmap, "last", Dee_HashStr__last);
 	if unlikely(!triple)
 		goto err;
-	error = DeeObject_Unpack(triple, 3, item);
+	error = DeeSeq_Unpack(triple, 3, item);
 	Dee_Decref(triple);
 	if unlikely(error)
 		goto err;
@@ -2353,7 +2329,7 @@ proxy_items_iterator_next_range(RangeMapProxyItemsIterator *__restrict self) {
 	tuple = DeeObject_IterNext(self->rmpii_base.rmpi_iter);
 	if (!ITER_ISOK(tuple))
 		return tuple;
-	error = DeeObject_Unpack(tuple, 3, item);
+	error = DeeSeq_Unpack(tuple, 3, item);
 	Dee_Decref(tuple);
 	if unlikely(error)
 		goto err;
@@ -2376,7 +2352,7 @@ proxy_items_iterator_next_value(RangeMapProxyItemsIterator *__restrict self) {
 	tuple = DeeObject_IterNext(self->rmpii_base.rmpi_iter);
 	if (!ITER_ISOK(tuple))
 		return tuple;
-	error = DeeObject_Unpack(tuple, 3, item);
+	error = DeeSeq_Unpack(tuple, 3, item);
 	Dee_Decref(tuple);
 	if unlikely(error)
 		goto err;
@@ -2967,7 +2943,7 @@ again:
 		tuple = DeeObject_IterNext(self->rmpki_base.rmpii_base.rmpi_iter);
 		if (!ITER_ISOK(tuple))
 			return tuple;
-		error = DeeObject_Unpack(tuple, 3, item);
+		error = DeeSeq_Unpack(tuple, 3, item);
 		Dee_Decref(tuple);
 		if unlikely(error)
 			goto err;
@@ -3042,7 +3018,7 @@ again:
 		tuple = DeeObject_IterNext(self->rmpki_base.rmpii_base.rmpi_iter);
 		if (!ITER_ISOK(tuple))
 			return tuple ? 1 : -1;
-		error = DeeObject_Unpack(tuple, 3, item);
+		error = DeeSeq_Unpack(tuple, 3, item);
 		Dee_Decref(tuple);
 		if unlikely(error)
 			goto err;
@@ -3124,7 +3100,7 @@ again:
 		tuple = DeeObject_IterNext(self->rmpki_base.rmpii_base.rmpi_iter);
 		if (!ITER_ISOK(tuple))
 			return tuple;
-		error = DeeObject_Unpack(tuple, 3, item);
+		error = DeeSeq_Unpack(tuple, 3, item);
 		Dee_Decref(tuple);
 		if unlikely(error)
 			goto err;
@@ -3204,7 +3180,7 @@ again:
 		tuple = DeeObject_IterNext(self->rmpki_base.rmpii_base.rmpi_iter);
 		if (!ITER_ISOK(tuple))
 			return tuple;
-		error = DeeObject_Unpack(tuple, 3, item);
+		error = DeeSeq_Unpack(tuple, 3, item);
 		Dee_Decref(tuple);
 		if unlikely(error)
 			goto err;

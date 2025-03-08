@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.setdefault()                                          */
 /************************************************************************/
-[[alias(Mapping.setdefault -> "map_setdefault")]]
+[[alias(Mapping.setdefault)]]
 __map_setdefault__(key,value)->?O {
 	DeeObject *key, *value;
 	if (DeeArg_Unpack(argc, argv, "oo:__map_setdefault__", &key, &value))

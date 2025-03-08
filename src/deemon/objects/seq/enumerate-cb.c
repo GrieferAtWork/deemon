@@ -106,7 +106,7 @@ seq_call_enumerate(DeeObject *self, DeeObject *cb) {
 	Dee_ssize_t foreach_status;
 	struct seq_enumerate_data data;
 	data.sed_cb    = cb;
-	foreach_status = DeeSeq_OperatorEnumerate(self, &seq_enumerate_cb, &data);
+	foreach_status = DeeObject_InvokeMethodHint(seq_enumerate, self, &seq_enumerate_cb, &data);
 	if unlikely(foreach_status == -1)
 		goto err;
 	if (foreach_status == -2)
@@ -122,7 +122,9 @@ seq_call_enumerate_with_intrange(DeeObject *self, DeeObject *cb,
 	Dee_ssize_t foreach_status;
 	struct seq_enumerate_data data;
 	data.sed_cb    = cb;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_enumerate_index_cb, &data, start, end);
+	foreach_status = DeeObject_InvokeMethodHint(seq_enumerate_index, self,
+	                                            &seq_enumerate_index_cb,
+	                                            &data, start, end);
 	if unlikely(foreach_status == -1)
 		goto err;
 	if (foreach_status == -2)
@@ -180,7 +182,7 @@ seq_call_enumerate_with_range(DeeObject *self, DeeObject *cb,
 	data.sedwf_cb    = cb;
 	data.sedwf_start = start;
 	data.sedwf_end   = end;
-	foreach_status = DeeSeq_OperatorEnumerate(self, &seq_enumerate_with_filter_cb, &data);
+	foreach_status = DeeObject_InvokeMethodHint(seq_enumerate, self, &seq_enumerate_with_filter_cb, &data);
 	if unlikely(foreach_status == -1)
 		goto err;
 	if (foreach_status == -2)

@@ -40,6 +40,25 @@
 
 DECL_BEGIN
 
+/* CONFIG: Allow types that are inheriting their constructors to
+ *         become GC objects when the object that they're inheriting
+ *         from wasn't one.
+ *         This is probably not something that should ever happen
+ *         and if this were ever to occur, it would probably be
+ *         a mistake.
+ *         But still: It is something that ?~could~? make sense to allow
+ *         In any case: A GC-enabled object providing inheritable constructors
+ *                      to non-GC objects is something that's definitely illegal!
+ * Anyways: Since the specs only state that an active VAR-flag must be inherited
+ *          by all sub-classes, yet remains silent on how the GC type-flag must
+ *          behave when it comes to inherited constructors, enabling this option
+ *          is the best course of action, considering it opens up the possibility
+ *          of further, quite well-defined behavioral options or GC-objects
+ *          inheriting their constructor from non-GC sub-classes.
+ */
+#undef CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
+#define CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
+
 #define DeeType_Optimize_tp_deepload(self, tp_deepload)       tp_deepload
 #define DeeType_Optimize_tp_assign(self, tp_assign)           tp_assign
 #define DeeType_Optimize_tp_move_assign(self, tp_move_assign) tp_move_assign

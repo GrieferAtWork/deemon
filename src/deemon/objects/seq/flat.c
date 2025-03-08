@@ -65,8 +65,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeSeq_InvokeForeachReverse(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
 	Dee_ssize_t result;
 	DREF DeeTupleObject *astuple;
-	Dee_mh_seq_foreach_reverse_t op;
-	op = DeeType_TryRequireSeqForeachReverse(Dee_TYPE(self));
+	DeeMH_seq_foreach_reverse_t op;
+	op = DeeObject_RequireMethodHint(self, seq_foreach_reverse);
 	if (op != NULL)
 		return (*op)(self, cb, arg);
 	astuple = (DREF DeeTupleObject *)DeeTuple_FromSequence(self);
@@ -85,8 +85,8 @@ DeeSeq_InvokeEnumerateIndexReverse(DeeObject *__restrict self,
                                    size_t start, size_t end) {
 	Dee_ssize_t result;
 	DREF DeeTupleObject *astuple;
-	Dee_mh_seq_enumerate_index_reverse_t op;
-	op = DeeType_TryRequireSeqEnumerateIndexReverse(Dee_TYPE(self));
+	DeeMH_seq_enumerate_index_reverse_t op;
+	op = DeeObject_RequireMethodHint(self, seq_enumerate_index_reverse);
 	if (op != NULL)
 		return (*op)(self, cb, arg, start, end);
 	astuple = (DREF DeeTupleObject *)DeeTuple_FromSequence(self);
@@ -142,7 +142,7 @@ STATIC_ASSERT(offsetof(SeqFlat, sf_seq) == offsetof(ProxyObject, po_obj));
 #define sf_fini  generic_proxy__fini
 #define sf_visit generic_proxy__visit
 
-#define sf_foreachseq(self, cb, arg)         DeeSeq_OperatorForeach((self)->sf_seq, cb, arg)
+#define sf_foreachseq(self, cb, arg)         DeeObject_InvokeMethodHint(seq_operator_foreach, (self)->sf_seq, cb, arg)
 #define sf_foreachseq_reverse(self, cb, arg) DeeSeq_InvokeForeachReverse((self)->sf_seq, cb, arg)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -155,7 +155,7 @@ sf_ctor(SeqFlat *__restrict self) {
 #define SF_BOOL_FOREACH_YES SSIZE_MIN
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 sf_bool_foreach_cb(void *UNUSED(arg), DeeObject *item) {
-	Dee_ssize_t result = DeeSeq_OperatorBool(item);
+	Dee_ssize_t result = DeeObject_InvokeMethodHint(seq_operator_bool, item);
 	if (result > 0)
 		result = SF_BOOL_FOREACH_YES;
 	ASSERT(result == 0 || result == -1 || result == SF_BOOL_FOREACH_YES);
@@ -171,36 +171,36 @@ sf_bool(SeqFlat *__restrict self) {
 	return (int)result;
 }
 
-#define sf_trygetfirstseq(self) DeeSeq_InvokeTryGetFirst((self)->sf_seq)
-#define sf_trygetlastseq(self)  DeeSeq_InvokeTryGetLast((self)->sf_seq)
+#define sf_trygetfirstseq(self) DeeObject_InvokeMethodHint(seq_trygetfirst, (self)->sf_seq)
+#define sf_trygetlastseq(self)  DeeObject_InvokeMethodHint(seq_trygetlast, (self)->sf_seq)
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sf_getfirstseq(SeqFlat *__restrict self) {
-	return DeeSeq_InvokeGetFirst(self->sf_seq);
+	return DeeObject_InvokeMethodHint(seq_getfirst, self->sf_seq);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_delfirstseq(SeqFlat *__restrict self) {
-	return DeeSeq_InvokeDelFirst(self->sf_seq);
+	return DeeObject_InvokeMethodHint(seq_delfirst, self->sf_seq);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sf_setfirstseq(SeqFlat *self, DeeObject *value) {
-	return DeeSeq_InvokeSetFirst(self->sf_seq, value);
+	return DeeObject_InvokeMethodHint(seq_setfirst, self->sf_seq, value);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sf_getlastseq(SeqFlat *__restrict self) {
-	return DeeSeq_InvokeGetLast(self->sf_seq);
+	return DeeObject_InvokeMethodHint(seq_getlast, self->sf_seq);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_dellastseq(SeqFlat *__restrict self) {
-	return DeeSeq_InvokeDelLast(self->sf_seq);
+	return DeeObject_InvokeMethodHint(seq_dellast, self->sf_seq);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sf_setlastseq(SeqFlat *self, DeeObject *value) {
-	return DeeSeq_InvokeSetLast(self->sf_seq, value);
+	return DeeObject_InvokeMethodHint(seq_setlast, self->sf_seq, value);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqFlatIterator *DCALL
@@ -224,7 +224,7 @@ PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 sf_contains_foreach_cb(void *arg, DeeObject *item) {
 	Dee_ssize_t result;
 	DREF DeeObject *contains_ob;
-	contains_ob = DeeSeq_OperatorContains(item, (DeeObject *)arg);
+	contains_ob = DeeObject_InvokeMethodHint(seq_operator_contains, item, (DeeObject *)arg);
 	if unlikely(!contains_ob)
 		goto err;
 	result = DeeObject_BoolInherited(contains_ob);
@@ -256,7 +256,7 @@ PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 sf_foreach_cb(void *arg, DeeObject *subseq) {
 	struct sf_foreach_data *data;
 	data = (struct sf_foreach_data *)arg;
-	return DeeSeq_OperatorForeach(subseq, data->sffd_proc, data->sffd_arg);
+	return DeeObject_InvokeMethodHint(seq_operator_foreach, subseq, data->sffd_proc, data->sffd_arg);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -291,7 +291,8 @@ PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 sf_foreach_pair_cb(void *arg, DeeObject *subseq) {
 	struct sf_foreach_pair_data *data;
 	data = (struct sf_foreach_pair_data *)arg;
-	return DeeSeq_OperatorForeachPair(subseq, data->sffpd_proc, data->sffpd_arg);
+	return DeeObject_InvokeMethodHint(seq_operator_foreach_pair, subseq,
+	                                  data->sffpd_proc, data->sffpd_arg);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -304,7 +305,7 @@ sf_foreach_pair(SeqFlat *__restrict self, Dee_foreach_pair_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 sf_size_foreach_cb(void *arg, DeeObject *subseq) {
-	size_t subseq_size = DeeSeq_OperatorSize(subseq);
+	size_t subseq_size = DeeObject_InvokeMethodHint(seq_operator_size, subseq);
 	if unlikely(subseq_size == (size_t)-1)
 		goto err;
 	if (OVERFLOW_UADD(*(size_t *)arg, subseq_size, (size_t *)arg))
@@ -383,23 +384,25 @@ sf_enumerate_index_foreach_cb(void *arg, DeeObject *subseq) {
 	struct sf_enumerate_index_data *data;
 	data = (struct sf_enumerate_index_data *)arg;
 	if (!data->sfeid_skip)
-		return DeeSeq_OperatorForeach(subseq, &sf_enumerate_index_foreach_inner_cb, data);
-	subseq_fastsize = DeeSeq_OperatorSizeFast(subseq);
+		return DeeObject_InvokeMethodHint(seq_operator_foreach, subseq, &sf_enumerate_index_foreach_inner_cb, data);
+	subseq_fastsize = DeeObject_SizeFast(subseq);
 	if (subseq_fastsize == (size_t)-1)
-		return DeeSeq_OperatorForeach(subseq, &sf_enumerate_index_foreach_inner_with_skip_cb, data);
+		return DeeObject_InvokeMethodHint(seq_operator_foreach, subseq, &sf_enumerate_index_foreach_inner_with_skip_cb, data);
 	if (data->sfeid_skip >= subseq_fastsize) {
 		data->sfeid_skip -= subseq_fastsize;
 		return 0;
 	}
 	subseq_skip = data->sfeid_skip ;
 	data->sfeid_skip = 0;
-	return DeeSeq_OperatorEnumerateIndex(subseq, &sf_enumerate_index_enumerate_inner_cb,
-	                                     data, subseq_skip, (size_t)-1);
+	return DeeObject_InvokeMethodHint(seq_enumerate_index, subseq,
+	                                  &sf_enumerate_index_enumerate_inner_cb,
+	                                  data, subseq_skip, (size_t)-1);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-sf_enumerate_index(SeqFlat *__restrict self, Dee_seq_enumerate_index_t proc,
-                   void *arg, size_t start, size_t end) {
+sf_mh_seq_enumerate_index(SeqFlat *__restrict self,
+                          Dee_seq_enumerate_index_t proc,
+                          void *arg, size_t start, size_t end) {
 	Dee_ssize_t status;
 	struct sf_enumerate_index_data data;
 	data.sfeid_proc   = proc;
@@ -464,22 +467,22 @@ sf_enumerate_index_enumerate_reverse_inner_cb(void *arg, size_t UNUSED(index), D
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 sf_enumerate_index_foreach_reverse_cb(void *arg, DeeObject *subseq) {
 	size_t subseq_size, subseq_end;
-	Dee_mh_seq_enumerate_index_reverse_t ei_reverse_op;
+	DeeMH_seq_enumerate_index_reverse_t ei_reverse_op;
 	struct sf_enumerate_index_reverse_data *data;
 	data = (struct sf_enumerate_index_reverse_data *)arg;
 	if (!data->sfeird_skip)
 		return DeeSeq_InvokeForeachReverse(subseq, &sf_enumerate_index_foreach_reverse_inner_cb, data);
-	subseq_size = DeeSeq_OperatorSize(subseq);
+	subseq_size = DeeObject_InvokeMethodHint(seq_operator_size, subseq);
 	if (subseq_size == (size_t)-1)
 		goto err;
 	if (data->sfeird_skip >= subseq_size) {
 		data->sfeird_skip -= subseq_size;
 		return 0;
 	}
-	ei_reverse_op = DeeType_TryRequireSeqEnumerateIndexReverse(Dee_TYPE(subseq));
+	ei_reverse_op = DeeObject_RequireMethodHint(subseq, seq_enumerate_index_reverse);
 	if (!ei_reverse_op) {
-		Dee_mh_seq_foreach_reverse_t fe_reverse_op;
-		fe_reverse_op = DeeType_TryRequireSeqForeachReverse(Dee_TYPE(subseq));
+		DeeMH_seq_foreach_reverse_t fe_reverse_op;
+		fe_reverse_op = DeeObject_RequireMethodHint(subseq, seq_foreach_reverse);
 		if (fe_reverse_op != NULL)
 			return (*fe_reverse_op)(subseq, &sf_enumerate_index_foreach_reverse_inner_with_skip_cb, data);
 	}
@@ -539,7 +542,7 @@ sf_trygetitem_index(SeqFlat *__restrict self, size_t index) {
 #ifndef NDEBUG
 	result = NULL;
 #endif /* !NDEBUG */
-	status = sf_enumerate_index(self, &sf_trygetitem_index_cb, &result, index, index + 1);
+	status = sf_mh_seq_enumerate_index(self, &sf_trygetitem_index_cb, &result, index, index + 1);
 	ASSERT(status == 0 || status == -1 || status == SF_TRYGETITEM_INDEX_FOUND);
 	if likely(status == SF_TRYGETITEM_INDEX_FOUND) {
 #ifndef NDEBUG
@@ -572,7 +575,7 @@ sf_getitem_index(SeqFlat *__restrict self, size_t index) {
 	result = NULL;
 #endif /* !NDEBUG */
 
-	//status = sf_enumerate_index(self, &sf_trygetitem_index_cb, &result, index, index + 1);
+	//status = sf_mh_seq_enumerate_index(self, &sf_trygetitem_index_cb, &result, index, index + 1);
 	data.sfeid_proc   = &sf_trygetitem_index_cb;
 	data.sfeid_arg    = &result;
 	data.sfeid_result = 0;
@@ -613,7 +616,7 @@ sf_interact_withitem_cb(void *arg, DeeObject *subseq) {
 	size_t subseq_size;
 	struct sf_interact_withitem_data *data;
 	data = (struct sf_interact_withitem_data *)arg;
-	subseq_size = DeeSeq_OperatorSize(subseq);
+	subseq_size = DeeObject_InvokeMethodHint(seq_operator_size, subseq);
 	if unlikely(subseq_size == (size_t)-1)
 		goto err;
 	if (data->sfiwid_index >= subseq_size) {
@@ -655,7 +658,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_delitem_index_cb(DeeObject *__restrict subseq, size_t index,
                     DeeObject *UNUSED(cookie)) {
-	return DeeSeq_OperatorDelItemIndex(subseq, index);
+	return DeeObject_InvokeMethodHint(seq_operator_delitem_index, subseq, index);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -675,7 +678,7 @@ sf_xchitem_index_cb(DeeObject *__restrict subseq, size_t index,
                     DeeObject *cookie) {
 	DREF DeeObject *old_value;
 	DeeObject *new_value = *(DeeObject **)cookie;
-	old_value = DeeSeq_InvokeXchItemIndex(subseq, index, new_value);
+	old_value = DeeObject_InvokeMethodHint(seq_xchitem_index, subseq, index, new_value);
 	if unlikely(!old_value)
 		goto err;
 	*(DREF DeeObject **)cookie = old_value;
@@ -709,9 +712,6 @@ PRIVATE struct type_seq sf_seq = {
 	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&sf_foreach,
 	/* .tp_foreach_pair       = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&sf_foreach_pair,
-	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&sf_enumerate_index,
-	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ DEFIMPL(&default__bounditem__with__getitem),
 	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__bounditem),
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&sf_size,
@@ -754,7 +754,7 @@ PRIVATE struct type_getset tpconst sf_getsets[] = {
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 sf_mh_clear_foreach_cb(void *UNUSED(arg), DeeObject *subseq) {
-	return DeeSeq_InvokeClear(subseq);
+	return DeeObject_InvokeMethodHint(seq_clear, subseq);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -775,6 +775,7 @@ sf_mh_clear(SeqFlat *__restrict self) {
 
 
 PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &sf_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_foreach_reverse, &sf_mh_foreach_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &sf_mh_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_trygetfirst, &sf_mh_trygetfirst, METHOD_FNOREFESCAPE),
@@ -850,37 +851,38 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 };
 
 PRIVATE struct type_method tpconst sf_methods[] = {
-	//TODO:TYPE_METHOD_HINTREF(seq_any),
-	//TODO:TYPE_METHOD_HINTREF(seq_all),
-	//TODO:TYPE_METHOD_HINTREF(seq_parity),
-	//TODO:TYPE_METHOD_HINTREF(seq_min),
-	//TODO:TYPE_METHOD_HINTREF(seq_max),
-	//TODO:TYPE_METHOD_HINTREF(seq_count),
-	//TODO:TYPE_METHOD_HINTREF(seq_contains),
-	//TODO:TYPE_METHOD_HINTREF(seq_locate),
-	//TODO:TYPE_METHOD_HINTREF(seq_rlocate),
-	//TODO:TYPE_METHOD_HINTREF(seq_startswith),
-	//TODO:TYPE_METHOD_HINTREF(seq_endswith),
-	//TODO:TYPE_METHOD_HINTREF(seq_find),
-	//TODO:TYPE_METHOD_HINTREF(seq_rfind),
-	//TODO:TYPE_METHOD_HINTREF(seq_erase),
-	//TODO:TYPE_METHOD_HINTREF(seq_insert),
-	//TODO:TYPE_METHOD_HINTREF(seq_insertall),
-	//TODO:TYPE_METHOD_HINTREF(seq_pushfront),
-	//TODO:TYPE_METHOD_HINTREF(seq_append),
-	//TODO:TYPE_METHOD_HINTREF(seq_extend),
-	TYPE_METHOD_HINTREF(seq_xchitem),
-	TYPE_METHOD_HINTREF(seq_clear),
-	//TODO:TYPE_METHOD_HINTREF(seq_pop),
-	//TODO:TYPE_METHOD_HINTREF(seq_remove),
-	//TODO:TYPE_METHOD_HINTREF(seq_rremove),
-	//TODO:TYPE_METHOD_HINTREF(seq_removeall),
-	//TODO:TYPE_METHOD_HINTREF(seq_removeif),
-	//TODO:TYPE_METHOD_HINTREF(seq_resize),
-	//TODO:TYPE_METHOD_HINTREF(seq_fill),
-	//TODO:TYPE_METHOD_HINTREF(seq_reverse),
-	//TODO:TYPE_METHOD_HINTREF(seq_reversed),
-	/* TODO: TYPE_METHOD_HINTREF(seq_sum),*/
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_any),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_all),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_parity),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_min),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_max),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_count),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_contains),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_locate),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_rlocate),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_startswith),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_endswith),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_find),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_rfind),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_erase),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_insert),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_insertall),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_pushfront),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_append),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_extend),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_clear),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_pop),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_remove),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_rremove),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_removeall),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_removeif),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_resize),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_fill),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_reverse),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_reversed),
+	/* TODO: TYPE_METHOD_HINTREF(Sequence_sum),*/
 	TYPE_METHOD_END
 };
 

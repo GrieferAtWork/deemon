@@ -68,7 +68,7 @@ err:
 	Dee_Decref(sizeob);
 	if unlikely(!startob_and_endob_tuple)
 		goto err;
-	temp = DeeObject_Unpack(startob_and_endob_tuple, 2, startob_and_endob);
+	temp = DeeSeq_Unpack(startob_and_endob_tuple, 2, startob_and_endob);
 	Dee_Decref(startob_and_endob_tuple);
 	if unlikely(temp)
 		goto err;

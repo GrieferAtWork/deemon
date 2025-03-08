@@ -249,9 +249,6 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 		NativeOperator("tp_setrange"),
 		NativeOperator("tp_foreach"),
 		NativeOperator("tp_foreach_pair"),
-		Field("tp_enumerate"),
-		Field("tp_enumerate_index"),
-		Field("tp_iterkeys"),
 		NativeOperator("tp_bounditem"),
 		NativeOperator("tp_hasitem"),
 		NativeOperator("tp_size"),
@@ -284,9 +281,6 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 		NativeOperator("tp_hasitem_string_len_hash"),
 		Field("tp_asvector"),
 		Field("tp_asvector_nothrow"),
-		Field("tp_unpack"),
-		Field("tp_unpack_ex"),
-		Field("tp_unpack_ub"),
 		Field("tp_getitemnr"),
 		Field("tp_getitemnr_string_hash"),
 		Field("tp_getitemnr_string_len_hash"),
@@ -965,9 +959,6 @@ final class StructInitializer {
 				).cached;
 
 				for (local hint: tpMethodHints) {
-					hint = {
-						"seq_operator_enumerate_index": "seq_enumerate_index"
-					}.get(hint, hint);
 					if (hint in mh.ANONYMOUS_METHOD_HINTS)
 						continue; /* No attribute needed here! */
 					local nativeMethod: mh.NativeMethod | none = mh.NATIVE_METHOD_HINTS.get(hint);

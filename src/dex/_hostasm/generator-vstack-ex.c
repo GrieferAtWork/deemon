@@ -54,6 +54,7 @@
 #include <deemon/property.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
+#include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
@@ -6304,7 +6305,7 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 			elemv = (DREF DeeObject **)Dee_Mallocac(n, sizeof(DREF DeeObject *));
 			if unlikely(!elemv)
 				goto err;
-			if likely(DeeObject_Unpack(seqobj, n, elemv) == 0) {
+			if likely(DeeSeq_Unpack(seqobj, n, elemv) == 0) {
 				int temp = fg_vpop(self);
 				if likely(temp == 0) {
 					for (i = 0; i < n; ++i) {
@@ -6395,7 +6396,7 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));  /* [elems...], seq */
 	DO(fg_vpush_immSIZ(self, n));                              /* [elems...], seq, objc */
 	DO(fg_vpush_hstack(self, cfa_offset));                     /* [elems...], seq, objc, objv */
-	DO(fg_vcallapi(self, &DeeObject_Unpack, VCALL_CC_INT, 3)); /* [elems...] */
+	DO(fg_vcallapi(self, &DeeSeq_Unpack, VCALL_CC_INT, 3)); /* [elems...] */
 	for (i = 0; i < n; ++i) {
 		ASSERT(!memval_direct_isref(fg_vtop(self) - i));
 		memval_direct_setref(fg_vtop(self) - i);

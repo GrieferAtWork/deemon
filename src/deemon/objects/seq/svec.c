@@ -546,8 +546,8 @@ err_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rvec_enumerate_index(RefVector *self, Dee_seq_enumerate_index_t proc,
-                     void *arg, size_t start, size_t end) {
+rvec_mh_seq_enumerate_index(RefVector *self, Dee_seq_enumerate_index_t proc,
+                            void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	size_t i;
 	if (end > self->rv_length)
@@ -569,13 +569,39 @@ err_temp:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+rvec_mh_seq_enumerate_index_reverse(RefVector *self, Dee_seq_enumerate_index_t proc,
+                                    void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	if (end > self->rv_length)
+		end = self->rv_length;
+	while (end > start) {
+		DREF DeeObject *elem;
+		RefVector_XLockRead(self);
+		elem = self->rv_vector[--end];
+		Dee_XIncref(elem);
+		RefVector_XLockEndRead(self);
+		temp = (*proc)(arg, end, elem);
+		Dee_XDecref_unlikely(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
 PRIVATE struct type_method tpconst rvec_methods[] = {
-	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst rvec_method_hints[] = {
 	TYPE_METHOD_HINT(seq_xchitem_index, &rvec_xchitem_index),
+	TYPE_METHOD_HINT(seq_enumerate_index, &rvec_mh_seq_enumerate_index),
+	TYPE_METHOD_HINT(seq_enumerate_index_reverse, &rvec_mh_seq_enumerate_index_reverse),
 	TYPE_METHOD_HINT_END
 };
 
@@ -591,9 +617,6 @@ PRIVATE struct type_seq rvec_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__setrange__with__setrange_index__and__setrange_index_n), /* default */
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rvec_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&rvec_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rvec_size,
@@ -1024,8 +1047,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-svec_enumerate_index(SharedVector *self, Dee_seq_enumerate_index_t proc,
-                     void *arg, size_t start, size_t end) {
+svec_mh_seq_enumerate_index(SharedVector *self, Dee_seq_enumerate_index_t proc,
+                            void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	for (i = start; i < end; ++i) {
@@ -1039,6 +1062,34 @@ svec_enumerate_index(SharedVector *self, Dee_seq_enumerate_index_t proc,
 		Dee_Incref(list_elem);
 		SharedVector_LockEndRead(self);
 		temp = (*proc)(arg, i, list_elem);
+		Dee_Decref_unlikely(list_elem);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+	return result;
+err:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+svec_mh_seq_enumerate_index_reverse(SharedVector *self, Dee_seq_enumerate_index_t proc,
+                                    void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	while (end > start) {
+		DREF DeeObject *list_elem;
+		SharedVector_LockRead(self);
+		if (end > self->sv_length) {
+			end = self->sv_length;
+			if (end <= start) {
+				SharedVector_LockEndRead(self);
+				break;
+			}
+		}
+		list_elem = self->sv_vector[--end];
+		Dee_Incref(list_elem);
+		SharedVector_LockEndRead(self);
+		temp = (*proc)(arg, end, list_elem);
 		Dee_Decref_unlikely(list_elem);
 		if unlikely(temp < 0)
 			goto err;
@@ -1180,12 +1231,15 @@ err:
 }
 
 PRIVATE struct type_method tpconst svec_methods[] = {
-	TYPE_METHOD_HINTREF(seq_find),
-	TYPE_METHOD_HINTREF(seq_rfind),
+	TYPE_METHOD_HINTREF(Sequence_find),
+	TYPE_METHOD_HINTREF(Sequence_rfind),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst svec_method_hints[] = {
+	TYPE_METHOD_HINT(seq_enumerate_index, &svec_mh_seq_enumerate_index),
+	TYPE_METHOD_HINT(seq_enumerate_index_reverse, &svec_mh_seq_enumerate_index_reverse),
 	TYPE_METHOD_HINT(seq_find, &svec_mh_find),
 	TYPE_METHOD_HINT(seq_find_with_key, &svec_mh_find_with_key),
 	TYPE_METHOD_HINT(seq_rfind, &svec_mh_rfind),
@@ -1205,9 +1259,6 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&svec_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&svec_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&svec_size,

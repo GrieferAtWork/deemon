@@ -461,9 +461,8 @@ read_from_mhcache:
  * Never returns NULL when `id' has an "%{unsupported}" implementation. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetUncachedMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id) {
-	DeeTypeObject *iter;
 	DeeTypeMRO mro;
-	iter = DeeTypeMRO_Init(&mro, self);
+	DeeTypeObject *iter = DeeTypeMRO_Init(&mro, self);
 	do {
 		Dee_funptr_t result;
 		result = DeeType_GetPrivateMethodHint(iter, self, id);

@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.pushfront()                                          */
 /************************************************************************/
-[[alias(Sequence.pushfront -> "seq_pushfront")]]
+[[alias(Sequence.pushfront)]]
 __seq_pushfront__(item) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_pushfront__", &item))

@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.clear()                                          */
 /************************************************************************/
-[[alias(Sequence.clear -> "seq_clear")]]
+[[alias(Sequence.clear)]]
 [[alias(Set.clear)]]
 [[alias(Mapping.clear)]]
 __seq_clear__() {

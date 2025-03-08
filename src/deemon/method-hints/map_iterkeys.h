@@ -42,7 +42,7 @@ err:
 	return NULL;
 }}
 %{$with__map_enumerate = {
-	/* TODO: Custom iterator type that uses "tp_enumerate" */
+	/* TODO: Custom iterator type that uses "map_enumerate" */
 	(void)self;
 	DeeError_NOTIMPLEMENTED();
 	return NULL;

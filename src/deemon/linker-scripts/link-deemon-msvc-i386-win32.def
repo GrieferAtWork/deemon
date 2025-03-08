@@ -1085,9 +1085,6 @@ EXPORTS
 	DeeObject_TypeAssertFailed3@16=_DeeObject_TypeAssertFailed3@16
 	DeeObject_TypeAssertFailed@8=_DeeObject_TypeAssertFailed@8
 	DeeObject_UndoConstruction@8=_DeeObject_UndoConstruction@8
-	DeeObject_Unpack@12=_DeeObject_Unpack@12
-	DeeObject_UnpackEx@16=_DeeObject_UnpackEx@16
-	DeeObject_UnpackWithUnbound@12=_DeeObject_UnpackWithUnbound@12
 	DeeObject_VCallAttrPack@16=_DeeObject_VCallAttrPack@16
 	DeeObject_VCallAttrStringHashPack@20=_DeeObject_VCallAttrStringHashPack@20
 	DeeObject_VCallAttrStringHashf@20=_DeeObject_VCallAttrStringHashf@20
@@ -1136,6 +1133,7 @@ EXPORTS
 	DeeSeq_Max@4=_DeeSeq_Max@4
 	DeeSeq_Min@4=_DeeSeq_Min@4
 	DeeSeq_Sum@4=_DeeSeq_Sum@4
+	DeeSeq_Unpack@12=_DeeSeq_Unpack@12
 	DeeSharedMap_Decref@4=_DeeSharedMap_Decref@4
 	DeeSharedMap_DecrefNoGiftItems@4=_DeeSharedMap_DecrefNoGiftItems@4
 	DeeSharedMap_NewShared@8=_DeeSharedMap_NewShared@8

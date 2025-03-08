@@ -60,14 +60,14 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 invset_hash(SetInversion *__restrict self) {
-	return ~DeeSet_OperatorHash(self->si_set);
+	return ~DeeObject_InvokeMethodHint(set_operator_hash, self->si_set);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 invset_compare_eq(SetInversion *self, DeeObject *rhs) {
 	if (SetInversion_Check(rhs)) {
 		SetInversion *xrhs = (SetInversion *)rhs;
-		return DeeSeq_OperatorCompareEq(self->si_set, xrhs->si_set);
+		return DeeObject_InvokeMethodHint(set_operator_compare_eq, self->si_set, xrhs->si_set);
 	}
 	return 1; /* not equal */
 }
@@ -76,7 +76,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 invset_trycompare_eq(SetInversion *self, DeeObject *rhs) {
 	if (SetInversion_Check(rhs)) {
 		SetInversion *xrhs = (SetInversion *)rhs;
-		return DeeSeq_OperatorTryCompareEq(self->si_set, xrhs->si_set);
+		return DeeObject_InvokeMethodHint(set_operator_trycompare_eq, self->si_set, xrhs->si_set);
 	}
 	return 1; /* not equal */
 }
@@ -87,7 +87,7 @@ invset_lo(SetInversion *self, DeeObject *rhs) {
 	if (SetInversion_Check(rhs)) {
 		/* ~lhs < ~rhs   <===>   lhs > rhs */
 		SetInversion *xrhs = (SetInversion *)rhs;
-		return DeeSet_OperatorGr(self->si_set, xrhs->si_set);
+		return DeeObject_InvokeMethodHint(set_operator_gr, self->si_set, xrhs->si_set);
 	}
 	return_false;
 }
@@ -98,7 +98,7 @@ invset_le(SetInversion *self, DeeObject *rhs) {
 	if (SetInversion_Check(rhs)) {
 		/* ~lhs <= ~rhs   <===>   lhs >= rhs */
 		SetInversion *xrhs = (SetInversion *)rhs;
-		return DeeSet_OperatorGe(self->si_set, xrhs->si_set);
+		return DeeObject_InvokeMethodHint(set_operator_ge, self->si_set, xrhs->si_set);
 	}
 	return_false;
 }
@@ -109,7 +109,7 @@ invset_gr(SetInversion *self, DeeObject *rhs) {
 	if (SetInversion_Check(rhs)) {
 		/* ~lhs > ~rhs   <===>   lhs < rhs */
 		SetInversion *xrhs = (SetInversion *)rhs;
-		return DeeSet_OperatorLo(self->si_set, xrhs->si_set);
+		return DeeObject_InvokeMethodHint(set_operator_lo, self->si_set, xrhs->si_set);
 	}
 	return_true;
 }
@@ -120,7 +120,7 @@ invset_ge(SetInversion *self, DeeObject *rhs) {
 	if (SetInversion_Check(rhs)) {
 		/* ~lhs >= ~rhs   <===>   lhs <= rhs */
 		SetInversion *xrhs = (SetInversion *)rhs;
-		return DeeSet_OperatorLe(self->si_set, xrhs->si_set);
+		return DeeObject_InvokeMethodHint(set_operator_le, self->si_set, xrhs->si_set);
 	}
 	return_true;
 }
@@ -149,7 +149,7 @@ invset_printrepr(SetInversion *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 invset_contains(SetInversion *self, DeeObject *key) {
-	int result = DeeSet_OperatorContainsAsBool(self->si_set, key);
+	int result = DeeObject_InvokeMethodHint(seq_contains, self->si_set, key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(!result);
@@ -158,23 +158,20 @@ err:
 }
 
 PRIVATE struct type_seq invset_seq = {
-	/* .tp_iter     = */ DEFIMPL(&default__set_operator_iter__unsupported),
-	/* .tp_sizeob   = */ DEFIMPL(&default__set_operator_sizeob__unsupported),
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_contains,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_foreach         = */ DEFIMPL(&default__set_operator_foreach__with__set_operator_iter),
-	/* .tp_foreach_pair    = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate       = */ NULL,
-	/* .tp_enumerate_index = */ NULL,
-	/* .tp_iterkeys        = */ NULL,
-	/* .tp_bounditem       = */ NULL,
-	/* .tp_hasitem         = */ NULL,
-	/* .tp_size            = */ DEFIMPL(&default__set_operator_size__unsupported),
+	/* .tp_iter         = */ DEFIMPL(&default__set_operator_iter__unsupported),
+	/* .tp_sizeob       = */ DEFIMPL(&default__set_operator_sizeob__unsupported),
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_contains,
+	/* .tp_getitem      = */ NULL,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
+	/* .tp_foreach      = */ DEFIMPL(&default__set_operator_foreach__with__set_operator_iter),
+	/* .tp_foreach_pair = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_bounditem    = */ NULL,
+	/* .tp_hasitem      = */ NULL,
+	/* .tp_size         = */ DEFIMPL(&default__set_operator_size__unsupported),
 };
 
 PRIVATE struct type_member tpconst invset_members[] = {
@@ -208,7 +205,7 @@ invset_operator_add(SetInversion *self, DeeObject *some_object) {
 		/* (~a | ~b)  <=>  ~(a & b) */
 		SetInversion *xrhs = (SetInversion *)some_object;
 		DREF DeeObject *intersection;
-		intersection = DeeSet_OperatorAnd(self->si_set, xrhs->si_set);
+		intersection = DeeObject_InvokeMethodHint(set_operator_and, self->si_set, xrhs->si_set);
 		if unlikely(!intersection)
 			goto err;
 		return (DREF DeeObject *)SetInversion_New_inherit(intersection);
@@ -516,7 +513,7 @@ suiter_ctor(SetUnionIterator *__restrict self) {
 	                                                        : &SetSymmetricDifference_Type);
 	if unlikely(!self->sui_union)
 		goto err;
-	self->sui_iter = DeeSet_OperatorIter(self->sui_union->su_a);
+	self->sui_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->sui_union->su_a);
 	if unlikely(!self->sui_iter)
 		goto err_union;
 	Dee_atomic_rwlock_init(&self->sui_lock);
@@ -535,7 +532,7 @@ suiter_init(SetUnionIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->sui_union, &SetUnion_Type))
 		goto err;
-	if ((self->sui_iter = DeeSet_OperatorIter(self->sui_union->su_a)) == NULL)
+	if ((self->sui_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->sui_union->su_a)) == NULL)
 		goto err;
 	Dee_Incref(self->sui_union);
 	Dee_atomic_rwlock_init(&self->sui_lock);
@@ -568,7 +565,7 @@ read_from_iter:
 			/* Check if the found item is also part of the second set.
 			 * If it is, don't yield it now, but yield it later, as
 			 * part of the enumeration of the second set. */
-			temp = DeeSet_OperatorContainsAsBool(self->sui_union->su_b, result);
+			temp = DeeObject_InvokeMethodHint(seq_contains, self->sui_union->su_b, result);
 			if (temp != 0) {
 				/* Error, or apart of second set. */
 				Dee_Decref(result);
@@ -595,7 +592,7 @@ read_from_iter:
 #endif /* !CONFIG_NO_THREADS */
 
 	/* Create the level #2 iterator. */
-	result = DeeSet_OperatorIter(self->sui_union->su_b);
+	result = DeeObject_InvokeMethodHint(set_operator_iter, self->sui_union->su_b);
 	if unlikely(!result)
 		goto done;
 	SetUnionIterator_LockWrite(self);
@@ -791,7 +788,7 @@ su_iter(SetUnion *__restrict self) {
 	result = DeeGCObject_MALLOC(SetUnionIterator);
 	if unlikely(!result)
 		goto err;
-	result->sui_iter = DeeSet_OperatorIter(self->su_a);
+	result->sui_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->su_a);
 	if unlikely(!result->sui_iter)
 		goto err_r;
 	Dee_atomic_rwlock_init(&result->sui_lock);
@@ -810,7 +807,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 su_contains(SetUnion *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int temp;
-	result = DeeSet_OperatorContains(self->su_a, item);
+	result = DeeObject_InvokeMethodHint(seq_operator_contains, self->su_a, item);
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
@@ -821,7 +818,7 @@ su_contains(SetUnion *self, DeeObject *item) {
 	Dee_Decref_unlikely(result);
 
 	/* Check the second set, and forward the return value. */
-	result = DeeSet_OperatorContains(self->su_b, item);
+	result = DeeObject_InvokeMethodHint(seq_operator_contains, self->su_b, item);
 done:
 	return result;
 err_r:
@@ -840,7 +837,7 @@ su_foreach_if_not_contained_in_cb(void *arg, DeeObject *elem) {
 	struct su_foreach_if_contained_in_data *data;
 	int contains;
 	data = (struct su_foreach_if_contained_in_data *)arg;
-	contains = DeeSet_OperatorContainsAsBool(data->feicid_seq, elem);
+	contains = DeeObject_InvokeMethodHint(seq_contains, data->feicid_seq, elem);
 	if unlikely(contains < 0)
 		goto err;
 	if (contains)
@@ -855,7 +852,7 @@ su_foreach_if_contained_in_cb(void *arg, DeeObject *elem) {
 	struct su_foreach_if_contained_in_data *data;
 	int contains;
 	data = (struct su_foreach_if_contained_in_data *)arg;
-	contains = DeeSet_OperatorContainsAsBool(data->feicid_seq, elem);
+	contains = DeeObject_InvokeMethodHint(seq_contains, data->feicid_seq, elem);
 	if unlikely(contains < 0)
 		goto err;
 	if (!contains)
@@ -868,14 +865,14 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
 su_foreach(SetUnion *__restrict self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t result;
-	result = DeeSet_OperatorForeach(self->su_a, proc, arg);
+	result = DeeObject_InvokeMethodHint(set_operator_foreach, self->su_a, proc, arg);
 	if likely(result >= 0) {
 		Dee_ssize_t temp;
 		struct su_foreach_if_contained_in_data data;
 		data.feicid_seq  = self->su_a;
 		data.feicid_proc = proc;
 		data.feicid_arg  = arg;
-		temp = DeeSet_OperatorForeach(self->su_b, &su_foreach_if_not_contained_in_cb, &data);
+		temp = DeeObject_InvokeMethodHint(set_operator_foreach, self->su_b, &su_foreach_if_not_contained_in_cb, &data);
 		if unlikely(temp < 0)
 			return temp;
 		result += temp;
@@ -885,30 +882,27 @@ su_foreach(SetUnion *__restrict self, Dee_foreach_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL 
 su_bool(SetUnion *__restrict self) {
-	int result = DeeSet_OperatorBool(self->su_a);
+	int result = DeeObject_InvokeMethodHint(seq_operator_bool, self->su_a);
 	if likely(result == 0)
-		result = DeeSet_OperatorBool(self->su_b);
+		result = DeeObject_InvokeMethodHint(seq_operator_bool, self->su_b);
 	return result;
 }
 
 PRIVATE struct type_seq su_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&su_iter,
-	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&su_contains,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&su_foreach,
-	/* .tp_foreach_pair    = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate       = */ NULL,
-	/* .tp_enumerate_index = */ NULL,
-	/* .tp_iterkeys        = */ NULL,
-	/* .tp_bounditem       = */ NULL,
-	/* .tp_hasitem         = */ NULL,
-	/* .tp_size            = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&su_iter,
+	/* .tp_sizeob       = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&su_contains,
+	/* .tp_getitem      = */ NULL,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
+	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&su_foreach,
+	/* .tp_foreach_pair = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_bounditem    = */ NULL,
+	/* .tp_hasitem      = */ NULL,
+	/* .tp_size         = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
 };
 
 PRIVATE struct type_member tpconst su_class_members[] = {
@@ -1010,10 +1004,10 @@ read_from_iter:
 		if (result) {
 			int temp;
 			/* Only yield the item if it's not contained in the other set. */
-			temp = DeeSet_OperatorContainsAsBool(is_second
-			                                     ? self->ssd_set->ssd_b
-			                                     : self->ssd_set->ssd_a,
-			                                     result);
+			temp = DeeObject_InvokeMethodHint(seq_contains,
+			                                  is_second ? self->ssd_set->ssd_b
+			                                            : self->ssd_set->ssd_a,
+			                                  result);
 			if (temp != 0) {
 				/* Error, or apart of second set. */
 				Dee_Decref(result);
@@ -1040,7 +1034,7 @@ read_from_iter:
 #endif /* !CONFIG_NO_THREADS */
 
 	/* Create the level #2 iterator. */
-	result = DeeSet_OperatorIter(self->ssd_set->ssd_b);
+	result = DeeObject_InvokeMethodHint(set_operator_iter, self->ssd_set->ssd_b);
 	if unlikely(!result)
 		goto done;
 	SetSymmetricDifferenceIterator_LockWrite(self);
@@ -1148,7 +1142,7 @@ ssd_iter(SetSymmetricDifference *__restrict self) {
 	result = DeeGCObject_MALLOC(SetSymmetricDifferenceIterator);
 	if unlikely(!result)
 		goto err;
-	result->ssd_iter = DeeSet_OperatorIter(self->ssd_a);
+	result->ssd_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->ssd_a);
 	if unlikely(!result->ssd_iter)
 		goto err_r;
 	Dee_atomic_rwlock_init(&result->ssd_lock);
@@ -1167,10 +1161,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 ssd_contains(SetSymmetricDifference *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int cona, conb;
-	cona = DeeSet_OperatorContainsAsBool(self->ssd_a, item);
+	cona = DeeObject_InvokeMethodHint(seq_contains, self->ssd_a, item);
 	if unlikely(cona < 0)
 		goto err;
-	conb = DeeSet_OperatorContainsAsBool(self->ssd_b, item);
+	conb = DeeObject_InvokeMethodHint(seq_contains, self->ssd_b, item);
 	if unlikely(conb < 0)
 		goto err;
 	result = DeeBool_For(!!cona ^ !!conb);
@@ -1189,11 +1183,11 @@ ssd_foreach(SetSymmetricDifference *__restrict self, Dee_foreach_t proc, void *a
 	data.feicid_seq  = self->ssd_b;
 	data.feicid_proc = proc;
 	data.feicid_arg  = arg;
-	r1 = DeeSet_OperatorForeach(self->ssd_a, &su_foreach_if_not_contained_in_cb, &data);
+	r1 = DeeObject_InvokeMethodHint(set_operator_foreach, self->ssd_a, &su_foreach_if_not_contained_in_cb, &data);
 	if unlikely(r1 < 0)
 		return r1;
 	data.feicid_seq = self->ssd_a;
-	r2 = DeeSet_OperatorForeach(self->ssd_b, &su_foreach_if_not_contained_in_cb, &data);
+	r2 = DeeObject_InvokeMethodHint(set_operator_foreach, self->ssd_b, &su_foreach_if_not_contained_in_cb, &data);
 	if unlikely(r2 < 0)
 		return r2;
 	return r1 + r2;
@@ -1202,7 +1196,7 @@ ssd_foreach(SetSymmetricDifference *__restrict self, Dee_foreach_t proc, void *a
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssd_bool(SetSymmetricDifference *__restrict self) {
 	/* `(a ^ b) != {}'    <=>    `a != b' */
-	int result = DeeSet_OperatorCompareEq(self->ssd_a, self->ssd_b);
+	int result = DeeObject_InvokeMethodHint(set_operator_compare_eq, self->ssd_a, self->ssd_b);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return result == 0 ? 0 : 1;
@@ -1211,23 +1205,20 @@ err:
 }
 
 PRIVATE struct type_seq ssd_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssd_iter,
-	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssd_contains,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ssd_foreach,
-	/* .tp_foreach_pair    = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate       = */ NULL,
-	/* .tp_enumerate_index = */ NULL,
-	/* .tp_iterkeys        = */ NULL,
-	/* .tp_bounditem       = */ NULL,
-	/* .tp_hasitem         = */ NULL,
-	/* .tp_size            = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssd_iter,
+	/* .tp_sizeob       = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssd_contains,
+	/* .tp_getitem      = */ NULL,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
+	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ssd_foreach,
+	/* .tp_foreach_pair = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_bounditem    = */ NULL,
+	/* .tp_hasitem      = */ NULL,
+	/* .tp_size         = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
 };
 
 PRIVATE struct type_member tpconst ssd_class_members[] = {
@@ -1307,7 +1298,7 @@ siiter_ctor(SetIntersectionIterator *__restrict self) {
 	                                                                   : &SetDifference_Type);
 	if unlikely(!self->sii_intersect)
 		goto err;
-	self->sii_iter = DeeSet_OperatorIter(self->sii_intersect->si_a);
+	self->sii_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->sii_intersect->si_a);
 	if unlikely(!self->sii_iter)
 		goto err_isec;
 	self->sii_other = self->sii_intersect->si_b;
@@ -1356,7 +1347,7 @@ siiter_init(SetIntersectionIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->sii_intersect, &SetIntersection_Type))
 		goto err;
-	self->sii_iter = DeeSet_OperatorIter(self->sii_intersect->si_a);
+	self->sii_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->sii_intersect->si_a);
 	if unlikely(!self->sii_iter)
 		goto err;
 	Dee_Incref(self->sii_intersect);
@@ -1376,7 +1367,7 @@ again:
 		goto done;
 
 	/* Check if contained in the second set. */
-	temp = DeeSet_OperatorContainsAsBool(self->sii_other, result);
+	temp = DeeObject_InvokeMethodHint(seq_contains, self->sii_other, result);
 	if (temp <= 0) {
 		Dee_Decref(result);
 		if (!temp) {
@@ -1476,7 +1467,7 @@ si_iter(SetIntersection *__restrict self) {
 	result = DeeObject_MALLOC(SetIntersectionIterator);
 	if unlikely(!result)
 		goto done;
-	result->sii_iter = DeeSet_OperatorIter(self->si_a);
+	result->sii_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->si_a);
 	if unlikely(!result->sii_iter)
 		goto err_r;
 	Dee_Incref(self);
@@ -1494,7 +1485,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 si_contains(SetIntersection *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int temp;
-	result = DeeSet_OperatorContains(self->si_a, item);
+	result = DeeObject_InvokeMethodHint(seq_operator_contains, self->si_a, item);
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
@@ -1505,7 +1496,7 @@ si_contains(SetIntersection *self, DeeObject *item) {
 	Dee_Decref(result);
 
 	/* Check the second set, and forward the return value. */
-	result = DeeSet_OperatorContains(self->si_b, item);
+	result = DeeObject_InvokeMethodHint(seq_operator_contains, self->si_b, item);
 done:
 	return result;
 err_r:
@@ -1519,7 +1510,7 @@ si_foreach(SetIntersection *__restrict self, Dee_foreach_t proc, void *arg) {
 	data.feicid_seq  = self->si_b;
 	data.feicid_proc = proc;
 	data.feicid_arg  = arg;
-	return DeeSet_OperatorForeach(self->si_a, &su_foreach_if_contained_in_cb, &data);
+	return DeeObject_InvokeMethodHint(set_operator_foreach, self->si_a, &su_foreach_if_contained_in_cb, &data);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1528,23 +1519,20 @@ si_bool(SetIntersection *__restrict self) {
 }
 
 PRIVATE struct type_seq si_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_iter,
-	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&si_contains,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&si_foreach,
-	/* .tp_foreach_pair    = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate       = */ NULL,
-	/* .tp_enumerate_index = */ NULL,
-	/* .tp_iterkeys        = */ NULL,
-	/* .tp_bounditem       = */ NULL,
-	/* .tp_hasitem         = */ NULL,
-	/* .tp_size            = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_iter,
+	/* .tp_sizeob       = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&si_contains,
+	/* .tp_getitem      = */ NULL,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
+	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&si_foreach,
+	/* .tp_foreach_pair = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_bounditem    = */ NULL,
+	/* .tp_hasitem      = */ NULL,
+	/* .tp_size         = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
 };
 
 PRIVATE struct type_member tpconst si_class_members[] = {
@@ -1628,7 +1616,7 @@ again:
 	if (!ITER_ISOK(result))
 		goto done;
 	/* Check if contained in the second set. */
-	temp = DeeSet_OperatorContainsAsBool(self->sdi_other, result);
+	temp = DeeObject_InvokeMethodHint(seq_contains, self->sdi_other, result);
 	if (temp != 0) {
 		Dee_Decref(result);
 		if (temp) {
@@ -1718,7 +1706,7 @@ sd_iter(SetDifference *__restrict self) {
 	result = DeeObject_MALLOC(SetDifferenceIterator);
 	if unlikely(!result)
 		goto done;
-	result->sdi_iter = DeeSet_OperatorIter(self->sd_a);
+	result->sdi_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->sd_a);
 	if unlikely(!result->sdi_iter)
 		goto err_r;
 	result->sdi_diff  = self;
@@ -1737,7 +1725,7 @@ sd_contains(SetDifference *self, DeeObject *item) {
 	int temp;
 
 	/* Check the primary set for the object. */
-	temp = DeeSet_OperatorContainsAsBool(self->sd_a, item);
+	temp = DeeObject_InvokeMethodHint(seq_contains, self->sd_a, item);
 	if (temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
@@ -1747,7 +1735,7 @@ sd_contains(SetDifference *self, DeeObject *item) {
 	/* The object is apart of the primary set.
 	 * -> Return true if it's not apart of the secondary set.
 	 * -> Return false otherwise. */
-	temp = DeeSet_OperatorContainsAsBool(self->sd_b, item);
+	temp = DeeObject_InvokeMethodHint(seq_contains, self->sd_b, item);
 	if unlikely(temp < 0)
 		goto err;
 	return_bool_(!temp);
@@ -1761,7 +1749,7 @@ sd_foreach(SetDifference *__restrict self, Dee_foreach_t proc, void *arg) {
 	data.feicid_seq  = self->sd_b;
 	data.feicid_proc = proc;
 	data.feicid_arg  = arg;
-	return DeeSet_OperatorForeach(self->sd_a, &su_foreach_if_not_contained_in_cb, &data);
+	return DeeObject_InvokeMethodHint(set_operator_foreach, self->sd_a, &su_foreach_if_not_contained_in_cb, &data);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1770,23 +1758,20 @@ sd_bool(SetDifference *__restrict self) {
 }
 
 PRIVATE struct type_seq sd_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sd_iter,
-	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sd_contains,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&sd_foreach,
-	/* .tp_foreach_pair    = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate       = */ NULL,
-	/* .tp_enumerate_index = */ NULL,
-	/* .tp_iterkeys        = */ NULL,
-	/* .tp_bounditem       = */ NULL,
-	/* .tp_hasitem         = */ NULL,
-	/* .tp_size            = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sd_iter,
+	/* .tp_sizeob       = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sd_contains,
+	/* .tp_getitem      = */ NULL,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
+	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&sd_foreach,
+	/* .tp_foreach_pair = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_bounditem    = */ NULL,
+	/* .tp_hasitem      = */ NULL,
+	/* .tp_size         = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
 };
 
 PRIVATE struct type_member tpconst sd_class_members[] = {
@@ -1850,7 +1835,7 @@ INTERN DeeTypeObject SetDifference_Type = {
 #define SET_CONTAINSANY_FOREACH_LHS__FOUND SSIZE_MIN
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 set_containsany_foreach_lhs_cb(void *arg, DeeObject *key) {
-	int is_contained = DeeSet_OperatorContainsAsBool((DeeObject *)arg, key);
+	int is_contained = DeeObject_InvokeMethodHint(seq_contains, (DeeObject *)arg, key);
 	if (is_contained != 0) {
 		if unlikely(is_contained < 0)
 			goto err;
@@ -1866,7 +1851,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 set_containsany_foreach_lhs(DeeObject *lhs, DeeObject *rhs) {
 	Dee_ssize_t status;
-	status = DeeSet_OperatorForeach(lhs, &set_containsany_foreach_lhs_cb, rhs);
+	status = DeeObject_InvokeMethodHint(set_operator_foreach, lhs, &set_containsany_foreach_lhs_cb, rhs);
 	if (status == SET_CONTAINSANY_FOREACH_LHS__FOUND)
 		return 1;
 	if (status == 0)
@@ -1878,7 +1863,7 @@ set_containsany_foreach_lhs(DeeObject *lhs, DeeObject *rhs) {
 #define SET_CONTAINSALL_FOREACH_LHS__MISSING SSIZE_MIN
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 set_containsall_foreach_lhs_cb(void *arg, DeeObject *key) {
-	int is_contained = DeeSet_OperatorContainsAsBool((DeeObject *)arg, key);
+	int is_contained = DeeObject_InvokeMethodHint(seq_contains, (DeeObject *)arg, key);
 	if (is_contained <= 0) {
 		if unlikely(is_contained < 0)
 			goto err;
@@ -1894,7 +1879,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 set_containsall_foreach_lhs(DeeObject *lhs, DeeObject *rhs) {
 	Dee_ssize_t status;
-	status = DeeSet_OperatorForeach(lhs, &set_containsall_foreach_lhs_cb, rhs);
+	status = DeeObject_InvokeMethodHint(set_operator_foreach, lhs, &set_containsall_foreach_lhs_cb, rhs);
 	if (status == SET_CONTAINSALL_FOREACH_LHS__MISSING)
 		return 0;
 	if (status == 0)
@@ -1906,9 +1891,9 @@ set_containsall_foreach_lhs(DeeObject *lhs, DeeObject *rhs) {
 /*
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 SetUnion_NonEmpty(DeeObject *a, DeeObject *b) {
-	int result = DeeSet_OperatorBool(a);
+	int result = DeeObject_InvokeMethodHint(set_operator_bool, a);
 	if (result == 0)
-		result = DeeSet_OperatorBool(b);
+		result = DeeObject_InvokeMethodHint(set_operator_bool, b);
 	return result;
 }
 */
@@ -1925,10 +1910,10 @@ SetIntersection_NonEmpty(DeeObject *a, DeeObject *b) {
 		return SetDifference_NonEmpty(a, xb->si_set);
 	} else {
 		size_t size_a, size_b;
-		size_a = DeeSet_OperatorSize(a);
+		size_a = DeeObject_InvokeMethodHint(set_operator_size, a);
 		if unlikely(size_a == (size_t)-1)
 			goto err;
-		size_b = DeeSet_OperatorSize(b);
+		size_b = DeeObject_InvokeMethodHint(set_operator_size, b);
 		if unlikely(size_b == (size_t)-1)
 			goto err;
 		if (size_a < size_b) {

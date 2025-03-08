@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.fill()                                               */
 /************************************************************************/
-[[kw, alias(Sequence.fill -> "seq_fill")]]
+[[kw, alias(Sequence.fill)]]
 __seq_fill__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N) {
 	size_t start = 0, end = (size_t)-1;
 	DeeObject *filler = Dee_None;

@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Set.unify()                                                   */
 /************************************************************************/
-[[alias(Set.unify -> "set_unify")]]
+[[alias(Set.unify)]]
 __set_unify__(key)->?O {
 	DeeObject *key;
 	if (DeeArg_Unpack(argc, argv, "o:__set_unify__", &key))

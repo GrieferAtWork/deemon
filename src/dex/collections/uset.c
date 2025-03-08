@@ -1173,9 +1173,6 @@ PRIVATE struct type_seq uset_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&uset_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&uset_size,
@@ -1211,11 +1208,11 @@ PRIVATE struct type_seq uset_seq = {
 };
 
 PRIVATE struct type_method tpconst uset_methods[] = {
-	TYPE_METHOD_HINTREF(set_pop),
-	TYPE_METHOD_HINTREF(seq_clear),
-	TYPE_METHOD_HINTREF(set_unify),
-	TYPE_METHOD_HINTREF(set_insert),
-	TYPE_METHOD_HINTREF(set_remove),
+	TYPE_METHOD_HINTREF(Set_pop),
+	TYPE_METHOD_HINTREF(Sequence_clear),
+	TYPE_METHOD_HINTREF(Set_unify),
+	TYPE_METHOD_HINTREF(Set_insert),
+	TYPE_METHOD_HINTREF(Set_remove),
 	TYPE_METHOD_END
 };
 
@@ -1568,9 +1565,6 @@ PRIVATE struct type_seq uroset_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&uroset_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&uroset_size,

@@ -23,23 +23,24 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
-#include <deemon/int.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/module.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+/**/
 
-#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -1029,7 +1030,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-modexports_enumerate(ModuleExports *self, Dee_seq_enumerate_t proc, void *arg) {
+modexports_mh_map_enumerate(ModuleExports *self, Dee_seq_enumerate_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
 	DeeModuleObject *mod = self->me_module;
 	Dee_hash_t i;
@@ -1069,6 +1070,16 @@ err:
 	return -1;
 }
 
+PRIVATE struct type_method tpconst modexports_methods[] = {
+	TYPE_METHOD_HINTREF(__map_enumerate__),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst modexports_method_hints[] = {
+	TYPE_METHOD_HINT(map_enumerate, &modexports_mh_map_enumerate),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_seq modexports_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&modexports_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
@@ -1081,9 +1092,6 @@ PRIVATE struct type_seq modexports_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&modexports_enumerate,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&modexports_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&modexports_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&modexports_size,
@@ -1166,12 +1174,13 @@ INTERN DeeTypeObject ModuleExports_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ modexports_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ modexports_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ modexports_class_members,
+	/* .tp_method_hints  = */ modexports_method_hints,
 };
 
 
@@ -1335,7 +1344,7 @@ modglobals_delitem_index(ModuleGlobals *self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-modglobals_enumerate_index(ModuleGlobals *__restrict self,
+modglobals_mh_seq_enumerate_index(ModuleGlobals *__restrict self,
                            Dee_seq_enumerate_index_t proc,
                            void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
@@ -1370,12 +1379,14 @@ err:
 }
 
 PRIVATE struct type_method tpconst modglobals_methods[] = {
-	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst modglobals_method_hints[] = {
 	TYPE_METHOD_HINT(seq_xchitem_index, &modglobals_xchitem_index),
+	TYPE_METHOD_HINT(seq_enumerate_index, &modglobals_mh_seq_enumerate_index),
 	TYPE_METHOD_HINT_END
 };
 
@@ -1391,9 +1402,6 @@ PRIVATE struct type_seq modglobals_seq = {
 	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach            = */ DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index),
 	/* .tp_foreach_pair       = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
-	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&modglobals_enumerate_index,
-	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__hasitem_index),
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&modglobals_size,

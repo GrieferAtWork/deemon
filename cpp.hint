@@ -1418,12 +1418,6 @@
 #define DEFINE_ANY_BYTES_TRAIT(n,...) DeeObject*bytes_##n(Bytes*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
 #define SUPER_PRIVATE_EXPANDARGS(...) (DeeTypeObject *tp_self, __VA_ARGS__)
 #define DEFINE_OPERATOR(return,n,args) return DeeObject_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeObject_##n args
-#define DEFINE_INTERNAL_OPERATOR(return,n,args) return DeeObject_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeObject_##n args
-#define DEFINE_INTERNAL_SEQ_OPERATOR(return,n,args) return DeeSeq_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeSeq_##n args
-#define DEFINE_INTERNAL_SET_OPERATOR(return,n,args) return DeeSet_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeSet_##n args
-#define DEFINE_INTERNAL_MAP_OPERATOR(return,n,args) return DeeMap_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeMap_##n args
-#define DEFINE_DEFAULT_FOO_WITH_INPLACE_FOO_OPERATOR(x,...) DEFINE_INTERNAL_OPERATOR(DeeObject*,Default##x##WithInplace##x,(DeeObject*self,DeeObject*other)){}
-#define DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR(x,...) DEFINE_INTERNAL_OPERATOR(DeeObject*,DefaultInplace##x##With##x,(DeeObject*self,DeeObject*other)){}
 #define DEFINE_FILE_OPERATOR(return,n,args) return DeeFile_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeFile_##n args
 #define DEFINE_MATH_INPLACE_INT_OPERATOR(n,a,b,c,...) int n(DeeObject**restrict p_self,c val){}
 #define DEF_STRING(n,a,b,c) DeeStringObject n={};

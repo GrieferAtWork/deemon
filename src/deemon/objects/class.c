@@ -32,6 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/string.h>
+#include <deemon/seq.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
@@ -3139,7 +3140,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 			goto err;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 			struct class_attribute *at;
-			if unlikely(DeeObject_Unpack(elem, 2, data))
+			if unlikely(DeeSeq_Unpack(elem, 2, data))
 				goto err_iter_elem;
 			Dee_Decref(elem);
 			if (DeeObject_AssertTypeExact(data[0], &DeeString_Type))

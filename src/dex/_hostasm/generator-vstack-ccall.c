@@ -313,13 +313,13 @@ err:
 /* map, key, [value] -> result */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cca_Mapping_setdefault(struct fungen *__restrict self, vstackaddr_t argc) {
-	Dee_mh_map_setdefault_t mh_map_setdefault;
+	DeeMH_map_setdefault_t mh_map_setdefault;
 	DeeTypeObject *map_type = memval_typeof(fg_vtop(self) - argc);
 	if unlikely(!map_type)
 		return 1; /* Shouldn't happen since we only get called when types are known... */
 	if (argc < 2)
 		DO(fg_vpush_none(self)); /* map, key, value */
-	mh_map_setdefault = DeeType_RequireMapSetDefault(map_type);
+	mh_map_setdefault = DeeType_RequireMethodHint(map_type, map_setdefault);
 	DO(fg_vnotoneref(self, 2));                                  /* this, key, value */
 	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SETITEM, 2)); /* this, key, value */
 	return fg_vcallapi(self, mh_map_setdefault, VCALL_CC_OBJECT, 3);

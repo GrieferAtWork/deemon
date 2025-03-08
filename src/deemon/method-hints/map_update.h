@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.update()                                              */
 /************************************************************************/
-[[alias(Mapping.update -> "map_update")]]
+[[alias(Mapping.update)]]
 __map_update__(items:?X3?DMapping?M?O?O?S?T2?O?O) {
 	DeeObject *items;
 	if (DeeArg_Unpack(argc, argv, "o:__map_update__", &items))

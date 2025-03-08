@@ -1388,7 +1388,7 @@ tuple_asvector_nothrow(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-tuple_unpack(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+tuple_mh_seq_unpack(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	if unlikely(self->t_size != dst_length)
 		return err_invalid_unpack_size((DeeObject *)self, dst_length, self->t_size);
 	Dee_Movrefv(dst, self->t_elem, dst_length);
@@ -1396,7 +1396,7 @@ tuple_unpack(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-tuple_unpack_ex(Tuple *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst) {
+tuple_mh_seq_unpack_ex(Tuple *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst) {
 	if unlikely(self->t_size < dst_length_min || self->t_size > dst_length_max)
 		return (size_t)err_invalid_unpack_size_minmax((DeeObject *)self, dst_length_min, dst_length_max, self->t_size);
 	Dee_Movrefv(dst, self->t_elem, self->t_size);
@@ -1415,9 +1415,6 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&tuple_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&tuple_mh_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&tuple_size,
@@ -1450,9 +1447,6 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
 	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_asvector_nothrow,
 	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_asvector_nothrow,
-	/* .tp_unpack                     = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_unpack,
-	/* .tp_unpack_ex                  = */ (size_t (DCALL *)(DeeObject *, size_t, size_t, DREF DeeObject **))&tuple_unpack_ex,
-	/* .tp_unpack_ub                  = */ NULL,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL
@@ -1465,7 +1459,7 @@ tuple_unpack_method(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv
 	result = DeeTuple_NewUninitialized(num_items);
 	if unlikely(!result)
 		goto done;
-	if unlikely(DeeObject_Unpack(seq, num_items, DeeTuple_ELEM(result))) {
+	if unlikely(DeeSeq_Unpack(seq, num_items, DeeTuple_ELEM(result))) {
 		DeeTuple_FreeUninitialized(result);
 err:
 		result = NULL;
@@ -1832,31 +1826,36 @@ err_temp:
 }
 
 PRIVATE struct type_method tpconst tuple_methods[] = {
-	TYPE_METHOD_HINTREF(seq_find),
-	TYPE_METHOD_HINTREF(seq_rfind),
-	TYPE_METHOD_HINTREF(seq_sorted),
+	TYPE_METHOD_HINTREF(Sequence_find),
+	TYPE_METHOD_HINTREF(Sequence_rfind),
+	TYPE_METHOD_HINTREF(Sequence_sorted),
+	TYPE_METHOD_HINTREF(Sequence_unpack),
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst tuple_method_hints[] = {
-	TYPE_METHOD_HINT_F(seq_foreach_reverse, &tuple_mh_foreach_reverse, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_enumerate_index, &tuple_mh_enumerate_index, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &tuple_mh_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_foreach_reverse, &tuple_mh_foreach_reverse, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &tuple_mh_enumerate_index, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &tuple_mh_enumerate_index_reverse, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 	TYPE_METHOD_HINT_F(seq_find, &tuple_mh_find, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_find_with_key, &tuple_mh_find_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_rfind, &tuple_mh_rfind, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_rfind_with_key, &tuple_mh_rfind_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_sorted, &tuple_mh_sorted, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_sorted_with_key, &tuple_mh_sorted_with_key, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_trygetfirst, &tuple_trygetfirst, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_trygetlast, &tuple_trygetlast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_trygetfirst, &tuple_trygetfirst, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_METHOD_HINT_F(seq_trygetlast, &tuple_trygetlast, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_METHOD_HINT_F(seq_unpack, &tuple_mh_seq_unpack, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_METHOD_HINT_F(seq_unpack_ex, &tuple_mh_seq_unpack_ex, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_getset tpconst tuple_getsets[] = {
-	TYPE_GETTER_BOUND_F_NODOC(STR_first, &tuple_getfirst, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
-	TYPE_GETTER_BOUND_F_NODOC(STR_last, &tuple_getlast, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_GETTER_BOUND_F_NODOC(STR_first, &tuple_getfirst, &tuple_nonempty_as_bound,
+	                          METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_GETTER_BOUND_F_NODOC(STR_last, &tuple_getlast, &tuple_nonempty_as_bound,
+	                          METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 #define nullable_tuple_getsets (tuple_getsets + 2)
 	TYPE_GETTER_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
@@ -2420,7 +2419,8 @@ nullable_tuple_unpack(DeeObject *UNUSED(self), size_t argc, DeeObject *const *ar
 	result = DeeTuple_NewUninitialized(num_items);
 	if unlikely(!result)
 		goto done;
-	if unlikely(DeeObject_UnpackWithUnbound(init, num_items, DeeTuple_ELEM(result))) {
+	if unlikely(DeeObject_InvokeMethodHint(seq_unpack_ub, init, num_items,
+	                                       num_items, DeeTuple_ELEM(result)) == (size_t)-1) {
 		DeeTuple_FreeUninitialized(result);
 err:
 		result = NULL;
@@ -2544,12 +2544,12 @@ nullable_tuple_trygetitem_index(Tuple *__restrict self, size_t index) {
 	return_reference(self->t_elem[index]);
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-nullable_tuple_unpack_ub(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
-	if unlikely(self->t_size != dst_length)
-		return err_invalid_unpack_size((DeeObject *)self, dst_length, self->t_size);
-	Dee_XMovrefv(dst, self->t_elem, dst_length);
-	return 0;
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+nullable_tuple_mh_seq_unpack_ub(Tuple *self, size_t min_count, size_t max_count, /*out*/ DREF DeeObject **dst) {
+	if unlikely(self->t_size < min_count || self->t_size > max_count)
+		return err_invalid_unpack_size_minmax((DeeObject *)self, min_count, max_count, self->t_size);
+	Dee_XMovrefv(dst, self->t_elem, self->t_size);
+	return self->t_size;
 }
 
 
@@ -2565,9 +2565,6 @@ PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&nullable_tuple_mh_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&tuple_size,
@@ -2600,9 +2597,6 @@ PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
 	/* .tp_asvector                   = */ NULL, /* TODO */
 	/* .tp_asvector_nothrow           = */ NULL, /* TODO */
-	/* .tp_unpack                     = */ NULL,
-	/* .tp_unpack_ex                  = */ NULL,
-	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&nullable_tuple_unpack_ub,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -2628,10 +2622,12 @@ PRIVATE struct type_method_hint tpconst nullable_tuple_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_foreach_reverse, &nullable_tuple_mh_foreach_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_enumerate_index, &nullable_tuple_mh_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &nullable_tuple_mh_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_unpack_ub, &nullable_tuple_mh_seq_unpack_ub, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_method tpconst nullable_tuple_methods[] = {
+	TYPE_METHOD_HINTREF(Sequence_unpackub),
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };

@@ -59,12 +59,12 @@ struct map_foreach_pair_filter_keys {
 	DeeObject         *mfpfk_keys; /* [1..1] Keys that should be included/excluded (based on callback used) */
 };
 
-PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL /* Using `DeeSet_OperatorContainsAsBool' */
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL /* Using `seq_contains' */
 map_foreach_pair_with_setkeys_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int temp;
 	struct map_foreach_pair_filter_keys *data;
 	data = (struct map_foreach_pair_filter_keys *)arg;
-	temp = DeeSet_OperatorContainsAsBool(data->mfpfk_keys, key);
+	temp = DeeObject_InvokeMethodHint(seq_contains, data->mfpfk_keys, key);
 	if (temp != 0) {
 		if unlikely(temp < 0)
 			goto err;
@@ -75,12 +75,12 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL /* Using `DeeSet_OperatorContainsAsBool' */
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL /* Using `seq_contains' */
 map_foreach_pair_without_setkeys_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int temp;
 	struct map_foreach_pair_filter_keys *data;
 	data = (struct map_foreach_pair_filter_keys *)arg;
-	temp = DeeSet_OperatorContainsAsBool(data->mfpfk_keys, key);
+	temp = DeeObject_InvokeMethodHint(seq_contains, data->mfpfk_keys, key);
 	if (temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
@@ -135,9 +135,9 @@ mu_ctor(MapUnion *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mu_bool(MapUnion *__restrict self) {
-	int result = DeeMap_OperatorBool(self->mu_a);
+	int result = DeeObject_InvokeMethodHint(seq_operator_bool, self->mu_a);
 	if likely(result == 0)
-		result = DeeMap_OperatorBool(self->mu_b);
+		result = DeeObject_InvokeMethodHint(seq_operator_bool, self->mu_b);
 	return result;
 }
 
@@ -146,7 +146,7 @@ mu_iter(MapUnion *__restrict self) {
 	DREF MapUnionIterator *result = DeeGCObject_MALLOC(MapUnionIterator);
 	if unlikely(!result)
 		goto err;
-	result->mui_iter = DeeMap_OperatorIter(self->mu_a);
+	result->mui_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->mu_a);
 	if unlikely(!result->mui_iter)
 		goto err_r;
 	Dee_Incref(self);
@@ -165,7 +165,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mu_contains(MapUnion *__restrict self, DeeObject *key) {
 	DREF DeeObject *result;
 	int temp;
-	result = DeeMap_OperatorContains(self->mu_a, key);
+	result = DeeObject_InvokeMethodHint(map_operator_contains, self->mu_a, key);
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
@@ -176,7 +176,7 @@ mu_contains(MapUnion *__restrict self, DeeObject *key) {
 	Dee_Decref_unlikely(result);
 
 	/* Check the second set, and forward the return value. */
-	result = DeeMap_OperatorContains(self->mu_b, key);
+	result = DeeObject_InvokeMethodHint(map_operator_contains, self->mu_b, key);
 done:
 	return result;
 err_r:
@@ -186,33 +186,33 @@ err_r:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mu_getitem(MapUnion *__restrict self, DeeObject *key) {
-	DREF DeeObject *result = DeeMap_OperatorTryGetItem(self->mu_a, key);
+	DREF DeeObject *result = DeeObject_InvokeMethodHint(map_operator_trygetitem, self->mu_a, key);
 	if (result == ITER_DONE)
-		result = DeeMap_OperatorGetItem(self->mu_b, key);
+		result = DeeObject_InvokeMethodHint(map_operator_getitem, self->mu_b, key);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mu_trygetitem(MapUnion *__restrict self, DeeObject *key) {
-	DREF DeeObject *result = DeeMap_OperatorTryGetItem(self->mu_a, key);
+	DREF DeeObject *result = DeeObject_InvokeMethodHint(map_operator_trygetitem, self->mu_a, key);
 	if (result == ITER_DONE)
-		result = DeeMap_OperatorTryGetItem(self->mu_b, key);
+		result = DeeObject_InvokeMethodHint(map_operator_trygetitem, self->mu_b, key);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mu_hasitem(MapUnion *__restrict self, DeeObject *key) {
-	int result = DeeMap_OperatorHasItem(self->mu_a, key);
+	int result = DeeObject_InvokeMethodHint(map_operator_hasitem, self->mu_a, key);
 	if (result == 0)
-		result = DeeMap_OperatorHasItem(self->mu_b, key);
+		result = DeeObject_InvokeMethodHint(map_operator_hasitem, self->mu_b, key);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mu_bounditem(MapUnion *__restrict self, DeeObject *key) {
-	int result = DeeMap_OperatorBoundItem(self->mu_a, key);
+	int result = DeeObject_InvokeMethodHint(map_operator_bounditem, self->mu_a, key);
 	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
-		int result2 = DeeMap_OperatorBoundItem(self->mu_b, key);
+		int result2 = DeeObject_InvokeMethodHint(map_operator_bounditem, self->mu_b, key);
 		if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2))
 			result = result2;
 	}
@@ -221,33 +221,33 @@ mu_bounditem(MapUnion *__restrict self, DeeObject *key) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mu_getitem_index(MapUnion *__restrict self, size_t key) {
-	DREF DeeObject *result = DeeMap_OperatorTryGetItemIndex(self->mu_a, key);
+	DREF DeeObject *result = DeeObject_InvokeMethodHint(map_operator_trygetitem_index, self->mu_a, key);
 	if (result == ITER_DONE)
-		result = DeeMap_OperatorGetItemIndex(self->mu_b, key);
+		result = DeeObject_InvokeMethodHint(map_operator_getitem_index, self->mu_b, key);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mu_trygetitem_index(MapUnion *__restrict self, size_t key) {
-	DREF DeeObject *result = DeeMap_OperatorTryGetItemIndex(self->mu_a, key);
+	DREF DeeObject *result = DeeObject_InvokeMethodHint(map_operator_trygetitem_index, self->mu_a, key);
 	if (result == ITER_DONE)
-		result = DeeMap_OperatorTryGetItemIndex(self->mu_b, key);
+		result = DeeObject_InvokeMethodHint(map_operator_trygetitem_index, self->mu_b, key);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mu_hasitem_index(MapUnion *__restrict self, size_t key) {
-	int result = DeeMap_OperatorHasItemIndex(self->mu_a, key);
+	int result = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->mu_a, key);
 	if (result == 0)
-		result = DeeMap_OperatorHasItemIndex(self->mu_b, key);
+		result = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->mu_b, key);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mu_bounditem_index(MapUnion *__restrict self, size_t key) {
-	int result = DeeMap_OperatorBoundItemIndex(self->mu_a, key);
+	int result = DeeObject_InvokeMethodHint(map_operator_bounditem_index, self->mu_a, key);
 	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
-		int result2 = DeeMap_OperatorBoundItemIndex(self->mu_b, key);
+		int result2 = DeeObject_InvokeMethodHint(map_operator_bounditem_index, self->mu_b, key);
 		if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2))
 			result = result2;
 	}
@@ -256,33 +256,33 @@ mu_bounditem_index(MapUnion *__restrict self, size_t key) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mu_getitem_string_hash(MapUnion *__restrict self, char const *key, Dee_hash_t hash) {
-	DREF DeeObject *result = DeeMap_OperatorTryGetItemStringHash(self->mu_a, key, hash);
+	DREF DeeObject *result = DeeObject_InvokeMethodHint(map_operator_trygetitem_string_hash, self->mu_a, key, hash);
 	if (result == ITER_DONE)
-		result = DeeMap_OperatorGetItemStringHash(self->mu_b, key, hash);
+		result = DeeObject_InvokeMethodHint(map_operator_getitem_string_hash, self->mu_b, key, hash);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mu_trygetitem_string_hash(MapUnion *__restrict self, char const *key, Dee_hash_t hash) {
-	DREF DeeObject *result = DeeMap_OperatorTryGetItemStringHash(self->mu_a, key, hash);
+	DREF DeeObject *result = DeeObject_InvokeMethodHint(map_operator_trygetitem_string_hash, self->mu_a, key, hash);
 	if (result == ITER_DONE)
-		result = DeeMap_OperatorTryGetItemStringHash(self->mu_b, key, hash);
+		result = DeeObject_InvokeMethodHint(map_operator_trygetitem_string_hash, self->mu_b, key, hash);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mu_hasitem_string_hash(MapUnion *__restrict self, char const *key, Dee_hash_t hash) {
-	int result = DeeMap_OperatorHasItemStringHash(self->mu_a, key, hash);
+	int result = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->mu_a, key, hash);
 	if (result == 0)
-		result = DeeMap_OperatorHasItemStringHash(self->mu_b, key, hash);
+		result = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->mu_b, key, hash);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mu_bounditem_string_hash(MapUnion *__restrict self, char const *key, Dee_hash_t hash) {
-	int result = DeeMap_OperatorBoundItemStringHash(self->mu_a, key, hash);
+	int result = DeeObject_InvokeMethodHint(map_operator_bounditem_string_hash, self->mu_a, key, hash);
 	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
-		int result2 = DeeMap_OperatorBoundItemStringHash(self->mu_b, key, hash);
+		int result2 = DeeObject_InvokeMethodHint(map_operator_bounditem_string_hash, self->mu_b, key, hash);
 		if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2))
 			result = result2;
 	}
@@ -291,33 +291,33 @@ mu_bounditem_string_hash(MapUnion *__restrict self, char const *key, Dee_hash_t 
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mu_getitem_string_len_hash(MapUnion *__restrict self, char const *key, size_t keylen, Dee_hash_t hash) {
-	DREF DeeObject *result = DeeMap_OperatorTryGetItemStringLenHash(self->mu_a, key, keylen, hash);
+	DREF DeeObject *result = DeeObject_InvokeMethodHint(map_operator_trygetitem_string_len_hash, self->mu_a, key, keylen, hash);
 	if (result == ITER_DONE)
-		result = DeeMap_OperatorGetItemStringLenHash(self->mu_b, key, keylen, hash);
+		result = DeeObject_InvokeMethodHint(map_operator_getitem_string_len_hash, self->mu_b, key, keylen, hash);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mu_trygetitem_string_len_hash(MapUnion *__restrict self, char const *key, size_t keylen, Dee_hash_t hash) {
-	DREF DeeObject *result = DeeMap_OperatorTryGetItemStringLenHash(self->mu_a, key, keylen, hash);
+	DREF DeeObject *result = DeeObject_InvokeMethodHint(map_operator_trygetitem_string_len_hash, self->mu_a, key, keylen, hash);
 	if (result == ITER_DONE)
-		result = DeeMap_OperatorTryGetItemStringLenHash(self->mu_b, key, keylen, hash);
+		result = DeeObject_InvokeMethodHint(map_operator_trygetitem_string_len_hash, self->mu_b, key, keylen, hash);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mu_hasitem_string_len_hash(MapUnion *__restrict self, char const *key, size_t keylen, Dee_hash_t hash) {
-	int result = DeeMap_OperatorHasItemStringLenHash(self->mu_a, key, keylen, hash);
+	int result = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->mu_a, key, keylen, hash);
 	if (result == 0)
-		result = DeeMap_OperatorHasItemStringLenHash(self->mu_b, key, keylen, hash);
+		result = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->mu_b, key, keylen, hash);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mu_bounditem_string_len_hash(MapUnion *__restrict self, char const *key, size_t keylen, Dee_hash_t hash) {
-	int result = DeeMap_OperatorBoundItemStringLenHash(self->mu_a, key, keylen, hash);
+	int result = DeeObject_InvokeMethodHint(map_operator_bounditem_string_len_hash, self->mu_a, key, keylen, hash);
 	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
-		int result2 = DeeMap_OperatorBoundItemStringLenHash(self->mu_b, key, keylen, hash);
+		int result2 = DeeObject_InvokeMethodHint(map_operator_bounditem_string_len_hash, self->mu_b, key, keylen, hash);
 		if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2))
 			result = result2;
 	}
@@ -326,14 +326,14 @@ mu_bounditem_string_len_hash(MapUnion *__restrict self, char const *key, size_t 
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 mu_foreach_pair(MapUnion *__restrict self, Dee_foreach_pair_t cb, void *arg) {
-	Dee_ssize_t result = DeeMap_OperatorForeachPair(self->mu_a, cb, arg);
+	Dee_ssize_t result = DeeObject_InvokeMethodHint(map_operator_foreach_pair, self->mu_a, cb, arg);
 	if likely(result >= 0) {
 		Dee_ssize_t temp;
 		struct map_foreach_pair_filter_keys data;
 		data.mfpfk_cb            = cb;
 		data.mfpfk_arg           = arg;
 		data.mfpfk_keys = self->mu_a;
-		temp = DeeMap_OperatorForeachPair(self->mu_b, &map_foreach_pair_without_mapkeys_cb, &data);
+		temp = DeeObject_InvokeMethodHint(map_operator_foreach_pair, self->mu_b, &map_foreach_pair_without_mapkeys_cb, &data);
 		if unlikely(temp < 0)
 			return temp;
 		result += temp;
@@ -353,9 +353,6 @@ PRIVATE struct type_seq mu_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&mu_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&mu_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&mu_hasitem,
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach_pair),
@@ -455,7 +452,7 @@ muiter_ctor(MapUnionIterator *__restrict self) {
 	                                                        : &MapSymmetricDifference_Type);
 	if unlikely(!self->mui_union)
 		goto err;
-	self->mui_iter = DeeMap_OperatorIter(self->mui_union->mu_a);
+	self->mui_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->mui_union->mu_a);
 	if unlikely(!self->mui_iter)
 		goto err_union;
 	Dee_atomic_rwlock_init(&self->mui_lock);
@@ -596,7 +593,7 @@ muiter_init(MapUnionIterator *__restrict self,
 	                              ? &MapUnion_Type
 	                              : &MapSymmetricDifference_Type))
 		goto err;
-	if ((self->mui_iter = DeeMap_OperatorIter(self->mui_union->mu_a)) == NULL)
+	if ((self->mui_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->mui_union->mu_a)) == NULL)
 		goto err;
 	Dee_Incref(self->mui_union);
 	Dee_atomic_rwlock_init(&self->mui_lock);
@@ -643,7 +640,7 @@ read_from_iter:
 			goto done;
 
 		/* End of first iterator -> try to switch to the second iterator. */
-		iter2 = DeeMap_OperatorIter(self->mui_union->mu_b);
+		iter2 = DeeObject_InvokeMethodHint(map_operator_iter, self->mui_union->mu_b);
 		if unlikely(!iter2)
 			goto err;
 		MapUnionIterator_LockWrite(self);
@@ -701,7 +698,7 @@ read_from_iter:
 			goto done;
 
 		/* End of first iterator -> try to switch to the second iterator. */
-		iter2 = DeeMap_OperatorIter(self->mui_union->mu_b);
+		iter2 = DeeObject_InvokeMethodHint(map_operator_iter, self->mui_union->mu_b);
 		if unlikely(!iter2)
 			goto err;
 		MapUnionIterator_LockWrite(self);
@@ -732,7 +729,7 @@ muiter_advance(MapUnionIterator *__restrict self, size_t step) {
 	MapUnionIterator_LockRead(self);
 	if (self->mui_in2nd) {
 		MapUnionIterator_LockEndRead(self);
-		return DeeObject_DefaultIterAdvanceWithIterNextKey((DeeObject *)self, step);
+		return default__advance__with__nextkey((DeeObject *)self, step);
 	}
 	iter = self->mui_iter;
 	Dee_Incref(iter);
@@ -742,7 +739,7 @@ muiter_advance(MapUnionIterator *__restrict self, size_t step) {
 	if (result >= step /* || unlikely(result == (size_t)-1)*/)
 		return result; /* Error, or fully "step" was fully applied */
 	/* Must use default for remaining steps. */
-	temp = DeeObject_DefaultIterAdvanceWithIterNextKey((DeeObject *)self, step - result);
+	temp = default__advance__with__nextkey((DeeObject *)self, step - result);
 	if unlikely(temp == (size_t)-1)
 		goto err;
 	return result + temp;
@@ -961,7 +958,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mi_bool(MapIntersection *__restrict self) {
 	/* >> mi_map.CONTAINS_ANY(mi_keys) */
-	Dee_ssize_t status = DeeSet_OperatorForeach(self->mi_keys, &map_containsany_foreach_cb, self->mi_map);
+	Dee_ssize_t status = DeeObject_InvokeMethodHint(set_operator_foreach, self->mi_keys, &map_containsany_foreach_cb, self->mi_map);
 	if (status == 0)
 		return 0;
 	if (status == MAP_CONTAINSANY_FOREACH__FOUND)
@@ -974,7 +971,7 @@ mi_iter(MapIntersection *__restrict self) {
 	DREF MapIntersectionIterator *result = DeeObject_MALLOC(MapIntersectionIterator);
 	if unlikely(!result)
 		goto err;
-	result->mii_iter = DeeMap_OperatorIter(self->mi_map);
+	result->mii_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->mi_map);
 	if unlikely(!result->mii_iter)
 		goto err_r;
 	Dee_Incref(self);
@@ -996,20 +993,20 @@ mi_contains(MapIntersection *__restrict self, DeeObject *key) {
 			goto err;
 		return_false;
 	}
-	return DeeSet_OperatorContains(self->mi_keys, key);
+	return DeeObject_InvokeMethodHint(seq_operator_contains, self->mi_keys, key);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mi_getitem(MapIntersection *__restrict self, DeeObject *key) {
-	int temp = DeeSet_OperatorContainsAsBool(self->mi_keys, key);
+	int temp = DeeObject_InvokeMethodHint(seq_contains, self->mi_keys, key);
 	if unlikely(temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
 		goto err_key;
 	}
-	return DeeMap_OperatorGetItem(self->mi_map, key);
+	return DeeObject_InvokeMethodHint(map_operator_getitem, self->mi_map, key);
 err_key:
 	err_unknown_key((DeeObject *)self, key);
 err:
@@ -1018,39 +1015,39 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mi_trygetitem(MapIntersection *__restrict self, DeeObject *key) {
-	int temp = DeeSet_OperatorContainsAsBool(self->mi_keys, key);
+	int temp = DeeObject_InvokeMethodHint(seq_contains, self->mi_keys, key);
 	if unlikely(temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
 		return ITER_DONE;
 	}
-	return DeeMap_OperatorTryGetItem(self->mi_map, key);
+	return DeeObject_InvokeMethodHint(map_operator_trygetitem, self->mi_map, key);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mi_hasitem(MapIntersection *__restrict self, DeeObject *key) {
-	int temp = DeeSet_OperatorContainsAsBool(self->mi_keys, key);
+	int temp = DeeObject_InvokeMethodHint(seq_contains, self->mi_keys, key);
 	if unlikely(temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
 		return 0;
 	}
-	return DeeMap_OperatorHasItem(self->mi_map, key);
+	return DeeObject_InvokeMethodHint(map_operator_hasitem, self->mi_map, key);
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mi_bounditem(MapIntersection *__restrict self, DeeObject *key) {
-	int temp = DeeSet_OperatorContainsAsBool(self->mi_keys, key);
+	int temp = DeeObject_InvokeMethodHint(seq_contains, self->mi_keys, key);
 	if unlikely(temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
 		return Dee_BOUND_MISSING;
 	}
-	return DeeMap_OperatorBoundItem(self->mi_map, key);
+	return DeeObject_InvokeMethodHint(map_operator_bounditem, self->mi_map, key);
 err:
 	return Dee_BOUND_ERR;
 }
@@ -1062,7 +1059,7 @@ mi_foreach_pair(MapIntersection *__restrict self, Dee_foreach_pair_t cb, void *a
 	data.mfpfk_cb   = cb;
 	data.mfpfk_arg  = arg;
 	data.mfpfk_keys = self->mi_keys;
-	return DeeMap_OperatorForeachPair(self->mi_map, &map_foreach_pair_with_setkeys_cb, &data);
+	return DeeObject_InvokeMethodHint(map_operator_foreach_pair, self->mi_map, &map_foreach_pair_with_setkeys_cb, &data);
 }
 
 PRIVATE struct type_seq mi_seq = {
@@ -1077,9 +1074,6 @@ PRIVATE struct type_seq mi_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&mi_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&mi_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&mi_hasitem,
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach_pair),
@@ -1180,7 +1174,7 @@ miiter_ctor(MapIntersectionIterator *__restrict self) {
 	                                                                   : &MapDifference_Type);
 	if unlikely(!self->mii_intersect)
 		goto err;
-	self->mii_iter = DeeMap_OperatorIter(self->mii_intersect->mi_map);
+	self->mii_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->mii_intersect->mi_map);
 	if unlikely(!self->mii_iter)
 		goto err_intersect;
 	self->mii_keys = self->mii_intersect->mi_keys;
@@ -1234,7 +1228,7 @@ miiter_init(MapIntersectionIterator *self,
 	                         ? &MapIntersection_Type
 	                         : &MapDifference_Type))
 		goto err;
-	self->mii_iter = DeeMap_OperatorIter(self->mii_intersect->mi_map);
+	self->mii_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->mii_intersect->mi_map);
 	if unlikely(!self->mii_iter)
 		goto err;
 	Dee_Incref(self->mii_intersect);
@@ -1266,7 +1260,7 @@ again:
 	result = DeeObject_IterNextPair(self->mii_iter, key_and_value);
 	if (result != 0)
 		return result; /* error, or ITER_DONE */
-	temp = DeeSet_OperatorContainsAsBool(self->mii_keys, key_and_value[0]);
+	temp = DeeObject_InvokeMethodHint(seq_contains, self->mii_keys, key_and_value[0]);
 	if likely(temp > 0)
 		return 0;
 	Dee_Decref(key_and_value[1]);
@@ -1288,7 +1282,7 @@ again:
 	result = DeeObject_IterNextKey(self->mii_iter);
 	if (!ITER_ISOK(result))
 		return result; /* error, or ITER_DONE */
-	temp = DeeSet_OperatorContainsAsBool(self->mii_keys, result);
+	temp = DeeObject_InvokeMethodHint(seq_contains, self->mii_keys, result);
 	if likely(temp > 0)
 		return result;
 	Dee_Decref(result);
@@ -1406,7 +1400,7 @@ md_iter(MapDifference *__restrict self) {
 	DREF MapDifferenceIterator *result = DeeObject_MALLOC(MapDifferenceIterator);
 	if unlikely(!result)
 		goto err;
-	result->mdi_iter = DeeMap_OperatorIter(self->md_map);
+	result->mdi_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->md_map);
 	if unlikely(!result->mdi_iter)
 		goto err_r;
 	Dee_Incref(self);
@@ -1422,66 +1416,66 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 md_contains(MapDifference *self, DeeObject *key) {
-	int in_keys = DeeSet_OperatorContainsAsBool(self->md_keys, key);
+	int in_keys = DeeObject_InvokeMethodHint(seq_contains, self->md_keys, key);
 	if (in_keys != 0) {
 		if unlikely(in_keys < 0)
 			goto err;
 		return_false;
 	}
-	return DeeMap_OperatorContains(self->md_map, key);
+	return DeeObject_InvokeMethodHint(map_operator_contains, self->md_map, key);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 md_getitem(MapDifference *self, DeeObject *key) {
-	int in_keys = DeeSet_OperatorContainsAsBool(self->md_keys, key);
+	int in_keys = DeeObject_InvokeMethodHint(seq_contains, self->md_keys, key);
 	if unlikely(in_keys != 0) {
 		if unlikely(in_keys < 0)
 			goto err;
 		err_unknown_key((DeeObject *)self, key);
 		goto err;
 	}
-	return DeeMap_OperatorGetItem(self->md_map, key);
+	return DeeObject_InvokeMethodHint(map_operator_getitem, self->md_map, key);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 md_trygetitem(MapDifference *self, DeeObject *key) {
-	int in_keys = DeeSet_OperatorContainsAsBool(self->md_keys, key);
+	int in_keys = DeeObject_InvokeMethodHint(seq_contains, self->md_keys, key);
 	if unlikely(in_keys != 0) {
 		if unlikely(in_keys < 0)
 			goto err;
 		return ITER_DONE;
 	}
-	return DeeMap_OperatorTryGetItem(self->md_map, key);
+	return DeeObject_InvokeMethodHint(map_operator_trygetitem, self->md_map, key);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 md_bounditem(MapDifference *self, DeeObject *key) {
-	int in_keys = DeeSet_OperatorContainsAsBool(self->md_keys, key);
+	int in_keys = DeeObject_InvokeMethodHint(seq_contains, self->md_keys, key);
 	if unlikely(in_keys != 0) {
 		if unlikely(in_keys < 0)
 			goto err;
 		return Dee_BOUND_MISSING;
 	}
-	return DeeMap_OperatorBoundItem(self->md_map, key);
+	return DeeObject_InvokeMethodHint(map_operator_bounditem, self->md_map, key);
 err:
 	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 md_hasitem(MapDifference *self, DeeObject *key) {
-	int in_keys = DeeSet_OperatorContainsAsBool(self->md_keys, key);
+	int in_keys = DeeObject_InvokeMethodHint(seq_contains, self->md_keys, key);
 	if unlikely(in_keys != 0) {
 		if unlikely(in_keys < 0)
 			goto err;
 		return 0;
 	}
-	return DeeMap_OperatorHasItem(self->md_map, key);
+	return DeeObject_InvokeMethodHint(map_operator_hasitem, self->md_map, key);
 err:
 	return -1;
 }
@@ -1492,7 +1486,7 @@ md_foreach_pair(MapDifference *__restrict self, Dee_foreach_pair_t cb, void *arg
 	data.mfpfk_cb   = cb;
 	data.mfpfk_arg  = arg;
 	data.mfpfk_keys = self->md_keys;
-	return DeeMap_OperatorForeachPair(self->md_map, &map_foreach_pair_without_setkeys_cb, &data);
+	return DeeObject_InvokeMethodHint(map_operator_foreach_pair, self->md_map, &map_foreach_pair_without_setkeys_cb, &data);
 }
 
 PRIVATE struct type_seq md_seq = {
@@ -1507,9 +1501,6 @@ PRIVATE struct type_seq md_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&md_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&md_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&md_hasitem,
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach_pair),
@@ -1639,7 +1630,7 @@ again:
 	result = DeeObject_IterNextPair(self->mdi_iter, key_and_value);
 	if (result != 0)
 		return result; /* error, or ITER_DONE */
-	temp = DeeSet_OperatorContainsAsBool(self->mdi_keys, key_and_value[0]);
+	temp = DeeObject_InvokeMethodHint(seq_contains, self->mdi_keys, key_and_value[0]);
 	if likely(temp == 0)
 		return 0;
 	Dee_Decref(key_and_value[1]);
@@ -1661,7 +1652,7 @@ again:
 	result = DeeObject_IterNextKey(self->mdi_iter);
 	if (!ITER_ISOK(result))
 		return result; /* error, or ITER_DONE */
-	temp = DeeSet_OperatorContainsAsBool(self->mdi_keys, result);
+	temp = DeeObject_InvokeMethodHint(seq_contains, self->mdi_keys, result);
 	if likely(temp == 0)
 		return result;
 	Dee_Decref(result);
@@ -1768,13 +1759,13 @@ msd_bool(MapSymmetricDifference *__restrict self) {
 	/* `(a ^ b) != {}'    <=>    `a.keys != b.keys' */
 	int result;
 	DREF DeeObject *a_keys, *b_keys;
-	a_keys = DeeMap_InvokeKeys(self->msd_a);
+	a_keys = DeeObject_InvokeMethodHint(map_keys, self->msd_a);
 	if unlikely(!a_keys)
 		goto err;
-	b_keys = DeeMap_InvokeKeys(self->msd_b);
+	b_keys = DeeObject_InvokeMethodHint(map_keys, self->msd_b);
 	if unlikely(!b_keys)
 		goto err_a_keys;
-	result = DeeSet_OperatorCompareEq(a_keys, b_keys);
+	result = DeeObject_InvokeMethodHint(set_operator_compare_eq, a_keys, b_keys);
 	Dee_Decref(b_keys);
 	Dee_Decref(a_keys);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -1791,7 +1782,7 @@ msd_iter(MapSymmetricDifference *__restrict self) {
 	DREF MapSymmetricDifferenceIterator *result = DeeGCObject_MALLOC(MapSymmetricDifferenceIterator);
 	if unlikely(!result)
 		goto err;
-	result->msdi_iter = DeeMap_OperatorIter(self->msd_a);
+	result->msdi_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->msd_a);
 	if unlikely(!result->msdi_iter)
 		goto err_r;
 	Dee_Incref(self);
@@ -1824,12 +1815,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 msd_getitem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 	int exists;
 	DREF DeeObject *result;
-	result = DeeMap_OperatorTryGetItem(self->msd_a, key);
+	result = DeeObject_InvokeMethodHint(map_operator_trygetitem, self->msd_a, key);
 	if (result == ITER_DONE)
-		return DeeMap_OperatorGetItem(self->msd_b, key);
+		return DeeObject_InvokeMethodHint(map_operator_getitem, self->msd_b, key);
 	if unlikely(!result)
 		goto err;
-	exists = DeeMap_OperatorHasItem(self->msd_b, key);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -1847,12 +1838,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 msd_trygetitem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 	int exists;
 	DREF DeeObject *result;
-	result = DeeMap_OperatorTryGetItem(self->msd_a, key);
+	result = DeeObject_InvokeMethodHint(map_operator_trygetitem, self->msd_a, key);
 	if (result == ITER_DONE)
-		return DeeMap_OperatorTryGetItem(self->msd_b, key);
+		return DeeObject_InvokeMethodHint(map_operator_trygetitem, self->msd_b, key);
 	if unlikely(!result)
 		goto err;
-	exists = DeeMap_OperatorHasItem(self->msd_b, key);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -1867,12 +1858,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 msd_hasitem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 	int exists, result;
-	result = DeeMap_OperatorHasItem(self->msd_a, key);
+	result = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_a, key);
 	if (result == 0)
-		return DeeMap_OperatorHasItem(self->msd_b, key);
+		return DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
 	if unlikely(result < 0)
 		goto err;
-	exists = DeeMap_OperatorHasItem(self->msd_b, key);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -1886,9 +1877,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 msd_bounditem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 	int exists, result;
-	result = DeeMap_OperatorBoundItem(self->msd_a, key);
+	result = DeeObject_InvokeMethodHint(map_operator_bounditem, self->msd_a, key);
 	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
-		int result2 = DeeMap_OperatorBoundItem(self->msd_b, key);
+		int result2 = DeeObject_InvokeMethodHint(map_operator_bounditem, self->msd_b, key);
 		if (result == result2) {
 			result = Dee_BOUND_MISSING;
 		} else if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2)) {
@@ -1898,7 +1889,7 @@ msd_bounditem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 	}
 	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
-	exists = DeeMap_OperatorBoundItem(self->msd_b, key);
+	exists = DeeObject_InvokeMethodHint(map_operator_bounditem, self->msd_b, key);
 	if unlikely(!Dee_BOUND_ISMISSING_OR_UNBOUND(exists)) {
 		if unlikely(Dee_BOUND_ISERR(exists))
 			goto err;
@@ -1913,12 +1904,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 msd_getitem_index(MapSymmetricDifference *__restrict self, size_t key) {
 	int exists;
 	DREF DeeObject *result;
-	result = DeeMap_OperatorTryGetItemIndex(self->msd_a, key);
+	result = DeeObject_InvokeMethodHint(map_operator_trygetitem_index, self->msd_a, key);
 	if (result == ITER_DONE)
-		return DeeMap_OperatorGetItemIndex(self->msd_b, key);
+		return DeeObject_InvokeMethodHint(map_operator_getitem_index, self->msd_b, key);
 	if unlikely(!result)
 		goto err;
-	exists = DeeMap_OperatorHasItemIndex(self->msd_b, key);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -1936,12 +1927,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 msd_trygetitem_index(MapSymmetricDifference *__restrict self, size_t key) {
 	int exists;
 	DREF DeeObject *result;
-	result = DeeMap_OperatorTryGetItemIndex(self->msd_a, key);
+	result = DeeObject_InvokeMethodHint(map_operator_trygetitem_index, self->msd_a, key);
 	if (result == ITER_DONE)
-		return DeeMap_OperatorTryGetItemIndex(self->msd_b, key);
+		return DeeObject_InvokeMethodHint(map_operator_trygetitem_index, self->msd_b, key);
 	if unlikely(!result)
 		goto err;
-	exists = DeeMap_OperatorHasItemIndex(self->msd_b, key);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -1956,12 +1947,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 msd_hasitem_index(MapSymmetricDifference *__restrict self, size_t key) {
 	int exists, result;
-	result = DeeMap_OperatorHasItemIndex(self->msd_a, key);
+	result = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_a, key);
 	if (result == 0)
-		return DeeMap_OperatorHasItemIndex(self->msd_b, key);
+		return DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
 	if unlikely(result < 0)
 		goto err;
-	exists = DeeMap_OperatorHasItemIndex(self->msd_b, key);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -1975,9 +1966,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 msd_bounditem_index(MapSymmetricDifference *__restrict self, size_t key) {
 	int exists, result;
-	result = DeeMap_OperatorBoundItemIndex(self->msd_a, key);
+	result = DeeObject_InvokeMethodHint(map_operator_bounditem_index, self->msd_a, key);
 	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
-		int result2 = DeeMap_OperatorBoundItemIndex(self->msd_b, key);
+		int result2 = DeeObject_InvokeMethodHint(map_operator_bounditem_index, self->msd_b, key);
 		if (result == result2) {
 			result = Dee_BOUND_MISSING;
 		} else if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2)) {
@@ -1987,7 +1978,7 @@ msd_bounditem_index(MapSymmetricDifference *__restrict self, size_t key) {
 	}
 	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
-	exists = DeeMap_OperatorBoundItemIndex(self->msd_b, key);
+	exists = DeeObject_InvokeMethodHint(map_operator_bounditem_index, self->msd_b, key);
 	if unlikely(!Dee_BOUND_ISMISSING_OR_UNBOUND(exists)) {
 		if unlikely(Dee_BOUND_ISERR(exists))
 			goto err;
@@ -2003,12 +1994,12 @@ msd_getitem_string_hash(MapSymmetricDifference *__restrict self,
                         char const *key, Dee_hash_t hash) {
 	int exists;
 	DREF DeeObject *result;
-	result = DeeMap_OperatorTryGetItemStringHash(self->msd_a, key, hash);
+	result = DeeObject_InvokeMethodHint(map_operator_trygetitem_string_hash, self->msd_a, key, hash);
 	if (result == ITER_DONE)
-		return DeeMap_OperatorGetItemStringHash(self->msd_b, key, hash);
+		return DeeObject_InvokeMethodHint(map_operator_getitem_string_hash, self->msd_b, key, hash);
 	if unlikely(!result)
 		goto err;
-	exists = DeeMap_OperatorHasItemStringHash(self->msd_b, key, hash);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -2027,12 +2018,12 @@ msd_trygetitem_string_hash(MapSymmetricDifference *__restrict self,
                            char const *key, Dee_hash_t hash) {
 	int exists;
 	DREF DeeObject *result;
-	result = DeeMap_OperatorTryGetItemStringHash(self->msd_a, key, hash);
+	result = DeeObject_InvokeMethodHint(map_operator_trygetitem_string_hash, self->msd_a, key, hash);
 	if (result == ITER_DONE)
-		return DeeMap_OperatorTryGetItemStringHash(self->msd_b, key, hash);
+		return DeeObject_InvokeMethodHint(map_operator_trygetitem_string_hash, self->msd_b, key, hash);
 	if unlikely(!result)
 		goto err;
-	exists = DeeMap_OperatorHasItemStringHash(self->msd_b, key, hash);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -2048,12 +2039,12 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 msd_hasitem_string_hash(MapSymmetricDifference *__restrict self,
                         char const *key, Dee_hash_t hash) {
 	int exists, result;
-	result = DeeMap_OperatorHasItemStringHash(self->msd_a, key, hash);
+	result = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_a, key, hash);
 	if (result == 0)
-		return DeeMap_OperatorHasItemStringHash(self->msd_b, key, hash);
+		return DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
 	if unlikely(result < 0)
 		goto err;
-	exists = DeeMap_OperatorHasItemStringHash(self->msd_b, key, hash);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -2068,9 +2059,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 msd_bounditem_string_hash(MapSymmetricDifference *__restrict self,
                           char const *key, Dee_hash_t hash) {
 	int exists, result;
-	result = DeeMap_OperatorBoundItemStringHash(self->msd_a, key, hash);
+	result = DeeObject_InvokeMethodHint(map_operator_bounditem_string_hash, self->msd_a, key, hash);
 	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
-		int result2 = DeeMap_OperatorBoundItemStringHash(self->msd_b, key, hash);
+		int result2 = DeeObject_InvokeMethodHint(map_operator_bounditem_string_hash, self->msd_b, key, hash);
 		if (result == result2) {
 			result = Dee_BOUND_MISSING;
 		} else if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2)) {
@@ -2080,7 +2071,7 @@ msd_bounditem_string_hash(MapSymmetricDifference *__restrict self,
 	}
 	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
-	exists = DeeMap_OperatorBoundItemStringHash(self->msd_b, key, hash);
+	exists = DeeObject_InvokeMethodHint(map_operator_bounditem_string_hash, self->msd_b, key, hash);
 	if unlikely(!Dee_BOUND_ISMISSING_OR_UNBOUND(exists)) {
 		if unlikely(Dee_BOUND_ISERR(exists))
 			goto err;
@@ -2096,12 +2087,12 @@ msd_getitem_string_len_hash(MapSymmetricDifference *__restrict self,
                             char const *key, size_t keylen, Dee_hash_t hash) {
 	int exists;
 	DREF DeeObject *result;
-	result = DeeMap_OperatorTryGetItemStringLenHash(self->msd_a, key, keylen, hash);
+	result = DeeObject_InvokeMethodHint(map_operator_trygetitem_string_len_hash, self->msd_a, key, keylen, hash);
 	if (result == ITER_DONE)
-		return DeeMap_OperatorGetItemStringLenHash(self->msd_b, key, keylen, hash);
+		return DeeObject_InvokeMethodHint(map_operator_getitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(!result)
 		goto err;
-	exists = DeeMap_OperatorHasItemStringLenHash(self->msd_b, key, keylen, hash);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -2120,12 +2111,12 @@ msd_trygetitem_string_len_hash(MapSymmetricDifference *__restrict self,
                                char const *key, size_t keylen, Dee_hash_t hash) {
 	int exists;
 	DREF DeeObject *result;
-	result = DeeMap_OperatorTryGetItemStringLenHash(self->msd_a, key, keylen, hash);
+	result = DeeObject_InvokeMethodHint(map_operator_trygetitem_string_len_hash, self->msd_a, key, keylen, hash);
 	if (result == ITER_DONE)
-		return DeeMap_OperatorTryGetItemStringLenHash(self->msd_b, key, keylen, hash);
+		return DeeObject_InvokeMethodHint(map_operator_trygetitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(!result)
 		goto err;
-	exists = DeeMap_OperatorHasItemStringLenHash(self->msd_b, key, keylen, hash);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -2141,12 +2132,12 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 msd_hasitem_string_len_hash(MapSymmetricDifference *__restrict self,
                             char const *key, size_t keylen, Dee_hash_t hash) {
 	int exists, result;
-	result = DeeMap_OperatorHasItemStringLenHash(self->msd_a, key, keylen, hash);
+	result = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_a, key, keylen, hash);
 	if (result == 0)
-		return DeeMap_OperatorHasItemStringLenHash(self->msd_b, key, keylen, hash);
+		return DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(result < 0)
 		goto err;
-	exists = DeeMap_OperatorHasItemStringLenHash(self->msd_b, key, keylen, hash);
+	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(exists != 0) {
 		if unlikely(exists < 0)
 			goto err;
@@ -2161,9 +2152,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 msd_bounditem_string_len_hash(MapSymmetricDifference *__restrict self,
                               char const *key, size_t keylen, Dee_hash_t hash) {
 	int exists, result;
-	result = DeeMap_OperatorBoundItemStringLenHash(self->msd_a, key, keylen, hash);
+	result = DeeObject_InvokeMethodHint(map_operator_bounditem_string_len_hash, self->msd_a, key, keylen, hash);
 	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
-		int result2 = DeeMap_OperatorBoundItemStringLenHash(self->msd_b, key, keylen, hash);
+		int result2 = DeeObject_InvokeMethodHint(map_operator_bounditem_string_len_hash, self->msd_b, key, keylen, hash);
 		if (result == result2) {
 			result = Dee_BOUND_MISSING;
 		} else if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2)) {
@@ -2173,7 +2164,7 @@ msd_bounditem_string_len_hash(MapSymmetricDifference *__restrict self,
 	}
 	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
-	exists = DeeMap_OperatorBoundItemStringLenHash(self->msd_b, key, keylen, hash);
+	exists = DeeObject_InvokeMethodHint(map_operator_bounditem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(!Dee_BOUND_ISMISSING_OR_UNBOUND(exists)) {
 		if unlikely(Dee_BOUND_ISERR(exists))
 			goto err;
@@ -2191,11 +2182,11 @@ msd_foreach_pair(MapSymmetricDifference *__restrict self, Dee_foreach_pair_t cb,
 	data.mfpfk_cb   = cb;
 	data.mfpfk_arg  = arg;
 	data.mfpfk_keys = self->msd_b;
-	result = DeeMap_OperatorForeachPair(self->msd_a, &map_foreach_pair_without_mapkeys_cb, &data);
+	result = DeeObject_InvokeMethodHint(map_operator_foreach_pair, self->msd_a, &map_foreach_pair_without_mapkeys_cb, &data);
 	if unlikely(result < 0)
 		return result;
 	data.mfpfk_keys = self->msd_a;
-	temp = DeeMap_OperatorForeachPair(self->msd_b, &map_foreach_pair_without_mapkeys_cb, &data);
+	temp = DeeObject_InvokeMethodHint(map_operator_foreach_pair, self->msd_b, &map_foreach_pair_without_mapkeys_cb, &data);
 	if unlikely(temp < 0)
 		return temp;
 	result += temp;
@@ -2214,9 +2205,6 @@ PRIVATE struct type_seq msd_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&msd_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&msd_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&msd_hasitem,
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach_pair),
@@ -2463,7 +2451,7 @@ msditer_ctor(MapSymmetricDifferenceIterator *__restrict self) {
 	self->msdi_symdiff = (DREF MapSymmetricDifference *)DeeObject_NewDefault(&MapSymmetricDifference_Type);
 	if unlikely(!self->msdi_symdiff)
 		goto err;
-	self->msdi_iter = DeeMap_OperatorIter(self->msdi_symdiff->msd_a);
+	self->msdi_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->msdi_symdiff->msd_a);
 	if unlikely(!self->msdi_iter)
 		goto err_union;
 	Dee_atomic_rwlock_init(&self->msdi_lock);
@@ -2482,7 +2470,7 @@ msditer_init(MapSymmetricDifferenceIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->msdi_symdiff, &MapSymmetricDifference_Type))
 		goto err;
-	if ((self->msdi_iter = DeeMap_OperatorIter(self->msdi_symdiff->msd_a)) == NULL)
+	if ((self->msdi_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->msdi_symdiff->msd_a)) == NULL)
 		goto err;
 	Dee_Incref(self->msdi_symdiff);
 	Dee_atomic_rwlock_init(&self->msdi_lock);
@@ -2622,7 +2610,7 @@ read_from_iter:
 			goto done;
 
 		/* End of first iterator -> try to switch to the second iterator. */
-		iter2 = DeeMap_OperatorIter(self->msdi_symdiff->msd_b);
+		iter2 = DeeObject_InvokeMethodHint(map_operator_iter, self->msdi_symdiff->msd_b);
 		if unlikely(!iter2)
 			goto err;
 		MapSymmetricDifferenceIterator_LockWrite(self);
@@ -2680,7 +2668,7 @@ read_from_iter:
 			goto done;
 
 		/* End of first iterator -> try to switch to the second iterator. */
-		iter2 = DeeMap_OperatorIter(self->msdi_symdiff->msd_b);
+		iter2 = DeeObject_InvokeMethodHint(map_operator_iter, self->msdi_symdiff->msd_b);
 		if unlikely(!iter2)
 			goto err;
 		MapSymmetricDifferenceIterator_LockWrite(self);
@@ -2777,7 +2765,7 @@ PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
 set_containsany_foreach_pair_lhsmap_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int is_contained;
 	(void)value;
-	is_contained = DeeSet_OperatorContainsAsBool((DeeObject *)arg, key);
+	is_contained = DeeObject_InvokeMethodHint(seq_contains, (DeeObject *)arg, key);
 	if (is_contained != 0) {
 		if unlikely(is_contained < 0)
 			goto err;
@@ -2797,20 +2785,20 @@ MapIntersection_NonEmpty(DeeObject *map, DeeObject *keys) {
 	} else {
 		Dee_ssize_t status;
 		size_t size_map, size_keys;
-		size_map = DeeMap_OperatorSize(map);
+		size_map = DeeObject_InvokeMethodHint(map_operator_size, map);
 		if unlikely(size_map == (size_t)-1)
 			goto err;
-		size_keys = DeeSet_OperatorSize(keys);
+		size_keys = DeeObject_InvokeMethodHint(set_operator_size, keys);
 		if unlikely(size_keys == (size_t)-1)
 			goto err;
 		if (size_map < size_keys) {
 			/* >> for (local key, none: map) if (key in keys) return true;
 			 * >> return false; */
-			status = DeeMap_OperatorForeachPair(map, &set_containsany_foreach_pair_lhsmap_cb, keys);
+			status = DeeObject_InvokeMethodHint(map_operator_foreach_pair, map, &set_containsany_foreach_pair_lhsmap_cb, keys);
 		} else {
 			/* >> for (local key: keys) if (key in map) return true; */
 			/* >> return false; */
-			status = DeeSet_OperatorForeach(keys, &map_containsany_foreach_cb, map);
+			status = DeeObject_InvokeMethodHint(set_operator_foreach, keys, &map_containsany_foreach_cb, map);
 		}
 		if (status == MAP_CONTAINSANY_FOREACH__FOUND)
 			return 1;
@@ -2829,7 +2817,7 @@ PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
 set_containsall_foreach_pair_lhsmap_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int is_contained;
 	(void)value;
-	is_contained = DeeSet_OperatorContainsAsBool((DeeObject *)arg, key);
+	is_contained = DeeObject_InvokeMethodHint(seq_contains, (DeeObject *)arg, key);
 	if (is_contained <= 0) {
 		if unlikely(is_contained < 0)
 			goto err;
@@ -2865,7 +2853,7 @@ MapDifference_NonEmpty(DeeObject *map, DeeObject *keys) {
 		/* >> for (local key, none: map) if (key !in keys) return true;
 		 * >> return false; */
 		Dee_ssize_t status;
-		status = DeeMap_OperatorForeachPair(map, &set_containsall_foreach_pair_lhsmap_cb, keys);
+		status = DeeObject_InvokeMethodHint(map_operator_foreach_pair, map, &set_containsall_foreach_pair_lhsmap_cb, keys);
 		if (status == SET_CONTAINSALL_FOREACH_PAIR_LHSMAP__MISSING)
 			return 1;
 		if (status == 0)
@@ -2878,7 +2866,7 @@ MapDifference_NonEmpty(DeeObject *map, DeeObject *keys) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 MapDifferenceMapKeys_NonEmpty(DeeObject *map, DeeObject *map2) {
 	Dee_ssize_t status;
-	status = DeeMap_OperatorForeachPair(map, &mapkeys_containsall_foreach_pair_lhsmap_cb, map2);
+	status = DeeObject_InvokeMethodHint(map_operator_foreach_pair, map, &mapkeys_containsall_foreach_pair_lhsmap_cb, map2);
 	if (status == SET_CONTAINSALL_FOREACH_PAIR_LHSMAP__MISSING)
 		return 1;
 	if (status == 0)

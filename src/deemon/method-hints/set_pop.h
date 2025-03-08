@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Set.pop()                                                     */
 /************************************************************************/
-[[alias(Set.pop -> "set_pop")]]
+[[alias(Set.pop)]]
 __set_pop__(def?)->?O {
 	DeeObject *def = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:__set_pop__", &def))
@@ -49,7 +49,7 @@ __set_pop__.set_pop([[nonnull]] DeeObject *self)
 			err_empty_sequence(self);
 		goto err;
 	}
-	if unlikely(DeeSet_InvokeRemove(self, result) < 0)
+	if unlikely(CALL_DEPENDENCY(set_remove, self, result) < 0)
 		goto err_r;
 	return result;
 err_r:
@@ -92,7 +92,7 @@ __set_pop__.set_pop_with_default([[nonnull]] DeeObject *self,
 			return_reference_(default_);
 		goto err;
 	}
-	if unlikely(DeeSet_InvokeRemove(self, result) < 0)
+	if unlikely(CALL_DEPENDENCY(set_remove, self, result) < 0)
 		goto err_r;
 	return result;
 err_r:

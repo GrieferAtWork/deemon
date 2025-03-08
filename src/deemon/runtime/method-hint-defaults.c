@@ -663,7 +663,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_operator_iter__with__map_enumerate(DeeObject *__restrict self) {
-	/* TODO: Custom iterator type that uses "tp_enumerate" */
+	/* TODO: Custom iterator type that uses "map_enumerate" */
 	(void)self;
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
@@ -1047,7 +1047,7 @@ default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem) {
 		                           DeeTuple_GET(elem, 1));
 	} else {
 		DREF DeeObject *pair[2];
-		if unlikely(DeeObject_Unpack(elem, 2, pair))
+		if unlikely(DeeSeq_Unpack(elem, 2, pair))
 			goto err;
 		result = (*data->dfpwf_cb)(data->dfpwf_arg, pair[0], pair[1]);
 		Dee_Decref_unlikely(pair[1]);
@@ -1868,7 +1868,7 @@ default__seq_operator_getrange__with__seq_operator_sizeob__and__seq_operator_get
 	Dee_Decref(sizeob);
 	if unlikely(!startob_and_endob_tuple)
 		goto err;
-	temp = DeeObject_Unpack(startob_and_endob_tuple, 2, startob_and_endob);
+	temp = DeeSeq_Unpack(startob_and_endob_tuple, 2, startob_and_endob);
 	Dee_Decref(startob_and_endob_tuple);
 	if unlikely(temp)
 		goto err;
@@ -9559,7 +9559,7 @@ default__seq_contains__with__map_operator_trygetitem(DeeObject *self, DeeObject 
 	int result;
 	DREF DeeObject *real_value;
 	DREF DeeObject *key_and_value[2];
-	if (DeeObject_Unpack(item, 2, key_and_value))
+	if (DeeSeq_Unpack(item, 2, key_and_value))
 		goto err_trycatch;
 	real_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_trygetitem))(self, key_and_value[0]);
 	Dee_Decref(key_and_value[0]);
@@ -10143,11 +10143,7 @@ default__seq_rlocate__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(match), D
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 default__seq_rlocate__with__seq_foreach_reverse(DeeObject *self, DeeObject *match, DeeObject *def) {
-	Dee_ssize_t foreach_status;
-	DeeMH_seq_foreach_reverse_t rforeach;
-	rforeach = DeeType_TryRequireSeqForeachReverse(Dee_TYPE(self));
-	ASSERT(rforeach);
-	foreach_status = (*rforeach)(self, &seq_locate_foreach_cb, &match);
+	Dee_ssize_t foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_foreach_reverse))(self, &seq_locate_foreach_cb, &match);
 	if likely(foreach_status == -2)
 		return match;
 	return_reference_(def);
@@ -10230,11 +10226,7 @@ default__seq_rlocate_with_range__empty(DeeObject *UNUSED(self), DeeObject *UNUSE
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 default__seq_rlocate_with_range__with__seq_enumerate_index_reverse(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def) {
-	Dee_ssize_t foreach_status;
-	DeeMH_seq_enumerate_index_reverse_t renum;
-	renum = DeeType_TryRequireSeqEnumerateIndexReverse(Dee_TYPE(self));
-	ASSERT(renum);
-	foreach_status = (*renum)(self, &seq_locate_enumerate_index_cb, &match, start, end);
+	Dee_ssize_t foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index_reverse))(self, &seq_locate_enumerate_index_cb, &match, start, end);
 	if likely(foreach_status == -2)
 		return match;
 	return_reference_(def);
@@ -10281,8 +10273,7 @@ seq_rlocate_enumerate_index_cb(void *arg, size_t index, DeeObject *item) {
 #endif /* !DEFINED_seq_rlocate_enumerate_index_cb */
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 default__seq_rlocate_with_range__with__seq_enumerate_index(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def) {
-	Dee_ssize_t foreach_status;
-	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_rlocate_enumerate_index_cb, &match, start, end);
+	Dee_ssize_t foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_rlocate_enumerate_index_cb, &match, start, end);
 	if likely(foreach_status == -2)
 		return match;
 	return_reference_(def);
@@ -12059,8 +12050,7 @@ default__seq_remove__with__seq_enumerate_index__and__seq_operator_delitem_index(
 	struct default_remove_with_enumerate_index_and_delitem_index_data data;
 	data.drweiadiid_self = self;
 	data.drweiadiid_item = item;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &default_remove_with_enumerate_index_and_delitem_index_cb,
-	                                               &data, start, end);
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_remove_with_enumerate_index_and_delitem_index_cb, &data, start, end);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
 	if unlikely(foreach_status == -1)
 		goto err;
@@ -12410,7 +12400,7 @@ default__seq_removeall__with__seq_removeif(DeeObject *self, DeeObject *item, siz
 	Dee_Incref(item);
 	pred->srwrip_item = item;
 	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicate_Type);
-	result = DeeSeq_InvokeRemoveIf(self, (DeeObject *)pred, start, end, max);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeif))(self, (DeeObject *)pred, start, end, max);
 	Dee_Decref_likely(pred);
 	return result;
 err:
@@ -14253,7 +14243,7 @@ default__seq_brange__with_callattr_brange(DeeObject *self, DeeObject *item, size
 	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str_brange, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!resultob)
 		goto err;
-	if (DeeObject_Unpack(resultob, 2, result_start_and_end))
+	if (DeeSeq_Unpack(resultob, 2, result_start_and_end))
 		goto err_r;
 	Dee_Decref(resultob);
 	if (DeeObject_AsSize(result_start_and_end[0], &result_range[0]))
@@ -14279,7 +14269,7 @@ default__seq_brange__with_callattr___seq_brange__(DeeObject *self, DeeObject *it
 	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_brange__, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!resultob)
 		goto err;
-	if (DeeObject_Unpack(resultob, 2, result_start_and_end))
+	if (DeeSeq_Unpack(resultob, 2, result_start_and_end))
 		goto err_r;
 	Dee_Decref(resultob);
 	if (DeeObject_AsSize(result_start_and_end[0], &result_range[0]))
@@ -14308,7 +14298,7 @@ default__seq_brange__with_callobjectcache___seq_brange__(DeeObject *self, DeeObj
 	DREF DeeObject *resultob = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_brange__, self, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!resultob)
 		goto err;
-	if (DeeObject_Unpack(resultob, 2, result_start_and_end))
+	if (DeeSeq_Unpack(resultob, 2, result_start_and_end))
 		goto err_r;
 	Dee_Decref(resultob);
 	if (DeeObject_AsSize(result_start_and_end[0], &result_range[0]))
@@ -14445,7 +14435,7 @@ default__seq_brange_with_key__with_callattr_brange(DeeObject *self, DeeObject *i
 	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str_brange, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!resultob)
 		goto err;
-	if (DeeObject_Unpack(resultob, 2, result_start_and_end))
+	if (DeeSeq_Unpack(resultob, 2, result_start_and_end))
 		goto err_r;
 	Dee_Decref(resultob);
 	if (DeeObject_AsSize(result_start_and_end[0], &result_range[0]))
@@ -14471,7 +14461,7 @@ default__seq_brange_with_key__with_callattr___seq_brange__(DeeObject *self, DeeO
 	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_brange__, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!resultob)
 		goto err;
-	if (DeeObject_Unpack(resultob, 2, result_start_and_end))
+	if (DeeSeq_Unpack(resultob, 2, result_start_and_end))
 		goto err_r;
 	Dee_Decref(resultob);
 	if (DeeObject_AsSize(result_start_and_end[0], &result_range[0]))
@@ -14500,7 +14490,7 @@ default__seq_brange_with_key__with_callobjectcache___seq_brange__(DeeObject *sel
 	DREF DeeObject *resultob = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_brange__, self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!resultob)
 		goto err;
-	if (DeeObject_Unpack(resultob, 2, result_start_and_end))
+	if (DeeSeq_Unpack(resultob, 2, result_start_and_end))
 		goto err_r;
 	Dee_Decref(resultob);
 	if (DeeObject_AsSize(result_start_and_end[0], &result_range[0]))
@@ -16069,7 +16059,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_insert__with__map_setnew(DeeObject *self, DeeObject *key) {
 	int result;
 	DREF DeeObject *map_key_and_value[2];
-	if unlikely(DeeObject_Unpack(key, 2, map_key_and_value))
+	if unlikely(DeeSeq_Unpack(key, 2, map_key_and_value))
 		goto err;
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setnew))(self, map_key_and_value[0], map_key_and_value[1]);
 	Dee_Decref(map_key_and_value[1]);
@@ -16238,7 +16228,7 @@ default__set_remove__with__map_operator_trygetitem__and__map_operator_delitem(De
 	int temp;
 	DREF DeeObject *current_value;
 	DREF DeeObject *map_key_and_value[2];
-	if unlikely(DeeObject_Unpack(key, 2, map_key_and_value))
+	if unlikely(DeeSeq_Unpack(key, 2, map_key_and_value))
 		goto err;
 	current_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_trygetitem))(self, map_key_and_value[0]);
 	if unlikely(!current_value)
@@ -16414,7 +16404,7 @@ default__set_pop__with__seq_trygetfirst__and__set_remove(DeeObject *self) {
 			err_empty_sequence(self);
 		goto err;
 	}
-	if unlikely(DeeSet_InvokeRemove(self, result) < 0)
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_remove))(self, result) < 0)
 		goto err_r;
 	return result;
 err_r:
@@ -16483,7 +16473,7 @@ default__set_pop_with_default__with__seq_trygetfirst__and__set_remove(DeeObject 
 			return_reference_(default_);
 		goto err;
 	}
-	if unlikely(DeeSet_InvokeRemove(self, result) < 0)
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_remove))(self, result) < 0)
 		goto err_r;
 	return result;
 err_r:
@@ -17829,7 +17819,7 @@ map_setold_ex_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *valu
 	struct map_setold_ex_with_seq_enumerate_data *data;
 	data = (struct map_setold_ex_with_seq_enumerate_data *)arg;
 	if (value) {
-		if (DeeObject_Unpack(value, 2, this_key_and_value))
+		if (DeeSeq_Unpack(value, 2, this_key_and_value))
 			goto err;
 		status = DeeObject_TryCompareEq(data->msoxwse_key_and_value[0], this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
@@ -17899,7 +17889,7 @@ map_setold_ex_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *va
 	struct map_setold_ex_with_seq_enumerate_index_data *data;
 	data = (struct map_setold_ex_with_seq_enumerate_index_data *)arg;
 	if (value) {
-		if (DeeObject_Unpack(value, 2, this_key_and_value))
+		if (DeeSeq_Unpack(value, 2, this_key_and_value))
 			goto err;
 		status = DeeObject_TryCompareEq(data->msoxwsei_key_and_value[0], this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
@@ -18203,7 +18193,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__map_iterkeys__with__map_enumerate(DeeObject *__restrict self) {
-	/* TODO: Custom iterator type that uses "tp_enumerate" */
+	/* TODO: Custom iterator type that uses "map_enumerate" */
 	(void)self;
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
@@ -18872,7 +18862,7 @@ default__map_operator_lo__with__map_operator_foreach_pair(DeeObject *lhs, DeeObj
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "rhs" is missing some element of "lhs", or has a different value for it */
-	rhs_size = DeeMap_OperatorSize(rhs);
+	rhs_size = DeeObject_InvokeMethodHint(map_operator_size, rhs);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)
@@ -19031,7 +19021,7 @@ default__map_operator_ge__with__map_operator_foreach_pair(DeeObject *lhs, DeeObj
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "rhs" is missing some element of "lhs", or has a different value for it */
-	rhs_size = DeeMap_OperatorSize(rhs);
+	rhs_size = DeeObject_InvokeMethodHint(map_operator_size, rhs);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)
@@ -19623,7 +19613,7 @@ default__map_setold_ex__with_callattr_setold_ex(DeeObject *self, DeeObject *key,
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_setold_ex, 2, args);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_Unpack(result, 2, status);
+	temp = DeeSeq_Unpack(result, 2, status);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
@@ -19651,7 +19641,7 @@ default__map_setold_ex__with_callattr___map_setold_ex__(DeeObject *self, DeeObje
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___map_setold_ex__, 2, args);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_Unpack(result, 2, status);
+	temp = DeeSeq_Unpack(result, 2, status);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
@@ -19682,7 +19672,7 @@ default__map_setold_ex__with_callobjectcache___map_setold_ex__(DeeObject *self, 
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_setold_ex__, self, 2, args);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_Unpack(result, 2, status);
+	temp = DeeSeq_Unpack(result, 2, status);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
@@ -19890,7 +19880,7 @@ default__map_setnew_ex__with_callattr_setnew_ex(DeeObject *self, DeeObject *key,
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_setnew_ex, 2, args);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_Unpack(result, 2, status);
+	temp = DeeSeq_Unpack(result, 2, status);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
@@ -19918,7 +19908,7 @@ default__map_setnew_ex__with_callattr___map_setnew_ex__(DeeObject *self, DeeObje
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___map_setnew_ex__, 2, args);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_Unpack(result, 2, status);
+	temp = DeeSeq_Unpack(result, 2, status);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
@@ -19949,7 +19939,7 @@ default__map_setnew_ex__with_callobjectcache___map_setnew_ex__(DeeObject *self, 
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_setnew_ex__, self, 2, args);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_Unpack(result, 2, status);
+	temp = DeeSeq_Unpack(result, 2, status);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
@@ -20281,7 +20271,7 @@ map_pop_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
 	struct map_pop_with_seq_enumerate_data *data;
 	data = (struct map_pop_with_seq_enumerate_data *)arg;
 	if (value) {
-		if (DeeObject_Unpack(value, 2, this_key_and_value))
+		if (DeeSeq_Unpack(value, 2, this_key_and_value))
 			goto err;
 		status = DeeObject_TryCompareEq(data->mpwse_key, this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
@@ -20333,7 +20323,7 @@ map_pop_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
 	struct map_pop_with_seq_enumerate_index_data *data;
 	data = (struct map_pop_with_seq_enumerate_index_data *)arg;
 	if (value) {
-		if (DeeObject_Unpack(value, 2, this_key_and_value))
+		if (DeeSeq_Unpack(value, 2, this_key_and_value))
 			goto err;
 		status = DeeObject_TryCompareEq(data->mpwsei_key, this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
@@ -20652,7 +20642,7 @@ default__map_popitem__with__seq_trygetlast__and__map_operator_delitem(DeeObject 
 		return_none;
 	if unlikely(!result)
 		goto err;
-	if unlikely(DeeObject_Unpack(result, 2, key_and_value))
+	if unlikely(DeeSeq_Unpack(result, 2, key_and_value))
 		goto err_r;
 	Dee_Decref(key_and_value[1]);
 	temp = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_delitem))(self, key_and_value[0]);
@@ -20675,7 +20665,7 @@ default__map_popitem__with__seq_trygetfirst__and__map_operator_delitem(DeeObject
 		return_none;
 	if unlikely(!result)
 		goto err;
-	if unlikely(DeeObject_Unpack(result, 2, key_and_value))
+	if unlikely(DeeSeq_Unpack(result, 2, key_and_value))
 		goto err_r;
 	Dee_Decref(key_and_value[1]);
 	temp = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_delitem))(self, key_and_value[0]);
@@ -22139,7 +22129,7 @@ tdefault__seq_brange__with_callobjectcache___seq_brange__(DeeTypeObject *tp_self
 	DREF DeeObject *resultob = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_brange__, self, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!resultob)
 		goto err;
-	if (DeeObject_Unpack(resultob, 2, result_start_and_end))
+	if (DeeSeq_Unpack(resultob, 2, result_start_and_end))
 		goto err_r;
 	Dee_Decref(resultob);
 	if (DeeObject_AsSize(result_start_and_end[0], &result_range[0]))
@@ -22166,7 +22156,7 @@ tdefault__seq_brange_with_key__with_callobjectcache___seq_brange__(DeeTypeObject
 	DREF DeeObject *resultob = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_brange__, self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!resultob)
 		goto err;
-	if (DeeObject_Unpack(resultob, 2, result_start_and_end))
+	if (DeeSeq_Unpack(resultob, 2, result_start_and_end))
 		goto err_r;
 	Dee_Decref(resultob);
 	if (DeeObject_AsSize(result_start_and_end[0], &result_range[0]))
@@ -22747,7 +22737,7 @@ tdefault__map_setold_ex__with_callobjectcache___map_setold_ex__(DeeTypeObject *t
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___map_setold_ex__, self, 2, args);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_Unpack(result, 2, status);
+	temp = DeeSeq_Unpack(result, 2, status);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
@@ -22791,7 +22781,7 @@ tdefault__map_setnew_ex__with_callobjectcache___map_setnew_ex__(DeeTypeObject *t
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___map_setnew_ex__, self, 2, args);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_Unpack(result, 2, status);
+	temp = DeeSeq_Unpack(result, 2, status);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;

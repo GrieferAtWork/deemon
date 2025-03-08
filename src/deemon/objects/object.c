@@ -37,6 +37,7 @@
 #include <deemon/int.h>
 #include <deemon/kwds.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
 #include <deemon/none-operator.h>
@@ -3469,7 +3470,7 @@ unpack_init_info(DeeObject *__restrict info,
                  DREF DeeObject **__restrict p_init_args,
                  DREF DeeObject **__restrict p_init_kw) {
 	DREF DeeObject *fields_args_kw[3];
-	size_t n_args = DeeObject_UnpackEx(info, 1, 3, fields_args_kw);
+	size_t n_args = DeeObject_InvokeMethodHint(seq_unpack_ex, info, 1, 3, fields_args_kw);
 	if unlikely(n_args == (size_t)-1)
 		goto err;
 	ASSERT(n_args >= 1 && n_args <= 3);

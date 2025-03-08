@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.sort()                                               */
 /************************************************************************/
-[[kw, alias(Sequence.sort -> "seq_sort")]]
+[[kw, alias(Sequence.sort)]]
 __seq_sort__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N) {
 	size_t start = 0, end = (size_t)-1;
 	DeeObject *key = Dee_None;

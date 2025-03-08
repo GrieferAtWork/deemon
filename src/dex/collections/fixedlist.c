@@ -33,9 +33,7 @@
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
-#include <deemon/map.h>
 #include <deemon/method-hints.h>
-#include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
@@ -206,7 +204,7 @@ fl_assign(FixedList *__restrict self, DeeObject *__restrict other) {
 	                                        sizeof(DREF DeeObject *));
 	if unlikely(!items)
 		goto err;
-	if (DeeObject_Unpack(other, self->fl_size, items))
+	if (DeeSeq_Unpack(other, self->fl_size, items))
 		goto err_items;
 	FixedList_LockWrite(self);
 	/* Exchange all stored items. */
@@ -635,7 +633,7 @@ fl_setrange_index(FixedList *self, Dee_ssize_t i_begin,
 	values_buf = (DREF DeeObject **)Dee_Mallocac(range_size, sizeof(DREF DeeObject *));
 	if unlikely(!values_buf)
 		goto err;
-	if (DeeObject_UnpackWithUnbound(values, range_size, values_buf))
+	if (DeeObject_InvokeMethodHint(seq_unpack_ub, values, range_size, range_size, values_buf) == (size_t)-1)
 		goto err_values_buf;
 	FixedList_LockWrite(self);
 	for (i = 0; i < range_size; ++i) {
@@ -668,7 +666,7 @@ fl_setrange_index_n(FixedList *self, Dee_ssize_t i_begin, DeeObject *values) {
 	values_buf = (DREF DeeObject **)Dee_Mallocac(range_size, sizeof(DREF DeeObject *));
 	if unlikely(!values_buf)
 		goto err;
-	if (DeeObject_UnpackWithUnbound(values, range_size, values_buf))
+	if (DeeObject_InvokeMethodHint(seq_unpack_ub, values, range_size, range_size, values_buf) == (size_t)-1)
 		goto err_values_buf;
 	FixedList_LockWrite(self);
 	for (i = 0; i < range_size; ++i) {
@@ -1266,16 +1264,16 @@ fl_mh_clear(FixedList *self) {
 }
 
 PRIVATE struct type_method tpconst fl_methods[] = {
-	TYPE_METHOD_HINTREF(seq_find),
-	TYPE_METHOD_HINTREF(seq_rfind),
-	TYPE_METHOD_HINTREF(seq_xchitem),
-	TYPE_METHOD_HINTREF(seq_remove),
-	TYPE_METHOD_HINTREF(seq_rremove),
-	TYPE_METHOD_HINTREF(seq_removeall),
-	TYPE_METHOD_HINTREF(seq_removeif),
-	TYPE_METHOD_HINTREF(seq_fill),
-	TYPE_METHOD_HINTREF(seq_reverse),
-	TYPE_METHOD_HINTREF(seq_clear),
+	TYPE_METHOD_HINTREF(Sequence_find),
+	TYPE_METHOD_HINTREF(Sequence_rfind),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_remove),
+	TYPE_METHOD_HINTREF(Sequence_rremove),
+	TYPE_METHOD_HINTREF(Sequence_removeall),
+	TYPE_METHOD_HINTREF(Sequence_removeif),
+	TYPE_METHOD_HINTREF(Sequence_fill),
+	TYPE_METHOD_HINTREF(Sequence_reverse),
+	TYPE_METHOD_HINTREF(Sequence_clear),
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
@@ -1313,9 +1311,6 @@ PRIVATE struct type_seq fl_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&fl_mh_seq_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&fl_size,

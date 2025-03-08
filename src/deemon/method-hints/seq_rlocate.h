@@ -84,11 +84,7 @@ __seq_rlocate__.seq_rlocate([[nonnull]] DeeObject *self,
 %{$none = return_none}
 %{$empty = return_reference_(def)}
 %{$with__seq_foreach_reverse = [[prefix(DEFINE_seq_locate_foreach_cb)]] {
-	Dee_ssize_t foreach_status;
-	DeeMH_seq_foreach_reverse_t rforeach;
-	rforeach = DeeType_TryRequireSeqForeachReverse(Dee_TYPE(self));
-	ASSERT(rforeach);
-	foreach_status = (*rforeach)(self, &seq_locate_foreach_cb, &match);
+	Dee_ssize_t foreach_status = CALL_DEPENDENCY(seq_foreach_reverse, self, &seq_locate_foreach_cb, &match);
 	if likely(foreach_status == -2)
 		return match;
 	return_reference_(def);
@@ -149,18 +145,13 @@ __seq_rlocate__.seq_rlocate_with_range([[nonnull]] DeeObject *self,
 %{$none = return_none}
 %{$empty = return_reference_(def)}
 %{$with__seq_enumerate_index_reverse = [[prefix(DEFINE_seq_locate_enumerate_index_cb)]] {
-	Dee_ssize_t foreach_status;
-	DeeMH_seq_enumerate_index_reverse_t renum;
-	renum = DeeType_TryRequireSeqEnumerateIndexReverse(Dee_TYPE(self));
-	ASSERT(renum);
-	foreach_status = (*renum)(self, &seq_locate_enumerate_index_cb, &match, start, end);
+	Dee_ssize_t foreach_status = CALL_DEPENDENCY(seq_enumerate_index_reverse, self, &seq_locate_enumerate_index_cb, &match, start, end);
 	if likely(foreach_status == -2)
 		return match;
 	return_reference_(def);
 }}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_rlocate_enumerate_index_cb)]] {
-	Dee_ssize_t foreach_status;
-	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_rlocate_enumerate_index_cb, &match, start, end);
+	Dee_ssize_t foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_rlocate_enumerate_index_cb, &match, start, end);
 	if likely(foreach_status == -2)
 		return match;
 	return_reference_(def);

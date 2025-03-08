@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.pop()                                                 */
 /************************************************************************/
-[[alias(Mapping.pop -> "map_pop")]]
+[[alias(Mapping.pop)]]
 __map_pop__(key,def?)->?O {
 	DeeObject *key, *def = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:__map_pop__", &key, &def))
@@ -48,7 +48,7 @@ map_pop_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
 	struct map_pop_with_seq_enumerate_data *data;
 	data = (struct map_pop_with_seq_enumerate_data *)arg;
 	if (value) {
-		if (DeeObject_Unpack(value, 2, this_key_and_value))
+		if (DeeSeq_Unpack(value, 2, this_key_and_value))
 			goto err;
 		status = DeeObject_TryCompareEq(data->mpwse_key, this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
@@ -89,7 +89,7 @@ map_pop_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
 	struct map_pop_with_seq_enumerate_index_data *data;
 	data = (struct map_pop_with_seq_enumerate_index_data *)arg;
 	if (value) {
-		if (DeeObject_Unpack(value, 2, this_key_and_value))
+		if (DeeSeq_Unpack(value, 2, this_key_and_value))
 			goto err;
 		status = DeeObject_TryCompareEq(data->mpwsei_key, this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);

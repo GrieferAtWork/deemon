@@ -803,7 +803,7 @@ DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self,
 		Dee_operator_t effective_opname;
 		switch (opname) {
 		case OPERATOR_EQ:
-			if (self->tp_cmp->tp_eq == &DeeObject_DefaultEqWithNe) {
+			if (self->tp_cmp->tp_eq == &default__eq__with__ne) {
 				effective_opname = OPERATOR_NE;
 check_effective_opname:
 				result = DeeType_GetCustomOperatorById(self, effective_opname);
@@ -812,45 +812,45 @@ check_effective_opname:
 			}
 			break;
 		case OPERATOR_NE:
-			if (self->tp_cmp->tp_ne == &DeeObject_DefaultNeWithEq) {
+			if (self->tp_cmp->tp_ne == &default__ne__with__eq) {
 				effective_opname = OPERATOR_EQ;
 				goto check_effective_opname;
 			}
 			break;
 		case OPERATOR_LO:
-			if (self->tp_cmp->tp_lo == &DeeObject_DefaultLoWithGe) {
+			if (self->tp_cmp->tp_lo == &default__lo__with__ge) {
 				effective_opname = OPERATOR_GE;
 				goto check_effective_opname;
 			}
 			break;
 		case OPERATOR_LE:
-			if (self->tp_cmp->tp_le == &DeeObject_DefaultLeWithGr) {
+			if (self->tp_cmp->tp_le == &default__le__with__gr) {
 				effective_opname = OPERATOR_GR;
 				goto check_effective_opname;
 			}
 			break;
 		case OPERATOR_GR:
-			if (self->tp_cmp->tp_gr == &DeeObject_DefaultGrWithLe) {
+			if (self->tp_cmp->tp_gr == &default__gr__with__le) {
 				effective_opname = OPERATOR_LE;
 				goto check_effective_opname;
 			}
 			break;
 		case OPERATOR_GE:
-			if (self->tp_cmp->tp_ge == &DeeObject_DefaultGeWithLo) {
+			if (self->tp_cmp->tp_ge == &default__ge__with__lo) {
 				effective_opname = OPERATOR_LO;
 				goto check_effective_opname;
 			}
 			break;
 		case OPERATOR_INT:
-			if (self->tp_math->tp_int == &DeeObject_DefaultIntWithDouble) {
+			if (self->tp_math->tp_int == &default__int__with__double) {
 				effective_opname = OPERATOR_FLOAT;
 				goto check_effective_opname;
 			}
 			break;
 		case OPERATOR_FLOAT:
-			if (self->tp_math->tp_double == &DeeObject_DefaultDoubleWithInt ||
-			    self->tp_math->tp_double == &DeeObject_DefaultDoubleWithInt32 ||
-			    self->tp_math->tp_double == &DeeObject_DefaultDoubleWithInt64) {
+			if (self->tp_math->tp_double == &default__double__with__int ||
+			    self->tp_math->tp_double == &default__double__with__int32 ||
+			    self->tp_math->tp_double == &default__double__with__int64) {
 				effective_opname = OPERATOR_INT;
 				goto check_effective_opname;
 			}
@@ -869,24 +869,24 @@ check_effective_opname_with_copy:
 			}
 			break;
 
-#define HANDLE_MATH_FOO_WITH_INPLACE_FOO(NAME, Name, name)                                         \
-		case OPERATOR_INPLACE_##NAME:                                                              \
-			if (self->tp_math->tp_inplace_##name == &DeeObject_DefaultInplace##Name##With##Name) { \
-				effective_opname = OPERATOR_##NAME;                                                \
-				goto check_effective_opname_with_copy;                                             \
-			}                                                                                      \
+#define HANDLE_MATH_FOO_WITH_INPLACE_FOO(NAME, name)                                            \
+		case OPERATOR_INPLACE_##NAME:                                                           \
+			if (self->tp_math->tp_inplace_##name == &default__inplace_##name##__with__##name) { \
+				effective_opname = OPERATOR_##NAME;                                             \
+				goto check_effective_opname_with_copy;                                          \
+			}                                                                                   \
 			break
-		HANDLE_MATH_FOO_WITH_INPLACE_FOO(ADD, Add, add);
-		HANDLE_MATH_FOO_WITH_INPLACE_FOO(SUB, Sub, sub);
-		HANDLE_MATH_FOO_WITH_INPLACE_FOO(MUL, Mul, mul);
-		HANDLE_MATH_FOO_WITH_INPLACE_FOO(DIV, Div, div);
-		HANDLE_MATH_FOO_WITH_INPLACE_FOO(MOD, Mod, mod);
-		HANDLE_MATH_FOO_WITH_INPLACE_FOO(SHL, Shl, shl);
-		HANDLE_MATH_FOO_WITH_INPLACE_FOO(SHR, Shr, shr);
-		HANDLE_MATH_FOO_WITH_INPLACE_FOO(AND, And, and);
-		HANDLE_MATH_FOO_WITH_INPLACE_FOO(OR, Or, or);
-		HANDLE_MATH_FOO_WITH_INPLACE_FOO(XOR, Xor, xor);
-		HANDLE_MATH_FOO_WITH_INPLACE_FOO(POW, Pow, pow);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(ADD, add);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(SUB, sub);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(MUL, mul);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(DIV, div);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(MOD, mod);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(SHL, shl);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(SHR, shr);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(AND, and);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(OR, or);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(XOR, xor);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(POW, pow);
 #undef HANDLE_MATH_FOO_WITH_INPLACE_FOO
 
 		default: break;
@@ -1960,24 +1960,20 @@ err:
 
 
 PRIVATE struct type_seq to_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&to_iter,
-	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&to_contains
-	/* TODO: tp_foreach */,
-	/* .tp_getitem         = */ NULL,
-	/* .tp_delitem         = */ NULL,
-	/* .tp_setitem         = */ NULL,
-	/* .tp_getrange        = */ NULL,
-	/* .tp_delrange        = */ NULL,
-	/* .tp_setrange        = */ NULL,
-	/* .tp_foreach         = */ DEFIMPL(&default__foreach__with__iter),
-	/* .tp_foreach_pair    = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate       = */ NULL,
-	/* .tp_enumerate_index = */ NULL,
-	/* .tp_iterkeys        = */ NULL,
-	/* .tp_bounditem       = */ NULL,
-	/* .tp_hasitem         = */ NULL,
-	/* .tp_size            = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&to_iter,
+	/* .tp_sizeob       = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&to_contains,
+	/* .tp_getitem      = */ NULL,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
+	/* .tp_foreach      = */ DEFIMPL(&default__foreach__with__iter), /* TODO: tp_foreach */
+	/* .tp_foreach_pair = */ DEFIMPL(&default__foreach_pair__with__iter),
+	/* .tp_bounditem    = */ NULL,
+	/* .tp_hasitem      = */ NULL,
+	/* .tp_size         = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
 };
 
 PRIVATE struct type_member tpconst to_class_members[] = {

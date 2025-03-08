@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.all()                                                */
 /************************************************************************/
-[[kw, alias(Sequence.all -> "seq_all")]]
+[[kw, alias(Sequence.all)]]
 __seq_all__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 	int result;
 	DeeObject *key = Dee_None;

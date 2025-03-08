@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.removekeys()                                          */
 /************************************************************************/
-[[alias(Mapping.removekeys -> "map_removekeys")]]
+[[alias(Mapping.removekeys)]]
 __map_removekeys__(keys:?X3?DSet?DSequence?S?O) {
 	DeeObject *keys;
 	if (DeeArg_Unpack(argc, argv, "o:__map_removekeys__", &keys))

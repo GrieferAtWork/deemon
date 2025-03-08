@@ -20,22 +20,28 @@
 #ifndef GUARD_DEEMON_OBJECTS_SET_C
 #define GUARD_DEEMON_OBJECTS_SET_C 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/class.h>
 #include <deemon/computed-operators.h>
+#include <deemon/method-hints.h>
 #include <deemon/none-operator.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
 
+#include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"
 #include "../runtime/strings.h"
 #include "seq/default-sets.h"
 #include "seq/unique-iterator.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 
@@ -59,107 +65,107 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	            "Returns ?t if ${!((this as Set) & with_)}\n"
 	            "In other words: If @this and @with_ have no items in common"),
 
-	TYPE_METHOD(STR_union, &DeeMA_Set_union,
+	TYPE_METHOD(DeeMA_Set_union_name, &DeeMA_Set_union,
 	            "(with_:?.)->?.\n"
 	            "Same as ${(this as Set) | with_}"),
-	TYPE_METHOD(STR_symmetric_difference, &DeeMA_Set_symmetric_difference,
+	TYPE_METHOD(DeeMA_Set_symmetric_difference_name, &DeeMA_Set_symmetric_difference,
 	            "(with_:?.)->?.\n"
 	            "Same as ${(this as Set) ^ with_}"),
-	TYPE_METHOD(STR_difference, &DeeMA_Set_difference,
+	TYPE_METHOD(DeeMA_Set_difference_name, &DeeMA_Set_difference,
 	            "(to:?.)->?.\n"
 	            "Same as ${(this as Set) - to}"),
-	TYPE_METHOD(STR_intersection, &DeeMA_Set_intersection,
+	TYPE_METHOD(DeeMA_Set_intersection_name, &DeeMA_Set_intersection,
 	            "(with_:?.)->?.\n"
 	            "Same as ${(this as Set) & with_}"),
-	TYPE_METHOD(STR_issubset, &DeeMA_Set_issubset,
+	TYPE_METHOD(DeeMA_Set_issubset_name, &DeeMA_Set_issubset,
 	            "(of:?.)->?Dbool\n"
 	            "Same as ${(this as Set) <= of}"),
-	TYPE_METHOD(STR_issuperset, &DeeMA_Set_issuperset,
+	TYPE_METHOD(DeeMA_Set_issuperset_name, &DeeMA_Set_issuperset,
 	            "(of:?.)->?Dbool\n"
 	            "Same as ${(this as Set) >= of}"),
 
 	/* Default functions for mutable sets */
-	TYPE_METHOD(STR_insert, &DeeMH_set_insert,
+	TYPE_METHOD(DeeMA_Set_insert_name, &DeeMA_Set_insert,
 	            "(key)->?Dbool\n"
 	            "Insert @key into @this set, returning !t if it was inserted and !f if it was already present"),
-	TYPE_METHOD(STR_remove, &DeeMH_set_remove,
+	TYPE_METHOD(DeeMA_Set_remove_name, &DeeMA_Set_remove,
 	            "(key)->?Dbool\n"
 	            "Remove @key from @this set, returning !t if it was removed and !f if it wasn't present"),
-	TYPE_METHOD(STR_insertall, &DeeMH_set_insertall,
+	TYPE_METHOD(DeeMA_Set_insertall_name, &DeeMA_Set_insertall,
 	            "(keys:?S?O)\n"
 	            "Insert all elements from @keys into @this set"),
-	TYPE_METHOD(STR_removeall, &DeeMH_set_removeall,
+	TYPE_METHOD(DeeMA_Set_removeall_name, &DeeMA_Set_removeall,
 	            "(keys:?S?O)\n"
 	            "Remove all elements from @keys from @this set"),
-	TYPE_METHOD(STR_pop, &DeeMH_set_pop,
+	TYPE_METHOD(DeeMA_Set_pop_name, &DeeMA_Set_pop,
 	            "(def?)->\n"
 	            "#tValueError{Set is empty and no @def was given}\n"
 	            "Remove and return some random key from @this set. "
 	            /**/ "If the set is empty, return @def or throw :ValueError"),
 
-	TYPE_METHOD("__iter__", &default_set___iter__,
+	TYPE_METHOD("__iter__", &DeeMA___set_iter__,
 	            "->?DIterator\n"
 	            "Alias for ${(this as Set).operator iter()}"),
-	TYPE_METHOD("__size__", &default_set___size__,
+	TYPE_METHOD("__size__", &DeeMA___set_size__,
 	            "->?Dint\n"
 	            "Alias for ${#(this as Set)}"),
-	TYPE_METHOD("__hash__", &default_set___hash__,
+	TYPE_METHOD("__hash__", &DeeMA___set_hash__,
 	            "->?Dint\n"
 	            "Alias for ${(this as Set).operator hash()}"),
-	TYPE_METHOD("__compare_eq__", &default_set___compare_eq__,
+	TYPE_METHOD("__compare_eq__", &DeeMA___set_compare_eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Set).operator == (rhs)}"),
-	TYPE_METHOD("__eq__", &default_set___eq__,
+	TYPE_METHOD("__eq__", &DeeMA___set_eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Set) == rhs}"),
-	TYPE_METHOD("__ne__", &default_set___ne__,
+	TYPE_METHOD("__ne__", &DeeMA___set_ne__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Set) != rhs}"),
-	TYPE_METHOD("__lo__", &default_set___lo__,
+	TYPE_METHOD("__lo__", &DeeMA___set_lo__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Set) < rhs}"),
-	TYPE_METHOD("__le__", &default_set___le__,
+	TYPE_METHOD("__le__", &DeeMA___set_le__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Set) <= rhs}"),
-	TYPE_METHOD("__gr__", &default_set___gr__,
+	TYPE_METHOD("__gr__", &DeeMA___set_gr__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Set) > rhs}"),
-	TYPE_METHOD("__ge__", &default_set___ge__,
+	TYPE_METHOD("__ge__", &DeeMA___set_ge__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Set) >= rhs}"),
-	TYPE_METHOD("__inv__", &default_set___inv__,
+	TYPE_METHOD("__inv__", &DeeMA___set_inv__,
 	            "()->?DSet\n"
 	            "Alias for ${~(this as Set)}"),
-	TYPE_METHOD("__add__", &default_set___add__,
+	TYPE_METHOD("__add__", &DeeMA___set_add__,
 	            "(rhs:?S?O)->?DSet\n"
 	            "Alias for ${(this as Set) + rhs}"),
-	TYPE_METHOD("__sub__", &default_set___sub__,
+	TYPE_METHOD("__sub__", &DeeMA___set_sub__,
 	            "(rhs:?S?O)->?DSet\n"
 	            "Alias for ${(this as Set) - rhs}"),
-	TYPE_METHOD("__and__", &default_set___and__,
+	TYPE_METHOD("__and__", &DeeMA___set_and__,
 	            "(rhs:?S?O)->?DSet\n"
 	            "Alias for ${(this as Set) & rhs}"),
-	TYPE_METHOD("__xor__", &default_set___xor__,
+	TYPE_METHOD("__xor__", &DeeMA___set_xor__,
 	            "(rhs:?S?O)->?DSet\n"
 	            "Alias for ${(this as Set) ^ rhs}"),
-	TYPE_METHOD("__inplace_add__", &default_set___inplace_add__,
+	TYPE_METHOD("__inplace_add__", &DeeMA___set_inplace_add__,
 	            "(rhs:?S?O)->?.\n"
 	            "Alias for ${(this as Set) += rhs}"),
-	TYPE_METHOD("__inplace_sub__", &default_set___inplace_sub__,
+	TYPE_METHOD("__inplace_sub__", &DeeMA___set_inplace_sub__,
 	            "(rhs:?S?O)->?.\n"
 	            "Alias for ${(this as Set) -= rhs}"),
-	TYPE_METHOD("__inplace_and__", &default_set___inplace_and__,
+	TYPE_METHOD("__inplace_and__", &DeeMA___set_inplace_and__,
 	            "(rhs:?S?O)->?.\n"
 	            "Alias for ${(this as Set) &= rhs}"),
-	TYPE_METHOD("__inplace_xor__", &default_set___inplace_xor__,
+	TYPE_METHOD("__inplace_xor__", &DeeMA___set_inplace_xor__,
 	            "(rhs:?S?O)->?.\n"
 	            "Alias for ${(this as Set) ^= rhs}"),
-	TYPE_METHOD("__or__", &default_set___or__,
+	TYPE_METHOD("__or__", &DeeMA___set_add__,
 	            "(rhs:?S?O)->?DSet\n"
-	            "Alias for ?#__and__"),
-	TYPE_METHOD("__inplace_or__", &default_set___inplace_or__,
+	            "Alias for ?#__add__"),
+	TYPE_METHOD("__inplace_or__", &DeeMA___set_inplace_add__,
 	            "(rhs:?S?O)->?DSet\n"
-	            "Alias for ?#__inplace_and__"),
+	            "Alias for ?#__inplace_add__"),
 
 	TYPE_METHOD_END
 };
@@ -294,9 +300,6 @@ PRIVATE struct type_seq set_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ &default__set_operator_foreach,
 	/* .tp_foreach_pair               = */ &default__foreach_pair__with__foreach,
-	/* .tp_enumerate      = */ NULL,
-	/* .tp_enumerate_index= */ NULL,
-	/* .tp_iterkeys       = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ &default__set_operator_size,

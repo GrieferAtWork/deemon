@@ -60,7 +60,7 @@ if (lo in ["lo", "ge"]) {
 	print('		goto err;');
 	print('	if (contains_status == -2)');
 	print('		goto missing_item; /' '* "rhs" is missing some element of "lhs", or has a different value for it *' '/');
-	print('	rhs_size = DeeMap_OperatorSize(rhs);');
+	print('	rhs_size = DeeObject_InvokeMethodHint(map_operator_size, rhs);');
 	print('	if unlikely(rhs_size == (size_t)-1)');
 	print('		goto err;');
 	print('	if ((size_t)contains_status >= rhs_size)');
@@ -134,7 +134,7 @@ __map_lo__.map_operator_lo([[nonnull]] DeeObject *lhs,
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "rhs" is missing some element of "lhs", or has a different value for it */
-	rhs_size = DeeMap_OperatorSize(rhs);
+	rhs_size = DeeObject_InvokeMethodHint(map_operator_size, rhs);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)
@@ -290,7 +290,7 @@ __map_ge__.map_operator_ge([[nonnull]] DeeObject *lhs,
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "rhs" is missing some element of "lhs", or has a different value for it */
-	rhs_size = DeeMap_OperatorSize(rhs);
+	rhs_size = DeeObject_InvokeMethodHint(map_operator_size, rhs);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)

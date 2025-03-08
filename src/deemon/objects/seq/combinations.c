@@ -62,7 +62,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 sc_ctor(SeqCombinations *__restrict self) {
 	Dee_Incref(Dee_EmptySeq);
 	self->sc_seq              = Dee_EmptySeq;
-	self->sc_trygetitem_index = &DeeSeq_DefaultOperatorTryGetItemIndexWithEmpty;
+	self->sc_trygetitem_index = &default__seq_operator_trygetitem_index__empty;
 	self->sc_seqsize          = 0;
 	self->sc_rparam           = 1;
 	return 0;
@@ -89,7 +89,7 @@ sc_deep(SeqCombinations *__restrict self,
 	self->sc_seq = DeeObject_DeepCopy(other->sc_seq);
 	if unlikely(!self->sc_seq)
 		goto err;
-	self->sc_trygetitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(self->sc_seq));
+	self->sc_trygetitem_index = DeeObject_RequireMethodHint(self->sc_seq, seq_operator_trygetitem_index);
 	self->sc_seqsize          = other->sc_seqsize;
 	self->sc_rparam           = other->sc_rparam;
 	return 0;
@@ -113,7 +113,7 @@ sc_init(SeqCombinations *__restrict self,
 	}
 	self->sc_seq = argv[0];
 	Dee_Incref(self->sc_seq);
-	self->sc_trygetitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(self->sc_seq));
+	self->sc_trygetitem_index = DeeObject_RequireMethodHint(self->sc_seq, seq_operator_trygetitem_index);
 	self->sc_seqsize = (size_t)-1;
 	return 0;
 err_zero_rparam:
@@ -128,7 +128,7 @@ PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 sc_getseqsize(SeqCombinations *__restrict self) {
 	size_t result = atomic_read(&self->sc_seqsize);
 	if (result == (size_t)-1) {
-		result = DeeSeq_OperatorSize(self->sc_seq);
+		result = DeeObject_InvokeMethodHint(seq_operator_size, self->sc_seq);
 		if likely(result != (size_t)-1)
 			atomic_write(&self->sc_seqsize, result);
 	}
@@ -167,6 +167,7 @@ sc_iter(SeqCombinations *__restrict self) {
 	/* Fill in iterator as the normal matrix (truncated to "rparam"). */
 	for (i = 0; i < rparam; ++i)
 		result->sci_idx[i] = i;
+	ASSERT(rparam != 0);
 	--result->sci_idx[rparam - 1]; /* Hack to get the first element to load correctly */
 	Dee_Incref(self);
 	result->sci_com = self;
@@ -219,6 +220,7 @@ sp_iter(SeqCombinations *__restrict self) {
 	/* Fill in iterator as the normal matrix (truncated to "rparam"). */
 	for (i = 0; i < rparam; ++i)
 		result->sci_idx[i] = i;
+	ASSERT(rparam != 0);
 	--result->sci_idx[rparam - 1]; /* Hack to get the first element to load correctly */
 	Dee_Incref(self);
 	result->sci_com = self;
@@ -242,9 +244,6 @@ PRIVATE struct type_seq sc_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
@@ -290,9 +289,6 @@ PRIVATE struct type_seq src_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
@@ -338,9 +334,6 @@ PRIVATE struct type_seq sp_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
@@ -901,6 +894,7 @@ spi_inc(SeqCombinationsIterator *__restrict self) {
 		size_t j, index;
 		--i;
 increment_i:
+		ASSERT(i < rparam);
 		if (++self->sci_idx[i] >= seqsize) {
 			if (i == 0) {
 				self->sci_idx[i] = seqsize - 1;
@@ -1290,7 +1284,7 @@ scv_getitem_index(SeqCombinationsView *__restrict self, size_t index) {
 	if unlikely(index >= self->scv_com->sc_rparam)
 		goto err_oob;
 	index = idx[index];
-	return DeeSeq_OperatorGetItemIndex(self->scv_com->sc_seq, index);
+	return DeeObject_InvokeMethodHint(seq_operator_getitem_index, self->scv_com->sc_seq, index);
 err_oob:
 	err_index_out_of_bounds((DeeObject *)self, index, self->scv_com->sc_rparam);
 	return NULL;
@@ -1313,7 +1307,7 @@ scv_bounditem_index(SeqCombinationsView *__restrict self, size_t index) {
 	if unlikely(index >= self->scv_com->sc_rparam)
 		return Dee_BOUND_MISSING;
 	index = idx[index];
-	return DeeSeq_OperatorBoundItemIndex(self->scv_com->sc_seq, index);
+	return DeeObject_InvokeMethodHint(seq_operator_bounditem_index, self->scv_com->sc_seq, index);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -1344,8 +1338,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-scv_enumerate_index(SeqCombinationsView *__restrict self, Dee_seq_enumerate_index_t proc,
-                    void *arg, size_t start, size_t end) {
+scv_mh_seq_enumerate_index(SeqCombinationsView *__restrict self,
+                           Dee_seq_enumerate_index_t proc,
+                           void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	size_t i, *idx = SeqCombinationsView_GetIdx(self);
 	ASSERT(self->scv_com->sc_rparam != (size_t)-1);
@@ -1373,6 +1368,48 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+scv_mh_seq_enumerate_index_reverse(SeqCombinationsView *__restrict self,
+                                   Dee_seq_enumerate_index_t proc,
+                                   void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	size_t *idx = SeqCombinationsView_GetIdx(self);
+	ASSERT(self->scv_com->sc_rparam != (size_t)-1);
+	if (end > self->scv_com->sc_rparam)
+		end = self->scv_com->sc_rparam;
+	while (end > start) {
+		DREF DeeObject *elem;
+		size_t index = idx[--end];
+		elem = (*self->scv_com->sc_trygetitem_index)(self->scv_com->sc_seq, index);
+		if unlikely(!ITER_ISOK(elem)) {
+			if unlikely(!elem)
+				goto err;
+		} else {
+			temp = (*proc)(arg, end, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE struct type_method tpconst scv_methods[] = {
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst scv_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &scv_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &scv_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_seq scv_seq = {
 	/* .tp_iter               = */ DEFIMPL(&default__iter__with__foreach),
 	/* .tp_sizeob             = */ DEFIMPL(&default__sizeob__with__size),
@@ -1385,9 +1422,6 @@ PRIVATE struct type_seq scv_seq = {
 	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&scv_foreach,
 	/* .tp_foreach_pair       = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&scv_enumerate_index,
-	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__bounditem),
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&scv_size,
@@ -1397,7 +1431,7 @@ PRIVATE struct type_seq scv_seq = {
 	/* .tp_delitem_index      = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
 	/* .tp_setitem_index      = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
 	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&scv_bounditem_index,
-	/* .tp_hasitem_index      = */ &DeeSeq_DefaultHasItemIndexWithSize,
+	/* .tp_hasitem_index      = */ &default__seq_operator_hasitem_index__with__seq_operator_size,
 	/* .tp_getrange_index     = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	/* .tp_delrange_index     = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
 	/* .tp_setrange_index     = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
@@ -1463,12 +1497,13 @@ INTERN DeeTypeObject SeqCombinationsView_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ scv_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ scv_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ scv_method_hints,
 };
 
 
@@ -1485,8 +1520,8 @@ SeqCombinations_New(/*inherit(always)*/ DREF DeeObject *__restrict seq,
 	result = DeeObject_MALLOC(SeqCombinations);
 	if unlikely(!result)
 		goto err_seq;
-	result->sc_trygetitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(seq));
-	if unlikely(result->sc_trygetitem_index == &DeeSeq_DefaultOperatorTryGetItemIndexWithError)
+	result->sc_trygetitem_index = DeeObject_RequireMethodHint(seq, seq_operator_trygetitem_index);
+	if unlikely(result->sc_trygetitem_index == &default__seq_operator_trygetitem_index__unsupported)
 		goto err_seq_r_combinations_not_supported;
 	result->sc_seqsize = (size_t)-1; /* Will be calculated lazily */
 	result->sc_rparam  = rparam;

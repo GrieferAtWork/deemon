@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Set.insert()                                                  */
 /************************************************************************/
-[[alias(Set.insert -> "set_insert")]]
+[[alias(Set.insert)]]
 __set_insert__(key)->?Dbool {
 	int result;
 	DeeObject *key;
@@ -48,7 +48,7 @@ __set_insert__.set_insert([[nonnull]] DeeObject *self,
 %{$with__map_setnew = {
 	int result;
 	DREF DeeObject *map_key_and_value[2];
-	if unlikely(DeeObject_Unpack(key, 2, map_key_and_value))
+	if unlikely(DeeSeq_Unpack(key, 2, map_key_and_value))
 		goto err;
 	result = CALL_DEPENDENCY(map_setnew, self, map_key_and_value[0], map_key_and_value[1]);
 	Dee_Decref(map_key_and_value[1]);

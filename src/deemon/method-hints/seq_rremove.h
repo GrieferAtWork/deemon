@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.rremove()                                            */
 /************************************************************************/
-[[kw, alias(Sequence.rremove -> "seq_rremove")]]
+[[kw, alias(Sequence.rremove)]]
 __seq_rremove__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 	int result;
 	DeeObject *item, *key = Dee_None;

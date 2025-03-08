@@ -316,7 +316,7 @@ ob_is_const_cmp(DeeObject *a, DeeObject *b) {
 	if (tp != Dee_TYPE(b))
 		return false;
 	/* NOTE: No need to check for NE, GR, GE -- those are always present when their
-	 *       logical inverse is present due to `DeeObject_DefaultNeWithEq', ... */
+	 *       logical inverse is present due to `default__ne__with__eq', ... */
 	has_eq = DeeType_HasOperator(tp, OPERATOR_EQ);
 	has_lo = DeeType_HasOperator(tp, OPERATOR_LO);
 	has_le = DeeType_HasOperator(tp, OPERATOR_LE);

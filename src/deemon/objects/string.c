@@ -25,7 +25,6 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
-#include <deemon/class.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -46,6 +45,7 @@
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
 
+#include "../runtime/method-hint-defaults.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
@@ -1504,12 +1504,12 @@ PRIVATE struct type_cmp string_cmp = {
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&string_compare_eq,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&string_compare,
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&string_trycompare_eq,
-	/* .tp_eq            = */ &DeeObject_DefaultEqWithCompareEq,
-	/* .tp_ne            = */ &DeeObject_DefaultNeWithCompareEq,
-	/* .tp_lo            = */ &DeeObject_DefaultLoWithCompare,
-	/* .tp_le            = */ &DeeObject_DefaultLeWithCompare,
-	/* .tp_gr            = */ &DeeObject_DefaultGrWithCompare,
-	/* .tp_ge            = */ &DeeObject_DefaultGeWithCompare,
+	/* .tp_eq            = */ &default__eq__with__compare_eq,
+	/* .tp_ne            = */ &default__ne__with__compare_eq,
+	/* .tp_lo            = */ &default__lo__with__compare,
+	/* .tp_le            = */ &default__le__with__compare,
+	/* .tp_gr            = */ &default__gr__with__compare,
+	/* .tp_ge            = */ &default__ge__with__compare,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1649,8 +1649,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-string_enumerate_index(String *self, Dee_seq_enumerate_index_t cb,
-                       void *arg, size_t start, size_t end) {
+string_mh_seq_enumerate_index(String *self, Dee_seq_enumerate_index_t cb,
+                              void *arg, size_t start, size_t end) {
 	union dcharptr ptr;
 	Dee_ssize_t temp, result = 0;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
@@ -1724,8 +1724,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-string_enumerate_index_reverse(String *self, Dee_seq_enumerate_index_t cb,
-                               void *arg, size_t start, size_t end) {
+string_mh_seq_enumerate_index_reverse(String *self, Dee_seq_enumerate_index_t cb,
+                                      void *arg, size_t start, size_t end) {
 	union dcharptr ptr;
 	Dee_ssize_t temp, result = 0;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
@@ -1860,8 +1860,8 @@ err_dst_iter:
 
 
 #ifdef __OPTIMIZE_SIZE__
-#define string_getitem  DeeObject_DefaultGetItemWithGetItemIndex
-#define string_getrange DeeObject_DefaultGetRangeWithGetRangeIndexAndGetRangeIndexN
+#define string_getitem  default__getitem__with__getitem_index
+#define string_getrange default__getrange__with__getrange_index__and__getrange_index_n
 #else /* __OPTIMIZE_SIZE__ */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_getitem(String *self, DeeObject *index) {
@@ -1920,11 +1920,8 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&string_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&string_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__getitem),
-	/* .tp_hasitem                    = */ &DeeObject_DefaultHasItemWithHasItemIndex,
+	/* .tp_hasitem                    = */ &default__hasitem__with__hasitem_index,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&string_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&string_size,
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&string_getitem_index,
@@ -1932,14 +1929,14 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
 	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
 	/* .tp_bounditem_index            = */ DEFIMPL(&default__bounditem_index__with__getitem_index),
-	/* .tp_hasitem_index              = */ &DeeSeq_DefaultHasItemIndexWithSize,
+	/* .tp_hasitem_index              = */ &default__seq_operator_hasitem_index__with__seq_operator_size,
 	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&string_getrange_index,
 	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
 	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
 	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&string_getrange_index_n,
 	/* .tp_delrange_index_n           = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
 	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
-	/* .tp_trygetitem                 = */ &DeeObject_DefaultTryGetItemWithTryGetItemIndex,
+	/* .tp_trygetitem                 = */ &default__trygetitem__with__trygetitem_index,
 	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&string_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__getitem_string_hash),
 	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
@@ -2275,7 +2272,8 @@ string_mh_seq_any_with_range(String *self, size_t start, size_t end) {
 PRIVATE struct type_method_hint tpconst string_method_hints[] = {
 	/* Helper hints. */
 	TYPE_METHOD_HINT_F(seq_foreach_reverse, &string_foreach_reverse, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &string_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &string_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &string_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &string_trygetfirst, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &string_trygetlast, METHOD_FNOREFESCAPE),
 
@@ -2283,12 +2281,12 @@ PRIVATE struct type_method_hint tpconst string_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_operator_compare_eq, &string_mh_seq_compare_eq, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_compare, &string_mh_seq_compare, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_trycompare_eq, &string_mh_seq_trycompare_eq, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_operator_eq, &DeeSeq_DefaultOperatorEqWithSeqCompareEq, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_operator_ne, &DeeSeq_DefaultOperatorNeWithSeqCompareEq, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_operator_lo, &DeeSeq_DefaultOperatorLoWithSeqCompare, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_operator_le, &DeeSeq_DefaultOperatorLeWithSeqCompare, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_operator_gr, &DeeSeq_DefaultOperatorGrWithSeqCompare, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_operator_ge, &DeeSeq_DefaultOperatorGeWithSeqCompare, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_eq, &default__seq_operator_eq__with__seq_operator_compare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_ne, &default__seq_operator_ne__with__seq_operator_compare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_lo, &default__seq_operator_lo__with__seq_operator_compare, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_le, &default__seq_operator_le__with__seq_operator_compare, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_gr, &default__seq_operator_gr__with__seq_operator_compare, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_ge, &default__seq_operator_ge__with__seq_operator_compare, METHOD_FNOREFESCAPE),
 
 	/* Optimized  */
 	TYPE_METHOD_HINT(seq_sum, &string_mh_seq_sum),
@@ -2298,44 +2296,44 @@ PRIVATE struct type_method_hint tpconst string_method_hints[] = {
 	 * Since the elements of strings are all 1-char strings, there can
 	 * never be an empty string (meaning all elements are always true) */
 	TYPE_METHOD_HINT_F(seq_all, (int (DCALL *)(DeeObject *))&_DeeNone_reti1_1, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_all_with_key, &DeeSeq_DefaultAllWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_key, &default__seq_all_with_key__with__seq_operator_foreach, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_all_with_range, (int (DCALL *)(DeeObject *, size_t, size_t))&_DeeNone_reti1_3, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &DeeSeq_DefaultAllWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &default__seq_all_with_range_and_key__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
 
 	/* seq.any() is true if there is at least 1 true element in the
 	 * sequence. Since all elements of strings are 1-char strings,
 	 * which are always true, seq.any() is true if the string is
 	 * non-empty. */
 	TYPE_METHOD_HINT_F(seq_any, &string_bool, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_any_with_key, &DeeSeq_DefaultAnyWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_key, &default__seq_any_with_key__with__seq_operator_foreach, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any_with_range, &string_mh_seq_any_with_range, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_any_with_range_and_key, &DeeSeq_DefaultAnyWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_range_and_key, &default__seq_any_with_range_and_key__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
 
 	/* These are here because string defines its own "find", "rfind", etc.
 	 * functions that work differently from those defined by Sequence. Since
 	 * we still want "(string as Sequence).find" to behave like the version
 	 * from "Sequence", we have to re-inject the original behavior here, as
 	 * well as link it as explicit method references in "string_functions.c" */
-	TYPE_METHOD_HINT_F(seq_count, &DeeSeq_DefaultCountWithSeqForeach, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_count_with_key, &DeeSeq_DefaultCountWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_count_with_range, &DeeSeq_DefaultCountWithRangeWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_count_with_range_and_key, &DeeSeq_DefaultCountWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_contains, &DeeSeq_DefaultContainsWithContains, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_contains_with_key, &DeeSeq_DefaultContainsWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_contains_with_range, &DeeSeq_DefaultContainsWithRangeWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &DeeSeq_DefaultContainsWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_startswith, &DeeSeq_DefaultStartsWithWithSeqTryGetFirst, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_startswith_with_key, &DeeSeq_DefaultStartsWithWithKeyWithSeqTryGetFirst, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_startswith_with_range, &DeeSeq_DefaultStartsWithWithRangeWithSeqTryGetItemIndex, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_startswith_with_range_and_key, &DeeSeq_DefaultStartsWithWithRangeAndKeyWithSeqTryGetItemIndex, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_endswith, &DeeSeq_DefaultEndsWithWithSeqTryGetLast, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_endswith_with_key, &DeeSeq_DefaultEndsWithWithKeyWithSeqTryGetLast, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_endswith_with_range, &DeeSeq_DefaultEndsWithWithRangeWithSeqSizeAndSeqTryGetItemIndex, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_endswith_with_range_and_key, &DeeSeq_DefaultEndsWithWithRangeAndKeyWithSeqSizeAndSeqTryGetItemIndex, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_find, &DeeSeq_DefaultFindWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_find_with_key, &DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_rfind, &DeeSeq_DefaultRFindWithSeqEnumerateIndexReverse, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_rfind_with_key, &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndexReverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count, &default__seq_count__with__seq_operator_foreach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_key, &default__seq_count_with_key__with__seq_operator_foreach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_range, &default__seq_count_with_range__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_range_and_key, &default__seq_count_with_range_and_key__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains, &default__seq_contains__with__seq_operator_contains, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_key, &default__seq_contains_with_key__with__seq_operator_foreach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_range, &default__seq_contains_with_range__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &default__seq_contains_with_range_and_key__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith, &default__seq_startswith__with__seq_trygetfirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith_with_key, &default__seq_startswith_with_key__with__seq_trygetfirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith_with_range, &default__seq_startswith_with_range__with__seq_operator_trygetitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith_with_range_and_key, &default__seq_startswith_with_range_and_key__with__seq_operator_trygetitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith, &default__seq_endswith__with__seq_trygetlast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith_with_key, &default__seq_endswith_with_key__with__seq_trygetlast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith_with_range, &default__seq_endswith_with_range__with__seq_operator_size__and__operator_trygetitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith_with_range_and_key, &default__seq_endswith_with_range_and_key__with__seq_operator_size__and__operator_trygetitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find, &default__seq_find__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find_with_key, &default__seq_find_with_key__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind, &default__seq_rfind__with__seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind_with_key, &default__seq_rfind_with_key__with__seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 
 	TYPE_METHOD_HINT_END
 };

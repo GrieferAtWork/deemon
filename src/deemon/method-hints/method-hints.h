@@ -23,8 +23,11 @@
  * >> make method-hints
  */
 
+/* TODO: Method hint impl that don't call dependencies don't
+ *       need to appear in "msm_with_super__" (I think...) */
+
 /************************************************************************/
-/* For `deemon.Object'                                                  */
+/* Core operator definitions for `deemon.Object'                        */
 /************************************************************************/
 %[include("object_operator_assign.h")]
 %[include("object_operator_moveassign.h")]
@@ -51,9 +54,7 @@
 %[include("object_operator_delattr.h")]
 %[include("object_operator_setattr.h")]
 
-
-/* TODO: Get rid of all the "-> seq_foo" part in "[[alias(Sequence.foo -> seq_foo)]]"
- * Instead of "seq_foo", the standard "Sequence_foo" attribute identifier should be used! */
+/* TODO: Object.__format__ */
 
 /************************************************************************/
 /* For `deemon.Sequence'                                                */
@@ -229,6 +230,7 @@
  * For that reason, also need "map_operator_size" and "map_operator_sizeob" */
 %[include("map_operator_iter.h")]
 %[include("map_operator_size.h")]
+//TODO:%[include("map_operator_hash.h")]
 
 %[include("map_operator_getitem.h")]
 %[include("map_operator_delitem.h")]

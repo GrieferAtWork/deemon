@@ -2771,7 +2771,7 @@ di_nuf_iter_next(DefaultIterator_WithNextAndUnpackFilter *self) {
 again:
 	result = (*self->dinuf_tp_next)(self->dinuf_iter);
 	if (ITER_ISOK(result)) {
-		if (DeeObject_Unpack(result, 2, key_and_value))
+		if (DeeSeq_Unpack(result, 2, key_and_value))
 			goto err_r;
 		Dee_Decref(key_and_value[1]);
 		temp = DeeObject_CmpLeAsBool(self->dinuf_start, key_and_value[0]);

@@ -503,9 +503,6 @@ PRIVATE struct type_seq cot_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cot_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__trygetitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__bounditem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&cot_size,
@@ -1107,9 +1104,6 @@ PRIVATE struct type_seq cat_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cat_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__bounditem_string_len_hash),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__bounditem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&cat_size,
@@ -1788,7 +1782,7 @@ class_attribute_init(struct class_attribute *__restrict self,
 		self->ca_flag = CLASS_ATTRIBUTE_FPUBLIC;
 		return 0;
 	}
-	nargs = DeeObject_UnpackEx(data, 2, 3, addr_flags_doc);
+	nargs = DeeObject_InvokeMethodHint(seq_unpack_ex, data, 2, 3, addr_flags_doc);
 	if unlikely(nargs == (size_t)-1)
 		goto err;
 #define LOCAL_addr  addr_flags_doc[0]
@@ -1945,7 +1939,7 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 			result = new_result;
 			imask  = new_mask;
 		}
-		if (DeeObject_Unpack(elem, 2, data))
+		if (DeeSeq_Unpack(elem, 2, data))
 			goto err_iter_r_elem;
 		Dee_Decref(elem);
 		if (DeeObject_AssertType(data[0], &DeeString_Type))
@@ -2187,7 +2181,7 @@ got_flag:
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 			struct class_attribute *ent;
 			Dee_hash_t hash, i, perturb;
-			if (DeeObject_Unpack(elem, 2, data))
+			if (DeeSeq_Unpack(elem, 2, data))
 				goto err_r_imemb_iter_elem;
 			Dee_Decref(elem);
 			if (DeeObject_AssertType(data[0], &DeeString_Type))
@@ -2245,7 +2239,7 @@ got_flag:
 			goto err_r_imemb_cmemb;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 			Dee_operator_t name, index;
-			if (DeeObject_Unpack(elem, 2, data))
+			if (DeeSeq_Unpack(elem, 2, data))
 				goto err_r_imemb_iter_elem;
 			Dee_Decref(elem);
 			if (DeeObject_AsUInt16(data[1], &index))
@@ -2512,7 +2506,7 @@ ot_bounditem_index(ObjectTable *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-ot_xchitem_index(ObjectTable *self, size_t index, DeeObject *newval) {
+ot_mh_seq_xchitem_index(ObjectTable *self, size_t index, DeeObject *newval) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->ot_size)
 		goto err_index;
@@ -2560,8 +2554,8 @@ err_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ot_enumerate_index(ObjectTable *self, Dee_seq_enumerate_index_t proc,
-                   void *arg, size_t start, size_t end) {
+ot_mh_seq_enumerate_index(ObjectTable *self, Dee_seq_enumerate_index_t proc,
+                          void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (end > self->ot_size)
@@ -2588,12 +2582,14 @@ err_temp:
 }
 
 PRIVATE struct type_method tpconst ot_methods[] = {
-	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst ot_method_hints[] = {
-	TYPE_METHOD_HINT(seq_xchitem_index, &ot_xchitem_index),
+	TYPE_METHOD_HINT(seq_xchitem_index, &ot_mh_seq_xchitem_index),
+	TYPE_METHOD_HINT(seq_enumerate_index, &ot_mh_seq_enumerate_index),
 	TYPE_METHOD_HINT_END
 };
 
@@ -2609,9 +2605,6 @@ PRIVATE struct type_seq ot_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ot_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ot_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ot_size,

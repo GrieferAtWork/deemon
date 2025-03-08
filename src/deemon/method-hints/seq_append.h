@@ -21,8 +21,8 @@
 /************************************************************************/
 /* deemon.Sequence.append()                                             */
 /************************************************************************/
-[[alias(Sequence.append -> "seq_append")]]
-[[alias(Sequence.pushback -> "seq_pushback")]]
+[[alias(Sequence.append)]]
+[[alias(Sequence.pushback)]]
 __seq_append__(item) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_append__", &item))

@@ -142,7 +142,7 @@ again:
 	result = DeeObject_IterNext(self->fi_iter);
 	if unlikely(!ITER_ISOK(result))
 		goto done;
-	if (DeeObject_Unpack(result, 2, key_and_value))
+	if (DeeSeq_Unpack(result, 2, key_and_value))
 		goto err_r;
 	Dee_Decref(key_and_value[1]);
 	key_hash = DeeObject_Hash(key_and_value[0]);
@@ -368,9 +368,6 @@ PRIVATE struct type_seq filter_seq = {
 	/* .tp_setrange = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),

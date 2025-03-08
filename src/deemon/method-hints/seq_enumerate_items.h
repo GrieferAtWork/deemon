@@ -33,14 +33,14 @@ __seq_enumerate_items__(start?:?X2?Dint?O,end?:?X2?Dint?O)->?S?T2?Dint?O {
 	if (endob) {
 		if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
 		    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end)))
-			return DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, end);
-		return DeeSeq_InvokeMakeEnumerationWithRange(self, startob, endob);
+			return CALL_DEPENDENCY(seq_makeenumeration_with_intrange, self, start, end);
+		return CALL_DEPENDENCY(seq_makeenumeration_with_range, self, startob, endob);
 	} else if (startob) {
 		if (DeeObject_AsSize(startob, &start))
 			goto err;
-		return DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, (size_t)-1);
+		return CALL_DEPENDENCY(seq_makeenumeration_with_intrange, self, start, (size_t)-1);
 	}
-	return DeeSeq_InvokeMakeEnumeration(self);
+	return CALL_DEPENDENCY(seq_makeenumeration, self);
 err:
 	return NULL;
 }

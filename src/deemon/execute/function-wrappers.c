@@ -407,7 +407,7 @@ funcstatics_getitem_index_fast(FunctionStatics *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-funcstatics_xchitem_index(FunctionStatics *self, size_t index, DeeObject *value) {
+funcstatics_mh_seq_xchitem_index(FunctionStatics *self, size_t index, DeeObject *value) {
 	DeeFunctionObject *func = self->fs_func;
 	DeeCodeObject *code = func->fo_code;
 	DREF DeeObject *oldval;
@@ -477,8 +477,8 @@ STATIC_ASSERT(offsetof(FunctionStatics, fs_func) == offsetof(ProxyObject, po_obj
 #define funcstatics_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-funcstatics_enumerate_index(FunctionStatics *self, Dee_seq_enumerate_index_t proc,
-                            void *arg, size_t start, size_t end) {
+funcstatics_mh_seq_enumerate_index(FunctionStatics *self, Dee_seq_enumerate_index_t proc,
+                                   void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	DeeFunctionObject *func = self->fs_func;
 	DeeCodeObject *code = func->fo_code;
@@ -503,12 +503,14 @@ err_temp:
 }
 
 PRIVATE struct type_method tpconst funcstatics_methods[] = {
-	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst funcstatics_method_hints[] = {
-	TYPE_METHOD_HINT(seq_xchitem_index, &funcstatics_xchitem_index),
+	TYPE_METHOD_HINT(seq_xchitem_index, &funcstatics_mh_seq_xchitem_index),
+	TYPE_METHOD_HINT(seq_enumerate_index, &funcstatics_mh_seq_enumerate_index),
 	TYPE_METHOD_HINT_END
 };
 
@@ -524,9 +526,6 @@ PRIVATE struct type_seq funcstatics_seq = {
 	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach            = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair       = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&funcstatics_enumerate_index,
-	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&funcstatics_size,
@@ -1483,9 +1482,6 @@ PRIVATE struct type_seq funcsymbolsbyname_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&funcsymbolsbyname_enumerate,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_mh_map_iterkeys,
 	/* .tp_bounditem                  = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_bounditem),
 	/* .tp_hasitem                    = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_hasitem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_size,
@@ -1532,8 +1528,8 @@ PRIVATE struct type_member tpconst funcsymbolsbyname_members[] = {
 };
 
 PRIVATE struct type_method tpconst funcsymbolsbyname_methods[] = {
-	TYPE_METHOD_HINTREF(map_setold_ex),
-	TYPE_METHOD_HINTREF(map_setnew_ex),
+	TYPE_METHOD_HINTREF(Mapping_setold_ex),
+	TYPE_METHOD_HINTREF(Mapping_setnew_ex),
 	TYPE_METHOD_END
 };
 
@@ -2590,9 +2586,6 @@ PRIVATE struct type_seq yfuncsymbolsbyname_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&yfuncsymbolsbyname_enumerate,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_mh_map_iterkeys,
 	/* .tp_bounditem                  = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_bounditem),
 	/* .tp_hasitem                    = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_hasitem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_size,
@@ -2632,14 +2625,15 @@ PRIVATE struct type_member tpconst yfuncsymbolsbyname_class_members[] = {
 };
 
 PRIVATE struct type_method tpconst yfuncsymbolsbyname_methods[] = {
-	TYPE_METHOD_HINTREF(map_setold_ex),
-	TYPE_METHOD_HINTREF(map_setnew_ex),
+	TYPE_METHOD_HINTREF(Mapping_setold_ex),
+	TYPE_METHOD_HINTREF(Mapping_setnew_ex),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst yfuncsymbolsbyname_method_hints[] = {
 	TYPE_METHOD_HINT(map_setold_ex, &yfuncsymbolsbyname_mh_setold_ex),
 	TYPE_METHOD_HINT(map_setnew_ex, &yfuncsymbolsbyname_mh_setnew_ex),
+	// TODO: TYPE_METHOD_HINT(map_enumerate, &yfuncsymbolsbyname_enumerate),
 	TYPE_METHOD_HINT_END
 };
 
@@ -2884,9 +2878,6 @@ PRIVATE struct type_seq frameargs_seq = {
 	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach            = */ DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index),
 	/* .tp_foreach_pair       = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
-	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ NULL, /* TODO */
-	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__bounditem),
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&frameargs_size,
@@ -2976,6 +2967,7 @@ INTERN DeeTypeObject FrameArgs_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL, /* TODO: seq_enumerate_index */
 };
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3104,7 +3096,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-framelocals_xchitem_index(FrameLocals *self, size_t index, DeeObject *value) {
+framelocals_mh_seq_xchitem_index(FrameLocals *self, size_t index, DeeObject *value) {
 	struct code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
@@ -3129,8 +3121,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-framelocals_enumerate_index(FrameLocals *__restrict self, Dee_seq_enumerate_index_t proc,
-                            void *arg, size_t start, size_t end) {
+framelocals_mh_seq_enumerate_index(FrameLocals *__restrict self, Dee_seq_enumerate_index_t proc,
+                                   void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	struct code_frame const *frame;
 	if (end > self->fl_localc)
@@ -3204,12 +3196,14 @@ STATIC_ASSERT(offsetof(FrameLocals, fl_frame) == offsetof(ProxyObject, po_obj));
 #define framelocals_visit generic_proxy__visit
 
 PRIVATE struct type_method tpconst framelocals_methods[] = {
-	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst framelocals_method_hints[] = {
-	TYPE_METHOD_HINT(seq_xchitem_index, &framelocals_xchitem_index),
+	TYPE_METHOD_HINT(seq_xchitem_index, &framelocals_mh_seq_xchitem_index),
+	TYPE_METHOD_HINT(seq_enumerate_index, &framelocals_mh_seq_enumerate_index),
 	TYPE_METHOD_HINT_END
 };
 
@@ -3225,9 +3219,6 @@ PRIVATE struct type_seq framelocals_seq = {
 	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach            = */ DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index),
 	/* .tp_foreach_pair       = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
-	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&framelocals_enumerate_index,
-	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__bounditem),
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&framelocals_size,
@@ -3412,7 +3403,7 @@ err:
 #endif /* !__OPTIMIZE_SIZE__ */
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-framestack_xchitem_index(FrameStack *self, size_t index, DeeObject *value) {
+framestack_mh_seq_xchitem_index(FrameStack *self, size_t index, DeeObject *value) {
 	uint16_t stackc;
 	struct code_frame *frame;
 	DREF DeeObject *oldvalue;
@@ -3438,7 +3429,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 framestack_setitem_index(FrameStack *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldvalue;
-	oldvalue = framestack_xchitem_index(self, index, value);
+	oldvalue = framestack_mh_seq_xchitem_index(self, index, value);
 	if unlikely(!oldvalue)
 		goto err;
 	Dee_Decref(oldvalue);
@@ -3481,8 +3472,8 @@ STATIC_ASSERT(offsetof(FrameStack, fs_frame) == offsetof(ProxyObject, po_obj));
 #define framestack_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-framestack_enumerate_index(FrameStack *__restrict self, Dee_seq_enumerate_index_t proc,
-                           void *arg, size_t start, size_t end) {
+framestack_mh_seq_enumerate_index(FrameStack *__restrict self, Dee_seq_enumerate_index_t proc,
+                                  void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	struct code_frame const *frame;
 	for (; start < end; ++start) {
@@ -3517,7 +3508,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-framestack_mh_insert(FrameStack *self, size_t index, DeeObject *value) {
+framestack_mh_seq_insert(FrameStack *self, size_t index, DeeObject *value) {
 	uint16_t stackc, stacka;
 	struct code_frame *frame;
 	DREF DeeObject **stackv;
@@ -3590,7 +3581,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framestack_mh_pop(FrameStack *self, Dee_ssize_t index) {
+framestack_mh_seq_pop(FrameStack *self, Dee_ssize_t index) {
 	uint16_t stackc, i;
 	struct code_frame *frame;
 	DREF DeeObject **stackv;
@@ -3625,16 +3616,18 @@ err:
 }
 
 PRIVATE struct type_method tpconst framestack_methods[] = {
-	TYPE_METHOD_HINTREF(seq_xchitem),
-	TYPE_METHOD_HINTREF(seq_insert),
-	TYPE_METHOD_HINTREF(seq_pop),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_insert),
+	TYPE_METHOD_HINTREF(Sequence_pop),
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst framestack_method_hints[] = {
-	TYPE_METHOD_HINT(seq_xchitem_index, &framestack_xchitem_index),
-	TYPE_METHOD_HINT(seq_insert, &framestack_mh_insert),
-	TYPE_METHOD_HINT(seq_pop, &framestack_mh_pop),
+	TYPE_METHOD_HINT(seq_xchitem_index, &framestack_mh_seq_xchitem_index),
+	TYPE_METHOD_HINT(seq_insert, &framestack_mh_seq_insert),
+	TYPE_METHOD_HINT(seq_pop, &framestack_mh_seq_pop),
+	TYPE_METHOD_HINT(seq_enumerate_index, &framestack_mh_seq_enumerate_index),
 	TYPE_METHOD_HINT_END
 };
 
@@ -3655,9 +3648,6 @@ PRIVATE struct type_seq framestack_seq = {
 	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach            = */ DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index),
 	/* .tp_foreach_pair       = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
-	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&framestack_enumerate_index,
-	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__bounditem),
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&framestack_size,
@@ -5193,9 +5183,6 @@ PRIVATE struct type_seq framesymbolsbyname_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *, Dee_seq_enumerate_t cb, void *arg))&framesymbolsbyname_enumerate,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbyname_mh_map_keysiter,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_size,
@@ -5229,8 +5216,8 @@ PRIVATE struct type_seq framesymbolsbyname_seq = {
 };
 
 PRIVATE struct type_method tpconst framesymbolsbyname_methods[] = {
-	TYPE_METHOD_HINTREF(map_setold_ex),
-	TYPE_METHOD_HINTREF(map_setnew_ex),
+	TYPE_METHOD_HINTREF(Mapping_setold_ex),
+	TYPE_METHOD_HINTREF(Mapping_setnew_ex),
 	TYPE_METHOD_END
 };
 
@@ -5242,6 +5229,7 @@ PRIVATE struct type_getset tpconst framesymbolsbyname_getsets[] = {
 PRIVATE struct type_method_hint tpconst framesymbolsbyname_method_hints[] = {
 	TYPE_METHOD_HINT(map_setold_ex, &framesymbolsbyname_mh_setold_ex),
 	TYPE_METHOD_HINT(map_setnew_ex, &framesymbolsbyname_mh_setnew_ex),
+	// TODO: TYPE_METHOD_HINT(map_enumerate, &framesymbolsbyname_enumerate),
 	TYPE_METHOD_HINT_END
 };
 

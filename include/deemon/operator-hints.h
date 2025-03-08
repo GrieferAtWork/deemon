@@ -1691,41 +1691,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__setattr_string_len_hash__wi
 /* clang-format on */
 
 
-/* Backward compat -- DEPRECATED! */
-#define DeeObject_DefaultEqWithNe                      default__eq__with__ne
-#define DeeObject_DefaultNeWithEq                      default__ne__with__eq
-#define DeeObject_DefaultLoWithGe                      default__lo__with__ge
-#define DeeObject_DefaultLeWithGr                      default__le__with__gr
-#define DeeObject_DefaultGrWithLe                      default__gr__with__le
-#define DeeObject_DefaultGeWithLo                      default__ge__with__lo
-#define DeeObject_DefaultIntWithDouble                 default__int__with__double
-#define DeeObject_DefaultDoubleWithInt                 default__double__with__int
-#define DeeObject_DefaultDoubleWithInt32               default__double__with__int32
-#define DeeObject_DefaultDoubleWithInt64               default__double__with__int64
-#define DeeObject_DefaultInplaceAddWithAdd             default__inplace_add__with__add
-#define DeeObject_DefaultInplaceSubWithSub             default__inplace_sub__with__sub
-#define DeeObject_DefaultInplaceMulWithMul             default__inplace_mul__with__mul
-#define DeeObject_DefaultInplaceDivWithDiv             default__inplace_div__with__div
-#define DeeObject_DefaultInplaceModWithMod             default__inplace_mod__with__mod
-#define DeeObject_DefaultInplaceShlWithShl             default__inplace_shl__with__shl
-#define DeeObject_DefaultInplaceShrWithShr             default__inplace_shr__with__shr
-#define DeeObject_DefaultInplaceAndWithAnd             default__inplace_and__with__and
-#define DeeObject_DefaultInplaceOrWithOr               default__inplace_or__with__or
-#define DeeObject_DefaultInplaceXorWithXor             default__inplace_xor__with__xor
-#define DeeObject_DefaultInplacePowWithPow             default__inplace_pow__with__pow
-#define DeeObject_DefaultEqWithCompareEq               default__eq__with__compare_eq
-#define DeeObject_DefaultNeWithCompareEq               default__ne__with__compare_eq
-#define DeeObject_DefaultLoWithCompare                 default__lo__with__compare
-#define DeeObject_DefaultLeWithCompare                 default__le__with__compare
-#define DeeObject_DefaultGrWithCompare                 default__gr__with__compare
-#define DeeObject_DefaultGeWithCompare                 default__ge__with__compare
-#define DeeObject_DefaultHasItemWithHasItemIndex       default__hasitem__with__hasitem_index
-#define DeeObject_DefaultTryGetItemWithTryGetItemIndex default__trygetitem__with__trygetitem_index
-#define DeeObject_DefaultIterAdvanceWithIterNextKey    default__advance__with__nextkey
-#define DeeObject_DefaultForeachPairWithForeach        default__foreach_pair__with__foreach
-
-
-/* Backward compat -- DEPRECATED! */
+/* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: Backward compat -- DEPRECATED! */
 #define instance_tassign                tusrtype__assign__with__ASSIGN
 #define instance_assign                 usrtype__assign__with__ASSIGN
 #define instance_tmoveassign            tusrtype__move_assign__with__MOVEASSIGN
@@ -1863,7 +1829,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__setattr_string_len_hash__wi
 #define instance_tleave                 tusrtype__leave__with__LEAVE
 #define instance_leave                  usrtype__leave__with__LEAVE
 
-/* Backward compat -- DEPRECATED! */
+/* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: Backward compat -- DEPRECATED! */
 #define DeeType_InheritStr(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_str) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_print))
 #define DeeType_InheritRepr(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_repr) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_printrepr))
 #define DeeType_InheritBool(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_bool) && 1)
@@ -1895,112 +1861,28 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__setattr_string_len_hash__wi
 #define DeeType_InheritSetRange(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_setrange) && 1)
 #define DeeType_InheritWith(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_enter) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_leave))
 
-/* Backward compat -- DEPRECATED! */
-#define DeeType_InvokeInitAssign(tp_self, self, other)                                           (*maketyped__assign((tp_self)->tp_init.tp_assign))(tp_self, self, other)
-#define DeeType_InvokeInitMoveAssign(tp_self, self, other)                                       (*maketyped__move_assign((tp_self)->tp_init.tp_move_assign))(tp_self, self, other)
+/* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: Backward compat -- DEPRECATED! */
 #define DeeType_InvokeCastStr(tp_self, self)                                                     (*maketyped__str((tp_self)->tp_cast.tp_str))(tp_self, self)
 #define DeeType_InvokeCastPrint(tp_self, self, printer, arg)                                     (*maketyped__print((tp_self)->tp_cast.tp_print))(tp_self, self, printer, arg)
 #define DeeType_InvokeCastRepr(tp_self, self)                                                    (*maketyped__repr((tp_self)->tp_cast.tp_repr))(tp_self, self)
 #define DeeType_InvokeCastPrintRepr(tp_self, self, printer, arg)                                 (*maketyped__printrepr((tp_self)->tp_cast.tp_printrepr))(tp_self, self, printer, arg)
 #define DeeType_InvokeCastBool(tp_self, self)                                                    (*maketyped__bool((tp_self)->tp_cast.tp_bool))(tp_self, self)
-#define DeeType_InvokeIterNext(tp_self, self)                                                    (*maketyped__iter_next((tp_self)->tp_iter_next))(tp_self, self)
-#define DeeType_InvokeIterNextPair(tp_self, self, key_and_value)                                 (*maketyped__nextpair((tp_self)->tp_iterator->tp_nextpair))(tp_self, self, key_and_value)
-#define DeeType_InvokeIterNextKey(tp_self, self)                                                 (*maketyped__nextkey((tp_self)->tp_iterator->tp_nextkey))(tp_self, self)
-#define DeeType_InvokeIterNextValue(tp_self, self)                                               (*maketyped__nextvalue((tp_self)->tp_iterator->tp_nextvalue))(tp_self, self)
-#define DeeType_InvokeIterAdvance(tp_self, self, step)                                           (*maketyped__advance((tp_self)->tp_iterator->tp_advance))(tp_self, self, step)
 #define DeeType_InvokeCall(tp_self, self, argc, argv)                                            (*maketyped__call((tp_self)->tp_call))(tp_self, self, argc, argv)
 #define DeeType_InvokeCallKw(tp_self, self, argc, argv, kw)                                      (*maketyped__call_kw((tp_self)->tp_call_kw))(tp_self, self, argc, argv, kw)
 #define DeeType_InvokeMathInt32(tp_self, self, result)                                           (*maketyped__int32((tp_self)->tp_math->tp_int32))(tp_self, self, result)
 #define DeeType_InvokeMathInt64(tp_self, self, result)                                           (*maketyped__int64((tp_self)->tp_math->tp_int64))(tp_self, self, result)
 #define DeeType_InvokeMathDouble(tp_self, self, result)                                          (*maketyped__double((tp_self)->tp_math->tp_double))(tp_self, self, result)
 #define DeeType_InvokeMathInt(tp_self, self)                                                     (*maketyped__int((tp_self)->tp_math->tp_int))(tp_self, self)
-#define DeeType_InvokeMathInv(tp_self, self)                                                     (*maketyped__inv((tp_self)->tp_math->tp_inv))(tp_self, self)
-#define DeeType_InvokeMathPos(tp_self, self)                                                     (*maketyped__pos((tp_self)->tp_math->tp_pos))(tp_self, self)
-#define DeeType_InvokeMathNeg(tp_self, self)                                                     (*maketyped__neg((tp_self)->tp_math->tp_neg))(tp_self, self)
-#define DeeType_InvokeMathAdd(tp_self, self, other)                                              (*maketyped__add((tp_self)->tp_math->tp_add))(tp_self, self, other)
-#define DeeType_InvokeMathSub(tp_self, self, other)                                              (*maketyped__sub((tp_self)->tp_math->tp_sub))(tp_self, self, other)
-#define DeeType_InvokeMathMul(tp_self, self, other)                                              (*maketyped__mul((tp_self)->tp_math->tp_mul))(tp_self, self, other)
-#define DeeType_InvokeMathDiv(tp_self, self, other)                                              (*maketyped__div((tp_self)->tp_math->tp_div))(tp_self, self, other)
-#define DeeType_InvokeMathMod(tp_self, self, other)                                              (*maketyped__mod((tp_self)->tp_math->tp_mod))(tp_self, self, other)
-#define DeeType_InvokeMathShl(tp_self, self, other)                                              (*maketyped__shl((tp_self)->tp_math->tp_shl))(tp_self, self, other)
-#define DeeType_InvokeMathShr(tp_self, self, other)                                              (*maketyped__shr((tp_self)->tp_math->tp_shr))(tp_self, self, other)
-#define DeeType_InvokeMathAnd(tp_self, self, other)                                              (*maketyped__and((tp_self)->tp_math->tp_and))(tp_self, self, other)
-#define DeeType_InvokeMathOr(tp_self, self, other)                                               (*maketyped__or((tp_self)->tp_math->tp_or))(tp_self, self, other)
-#define DeeType_InvokeMathXor(tp_self, self, other)                                              (*maketyped__xor((tp_self)->tp_math->tp_xor))(tp_self, self, other)
-#define DeeType_InvokeMathPow(tp_self, self, other)                                              (*maketyped__pow((tp_self)->tp_math->tp_pow))(tp_self, self, other)
-#define DeeType_InvokeMathInc(tp_self, p_self)                                                   (*maketyped__inc((tp_self)->tp_math->tp_inc))(tp_self, p_self)
-#define DeeType_InvokeMathDec(tp_self, p_self)                                                   (*maketyped__dec((tp_self)->tp_math->tp_dec))(tp_self, p_self)
-#define DeeType_InvokeMathInplaceAdd(tp_self, p_self, other)                                     (*maketyped__inplace_add((tp_self)->tp_math->tp_inplace_add))(tp_self, p_self, other)
-#define DeeType_InvokeMathInplaceSub(tp_self, p_self, other)                                     (*maketyped__inplace_sub((tp_self)->tp_math->tp_inplace_sub))(tp_self, p_self, other)
-#define DeeType_InvokeMathInplaceMul(tp_self, p_self, other)                                     (*maketyped__inplace_mul((tp_self)->tp_math->tp_inplace_mul))(tp_self, p_self, other)
-#define DeeType_InvokeMathInplaceDiv(tp_self, p_self, other)                                     (*maketyped__inplace_div((tp_self)->tp_math->tp_inplace_div))(tp_self, p_self, other)
-#define DeeType_InvokeMathInplaceMod(tp_self, p_self, other)                                     (*maketyped__inplace_mod((tp_self)->tp_math->tp_inplace_mod))(tp_self, p_self, other)
-#define DeeType_InvokeMathInplaceShl(tp_self, p_self, other)                                     (*maketyped__inplace_shl((tp_self)->tp_math->tp_inplace_shl))(tp_self, p_self, other)
-#define DeeType_InvokeMathInplaceShr(tp_self, p_self, other)                                     (*maketyped__inplace_shr((tp_self)->tp_math->tp_inplace_shr))(tp_self, p_self, other)
-#define DeeType_InvokeMathInplaceAnd(tp_self, p_self, other)                                     (*maketyped__inplace_and((tp_self)->tp_math->tp_inplace_and))(tp_self, p_self, other)
-#define DeeType_InvokeMathInplaceOr(tp_self, p_self, other)                                      (*maketyped__inplace_or((tp_self)->tp_math->tp_inplace_or))(tp_self, p_self, other)
-#define DeeType_InvokeMathInplaceXor(tp_self, p_self, other)                                     (*maketyped__inplace_xor((tp_self)->tp_math->tp_inplace_xor))(tp_self, p_self, other)
-#define DeeType_InvokeMathInplacePow(tp_self, p_self, other)                                     (*maketyped__inplace_pow((tp_self)->tp_math->tp_inplace_pow))(tp_self, p_self, other)
 #define DeeType_InvokeCmpHash(tp_self, self)                                                     (*maketyped__hash((tp_self)->tp_cmp->tp_hash))(tp_self, self)
-#define DeeType_InvokeCmpEq(tp_self, self, other)                                                (*maketyped__eq((tp_self)->tp_cmp->tp_eq))(tp_self, self, other)
-#define DeeType_InvokeCmpNe(tp_self, self, other)                                                (*maketyped__ne((tp_self)->tp_cmp->tp_ne))(tp_self, self, other)
-#define DeeType_InvokeCmpLo(tp_self, self, other)                                                (*maketyped__lo((tp_self)->tp_cmp->tp_lo))(tp_self, self, other)
-#define DeeType_InvokeCmpLe(tp_self, self, other)                                                (*maketyped__le((tp_self)->tp_cmp->tp_le))(tp_self, self, other)
-#define DeeType_InvokeCmpGr(tp_self, self, other)                                                (*maketyped__gr((tp_self)->tp_cmp->tp_gr))(tp_self, self, other)
-#define DeeType_InvokeCmpGe(tp_self, self, other)                                                (*maketyped__ge((tp_self)->tp_cmp->tp_ge))(tp_self, self, other)
-#define DeeType_InvokeCmpCompareEq(tp_self, self, other)                                         (*maketyped__compare_eq((tp_self)->tp_cmp->tp_compare_eq))(tp_self, self, other)
-#define DeeType_InvokeCmpCompare(tp_self, self, other)                                           (*maketyped__compare((tp_self)->tp_cmp->tp_compare))(tp_self, self, other)
-#define DeeType_InvokeCmpTryCompareEq(tp_self, self, other)                                      (*maketyped__trycompare_eq((tp_self)->tp_cmp->tp_trycompare_eq))(tp_self, self, other)
-#define DeeType_InvokeSeqIter(tp_self, self)                                                     (*maketyped__iter((tp_self)->tp_seq->tp_iter))(tp_self, self)
-#define DeeType_InvokeSeqSizeOb(tp_self, self)                                                   (*maketyped__sizeob((tp_self)->tp_seq->tp_sizeob))(tp_self, self)
-#define DeeType_InvokeSeqContains(tp_self, self, other)                                          (*maketyped__contains((tp_self)->tp_seq->tp_contains))(tp_self, self, other)
-#define DeeType_InvokeSeqGetItem(tp_self, self, index)                                           (*maketyped__getitem((tp_self)->tp_seq->tp_getitem))(tp_self, self, index)
-#define DeeType_InvokeSeqDelItem(tp_self, self, index)                                           (*maketyped__delitem((tp_self)->tp_seq->tp_delitem))(tp_self, self, index)
-#define DeeType_InvokeSeqSetItem(tp_self, self, index, value)                                    (*maketyped__setitem((tp_self)->tp_seq->tp_setitem))(tp_self, self, index, value)
 #define DeeType_InvokeSeqGetRange(tp_self, self, start, end)                                     (*maketyped__getrange((tp_self)->tp_seq->tp_getrange))(tp_self, self, start, end)
 #define DeeType_InvokeSeqDelRange(tp_self, self, start, end)                                     (*maketyped__delrange((tp_self)->tp_seq->tp_delrange))(tp_self, self, start, end)
 #define DeeType_InvokeSeqSetRange(tp_self, self, start, end, values)                             (*maketyped__setrange((tp_self)->tp_seq->tp_setrange))(tp_self, self, start, end, values)
-#define DeeType_InvokeSeqForeach(tp_self, self, proc, arg)                                       (*maketyped__foreach((tp_self)->tp_seq->tp_foreach))(tp_self, self, proc, arg)
-#define DeeType_InvokeSeqForeachPair(tp_self, self, proc, arg)                                   (*maketyped__foreach_pair((tp_self)->tp_seq->tp_foreach_pair))(tp_self, self, proc, arg)
-#define DeeType_InvokeSeqBoundItem(tp_self, self, index)                                         (*maketyped__bounditem((tp_self)->tp_seq->tp_bounditem))(tp_self, self, index)
-#define DeeType_InvokeSeqHasItem(tp_self, self, index)                                           (*maketyped__hasitem((tp_self)->tp_seq->tp_hasitem))(tp_self, self, index)
-#define DeeType_InvokeSeqSize(tp_self, self)                                                     (*maketyped__size((tp_self)->tp_seq->tp_size))(tp_self, self)
-#define DeeType_InvokeSeqSizeFast(tp_self, self)                                                 (*(tp_self)->tp_seq->tp_size_fast)(self)
-#define DeeType_InvokeSeqGetItemIndex(tp_self, self, index)                                      (*maketyped__getitem_index((tp_self)->tp_seq->tp_getitem_index))(tp_self, self, index)
-#define DeeType_InvokeSeqDelItemIndex(tp_self, self, index)                                      (*maketyped__delitem_index((tp_self)->tp_seq->tp_delitem_index))(tp_self, self, index)
-#define DeeType_InvokeSeqSetItemIndex(tp_self, self, index, value)                               (*maketyped__setitem_index((tp_self)->tp_seq->tp_setitem_index))(tp_self, self, index, value)
-#define DeeType_InvokeSeqBoundItemIndex(tp_self, self, index)                                    (*maketyped__bounditem_index((tp_self)->tp_seq->tp_bounditem_index))(tp_self, self, index)
-#define DeeType_InvokeSeqHasItemIndex(tp_self, self, index)                                      (*maketyped__hasitem_index((tp_self)->tp_seq->tp_hasitem_index))(tp_self, self, index)
 #define DeeType_InvokeSeqGetRangeIndex(tp_self, self, start, end)                                (*maketyped__getrange_index((tp_self)->tp_seq->tp_getrange_index))(tp_self, self, start, end)
 #define DeeType_InvokeSeqDelRangeIndex(tp_self, self, start, end)                                (*maketyped__delrange_index((tp_self)->tp_seq->tp_delrange_index))(tp_self, self, start, end)
 #define DeeType_InvokeSeqSetRangeIndex(tp_self, self, start, end, value)                         (*maketyped__setrange_index((tp_self)->tp_seq->tp_setrange_index))(tp_self, self, start, end, value)
 #define DeeType_InvokeSeqGetRangeIndexN(tp_self, self, start)                                    (*maketyped__getrange_index_n((tp_self)->tp_seq->tp_getrange_index_n))(tp_self, self, start)
 #define DeeType_InvokeSeqDelRangeIndexN(tp_self, self, start)                                    (*maketyped__delrange_index_n((tp_self)->tp_seq->tp_delrange_index_n))(tp_self, self, start)
 #define DeeType_InvokeSeqSetRangeIndexN(tp_self, self, start, value)                             (*maketyped__setrange_index_n((tp_self)->tp_seq->tp_setrange_index_n))(tp_self, self, start, value)
-#define DeeType_InvokeSeqTryGetItem(tp_self, self, index)                                        (*maketyped__trygetitem((tp_self)->tp_seq->tp_trygetitem))(tp_self, self, index)
-#define DeeType_InvokeSeqTryGetItemIndex(tp_self, self, index)                                   (*maketyped__trygetitem_index((tp_self)->tp_seq->tp_trygetitem_index))(tp_self, self, index)
-#define DeeType_InvokeSeqTryGetItemStringHash(tp_self, self, key, hash)                          (*maketyped__trygetitem_string_hash((tp_self)->tp_seq->tp_trygetitem_string_hash))(tp_self, self, key, hash)
-#define DeeType_InvokeSeqGetItemStringHash(tp_self, self, key, hash)                             (*maketyped__getitem_string_hash((tp_self)->tp_seq->tp_getitem_string_hash))(tp_self, self, key, hash)
-#define DeeType_InvokeSeqDelItemStringHash(tp_self, self, key, hash)                             (*maketyped__delitem_string_hash((tp_self)->tp_seq->tp_delitem_string_hash))(tp_self, self, key, hash)
-#define DeeType_InvokeSeqSetItemStringHash(tp_self, self, key, hash, value)                      (*maketyped__setitem_string_hash((tp_self)->tp_seq->tp_setitem_string_hash))(tp_self, self, key, hash, value)
-#define DeeType_InvokeSeqBoundItemStringHash(tp_self, self, key, hash)                           (*maketyped__bounditem_string_hash((tp_self)->tp_seq->tp_bounditem_string_hash))(tp_self, self, key, hash)
-#define DeeType_InvokeSeqHasItemStringHash(tp_self, self, key, hash)                             (*maketyped__hasitem_string_hash((tp_self)->tp_seq->tp_hasitem_string_hash))(tp_self, self, key, hash)
-#define DeeType_InvokeSeqTryGetItemStringLenHash(tp_self, self, key, keylen, hash)               (*maketyped__trygetitem_string_len_hash((tp_self)->tp_seq->tp_trygetitem_string_len_hash))(tp_self, self, key, keylen, hash)
-#define DeeType_InvokeSeqGetItemStringLenHash(tp_self, self, key, keylen, hash)                  (*maketyped__getitem_string_len_hash((tp_self)->tp_seq->tp_getitem_string_len_hash))(tp_self, self, key, keylen, hash)
-#define DeeType_InvokeSeqDelItemStringLenHash(tp_self, self, key, keylen, hash)                  (*maketyped__delitem_string_len_hash((tp_self)->tp_seq->tp_delitem_string_len_hash))(tp_self, self, key, keylen, hash)
-#define DeeType_InvokeSeqSetItemStringLenHash(tp_self, self, key, keylen, hash, value)           (*maketyped__setitem_string_len_hash((tp_self)->tp_seq->tp_setitem_string_len_hash))(tp_self, self, key, keylen, hash, value)
-#define DeeType_InvokeSeqBoundItemStringLenHash(tp_self, self, key, keylen, hash)                (*maketyped__bounditem_string_len_hash((tp_self)->tp_seq->tp_bounditem_string_len_hash))(tp_self, self, key, keylen, hash)
-#define DeeType_InvokeSeqHasItemStringLenHash(tp_self, self, key, keylen, hash)                  (*maketyped__hasitem_string_len_hash((tp_self)->tp_seq->tp_hasitem_string_len_hash))(tp_self, self, key, keylen, hash)
-#define DeeType_InvokeAttrGetAttr(tp_self, self, name)                                           (*maketyped__getattr((tp_self)->tp_attr->tp_getattr))(tp_self, self, name)
-#define DeeType_InvokeAttrDelAttr(tp_self, self, name)                                           (*maketyped__delattr((tp_self)->tp_attr->tp_delattr))(tp_self, self, name)
-#define DeeType_InvokeAttrSetAttr(tp_self, self, name, value)                                    (*maketyped__setattr((tp_self)->tp_attr->tp_setattr))(tp_self, self, name, value)
-#define DeeType_InvokeWithEnter(tp_self, self)                                                   (*maketyped__enter((tp_self)->tp_with->tp_enter))(tp_self, self)
-#define DeeType_InvokeWithLeave(tp_self, self)                                                   (*maketyped__leave((tp_self)->tp_with->tp_leave))(tp_self, self)
-
-#define DeeType_invoke_attr_tp_getattr(tp_self, tp_getattr, self, name)        (*maketyped__getattr(tp_getattr))(tp_self, self, name)
-#define DeeType_invoke_attr_tp_delattr(tp_self, tp_delattr, self, name)        (*maketyped__delattr(tp_delattr))(tp_self, self, name)
-#define DeeType_invoke_attr_tp_setattr(tp_self, tp_setattr, self, name, value) (*maketyped__setattr(tp_setattr))(tp_self, self, name, value)
-
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DECL_END

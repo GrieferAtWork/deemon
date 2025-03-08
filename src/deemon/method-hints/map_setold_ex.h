@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.setold_ex()                                           */
 /************************************************************************/
-[[alias(Mapping.setold_ex -> "map_setold_ex")]]
+[[alias(Mapping.setold_ex)]]
 __map_setold_ex__(key,value)->?T2?Dbool?X2?O?N {
 	PRIVATE DEFINE_TUPLE(setold_failed_result, 2, { Dee_False, Dee_None });
 	DeeObject *key, *value;
@@ -65,7 +65,7 @@ map_setold_ex_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *valu
 	struct map_setold_ex_with_seq_enumerate_data *data;
 	data = (struct map_setold_ex_with_seq_enumerate_data *)arg;
 	if (value) {
-		if (DeeObject_Unpack(value, 2, this_key_and_value))
+		if (DeeSeq_Unpack(value, 2, this_key_and_value))
 			goto err;
 		status = DeeObject_TryCompareEq(data->msoxwse_key_and_value[0], this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
@@ -112,7 +112,7 @@ map_setold_ex_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *va
 	struct map_setold_ex_with_seq_enumerate_index_data *data;
 	data = (struct map_setold_ex_with_seq_enumerate_index_data *)arg;
 	if (value) {
-		if (DeeObject_Unpack(value, 2, this_key_and_value))
+		if (DeeSeq_Unpack(value, 2, this_key_and_value))
 			goto err;
 		status = DeeObject_TryCompareEq(data->msoxwsei_key_and_value[0], this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
@@ -225,7 +225,7 @@ err:
 	result = LOCAL_CALLATTR(self, 2, args);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_Unpack(result, 2, status);
+	temp = DeeSeq_Unpack(result, 2, status);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;

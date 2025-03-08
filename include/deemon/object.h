@@ -1954,11 +1954,6 @@ struct Dee_type_cmp {
 #define Dee_BOUND_FROMHAS_UNBOUND(has_value) \
 	(unlikely(has_value) < 0 ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_UNBOUND(has_value))
 
-#if 1 /* TODO: CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: REMOVE ME */
-typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_seq_enumerate_t)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value);
-typedef WUNUSED_T Dee_ssize_t (DCALL *Dee_seq_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
-#endif
-
 struct Dee_type_seq {
 	/* Sequence operators. */
 	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *tp_iter)(DeeObject *__restrict self);
@@ -1982,14 +1977,6 @@ struct Dee_type_seq {
 	 * can also just provide `tp_size' and `tp_getitem_index'). */
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach_pair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
-
-#if 1 /* TODO: CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: REMOVE ME */
-	/* These will go away and only be accessible via method hints.
-	 * Reason: Not perfectly equivalent to "tp_foreach", so user-impl must happen via attributes. */
-	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t  (DCALL *tp_enumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg);
-	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t  (DCALL *tp_enumerate_index)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end);
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_iterkeys)(DeeObject *__restrict self);
-#endif
 
 	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem')
 	 * Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
@@ -2102,14 +2089,6 @@ struct Dee_type_seq {
 	 *                         but will not contain any object references. You must resize it until it is able
 	 *                         to hold at least "return" elements, and call this operator again. */
 	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
-
-#if 1 /* TODO: CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: REMOVE ME */
-	/* These will go away and only be accessible via method hints.
-	 * Reason: Not perfectly equivalent to "tp_foreach", so user-impl must happen via attributes. */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *_deprecated_tp_unpack)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
-	WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *_deprecated_tp_unpack_ex)(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
-	WUNUSED_T NONNULL_T((1)) int (DCALL *_deprecated_tp_unpack_ub)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
-#endif
 
 	/* All of the following are *always* and *unconditionally* implemented
 	 * when the associated type has the "tp_features & TF_KW" flag set,
@@ -2489,9 +2468,6 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&myob_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&myob_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&myob_foreach_pair,
-	/* .tp_enumerate      = */ NULL,
-	/* .tp_enumerate_index= */ NULL,
-	/* .tp_iterkeys       = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&myob_size,
@@ -2524,9 +2500,6 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&myob_hasitem_string_len_hash,
 	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_asvector,
 	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_asvector_nothrow,
-	/* ._deprecated_tp_unpack         = */ NULL,
-	/* ._deprecated_tp_unpack_ex      = */ NULL,
-	/* ._deprecated_tp_unpack_ub      = */ NULL,
 	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))NULL,
 	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))NULL,
 	/* .tp_getitemnr_string_len_hash    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))NULL,
@@ -2537,13 +2510,13 @@ PRIVATE struct type_seq myob_seq = {
 #endif
 
 struct Dee_type_iterator {
-	/* Fast-pass for `DeeObject_Unpack(DeeObject_IterNext(self), 2)'
+	/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2)'
 	 * @return: 0 : Success
 	 * @return: 1 : Iterator has been exhausted
 	 * @return: -1: Error */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_nextpair)(DeeObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]);
 
-	/* Fast-pass for `DeeObject_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]'
+	/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]'
 	 * In the case of mapping iterators, these can be used to iterate only the
 	 * key/value part of the map, without needing to construct a temporary tuple
 	 * holding both values (as needs to be done by `tp_iter_next'). */
@@ -2622,8 +2595,8 @@ struct Dee_type_attr {
 	 * If implemented, it *MUST* behave identical to the above operators.
 	 *
 	 * NOTE: Deemon will *NOT* substitute the above functions with those below!!!
-	 *       (As a matter of fact: it doesn't use DeeObject_Default* operators for
-	 *       any of this stuff since doing so would be slower due to the fact that
+	 *       (As a matter of fact: it doesn't use default__* operators for any
+	 *       of this stuff since doing so would be slower due to the fact that
 	 *       it would add a whole ton of otherwise unnecessary DeeObject_T-checks)
 	 *       This means that if you want to implement stuff below, you *MUST* also
 	 *       implement the operators above like follows:
@@ -4903,7 +4876,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Iter)(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict self);
 
-/* Fast-pass for `DeeObject_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]'
+/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]'
  * In the case of mapping iterators, these can be used to iterate only the
  * key/value part of the map, without needing to construct a temporary tuple
  * holding both values (as needs to be done by `DeeObject_IterNext'). */
@@ -4928,34 +4901,8 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use t
 (DCALL DeeObject_Foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 
 /* Same as `DeeObject_Foreach()', but meant for enumeration of mapping key/value pairs. */
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_Unpack()' */
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeSeq_Unpack()' */
 (DCALL DeeObject_ForeachPair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
-
-/* Unpack the given sequence `self' into `dst_length' items then stored within the `dst' vector.
- * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.
- * @return: 0 : Success (`dst' now contains exactly `dst_length' references to [1..1] objects)
- * @return: -1: An error was thrown (`dst' may have been modified, but contains no references) */
-DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int /* DEPRECATED after "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" -- use DeeObject_InvokeMethodHint(seq_unpack) instead */
-(DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t dst_length,
-                         /*out*/ DREF DeeObject **__restrict dst);
-
-/* @return: * : The actual # of objects written to `dst' (always in range [dst_length_min, dst_length_max])
- * @return: (size_t)-1: Error */
-DFUNDEF WUNUSED NONNULL((1)) size_t /* DEPRECATED after "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" -- use DeeObject_InvokeMethodHint(seq_unpack_ex) instead */
-(DCALL DeeObject_UnpackEx)(DeeObject *__restrict self,
-                           size_t dst_length_min, size_t dst_length_max,
-                           /*out*/ DREF DeeObject **__restrict dst);
-
-/* Similar to `DeeObject_Unpack()', but does not skip unbound items. Instead,
- * unbound items will appear as `NULL' in `dst' upon success (meaning you have
- * to use `Dee_XDecrefv()' to drop references).
- * This operator follows `DeeObject_Enumerate()' semantics, in that unbound items
- * are NOT skipped.
- * @return: 0 : Success (`dst' now contains exactly `dst_length' references to [0..1] objects)
- * @return: -1: An error was thrown (`dst' may have been modified, but contains no references) */
-DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int /* DEPRECATED after "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" -- use DeeObject_InvokeMethodHint(seq_unpack_ub) instead */
-(DCALL DeeObject_UnpackWithUnbound)(DeeObject *__restrict self, size_t dst_length,
-                                    /*out*/ DREF DeeObject **__restrict dst);
 
 /* >> DeeObject_GetAttr() -- <self>.<attr>;
  * Retrieve a named attribute of an object
@@ -5160,8 +5107,6 @@ DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_PutBuf)(DeeObject *__restrict self
 #define DeeObject_SetRangeBeginIndex(self, begin, end, value)          __builtin_expect(DeeObject_SetRangeBeginIndex(self, begin, end, value), 0)
 #define DeeObject_SetRangeEndIndex(self, begin, end, value)            __builtin_expect(DeeObject_SetRangeEndIndex(self, begin, end, value), 0)
 #define DeeObject_SetRangeIndex(self, begin, end, value)               __builtin_expect(DeeObject_SetRangeIndex(self, begin, end, value), 0)
-#define DeeObject_Unpack(self, dst_length, objv)                       __builtin_expect(DeeObject_Unpack(self, dst_length, objv), 0)
-#define DeeObject_UnpackWithUnbound(self, dst_length, objv)            __builtin_expect(DeeObject_UnpackWithUnbound(self, dst_length, objv), 0)
 #define DeeObject_DelAttr(self, attr)                                  __builtin_expect(DeeObject_DelAttr(self, attr), 0)
 #define DeeObject_SetAttr(self, attr, value)                           __builtin_expect(DeeObject_SetAttr(self, attr, value), 0)
 #ifndef DeeObject_DelAttrString

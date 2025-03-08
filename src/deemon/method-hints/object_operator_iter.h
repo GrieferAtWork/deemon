@@ -122,7 +122,7 @@ default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem) {
 		                           DeeTuple_GET(elem, 1));
 	} else {
 		DREF DeeObject *pair[2];
-		if unlikely(DeeObject_Unpack(elem, 2, pair))
+		if unlikely(DeeSeq_Unpack(elem, 2, pair))
 			goto err;
 		result = (*data->dfpwf_cb)(data->dfpwf_arg, pair[0], pair[1]);
 		Dee_Decref_unlikely(pair[1]);

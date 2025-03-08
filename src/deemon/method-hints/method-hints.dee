@@ -23,10 +23,6 @@
  *       those 2 functions can alias each other.
  *       example: `default__seq_locate__empty' and `default__seq_rlocate__empty' */
 
-/* TODO: Don't define stuff `DeeMA_*_name' and `DeeMA_*_doc' as exports; just use
- *       macros and trust the compiler to be smart enough to eliminate duplicate
- *       strings. */
-
 /* TODO: Don't generate "tdefault__size_fast__with__" (typed variants without dependencies). */
 
 
@@ -1370,7 +1366,7 @@ final class NativeOperator {
 				printIntdefDeclOrAlias(symName, impl.impl);
 			local coreImpl: NativeMethodImpl = impl.impl;
 			if (coreImpl.origImpl is none ||
-			    coreImpl.origImpl.recontains(r"\bCALL_DEPENDENCY\b")) {
+			    coreImpl.origImpl.recontains(r"\b(CALL_DEPENDENCY|REQUIRE_DEPENDENCY)\b")) {
 				result.append(symName);
 			}
 		}

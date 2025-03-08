@@ -72,7 +72,7 @@ err_key_and_value:
 }} = OPERATOR_ITERNEXT;
 
 
-/* Fast-pass for `DeeObject_Unpack(DeeObject_IterNext(self), 2)'
+/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2)'
  * @return: 0 : Success
  * @return: 1 : Iterator has been exhausted
  * @return: -1: Error */
@@ -87,7 +87,7 @@ tp_iterator->tp_nextpair([[nonnull]] DeeObject *__restrict self,
 		return 1;
 	if unlikely(item == NULL)
 		goto err;
-	result = DeeObject_Unpack(item, 2, key_and_value);
+	result = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref_likely(item);
 	return result;
 err:
@@ -95,7 +95,7 @@ err:
 }} = OPERATOR_ITERNEXT;
 
 
-/* Fast-pass for `DeeObject_Unpack(DeeObject_IterNext(self), 2).first'
+/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first'
  * In the case of mapping iterators, these can be used to iterate only the
  * key/value part of the map, without needing to construct a temporary tuple
  * holding both values (as needs to be done by `tp_iter_next'). */
@@ -108,7 +108,7 @@ tp_iterator->tp_nextkey([[nonnull]] DeeObject *__restrict self)
 	DREF DeeObject *item = CALL_DEPENDENCY(tp_iter_next, self);
 	if unlikely(!ITER_ISOK(item))
 		return item;
-	unpack_status = DeeObject_Unpack(item, 2, key_and_value);
+	unpack_status = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref_likely(item);
 	if unlikely(unpack_status)
 		goto err;
@@ -132,7 +132,7 @@ err:
 }} = OPERATOR_ITERNEXT;
 
 
-/* Fast-pass for `DeeObject_Unpack(DeeObject_IterNext(self), 2).last'
+/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).last'
  * In the case of mapping iterators, these can be used to iterate only the
  * key/value part of the map, without needing to construct a temporary tuple
  * holding both values (as needs to be done by `tp_iter_next'). */
@@ -145,7 +145,7 @@ tp_iterator->tp_nextvalue([[nonnull]] DeeObject *__restrict self)
 	DREF DeeObject *item = CALL_DEPENDENCY(tp_iter_next, self);
 	if unlikely(!ITER_ISOK(item))
 		return item;
-	unpack_status = DeeObject_Unpack(item, 2, key_and_value);
+	unpack_status = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref_likely(item);
 	if unlikely(unpack_status)
 		goto err;

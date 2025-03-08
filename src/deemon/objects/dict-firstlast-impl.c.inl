@@ -27,6 +27,8 @@
 //#define DEFINE_dict_lastvalue
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/seq.h>
+
 #if (defined(DEFINE_dict_first) +      \
      defined(DEFINE_dict_firstkey) +   \
      defined(DEFINE_dict_firstvalue) + \
@@ -366,7 +368,7 @@ err_empty:
 #else /* ... */
 	int result;
 	DREF DeeObject *key_and_value[2];
-	if (DeeObject_Unpack(value, 2, key_and_value))
+	if (DeeSeq_Unpack(value, 2, key_and_value))
 		goto err;
 	result = LOCAL_dict_setspecial_pair(self, key_and_value[0], key_and_value[1]);
 	Dee_Decref(key_and_value[1]);

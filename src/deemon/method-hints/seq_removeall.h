@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Sequence.removeall()                                          */
 /************************************************************************/
-[[kw, alias(Sequence.removeall -> "seq_removeall")]]
+[[kw, alias(Sequence.removeall)]]
 __seq_removeall__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint {
 	size_t result;
 	DeeObject *item, *key = Dee_None;
@@ -62,7 +62,7 @@ __seq_removeall__.seq_removeall([[nonnull]] DeeObject *self,
 	Dee_Incref(item);
 	pred->srwrip_item = item;
 	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicate_Type);
-	result = DeeSeq_InvokeRemoveIf(self, (DeeObject *)pred, start, end, max);
+	result = CALL_DEPENDENCY(seq_removeif, self, (DeeObject *)pred, start, end, max);
 	Dee_Decref_likely(pred);
 	return result;
 err:

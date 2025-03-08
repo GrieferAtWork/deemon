@@ -235,8 +235,9 @@ err_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ds_sgi_enumerate_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
-                       Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+ds_sgi_mh_seq_enumerate_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                              Dee_seq_enumerate_index_t proc, void *arg,
+                              size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (OVERFLOW_UADD(start, self->dssgi_start, &start))
@@ -270,6 +271,41 @@ err_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ds_sgi_mh_seq_enumerate_index_reverse(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                                      Dee_seq_enumerate_index_t proc, void *arg,
+                                      size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	if (OVERFLOW_UADD(start, self->dssgi_start, &start))
+		return 0;
+	if (OVERFLOW_UADD(end, self->dssgi_start, &end))
+		end = (size_t)-1;
+	if (end > self->dssgi_end)
+		end = self->dssgi_end;
+	while (end > start) {
+		DREF DeeObject *elem;
+		elem = (*self->dssgi_tp_getitem_index)(self->dssgi_seq, --end);
+		if (!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				temp = (*proc)(arg, end - self->dssgi_start, NULL);
+			} else {
+				if (DeeError_Catch(&DeeError_IndexError))
+					break;
+				return -1;
+			}
+		} else {
+			temp = (*proc)(arg, end - self->dssgi_start, elem);
+			Dee_Decref(elem);
+		}
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ds_sgif_foreach(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
                 Dee_foreach_t proc, void *arg) {
 	size_t i;
@@ -291,8 +327,9 @@ err_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ds_sgif_enumerate_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
-                        Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+ds_sgif_mh_seq_enumerate_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                               Dee_seq_enumerate_index_t proc, void *arg,
+                               size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (OVERFLOW_UADD(start, self->dssgi_start, &start))
@@ -305,6 +342,31 @@ ds_sgif_enumerate_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self
 		DREF DeeObject *elem;
 		elem = (*self->dssgi_tp_getitem_index)(self->dssgi_seq, i);
 		temp = (*proc)(arg, i - self->dssgi_start, elem);
+		Dee_XDecref(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ds_sgif_mh_seq_enumerate_index_reverse(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                                       Dee_seq_enumerate_index_t proc, void *arg,
+                                       size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	if (OVERFLOW_UADD(start, self->dssgi_start, &start))
+		return 0;
+	if (OVERFLOW_UADD(end, self->dssgi_start, &end))
+		end = (size_t)-1;
+	if (end > self->dssgi_end)
+		end = self->dssgi_end;
+	while (end > start) {
+		DREF DeeObject *elem;
+		elem = (*self->dssgi_tp_getitem_index)(self->dssgi_seq, --end);
+		temp = (*proc)(arg, end - self->dssgi_start, elem);
 		Dee_XDecref(elem);
 		if unlikely(temp < 0)
 			goto err_temp;
@@ -342,8 +404,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ds_stgi_enumerate_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
-                        Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+ds_stgi_mh_seq_enumerate_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                               Dee_seq_enumerate_index_t proc, void *arg,
+                               size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (OVERFLOW_UADD(start, self->dssgi_start, &start))
@@ -362,6 +425,39 @@ ds_stgi_enumerate_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self
 			if (!elem)
 				goto err;
 			temp = (*proc)(arg, i - self->dssgi_start, NULL);
+		}
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ds_stgi_mh_seq_enumerate_index_reverse(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                                       Dee_seq_enumerate_index_t proc, void *arg,
+                                       size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	if (OVERFLOW_UADD(start, self->dssgi_start, &start))
+		return 0;
+	if (OVERFLOW_UADD(end, self->dssgi_start, &end))
+		end = (size_t)-1;
+	if (end > self->dssgi_end)
+		end = self->dssgi_end;
+	while (end > start) {
+		DREF DeeObject *elem;
+		elem = (*self->dssgi_tp_getitem_index)(self->dssgi_seq, --end);
+		if (ITER_ISOK(elem)) {
+			temp = (*proc)(arg, end - self->dssgi_start, elem);
+			Dee_Decref(elem);
+		} else {
+			if (!elem)
+				goto err;
+			temp = (*proc)(arg, end - self->dssgi_start, NULL);
 		}
 		if unlikely(temp < 0)
 			goto err_temp;
@@ -703,6 +799,32 @@ PRIVATE struct type_member tpconst ds_stgi_class_members[] = {
 };
 
 
+#define ds_sgif_methods ds_sgi_methods
+#define ds_stgi_methods ds_sgi_methods
+PRIVATE struct type_method tpconst ds_sgi_methods[] = {
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst ds_sgi_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &ds_sgi_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &ds_sgi_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_method_hint tpconst ds_sgif_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &ds_sgif_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &ds_sgif_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_method_hint tpconst ds_stgi_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &ds_stgi_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &ds_stgi_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
+
+
 PRIVATE struct type_seq ds_sgi_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_sgi_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
@@ -715,9 +837,6 @@ PRIVATE struct type_seq ds_sgi_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_sgi_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ds_sgi_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__hasitem_index),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgi_size,
@@ -762,9 +881,6 @@ PRIVATE struct type_seq ds_sgif_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_sgif_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ds_sgif_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__hasitem_index),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgif_size,
@@ -809,9 +925,6 @@ PRIVATE struct type_seq ds_stgi_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_stgi_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ds_stgi_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__hasitem_index),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_stgi_size,
@@ -884,12 +997,13 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ ds_sgi_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ ds_sgi_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ ds_sgi_class_members,
+	/* .tp_method_hints  = */ ds_sgi_method_hints,
 };
 
 INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
@@ -932,12 +1046,13 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ ds_sgif_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ ds_sgif_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ ds_sgif_class_members,
+	/* .tp_method_hints  = */ ds_sgif_method_hints,
 };
 
 INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
@@ -980,12 +1095,13 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ ds_stgi_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ ds_stgi_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ ds_stgi_class_members,
+	/* .tp_method_hints  = */ ds_stgi_method_hints,
 };
 
 
@@ -1183,7 +1299,7 @@ ds_sg_getrange(DefaultSequence_WithSizeObAndGetItem *self, DeeObject *start, Dee
 	Dee_Decref(sizeob);
 	if unlikely(!clamed_start_and_end)
 		goto err;
-	temp = DeeObject_Unpack(clamed_start_and_end, 2, clamed_start_end_and_pair);
+	temp = DeeSeq_Unpack(clamed_start_and_end, 2, clamed_start_end_and_pair);
 	Dee_Decref(clamed_start_and_end);
 	if unlikely(temp)
 		goto err;
@@ -1253,7 +1369,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ds_sg_enumerate(DefaultSequence_WithSizeObAndGetItem *self, Dee_seq_enumerate_t proc, void *arg) {
+ds_sg_mh_seq_enumerate(DefaultSequence_WithSizeObAndGetItem *self,
+                       Dee_seq_enumerate_t proc, void *arg) {
 	DREF DeeObject *index;
 	Dee_ssize_t temp, result = 0;
 	int error;
@@ -1304,9 +1421,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ds_sg_enumerate_index(DefaultSequence_WithSizeObAndGetItem *self,
-                      Dee_seq_enumerate_index_t proc,
-                      void *arg, size_t start, size_t end) {
+ds_sg_mh_seq_enumerate_index(DefaultSequence_WithSizeObAndGetItem *self,
+                             Dee_seq_enumerate_index_t proc,
+                             void *arg, size_t start, size_t end) {
 	DREF DeeObject *index, *endindex;
 	Dee_ssize_t temp, result = 0;
 	int error;
@@ -1412,6 +1529,21 @@ err:
 	return -1;
 }
 
+#if 1
+#define ds_sg_methods ds_sgi_methods
+#else
+PRIVATE struct type_method tpconst ds_sg_methods[] = {
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_END
+};
+#endif
+
+PRIVATE struct type_method_hint tpconst ds_sg_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_enumerate, &ds_sg_mh_seq_enumerate, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &ds_sg_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_seq ds_sg_seq = {
 	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_sg_iter,
 	/* .tp_sizeob             = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_sg_sizeob,
@@ -1424,9 +1556,6 @@ PRIVATE struct type_seq ds_sg_seq = {
 	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_sg_foreach,
 	/* .tp_foreach_pair       = */ DEFIMPL(&default__foreach_pair__with__foreach),
-	/* .tp_enumerate          = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&ds_sg_enumerate,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ds_sg_enumerate_index,
-	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_sg_bounditem,
 	/* .tp_hasitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_sg_hasitem,
 	/* .tp_size               = */ DEFIMPL(&default__size__with__sizeob),
@@ -1511,12 +1640,13 @@ INTERN DeeTypeObject DefaultSequence_WithSizeObAndGetItem_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ ds_sg_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ ds_sg_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ ds_sg_class_members,
+	/* .tp_method_hints  = */ ds_sg_method_hints,
 };
 
 
@@ -1778,9 +1908,6 @@ PRIVATE struct type_seq ds_i_seq = {
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
@@ -1825,9 +1952,6 @@ PRIVATE struct type_seq ds_ial_seq = {
 	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach            = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair       = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ NULL,
-	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ DEFIMPL(&default__bounditem__with__getitem),
 	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__bounditem),
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_ial_size,

@@ -45,14 +45,6 @@
 #define SUPER_PRIVATE_EXPANDARGS(...) (DeeTypeObject *tp_self, __VA_ARGS__)
 #define DEFINE_OPERATOR(return, name, args) \
 	PUBLIC return DCALL DeeObject_T##name SUPER_PRIVATE_EXPANDARGS args
-#define DEFINE_INTERNAL_OPERATOR(return, name, args) \
-	INTERN return DCALL DeeObject_T##name SUPER_PRIVATE_EXPANDARGS args
-#define DEFINE_INTERNAL_SEQ_OPERATOR(return, name, args) \
-	INTERN return DCALL DeeSeq_T##name SUPER_PRIVATE_EXPANDARGS args
-#define DEFINE_INTERNAL_SET_OPERATOR(return, name, args) \
-	INTERN return DCALL DeeSet_T##name SUPER_PRIVATE_EXPANDARGS args
-#define DEFINE_INTERNAL_MAP_OPERATOR(return, name, args) \
-	INTERN return DCALL DeeMap_T##name SUPER_PRIVATE_EXPANDARGS args
 #include "../runtime/operator.c"
 #undef DEFINE_TYPED_OPERATORS
 
@@ -503,7 +495,7 @@ PRIVATE struct type_math super_math = {
 	/* .tp_inplace_and = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_and,
 	/* .tp_inplace_or  = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_or,
 	/* .tp_inplace_xor = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_xor,
-	/* .tp_inplace_pow = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_pow
+	/* .tp_inplace_pow = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_pow,
 };
 
 
@@ -778,9 +770,6 @@ PRIVATE struct type_seq super_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&super_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&super_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&super_foreach_pair,
-	/* .tp_enumerate      = */ NULL,
-	/* .tp_enumerate_index= */ NULL,
-	/* .tp_iterkeys       = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&super_size,
@@ -811,11 +800,6 @@ PRIVATE struct type_seq super_seq = {
 	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&super_setitem_string_len_hash,
 	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&super_bounditem_string_len_hash,
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&super_hasitem_string_len_hash,
-	/* .tp_asvector                   = */ NULL,
-	/* .tp_asvector_nothrow           = */ NULL,
-	/* .tp_unpack                     = */ NULL,
-	/* .tp_unpack_ex                  = */ NULL,
-	/* .tp_unpack_ub                  = */ NULL,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1052,7 +1036,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL super_leave(Super *__restrict self) {
 
 PRIVATE struct type_with super_with = {
 	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&super_enter,
-	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&super_leave
+	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&super_leave,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1232,14 +1216,14 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&super_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_assign,
-		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_moveassign
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_moveassign,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_str,
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_repr,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&super_bool,
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&super_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&super_printrepr
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&super_printrepr,
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&super_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&super_visit,
