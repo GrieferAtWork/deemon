@@ -955,8 +955,6 @@ EXPORTS
 	_DeeObject_TDelItemStringHash@16=DeeObject_TDelItemStringHash@16
 	_DeeObject_TDelItemStringLenHash@20=DeeObject_TDelItemStringLenHash@20
 	_DeeObject_TDelRange@16=DeeObject_TDelRange@16
-	_DeeObject_TDelRangeBeginIndex@16=DeeObject_TDelRangeBeginIndex@16
-	_DeeObject_TDelRangeEndIndex@16=DeeObject_TDelRangeEndIndex@16
 	_DeeObject_TDelRangeIndex@16=DeeObject_TDelRangeIndex@16
 	_DeeObject_TDelRangeIndexN@12=DeeObject_TDelRangeIndexN@12
 	_DeeObject_TDiv@12=DeeObject_TDiv@12
@@ -994,8 +992,6 @@ EXPORTS
 	_DeeObject_TGetItemStringHash@16=DeeObject_TGetItemStringHash@16
 	_DeeObject_TGetItemStringLenHash@20=DeeObject_TGetItemStringLenHash@20
 	_DeeObject_TGetRange@16=DeeObject_TGetRange@16
-	_DeeObject_TGetRangeBeginIndex@16=DeeObject_TGetRangeBeginIndex@16
-	_DeeObject_TGetRangeEndIndex@16=DeeObject_TGetRangeEndIndex@16
 	_DeeObject_TGetRangeIndex@16=DeeObject_TGetRangeIndex@16
 	_DeeObject_TGetRangeIndexN@12=DeeObject_TGetRangeIndexN@12
 	_DeeObject_THasAttr@12=DeeObject_THasAttr@12
@@ -1047,8 +1043,6 @@ EXPORTS
 	_DeeObject_TSetItemStringHash@20=DeeObject_TSetItemStringHash@20
 	_DeeObject_TSetItemStringLenHash@24=DeeObject_TSetItemStringLenHash@24
 	_DeeObject_TSetRange@20=DeeObject_TSetRange@20
-	_DeeObject_TSetRangeBeginIndex@20=DeeObject_TSetRangeBeginIndex@20
-	_DeeObject_TSetRangeEndIndex@20=DeeObject_TSetRangeEndIndex@20
 	_DeeObject_TSetRangeIndex@20=DeeObject_TSetRangeIndex@20
 	_DeeObject_TSetRangeIndexN@16=DeeObject_TSetRangeIndexN@16
 	_DeeObject_TShl@12=DeeObject_TShl@12

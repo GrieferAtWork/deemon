@@ -143,49 +143,31 @@ DECL_BEGIN
  * So because of this, we only need to check for class operator callbacks in
  * a super-context, or in other words: when `DEFINE_TYPED_OPERATORS' is defined! */
 #ifdef DEFINE_TYPED_OPERATORS
-#define DeeType_INVOKE_STR                               DeeType_InvokeCastStr
-#define DeeType_INVOKE_PRINT                             DeeType_InvokeCastPrint
-#define DeeType_INVOKE_REPR                              DeeType_InvokeCastRepr
-#define DeeType_INVOKE_PRINTREPR                         DeeType_InvokeCastPrintRepr
-#define DeeType_INVOKE_BOOL                              DeeType_InvokeCastBool
-#define DeeType_INVOKE_CALL                              DeeType_InvokeCall
-#define DeeType_INVOKE_CALLKW                            DeeType_InvokeCallKw
-#define DeeType_INVOKE_INT32                             DeeType_InvokeMathInt32
-#define DeeType_INVOKE_INT64                             DeeType_InvokeMathInt64
-#define DeeType_INVOKE_DOUBLE                            DeeType_InvokeMathDouble
-#define DeeType_INVOKE_INT                               DeeType_InvokeMathInt
-#define DeeType_INVOKE_HASH                              DeeType_InvokeCmpHash
-#define DeeType_INVOKE_GETRANGE                          DeeType_InvokeSeqGetRange
-#define DeeType_INVOKE_DELRANGE                          DeeType_InvokeSeqDelRange
-#define DeeType_INVOKE_SETRANGE                          DeeType_InvokeSeqSetRange
-#define DeeType_INVOKE_GETRANGEINDEX                     DeeType_InvokeSeqGetRangeIndex
-#define DeeType_INVOKE_DELRANGEINDEX                     DeeType_InvokeSeqDelRangeIndex
-#define DeeType_INVOKE_SETRANGEINDEX                     DeeType_InvokeSeqSetRangeIndex
-#define DeeType_INVOKE_GETRANGEINDEXN                    DeeType_InvokeSeqGetRangeIndexN
-#define DeeType_INVOKE_DELRANGEINDEXN                    DeeType_InvokeSeqDelRangeIndexN
-#define DeeType_INVOKE_SETRANGEINDEXN                    DeeType_InvokeSeqSetRangeIndexN
+#define DeeType_INVOKE_STR       DeeType_InvokeCastStr
+#define DeeType_INVOKE_PRINT     DeeType_InvokeCastPrint
+#define DeeType_INVOKE_REPR      DeeType_InvokeCastRepr
+#define DeeType_INVOKE_PRINTREPR DeeType_InvokeCastPrintRepr
+#define DeeType_INVOKE_BOOL      DeeType_InvokeCastBool
+#define DeeType_INVOKE_CALL      DeeType_InvokeCall
+#define DeeType_INVOKE_CALLKW    DeeType_InvokeCallKw
+#define DeeType_INVOKE_INT32     DeeType_InvokeMathInt32
+#define DeeType_INVOKE_INT64     DeeType_InvokeMathInt64
+#define DeeType_INVOKE_DOUBLE    DeeType_InvokeMathDouble
+#define DeeType_INVOKE_INT       DeeType_InvokeMathInt
+#define DeeType_INVOKE_HASH      DeeType_InvokeCmpHash
 #else /* DEFINE_TYPED_OPERATORS */
-#define DeeType_INVOKE_STR(tp_self, self)                                            (*(tp_self)->tp_cast.tp_str)(self)
-#define DeeType_INVOKE_REPR(tp_self, self)                                           (*(tp_self)->tp_cast.tp_repr)(self)
-#define DeeType_INVOKE_PRINT(tp_self, self, printer, arg)                            (*(tp_self)->tp_cast.tp_print)(self, printer, arg)
-#define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg)                        (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg)
-#define DeeType_INVOKE_BOOL(tp_self, self)                                           (*(tp_self)->tp_cast.tp_bool)(self)
-#define DeeType_INVOKE_CALL(tp_self, self, argc, argv)                               (*(tp_self)->tp_call)(self, argc, argv)
-#define DeeType_INVOKE_CALLKW(tp_self, self, argc, argv, kw)                         (*(tp_self)->tp_call_kw)(self, argc, argv, kw)
-#define DeeType_INVOKE_INT32(tp_self, self, result)                                  (*(tp_self)->tp_math->tp_int32)(self, result)
-#define DeeType_INVOKE_INT64(tp_self, self, result)                                  (*(tp_self)->tp_math->tp_int64)(self, result)
-#define DeeType_INVOKE_DOUBLE(tp_self, self, result)                                 (*(tp_self)->tp_math->tp_double)(self, result)
-#define DeeType_INVOKE_INT(tp_self, self)                                            (*(tp_self)->tp_math->tp_int)(self)
-#define DeeType_INVOKE_HASH(tp_self, self)                                           (*(tp_self)->tp_cmp->tp_hash)(self)
-#define DeeType_INVOKE_GETRANGE(tp_self, self, start, end)                           (*(tp_self)->tp_seq->tp_getrange)(self, start, end)
-#define DeeType_INVOKE_DELRANGE(tp_self, self, start, end)                           (*(tp_self)->tp_seq->tp_delrange)(self, start, end)
-#define DeeType_INVOKE_SETRANGE(tp_self, self, start, end, values)                   (*(tp_self)->tp_seq->tp_setrange)(self, start, end, values)
-#define DeeType_INVOKE_GETRANGEINDEX(tp_self, self, start, end)                      (*(tp_self)->tp_seq->tp_getrange_index)(self, start, end)
-#define DeeType_INVOKE_DELRANGEINDEX(tp_self, self, start, end)                      (*(tp_self)->tp_seq->tp_delrange_index)(self, start, end)
-#define DeeType_INVOKE_SETRANGEINDEX(tp_self, self, start, end, value)               (*(tp_self)->tp_seq->tp_setrange_index)(self, start, end, value)
-#define DeeType_INVOKE_GETRANGEINDEXN(tp_self, self, start)                          (*(tp_self)->tp_seq->tp_getrange_index_n)(self, start)
-#define DeeType_INVOKE_DELRANGEINDEXN(tp_self, self, start)                          (*(tp_self)->tp_seq->tp_delrange_index_n)(self, start)
-#define DeeType_INVOKE_SETRANGEINDEXN(tp_self, self, start, value)                   (*(tp_self)->tp_seq->tp_setrange_index_n)(self, start, value)
+#define DeeType_INVOKE_STR(tp_self, self)                     (*(tp_self)->tp_cast.tp_str)(self)
+#define DeeType_INVOKE_REPR(tp_self, self)                    (*(tp_self)->tp_cast.tp_repr)(self)
+#define DeeType_INVOKE_PRINT(tp_self, self, printer, arg)     (*(tp_self)->tp_cast.tp_print)(self, printer, arg)
+#define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg) (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg)
+#define DeeType_INVOKE_BOOL(tp_self, self)                    (*(tp_self)->tp_cast.tp_bool)(self)
+#define DeeType_INVOKE_CALL(tp_self, self, argc, argv)        (*(tp_self)->tp_call)(self, argc, argv)
+#define DeeType_INVOKE_CALLKW(tp_self, self, argc, argv, kw)  (*(tp_self)->tp_call_kw)(self, argc, argv, kw)
+#define DeeType_INVOKE_INT32(tp_self, self, result)           (*(tp_self)->tp_math->tp_int32)(self, result)
+#define DeeType_INVOKE_INT64(tp_self, self, result)           (*(tp_self)->tp_math->tp_int64)(self, result)
+#define DeeType_INVOKE_DOUBLE(tp_self, self, result)          (*(tp_self)->tp_math->tp_double)(self, result)
+#define DeeType_INVOKE_INT(tp_self, self)                     (*(tp_self)->tp_math->tp_int)(self)
+#define DeeType_INVOKE_HASH(tp_self, self)                    (*(tp_self)->tp_cmp->tp_hash)(self)
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 #ifndef DEFINE_TYPED_OPERATORS
@@ -1213,55 +1195,6 @@ recursion:
 
 #undef Xrepr_frame
 
-DEFINE_OPERATOR(int, Bool, (DeeObject *RESTRICT_IF_NOTYPE self)) {
-	/* _very_ likely case: `self' is one of the boolean constants
-	 *  -> In this case, we return the result immediately! */
-#ifndef __OPTIMIZE_SIZE__
-	if (self == Dee_True)
-		return 1;
-	if (self == Dee_False)
-		return 0;
-#endif /* !__OPTIMIZE_SIZE__ */
-
-	/* General case: invoke the "bool" operator. */
-	{
-		LOAD_TP_SELF;
-		if likely(tp_self->tp_cast.tp_bool || DeeType_InheritBool(tp_self))
-			return DeeType_INVOKE_BOOL(tp_self, self);
-		return err_unimplemented_operator(tp_self, OPERATOR_BOOL);
-	}
-}
-
-#ifndef DEFINE_TYPED_OPERATORS
-DEFINE_OPERATOR(int, BoolInherited, (/*inherit(always)*/ DREF DeeObject *RESTRICT_IF_NOTYPE self)) {
-	/* _very_ likely case: `self' is one of the boolean constants
-	 *  -> In this case, we return the result immediately! */
-#ifndef __OPTIMIZE_SIZE__
-	if (self == Dee_True) {
-		Dee_DecrefNokill(Dee_True);
-		return 1;
-	}
-	if (self == Dee_False) {
-		Dee_DecrefNokill(Dee_False);
-		return 0;
-	}
-#endif /* !__OPTIMIZE_SIZE__ */
-
-	/* General case: invoke the "bool" operator. */
-	{
-		int result;
-		LOAD_TP_SELF;
-		if likely(tp_self->tp_cast.tp_bool || DeeType_InheritBool(tp_self)) {
-			result = DeeType_INVOKE_BOOL(tp_self, self);
-		} else {
-			result = err_unimplemented_operator(tp_self, OPERATOR_BOOL);
-		}
-		Dee_Decref(self);
-		return result;
-	}
-}
-#endif /* !DEFINE_TYPED_OPERATORS */
-
 #ifndef DEFINE_TYPED_OPERATORS
 DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
                (DeeObject *self, DeeObject *args)) {
@@ -1726,193 +1659,6 @@ DEFINE_OPERATOR(void, PClear, (DeeObject *__restrict self, unsigned int gc_prior
 		}
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
 }
-
-DEFINE_OPERATOR(DREF DeeObject *, GetRangeBeginIndex,
-                (DeeObject *self, Dee_ssize_t start, DeeObject *end)) {
-	Dee_ssize_t end_index;
-	LOAD_TP_SELF;
-	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index)) {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getrange_index) ||
-		          unlikely(DeeType_InheritGetRange(tp_self)))
-			return DeeType_INVOKE_GETRANGEINDEX(tp_self, self, start, end_index);
-	} else if (DeeNone_Check(end)) {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getrange_index_n) ||
-		          unlikely(DeeType_InheritGetRange(tp_self)))
-			return DeeType_INVOKE_GETRANGEINDEXN(tp_self, self, start);
-	} else {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getrange) ||
-		          unlikely(DeeType_InheritGetRange(tp_self))) {
-			DREF DeeObject *result;
-			DREF DeeObject *start_ob = DeeInt_NewSSize(start);
-			if unlikely(!start_ob)
-				goto err;
-			result = DeeType_INVOKE_GETRANGE(tp_self, self, start_ob, end);
-			Dee_Decref(start_ob);
-			return result;
-		}
-	}
-	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
-err:
-	return NULL;
-}
-
-DEFINE_OPERATOR(DREF DeeObject *, GetRangeEndIndex,
-                (DeeObject *self, DeeObject *start, Dee_ssize_t end)) {
-	Dee_ssize_t start_index;
-	LOAD_TP_SELF;
-	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index)) {
-do_get_with_start_index:
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getrange_index) ||
-		          unlikely(DeeType_InheritGetRange(tp_self)))
-			return DeeType_INVOKE_GETRANGEINDEX(tp_self, self, start_index, end);
-	} else if (DeeNone_Check(start)) {
-		start_index = 0;
-		goto do_get_with_start_index;
-	} else {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getrange) ||
-		          unlikely(DeeType_InheritGetRange(tp_self))) {
-			DREF DeeObject *result;
-			DREF DeeObject *end_ob = DeeInt_NewSSize(end);
-			if unlikely(!end_ob)
-				goto err;
-			result = DeeType_INVOKE_GETRANGE(tp_self, self, start, end_ob);
-			Dee_Decref(end_ob);
-			return result;
-		}
-	}
-	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
-err:
-	return NULL;
-}
-
-DEFINE_OPERATOR(int, DelRangeBeginIndex,
-                (DeeObject *self, Dee_ssize_t start, DeeObject *end)) {
-	Dee_ssize_t end_index;
-	LOAD_TP_SELF;
-	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index)) {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delrange_index) ||
-		          unlikely(DeeType_InheritDelRange(tp_self)))
-			return DeeType_INVOKE_DELRANGEINDEX(tp_self, self, start, end_index);
-	} else if (DeeNone_Check(end)) {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delrange_index_n) ||
-		          unlikely(DeeType_InheritDelRange(tp_self)))
-			return DeeType_INVOKE_DELRANGEINDEXN(tp_self, self, start);
-	} else {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delrange) ||
-		          unlikely(DeeType_InheritDelRange(tp_self))) {
-			int result;
-			DREF DeeObject *start_ob = DeeInt_NewSSize(start);
-			if unlikely(!start_ob)
-				goto err;
-			result = DeeType_INVOKE_DELRANGE(tp_self, self, start_ob, end);
-			Dee_Decref(start_ob);
-			return result;
-		}
-	}
-	err_unimplemented_operator(tp_self, OPERATOR_DELRANGE);
-err:
-	return -1;
-}
-
-DEFINE_OPERATOR(int, DelRangeEndIndex,
-                (DeeObject *self, DeeObject *start, Dee_ssize_t end)) {
-	Dee_ssize_t start_index;
-	LOAD_TP_SELF;
-	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index)) {
-do_del_with_start_index:
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delrange_index) ||
-		          unlikely(DeeType_InheritDelRange(tp_self)))
-			return DeeType_INVOKE_DELRANGEINDEX(tp_self, self, start_index, end);
-	} else if (DeeNone_Check(start)) {
-		start_index = 0;
-		goto do_del_with_start_index;
-	} else {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delrange) ||
-		          unlikely(DeeType_InheritDelRange(tp_self))) {
-			int result;
-			DREF DeeObject *end_ob = DeeInt_NewSSize(end);
-			if unlikely(!end_ob)
-				goto err;
-			result = DeeType_INVOKE_DELRANGE(tp_self, self, start, end_ob);
-			Dee_Decref(end_ob);
-			return result;
-		}
-	}
-	err_unimplemented_operator(tp_self, OPERATOR_DELRANGE);
-err:
-	return -1;
-}
-
-DEFINE_OPERATOR(int, SetRangeBeginIndex,
-                (DeeObject *self, Dee_ssize_t start, DeeObject *end, DeeObject *values)) {
-	Dee_ssize_t end_index;
-	LOAD_TP_SELF;
-	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index)) {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setrange_index) ||
-		          unlikely(DeeType_InheritSetRange(tp_self)))
-			return DeeType_INVOKE_SETRANGEINDEX(tp_self, self, start, end_index, values);
-	} else if (DeeNone_Check(end)) {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setrange_index_n) ||
-		          unlikely(DeeType_InheritSetRange(tp_self)))
-			return DeeType_INVOKE_SETRANGEINDEXN(tp_self, self, start, values);
-	} else {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setrange) ||
-		          unlikely(DeeType_InheritSetRange(tp_self))) {
-			int result;
-			DREF DeeObject *start_ob = DeeInt_NewSSize(start);
-			if unlikely(!start_ob)
-				goto err;
-			result = DeeType_INVOKE_SETRANGE(tp_self, self, start_ob, end, values);
-			Dee_Decref(start_ob);
-			return result;
-		}
-	}
-	err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
-err:
-	return -1;
-}
-
-DEFINE_OPERATOR(int, SetRangeEndIndex,
-                (DeeObject *self, DeeObject *start, Dee_ssize_t end, DeeObject *values)) {
-	Dee_ssize_t start_index;
-	LOAD_TP_SELF;
-	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index)) {
-do_set_with_start_index:
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setrange_index) ||
-		          unlikely(DeeType_InheritSetRange(tp_self)))
-			return DeeType_INVOKE_SETRANGEINDEX(tp_self, self, start_index, end, values);
-	} else if (DeeNone_Check(start)) {
-		start_index = 0;
-		goto do_set_with_start_index;
-	} else {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setrange) ||
-		          unlikely(DeeType_InheritSetRange(tp_self))) {
-			int result;
-			DREF DeeObject *end_ob = DeeInt_NewSSize(end);
-			if unlikely(!end_ob)
-				goto err;
-			result = DeeType_INVOKE_SETRANGE(tp_self, self, start, end_ob, values);
-			Dee_Decref(end_ob);
-			return result;
-		}
-	}
-	err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
-err:
-	return -1;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #ifndef DEFINE_TYPED_OPERATORS
 DEFINE_OPERATOR(DREF DeeObject *, IntInherited, (/*inherit(always)*/ DREF DeeObject *RESTRICT_IF_NOTYPE self)) {
@@ -2768,6 +2514,121 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
+PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeObject_GetRangeBeginIndex(DeeObject *self, Dee_ssize_t start, DeeObject *end) {
+	DREF DeeObject *result;
+	DREF DeeObject *start_ob;
+	Dee_ssize_t end_index;
+	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index))
+		return DeeObject_GetRangeIndex(self, start, end_index);
+	if (DeeNone_Check(end))
+		return DeeObject_GetRangeIndexN(self, start);
+	start_ob = DeeInt_NewSSize(start);
+	if unlikely(!start_ob)
+		goto err;
+	result = DeeObject_GetRange(self, start_ob, end);
+	Dee_Decref(start_ob);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_GetRangeEndIndex(DeeObject *self, DeeObject *start, Dee_ssize_t end) {
+	DREF DeeObject *result;
+	DREF DeeObject *end_ob;
+	Dee_ssize_t start_index;
+	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index))
+		return DeeObject_GetRangeIndex(self, start_index, end);
+	if (DeeNone_Check(start))
+		return DeeObject_GetRangeIndex(self, 0, end);
+	end_ob = DeeInt_NewSSize(end);
+	if unlikely(!end_ob)
+		goto err;
+	result = DeeObject_GetRange(self, start, end_ob);
+	Dee_Decref(end_ob);
+	return result;
+err:
+	return NULL;
+}
+
+
+PUBLIC WUNUSED NONNULL((1, 3)) int DCALL
+DeeObject_DelRangeBeginIndex(DeeObject *self, Dee_ssize_t start, DeeObject *end) {
+	int result;
+	DREF DeeObject *start_ob;
+	Dee_ssize_t end_index;
+	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index))
+		return DeeObject_DelRangeIndex(self, start, end_index);
+	if (DeeNone_Check(end))
+		return DeeObject_DelRangeIndexN(self, start);
+	start_ob = DeeInt_NewSSize(start);
+	if unlikely(!start_ob)
+		goto err;
+	result = DeeObject_DelRange(self, start_ob, end);
+	Dee_Decref(start_ob);
+	return result;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeObject_DelRangeEndIndex(DeeObject *self, DeeObject *start, Dee_ssize_t end) {
+	int result;
+	DREF DeeObject *end_ob;
+	Dee_ssize_t start_index;
+	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index))
+		return DeeObject_DelRangeIndex(self, start_index, end);
+	if (DeeNone_Check(start))
+		return DeeObject_DelRangeIndex(self, 0, end);
+	end_ob = DeeInt_NewSSize(end);
+	if unlikely(!end_ob)
+		goto err;
+	result = DeeObject_DelRange(self, start, end_ob);
+	Dee_Decref(end_ob);
+	return result;
+err:
+	return -1;
+}
+
+
+PUBLIC WUNUSED NONNULL((1, 3, 4)) int DCALL
+DeeObject_SetRangeBeginIndex(DeeObject *self, Dee_ssize_t start, DeeObject *end, DeeObject *values) {
+	int result;
+	DREF DeeObject *start_ob;
+	Dee_ssize_t end_index;
+	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index))
+		return DeeObject_SetRangeIndex(self, start, end_index, values);
+	if (DeeNone_Check(end))
+		return DeeObject_SetRangeIndexN(self, start, values);
+	start_ob = DeeInt_NewSSize(start);
+	if unlikely(!start_ob)
+		goto err;
+	result = DeeObject_SetRange(self, start_ob, end, values);
+	Dee_Decref(start_ob);
+	return result;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 4)) int DCALL
+DeeObject_SetRangeEndIndex(DeeObject *self, DeeObject *start, Dee_ssize_t end, DeeObject *values) {
+	int result;
+	DREF DeeObject *end_ob;
+	Dee_ssize_t start_index;
+	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index))
+		return DeeObject_SetRangeIndex(self, start_index, end, values);
+	if (DeeNone_Check(start))
+		return DeeObject_SetRangeIndex(self, 0, end, values);
+	end_ob = DeeInt_NewSSize(end);
+	if unlikely(!end_ob)
+		goto err;
+	result = DeeObject_SetRange(self, start, end_ob, values);
+	Dee_Decref(end_ob);
+	return result;
+err:
+	return -1;
+}
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 #undef GET_TP_SELF

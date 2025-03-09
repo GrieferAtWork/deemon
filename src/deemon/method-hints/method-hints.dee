@@ -1195,6 +1195,7 @@ final class NativeOperator {
 	public member name: NativeOperatorName;            /* tp_seq->tp_foreach */
 	public member params: {NativeMethodParam...} = []; /* { ... } */
 	public member tpSelfExpr: string;                  /* "Dee_TYPE(self)" */
+	public member exportPrecheck: string;              /* ... */
 	public member impls: {NativeOperatorImpl...} = []; /* { ... } */
 	public member usrtypeImpls: {NativeOperatorImpl...} = [];
 	public member typed: NativeOperator | none = none;
@@ -1220,6 +1221,7 @@ final class NativeOperator {
 				params.each._withoutRestrict()...),
 			operatorName: operatorName,
 			tpSelfExpr: "tp_self",
+			exportPrecheck: exportPrecheck,
 			impls: Tuple(impls.each._makeTyped()),
 			usrtypeImpls: Tuple(usrtypeImpls.each._makeTyped()),
 			namePrefix: "t"
@@ -2283,10 +2285,21 @@ function printNativeOperatorExportedApi() {
 			print(f" \{");
 			print(f"	__register DeeNO_{opName}_t {opVarName};");
 			local tpSelfExpr = usedOperator.tpSelfExpr;
+			local exportPrecheck: string = usedOperator.exportPrecheck;
+			local mustAssignTpSelf: bool = false;
 			if (tpSelfExpr.startswith("Dee_TYPE(") && tpSelfExpr.endswith(")")) {
-				print(f"	__register DeeTypeObject *tp_self = {tpSelfExpr};");
+				if (exportPrecheck) {
+					print(f"	__register DeeTypeObject *tp_self;");
+					mustAssignTpSelf = true;
+				} else {
+					print(f"	__register DeeTypeObject *tp_self = {tpSelfExpr};");
+				}
 				tpSelfExpr = "tp_self";
 			}
+			if (exportPrecheck)
+				print(exportPrecheck);
+			if (mustAssignTpSelf)
+				print(f"	{tpSelfExpr} = {usedOperator.tpSelfExpr};");
 			print(f"	if unlikely("),;
 			if (usedOperator.name.table !is none)
 				print(f"!{tpSelfExpr}->{usedOperator.name.table} || "),;
@@ -2799,6 +2812,7 @@ final class _SpecParserAttrib {
 	public member wunused: bool = false;
 	public member disliked: bool = false;
 	public member tpSelfExpr: string = "";
+	public member exportPrecheck: string = "";
 	public member nonnull: bool = false;
 	public member getset: bool = false;
 	public member getsetMember: string = "";
@@ -3143,6 +3157,19 @@ done:
 				if (prefixEnd < 0)
 					err("Missing end-of-tp_self attribute body");
 				attrib.tpSelfExpr = data[prefixStart:prefixEnd].strip();
+				tokEnd = prefixEnd;
+				next();
+				skip(")");
+			}	break;
+
+			case "export_precheck": {
+				next();
+				skip("(");
+				local prefixStart = tokStart;
+				local prefixEnd = data.findmatch("(", ")", prefixStart);
+				if (prefixEnd < 0)
+					err("Missing end-of-export_precheck attribute body");
+				attrib.exportPrecheck = data[prefixStart:prefixEnd].strip();
 				tokEnd = prefixEnd;
 				next();
 				skip(")");
@@ -3588,6 +3615,7 @@ done:
 						wunused: attrib.wunused,
 						cc: attrib.cc,
 						tpSelfExpr: attrib.tpSelfExpr,
+						exportPrecheck: attrib.exportPrecheck,
 						name: operatorName,
 						customUnsupportedImplName: attrib.customUnsupportedImplName,
 						customBadAllocImplName: attrib.customBadAllocImplName,

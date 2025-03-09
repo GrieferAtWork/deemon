@@ -30,6 +30,7 @@
 /**/
 
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* int32_t, int64_t */
 
 DECL_BEGIN
 
@@ -338,6 +339,7 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_funptr_t
 #define DeeType_RequireSupportedNativeOperator(self, name) \
 	(likely(_Dee_TNO_HAS(self, name)) ? _Dee_TNO_GET(self, name) : _DeeType_RequireSupportedNativeOperator(self, name))
 #endif /* !__OPTIMIZE_SIZE__ */
+#define DeeType_HasNativeOperator(self, name) (DeeType_RequireSupportedNativeOperator(self, name) != NULL)
 
 
 #define _Dee_TNO_GET4_PATH1(_, a)    (_)->a
@@ -1692,197 +1694,50 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__setattr_string_len_hash__wi
 
 
 /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: Backward compat -- DEPRECATED! */
-#define instance_tassign                tusrtype__assign__with__ASSIGN
-#define instance_assign                 usrtype__assign__with__ASSIGN
-#define instance_tmoveassign            tusrtype__move_assign__with__MOVEASSIGN
-#define instance_moveassign             usrtype__move_assign__with__MOVEASSIGN
-#define instance_tstr                   tusrtype__str__with__STR
-#define instance_str                    usrtype__str__with__STR
-#define instance_trepr                  tusrtype__repr__with__REPR
-#define instance_repr                   usrtype__repr__with__REPR
-#define instance_tprint                 tusrtype__print__with__STR
-#define instance_print                  usrtype__print__with__STR
-#define instance_tprintrepr             tusrtype__printrepr__with__REPR
-#define instance_printrepr              usrtype__printrepr__with__REPR
-#define instance_tstr_by_print          tusrtype__str__with__PRINT
-#define instance_str_by_print           usrtype__str__with__PRINT
-#define instance_trepr_by_print         tusrtype__repr__with__PRINTREPR
-#define instance_repr_by_print          usrtype__repr__with__PRINTREPR
-#define instance_tprint_by_print        tusrtype__print__with__PRINT
-#define instance_print_by_print         usrtype__print__with__PRINT
-#define instance_tprintrepr_by_print    tusrtype__printrepr__with__PRINTREPR
-#define instance_printrepr_by_print     usrtype__printrepr__with__PRINTREPR
-#define instance_tbool                  tusrtype__bool__with__BOOL
-#define instance_bool                   usrtype__bool__with__BOOL
-#define instance_tcall                  tusrtype__call__with__CALL
-#define instance_call                   usrtype__call__with__CALL
-#define instance_tcallkw                tusrtype__call_kw__with__CALL
-#define instance_callkw                 usrtype__call_kw__with__CALL
-#define instance_tnext                  tusrtype__iter_next__with__ITERNEXT
-#define instance_next                   usrtype__iter_next__with__ITERNEXT
-#define instance_tint                   tusrtype__int__with__INT
-#define instance_int                    usrtype__int__with__INT
-#define instance_tdouble                tusrtype__double__with__FLOAT
-#define instance_double                 usrtype__double__with__FLOAT
-#define instance_tinv                   tusrtype__inv__with__INV
-#define instance_inv                    usrtype__inv__with__INV
-#define instance_tpos                   tusrtype__pos__with__POS
-#define instance_pos                    usrtype__pos__with__POS
-#define instance_tneg                   tusrtype__neg__with__NEG
-#define instance_neg                    usrtype__neg__with__NEG
-#define instance_tadd                   tusrtype__add__with__ADD
-#define instance_add                    usrtype__add__with__ADD
-#define instance_tsub                   tusrtype__sub__with__SUB
-#define instance_sub                    usrtype__sub__with__SUB
-#define instance_tmul                   tusrtype__mul__with__MUL
-#define instance_mul                    usrtype__mul__with__MUL
-#define instance_tdiv                   tusrtype__div__with__DIV
-#define instance_div                    usrtype__div__with__DIV
-#define instance_tmod                   tusrtype__mod__with__MOD
-#define instance_mod                    usrtype__mod__with__MOD
-#define instance_tshl                   tusrtype__shl__with__SHL
-#define instance_shl                    usrtype__shl__with__SHL
-#define instance_tshr                   tusrtype__shr__with__SHR
-#define instance_shr                    usrtype__shr__with__SHR
-#define instance_tand                   tusrtype__and__with__AND
-#define instance_and                    usrtype__and__with__AND
-#define instance_tor                    tusrtype__or__with__OR
-#define instance_or                     usrtype__or__with__OR
-#define instance_txor                   tusrtype__xor__with__XOR
-#define instance_xor                    usrtype__xor__with__XOR
-#define instance_tpow                   tusrtype__pow__with__POW
-#define instance_pow                    usrtype__pow__with__POW
-#define instance_tinc                   tusrtype__inc__with__INC
-#define instance_inc                    usrtype__inc__with__INC
-#define instance_tdec                   tusrtype__dec__with__DEC
-#define instance_dec                    usrtype__dec__with__DEC
-#define instance_tiadd                  tusrtype__inplace_add__with__INPLACE_ADD
-#define instance_iadd                   usrtype__inplace_add__with__INPLACE_ADD
-#define instance_tisub                  tusrtype__inplace_sub__with__INPLACE_SUB
-#define instance_isub                   usrtype__inplace_sub__with__INPLACE_SUB
-#define instance_timul                  tusrtype__inplace_mul__with__INPLACE_MUL
-#define instance_imul                   usrtype__inplace_mul__with__INPLACE_MUL
-#define instance_tidiv                  tusrtype__inplace_div__with__INPLACE_DIV
-#define instance_idiv                   usrtype__inplace_div__with__INPLACE_DIV
-#define instance_timod                  tusrtype__inplace_mod__with__INPLACE_MOD
-#define instance_imod                   usrtype__inplace_mod__with__INPLACE_MOD
-#define instance_tishl                  tusrtype__inplace_shl__with__INPLACE_SHL
-#define instance_ishl                   usrtype__inplace_shl__with__INPLACE_SHL
-#define instance_tishr                  tusrtype__inplace_shr__with__INPLACE_SHR
-#define instance_ishr                   usrtype__inplace_shr__with__INPLACE_SHR
-#define instance_tiand                  tusrtype__inplace_and__with__INPLACE_AND
-#define instance_iand                   usrtype__inplace_and__with__INPLACE_AND
-#define instance_tior                   tusrtype__inplace_or__with__INPLACE_OR
-#define instance_ior                    usrtype__inplace_or__with__INPLACE_OR
-#define instance_tixor                  tusrtype__inplace_xor__with__INPLACE_XOR
-#define instance_ixor                   usrtype__inplace_xor__with__INPLACE_XOR
-#define instance_tipow                  tusrtype__inplace_pow__with__INPLACE_POW
-#define instance_ipow                   usrtype__inplace_pow__with__INPLACE_POW
-#define instance_thash                  tusrtype__hash__with__HASH
-#define instance_hash                   usrtype__hash__with__HASH
-#define instance_builtin_thash          tusrtype__hash__with__
-#define instance_builtin_hash           usrtype__hash__with__
-#define instance_builtin_tcompare       tusrtype__compare__with__
-#define instance_builtin_compare        usrtype__compare__with__
-#define instance_builtin_tcompare_eq    tusrtype__compare_eq__with__
-#define instance_builtin_compare_eq     usrtype__compare_eq__with__
-#define instance_builtin_ttrycompare_eq tusrtype__trycompare_eq__with__
-#define instance_builtin_trycompare_eq  usrtype__trycompare_eq__with__
-#define instance_teq                    tusrtype__eq__with__EQ
-#define instance_eq                     usrtype__eq__with__EQ
-#define instance_tne                    tusrtype__ne__with__NE
-#define instance_ne                     usrtype__ne__with__NE
-#define instance_tlo                    tusrtype__lo__with__LO
-#define instance_lo                     usrtype__lo__with__LO
-#define instance_tle                    tusrtype__le__with__LE
-#define instance_le                     usrtype__le__with__LE
-#define instance_tgr                    tusrtype__gr__with__GR
-#define instance_gr                     usrtype__gr__with__GR
-#define instance_tge                    tusrtype__ge__with__GE
-#define instance_ge                     usrtype__ge__with__GE
-#define instance_titer                  tusrtype__iter__with__ITER
-#define instance_iter                   usrtype__iter__with__ITER
-#define instance_tsize                  tusrtype__sizeob__with__SIZE
-#define instance_size                   usrtype__sizeob__with__SIZE
-#define instance_tcontains              tusrtype__contains__with__CONTAINS
-#define instance_contains               usrtype__contains__with__CONTAINS
-#define instance_tgetitem               tusrtype__getitem__with__GETITEM
-#define instance_getitem                usrtype__getitem__with__GETITEM
-#define instance_tdelitem               tusrtype__delitem__with__DELITEM
-#define instance_delitem                usrtype__delitem__with__DELITEM
-#define instance_tsetitem               tusrtype__setitem__with__SETITEM
-#define instance_setitem                usrtype__setitem__with__SETITEM
-#define instance_tgetrange              tusrtype__getrange__with__GETRANGE
-#define instance_getrange               usrtype__getrange__with__GETRANGE
-#define instance_tdelrange              tusrtype__delrange__with__DELRANGE
-#define instance_delrange               usrtype__delrange__with__DELRANGE
-#define instance_tsetrange              tusrtype__setrange__with__SETRANGE
-#define instance_setrange               usrtype__setrange__with__SETRANGE
-#define instance_tgetattr               tusrtype__getattr__with__GETATTR
-#define instance_getattr                usrtype__getattr__with__GETATTR
-#define instance_tdelattr               tusrtype__delattr__with__DELATTR
-#define instance_delattr                usrtype__delattr__with__DELATTR
-#define instance_tsetattr               tusrtype__setattr__with__SETATTR
-#define instance_setattr                usrtype__setattr__with__SETATTR
-#define instance_tenter                 tusrtype__enter__with__ENTER
-#define instance_enter                  usrtype__enter__with__ENTER
-#define instance_tleave                 tusrtype__leave__with__LEAVE
-#define instance_leave                  usrtype__leave__with__LEAVE
+#define DeeType_InheritStr(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_str) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_print))
+#define DeeType_InheritRepr(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_repr) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_printrepr))
+#define DeeType_InheritBool(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_bool) && 1)
+#define DeeType_InheritCall(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_call) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_call_kw))
+#define DeeType_InheritInt(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_int) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_int32) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_int64) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_double))
+#define DeeType_InheritInv(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inv) && 1)
+#define DeeType_InheritPos(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_pos) && 1)
+#define DeeType_InheritNeg(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_neg) && 1)
+#define DeeType_InheritAdd(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_add) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_sub) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_add) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_sub) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inc) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_dec))
+#define DeeType_InheritMul(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_mul) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_mul))
+#define DeeType_InheritDiv(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_div) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_div))
+#define DeeType_InheritMod(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_mod) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_mod))
+#define DeeType_InheritShl(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_shl) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_shl))
+#define DeeType_InheritShr(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_shr) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_shr))
+#define DeeType_InheritAnd(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_and) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_and))
+#define DeeType_InheritOr(self)       (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_or) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_or))
+#define DeeType_InheritXor(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_xor) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_xor))
+#define DeeType_InheritPow(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_pow) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_pow))
+#define DeeType_InheritCompare(self)  (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_hash) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_eq) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_ne) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_lo) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_le) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_gr) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_ge) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_compare_eq) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_compare) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_trycompare_eq))
+#define DeeType_InheritIterNext(self) (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_iter_next) && 1)
+#define DeeType_InheritIter(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_iter) && 1)
+#define DeeType_InheritSize(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_sizeob) && 1)
+#define DeeType_InheritContains(self) (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_contains) && 1)
+#define DeeType_InheritGetItem(self)  (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_getitem) && 1)
+#define DeeType_InheritDelItem(self)  (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_delitem) && 1)
+#define DeeType_InheritSetItem(self)  (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_setitem) && 1)
+#define DeeType_InheritGetRange(self) (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_getrange) && 1)
+#define DeeType_InheritDelRange(self) (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_delrange) && 1)
+#define DeeType_InheritSetRange(self) (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_setrange) && 1)
+#define DeeType_InheritWith(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_enter) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_leave))
 
 /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: Backward compat -- DEPRECATED! */
-#define DeeType_InheritStr(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_str) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_print))
-#define DeeType_InheritRepr(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_repr) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_printrepr))
-#define DeeType_InheritBool(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_bool) && 1)
-#define DeeType_InheritCall(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_call) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_call_kw))
-#define DeeType_InheritInt(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_int) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_int32) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_int64) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_double))
-#define DeeType_InheritInv(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inv) && 1)
-#define DeeType_InheritPos(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_pos) && 1)
-#define DeeType_InheritNeg(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_neg) && 1)
-#define DeeType_InheritAdd(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_add) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_sub) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_add) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_sub) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inc) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_dec))
-#define DeeType_InheritMul(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_mul) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_mul))
-#define DeeType_InheritDiv(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_div) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_div))
-#define DeeType_InheritMod(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_mod) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_mod))
-#define DeeType_InheritShl(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_shl) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_shl))
-#define DeeType_InheritShr(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_shr) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_shr))
-#define DeeType_InheritAnd(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_and) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_and))
-#define DeeType_InheritOr(self)           (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_or) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_or))
-#define DeeType_InheritXor(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_xor) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_xor))
-#define DeeType_InheritPow(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_pow) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_pow))
-#define DeeType_InheritCompare(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_hash) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_eq) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_ne) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_lo) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_le) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_gr) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_ge) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_compare_eq) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_compare) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_trycompare_eq))
-#define DeeType_InheritIterNext(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_iter_next) && 1)
-#define DeeType_InheritIter(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_iter) && 1)
-#define DeeType_InheritSize(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_sizeob) && 1)
-#define DeeType_InheritContains(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_contains) && 1)
-#define DeeType_InheritGetItem(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_getitem) && 1)
-#define DeeType_InheritDelItem(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_delitem) && 1)
-#define DeeType_InheritSetItem(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_setitem) && 1)
-#define DeeType_InheritGetRange(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_getrange) && 1)
-#define DeeType_InheritDelRange(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_delrange) && 1)
-#define DeeType_InheritSetRange(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_setrange) && 1)
-#define DeeType_InheritWith(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_enter) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_leave))
-
-/* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: Backward compat -- DEPRECATED! */
-#define DeeType_InvokeCastStr(tp_self, self)                                                     (*maketyped__str((tp_self)->tp_cast.tp_str))(tp_self, self)
-#define DeeType_InvokeCastPrint(tp_self, self, printer, arg)                                     (*maketyped__print((tp_self)->tp_cast.tp_print))(tp_self, self, printer, arg)
-#define DeeType_InvokeCastRepr(tp_self, self)                                                    (*maketyped__repr((tp_self)->tp_cast.tp_repr))(tp_self, self)
-#define DeeType_InvokeCastPrintRepr(tp_self, self, printer, arg)                                 (*maketyped__printrepr((tp_self)->tp_cast.tp_printrepr))(tp_self, self, printer, arg)
-#define DeeType_InvokeCastBool(tp_self, self)                                                    (*maketyped__bool((tp_self)->tp_cast.tp_bool))(tp_self, self)
-#define DeeType_InvokeCall(tp_self, self, argc, argv)                                            (*maketyped__call((tp_self)->tp_call))(tp_self, self, argc, argv)
-#define DeeType_InvokeCallKw(tp_self, self, argc, argv, kw)                                      (*maketyped__call_kw((tp_self)->tp_call_kw))(tp_self, self, argc, argv, kw)
-#define DeeType_InvokeMathInt32(tp_self, self, result)                                           (*maketyped__int32((tp_self)->tp_math->tp_int32))(tp_self, self, result)
-#define DeeType_InvokeMathInt64(tp_self, self, result)                                           (*maketyped__int64((tp_self)->tp_math->tp_int64))(tp_self, self, result)
-#define DeeType_InvokeMathDouble(tp_self, self, result)                                          (*maketyped__double((tp_self)->tp_math->tp_double))(tp_self, self, result)
-#define DeeType_InvokeMathInt(tp_self, self)                                                     (*maketyped__int((tp_self)->tp_math->tp_int))(tp_self, self)
-#define DeeType_InvokeCmpHash(tp_self, self)                                                     (*maketyped__hash((tp_self)->tp_cmp->tp_hash))(tp_self, self)
-#define DeeType_InvokeSeqGetRange(tp_self, self, start, end)                                     (*maketyped__getrange((tp_self)->tp_seq->tp_getrange))(tp_self, self, start, end)
-#define DeeType_InvokeSeqDelRange(tp_self, self, start, end)                                     (*maketyped__delrange((tp_self)->tp_seq->tp_delrange))(tp_self, self, start, end)
-#define DeeType_InvokeSeqSetRange(tp_self, self, start, end, values)                             (*maketyped__setrange((tp_self)->tp_seq->tp_setrange))(tp_self, self, start, end, values)
-#define DeeType_InvokeSeqGetRangeIndex(tp_self, self, start, end)                                (*maketyped__getrange_index((tp_self)->tp_seq->tp_getrange_index))(tp_self, self, start, end)
-#define DeeType_InvokeSeqDelRangeIndex(tp_self, self, start, end)                                (*maketyped__delrange_index((tp_self)->tp_seq->tp_delrange_index))(tp_self, self, start, end)
-#define DeeType_InvokeSeqSetRangeIndex(tp_self, self, start, end, value)                         (*maketyped__setrange_index((tp_self)->tp_seq->tp_setrange_index))(tp_self, self, start, end, value)
-#define DeeType_InvokeSeqGetRangeIndexN(tp_self, self, start)                                    (*maketyped__getrange_index_n((tp_self)->tp_seq->tp_getrange_index_n))(tp_self, self, start)
-#define DeeType_InvokeSeqDelRangeIndexN(tp_self, self, start)                                    (*maketyped__delrange_index_n((tp_self)->tp_seq->tp_delrange_index_n))(tp_self, self, start)
-#define DeeType_InvokeSeqSetRangeIndexN(tp_self, self, start, value)                             (*maketyped__setrange_index_n((tp_self)->tp_seq->tp_setrange_index_n))(tp_self, self, start, value)
+#define DeeType_InvokeCastStr(tp_self, self)                             (*maketyped__str((tp_self)->tp_cast.tp_str))(tp_self, self)
+#define DeeType_InvokeCastPrint(tp_self, self, printer, arg)             (*maketyped__print((tp_self)->tp_cast.tp_print))(tp_self, self, printer, arg)
+#define DeeType_InvokeCastRepr(tp_self, self)                            (*maketyped__repr((tp_self)->tp_cast.tp_repr))(tp_self, self)
+#define DeeType_InvokeCastPrintRepr(tp_self, self, printer, arg)         (*maketyped__printrepr((tp_self)->tp_cast.tp_printrepr))(tp_self, self, printer, arg)
+#define DeeType_InvokeCastBool(tp_self, self)                            (*maketyped__bool((tp_self)->tp_cast.tp_bool))(tp_self, self)
+#define DeeType_InvokeCall(tp_self, self, argc, argv)                    (*maketyped__call((tp_self)->tp_call))(tp_self, self, argc, argv)
+#define DeeType_InvokeCallKw(tp_self, self, argc, argv, kw)              (*maketyped__call_kw((tp_self)->tp_call_kw))(tp_self, self, argc, argv, kw)
+#define DeeType_InvokeMathInt32(tp_self, self, result)                   (*maketyped__int32((tp_self)->tp_math->tp_int32))(tp_self, self, result)
+#define DeeType_InvokeMathInt64(tp_self, self, result)                   (*maketyped__int64((tp_self)->tp_math->tp_int64))(tp_self, self, result)
+#define DeeType_InvokeMathDouble(tp_self, self, result)                  (*maketyped__double((tp_self)->tp_math->tp_double))(tp_self, self, result)
+#define DeeType_InvokeMathInt(tp_self, self)                             (*maketyped__int((tp_self)->tp_math->tp_int))(tp_self, self)
+#define DeeType_InvokeCmpHash(tp_self, self)                             (*maketyped__hash((tp_self)->tp_cmp->tp_hash))(tp_self, self)
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DECL_END

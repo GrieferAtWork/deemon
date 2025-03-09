@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINT_INVOKE_C 1
 
 #include <deemon/api.h>
+#include <deemon/bool.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 
@@ -50,6 +51,22 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) int
 	if unlikely((tp_move_assign = tp_self->tp_init.tp_move_assign) == NULL)
 		tp_move_assign = _DeeType_RequireNativeOperator(tp_self, move_assign);
 	return (*tp_move_assign)(self, value);
+}
+
+PUBLIC ATTR_HOT WUNUSED NONNULL((1)) int
+(DCALL DeeObject_Bool)(DeeObject *__restrict self) {
+	__register DeeNO_bool_t tp_bool;
+	__register DeeTypeObject *tp_self;
+#ifndef __OPTIMIZE_SIZE__
+	if (self == Dee_True)
+		return 1;
+	if (self == Dee_False)
+		return 0;
+#endif /* !__OPTIMIZE_SIZE__ */
+	tp_self = Dee_TYPE(self);
+	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL)
+		tp_bool = _DeeType_RequireNativeOperator(tp_self, bool);
+	return (*tp_bool)(self);
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1)) DREF DeeObject *
@@ -873,6 +890,23 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 			return (*tp_move_assign)(self, value);
 	}
 	return (*maketyped__move_assign(tp_move_assign))(tp_self, self, value);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_TBool)(DeeTypeObject *tp_self, DeeObject *self) {
+	__register DeeNO_bool_t tp_bool;
+#ifndef __OPTIMIZE_SIZE__
+	if (self == Dee_True)
+		return 1;
+	if (self == Dee_False)
+		return 0;
+#endif /* !__OPTIMIZE_SIZE__ */
+	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL) {
+		tp_bool = _DeeType_RequireNativeOperator(tp_self, bool);
+		if unlikely(tp_bool == (DeeNO_bool_t)&default__bool__unsupported)
+			return (*tp_bool)(self);
+	}
+	return (*maketyped__bool(tp_bool))(tp_self, self);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
@@ -1937,6 +1971,14 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 }
 /*[[[end]]]*/
 /* clang-format on */
+
+
+PUBLIC ATTR_HOT WUNUSED NONNULL((1)) int DCALL
+DeeObject_BoolInherited(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	int result = DeeObject_Bool(self);
+	Dee_Decref(self);
+	return result;
+}
 
 DECL_END
 

@@ -68,11 +68,7 @@ has_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) 
 	if (tp_self->tp_attr) {
 		if (tp_self->tp_attr->tp_getattr) {
 			DREF DeeObject *obj;
-			if (tp_self->tp_attr->tp_getattr == &instance_getattr) {
-				obj = instance_tgetattr(tp_self, self, attr);
-			} else {
-				obj = (*tp_self->tp_attr->tp_getattr)(self, attr);
-			}
+			obj = (*maketyped__getattr(tp_self->tp_attr->tp_getattr))(tp_self, self, attr);
 			if (obj) {
 				Dee_Decref(obj);
 				return 1;

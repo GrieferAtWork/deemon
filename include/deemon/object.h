@@ -3662,6 +3662,7 @@ struct Dee_operator_invoke {
 	  Dee_REQUIRES_OPERATOR_INHERIT_CB(opi_inherit) }
 
 struct Dee_opinfo {
+	/* TODO: This here needs to be re-designed */
 	Dee_operator_t                          oi_id;        /* Operator ID */
 	uint16_t                                oi_class;     /* Offset into the type for where to find a `0..1' struct that contains more  */
 	uint16_t                                oi_offset;    /* Offset from `oi_class' to where the c-function of this operator can be found. */

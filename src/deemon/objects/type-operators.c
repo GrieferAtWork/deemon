@@ -77,59 +77,42 @@ err_operator_requires_inplace(DeeTypeObject *__restrict tp_self,
 }
 
 PRIVATE NONNULL((1, 2, 3)) void DCALL
-do_DeeType_InheritUninheritable(DeeTypeObject *self,
-                                DeeTypeObject *type_type,
-                                struct Dee_opinfo const *info) {
+do_inherit_noop(DeeTypeObject *self,
+                DeeTypeObject *type_type,
+                struct Dee_opinfo const *info) {
 	(void)self;
 	(void)type_type;
 	(void)info;
 }
 
-#define DEFINE_TYPE_INHERIT_HOOK(name, impl)            \
-	PRIVATE NONNULL((1, 2, 3)) void DCALL               \
-	name(DeeTypeObject *self, DeeTypeObject *type_type, \
-	     struct Dee_opinfo const *info) {               \
-		ASSERT(type_type == &DeeType_Type);             \
-		(void)type_type;                                \
-		(void)info;                                     \
-		(void)impl(self);                               \
-	}
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritConstructors, DeeType_InheritConstructors);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritStr, DeeType_InheritStr);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritRepr, DeeType_InheritRepr);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritBool, DeeType_InheritBool);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritCall, DeeType_InheritCall);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritInt, DeeType_InheritInt);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritInv, DeeType_InheritInv);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritPos, DeeType_InheritPos);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritNeg, DeeType_InheritNeg);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritAdd, DeeType_InheritAdd);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritMul, DeeType_InheritMul);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritDiv, DeeType_InheritDiv);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritMod, DeeType_InheritMod);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritShl, DeeType_InheritShl);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritShr, DeeType_InheritShr);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritAnd, DeeType_InheritAnd);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritOr, DeeType_InheritOr);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritXor, DeeType_InheritXor);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritPow, DeeType_InheritPow);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritCompare, DeeType_InheritCompare);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritIterNext, DeeType_InheritIterNext);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritIter, DeeType_InheritIter);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritSize, DeeType_InheritSize);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritContains, DeeType_InheritContains);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritGetItem, DeeType_InheritGetItem);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritDelItem, DeeType_InheritDelItem);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritSetItem, DeeType_InheritSetItem);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritGetRange, DeeType_InheritGetRange);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritDelRange, DeeType_InheritDelRange);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritSetRange, DeeType_InheritSetRange);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritWith, DeeType_InheritWith);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritBuffer, DeeType_InheritBuffer);
-#undef DEFINE_TYPE_INHERIT_HOOK
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+do_inherit_constructor(DeeTypeObject *self,
+                       DeeTypeObject *type_type,
+                       struct Dee_opinfo const *info) {
+	(void)type_type;
+	(void)info;
+	(void)DeeType_InheritConstructors(self);
+}
 
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+do_inherit_buffer(DeeTypeObject *self,
+                  DeeTypeObject *type_type,
+                  struct Dee_opinfo const *info) {
+	(void)type_type;
+	(void)info;
+	(void)DeeType_InheritBuffer(self);
+}
 
-DEFINE_OPERATOR_INVOKE(operator_constructor, &instance_ctor, &do_DeeType_InheritConstructors) {
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+do_inherit_builtin_operator(DeeTypeObject *self,
+                            DeeTypeObject *type_type,
+                            struct Dee_opinfo const *info) {
+	enum Dee_tno_id id = DeeType_GetTnoOfOperator(info->oi_id);
+	(void)type_type;
+	COMPILER_UNUSED(DeeType_GetNativeOperatorWithoutUnsupported(self, id));
+}
+
+DEFINE_OPERATOR_INVOKE(operator_constructor, &instance_ctor, &do_inherit_constructor) {
 	(void)self;
 	(void)p_self;
 	(void)argc;
@@ -139,7 +122,7 @@ DEFINE_OPERATOR_INVOKE(operator_constructor, &instance_ctor, &do_DeeType_Inherit
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_copy, &instance_copy, &do_DeeType_InheritConstructors) {
+DEFINE_OPERATOR_INVOKE(operator_copy, &instance_copy, &do_inherit_constructor) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("copy")))
@@ -149,7 +132,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_deepcopy, &instance_deepcopy, &do_DeeType_InheritConstructors) {
+DEFINE_OPERATOR_INVOKE(operator_deepcopy, &instance_deepcopy, &do_inherit_constructor) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("deepcopy")))
@@ -159,7 +142,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_destructor, &instance_destructor, &do_DeeType_InheritUninheritable) {
+DEFINE_OPERATOR_INVOKE(operator_destructor, &instance_destructor, &do_inherit_noop) {
 	(void)self;
 	(void)p_self;
 	(void)argc;
@@ -169,7 +152,7 @@ DEFINE_OPERATOR_INVOKE(operator_destructor, &instance_destructor, &do_DeeType_In
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_bool, &instance_bool, &do_DeeType_InheritBool) {
+DEFINE_OPERATOR_INVOKE(operator_bool, &usrtype__bool__with__BOOL, &do_inherit_builtin_operator) {
 	int result;
 	(void)p_self;
 	(void)opname;
@@ -183,7 +166,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_next, &instance_next, &do_DeeType_InheritIterNext) {
+DEFINE_OPERATOR_INVOKE(operator_next, &usrtype__iter_next__with__ITERNEXT, &do_inherit_builtin_operator) {
 	DREF DeeObject *result;
 	(void)p_self;
 	(void)opname;
@@ -199,7 +182,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_call, &instance_call, &do_DeeType_InheritCall) {
+DEFINE_OPERATOR_INVOKE(operator_call, &usrtype__call__with__CALL, &do_inherit_builtin_operator) {
 	DeeObject *args, *kw = NULL;
 	DREF DeeObject *result;
 	(void)p_self;
@@ -222,7 +205,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_float, &instance_double, &do_DeeType_InheritInt) {
+DEFINE_OPERATOR_INVOKE(operator_float, &usrtype__double__with__FLOAT, &do_inherit_builtin_operator) {
 	double result;
 	(void)p_self;
 	(void)opname;
@@ -235,7 +218,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_hash, &instance_hash, &do_DeeType_InheritCompare) {
+DEFINE_OPERATOR_INVOKE(operator_hash, &usrtype__hash__with__HASH, &do_inherit_builtin_operator) {
 	dhash_t result;
 	(void)p_self;
 	(void)opname;
@@ -247,7 +230,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_getattr, &instance_getattr, &do_DeeType_InheritUninheritable) {
+DEFINE_OPERATOR_INVOKE(operator_getattr, &usrtype__getattr__with__GETATTR, &do_inherit_noop) {
 	DeeStringObject *attr;
 	(void)p_self;
 	(void)opname;
@@ -260,7 +243,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_delattr, &instance_delattr, &do_DeeType_InheritUninheritable) {
+DEFINE_OPERATOR_INVOKE(operator_delattr, &usrtype__delattr__with__DELATTR, &do_inherit_noop) {
 	DeeStringObject *attr;
 	(void)p_self;
 	(void)opname;
@@ -275,7 +258,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_setattr, &instance_setattr, &do_DeeType_InheritUninheritable) {
+DEFINE_OPERATOR_INVOKE(operator_setattr, &usrtype__setattr__with__SETATTR, &do_inherit_noop) {
 	DeeStringObject *attr;
 	DeeObject *value;
 	(void)p_self;
@@ -291,7 +274,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_enumattr, &instance_enumattr, &do_DeeType_InheritUninheritable) {
+DEFINE_OPERATOR_INVOKE(operator_enumattr, &instance_enumattr, &do_inherit_noop) {
 	DeeObject *args[2];
 	(void)p_self;
 	(void)opname;
@@ -304,7 +287,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_visit, &instance_visit, &do_DeeType_InheritUninheritable) {
+DEFINE_OPERATOR_INVOKE(operator_visit, &instance_visit, &do_inherit_noop) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("visit")))
@@ -314,7 +297,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_clear, &instance_clear, &do_DeeType_InheritUninheritable) {
+DEFINE_OPERATOR_INVOKE(operator_clear, &instance_clear, &do_inherit_noop) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("clear")))
@@ -325,7 +308,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_pclear, &instance_pclear, &do_DeeType_InheritUninheritable) {
+DEFINE_OPERATOR_INVOKE(operator_pclear, &instance_pclear, &do_inherit_noop) {
 	unsigned int gc_prio;
 	(void)p_self;
 	(void)opname;
@@ -337,7 +320,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_getbuf, NULL, &do_DeeType_InheritBuffer) {
+DEFINE_OPERATOR_INVOKE(operator_getbuf, NULL, &do_inherit_buffer) {
 	bool writable = false;
 	size_t start = 0, end = (size_t)-1;
 	(void)p_self;
@@ -355,7 +338,7 @@ err:
 
 /* >> operator str(): string;
  * >> operator str(fp: File); */
-DEFINE_OPERATOR_INVOKE(operator_str, &instance_str, &do_DeeType_InheritStr) {
+DEFINE_OPERATOR_INVOKE(operator_str, &usrtype__str__with__STR, &do_inherit_builtin_operator) {
 	DeeObject *fp = NULL;
 	(void)p_self;
 	(void)opname;
@@ -373,7 +356,7 @@ err:
 
 /* >> operator repr(): string;
  * >> operator repr(fp: File); */
-DEFINE_OPERATOR_INVOKE(operator_repr, &instance_repr, &do_DeeType_InheritRepr) {
+DEFINE_OPERATOR_INVOKE(operator_repr, &usrtype__repr__with__REPR, &do_inherit_builtin_operator) {
 	DeeObject *fp = NULL;
 	(void)p_self;
 	(void)opname;
@@ -391,35 +374,6 @@ err:
 
 /*[[[deemon
 import * from deemon;
-global inheritReplacements: {string: string} = {
-	"Assign" : "Constructors",
-	"MoveAssign" : "Constructors",
-	"Inc" : "Add",
-	"Dec" : "Add",
-	"Sub" : "Add",
-	"InplaceAdd" : "Add",
-	"InplaceSub" : "Add",
-	"Eq" : "Compare",
-	"Ne" : "Compare",
-	"Lo" : "Compare",
-	"Le" : "Compare",
-	"Gr" : "Compare",
-	"Ge" : "Compare",
-	"SizeObject" : "Size",
-	"ContainsObject" : "Contains",
-	"Enter" : "With",
-	"Leave" : "With",
-	"Get" : "GetItem",
-	"Del" : "DelItem",
-	"Set" : "SetItem",
-	"RangeGet" : "GetRange",
-	"RangeDel" : "DelRange",
-	"RangeSet" : "SetRange",
-};
-function getInheritName(name: string) {
-	return inheritReplacements.get(name, name);
-}
-
 global operatorApiName: {string: string} = {
 	"Eq" : "CmpEq",
 	"Ne" : "CmpNe",
@@ -433,10 +387,12 @@ function getGroupName(name: string) {
 	return operatorApiName.get(name, name);
 }
 
-function defineUnary(name: string, nameTitle: string = none) {
+function defineUnary(name: string, nameTitle: string = none, usrtype: string = none) {
 	if (nameTitle is none)
 		nameTitle = name.title();
-	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}, &do_DeeType_Inherit{getInheritName(nameTitle)}) \{');
+	if (usrtype is none)
+		usrtype = f"usrtype__{name}__with__{name.upper()}";
+	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &{usrtype}, &do_inherit_builtin_operator) \{');
 	print(f'	(void)p_self;');
 	print(f'	(void)opname;');
 	print(f'	if (DeeArg_Unpack(argc, argv, ":" OPNAME("{name}")))');
@@ -448,10 +404,12 @@ function defineUnary(name: string, nameTitle: string = none) {
 	print;
 }
 
-function defineUnaryInplace(name: string, nameTitle: string = none) {
+function defineUnaryInplace(name: string, nameTitle: string = none, usrtype: string = none) {
 	if (nameTitle is none)
 		nameTitle = name.title();
-	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}, &do_DeeType_Inherit{getInheritName(nameTitle)}) \{');
+	if (usrtype is none)
+		usrtype = f"usrtype__{name}__with__{name.upper()}";
+	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &{usrtype}, &do_inherit_builtin_operator) \{');
 	print(f'	(void)self;');
 	print(f'	(void)opname;');
 	print(f'	if unlikely(!p_self)');
@@ -469,10 +427,12 @@ function defineUnaryInplace(name: string, nameTitle: string = none) {
 	print;
 }
 
-function defineUnaryInt(name: string, nameTitle: string = none, returnNone: bool = false) {
+function defineUnaryInt(name: string, nameTitle: string = none, returnNone: bool = false, usrtype: string = none) {
 	if (nameTitle is none)
 		nameTitle = name.title();
-	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}, &do_DeeType_Inherit{getInheritName(nameTitle)}) \{');
+	if (usrtype is none)
+		usrtype = f"usrtype__{name}__with__{name.upper()}";
+	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &{usrtype}, &do_inherit_builtin_operator) \{');
 	print(f'	(void)p_self;');
 	print(f'	(void)opname;');
 	print(f'	if (DeeArg_Unpack(argc, argv, ":" OPNAME("{name}")))');
@@ -486,10 +446,12 @@ function defineUnaryInt(name: string, nameTitle: string = none, returnNone: bool
 	print;
 }
 
-function defineBinary(name: string, nameTitle: string = none) {
+function defineBinary(name: string, nameTitle: string = none, usrtype: string = none) {
 	if (nameTitle is none)
 		nameTitle = name.title();
-	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}, &do_DeeType_Inherit{getInheritName(nameTitle)}) \{');
+	if (usrtype is none)
+		usrtype = f"usrtype__{name}__with__{name.upper()}";
+	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &{usrtype}, &do_inherit_builtin_operator) \{');
 	print(f'	DeeObject *other;');
 	print(f'	(void)p_self;');
 	print(f'	(void)opname;');
@@ -502,10 +464,12 @@ function defineBinary(name: string, nameTitle: string = none) {
 	print;
 }
 
-function defineBinaryInt(name: string, nameTitle: string = none, returnNone: bool = false) {
+function defineBinaryInt(name: string, nameTitle: string = none, returnNone: bool = false, usrtype: string = none) {
 	if (nameTitle is none)
 		nameTitle = name.title();
-	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}, &do_DeeType_Inherit{getInheritName(nameTitle)}) \{');
+	if (usrtype is none)
+		usrtype = f"usrtype__{name}__with__{name.upper()}";
+	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &{usrtype}, &do_inherit_builtin_operator) \{');
 	print(f'	DeeObject *other;');
 	print(f'	(void)p_self;');
 	print(f'	(void)opname;');
@@ -520,10 +484,12 @@ function defineBinaryInt(name: string, nameTitle: string = none, returnNone: boo
 	print;
 }
 
-function defineBinaryInplace(name: string, nameTitle: string = none) {
+function defineBinaryInplace(name: string, nameTitle: string = none, usrtype: string = none) {
 	if (nameTitle is none)
 		nameTitle = name.title();
-	print(f'DEFINE_OPERATOR_INVOKE(operator_i{name}, &instance_i{name}, &do_DeeType_Inherit{getInheritName(nameTitle)}) \{');
+	if (usrtype is none)
+		usrtype = f"usrtype__inplace_{name}__with__INPLACE_{name.upper()}";
+	print(f'DEFINE_OPERATOR_INVOKE(operator_i{name}, &{usrtype}, &do_inherit_builtin_operator) \{');
 	print(f'	DeeObject *other;');
 	print(f'	(void)self;');
 	print(f'	(void)opname;');
@@ -542,10 +508,12 @@ function defineBinaryInplace(name: string, nameTitle: string = none) {
 	print;
 }
 
-function defineTrinary(name: string, nameTitle: string = none) {
+function defineTrinary(name: string, nameTitle: string = none, usrtype: string = none) {
 	if (nameTitle is none)
 		nameTitle = name.title();
-	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}, &do_DeeType_Inherit{getInheritName(nameTitle)}) \{');
+	if (usrtype is none)
+		usrtype = f"usrtype__{name}__with__{name.upper()}";
+	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &{usrtype}, &do_inherit_builtin_operator) \{');
 	print(f'	DeeObject *a, *b;');
 	print(f'	(void)p_self;');
 	print(f'	(void)opname;');
@@ -558,10 +526,12 @@ function defineTrinary(name: string, nameTitle: string = none) {
 	print;
 }
 
-function defineTrinaryInt(name: string, nameTitle: string = none, returnNone: bool = false) {
+function defineTrinaryInt(name: string, nameTitle: string = none, returnNone: bool = false, usrtype: string = none) {
 	if (nameTitle is none)
 		nameTitle = name.title();
-	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}, &do_DeeType_Inherit{getInheritName(nameTitle)}) \{');
+	if (usrtype is none)
+		usrtype = f"usrtype__{name}__with__{name.upper()}";
+	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &{usrtype}, &do_inherit_builtin_operator) \{');
 	print(f'	DeeObject *a, *b;');
 	print(f'	(void)p_self;');
 	print(f'	(void)opname;');
@@ -576,10 +546,12 @@ function defineTrinaryInt(name: string, nameTitle: string = none, returnNone: bo
 	print;
 }
 
-function defineQuaternaryInt(name: string, nameTitle: string = none, returnNone: bool = false) {
+function defineQuaternaryInt(name: string, nameTitle: string = none, returnNone: bool = false, usrtype: string = none) {
 	if (nameTitle is none)
 		nameTitle = name.title();
-	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}, &do_DeeType_Inherit{getInheritName(nameTitle)}) \{');
+	if (usrtype is none)
+		usrtype = f"usrtype__{name}__with__{name.upper()}";
+	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &{usrtype}, &do_inherit_builtin_operator) \{');
 	print(f'	DeeObject *a, *b, *c;');
 	print(f'	(void)p_self;');
 	print(f'	(void)opname;');
@@ -596,7 +568,7 @@ function defineQuaternaryInt(name: string, nameTitle: string = none, returnNone:
 
 local mathOps = ["add", "sub", "mul", "div", "mod", "shl", "shr", "and", "or", "xor", "pow"];
 defineBinaryInt("assign");
-defineBinaryInt("moveassign", nameTitle: "MoveAssign");
+defineBinaryInt("moveassign", nameTitle: "MoveAssign", usrtype: "usrtype__move_assign__with__MOVEASSIGN");
 defineUnary("int");
 defineUnary("inv");
 defineUnary("pos");
@@ -614,7 +586,7 @@ defineBinary("le");
 defineBinary("gr");
 defineBinary("ge");
 defineUnary("iter", nameTitle: "Iter");
-defineUnary("size", nameTitle: "Size");
+defineUnary("size", nameTitle: "Size", usrtype: "usrtype__sizeob__with__SIZE");
 defineBinary("contains", nameTitle: "Contains");
 defineBinary("getitem", nameTitle: "GetItem");
 defineBinaryInt("delitem", nameTitle: "DelItem", returnNone: true);
@@ -625,7 +597,7 @@ defineQuaternaryInt("setrange", nameTitle: "SetRange", returnNone: true);
 defineUnaryInt("enter", returnNone: true);
 defineUnaryInt("leave", returnNone: true);
 ]]]*/
-DEFINE_OPERATOR_INVOKE(operator_assign, &instance_assign, &do_DeeType_InheritConstructors) {
+DEFINE_OPERATOR_INVOKE(operator_assign, &usrtype__assign__with__ASSIGN, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -638,7 +610,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_moveassign, &instance_moveassign, &do_DeeType_InheritConstructors) {
+DEFINE_OPERATOR_INVOKE(operator_moveassign, &usrtype__move_assign__with__MOVEASSIGN, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -651,7 +623,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_int, &instance_int, &do_DeeType_InheritInt) {
+DEFINE_OPERATOR_INVOKE(operator_int, &usrtype__int__with__INT, &do_inherit_builtin_operator) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("int")))
@@ -661,7 +633,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_inv, &instance_inv, &do_DeeType_InheritInv) {
+DEFINE_OPERATOR_INVOKE(operator_inv, &usrtype__inv__with__INV, &do_inherit_builtin_operator) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("inv")))
@@ -671,7 +643,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_pos, &instance_pos, &do_DeeType_InheritPos) {
+DEFINE_OPERATOR_INVOKE(operator_pos, &usrtype__pos__with__POS, &do_inherit_builtin_operator) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("pos")))
@@ -681,7 +653,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_neg, &instance_neg, &do_DeeType_InheritNeg) {
+DEFINE_OPERATOR_INVOKE(operator_neg, &usrtype__neg__with__NEG, &do_inherit_builtin_operator) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("neg")))
@@ -691,7 +663,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_inc, &instance_inc, &do_DeeType_InheritAdd) {
+DEFINE_OPERATOR_INVOKE(operator_inc, &usrtype__inc__with__INC, &do_inherit_builtin_operator) {
 	(void)self;
 	(void)opname;
 	if unlikely(!p_self)
@@ -707,7 +679,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_dec, &instance_dec, &do_DeeType_InheritAdd) {
+DEFINE_OPERATOR_INVOKE(operator_dec, &usrtype__dec__with__DEC, &do_inherit_builtin_operator) {
 	(void)self;
 	(void)opname;
 	if unlikely(!p_self)
@@ -723,7 +695,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_add, &instance_add, &do_DeeType_InheritAdd) {
+DEFINE_OPERATOR_INVOKE(operator_add, &usrtype__add__with__ADD, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -734,7 +706,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_sub, &instance_sub, &do_DeeType_InheritAdd) {
+DEFINE_OPERATOR_INVOKE(operator_sub, &usrtype__sub__with__SUB, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -745,7 +717,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_mul, &instance_mul, &do_DeeType_InheritMul) {
+DEFINE_OPERATOR_INVOKE(operator_mul, &usrtype__mul__with__MUL, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -756,7 +728,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_div, &instance_div, &do_DeeType_InheritDiv) {
+DEFINE_OPERATOR_INVOKE(operator_div, &usrtype__div__with__DIV, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -767,7 +739,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_mod, &instance_mod, &do_DeeType_InheritMod) {
+DEFINE_OPERATOR_INVOKE(operator_mod, &usrtype__mod__with__MOD, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -778,7 +750,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_shl, &instance_shl, &do_DeeType_InheritShl) {
+DEFINE_OPERATOR_INVOKE(operator_shl, &usrtype__shl__with__SHL, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -789,7 +761,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_shr, &instance_shr, &do_DeeType_InheritShr) {
+DEFINE_OPERATOR_INVOKE(operator_shr, &usrtype__shr__with__SHR, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -800,7 +772,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_and, &instance_and, &do_DeeType_InheritAnd) {
+DEFINE_OPERATOR_INVOKE(operator_and, &usrtype__and__with__AND, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -811,7 +783,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_or, &instance_or, &do_DeeType_InheritOr) {
+DEFINE_OPERATOR_INVOKE(operator_or, &usrtype__or__with__OR, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -822,7 +794,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_xor, &instance_xor, &do_DeeType_InheritXor) {
+DEFINE_OPERATOR_INVOKE(operator_xor, &usrtype__xor__with__XOR, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -833,7 +805,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_pow, &instance_pow, &do_DeeType_InheritPow) {
+DEFINE_OPERATOR_INVOKE(operator_pow, &usrtype__pow__with__POW, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -844,7 +816,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_iadd, &instance_iadd, &do_DeeType_InheritAdd) {
+DEFINE_OPERATOR_INVOKE(operator_iadd, &usrtype__inplace_add__with__INPLACE_ADD, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)self;
 	(void)opname;
@@ -861,7 +833,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_isub, &instance_isub, &do_DeeType_InheritAdd) {
+DEFINE_OPERATOR_INVOKE(operator_isub, &usrtype__inplace_sub__with__INPLACE_SUB, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)self;
 	(void)opname;
@@ -878,7 +850,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_imul, &instance_imul, &do_DeeType_InheritMul) {
+DEFINE_OPERATOR_INVOKE(operator_imul, &usrtype__inplace_mul__with__INPLACE_MUL, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)self;
 	(void)opname;
@@ -895,7 +867,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_idiv, &instance_idiv, &do_DeeType_InheritDiv) {
+DEFINE_OPERATOR_INVOKE(operator_idiv, &usrtype__inplace_div__with__INPLACE_DIV, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)self;
 	(void)opname;
@@ -912,7 +884,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_imod, &instance_imod, &do_DeeType_InheritMod) {
+DEFINE_OPERATOR_INVOKE(operator_imod, &usrtype__inplace_mod__with__INPLACE_MOD, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)self;
 	(void)opname;
@@ -929,7 +901,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_ishl, &instance_ishl, &do_DeeType_InheritShl) {
+DEFINE_OPERATOR_INVOKE(operator_ishl, &usrtype__inplace_shl__with__INPLACE_SHL, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)self;
 	(void)opname;
@@ -946,7 +918,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_ishr, &instance_ishr, &do_DeeType_InheritShr) {
+DEFINE_OPERATOR_INVOKE(operator_ishr, &usrtype__inplace_shr__with__INPLACE_SHR, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)self;
 	(void)opname;
@@ -963,7 +935,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_iand, &instance_iand, &do_DeeType_InheritAnd) {
+DEFINE_OPERATOR_INVOKE(operator_iand, &usrtype__inplace_and__with__INPLACE_AND, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)self;
 	(void)opname;
@@ -980,7 +952,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_ior, &instance_ior, &do_DeeType_InheritOr) {
+DEFINE_OPERATOR_INVOKE(operator_ior, &usrtype__inplace_or__with__INPLACE_OR, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)self;
 	(void)opname;
@@ -997,7 +969,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_ixor, &instance_ixor, &do_DeeType_InheritXor) {
+DEFINE_OPERATOR_INVOKE(operator_ixor, &usrtype__inplace_xor__with__INPLACE_XOR, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)self;
 	(void)opname;
@@ -1014,7 +986,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_ipow, &instance_ipow, &do_DeeType_InheritPow) {
+DEFINE_OPERATOR_INVOKE(operator_ipow, &usrtype__inplace_pow__with__INPLACE_POW, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)self;
 	(void)opname;
@@ -1031,7 +1003,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_eq, &instance_eq, &do_DeeType_InheritCompare) {
+DEFINE_OPERATOR_INVOKE(operator_eq, &usrtype__eq__with__EQ, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -1042,7 +1014,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_ne, &instance_ne, &do_DeeType_InheritCompare) {
+DEFINE_OPERATOR_INVOKE(operator_ne, &usrtype__ne__with__NE, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -1053,7 +1025,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_lo, &instance_lo, &do_DeeType_InheritCompare) {
+DEFINE_OPERATOR_INVOKE(operator_lo, &usrtype__lo__with__LO, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -1064,7 +1036,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_le, &instance_le, &do_DeeType_InheritCompare) {
+DEFINE_OPERATOR_INVOKE(operator_le, &usrtype__le__with__LE, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -1075,7 +1047,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_gr, &instance_gr, &do_DeeType_InheritCompare) {
+DEFINE_OPERATOR_INVOKE(operator_gr, &usrtype__gr__with__GR, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -1086,7 +1058,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_ge, &instance_ge, &do_DeeType_InheritCompare) {
+DEFINE_OPERATOR_INVOKE(operator_ge, &usrtype__ge__with__GE, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -1097,7 +1069,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_iter, &instance_iter, &do_DeeType_InheritIter) {
+DEFINE_OPERATOR_INVOKE(operator_iter, &usrtype__iter__with__ITER, &do_inherit_builtin_operator) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("iter")))
@@ -1107,7 +1079,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_size, &instance_size, &do_DeeType_InheritSize) {
+DEFINE_OPERATOR_INVOKE(operator_size, &usrtype__sizeob__with__SIZE, &do_inherit_builtin_operator) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("size")))
@@ -1117,7 +1089,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_contains, &instance_contains, &do_DeeType_InheritContains) {
+DEFINE_OPERATOR_INVOKE(operator_contains, &usrtype__contains__with__CONTAINS, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -1128,7 +1100,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_getitem, &instance_getitem, &do_DeeType_InheritGetItem) {
+DEFINE_OPERATOR_INVOKE(operator_getitem, &usrtype__getitem__with__GETITEM, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -1139,7 +1111,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_delitem, &instance_delitem, &do_DeeType_InheritDelItem) {
+DEFINE_OPERATOR_INVOKE(operator_delitem, &usrtype__delitem__with__DELITEM, &do_inherit_builtin_operator) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
@@ -1152,7 +1124,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_setitem, &instance_setitem, &do_DeeType_InheritSetItem) {
+DEFINE_OPERATOR_INVOKE(operator_setitem, &usrtype__setitem__with__SETITEM, &do_inherit_builtin_operator) {
 	DeeObject *a, *b;
 	(void)p_self;
 	(void)opname;
@@ -1165,7 +1137,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_getrange, &instance_getrange, &do_DeeType_InheritGetRange) {
+DEFINE_OPERATOR_INVOKE(operator_getrange, &usrtype__getrange__with__GETRANGE, &do_inherit_builtin_operator) {
 	DeeObject *a, *b;
 	(void)p_self;
 	(void)opname;
@@ -1176,7 +1148,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_delrange, &instance_delrange, &do_DeeType_InheritDelRange) {
+DEFINE_OPERATOR_INVOKE(operator_delrange, &usrtype__delrange__with__DELRANGE, &do_inherit_builtin_operator) {
 	DeeObject *a, *b;
 	(void)p_self;
 	(void)opname;
@@ -1189,7 +1161,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_setrange, &instance_setrange, &do_DeeType_InheritSetRange) {
+DEFINE_OPERATOR_INVOKE(operator_setrange, &usrtype__setrange__with__SETRANGE, &do_inherit_builtin_operator) {
 	DeeObject *a, *b, *c;
 	(void)p_self;
 	(void)opname;
@@ -1202,7 +1174,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_enter, &instance_enter, &do_DeeType_InheritWith) {
+DEFINE_OPERATOR_INVOKE(operator_enter, &usrtype__enter__with__ENTER, &do_inherit_builtin_operator) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("enter")))
@@ -1214,7 +1186,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_leave, &instance_leave, &do_DeeType_InheritWith) {
+DEFINE_OPERATOR_INVOKE(operator_leave, &usrtype__leave__with__LEAVE, &do_inherit_builtin_operator) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("leave")))

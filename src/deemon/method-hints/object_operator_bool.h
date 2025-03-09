@@ -24,7 +24,15 @@
 
 operator {
 
-/*[[export("DeeObject_{|T}Bool")]]*/ /* Custom handling for likely "bool"-optimization */
+[[export("DeeObject_{|T}Bool")]]
+[[export_precheck(
+#ifndef __OPTIMIZE_SIZE__
+	if (self == Dee_True)
+		return 1;
+	if (self == Dee_False)
+		return 0;
+#endif /* !__OPTIMIZE_SIZE__ */
+)]]
 [[wunused]] int
 tp_cast.tp_bool([[nonnull]] DeeObject *__restrict self)
 %{class using OPERATOR_BOOL: {

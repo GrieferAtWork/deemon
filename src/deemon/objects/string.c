@@ -1086,7 +1086,7 @@ string_mh_seq_trycompare_eq(String *lhs, DeeObject *rhs) {
 	}
 	if likely(tp_rhs == &DeeBytes_Type)
 		return !string_eq_bytes(lhs, (DeeBytesObject *)rhs);
-	if ((!tp_rhs->tp_seq || !tp_rhs->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs))
+	if (!DeeType_HasNativeOperator(tp_rhs, foreach))
 		return 1;
 	return string_compare_seq(lhs, rhs);
 }

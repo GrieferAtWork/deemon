@@ -57,10 +57,10 @@
 DECL_BEGIN
 
 PRIVATE struct type_cmp instance_builtin_cmp = {
-	/* .tp_hash          = */ &instance_builtin_hash,
-	/* .tp_compare_eq    = */ &instance_builtin_compare_eq,
-	/* .tp_compare       = */ &instance_builtin_compare,
-	/* .tp_trycompare_eq = */ &instance_builtin_trycompare_eq,
+	/* .tp_hash          = */ &usrtype__hash__with__,
+	/* .tp_compare_eq    = */ &usrtype__compare_eq__with__,
+	/* .tp_compare       = */ &usrtype__compare__with__,
+	/* .tp_trycompare_eq = */ &usrtype__trycompare_eq__with__,
 	/* .tp_eq            = */ &default__eq__with__compare_eq,
 	/* .tp_ne            = */ &default__ne__with__compare_eq,
 	/* .tp_lo            = */ &default__lo__with__compare,
@@ -4278,13 +4278,13 @@ err_custom_allocator:
 				/* Defining either assign, or move_assign will get rid
 				 * of automatically generated operators for the other. */
 			case OPERATOR_ASSIGN:
-				result->tp_init.tp_assign = &instance_assign;
+				result->tp_init.tp_assign = &usrtype__assign__with__ASSIGN;
 				if (result->tp_init.tp_move_assign == &instance_builtin_moveassign)
 					result->tp_init.tp_move_assign = NULL;
 				break;
 
 			case OPERATOR_MOVEASSIGN:
-				result->tp_init.tp_move_assign = &instance_moveassign;
+				result->tp_init.tp_move_assign = &usrtype__move_assign__with__MOVEASSIGN;
 				if (result->tp_init.tp_assign == &instance_builtin_assign)
 					result->tp_init.tp_assign = NULL;
 				break;
@@ -4294,32 +4294,32 @@ err_custom_allocator:
 				break;
 
 			case OPERATOR_CALL:
-				result->tp_call    = &instance_call;
-				result->tp_call_kw = &instance_callkw;
+				result->tp_call    = &usrtype__call__with__CALL;
+				result->tp_call_kw = &usrtype__call_kw__with__CALL;
 				break;
 
 			case OPERATOR_STR:
-				result->tp_cast.tp_str = &instance_str;
+				result->tp_cast.tp_str = &usrtype__str__with__STR;
 				if (result->tp_cast.tp_print == NULL)
-					result->tp_cast.tp_print = &instance_print;
+					result->tp_cast.tp_print = &usrtype__print__with__STR;
 				break;
 
 			case CLASS_OPERATOR_PRINT:
-				result->tp_cast.tp_print = &instance_print_by_print;
+				result->tp_cast.tp_print = &usrtype__print__with__PRINT;
 				if (result->tp_cast.tp_str == NULL)
-					result->tp_cast.tp_str = &instance_str_by_print;
+					result->tp_cast.tp_str = &usrtype__str__with__PRINT;
 				break;
 
 			case OPERATOR_REPR:
-				result->tp_cast.tp_repr = &instance_repr;
+				result->tp_cast.tp_repr = &usrtype__repr__with__REPR;
 				if (result->tp_cast.tp_printrepr == NULL)
-					result->tp_cast.tp_printrepr = &instance_printrepr;
+					result->tp_cast.tp_printrepr = &usrtype__printrepr__with__REPR;
 				break;
 
 			case CLASS_OPERATOR_PRINTREPR:
-				result->tp_cast.tp_printrepr = &instance_printrepr_by_print;
+				result->tp_cast.tp_printrepr = &usrtype__printrepr__with__PRINTREPR;
 				if (result->tp_cast.tp_repr == NULL)
-					result->tp_cast.tp_repr = &instance_repr_by_print;
+					result->tp_cast.tp_repr = &usrtype__repr__with__PRINTREPR;
 				break;
 
 			case OPERATOR_DEEPCOPY:
