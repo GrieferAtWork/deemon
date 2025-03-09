@@ -726,10 +726,14 @@ ddi_trycompare_eq(DeeDDIObject *self, DeeDDIObject *other) {
 PRIVATE struct type_cmp ddi_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&ddi_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&ddi_compare_eq,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ DEFIMPL_UNSUPPORTED(&default__compare__unsupported),
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&ddi_trycompare_eq,
 	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
 	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
+	/* .tp_lo            = */ DEFIMPL_UNSUPPORTED(&default__lo__unsupported),
+	/* .tp_le            = */ DEFIMPL_UNSUPPORTED(&default__le__unsupported),
+	/* .tp_gr            = */ DEFIMPL_UNSUPPORTED(&default__gr__unsupported),
+	/* .tp_ge            = */ DEFIMPL_UNSUPPORTED(&default__ge__unsupported),
 };
 
 
@@ -765,19 +769,19 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&object_str),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool      = */ NULL,
+		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ddi_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ddi_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &ddi_cmp,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL, /* TODO: <helpers for addr2line, etc.> */
 	/* .tp_getsets       = */ NULL, /* TODO: __sizeof__ */
@@ -785,6 +789,9 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
 };
 
 DECL_END

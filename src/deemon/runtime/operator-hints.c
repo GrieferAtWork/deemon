@@ -20,8 +20,8 @@
 #ifndef GUARD_DEEMON_RUNTIME_OPERATOR_HINTS_C
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINTS_C 1
 
-#include <deemon/api.h>
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/class.h>
 #include <deemon/format.h>
 #include <deemon/method-hints.h>
@@ -48,13 +48,6 @@
 #else /* !NDEBUG */
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
-
-
-/* Config option: also write "*__unsupported" impls to operator slots */
-#undef CONFIG_CACHE_UNSUPPORTED_OPERATORS
-#if 1
-#define CONFIG_CACHE_UNSUPPORTED_OPERATORS
-#endif
 
 DECL_BEGIN
 
@@ -1787,10 +1780,10 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 					goto nope;
 			}
 		}
-#ifdef CONFIG_CACHE_UNSUPPORTED_OPERATORS
+#ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
 		if (result == DeeType_GetNativeOperatorUnsupported(id))
 			goto nope;
-#endif /* CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+#endif /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 	}
 yes:
 	return result;
@@ -2074,10 +2067,10 @@ PRIVATE WUNUSED NONNULL((1, 2, 4, 5, 6)) Dee_funptr_t
 				/* Check if the dependency is already present in "into". */
 				into_dep_impl = type_tno_get(into, dep);
 				if (into_dep_impl) {
-#ifdef CONFIG_CACHE_UNSUPPORTED_OPERATORS
+#ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
 					if (into_dep_impl == DeeType_GetNativeOperatorUnsupported(dep))
 						return NULL; /* Unsatisfied dependency */
-#endif /* CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+#endif /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 					continue;
 				}
 
@@ -2087,11 +2080,11 @@ PRIVATE WUNUSED NONNULL((1, 2, 4, 5, 6)) Dee_funptr_t
 					continue;
 
 				dep_impl = type_tno_get(from, dep);
-#ifdef CONFIG_CACHE_UNSUPPORTED_OPERATORS
+#ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
 #define LOCAL_VERIFY_DEP_IMPL() (dep_impl != NULL && dep_impl != DeeType_GetNativeOperatorUnsupported(dep))
-#else /* CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+#else /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 #define LOCAL_VERIFY_DEP_IMPL() (dep_impl != NULL)
-#endif /* !CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+#endif /* !CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 				ASSERTF(LOCAL_VERIFY_DEP_IMPL(),
 				        "Transitive operator '%u' used as dependency was not initialized in '%s'",
 				        (unsigned int)dep, from->tp_name);
@@ -2225,7 +2218,7 @@ PRIVATE WUNUSED NONNULL((1)) Dee_funptr_t
  * whatever is indicative of an error in the context of the native operator. */
 PUBLIC WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperator)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
-#ifdef CONFIG_CACHE_UNSUPPORTED_OPERATORS
+#ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
 	Dee_funptr_t result = DeeType_GetNativeOperatorWithoutInherit(self, id);
 	if unlikely(!result) {
 		result = DeeType_InheritNativeOperator(self, id);
@@ -2237,12 +2230,12 @@ PUBLIC WUNUSED NONNULL((1)) Dee_funptr_t
 		}
 	}
 	return result;
-#else /* CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+#else /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 	Dee_funptr_t result = DeeType_GetNativeOperatorWithoutUnsupported(self, id);
 	if unlikely(!result) /* Note how we don't write this impl back to "self" */
 		result = DeeType_GetNativeOperatorUnsupported(id);
 	return result;
-#endif /* !CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+#endif /* !CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 }
 
 /* Same as `DeeType_GetNativeOperatorWithoutInherit', but actually also does the
@@ -2253,7 +2246,7 @@ PUBLIC WUNUSED NONNULL((1)) Dee_funptr_t
  *     one only adds coalesce to `DeeType_GetNativeOperatorUnsupported()' */
 PUBLIC WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperatorWithoutUnsupported)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
-#ifdef CONFIG_CACHE_UNSUPPORTED_OPERATORS
+#ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
 #ifdef __OPTIMIZE_SIZE__
 	Dee_funptr_t result = DeeType_GetNativeOperator(self, id);
 #else /* __OPTIMIZE_SIZE__ */
@@ -2264,12 +2257,12 @@ PUBLIC WUNUSED NONNULL((1)) Dee_funptr_t
 	if (result == DeeType_GetNativeOperatorUnsupported(id))
 		result = NULL;
 	return result;
-#else /* CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+#else /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 	Dee_funptr_t result = DeeType_GetNativeOperatorWithoutInherit(self, id);
 	if unlikely(!result)
 		result = DeeType_InheritNativeOperator(self, id);
 	return result;
-#endif /* !CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+#endif /* !CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 }
 
 

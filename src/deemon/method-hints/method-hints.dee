@@ -1207,6 +1207,17 @@ final class NativeOperator {
 	@@Names of public API functions: @("DeeObject_Foreach", "DeeObject_TForeach")
 	public member operatorExportNames: (string, string) | none = none;
 
+	@@Returns the name of the high-level `*__unsupported` symbol (if there is one)
+	public property unsupportedImplName: string | none = {
+		get(): string | none {
+			if (customUnsupportedImplName)
+				return customUnsupportedImplName;
+			if (operatorName)
+				return f"default__{name.name}__unsupported";
+			return none;
+		}
+	}
+
 	public _makeTyped() {
 		typed = NativeOperator(
 			wunused: wunused,
@@ -2148,7 +2159,7 @@ function printNativeOperatorHintErrorImpls(decls: bool) {
 			local key: ErrorMethodKey = makeKey(true);
 			key.body = makeBodyWithMinus1Expr(key, f"err_unimplemented_operator({
 					key.tpSelfExpr}, {nativeOperator.operatorName})");
-			addKey(key, f"default__{nativeOperator.name.name}__unsupported");
+			addKey(key, f"_default__{nativeOperator.name.name}__unsupported");
 		}
 	}
 
@@ -2156,6 +2167,15 @@ function printNativeOperatorHintErrorImpls(decls: bool) {
 	if (decls) {
 		for (local key, names: requiredFunctions)
 			key.printIntdefDeclAndAliases(names);
+		local longestNameLength = NATIVE_OPERATORS.values.each.name.name.length > ...;
+		for (local none, nativeOperator /*: NativeOperator*/: NATIVE_OPERATORS) {
+			if (nativeOperator.operatorName && !nativeOperator.customUnsupportedImplName) {
+				print("#define default__", (nativeOperator.name.name + "__unsupported").ljust(
+					longestNameLength + #"__unsupported"),
+					" (*(DeeNO_", nativeOperator.name.name, "_t)&"
+					"_default__", nativeOperator.name.name, "__unsupported)");
+			}
+		}
 	} else {
 		for (local key, names: requiredFunctions) {
 			if (names)

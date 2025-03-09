@@ -378,6 +378,16 @@ final class SubTableImpl {
 	@@Initializer expressions for members of this table
 	public final member initializers: {string...};
 
+	public property allInitializersUnsupported: bool = {
+		get(): bool {
+			for (local x: initializers) {
+				if (x != "NULL" && !x.startswith("UNSUPPORTED("))
+					return false;
+			}
+			return true;
+		}
+	};
+
 	private member _hashName: string;
 
 	@@The hash-name of this table (e.g. @"tp_seq__543256585ADCF120")
@@ -435,6 +445,12 @@ function _buildDefaultOperatorSubTable(subTable: SubTable, typ: Type)
 				} else {
 					init = f"&{init}";
 				}
+			} else {
+				local natOp: mh.NativeOperator =
+						mh_NATIVE_OPERATORS_BYNAME[spec.operatorName];
+				local unSupSymbol: string | none = natOp.unsupportedImplName;
+				if (unSupSymbol !is none)
+					init = f"UNSUPPORTED(&{unSupSymbol})";
 			}
 			initializers.append(init);
 		} else {
@@ -650,7 +666,10 @@ final class InitParser {
 		local impl: SubTableImpl | none = buildDefaultOperatorSubTable(subTable, typ);
 		if (impl is none)
 			return "NULL";
-		return f"&{impl.hashName}";
+		return f"{impl.allInitializersUnsupported
+				? "DEFIMPL_UNSUPPORTED"
+				: "DEFIMPL"
+		}(&{impl.hashName})";
 	}
 
 	@@Output @"\n<indent>/* .<field> = */ <init>," for @spec
@@ -678,10 +697,7 @@ final class InitParser {
 					spec.name.ljust(relevantSpecsMaxNameLen),
 					" = */ "),;
 			if (spec is SubTable) {
-				local init = getDefaultSubTableInitializer(spec);
-				if (init != "NULL")
-					init = f"DEFIMPL({init})";
-				print out: (init, ","),;
+				print out: (getDefaultSubTableInitializer(spec), ","),;
 			} else if (spec is Field) {
 				print out: ("NULL,"),;
 			} else {
@@ -716,6 +732,12 @@ final class InitParser {
 				})&{computedImpl})";
 			}
 			return f"DEFIMPL(&{computedImpl})";
+		} else {
+			local natOp: mh.NativeOperator =
+					mh_NATIVE_OPERATORS_BYNAME[operatorName];
+			local unSupSymbol: string | none = natOp.unsupportedImplName;
+			if (unSupSymbol !is none)
+				return f"DEFIMPL_UNSUPPORTED(&{unSupSymbol})";
 		}
 		return computedImpl;
 	}
@@ -730,8 +752,14 @@ final class InitParser {
 				/* ... */
 			} else if (last is NativeOperator) {
 				local name = _Type_getNativeOperatorName(typ, last.operatorName);
-				if (name !is none && name != "NULL")
-					break;
+				if (name !is none) {
+					if (name != "NULL")
+						break;
+					local natOp: mh.NativeOperator =
+							mh_NATIVE_OPERATORS_BYNAME[last.operatorName];
+					if (natOp.unsupportedImplName !is none)
+						break;
+				}
 			} else if (last is SubTable) {
 				local impl: SubTableImpl | none = buildDefaultOperatorSubTable(last, typ);
 				if (impl !is none)
@@ -783,10 +811,10 @@ final class InitParser {
 		} else if (spec is NativeOperator) {
 			flushUntilHere();
 			local initializer: string, initializerEnd: int = parseInitializer()...;
-			if (initializer == "NULL" || (
-					initializer.startswith("DEFIMPL(") &&
-					initializer.endswith(")")
-			)) {
+			if (initializer == "NULL" || ((
+					initializer.startswith("DEFIMPL(") ||
+					initializer.startswith("DEFIMPL_UNSUPPORTED(")
+			) && initializer.endswith(")"))) {
 				print out: formatDefImpl(spec.operatorName),;
 				flushStart = initializerEnd;
 			}
@@ -799,16 +827,11 @@ final class InitParser {
 						allParts.get(subTableSymbolName);
 				if (subTableSymbol !is none)
 					subTableSymbol.optimizeBodyImpl(allParts: allParts, typ: typ);
-			} else if (initializer == "NULL" || (
-					initializer.startswith("DEFIMPL(") &&
-					initializer.endswith(")")
-			)) {
-				local init = getDefaultSubTableInitializer(spec);
-				if (init == "NULL") {
-					print out: ("NULL"),;
-				} else {
-					print out: ("DEFIMPL(", init, ")"),;
-				}
+			} else if (initializer == "NULL" || ((
+					initializer.startswith("DEFIMPL(") ||
+					initializer.startswith("DEFIMPL_UNSUPPORTED(")
+			) && initializer.endswith(")"))) {
+				print out: (getDefaultSubTableInitializer(spec)),;
 				flushStart = initializerEnd;
 			}
 		} else if (spec is Sequence) {
@@ -1175,8 +1198,7 @@ function doPrintComputedOperators(impl: bool) {
 			print(";");
 		}
 	}
-	for (local defTabName: USED_DEFAULT_TABLES.keys.sorted()) {
-		local defTab: SubTableImpl = USED_DEFAULT_TABLES[defTabName];
+	function printTable(defTabName: string, defTab: SubTableImpl) {
 		print(impl ? "INTERN " : "INTDEF ", "struct ",
 				defTab.subTable.typ, " ", defTabName),;
 		if (impl) {
@@ -1191,6 +1213,21 @@ function doPrintComputedOperators(impl: bool) {
 			print("}"),;
 		}
 		print(";");
+	}
+	local allUnsuppTables: {(string, SubTableImpl)...} = [];
+	for (local defTabName: USED_DEFAULT_TABLES.keys.sorted()) {
+		local defTab: SubTableImpl = USED_DEFAULT_TABLES[defTabName];
+		if (defTab.allInitializersUnsupported) {
+			allUnsuppTables.append((defTabName, defTab));
+		} else {
+			printTable(defTabName, defTab);
+		}
+	}
+	if (allUnsuppTables) {
+		print("#ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS");
+		for (local defTabName, defTab: allUnsuppTables)
+			printTable(defTabName, defTab);
+		print("#endif /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */");
 	}
 }
 

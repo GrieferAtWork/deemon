@@ -417,7 +417,7 @@ err:
 
 
 PRIVATE struct type_cmp ri_cmp = {
-	/* .tp_hash       = */ NULL,
+	/* .tp_hash       = */ DEFIMPL_UNSUPPORTED(&default__hash__unsupported),
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&ri_compare_eq,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&ri_compare,
 	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
@@ -460,13 +460,13 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ri_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324), /* TODO: bi-directional iterator support */
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C), /* TODO: bi-directional iterator support */
 	/* .tp_cmp           = */ &ri_cmp,
-	/* .tp_seq           = */ NULL,
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ri_next,
 	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ ri_getsets,
@@ -1127,13 +1127,13 @@ INTERN DeeTypeObject SeqRange_Type = {
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&range_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__5819FE7E0C5EF426),
 	/* .tp_seq           = */ &range_seq,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ range_getsets,
@@ -1141,6 +1141,9 @@ INTERN DeeTypeObject SeqRange_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ range_class_members,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
 };
 
 
@@ -1241,7 +1244,7 @@ err:
 }
 
 PRIVATE struct type_cmp iri_cmp = {
-	/* .tp_hash       = */ NULL,
+	/* .tp_hash       = */ DEFIMPL_UNSUPPORTED(&default__hash__unsupported),
 	/* .tp_compare_eq = */ DEFIMPL(&default__compare_eq__with__compare),
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&iri_compare,
 	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
@@ -1286,13 +1289,13 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324), /* TODO: bi-directional iterator support */
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C), /* TODO: bi-directional iterator support */
 	/* .tp_cmp           = */ &iri_cmp,
-	/* .tp_seq           = */ NULL,
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&iri_next,
 	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ iri_getsets,
@@ -1632,13 +1635,13 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__26B2EC529683DE3C),
 	/* .tp_seq           = */ &intrange_seq,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ intrange_getsets,
@@ -1646,6 +1649,9 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ intrange_class_members,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
 };
 
 

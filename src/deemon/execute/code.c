@@ -1718,10 +1718,14 @@ code_trycompare_eq(DeeCodeObject *self, DeeCodeObject *other) {
 PRIVATE struct type_cmp code_cmp = {
 	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&code_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&code_compare_eq,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ DEFIMPL_UNSUPPORTED(&default__compare__unsupported),
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&code_trycompare_eq,
 	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
 	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
+	/* .tp_lo            = */ DEFIMPL_UNSUPPORTED(&default__lo__unsupported),
+	/* .tp_le            = */ DEFIMPL_UNSUPPORTED(&default__le__unsupported),
+	/* .tp_gr            = */ DEFIMPL_UNSUPPORTED(&default__gr__unsupported),
+	/* .tp_ge            = */ DEFIMPL_UNSUPPORTED(&default__ge__unsupported),
 };
 
 PRIVATE WUNUSED DREF DeeObject *DCALL code_ctor(void) {
@@ -2537,19 +2541,19 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool      = */ NULL,
+		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&code_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&code_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&code_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &code_cmp,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ code_methods,
 	/* .tp_getsets       = */ code_getsets,
@@ -2557,6 +2561,9 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
 };
 
 

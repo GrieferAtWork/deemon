@@ -240,7 +240,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #else /* !NDEBUG */
 #define CONFIG_NO_TRACE_REFCHANGES 
 #endif /* NDEBUG */
-#endif /* !CONFIG_TRACE_REFCHANGES && !CONFIG_NO_TRACE_REFCHANGES */
+#endif /* !CONFIG_[NO_]TRACE_REFCHANGES */
 
 #if (!defined(CONFIG_NO_BADREFCNT_CHECKS) && \
      !defined(CONFIG_BADREFCNT_CHECKS))
@@ -249,7 +249,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #else /* NDEBUG */
 #define CONFIG_BADREFCNT_CHECKS
 #endif /* !NDEBUG */
-#endif /* !CONFIG_NO_BADREFCNT_CHECKS && !CONFIG_BADREFCNT_CHECKS */
+#endif /* !CONFIG_[NO_]BADREFCNT_CHECKS */
 
 
 /* Feature flag: should the implementation of `DeeObject_Destroy'  */
@@ -273,6 +273,18 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 
+/* Config option: also write "*__unsupported" impls to operator slots */
+#if (!defined(CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS) && \
+     !defined(CONFIG_NO_CACHE_UNSUPPORTED_NATIVE_OPERATORS))
+#if 1
+#define CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
+#else
+#define CONFIG_NO_CACHE_UNSUPPORTED_NATIVE_OPERATORS
+#endif
+#endif /* !CONFIG_[NO_]CACHE_UNSUPPORTED_NATIVE_OPERATORS */
+
+
+/* Config option: provide optimized code-paths for `foo(args...)' expressions */
 #if (!defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && \
      !defined(CONFIG_NO_CALLTUPLE_OPTIMIZATIONS))
 #ifndef __OPTIMIZE_SIZE__
@@ -282,6 +294,8 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* __OPTIMIZE_SIZE__ */
 #endif /* !CONFIG_[NO_]CALLTUPLE_OPTIMIZATIONS */
 
+
+/* Config option: provide special optimizations for user-classes without bases */
 #if (!defined(CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS) && \
      !defined(CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS))
 #ifndef __OPTIMIZE_SIZE__
@@ -291,6 +305,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* __OPTIMIZE_SIZE__ */
 #endif /* !CONFIG_[NO_]NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
+/* Config option: how are latin-1 1-char strings cached? */
 #if (!defined(CONFIG_STRING_LATIN1_STATIC) && \
      !defined(CONFIG_STRING_LATIN1_CACHED) && \
      !defined(CONFIG_STRING_LATIN1_NORMAL))

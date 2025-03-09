@@ -77,6 +77,12 @@
  * #2: `$ make computed-operators`
  */
 #define DEFIMPL(x) x
+#ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
+#define DEFIMPL_UNSUPPORTED(x) x
+#include "../../src/deemon/runtime/operator-hint-errors.h" /*!KEEPME*/
+#else /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
+#define DEFIMPL_UNSUPPORTED(x) NULL
+#endif /* !CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 #include "../../src/deemon/runtime/method-hint-defaults.h" /*!KEEPME*/
 #include "operator-hints.h"                                /*!KEEPME*/
 
@@ -118,39 +124,48 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_repr(DeeObject *__restric
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_str(DeeObject *__restrict self);
 INTDEF struct type_callable default__tp_callable__414DF0A8610383F3;
 INTDEF struct type_callable default__tp_callable__E31EBEB26CC72F83;
+INTDEF struct type_cmp default__tp_cmp__22DEF1D4118F5821;
 INTDEF struct type_cmp default__tp_cmp__247219960F1E745D;
 INTDEF struct type_cmp default__tp_cmp__26B2EC529683DE3C;
 INTDEF struct type_cmp default__tp_cmp__287C06B7236F06BE;
 INTDEF struct type_cmp default__tp_cmp__2B5761B4075B51D3;
 INTDEF struct type_cmp default__tp_cmp__3C4D336761465F8A;
-INTDEF struct type_cmp default__tp_cmp__40D3D60A1F18CAE2;
-INTDEF struct type_cmp default__tp_cmp__50A436E90E5A2AF0;
+INTDEF struct type_cmp default__tp_cmp__439AAF00B07ABA02;
 INTDEF struct type_cmp default__tp_cmp__5819FE7E0C5EF426;
-INTDEF struct type_cmp default__tp_cmp__6F3C9C45873AB01F;
-INTDEF struct type_cmp default__tp_cmp__7188129899C2A8D6;
 INTDEF struct type_cmp default__tp_cmp__7EA181D4706D1525;
+INTDEF struct type_cmp default__tp_cmp__8C153DCE147F6A78;
+INTDEF struct type_cmp default__tp_cmp__A5C53AFDF1233C5A;
 INTDEF struct type_cmp default__tp_cmp__ABC6920EC80A6EC1;
+INTDEF struct type_cmp default__tp_cmp__B2BE65C46A4CA39B;
 INTDEF struct type_cmp default__tp_cmp__B8EC3298B952DF3A;
 INTDEF struct type_cmp default__tp_cmp__C2B62E6BCA44673D;
-INTDEF struct type_cmp default__tp_cmp__C6AA9DC8372C283F;
-INTDEF struct type_cmp default__tp_cmp__CE2E4B8E19554701;
 INTDEF struct type_cmp default__tp_cmp__DC202CECA797EF15;
+INTDEF struct type_cmp default__tp_cmp__E2C81DE60D62A07B;
 INTDEF struct type_iterator default__tp_iterator__863AC70046E4B6B0;
-INTDEF struct type_math default__tp_math__385A9235483A0324;
-INTDEF struct type_math default__tp_math__3959C0D1502AC76A;
-INTDEF struct type_math default__tp_math__56685E2B01B76756;
-INTDEF struct type_math default__tp_math__667432E5904B49F8;
-INTDEF struct type_math default__tp_math__7C9B3D263E47878C;
-INTDEF struct type_math default__tp_math__9211580AA9433079;
-INTDEF struct type_math default__tp_math__AFC6A8FA89E9F0A6;
-INTDEF struct type_math default__tp_math__BA555DDFFD44D1A5;
+INTDEF struct type_math default__tp_math__22D95991F3D69B20;
+INTDEF struct type_math default__tp_math__2E23147A197C0EE6;
+INTDEF struct type_math default__tp_math__47C97A4265F9F31F;
+INTDEF struct type_math default__tp_math__6AAE313158D20BA0;
+INTDEF struct type_math default__tp_math__E5A99B058858326C;
+INTDEF struct type_math default__tp_math__E66FA6851AAFE176;
+INTDEF struct type_math default__tp_math__EFED4BCD35433C3C;
+INTDEF struct type_math default__tp_math__F6E3D7B2219AE1EB;
+#ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
+INTDEF struct type_callable default__tp_callable__5B2E0F4105586532;
+INTDEF struct type_cmp default__tp_cmp__8F384E6A64571883;
+INTDEF struct type_iterator default__tp_iterator__1806D264FE42CE33;
+INTDEF struct type_math default__tp_math__AE7A38D3B0C75E4B;
+INTDEF struct type_seq default__tp_seq__2019F6A38C2B50B6;
+INTDEF struct type_with default__tp_with__0476D7EDEFD2E7B7;
+#endif /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 /*[[[end::computer-operator-decls]]]*/
 
 INTDEF Dee_hash_t DCALL default__hash__unsupported(DeeObject *__restrict self);
 
 DECL_END
 #else /* !CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS */
-#define DEFIMPL(x) NULL
+#define DEFIMPL(x)             NULL
+#define DEFIMPL_UNSUPPORTED(x) NULL
 
 #define DEFAULT_OPDEF PRIVATE
 #define DEFAULT_OPIMP PRIVATE

@@ -219,7 +219,7 @@ err:
 }
 
 PRIVATE struct type_cmp catiterator_cmp = {
-	/* .tp_hash       = */ NULL,
+	/* .tp_hash       = */ DEFIMPL_UNSUPPORTED(&default__hash__unsupported),
 	/* .tp_compare_eq = */ DEFIMPL(&default__compare_eq__with__compare),
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&catiterator_compare,
 	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
@@ -379,13 +379,13 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&catiterator_visit,
 	/* .tp_gc            = */ &catiterator_gc,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &catiterator_cmp,
-	/* .tp_seq           = */ NULL,
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_next,
 	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ catiterator_getsets,
@@ -740,13 +740,13 @@ INTERN DeeTypeObject SeqConcat_Type = {
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cat_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__26B2EC529683DE3C),
 	/* .tp_seq           = */ &cat_seq,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ cat_getsets,
@@ -754,6 +754,9 @@ INTERN DeeTypeObject SeqConcat_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ cat_class_members,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
 };
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
