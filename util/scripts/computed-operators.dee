@@ -1233,10 +1233,10 @@ function doPrintComputedOperators(impl: bool) {
 
 function printComputedOperators(filename: string) {
 	updateFile(filename, oldBytes -> {
-		local final DECL_START = "/*[[[begin::computer-operator-decls]]]*/";
-		local final DECL_END   = "/*[[[end::computer-operator-decls]]]*/";
-		local final IMPL_START = "/*[[[begin::computer-operator-impls]]]*/";
-		local final IMPL_END   = "/*[[[end::computer-operator-impls]]]*/";
+		local final DECL_START = "/*[[[begin::computed-operator-decls]]]*/";
+		local final DECL_END   = "/*[[[end::computed-operator-decls]]]*/";
+		local final IMPL_START = "/*[[[begin::computed-operator-impls]]]*/";
+		local final IMPL_END   = "/*[[[end::computed-operator-impls]]]*/";
 		local newBytes = oldBytes;
 		local declStart = oldBytes.find(DECL_START);
 		if (declStart >= 0) {

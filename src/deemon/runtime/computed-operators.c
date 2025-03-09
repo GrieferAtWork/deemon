@@ -43,7 +43,7 @@ DECL_BEGIN
 #endif /* !CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 
 /* Reusable default operators. */
-/*[[[begin::computer-operator-impls]]]*/
+/*[[[begin::computed-operator-impls]]]*/
 INTERN struct type_callable default__tp_callable__414DF0A8610383F3 = {
 	/* .tp_call_kw           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeObject_NewKw,
 	/* .tp_thiscall          = */ &default__thiscall__with__call,
@@ -704,7 +704,7 @@ INTERN struct type_with default__tp_with__0476D7EDEFD2E7B7 = {
 	/* .tp_leave = */ UNSUPPORTED(&default__leave__unsupported),
 };
 #endif /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
-/*[[[end::computer-operator-impls]]]*/
+/*[[[end::computed-operator-impls]]]*/
 
 DECL_END
 #endif /* CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS */

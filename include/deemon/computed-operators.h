@@ -92,7 +92,7 @@
 DECL_BEGIN
 
 /* Reusable default operators (and operator callbacks that get inherited) */
-/*[[[begin::computer-operator-decls]]]*/
+/*[[[begin::computed-operator-decls]]]*/
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Concat(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default_seq_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default_set_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
@@ -159,7 +159,7 @@ INTDEF struct type_math default__tp_math__AE7A38D3B0C75E4B;
 INTDEF struct type_seq default__tp_seq__2019F6A38C2B50B6;
 INTDEF struct type_with default__tp_with__0476D7EDEFD2E7B7;
 #endif /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
-/*[[[end::computer-operator-decls]]]*/
+/*[[[end::computed-operator-decls]]]*/
 
 INTDEF Dee_hash_t DCALL default__hash__unsupported(DeeObject *__restrict self);
 
