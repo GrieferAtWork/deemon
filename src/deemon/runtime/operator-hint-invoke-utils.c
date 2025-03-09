@@ -839,8 +839,8 @@ err:
 }
 
 
-PUBLIC WUNUSED NONNULL((1, 3)) int DCALL
-DeeObject_DelRangeBeginIndex(DeeObject *self, Dee_ssize_t start, DeeObject *end) {
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeObject_DelRangeBeginIndex)(DeeObject *self, Dee_ssize_t start, DeeObject *end) {
 	int result;
 	DREF DeeObject *start_ob;
 	Dee_ssize_t end_index;
@@ -858,8 +858,8 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeObject_DelRangeEndIndex(DeeObject *self, DeeObject *start, Dee_ssize_t end) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_DelRangeEndIndex)(DeeObject *self, DeeObject *start, Dee_ssize_t end) {
 	int result;
 	DREF DeeObject *end_ob;
 	Dee_ssize_t start_index;
@@ -878,8 +878,9 @@ err:
 }
 
 
-PUBLIC WUNUSED NONNULL((1, 3, 4)) int DCALL
-DeeObject_SetRangeBeginIndex(DeeObject *self, Dee_ssize_t start, DeeObject *end, DeeObject *values) {
+PUBLIC WUNUSED NONNULL((1, 3, 4)) int
+(DCALL DeeObject_SetRangeBeginIndex)(DeeObject *self, Dee_ssize_t start,
+                                     DeeObject *end, DeeObject *values) {
 	int result;
 	DREF DeeObject *start_ob;
 	Dee_ssize_t end_index;
@@ -897,8 +898,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 4)) int DCALL
-DeeObject_SetRangeEndIndex(DeeObject *self, DeeObject *start, Dee_ssize_t end, DeeObject *values) {
+PUBLIC WUNUSED NONNULL((1, 2, 4)) int
+(DCALL DeeObject_SetRangeEndIndex)(DeeObject *self, DeeObject *start,
+                                   Dee_ssize_t end, DeeObject *values) {
 	int result;
 	DREF DeeObject *end_ob;
 	Dee_ssize_t start_index;

@@ -1435,7 +1435,7 @@ do_push_bnd_local:
 			int temp = DeeObject_BoolInheritedOnSuccess(TOP);
 			if unlikely(temp < 0)
 				HANDLE_EXCEPT();
-			POP();
+			(void)POP();
 			if (!temp) {
 jump_16:
 				if ((int16_t)imm_val < 0) {
@@ -1458,7 +1458,7 @@ jump_16:
 			int temp = DeeObject_BoolInheritedOnSuccess(TOP);
 			if unlikely(temp < 0)
 				HANDLE_EXCEPT();
-			POP();
+			(void)POP();
 			if (temp)
 				goto jump_16;
 			DISPATCH();
