@@ -1297,10 +1297,6 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 
 /* Inline version of `DeeObject_NewRef()' */
 #ifndef __OPTIMIZE_SIZE__
-#undef DeeObject_NewRef_traced
-#define DeeObject_NewRef(self) DeeObject_NewRef_inline(self)
-#define DeeObject_NewRef_traced(self, file, line) \
-	DeeObject_NewRef_inline_traced(self, file, line)
 LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_NewRef_inline)(DeeObject *__restrict self) {
 	Dee_Incref(self);
@@ -1319,6 +1315,11 @@ LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 #define DeeObject_NewRef_inline_traced(self, file, line) \
 	DeeObject_NewRef_inline(self)
 #endif /* !CONFIG_TRACE_REFCHANGES */
+#undef DeeObject_NewRef
+#undef DeeObject_NewRef_traced
+#define DeeObject_NewRef(self) DeeObject_NewRef_inline(self)
+#define DeeObject_NewRef_traced(self, file, line) \
+	DeeObject_NewRef_inline_traced(self, file, line)
 #endif /* !__OPTIMIZE_SIZE__ */
 
 
@@ -4432,6 +4433,10 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Repr(DeeObject *__r
  * @return: <  0: Error was thrown */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_Bool(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_BoolInherited(/*inherit(always)*/ DREF DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_BoolInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_BoolOb(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_BoolObInherited(/*inherit(always)*/ DREF DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_BoolObInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
 
 /* Object call operator invocation. */
 DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL DeeObject_Call(DeeObject *self, size_t argc, DeeObject *const *argv);
@@ -4520,6 +4525,7 @@ DFUNDEF WUNUSED NONNULL((1)) uint64_t (DCALL DeeObject_AsDirectUInt64Inherited)(
 /* Cast-to-integer conversion operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInheritedOnSuccess)(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
 
 #define DEE_PRIVATE_OBJECT_AS_INT_1(self, result)   DeeObject_AsInt8(self, (int8_t *)(result))
 #define DEE_PRIVATE_OBJECT_AS_INT_2(self, result)   DeeObject_AsInt16(self, (int16_t *)(result))

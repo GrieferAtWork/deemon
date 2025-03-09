@@ -1651,14 +1651,14 @@ target_jf:
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_Bool,4)
+	call   fSYM(DeeObject_BoolInheritedOnSuccess,4)
 	ADJUST_CFA_OFFSET(-4)
 	cmpl   $0, %eax
 	jb    .except_x4
 	popl   %edx /* Displacement offset */
 	ADJUST_CFA_OFFSET(-4)
 	jz     1f /* if (bool != 0) DISPATCH() */
-	sp_popref %ecx /* POPREF() */
+	subl   $4, SP /* POP() (reference was inherited on success) */
 	jmp    .disp
 1:	cmpl   $0, %edx
 	jge    1f
@@ -1706,14 +1706,14 @@ target_jt:
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_Bool,4)
+	call   fSYM(DeeObject_BoolInheritedOnSuccess,4)
 	ADJUST_CFA_OFFSET(-4)
 	cmpl   $0, %eax
 	jb    .except_x4
 	popl   %edx /* Displacement offset */
 	ADJUST_CFA_OFFSET(-4)
 	jnz    1f /* if (bool == 0) DISPATCH() */
-	sp_popref %ecx /* POPREF() */
+	subl   $4, SP /* POP() (reference was inherited on success) */
 	jmp    .disp
 1:	cmpl   $0, %edx
 	jge    1f
@@ -1736,93 +1736,48 @@ target_jt:
 
 prefix_target_jf16:
 	call   get_prefix_object
-	pushl  %edx          /* BACKUP(prefix_ob) */
+	pushl  %edx          /* DeeObject_BoolInherited:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx          /* DeeObject_Bool:self */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_Bool,4)
+	call   fSYM(DeeObject_BoolInherited,4)
 	ADJUST_CFA_OFFSET(-4)
-	xorl   %ecx, %ecx
 	cmpl   $0, %eax
-	je     .Ldo_jmp_prefix_16   /* if (IS_FALSE) goto DO_JUMP; */
-	jl    .except_decref_pop
+	je     target_jmp16   /* if (IS_FALSE) goto DO_JUMP; */
+	jl     .except
 	jmp    .Ldont_jmp_prefix_16 /* else goto DONT_JUMP; */
-	ADJUST_CFA_OFFSET(-4)
 prefix_target_jt16:
 	call   get_prefix_object
-	pushl  %edx          /* BACKUP(prefix_ob) */
+	pushl  %edx          /* DeeObject_BoolInherited:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx          /* DeeObject_Bool:self */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_Bool,4)
+	call   fSYM(DeeObject_BoolInherited,4)
 	ADJUST_CFA_OFFSET(-4)
-	xorl   %ecx, %ecx
 	cmpl   $0, %eax
-	je     .Ldont_jmp_prefix_16 /* if (IS_FALSE) goto DONT_JUMP; */
-	jl    .except_decref_pop
-.Ldo_jmp_prefix_16:
-	popl   %edx
-	ADJUST_CFA_OFFSET(-4)
-	decref %edx
-	lodsw
-	movswl %ax, %eax
-	addl   %eax, PC /* ip += Simm16 */
-#ifndef NDEBUG
-	jno   .disp_checkip
-	assert_failed() /* ASSERTION_FAILED: `ip += Simm16' did overflow. */
-#endif /* !NDEBUG */
-	jmp    .disp
-	ADJUST_CFA_OFFSET(4)
+	jl    .except
+	jne    target_jmp16 /* if (IS_TRUE) goto DO_JUMP; */
 .Ldont_jmp_prefix_16:
-	popl   %edx
-	ADJUST_CFA_OFFSET(-4)
-	decref %edx
 	addl   $2, PC
 	jmp    .disp
 
 prefix_target_jf:
 	call   get_prefix_object
-	pushl  %edx          /* BACKUP(prefix_ob) */
+	pushl  %edx          /* DeeObject_BoolInherited:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx          /* DeeObject_Bool:self */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_Bool,4)
+	call   fSYM(DeeObject_BoolInherited,4)
 	ADJUST_CFA_OFFSET(-4)
-	xorl   %ecx, %ecx
 	cmpl   $0, %eax
-	je     .Ldo_jmp_prefix_8   /* if (IS_FALSE) goto DO_JUMP; */
-	jl    .except_decref_pop
+	jl     .except
+	je     target_jmp    /* if (IS_FALSE) goto DO_JUMP; */
 	jmp    .Ldont_jmp_prefix_8 /* else goto DONT_JUMP; */
 	ADJUST_CFA_OFFSET(-4)
 prefix_target_jt:
 	call   get_prefix_object
-	pushl  %edx          /* BACKUP(prefix_ob) */
+	pushl  %edx          /* DeeObject_BoolInherited:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx          /* DeeObject_Bool:self */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_Bool,4)
+	call   fSYM(DeeObject_BoolInherited,4)
 	ADJUST_CFA_OFFSET(-4)
-	xorl   %ecx, %ecx
 	cmpl   $0, %eax
-	je     .Ldont_jmp_prefix_8 /* if (IS_FALSE) goto DONT_JUMP; */
-	jl    .except_decref_pop
-.Ldo_jmp_prefix_8:
-	popl   %edx
-	ADJUST_CFA_OFFSET(-4)
-	decref %edx
-	lodsb
-	movsbl %al, %eax
-	addl   %eax, PC /* ip += Simm8 */
-#ifndef NDEBUG
-	jno   .disp_checkip
-	assert_failed() /* ASSERTION_FAILED: `ip += Simm8' did overflow. */
-#endif /* !NDEBUG */
-	jmp    .disp
-	ADJUST_CFA_OFFSET(4)
+	jl     .except
+	jne    target_jmp    /* if (IS_TRUE) goto DO_JUMP; */
 .Ldont_jmp_prefix_8:
-	popl   %edx
-	ADJUST_CFA_OFFSET(-4)
-	decref %edx
 	incl   PC
 	jmp    .disp
 
@@ -3793,16 +3748,11 @@ target_implements:
 target_bool:
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_Bool,4)
+	call   fSYM(DeeObject_BoolObInheritedOnSuccess,4)
 	ADJUST_CFA_OFFSET(-4)
-	xorl   %ecx, %ecx /* Clear ECX */
-	cmpl   $0, %eax
-	jb    .except /* Check for errors. */
-	setne  %cl /* set ECX to 0/1 indicative of the boolean */
-	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax
-	incref %eax
-	xchgl  TOP, %eax /* Exchange the stack-object with its boolean value. */
-	decref %eax
+	testl  %eax, %eax
+	jz    .except /* Check for error */
+	movl   %eax, TOP
 	jmp    .disp
 
 
@@ -3810,7 +3760,7 @@ target_bool:
 target_not:
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_Bool,4)
+	call   fSYM(DeeObject_BoolInheritedOnSuccess,4)
 	ADJUST_CFA_OFFSET(-4)
 	xorl   %ecx, %ecx /* Clear ECX */
 	cmpl   $0, %eax
@@ -3818,8 +3768,7 @@ target_not:
 	sete   %cl /* set ECX to 0/1 indicative of the reverse boolean */
 	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax
 	incref %eax
-	xchgl  TOP, %eax /* Exchange the stack-object with its boolean value. */
-	decref %eax
+	movl   %eax, TOP /* Reference was inherited on success */
 	jmp    .disp
 
 
@@ -4922,7 +4871,16 @@ target_cmpxch_pop_pop:
 
 
 /* Unary arithmethic/math operators. */
-define_unary_op target_cast_int, fSYM(DeeObject_Int,4)
+target_cast_int:
+	pushl  TOP
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_IntInheritedOnSuccess,4)
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jz     .except   /* Check for errors. */
+	movl   %eax, TOP /* Store EAX in TOP. */
+	jmp    .disp
+
 define_unary_op target_inv, fSYM(DeeObject_Inv,4)
 define_unary_op target_pos, fSYM(DeeObject_Pos,4)
 define_unary_op target_neg, fSYM(DeeObject_Neg,4)

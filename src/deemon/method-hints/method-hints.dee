@@ -2285,21 +2285,12 @@ function printNativeOperatorExportedApi() {
 			print(f" \{");
 			print(f"	__register DeeNO_{opName}_t {opVarName};");
 			local tpSelfExpr = usedOperator.tpSelfExpr;
-			local exportPrecheck: string = usedOperator.exportPrecheck;
-			local mustAssignTpSelf: bool = false;
 			if (tpSelfExpr.startswith("Dee_TYPE(") && tpSelfExpr.endswith(")")) {
-				if (exportPrecheck) {
-					print(f"	__register DeeTypeObject *tp_self;");
-					mustAssignTpSelf = true;
-				} else {
-					print(f"	__register DeeTypeObject *tp_self = {tpSelfExpr};");
-				}
+				print(f"	__register DeeTypeObject *tp_self = {tpSelfExpr};");
 				tpSelfExpr = "tp_self";
 			}
-			if (exportPrecheck)
-				print(exportPrecheck);
-			if (mustAssignTpSelf)
-				print(f"	{tpSelfExpr} = {usedOperator.tpSelfExpr};");
+			if (usedOperator.exportPrecheck)
+				print(usedOperator.exportPrecheck);
 			print(f"	if unlikely("),;
 			if (usedOperator.name.table !is none)
 				print(f"!{tpSelfExpr}->{usedOperator.name.table} || "),;

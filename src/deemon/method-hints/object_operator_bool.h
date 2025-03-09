@@ -27,10 +27,10 @@ operator {
 [[export("DeeObject_{|T}Bool")]]
 [[export_precheck(
 #ifndef __OPTIMIZE_SIZE__
-	if (self == Dee_True)
-		return 1;
-	if (self == Dee_False)
-		return 0;
+	__builtin_assume((tp_self == &DeeBool_Type) ==
+	                 (self == Dee_True || self == Dee_False));
+	if (tp_self == &DeeBool_Type)
+		return self == Dee_True ? 1 : 0;
 #endif /* !__OPTIMIZE_SIZE__ */
 )]]
 [[wunused]] int

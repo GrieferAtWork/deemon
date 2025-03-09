@@ -1432,10 +1432,10 @@ do_push_bnd_local:
 
 		TARGETSimm16(ASM_JF, -1, +0) {
 			/* Conditionally jump if true. */
-			int temp = DeeObject_Bool(TOP);
+			int temp = DeeObject_BoolInheritedOnSuccess(TOP);
 			if unlikely(temp < 0)
 				HANDLE_EXCEPT();
-			POPREF();
+			POP();
 			if (!temp) {
 jump_16:
 				if ((int16_t)imm_val < 0) {
@@ -1455,10 +1455,10 @@ jump_16:
 
 		TARGETSimm16(ASM_JT, -1, +0) {
 			/* Conditionally jump if false. */
-			int temp = DeeObject_Bool(TOP);
+			int temp = DeeObject_BoolInheritedOnSuccess(TOP);
 			if unlikely(temp < 0)
 				HANDLE_EXCEPT();
-			POPREF();
+			POP();
 			if (temp)
 				goto jump_16;
 			DISPATCH();
@@ -2296,20 +2296,17 @@ do_push_module:
 		}
 
 		TARGET(ASM_BOOL, -1, +1) {
-			int boolval = DeeObject_Bool(TOP);
-			if unlikely(boolval < 0)
+			DREF DeeObject *boolval = DeeObject_BoolObInheritedOnSuccess(TOP);
+			if unlikely(!boolval)
 				HANDLE_EXCEPT();
-			Dee_Decref(TOP);
-			TOP = DeeBool_For(boolval);
-			Dee_Incref(TOP);
+			TOP = boolval;
 			DISPATCH();
 		}
 
 		TARGET(ASM_NOT, -1, +1) {
-			int boolval = DeeObject_Bool(TOP);
+			int boolval = DeeObject_BoolInheritedOnSuccess(TOP);
 			if unlikely(boolval < 0)
 				HANDLE_EXCEPT();
-			Dee_Decref(TOP);
 			TOP = DeeBool_For(!boolval);
 			Dee_Incref(TOP);
 			DISPATCH();
@@ -2555,10 +2552,9 @@ do_function_c:
 
 		TARGET(ASM_CAST_INT, -1, +1) {
 			DeeObject *cast_result;
-			cast_result = DeeObject_Int(TOP);
+			cast_result = DeeObject_IntInheritedOnSuccess(TOP);
 			if unlikely(!cast_result)
 				HANDLE_EXCEPT();
-			Dee_Decref(TOP);
 			TOP = cast_result; /* Inherit reference. */
 			DISPATCH();
 		}
@@ -5605,8 +5601,7 @@ prefix_jf_16:
 					prefix_ob = get_prefix_object();
 					if unlikely(!prefix_ob)
 						HANDLE_EXCEPT();
-					temp = DeeObject_Bool(prefix_ob);
-					Dee_Decref(prefix_ob);
+					temp = DeeObject_BoolInherited(prefix_ob);
 					if unlikely(temp < 0)
 						HANDLE_EXCEPT();
 					if (!temp) {
@@ -5639,8 +5634,7 @@ prefix_jt_16:
 					prefix_ob = get_prefix_object();
 					if unlikely(!prefix_ob)
 						HANDLE_EXCEPT();
-					temp = DeeObject_Bool(prefix_ob);
-					Dee_Decref(prefix_ob);
+					temp = DeeObject_BoolInherited(prefix_ob);
 					if unlikely(temp < 0)
 						HANDLE_EXCEPT();
 					if (temp) {

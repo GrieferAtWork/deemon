@@ -47,11 +47,11 @@ bool_return_false(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 bool_new(size_t argc, DeeObject *const *argv) {
-	bool value;
-	if (DeeArg_Unpack(argc, argv, "b:bool", &value))
-		goto err;
-	return_bool_(value);
-err:
+	if unlikely(argc != 1)
+		goto err_bad_argc;
+	return DeeObject_BoolOb(argv[0]);
+err_bad_argc:
+	err_invalid_argc("bool", argc, 1, 1);
 	return NULL;
 }
 
@@ -122,28 +122,16 @@ bool_inv(DeeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_or(DeeObject *self, DeeObject *other) {
-	int temp;
 	if (DeeBool_IsTrue(self))
 		return_true;
-	temp = DeeObject_Bool(other);
-	if unlikely(temp < 0)
-		goto err;
-	return_bool_(temp);
-err:
-	return NULL;
+	return DeeObject_BoolOb(other);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_and(DeeObject *self, DeeObject *other) {
-	int temp;
 	if (!DeeBool_IsTrue(self))
 		return_false;
-	temp = DeeObject_Bool(other);
-	if unlikely(temp < 0)
-		goto err;
-	return_bool_(temp);
-err:
-	return NULL;
+	return DeeObject_BoolOb(other);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -336,41 +324,23 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_lo(DeeObject *self, DeeObject *other) {
-	int error;
 	if (DeeBool_IsTrue(self))
 		return_false; /* true < X --> false */
-	error = DeeObject_Bool(other);
-	if unlikely(error < 0)
-		goto err;
-	return_bool_(error); /* false < X --> X */
-err:
-	return NULL;
+	return DeeObject_BoolOb(other); /* false < X --> X */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_le(DeeObject *self, DeeObject *other) {
-	int error;
 	if (!DeeBool_IsTrue(self))
 		return_true; /* false <= X --> true */
-	error = DeeObject_Bool(other);
-	if unlikely(error < 0)
-		goto err;
-	return_bool_(error); /* true <= X --> X */
-err:
-	return NULL;
+	return DeeObject_BoolOb(other); /* true <= X --> X */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_gr(DeeObject *self, DeeObject *other) {
-	int error;
 	if (!DeeBool_IsTrue(self))
 		return_false; /* false > X --> false */
-	error = DeeObject_Bool(other);
-	if unlikely(error < 0)
-		goto err;
-	return_bool_(error); /* true > X --> X */
-err:
-	return NULL;
+	return DeeObject_BoolOb(other); /* true > X --> X */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

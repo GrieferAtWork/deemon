@@ -1726,18 +1726,13 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__setattr_string_len_hash__wi
 #define DeeType_InheritWith(self)     (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_enter) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_leave))
 
 /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: Backward compat -- DEPRECATED! */
-#define DeeType_InvokeCastStr(tp_self, self)                             (*maketyped__str((tp_self)->tp_cast.tp_str))(tp_self, self)
-#define DeeType_InvokeCastPrint(tp_self, self, printer, arg)             (*maketyped__print((tp_self)->tp_cast.tp_print))(tp_self, self, printer, arg)
-#define DeeType_InvokeCastRepr(tp_self, self)                            (*maketyped__repr((tp_self)->tp_cast.tp_repr))(tp_self, self)
-#define DeeType_InvokeCastPrintRepr(tp_self, self, printer, arg)         (*maketyped__printrepr((tp_self)->tp_cast.tp_printrepr))(tp_self, self, printer, arg)
-#define DeeType_InvokeCastBool(tp_self, self)                            (*maketyped__bool((tp_self)->tp_cast.tp_bool))(tp_self, self)
-#define DeeType_InvokeCall(tp_self, self, argc, argv)                    (*maketyped__call((tp_self)->tp_call))(tp_self, self, argc, argv)
-#define DeeType_InvokeCallKw(tp_self, self, argc, argv, kw)              (*maketyped__call_kw((tp_self)->tp_call_kw))(tp_self, self, argc, argv, kw)
-#define DeeType_InvokeMathInt32(tp_self, self, result)                   (*maketyped__int32((tp_self)->tp_math->tp_int32))(tp_self, self, result)
-#define DeeType_InvokeMathInt64(tp_self, self, result)                   (*maketyped__int64((tp_self)->tp_math->tp_int64))(tp_self, self, result)
-#define DeeType_InvokeMathDouble(tp_self, self, result)                  (*maketyped__double((tp_self)->tp_math->tp_double))(tp_self, self, result)
-#define DeeType_InvokeMathInt(tp_self, self)                             (*maketyped__int((tp_self)->tp_math->tp_int))(tp_self, self)
-#define DeeType_InvokeCmpHash(tp_self, self)                             (*maketyped__hash((tp_self)->tp_cmp->tp_hash))(tp_self, self)
+#define DeeType_InvokeCastStr(tp_self, self)                     (*maketyped__str((tp_self)->tp_cast.tp_str))(tp_self, self)
+#define DeeType_InvokeCastPrint(tp_self, self, printer, arg)     (*maketyped__print((tp_self)->tp_cast.tp_print))(tp_self, self, printer, arg)
+#define DeeType_InvokeCastRepr(tp_self, self)                    (*maketyped__repr((tp_self)->tp_cast.tp_repr))(tp_self, self)
+#define DeeType_InvokeCastPrintRepr(tp_self, self, printer, arg) (*maketyped__printrepr((tp_self)->tp_cast.tp_printrepr))(tp_self, self, printer, arg)
+#define DeeType_InvokeCall(tp_self, self, argc, argv)            (*maketyped__call((tp_self)->tp_call))(tp_self, self, argc, argv)
+#define DeeType_InvokeCallKw(tp_self, self, argc, argv, kw)      (*maketyped__call_kw((tp_self)->tp_call_kw))(tp_self, self, argc, argv, kw)
+#define DeeType_InvokeCmpHash(tp_self, self)                     (*maketyped__hash((tp_self)->tp_cmp->tp_hash))(tp_self, self)
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DECL_END

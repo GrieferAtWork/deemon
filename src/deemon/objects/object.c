@@ -2088,13 +2088,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_bool(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	int result;
 	if (DeeArg_Unpack(argc, argv, meth_bool))
 		goto err;
-	result = DeeObject_Bool(self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
+	return DeeObject_BoolOb(self);
 err:
 	return NULL;
 }
@@ -4941,7 +4937,7 @@ DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_object_eq(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, Dee_TYPE(self)))
 		goto err;
-	return_bool_(self == some_object);
+	return_bool(self == some_object);
 err:
 	return NULL;
 }
@@ -4950,7 +4946,7 @@ DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_object_ne(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, Dee_TYPE(self)))
 		goto err;
-	return_bool_(self != some_object);
+	return_bool(self != some_object);
 err:
 	return NULL;
 }
@@ -4985,7 +4981,7 @@ DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_eq(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))
 		goto err;
-	return_bool_(self == some_object);
+	return_bool(self == some_object);
 err:
 	return NULL;
 }
@@ -4994,7 +4990,7 @@ DEFAULT_OPDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_ne(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))
 		goto err;
-	return_bool_(self != some_object);
+	return_bool(self != some_object);
 err:
 	return NULL;
 }

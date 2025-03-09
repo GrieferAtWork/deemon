@@ -1597,17 +1597,17 @@ clsproperty_bound_module(DeeClsPropertyObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_canget(DeeClsPropertyObject *__restrict self) {
-	return_bool_(self->cp_get != NULL);
+	return_bool(self->cp_get != NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_candel(DeeClsPropertyObject *__restrict self) {
-	return_bool_(self->cp_del != NULL);
+	return_bool(self->cp_del != NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_canset(DeeClsPropertyObject *__restrict self) {
-	return_bool_(self->cp_set != NULL);
+	return_bool(self->cp_set != NULL);
 }
 
 PRIVATE struct type_getset tpconst clsproperty_getsets[] = {
@@ -1862,7 +1862,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_canset(DeeClsMemberObject *__restrict self) {
 	if (TYPE_MEMBER_ISCONST(&self->cm_memb))
 		return_false;
-	return_bool_(!(self->cm_memb.m_field.m_type & STRUCT_CONST));
+	return_bool(!(self->cm_memb.m_field.m_type & STRUCT_CONST));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

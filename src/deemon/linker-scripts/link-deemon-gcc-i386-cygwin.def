@@ -720,6 +720,10 @@ EXPORTS
 	_DeeObject_Assign@8=DeeObject_Assign@8
 	_DeeObject_Bool@4=DeeObject_Bool@4
 	_DeeObject_BoolInherited@4=DeeObject_BoolInherited@4
+	_DeeObject_BoolInheritedOnSuccess@4=DeeObject_BoolInheritedOnSuccess@4
+	_DeeObject_BoolOb@4=DeeObject_BoolOb@4
+	_DeeObject_BoolObInherited@4=DeeObject_BoolObInherited@4
+	_DeeObject_BoolObInheritedOnSuccess@4=DeeObject_BoolObInheritedOnSuccess@4
 	_DeeObject_BoundAttr@8=DeeObject_BoundAttr@8
 	_DeeObject_BoundAttrString@8=DeeObject_BoundAttrString@8
 	_DeeObject_BoundAttrStringHash@12=DeeObject_BoundAttrStringHash@12
@@ -851,6 +855,7 @@ EXPORTS
 	_DeeObject_InplaceXorUInt32@8=DeeObject_InplaceXorUInt32@8
 	_DeeObject_Int@4=DeeObject_Int@4
 	_DeeObject_IntInherited@4=DeeObject_IntInherited@4
+	_DeeObject_IntInheritedOnSuccess@4=DeeObject_IntInheritedOnSuccess@4
 	_DeeObject_Inv@4=DeeObject_Inv@4
 	_DeeObject_InvokeOperator@16=DeeObject_InvokeOperator@16
 	_DeeObject_Iter@4=DeeObject_Iter@4

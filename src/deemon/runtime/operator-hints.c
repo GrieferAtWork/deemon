@@ -2095,6 +2095,17 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_funptr_t
 			            (unsigned int)actions[i].tnoi_id,
 			            *(void **)&actions[i].tnoi_cb);
 #endif /* !Dee_DPRINT_IS_NOOP */
+			/* special handling when inheriting certain operators */
+			switch (actions[i].tnoi_id) {
+			case Dee_TNO_int:
+			case Dee_TNO_int32:
+			case Dee_TNO_int64:
+				if (from->tp_flags & TP_FTRUNCATE)
+					atomic_or(&into->tp_flags, TP_FTRUNCATE);
+				break;
+			default: break;
+			}
+
 			ok = type_tno_tryset(into, actions[i].tnoi_id, actions[i].tnoi_cb);
 			if likely(ok)
 				continue;

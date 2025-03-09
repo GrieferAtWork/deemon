@@ -210,17 +210,17 @@ PRIVATE struct type_member tpconst property_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_canget(Property *__restrict self) {
-	return_bool_(self->p_get != NULL);
+	return_bool(self->p_get != NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_candel(Property *__restrict self) {
-	return_bool_(self->p_del != NULL);
+	return_bool(self->p_del != NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_canset(Property *__restrict self) {
-	return_bool_(self->p_set != NULL);
+	return_bool(self->p_set != NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
