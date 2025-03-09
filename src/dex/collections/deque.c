@@ -1454,7 +1454,6 @@ INTERN DeeTypeObject Deque_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&deq_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&deq_visit,
 	/* .tp_gc            = */ &deq_gc,
 	/* .tp_math          = */ NULL,
@@ -1682,7 +1681,6 @@ INTERN DeeTypeObject DequeIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&deqiter_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&deqiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL, /* TODO: bi-directional iterator support */

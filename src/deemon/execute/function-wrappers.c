@@ -283,7 +283,6 @@ INTERN DeeTypeObject FunctionStaticsIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&funcstaticsiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -301,7 +300,8 @@ INTERN DeeTypeObject FunctionStaticsIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 
@@ -597,7 +597,6 @@ INTERN DeeTypeObject FunctionStatics_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&funcstatics_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
@@ -953,7 +952,6 @@ INTERN DeeTypeObject FunctionSymbolsByNameIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&funcsymbolsbynameiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -971,7 +969,8 @@ INTERN DeeTypeObject FunctionSymbolsByNameIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
@@ -1003,7 +1002,6 @@ INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&funcsymbolsbynameiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -1021,7 +1019,8 @@ INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 
@@ -1579,7 +1578,6 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&funcsymbolsbyname_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__7C9B3D263E47878C),
@@ -2107,7 +2105,6 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yfuncsymbolsbynameiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -2125,7 +2122,8 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 
@@ -2158,7 +2156,6 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yfuncsymbolsbynameiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -2176,7 +2173,8 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 
@@ -2683,7 +2681,6 @@ INTERN DeeTypeObject YieldFunctionSymbolsByName_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yfuncsymbolsbyname_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__7C9B3D263E47878C),
@@ -2950,7 +2947,6 @@ INTERN DeeTypeObject FrameArgs_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&frameargs_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
@@ -3291,7 +3287,6 @@ INTERN DeeTypeObject FrameLocals_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&framelocals_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
@@ -3714,7 +3709,6 @@ INTERN DeeTypeObject FrameStack_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&framestack_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__3959C0D1502AC76A),
@@ -4470,7 +4464,6 @@ INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&framesymbolsbynameiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -4488,7 +4481,8 @@ INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
@@ -4520,7 +4514,6 @@ INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&framesymbolsbynameiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -4538,7 +4531,8 @@ INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 
@@ -5283,7 +5277,6 @@ INTERN DeeTypeObject FrameSymbolsByName_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&framesymbolsbyname_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__7C9B3D263E47878C),

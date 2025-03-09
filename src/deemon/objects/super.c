@@ -272,6 +272,39 @@ super_call_kw(Super *self, size_t argc,
 	return DeeObject_TCallKw(self->s_type, self->s_self, argc, argv, kw);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_thiscall(Super *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv) {
+	return DeeObject_TThisCall(self->s_type, self->s_self, thisarg, argc, argv);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_thiscall_kw(Super *self, DeeObject *thisarg, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
+	return DeeObject_TThisCallKw(self->s_type, self->s_self, thisarg, argc, argv, kw);
+}
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_call_tuple(Super *self, DeeObject *args) {
+	return DeeObject_TCallTuple(self->s_type, self->s_self, args);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_call_tuple_kw(Super *self, DeeObject *args, DeeObject *kw) {
+	return DeeObject_TCallTupleKw(self->s_type, self->s_self, args, kw);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+super_thiscall_tuple(Super *self, DeeObject *thisarg, DeeObject *args) {
+	return DeeObject_TThisCallTuple(self->s_type, self->s_self, thisarg, args);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+super_thiscall_tuple_kw(Super *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw) {
+	return DeeObject_TThisCallTupleKw(self->s_type, self->s_self, thisarg, args, kw);
+}
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 super_hash(Super *__restrict self) {
 	return DeeObject_THash(self->s_type, self->s_self);
@@ -1039,6 +1072,19 @@ PRIVATE struct type_with super_with = {
 	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&super_leave,
 };
 
+PRIVATE struct type_callable super_callable = {
+	/* .tp_call_kw     = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&super_call_kw,
+	/* .tp_thiscall    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&super_thiscall,
+	/* .tp_thiscall_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *, DeeObject *))&super_thiscall_kw,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	/* .tp_call_tuple        = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_call_tuple,
+	/* .tp_call_tuple_kw     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_call_tuple_kw,
+	/* .tp_thiscall_tuple    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_thiscall_tuple,
+	/* .tp_thiscall_tuple_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&super_thiscall_tuple_kw,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+};
+
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_getbuf(Super *__restrict self,
              DeeBuffer *__restrict info,
@@ -1225,7 +1271,6 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&super_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&super_printrepr,
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&super_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&super_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &super_math,
@@ -1243,7 +1288,8 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&super_call_kw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&super_call,
+	/* .tp_callable      = */ &super_callable,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ NULL,
 	/* .tp_operators_size= */ 0,

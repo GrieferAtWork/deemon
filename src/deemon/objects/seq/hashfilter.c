@@ -262,7 +262,6 @@ INTERN DeeTypeObject SeqHashFilterIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&filteriterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -280,7 +279,8 @@ INTERN DeeTypeObject SeqHashFilterIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 INTERN DeeTypeObject MapHashFilterIterator_Type = {
@@ -312,7 +312,6 @@ INTERN DeeTypeObject MapHashFilterIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&filteriterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -330,7 +329,8 @@ INTERN DeeTypeObject MapHashFilterIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 
@@ -543,7 +543,6 @@ INTERN DeeTypeObject SeqHashFilter_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&filter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
@@ -592,7 +591,6 @@ INTERN DeeTypeObject MapHashFilter_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&filter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),

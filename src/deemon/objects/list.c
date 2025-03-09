@@ -4315,7 +4315,6 @@ PUBLIC DeeTypeObject DeeList_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&list_printrepr,
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&list_visit,
 	/* .tp_gc            = */ &list_gc,
 	/* .tp_math          = */ &list_math,
@@ -4333,7 +4332,8 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ list_class_members,
 	/* .tp_method_hints  = */ list_method_hints,
-	/* .tp_call_kw       = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ list_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(list_operators),
@@ -4594,7 +4594,6 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&li_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -4612,7 +4611,8 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 

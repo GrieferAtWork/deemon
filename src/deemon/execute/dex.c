@@ -554,7 +554,6 @@ PUBLIC DeeTypeObject DeeDex_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&module_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, // (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dex_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

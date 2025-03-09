@@ -167,7 +167,6 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 			NativeOperator("tp_print"),
 			NativeOperator("tp_printrepr"),
 		},
-		NativeOperator("tp_call"),
 		Field("tp_visit"),
 		Field("tp_gc"),
 		SubTable("tp_math", "type_math"),
@@ -185,7 +184,8 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 		Field("tp_class_getsets"),
 		Field("tp_class_members"),
 		Field("tp_method_hints"),
-		NativeOperator("tp_call_kw"),
+		NativeOperator("tp_call"),
+		SubTable("tp_callable", "type_callable"),
 		Field("tp_mro"),
 		Field("tp_operators"),
 		Field("tp_operators_size"),
@@ -327,6 +327,17 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 		NativeOperator("tp_enter"),
 		NativeOperator("tp_leave"),
 	},
+	"type_callable": {
+		NativeOperator("tp_call_kw"),
+		NativeOperator("tp_thiscall"),
+		NativeOperator("tp_thiscall_kw"),
+		// TODO: #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+		NativeOperator("tp_call_tuple"),
+		NativeOperator("tp_call_tuple_kw"),
+		NativeOperator("tp_thiscall_tuple"),
+		NativeOperator("tp_thiscall_tuple_kw"),
+		// TODO: #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+	},
 };
 
 
@@ -416,8 +427,15 @@ function _buildDefaultOperatorSubTable(subTable: SubTable, typ: Type)
 			local init = _Type_getNativeOperatorName(typ, spec.operatorName);
 			if (init is none)
 				throw Error(f"Failed to load name of '{typ}.<native>.{spec.operatorName}'");
-			if (init != "NULL")
-				init = f"&{init}";
+			if (init != "NULL") {
+				if (mustCastSymbol(init)) {
+					local natOp: mh.NativeOperator =
+							mh_NATIVE_OPERATORS_BYNAME[spec.operatorName];
+					init = f"({captureStdout(() -> natOp.printFunctionPointerType())})&{init}";
+				} else {
+					init = f"&{init}";
+				}
+			}
 			initializers.append(init);
 		} else {
 			throw Error(f"Unsupported member type in sub-table: {type spec}");
@@ -629,7 +647,7 @@ final class InitParser {
 	}
 
 	private getDefaultSubTableInitializer(subTable: SubTable): string {
-		local impl: SubTableImpl = buildDefaultOperatorSubTable(subTable, typ);
+		local impl: SubTableImpl | none = buildDefaultOperatorSubTable(subTable, typ);
 		if (impl is none)
 			return "NULL";
 		return f"&{impl.hashName}";
@@ -660,7 +678,10 @@ final class InitParser {
 					spec.name.ljust(relevantSpecsMaxNameLen),
 					" = */ "),;
 			if (spec is SubTable) {
-				print out: (getDefaultSubTableInitializer(spec), ","),;
+				local init = getDefaultSubTableInitializer(spec);
+				if (init != "NULL")
+					init = f"DEFIMPL({init})";
+				print out: (init, ","),;
 			} else if (spec is Field) {
 				print out: ("NULL,"),;
 			} else {
@@ -710,6 +731,10 @@ final class InitParser {
 			} else if (last is NativeOperator) {
 				local name = _Type_getNativeOperatorName(typ, last.operatorName);
 				if (name !is none && name != "NULL")
+					break;
+			} else if (last is SubTable) {
+				local impl: SubTableImpl | none = buildDefaultOperatorSubTable(last, typ);
+				if (impl !is none)
 					break;
 			} else {
 				break;

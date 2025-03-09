@@ -3036,7 +3036,6 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -3054,7 +3053,8 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ object_class_members,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ object_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(object_operators),
@@ -3174,6 +3174,7 @@ type_fini(DeeTypeObject *__restrict self) {
 
 	/* clang-format off */
 /*[[[deemon (printFreeAllocatedOperatorTables from "..method-hints.method-hints")("self");]]]*/
+	Dee_Free(self->tp_callable);
 	Dee_Free(self->tp_iterator);
 	Dee_Free(self->tp_math);
 	Dee_Free(self->tp_cmp);
@@ -5128,6 +5129,16 @@ PRIVATE DeeTypeObject *tpconst type_mro[] = {
 	NULL,
 };
 
+PRIVATE struct type_callable type_callable = {
+	/* .tp_call_kw = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeObject_NewKw,
+	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
+	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
+	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
+	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
+	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
+	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
+};
+
 PUBLIC DeeTypeObject DeeType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type), /* The type of Type is Type :D */
 	/* .tp_name     = */ DeeString_STR(&str_Type),
@@ -5158,7 +5169,6 @@ PUBLIC DeeTypeObject DeeType_Type = {
 		/* .tp_print     = */ &type_print,
 		/* .tp_printrepr = */ &type_printrepr,
 	},
-	/* .tp_call          = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeObject_New,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&type_visit,
 	/* .tp_gc            = */ &type_gc_data,
 	/* .tp_math          = */ NULL,
@@ -5176,7 +5186,8 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeObject_NewKw,
+	/* .tp_call          = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeObject_New,
+	/* .tp_callable      = */ &type_callable,
 	/* .tp_mro           = */ type_mro,
 	/* .tp_operators     = */ type_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(type_operators),

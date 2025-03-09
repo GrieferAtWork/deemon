@@ -1088,7 +1088,6 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cdict_printrepr,
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cdict_visit,
 	/* .tp_gc            = */ &cdict_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__667432E5904B49F8),

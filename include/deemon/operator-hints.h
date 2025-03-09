@@ -45,6 +45,12 @@ typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeNO_printrepr_t)(DeeOb
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_bool_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_call_t)(DeeObject *self, size_t argc, DeeObject *const *argv);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_call_kw_t)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_thiscall_t)(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_thiscall_kw_t)(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_call_tuple_t)(DeeObject *self, DeeObject *args);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_call_tuple_kw_t)(DeeObject *self, DeeObject *args, DeeObject *kw);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeNO_thiscall_tuple_t)(DeeObject *self, DeeObject *thisarg, DeeObject *args);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeNO_thiscall_tuple_kw_t)(DeeObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_iter_next_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_nextpair_t)(DeeObject *__restrict self, DREF DeeObject *key_and_value[2]);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_nextkey_t)(DeeObject *__restrict self);
@@ -166,6 +172,12 @@ enum Dee_tno_id {
 	Dee_TNO_bool,
 	Dee_TNO_call,
 	Dee_TNO_call_kw,
+	Dee_TNO_thiscall,
+	Dee_TNO_thiscall_kw,
+	Dee_TNO_call_tuple,
+	Dee_TNO_call_tuple_kw,
+	Dee_TNO_thiscall_tuple,
+	Dee_TNO_thiscall_tuple_kw,
 	Dee_TNO_iter_next,
 	Dee_TNO_nextpair,
 	Dee_TNO_nextkey,
@@ -363,7 +375,13 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_funptr_t
 #define _Dee_TNO_PATH_printrepr(_)                  PATH1(_, tp_cast.tp_printrepr)
 #define _Dee_TNO_PATH_bool(_)                       PATH1(_, tp_cast.tp_bool)
 #define _Dee_TNO_PATH_call(_)                       PATH1(_, tp_call)
-#define _Dee_TNO_PATH_call_kw(_)                    PATH1(_, tp_call_kw)
+#define _Dee_TNO_PATH_call_kw(_)                    PATH2(_, tp_callable, tp_call_kw)
+#define _Dee_TNO_PATH_thiscall(_)                   PATH2(_, tp_callable, tp_thiscall)
+#define _Dee_TNO_PATH_thiscall_kw(_)                PATH2(_, tp_callable, tp_thiscall_kw)
+#define _Dee_TNO_PATH_call_tuple(_)                 PATH2(_, tp_callable, tp_call_tuple)
+#define _Dee_TNO_PATH_call_tuple_kw(_)              PATH2(_, tp_callable, tp_call_tuple_kw)
+#define _Dee_TNO_PATH_thiscall_tuple(_)             PATH2(_, tp_callable, tp_thiscall_tuple)
+#define _Dee_TNO_PATH_thiscall_tuple_kw(_)          PATH2(_, tp_callable, tp_thiscall_tuple_kw)
 #define _Dee_TNO_PATH_iter_next(_)                  PATH1(_, tp_iter_next)
 #define _Dee_TNO_PATH_nextpair(_)                   PATH2(_, tp_iterator, tp_nextpair)
 #define _Dee_TNO_PATH_nextkey(_)                    PATH2(_, tp_iterator, tp_nextkey)
@@ -638,7 +656,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__call__with__call_kw(D
 #define isdefault__call(tp_call) ((tp_call) == &default__call__with__call_kw)
 #define maketyped__call(tp_call) ((tp_call) == &usrtype__call__with__CALL ? &tusrtype__call__with__CALL : (tp_call) == &default__call__with__call_kw ? &tdefault__call__with__call_kw : &tdefault__call)
 
-/* tp_call_kw */
+/* tp_callable->tp_call_kw */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__call_kw__with__CALL(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__call_kw__with__call(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__call_kw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
@@ -647,6 +665,50 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__call_kw__with__call(D
 #define isusrtype__call_kw(tp_call_kw) ((tp_call_kw) == &usrtype__call_kw__with__CALL)
 #define isdefault__call_kw(tp_call_kw) ((tp_call_kw) == &default__call_kw__with__call)
 #define maketyped__call_kw(tp_call_kw) ((tp_call_kw) == &usrtype__call_kw__with__CALL ? &tusrtype__call_kw__with__CALL : (tp_call_kw) == &default__call_kw__with__call ? &tdefault__call_kw__with__call : &tdefault__call_kw)
+
+/* tp_callable->tp_thiscall */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__thiscall__with__call(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__thiscall(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__thiscall__with__call(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv);
+#define isdefault__thiscall(tp_thiscall) ((tp_thiscall) == &default__thiscall__with__call)
+#define maketyped__thiscall(tp_thiscall) ((tp_thiscall) == &default__thiscall__with__call ? &tdefault__thiscall__with__call : &tdefault__thiscall)
+
+/* tp_callable->tp_thiscall_kw */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__thiscall_kw__with__call_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__thiscall_kw__with__thiscall(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__thiscall_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__thiscall_kw__with__call_kw(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__thiscall_kw__with__thiscall(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define isdefault__thiscall_kw(tp_thiscall_kw) ((tp_thiscall_kw) == &default__thiscall_kw__with__call_kw || (tp_thiscall_kw) == &default__thiscall_kw__with__thiscall)
+#define maketyped__thiscall_kw(tp_thiscall_kw) ((tp_thiscall_kw) == &default__thiscall_kw__with__call_kw ? &tdefault__thiscall_kw__with__call_kw : (tp_thiscall_kw) == &default__thiscall_kw__with__thiscall ? &tdefault__thiscall_kw__with__thiscall : &tdefault__thiscall_kw)
+
+/* tp_callable->tp_call_tuple */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__call_tuple__with__call(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__call_tuple(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__call_tuple__with__call(DeeObject *self, DeeObject *args);
+#define isdefault__call_tuple(tp_call_tuple) ((tp_call_tuple) == &default__call_tuple__with__call)
+#define maketyped__call_tuple(tp_call_tuple) ((tp_call_tuple) == &default__call_tuple__with__call ? &tdefault__call_tuple__with__call : &tdefault__call_tuple)
+
+/* tp_callable->tp_call_tuple_kw */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__call_tuple_kw__with__call_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__call_tuple_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__call_tuple_kw__with__call_kw(DeeObject *self, DeeObject *args, DeeObject *kw);
+#define isdefault__call_tuple_kw(tp_call_tuple_kw) ((tp_call_tuple_kw) == &default__call_tuple_kw__with__call_kw)
+#define maketyped__call_tuple_kw(tp_call_tuple_kw) ((tp_call_tuple_kw) == &default__call_tuple_kw__with__call_kw ? &tdefault__call_tuple_kw__with__call_kw : &tdefault__call_tuple_kw)
+
+/* tp_callable->tp_thiscall_tuple */
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL tdefault__thiscall_tuple__with__thiscall(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL tdefault__thiscall_tuple(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__thiscall_tuple__with__thiscall(DeeObject *self, DeeObject *thisarg, DeeObject *args);
+#define isdefault__thiscall_tuple(tp_thiscall_tuple) ((tp_thiscall_tuple) == &default__thiscall_tuple__with__thiscall)
+#define maketyped__thiscall_tuple(tp_thiscall_tuple) ((tp_thiscall_tuple) == &default__thiscall_tuple__with__thiscall ? &tdefault__thiscall_tuple__with__thiscall : &tdefault__thiscall_tuple)
+
+/* tp_callable->tp_thiscall_tuple_kw */
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL tdefault__thiscall_tuple_kw__with__thiscall_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL tdefault__thiscall_tuple_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__thiscall_tuple_kw__with__thiscall_kw(DeeObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw);
+#define isdefault__thiscall_tuple_kw(tp_thiscall_tuple_kw) ((tp_thiscall_tuple_kw) == &default__thiscall_tuple_kw__with__thiscall_kw)
+#define maketyped__thiscall_tuple_kw(tp_thiscall_tuple_kw) ((tp_thiscall_tuple_kw) == &default__thiscall_tuple_kw__with__thiscall_kw ? &tdefault__thiscall_tuple_kw__with__thiscall_kw : &tdefault__thiscall_tuple_kw)
 
 /* tp_iter_next */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__iter_next__with__ITERNEXT(DeeTypeObject *tp_self, DeeObject *self);
@@ -1730,8 +1792,6 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__setattr_string_len_hash__wi
 #define DeeType_InvokeCastPrint(tp_self, self, printer, arg)     (*maketyped__print((tp_self)->tp_cast.tp_print))(tp_self, self, printer, arg)
 #define DeeType_InvokeCastRepr(tp_self, self)                    (*maketyped__repr((tp_self)->tp_cast.tp_repr))(tp_self, self)
 #define DeeType_InvokeCastPrintRepr(tp_self, self, printer, arg) (*maketyped__printrepr((tp_self)->tp_cast.tp_printrepr))(tp_self, self, printer, arg)
-#define DeeType_InvokeCall(tp_self, self, argc, argv)            (*maketyped__call((tp_self)->tp_call))(tp_self, self, argc, argv)
-#define DeeType_InvokeCallKw(tp_self, self, argc, argv, kw)      (*maketyped__call_kw((tp_self)->tp_call_kw))(tp_self, self, argc, argv, kw)
 #define DeeType_InvokeCmpHash(tp_self, self)                     (*maketyped__hash((tp_self)->tp_cmp->tp_hash))(tp_self, self)
 #endif /* CONFIG_BUILDING_DEEMON */
 

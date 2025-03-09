@@ -1149,7 +1149,6 @@ INTERN DeeTypeObject RBTreeIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&rbtreeiter_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rbtreeiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -3712,7 +3711,6 @@ INTERN DeeTypeObject RBTree_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rbtree_printrepr,
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rbtree_visit,
 	/* .tp_gc            = */ &rbtree_gc,
 	/* .tp_math          = */ NULL,

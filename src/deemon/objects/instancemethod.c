@@ -259,6 +259,16 @@ instancemethod_bound_module(InstanceMethod *__restrict self) {
 	return DeeObject_BoundAttr(self->im_func, (DeeObject *)&str___module__);
 }
 
+PRIVATE struct type_callable im_callable = {
+	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&im_callkw,
+	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
+	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
+	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
+	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
+	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
+	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
+};
+
 PRIVATE struct type_getset tpconst im_getsets[] = {
 	TYPE_GETTER_BOUND_F(STR___name__, &instancemethod_get_name, &instancemethod_bound_name,
 	                    METHOD_FNOREFESCAPE,
@@ -348,7 +358,6 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&im_printrepr,
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&im_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&im_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -366,7 +375,8 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&im_callkw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&im_call,
+	/* .tp_callable      = */ &im_callable,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ im_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(im_operators),

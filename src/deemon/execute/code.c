@@ -2541,7 +2541,6 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&code_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&code_printrepr,
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&code_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

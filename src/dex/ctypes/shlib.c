@@ -546,7 +546,6 @@ INTERN DeeTypeObject DeeShlib_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 #ifndef CONFIG_NO_CFUNCTION
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&shlib_visit,
 #else /* !CONFIG_NO_CFUNCTION */

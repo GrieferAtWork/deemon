@@ -674,7 +674,7 @@ tusrtype__call__with__CALL(DeeTypeObject *tp_self, DeeObject *self, size_t argc,
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__call__with__call_kw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv) {
-	return (*(tp_self->tp_call_kw == &usrtype__call_kw__with__CALL ? &tusrtype__call_kw__with__CALL : &tdefault__call_kw))(tp_self, self, argc, argv, NULL);
+	return (*(tp_self->tp_callable->tp_call_kw == &usrtype__call_kw__with__CALL ? &tusrtype__call_kw__with__CALL : &tdefault__call_kw))(tp_self, self, argc, argv, NULL);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -696,11 +696,11 @@ default__call__with__call_kw(DeeObject *self, size_t argc, DeeObject *const *arg
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__call__with__call_kw(Dee_TYPE(self), self, argc, argv);
 #else /* __OPTIMIZE_SIZE__ */
-	return (*Dee_TYPE(self)->tp_call_kw)(self, argc, argv, NULL);
+	return (*Dee_TYPE(self)->tp_callable->tp_call_kw)(self, argc, argv, NULL);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
-/* tp_call_kw */
+/* tp_callable->tp_call_kw */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__call_kw__with__CALL(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *func, *result;
@@ -738,7 +738,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__call_kw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	return (*tp_self->tp_call_kw)(self, argc, argv, kw);
+	return (*tp_self->tp_callable->tp_call_kw)(self, argc, argv, kw);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -781,6 +781,218 @@ err_no_keywords:
 	err_keywords_not_accepted(Dee_TYPE(self), kw);
 err:
 	return NULL;
+#endif /* __OPTIMIZE_SIZE__ */
+}
+
+/* tp_callable->tp_thiscall */
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__thiscall__with__call(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
+	DeeObject **full_argv;
+	full_argv = (DeeObject **)Dee_Mallocac(1 + argc, sizeof(DeeObject *));
+	if unlikely(!full_argv)
+		goto err;
+	full_argv[0] = thisarg;
+	memcpyc(full_argv + 1, argv, argc, sizeof(DeeObject *));
+	result = (*(tp_self->tp_call == &usrtype__call__with__CALL ? &tusrtype__call__with__CALL : tp_self->tp_call == &default__call__with__call_kw ? &tdefault__call__with__call_kw : &tdefault__call))(tp_self, self, 1 + argc, full_argv);
+	Dee_Freea(full_argv);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__thiscall(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv) {
+	return (*tp_self->tp_callable->tp_thiscall)(self, thisarg, argc, argv);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__thiscall__with__call(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__thiscall__with__call(Dee_TYPE(self), self, thisarg, argc, argv);
+#else /* __OPTIMIZE_SIZE__ */
+	DREF DeeObject *result;
+	DeeObject **full_argv;
+	full_argv = (DeeObject **)Dee_Mallocac(1 + argc, sizeof(DeeObject *));
+	if unlikely(!full_argv)
+		goto err;
+	full_argv[0] = thisarg;
+	memcpyc(full_argv + 1, argv, argc, sizeof(DeeObject *));
+	result = (*Dee_TYPE(self)->tp_call)(self, 1 + argc, full_argv);
+	Dee_Freea(full_argv);
+	return result;
+err:
+	return NULL;
+#endif /* __OPTIMIZE_SIZE__ */
+}
+
+/* tp_callable->tp_thiscall_kw */
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__thiscall_kw__with__call_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result;
+	DeeObject **full_argv;
+	full_argv = (DeeObject **)Dee_Mallocac(1 + argc, sizeof(DeeObject *));
+	if unlikely(!full_argv)
+		goto err;
+	full_argv[0] = thisarg;
+	memcpyc(full_argv + 1, argv, argc, sizeof(DeeObject *));
+	result = (*(tp_self->tp_callable->tp_call_kw == &usrtype__call_kw__with__CALL ? &tusrtype__call_kw__with__CALL : tp_self->tp_callable->tp_call_kw == &default__call_kw__with__call ? &tdefault__call_kw__with__call : &tdefault__call_kw))(tp_self, self, 1 + argc, full_argv, kw);
+	Dee_Freea(full_argv);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__thiscall_kw__with__thiscall(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	if (kw) {
+		if (DeeKwds_Check(kw)) {
+			if (DeeKwds_SIZE(kw) != 0)
+				goto err_no_keywords;
+		} else {
+			size_t kw_length;
+			kw_length = DeeObject_Size(kw);
+			if unlikely(kw_length == (size_t)-1)
+				goto err;
+			if (kw_length != 0)
+				goto err_no_keywords;
+		}
+	}
+	return (*(tp_self->tp_callable->tp_thiscall == &default__thiscall__with__call ? &tdefault__thiscall__with__call : &tdefault__thiscall))(tp_self, self, thisarg, argc, argv);
+err_no_keywords:
+	err_keywords_not_accepted(tp_self, kw);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__thiscall_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	return (*tp_self->tp_callable->tp_thiscall_kw)(self, thisarg, argc, argv, kw);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__thiscall_kw__with__call_kw(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__thiscall_kw__with__call_kw(Dee_TYPE(self), self, thisarg, argc, argv, kw);
+#else /* __OPTIMIZE_SIZE__ */
+	DREF DeeObject *result;
+	DeeObject **full_argv;
+	full_argv = (DeeObject **)Dee_Mallocac(1 + argc, sizeof(DeeObject *));
+	if unlikely(!full_argv)
+		goto err;
+	full_argv[0] = thisarg;
+	memcpyc(full_argv + 1, argv, argc, sizeof(DeeObject *));
+	result = (*Dee_TYPE(self)->tp_callable->tp_call_kw)(self, 1 + argc, full_argv, kw);
+	Dee_Freea(full_argv);
+	return result;
+err:
+	return NULL;
+#endif /* __OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__thiscall_kw__with__thiscall(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__thiscall_kw__with__thiscall(Dee_TYPE(self), self, thisarg, argc, argv, kw);
+#else /* __OPTIMIZE_SIZE__ */
+	if (kw) {
+		if (DeeKwds_Check(kw)) {
+			if (DeeKwds_SIZE(kw) != 0)
+				goto err_no_keywords;
+		} else {
+			size_t kw_length;
+			kw_length = DeeObject_Size(kw);
+			if unlikely(kw_length == (size_t)-1)
+				goto err;
+			if (kw_length != 0)
+				goto err_no_keywords;
+		}
+	}
+	return (*Dee_TYPE(self)->tp_callable->tp_thiscall)(self, thisarg, argc, argv);
+err_no_keywords:
+	err_keywords_not_accepted(Dee_TYPE(self), kw);
+err:
+	return NULL;
+#endif /* __OPTIMIZE_SIZE__ */
+}
+
+/* tp_callable->tp_call_tuple */
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__call_tuple__with__call(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args) {
+	return (*(tp_self->tp_call == &usrtype__call__with__CALL ? &tusrtype__call__with__CALL : tp_self->tp_call == &default__call__with__call_kw ? &tdefault__call__with__call_kw : &tdefault__call))(tp_self, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__call_tuple(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args) {
+	return (*tp_self->tp_callable->tp_call_tuple)(self, args);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__call_tuple__with__call(DeeObject *self, DeeObject *args) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__call_tuple__with__call(Dee_TYPE(self), self, args);
+#else /* __OPTIMIZE_SIZE__ */
+	return (*Dee_TYPE(self)->tp_call)(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+#endif /* __OPTIMIZE_SIZE__ */
+}
+
+/* tp_callable->tp_call_tuple_kw */
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__call_tuple_kw__with__call_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args, DeeObject *kw) {
+	return (*(tp_self->tp_callable->tp_call_kw == &usrtype__call_kw__with__CALL ? &tusrtype__call_kw__with__CALL : tp_self->tp_callable->tp_call_kw == &default__call_kw__with__call ? &tdefault__call_kw__with__call : &tdefault__call_kw))(tp_self, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__call_tuple_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args, DeeObject *kw) {
+	return (*tp_self->tp_callable->tp_call_tuple_kw)(self, args, kw);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__call_tuple_kw__with__call_kw(DeeObject *self, DeeObject *args, DeeObject *kw) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__call_tuple_kw__with__call_kw(Dee_TYPE(self), self, args, kw);
+#else /* __OPTIMIZE_SIZE__ */
+	return (*Dee_TYPE(self)->tp_callable->tp_call_kw)(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
+#endif /* __OPTIMIZE_SIZE__ */
+}
+
+/* tp_callable->tp_thiscall_tuple */
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+tdefault__thiscall_tuple__with__thiscall(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args) {
+	return (*(tp_self->tp_callable->tp_thiscall == &default__thiscall__with__call ? &tdefault__thiscall__with__call : &tdefault__thiscall))(tp_self, self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+tdefault__thiscall_tuple(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args) {
+	return (*tp_self->tp_callable->tp_thiscall_tuple)(self, thisarg, args);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__thiscall_tuple__with__thiscall(DeeObject *self, DeeObject *thisarg, DeeObject *args) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__thiscall_tuple__with__thiscall(Dee_TYPE(self), self, thisarg, args);
+#else /* __OPTIMIZE_SIZE__ */
+	return (*Dee_TYPE(self)->tp_callable->tp_thiscall)(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+#endif /* __OPTIMIZE_SIZE__ */
+}
+
+/* tp_callable->tp_thiscall_tuple_kw */
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+tdefault__thiscall_tuple_kw__with__thiscall_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw) {
+	return (*(tp_self->tp_callable->tp_thiscall_kw == &default__thiscall_kw__with__call_kw ? &tdefault__thiscall_kw__with__call_kw : tp_self->tp_callable->tp_thiscall_kw == &default__thiscall_kw__with__thiscall ? &tdefault__thiscall_kw__with__thiscall : &tdefault__thiscall_kw))(tp_self, self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+tdefault__thiscall_tuple_kw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw) {
+	return (*tp_self->tp_callable->tp_thiscall_tuple_kw)(self, thisarg, args, kw);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__thiscall_tuple_kw__with__thiscall_kw(DeeObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__thiscall_tuple_kw__with__thiscall_kw(Dee_TYPE(self), self, thisarg, args, kw);
+#else /* __OPTIMIZE_SIZE__ */
+	return (*Dee_TYPE(self)->tp_callable->tp_thiscall_kw)(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 

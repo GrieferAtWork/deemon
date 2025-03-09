@@ -1146,7 +1146,7 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 	case OPERATOR_BOOL:
 		return self->tp_cast.tp_bool || DeeType_InheritBool(self);
 	case OPERATOR_CALL:
-		return self->tp_call || self->tp_call_kw || DeeType_InheritCall(self);
+		return self->tp_call || DeeType_InheritCall(self);
 	case OPERATOR_INT:
 	case OPERATOR_FLOAT:
 		return (self->tp_math && (self->tp_math->tp_int || self->tp_math->tp_int32 ||
@@ -2100,7 +2100,6 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&toi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -2118,7 +2117,8 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 INTERN DeeTypeObject TypeOperators_Type = {
@@ -2150,7 +2150,6 @@ INTERN DeeTypeObject TypeOperators_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&to_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__AFC6A8FA89E9F0A6),

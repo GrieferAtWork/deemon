@@ -373,6 +373,14 @@ DeeNone_OperatorGetItemNRStringLenHash(DeeObject *__restrict UNUSED(self),
 #define DeeNone_OperatorBool       (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1)
 #define DeeNone_OperatorCall       (*(DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&_DeeNone_NewRef3)
 #define DeeNone_OperatorCallKw     (*(DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&_DeeNone_NewRef4)
+#define DeeNone_OperatorThisCall   (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&_DeeNone_NewRef4)
+#define DeeNone_OperatorThisCallKw (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *, DeeObject *))&_DeeNone_NewRef5)
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define DeeNone_OperatorCallTuple       (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&_DeeNone_NewRef2)
+#define DeeNone_OperatorCallTupleKw     (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&_DeeNone_NewRef3)
+#define DeeNone_OperatorThisCallTuple   (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&_DeeNone_NewRef3)
+#define DeeNone_OperatorThisCallTupleKw (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&_DeeNone_NewRef4)
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by definition of `DeeNone_OperatorIterNext'");
 #define DeeNone_OperatorIterNext (*(DREF DeeObject *(DCALL *)(DeeObject *))&_DeeNone_retsm1_1)
@@ -545,6 +553,18 @@ PRIVATE struct type_buffer none_buffer = {
 	/* .tp_getbuf       = */ &DeeNone_OperatorGetBuf,
 	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
+};
+
+PRIVATE struct type_callable none_callable = {
+	/* .tp_call_kw     = */ &DeeNone_OperatorCallKw,
+	/* .tp_thiscall    = */ &DeeNone_OperatorThisCall,
+	/* .tp_thiscall_kw = */ &DeeNone_OperatorThisCallKw,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	/* .tp_call_tuple        = */ &DeeNone_OperatorCallTuple,
+	/* .tp_call_tuple_kw     = */ &DeeNone_OperatorCallTupleKw,
+	/* .tp_thiscall_tuple    = */ &DeeNone_OperatorThisCallTuple,
+	/* .tp_thiscall_tuple_kw = */ &DeeNone_OperatorThisCallTupleKw,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -992,7 +1012,6 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 		/* .tp_print     = */ &DeeNone_OperatorPrint,
 		/* .tp_printrepr = */ &DeeNone_OperatorPrint,
 	},
-	/* .tp_call          = */ &DeeNone_OperatorCall,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &none_math,
@@ -1010,7 +1029,8 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ &DeeNone_OperatorCallKw,
+	/* .tp_call          = */ &DeeNone_OperatorCall,
+	/* .tp_callable      = */ &none_callable,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ none_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(none_operators),

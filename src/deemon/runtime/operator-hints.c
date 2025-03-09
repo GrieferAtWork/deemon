@@ -246,6 +246,31 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_call_kw[2] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__call_kw__with__call, Dee_TNO_call, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_thiscall[2] = {
+	OH_INIT_SPEC_IMPL_INIT(&default__thiscall__with__call, Dee_TNO_call, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_END
+};
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_thiscall_kw[3] = {
+	OH_INIT_SPEC_IMPL_INIT(&default__thiscall_kw__with__call_kw, Dee_TNO_call_kw, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__thiscall_kw__with__thiscall, Dee_TNO_thiscall, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_END
+};
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_call_tuple[2] = {
+	OH_INIT_SPEC_IMPL_INIT(&default__call_tuple__with__call, Dee_TNO_call, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_END
+};
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_call_tuple_kw[2] = {
+	OH_INIT_SPEC_IMPL_INIT(&default__call_tuple_kw__with__call_kw, Dee_TNO_call_kw, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_END
+};
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_thiscall_tuple[2] = {
+	OH_INIT_SPEC_IMPL_INIT(&default__thiscall_tuple__with__thiscall, Dee_TNO_thiscall, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_END
+};
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_thiscall_tuple_kw[2] = {
+	OH_INIT_SPEC_IMPL_INIT(&default__thiscall_tuple_kw__with__thiscall_kw, Dee_TNO_thiscall_kw, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_END
+};
 PRIVATE struct oh_init_spec_class tpconst oh_class_iter_next[2] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__iter_next__with__ITERNEXT, OPERATOR_ITERNEXT, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
@@ -1238,7 +1263,7 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_setattr_string_len_hash[2] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__setattr_string_len_hash__with__setattr, Dee_TNO_setattr, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
 };
-INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[113] = {
+INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[119] = {
 	/* tp_init.tp_assign                     */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_init.tp_assign), oh_class_assign, NULL, oh_mhints_assign, NULL),
 	/* tp_init.tp_move_assign                */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_init.tp_move_assign), oh_class_move_assign, oh_impls_move_assign, NULL, NULL),
 	/* tp_cast.tp_str                        */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_str), oh_class_str, oh_impls_str, NULL, NULL),
@@ -1247,7 +1272,13 @@ INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[113] = {
 	/* tp_cast.tp_printrepr                  */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_printrepr), oh_class_printrepr, oh_impls_printrepr, NULL, NULL),
 	/* tp_cast.tp_bool                       */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_bool), oh_class_bool, NULL, oh_mhints_bool, NULL),
 	/* tp_call                               */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_call), oh_class_call, oh_impls_call, NULL, NULL),
-	/* tp_call_kw                            */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_call_kw), oh_class_call_kw, oh_impls_call_kw, NULL, NULL),
+	/* tp_callable->tp_call_kw               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_callable), offsetof(struct type_callable, tp_call_kw), oh_class_call_kw, oh_impls_call_kw, NULL, NULL),
+	/* tp_callable->tp_thiscall              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_callable), offsetof(struct type_callable, tp_thiscall), NULL, oh_impls_thiscall, NULL, NULL),
+	/* tp_callable->tp_thiscall_kw           */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_callable), offsetof(struct type_callable, tp_thiscall_kw), NULL, oh_impls_thiscall_kw, NULL, NULL),
+	/* tp_callable->tp_call_tuple            */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_callable), offsetof(struct type_callable, tp_call_tuple), NULL, oh_impls_call_tuple, NULL, NULL),
+	/* tp_callable->tp_call_tuple_kw         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_callable), offsetof(struct type_callable, tp_call_tuple_kw), NULL, oh_impls_call_tuple_kw, NULL, NULL),
+	/* tp_callable->tp_thiscall_tuple        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_callable), offsetof(struct type_callable, tp_thiscall_tuple), NULL, oh_impls_thiscall_tuple, NULL, NULL),
+	/* tp_callable->tp_thiscall_tuple_kw     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_callable), offsetof(struct type_callable, tp_thiscall_tuple_kw), NULL, oh_impls_thiscall_tuple_kw, NULL, NULL),
 	/* tp_iter_next                          */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_iter_next), oh_class_iter_next, oh_impls_iter_next, NULL, NULL),
 	/* tp_iterator->tp_nextpair              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_iterator), offsetof(struct type_iterator, tp_nextpair), NULL, oh_impls_nextpair, NULL, NULL),
 	/* tp_iterator->tp_nextkey               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_iterator), offsetof(struct type_iterator, tp_nextkey), NULL, oh_impls_nextkey, NULL, NULL),
@@ -1375,6 +1406,8 @@ type_tno_sizeof_table(__UINTPTR_HALF_TYPE__ offsetof_table) {
 	switch (offsetof_table) {
 		/* clang-format off */
 /*[[[deemon (printTypeTnoSizeofTableCases from "..method-hints.method-hints")();]]]*/
+	case offsetof(DeeTypeObject, tp_callable):
+		return sizeof(struct type_callable);
 	case offsetof(DeeTypeObject, tp_iterator):
 		return sizeof(struct type_iterator);
 	case offsetof(DeeTypeObject, tp_math):
@@ -2367,6 +2400,12 @@ INTERN Dee_operator_t const _DeeType_GetOperatorOfTno[Dee_TNO_COUNT] = {
 	/* [Dee_TNO_bool]                       = */ OPERATOR_BOOL,
 	/* [Dee_TNO_call]                       = */ OPERATOR_CALL,
 	/* [Dee_TNO_call_kw]                    = */ OPERATOR_CALL,
+	/* [Dee_TNO_thiscall]                   = */ OPERATOR_CALL,
+	/* [Dee_TNO_thiscall_kw]                = */ OPERATOR_CALL,
+	/* [Dee_TNO_call_tuple]                 = */ OPERATOR_CALL,
+	/* [Dee_TNO_call_tuple_kw]              = */ OPERATOR_CALL,
+	/* [Dee_TNO_thiscall_tuple]             = */ OPERATOR_CALL,
+	/* [Dee_TNO_thiscall_tuple_kw]          = */ OPERATOR_CALL,
 	/* [Dee_TNO_iter_next]                  = */ OPERATOR_ITERNEXT,
 	/* [Dee_TNO_nextpair]                   = */ OPERATOR_ITERNEXT,
 	/* [Dee_TNO_nextkey]                    = */ OPERATOR_ITERNEXT,

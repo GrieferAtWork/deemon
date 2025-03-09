@@ -1259,7 +1259,6 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
 		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&frame_print,
 		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&frame_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

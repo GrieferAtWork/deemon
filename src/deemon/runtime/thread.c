@@ -4902,7 +4902,6 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&thread_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&thread_printrepr,
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&thread_visit,
 	/* .tp_gc            = */ thread_gc_PTR,
 	/* .tp_math          = */ NULL,

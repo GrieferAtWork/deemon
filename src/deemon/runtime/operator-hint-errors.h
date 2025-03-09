@@ -48,7 +48,20 @@ INTDEF void*DCALL default__repr__unsupported(DeeObject*);
 INTDEF Dee_ssize_t DCALL default__printrepr__unsupported(DeeObject*, Dee_formatprinter_t, void*);
 INTDEF int DCALL default__bool__unsupported(DeeObject*);
 INTDEF void*DCALL default__call__unsupported(DeeObject*, void*, void*);
+#define default__call_tuple_kw__unsupported default__call__unsupported
+#define default__thiscall_tuple__unsupported default__call__unsupported
+INTDEF void*DCALL default__call_kw__badalloc(void*, void*, void*, void*);
+#define default__thiscall__badalloc default__call_kw__badalloc
+#define default__thiscall_tuple_kw__badalloc default__call_kw__badalloc
 INTDEF void*DCALL default__call_kw__unsupported(DeeObject*, void*, void*, void*);
+#define default__thiscall__unsupported default__call_kw__unsupported
+#define default__thiscall_tuple_kw__unsupported default__call_kw__unsupported
+INTDEF void*DCALL default__thiscall_kw__badalloc(void*, void*, void*, void*, void*);
+INTDEF void*DCALL default__thiscall_kw__unsupported(DeeObject*, void*, void*, void*, void*);
+INTDEF void*DCALL default__call_tuple__badalloc(void*, void*);
+INTDEF void*DCALL default__call_tuple__unsupported(DeeObject*, void*);
+INTDEF void*DCALL default__call_tuple_kw__badalloc(void*, void*, void*);
+#define default__thiscall_tuple__badalloc default__call_tuple_kw__badalloc
 INTDEF void*DCALL default__iter_next__unsupported(DeeObject*);
 #define default__nextkey__unsupported default__iter_next__unsupported
 #define default__nextvalue__unsupported default__iter_next__unsupported

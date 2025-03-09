@@ -116,6 +116,8 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL type_print(DeeObject *__restric
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL type_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_repr(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_str(DeeObject *__restrict self);
+INTDEF struct type_callable default__tp_callable__414DF0A8610383F3;
+INTDEF struct type_callable default__tp_callable__E31EBEB26CC72F83;
 INTDEF struct type_cmp default__tp_cmp__247219960F1E745D;
 INTDEF struct type_cmp default__tp_cmp__26B2EC529683DE3C;
 INTDEF struct type_cmp default__tp_cmp__287C06B7236F06BE;

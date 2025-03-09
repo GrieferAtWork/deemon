@@ -510,7 +510,6 @@ INTERN DeeTypeObject DeeSType_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&stype_call,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -528,7 +527,8 @@ INTERN DeeTypeObject DeeSType_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ NULL,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&stype_call,
+	/* .tp_callable      = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ stype_operator_decls,
 	/* .tp_operators_size= */ COMPILER_LENOF(stype_operator_decls)
@@ -593,7 +593,6 @@ INTERN DeeTypeObject DeePointerType_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ptype_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -736,7 +735,6 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ltype_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1380,7 +1378,6 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 			/* .tp_repr = */ &struct_repr,
 			/* .tp_bool = */ &struct_bool
 		},
-		/* .tp_call          = */ &struct_call,
 		/* .tp_visit         = */ NULL,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ &struct_math,
@@ -1400,7 +1397,9 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */ NULL,
 		/* .tp_class_getsets = */ NULL,
-		/* .tp_class_members = */ NULL
+		/* .tp_class_members = */ NULL,
+		/* .tp_method_hints  = */ NULL,
+		/* .tp_call          = */ &struct_call,
 	},
 #ifndef CONFIG_NO_THREADS
 	/* .st_cachelock = */ DEE_ATOMIC_RWLOCK_INIT,
@@ -1995,7 +1994,6 @@ INTERN DeeTypeObject DeeArrayType_Type = {
 		/* .tp_repr = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&atype_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2153,7 +2151,6 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 		/* .tp_repr = */ CFUNCTION_OPERATOR((DeeObject *(DCALL *)(DeeObject *__restrict))&ftype_repr),
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ CFUNCTION_OPERATOR((void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ftype_visit),
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

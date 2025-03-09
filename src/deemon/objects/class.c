@@ -69,6 +69,18 @@ PRIVATE struct type_cmp instance_builtin_cmp = {
 	/* .tp_ge            = */ &default__ge__with__compare
 };
 
+PRIVATE struct type_callable instance_user_callable = {
+	/* .tp_call_kw     = */ &usrtype__call_kw__with__CALL,
+	/* .tp_thiscall    = */ &default__thiscall__with__call,
+	/* .tp_thiscall_kw = */ &default__thiscall_kw__with__call_kw,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	/* .tp_call_tuple        = */ &default__call_tuple__with__call,
+	/* .tp_call_tuple_kw     = */ &default__call_tuple_kw__with__call_kw,
+	/* .tp_thiscall_tuple    = */ &default__thiscall_tuple__with__thiscall,
+	/* .tp_thiscall_tuple_kw = */ &default__thiscall_tuple_kw__with__thiscall_kw,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+};
+
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_operator_class_inherited(DeeTypeObject *__restrict type_type,
@@ -170,6 +182,8 @@ again:
 	 * (so our caller won't try to Dee_Free() them) */
 	if (self->tp_cmp == &instance_builtin_cmp)
 		self->tp_cmp = NULL;
+	if (self->tp_callable == &instance_user_callable)
+		self->tp_callable = NULL;
 
 	/* Custom operators. */
 	Dee_Free((void *)self->tp_operators);
@@ -4294,8 +4308,8 @@ err_custom_allocator:
 				break;
 
 			case OPERATOR_CALL:
-				result->tp_call    = &usrtype__call__with__CALL;
-				result->tp_call_kw = &usrtype__call_kw__with__CALL;
+				result->tp_call     = &usrtype__call__with__CALL;
+				result->tp_callable = &instance_user_callable;
 				break;
 
 			case OPERATOR_STR:

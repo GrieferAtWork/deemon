@@ -278,7 +278,6 @@ INTERN DeeTypeObject UDictIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&udictiterator_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&udictiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1387,7 +1386,6 @@ INTERN DeeTypeObject UDict_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&udict_printrepr
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&udict_visit,
 	/* .tp_gc            = */ &udict_gc,
 	/* .tp_math          = */ NULL,
@@ -1562,7 +1560,6 @@ INTERN DeeTypeObject URoDictIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&urodictiterator_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&urodictiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2105,7 +2102,6 @@ INTERN DeeTypeObject URoDict_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&urodict_printrepr
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&urodict_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

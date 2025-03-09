@@ -1224,6 +1224,12 @@ PRIVATE struct type_attr LOCAL_seX(attr) = {
 };
 
 
+#ifdef DEFINE_SeqEachGetAttr
+PRIVATE struct type_callable LOCAL_seX(callable) = {
+	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&LOCAL_seX(call_kw),
+};
+#endif /* DEFINE_SeqEachGetAttr */
+
 INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_" LOCAL_SeqEach_Type_NAME,
@@ -1278,11 +1284,6 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 		/* .tp_printrepr = */ &default_seq_printrepr,
 #endif /* !CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
 	},
-#ifdef DEFINE_SeqEachGetAttr
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&LOCAL_seX(call),
-#else /* DEFINE_SeqEachGetAttr */
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sew_call,
-#endif /* !DEFINE_SeqEachGetAttr */
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&LOCAL_seX(visit),
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &LOCAL_seX(math),
@@ -1301,9 +1302,11 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 	/* .tp_class_members = */ LOCAL_seX(class_members),
 	/* .tp_method_hints  = */ LOCAL_seX(method_hints),
 #ifdef DEFINE_SeqEachGetAttr
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&LOCAL_seX(call_kw),
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&LOCAL_seX(call),
+	/* .tp_callable      = */ &LOCAL_seX(callable),
 #else /* DEFINE_SeqEachGetAttr */
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&sew_call_kw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sew_call,
+	/* .tp_callable      = */ &sew_callable,
 #endif /* !DEFINE_SeqEachGetAttr */
 };
 
@@ -1392,7 +1395,6 @@ INTERN DeeTypeObject LOCAL_SeqEachIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sewi_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sewi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1702,6 +1704,12 @@ PRIVATE struct type_attr LOCAL_ssX(attr) = {
 
 
 
+#ifdef DEFINE_SeqEachGetAttr
+PRIVATE struct type_callable LOCAL_ssX(callable) = {
+	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&LOCAL_ssX(call_kw),
+};
+#endif /* DEFINE_SeqEachGetAttr */
+
 INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_" LOCAL_SeqSome_Type_NAME,
@@ -1752,11 +1760,6 @@ INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&LOCAL_ssX(printrepr),
 	},
-#ifdef DEFINE_SeqEachGetAttr
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&LOCAL_ssX(call),
-#else /* DEFINE_SeqEachGetAttr */
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ssw_call,
-#endif /* !DEFINE_SeqEachGetAttr */
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&LOCAL_seX(visit),
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &ssw_math,
@@ -1775,9 +1778,11 @@ INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 	/* .tp_class_members = */ LOCAL_seX(class_members),
 	/* .tp_method_hints  = */ NULL,
 #ifdef DEFINE_SeqEachGetAttr
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&LOCAL_ssX(call_kw),
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&LOCAL_ssX(call),
+	/* .tp_callable      = */ &LOCAL_ssX(callable),
 #else /* DEFINE_SeqEachGetAttr */
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&ssw_call_kw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ssw_call,
+	/* .tp_callable      = */ &ssw_callable,
 #endif /* !DEFINE_SeqEachGetAttr */
 };
 #endif /* CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS */

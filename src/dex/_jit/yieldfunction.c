@@ -324,7 +324,6 @@ INTERN DeeTypeObject JITYieldFunction_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -342,7 +341,6 @@ INTERN DeeTypeObject JITYieldFunction_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ jy_class_members,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ NULL
 };
 
 
@@ -1986,7 +1984,6 @@ INTERN DeeTypeObject JITYieldFunctionIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ji_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2004,7 +2001,6 @@ INTERN DeeTypeObject JITYieldFunctionIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ NULL
 };
 
 

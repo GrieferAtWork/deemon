@@ -939,6 +939,8 @@ EXPORTS
 	DeeObject_TCallAttrTuple@16=_DeeObject_TCallAttrTuple@16
 	DeeObject_TCallAttrTupleKw@20=_DeeObject_TCallAttrTupleKw@20
 	DeeObject_TCallKw@20=_DeeObject_TCallKw@20
+	DeeObject_TCallTuple@12=_DeeObject_TCallTuple@12
+	DeeObject_TCallTupleKw@16=_DeeObject_TCallTupleKw@16
 	DeeObject_TClear@8=_DeeObject_TClear@8
 	DeeObject_TCmpEq@12=_DeeObject_TCmpEq@12
 	DeeObject_TCmpGe@12=_DeeObject_TCmpGe@12
@@ -1059,6 +1061,8 @@ EXPORTS
 	DeeObject_TSub@12=_DeeObject_TSub@12
 	DeeObject_TThisCall@20=_DeeObject_TThisCall@20
 	DeeObject_TThisCallKw@24=_DeeObject_TThisCallKw@24
+	DeeObject_TThisCallTuple@16=_DeeObject_TThisCallTuple@16
+	DeeObject_TThisCallTupleKw@20=_DeeObject_TThisCallTupleKw@20
 	DeeObject_TTryCompareEq@12=_DeeObject_TTryCompareEq@12
 	DeeObject_TTryGetItem@12=_DeeObject_TTryGetItem@12
 	DeeObject_TTryGetItemIndex@12=_DeeObject_TTryGetItemIndex@12

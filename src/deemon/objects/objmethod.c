@@ -389,7 +389,6 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&objmethod_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&objmethod_printrepr,
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&objmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&objmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -407,7 +406,8 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&objmethod_call,
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ objmethod_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(objmethod_operators),
@@ -615,7 +615,6 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dockwdsiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -633,7 +632,8 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 
@@ -790,7 +790,6 @@ INTERN DeeTypeObject DocKwds_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&dockwds_print,
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dockwds_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
@@ -911,6 +910,16 @@ PRIVATE struct type_getset tpconst kwobjmethod_getsets[] = {
 #define kwobjmethod_printrepr objmethod_printrepr
 #define kwobjmethod_operators objmethod_operators
 
+PRIVATE struct type_callable kwobjmethod_callable = {
+	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwobjmethod_call_kw,
+	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
+	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
+	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
+	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
+	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
+	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
+};
+
 PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwObjMethod",
@@ -940,7 +949,6 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwobjmethod_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwobjmethod_printrepr,
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&kwobjmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwobjmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -958,7 +966,8 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwobjmethod_call_kw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&kwobjmethod_call,
+	/* .tp_callable      = */ &kwobjmethod_callable,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ kwobjmethod_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(kwobjmethod_operators),
@@ -1170,6 +1179,30 @@ PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
 #define clsmethod_get_kwds_doc objmethod_get_kwds_doc
 
 
+
+PRIVATE WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL
+clsmethod_thiscall(DeeClsMethodObject *self, DeeObject *thisarg,
+                   size_t argc, DeeObject *const *argv) {
+	/* Must ensure proper typing of the this-argument. */
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+		goto err;
+	return (*self->cm_func)(thisarg, argc, argv);
+err:
+	return NULL;
+}
+
+
+PRIVATE struct type_callable clsmethod_callable = {
+	/* .tp_call_kw     = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_thiscall    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&clsmethod_thiscall,
+	/* .tp_thiscall_kw = */ DEFIMPL(&default__thiscall_kw__with__thiscall),
+	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
+	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
+	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
+	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
+};
+
+
 PRIVATE struct type_member tpconst kwclsmethod_members[] = {
 	TYPE_MEMBER_CONST_DOC(STR___kwds__, Dee_EmptySeq, clsmethod_get_kwds_doc),
 #define clsmethod_members (kwclsmethod_members + 1)
@@ -1178,7 +1211,6 @@ PRIVATE struct type_member tpconst kwclsmethod_members[] = {
 	                      "The type implementing @this method"),
 	TYPE_MEMBER_END
 };
-
 
 PRIVATE struct type_operator const clsmethod_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FIELDS_CONSTSTR),
@@ -1221,7 +1253,6 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsmethod_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsmethod_printrepr,
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1239,7 +1270,8 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsmethod_call,
+	/* .tp_callable      = */ &clsmethod_callable,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ clsmethod_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(clsmethod_operators),
@@ -1281,6 +1313,30 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+kwclsmethod_thiscall(DeeKwClsMethodObject *self,
+                     DeeObject *thisarg, size_t argc,
+                     DeeObject *const *argv) {
+	/* Must ensure proper typing of the this-argument. */
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+		goto err;
+	return (*self->cm_func)(thisarg, argc, argv, NULL);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+kwclsmethod_thiscall_kw(DeeKwClsMethodObject *self,
+                        DeeObject *thisarg, size_t argc,
+                        DeeObject *const *argv, DeeObject *kw) {
+	/* Must ensure proper typing of the this-argument. */
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+		goto err;
+	return (*self->cm_func)(thisarg, argc, argv, kw);
+err:
+	return NULL;
+}
+
 STATIC_ASSERT(offsetof(DeeKwClsMethodObject, cm_func) == offsetof(DeeClsMethodObject, cm_func));
 STATIC_ASSERT(offsetof(DeeKwClsMethodObject, cm_type) == offsetof(DeeClsMethodObject, cm_type));
 #define kwclsmethod_fini      clsmethod_fini
@@ -1290,6 +1346,16 @@ STATIC_ASSERT(offsetof(DeeKwClsMethodObject, cm_type) == offsetof(DeeClsMethodOb
 #define kwclsmethod_hash      clsmethod_hash
 #define kwclsmethod_cmp       clsmethod_cmp
 #define kwclsmethod_operators clsmethod_operators
+
+PRIVATE struct type_callable kwclsmethod_callable = {
+	/* .tp_call_kw      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwclsmethod_call_kw,
+	/* .tp_thiscall     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&kwclsmethod_thiscall,
+	/* .tp_thiscall_kw  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwclsmethod_thiscall_kw,
+	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
+	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
+	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
+	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
+};
 
 PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1320,7 +1386,6 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwclsmethod_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwclsmethod_printrepr,
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&kwclsmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwclsmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1338,7 +1403,8 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwclsmethod_call_kw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&kwclsmethod_call,
+	/* .tp_callable      = */ &kwclsmethod_callable,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ kwclsmethod_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(kwclsmethod_operators),
@@ -1651,6 +1717,16 @@ PRIVATE struct type_member tpconst clsproperty_members[] = {
 STATIC_ASSERT(offsetof(DeeClsPropertyObject, cp_type) ==
               offsetof(DeeClsMethodObject, cm_type));
 
+PRIVATE struct type_callable clsproperty_callable = {
+	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsproperty_get_kw,
+	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
+	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
+	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
+	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
+	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
+	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
+};
+
 #define clsproperty_operators clsmethod_operators
 PUBLIC DeeTypeObject DeeClsProperty_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1681,7 +1757,6 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsproperty_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsproperty_printrepr,
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_get,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1699,7 +1774,8 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsproperty_get_kw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_get,
+	/* .tp_callable      = */ &clsproperty_callable,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ clsproperty_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(clsproperty_operators),
@@ -1903,6 +1979,16 @@ PRIVATE struct type_getset tpconst clsmember_getsets[] = {
 	TYPE_GETSET_END
 };
 
+PRIVATE struct type_callable clsmember_callable = {
+	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsmember_get_kw,
+	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
+	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
+	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
+	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
+	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
+	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
+};
+
 #define clsmember_operators clsmethod_operators
 PUBLIC DeeTypeObject DeeClsMember_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1933,7 +2019,6 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsmember_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsmember_printrepr,
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsmember_get,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmember_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1951,7 +2036,8 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsmember_get_kw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsmember_get,
+	/* .tp_callable      = */ &clsmember_callable,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ clsmember_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(clsmember_operators),
@@ -2338,7 +2424,6 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cmethod_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cmethod_printrepr,
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cmethod_call,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2356,7 +2441,8 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cmethod_call,
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ cmethod_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(cmethod_operators),
@@ -2379,6 +2465,16 @@ STATIC_ASSERT(offsetof(DeeKwCMethodObject, kcm_func) == offsetof(DeeCMethodObjec
 #define kwcmethod_print     cmethod_print
 #define kwcmethod_printrepr cmethod_printrepr
 #define kwcmethod_operators cmethod_operators
+
+PRIVATE struct type_callable kwcmethod_callable = {
+	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwcmethod_call_kw,
+	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
+	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
+	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
+	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
+	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
+	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
+};
 
 PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2409,7 +2505,6 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwcmethod_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwcmethod_printrepr,
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&kwcmethod_call,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2427,7 +2522,8 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwcmethod_call_kw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&kwcmethod_call,
+	/* .tp_callable      = */ &kwcmethod_callable,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ kwcmethod_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(kwcmethod_operators),

@@ -90,6 +90,7 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 #define Dee_type_iterator          type_iterator
 #define Dee_type_attr              type_attr
 #define Dee_type_with              type_with
+#define Dee_type_callable          type_callable
 #define Dee_type_buffer            type_buffer
 #define Dee_type_operator          type_operator
 #define Dee_opinfo                 opinfo
@@ -2693,6 +2694,32 @@ struct Dee_type_with {
 	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_leave)(DeeObject *__restrict self);
 };
 
+struct Dee_type_callable {
+	/* Same as `tp_call', but having support for keyword arguments. */
+	WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1))
+	DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc,
+	                                    DeeObject *const *argv, DeeObject *kw);
+
+	/* Same as `tp_call', but "thisarg" gets injected as an additional, leading argument. */
+	WUNUSED_T ATTR_INS_T(4, 3) NONNULL_T((1, 2))
+	DREF DeeObject *(DCALL *tp_thiscall)(DeeObject *self, DeeObject *thisarg,
+	                                     size_t argc, DeeObject *const *argv);
+
+	/* Same as `tp_thiscall', but having support for keyword arguments. */
+	WUNUSED_T ATTR_INS_T(4, 3) NONNULL_T((1, 2))
+	DREF DeeObject *(DCALL *tp_thiscall_kw)(DeeObject *self, DeeObject *thisarg, size_t argc,
+	                                        DeeObject *const *argv, DeeObject *kw);
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_call_tuple)(DeeObject *self, DeeObject *args);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_call_tuple_kw)(DeeObject *self, DeeObject *args, DeeObject *kw);
+	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *tp_thiscall_tuple)(DeeObject *self, DeeObject *thisarg, DeeObject *args);
+	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *tp_thiscall_tuple_kw)(DeeObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw);
+#elif !defined(CONFIG_BUILDING_DEEMON)
+	Dee_funptr_t _tp_pad[4]; /* For binary compatibility */
+#endif /* ... */
+};
+
 typedef struct dee_bytesbuffer DeeBuffer;
 struct dee_bytesbuffer {
 	void           *bb_base;  /* [0..bb_size][const] Base address of the buffer.
@@ -3863,8 +3890,6 @@ struct Dee_type_object {
 	                                                  * NOTE: When the `TP_FINHERITCTOR' flag is set, then this field must be non-NULL. */
 	struct Dee_type_constructor         tp_init;     /* Constructor/destructor operators. */
 	struct Dee_type_cast                tp_cast;     /* Type casting operators. */
-	WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1))
-	DREF DeeObject             *(DCALL *tp_call)(DeeObject *self, size_t argc, DeeObject *const *argv);
 	NONNULL_T((1, 2)) void      (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
 	/* NOTE: Anything used by `DeeType_Inherit*' can't be made `Dee_tpconst' here! */
 	struct Dee_type_gc Dee_tpconst     *tp_gc;       /* [0..1] GC related operators. */
@@ -3885,10 +3910,9 @@ struct Dee_type_object {
 	struct Dee_type_getset Dee_tpconst *tp_class_getsets; /* [0..1] Class getsets. */
 	struct Dee_type_member Dee_tpconst *tp_class_members; /* [0..1] Class members (usually constants). */
 	struct Dee_type_method_hint Dee_tpconst *tp_method_hints; /* [0..1] Instance method hints (referenced by `tp_methods'; see `<deemon/method-hints.h>') */
-	/* [0..1] Same as `tp_call', but having support for keyword arguments. */
 	WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1))
-	DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc,
-	                                    DeeObject *const *argv, DeeObject *kw);
+	DREF DeeObject             *(DCALL *tp_call)(DeeObject *self, size_t argc, DeeObject *const *argv);
+	struct Dee_type_callable           *tp_callable; /* [0..1][owned_if(tp_class != NULL)] Sequence operators. */
 
 	/* [1..1][0..n][owned] NULL-terminated MRO override for this type.
 	 * - When NULL, MRO for this type is facilitated through `tp_base'
@@ -4441,14 +4465,14 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_BoolObInheritedOnSu
 /* Object call operator invocation. */
 DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL DeeObject_Call(DeeObject *self, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL DeeObject_CallKw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_ThisCall(DeeObject *self, DeeObject *this_arg, size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_ThisCallKw(DeeObject *self, DeeObject *this_arg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_ThisCall(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_ThisCallKw(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DeeObject_CallPack(DeeObject *self, size_t argc, ...);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_VCallPack(DeeObject *self, size_t argc, va_list args);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DeeObject_Callf(DeeObject *self, char const *__restrict format, ...);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DeeObject_ThisCallf(DeeObject *self, DeeObject *this_arg, char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DeeObject_ThisCallf(DeeObject *self, DeeObject *thisarg, char const *__restrict format, ...);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_VCallf(DeeObject *self, char const *__restrict format, va_list args);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_VThisCallf(DeeObject *self, DeeObject *this_arg, char const *__restrict format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_VThisCallf(DeeObject *self, DeeObject *thisarg, char const *__restrict format, va_list args);
 
 /* Same as the regular call functions, however also include special
  * optimizations to re-use `args' as the varargs tuple in calls to
@@ -4470,13 +4494,13 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_VThisCallf(De
  */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallTuple)(DeeObject *self, /*Tuple*/ DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallTupleKw)(DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_ThisCallTuple)(DeeObject *self, DeeObject *this_arg, /*Tuple*/ DeeObject *args);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_ThisCallTupleKw)(DeeObject *self, DeeObject *this_arg, /*Tuple*/ DeeObject *args, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_ThisCallTuple)(DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_ThisCallTupleKw)(DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args, DeeObject *kw);
 #if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
 #define DeeObject_CallTuple(self, args)                     DeeObject_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_CallTupleKw(self, args, kw)               DeeObject_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#define DeeObject_ThisCallTuple(self, this_arg, args)       DeeObject_ThisCall(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeObject_ThisCallTupleKw(self, this_arg, args, kw) DeeObject_ThisCallKw(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#define DeeObject_ThisCallTuple(self, thisarg, args)       DeeObject_ThisCall(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_ThisCallTupleKw(self, thisarg, args, kw) DeeObject_ThisCallKw(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
 
 /* Generate and return the hash of a given object. */

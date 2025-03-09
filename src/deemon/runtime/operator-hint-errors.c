@@ -67,8 +67,32 @@ INTERN void*DCALL default__call__unsupported(DeeObject*self, void*, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_CALL);
 	return NULL;
 }
+INTERN void*DCALL default__call_kw__badalloc(void*UNUSED(self), void*, void*, void*) {
+	Dee_BadAlloc(sizeof(struct type_callable));
+	return NULL;
+}
 INTERN void*DCALL default__call_kw__unsupported(DeeObject*self, void*, void*, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_CALL);
+	return NULL;
+}
+INTERN void*DCALL default__thiscall_kw__badalloc(void*UNUSED(self), void*, void*, void*, void*) {
+	Dee_BadAlloc(sizeof(struct type_callable));
+	return NULL;
+}
+INTERN void*DCALL default__thiscall_kw__unsupported(DeeObject*self, void*, void*, void*, void*) {
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_CALL);
+	return NULL;
+}
+INTERN void*DCALL default__call_tuple__badalloc(void*UNUSED(self), void*) {
+	Dee_BadAlloc(sizeof(struct type_callable));
+	return NULL;
+}
+INTERN void*DCALL default__call_tuple__unsupported(DeeObject*self, void*) {
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_CALL);
+	return NULL;
+}
+INTERN void*DCALL default__call_tuple_kw__badalloc(void*UNUSED(self), void*, void*) {
+	Dee_BadAlloc(sizeof(struct type_callable));
 	return NULL;
 }
 INTERN void*DCALL default__iter_next__unsupported(DeeObject*self) {
@@ -421,7 +445,13 @@ _DeeType_GetNativeOperatorOOM[Dee_TNO_COUNT] = {
 	/* printrepr                  */ NULL,
 	/* bool                       */ NULL,
 	/* call                       */ NULL,
-	/* call_kw                    */ NULL,
+	/* call_kw                    */ (Dee_funptr_t)&default__call_kw__badalloc,
+	/* thiscall                   */ (Dee_funptr_t)&default__thiscall__badalloc,
+	/* thiscall_kw                */ (Dee_funptr_t)&default__thiscall_kw__badalloc,
+	/* call_tuple                 */ (Dee_funptr_t)&default__call_tuple__badalloc,
+	/* call_tuple_kw              */ (Dee_funptr_t)&default__call_tuple_kw__badalloc,
+	/* thiscall_tuple             */ (Dee_funptr_t)&default__thiscall_tuple__badalloc,
+	/* thiscall_tuple_kw          */ (Dee_funptr_t)&default__thiscall_tuple_kw__badalloc,
 	/* iter_next                  */ NULL,
 	/* nextpair                   */ (Dee_funptr_t)&default__nextpair__badalloc,
 	/* nextkey                    */ (Dee_funptr_t)&default__nextkey__badalloc,
@@ -546,6 +576,12 @@ _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT] = {
 	/* bool                       */ (Dee_funptr_t)&default__bool__unsupported,
 	/* call                       */ (Dee_funptr_t)&default__call__unsupported,
 	/* call_kw                    */ (Dee_funptr_t)&default__call_kw__unsupported,
+	/* thiscall                   */ (Dee_funptr_t)&default__thiscall__unsupported,
+	/* thiscall_kw                */ (Dee_funptr_t)&default__thiscall_kw__unsupported,
+	/* call_tuple                 */ (Dee_funptr_t)&default__call_tuple__unsupported,
+	/* call_tuple_kw              */ (Dee_funptr_t)&default__call_tuple_kw__unsupported,
+	/* thiscall_tuple             */ (Dee_funptr_t)&default__thiscall_tuple__unsupported,
+	/* thiscall_tuple_kw          */ (Dee_funptr_t)&default__thiscall_tuple_kw__unsupported,
 	/* iter_next                  */ (Dee_funptr_t)&default__iter_next__unsupported,
 	/* nextpair                   */ (Dee_funptr_t)&default__nextpair__unsupported,
 	/* nextkey                    */ (Dee_funptr_t)&default__nextkey__unsupported,

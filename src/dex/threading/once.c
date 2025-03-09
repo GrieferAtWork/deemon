@@ -626,6 +626,10 @@ PRIVATE struct type_getset tpconst once_getsets[] = {
 	TYPE_GETSET_END
 };
 
+PRIVATE struct type_callable once_callable = {
+	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&once_call_kw,
+};
+
 
 INTERN DeeTypeObject DeeOnce_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -713,7 +717,6 @@ INTERN DeeTypeObject DeeOnce_Type = {
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&once_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&once_printrepr
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&once_visit,
 	/* .tp_gc            = */ &once_gc,
 	/* .tp_math          = */ NULL,
@@ -731,7 +734,8 @@ INTERN DeeTypeObject DeeOnce_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&once_call_kw
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ &once_callable,
 };
 
 DECL_END

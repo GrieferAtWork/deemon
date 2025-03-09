@@ -224,8 +224,7 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
 				/* .tp_repr = */ NULL,
 				/* .tp_bool = */ NULL
 			},
-			/* .tp_call          = */ NULL,
-			/* .tp_visit         = */ NULL,
+					/* .tp_visit         = */ NULL,
 			/* .tp_gc            = */ NULL,
 			/* .tp_math          = */ NULL,
 			/* .tp_cmp           = */ NULL,
@@ -242,7 +241,8 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
 			/* .tp_class_getsets = */ NULL,
 			/* .tp_class_members = */ NULL,
 			/* .tp_method_hints  = */ NULL,
-			/* .tp_call_kw       = */ NULL,
+			/* .tp_call          = */ NULL,
+			/* .tp_callable      = */ NULL,
 			/* .tp_mro           = */ function_mro
 		},
 #ifndef CONFIG_NO_THREADS

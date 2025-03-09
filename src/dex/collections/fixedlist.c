@@ -1469,7 +1469,6 @@ INTERN DeeTypeObject FixedList_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&fl_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&fl_visit,
 	/* .tp_gc            = */ &fl_gc,
 	/* .tp_math          = */ NULL,
@@ -1487,7 +1486,8 @@ INTERN DeeTypeObject FixedList_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ fl_class_members,
 	/* .tp_method_hints  = */ fl_method_hints,
-	/* .tp_call_kw       = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ fl_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(fl_operators)
@@ -1742,7 +1742,6 @@ INTERN DeeTypeObject FixedListIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&fli_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&fli_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

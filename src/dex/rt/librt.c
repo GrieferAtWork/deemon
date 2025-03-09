@@ -1018,7 +1018,6 @@ my_custom_getitem(DeeObject *self, DeeObject *index) {
 			/* .tp_move_assign = */ NULL                     \
 		},                                                   \
 		/* .tp_cast = */ { NULL },                           \
-		/* .tp_call          = */ NULL,                      \
 		/* .tp_visit         = */ NULL,                      \
 		/* .tp_gc            = */ NULL,                      \
 		/* .tp_math          = */ NULL,                      \
@@ -1720,7 +1719,6 @@ PRIVATE DeeTypeObject type_with_seq_enumerate = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ { NULL },
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1824,7 +1822,6 @@ PRIVATE DeeTypeObject type_with_map_enumerate = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ { NULL },
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

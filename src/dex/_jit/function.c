@@ -1245,6 +1245,10 @@ PRIVATE struct type_member tpconst jf_members[] = {
 };
 
 
+PRIVATE struct type_callable jf_callable = {
+	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&jf_call_kw,
+};
+
 INTERN DeeTypeObject JITFunction_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_JitFunction",
@@ -1272,7 +1276,6 @@ INTERN DeeTypeObject JITFunction_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1290,7 +1293,8 @@ INTERN DeeTypeObject JITFunction_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&jf_call_kw,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ &jf_callable,
 };
 
 DECL_END

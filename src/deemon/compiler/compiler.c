@@ -369,7 +369,6 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&compiler_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

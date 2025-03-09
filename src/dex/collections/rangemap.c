@@ -801,7 +801,6 @@ INTERN DeeTypeObject RangeMap_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rangemap_printrepr,
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1778,7 +1777,6 @@ INTERN DeeTypeObject RangeMapProxy_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1833,7 +1831,6 @@ INTERN DeeTypeObject RangeMapKeys_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1851,7 +1848,8 @@ INTERN DeeTypeObject RangeMapKeys_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ proxy_keys_class_members,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
 	/* .tp_mro           = */ rmapping_keys_mro
 };
 
@@ -1883,7 +1881,6 @@ INTERN DeeTypeObject RangeMapValues_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1930,7 +1927,6 @@ INTERN DeeTypeObject RangeMapItems_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1977,7 +1973,6 @@ INTERN DeeTypeObject RangeMapNodes_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2024,7 +2019,6 @@ INTERN DeeTypeObject RangeMapRanges_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2071,7 +2065,6 @@ INTERN DeeTypeObject RangeMapMapItems_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2126,7 +2119,6 @@ INTERN DeeTypeObject RangeMapAsMap_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2144,7 +2136,8 @@ INTERN DeeTypeObject RangeMapAsMap_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ proxy_asmap_class_members,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
 	/* .tp_mro           = */ rmapping_asmap_mro
 };
 
@@ -2450,7 +2443,6 @@ INTERN DeeTypeObject RangeMapProxyIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_iterator_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_iterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2496,7 +2488,6 @@ INTERN DeeTypeObject RangeMapValuesIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL /* Inherited... */
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2542,7 +2533,6 @@ INTERN DeeTypeObject RangeMapItemsIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL /* Inherited... */
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2588,7 +2578,6 @@ INTERN DeeTypeObject RangeMapRangesIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL /* Inherited... */
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2634,7 +2623,6 @@ INTERN DeeTypeObject RangeMapNodesIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL /* Inherited... */
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -3245,7 +3233,6 @@ INTERN DeeTypeObject RangeMapKeysIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_keys_iterator_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_keys_iterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -3291,7 +3278,6 @@ INTERN DeeTypeObject RangeMapMapItemsIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_keys_iterator_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_mapitems_iterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -3337,7 +3323,6 @@ INTERN DeeTypeObject RangeMapAsMapIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL /* Inherited... */
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

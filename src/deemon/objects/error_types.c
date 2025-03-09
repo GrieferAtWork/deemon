@@ -94,7 +94,6 @@ DECL_BEGIN
 			/* .tp_bool  = */ NULL,                                                                    \
 			/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))(tp_print) \
 		},                                                                                             \
-		/* .tp_call          = */ NULL,                                                                \
 		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))(tp_visit), \
 		/* .tp_gc            = */ NULL,                                                                \
 		/* .tp_math          = */ NULL,                                                                \
@@ -403,7 +402,6 @@ PUBLIC DeeTypeObject DeeError_Error = {
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&error_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&error_printrepr,
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&error_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1052,7 +1050,6 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&systemerror_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&systemerror_printrepr,
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1339,7 +1336,6 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 		/* .tp_strrepr  = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&appexit_print,
 		/* .tp_reprrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&appexit_printrepr,
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1472,7 +1468,6 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&signal_printrepr,
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

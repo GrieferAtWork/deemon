@@ -34,6 +34,24 @@ DECL_BEGIN
 
 /* Reusable default operators. */
 /*[[[begin::computer-operator-impls]]]*/
+INTERN struct type_callable default__tp_callable__414DF0A8610383F3 = {
+	/* .tp_call_kw           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeObject_NewKw,
+	/* .tp_thiscall          = */ &default__thiscall__with__call,
+	/* .tp_thiscall_kw       = */ &default__thiscall_kw__with__call_kw,
+	/* .tp_call_tuple        = */ &default__call_tuple__with__call,
+	/* .tp_call_tuple_kw     = */ &default__call_tuple_kw__with__call_kw,
+	/* .tp_thiscall_tuple    = */ &default__thiscall_tuple__with__thiscall,
+	/* .tp_thiscall_tuple_kw = */ &default__thiscall_tuple_kw__with__thiscall_kw,
+};
+INTERN struct type_callable default__tp_callable__E31EBEB26CC72F83 = {
+	/* .tp_call_kw           = */ &default__call_kw__with__call,
+	/* .tp_thiscall          = */ &default__thiscall__with__call,
+	/* .tp_thiscall_kw       = */ &default__thiscall_kw__with__call_kw,
+	/* .tp_call_tuple        = */ &default__call_tuple__with__call,
+	/* .tp_call_tuple_kw     = */ &default__call_tuple_kw__with__call_kw,
+	/* .tp_thiscall_tuple    = */ &default__thiscall_tuple__with__thiscall,
+	/* .tp_thiscall_tuple_kw = */ &default__thiscall_tuple_kw__with__thiscall_kw,
+};
 INTERN struct type_cmp default__tp_cmp__247219960F1E745D = {
 	/* .tp_hash          = */ &default__seq_operator_hash__with__seq_operator_foreach,
 	/* .tp_compare_eq    = */ &default__seq_operator_compare_eq__with__seq_operator_size__and__seq_operator_trygetitem_index,

@@ -1206,6 +1206,17 @@ PRIVATE struct type_cmp function_cmp = {
 	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
 };
 
+PRIVATE struct type_callable function_callable = {
+	/* .tp_call_kw     = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeFunction_CallKw,
+	/* .tp_thiscall    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&DeeFunction_ThisCall,
+	/* .tp_thiscall_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeFunction_ThisCallKw,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	/* .tp_call_tuple        = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&DeeFunction_CallTuple,
+	/* .tp_call_tuple_kw     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&DeeFunction_CallTupleKw,
+	/* .tp_thiscall_tuple    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&DeeFunction_ThisCallTuple,
+	/* .tp_thiscall_tuple_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&DeeFunction_ThisCallTupleKw,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+};
 
 PUBLIC DeeTypeObject DeeFunction_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1236,7 +1247,6 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&function_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&function_printrepr,
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeFunction_Call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&function_visit,
 	/* .tp_gc            = */ &function_gc,
 	/* .tp_math          = */ NULL,
@@ -1254,7 +1264,8 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ function_class_members,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeFunction_CallKw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeFunction_Call,
+	/* .tp_callable      = */ &function_callable,
 };
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1775,7 +1786,6 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__9211580AA9433079),
@@ -3038,7 +3048,6 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yfi_visit,
 	/* .tp_gc            = */ &yfi_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__385A9235483A0324),
@@ -3056,7 +3065,8 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call_kw       = */ DEFIMPL(&default__call_kw__with__call),
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 DECL_END

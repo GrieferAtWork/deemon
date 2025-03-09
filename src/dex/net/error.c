@@ -60,7 +60,6 @@ DECL_BEGIN
 			/* .tp_repr = */ NULL,                             \
 			/* .tp_bool = */ NULL                              \
 		},                                                     \
-		/* .tp_call          = */ NULL,                        \
 		/* .tp_visit         = */ NULL,                        \
 		/* .tp_gc            = */ NULL,                        \
 		/* .tp_math          = */ NULL,                        \

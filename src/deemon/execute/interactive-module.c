@@ -1956,7 +1956,6 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&module_printrepr),
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&imod_visit,
 	/* .tp_gc            = */ &imod_gc,
 	/* .tp_math          = */ NULL,

@@ -798,7 +798,6 @@ INTERN DeeTypeObject DeeTLS_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&tls_printrepr,
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tls_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

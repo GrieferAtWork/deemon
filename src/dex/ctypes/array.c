@@ -166,7 +166,6 @@ PRIVATE DeeTypeObject ArrayIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&aiter_bool
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&aiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -672,8 +671,7 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
 				/* .tp_repr = */ NULL,
 				/* .tp_bool = */ NULL
 			},
-			/* .tp_call          = */ NULL,
-			/* .tp_visit         = */ NULL,
+					/* .tp_visit         = */ NULL,
 			/* .tp_gc            = */ NULL,
 			/* .tp_math          = */ NULL,
 			/* .tp_cmp           = */ NULL,
@@ -690,7 +688,8 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
 			/* .tp_class_getsets = */ NULL,
 			/* .tp_class_members = */ array_class_members,
 			/* .tp_method_hints  = */ NULL,
-			/* .tp_call_kw       = */ NULL,
+			/* .tp_call          = */ NULL,
+			/* .tp_callable      = */ NULL,
 			/* .tp_mro           = */ array_mro,
 		},
 #ifndef CONFIG_NO_THREADS

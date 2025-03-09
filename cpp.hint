@@ -1395,6 +1395,7 @@
 #define type_operator                  Dee_type_operator
 #define type_seq                       Dee_type_seq
 #define type_with                      Dee_type_with
+#define type_callable                  Dee_type_callable
 #define unicode_printer                Dee_unicode_printer
 #define unitraits                      Dee_unitraits
 #define weakref                        Dee_weakref

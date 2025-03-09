@@ -5316,7 +5316,6 @@ INTERN DeeTypeObject DeeProcess_Type = {
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&process_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&process_printrepr
 	},
-	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&process_visit,
 	/* .tp_gc            = */ &process_gc,
 	/* .tp_math          = */ NULL,

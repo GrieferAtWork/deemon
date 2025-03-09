@@ -106,9 +106,63 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_CallKw)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	__register DeeNO_call_kw_t tp_call_kw;
 	__register DeeTypeObject *tp_self = Dee_TYPE(self);
-	if unlikely((tp_call_kw = tp_self->tp_call_kw) == NULL)
+	if unlikely(!tp_self->tp_callable || (tp_call_kw = tp_self->tp_callable->tp_call_kw) == NULL)
 		tp_call_kw = _DeeType_RequireNativeOperator(tp_self, call_kw);
 	return (*tp_call_kw)(self, argc, argv, kw);
+}
+
+PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_ThisCall)(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv) {
+	__register DeeNO_thiscall_t tp_thiscall;
+	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+	if unlikely(!tp_self->tp_callable || (tp_thiscall = tp_self->tp_callable->tp_thiscall) == NULL)
+		tp_thiscall = _DeeType_RequireNativeOperator(tp_self, thiscall);
+	return (*tp_thiscall)(self, thisarg, argc, argv);
+}
+
+PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_ThisCallKw)(DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	__register DeeNO_thiscall_kw_t tp_thiscall_kw;
+	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+	if unlikely(!tp_self->tp_callable || (tp_thiscall_kw = tp_self->tp_callable->tp_thiscall_kw) == NULL)
+		tp_thiscall_kw = _DeeType_RequireNativeOperator(tp_self, thiscall_kw);
+	return (*tp_thiscall_kw)(self, thisarg, argc, argv, kw);
+}
+
+PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_CallTuple)(DeeObject *self, DeeObject *args) {
+	__register DeeNO_call_tuple_t tp_call_tuple;
+	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+	if unlikely(!tp_self->tp_callable || (tp_call_tuple = tp_self->tp_callable->tp_call_tuple) == NULL)
+		tp_call_tuple = _DeeType_RequireNativeOperator(tp_self, call_tuple);
+	return (*tp_call_tuple)(self, args);
+}
+
+PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_CallTupleKw)(DeeObject *self, DeeObject *args, DeeObject *kw) {
+	__register DeeNO_call_tuple_kw_t tp_call_tuple_kw;
+	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+	if unlikely(!tp_self->tp_callable || (tp_call_tuple_kw = tp_self->tp_callable->tp_call_tuple_kw) == NULL)
+		tp_call_tuple_kw = _DeeType_RequireNativeOperator(tp_self, call_tuple_kw);
+	return (*tp_call_tuple_kw)(self, args, kw);
+}
+
+PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_ThisCallTuple)(DeeObject *self, DeeObject *thisarg, DeeObject *args) {
+	__register DeeNO_thiscall_tuple_t tp_thiscall_tuple;
+	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+	if unlikely(!tp_self->tp_callable || (tp_thiscall_tuple = tp_self->tp_callable->tp_thiscall_tuple) == NULL)
+		tp_thiscall_tuple = _DeeType_RequireNativeOperator(tp_self, thiscall_tuple);
+	return (*tp_thiscall_tuple)(self, thisarg, args);
+}
+
+PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_ThisCallTupleKw)(DeeObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw) {
+	__register DeeNO_thiscall_tuple_kw_t tp_thiscall_tuple_kw;
+	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+	if unlikely(!tp_self->tp_callable || (tp_thiscall_tuple_kw = tp_self->tp_callable->tp_thiscall_tuple_kw) == NULL)
+		tp_thiscall_tuple_kw = _DeeType_RequireNativeOperator(tp_self, thiscall_tuple_kw);
+	return (*tp_thiscall_tuple_kw)(self, thisarg, args, kw);
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1)) DREF DeeObject *
@@ -947,12 +1001,85 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_TCallKw)(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	__register DeeNO_call_kw_t tp_call_kw;
-	if unlikely((tp_call_kw = tp_self->tp_call_kw) == NULL) {
+	if unlikely(!tp_self->tp_callable || (tp_call_kw = tp_self->tp_callable->tp_call_kw) == NULL) {
 		tp_call_kw = _DeeType_RequireNativeOperator(tp_self, call_kw);
-		if unlikely(tp_call_kw == (DeeNO_call_kw_t)&default__call_kw__unsupported)
+		if unlikely(tp_call_kw == (DeeNO_call_kw_t)&default__call_kw__badalloc ||
+		            tp_call_kw == (DeeNO_call_kw_t)&default__call_kw__unsupported)
 			return (*tp_call_kw)(self, argc, argv, kw);
 	}
 	return (*maketyped__call_kw(tp_call_kw))(tp_self, self, argc, argv, kw);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_TThisCall)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv) {
+	__register DeeNO_thiscall_t tp_thiscall;
+	if unlikely(!tp_self->tp_callable || (tp_thiscall = tp_self->tp_callable->tp_thiscall) == NULL) {
+		tp_thiscall = _DeeType_RequireNativeOperator(tp_self, thiscall);
+		if unlikely(tp_thiscall == (DeeNO_thiscall_t)&default__thiscall__badalloc ||
+		            tp_thiscall == (DeeNO_thiscall_t)&default__thiscall__unsupported)
+			return (*tp_thiscall)(self, thisarg, argc, argv);
+	}
+	return (*maketyped__thiscall(tp_thiscall))(tp_self, self, thisarg, argc, argv);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_TThisCallKw)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	__register DeeNO_thiscall_kw_t tp_thiscall_kw;
+	if unlikely(!tp_self->tp_callable || (tp_thiscall_kw = tp_self->tp_callable->tp_thiscall_kw) == NULL) {
+		tp_thiscall_kw = _DeeType_RequireNativeOperator(tp_self, thiscall_kw);
+		if unlikely(tp_thiscall_kw == (DeeNO_thiscall_kw_t)&default__thiscall_kw__badalloc ||
+		            tp_thiscall_kw == (DeeNO_thiscall_kw_t)&default__thiscall_kw__unsupported)
+			return (*tp_thiscall_kw)(self, thisarg, argc, argv, kw);
+	}
+	return (*maketyped__thiscall_kw(tp_thiscall_kw))(tp_self, self, thisarg, argc, argv, kw);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_TCallTuple)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args) {
+	__register DeeNO_call_tuple_t tp_call_tuple;
+	if unlikely(!tp_self->tp_callable || (tp_call_tuple = tp_self->tp_callable->tp_call_tuple) == NULL) {
+		tp_call_tuple = _DeeType_RequireNativeOperator(tp_self, call_tuple);
+		if unlikely(tp_call_tuple == (DeeNO_call_tuple_t)&default__call_tuple__badalloc ||
+		            tp_call_tuple == (DeeNO_call_tuple_t)&default__call_tuple__unsupported)
+			return (*tp_call_tuple)(self, args);
+	}
+	return (*maketyped__call_tuple(tp_call_tuple))(tp_self, self, args);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_TCallTupleKw)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args, DeeObject *kw) {
+	__register DeeNO_call_tuple_kw_t tp_call_tuple_kw;
+	if unlikely(!tp_self->tp_callable || (tp_call_tuple_kw = tp_self->tp_callable->tp_call_tuple_kw) == NULL) {
+		tp_call_tuple_kw = _DeeType_RequireNativeOperator(tp_self, call_tuple_kw);
+		if unlikely(tp_call_tuple_kw == (DeeNO_call_tuple_kw_t)&default__call_tuple_kw__badalloc ||
+		            tp_call_tuple_kw == (DeeNO_call_tuple_kw_t)&default__call_tuple_kw__unsupported)
+			return (*tp_call_tuple_kw)(self, args, kw);
+	}
+	return (*maketyped__call_tuple_kw(tp_call_tuple_kw))(tp_self, self, args, kw);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *
+(DCALL DeeObject_TThisCallTuple)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args) {
+	__register DeeNO_thiscall_tuple_t tp_thiscall_tuple;
+	if unlikely(!tp_self->tp_callable || (tp_thiscall_tuple = tp_self->tp_callable->tp_thiscall_tuple) == NULL) {
+		tp_thiscall_tuple = _DeeType_RequireNativeOperator(tp_self, thiscall_tuple);
+		if unlikely(tp_thiscall_tuple == (DeeNO_thiscall_tuple_t)&default__thiscall_tuple__badalloc ||
+		            tp_thiscall_tuple == (DeeNO_thiscall_tuple_t)&default__thiscall_tuple__unsupported)
+			return (*tp_thiscall_tuple)(self, thisarg, args);
+	}
+	return (*maketyped__thiscall_tuple(tp_thiscall_tuple))(tp_self, self, thisarg, args);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *
+(DCALL DeeObject_TThisCallTupleKw)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw) {
+	__register DeeNO_thiscall_tuple_kw_t tp_thiscall_tuple_kw;
+	if unlikely(!tp_self->tp_callable || (tp_thiscall_tuple_kw = tp_self->tp_callable->tp_thiscall_tuple_kw) == NULL) {
+		tp_thiscall_tuple_kw = _DeeType_RequireNativeOperator(tp_self, thiscall_tuple_kw);
+		if unlikely(tp_thiscall_tuple_kw == (DeeNO_thiscall_tuple_kw_t)&default__thiscall_tuple_kw__badalloc ||
+		            tp_thiscall_tuple_kw == (DeeNO_thiscall_tuple_kw_t)&default__thiscall_tuple_kw__unsupported)
+			return (*tp_thiscall_tuple_kw)(self, thisarg, args, kw);
+	}
+	return (*maketyped__thiscall_tuple_kw(tp_thiscall_tuple_kw))(tp_self, self, thisarg, args, kw);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
@@ -2510,6 +2637,96 @@ return_value:
 	return 0;
 err:
 	return -1;
+}
+
+
+
+#ifdef CONFIG_VA_LIST_IS_STACK_POINTER
+#ifndef __NO_DEFINE_ALIAS
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_VCallPack, 12),
+                    DCALL_ASSEMBLY_NAME(DeeObject_Call, 12));
+#else /* !__NO_DEFINE_ALIAS */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_VCallPack(DeeObject *self, size_t argc, va_list args) {
+	return DeeObject_Call(self, argc, (DeeObject **)args);
+}
+#endif /* __NO_DEFINE_ALIAS */
+#else /* CONFIG_VA_LIST_IS_STACK_POINTER */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_VCallPack(DeeObject *self, size_t argc, va_list args) {
+	DREF DeeObject *result, *args_tuple;
+	args_tuple = DeeTuple_VPackSymbolic(argc, args);
+	if unlikely(!args_tuple)
+		goto err;
+	result = DeeObject_Call(self, argc, DeeTuple_ELEM(args_tuple));
+	DeeTuple_DecrefSymbolic(args_tuple);
+	return result;
+err:
+	return NULL;
+}
+#endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_VCallf(DeeObject *self, char const *__restrict format, va_list args) {
+	DREF DeeObject *result, *args_tuple;
+	args_tuple = DeeTuple_VNewf(format, args);
+	if unlikely(!args_tuple)
+		goto err;
+	result = DeeObject_Call(self,
+	                        DeeTuple_SIZE(args_tuple),
+	                        DeeTuple_ELEM(args_tuple));
+	Dee_Decref(args_tuple);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObject_VThisCallf(DeeObject *self, DeeObject *this_arg,
+                     char const *__restrict format, va_list args) {
+	DREF DeeObject *result, *args_tuple;
+	args_tuple = DeeTuple_VNewf(format, args);
+	if unlikely(!args_tuple)
+		goto err;
+	result = DeeObject_ThisCall(self, this_arg,
+	                            DeeTuple_SIZE(args_tuple),
+	                            DeeTuple_ELEM(args_tuple));
+	Dee_Decref(args_tuple);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1)) DREF DeeObject *
+DeeObject_CallPack(DeeObject *self, size_t argc, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, argc);
+	result = DeeObject_VCallPack(self, argc, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeObject_Callf(DeeObject *self,
+                char const *__restrict format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeObject_VCallf(self, format, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+DeeObject_ThisCallf(DeeObject *self, DeeObject *this_arg,
+                    char const *__restrict format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeObject_VThisCallf(self, this_arg, format, args);
+	va_end(args);
+	return result;
 }
 
 

@@ -51,6 +51,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/operator-hints.h>
 #include <deemon/property.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
@@ -2272,7 +2273,6 @@ vopcallkw_consttype(struct fungen *__restrict self,
 		DO(fg_vpop(self));                                   /* func->s_type, func->s_self, [args...], kw */
 		return do_impl_vopTcallkw(self, true_argc, prefer_thiscall);
 	} else if (DeeType_InheritOperator(func_type, OPERATOR_CALL)) {
-		ASSERT(func_type->tp_call || func_type->tp_call_kw);
 		if (func_type == &DeeFunction_Type) {
 			/* TODO: When `func_type' is a `DeeFunctionObject', see if it has already been optimized,
 			 *       or if we're supposed to produce a deeply optimized code object (in which case we
@@ -2280,9 +2280,10 @@ vopcallkw_consttype(struct fungen *__restrict self,
 			 *       call to function's _hostasm representation. */
 		}
 
-		if (func_type->tp_call_kw == NULL) {
-do_inline_tp_call:
-			ASSERT(func_type->tp_call);
+		/* Check if the caller-given "kw" is empty. */
+		struct memval *kwval = fg_vtop(self);
+		if (memval_isnull(kwval)) {
+			DeeNO_call_t tp_call = DeeType_RequireNativeOperator(func_type, call);
 			DO(vpop_empty_kwds(self));             /* func, [args...] */
 			DO(fg_vnotoneref(self, true_argc));    /* func, [args...] */
 			DO(fg_vnotoneref_if_operator_at(self, OPERATOR_CALL, true_argc + 1)); /* func, [args...] */
@@ -2290,10 +2291,9 @@ do_inline_tp_call:
 			DO(fg_vlrot(self, true_argc + 2));     /* [args...], argv, func */
 			DO(fg_vpush_immSIZ(self, true_argc));  /* [args...], argv, func, argc */
 			DO(fg_vlrot(self, 3));                 /* [args...], func, argc, argv */
-			return fg_vcallapi_ex(self, func_type->tp_call, VCALL_CC_OBJECT, 3, true_argc + 3); /* result */
-		} else if (func_type->tp_call == NULL) {
-do_inline_tp_call_kw:
-			ASSERT(func_type->tp_call_kw);
+			return fg_vcallapi_ex(self, tp_call, VCALL_CC_OBJECT, 3, true_argc + 3); /* result */
+		} else {
+			DeeNO_call_kw_t tp_call_kw = DeeType_RequireNativeOperator(func_type, call_kw);
 			DO(fg_vnotoneref(self, true_argc + 1)); /* func, [args...], kw */
 			DO(fg_vnotoneref_if_operator_at(self, OPERATOR_CALL, true_argc + 2)); /* func, [args...], kw */
 			DO(fg_vrrot(self, true_argc + 1));      /* func, kw, [args...] */
@@ -2302,13 +2302,7 @@ do_inline_tp_call_kw:
 			DO(fg_vpush_immSIZ(self, true_argc));   /* kw, [args...], argv, func, argc */
 			DO(fg_vlrot(self, 3));                  /* kw, [args...], func, argc, argv */
 			DO(fg_vlrot(self, true_argc + 4));      /* [args...], func, argc, argv, kw */
-			return fg_vcallapi_ex(self, func_type->tp_call_kw, VCALL_CC_OBJECT, 3, true_argc + 3); /* result */
-		} else {
-			/* Both calls are possible. Check if the caller-given "kw" is empty. */
-			struct memval *kwval = fg_vtop(self);
-			if (memval_isnull(kwval))
-				goto do_inline_tp_call;
-			goto do_inline_tp_call_kw;
+			return fg_vcallapi_ex(self, tp_call_kw, VCALL_CC_OBJECT, 3, true_argc + 3); /* result */
 		}
 	}
 	return 1; /* No dedicated optimization available */
@@ -5476,7 +5470,7 @@ PRIVATE struct host_operator_specs const operator_apis[] = {
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
 vtype_get_operator_api_function(struct fungen *__restrict self,
-                                DeeTypeObject const *__restrict type,
+                                DeeTypeObject *__restrict type,
                                 Dee_operator_t operator_name, vstackaddr_t *__restrict p_extra_argc,
                                 struct host_operator_specs *__restrict result, bool inplace) {
 	void const *api_function;
@@ -5497,9 +5491,9 @@ vtype_get_operator_api_function(struct fungen *__restrict self,
 	case OPERATOR_CALL:
 		api_function = NULL;
 		if (*p_extra_argc == 1) {
-			api_function = type->tp_call;
+			api_function = DeeType_RequireNativeOperator(type, call);
 		} else if (*p_extra_argc == 2) {
-			api_function = type->tp_call_kw;
+			api_function = DeeType_RequireNativeOperator(type, call_kw);
 		}
 		if (api_function && !inplace) {
 			result->hos_apifunc = api_function;
