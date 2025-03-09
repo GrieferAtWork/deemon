@@ -464,16 +464,18 @@ err:
 #define filterub_contains filter_contains
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 filter_contains(Filter *self, DeeObject *elem) {
-	int result = DeeObject_ContainsAsBool(self->f_seq, elem);
-	if unlikely(result < 0)
-		goto err;
-	if (!result)
+	int result = DeeObject_InvokeMethodHint(seq_contains, self->f_seq, elem);
+	if (result <= 0) {
+		if unlikely(result < 0)
+			goto err;
 		goto nope;
+	}
 	result = invoke_filter(self->f_fun, elem);
-	if unlikely(result < 0)
-		goto err;
-	if (!result)
+	if (result <= 0) {
+		if unlikely(result < 0)
+			goto err;
 		goto nope;
+	}
 	return_true;
 nope:
 	return_false;

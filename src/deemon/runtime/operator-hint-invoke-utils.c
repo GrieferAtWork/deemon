@@ -21,18 +21,21 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINT_INVOKE_UTILS_C 1
 
 #include <deemon/api.h>
-#include <deemon/bool.h>
 #include <deemon/int.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/tuple.h>
 #include <deemon/operator-hints.h>
+#include <deemon/util/lock.h>
 
+#include <hybrid/int128.h>
 #include <hybrid/limitcore.h> /* __INT32_MAX__, __INT64_MAX__ */
 
 /**/
-#include "operator-hint-errors.h"
 #include "runtime_error.h"
 
 /**/
+#include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* true/false */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* intN_t */
@@ -509,7 +512,409 @@ DeeObject_ThisCallf(DeeObject *self, DeeObject *this_arg,
 
 
 
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeObject_ContainsAsBool(DeeObject *self, DeeObject *some_object) {
+	DREF DeeObject *resultob;
+	resultob = DeeObject_Contains(self, some_object);
+	if unlikely(!resultob)
+		goto err;
+	return DeeObject_BoolInherited(resultob);
+err:
+	return -1;
+}
 
+
+
+
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeObject_InplaceDeepCopy)(DREF DeeObject **__restrict p_self) {
+	DeeObject *objcopy, *old_object;
+	old_object = *p_self;
+	ASSERT_OBJECT(old_object);
+	objcopy = DeeObject_DeepCopy(old_object);
+	if unlikely(!objcopy)
+		goto err;
+	Dee_Decref(old_object);
+	*p_self = objcopy;
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeObject_InplaceDeepCopyv)(/*in|out*/ DREF DeeObject **__restrict object_vector,
+                                   size_t object_count) {
+	size_t i;
+	for (i = 0; i < object_count; ++i) {
+		if (DeeObject_InplaceDeepCopy(&object_vector[i]))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_InplaceDeepCopyWithLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
+                                          Dee_atomic_lock_t *__restrict p_lock) {
+	DREF DeeObject *temp, *copy;
+	(void)p_lock;
+
+	/* Step #1: Extract the existing object. */
+	Dee_atomic_lock_acquire(p_lock);
+	temp = *p_self;
+	Dee_Incref(temp);
+	Dee_atomic_lock_release(p_lock);
+
+	/* Step #2: Create a deep copy for it. */
+	copy = DeeObject_DeepCopy(temp);
+	Dee_Decref(temp);
+	if unlikely(!copy)
+		goto err;
+
+	/* Step #3: Write back the newly created deep copy. */
+	Dee_atomic_lock_acquire(p_lock);
+	temp   = *p_self; /* Inherit */
+	*p_self = copy;   /* Inherit */
+	Dee_atomic_lock_release(p_lock);
+	Dee_Decref(temp);
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_XInplaceDeepCopyWithLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
+                                           Dee_atomic_lock_t *__restrict p_lock) {
+	DREF DeeObject *temp, *copy;
+	(void)p_lock;
+
+	/* Step #1: Extract the existing object. */
+	Dee_atomic_lock_acquire(p_lock);
+	temp = *p_self;
+	if (!temp) {
+		Dee_atomic_lock_release(p_lock);
+		goto done;
+	}
+	Dee_Incref(temp);
+	Dee_atomic_lock_release(p_lock);
+
+	/* Step #2: Create a deep copy for it. */
+	copy = DeeObject_DeepCopy(temp);
+	Dee_Decref(temp);
+	if unlikely(!copy)
+		goto err;
+
+	/* Step #3: Write back the newly created deep copy. */
+	Dee_atomic_lock_acquire(p_lock);
+	temp   = *p_self; /* Inherit */
+	*p_self = copy;   /* Inherit */
+	Dee_atomic_lock_release(p_lock);
+	Dee_XDecref(temp);
+done:
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_InplaceDeepCopyWithRWLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
+                                            Dee_atomic_rwlock_t *__restrict p_lock) {
+	DREF DeeObject *temp, *copy;
+	(void)p_lock;
+
+	/* Step #1: Extract the existing object. */
+	Dee_atomic_rwlock_read(p_lock);
+	temp = *p_self;
+	Dee_Incref(temp);
+	Dee_atomic_rwlock_endread(p_lock);
+
+	/* Step #2: Create a deep copy for it. */
+	copy = DeeObject_DeepCopy(temp);
+	Dee_Decref(temp);
+	if unlikely(!copy)
+		goto err;
+
+	/* Step #3: Write back the newly created deep copy. */
+	Dee_atomic_rwlock_write(p_lock);
+	temp   = *p_self; /* Inherit */
+	*p_self = copy;   /* Inherit */
+	Dee_atomic_rwlock_endwrite(p_lock);
+	Dee_Decref(temp);
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_XInplaceDeepCopyWithRWLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
+                                             Dee_atomic_rwlock_t *__restrict p_lock) {
+	DREF DeeObject *temp, *copy;
+	(void)p_lock;
+
+	/* Step #1: Extract the existing object. */
+	Dee_atomic_rwlock_read(p_lock);
+	temp = *p_self;
+	if (!temp) {
+		Dee_atomic_rwlock_endread(p_lock);
+		goto done;
+	}
+	Dee_Incref(temp);
+	Dee_atomic_rwlock_endread(p_lock);
+
+	/* Step #2: Create a deep copy for it. */
+	copy = DeeObject_DeepCopy(temp);
+	Dee_Decref(temp);
+	if unlikely(!copy)
+		goto err;
+
+	/* Step #3: Write back the newly created deep copy. */
+	Dee_atomic_rwlock_write(p_lock);
+	temp   = *p_self; /* Inherit */
+	*p_self = copy;   /* Inherit */
+	Dee_atomic_rwlock_endwrite(p_lock);
+	Dee_XDecref(temp);
+done:
+	return 0;
+err:
+	return -1;
+}
+
+
+
+
+PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t
+(DCALL DeeObject_Hashv)(DeeObject *const *__restrict object_vector,
+                        size_t object_count) {
+	size_t i;
+	Dee_hash_t result;
+	/* Check for special case: no objects, i.e.: an empty sequence */
+	if unlikely(!object_count)
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+
+	/* Important: when only a single object is given, our
+	 * return value must be equal to `DeeObject_Hash()'.
+	 *
+	 * This is required so that:
+	 * >> import hash from deemon;
+	 * >> assert hash(42) == (42).operator hash();
+	 * >> assert hash(42) == (42); */
+	result = DeeObject_Hash(object_vector[0]);
+	for (i = 1; i < object_count; ++i) {
+		Dee_hash_t hsitem;
+		hsitem = DeeObject_Hash(object_vector[i]);
+		result = Dee_HashCombine(result, hsitem);
+	}
+	return result;
+}
+
+PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t
+(DCALL DeeObject_XHashv)(DeeObject *const *__restrict object_vector,
+                         size_t object_count) {
+	size_t i;
+	Dee_hash_t result;
+	/* Check for special case: no objects, i.e.: an empty sequence */
+	if unlikely(!object_count)
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+
+	/* Important: when only a single object is given, our
+	 * return value must be equal to `DeeObject_Hash()'.
+	 *
+	 * This is required so that:
+	 * >> import hash from deemon;
+	 * >> assert hash(42) == (42).operator hash();
+	 * >> assert hash(42) == (42); */
+	{
+		DeeObject *item = object_vector[0];
+		result = item ? DeeObject_Hash(item) : DEE_HASHOF_UNBOUND_ITEM;
+	}
+	for (i = 1; i < object_count; ++i) {
+		Dee_hash_t hsitem;
+		DeeObject *item = object_vector[i];
+		hsitem = item ? DeeObject_Hash(item) : DEE_HASHOF_UNBOUND_ITEM;
+		result = Dee_HashCombine(result, hsitem);
+	}
+	return result;
+}
+
+
+
+
+
+
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
+ * @return: == -1: `lhs_keyed < key(rhs)'
+ * @return: == 0:  `lhs_keyed == key(rhs)'
+ * @return: == 1:  `lhs_keyed > key(rhs)'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int
+(DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
+                             DeeObject *rhs, DeeObject *key) {
+	int result;
+	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
+	if unlikely(!rhs)
+		goto err;
+	result = DeeObject_Compare(lhs_keyed, rhs);
+	Dee_Decref(rhs);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
+ * @return: == -1: `lhs_keyed != key(rhs)'
+ * @return: == 0:  `lhs_keyed == key(rhs)'
+ * @return: == 1:  `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int
+(DCALL DeeObject_CompareKeyEq)(DeeObject *lhs_keyed,
+                               DeeObject *rhs, DeeObject *key) {
+	int result;
+	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
+	if unlikely(!rhs)
+		goto err;
+	result = DeeObject_CompareEq(lhs_keyed, rhs);
+	Dee_Decref(rhs);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
+ * @return: == -1: `lhs_keyed != key(rhs)'
+ * @return: == 0:  `lhs_keyed == key(rhs)'
+ * @return: == 1:  `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int
+(DCALL DeeObject_TryCompareKeyEq)(DeeObject *lhs_keyed,
+                                  DeeObject *rhs, DeeObject *key) {
+	int result;
+	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
+	if unlikely(!rhs)
+		goto err;
+	result = DeeObject_TryCompareEq(lhs_keyed, rhs);
+	Dee_Decref(rhs);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeObject_GetRangeBeginIndex(DeeObject *self, Dee_ssize_t start, DeeObject *end) {
+	DREF DeeObject *result;
+	DREF DeeObject *start_ob;
+	Dee_ssize_t end_index;
+	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index))
+		return DeeObject_GetRangeIndex(self, start, end_index);
+	if (DeeNone_Check(end))
+		return DeeObject_GetRangeIndexN(self, start);
+	start_ob = DeeInt_NewSSize(start);
+	if unlikely(!start_ob)
+		goto err;
+	result = DeeObject_GetRange(self, start_ob, end);
+	Dee_Decref(start_ob);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_GetRangeEndIndex(DeeObject *self, DeeObject *start, Dee_ssize_t end) {
+	DREF DeeObject *result;
+	DREF DeeObject *end_ob;
+	Dee_ssize_t start_index;
+	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index))
+		return DeeObject_GetRangeIndex(self, start_index, end);
+	if (DeeNone_Check(start))
+		return DeeObject_GetRangeIndex(self, 0, end);
+	end_ob = DeeInt_NewSSize(end);
+	if unlikely(!end_ob)
+		goto err;
+	result = DeeObject_GetRange(self, start, end_ob);
+	Dee_Decref(end_ob);
+	return result;
+err:
+	return NULL;
+}
+
+
+PUBLIC WUNUSED NONNULL((1, 3)) int DCALL
+DeeObject_DelRangeBeginIndex(DeeObject *self, Dee_ssize_t start, DeeObject *end) {
+	int result;
+	DREF DeeObject *start_ob;
+	Dee_ssize_t end_index;
+	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index))
+		return DeeObject_DelRangeIndex(self, start, end_index);
+	if (DeeNone_Check(end))
+		return DeeObject_DelRangeIndexN(self, start);
+	start_ob = DeeInt_NewSSize(start);
+	if unlikely(!start_ob)
+		goto err;
+	result = DeeObject_DelRange(self, start_ob, end);
+	Dee_Decref(start_ob);
+	return result;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeObject_DelRangeEndIndex(DeeObject *self, DeeObject *start, Dee_ssize_t end) {
+	int result;
+	DREF DeeObject *end_ob;
+	Dee_ssize_t start_index;
+	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index))
+		return DeeObject_DelRangeIndex(self, start_index, end);
+	if (DeeNone_Check(start))
+		return DeeObject_DelRangeIndex(self, 0, end);
+	end_ob = DeeInt_NewSSize(end);
+	if unlikely(!end_ob)
+		goto err;
+	result = DeeObject_DelRange(self, start, end_ob);
+	Dee_Decref(end_ob);
+	return result;
+err:
+	return -1;
+}
+
+
+PUBLIC WUNUSED NONNULL((1, 3, 4)) int DCALL
+DeeObject_SetRangeBeginIndex(DeeObject *self, Dee_ssize_t start, DeeObject *end, DeeObject *values) {
+	int result;
+	DREF DeeObject *start_ob;
+	Dee_ssize_t end_index;
+	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index))
+		return DeeObject_SetRangeIndex(self, start, end_index, values);
+	if (DeeNone_Check(end))
+		return DeeObject_SetRangeIndexN(self, start, values);
+	start_ob = DeeInt_NewSSize(start);
+	if unlikely(!start_ob)
+		goto err;
+	result = DeeObject_SetRange(self, start_ob, end, values);
+	Dee_Decref(start_ob);
+	return result;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 4)) int DCALL
+DeeObject_SetRangeEndIndex(DeeObject *self, DeeObject *start, Dee_ssize_t end, DeeObject *values) {
+	int result;
+	DREF DeeObject *end_ob;
+	Dee_ssize_t start_index;
+	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index))
+		return DeeObject_SetRangeIndex(self, start_index, end, values);
+	if (DeeNone_Check(start))
+		return DeeObject_SetRangeIndex(self, 0, end, values);
+	end_ob = DeeInt_NewSSize(end);
+	if unlikely(!end_ob)
+		goto err;
+	result = DeeObject_SetRange(self, start, end_ob, values);
+	Dee_Decref(end_ob);
+	return result;
+err:
+	return -1;
+}
 
 DECL_END
 
