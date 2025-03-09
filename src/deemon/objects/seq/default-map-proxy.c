@@ -22,8 +22,6 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
-#include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
@@ -32,7 +30,6 @@
 #include <deemon/set.h>
 
 #include "../../runtime/runtime_error.h"
-#include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 
 /**/
@@ -43,60 +40,242 @@
 
 DECL_BEGIN
 
-#define ds_mk_copy     generic_proxy__copy_alias
-#define ds_mv_copy     generic_proxy__copy_alias
-#define ds_mv_deepcopy generic_proxy__deepcopy
-#define ds_mk_deepcopy generic_proxy__deepcopy
+STATIC_ASSERT(offsetof(DefaultSequence_MapProxy, dsmp_map) ==
+              offsetof(ProxyObject, po_obj));
+#define ds_mk_init             generic_proxy__init
+#define ds_mv_init             generic_proxy__init
+#define ds_mk_copy             generic_proxy__copy_alias
+#define ds_mv_copy             generic_proxy__copy_alias
+#define ds_mv_deepcopy         generic_proxy__deepcopy
+#define ds_mk_deepcopy         generic_proxy__deepcopy
+#define ds_mv_fini             generic_proxy__fini
+#define ds_mk_fini             generic_proxy__fini
+#define ds_mv_visit            generic_proxy__visit
+#define ds_mk_visit            generic_proxy__visit
+#define ds_mk_iter             generic_proxy__map_iterkeys
+#define ds_mv_iter             generic_proxy__map_itervalues
+#define ds_mk_contains         generic_proxy__map_operator_contains
+#define ds_mv_size             generic_proxy__map_operator_size
+#define ds_mv_sizeob           generic_proxy__map_operator_sizeob
+#define ds_mv_bounditem        generic_proxy__seq_operator_bounditem
+#define ds_mv_bounditem_index  generic_proxy__seq_operator_bounditem_index
+#define ds_mv_hasitem          generic_proxy__seq_operator_hasitem
+#define ds_mv_hasitem_index    generic_proxy__seq_operator_hasitem_index
+#define ds_mv_delitem          generic_proxy__seq_operator_delitem
+#define ds_mv_delitem_index    generic_proxy__seq_operator_delitem_index
+#define ds_mv_delrange         generic_proxy__seq_operator_delrange
+#define ds_mv_delrange_index   generic_proxy__seq_operator_delrange_index
+#define ds_mv_delrange_index_n generic_proxy__seq_operator_delrange_index_n
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-ds_mk_init(DefaultSequence_MapProxy *__restrict self,
-           size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SeqMapKeys", &self->dsmp_map))
+#define ds_mk_mh_seq_clear     generic_proxy__seq_clear
+#define ds_mv_mh_seq_clear     generic_proxy__seq_clear
+#define ds_mk_mh_set_remove    generic_proxy__map_remove
+#define ds_mk_mh_set_removeall generic_proxy__map_removekeys
+
+struct ds_mX_foreach_cb_data {
+	Dee_foreach_t dmxfcd_cb;  /* [1..1] Nested callback. */
+	void         *dmxfcd_arg; /* [?..?] Cookie for `dmxfcd_cb' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ds_mk_enumerate_cb(void *arg, DeeObject *key, DeeObject *UNUSED(value)) {
+	struct ds_mX_foreach_cb_data *data = (struct ds_mX_foreach_cb_data *)arg;
+	return (*data->dmxfcd_cb)(data->dmxfcd_arg, key);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ds_mk_foreach(DefaultSequence_MapProxy *self, Dee_foreach_t cb, void *arg) {
+	struct ds_mX_foreach_cb_data data;
+	data.dmxfcd_cb  = cb;
+	data.dmxfcd_arg = arg;
+	return DeeObject_InvokeMethodHint(map_enumerate, self->dsmp_map, &ds_mk_enumerate_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ds_mv_enumerate_cb(void *arg, DeeObject *UNUSED(key), DeeObject *value) {
+	struct ds_mX_foreach_cb_data *data = (struct ds_mX_foreach_cb_data *)arg;
+	return value ? (*data->dmxfcd_cb)(data->dmxfcd_arg, value) : 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ds_mv_foreach(DefaultSequence_MapProxy *self, Dee_foreach_t cb, void *arg) {
+	struct ds_mX_foreach_cb_data data;
+	data.dmxfcd_cb  = cb;
+	data.dmxfcd_arg = arg;
+	return DeeObject_InvokeMethodHint(map_enumerate, self->dsmp_map, &ds_mv_enumerate_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ds_mk_mh_set_pop(DefaultSequence_MapProxy *self) {
+	DREF DeeObject *item;
+	item = DeeObject_InvokeMethodHint(map_popitem, self->dsmp_map);
+	if unlikely(!item)
 		goto err;
-	Dee_Incref(self->dsmp_map);
-	return 0;
+	if (!DeeNone_Check(item)) {
+		DREF DeeObject *key_and_value[2];
+		int temp = DeeSeq_Unpack(item, 2, key_and_value);
+		Dee_Decref(item);
+		if unlikely(temp)
+			goto err;
+		Dee_Decref(key_and_value[1]);
+		return key_and_value[0];
+	}
+	Dee_DecrefNokill(item);
+	err_empty_sequence(self->dsmp_map);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+ds_mk_mh_set_pop_with_default(DefaultSequence_MapProxy *self,
+                              DeeObject *def) {
+	DREF DeeObject *item;
+	item = DeeObject_InvokeMethodHint(map_popitem, self->dsmp_map);
+	if unlikely(!item)
+		goto err;
+	if (!DeeNone_Check(item)) {
+		DREF DeeObject *key_and_value[2];
+		int temp = DeeSeq_Unpack(item, 2, key_and_value);
+		Dee_Decref(item);
+		if unlikely(temp)
+			goto err;
+		Dee_Decref(key_and_value[1]);
+		return key_and_value[0];
+	}
+	Dee_DecrefNokill(item);
+	return_reference_(def);
+err:
+	return NULL;
+}
+
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+ds_mv_getitem(DefaultSequence_MapProxy *self, DeeObject *index) {
+	int temp;
+	DREF DeeObject *item;
+	DREF DeeObject *key_and_value[2];
+	item = DeeObject_InvokeMethodHint(seq_operator_getitem, self->dsmp_map, index);
+	if unlikely(!item)
+		goto err;
+	temp = DeeSeq_Unpack(item, 2, key_and_value);
+	Dee_Decref(item);
+	if unlikely(temp)
+		goto err;
+	Dee_Decref(key_and_value[0]);
+	return key_and_value[1];
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+ds_mv_trygetitem(DefaultSequence_MapProxy *self, DeeObject *index) {
+	int temp;
+	DREF DeeObject *item;
+	DREF DeeObject *key_and_value[2];
+	item = DeeObject_InvokeMethodHint(seq_operator_trygetitem, self->dsmp_map, index);
+	if unlikely(!ITER_ISOK(item))
+		return item;
+	temp = DeeSeq_Unpack(item, 2, key_and_value);
+	Dee_Decref(item);
+	if unlikely(temp)
+		goto err;
+	Dee_Decref(key_and_value[0]);
+	return key_and_value[1];
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ds_mv_getitem_index(DefaultSequence_MapProxy *self, size_t index) {
+	int temp;
+	DREF DeeObject *item;
+	DREF DeeObject *key_and_value[2];
+	item = DeeObject_InvokeMethodHint(seq_operator_getitem_index, self->dsmp_map, index);
+	if unlikely(!item)
+		goto err;
+	temp = DeeSeq_Unpack(item, 2, key_and_value);
+	Dee_Decref(item);
+	if unlikely(temp)
+		goto err;
+	Dee_Decref(key_and_value[0]);
+	return key_and_value[1];
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ds_mv_trygetitem_index(DefaultSequence_MapProxy *self, size_t index) {
+	int temp;
+	DREF DeeObject *item;
+	DREF DeeObject *key_and_value[2];
+	item = DeeObject_InvokeMethodHint(seq_operator_trygetitem_index, self->dsmp_map, index);
+	if unlikely(!ITER_ISOK(item))
+		return item;
+	temp = DeeSeq_Unpack(item, 2, key_and_value);
+	Dee_Decref(item);
+	if unlikely(temp)
+		goto err;
+	Dee_Decref(key_and_value[0]);
+	return key_and_value[1];
+err:
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+ds_mv_setitem(DefaultSequence_MapProxy *self, DeeObject *index, DeeObject *value) {
+	int result;
+	DREF DeeObject *item;
+	DREF DeeObject *key;
+	item = DeeObject_InvokeMethodHint(seq_operator_getitem, self->dsmp_map, index);
+	if unlikely(!item)
+		goto err;
+	key = DeeObject_InvokeMethodHint(seq_getfirst, item);
+	Dee_Decref(item);
+	if unlikely(!key)
+		goto err;
+	result = DeeObject_InvokeMethodHint(map_operator_setitem, self->dsmp_map, key, value);
+	Dee_Decref(key);
+	return result;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-ds_mv_init(DefaultSequence_MapProxy *__restrict self,
-           size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SeqMapValues", &self->dsmp_map))
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+ds_mv_setitem_index(DefaultSequence_MapProxy *self, size_t index, DeeObject *value) {
+	int result;
+	DREF DeeObject *item;
+	DREF DeeObject *key;
+	item = DeeObject_InvokeMethodHint(seq_operator_getitem_index, self->dsmp_map, index);
+	if unlikely(!item)
 		goto err;
-	Dee_Incref(self->dsmp_map);
-	return 0;
+	key = DeeObject_InvokeMethodHint(seq_getfirst, item);
+	Dee_Decref(item);
+	if unlikely(!key)
+		goto err;
+	result = DeeObject_InvokeMethodHint(map_operator_setitem, self->dsmp_map, key, value);
+	Dee_Decref(key);
+	return result;
 err:
 	return -1;
 }
 
-#define ds_mv_fini  generic_proxy__fini
-#define ds_mk_fini  generic_proxy__fini
-#define ds_mv_visit generic_proxy__visit
-#define ds_mk_visit generic_proxy__visit
 
-PRIVATE NONNULL((1)) DREF DeeObject *DCALL
-ds_mk_iter(DefaultSequence_MapProxy *__restrict self) {
-	return DeeObject_InvokeMethodHint(map_iterkeys, self->dsmp_map);
-}
 
-PRIVATE NONNULL((1)) DREF DeeObject *DCALL
-ds_mv_iter(DefaultSequence_MapProxy *__restrict self) {
-	return DeeObject_InvokeMethodHint(map_itervalues, self->dsmp_map);
-}
 
 PRIVATE struct type_seq ds_mk_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_mk_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
-	/* .tp_contains                   = */ DEFIMPL(&default__seq_operator_contains), // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ds_mk_contains,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ds_mk_contains,
 	/* .tp_getitem                    = */ DEFIMPL_UNSUPPORTED(&default__getitem__unsupported),
 	/* .tp_delitem                    = */ DEFIMPL_UNSUPPORTED(&default__delitem__unsupported),
 	/* .tp_setitem                    = */ DEFIMPL_UNSUPPORTED(&default__setitem__unsupported),
 	/* .tp_getrange                   = */ DEFIMPL_UNSUPPORTED(&default__getrange__unsupported),
 	/* .tp_delrange                   = */ DEFIMPL_UNSUPPORTED(&default__delrange__unsupported),
 	/* .tp_setrange                   = */ DEFIMPL_UNSUPPORTED(&default__setrange__unsupported),
-	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter), // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_mk_foreach,
-	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_mk_foreach,
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
 	/* .tp_bounditem                  = */ DEFIMPL_UNSUPPORTED(&default__bounditem__unsupported),
 	/* .tp_hasitem                    = */ DEFIMPL_UNSUPPORTED(&default__hasitem__unsupported),
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach), /* XXX: When the map can't have unbound keys, this is equal to its length */
@@ -131,34 +310,34 @@ PRIVATE struct type_seq ds_mk_seq = {
 
 PRIVATE struct type_seq ds_mv_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_mv_iter,
-	/* .tp_sizeob                     = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size), // TODO: (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_mv_sizeob,
-	/* .tp_contains                   = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains), // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ds_mv_contains,
-	/* .tp_getitem                    = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
-	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
-	/* .tp_setitem                    = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_mv_sizeob,
+	/* .tp_contains                   = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ds_mv_getitem,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_mv_delitem,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&ds_mv_setitem,
 	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
-	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
+	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&ds_mv_delrange,
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
-	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter), // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_mv_foreach,
-	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
-	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
-	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach), // TODO: (size_t (DCALL *)(DeeObject *__restrict))&ds_mv_size,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_mv_foreach,
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_mv_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_mv_hasitem,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_mv_size,
 	/* .tp_size_fast                  = */ NULL,
-	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach), // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_mv_getitem_index,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_mv_getitem_index,
 	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported), // TODO: (int (DCALL *)(DeeObject *, size_t))&ds_mv_delitem_index,
-	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported), // TODO: (int (DCALL *)(DeeObject *, size_t, DeeObject *))&ds_mv_setitem_index,
-	/* .tp_bounditem_index            = */ DEFIMPL(&default__seq_operator_bounditem_index__with__seq_operator_getitem_index),
-	/* .tp_hasitem_index              = */ DEFIMPL(&default__seq_operator_hasitem_index__with__seq_operator_getitem_index),
-	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_iter),
-	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&ds_mv_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&ds_mv_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&ds_mv_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&ds_mv_hasitem_index,
+	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&ds_mv_delrange_index,
 	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
-	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_iter),
-	/* .tp_delrange_index_n           = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
+	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&ds_mv_delrange_index_n,
 	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
-	/* .tp_trygetitem                 = */ DEFIMPL(&default__seq_operator_trygetitem__with__seq_operator_trygetitem_index),
-	/* .tp_trygetitem_index           = */ DEFIMPL(&default__seq_operator_trygetitem_index__with__seq_operator_foreach), // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_mv_trygetitem_index,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ds_mv_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_mv_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
 	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
 	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
@@ -173,108 +352,25 @@ PRIVATE struct type_seq ds_mv_seq = {
 	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ds_mk_remove(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *argv) {
-	int result;
-	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:remove", &key))
-		goto err;
-	result = DeeObject_InvokeMethodHint(map_remove, self->dsmp_map, key);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ds_mk_removeall(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *keys;
-	if (DeeArg_Unpack(argc, argv, "o:removeall", &keys))
-		goto err;
-	if unlikely(DeeObject_InvokeMethodHint(map_removekeys, self->dsmp_map, keys))
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ds_mk_pop(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *item;
-	DeeObject *def = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:pop", &def))
-		goto err;
-	item = DeeObject_InvokeMethodHint(map_popitem, self->dsmp_map);
-	if unlikely(!item)
-		goto err;
-	if (!DeeNone_Check(item)) {
-		DREF DeeObject *key_and_value[2];
-		int temp = DeeSeq_Unpack(item, 2, key_and_value);
-		Dee_Decref(item);
-		if unlikely(temp)
-			goto err;
-		Dee_Decref(key_and_value[1]);
-		return key_and_value[0];
-	}
-	Dee_DecrefNokill(item);
-	if (def)
-		return_reference_(def);
-	err_empty_sequence(self->dsmp_map);
-err:
-	return NULL;
-}
-
-#define ds_mv_clear ds_mk_clear
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ds_mk_clear(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":clear"))
-		goto err;
-	if unlikely(DeeObject_InvokeMethodHint(seq_clear, self->dsmp_map))
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
 
 PRIVATE struct type_method tpconst ds_mk_methods[] = {
 	/* TODO: byhash(ob) { return Mapping.byhash(this.__map__, ob).map(e -> e.first); } */
-	/* TODO: CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS: Use method hints instead of explicit callbacks */
-	TYPE_METHOD(STR_remove, &ds_mk_remove,
-	            "(key)->?Dbool\n"
-	            "${"
-	            /**/ "function remove(key): bool {\n"
-	            /**/ "	return Mapping.remove(this.__map__, key);\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_METHOD(STR_removeall, &ds_mk_removeall,
-	            "(keys:?S?O)\n"
-	            "${"
-	            /**/ "function removeall(keys) {\n"
-	            /**/ "	Mapping.removekeys(this.__map__, keys);\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_METHOD(STR_pop, &ds_mk_pop,
-	            "(def?)->\n"
-	            "${"
-	            /**/ "function pop(def?) {\n"
-	            /**/ "	local item = Mapping.popitem(this.__map__);\n"
-	            /**/ "	if (item !is none) {\n"
-	            /**/ "		local result, none = item...;\n"
-	            /**/ "		return result;\n"
-	            /**/ "	}\n"
-	            /**/ "	throw ValueError(...);\n"
-	            /**/ "}"
-	            "}"),
+	TYPE_METHOD_HINTREF(Set_remove),
+	TYPE_METHOD_HINTREF(Set_removeall),
+	TYPE_METHOD_HINTREF(Set_pop),
 #define ds_mv_methods (ds_mk_methods + 3)
-	TYPE_METHOD(STR_clear, &ds_mk_clear,
-	            "()"
-	            "${"
-	            /**/ "function clear() {\n"
-	            /**/ "	Sequence.clear(this.__map__);\n"
-	            /**/ "}"
-	            "}"),
+	TYPE_METHOD_HINTREF(Sequence_clear),
 	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst ds_mk_method_hints[] = {
+	TYPE_METHOD_HINT_F(set_remove, &ds_mk_mh_set_remove, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_removeall, &ds_mk_mh_set_removeall, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_pop, &ds_mk_mh_set_pop, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_pop_with_default, &ds_mk_mh_set_pop_with_default, METHOD_FNOREFESCAPE),
+#define ds_mv_method_hints (ds_mk_method_hints + 4)
+	TYPE_METHOD_HINT_F(seq_clear, &ds_mk_mh_seq_clear, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
 };
 
 #define ds_mv_members ds_mk_members
@@ -290,7 +386,7 @@ PRIVATE struct type_member tpconst ds_mk_members[] = {
 INTERN DeeTypeObject DefaultSequence_MapKeys_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapKeys",
-	/* .tp_doc      = */ DOC("(map)"),
+	/* .tp_doc      = */ DOC("(map:?DMapping)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -318,7 +414,7 @@ INTERN DeeTypeObject DefaultSequence_MapKeys_Type = {
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ds_mk_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__F6E3D7B2219AE1EB),
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__8B471346AD5C3673),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__A5C53AFDF1233C5A),
 	/* .tp_seq           = */ &ds_mk_seq,
 	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
@@ -332,7 +428,7 @@ INTERN DeeTypeObject DefaultSequence_MapKeys_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ ds_mk_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
 };
@@ -340,7 +436,7 @@ INTERN DeeTypeObject DefaultSequence_MapKeys_Type = {
 INTERN DeeTypeObject DefaultSequence_MapValues_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapValues",
-	/* .tp_doc      = */ DOC("(map)"),
+	/* .tp_doc      = */ DOC("(map:?DMapping)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -362,14 +458,14 @@ INTERN DeeTypeObject DefaultSequence_MapValues_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_foreach),
+		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_size),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ds_mv_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
-	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__247219960F1E745D),
 	/* .tp_seq           = */ &ds_mv_seq,
 	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
 	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
@@ -382,7 +478,7 @@ INTERN DeeTypeObject DefaultSequence_MapValues_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL, /* TODO: seq_enumerate_index */
+	/* .tp_method_hints  = */ ds_mv_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
 };

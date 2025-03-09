@@ -348,6 +348,11 @@ generic_proxy__seq_operator_contains(ProxyObject *self, DeeObject *item){
 	return DeeObject_InvokeMethodHint(seq_operator_contains, self->po_obj, item);
 }
 
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__seq_clear(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(seq_clear, self->po_obj);
+}
+
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_proxy__map_operator_getitem(ProxyObject *self, DeeObject *key){
 	return DeeObject_InvokeMethodHint(map_operator_getitem, self->po_obj, key);
@@ -421,6 +426,41 @@ generic_proxy__map_operator_hasitem_string_len_hash(ProxyObject *self, char cons
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy__map_operator_bounditem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash){
 	return DeeObject_InvokeMethodHint(map_operator_bounditem_string_len_hash, self->po_obj, key, keylen, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__map_operator_contains(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(map_operator_contains, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+generic_proxy__map_operator_size(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_operator_size, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_operator_sizeob(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_operator_sizeob, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_iterkeys(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_iterkeys, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_itervalues(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_itervalues, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__map_remove(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(map_remove, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__map_removekeys(ProxyObject *self, DeeObject *keys){
+	return DeeObject_InvokeMethodHint(map_removekeys, self->po_obj, keys);
 }
 /*[[[end]]]*/
 

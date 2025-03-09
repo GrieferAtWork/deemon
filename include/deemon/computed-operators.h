@@ -146,6 +146,7 @@ INTDEF struct type_math default__tp_math__22D95991F3D69B20;
 INTDEF struct type_math default__tp_math__2E23147A197C0EE6;
 INTDEF struct type_math default__tp_math__47C97A4265F9F31F;
 INTDEF struct type_math default__tp_math__6AAE313158D20BA0;
+INTDEF struct type_math default__tp_math__8B471346AD5C3673;
 INTDEF struct type_math default__tp_math__E5A99B058858326C;
 INTDEF struct type_math default__tp_math__E66FA6851AAFE176;
 INTDEF struct type_math default__tp_math__EFED4BCD35433C3C;
