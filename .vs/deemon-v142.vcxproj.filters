@@ -1961,6 +1961,9 @@
 		<ClCompile Include="..\src\deemon\runtime\operator-hint-errors.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\operator-hint-invoke-utils.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\operator-hint-invoke.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>

@@ -663,6 +663,7 @@
 		<ClCompile Include="..\src\deemon\runtime\operator-constcall.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator-hint-defaults.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator-hint-errors.c" />
+		<ClCompile Include="..\src\deemon\runtime\operator-hint-invoke-utils.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator-hint-invoke.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator-hints.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator-inherit.c" />
