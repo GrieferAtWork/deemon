@@ -997,7 +997,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 	default:
 		if (name < Dee_OPERATOR_USERCOUNT) {
 			enum Dee_tno_id tno_id = DeeType_GetTnoOfOperator(name);
-			if (tno_id < Dee_TNO_COUNT)
+			if ((unsigned int)tno_id < Dee_TNO_COUNT)
 				return DeeType_GetNativeOperatorOrigin((DeeTypeObject *)self, tno_id);
 		}
 		break;
@@ -1137,164 +1137,16 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 		       self->tp_init.tp_var.tp_any_ctor ||
 		       self->tp_init.tp_var.tp_any_ctor_kw ||
 		       DeeType_InheritConstructors(self);
-	case OPERATOR_STR:
-		/* "str" and "repr" are special in that we can *always* substitude str<=>print and repr<=>printrepr
-		 * As such, invoke the inherit function even if one has already been implemented, but the other hasn't. */
-		return (self->tp_cast.tp_str && self->tp_cast.tp_print) || DeeType_InheritStr(self);
-	case OPERATOR_REPR:
-		return (self->tp_cast.tp_repr && self->tp_cast.tp_printrepr) || DeeType_InheritRepr(self);
-	case OPERATOR_BOOL:
-		return self->tp_cast.tp_bool || DeeType_InheritBool(self);
-	case OPERATOR_CALL:
-		return self->tp_call || DeeType_InheritCall(self);
-	case OPERATOR_INT:
-	case OPERATOR_FLOAT:
-		return (self->tp_math && (self->tp_math->tp_int || self->tp_math->tp_int32 ||
-		                          self->tp_math->tp_int64 || self->tp_math->tp_double)) ||
-		       DeeType_InheritInt(self);
-	case OPERATOR_INV:
-		return (self->tp_math && (self->tp_math->tp_inv)) || DeeType_InheritInv(self);
-	case OPERATOR_POS:
-		return (self->tp_math && (self->tp_math->tp_pos)) || DeeType_InheritPos(self);
-	case OPERATOR_NEG:
-		return (self->tp_math && (self->tp_math->tp_neg)) || DeeType_InheritNeg(self);
-	case OPERATOR_ADD:
-	case OPERATOR_INPLACE_ADD:
-		return (self->tp_math && self->tp_math->tp_add) ||
-		       (DeeType_InheritAdd(self) && self->tp_math->tp_add);
-	case OPERATOR_SUB:
-	case OPERATOR_INPLACE_SUB:
-		return (self->tp_math && self->tp_math->tp_sub) ||
-		       (DeeType_InheritAdd(self) && self->tp_math->tp_sub);
-	case OPERATOR_INC:
-		return (self->tp_math && self->tp_math->tp_inc) ||
-		       (DeeType_InheritAdd(self) && self->tp_math->tp_inc);
-	case OPERATOR_DEC:
-		return (self->tp_math && self->tp_math->tp_dec) ||
-		       (DeeType_InheritAdd(self) && self->tp_math->tp_dec);
-	case OPERATOR_MUL:
-	case OPERATOR_INPLACE_MUL:
-		return (self->tp_math && (self->tp_math->tp_mul || self->tp_math->tp_inplace_mul)) || DeeType_InheritMul(self);
-	case OPERATOR_DIV:
-	case OPERATOR_INPLACE_DIV:
-		return (self->tp_math && (self->tp_math->tp_div || self->tp_math->tp_inplace_div)) || DeeType_InheritDiv(self);
-	case OPERATOR_MOD:
-	case OPERATOR_INPLACE_MOD:
-		return (self->tp_math && (self->tp_math->tp_mod || self->tp_math->tp_inplace_mod)) || DeeType_InheritMod(self);
-	case OPERATOR_SHL:
-	case OPERATOR_INPLACE_SHL:
-		return (self->tp_math && (self->tp_math->tp_shl || self->tp_math->tp_inplace_shl)) || DeeType_InheritShl(self);
-	case OPERATOR_SHR:
-	case OPERATOR_INPLACE_SHR:
-		return (self->tp_math && (self->tp_math->tp_shr || self->tp_math->tp_inplace_shr)) || DeeType_InheritShr(self);
-	case OPERATOR_AND:
-	case OPERATOR_INPLACE_AND:
-		return (self->tp_math && (self->tp_math->tp_and || self->tp_math->tp_inplace_and)) || DeeType_InheritAnd(self);
-	case OPERATOR_OR:
-	case OPERATOR_INPLACE_OR:
-		return (self->tp_math && (self->tp_math->tp_or || self->tp_math->tp_inplace_or)) || DeeType_InheritOr(self);
-	case OPERATOR_XOR:
-	case OPERATOR_INPLACE_XOR:
-		return (self->tp_math && (self->tp_math->tp_xor || self->tp_math->tp_inplace_xor)) || DeeType_InheritXor(self);
-	case OPERATOR_POW:
-	case OPERATOR_INPLACE_POW:
-		return (self->tp_math && (self->tp_math->tp_pow || self->tp_math->tp_inplace_pow)) || DeeType_InheritPow(self);
-	case OPERATOR_HASH:
-		return (self->tp_cmp && self->tp_cmp->tp_hash) ||
-		       (DeeType_InheritCompare(self) && self->tp_cmp->tp_hash);
-	case OPERATOR_EQ:
-	case OPERATOR_NE:
-		return (self->tp_cmp && self->tp_cmp->tp_eq) ||
-		       (DeeType_InheritCompare(self) && self->tp_cmp->tp_eq);
-	case OPERATOR_LO:
-	case OPERATOR_GE:
-		return (self->tp_cmp && self->tp_cmp->tp_lo) ||
-		       (DeeType_InheritCompare(self) && self->tp_cmp->tp_lo);
-	case OPERATOR_LE:
-	case OPERATOR_GR:
-		return (self->tp_cmp && self->tp_cmp->tp_gr) ||
-		       (DeeType_InheritCompare(self) && self->tp_cmp->tp_gr);
-	case OPERATOR_ITERNEXT:
-		return (self->tp_iter_next) || DeeType_InheritIterNext(self);
-	case OPERATOR_ITER:
-	case OPERATOR_SIZE:
-	case OPERATOR_CONTAINS:
-	case OPERATOR_GETITEM:
-	case OPERATOR_DELITEM:
-	case OPERATOR_SETITEM:
-	case OPERATOR_GETRANGE:
-	case OPERATOR_DELRANGE:
-	case OPERATOR_SETRANGE:
-		switch (name) {
-		case OPERATOR_ITER:
-			return (self->tp_seq && (self->tp_seq->tp_iter &&
-			                         self->tp_seq->tp_foreach &&
-			                         self->tp_seq->tp_foreach_pair)) ||
-			       DeeType_InheritIter(self);
-		case OPERATOR_SIZE:
-			return (self->tp_seq && (self->tp_seq->tp_sizeob &&
-			                         self->tp_seq->tp_size)) ||
-			       DeeType_InheritSize(self);
-		case OPERATOR_CONTAINS:
-			return (self->tp_seq && (self->tp_seq->tp_contains)) ||
-			       DeeType_InheritContains(self);
-		case OPERATOR_GETITEM:
-			return (self->tp_seq && (self->tp_seq->tp_getitem &&
-			                         self->tp_seq->tp_getitem_index &&
-			                         self->tp_seq->tp_getitem_string_hash &&
-			                         self->tp_seq->tp_getitem_string_len_hash &&
-			                         /*self->tp_seq->tp_getitem_index_fast &&*/ /* May not end up defined */
-			                         self->tp_seq->tp_trygetitem &&
-			                         self->tp_seq->tp_trygetitem_string_hash &&
-			                         self->tp_seq->tp_trygetitem_string_len_hash &&
-			                         /* Everything above is functionally equivalent */
-			                         /* ================ */
-			                         /* Everything below can be substituted using the above */
-			                         self->tp_seq->tp_bounditem &&
-			                         self->tp_seq->tp_bounditem_index &&
-			                         self->tp_seq->tp_bounditem_string_hash &&
-			                         self->tp_seq->tp_bounditem_string_len_hash &&
-			                         self->tp_seq->tp_hasitem &&
-			                         self->tp_seq->tp_hasitem_index &&
-			                         self->tp_seq->tp_hasitem_string_hash &&
-			                         self->tp_seq->tp_hasitem_string_len_hash)) ||
-			       DeeType_InheritGetItem(self);
-		case OPERATOR_DELITEM:
-			return (self->tp_seq && (self->tp_seq->tp_delitem &&
-			                         self->tp_seq->tp_delitem_index &&
-			                         self->tp_seq->tp_delitem_string_hash &&
-			                         self->tp_seq->tp_delitem_string_len_hash)) ||
-			       DeeType_InheritDelItem(self);
-		case OPERATOR_SETITEM:
-			return (self->tp_seq && (self->tp_seq->tp_setitem &&
-			                         self->tp_seq->tp_setitem_index &&
-			                         self->tp_seq->tp_setitem_string_hash &&
-			                         self->tp_seq->tp_setitem_string_len_hash)) ||
-			       DeeType_InheritSetItem(self);
-		case OPERATOR_GETRANGE:
-			return (self->tp_seq && (self->tp_seq->tp_getrange &&
-			                         self->tp_seq->tp_getrange_index &&
-			                         self->tp_seq->tp_getrange_index_n)) ||
-			       DeeType_InheritGetRange(self);
-		case OPERATOR_DELRANGE:
-			return (self->tp_seq && (self->tp_seq->tp_delrange &&
-			                         self->tp_seq->tp_delrange_index &&
-			                         self->tp_seq->tp_delrange_index_n)) ||
-			       DeeType_InheritDelRange(self);
-		case OPERATOR_SETRANGE:
-			return (self->tp_seq && (self->tp_seq->tp_setrange &&
-			                         self->tp_seq->tp_setrange_index &&
-			                         self->tp_seq->tp_setrange_index_n)) ||
-			       DeeType_InheritSetRange(self);
-		default: __builtin_unreachable();
-		}
-		__builtin_unreachable();
-	case OPERATOR_ENTER:
-	case OPERATOR_LEAVE:
-		return (self->tp_with && self->tp_with->tp_enter) || DeeType_InheritWith(self);
 	case OPERATOR_GETBUF:
-		return (self->tp_buffer && (self->tp_buffer->tp_getbuf || self->tp_buffer->tp_putbuf)) || DeeType_InheritBuffer(self);
-	default: break;
+		return (self->tp_buffer && (self->tp_buffer->tp_getbuf || self->tp_buffer->tp_putbuf)) ||
+		       DeeType_InheritBuffer(self);
+	default:
+		if (name < Dee_OPERATOR_USERCOUNT) {
+			enum Dee_tno_id tno_id = DeeType_GetTnoOfOperator(name);
+			if ((unsigned int)tno_id < Dee_TNO_COUNT)
+				return DeeType_GetNativeOperatorWithoutUnsupported((DeeTypeObject *)self, tno_id) != NULL;
+		}
+		break;
 	}
 
 	/* Try to inherit a non-standard operator (e.g. operators defined by "DeeFile_Type"). */

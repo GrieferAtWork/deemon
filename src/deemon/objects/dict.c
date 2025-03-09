@@ -3753,7 +3753,7 @@ dict_compare_eq_seq_foreach(void *arg, DeeObject *rhs_item) {
 	struct Dee_dict_item *lhs_item;
 	DREF DeeObject *lhs_key_and_value[2];
 	struct dict_compare_seq_foreach_data *data;
-	if (!DeeType_RequireSupportedNativeOperator(Dee_TYPE(rhs_item), foreach))
+	if (!DeeType_HasNativeOperator(Dee_TYPE(rhs_item), foreach))
 		return DICT_COMPARE_SEQ_FOREACH_NOTEQUAL;
 	data = (struct dict_compare_seq_foreach_data *)arg;
 	dict = data->dcsfd_lhs;
@@ -3826,7 +3826,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_mh_seq_trycompare_eq(Dict *lhs, DeeObject *rhs) {
-	if (!DeeType_RequireSupportedNativeOperator(Dee_TYPE(rhs), iter))
+	if (!DeeType_HasNativeOperator(Dee_TYPE(rhs), iter))
 		return 1;
 	return dict_mh_seq_compare_eq(lhs, rhs);
 }

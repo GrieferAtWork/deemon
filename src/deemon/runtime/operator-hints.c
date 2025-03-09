@@ -49,6 +49,13 @@
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
+
+/* Config option: also write "*__unsupported" impls to operator slots */
+#undef CONFIG_CACHE_UNSUPPORTED_OPERATORS
+#if 1
+#define CONFIG_CACHE_UNSUPPORTED_OPERATORS
+#endif
+
 DECL_BEGIN
 
 struct oh_init_spec_class {
@@ -1780,6 +1787,10 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 					goto nope;
 			}
 		}
+#ifdef CONFIG_CACHE_UNSUPPORTED_OPERATORS
+		if (result == DeeType_GetNativeOperatorUnsupported(id))
+			goto nope;
+#endif /* CONFIG_CACHE_UNSUPPORTED_OPERATORS */
 	}
 yes:
 	return result;
@@ -2055,14 +2066,20 @@ PRIVATE WUNUSED NONNULL((1, 2, 4, 5, 6)) Dee_funptr_t
 
 			/* Found the impl in question -> must now also inherit *its* dependencies */
 			for (dep_i = 0; dep_i < COMPILER_LENOF(iter->ohisi_deps); ++dep_i) {
-				Dee_funptr_t dep_impl;
+				Dee_funptr_t dep_impl, into_dep_impl;
 				enum Dee_tno_id dep = (enum Dee_tno_id)iter->ohisi_deps[dep_i];
-				if (dep >= Dee_TNO_COUNT)
+				if ((unsigned int)dep >= Dee_TNO_COUNT)
 					break;
 
 				/* Check if the dependency is already present in "into". */
-				if (type_tno_get(into, dep))
+				into_dep_impl = type_tno_get(into, dep);
+				if (into_dep_impl) {
+#ifdef CONFIG_CACHE_UNSUPPORTED_OPERATORS
+					if (into_dep_impl == DeeType_GetNativeOperatorUnsupported(dep))
+						return NULL; /* Unsatisfied dependency */
+#endif /* CONFIG_CACHE_UNSUPPORTED_OPERATORS */
 					continue;
+				}
 
 				/* Also skip if "dep" is already appears in "actions"
 				 * (because it will be present by the time "impl" gets written) */
@@ -2070,8 +2087,15 @@ PRIVATE WUNUSED NONNULL((1, 2, 4, 5, 6)) Dee_funptr_t
 					continue;
 
 				dep_impl = type_tno_get(from, dep);
-				ASSERTF(dep_impl, "Transitive operator '%u' used as dependency was not initialized in '%s'",
+#ifdef CONFIG_CACHE_UNSUPPORTED_OPERATORS
+#define LOCAL_VERIFY_DEP_IMPL() (dep_impl != NULL && dep_impl != DeeType_GetNativeOperatorUnsupported(dep))
+#else /* CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+#define LOCAL_VERIFY_DEP_IMPL() (dep_impl != NULL)
+#endif /* !CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+				ASSERTF(LOCAL_VERIFY_DEP_IMPL(),
+				        "Transitive operator '%u' used as dependency was not initialized in '%s'",
 				        (unsigned int)dep, from->tp_name);
+#undef LOCAL_VERIFY_DEP_IMPL
 				dep_impl = do_DeeType_InheritNativeOperatorWithoutHints(from, into, dep, actions, p_nactions, dep_impl);
 				if unlikely(!dep_impl)
 					return NULL; /* Unsatisfied dependency */
@@ -2194,6 +2218,33 @@ PRIVATE WUNUSED NONNULL((1)) Dee_funptr_t
 	return NULL;
 }
 
+/* Same as `DeeType_GetNativeOperatorWithoutUnsupported()', but never returns NULL
+ * (for any operator linked against a deemon user-code ID (e.g. "OPERATOR_ITER"))
+ * and instead returns special implementations for each operator that simply call
+ * `err_unimplemented_operator()' with the relevant arguments, before returning
+ * whatever is indicative of an error in the context of the native operator. */
+PUBLIC WUNUSED NONNULL((1)) Dee_funptr_t
+(DCALL DeeType_GetNativeOperator)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
+#ifdef CONFIG_CACHE_UNSUPPORTED_OPERATORS
+	Dee_funptr_t result = DeeType_GetNativeOperatorWithoutInherit(self, id);
+	if unlikely(!result) {
+		result = DeeType_InheritNativeOperator(self, id);
+		if unlikely(result == NULL) {
+			/* Operator isn't supported :( -- if possible, try to remember that fact */
+			result = DeeType_GetNativeOperatorUnsupported(id);
+			if likely(result)
+				(void)type_tno_tryset(self, id, result);
+		}
+	}
+	return result;
+#else /* CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+	Dee_funptr_t result = DeeType_GetNativeOperatorWithoutUnsupported(self, id);
+	if unlikely(!result) /* Note how we don't write this impl back to "self" */
+		result = DeeType_GetNativeOperatorUnsupported(id);
+	return result;
+#endif /* !CONFIG_CACHE_UNSUPPORTED_OPERATORS */
+}
+
 /* Same as `DeeType_GetNativeOperatorWithoutInherit', but actually also does the
  * operator inherit part (meaning that this is the low-level* master-function
  * that's called when you invoke one of the standard operators whose callback
@@ -2202,23 +2253,23 @@ PRIVATE WUNUSED NONNULL((1)) Dee_funptr_t
  *     one only adds coalesce to `DeeType_GetNativeOperatorUnsupported()' */
 PUBLIC WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperatorWithoutUnsupported)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
+#ifdef CONFIG_CACHE_UNSUPPORTED_OPERATORS
+#ifdef __OPTIMIZE_SIZE__
+	Dee_funptr_t result = DeeType_GetNativeOperator(self, id);
+#else /* __OPTIMIZE_SIZE__ */
+	Dee_funptr_t result = type_tno_get(self, id);
+	if unlikely(result == NULL)
+		result = DeeType_GetNativeOperator(self, id);
+#endif /* !__OPTIMIZE_SIZE__ */
+	if (result == DeeType_GetNativeOperatorUnsupported(id))
+		result = NULL;
+	return result;
+#else /* CONFIG_CACHE_UNSUPPORTED_OPERATORS */
 	Dee_funptr_t result = DeeType_GetNativeOperatorWithoutInherit(self, id);
-	if (result == NULL)
+	if unlikely(!result)
 		result = DeeType_InheritNativeOperator(self, id);
 	return result;
-}
-
-/* Same as `DeeType_GetNativeOperatorWithoutUnsupported()', but never returns NULL
- * (for any operator linked against a deemon user-code ID (e.g. "OPERATOR_ITER"))
- * and instead returns special implementations for each operator that simply call
- * `err_unimplemented_operator()' with the relevant arguments, before returning
- * whatever is indicative of an error in the context of the native operator. */
-PUBLIC WUNUSED NONNULL((1)) Dee_funptr_t
-(DCALL DeeType_GetNativeOperator)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
-	Dee_funptr_t result = DeeType_GetNativeOperatorWithoutUnsupported(self, id);
-	if unlikely(!result) /* Note how we don't write this impl back to "self" */
-		result = DeeType_GetNativeOperatorUnsupported(id);
-	return result;
+#endif /* !CONFIG_CACHE_UNSUPPORTED_OPERATORS */
 }
 
 

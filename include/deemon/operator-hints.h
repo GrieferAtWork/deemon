@@ -334,7 +334,10 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_funptr_t
  * >> } */
 #define _DeeType_RequireNativeOperator(self, name) \
 	((DeeNO_##name##_t)DeeType_GetNativeOperator(self, Dee_TNO_##name))
-#define _DeeType_RequireSupportedNativeOperator(self, name) \
+
+/* Same as `DeeType_RequireNativeOperator()', but returns `NULL' when
+ * `DeeType_RequireNativeOperator()' would have returned the "not-implemented" impl */
+#define DeeType_RequireSupportedNativeOperator(self, name) \
 	((DeeNO_##name##_t)DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_##name))
 
 /* Inline helper for optimized lookup of a specific native operator,
@@ -343,13 +346,9 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_funptr_t
 #ifdef __OPTIMIZE_SIZE__
 #define DeeType_RequireNativeOperator(self, name) \
 	_DeeType_RequireNativeOperator(self, name)
-#define DeeType_RequireSupportedNativeOperator(self, name) \
-	_DeeType_RequireSupportedNativeOperator(self, name)
 #else /* __OPTIMIZE_SIZE__ */
 #define DeeType_RequireNativeOperator(self, name) \
 	(likely(_Dee_TNO_HAS(self, name)) ? _Dee_TNO_GET(self, name) : _DeeType_RequireNativeOperator(self, name))
-#define DeeType_RequireSupportedNativeOperator(self, name) \
-	(likely(_Dee_TNO_HAS(self, name)) ? _Dee_TNO_GET(self, name) : _DeeType_RequireSupportedNativeOperator(self, name))
 #endif /* !__OPTIMIZE_SIZE__ */
 #define DeeType_HasNativeOperator(self, name) (DeeType_RequireSupportedNativeOperator(self, name) != NULL)
 

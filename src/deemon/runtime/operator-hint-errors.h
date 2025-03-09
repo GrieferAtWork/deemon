@@ -34,10 +34,6 @@ INTDEF Dee_hash_t DCALL default__hash__unsupported(DeeObject *__restrict self);
 #define default__trycompare_eq__unsupported \
 	default__seq_operator_trycompare_eq__unsupported
 
-/* TODO: Types should be able to "delete" operators by assigning the `default__*__unsupported'
- *       implementation to the relevant slot, and the operator inheritance engine should just
- *       notice those assignment and stop trying to find the operator in that sub-tree of types */
-
 /* clang-format off */
 /*[[[deemon (printNativeOperatorHintErrorImpls from "..method-hints.method-hints")(decls: true);]]]*/
 INTDEF int DCALL default__assign__unsupported(DeeObject*, void*);

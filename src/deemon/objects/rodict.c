@@ -1734,7 +1734,7 @@ rodict_compare_eq_seq_foreach(void *arg, DeeObject *rhs_item) {
 	int cmp_result;
 	struct Dee_dict_item *lhs_item;
 	struct rodict_compare_seq_foreach_data *data;
-	if (!DeeType_RequireSupportedNativeOperator(Dee_TYPE(rhs_item), foreach))
+	if (!DeeType_HasNativeOperator(Dee_TYPE(rhs_item), foreach))
 		return RODICT_COMPARE_SEQ_FOREACH_NOTEQUAL;
 	data = (struct rodict_compare_seq_foreach_data *)arg;
 	dict = data->rdcsfd_lhs;
@@ -1792,7 +1792,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rodict_mh_seq_trycompare_eq(RoDict *lhs, DeeObject *rhs) {
-	if (!DeeType_RequireSupportedNativeOperator(Dee_TYPE(rhs), foreach))
+	if (!DeeType_HasNativeOperator(Dee_TYPE(rhs), foreach))
 		return 1;
 	return rodict_mh_seq_compare_eq(lhs, rhs);
 }
