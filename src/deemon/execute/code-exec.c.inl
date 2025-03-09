@@ -23,16 +23,13 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
-#include <deemon/cell.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
-#include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
@@ -51,14 +48,18 @@
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/futex.h>
 
-#include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/overflow.h>
-#include <hybrid/sched/yield.h>
+#include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
 #include "../runtime/runtime_error.h"
+/**/
+
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t */
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>
@@ -92,7 +93,7 @@ __pragma_GCC_diagnostic_ignored(MSconditional_expression_is_constant)
 #ifdef CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS
 #define exec_dispatch_USE_goto
 #elif defined(_MSC_VER) && defined(NDEBUG)
-/* This forced msvc to *always* generate a *full* 256-word jump-table.
+/* This forces msvc to *always* generate a *full* 256-word jump-table.
  * When using a regular switch with a default-case, msvc will also use
  * a jump-table, but it won't be 256-word long. Instead, it will emit
  * code like this (for the prefix case):
@@ -987,7 +988,7 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 #include <deemon/asm-table.h>
 #endif /* exec_dispatch_USE_goto */
 
-	register union {
+	__register union {
 		instruction_t *ptr;
 		uint8_t       *u8;
 		int8_t        *s8;
@@ -996,15 +997,19 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 		int16_t       *s16;
 		int32_t       *s32;
 	} ip;
-#define READ_imm8()   (*ip.u8++)
-#define READ_Simm8()  (*ip.s8++)
-#define READ_imm16()            UNALIGNED_GETLE16(ip.u16++)
-#define READ_Simm16() ((int16_t)UNALIGNED_GETLE16(ip.u16++))
-#define READ_imm32()            UNALIGNED_GETLE32(ip.u32++)
-#define READ_Simm32() ((int32_t)UNALIGNED_GETLE32(ip.u32++))
-	register DeeObject **sp;
-	register DeeCodeObject *code;
-	register uint16_t imm_val;
+#define PEEK_instr()    (*ip.ptr)
+#define READ_instr()    (*ip.ptr++)
+#define SKIP_instr()    (++ip.ptr)
+#define ADJUST_PC(off)  (ip.ptr += (off))
+#define READ_imm8()     (*ip.u8++)
+#define READ_Simm8()    (*ip.s8++)
+#define READ_imm16()              UNALIGNED_GETLE16(ip.u16++)
+#define READ_Simm16()   ((int16_t)UNALIGNED_GETLE16(ip.u16++))
+#define READ_imm32()              UNALIGNED_GETLE32(ip.u32++)
+#define READ_Simm32()   ((int32_t)UNALIGNED_GETLE32(ip.u32++))
+	__register DeeObject **sp;
+	__register DeeCodeObject *code;
+	__register uint16_t imm_val;
 	uint16_t imm_val2;
 	DeeThreadObject *this_thread = DeeThread_Self();
 	uint16_t except_recursion    = this_thread->t_exceptsz;
@@ -1207,10 +1212,21 @@ inc_execsz_start:
 #define YIELD(val)           do{ frame->cf_result = (val); YIELD_RESULT(); }__WHILE0
 #define RETURN(val)          do{ frame->cf_result = (val); RETURN_RESULT(); }__WHILE0
 #ifndef __OPTIMIZE_SIZE__
-#define PREDICT(opcode)      do{ if (*ip.ptr == (opcode)) { ++ip.ptr; goto target_##opcode; } }__WHILE0
+#define PREDICT(opcode)      do{ if (PEEK_instr() == (opcode)) { SKIP_instr(); goto target_##opcode; } }__WHILE0
 #else /* !__OPTIMIZE_SIZE__ */
 #define PREDICT(opcode)      do{}__WHILE0
 #endif /* __OPTIMIZE_SIZE__ */
+#ifdef EXEC_SAFE
+#define JMP_RELATIVE(off) do { ADJUST_PC(off); goto assert_ip_bounds; } __WHILE0
+#else /* EXEC_SAFE */
+#define JMP_RELATIVE(off)                                             \
+	do {                                                     \
+		ADJUST_PC(off);                                      \
+		ASSERT(ip.ptr >= code->co_code);                     \
+		ASSERT(ip.ptr < code->co_code + code->co_codebytes); \
+		DISPATCH();                                          \
+	} __WHILE0
+#endif /* !EXEC_SAFE */
 
 
 next_instr:
@@ -1261,11 +1277,11 @@ next_instr:
 
 
 #ifdef exec_dispatch_USE_switch
-	switch (*ip.ptr++)
+	switch (READ_instr())
 #elif defined(exec_dispatch_USE_goto)
-	goto *targets_0x00[*ip.ptr++];
+	goto *targets_0x00[READ_instr()];
 #elif defined(exec_dispatch_USE_switch_goto)
-	switch (*ip.ptr++) {
+	switch (READ_instr()) {
 #define DEE_ASM_WANT_TABLE(prefix_byte_or_0) (prefix_byte_or_0 == 0)
 #define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len) \
 	case opcode_byte: goto unknown_instruction;
@@ -1442,13 +1458,7 @@ jump_16:
 					if (DeeThread_CheckInterruptSelf(this_thread))
 						HANDLE_EXCEPT();
 				}
-				ip.ptr += (int16_t)imm_val;
-#ifdef EXEC_SAFE
-				goto assert_ip_bounds;
-#else /* EXEC_SAFE */
-				ASSERT(ip.ptr >= code->co_code);
-				ASSERT(ip.ptr < code->co_code + code->co_codebytes);
-#endif /* !EXEC_SAFE */
+				JMP_RELATIVE((int16_t)imm_val);
 			}
 			DISPATCH();
 		}
@@ -1471,18 +1481,17 @@ jump_16:
 			}
 
 			/* Adjust the instruction pointer accordingly. */
-			ip.ptr += (int16_t)imm_val;
 #ifdef EXEC_SAFE
+			ADJUST_PC((int16_t)imm_val);
 assert_ip_bounds:
 			/* Raise an error if the new PC has been displaced out-of-bounds. */
 			if unlikely(ip.ptr < code->co_code ||
 			            ip.ptr >= code->co_code + code->co_codebytes)
 				goto err_invalid_ip;
-#else /* EXEC_SAFE */
-			ASSERT(ip.ptr >= code->co_code);
-			ASSERT(ip.ptr < code->co_code + code->co_codebytes);
-#endif /* !EXEC_SAFE */
 			DISPATCH();
+#else /* EXEC_SAFE */
+			JMP_RELATIVE((int16_t)imm_val);
+#endif /* !EXEC_SAFE */
 		}
 
 		TARGETSimm16(ASM_FOREACH, -1, +2) {
@@ -4070,11 +4079,11 @@ do_setattr_this_c:
 		RAW_TARGET(ASM_EXTENDED1) {
 
 #ifdef exec_dispatch_USE_switch
-			switch (*ip.ptr++)
+			switch (READ_instr())
 #elif defined(exec_dispatch_USE_goto)
-			goto *targets_0xf0[*ip.ptr++];
+			goto *targets_0xf0[READ_instr()];
 #elif defined(exec_dispatch_USE_switch_goto)
-			switch (*ip.ptr++) {
+			switch (READ_instr()) {
 #define DEE_ASM_WANT_TABLE(prefix_byte_or_0) (prefix_byte_or_0 == 0xf0)
 #define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len) \
 			case opcode_byte: goto unknown_instruction;
@@ -4198,14 +4207,7 @@ do_setattr_this_c:
 						if (DeeThread_CheckInterruptSelf(this_thread))
 							HANDLE_EXCEPT();
 					}
-					ip.ptr += disp32;
-#ifdef EXEC_SAFE
-					goto assert_ip_bounds;
-#else /* EXEC_SAFE */
-					ASSERT(ip.ptr >= code->co_code);
-					ASSERT(ip.ptr < code->co_code + code->co_codebytes);
-					DISPATCH();
-#endif /* !EXEC_SAFE */
+					JMP_RELATIVE(disp32);
 				}
 
 				TARGETSimm16(ASM_FOREACH_PAIR, -1, +3) {
@@ -5288,14 +5290,14 @@ do_pack_dict:
 				}
 
 				RAW_TARGET(ASM16_EXTERN)
-					ip.ptr += 4;
+					ADJUST_PC(4);
 					goto do_prefix_instr;
 
 				RAW_TARGET(ASM16_STACK)
 				RAW_TARGET(ASM16_STATIC)
 				RAW_TARGET(ASM16_GLOBAL)
 				RAW_TARGET(ASM16_LOCAL)
-					ip.ptr += 2;
+					ADJUST_PC(2);
 					goto do_prefix_instr;
 
 				RAW_TARGET(ASM_VARARGS_UNPACK) {
@@ -5543,22 +5545,22 @@ do_supercallattr_rc:
 
 		{ /* Prefixed instruction handling. */
 		RAW_TARGET(ASM_EXTERN)
-			ip.ptr += 2;
+			ADJUST_PC(2);
 			goto do_prefix_instr;
 		RAW_TARGET(ASM_STACK)
 		RAW_TARGET(ASM_STATIC)
 		RAW_TARGET(ASM_GLOBAL)
 		RAW_TARGET(ASM_LOCAL)
-			++ip.ptr;
+			ADJUST_PC(1);
 do_prefix_instr:
 
 			/* Execute a prefixed instruction. */
 #ifdef exec_dispatch_USE_switch
-			switch (*ip.ptr++)
+			switch (READ_instr())
 #elif defined(exec_dispatch_USE_goto)
-			goto *prefix_targets_0x00[*ip.ptr++];
+			goto *prefix_targets_0x00[READ_instr()];
 #elif defined(exec_dispatch_USE_switch_goto)
-			switch (*ip.ptr++) {
+			switch (READ_instr()) {
 #define DEE_ASM_WANT_TABLE(prefix_byte_or_0) (prefix_byte_or_0 == 0)
 #define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len) \
 			case opcode_byte: goto unknown_instruction;
@@ -5609,13 +5611,7 @@ prefix_jf_16:
 							if (DeeThread_CheckInterruptSelf(this_thread))
 								HANDLE_EXCEPT();
 						}
-						ip.ptr += (int16_t)imm_val;
-#ifdef EXEC_SAFE
-						goto assert_ip_bounds;
-#else /* EXEC_SAFE */
-						ASSERT(ip.ptr >= code->co_code);
-						ASSERT(ip.ptr < code->co_code + code->co_codebytes);
-#endif /* !EXEC_SAFE */
+						JMP_RELATIVE((int16_t)imm_val);
 					}
 					DISPATCH();
 				}
@@ -5642,13 +5638,7 @@ prefix_jt_16:
 							if (DeeThread_CheckInterruptSelf(this_thread))
 								HANDLE_EXCEPT();
 						}
-						ip.ptr += (int16_t)imm_val;
-#ifdef EXEC_SAFE
-						goto assert_ip_bounds;
-#else /* EXEC_SAFE */
-						ASSERT(ip.ptr >= code->co_code);
-						ASSERT(ip.ptr < code->co_code + code->co_codebytes);
-#endif /* !EXEC_SAFE */
+						JMP_RELATIVE((int16_t)imm_val);
 					}
 					DISPATCH();
 				}
@@ -6653,11 +6643,11 @@ do_prefix_push_local:
 
 				PREFIX_RAW_TARGET(ASM_EXTENDED1) {
 #ifdef exec_dispatch_USE_switch
-					switch (*ip.ptr++)
+					switch (READ_instr())
 #elif defined(exec_dispatch_USE_goto)
-					goto *PP_CAT2(prefix_targets_, ASM_EXTENDED1)[*ip.ptr++];
+					goto *PP_CAT2(prefix_targets_, ASM_EXTENDED1)[READ_instr()];
 #elif defined(exec_dispatch_USE_switch_goto)
-					switch (*ip.ptr++) {
+					switch (READ_instr()) {
 #define DEE_ASM_WANT_TABLE(prefix_byte_or_0) (prefix_byte_or_0 == ASM_EXTENDED1)
 #define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len) \
 					case opcode_byte: goto unknown_instruction;
@@ -6893,7 +6883,7 @@ do_prefix_cmpxch_ub_c:
 							if (!ok)
 								Dee_DecrefNokill(value);
 #ifndef __OPTIMIZE_SIZE__
-							if likely(*ip.ptr == ASM_POP) {
+							if likely(PEEK_instr() == ASM_POP) {
 								/* This is a likely case, as the compiler generates for:
 								 * >> static local x = 42;
 								 *
@@ -6904,7 +6894,7 @@ do_prefix_cmpxch_ub_c:
 								 * And prefixed ASM_CMPXCH_UB_C is used nowhere else, except
 								 * in custom user-assembly, so we merge the 2 instructions
 								 * here such that we never have to push the boolean. */
-								++ip.ptr;
+								SKIP_instr();
 								DISPATCH();
 							}
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -7658,6 +7648,8 @@ __pragma_GCC_diagnostic_pop
 #undef RETURN_RESULT
 #undef YIELD
 #undef RETURN
+#undef PREDICT
+#undef JMP_RELATIVE
 #undef cmpxch_prefix_object
 #undef xch_prefix_object
 #undef get_prefix_object_ptr

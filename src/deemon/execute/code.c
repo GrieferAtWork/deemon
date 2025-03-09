@@ -1962,7 +1962,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeCodeObject *result;
 	DeeObject *flags        = Dee_None;
 	DeeObject *except       = Dee_None;
-	DeeObject *constants      = Dee_None;
+	DeeObject *constants    = Dee_None;
 	DeeObject *text         = Dee_None;
 	DeeObject *keywords     = Dee_None;
 	DeeObject *defaults     = Dee_None;
