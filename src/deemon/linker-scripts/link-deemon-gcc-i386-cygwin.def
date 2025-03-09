@@ -1076,8 +1076,6 @@ EXPORTS
 	_DeeObject_ThisCallKw@20=DeeObject_ThisCallKw@20
 	_DeeObject_ThisCallTuple@12=DeeObject_ThisCallTuple@12
 	_DeeObject_ThisCallTupleKw@16=DeeObject_ThisCallTupleKw@16
-	_DeeObject_TryCmpEqAsBool@8=DeeObject_TryCmpEqAsBool@8
-	_DeeObject_TryCmpKeyEqAsBool@12=DeeObject_TryCmpKeyEqAsBool@12
 	_DeeObject_TryCompareEq@8=DeeObject_TryCompareEq@8
 	_DeeObject_TryCompareKeyEq@12=DeeObject_TryCompareKeyEq@12
 	_DeeObject_TryGetItem@8=DeeObject_TryGetItem@8

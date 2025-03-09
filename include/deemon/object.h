@@ -4715,23 +4715,6 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpGrAsBool)(DeeObject *sel
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpGeAsBool)(DeeObject *self, DeeObject *some_object);
 
 
-/* Deprecated wrapper around "DeeObject_TryCompareEq()"
- * @return: 1 : Compare returns "true"
- * @return: 0 : Compare returns "false"
- * @return: -1: Error */
-DFUNDEF WUNUSED NONNULL((1, 2)) int /* DEPRECATED! */
-(DCALL DeeObject_TryCmpEqAsBool)(DeeObject *self, DeeObject *some_object);
-
-/* Deprecated wrapper around "DeeObject_TryCompareKeyEq()"
- * @return: 1 : Compare returns "true"
- * @return: 0 : Compare returns "false"
- * @return: -1: Error */
-DFUNDEF WUNUSED NONNULL((1, 2)) int /* DEPRECATED! */
-(DCALL DeeObject_TryCmpKeyEqAsBool)(DeeObject *keyed_search_item,
-                                    DeeObject *elem, /*nullable*/ DeeObject *key);
-
-
-
 /* @return: == -1: `lhs < rhs'
  * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs > rhs'

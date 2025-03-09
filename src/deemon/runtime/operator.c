@@ -1588,32 +1588,6 @@ DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpGrAsBool, DeeObject_CmpGr)
 DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpGeAsBool, DeeObject_CmpGe)
 #undef DEFINE_COMPARE_ASBOOL_OPERATOR
 
-/* Deprecated wrapper around "DeeObject_TryCompareEq()"
- * @return: 1 : Compare returns "true"
- * @return: 0 : Compare returns "false"
- * @return: -1: Error */
-PUBLIC WUNUSED NONNULL((1, 2)) int /* DEPRECATED! */
-(DCALL DeeObject_TryCmpEqAsBool)(DeeObject *self, DeeObject *some_object) {
-	int result = DeeObject_TryCompareEq(self, some_object);
-	if unlikely(result == Dee_COMPARE_ERR)
-		return -1;
-	return result == 0 ? 1 : 0;
-}
-
-/* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
- * @return:  > 0: `keyed_search_item == key(elem)'
- * @return: == 0: `keyed_search_item != key(elem)'
- * @return:  < 0: An error occurred. */
-PUBLIC WUNUSED NONNULL((1, 2)) int /* DEPRECATED! */
-(DCALL DeeObject_TryCmpKeyEqAsBool)(DeeObject *keyed_search_item,
-                                    DeeObject *elem, /*nullable*/ DeeObject *key) {
-	int result = key ? DeeObject_TryCompareKeyEq(keyed_search_item, elem, key)
-	                 : DeeObject_TryCompareEq(keyed_search_item, elem);
-	if unlikely(result == Dee_COMPARE_ERR)
-		return -1;
-	return result == 0 ? 1 : 0;
-}
-
 DEFINE_OPERATOR(int, ContainsAsBool,
                 (DeeObject *self, DeeObject *some_object)) {
 	DREF DeeObject *resultob;
