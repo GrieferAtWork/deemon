@@ -269,33 +269,33 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5, 6)) int
 #define DEE_UNPdN(sizeof)         DEE_PRIVATE_UNPdN(sizeof)
 
 /* Helpful aliases */
-#define DEE_UNPuSIZ DEE_UNPuN(__SIZEOF_SIZE_T__)
 #define DEE_UNPdSIZ DEE_UNPdN(__SIZEOF_SIZE_T__)
-#define DEE_UNPuPTR DEE_UNPuN(__SIZEOF_POINTER__)
+#define DEE_UNPuSIZ DEE_UNPuN(__SIZEOF_SIZE_T__)
 #define DEE_UNPdPTR DEE_UNPdN(__SIZEOF_POINTER__)
-#define DEE_UNPuB   DEE_UNPu8
+#define DEE_UNPuPTR DEE_UNPuN(__SIZEOF_POINTER__)
 #define DEE_UNPdB   DEE_UNPd8
+#define DEE_UNPuB   DEE_UNPu8
 
 /* Unescaped names. */
 #ifdef DEE_SOURCE
-#define UNPuB   DEE_UNPuB
 #define UNPdB   DEE_UNPdB
-#define UNPu8   DEE_UNPu8
+#define UNPuB   DEE_UNPuB
 #define UNPd8   DEE_UNPd8
-#define UNPu16  DEE_UNPu16
+#define UNPu8   DEE_UNPu8
 #define UNPd16  DEE_UNPd16
-#define UNPu32  DEE_UNPu32
+#define UNPu16  DEE_UNPu16
 #define UNPd32  DEE_UNPd32
-#define UNPu64  DEE_UNPu64
+#define UNPu32  DEE_UNPu32
 #define UNPd64  DEE_UNPd64
-#define UNPu128 DEE_UNPu128
+#define UNPu64  DEE_UNPu64
 #define UNPd128 DEE_UNPd128
-#define UNPuN   DEE_UNPuN
+#define UNPu128 DEE_UNPu128
 #define UNPdN   DEE_UNPdN
-#define UNPuSIZ DEE_UNPuSIZ
+#define UNPuN   DEE_UNPuN
 #define UNPdSIZ DEE_UNPdSIZ
-#define UNPuPTR DEE_UNPuPTR
+#define UNPuSIZ DEE_UNPuSIZ
 #define UNPdPTR DEE_UNPdPTR
+#define UNPuPTR DEE_UNPuPTR
 #endif /* DEE_SOURCE */
 
 DECL_END
