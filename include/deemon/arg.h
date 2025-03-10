@@ -26,6 +26,9 @@
 #include "types.h"
 /**/
 
+#include <hybrid/typecore.h>
+/**/
+
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */
 
@@ -61,18 +64,12 @@ DECL_BEGIN
  * >> }
  */
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
-DeeArg_Unpack(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
-              char const *__restrict format, ...);
-DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int DCALL
-DeeArg_VUnpack(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
-               char const *__restrict format, va_list args);
+(DeeArg_Unpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
+                char const *__restrict format, ...);
+DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
+(DCALL DeeArg_VUnpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
+                       char const *__restrict format, va_list args);
 
-#ifndef __INTELLISENSE__
-#ifndef __NO_builtin_expect
-#define DeeArg_Unpack(argc, argv, ...)           __builtin_expect(DeeArg_Unpack(argc, argv, __VA_ARGS__), 0)
-#define DeeArg_VUnpack(argc, argv, format, args) __builtin_expect(DeeArg_VUnpack(argc, argv, format, args), 0)
-#endif /* !__NO_builtin_expect */
-#endif /* !__INTELLISENSE__ */
 
 
 struct Dee_keyword {
@@ -103,13 +100,13 @@ struct Dee_keyword {
  *    were given by the keyword-list, and throwing an error if more were
  *    given than what was actually used. */
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
-DeeArg_UnpackKw(size_t argc, DeeObject *const *argv,
-                DeeObject *kw, struct Dee_keyword *__restrict kwlist,
-                char const *__restrict format, ...);
-DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int DCALL
-DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
-                 DeeObject *kw, struct Dee_keyword *__restrict kwlist,
-                 char const *__restrict format, va_list args);
+(DeeArg_UnpackKw)(size_t argc, DeeObject *const *argv,
+                  DeeObject *kw, struct Dee_keyword *__restrict kwlist,
+                  char const *__restrict format, ...);
+DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
+(DCALL DeeArg_VUnpackKw)(size_t argc, DeeObject *const *argv,
+                         DeeObject *kw, struct Dee_keyword *__restrict kwlist,
+                         char const *__restrict format, va_list args);
 
 /* Same as the non-*Struct functions, but rather than taking 1 pointer per argument,
  * these take a single pointer to an aligned struct-blob (where each element is always
@@ -128,14 +125,23 @@ DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
  * >> if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ UNPuSIZ UNPuSIZ ":foo", &args))
  * >>     goto err;
  */
-/* TODO: int DeeArg_UnpackStruct(size_t argc, DeeObject *const *argv, char const *__restrict format, void *out); */
-/* TODO: int DeeArg_UnpackStructKw(size_t argc, DeeObject *const *argv, DeeObject *kw, struct Dee_keyword *__restrict kwlist, char const *__restrict format, void *out); */
+DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3, 4)) int
+(DCALL DeeArg_UnpackStruct)(size_t argc, DeeObject *const *argv,
+                            char const *__restrict format, void *out);
+DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5, 6)) int
+(DCALL DeeArg_UnpackStructKw)(size_t argc, DeeObject *const *argv,
+                              DeeObject *kw, struct Dee_keyword *__restrict kwlist,
+                              char const *__restrict format, void *out);
 
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define DeeArg_UnpackKw(argc, argv, kw, kwlist, ...)           __builtin_expect(DeeArg_UnpackKw(argc, argv, kw, kwlist, __VA_ARGS__), 0)
-#define DeeArg_VUnpackKw(argc, argv, kw, kwlist, format, args) __builtin_expect(DeeArg_VUnpackKw(argc, argv, kw, kwlist, format, args), 0)
+#define DeeArg_Unpack(argc, argv, ...)                             __builtin_expect(DeeArg_Unpack(argc, argv, __VA_ARGS__), 0)
+#define DeeArg_UnpackKw(argc, argv, kw, kwlist, ...)               __builtin_expect(DeeArg_UnpackKw(argc, argv, kw, kwlist, __VA_ARGS__), 0)
+#define DeeArg_VUnpack(argc, argv, format, args)                   __builtin_expect(DeeArg_VUnpack(argc, argv, format, args), 0)
+#define DeeArg_VUnpackKw(argc, argv, kw, kwlist, format, args)     __builtin_expect(DeeArg_VUnpackKw(argc, argv, kw, kwlist, format, args), 0)
+#define DeeArg_UnpackStruct(argc, argv, format, out)               __builtin_expect(DeeArg_UnpackStruct(argc, argv, format, out), 0)
+#define DeeArg_UnpackStructKw(argc, argv, kw, kwlist, format, out) __builtin_expect(DeeArg_UnpackStructKw(argc, argv, kw, kwlist, format, out), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 

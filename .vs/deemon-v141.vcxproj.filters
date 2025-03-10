@@ -1332,6 +1332,9 @@
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-type.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\build-value-unpack.c.inl">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\builtin.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
@@ -1892,7 +1895,7 @@
 		<ClCompile Include="..\src\deemon\runtime\attribute.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\build_value.c">
+		<ClCompile Include="..\src\deemon\runtime\build-value.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\builtin.c">

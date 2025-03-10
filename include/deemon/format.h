@@ -307,7 +307,9 @@ DeeFormat_Print32(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
                   size_t textlen);
 
 
-struct va_list_struct { va_list vl_ap; };
+struct va_list_struct {
+	va_list vl_ap;
+};
 
 /* Pack a new value, given a special format string `string'.
  * Format language syntax:
@@ -526,6 +528,12 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL Dee_VPUnpackf)(DeeObject *__restrict self,
                       char const **__restrict p_format,
                       struct va_list_struct *__restrict p_args);
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL Dee_UnpackStruct)(DeeObject *__restrict self,
+                         char const *__restrict format, void *out);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
+(DCALL Dee_PUnpackStruct)(DeeObject *__restrict self,
+                          char const **__restrict p_format, void **p_out);
 
 
 /* Both of these functions return a pointer to the target address where
@@ -550,9 +558,11 @@ Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define Dee_Unpackf(self, ...)                __builtin_expect(Dee_Unpackf(self, __VA_ARGS__), 0)
-#define Dee_VUnpackf(self, format, args)      __builtin_expect(Dee_VUnpackf(self, format, args), 0)
-#define Dee_VPUnpackf(self, p_format, p_args) __builtin_expect(Dee_VPUnpackf(self, p_format, p_args), 0)
+#define Dee_Unpackf(self, ...)                   __builtin_expect(Dee_Unpackf(self, __VA_ARGS__), 0)
+#define Dee_VUnpackf(self, format, args)         __builtin_expect(Dee_VUnpackf(self, format, args), 0)
+#define Dee_VPUnpackf(self, p_format, p_args)    __builtin_expect(Dee_VPUnpackf(self, p_format, p_args), 0)
+#define Dee_UnpackStruct(self, format, out)      __builtin_expect(Dee_UnpackStruct(self, format, out), 0)
+#define Dee_PUnpackStruct(self, p_format, p_out) __builtin_expect(Dee_PUnpackStruct(self, p_format, p_out), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 

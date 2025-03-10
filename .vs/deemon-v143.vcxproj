@@ -452,6 +452,7 @@
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-object.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-type-instance.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-type.c.inl" />
+		<ClInclude Include="..\src\deemon\runtime\build-value-unpack.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\builtin.h" />
 		<ClInclude Include="..\src\deemon\runtime\kwlist.h" />
 		<ClInclude Include="..\src\deemon\runtime\method-hint-defaults.h" />
@@ -640,7 +641,7 @@
 		<ClCompile Include="..\src\deemon\objects\weakref.c" />
 		<ClCompile Include="..\src\deemon\runtime\accu.c" />
 		<ClCompile Include="..\src\deemon\runtime\attribute.c" />
-		<ClCompile Include="..\src\deemon\runtime\build_value.c" />
+		<ClCompile Include="..\src\deemon\runtime\build-value.c" />
 		<ClCompile Include="..\src\deemon\runtime\builtin.c" />
 		<ClCompile Include="..\src\deemon\runtime\builtin_functions.c" />
 		<ClCompile Include="..\src\deemon\runtime\computed-operators.c" />

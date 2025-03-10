@@ -1959,59 +1959,62 @@ err:
 
 PRIVATE WUNUSED DREF DeeCodeObject *DCALL
 code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF DeeCodeObject *result;
-	DeeObject *flags        = Dee_None;
-	DeeObject *except       = Dee_None;
-	DeeObject *constants    = Dee_None;
-	DeeObject *text         = Dee_None;
-	DeeObject *keywords     = Dee_None;
-	DeeObject *defaults     = Dee_None;
-	DeeModuleObject *module = (DeeModuleObject *)Dee_None;
-	DeeDDIObject *ddi       = (DeeDDIObject *)Dee_None;
-	uint16_t nlocal         = 0;
-	uint16_t nstack         = 0;
-	uint16_t nref           = 0;
-	uint16_t nstatic        = 0;
-	uint16_t coargc         = 0;
 	DeeBuffer text_buf;
+	DREF DeeCodeObject *result;
+	struct {
+		DeeObject *text;
+		DeeModuleObject *module;
+		DeeObject *constants;
+		DeeObject *except;
+		uint16_t nlocal;
+		uint16_t nstack;
+		uint16_t nref;
+		uint16_t nstatic;
+		uint16_t coargc;
+		DeeObject *keywords;
+		DeeObject *defaults;
+		DeeObject *flags;
+		DeeDDIObject *ddi;
+	} args;
+	args.text      = Dee_None;
+	args.module    = (DeeModuleObject *)Dee_None;
+	args.constants = Dee_None;
+	args.except    = Dee_None;
+	args.nlocal    = 0;
+	args.nstack    = 0;
+	args.nref      = 0;
+	args.nstatic   = 0;
+	args.coargc    = 0;
+	args.keywords  = Dee_None;
+	args.defaults  = Dee_None;
+	args.flags     = Dee_None;
+	args.ddi       = (DeeDDIObject *)Dee_None;
 	/* (text:?DBytes=!N,module:?DModule=!N,constants:?S?O=!N,
 	 *  except:?S?X2?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType=!N,
 	 *  nlocal=!0,nstack=!0,nref=!0,nstatic=!0,argc=!0,keywords:?S?Dstring=!N,defaults:?S?O=!N,
 	 *  flags:?X2?Dstring?Dint=!P{lenient},ddi:?Ert:Ddi=!N) */
-	if (DeeArg_UnpackKw(argc, argv, kw,
-	                    kwlist__text_module_constants_except_nlocal_nstack_nref_nstatic_argc_keywords_defaults_flags_ddi,
-	                    "|"
-	                    "o"    /* text */
-	                    "o"    /* module */
-	                    "o"    /* constants */
-	                    "o"    /* except */
-	                    "I16u" /* nlocal */
-	                    "I16u" /* nstack */
-	                    "I16u" /* nref */
-	                    "I16u" /* nstatic */
-	                    "I16u" /* argc */
-	                    "o"    /* keywords */
-	                    "o"    /* defaults */
-	                    "o"    /* flags */
-	                    "o"    /* ddi */
-	                    ":_Code",
-	                    &text,
-	                    &module,
-	                    &constants,
-	                    &except,
-	                    &nlocal,
-	                    &nstack,
-	                    &nref,
-	                    &nstatic,
-	                    &coargc,
-	                    &keywords,
-	                    &defaults,
-	                    &flags,
-	                    &ddi))
+	if (DeeArg_UnpackStructKw(argc, argv, kw,
+	                          kwlist__text_module_constants_except_nlocal_nstack_nref_nstatic_argc_keywords_defaults_flags_ddi,
+	                          "|"
+	                          "o"    /* text */
+	                          "o"    /* module */
+	                          "o"    /* constants */
+	                          "o"    /* except */
+	                          "I16u" /* nlocal */
+	                          "I16u" /* nstack */
+	                          "I16u" /* nref */
+	                          "I16u" /* nstatic */
+	                          "I16u" /* argc */
+	                          "o"    /* keywords */
+	                          "o"    /* defaults */
+	                          "o"    /* flags */
+	                          "o"    /* ddi */
+	                          ":_Code",
+	                          &args))
 		goto err;
-	if (DeeNone_Check(flags))
-		flags = Dee_EmptyString;
-	if (DeeObject_GetBuf(text, &text_buf, Dee_BUFFER_FREADONLY))
+	if (DeeNone_Check(args.flags))
+		args.flags = Dee_EmptyString;
+	if (DeeObject_GetBuf(args.text, &text_buf, Dee_BUFFER_FREADONLY))
 		goto err;
 #if __SIZEOF_SIZE_T__ > 4
 	if unlikely(text_buf.bb_size > (code_size_t)-1) {
@@ -2034,16 +2037,16 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		memset(endp, ASM_RET_NONE, INSTRLEN_MAX);
 #endif /* ASM_RET_NONE != 0 */
 	}
-	DeeObject_PutBuf(text, &text_buf, Dee_BUFFER_FREADONLY);
+	DeeObject_PutBuf(args.text, &text_buf, Dee_BUFFER_FREADONLY);
 	/* Load keyword arguments */
 	result->co_keywords = NULL;
-	if (!DeeNone_Check(keywords)) {
+	if (!DeeNone_Check(args.keywords)) {
 		DREF DeeStringObject **keyword_vec;
 		uint16_t i;
-		if (!coargc) {
+		if (!args.coargc) {
 			/* Automatically determine the argument count. */
 			size_t keyword_count;
-			keyword_vec = (DREF DeeStringObject **)DeeSeq_AsHeapVector(keywords,
+			keyword_vec = (DREF DeeStringObject **)DeeSeq_AsHeapVector(args.keywords,
 			                                                           &keyword_count);
 			if unlikely(!keyword_vec)
 				goto err_r;
@@ -2053,59 +2056,59 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 				                keyword_count);
 				goto err_r;
 			}
-			coargc = (uint16_t)keyword_count;
+			args.coargc = (uint16_t)keyword_count;
 		} else {
-			keyword_vec = (DREF DeeStringObject **)Dee_Mallocc(coargc,
+			keyword_vec = (DREF DeeStringObject **)Dee_Mallocc(args.coargc,
 			                                                   sizeof(DREF DeeStringObject *));
 			if unlikely(!keyword_vec)
 				goto err_r;
-			if unlikely(DeeSeq_Unpack(keywords, coargc, (DeeObject **)keyword_vec)) {
+			if unlikely(DeeSeq_Unpack(args.keywords, args.coargc, (DeeObject **)keyword_vec)) {
 				Dee_Free(keyword_vec);
 				goto err_r;
 			}
 		}
 		result->co_keywords = keyword_vec; /* Inherit */
 		/* Ensure that all elements are strings. */
-		for (i = 0; i < coargc; ++i) {
+		for (i = 0; i < args.coargc; ++i) {
 			if (DeeObject_AssertTypeExact(keyword_vec[i], &DeeString_Type))
 				goto err_r_keywords;
 		}
 	}
 
-	result->co_argc_min = coargc;
-	result->co_argc_max = coargc;
+	result->co_argc_min = args.coargc;
+	result->co_argc_max = args.coargc;
 	result->co_defaultv = NULL;
 	/* Load default arguments */
-	if (!DeeNone_Check(defaults)) {
+	if (!DeeNone_Check(args.defaults)) {
 		size_t default_c;
 		DREF DeeObject **default_vec;
-		default_c = DeeObject_Size(defaults);
+		default_c = DeeObject_Size(args.defaults);
 		if unlikely(default_c == (size_t)-1)
 			goto err_r_keywords;
-		if unlikely(default_c > coargc) {
+		if unlikely(default_c > args.coargc) {
 			DeeError_Throwf(&DeeError_IntegerOverflow,
 			                "Too many default arguments (%" PRFuSIZ ") for "
 			                "code only taking %" PRFu16 " arguments at most",
-			                default_c, coargc);
+			                default_c, args.coargc);
 			goto err_r_keywords;
 		}
 		default_vec = (DREF DeeObject **)Dee_Mallocc(default_c, sizeof(DREF DeeObject *));
 		if unlikely(!default_vec)
 			goto err_r_keywords;
-		if unlikely(DeeObject_InvokeMethodHint(seq_unpack_ub, defaults, default_c,
+		if unlikely(DeeObject_InvokeMethodHint(seq_unpack_ub, args.defaults, default_c,
 		                                       default_c, default_vec) == (size_t)-1) {
 			Dee_Free(default_vec);
 			goto err_r_keywords;
 		}
 		result->co_defaultv = default_vec;
-		result->co_argc_min = (uint16_t)(coargc - (uint16_t)default_c);
+		result->co_argc_min = (uint16_t)(args.coargc - (uint16_t)default_c);
 	}
 	result->co_constc = 0;
 	result->co_constv = NULL;
-	if (!DeeNone_Check(constants)) {
+	if (!DeeNone_Check(args.constants)) {
 		DREF DeeObject **constants_vec;
 		size_t constants_cnt;
-		constants_vec = DeeSeq_AsHeapVector(constants, &constants_cnt);
+		constants_vec = DeeSeq_AsHeapVector(args.constants, &constants_cnt);
 		if unlikely(!constants_vec)
 			goto err_r_defaultv;
 		if unlikely(constants_cnt > (uint16_t)-1) {
@@ -2117,7 +2120,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		result->co_constc = (uint16_t)constants_cnt;
 		result->co_constv = constants_vec;
 	}
-	if (DeeNone_Check(module)) {
+	if (DeeNone_Check(args.module)) {
 		DeeThreadObject *ts = DeeThread_Self();
 		if unlikely(!ts->t_execsz) {
 			DeeError_Throwf(&DeeError_TypeError,
@@ -2129,23 +2132,23 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		ASSERT(ts->t_exec->cf_func);
 		ASSERT(ts->t_exec->cf_func->fo_code);
 		ASSERT(ts->t_exec->cf_func->fo_code->co_module);
-		module = ts->t_exec->cf_func->fo_code->co_module;
+		args.module = ts->t_exec->cf_func->fo_code->co_module;
 	}
 	/* NOTE: Always check this, so prevent stuff like interactive
 	 *       modules to leaking into generic code objects. */
-	if (DeeObject_AssertTypeExact(module, &DeeModule_Type))
+	if (DeeObject_AssertTypeExact(args.module, &DeeModule_Type))
 		goto err_r_constv;
 
 	/* Generate exception handlers. */
 	result->co_exceptc = 0;
 	result->co_exceptv = NULL;
-	if (!DeeNone_Check(except)) {
+	if (!DeeNone_Check(args.except)) {
 		uint16_t except_c               = 0;
 		uint16_t except_a               = 0;
 		struct except_handler *except_v = NULL;
 		struct except_handler *new_except_v;
 		DREF DeeObject *iter, *elem;
-		iter = DeeObject_Iter(except);
+		iter = DeeObject_Iter(args.except);
 		if unlikely(!iter)
 			goto err_r_constv;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
@@ -2201,9 +2204,9 @@ err_r_except_temp_iter:
 
 	/* Load custom code flags */
 	result->co_flags = CODE_FASSEMBLY;
-	if (!DeeNone_Check(flags)) {
-		if (DeeString_Check(flags)) {
-			char const *s = DeeString_STR(flags);
+	if (!DeeNone_Check(args.flags)) {
+		if (DeeString_Check(args.flags)) {
+			char const *s = DeeString_STR(args.flags);
 			while (*s) {
 				char const *next = strchr(s, ',');
 				size_t i, len = next ? (size_t)(next - s) : strlen(s);
@@ -2228,7 +2231,7 @@ got_flag:
 				s = next + 1;
 			}
 		} else {
-			if (DeeObject_AsUInt16(flags, &result->co_flags))
+			if (DeeObject_AsUInt16(args.flags, &result->co_flags))
 				goto err_r_except;
 #if CODE_FMASK != 0xffff
 			if (result->co_flags & ~CODE_FMASK) {
@@ -2241,25 +2244,25 @@ got_flag:
 			result->co_flags |= CODE_FASSEMBLY;
 		}
 	}
-	if (DeeNone_Check(ddi)) {
-		ddi = &DeeDDI_Empty;
+	if (DeeNone_Check(args.ddi)) {
+		args.ddi = &DeeDDI_Empty;
 	} else {
-		if (DeeObject_AssertTypeExact(ddi, &DeeDDI_Type))
+		if (DeeObject_AssertTypeExact(args.ddi, &DeeDDI_Type))
 			goto err_r_except;
 	}
 
 	/* Fill in remaining fields. */
-	result->co_ddi = ddi;
-	Dee_Incref(ddi);
-	result->co_module = module;
-	Dee_Incref(module);
-	result->co_localc = nlocal;
-	result->co_refc   = nref;
-	if (OVERFLOW_UADD(nref, nstatic, &result->co_refstaticc)) {
+	result->co_ddi = args.ddi;
+	Dee_Incref(args.ddi);
+	result->co_module = args.module;
+	Dee_Incref(args.module);
+	result->co_localc = args.nlocal;
+	result->co_refc   = args.nref;
+	if (OVERFLOW_UADD(args.nref, args.nstatic, &result->co_refstaticc)) {
 		DeeError_Throwf(&DeeError_ValueError, "Too many references or static variables");
 		goto err_r_ddi;
 	}
-	result->co_framesize  = (nlocal + nstack) * sizeof(DREF DeeObject *);
+	result->co_framesize  = (args.nlocal + args.nstack) * sizeof(DREF DeeObject *);
 	if (result->co_framesize > CODE_LARGEFRAME_THRESHOLD)
 		result->co_flags |= CODE_FHEAPFRAME;
 #ifdef CONFIG_HAVE_CODE_METRICS
@@ -2300,7 +2303,7 @@ err_r:
 	DeeGCObject_Free(result);
 	goto err;
 err_buf:
-	DeeObject_PutBuf(text, &text_buf, Dee_BUFFER_FREADONLY);
+	DeeObject_PutBuf(args.text, &text_buf, Dee_BUFFER_FREADONLY);
 err:
 	return NULL;
 }

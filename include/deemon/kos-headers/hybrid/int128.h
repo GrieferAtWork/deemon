@@ -26,6 +26,10 @@
 
 #ifdef __CC__
 #if defined(__INT128_TYPE__) && defined(__UINT128_TYPE__)
+#ifndef __ALIGNOF_INT128__
+#define __ALIGNOF_INT128__ 16
+#endif /* !__ALIGNOF_INT128__ */
+
 #define __hybrid_int128_t  __INT128_TYPE__
 #define __hybrid_uint128_t __UINT128_TYPE__
 
@@ -2344,7 +2348,10 @@ typedef union __hybrid_int128_struct {
 #ifdef __UINT64_TYPE__
 	__UINT64_TYPE__ __i128_u64[2];
 	__INT64_TYPE__  __i128_s64[2];
-#endif /* __UINT64_TYPE__ */
+#define __ALIGNOF_INT128__ __ALIGNOF_INT64__
+#else /* __UINT64_TYPE__ */
+#define __ALIGNOF_INT128__ __ALIGNOF_INT32__
+#endif /* !__UINT64_TYPE__ */
 #ifdef __INTELLISENSE__
 	__INT8_TYPE__ __s128_8[16];
 	__INT16_TYPE__ __s128_16[8];

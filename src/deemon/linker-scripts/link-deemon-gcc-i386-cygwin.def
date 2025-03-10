@@ -9,6 +9,8 @@ EXPORTS
 	_DeeArg_TryGetKwNR@16=DeeArg_TryGetKwNR@16
 	_DeeArg_TryGetKwNRStringHash@20=DeeArg_TryGetKwNRStringHash@20
 	_DeeArg_TryGetKwNRStringLenHash@24=DeeArg_TryGetKwNRStringLenHash@24
+	_DeeArg_UnpackStruct@16=DeeArg_UnpackStruct@16
+	_DeeArg_UnpackStructKw@24=DeeArg_UnpackStructKw@24
 	_DeeArg_VUnpack@16=DeeArg_VUnpack@16
 	_DeeArg_VUnpackKw@24=DeeArg_VUnpackKw@24
 	_DeeAsm_IsNoreturn@8=DeeAsm_IsNoreturn@8
@@ -1351,6 +1353,7 @@ EXPORTS
 	_Dee_Malloc@4=Dee_Malloc@4
 	_Dee_Movrefv@12=Dee_Movrefv@12
 	_Dee_Movrefv_traced@20=Dee_Movrefv_traced@20
+	_Dee_PUnpackStruct@12=Dee_PUnpackStruct@12
 	_Dee_Realloc@8=Dee_Realloc@8
 	_Dee_RunAtExit@4=Dee_RunAtExit@4
 	_Dee_SetArgv@4=Dee_SetArgv@4
@@ -1363,6 +1366,7 @@ EXPORTS
 	_Dee_TryCollectMemory@4=Dee_TryCollectMemory@4
 	_Dee_TryMalloc@4=Dee_TryMalloc@4
 	_Dee_TryRealloc@8=Dee_TryRealloc@8
+	_Dee_UnpackStruct@12=Dee_UnpackStruct@12
 	_Dee_VPPackf@8=Dee_VPPackf@8
 	_Dee_VPPackf_Cleanup@8=Dee_VPPackf_Cleanup@8
 	_Dee_VPUnpackf@12=Dee_VPUnpackf@12

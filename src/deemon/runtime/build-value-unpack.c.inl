@@ -17,33 +17,86 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_RUNTIME_BUILD_VALUE_C
-#define GUARD_DEEMON_RUNTIME_BUILD_VALUE_C 1
+#ifdef __INTELLISENSE__
+//#define DEFINE_DeeArg_Unpack
+#define DEFINE_DeeArg_UnpackStruct
+#endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/bool.h>
 #include <deemon/format.h>
-#include <deemon/int.h>
 #include <deemon/kwds.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* strnlen() */
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
-#include <deemon/tuple.h>
 
-#include <hybrid/__va_size.h>
-#include <hybrid/int128.h>
 #include <hybrid/typecore.h>
+/**/
 
 #include "runtime_error.h"
 /**/
 
-#include <stdarg.h> /* va_list, va_arg */
+#include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */
-#include <stdint.h> /* uintN_t */
+#include <stdint.h> /* uintptr_t, intN_t, uintN_t */
+
+#if (defined(DEFINE_DeeArg_Unpack) + defined(DEFINE_DeeArg_UnpackStruct)) != 1
+#error "Must #define exactly one of these macros"
+#endif
+
+#ifndef __SIZEOF_BOOL__
+#define __SIZEOF_BOOL__ __SIZEOF_CHAR__
+#endif /* !__SIZEOF_BOOL__ */
+
+#ifndef __ALIGNOF_BOOL__
+#define __ALIGNOF_BOOL__ __SIZEOF_BOOL__
+#endif /* !__ALIGNOF_BOOL__ */
+
+#ifndef VALIST_ADDR
+#ifdef CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
+#define VALIST_ADDR(x) (&(x))
+#else /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
+#define VALIST_ADDR(x) (&(x)[0])
+#endif /* !CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
+#endif /* !VALIST_ADDR */
+
+#ifdef DEFINE_DeeArg_Unpack
+#define LOCAL_Dee_VPUnpackf                    Dee_VPUnpackf
+#define LOCAL_Dee_VPUnpackfSkip                Dee_VPUnpackfSkip
+#define LOCAL_DeeArg_VUnpack                   DeeArg_VUnpack
+#define LOCAL_DeeArg_VUnpackKw                 DeeArg_VUnpackKw
+#define LOCAL_Dee_VUnpackf                     Dee_VUnpackf
+#define LOCAL_PARAM_P_OUT                      struct va_list_struct *__restrict p_args
+#define LOCAL_PARAM_OUT                        va_list args
+#define LOCAL_ARG_P_OUT                        p_args
+#define LOCAL_ARG_OUT                          args
+#define LOCAL_VAL_P_OUT                        p_args->vl_ap
+#define LOCAL_OUTPUT(out, T, alignof_T, value) (void)(*va_arg(out, T *) = (value))
+#define LOCAL_OUTPUT_PTR(out, T, alignof_T)    va_arg(out, T *)
+#define LOCAL_SKIP(out, T, alignof_T)          (void)va_arg(out, T *)
+#else /* DEFINE_DeeArg_Unpack */
+#define LOCAL_Dee_VPUnpackf     Dee_PUnpackStruct
+#define LOCAL_Dee_VPUnpackfSkip Dee_PUnpackStructSkip
+#define LOCAL_DeeArg_VUnpack    DeeArg_UnpackStruct
+#define LOCAL_DeeArg_VUnpackKw  DeeArg_UnpackStructKw
+#define LOCAL_Dee_VUnpackf      Dee_UnpackStruct
+#define LOCAL_PARAM_P_OUT       void **p_out
+#define LOCAL_PARAM_OUT         void *out
+#define LOCAL_ARG_P_OUT         p_out
+#define LOCAL_ARG_OUT           out
+#define LOCAL_VAL_P_OUT         *p_out
+#define LOCAL_OUTPUT(out, T, alignof_T, value)                                          \
+	(void)((out) = (void *)(((uintptr_t)(out) + (alignof_T) - 1) & ~((alignof_T) - 1)), \
+	       *(T *)(out) = (value), (out) = (void *)((uintptr_t)(out) + sizeof(T)))
+#define LOCAL_OUTPUT_PTR(out, T, alignof_T)                                                     \
+	((out) = (void *)((((uintptr_t)(out) + (alignof_T) - 1) & ~((alignof_T) - 1)) + sizeof(T)), \
+	 (T *)(void *)((uintptr_t)(out) - sizeof(T)))
+#define LOCAL_SKIP(out, T, alignof_T) \
+	(void)((out) = (void *)((((uintptr_t)(out) + (alignof_T) - 1) & ~((alignof_T) - 1)) + sizeof(T)))
+#endif /* !DEFINE_DeeArg_Unpack */
+
 
 DECL_BEGIN
 
@@ -54,91 +107,8 @@ DECL_BEGIN
 DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
-#ifndef CONFIG_HAVE_strnlen
-#define CONFIG_HAVE_strnlen
-#undef strnlen
-#define strnlen dee_strnlen
-DeeSystem_DEFINE_strnlen(strnlen)
-#endif /* !CONFIG_HAVE_strnlen */
-
-#ifdef CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
-#define VALIST_ADDR(x) (&(x))
-#else /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
-#define VALIST_ADDR(x) (&(x)[0])
-#endif /* !CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-count_pack_args(char const *__restrict format) {
-	size_t result = 0;
-	for (;;) {
-		char ch = *format++;
-		switch (ch) {
-
-			/* Length modifiers / ignored. */
-		case ',':
-		case 'h':
-		case 'l':
-		case 'I':
-		case 'L':
-		case '.':
-		case '*':
-		case '?':
-		case '$':
-			break;
-
-		case 'n':
-		case '-': /* none */
-		case 'o':
-		case 'O': /* Object */
-		case 'f':
-		case 'D': /* float */
-		case 'd':
-		case 'i': /* signed int */
-		case 'u':
-		case 'x': /* unsigned int */
-		case 'b': /* bool */
-		case 's': /* string */
-			++result;
-			break;
-
-		case '[':
-		case '(':
-		case '{':
-		case '<': {
-			char tagr;
-			unsigned int recursion;
-			recursion = 1;
-			tagr      = ch + 2;
-			if (ch == '(')
-				--tagr;
-			for (; *format; ++format) {
-				if (*format == ch) {
-					++recursion;
-				} else if (*format == tagr) {
-					if (!--recursion) {
-						++format;
-						break;
-					}
-				} else if (!*format) {
-					break;
-				}
-			}
-			++result;
-		}	break;
-
-		case '\0':
-			goto done;
-
-		default:
-			if (ch >= '0' && ch <= '9')
-				break;
-			goto done;
-		}
-	}
-done:
-	return result;
-}
-
+#ifndef DEFINED_count_unpack_args
+#define DEFINED_count_unpack_args
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 count_unpack_args(char const **__restrict p_format) {
 	size_t result      = 0;
@@ -199,394 +169,12 @@ done:
 	*p_format = format;
 	return result;
 }
-
-
-
-PUBLIC NONNULL((1)) void DCALL
-Dee_VPPackf_Cleanup(char const *__restrict format, va_list args) {
-again:
-	switch (*format++) {
-
-	case '(':
-	case '[':
-	case '{':
-	case '<': /* Recursion (Can be ignored here) */
-	case ',': /* Separator. */
-	case 'n': /* `none' */
-	case '-':
-		goto again;
-
-	case 'o':
-		(void)va_arg(args, DeeObject *);
-		goto again;
-
-	case 'L':
-		ASSERTF(*format == 'D', "Invalid format: `%s'", format);
-		(void)va_arg(args, long double);
-		goto again;
-
-	case 'f':
-	case 'D':
-		(void)va_arg(args, double); /* NOTE: C promotes `float' to double in varargs. */
-		goto again;
-
-	case '.':
-		if (*format == '*') {
-			(void)va_arg(args, unsigned int);
-			++format;
-		} else if (*format == '?') {
-		case '$':
-			(void)va_arg(args, size_t);
-			++format;
-		} else {
-			while (*format >= '0' && *format <= '9')
-				++format;
-		}
-		ASSERTF(*format == 's', "Invalid format: `%s'", format);
-		goto again;
-
-	{
-		unsigned int length;
-	case 'l':
-		length = sizeof(long);
-		if (*format == 'l') {
-#ifdef __SIZEOF_LONG_LONG__
-			length = __SIZEOF_LONG_LONG__;
-#else /* __SIZEOF_LONG_LONG__ */
-			length = 8;
-#endif /* !__SIZEOF_LONG_LONG__ */
-			++format;
-		}
-		++format; /* Consume integer-format-char */
-		goto do_int;
-	case 'h':
-		length = sizeof(short);
-		if (*format == 'h') {
-			length = sizeof(char);
-			++format;
-		}
-		++format; /* Consume integer-format-char */
-		goto do_int;
-	case 'I':
-		length = sizeof(size_t);
-		if (*format == '8') {
-			length = 1;
-			format += 1;
-		} else if (*format == '1') {
-			if (format[2] == '2') {
-				ASSERTF(format[3] == '8', "Invalid format: `%s'", format);
-				length = 16;
-				format += 3;
-			} else {
-				ASSERTF(format[1] == '6', "Invalid format: `%s'", format);
-				length = 2;
-				format += 2;
-			}
-		} else if (*format == '3') {
-			ASSERTF(format[1] == '2', "Invalid format: `%s'", format);
-			length = 4;
-			format += 2;
-		} else if (*format == '6') {
-			ASSERTF(format[1] == '4', "Invalid format: `%s'", format);
-			length = 8;
-			format += 2;
-		}
-		++format; /* Consume integer-format-char */
-		goto do_int;
-	case 'd':
-	case 'u':
-	case 'i':
-	case 'x':
-	case 'b':
-		length = sizeof(int);
-do_int:
-		ASSERTF(format[-1] == 'd' || *format == 'u' ||
-			    format[-1] == 'i' || *format == 'x' ||
-			    format[-1] == 'b',
-			    "Invalid format: `%s'", format);
-#if __VA_SIZE < 2
-		if (length <= 1) {
-			(void)va_arg(args, uint8_t);
-		} else
-#endif /* __VA_SIZE < 2 */
-#if __VA_SIZE < 4
-		if (length <= 2) {
-			(void)va_arg(args, uint16_t);
-		} else
-#endif /* __VA_SIZE < 4 */
-#if __VA_SIZE < 8
-		if (length <= 4) {
-			(void)va_arg(args, uint32_t);
-		} else
-#endif /* __VA_SIZE < 8 */
-#if __VA_SIZE < 16
-		if (length <= 8) {
-			(void)va_arg(args, uint64_t);
-		} else
-#endif /* __VA_SIZE < 16 */
-		{
-			(void)va_arg(args, Dee_uint128_t);
-		}
-	}	goto again;
-
-	case 'O': {
-		DeeObject *temp;
-		/* _Always_ inherit reference to `O' operands. */
-		temp = va_arg(args, DeeObject *);
-		Dee_XDecref(temp);
-		goto again;
-	}
-
-	default:
-		ASSERTF(!*format, "Invalid format: `%s'", format);
-		break;
-	}
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-Dee_VPPackf(char const **__restrict p_format,
-            struct va_list_struct *__restrict p_args) {
-	DREF DeeObject *result;
-	char const *format = *p_format;
-again:
-	switch (*format++) {
-
-	case ',':
-		goto again;
-
-	case '\0':
-		--format;
-		ATTR_FALLTHROUGH
-	case 'n':
-	case '-':
-		result = Dee_None;
-		Dee_Incref(result);
-		break;
-
-	case 'o':
-	case 'O':
-		result = va_arg(p_args->vl_ap, DeeObject *);
-		if (format[-1] == 'o') {
-			ASSERTF(result, "NULL-object passed to `o' operand");
-			Dee_Incref(result);
-		}
-		break;
-
-	{
-		int length;
-		union {
-			int32_t i32;
-			uint32_t u32;
-			int64_t i64;
-			uint64_t u64;
-		} data;
-	case 'h':
-		length = sizeof(short);
-		if (*format == 'h') {
-			++format;
-			length = sizeof(char);
-		}
-		++format; /* Consume integer-format-char */
-		goto has_length;
-
-	case 'l':
-		length = sizeof(long);
-#ifdef __SIZEOF_LONG_LONG__
-		if (*format == 'l') {
-			++format;
-			length = __SIZEOF_LONG_LONG__;
-		}
-#else /* __SIZEOF_LONG_LONG__ */
-		if (*format == 'l') {
-			++format;
-			length = 8;
-		}
-#endif /* !__SIZEOF_LONG_LONG__ */
-		++format; /* Consume integer-format-char */
-		goto has_length;
-
-	case 'I':
-		length = sizeof(size_t);
-		if (*format == '8') {
-			++format;
-			length = 1;
-		} else if (*format == '1') {
-			if (format[2] == '2') {
-				union {
-					Dee_int128_t  s;
-					Dee_uint128_t u;
-				} data128;
-				ASSERTF(format[3] == '8', "Invalid format: `%s'", format);
-				data128.u = va_arg(p_args->vl_ap, Dee_uint128_t);
-				format += 3;
-				ASSERTF(format[-1] == 'd' || format[-1] == 'u' ||
-				        format[-1] == 'i' || format[-1] == 'x' ||
-				        format[-1] == 'b',
-				        "Invalid format: `%s'", format);
-				if (format[-1] == 'b') {
-					/* Boolean. */
-					result = DeeBool_For(!__hybrid_uint128_iszero(data128.u));
-					Dee_Incref(result);
-				} else if (format[-1] == 'd' || format[-1] == 'i') {
-					/* Signed integer. */
-					result = DeeInt_NewInt128(data128.s);
-				} else {
-					/* Unsigned integer. */
-					result = DeeInt_NewUInt128(data128.u);
-				}
-				break;
-			} else {
-				ASSERTF(format[1] == '6', "Invalid format: `%s' (`%s')", format, *p_format);
-				format += 2;
-				length = 2;
-			}
-		} else if (*format == '3') {
-			ASSERTF(format[1] == '2', "Invalid format: `%s' (`%s')", format, *p_format);
-			format += 2;
-			length = 4;
-		} else if (*format == '6') {
-			ASSERTF(format[1] == '4', "Invalid format: `%s' (`%s')", format, *p_format);
-			format += 2;
-			length = 8;
-		}
-		++format; /* Consume integer-format-char */
-		goto has_length;
-	case 'd':
-	case 'i':
-	case 'u':
-	case 'x':
-	case 'b':
-		length = sizeof(int);
-has_length:
-		ASSERTF(format[-1] == 'd' || format[-1] == 'u' ||
-		        format[-1] == 'i' || format[-1] == 'x' ||
-		        format[-1] == 'b',
-		        "Invalid format: `%s'", format);
-#if __VA_SIZE < 2
-		if (length <= 1) {
-			data.u32 = (uint32_t)va_arg(p_args->vl_ap, uint8_t);
-		} else
-#endif /* __VA_SIZE < 2 */
-#if __VA_SIZE < 4
-		if (length <= 2) {
-			data.u32 = (uint32_t)va_arg(p_args->vl_ap, uint16_t);
-		} else
-#endif /* __VA_SIZE < 4 */
-#if __VA_SIZE < 8
-		if (length <= 4) {
-			data.u32 = va_arg(p_args->vl_ap, uint32_t);
-		} else
-#endif /* __VA_SIZE < 8 */
-		{
-			data.u64 = va_arg(p_args->vl_ap, uint64_t);
-		}
-		if (format[-1] == 'b') {
-			/* Boolean. */
-			result = DeeBool_For(length > 4 ? (data.u64 != 0) : (data.u32 != 0));
-			Dee_Incref(result);
-		} else if (format[-1] == 'd' || format[-1] == 'i') {
-			/* Signed integer. */
-			if (length > 4) {
-				result = DeeInt_NewInt64(data.i64);
-			} else {
-				result = DeeInt_NewInt32(data.i32);
-			}
-		} else {
-			/* Unsigned integer. */
-			if (length > 4) {
-				result = DeeInt_NewUInt64(data.u64);
-			} else {
-				result = DeeInt_NewUInt32(data.u32);
-			}
-		}
-	}	break;
-
-	{
-		size_t string_length;
-		char *string;
-	case '$':
-		ASSERTF(*format == 's', "Invalid format: `%s' (`%s')", format, *p_format);
-		++format;
-		string_length = va_arg(p_args->vl_ap, size_t);
-		string        = va_arg(p_args->vl_ap, char *);
-		goto do_string;
-	case 's':
-		string        = va_arg(p_args->vl_ap, char *);
-		string_length = strlen(string);
-		goto do_string;
-	case '.':
-#if (!defined(__SIZEOF_INT__) || !defined(__SIZEOF_SIZE_T__) || \
-     (__SIZEOF_INT__ != __SIZEOF_SIZE_T__))
-		if (*format == '*') {
-			string_length = (size_t)va_arg(p_args->vl_ap, unsigned int);
-			goto do_strnlen;
-		} else if (*format == '?')
-#else /* ... */
-		if (*format == '*' || *format == '?')
-#endif /* !... */
-		{
-			string_length = va_arg(p_args->vl_ap, size_t);
-do_strnlen:
-			string        = va_arg(p_args->vl_ap, char *);
-			string_length = strnlen(string, string_length);
-		} else {
-			ASSERTF(*format >= '0' && *format <= '9',
-				    "Invalid format: `%s' (`%s')", format, *p_format);
-			string_length = 0;
-			do {
-				string_length = (string_length * 10) + (*format - '0');
-			} while ((++format, *format >= '0' && *format <= '9'));
-			goto do_strnlen;
-		}
-do_string:
-		ASSERTF(format[-1] == 's', "Invalid format: `%s' (`%s')", format, *p_format);
-		/* TODO: `%I8s' -- latin-1 string */
-		/* TODO: `%I16s' -- 2-byte string */
-		/* TODO: `%I32s' -- utf-32 string */
-		result = DeeString_NewUtf8(string, string_length, STRING_ERROR_FIGNORE);
-	}	break;
-
-
-	case '(': {
-		size_t i, num_args;
-		num_args = count_pack_args(format);
-		result   = (DREF DeeObject *)DeeTuple_NewUninitialized(num_args);
-		if unlikely(!result)
-			break;
-		for (i = 0; i < num_args; ++i) {
-			DREF DeeObject *elem;
-			elem = Dee_VPPackf(&format, p_args);
-			if unlikely(!elem) {
-				/* Propagate an error. */
-				Dee_Decrefv(DeeTuple_ELEM(result), i);
-				DeeTuple_FreeUninitialized((DREF DeeTupleObject *)result);
-				result = NULL;
-				goto end;
-			}
-			DeeTuple_SET(result, i, elem);
-		}
-		ASSERTF(*format == ')', "Invalid format: `%s' (`%s')", format, *p_format);
-		++format;
-	}	break;
-
-		/* TODO: Tuple, Set, Cell */
-		/* TODO: float */
-
-	default:
-		ASSERTF(0, "Invalid format: `%s' (`%s')", format, *p_format);
-		__builtin_unreachable();
-		break;
-	}
-end:
-	*p_format = format;
-	return result;
-}
-
+#endif /* !DEFINED_count_unpack_args */
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
-(DCALL Dee_VPUnpackf)(DeeObject *__restrict self,
-                      char const **__restrict p_format,
-                      struct va_list_struct *__restrict p_args) {
+(DCALL LOCAL_Dee_VPUnpackf)(DeeObject *__restrict self,
+                            char const **__restrict p_format,
+                            LOCAL_PARAM_P_OUT) {
 	char const *format = *p_format;
 again:
 	switch (*format++) {
@@ -625,7 +213,7 @@ again:
 				break;
 			}
 			/* Recursively unpacked contained objects. */
-			temp = Dee_VPUnpackf(elem, &format, p_args);
+			temp = LOCAL_Dee_VPUnpackf(elem, &format, LOCAL_ARG_P_OUT);
 			Dee_Decref(elem);
 			if unlikely(temp)
 				return temp;
@@ -670,7 +258,7 @@ invalid_argc2:
 		break;
 
 	case 'o': /* Store the object as-is. */
-		*va_arg(p_args->vl_ap, DeeObject **) = self;
+		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, DeeObject *, __ALIGNOF_POINTER__, self);
 		break;
 
 	case 'U': {
@@ -685,14 +273,14 @@ invalid_argc2:
 		if unlikely(!str)
 			goto err;
 		format += 3;
-		*va_arg(p_args->vl_ap, void **) = str;
+		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__, str);
 	}	break;
 
 
 	case 's': /* Store a string. */
 		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
 			goto err;
-		*va_arg(p_args->vl_ap, char **) = DeeString_STR(self);
+		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, char *, __ALIGNOF_POINTER__, DeeString_STR(self));
 		break;
 
 	case '$': {
@@ -714,8 +302,8 @@ invalid_argc2:
 			goto err;
 		ASSERTF(*format == 's', "Invalid format: `%s' (`%s')", format, *p_format);
 		++format;
-		*va_arg(p_args->vl_ap, size_t *) = WSTR_LENGTH(str);
-		*va_arg(p_args->vl_ap, void **)  = str;
+		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, size_t, __ALIGNOF_SIZE_T__, WSTR_LENGTH(str));
+		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__, str);
 	}	break;
 
 	case 'L': {
@@ -728,11 +316,11 @@ invalid_argc2:
 		if (DeeObject_AsDouble(self, &value))
 			goto err;
 		if (format[-1] == 'f') {
-			*va_arg(p_args->vl_ap, float *) = (float)value;
+			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, float, __ALIGNOF_FLOAT__, (float)value);
 		} else if (format[-2] != 'L') {
-			*va_arg(p_args->vl_ap, double *) = value;
+			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, double, __ALIGNOF_DOUBLE__, (double)value);
 		} else {
-			*va_arg(p_args->vl_ap, long double *) = (long double)value;
+			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, long double, __ALIGNOF_LONG_DOUBLE__, (long double)value);
 		}
 	}	break;
 
@@ -741,12 +329,13 @@ invalid_argc2:
 		temp = DeeObject_Bool(self);
 		if unlikely(temp < 0)
 			return temp;
-		*va_arg(p_args->vl_ap, bool *) = !!temp;
+		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, bool, __ALIGNOF_BOOL__, !!temp);
 	}	break;
 
 	/* Int */
 	{
 		int length, temp;
+#ifndef LEN_INT_IB1
 #define LEN_INT_IB1  0
 #define LEN_INT_IB2  1
 #define LEN_INT_IB4  2
@@ -754,8 +343,9 @@ invalid_argc2:
 #define LEN_INT_IB16 4
 #define LEN_INT2(n)  LEN_INT_IB##n
 #define LEN_INT(n)   LEN_INT2(n)
+#endif /* !LEN_INT_IB1 */
 	case 'c':
-		length = 1;
+		length = LEN_INT_IB1;
 		goto do_integer_format;
 	case 'l':
 		if (*format == 's') {
@@ -766,7 +356,7 @@ invalid_argc2:
 			str = DeeString_AsWide(self);
 			if unlikely(!str)
 				goto err;
-			*va_arg(p_args->vl_ap, void **) = str;
+			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__, str);
 			break;
 		}
 		ATTR_FALLTHROUGH
@@ -826,39 +416,41 @@ do_integer_format:
 		if (format[-1] == 'd' || format[-1] == 'i') {
 			switch (length) { /* signed int */
 			case LEN_INT_IB1:
-				temp = DeeObject_AsInt8(self, va_arg(p_args->vl_ap, int8_t *));
+				temp = DeeObject_AsInt8(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, int8_t, __ALIGNOF_INT8__));
 				break;
 			case LEN_INT_IB2:
-				temp = DeeObject_AsInt16(self, va_arg(p_args->vl_ap, int16_t *));
+				temp = DeeObject_AsInt16(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, int16_t, __ALIGNOF_INT16__));
 				break;
 			case LEN_INT_IB4:
-				temp = DeeObject_AsInt32(self, va_arg(p_args->vl_ap, int32_t *));
+				temp = DeeObject_AsInt32(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, int32_t, __ALIGNOF_INT32__));
 				break;
 			case LEN_INT_IB8:
-				temp = DeeObject_AsInt64(self, va_arg(p_args->vl_ap, int64_t *));
+				temp = DeeObject_AsInt64(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, int64_t, __ALIGNOF_INT64__));
 				break;
-			default:
-				temp = DeeObject_AsInt128(self, va_arg(p_args->vl_ap, Dee_int128_t *));
+			case LEN_INT_IB16:
+				temp = DeeObject_AsInt128(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, Dee_int128_t, __ALIGNOF_INT128__));
 				break;
+			default: __builtin_unreachable();
 			}
 		} else if (format[-1] == 'u' || format[-1] == 'x') {
 parse_unsigned_int:
 			switch (length) { /* unsigned int */
 			case LEN_INT_IB1:
-				temp = DeeObject_AsUInt8(self, va_arg(p_args->vl_ap, uint8_t *));
+				temp = DeeObject_AsUInt8(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint8_t, __ALIGNOF_INT8__));
 				break;
 			case LEN_INT_IB2:
-				temp = DeeObject_AsUInt16(self, va_arg(p_args->vl_ap, uint16_t *));
+				temp = DeeObject_AsUInt16(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint16_t, __ALIGNOF_INT16__));
 				break;
 			case LEN_INT_IB4:
-				temp = DeeObject_AsUInt32(self, va_arg(p_args->vl_ap, uint32_t *));
+				temp = DeeObject_AsUInt32(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint32_t, __ALIGNOF_INT32__));
 				break;
 			case LEN_INT_IB8:
-				temp = DeeObject_AsUInt64(self, va_arg(p_args->vl_ap, uint64_t *));
+				temp = DeeObject_AsUInt64(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint64_t, __ALIGNOF_INT64__));
 				break;
-			default:
-				temp = DeeObject_AsUInt128(self, va_arg(p_args->vl_ap, Dee_uint128_t *));
+			case LEN_INT_IB16:
+				temp = DeeObject_AsUInt128(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, Dee_uint128_t, __ALIGNOF_INT128__));
 				break;
+			default: __builtin_unreachable();
 			}
 		} else {
 			ASSERTF(format[-1] == 'c', "Invalid format: `%s' (`%s')", format, *p_format);
@@ -875,7 +467,7 @@ parse_unsigned_int:
 						err_integer_overflow_i(8, true);
 						goto err;
 					}
-					*va_arg(p_args->vl_ap, uint8_t *) = (uint8_t)ch;
+					LOCAL_OUTPUT(LOCAL_VAL_P_OUT, uint8_t, __ALIGNOF_INT8__, (uint8_t)ch);
 					break;
 
 				case LEN_INT_IB2:
@@ -883,22 +475,23 @@ parse_unsigned_int:
 						err_integer_overflow_i(16, true);
 						goto err;
 					}
-					*va_arg(p_args->vl_ap, uint16_t *) = (uint16_t)ch;
+					LOCAL_OUTPUT(LOCAL_VAL_P_OUT, uint16_t, __ALIGNOF_INT16__, (uint16_t)ch);
 					break;
 
 				case LEN_INT_IB4:
-					*va_arg(p_args->vl_ap, uint32_t *) = (uint32_t)ch;
+					LOCAL_OUTPUT(LOCAL_VAL_P_OUT, uint32_t, __ALIGNOF_INT32__, (uint32_t)ch);
 					break;
 
 				case LEN_INT_IB8:
-					*va_arg(p_args->vl_ap, uint64_t *) = (uint64_t)ch;
+					LOCAL_OUTPUT(LOCAL_VAL_P_OUT, uint64_t, __ALIGNOF_INT64__, (uint64_t)ch);
 					break;
 
-				default: {
-					Dee_uint128_t *p = va_arg(p_args->vl_ap, Dee_uint128_t *);
+				case LEN_INT_IB16: {
+					Dee_uint128_t *p = LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, Dee_uint128_t, __ALIGNOF_INT128__);
 					__hybrid_uint128_set32(*p, ch);
 				}	break;
 
+				default: __builtin_unreachable();
 				}
 				temp = 0;
 			} else {
@@ -921,8 +514,8 @@ err:
 
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) char const *DCALL
-Dee_VPUnpackfSkip(char const *__restrict format,
-                  struct va_list_struct *__restrict p_args) {
+LOCAL_Dee_VPUnpackfSkip(char const *__restrict format,
+                        LOCAL_PARAM_P_OUT) {
 again:
 	switch (*format++) {
 
@@ -932,7 +525,7 @@ again:
 	case '(':
 		/* Unpack a sequence. */
 		while (*format && *format != ')')
-			format = Dee_VPUnpackfSkip(format, p_args);
+			format = LOCAL_Dee_VPUnpackfSkip(format, LOCAL_ARG_P_OUT);
 		break;
 
 		/* Ignore this object. */
@@ -943,14 +536,26 @@ again:
 	case 'L':
 		ASSERTF(*format == 'D', "Invalid format: `%s'", format);
 		++format;
+#ifdef DEFINE_DeeArg_Unpack
 		ATTR_FALLTHROUGH
-	case 'f':
 	case 'D':
-	case 'o':
-	case 's':
+	case 'f':
 	case 'b':
-		(void)va_arg(p_args->vl_ap, void **);
+		(void)va_arg(LOCAL_VAL_P_OUT, void *);
 		break;
+#else /* DEFINE_DeeArg_Unpack */
+		LOCAL_SKIP(LOCAL_VAL_P_OUT, long double, __ALIGNOF_LONG_DOUBLE__);
+		break;
+	case 'D':
+		LOCAL_SKIP(LOCAL_VAL_P_OUT, double, __ALIGNOF_DOUBLE__);
+		break;
+	case 'f':
+		LOCAL_SKIP(LOCAL_VAL_P_OUT, float, __ALIGNOF_FLOAT__);
+		break;
+	case 'b':
+		LOCAL_SKIP(LOCAL_VAL_P_OUT, bool, __ALIGNOF_BOOL__);
+		break;
+#endif /* !DEFINE_DeeArg_Unpack */
 
 	case 'U': /* Store a unicode string. */
 		ASSERTF((format[0] == '1' && format[1] == '6') ||
@@ -958,7 +563,10 @@ again:
 		        "Invalid format: `%s'", format);
 		ASSERTF(format[2] == 's', "Invalid format: `%s'", format);
 		format += 3;
-		(void)va_arg(p_args->vl_ap, void **);
+		ATTR_FALLTHROUGH
+	case 'o':
+	case 's':
+		LOCAL_SKIP(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__);
 		break;
 
 	case '$': /* Store a string, including its length. */
@@ -970,14 +578,14 @@ again:
 		}
 		ASSERTF(*format == 's', "Invalid format: `%s'", format);
 		++format;
-		(void)va_arg(p_args->vl_ap, size_t *);
-		(void)va_arg(p_args->vl_ap, void **);
+		LOCAL_SKIP(LOCAL_VAL_P_OUT, size_t, __ALIGNOF_SIZE_T__);
+		LOCAL_SKIP(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__);
 		break;
 
 	/* Int */
 	case 'l':
 		if (*format == 's') {
-			(void)va_arg(p_args->vl_ap, void **);
+			LOCAL_SKIP(LOCAL_VAL_P_OUT, Dee_wchar_t *, __ALIGNOF_POINTER__);
 			break;
 		}
 		ATTR_FALLTHROUGH
@@ -986,39 +594,78 @@ again:
 	case 'd':
 	case 'u':
 	case 'i':
-	case 'x':
+	case 'x': {
+#ifdef DEFINE_DeeArg_Unpack
 	case 'c':
+#define LOCAL_SETLENGTH(x) (void)0
+#else /* DEFINE_DeeArg_Unpack */
+#define LOCAL_SETLENGTH(x) (void)(length = (x))
+		int length;
+		length = LEN_INT(__SIZEOF_INT__);
+		__IF0 {
+	case 'c':
+			length = LEN_INT_IB1;
+		}
+#endif /* !DEFINE_DeeArg_Unpack */
 		if (format[-1] == 'I') {
 			if (*format == '8') {
+				LOCAL_SETLENGTH(LEN_INT(1));
 				format += 2;
 			} else if (*format == '1') {
 				if (format[1] == '2') {
 					ASSERTF(format[2] == '8', "Invalid format: `%s'", format);
+					LOCAL_SETLENGTH(LEN_INT(16));
 					format += 4;
 				} else {
 					ASSERTF(format[1] == '6', "Invalid format: `%s'", format);
+					LOCAL_SETLENGTH(LEN_INT(2));
 					format += 3;
 				}
 			} else if (*format == '3') {
 				ASSERTF(format[1] == '2', "Invalid format: `%s'", format);
+				LOCAL_SETLENGTH(LEN_INT(4));
 				format += 3;
 			} else if (*format == '6') {
 				ASSERTF(format[1] == '4', "Invalid format: `%s'", format);
+				LOCAL_SETLENGTH(LEN_INT(8));
 				format += 3;
 			} else {
+				LOCAL_SETLENGTH(LEN_INT(__SIZEOF_SIZE_T__));
 				format += 1;
 			}
 		} else if (format[-1] == 'h') {
-			if (*format == 'h')
+			LOCAL_SETLENGTH(LEN_INT(__SIZEOF_SHORT__));
+			if (*format == 'h') {
 				++format;
+				LOCAL_SETLENGTH(LEN_INT(__SIZEOF_CHAR__));
+			}
 			++format;
 		} else if (format[-1] == 'l') {
-			if (*format == 'l')
+			LOCAL_SETLENGTH(LEN_INT(__SIZEOF_LONG__));
+			if (*format == 'l') {
 				++format;
+#ifdef __SIZEOF_LONG_LONG__
+				LOCAL_SETLENGTH(LEN_INT(__SIZEOF_LONG_LONG__));
+#else /* __SIZEOF_LONG_LONG__ */
+				LOCAL_SETLENGTH(LEN_INT(8));
+#endif /* !__SIZEOF_LONG_LONG__ */
+			}
 			++format;
 		}
-		(void)va_arg(p_args->vl_ap, void **);
-		break;
+#undef LOCAL_SETLENGTH
+#ifdef DEFINE_DeeArg_Unpack
+		LOCAL_SKIP(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__);
+#else /* DEFINE_DeeArg_Unpack */
+		switch (length) { /* unsigned int */
+		case LEN_INT_IB1: LOCAL_SKIP(LOCAL_VAL_P_OUT, uint8_t, __ALIGNOF_INT8__); break;
+		case LEN_INT_IB2: LOCAL_SKIP(LOCAL_VAL_P_OUT, uint16_t, __ALIGNOF_INT16__); break;
+		case LEN_INT_IB4: LOCAL_SKIP(LOCAL_VAL_P_OUT, uint32_t, __ALIGNOF_INT32__); break;
+		case LEN_INT_IB8: LOCAL_SKIP(LOCAL_VAL_P_OUT, uint64_t, __ALIGNOF_INT64__); break;
+		case LEN_INT_IB16: LOCAL_SKIP(LOCAL_VAL_P_OUT, Dee_uint128_t, __ALIGNOF_INT128__); break;
+		default: __builtin_unreachable();
+		}
+#endif /* !DEFINE_DeeArg_Unpack */
+	}	break;
 
 	default:
 		ASSERTF(!*format, "Invalid format: `%s'", format);
@@ -1028,36 +675,6 @@ again:
 }
 
 
-
-
-
-
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeTuple_VNewf(char const *__restrict format, va_list args) {
-	struct va_list_struct *p_args;
-	DREF DeeTupleObject *result;
-	size_t i, tuple_size = count_pack_args(format);
-	p_args  = (struct va_list_struct *)VALIST_ADDR(args);
-	result = DeeTuple_NewUninitialized(tuple_size);
-	if unlikely(!result)
-		goto err;
-	for (i = 0; i < tuple_size; ++i) {
-		DREF DeeObject *elem;
-		elem = Dee_VPPackf((char const **)&format, p_args);
-		if unlikely(!elem)
-			goto err_r;
-		DeeTuple_SET(result, i, elem);
-	}
-	ASSERTF(!*format, "Invalid format: `%s'", format);
-	return (DREF DeeObject *)result;
-err_r:
-	Dee_Decrefv(DeeTuple_ELEM(result), i);
-	DeeTuple_FreeUninitialized(result);
-	Dee_VPPackf_Cleanup(format, p_args->vl_ap);
-err:
-	return NULL;
-}
 
 /* An extension to `Dee_Unpackf', explicitly for unpacking elements from function arguments.
  * Format language syntax:
@@ -1080,30 +697,38 @@ err:
  * >> }
  */
 PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
-(DCALL DeeArg_VUnpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
-                       char const *__restrict format, va_list args) {
+(DCALL LOCAL_DeeArg_VUnpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
+                             char const *__restrict format, LOCAL_PARAM_OUT) {
 	char const *fmt_start;
 	bool is_optional;
 	int temp;
+#ifdef DEFINE_DeeArg_Unpack
 	struct va_list_struct *p_args;
+#else /* DEFINE_DeeArg_Unpack */
+	void **p_out;
+#endif /* !DEFINE_DeeArg_Unpack */
 	DeeObject *const *iter, *const *end;
 	fmt_start   = format;
 	is_optional = false;
-	p_args      = (struct va_list_struct *)VALIST_ADDR(args);
-	end         = (iter = argv) + argc;
+#ifdef DEFINE_DeeArg_Unpack
+	p_args = (struct va_list_struct *)VALIST_ADDR(args);
+#else /* DEFINE_DeeArg_Unpack */
+	p_out = &out;
+#endif /* !DEFINE_DeeArg_Unpack */
+	end = (iter = argv) + argc;
 	for (;;) {
 		if (*format == '|') {
 			is_optional = true;
 			++format;
 		}
-		if (iter == end) {
+		if (iter >= end) {
 			if (!is_optional && *format && *format != ':')
 				goto invalid_argc;
 			break;
 		}
 		if (!*format || *format == ':')
 			goto invalid_argc;
-		temp = Dee_VPUnpackf(*iter++, (char const **)&format, p_args);
+		temp = LOCAL_Dee_VPUnpackf(*iter++, (char const **)&format, LOCAL_ARG_P_OUT);
 		if unlikely(temp)
 			return temp;
 	}
@@ -1127,23 +752,15 @@ invalid_argc:
 	return -1;
 }
 
-PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
-(DeeArg_Unpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
-                char const *__restrict format, ...) {
-	int result;
-	va_list args;
-	va_start(args, format);
-	result = DeeArg_VUnpack(argc, argv, format, args);
-	va_end(args);
-	return result;
-}
 
 
+#ifndef DEFINED_kwds_findstr
+#define DEFINED_kwds_findstr
 PRIVATE NONNULL((1, 2)) size_t DCALL
 kwds_findstr(DeeKwdsObject *__restrict self,
              char const *__restrict name,
-             dhash_t hash) {
-	dhash_t i, perturb;
+             Dee_hash_t hash) {
+	Dee_hash_t i, perturb;
 	perturb = i = hash & self->kw_mask;
 	for (;; i = (i << 2) + i + perturb + 1, perturb >>= 5) {
 		struct kwds_entry *entry;
@@ -1158,21 +775,30 @@ kwds_findstr(DeeKwdsObject *__restrict self,
 	}
 	return (size_t)-1;
 }
+#endif /* !DEFINED_kwds_findstr */
 
 PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
-(DCALL DeeArg_VUnpackKw)(size_t argc, DeeObject *const *argv,
-                         DeeObject *kw, struct Dee_keyword *__restrict kwlist,
-                         char const *__restrict format, va_list args) {
+(DCALL LOCAL_DeeArg_VUnpackKw)(size_t argc, DeeObject *const *argv,
+                               DeeObject *kw, struct Dee_keyword *__restrict kwlist,
+                               char const *__restrict format, LOCAL_PARAM_OUT) {
 	char const *fmt_start;
 	size_t kw_argc;
 	bool is_optional;
 	int temp;
+#ifdef DEFINE_DeeArg_Unpack
 	struct va_list_struct *p_args;
+#else /* DEFINE_DeeArg_Unpack */
+	void **p_out;
+#endif /* !DEFINE_DeeArg_Unpack */
 	if (!kw) /* Without arguments, do a regular unpack. */
-		return DeeArg_VUnpack(argc, argv, format, args);
+		return LOCAL_DeeArg_VUnpack(argc, argv, format, LOCAL_ARG_OUT);
 	fmt_start   = format;
 	is_optional = false;
-	p_args      = (struct va_list_struct *)VALIST_ADDR(args);
+#ifdef DEFINE_DeeArg_Unpack
+	p_args = (struct va_list_struct *)VALIST_ADDR(args);
+#else /* DEFINE_DeeArg_Unpack */
+	p_out = &out;
+#endif /* !DEFINE_DeeArg_Unpack */
 	if (DeeKwds_Check(kw)) {
 		/* Indirect keyword list. */
 		size_t pos_argc;
@@ -1191,7 +817,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 				ASSERTF(!kwlist->k_name, "Keyword list too long");
 				goto err_invalid_argc; /* Too many arguments. */
 			}
-			temp = Dee_VPUnpackf(*argv++, (char const **)&format, p_args);
+			temp = LOCAL_Dee_VPUnpackf(*argv++, (char const **)&format, LOCAL_ARG_P_OUT);
 			if unlikely(temp)
 				return temp;
 			ASSERTF(kwlist->k_name, "Keyword list too short");
@@ -1201,7 +827,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 		/* All remaining arguments are passed through
 		 * keywords found in `kwlist .. kwlist + x'. */
 		for (;;) {
-			dhash_t keyword_hash;
+			Dee_hash_t keyword_hash;
 			size_t kwd_index;
 			if (*format == '|') {
 				is_optional = true;
@@ -1224,7 +850,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 			/* Find the matching positional argument. */
 			ASSERTF(kwlist->k_name, "Keyword list too short");
 			keyword_hash = kwlist->k_hash;
-			if (keyword_hash == (dhash_t)-1) {
+			if (keyword_hash == (Dee_hash_t)-1) {
 				/* Lazily calculate the hash the first time around. */
 				keyword_hash   = Dee_HashStr(kwlist->k_name);
 				kwlist->k_hash = keyword_hash;
@@ -1254,11 +880,11 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 				}
 
 				/* The argument is optional, but not given. -> So just skip this one! */
-				format = Dee_VPUnpackfSkip(format, p_args);
+				format = LOCAL_Dee_VPUnpackfSkip(format, LOCAL_ARG_P_OUT);
 			} else {
 				/* All right! we've got the argument! */
 				ASSERT(kwd_index < ((DeeKwdsObject *)kw)->kw_size);
-				temp = Dee_VPUnpackf(argv[kwd_index], (char const **)&format, p_args);
+				temp = LOCAL_Dee_VPUnpackf(argv[kwd_index], (char const **)&format, LOCAL_ARG_P_OUT);
 				if unlikely(temp)
 					return temp;
 				ASSERT(kw_argc != 0);
@@ -1293,7 +919,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 			ASSERTF(!kwlist->k_name, "Keyword list too long");
 			goto err_invalid_argc; /* Too many arguments. */
 		}
-		temp = Dee_VPUnpackf(*argv++, (char const **)&format, p_args);
+		temp = LOCAL_Dee_VPUnpackf(*argv++, (char const **)&format, LOCAL_ARG_P_OUT);
 		if unlikely(temp)
 			return temp;
 		ASSERTF(kwlist->k_name, "Keyword list too short");
@@ -1303,7 +929,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 	/* Now with positional arguments out of the way, move on to the named arguments. */
 	kw_argc = 0;
 	for (;;) {
-		dhash_t keyword_hash;
+		Dee_hash_t keyword_hash;
 		DeeObject *keyword_value;
 		if (*format == '|') {
 			is_optional = true;
@@ -1317,7 +943,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 		/* Find the matching positional argument. */
 		ASSERTF(kwlist->k_name, "Keyword list too short");
 		keyword_hash = kwlist->k_hash;
-		if (keyword_hash == (dhash_t)-1) {
+		if (keyword_hash == (Dee_hash_t)-1) {
 			/* Lazily calculate the hash the first time around. */
 			keyword_hash   = Dee_HashStr(kwlist->k_name);
 			kwlist->k_hash = keyword_hash;
@@ -1345,10 +971,10 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 			}
 
 			/* The argument is optional, but not given. -> So just skip this one! */
-			format = Dee_VPUnpackfSkip(format, p_args);
+			format = LOCAL_Dee_VPUnpackfSkip(format, LOCAL_ARG_P_OUT);
 		} else {
 			/* All right! we've got the argument! */
-			temp = Dee_VPUnpackf(keyword_value, (char const **)&format, p_args);
+			temp = LOCAL_Dee_VPUnpackf(keyword_value, (char const **)&format, LOCAL_ARG_P_OUT);
 			if unlikely(temp)
 				return temp;
 			++kw_argc;
@@ -1385,6 +1011,32 @@ err:
 	return -1;
 }
 
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL LOCAL_Dee_VUnpackf)(DeeObject *__restrict self,
+                           char const *__restrict format,
+                           LOCAL_PARAM_OUT) {
+#ifdef DEFINE_DeeArg_Unpack
+	return Dee_VPUnpackf(self, (char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+#else /* DEFINE_DeeArg_Unpack */
+	return Dee_PUnpackStruct(self, (char const **)&format, &out);
+#endif /* !DEFINE_DeeArg_Unpack */
+}
+
+
+
+#ifdef DEFINE_DeeArg_Unpack
+PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
+(DeeArg_Unpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
+                char const *__restrict format, ...) {
+	int result;
+	va_list args;
+	va_start(args, format);
+	result = DeeArg_VUnpack(argc, argv, format, args);
+	va_end(args);
+	return result;
+}
+
+
 PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 (DeeArg_UnpackKw)(size_t argc, DeeObject *const *argv,
                   DeeObject *kw, struct Dee_keyword *__restrict kwlist,
@@ -1397,96 +1049,6 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 	return result;
 }
 
-
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_VPackf(char const *__restrict format, va_list args) {
-	DREF DeeObject *result;
-	result = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
-	if unlikely(!result) {
-		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
-	} else if unlikely(*format != '\0') {
-		/* More objects at the end -> cannot pack */
-		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
-		Dee_Decref(result);
-		err_invalid_argc(NULL, 2, 1, 1); /* TODO: 2 is just a guess; it could also be more... */
-		result = NULL;
-	}
-	return result;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL Dee_VUnpackf)(DeeObject *__restrict self,
-                     char const *__restrict format,
-                     va_list args) {
-	return Dee_VPUnpackf(self, (char const **)&format,
-	                     (struct va_list_struct *)VALIST_ADDR(args));
-}
-
-
-/* Pack a new value, given a special format string `string'.
- * Format language syntax:
- *     __main__ ::= object;
- *     object ::= ('n' | '-')         // `none'
- *              | ref_object          // `Object' <-- `va_arg(DeeObject *)'
- *              | ref_int             // `int'    <-- `va_arg(...)'
- *              | ref_float           // `float'  <-- `va_arg(...)'
- *              | ref_bool            // `bool'   <-- `va_arg(...)'
- *              | ref_str             // `string' <-- `va_arg(...)'
- *              | '[' [objects] ']'   // `List'
- *              | '(' [objects] ')'   // `Tuple'
- *              | '{' [objects] '}'   // `Set'
- *              | '<' [object] '>'    // `Cell' (When `object')
- *     ;
- *     objects ::= (object | ',')...  // `,' is simply ignored, but can be used to prevent ambiguity
- *     
- *     ref_object ::= 'o' | 'O'; // `DeeObject *' (Uppercase `O' inherits a reference from `va_arg' and causes `Dee_Packf' to propagate an error when `NULL')
- *     ref_int    ::= ref_intlen ('d' | 'u' | 'i' | 'x'); // `u' and `x' create unsigned integers
- *     ref_intlen ::= 'I' ['8' | '16' | '32' | '64'] // Fixed-length / sizeof(size_t)
- *                  | 'hh' // char
- *                  | 'h'  // short
- *                  | ''   // int (Default when nothing else was given)
- *                  | 'l'  // long
- *                  | 'll' // long long (__(U)LONGLONG)
- *     ;
- *     ref_float  ::= 'f'  // float / double
- *                  | 'LD' // long double
- *     ;
- *     ref_bool   ::= ref_intlen 'b';
- *     ref_str    ::= [ '.<int>'  // str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), <int>));
- *                    | '.*'      // max = va_arg(unsigned int); str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), max));
- *                    | '.?'      // max = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), max));
- *                    | '$'       // len = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str, len);
- *                    ] 's';      // DeeString_New(va_arg(char *));
- *
- * Example:
- * >> Dee_Packf("(d<d>Os)", 10, 20, DeeInt_NewInt(42), "foobar");
- * >> // (10, <20>, 42, "foobar")
- */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-Dee_Packf(char const *__restrict format, ...) {
-	struct va_list_struct args;
-	DREF DeeObject *result;
-	va_start(args.vl_ap, format);
-	result = Dee_VPPackf((char const **)&format, &args);
-	va_end(args.vl_ap);
-	if unlikely(!result)
-		Dee_VPPackf_Cleanup(format, args.vl_ap);
-	return result;
-}
-
-/* Similar to `Dee_Packf', but parse any number of formated values and
- * put them in a tuple, essentially doing the same as `Dee_Packf' when
- * the entire `format' string was surrounded by `(' and `)'. */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-DeeTuple_Newf(char const *__restrict format, ...) {
-	DREF DeeObject *result;
-	va_list args;
-	va_start(args, format);
-	result = DeeTuple_VNewf(format, args);
-	va_end(args);
-	return result;
-}
 
 /* Unpack values from an object.
  * Format language syntax:
@@ -1540,8 +1102,23 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	va_end(args.vl_ap);
 	return result;
 }
+#endif /* DEFINE_DeeArg_Unpack */
 
+#undef LOCAL_Dee_VPUnpackf
+#undef LOCAL_Dee_VPUnpackfSkip
+#undef LOCAL_DeeArg_VUnpack
+#undef LOCAL_DeeArg_VUnpackKw
+#undef LOCAL_Dee_VUnpackf
+#undef LOCAL_PARAM_P_OUT
+#undef LOCAL_PARAM_OUT
+#undef LOCAL_ARG_P_OUT
+#undef LOCAL_ARG_OUT
+#undef LOCAL_VAL_P_OUT
+#undef LOCAL_OUTPUT
+#undef LOCAL_OUTPUT_PTR
+#undef LOCAL_SKIP
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_RUNTIME_BUILD_VALUE_C */
+#undef DEFINE_DeeArg_Unpack
+#undef DEFINE_DeeArg_UnpackStruct
