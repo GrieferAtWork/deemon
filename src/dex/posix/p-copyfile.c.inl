@@ -93,28 +93,33 @@ DECL_BEGIN
 /*[[[deemon import("rt.gen.dexutils").gw("fcopyfile",
 	"oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags:u=0,"
 	"progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f_impl(DeeObject *oldfd, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
+FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_fcopyfile_f_impl(DeeObject *oldfd, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FCOPYFILE_DEF { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_FCOPYFILE_DEF_DOC(doc) { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_FCOPYFILE_DEF { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
+#define POSIX_FCOPYFILE_DEF_DOC(doc) { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fcopyfile, &posix_fcopyfile_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_OLDFD_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
-#define POSIX_KWDS_OLDFD_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newpath_flags_progress_bufsize, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
-#endif /* !POSIX_KWDS_OLDFD_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED */
+#ifndef DEFINED_kwlist__oldfd_newpath_flags_progress_bufsize
+#define DEFINED_kwlist__oldfd_newpath_flags_progress_bufsize
+PRIVATE DEFINE_KWLIST(kwlist__oldfd_newpath_flags_progress_bufsize, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
+#endif /* !DEFINED_kwlist__oldfd_newpath_flags_progress_bufsize */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *oldfd;
-	DeeObject *newpath;
-	unsigned int flags = 0;
-	DeeObject *progress = Dee_None;
-	DeeObject *bufsize = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldfd_newpath_flags_progress_bufsize, "oo|uoo:fcopyfile", &oldfd, &newpath, &flags, &progress, &bufsize))
+	struct {
+		DeeObject *oldfd;
+		DeeObject *newpath;
+		unsigned int flags;
+		DeeObject *progress;
+		DeeObject *bufsize;
+	} args;
+	args.flags = 0;
+	args.progress = Dee_None;
+	args.bufsize = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__oldfd_newpath_flags_progress_bufsize, "oo|uoo:fcopyfile", &args))
 		goto err;
-	return posix_fcopyfile_f_impl(oldfd, newpath, flags, progress, bufsize);
+	return posix_fcopyfile_f_impl(args.oldfd, args.newpath, args.flags, args.progress, args.bufsize);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f_impl(DeeObject *oldfd, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize)
+FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5))DREF DeeObject *DCALL posix_fcopyfile_f_impl(DeeObject *oldfd, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize)
 /*[[[end]]]*/
 {
 #ifdef posix_fcopyfile_USE_posix_copyfile_fileio
@@ -181,28 +186,33 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("copyfile",
 	"oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:u=0,"
 	"progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
+FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_copyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_COPYFILE_DEF { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FREADONLY, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_COPYFILE_DEF_DOC(doc) { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FREADONLY, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_COPYFILE_DEF { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FREADONLY, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
+#define POSIX_COPYFILE_DEF_DOC(doc) { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FREADONLY, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_copyfile, &posix_copyfile_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
-#define POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath_flags_progress_bufsize, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
-#endif /* !POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED */
+#ifndef DEFINED_kwlist__oldpath_newpath_flags_progress_bufsize
+#define DEFINED_kwlist__oldpath_newpath_flags_progress_bufsize
+PRIVATE DEFINE_KWLIST(kwlist__oldpath_newpath_flags_progress_bufsize, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
+#endif /* !DEFINED_kwlist__oldpath_newpath_flags_progress_bufsize */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *oldpath;
-	DeeObject *newpath;
-	unsigned int flags = 0;
-	DeeObject *progress = Dee_None;
-	DeeObject *bufsize = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldpath_newpath_flags_progress_bufsize, "oo|uoo:copyfile", &oldpath, &newpath, &flags, &progress, &bufsize))
+	struct {
+		DeeObject *oldpath;
+		DeeObject *newpath;
+		unsigned int flags;
+		DeeObject *progress;
+		DeeObject *bufsize;
+	} args;
+	args.flags = 0;
+	args.progress = Dee_None;
+	args.bufsize = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__oldpath_newpath_flags_progress_bufsize, "oo|uoo:copyfile", &args))
 		goto err;
-	return posix_copyfile_f_impl(oldpath, newpath, flags, progress, bufsize);
+	return posix_copyfile_f_impl(args.oldpath, args.newpath, args.flags, args.progress, args.bufsize);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize)
+FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5))DREF DeeObject *DCALL posix_copyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize)
 /*[[[end]]]*/
 {
 #ifdef posix_copyfile_USE_posix_copyfile_fileio
@@ -329,28 +339,33 @@ again:
 /*[[[deemon import("rt.gen.dexutils").gw("lcopyfile",
 	"oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:u=0,"
 	"progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
+FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_lcopyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_LCOPYFILE_DEF { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_LCOPYFILE_DEF_DOC(doc) { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_LCOPYFILE_DEF { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
+#define POSIX_LCOPYFILE_DEF_DOC(doc) { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lcopyfile, &posix_lcopyfile_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
-#define POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath_flags_progress_bufsize, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
-#endif /* !POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED */
+#ifndef DEFINED_kwlist__oldpath_newpath_flags_progress_bufsize
+#define DEFINED_kwlist__oldpath_newpath_flags_progress_bufsize
+PRIVATE DEFINE_KWLIST(kwlist__oldpath_newpath_flags_progress_bufsize, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
+#endif /* !DEFINED_kwlist__oldpath_newpath_flags_progress_bufsize */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *oldpath;
-	DeeObject *newpath;
-	unsigned int flags = 0;
-	DeeObject *progress = Dee_None;
-	DeeObject *bufsize = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldpath_newpath_flags_progress_bufsize, "oo|uoo:lcopyfile", &oldpath, &newpath, &flags, &progress, &bufsize))
+	struct {
+		DeeObject *oldpath;
+		DeeObject *newpath;
+		unsigned int flags;
+		DeeObject *progress;
+		DeeObject *bufsize;
+	} args;
+	args.flags = 0;
+	args.progress = Dee_None;
+	args.bufsize = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__oldpath_newpath_flags_progress_bufsize, "oo|uoo:lcopyfile", &args))
 		goto err;
-	return posix_lcopyfile_f_impl(oldpath, newpath, flags, progress, bufsize);
+	return posix_lcopyfile_f_impl(args.oldpath, args.newpath, args.flags, args.progress, args.bufsize);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize)
+FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5))DREF DeeObject *DCALL posix_lcopyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize)
 /*[[[end]]]*/
 {
 #ifdef posix_lcopyfile_USE_posix_copyfile_fileio
@@ -480,31 +495,37 @@ err:
 	"olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,"
 	"newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:u=0,"
 	"atflags:u=0,progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix");]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfileat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags, DeeObject *progress, DeeObject *bufsize);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 7, 8)) DREF DeeObject *DCALL posix_copyfileat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags, DeeObject *progress, DeeObject *bufsize);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfileat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_COPYFILEAT_DEF { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_COPYFILEAT_DEF_DOC(doc) { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_COPYFILEAT_DEF { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
+#define POSIX_COPYFILEAT_DEF_DOC(doc) { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_copyfileat, &posix_copyfileat_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_PROGRESS_BUFSIZE_DEFINED
-#define POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_PROGRESS_BUFSIZE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize, { KEX("olddirfd", 0xfce5716b, 0x69852ead3adcc550), KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newdirfd", 0xcef3d13f, 0x767804c5c500a418), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
-#endif /* !POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_PROGRESS_BUFSIZE_DEFINED */
+#ifndef DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize
+#define DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize
+PRIVATE DEFINE_KWLIST(kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize, { KEX("olddirfd", 0xfce5716b, 0x69852ead3adcc550), KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newdirfd", 0xcef3d13f, 0x767804c5c500a418), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
+#endif /* !DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfileat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *olddirfd;
-	DeeObject *oldpath;
-	DeeObject *newdirfd;
-	DeeObject *newpath;
-	unsigned int flags = 0;
-	unsigned int atflags = 0;
-	DeeObject *progress = Dee_None;
-	DeeObject *bufsize = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize, "oooo|uuoo:copyfileat", &olddirfd, &oldpath, &newdirfd, &newpath, &flags, &atflags, &progress, &bufsize))
+	struct {
+		DeeObject *olddirfd;
+		DeeObject *oldpath;
+		DeeObject *newdirfd;
+		DeeObject *newpath;
+		unsigned int flags;
+		unsigned int atflags;
+		DeeObject *progress;
+		DeeObject *bufsize;
+	} args;
+	args.flags = 0;
+	args.atflags = 0;
+	args.progress = Dee_None;
+	args.bufsize = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize, "oooo|uuoo:copyfileat", &args))
 		goto err;
-	return posix_copyfileat_f_impl(olddirfd, oldpath, newdirfd, newpath, flags, atflags, progress, bufsize);
+	return posix_copyfileat_f_impl(args.olddirfd, args.oldpath, args.newdirfd, args.newpath, args.flags, args.atflags, args.progress, args.bufsize);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfileat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags, DeeObject *progress, DeeObject *bufsize)
+FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 7, 8))DREF DeeObject *DCALL posix_copyfileat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags, DeeObject *progress, DeeObject *bufsize)
 /*[[[end]]]*/
 {
 #ifdef posix_copyfileat_USE_copyfile__AND__lcopyfile__AND__fcopyfile

@@ -160,19 +160,20 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_isatty_f(size_t argc, DeeObject *con
 #define POSIX_ISATTY_DEF { "isatty", (DeeObject *)&posix_isatty, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dbool") },
 #define POSIX_ISATTY_DEF_DOC(doc) { "isatty", (DeeObject *)&posix_isatty, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_isatty, &posix_isatty_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_FD_DEFINED
-#define POSIX_KWDS_FD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
-#endif /* !POSIX_KWDS_FD_DEFINED */
+#ifndef DEFINED_kwlist__fd
+#define DEFINED_kwlist__fd
+PRIVATE DEFINE_KWLIST(kwlist__fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
+#endif /* !DEFINED_kwlist__fd */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_isatty_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int fd_fd;
-	DeeObject *fd;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:isatty", &fd))
+	struct {
+		DeeObject *raw_fd;
+	} args;
+	int fd;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__fd, "o:isatty", &args))
 		goto err;
-	fd_fd = DeeUnixSystem_GetFD(fd);
-	if unlikely(fd_fd == -1)
+	if unlikely((fd = DeeUnixSystem_GetFD(args.raw_fd)) == -1)
 		goto err;
-	return posix_isatty_f_impl(fd_fd);
+	return posix_isatty_f_impl(fd);
 err:
 	return NULL;
 }
@@ -228,15 +229,17 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_umask_f(size_t argc, DeeObject *cons
 #define POSIX_UMASK_DEF { "umask", (DeeObject *)&posix_umask, MODSYM_FREADONLY, DOC("(mask:?Dint)->?Dint") },
 #define POSIX_UMASK_DEF_DOC(doc) { "umask", (DeeObject *)&posix_umask, MODSYM_FREADONLY, DOC("(mask:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_umask, &posix_umask_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_MASK_DEFINED
-#define POSIX_KWDS_MASK_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_mask, { KEX("mask", 0xc3b4302b, 0x933f153b40dd4379), KEND });
-#endif /* !POSIX_KWDS_MASK_DEFINED */
+#ifndef DEFINED_kwlist__mask
+#define DEFINED_kwlist__mask
+PRIVATE DEFINE_KWLIST(kwlist__mask, { KEX("mask", 0xc3b4302b, 0x933f153b40dd4379), KEND });
+#endif /* !DEFINED_kwlist__mask */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_umask_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int mask;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_mask, "d:umask", &mask))
+	struct {
+		int mask;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__mask, "d:umask", &args))
 		goto err;
-	return posix_umask_f_impl(mask);
+	return posix_umask_f_impl(args.mask);
 err:
 	return NULL;
 }
@@ -279,19 +282,20 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup_f(size_t argc, DeeObject *const 
 #define POSIX_DUP_DEF { "dup", (DeeObject *)&posix_dup, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dint") },
 #define POSIX_DUP_DEF_DOC(doc) { "dup", (DeeObject *)&posix_dup, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_dup, &posix_dup_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_FD_DEFINED
-#define POSIX_KWDS_FD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
-#endif /* !POSIX_KWDS_FD_DEFINED */
+#ifndef DEFINED_kwlist__fd
+#define DEFINED_kwlist__fd
+PRIVATE DEFINE_KWLIST(kwlist__fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
+#endif /* !DEFINED_kwlist__fd */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int fd_fd;
-	DeeObject *fd;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:dup", &fd))
+	struct {
+		DeeObject *raw_fd;
+	} args;
+	int fd;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__fd, "o:dup", &args))
 		goto err;
-	fd_fd = DeeUnixSystem_GetFD(fd);
-	if unlikely(fd_fd == -1)
+	if unlikely((fd = DeeUnixSystem_GetFD(args.raw_fd)) == -1)
 		goto err;
-	return posix_dup_f_impl(fd_fd);
+	return posix_dup_f_impl(fd);
 err:
 	return NULL;
 }
@@ -339,24 +343,24 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup2_f(size_t argc, DeeObject *const
 #define POSIX_DUP2_DEF { "dup2", (DeeObject *)&posix_dup2, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile)->?Dint") },
 #define POSIX_DUP2_DEF_DOC(doc) { "dup2", (DeeObject *)&posix_dup2, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_dup2, &posix_dup2_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_OLDFD_NEWFD_DEFINED
-#define POSIX_KWDS_OLDFD_NEWFD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newfd, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newfd", 0xd4ea987d, 0xe1d56bf670fa4fe3), KEND });
-#endif /* !POSIX_KWDS_OLDFD_NEWFD_DEFINED */
+#ifndef DEFINED_kwlist__oldfd_newfd
+#define DEFINED_kwlist__oldfd_newfd
+PRIVATE DEFINE_KWLIST(kwlist__oldfd_newfd, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newfd", 0xd4ea987d, 0xe1d56bf670fa4fe3), KEND });
+#endif /* !DEFINED_kwlist__oldfd_newfd */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup2_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int oldfd_fd;
-	DeeObject *oldfd;
-	int newfd_fd;
-	DeeObject *newfd;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldfd_newfd, "oo:dup2", &oldfd, &newfd))
+	struct {
+		DeeObject *raw_oldfd;
+		DeeObject *raw_newfd;
+	} args;
+	int oldfd;
+	int newfd;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__oldfd_newfd, "oo:dup2", &args))
 		goto err;
-	oldfd_fd = DeeUnixSystem_GetFD(oldfd);
-	if unlikely(oldfd_fd == -1)
+	if unlikely((oldfd = DeeUnixSystem_GetFD(args.raw_oldfd)) == -1)
 		goto err;
-	newfd_fd = DeeUnixSystem_GetFD(newfd);
-	if unlikely(newfd_fd == -1)
+	if unlikely((newfd = DeeUnixSystem_GetFD(args.raw_newfd)) == -1)
 		goto err;
-	return posix_dup2_f_impl(oldfd_fd, newfd_fd);
+	return posix_dup2_f_impl(oldfd, newfd);
 err:
 	return NULL;
 }
@@ -406,25 +410,25 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup3_f(size_t argc, DeeObject *const
 #define POSIX_DUP3_DEF { "dup3", (DeeObject *)&posix_dup3, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile,oflags:?Dint)->?Dint") },
 #define POSIX_DUP3_DEF_DOC(doc) { "dup3", (DeeObject *)&posix_dup3, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile,oflags:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_dup3, &posix_dup3_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_OLDFD_NEWFD_OFLAGS_DEFINED
-#define POSIX_KWDS_OLDFD_NEWFD_OFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newfd_oflags, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newfd", 0xd4ea987d, 0xe1d56bf670fa4fe3), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEND });
-#endif /* !POSIX_KWDS_OLDFD_NEWFD_OFLAGS_DEFINED */
+#ifndef DEFINED_kwlist__oldfd_newfd_oflags
+#define DEFINED_kwlist__oldfd_newfd_oflags
+PRIVATE DEFINE_KWLIST(kwlist__oldfd_newfd_oflags, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newfd", 0xd4ea987d, 0xe1d56bf670fa4fe3), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEND });
+#endif /* !DEFINED_kwlist__oldfd_newfd_oflags */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup3_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int oldfd_fd;
-	DeeObject *oldfd;
-	int newfd_fd;
-	DeeObject *newfd;
-	int oflags;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldfd_newfd_oflags, "ood:dup3", &oldfd, &newfd, &oflags))
+	struct {
+		DeeObject *raw_oldfd;
+		DeeObject *raw_newfd;
+		int oflags;
+	} args;
+	int oldfd;
+	int newfd;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__oldfd_newfd_oflags, "ood:dup3", &args))
 		goto err;
-	oldfd_fd = DeeUnixSystem_GetFD(oldfd);
-	if unlikely(oldfd_fd == -1)
+	if unlikely((oldfd = DeeUnixSystem_GetFD(args.raw_oldfd)) == -1)
 		goto err;
-	newfd_fd = DeeUnixSystem_GetFD(newfd);
-	if unlikely(newfd_fd == -1)
+	if unlikely((newfd = DeeUnixSystem_GetFD(args.raw_newfd)) == -1)
 		goto err;
-	return posix_dup3_f_impl(oldfd_fd, newfd_fd, oflags);
+	return posix_dup3_f_impl(oldfd, newfd, args.oflags);
 err:
 	return NULL;
 }
@@ -586,19 +590,20 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_close_f(size_t argc, DeeObject *cons
 #define POSIX_CLOSE_DEF { "close", (DeeObject *)&posix_close, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)") },
 #define POSIX_CLOSE_DEF_DOC(doc) { "close", (DeeObject *)&posix_close, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_close, &posix_close_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_FD_DEFINED
-#define POSIX_KWDS_FD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
-#endif /* !POSIX_KWDS_FD_DEFINED */
+#ifndef DEFINED_kwlist__fd
+#define DEFINED_kwlist__fd
+PRIVATE DEFINE_KWLIST(kwlist__fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
+#endif /* !DEFINED_kwlist__fd */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_close_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int fd_fd;
-	DeeObject *fd;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:close", &fd))
+	struct {
+		DeeObject *raw_fd;
+	} args;
+	int fd;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__fd, "o:close", &args))
 		goto err;
-	fd_fd = DeeUnixSystem_GetFD(fd);
-	if unlikely(fd_fd == -1)
+	if unlikely((fd = DeeUnixSystem_GetFD(args.raw_fd)) == -1)
 		goto err;
-	return posix_close_f_impl(fd_fd);
+	return posix_close_f_impl(fd);
 err:
 	return NULL;
 }

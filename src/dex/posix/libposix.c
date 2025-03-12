@@ -642,13 +642,6 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_frename_USE_STUB /* nothing */
 #define str_posix_frename_USE_STUB /* nothing */
 #endif /* !posix_frename_USE_STUB */
-#ifdef posix_fresolvepath_USE_STUB
-#define len_posix_fresolvepath_USE_STUB +13
-#define str_posix_fresolvepath_USE_STUB 'f', 'r', 'e', 's', 'o', 'l', 'v', 'e', 'p', 'a', 't', 'h', '\0',
-#else /* posix_fresolvepath_USE_STUB */
-#define len_posix_fresolvepath_USE_STUB /* nothing */
-#define str_posix_fresolvepath_USE_STUB /* nothing */
-#endif /* !posix_fresolvepath_USE_STUB */
 #ifdef posix_fsymlinkat_USE_STUB
 #define len_posix_fsymlinkat_USE_STUB +23
 #define str_posix_fsymlinkat_USE_STUB 'f', 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0', '_', 'f', 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0',
@@ -1273,7 +1266,6 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_freadlink_USE_STUB \
 	len_posix_frealpath_USE_STUB \
 	len_posix_frename_USE_STUB \
-	len_posix_fresolvepath_USE_STUB \
 	len_posix_fsymlinkat_USE_STUB \
 	len_posix_fsync_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
@@ -1419,7 +1411,6 @@ PRIVATE struct {
 		str_posix_freadlink_USE_STUB
 		str_posix_frealpath_USE_STUB
 		str_posix_frename_USE_STUB
-		str_posix_fresolvepath_USE_STUB
 		str_posix_fsymlinkat_USE_STUB
 		str_posix_fsync_USE_STUB
 		str_posix_ftruncate_USE_STUB

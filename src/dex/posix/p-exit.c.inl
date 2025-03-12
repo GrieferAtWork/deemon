@@ -70,25 +70,28 @@ print "/" "**" "/";
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("atexit", "callback:?DCallable,args:?DTuple=Dee_EmptyTuple", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_atexit_f_impl(DeeObject *callback, DeeObject *args);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_atexit_f_impl(DeeObject *callback, DeeObject *args);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_atexit_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_ATEXIT_DEF { "atexit", (DeeObject *)&posix_atexit, MODSYM_FREADONLY, DOC("(callback:?DCallable,args:?DTuple=!T0)") },
-#define POSIX_ATEXIT_DEF_DOC(doc) { "atexit", (DeeObject *)&posix_atexit, MODSYM_FREADONLY, DOC("(callback:?DCallable,args:?DTuple=!T0)\n" doc) },
+#define POSIX_ATEXIT_DEF { "atexit", (DeeObject *)&posix_atexit, MODSYM_FREADONLY, DOC("(callback:?DCallable,args=!T0)") },
+#define POSIX_ATEXIT_DEF_DOC(doc) { "atexit", (DeeObject *)&posix_atexit, MODSYM_FREADONLY, DOC("(callback:?DCallable,args=!T0)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_atexit, &posix_atexit_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_CALLBACK_ARGS_DEFINED
-#define POSIX_KWDS_CALLBACK_ARGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_callback_args, { KEX("callback", 0x3b9dd39e, 0x1e7dd8df6e98f4c6), KEX("args", 0xc6fc997f, 0x4af7cd17f976719e), KEND });
-#endif /* !POSIX_KWDS_CALLBACK_ARGS_DEFINED */
+#ifndef DEFINED_kwlist__callback_args
+#define DEFINED_kwlist__callback_args
+PRIVATE DEFINE_KWLIST(kwlist__callback_args, { KEX("callback", 0x3b9dd39e, 0x1e7dd8df6e98f4c6), KEX("args", 0xc6fc997f, 0x4af7cd17f976719e), KEND });
+#endif /* !DEFINED_kwlist__callback_args */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_atexit_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *callback;
-	DeeObject *args = Dee_EmptyTuple;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_callback_args, "o|o:atexit", &callback, &args))
+	struct {
+		DeeObject *callback;
+		DeeObject *args;
+	} args;
+	args.args = Dee_EmptyTuple;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__callback_args, "o|o:atexit", &args))
 		goto err;
-	return posix_atexit_f_impl(callback, args);
+	return posix_atexit_f_impl(args.callback, args.args);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_atexit_f_impl(DeeObject *callback, DeeObject *args)
+FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_atexit_f_impl(DeeObject *callback, DeeObject *args)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
@@ -114,15 +117,17 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_exit_f(size_t argc, DeeObject *const
 #define POSIX_EXIT_DEF { "exit", (DeeObject *)&posix_exit, MODSYM_FREADONLY, DOC("(exitcode:?Dint)") },
 #define POSIX_EXIT_DEF_DOC(doc) { "exit", (DeeObject *)&posix_exit, MODSYM_FREADONLY, DOC("(exitcode:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_exit, &posix_exit_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_EXITCODE_DEFINED
-#define POSIX_KWDS_EXITCODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_exitcode, { KEX("exitcode", 0x79c9d863, 0x3fcba2655ec7fa85), KEND });
-#endif /* !POSIX_KWDS_EXITCODE_DEFINED */
+#ifndef DEFINED_kwlist__exitcode
+#define DEFINED_kwlist__exitcode
+PRIVATE DEFINE_KWLIST(kwlist__exitcode, { KEX("exitcode", 0x79c9d863, 0x3fcba2655ec7fa85), KEND });
+#endif /* !DEFINED_kwlist__exitcode */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_exit_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int exitcode;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_exitcode, "d:exit", &exitcode))
+	struct {
+		int exitcode;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__exitcode, "d:exit", &args))
 		goto err;
-	return posix_exit_f_impl(exitcode);
+	return posix_exit_f_impl(args.exitcode);
 err:
 	return NULL;
 }
@@ -147,15 +152,17 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__Exit_f(size_t argc, DeeObject *cons
 #define POSIX__EXIT_DEF { "_Exit", (DeeObject *)&posix__Exit, MODSYM_FREADONLY, DOC("(exitcode:?Dint)") },
 #define POSIX__EXIT_DEF_DOC(doc) { "_Exit", (DeeObject *)&posix__Exit, MODSYM_FREADONLY, DOC("(exitcode:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix__Exit, &posix__Exit_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_EXITCODE_DEFINED
-#define POSIX_KWDS_EXITCODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_exitcode, { KEX("exitcode", 0x79c9d863, 0x3fcba2655ec7fa85), KEND });
-#endif /* !POSIX_KWDS_EXITCODE_DEFINED */
+#ifndef DEFINED_kwlist__exitcode
+#define DEFINED_kwlist__exitcode
+PRIVATE DEFINE_KWLIST(kwlist__exitcode, { KEX("exitcode", 0x79c9d863, 0x3fcba2655ec7fa85), KEND });
+#endif /* !DEFINED_kwlist__exitcode */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__Exit_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int exitcode;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_exitcode, "d:_Exit", &exitcode))
+	struct {
+		int exitcode;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__exitcode, "d:_Exit", &args))
 		goto err;
-	return posix__Exit_f_impl(exitcode);
+	return posix__Exit_f_impl(args.exitcode);
 err:
 	return NULL;
 }
@@ -179,7 +186,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_abort_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_abort_f(size_t argc, DeeObject *const *argv);
 #define POSIX_ABORT_DEF { "abort", (DeeObject *)&posix_abort, MODSYM_FREADONLY, DOC("()") },
 #define POSIX_ABORT_DEF_DOC(doc) { "abort", (DeeObject *)&posix_abort, MODSYM_FREADONLY, DOC("()\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_abort, posix_abort_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(posix_abort, &posix_abort_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_abort_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":abort"))
 		goto err;

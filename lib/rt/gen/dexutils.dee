@@ -292,7 +292,28 @@ function gii(
 }
 
 
-
+#if 1
+function gw(name: string, args: string = "", docdecl: bool = true, kw: bool | none = none,
+            libname: string = none, visi: string = "PRIVATE", isvarying: bool = false,
+            ispure: bool = false, isconst: bool = false) {
+	if (libname is none)
+		libname = AUTOLIBNAME();
+	local print_libMethod = import(".unpack").print_libMethod;
+	local dReturnType;
+	args, none, dReturnType = args.rpartition("->")...;
+	return print_libMethod(
+			name: name,
+			params: args,
+			dReturnType: dReturnType,
+			kw: kw,
+			libname: libname,
+			visi: visi,
+			isvarying: isvarying,
+			ispure: ispure,
+			isconst: isconst
+	);
+}
+#else
 @@Generate a wrapper for a c method (gw -- GenerateWrapper)
 @@Usage (in a file `libfoo.c', after running `$ deemon -F libfoo.c'):
 @@>/*[[[deemon import("rt.dexutils").gw("bar", "arg1:obj:string,arg2:o,arg3:o=NULL,arg4:b=true"); ]]]*/
@@ -645,5 +666,6 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 	print_user_impl();
 	print;
 }
+#endif
 
 

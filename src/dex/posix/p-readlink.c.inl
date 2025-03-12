@@ -87,24 +87,26 @@ DECL_BEGIN
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("readlink", "file:?Dstring->?Dstring", libname: "posix");]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_readlink_f_impl(DeeObject *file);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_readlink_f_impl(DeeObject *file);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_readlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_READLINK_DEF { "readlink", (DeeObject *)&posix_readlink, MODSYM_FREADONLY, DOC("(file:?Dstring)->?Dstring") },
 #define POSIX_READLINK_DEF_DOC(doc) { "readlink", (DeeObject *)&posix_readlink, MODSYM_FREADONLY, DOC("(file:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_readlink, &posix_readlink_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_FILE_DEFINED
-#define POSIX_KWDS_FILE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_file, { KEX("file", 0x1a11b2b3, 0x612e37678ce7db5b), KEND });
-#endif /* !POSIX_KWDS_FILE_DEFINED */
+#ifndef DEFINED_kwlist__file
+#define DEFINED_kwlist__file
+PRIVATE DEFINE_KWLIST(kwlist__file, { KEX("file", 0x1a11b2b3, 0x612e37678ce7db5b), KEND });
+#endif /* !DEFINED_kwlist__file */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_readlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *file;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_file, "o:readlink", &file))
+	struct {
+		DeeObject *file;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__file, "o:readlink", &args))
 		goto err;
-	return posix_readlink_f_impl(file);
+	return posix_readlink_f_impl(args.file);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_readlink_f_impl(DeeObject *file)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_readlink_f_impl(DeeObject *file)
 /*[[[end]]]*/
 {
 #ifdef posix_readlink_USE_nt_FReadLink
@@ -299,24 +301,26 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("freadlink", "fd:?X2?DFile?Dint->?Dstring", libname: "posix");]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_freadlink_f_impl(DeeObject *fd);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_freadlink_f_impl(DeeObject *fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_freadlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FREADLINK_DEF { "freadlink", (DeeObject *)&posix_freadlink, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Dstring") },
 #define POSIX_FREADLINK_DEF_DOC(doc) { "freadlink", (DeeObject *)&posix_freadlink, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_freadlink, &posix_freadlink_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_FD_DEFINED
-#define POSIX_KWDS_FD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
-#endif /* !POSIX_KWDS_FD_DEFINED */
+#ifndef DEFINED_kwlist__fd
+#define DEFINED_kwlist__fd
+PRIVATE DEFINE_KWLIST(kwlist__fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
+#endif /* !DEFINED_kwlist__fd */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_freadlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *fd;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:freadlink", &fd))
+	struct {
+		DeeObject *fd;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__fd, "o:freadlink", &args))
 		goto err;
-	return posix_freadlink_f_impl(fd);
+	return posix_freadlink_f_impl(args.fd);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_freadlink_f_impl(DeeObject *fd)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_freadlink_f_impl(DeeObject *fd)
 /*[[[end]]]*/
 {
 #ifdef posix_freadlink_USE_nt_FReadLink
@@ -367,26 +371,29 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("readlinkat", "dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags:u=0->?Dstring", libname: "posix");]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_readlinkat_f_impl(DeeObject *dfd, DeeObject *file, unsigned int atflags);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_readlinkat_f_impl(DeeObject *dfd, DeeObject *file, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_readlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_READLINKAT_DEF { "readlinkat", (DeeObject *)&posix_readlinkat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags:?Dint=!0)->?Dstring") },
-#define POSIX_READLINKAT_DEF_DOC(doc) { "readlinkat", (DeeObject *)&posix_readlinkat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags:?Dint=!0)->?Dstring\n" doc) },
+#define POSIX_READLINKAT_DEF { "readlinkat", (DeeObject *)&posix_readlinkat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0)->?Dstring") },
+#define POSIX_READLINKAT_DEF_DOC(doc) { "readlinkat", (DeeObject *)&posix_readlinkat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_readlinkat, &posix_readlinkat_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_DFD_FILE_ATFLAGS_DEFINED
-#define POSIX_KWDS_DFD_FILE_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_file_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("file", 0x1a11b2b3, 0x612e37678ce7db5b), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
-#endif /* !POSIX_KWDS_DFD_FILE_ATFLAGS_DEFINED */
+#ifndef DEFINED_kwlist__dfd_file_atflags
+#define DEFINED_kwlist__dfd_file_atflags
+PRIVATE DEFINE_KWLIST(kwlist__dfd_file_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("file", 0x1a11b2b3, 0x612e37678ce7db5b), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
+#endif /* !DEFINED_kwlist__dfd_file_atflags */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_readlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *dfd;
-	DeeObject *file;
-	unsigned int atflags = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_file_atflags, "oo|u:readlinkat", &dfd, &file, &atflags))
+	struct {
+		DeeObject *dfd;
+		DeeObject *file;
+		unsigned int atflags;
+	} args;
+	args.atflags = 0;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dfd_file_atflags, "oo|u:readlinkat", &args))
 		goto err;
-	return posix_readlinkat_f_impl(dfd, file, atflags);
+	return posix_readlinkat_f_impl(args.dfd, args.file, args.atflags);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_readlinkat_f_impl(DeeObject *dfd, DeeObject *file, unsigned int atflags)
+FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_readlinkat_f_impl(DeeObject *dfd, DeeObject *file, unsigned int atflags)
 /*[[[end]]]*/
 {
 #ifdef posix_readlinkat_USE_posix_readlink

@@ -1,0 +1,959 @@
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import rt.hash as rtHash;
+
+
+global final DTYPE_BY_CTYPE: {string: string} = {
+	"DeeObject*": "?O",
+	"bool": "?Dbool",
+	"__BOOL": "?Dbool",
+	"int": "?Dint",
+	"signed int": "?Dint",
+	"unsigned int": "?Dint",
+	"short": "?Dint",
+	"signed short": "?Dint",
+	"unsigned short": "?Dint",
+	"long": "?Dint",
+	"signed long": "?Dint",
+	"unsigned long": "?Dint",
+	"long long": "?Dint",
+	"signed long long": "?Dint",
+	"unsigned long long": "?Dint",
+	"__LONGLONG": "?Dint",
+	"__ULONGLONG": "?Dint",
+	"char*": "?Dstring",
+	"char const*": "?Dstring",
+	"Dee_wchar_t*": "?Dstring",
+	"Dee_wchar_t const*": "?Dstring",
+	"int8_t": "?Dint",
+	"int16_t": "?Dint",
+	"int32_t": "?Dint",
+	"int64_t": "?Dint",
+	"uint8_t": "?Dint",
+	"uint16_t": "?Dint",
+	"uint32_t": "?Dint",
+	"uint64_t": "?Dint",
+	"size_t": "?Dint",
+	"Dee_ssize_t": "?Dint",
+	"float": "?Dfloat",
+	"double": "?Dfloat",
+	"long double": "?Dfloat",
+	"__LONGDOUBLE": "?Dfloat",
+};
+global final CTYPE_BY_DTYPE: {string: string} = {
+	"?O": "DeeObject*",
+	"?Dbool": "bool",
+};
+
+global final DTYPE_BY_DINIT: {string: string} = {
+	"!t": "?Dbool",
+	"!f": "?Dbool",
+	"!N": "?N",
+	"!0": "?Dint",
+	"!1": "?Dint",
+	"!-1": "?Dint",
+	"!A!Dint!PSIZE_MAX": "?Dint",
+	"!T0": "?DTuple",
+	"!P{}": "?Dstring",
+};
+
+global final CINIT_BY_DINIT: {string: string | {string: string}} = {
+	"!N": "Dee_None",
+	"!t": { "": "true", "DeeObject*": "Dee_True" },
+	"!f": { "": "false", "DeeObject*": "Dee_False" },
+	"!0": { "": "0", "DeeObject*": "DeeInt_Zero" },
+	"!1": { "": "1", "DeeObject*": "DeeInt_One" },
+	"!-1": { "": "-1", "DeeObject*": "DeeInt_MinusOne" },
+	"!P{}": { "char const*": "\"\"", "DeeObject*": "Dee_EmptyString" },
+	"!A!Dint!PSIZE_MAX": "(size_t)-1",
+	"!T0": "Dee_EmptyTuple",
+};
+
+global final DINIT_BY_CINIT: {string: string} = Dict.Frozen(() -> {
+	for (local k, v: CINIT_BY_DINIT) {
+		if (v is string) {
+			yield (v, k);
+		} else {
+			for (local none, _v: v)
+				yield (_v, k);
+		}
+	}
+}());
+
+global final UNP_BY_CTYPE: {string: string} = {
+	"DeeObject*": 'o',
+	"bool": 'b',
+	"__BOOL": 'b',
+	"char": 'c',
+	"float": 'f',
+	"double": 'D',
+	"long double": 'LD',
+	"__LONGDOUBLE": 'LD',
+	"signed char": '" UNPdN(__SIZEOF_CHAR__) "',
+	"unsigned char": '" UNPuN(__SIZEOF_CHAR__) "',
+	"short": '" UNPdN(__SIZEOF_SHORT__) "',
+	"signed short": '" UNPdN(__SIZEOF_SHORT__) "',
+	"unsigned short": '" UNPuN(__SIZEOF_SHORT__) "',
+	"int": 'd',
+	"signed int": 'd',
+	"unsigned int": 'u',
+	"long": '" UNPdN(__SIZEOF_LONG__) "',
+	"signed long": '" UNPdN(__SIZEOF_LONG__) "',
+	"unsigned long": '" UNPuN(__SIZEOF_LONG__) "',
+	"long long": '" UNPdN(__SIZEOF_LONG_LONG__) "',
+	"signed long long": '" UNPdN(__SIZEOF_LONG_LONG__) "',
+	"unsigned long long": '" UNPuN(__SIZEOF_LONG_LONG__) "',
+	"__LONGLONG": '" UNPdN(__SIZEOF_LONG_LONG__) "',
+	"__ULONGLONG": '" UNPuN(__SIZEOF_LONG_LONG__) "',
+	"intptr_t": '" UNPdPTR "',
+	"uintptr_t": '" UNPuPTR "',
+	"size_t": '" UNPuSIZ "',
+	"Dee_ssize_t": '" UNPdSIZ "',
+	"int8_t": '" UNPd8 "',
+	"uint8_t": '" UNPu8 "',
+	"int16_t": '" UNPd16 "',
+	"uint16_t": '" UNPu16 "',
+	"int32_t": '" UNPd32 "',
+	"uint32_t": '" UNPu32 "',
+	"int64_t": '" UNPd64 "',
+	"uint64_t": '" UNPu64 "',
+	"Dee_int128_t": '" UNPd128 "',
+	"Dee_uint128_t": '" UNPu128 "',
+};
+
+global final C_TYPE_QUALIFIERS: {string...} = HashSet.Frozen({
+	"const",
+	"volatile",
+	"__restrict",
+});
+
+global final C_TYPE_KEYWORDS: {string...} = HashSet.Frozen({
+	C_TYPE_QUALIFIERS...,
+	"signed",
+	"unsigned",
+	"char",
+	"short",
+	"int",
+	"long",
+	"float",
+	"double",
+});
+
+global final C_KEYWORDS: {string...} = HashSet.Frozen({
+	C_TYPE_KEYWORDS...,
+	"if",
+	"else",
+	"switch",
+	"case",
+	"default",
+	"for",
+	"while",
+	"do",
+});
+
+
+function removeUnusedSpaces(text: string): string {
+	text = text.rereplace(r"\s{2,}", " ");
+	text = text.rereplace(r"\s*([][)(}{!$%&/=+~*\-])\s*", r"\1");
+	text = text.strip();
+	return text;
+}
+
+final class UnpackTypeProxy {
+	this = default;
+	@@Default C type when using this proxy
+	public final member cType: string;
+
+	@@Format code sequence for `UNP*` format string
+	public final member UNPformat: string;
+
+	@@Referenced deemon type
+	public final member dType: string;
+};
+
+final class UnpackParamDecoder {
+	this = default;
+	@@C Type of the output argument (e.g. @"char const *")
+	public final member cOutType: string;
+
+	@@Deemon type expression accepted by this decoder
+	public final member dType: string;
+
+	@@Function that should @print (to @File.stdout) the code needed to decode `cIn`,
+	@@which is the name of the `DeeObject *` C variable read from argv (e.g. "args.foo").
+	@@The result should then be stored in `cOut`
+	public final member decode: Callable with
+			(/*cIn:*/ string, /*cOut:*/ string, /*err:*/ string)/*: string*/;
+
+	@@Default initializer of the @cOutType argument
+	public final member cOutDefaultInit: string | none;
+
+	public property cOutTypeWithSpaceAfter: string = {
+		get(): string {
+			return cOutType.endswith("*") ? cOutType : f"{cOutType} ";
+		}
+	}
+
+	public printCOutDecl(cOut: string, isOptional: bool) {
+		print(f"	{cOutTypeWithSpaceAfter}{cOut}"),;
+		if (isOptional && cOutDefaultInit !is none)
+			print(f" = {cOutDefaultInit}"),;
+		print(";");
+	}
+
+	public printCDecodeDecl(cIn: string, cOut: string, err: string, cInit: string | none) {
+		local decodeText = decode(cIn, cOut, err).strip();
+		if (cInit !is none) {
+			local isCInitCheck = f"{cIn} != {cInit}";
+			if (cInit == "Dee_None") {
+				isCInitCheck = f"!DeeNone_Check({cIn})";
+			} else if (cInit in ["NULL", "0"]) {
+				isCInitCheck = cIn;
+			}
+			print(f"	if ({isCInitCheck}) \{");
+			print(decodeText.indent("\t\t"));
+			print(f"	\}");
+		} else {
+			print(decodeText.indent("\t"));
+		}
+	}
+}
+
+
+@@Custom argument decoder functions
+global final UNPACK_PARAM_DECODERS: {string: UnpackParamDecoder | UnpackTypeProxy} = {
+	/* Unpack/printf format */
+	"o": UnpackTypeProxy('DeeObject *', 'o', '?O'),
+	"b": UnpackTypeProxy('bool', 'b', '?Dbool'),
+	"Id": UnpackTypeProxy('Dee_ssize_t', '" UNPdSIZ "', '?Dint'),
+	"Ii": UnpackTypeProxy('Dee_ssize_t', '" UNPdSIZ "', '?Dint'),
+	"Iu": UnpackTypeProxy('size_t', '" UNPuSIZ "', '?Dint'),
+	"Ix": UnpackTypeProxy('size_t', '" UNPuSIZ "', '?Dint'),
+	"I8d": UnpackTypeProxy('int8_t', '" UNPd8 "', '?Dint'),
+	"I8i": UnpackTypeProxy('int8_t', '" UNPd8 "', '?Dint'),
+	"I8u": UnpackTypeProxy('uint8_t', '" UNPu8 "', '?Dint'),
+	"I8x": UnpackTypeProxy('uint8_t', '" UNPu8 "', '?Dint'),
+	"I16d": UnpackTypeProxy('int16_t', '" UNPd16 "', '?Dint'),
+	"I16i": UnpackTypeProxy('int16_t', '" UNPd16 "', '?Dint'),
+	"I16u": UnpackTypeProxy('uint16_t', '" UNPu16 "', '?Dint'),
+	"I16x": UnpackTypeProxy('uint16_t', '" UNPu16 "', '?Dint'),
+	"I32d": UnpackTypeProxy('int32_t', '" UNPd32 "', '?Dint'),
+	"I32i": UnpackTypeProxy('int32_t', '" UNPd32 "', '?Dint'),
+	"I32u": UnpackTypeProxy('uint32_t', '" UNPu32 "', '?Dint'),
+	"I32x": UnpackTypeProxy('uint32_t', '" UNPu32 "', '?Dint'),
+	"I64d": UnpackTypeProxy('int64_t', '" UNPd64 "', '?Dint'),
+	"I64i": UnpackTypeProxy('int64_t', '" UNPd64 "', '?Dint'),
+	"I64u": UnpackTypeProxy('uint64_t', '" UNPu64 "', '?Dint'),
+	"I64x": UnpackTypeProxy('uint64_t', '" UNPu64 "', '?Dint'),
+	"I128d": UnpackTypeProxy('Dee_int128_t', '" UNPd128 "', '?Dint'),
+	"I128i": UnpackTypeProxy('Dee_int128_t', '" UNPd128 "', '?Dint'),
+	"I128u": UnpackTypeProxy('Dee_uint128_t', '" UNPu128 "', '?Dint'),
+	"I128x": UnpackTypeProxy('Dee_uint128_t', '" UNPu128 "', '?Dint'),
+	"hhd": UnpackTypeProxy('signed char', '" UNPdN(__SIZEOF_CHAR__) "', '?Dint'),
+	"hhi": UnpackTypeProxy('signed char', '" UNPdN(__SIZEOF_CHAR__) "', '?Dint'),
+	"hhu": UnpackTypeProxy('unsigned char', '" UNPuN(__SIZEOF_CHAR__) "', '?Dint'),
+	"hhx": UnpackTypeProxy('unsigned char', '" UNPuN(__SIZEOF_CHAR__) "', '?Dint'),
+	"hd": UnpackTypeProxy('signed short', '" UNPdN(__SIZEOF_SHORT__) "', '?Dint'),
+	"hi": UnpackTypeProxy('signed short', '" UNPdN(__SIZEOF_SHORT__) "', '?Dint'),
+	"hu": UnpackTypeProxy('unsigned short', '" UNPuN(__SIZEOF_SHORT__) "', '?Dint'),
+	"hx": UnpackTypeProxy('unsigned short', '" UNPuN(__SIZEOF_SHORT__) "', '?Dint'),
+	"d": UnpackTypeProxy('int', 'd', '?Dint'),
+	"i": UnpackTypeProxy('int', 'd', '?Dint'),
+	"u": UnpackTypeProxy('unsigned int', 'u', '?Dint'),
+	"x": UnpackTypeProxy('unsigned int', 'u', '?Dint'),
+	"ld": UnpackTypeProxy('long', '" UNPdN(__SIZEOF_LONG__) "', '?Dint'),
+	"li": UnpackTypeProxy('long', '" UNPdN(__SIZEOF_LONG__) "', '?Dint'),
+	"lu": UnpackTypeProxy('unsigned long', '" UNPuN(__SIZEOF_LONG__) "', '?Dint'),
+	"lx": UnpackTypeProxy('unsigned long', '" UNPuN(__SIZEOF_LONG__) "', '?Dint'),
+	"lld": UnpackTypeProxy('__LONGLONG', '" UNPdN(__SIZEOF_LONG_LONG__) "', '?Dint'),
+	"lli": UnpackTypeProxy('__LONGLONG', '" UNPdN(__SIZEOF_LONG_LONG__) "', '?Dint'),
+	"llu": UnpackTypeProxy('__ULONGLONG', '" UNPuN(__SIZEOF_LONG_LONG__) "', '?Dint'),
+	"llx": UnpackTypeProxy('__ULONGLONG', '" UNPuN(__SIZEOF_LONG_LONG__) "', '?Dint'),
+	"f": UnpackTypeProxy('float', 'f', '?Dfloat'),
+	"D": UnpackTypeProxy('double', 'D', '?Dfloat'),
+	"LD": UnpackTypeProxy('__LONGDOUBLE', 'LD', '?Dfloat'),
+
+	/* Misc. Deemon types */
+	"obj:buffer": UnpackTypeProxy('DeeObject *', 'o', '?DBytes'),
+
+	/* Misc. C types */
+	"c:bool":      UnpackTypeProxy("bool", "b", "?Dbool"),
+	"c:int":       UnpackTypeProxy("int", "d", "?Dint"),
+	"c:uint":      UnpackTypeProxy("unsigned int", "u", "?Dint"),
+	"c:size_t":    UnpackTypeProxy("size_t", '" UNPuSIZ "', "?Dint"),
+	"c:ssize_t":   UnpackTypeProxy("Dee_ssize_t", '" UNPdSIZ "', "?Dint"),
+	"c:intptr_t":  UnpackTypeProxy("intptr_t", '" UNPdPTR "', "?Dint"),
+	"c:uintptr_t": UnpackTypeProxy("uintptr_t", '" UNPuPTR "', "?Dint"),
+	"c:int8_t":    UnpackTypeProxy("int8_t", '" UNPd8 "', "?Dint"),
+	"c:uint8_t":   UnpackTypeProxy("uint8_t", '" UNPu8 "', "?Dint"),
+	"c:int16_t":   UnpackTypeProxy("int16_t", '" UNPd16 "', "?Dint"),
+	"c:uint16_t":  UnpackTypeProxy("uint16_t", '" UNPu16 "', "?Dint"),
+	"c:int32_t":   UnpackTypeProxy("int32_t", '" UNPd32 "', "?Dint"),
+	"c:uint32_t":  UnpackTypeProxy("uint32_t", '" UNPu32 "', "?Dint"),
+	"c:int64_t":   UnpackTypeProxy("int64_t", '" UNPd64 "', "?Dint"),
+	"c:uint64_t":  UnpackTypeProxy("uint64_t", '" UNPu64 "', "?Dint"),
+
+	/* ctypes integration */
+	"c:ptr": UnpackParamDecoder("void *", "?Aptr?Ectypes:void", (cIn, cOut, err) -> 
+			f"if unlikely(DeeCTypes_GetPointer({cIn}, &{cOut}))\n"
+			f"	goto {err};\n", "NULL"),
+
+	/* Unicode */
+	"c:utf8": UnpackTypeProxy("char const *", "Us", "?Dstring"),
+	"c:str8": UnpackTypeProxy("char const *", "Ss", "?Dstring"),
+	"c:utf16": UnpackTypeProxy("uint16_t const *", "U16s", "?Dstring"),
+	"c:str16": UnpackTypeProxy("uint16_t const *", "S16s", "?Dstring"),
+	"c:utf32": UnpackTypeProxy("uint32_t const *", "U32s", "?Dstring"),
+	"c:str32": UnpackTypeProxy("uint32_t const *", "S32s", "?Dstring"),
+	"c:wide": UnpackTypeProxy("Dee_wchar_t const *", "ls", "?Dstring"),
+	"c:char[]": UnpackTypeProxy("char const *", "Us", "?Dstring"),
+	"c:wchar_t[]": UnpackTypeProxy("Dee_wchar_t const *", "ls", "?Dstring"),
+
+	/* Unix integration */
+	"unix:fd": UnpackParamDecoder("int", "?X2?Dint?DFile", (cIn, cOut, err) -> 
+			f"if unlikely(({cOut} = DeeUnixSystem_GetFD({cIn})) == -1)\n"
+			f"	goto {err};\n", "-1"),
+
+	/* Windows (NT) integration */
+	"nt:HANDLE": UnpackParamDecoder("HANDLE", "?X3?Dint?DFile?Ewin32:HANDLE", (cIn, cOut, err) -> 
+			f"if unlikely(DeeNTSystem_TryGetHandle({cIn}, (void **)&{cOut}))\n"
+			f"	goto {err};\n", "INVALID_HANDLE_VALUE"),
+	"nt:LPCSTR": UnpackTypeProxy("LPCSTR", "Us", "?Dstring"),
+	"nt:LPCWSTR": UnpackTypeProxy("LPCWSTR", "U16s", "?Dstring"),
+	"nt:LONG": UnpackTypeProxy("LONG", '" UNPd32 "', "?Dint"),
+	"nt:ULONG": UnpackTypeProxy("ULONG", '" UNPu32 "', "?Dint"),
+	"nt:LONG64": UnpackTypeProxy("LONG64", '" UNPd64 "', "?Dint"),
+	"nt:ULONG64": UnpackTypeProxy("ULONG64", '" UNPu64 "', "?Dint"),
+	"nt:INT": UnpackTypeProxy("INT", '" UNPd32 "', "?Dint"),
+	"nt:UINT": UnpackTypeProxy("UINT", '" UNPu32 "', "?Dint"),
+	"nt:DWORD": UnpackTypeProxy("DWORD", '" UNPu32 "', "?Dint"),
+	"nt:DWORD64": UnpackTypeProxy("DWORD64", '" UNPu64 "', "?Dint"),
+	"nt:SIZE_T": UnpackTypeProxy("SIZE_T", '" UNPuSIZ "', "?Dint"),
+};
+
+
+
+final class UnpackParam {
+	this = default;
+
+	@@C Type expression specified in expression (e.g. @"DeeObject *")
+	public final member cType: string;
+
+	@@Name of the argument (e.g. @"key")
+	public final member name: string;
+
+	@@Deemon Type expression specified in expression (e.g. @"?X2?DCallable?N")
+	public final member dType: string;
+
+	@@The `UNP*` format for @this param
+	public final member UNPformat: string;
+
+	@@Deemon Initializer of the argument (e.g. @"!N")
+	public final member dInit: string | none;
+
+	@@C-Initializer of the argument (e.g. @"Dee_None")
+	public final member cInit: string | none;
+
+	@@Custom argument decoder (if used)
+	@@When used, @cType is always "DeeObject *"
+	public final member decode: UnpackParamDecoder | none;
+
+	public property nameHash32: int = { get() -> rtHash.hash32(name); }
+	public property nameHash64: int = { get() -> rtHash.hash64(name); }
+	public property nameHashes: string = { get() -> f"{nameHash32.hex()}, {nameHash64.hex()}"; }
+
+	public property cTypeRaw: string = {
+		get(): string -> removeUnusedSpaces(cType);
+	}
+
+	public property cInitRaw: string = {
+		get(): string -> removeUnusedSpaces(cInit);
+	}
+
+	public property cOutType: string = {
+		get(): string {
+			if (decode !is none)
+				return decode.cOutType;
+			return cType;
+		}
+	}
+
+	public property cOutTypePretty: string = {
+		get(): string {
+			return cOutType.rereplace(r"([^*\s])\*", r"\1 *");
+		}
+	}
+
+	public property cTypePretty: string = {
+		get(): string {
+			return cType.rereplace(r"([^*\s])\*", r"\1 *");
+		}
+	}
+
+	public property cTypePrettyWithSpaceAfter: string = {
+		get(): string {
+			local result = cTypePretty;
+			if (!result.endswith("*"))
+				result += " ";
+			return result;
+		}
+	}
+
+	public property cOutTypePrettyWithSpaceAfter: string = {
+		get(): string {
+			local result = cOutTypePretty;
+			if (!result.endswith("*"))
+				result += " ";
+			return result;
+		}
+	}
+
+	@@Evaluates to true if this argument is optional (NOTE: Arguments
+	@@written as "foo?" automatically get a default @cInit of @"NULL")
+	public property isOptional: bool = {
+		get(): bool {
+			return cInit !is none;
+		}
+	}
+
+	@@The name of the argument within the C `args` buffer struct
+	public property cName: string = {
+		get(): string {
+			return decode !is none ? "raw_" + name : cOutName;
+		}
+	}
+
+	@@Same as @name, but reserved C keywords are escaped
+	public property cOutName: string = {
+		get(): string {
+			local result: string = name;
+			if (result in C_KEYWORDS)
+				result = "_" + result;
+			return result;
+		}
+	}
+
+	@@Returns the encoded doc-string repr of @this param
+	public property docParam: string = {
+		get(): string {
+			local result = name;
+			if (isOptional && dInit is none)
+				result = f"{result}?";
+			if (dType != "?O" && (dInit is none || DTYPE_BY_DINIT.get(dInit) != dType))
+				result = f"{result}:{dType}";
+			if (dInit !is none)
+				result = f"{result}={dInit}";
+			return result;
+		}
+	}
+}
+
+@@Parse parameter specs. Format:
+@@>> PARAM ::= (
+@@>>     [<cType>]
+@@>>     <name>
+@@>>     ['?']
+@@>>     [':' <dType>]
+@@>>     [('=' ('!' <dInit> | <cInit>))...]
+@@>> )
+@@>> PARAMS ::= ((';' | ',') ~~ PARAM)...;
+@@
+@@cType: C type expression (e.g. @"DeeObject *")
+@@dType: Deemon type expression (e.g. @"?O"), or custom type expression (e.g. @"unix:fd")
+@@dInit: Deemon default initializer expression (e.g. @"!N")
+@@cInit: C initializer expression (e.g. @"Dee_None")
+function parseParamSpec(params: string): {UnpackParam...} {
+	local i = 0, len = #params;
+	while (i < len) {
+		if (params.isspace(i)) {
+			++i;
+			continue;
+		}
+		local typStart: int = i;
+continue_parsing_typ:
+		local xTypStart: int = i;
+		while (i < len && params.issymcont(i))
+			++i;
+		local typEnd: int = i;
+		while (i < len && params.isspace(i))
+			++i;
+		while (i < len && params[i] in "*&") {
+			++i;
+extend_typ_until_i:
+			typEnd = i;
+			while (i < len && params.isspace(i))
+				++i;
+		}
+		if (params[xTypStart:typEnd] in C_TYPE_QUALIFIERS)
+			goto continue_parsing_typ;
+		local nameStart: int = i;
+		while (i < len && params.issymcont(i))
+			++i;
+		local nameEnd: int = i;
+		local name = params[nameStart:nameEnd];
+		if (name in C_TYPE_KEYWORDS)
+			goto extend_typ_until_i;
+		while (i < len && params.isspace(i))
+			++i;
+		local cType: string | none = params[typStart:typEnd];
+		if (!name) {
+			name = cType;
+			cType = none;
+		}
+		local isOptional = false;
+		if (i < len && params[i] == "?") {
+			++i;
+			while (i < len && params.isspace(i))
+				++i;
+			isOptional = true;
+		}
+		local dType: string;
+		if (i < len && params[i] == ":") {
+			++i;
+			while (i < len && params.isspace(i))
+				++i;
+			local dTypeExprStart = i;
+			local recursion = 0;
+			while (i < len) {
+				local ch = params[i];
+				if (ch == "\\") {
+					++i;
+				} else if (ch in "{") {
+					++recursion;
+				} else if (ch in "}") {
+					--recursion;
+				} else if (ch in ",;=" && !recursion) {
+					break;
+				}
+				++i;
+			}
+			local dTypeExprEnd = i;
+			while (dTypeExprEnd > dTypeExprStart && params.isspace(dTypeExprEnd - 1))
+				--dTypeExprEnd;
+			dType = params[dTypeExprStart:dTypeExprEnd];
+		} else if (cType is none) {
+			cType = "DeeObject*";
+			dType = "?O";
+		} else {
+			dType = DTYPE_BY_CTYPE[removeUnusedSpaces(cType)];
+		}
+		if (cType is none)
+			cType = CTYPE_BY_DTYPE.get(dType, "DeeObject*");
+		local decode: UnpackParamDecoder | none = none;
+		local UNPformat: string | none = none;
+		if (!dType.startswith("?")) {
+			/* Custom argument decoder (e.g. "unix:fd") */
+			decode = UNPACK_PARAM_DECODERS[removeUnusedSpaces(dType)];
+			if (decode is UnpackParamDecoder) {
+				dType = decode.dType is bound ? decode.dType : "?O";
+			} else {
+				assert decode is UnpackTypeProxy;
+				if (cType == "DeeObject*")
+					cType = decode.cType;
+				UNPformat = decode.UNPformat;
+				dType = decode.dType;
+				decode = none;
+			}
+		}
+		local item: UnpackParam = UnpackParam(name: name, cType: cType, decode: decode);
+		if (dType != "?O")
+			item.dType = dType;
+		local isOptionalExplicit = isOptional;
+		while (i < len && params[i] == "=") {
+			++i;
+			while (i < len && params.isspace(i))
+				++i;
+			local initStart = i;
+			local recursion = 0;
+			while (i < len) {
+				local ch = params[i];
+				if (ch in "[({") {
+					++recursion;
+				} else if (ch in "})]") {
+					--recursion;
+				} else if (ch in ",;=" && !recursion) {
+					break;
+				}
+				++i;
+			}
+			local initEnd = i;
+			while (initEnd > initStart && params.isspace(initEnd - 1))
+				--initEnd;
+			isOptional = true;
+			local initExpr = params[initStart:initEnd];
+			if (initExpr.startswith("!")) {
+				item.dInit = initExpr;
+			} else {
+				item.cInit = initExpr;
+			}
+			while (i < len && params.isspace(i))
+				++i;
+		}
+		if (item.cInit !is bound) {
+			if (item.dInit is bound) {
+				local cInitSelect: string | {string: string} = CINIT_BY_DINIT[item.dInit];
+				if (cInitSelect !is string) {
+					local usedCInitSelect = cInitSelect.get(removeUnusedSpaces(cType));
+					if (usedCInitSelect is none)
+						usedCInitSelect = cInitSelect[""];
+					cInitSelect = usedCInitSelect;
+				}
+				item.cInit = cInitSelect;
+			} else {
+				item.cInit = isOptional ? "NULL" : none;
+				item.dInit = none;
+			}
+		} else if (item.dInit !is bound) {
+			if (isOptionalExplicit) {
+				item.dInit = none;
+			} else {
+				local cInitExpr = removeUnusedSpaces(item.cInit);
+				for (;;) {
+					if (item.cInit == "NULL") {
+						item.dInit = none;
+						break;
+					}
+					local dInit = DINIT_BY_CINIT.get(cInitExpr);
+					if (dInit !is none) {
+						item.dInit = dInit;
+						break;
+					}
+					if (cInitExpr.rematch(r"\d+")) {
+						item.dInit = f"!{dInit}";
+						break;
+					}
+					if (cInitExpr.startswith("(")) {
+						local end = cInitExpr.findmatch("(", ")", 1);
+						if (end < 0)
+							break;
+						cInitExpr = cInitExpr[end + 1:];
+						continue;
+					}
+					throw Error(f"Cannot translate C initializer {repr cInitExpr} to deemon");
+				}
+			}
+		}
+		if (item.dType !is bound) {
+			if (item.dInit is none) {
+				item.dType = "?O";
+			} else {
+				item.dType = DTYPE_BY_DINIT.get(item.dInit, "?O");
+			}
+		}
+		if (UNPformat is none)
+			UNPformat = UNP_BY_CTYPE[item.cTypeRaw];
+		item.UNPformat = UNPformat;
+		yield item;
+		if (i >= len)
+			break;
+		if (params[i] !in ",;") {
+			throw Error(f"Malformed param spec: encountered garbage {
+					repr params[i:]} after {repr item}");
+		}
+		++i;
+	}
+}
+
+@@Returns the already-escaped `format` string to-be
+@@passed to `DeeArg_Unpack` / `DeeArg_UnpackKw`
+function getUnpackFormat(params: string | {UnpackParam...} = (),
+                         name: string = ""): string {
+	if (params is string)
+		params = parseParamSpec(params).cached;
+	File.Writer writer = '"';
+	local inOpt = false;
+	for (local param: params) {
+		if (param.isOptional && !inOpt) {
+			print writer: '|',;
+			inOpt = true;
+		}
+		print writer: param.UNPformat,;
+	}
+	if (name)
+		print writer: f":{name}",;
+	print writer: '"',;
+	local result = writer.string;
+	local result = result.replace('""', '');
+	local result = result.rereplace(r"\s{2,}", r" ");
+	return result;
+}
+
+
+@@Usage:
+@@> print_DeeArg_UnpackKw("__seq_find__", params: """
+@@>        DeeObject *item,
+@@>        size_t start = 0,
+@@>        size_t end = (size_t)-1,
+@@>        key:?X2?DCallable?N = Dee_None
+@@> """);
+@@@param name   Name of the function whose arguments are being decoded
+@@@param argc   Name of the argc-argument
+@@@param argv   Name of the argv-argument
+@@@param kw     Name of the kw-argument
+@@@param params Parameter definitions
+@@@param args   Name of the C-struct where decoded arguments are stored
+@@@param err    Name of the label to jump to on error
+@@@param defineKwList When true, define the keyword argument list locally
+function print_DeeArg_UnpackKw(name: string = "",
+                               argc: string = "argc",
+                               argv: string = "argv",
+                               kw: string = "kw",
+                               params: string | {UnpackParam...} = (),
+                               args: string = "args",
+                               err: string = "err",
+                               defineKwList: bool = false) {
+	if (params is string)
+		params = parseParamSpec(params).cached;
+	local kwlistName = f"kwlist__{"_".join(params.each.name)}";
+	if (defineKwList) {
+		kwlistName = name ? f"{name}_kwlist" : "kwlist";
+		print(f"	static DEFINE_KWLIST({kwlistName}, \{ {((
+			for (local param: params)
+				f"KEX({repr param.name}, {param.nameHashes}), "
+		) + ...) ?? ""}KEND \});");
+	}
+	if (params) {
+		print("	struct {");
+		for (local param: params) {
+			print(f"		{param.cTypePrettyWithSpaceAfter}{param.cName};");
+		}
+		print("	} ", args, ";");
+		for (local param: params) {
+			if (param.decode !is none)
+				param.decode.printCOutDecl(param.cOutName, param.isOptional);
+		}
+		for (local param: params) {
+			if (param.cInit !is none)
+				print(f"	{args}.{param.cName} = {param.cInit};");
+		}
+		print(f"	if (DeeArg_UnpackStructKw({argc}, {argv}, {kw}, {kwlistName}, {
+				getUnpackFormat(name: name, params: params)}, &{args}))");
+		print(f"		goto {err};");
+		for (local param: params) {
+			if (param.decode !is none) {
+				param.decode.printCDecodeDecl(
+						f"{args}.{param.cName}",
+						param.cOutName, err, param.cInit);
+			}
+		}
+	} else {
+		print(f"	if (DeeArg_UnpackKw({argc}, {argv}, {kw}, {kwlistName}, {
+				getUnpackFormat(name: name, params: params)}))");
+		print(f"		goto {err};");
+	}
+}
+
+
+
+@@Usage:
+@@> print_DeeArg_Unpack("__seq_find__", params: """
+@@>        DeeObject *item,
+@@>        size_t start = 0,
+@@>        size_t end = (size_t)-1,
+@@>        key:?X2?DCallable?N = Dee_None
+@@> """);
+@@@param name   Name of the function whose arguments are being decoded
+@@@param argc   Name of the argc-argument
+@@@param argv   Name of the argv-argument
+@@@param params Parameter definitions
+@@@param args   Name of the C-struct where decoded arguments are stored
+@@@param err    Name of the label to jump to on error
+function print_DeeArg_Unpack(name: string = "",
+                             argc: string = "argc",
+                             argv: string = "argv",
+                             params: string | {UnpackParam...} = (),
+                             args: string = "args",
+                             err: string = "err") {
+	if (params is string)
+		params = parseParamSpec(params).cached;
+	if (params) {
+		print("	struct {");
+		for (local param: params) {
+			print(f"		{param.cTypePrettyWithSpaceAfter}{param.cName};");
+		}
+		print("	} ", args, ";");
+		for (local param: params) {
+			if (param.decode !is none)
+				param.decode.printCOutDecl(param.cOutName, param.isOptional);
+		}
+		for (local param: params) {
+			if (param.cInit !is none)
+				print(f"	{args}.{param.cName} = {param.cInit};");
+		}
+		print(f"	if (DeeArg_UnpackStruct({argc}, {argv}, {
+				getUnpackFormat(name: name, params: params)}, &{args}))");
+		print(f"		goto {err};");
+		for (local param: params) {
+			if (param.decode !is none) {
+				param.decode.printCDecodeDecl(
+						f"{args}.{param.cName}",
+						param.cOutName, err, param.cInit);
+			}
+		}
+	} else {
+		print(f"	if (DeeArg_Unpack({argc}, {argv}, {
+				getUnpackFormat(name: name, params: params)}))");
+		print(f"		goto {err};");
+	}
+}
+
+
+
+import MODULE_NAME, getDefaultLibnameOfSourceFile from rt.gen.dexutils;
+#define AUTOLIBNAME() \
+	(MODULE_NAME !is none ? MODULE_NAME : getDefaultLibnameOfSourceFile(Traceback()[1].file))
+
+
+@@Generate a wrapper for a c method
+@@Usage (in a file `libfoo.c', after running `$ deemon -F libfoo.c'):
+@@>/*[[[deemon import("rt.gen.unpack").print_libMethod("bar", "arg1: c:utf8, arg2, arg3 = NULL, bool arg4 = true"); ]]]*/
+@@>FORCELOCAL WUNUSED DREF DeeObject *DCALL libfoo_bar_f_impl(char const *arg1, DeeObject *arg2, DeeObject *arg3, bool arg4);
+@@>PRIVATE WUNUSED DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+@@>#define LIBFOO_BAR_DEF { "bar", (DeeObject *)&libfoo_bar, MODSYM_FREADONLY, DOC("(arg1:?Dstring,arg2,arg3?,arg4=!t)") },
+@@>#define LIBFOO_BAR_DEF_DOC(doc) { "bar", (DeeObject *)&libfoo_bar, MODSYM_FREADONLY, DOC("(arg1:?Dstring,arg2,arg3?,arg4=!t)\n" doc) },
+@@>PRIVATE DEFINE_KWCMETHOD(libfoo_bar, &libfoo_bar_f, METHOD_FNORMAL);
+@@>#ifndef DEFINED_kwlist__arg1_arg2_arg3_arg4
+@@>#define DEFINED_kwlist__arg1_arg2_arg3_arg4
+@@>PRIVATE DEFINE_KWLIST(kwlist__arg1_arg2_arg3_arg4, { KEX("arg1", 0x7b13db99, 0xd779c2a9622744aa), KEX("arg2", 0xefcd39c2, 0x30bb46664dffcce7), KEX("arg3", 0xd5013e7d, 0xaa34206f3b5c280a), KEX("arg4", 0xbf9492c1, 0x7cd8148e3be4374a), KEND });
+@@>#endif /* !DEFINED_kwlist__arg1_arg2_arg3_arg4 */
+@@>PRIVATE WUNUSED DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+@@>	struct {
+@@>		char const *arg1;
+@@>		DeeObject*arg2;
+@@>		DeeObject*arg3;
+@@>		bool arg4;
+@@>	} args;
+@@>	args.arg3 = NULL;
+@@>	args.arg4 = true;
+@@>	 if (DeeArg_UnpackStructKw(argc, argv, kw, _Code_kwlist, "Uso|ob:bar", &args))
+@@>	    goto err;
+@@>	return libfoo_bar_f_impl(args.arg1, args.arg2, args.arg3, args.arg4);
+@@>err:
+@@>	return NULL;
+@@>}
+@@>FORCELOCAL WUNUSED DREF DeeObject *DCALL libfoo_bar_f_impl(char const *arg1, DeeObject *arg2, DeeObject *arg3, bool arg4)
+@@>/*[[[end]]]*/
+@@>{
+@@>	...
+@@>	return_none;
+@@>}
+@@>	...
+@@>PRIVATE struct dex_symbol symbols[] = {
+@@>	LIBFOO_BAR_DEF("Human-readable function documentation text goes here"),
+@@>	{ NULL }
+@@>};
+@@>
+@@>PUBLIC struct dex DEX = {
+@@>	/* .d_symbols = */symbols
+@@>};
+function print_libMethod(name: string,
+                         params: string | {UnpackParam...} = (),
+                         dReturnType: string = "",
+                         kw: bool | none = none,
+                         libname: string = none,
+                         visi: string = "PRIVATE",
+                         isvarying: bool = false,
+                         ispure: bool = false,
+                         isconst: bool = false) {
+	if (params is string)
+		params = parseParamSpec(params).cached;
+	if (kw is none)
+		kw = !!params;
+	if (libname is none)
+		libname = AUTOLIBNAME();
+	if (libname)
+		libname = libname + "_";
+	local LIBFOO_BAR        = f"{libname.upper()}{name.upper()}";
+	local libfoo_bar        = f"{libname}{name}";
+	local libfoo_bar_f      = f"{libname}{name}_f";
+	local libfoo_bar_f_impl = f"{libname}{name}_f_impl";
+	local nonNullPointerArgs = [];
+	for (local i, param: params.enumerate()) {
+		if (param.cOutType.endswith("*") && (!param.isOptional || param.cInit != "NULL"))
+			nonNullPointerArgs.append(i + 1);
+	}
+	print("FORCELOCAL WUNUSED "),;
+	if (nonNullPointerArgs)
+		print(f"NONNULL(({", ".join(nonNullPointerArgs)})) "),;
+	print(f"DREF DeeObject *DCALL {libfoo_bar_f_impl}({", ".join(
+		for (local param: params)
+			f"{param.cOutTypePrettyWithSpaceAfter}{param.cOutName}"
+	) ?: "void"});");
+
+	local docString = f"({",".join(params.each.docParam)})";
+	if (dReturnType) {
+		if (docString == "()")
+			docString = "";
+		docString += "->";
+		if (dReturnType != "?O")
+			docString += dReturnType;
+	}
+
+	local symbolFlags = isvarying ? "MODSYM_FNORMAL" : "MODSYM_FREADONLY";
+	print(f"{visi == "INTERN" ? "INTDEF" : visi} WUNUSED DREF DeeObject *DCALL {libfoo_bar_f}(size_t argc, DeeObject *const *argv{kw ? ", DeeObject *kw" : ""});");
+	print('#define ', LIBFOO_BAR, '_DEF { ', repr name, ', (DeeObject *)&', libfoo_bar, ', ',
+		symbolFlags, ', DOC(', repr(docString), ') },');
+	print('#define ', LIBFOO_BAR, '_DEF_DOC(doc) { ', repr name, ', (DeeObject *)&', libfoo_bar, ', ',
+		symbolFlags, ', DOC(', repr(docString + '\n'), ' doc) },');
+
+	local methodFlags = "";
+	if (isconst)
+		methodFlags += " | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST";
+	if (ispure)
+		methodFlags += " | METHOD_FPURECALL";
+	methodFlags = methodFlags ? methodFlags[3:] : "METHOD_FNORMAL";
+	print(f"{visi} DEFINE_{kw ? "KW" : ""}CMETHOD({libfoo_bar}, &{libfoo_bar_f}, {methodFlags});");
+	if (kw) {
+		local kwlistName = f"kwlist__{"_".join(params.each.name)}";
+		print(f'#ifndef DEFINED_{kwlistName}');
+		print(f'#define DEFINED_{kwlistName}');
+		print(f"{visi} DEFINE_KWLIST({kwlistName}, \{ {((
+			for (local param: params)
+				f"KEX({repr param.name}, {param.nameHashes}), "
+		) + ...) ?? ""}KEND \});");
+		print(f'#endif /* !DEFINED_{kwlistName} */');
+	}
+	print(f"{visi} WUNUSED DREF DeeObject *DCALL {libfoo_bar_f}(size_t argc, DeeObject *const *argv{kw ? ", DeeObject *kw" : ""}) \{");
+	if (kw) {
+		print_DeeArg_UnpackKw(name: name, params: params, defineKwList: false);
+	} else {
+		print_DeeArg_Unpack(name, params: params);
+	}
+	print(f"	return {libfoo_bar_f_impl}({", ".join(
+		for (local param: params)
+			if (param.decode is none)
+				f"args.{param.cOutName}"
+			else
+				param.cOutName
+	)});");
+	print(f"err:");
+	print(f"	return NULL;");
+	print(f"\}");
+	print("FORCELOCAL WUNUSED "),;
+	if (nonNullPointerArgs)
+		print(f"NONNULL(({", ".join(nonNullPointerArgs)}))"),;
+	print(f"DREF DeeObject *DCALL {libfoo_bar_f_impl}({", ".join(
+		for (local param: params)
+			f"{param.cOutTypePrettyWithSpaceAfter}{param.cOutName}"
+	) ?: "void"})");
+}
+

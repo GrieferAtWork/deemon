@@ -498,15 +498,20 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
  *     objects    ::= [(object   // Parse some object from the sequence.
  *                    | ','      // `,' is simply ignored, but can be used to prevent ambiguity.
  *                    | '|'      // Any following objects are optional (va_arg() is still invoked, but non-present elements are skipped)
- *                    )...];
+ *                    )...]
+ *     ;
  *     ref_object ::= 'o'; // `va_arg(DeeObject **)'
  *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u' and `x' read unsigned integers
- *     ref_str    ::= ['$']      // `va_arg(size_t *)' (Store the length of the string)
- *                  | 'l' 's'    // `va_arg(wchar_t **)'
- *                  | 'U16' 's'  // `va_arg(uint16_t **)'
- *                  | 'U32' 's'  // `va_arg(uint32_t **)'
- *                  | 's'        // `va_arg(char **)'
- *                  ;
+ *     ref_str    ::= ['$']      // va_arg(size_t *)   (Store WSTR_LENGTH of the following string)
+ *                  | 'ls'       // *va_arg(wchar_t **)  = DeeString_AsWide()
+ *                  | 'Us'       // *va_arg(uint8_t **)  = DeeString_AsUtf8()
+ *                  | 'U16s'     // *va_arg(uint16_t **) = DeeString_AsUtf16()
+ *                  | 'U32s'     // *va_arg(uint32_t **) = DeeString_AsUtf32()
+ *                  | 'Ss'       // *va_arg(uint8_t **)  = DeeString_As1Byte()
+ *                  | 'S16s'     // *va_arg(uint16_t **) = DeeString_As2Byte()
+ *                  | 'S32s'     // *va_arg(uint32_t **) = DeeString_As4Byte()
+ *                  | 's'        // *va_arg(char **)     = DeeString_STR()
+ *     ;
  *     ref_intlen ::= 'I' ['8' | '16' | '32' | '64'] // Fixed-length / sizeof(size_t)
  *                  | 'hh' // `va_arg(char *)'
  *                  | 'h'  // `va_arg(short *)'

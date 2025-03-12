@@ -1233,24 +1233,26 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("headof", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_headof_f_impl(DeeObject *path);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_headof_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_headof_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_HEADOF_DEF { "headof", (DeeObject *)&posix_headof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
 #define POSIX_HEADOF_DEF_DOC(doc) { "headof", (DeeObject *)&posix_headof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_headof, &posix_headof_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-#ifndef POSIX_KWDS_PATH_DEFINED
-#define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
-#endif /* !POSIX_KWDS_PATH_DEFINED */
+#ifndef DEFINED_kwlist__path
+#define DEFINED_kwlist__path
+PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
+#endif /* !DEFINED_kwlist__path */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_headof_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:headof", &path))
+	struct {
+		DeeObject *path;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path, "o:headof", &args))
 		goto err;
-	return posix_headof_f_impl(path);
+	return posix_headof_f_impl(args.path);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_headof_f_impl(DeeObject *path)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_headof_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -1261,24 +1263,26 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("tailof", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_tailof_f_impl(DeeObject *path);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_tailof_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_tailof_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_TAILOF_DEF { "tailof", (DeeObject *)&posix_tailof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
 #define POSIX_TAILOF_DEF_DOC(doc) { "tailof", (DeeObject *)&posix_tailof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_tailof, &posix_tailof_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-#ifndef POSIX_KWDS_PATH_DEFINED
-#define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
-#endif /* !POSIX_KWDS_PATH_DEFINED */
+#ifndef DEFINED_kwlist__path
+#define DEFINED_kwlist__path
+PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
+#endif /* !DEFINED_kwlist__path */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_tailof_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:tailof", &path))
+	struct {
+		DeeObject *path;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path, "o:tailof", &args))
 		goto err;
-	return posix_tailof_f_impl(path);
+	return posix_tailof_f_impl(args.path);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_tailof_f_impl(DeeObject *path)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_tailof_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -1289,24 +1293,26 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("driveof", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_driveof_f_impl(DeeObject *path);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_driveof_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_driveof_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_DRIVEOF_DEF { "driveof", (DeeObject *)&posix_driveof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
 #define POSIX_DRIVEOF_DEF_DOC(doc) { "driveof", (DeeObject *)&posix_driveof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_driveof, &posix_driveof_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-#ifndef POSIX_KWDS_PATH_DEFINED
-#define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
-#endif /* !POSIX_KWDS_PATH_DEFINED */
+#ifndef DEFINED_kwlist__path
+#define DEFINED_kwlist__path
+PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
+#endif /* !DEFINED_kwlist__path */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_driveof_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:driveof", &path))
+	struct {
+		DeeObject *path;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path, "o:driveof", &args))
 		goto err;
-	return posix_driveof_f_impl(path);
+	return posix_driveof_f_impl(args.path);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_driveof_f_impl(DeeObject *path)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_driveof_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -1317,24 +1323,26 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("inctrail", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_inctrail_f_impl(DeeObject *path);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_inctrail_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_inctrail_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_INCTRAIL_DEF { "inctrail", (DeeObject *)&posix_inctrail, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
 #define POSIX_INCTRAIL_DEF_DOC(doc) { "inctrail", (DeeObject *)&posix_inctrail, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_inctrail, &posix_inctrail_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-#ifndef POSIX_KWDS_PATH_DEFINED
-#define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
-#endif /* !POSIX_KWDS_PATH_DEFINED */
+#ifndef DEFINED_kwlist__path
+#define DEFINED_kwlist__path
+PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
+#endif /* !DEFINED_kwlist__path */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_inctrail_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:inctrail", &path))
+	struct {
+		DeeObject *path;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path, "o:inctrail", &args))
 		goto err;
-	return posix_inctrail_f_impl(path);
+	return posix_inctrail_f_impl(args.path);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_inctrail_f_impl(DeeObject *path)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_inctrail_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -1345,24 +1353,26 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("exctrail", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_exctrail_f_impl(DeeObject *path);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_exctrail_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_exctrail_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_EXCTRAIL_DEF { "exctrail", (DeeObject *)&posix_exctrail, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
 #define POSIX_EXCTRAIL_DEF_DOC(doc) { "exctrail", (DeeObject *)&posix_exctrail, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_exctrail, &posix_exctrail_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-#ifndef POSIX_KWDS_PATH_DEFINED
-#define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
-#endif /* !POSIX_KWDS_PATH_DEFINED */
+#ifndef DEFINED_kwlist__path
+#define DEFINED_kwlist__path
+PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
+#endif /* !DEFINED_kwlist__path */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_exctrail_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:exctrail", &path))
+	struct {
+		DeeObject *path;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path, "o:exctrail", &args))
 		goto err;
-	return posix_exctrail_f_impl(path);
+	return posix_exctrail_f_impl(args.path);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_exctrail_f_impl(DeeObject *path)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_exctrail_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -1373,25 +1383,28 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("abspath", "path:?Dstring,pwd:?Dstring=NULL->?Dstring", libname: "posix", ispure: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_abspath_f_impl(DeeObject *path, DeeObject *pwd);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_abspath_f_impl(DeeObject *path, DeeObject *pwd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_abspath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ABSPATH_DEF { "abspath", (DeeObject *)&posix_abspath, MODSYM_FREADONLY, DOC("(path:?Dstring,pwd?:?Dstring)->?Dstring") },
 #define POSIX_ABSPATH_DEF_DOC(doc) { "abspath", (DeeObject *)&posix_abspath, MODSYM_FREADONLY, DOC("(path:?Dstring,pwd?:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_abspath, &posix_abspath_f, METHOD_FPURECALL);
-#ifndef POSIX_KWDS_PATH_PWD_DEFINED
-#define POSIX_KWDS_PATH_PWD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_pwd, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("pwd", 0x33a2a198, 0xc64fc5785f58c2ce), KEND });
-#endif /* !POSIX_KWDS_PATH_PWD_DEFINED */
+#ifndef DEFINED_kwlist__path_pwd
+#define DEFINED_kwlist__path_pwd
+PRIVATE DEFINE_KWLIST(kwlist__path_pwd, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("pwd", 0x33a2a198, 0xc64fc5785f58c2ce), KEND });
+#endif /* !DEFINED_kwlist__path_pwd */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_abspath_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	DeeObject *pwd = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path_pwd, "o|o:abspath", &path, &pwd))
+	struct {
+		DeeObject *path;
+		DeeObject *pwd;
+	} args;
+	args.pwd = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path_pwd, "o|o:abspath", &args))
 		goto err;
-	return posix_abspath_f_impl(path, pwd);
+	return posix_abspath_f_impl(args.path, args.pwd);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_abspath_f_impl(DeeObject *path, DeeObject *pwd)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_abspath_f_impl(DeeObject *path, DeeObject *pwd)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -1405,25 +1418,27 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("walklink", "linktext:?Dstring,linkname:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_walklink_f_impl(DeeObject *linktext, DeeObject *linkname);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_walklink_f_impl(DeeObject *linktext, DeeObject *linkname);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_walklink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_WALKLINK_DEF { "walklink", (DeeObject *)&posix_walklink, MODSYM_FREADONLY, DOC("(linktext:?Dstring,linkname:?Dstring)->?Dstring") },
 #define POSIX_WALKLINK_DEF_DOC(doc) { "walklink", (DeeObject *)&posix_walklink, MODSYM_FREADONLY, DOC("(linktext:?Dstring,linkname:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_walklink, &posix_walklink_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-#ifndef POSIX_KWDS_LINKTEXT_LINKNAME_DEFINED
-#define POSIX_KWDS_LINKTEXT_LINKNAME_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_linktext_linkname, { KEX("linktext", 0x1a980550, 0xe7f93f503eadfdf7), KEX("linkname", 0x8fc35daf, 0xe202766a17bf6f0a), KEND });
-#endif /* !POSIX_KWDS_LINKTEXT_LINKNAME_DEFINED */
+#ifndef DEFINED_kwlist__linktext_linkname
+#define DEFINED_kwlist__linktext_linkname
+PRIVATE DEFINE_KWLIST(kwlist__linktext_linkname, { KEX("linktext", 0x1a980550, 0xe7f93f503eadfdf7), KEX("linkname", 0x8fc35daf, 0xe202766a17bf6f0a), KEND });
+#endif /* !DEFINED_kwlist__linktext_linkname */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_walklink_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *linktext;
-	DeeObject *linkname;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_linktext_linkname, "oo:walklink", &linktext, &linkname))
+	struct {
+		DeeObject *linktext;
+		DeeObject *linkname;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__linktext_linkname, "oo:walklink", &args))
 		goto err;
-	return posix_walklink_f_impl(linktext, linkname);
+	return posix_walklink_f_impl(args.linktext, args.linkname);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_walklink_f_impl(DeeObject *linktext, DeeObject *linkname)
+FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_walklink_f_impl(DeeObject *linktext, DeeObject *linkname)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(linktext, &DeeString_Type))
@@ -1437,25 +1452,28 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("relpath", "path:?Dstring,pwd:?Dstring=NULL->?Dstring", libname: "posix", ispure: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_relpath_f_impl(DeeObject *path, DeeObject *pwd);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_relpath_f_impl(DeeObject *path, DeeObject *pwd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_relpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RELPATH_DEF { "relpath", (DeeObject *)&posix_relpath, MODSYM_FREADONLY, DOC("(path:?Dstring,pwd?:?Dstring)->?Dstring") },
 #define POSIX_RELPATH_DEF_DOC(doc) { "relpath", (DeeObject *)&posix_relpath, MODSYM_FREADONLY, DOC("(path:?Dstring,pwd?:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_relpath, &posix_relpath_f, METHOD_FPURECALL);
-#ifndef POSIX_KWDS_PATH_PWD_DEFINED
-#define POSIX_KWDS_PATH_PWD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_pwd, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("pwd", 0x33a2a198, 0xc64fc5785f58c2ce), KEND });
-#endif /* !POSIX_KWDS_PATH_PWD_DEFINED */
+#ifndef DEFINED_kwlist__path_pwd
+#define DEFINED_kwlist__path_pwd
+PRIVATE DEFINE_KWLIST(kwlist__path_pwd, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("pwd", 0x33a2a198, 0xc64fc5785f58c2ce), KEND });
+#endif /* !DEFINED_kwlist__path_pwd */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_relpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	DeeObject *pwd = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path_pwd, "o|o:relpath", &path, &pwd))
+	struct {
+		DeeObject *path;
+		DeeObject *pwd;
+	} args;
+	args.pwd = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path_pwd, "o|o:relpath", &args))
 		goto err;
-	return posix_relpath_f_impl(path, pwd);
+	return posix_relpath_f_impl(args.path, args.pwd);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_relpath_f_impl(DeeObject *path, DeeObject *pwd)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_relpath_f_impl(DeeObject *path, DeeObject *pwd)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -1469,24 +1487,26 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("normalpath", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_normalpath_f_impl(DeeObject *path);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_normalpath_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_normalpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_NORMALPATH_DEF { "normalpath", (DeeObject *)&posix_normalpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
 #define POSIX_NORMALPATH_DEF_DOC(doc) { "normalpath", (DeeObject *)&posix_normalpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_normalpath, &posix_normalpath_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-#ifndef POSIX_KWDS_PATH_DEFINED
-#define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
-#endif /* !POSIX_KWDS_PATH_DEFINED */
+#ifndef DEFINED_kwlist__path
+#define DEFINED_kwlist__path
+PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
+#endif /* !DEFINED_kwlist__path */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_normalpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:normalpath", &path))
+	struct {
+		DeeObject *path;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path, "o:normalpath", &args))
 		goto err;
-	return posix_normalpath_f_impl(path);
+	return posix_normalpath_f_impl(args.path);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_normalpath_f_impl(DeeObject *path)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_normalpath_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -1497,24 +1517,26 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("isabs", "path:?Dstring->?Dbool", libname: "posix", isconst: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isabs_f_impl(DeeObject *path);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_isabs_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_isabs_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ISABS_DEF { "isabs", (DeeObject *)&posix_isabs, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool") },
 #define POSIX_ISABS_DEF_DOC(doc) { "isabs", (DeeObject *)&posix_isabs, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_isabs, &posix_isabs_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-#ifndef POSIX_KWDS_PATH_DEFINED
-#define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
-#endif /* !POSIX_KWDS_PATH_DEFINED */
+#ifndef DEFINED_kwlist__path
+#define DEFINED_kwlist__path
+PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
+#endif /* !DEFINED_kwlist__path */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_isabs_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:isabs", &path))
+	struct {
+		DeeObject *path;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path, "o:isabs", &args))
 		goto err;
-	return posix_isabs_f_impl(path);
+	return posix_isabs_f_impl(args.path);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isabs_f_impl(DeeObject *path)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_isabs_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -1525,24 +1547,26 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("isrel", "path:?Dstring->?Dbool", libname: "posix", isconst: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isrel_f_impl(DeeObject *path);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_isrel_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_isrel_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ISREL_DEF { "isrel", (DeeObject *)&posix_isrel, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool") },
 #define POSIX_ISREL_DEF_DOC(doc) { "isrel", (DeeObject *)&posix_isrel, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_isrel, &posix_isrel_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-#ifndef POSIX_KWDS_PATH_DEFINED
-#define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
-#endif /* !POSIX_KWDS_PATH_DEFINED */
+#ifndef DEFINED_kwlist__path
+#define DEFINED_kwlist__path
+PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
+#endif /* !DEFINED_kwlist__path */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_isrel_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:isrel", &path))
+	struct {
+		DeeObject *path;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path, "o:isrel", &args))
 		goto err;
-	return posix_isrel_f_impl(path);
+	return posix_isrel_f_impl(args.path);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isrel_f_impl(DeeObject *path)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_isrel_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -1553,24 +1577,26 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("issep", "path:?Dstring->?Dbool", libname: "posix", isconst: true);]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_issep_f_impl(DeeObject *path);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_issep_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_issep_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ISSEP_DEF { "issep", (DeeObject *)&posix_issep, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool") },
 #define POSIX_ISSEP_DEF_DOC(doc) { "issep", (DeeObject *)&posix_issep, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_issep, &posix_issep_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-#ifndef POSIX_KWDS_PATH_DEFINED
-#define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
-#endif /* !POSIX_KWDS_PATH_DEFINED */
+#ifndef DEFINED_kwlist__path
+#define DEFINED_kwlist__path
+PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
+#endif /* !DEFINED_kwlist__path */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_issep_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:issep", &path))
+	struct {
+		DeeObject *path;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path, "o:issep", &args))
 		goto err;
-	return posix_issep_f_impl(path);
+	return posix_issep_f_impl(args.path);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_issep_f_impl(DeeObject *path)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_issep_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))

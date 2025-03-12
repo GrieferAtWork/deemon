@@ -32,6 +32,7 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 
+#include <hybrid/int128.h>
 #include <hybrid/typecore.h>
 /**/
 
@@ -261,21 +262,55 @@ invalid_argc2:
 		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, DeeObject *, __ALIGNOF_POINTER__, self);
 		break;
 
-	case 'U': {
-		void *str; /* Store a unicode string. */
-		ASSERTF((format[0] == '1' && format[1] == '6') ||
-		        (format[0] == '3' && format[1] == '2'),
-		        "Invalid format: `%s' (`%s')", format, *p_format);
-		ASSERTF(format[2] == 's', "Invalid format: `%s' (`%s')", format, *p_format);
-		str = format[0] == '1'
-		      ? (void *)DeeString_As2Byte(self)
-		      : (void *)DeeString_As4Byte(self);
+	case 'S': { /* Store a fixed-width string. */
+		void *str;
+		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
+			goto err;
+		if likely(format[0] == 's') {
+			++format;
+			str = DeeString_As1Byte(self);
+		} else if (format[0] == '1') {
+			ASSERTF(format[1] == '6' && format[2] == 's',
+			        "Invalid format: `%s' (`%s')",
+			        format, *p_format);
+			format += 3;
+			str = DeeString_As2Byte(self);
+		} else {
+			ASSERTF(format[0] == '3' && format[1] == '2' && format[2] == 's',
+			        "Invalid format: `%s' (`%s')",
+			        format, *p_format);
+			format += 3;
+			str = DeeString_As4Byte(self);
+		}
 		if unlikely(!str)
 			goto err;
-		format += 3;
 		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__, str);
 	}	break;
 
+	case 'U': { /* Store a unicode string. */
+		void *str;
+		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
+			goto err;
+		if likely(format[0] == 's') {
+			++format;
+			str = DeeString_AsUtf8(self);
+		} else if (format[0] == '1') {
+			ASSERTF(format[1] == '6' && format[2] == 's',
+			        "Invalid format: `%s' (`%s')",
+			        format, *p_format);
+			format += 3;
+			str = DeeString_AsUtf16(self, Dee_STRING_ERROR_FSTRICT);
+		} else {
+			ASSERTF(format[0] == '3' && format[1] == '2' && format[2] == 's',
+			        "Invalid format: `%s' (`%s')",
+			        format, *p_format);
+			format += 3;
+			str = DeeString_AsUtf32(self);
+		}
+		if unlikely(!str)
+			goto err;
+		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__, str);
+	}	break;
 
 	case 's': /* Store a string. */
 		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
@@ -283,44 +318,89 @@ invalid_argc2:
 		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, char *, __ALIGNOF_POINTER__, DeeString_STR(self));
 		break;
 
-	case '$': {
-		void *str; /* Store a string, including its length. */
+	case '$': { /* Store a string, including its length. */
+		void *str;
 		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
 			goto err;
 		if (*format == 'U') {
-			ASSERTF((format[1] == '1' && format[2] == '6') ||
-			        (format[1] == '3' && format[2] == '2'),
-			        "Invalid format: `%s' (`%s')", format, *p_format);
-			format += 3;
-			str = format[-1] == '2'
-			      ? (void *)DeeString_As2Byte(self)
-			      : (void *)DeeString_As4Byte(self);
+			++format;
+			if likely(format[0] == 's') {
+				++format;
+				str = DeeString_AsUtf8(self);
+			} else if (format[0] == '1') {
+				ASSERTF(format[1] == '6' && format[2] == 's',
+				        "Invalid format: `%s' (`%s')",
+				        format, *p_format);
+				format += 3;
+				str = DeeString_AsUtf16(self, Dee_STRING_ERROR_FSTRICT);
+			} else {
+				ASSERTF(format[0] == '3' && format[1] == '2' && format[2] == 's',
+				        "Invalid format: `%s' (`%s')",
+				        format, *p_format);
+				format += 3;
+				str = DeeString_AsUtf32(self);
+			}
+			if unlikely(!str)
+				goto err;
+		} else if (*format == 'S') {
+			++format;
+			if likely(format[0] == 's') {
+				++format;
+				str = DeeString_As1Byte(self);
+			} else if (format[0] == '1') {
+				ASSERTF(format[1] == '6' && format[2] == 's',
+				        "Invalid format: `%s' (`%s')",
+				        format, *p_format);
+				format += 3;
+				str = DeeString_As2Byte(self);
+			} else {
+				ASSERTF(format[0] == '3' && format[1] == '2' && format[2] == 's',
+				        "Invalid format: `%s' (`%s')",
+				        format, *p_format);
+				format += 3;
+				str = DeeString_As4Byte(self);
+			}
+			if unlikely(!str)
+				goto err;
+		} else if (*format == 'l') {
+			ASSERTF(format[1] == 's', "Invalid format: `%s' (`%s')", format, *p_format);
+			format += 2;
+			str = DeeString_AsWide(self);
+			if unlikely(!str)
+				goto err;
 		} else {
-			str = DeeString_AsUtf8(self);
+			ASSERTF(*format == 's', "Invalid format: `%s' (`%s')", format, *p_format);
+			++format;
+			str = DeeString_STR(self);
 		}
-		if unlikely(!str)
-			goto err;
-		ASSERTF(*format == 's', "Invalid format: `%s' (`%s')", format, *p_format);
-		++format;
 		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, size_t, __ALIGNOF_SIZE_T__, WSTR_LENGTH(str));
 		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__, str);
 	}	break;
 
-	case 'L': {
+#ifdef __LONGDOUBLE
+	case 'L':
+#endif /* __LONGDOUBLE */
+	{
 		double value;
+#ifdef __LONGDOUBLE
 		ASSERTF(*format == 'D', "Invalid format: `%s' (`%s')", format, *p_format);
 		++format;
 		ATTR_FALLTHROUGH
+#endif /* __LONGDOUBLE */
 	case 'f':
 	case 'D':
 		if (DeeObject_AsDouble(self, &value))
 			goto err;
 		if (format[-1] == 'f') {
 			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, float, __ALIGNOF_FLOAT__, (float)value);
-		} else if (format[-2] != 'L') {
+		} else
+#ifdef __LONGDOUBLE
+		if (format[-2] == 'L') {
+			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, __LONGDOUBLE, __ALIGNOF_LONG_DOUBLE__, (__LONGDOUBLE)value);
+		} else
+#endif /* __LONGDOUBLE */
+		{
 			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, double, __ALIGNOF_DOUBLE__, (double)value);
-		} else {
-			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, long double, __ALIGNOF_LONG_DOUBLE__, (long double)value);
 		}
 	}	break;
 
@@ -533,19 +613,25 @@ again:
 	case '-':
 		break;
 
+#ifdef __LONGDOUBLE
 	case 'L':
 		ASSERTF(*format == 'D', "Invalid format: `%s'", format);
 		++format;
+#endif /* __LONGDOUBLE */
 #ifdef DEFINE_DeeArg_Unpack
+#ifdef __LONGDOUBLE
 		ATTR_FALLTHROUGH
+#endif /* __LONGDOUBLE */
 	case 'D':
 	case 'f':
 	case 'b':
 		(void)va_arg(LOCAL_VAL_P_OUT, void *);
 		break;
 #else /* DEFINE_DeeArg_Unpack */
+#ifdef __LONGDOUBLE
 		LOCAL_SKIP(LOCAL_VAL_P_OUT, long double, __ALIGNOF_LONG_DOUBLE__);
 		break;
+#endif /* __LONGDOUBLE */
 	case 'D':
 		LOCAL_SKIP(LOCAL_VAL_P_OUT, double, __ALIGNOF_DOUBLE__);
 		break;
@@ -558,11 +644,15 @@ again:
 #endif /* !DEFINE_DeeArg_Unpack */
 
 	case 'U': /* Store a unicode string. */
-		ASSERTF((format[0] == '1' && format[1] == '6') ||
-		        (format[0] == '3' && format[1] == '2'),
-		        "Invalid format: `%s'", format);
-		ASSERTF(format[2] == 's', "Invalid format: `%s'", format);
-		format += 3;
+	case 'S': /* Store a fixed-width string. */
+		if likely(format[0] == 's') {
+			++format;
+		} else {
+			ASSERTF((format[0] == '1' && format[1] == '6' && format[2] == 's') ||
+			        (format[0] == '3' && format[1] == '2' && format[2] == 's'),
+			        "Invalid format: `%s'", format);
+			format += 3;
+		}
 		ATTR_FALLTHROUGH
 	case 'o':
 	case 's':
@@ -570,14 +660,23 @@ again:
 		break;
 
 	case '$': /* Store a string, including its length. */
-		if (*format == 'U') {
-			ASSERTF((format[1] == '1' && format[2] == '6') ||
-			        (format[1] == '3' && format[2] == '2'),
-			        "Invalid format: `%s'", format);
-			format += 3;
+		if (*format == 'S' || *format == 'U') {
+			++format;
+			if likely(format[0] == 's') {
+				++format;
+			} else {
+				ASSERTF((format[0] == '1' && format[1] == '6' && format[2] == 's') ||
+				        (format[0] == '3' && format[1] == '2' && format[2] == 's'),
+				        "Invalid format: `%s'", format);
+				format += 3;
+			}
+		} else if (*format == 'l') {
+			ASSERTF(format[1] == 's', "Invalid format: `%s'", format);
+			format += 2;
+		} else {
+			ASSERTF(*format == 's', "Invalid format: `%s'", format);
+			++format;
 		}
-		ASSERTF(*format == 's', "Invalid format: `%s'", format);
-		++format;
 		LOCAL_SKIP(LOCAL_VAL_P_OUT, size_t, __ALIGNOF_SIZE_T__);
 		LOCAL_SKIP(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__);
 		break;
@@ -699,23 +798,16 @@ again:
 PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 (DCALL LOCAL_DeeArg_VUnpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
                              char const *__restrict format, LOCAL_PARAM_OUT) {
-	char const *fmt_start;
-	bool is_optional;
 	int temp;
 #ifdef DEFINE_DeeArg_Unpack
-	struct va_list_struct *p_args;
+	struct va_list_struct *p_args = (struct va_list_struct *)VALIST_ADDR(args);
 #else /* DEFINE_DeeArg_Unpack */
-	void **p_out;
+	void **p_out = &out;
 #endif /* !DEFINE_DeeArg_Unpack */
-	DeeObject *const *iter, *const *end;
-	fmt_start   = format;
-	is_optional = false;
-#ifdef DEFINE_DeeArg_Unpack
-	p_args = (struct va_list_struct *)VALIST_ADDR(args);
-#else /* DEFINE_DeeArg_Unpack */
-	p_out = &out;
-#endif /* !DEFINE_DeeArg_Unpack */
-	end = (iter = argv) + argc;
+	char const *fmt_start   = format;
+	bool is_optional = false;
+	DeeObject *const *iter = argv;
+	DeeObject *const *end = argv + argc;
 	for (;;) {
 		if (*format == '|') {
 			is_optional = true;

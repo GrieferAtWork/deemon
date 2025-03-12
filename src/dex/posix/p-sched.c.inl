@@ -90,58 +90,50 @@ DECL_BEGIN
 
 #if defined(posix_system_USE_wsystem) || defined(posix_system_USE_fork_AND_wexec) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("system", "command:c:wchar_t[]->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(dwchar_t const *command);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_system_f_impl(Dee_wchar_t const *command);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint") },
 #define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_COMMAND_DEFINED
-#define POSIX_KWDS_COMMAND_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_command, { KEX("command", 0xe876e30d, 0x2a35e05780aa8e3b), KEND });
-#endif /* !POSIX_KWDS_COMMAND_DEFINED */
+#ifndef DEFINED_kwlist__command
+#define DEFINED_kwlist__command
+PRIVATE DEFINE_KWLIST(kwlist__command, { KEX("command", 0xe876e30d, 0x2a35e05780aa8e3b), KEND });
+#endif /* !DEFINED_kwlist__command */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	dwchar_t const *command_str;
-	DeeStringObject *command;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_command, "o:system", &command))
+	struct {
+		Dee_wchar_t const *command;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__command, "ls:system", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(command, &DeeString_Type))
-		goto err;
-	command_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)command);
-	if unlikely(!command_str)
-		goto err;
-	return posix_system_f_impl(command_str);
+	return posix_system_f_impl(args.command);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(dwchar_t const *command)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_system_f_impl(Dee_wchar_t const *command)
 /*[[[end]]]*/
 #endif /* posix_system_USE_wsystem || posix_system_USE_fork_AND_wexec */
 #if (!defined(posix_system_USE_wsystem) && !defined(posix_system_USE_fork_AND_wexec)) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("system", "command:c:char[]->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(/*utf-8*/ char const *command);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_system_f_impl(char const *command);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint") },
 #define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_COMMAND_DEFINED
-#define POSIX_KWDS_COMMAND_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_command, { KEX("command", 0xe876e30d, 0x2a35e05780aa8e3b), KEND });
-#endif /* !POSIX_KWDS_COMMAND_DEFINED */
+#ifndef DEFINED_kwlist__command
+#define DEFINED_kwlist__command
+PRIVATE DEFINE_KWLIST(kwlist__command, { KEX("command", 0xe876e30d, 0x2a35e05780aa8e3b), KEND });
+#endif /* !DEFINED_kwlist__command */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	/*utf-8*/ char const *command_str;
-	DeeStringObject *command;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_command, "o:system", &command))
+	struct {
+		char const *command;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__command, "Us:system", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(command, &DeeString_Type))
-		goto err;
-	command_str = DeeString_AsUtf8((DeeObject *)command);
-	if unlikely(!command_str)
-		goto err;
-	return posix_system_f_impl(command_str);
+	return posix_system_f_impl(args.command);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(/*utf-8*/ char const *command)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_system_f_impl(char const *command)
 /*[[[end]]]*/
 #endif /* !posix_system_USE_wsystem && !posix_system_USE_fork_AND_wexec */
 {
@@ -245,7 +237,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sched_yield_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f(size_t argc, DeeObject *const *argv);
 #define POSIX_SCHED_YIELD_DEF { "sched_yield", (DeeObject *)&posix_sched_yield, MODSYM_FREADONLY, DOC("()") },
 #define POSIX_SCHED_YIELD_DEF_DOC(doc) { "sched_yield", (DeeObject *)&posix_sched_yield, MODSYM_FREADONLY, DOC("()\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_sched_yield, posix_sched_yield_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(posix_sched_yield, &posix_sched_yield_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sched_yield"))
 		goto err;
@@ -272,7 +264,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getpid_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETPID_DEF { "getpid", (DeeObject *)&posix_getpid, MODSYM_FREADONLY, DOC("->?Dint") },
 #define POSIX_GETPID_DEF_DOC(doc) { "getpid", (DeeObject *)&posix_getpid, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_getpid, posix_getpid_f, METHOD_FPURECALL);
+PRIVATE DEFINE_CMETHOD(posix_getpid, &posix_getpid_f, METHOD_FPURECALL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":getpid"))
 		goto err;

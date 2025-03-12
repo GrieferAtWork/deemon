@@ -162,7 +162,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getcwd_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getcwd_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETCWD_DEF { "getcwd", (DeeObject *)&posix_getcwd, MODSYM_FREADONLY, DOC("->?Dstring") },
 #define POSIX_GETCWD_DEF_DOC(doc) { "getcwd", (DeeObject *)&posix_getcwd, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_getcwd, posix_getcwd_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(posix_getcwd, &posix_getcwd_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getcwd_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":getcwd"))
 		goto err;
@@ -189,7 +189,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_gettmp_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gettmp_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETTMP_DEF { "gettmp", (DeeObject *)&posix_gettmp, MODSYM_FREADONLY, DOC("->?Dstring") },
 #define POSIX_GETTMP_DEF_DOC(doc) { "gettmp", (DeeObject *)&posix_gettmp, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_gettmp, posix_gettmp_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(posix_gettmp, &posix_gettmp_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gettmp_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":gettmp"))
 		goto err;
@@ -230,7 +230,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_gethostname_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gethostname_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETHOSTNAME_DEF { "gethostname", (DeeObject *)&posix_gethostname, MODSYM_FREADONLY, DOC("->?Dstring") },
 #define POSIX_GETHOSTNAME_DEF_DOC(doc) { "gethostname", (DeeObject *)&posix_gethostname, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_gethostname, posix_gethostname_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(posix_gethostname, &posix_gethostname_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gethostname_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":gethostname"))
 		goto err;
@@ -330,24 +330,26 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("chdir", "path:?Dstring", libname: "posix");]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_chdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CHDIR_DEF { "chdir", (DeeObject *)&posix_chdir, MODSYM_FREADONLY, DOC("(path:?Dstring)") },
 #define POSIX_CHDIR_DEF_DOC(doc) { "chdir", (DeeObject *)&posix_chdir, MODSYM_FREADONLY, DOC("(path:?Dstring)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_chdir, &posix_chdir_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_PATH_DEFINED
-#define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
-#endif /* !POSIX_KWDS_PATH_DEFINED */
+#ifndef DEFINED_kwlist__path
+#define DEFINED_kwlist__path
+PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
+#endif /* !DEFINED_kwlist__path */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_chdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:chdir", &path))
+	struct {
+		DeeObject *path;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path, "o:chdir", &args))
 		goto err;
-	return posix_chdir_f_impl(path);
+	return posix_chdir_f_impl(args.path);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 #ifdef posix_chdir_USE_nt_SetCurrentDirectory
@@ -463,24 +465,26 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchdir", "fd:?X2?DFile?Dint", libname: "posix");]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdir_f_impl(DeeObject *fd);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fchdir_f_impl(DeeObject *fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHDIR_DEF { "fchdir", (DeeObject *)&posix_fchdir, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)") },
 #define POSIX_FCHDIR_DEF_DOC(doc) { "fchdir", (DeeObject *)&posix_fchdir, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fchdir, &posix_fchdir_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_FD_DEFINED
-#define POSIX_KWDS_FD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
-#endif /* !POSIX_KWDS_FD_DEFINED */
+#ifndef DEFINED_kwlist__fd
+#define DEFINED_kwlist__fd
+PRIVATE DEFINE_KWLIST(kwlist__fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
+#endif /* !DEFINED_kwlist__fd */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *fd;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:fchdir", &fd))
+	struct {
+		DeeObject *fd;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__fd, "o:fchdir", &args))
 		goto err;
-	return posix_fchdir_f_impl(fd);
+	return posix_fchdir_f_impl(args.fd);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdir_f_impl(DeeObject *fd)
+FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_fchdir_f_impl(DeeObject *fd)
 /*[[[end]]]*/
 {
 #ifdef posix_fchdir_USE_fchdir
@@ -533,26 +537,29 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchdirat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix");]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdirat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FCHDIRAT_DEF { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)") },
-#define POSIX_FCHDIRAT_DEF_DOC(doc) { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)\n" doc) },
+#define POSIX_FCHDIRAT_DEF { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)") },
+#define POSIX_FCHDIRAT_DEF_DOC(doc) { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fchdirat, &posix_fchdirat_f, METHOD_FNORMAL);
-#ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
-#define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
-#endif /* !POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED */
+#ifndef DEFINED_kwlist__dfd_path_atflags
+#define DEFINED_kwlist__dfd_path_atflags
+PRIVATE DEFINE_KWLIST(kwlist__dfd_path_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
+#endif /* !DEFINED_kwlist__dfd_path_atflags */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdirat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *dfd;
-	DeeObject *path;
-	unsigned int atflags = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_path_atflags, "oo|u:fchdirat", &dfd, &path, &atflags))
+	struct {
+		DeeObject *dfd;
+		DeeObject *path;
+		unsigned int atflags;
+	} args;
+	args.atflags = 0;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dfd_path_atflags, "oo|u:fchdirat", &args))
 		goto err;
-	return posix_fchdirat_f_impl(dfd, path, atflags);
+	return posix_fchdirat_f_impl(args.dfd, args.path, args.atflags);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags)
+FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags)
 /*[[[end]]]*/
 {
 #ifdef posix_fchdirat_USE_posix_chdir
