@@ -22,13 +22,8 @@
 /* deemon.Sequence.operator hash()                                      */
 /************************************************************************/
 __seq_hash__()->?Dint {
-	Dee_hash_t result;
-	if (DeeArg_Unpack(argc, argv, ":__seq_hash__"))
-		goto err;
-	result = CALL_DEPENDENCY(seq_operator_hash, self);
+	Dee_hash_t result = CALL_DEPENDENCY(seq_operator_hash, self);
 	return DeeInt_NewHash(result);
-err:
-	return NULL;
 }
 
 %[define(DEFINE_default_seq_hash_with_foreach_cb =

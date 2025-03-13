@@ -20,6 +20,7 @@
 
 import * from deemon;
 import rt.hash as rtHash;
+import . as globals;
 
 
 global final DTYPE_BY_CTYPE: {string: string} = {
@@ -313,7 +314,7 @@ global final UNPACK_PARAM_DECODERS: {string: UnpackParamDecoder | UnpackTypeProx
 	"c:uint64_t":  UnpackTypeProxy("uint64_t", '" UNPu64 "', "?Dint"),
 
 	/* ctypes integration */
-	"c:ptr": UnpackParamDecoder("void *", "?Aptr?Ectypes:void", (cIn, cOut, err) -> 
+	"c:ptr": UnpackParamDecoder("void *", "?Aptr?Ectypes:void", (cIn, cOut, err) ->
 			f"if unlikely(DeeCTypes_GetPointer({cIn}, &{cOut}))\n"
 			f"	goto {err};\n", "NULL"),
 
@@ -329,12 +330,12 @@ global final UNPACK_PARAM_DECODERS: {string: UnpackParamDecoder | UnpackTypeProx
 	"c:wchar_t[]": UnpackTypeProxy("Dee_wchar_t const *", "ls", "?Dstring"),
 
 	/* Unix integration */
-	"unix:fd": UnpackParamDecoder("int", "?X2?Dint?DFile", (cIn, cOut, err) -> 
+	"unix:fd": UnpackParamDecoder("int", "?X2?Dint?DFile", (cIn, cOut, err) ->
 			f"if unlikely(({cOut} = DeeUnixSystem_GetFD({cIn})) == -1)\n"
 			f"	goto {err};\n", "-1"),
 
 	/* Windows (NT) integration */
-	"nt:HANDLE": UnpackParamDecoder("HANDLE", "?X3?Dint?DFile?Ewin32:HANDLE", (cIn, cOut, err) -> 
+	"nt:HANDLE": UnpackParamDecoder("HANDLE", "?X3?Dint?DFile?Ewin32:HANDLE", (cIn, cOut, err) ->
 			f"if unlikely(DeeNTSystem_TryGetHandle({cIn}, (void **)&{cOut}))\n"
 			f"	goto {err};\n", "INVALID_HANDLE_VALUE"),
 	"nt:LPCSTR": UnpackTypeProxy("LPCSTR", "Us", "?Dstring"),
@@ -371,6 +372,8 @@ final class UnpackParam {
 	public final member dInit: string | none;
 
 	@@C-Initializer of the argument (e.g. @"Dee_None")
+	@@Set to @"?" when the parameter is optional, but should
+	@@**not** be pre-initialized prior to argument unpacking.
 	public final member cInit: string | none;
 
 	@@Custom argument decoder (if used)
@@ -450,6 +453,10 @@ final class UnpackParam {
 				result = "_" + result;
 			return result;
 		}
+	}
+
+	public function cOutNameEx(args: string = "args"): string {
+		return decode is none ? f"{args}.{cOutName}" : cOutName;
 	}
 
 	@@Returns the encoded doc-string repr of @this param
@@ -694,8 +701,12 @@ function getUnpackFormat(params: string | {UnpackParam...} = (),
 	local result = writer.string;
 	local result = result.replace('""', '');
 	local result = result.rereplace(r"\s{2,}", r" ");
+	if (!result)
+		result = '""';
 	return result;
 }
+
+
 
 
 @@Usage:
@@ -742,7 +753,7 @@ function print_DeeArg_UnpackKw(name: string = "",
 				param.decode.printCOutDecl(param.cOutName, param.isOptional);
 		}
 		for (local param: params) {
-			if (param.cInit !is none)
+			if (param.cInit !is none && param.cInit != "?")
 				print(f"	{args}.{param.cName} = {param.cInit};");
 		}
 		print(f"	if (DeeArg_UnpackStructKw({argc}, {argv}, {kw}, {kwlistName}, {
@@ -796,7 +807,7 @@ function print_DeeArg_Unpack(name: string = "",
 				param.decode.printCOutDecl(param.cOutName, param.isOptional);
 		}
 		for (local param: params) {
-			if (param.cInit !is none)
+			if (param.cInit !is none && param.cInit != "?")
 				print(f"	{args}.{param.cName} = {param.cInit};");
 		}
 		print(f"	if (DeeArg_UnpackStruct({argc}, {argv}, {
@@ -814,6 +825,155 @@ function print_DeeArg_Unpack(name: string = "",
 				getUnpackFormat(name: name, params: params)}))");
 		print(f"		goto {err};");
 	}
+}
+
+
+
+
+final class CMethod {
+	this = default;
+	@@Name of the method
+	public final member name: string;
+	@@Method parameters
+	public final member params: {UnpackParam...};
+	@@Deemon return type expression
+	public final member dReturnType: string;
+
+	public property UNPformat: string = {
+		get(): string {
+			return getUnpackFormat(params, name);
+		}
+	}
+
+	@@Returns the encoded doc-string used to describe @this C-method
+	public property docstring: string = {
+		get(): string {
+			local result = f"({",".join(params.each.docParam)})";
+			if (dReturnType != "?N") {
+				if (result == "()")
+					result = "";
+				result += "->";
+				if (dReturnType != "?O")
+					result += dReturnType;
+			}
+			return result;
+		}
+	}
+
+	public print_DeeArg_UnpackKw(argc: string = "argc",
+	                             argv: string = "argv",
+	                             kw: string = "kw",
+	                             args: string = "args",
+	                             err: string = "err",
+	                             defineKwList: bool = false) {
+		globals.print_DeeArg_UnpackKw(
+				name: name,
+				argc: argc,
+				argv: argv,
+				kw: kw,
+				params: params,
+				args: args,
+				err: err,
+				defineKwList: defineKwList,
+		);
+	}
+
+	public print_DeeArg_Unpack(argc: string = "argc",
+	                           argv: string = "argv",
+	                           args: string = "args",
+	                           err: string = "err") {
+		globals.print_DeeArg_Unpack(
+				name: name,
+				argc: argc,
+				argv: argv,
+				params: params,
+				args: args,
+				err: err,
+		);
+	}
+}
+
+
+function parseCMethodSpecEx(specs: string, i: int, end: int): (CMethod, int) {
+	while (i < end && specs.isspace(i))
+		++i;
+	local nameStart = i;
+	local nameEnd = i;
+	if (i < end && specs.issymstrt(i)) {
+		do {
+			++i;
+		} while (i < end && specs.issymcont(i));
+		nameEnd = i;
+	}
+	while (i < end && specs.isspace(i))
+		++i;
+	local params: {UnpackParam...} = ();
+	if (i < end && specs[i] == "(") {
+		++i;
+		local paramsStart = i;
+		i = specs.indexmatch("(", ")", i, end);
+		params = parseParamSpec(specs[paramsStart:i]);
+		++i;
+		while (i < end && specs.isspace(i))
+			++i;
+	}
+	local dReturnType = "?N";
+	if (i < end) {
+		local beforeReturnType = i;
+		if (specs[i] == ":") {
+			++i;
+load_dReturnType:
+			while (i < end && specs.isspace(i))
+				++i;
+			local dReturnTypeStart = i;
+			if (i < end && specs[i] == "?") {
+				while (i < end) {
+					if (specs.issymcont(i)) {
+continue_in_dReturnType:
+						++i;
+						continue;
+					}
+					local ch = specs[i];
+					if (ch in "?.#:!]")
+						goto continue_in_dReturnType;
+					if (ch == "{") {
+						i = specs.indexmatch("{", "}", i + 1, end) + 1;
+						continue;
+					}
+					break;
+				}
+				dReturnType = specs[dReturnTypeStart:i];
+				if (!dReturnType)
+					dReturnType = "?O";
+			} else {
+				i = beforeReturnType;
+			}
+		} else if (specs.startswith("->", i, end)) {
+			i += 2;
+			goto load_dReturnType;
+		}
+	}
+	return (
+		CMethod(
+			name: specs[nameStart:nameEnd],
+			params: params,
+			dReturnType: dReturnType,
+		),
+		i,
+	);
+}
+
+@@Parse a the specifications for a C-Method:
+@@>> CMETHOD ::= (
+@@>>      [<name>]
+@@>>      ['(' <params> ')']
+@@>>      [('->' | ':') <dReturnType>]
+@@>> )
+@@name:        Function name (must match @string.issymbol)
+@@params:      Function unpack parameters (s.a. @parseParamSpec)
+@@dReturnType: Deemon expression for the function's return type
+function parseCMethodSpec(specs: string): CMethod {
+	return parseCMethodSpecEx(specs, 0, #specs).first;
 }
 
 
@@ -900,7 +1060,7 @@ function print_libMethod(name: string,
 	) ?: "void"});");
 
 	local docString = f"({",".join(params.each.docParam)})";
-	if (dReturnType) {
+	if (dReturnType !in ["", "?N"]) {
 		if (docString == "()")
 			docString = "";
 		docString += "->";
@@ -938,13 +1098,7 @@ function print_libMethod(name: string,
 	} else {
 		print_DeeArg_Unpack(name, params: params);
 	}
-	print(f"	return {libfoo_bar_f_impl}({", ".join(
-		for (local param: params)
-			if (param.decode is none)
-				f"args.{param.cOutName}"
-			else
-				param.cOutName
-	)});");
+	print(f"	return {libfoo_bar_f_impl}({", ".join(params.each.cOutNameEx("args"))});");
 	print(f"err:");
 	print(f"	return NULL;");
 	print(f"\}");

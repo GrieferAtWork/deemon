@@ -22,17 +22,10 @@
 /* deemon.Sequence.rremove()                                            */
 /************************************************************************/
 [[kw, alias(Sequence.rremove)]]
-__seq_rremove__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
-	int result;
-	DeeObject *item, *key = Dee_None;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_rremove__",
-	                    &item, &start, &end, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? CALL_DEPENDENCY(seq_rremove_with_key, self, item, start, end, key)
-	         : CALL_DEPENDENCY(seq_rremove, self, item, start, end);
+__seq_rremove__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?Dbool {
+	int result = !DeeNone_Check(key)
+	             ? CALL_DEPENDENCY(seq_rremove_with_key, self, item, start, end, key)
+	             : CALL_DEPENDENCY(seq_rremove, self, item, start, end);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);

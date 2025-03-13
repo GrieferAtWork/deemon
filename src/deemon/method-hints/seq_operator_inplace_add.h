@@ -22,9 +22,6 @@
 /* deemon.Sequence.operator +=()                                        */
 /************************************************************************/
 __seq_inplace_add__(rhs:?S?O)->?. {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_inplace_add__", &rhs))
-		goto err;
 	Dee_Incref(self);
 	if unlikely(CALL_DEPENDENCY(seq_operator_inplace_add, (DeeObject **)&self, rhs))
 		goto err_self;

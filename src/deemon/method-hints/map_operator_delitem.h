@@ -22,14 +22,9 @@
 /* deemon.Mapping.operator del[]()                                      */
 /************************************************************************/
 __map_delitem__(key)->?O {
-	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:__map_delitem__", &key))
-		goto err;
 	if unlikely(CALL_DEPENDENCY(map_operator_delitem, self, key))
 		goto err;
 	return_none;
-err:
-	return NULL;
 }
 
 [[operator(Mapping: tp_seq->tp_delitem)]]

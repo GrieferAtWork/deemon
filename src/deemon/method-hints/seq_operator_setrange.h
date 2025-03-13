@@ -23,10 +23,6 @@
 /************************************************************************/
 [[kw]]
 __seq_setrange__(start:?X2?Dint?N,end:?X2?Dint?N,items:?X2?DSequence?S?O) {
-	DeeObject *start, *end, *items;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_values,
-	                    "ooo:__seq_setrange__", &start, &end, &items))
-		goto err;
 	if (CALL_DEPENDENCY(seq_operator_setrange, self, start, end, items))
 		goto err;
 	return_none;

@@ -22,11 +22,7 @@
 /* deemon.Set.operator iter()                                           */
 /************************************************************************/
 __set_iter__()->?DIterator {
-	if (DeeArg_Unpack(argc, argv, ":__set_iter__"))
-		goto err;
 	return CALL_DEPENDENCY(set_operator_iter, self);
-err:
-	return NULL;
 }
 
 

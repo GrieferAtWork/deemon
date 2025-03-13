@@ -23,18 +23,10 @@
 /************************************************************************/
 
 [[kw, alias(Sequence.locate)]]
-__seq_locate__(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef] {
-	DeeObject *match, *def = Dee_None;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__match_start_end_def,
-	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_locate__",
-	                    &match, &start, &end, &def))
-		goto err;
+__seq_locate__(match, size_t start = 0, size_t end = (size_t)-1, def=!N)->?X2?O?Q!Adef] {
 	if (start == 0 && end == (size_t)-1)
 		return CALL_DEPENDENCY(seq_locate, self, match, def);
 	return CALL_DEPENDENCY(seq_locate_with_range, self, match, start, end, def);
-err:
-	return NULL;
 }
 
 

@@ -22,15 +22,10 @@
 /* deemon.Set.insertall()                                               */
 /************************************************************************/
 [[alias(Set.insertall)]]
-__set_insertall__(keys:?X3?DSet?DSequence?S?O)->?Dbool {
-	int result;
-	DeeObject *keys;
-	if (DeeArg_Unpack(argc, argv, "o:__set_insertall__", &keys))
+__set_insertall__(keys:?X3?DSet?DSequence?S?O) {
+	if unlikely(CALL_DEPENDENCY(set_insertall, self, keys))
 		goto err;
-	result = CALL_DEPENDENCY(set_insertall, self, keys);
-	if unlikely(result < 0)
-		goto err;
-	return_bool(result);
+	return_none;
 err:
 	return NULL;
 }

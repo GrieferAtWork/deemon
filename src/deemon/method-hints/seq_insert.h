@@ -22,13 +22,7 @@
 /* deemon.Sequence.insert()                                             */
 /************************************************************************/
 [[kw, alias(Sequence.insert)]]
-__seq_insert__(index:?Dint,item) {
-	size_t index;
-	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
-	                    UNPuSIZ "o:__seq_insert__",
-	                    &index, &item))
-		goto err;
+__seq_insert__(size_t index, item) {
 	if unlikely(CALL_DEPENDENCY(seq_insert, self, index, item))
 		goto err;
 	return_none;

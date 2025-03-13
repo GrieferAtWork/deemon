@@ -88,16 +88,19 @@ function makeRelPath(path: string): string {
 			posix.headof(__FILE__), path)));
 }
 
+import SharedLock from threading;
+local stdoutLock = SharedLock();
 function withStdout(newStdout: File, cb: Callable): Object {
-	local oldStdout = File.stdout;
-	File.stdout = newStdout;
-	try {
-		return cb();
-	} finally {
-		File.stdout = oldStdout;
+	with (stdoutLock) {
+		local oldStdout = File.stdout;
+		File.stdout = newStdout;
+		try {
+			return cb();
+		} finally {
+			File.stdout = oldStdout;
+		}
 	}
 }
-
 
 function captureStdout(cb: Callable): string {
 	File.Writer fp;

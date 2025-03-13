@@ -22,9 +22,6 @@
 /* deemon.Set.operator &= ()                                            */
 /************************************************************************/
 __set_inplace_and__(rhs:?X3?DSet?DSequence?S?O)->?. {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__set_inplace_and__", &rhs))
-		goto err;
 	Dee_Incref(self);
 	if unlikely(CALL_DEPENDENCY(set_operator_inplace_and, (DeeObject **)&self, rhs))
 		goto err_self;

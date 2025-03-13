@@ -23,9 +23,6 @@
 /************************************************************************/
 [[alias(Sequence.pushfront)]]
 __seq_pushfront__(item) {
-	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_pushfront__", &item))
-		goto err;
 	if unlikely(CALL_DEPENDENCY(seq_pushfront, self, item))
 		goto err;
 	return_none;

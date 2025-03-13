@@ -22,14 +22,8 @@
 /* deemon.Sequence.pop()                                          */
 /************************************************************************/
 [[kw, alias(Sequence.pop)]]
-__seq_pop__(index=!-1)->?O {
-	Dee_ssize_t index = -1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index,
-	                    "|" UNPdSIZ ":__seq_pop__", &index))
-		goto err;
+__seq_pop__(Dee_ssize_t index = -1)->?O {
 	return CALL_DEPENDENCY(seq_pop, self, index);
-err:
-	return NULL;
 }
 
 

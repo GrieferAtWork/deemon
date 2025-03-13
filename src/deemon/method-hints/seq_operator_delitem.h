@@ -22,9 +22,6 @@
 /* deemon.Sequence.operator del[]()                                     */
 /************************************************************************/
 __seq_delitem__(index:?Dint) {
-	DeeObject *index;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_delitem__", &index))
-		goto err;
 	if (CALL_DEPENDENCY(seq_operator_delitem, self, index))
 		goto err;
 	return_none;

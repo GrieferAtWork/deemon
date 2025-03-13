@@ -20,16 +20,10 @@
 
 
 [[kw, alias(Sequence.bfind)]]
-__seq_bfind__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N {
-	DeeObject *item, *key = Dee_None;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_bfind__",
-	                    &item, &start, &end, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? CALL_DEPENDENCY(seq_bfind_with_key, self, item, start, end, key)
-	         : CALL_DEPENDENCY(seq_bfind, self, item, start, end);
+__seq_bfind__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?X2?Dint?N {
+	size_t result = !DeeNone_Check(key)
+	                ? CALL_DEPENDENCY(seq_bfind_with_key, self, item, start, end, key)
+	                : CALL_DEPENDENCY(seq_bfind, self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -41,16 +35,10 @@ err:
 
 
 [[kw, alias(Sequence.bposition)]]
-__seq_bposition__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint {
-	DeeObject *item, *key = Dee_None;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:bposition",
-	                    &item, &start, &end, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? CALL_DEPENDENCY(seq_bposition_with_key, self, item, start, end, key)
-	         : CALL_DEPENDENCY(seq_bposition, self, item, start, end);
+__seq_bposition__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?Dint {
+	size_t result = !DeeNone_Check(key)
+	                ? CALL_DEPENDENCY(seq_bposition_with_key, self, item, start, end, key)
+	                : CALL_DEPENDENCY(seq_bposition, self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -59,13 +47,8 @@ err:
 }
 
 [[kw, alias(Sequence.brange)]]
-__seq_brange__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint {
-	DeeObject *item, *key = Dee_None;
-	size_t start = 0, end = (size_t)-1, result_range[2];
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:brange",
-	                    &item, &start, &end, &key))
-		goto err;
+__seq_brange__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?T2?Dint?Dint {
+	size_t result_range[2];
 	if (!DeeNone_Check(key)
 	    ? CALL_DEPENDENCY(seq_brange_with_key, self, item, start, end, key, result_range)
 	    : CALL_DEPENDENCY(seq_brange, self, item, start, end, result_range))

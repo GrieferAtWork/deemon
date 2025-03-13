@@ -22,9 +22,6 @@
 /* deemon.Sequence.operator := ()                                       */
 /************************************************************************/
 __seq_assign__(items:?X2?DSequence?S?O) {
-	DeeObject *items;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_assign__", &items))
-		goto err;
 	if unlikely(CALL_DEPENDENCY(seq_operator_assign, self, items))
 		goto err;
 	return_none;

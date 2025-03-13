@@ -23,11 +23,7 @@
 /************************************************************************/
 [[alias(Mapping.popitem)]]
 __map_popitem__()->?X2?T2?O?O?N {
-	if (DeeArg_Unpack(argc, argv, ":__map_popitem__"))
-		goto err;
 	return CALL_DEPENDENCY(map_popitem, self);
-err:
-	return NULL;
 }
 
 

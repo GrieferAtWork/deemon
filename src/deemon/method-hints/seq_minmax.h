@@ -44,14 +44,8 @@ g('/' '************************************************************************'
 /' '* deemon.Sequence.{m}()                                                *' '/
 /' '************************************************************************' '/
 [[kw, alias(Sequence.{m})]]
-__seq_{m}__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?O {
+__seq_{m}__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?O {
 	DREF DeeObject *result;
-	DeeObject *key = Dee_None;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:__seq_{m}__",
-	                    &start, &end, &key))
-		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
 		         ? CALL_DEPENDENCY(seq_{m}_with_key, self, key)
@@ -315,14 +309,8 @@ seq_{m}_with_range_and_key = {
 /* deemon.Sequence.min()                                                */
 /************************************************************************/
 [[kw, alias(Sequence.min)]]
-__seq_min__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?O {
+__seq_min__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?O {
 	DREF DeeObject *result;
-	DeeObject *key = Dee_None;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:__seq_min__",
-	                    &start, &end, &key))
-		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
 		         ? CALL_DEPENDENCY(seq_min_with_key, self, key)
@@ -590,14 +578,8 @@ seq_min_with_range_and_key = {
 /* deemon.Sequence.max()                                                */
 /************************************************************************/
 [[kw, alias(Sequence.max)]]
-__seq_max__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?O {
+__seq_max__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?O {
 	DREF DeeObject *result;
-	DeeObject *key = Dee_None;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:__seq_max__",
-	                    &start, &end, &key))
-		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
 		         ? CALL_DEPENDENCY(seq_max_with_key, self, key)

@@ -1095,7 +1095,7 @@ final class MethodHint: WeakRefAble {
 		call2native.printDecl(f"DeeMA_{name}",
 				lineFeedBeforeName: true,
 				bodyHint: body);
-		print(body);
+		print(" ", body);
 		print;
 	}
 }
@@ -2817,6 +2817,19 @@ function printGetOperatorOfTnoInit() {
 }
 
 
+function captureStdout(cb: Callable): string {
+	local newStdout = File.Writer();
+	local oldStdout = File.stdout;
+	File.stdout = newStdout;
+	try {
+		cb();
+	} finally {
+		File.stdout = oldStdout;
+	}
+	return newStdout.string;
+}
+
+
 final class _SpecParserAttrib {
 	this = default;
 	public member kw: bool = false;
@@ -3718,33 +3731,75 @@ done:
 					continue;
 				}
 				if (tok in ["(", "->"] && returnType.issymbol()) {
+					import CMethod, parseCMethodSpecEx from rt.gen.unpack;
 					local docStart = tokStart;
-					local docEnd;
-					if (tok == "(") {
-						docEnd = data.findmatch("(", ")", docStart + 1);
-						if (docEnd < 0)
-							err("Missing closing ')' for doc string");
-						docEnd = data.findany({"{", ";"}, docEnd);
-					} else {
-						docEnd = data.findany({"{", ";"}, docStart);
+					local cMethod, docEnd;
+					try {
+						cMethod, docEnd = parseCMethodSpecEx(data, returnTypeStart, #data)...;
+					} catch (...) {
+						local l, c = lcAt(docStart)...;
+						print(filename, "(", l, ", ", c, ") : While parsing doc string...");
+						throw;
 					}
-					if (docEnd < 0)
-						err("Missing '{' or ';' after doc string");
+					while (docEnd < #data && data.isspace(docEnd))
+						++docEnd;
 					local methodHint: MethodHint = MethodHint(
-						name: returnType,
-						attr: attrib.attr ?? returnType,
-						doc: data[docStart:docEnd].strip().lsstrip("()").rsstrip("?O"),
-						aliases: attrib.aliases,
-						kw: attrib.kw,
-						getset: attrib.getset,
-						declNameAliases: attrib.declNameAliases,
+							name: returnType,
+							attr: attrib.attr ?? returnType,
+							doc: cMethod.docstring,
+							aliases: attrib.aliases,
+							kw: attrib.kw,
+							getset: attrib.getset,
+							declNameAliases: attrib.declNameAliases,
 					);
-					if (data[docEnd] == "{") {
+					if (data.startswith("{", docEnd)) {
 						local nativeBodyStart = docEnd;
 						local nativeBodyEnd = data.findmatch("{", "}", nativeBodyStart + 1);
 						if (nativeBodyEnd < 0)
 							err(f"Missing '\}' for body of call2native-impl of {repr methodHint.name}");
 						++nativeBodyEnd;
+						local nativeBody: string = data[nativeBodyStart:nativeBodyEnd];
+						local nativeBodyLine = lineAt(nativeBodyStart);
+						if (nativeBody.startswith("{\n") && nativeBody.endswith("\n}")) {
+							/* Automatically embedd argument unpacking code */
+							local unpackBody = captureStdout(() -> {
+								if (attrib.kw) {
+									cMethod.print_DeeArg_UnpackKw(
+											argc: "argc",
+											argv: "argv",
+											kw: "kw",
+											args: "args",
+											err: "err",
+											defineKwList: false);
+								} else {
+									cMethod.print_DeeArg_Unpack(
+											argc: "argc",
+											argv: "argv",
+											args: "args",
+											err: "err");
+								}
+							});
+							nativeBodyLine -= (1 + unpackBody.count("\n"));
+							local bodyWriter = File.Writer();
+							for (local param: cMethod.params) {
+								local argName = param.name;
+								local outName = param.cOutNameEx("args");
+								if (argName != outName) {
+									/* TODO: Generating regex patterns like this is inefficient! */
+									nativeBody = nativeBody.rereplace(
+										r"\b" + argName + r"\b", outName);
+								}
+							}
+							
+							bodyWriter << "{\n" << unpackBody << nativeBody[:-2];
+							if (!nativeBody.recontains(r"\berr:"))
+								bodyWriter << "\nerr:\n\treturn NULL;";
+							bodyWriter << "\n}}";
+							nativeBody = bodyWriter.string;
+						} else if (nativeBody.startswith("{{\n") && nativeBody.endswith("\n}}")) {
+							/* Write the impl with double braces to suppress automatic unpacking */
+							nativeBody = nativeBody[1:-1];
+						}
 						local call2native = NativeMethod(
 							wunused: attrib.wunused,
 							returnType: "DREF DeeObject *",
@@ -3755,9 +3810,9 @@ done:
 								NativeMethodParam("DeeObject *const *", "argv"),
 							],
 							callAttrImpl: NativeMethodImpl(
-									data[nativeBodyStart:nativeBodyEnd],
+									nativeBody,
 									ppLineFile: filenameForPPLine,
-									ppLineLine: lineAt(nativeBodyStart)),
+									ppLineLine: nativeBodyLine),
 							_methodHint: WeakRef(methodHint));
 						if (attrib.kw)
 							call2native.params.append(NativeMethodParam("DeeObject *", "kw"));

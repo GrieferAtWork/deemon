@@ -32,12 +32,7 @@ for (local lo, ge, alias: {
 	if (alias !is none)
 		print('[[alias(Set.', alias, ')]]');
 	print('__set_', lo, '__(rhs:?X3?DSet?DSequence?S?O)->?Dbool {');
-	print('	DeeObject *rhs;');
-	print('	if (DeeArg_Unpack(argc, argv, "o:__set_', lo, '__", &rhs))');
-	print('		goto err;');
 	print('	return CALL_DEPENDENCY(set_operator_', lo, ', self, rhs);');
-	print('err:');
-	print('	return NULL;');
 	print('}');
 	print;
 	print('[[operator(Set: tp_cmp->tp_', lo, ')]]');
@@ -120,12 +115,7 @@ if (lo in ["lo", "ge"]) {
 }
 ]]]*/
 __set_lo__(rhs:?X3?DSet?DSequence?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__set_lo__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(set_operator_lo, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Set: tp_cmp->tp_lo)]]
@@ -184,12 +174,7 @@ set_operator_lo = {
 
 [[alias(Set.issubset)]]
 __set_le__(rhs:?X3?DSet?DSequence?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__set_le__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(set_operator_le, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Set: tp_cmp->tp_le)]]
@@ -234,12 +219,7 @@ set_operator_le = {
 
 
 __set_gr__(rhs:?X3?DSet?DSequence?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__set_gr__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(set_operator_gr, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Set: tp_cmp->tp_gr)]]
@@ -285,12 +265,7 @@ set_operator_gr = {
 
 [[alias(Set.issuperset)]]
 __set_ge__(rhs:?X3?DSet?DSequence?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__set_ge__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(set_operator_ge, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Set: tp_cmp->tp_ge)]]

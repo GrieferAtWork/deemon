@@ -23,11 +23,7 @@
 /************************************************************************/
 [[alias(Set.insert)]]
 __set_insert__(key)->?Dbool {
-	int result;
-	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:__set_insert__", &key))
-		goto err;
-	result = CALL_DEPENDENCY(set_insert, self, key);
+	int result = CALL_DEPENDENCY(set_insert, self, key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);

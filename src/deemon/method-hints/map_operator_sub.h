@@ -23,12 +23,7 @@
 /************************************************************************/
 [[alias(Mapping.difference)]]
 __map_sub__(keys:?X2?DSet?S?O)->?DMapping {
-	DeeObject *keys;
-	if (DeeArg_Unpack(argc, argv, "o:__map_sub__", &keys))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_sub, self, keys);
-err:
-	return NULL;
 }
 
 

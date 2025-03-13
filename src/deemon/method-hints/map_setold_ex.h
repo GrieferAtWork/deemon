@@ -24,12 +24,8 @@
 [[alias(Mapping.setold_ex)]]
 __map_setold_ex__(key,value)->?T2?Dbool?X2?O?N {
 	PRIVATE DEFINE_TUPLE(setold_failed_result, 2, { Dee_False, Dee_None });
-	DeeObject *key, *value;
-	DREF DeeObject *old_value;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, "oo:__map_setold_ex__", &key, &value))
-		goto err;
-	old_value = CALL_DEPENDENCY(map_setold_ex, self, key, value);
+	DREF DeeObject *old_value = CALL_DEPENDENCY(map_setold_ex, self, key, value);
 	if unlikely(!old_value)
 		goto err;
 	if (old_value == ITER_DONE)

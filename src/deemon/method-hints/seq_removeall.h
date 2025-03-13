@@ -22,17 +22,10 @@
 /* deemon.Sequence.removeall()                                          */
 /************************************************************************/
 [[kw, alias(Sequence.removeall)]]
-__seq_removeall__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint {
-	size_t result;
-	DeeObject *item, *key = Dee_None;
-	size_t start = 0, end = (size_t)-1, max = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_max_key,
-	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ "o:removeall",
-	                    &item, &start, &end, &max, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? CALL_DEPENDENCY(seq_removeall_with_key, self, item, start, end, max, key)
-	         : CALL_DEPENDENCY(seq_removeall, self, item, start, end, max);
+__seq_removeall__(item, size_t start = 0, size_t end = (size_t)-1, size_t max = (size_t)-1, key:?DCallable=!N)->?Dint {
+	size_t result = !DeeNone_Check(key)
+	                ? CALL_DEPENDENCY(seq_removeall_with_key, self, item, start, end, max, key)
+	                : CALL_DEPENDENCY(seq_removeall, self, item, start, end, max);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);

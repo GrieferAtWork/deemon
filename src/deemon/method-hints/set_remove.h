@@ -23,11 +23,7 @@
 /************************************************************************/
 [[alias(Set.remove)]]
 __set_remove__(key)->?Dbool {
-	int result;
-	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:__set_remove__", &key))
-		goto err;
-	result = CALL_DEPENDENCY(set_remove, self, key);
+	int result = CALL_DEPENDENCY(set_remove, self, key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);

@@ -23,13 +23,8 @@
 /************************************************************************/
 [[alias(Mapping.pop)]]
 __map_pop__(key,def?)->?O {
-	DeeObject *key, *def = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:__map_pop__", &key, &def))
-		goto err;
 	return def ? CALL_DEPENDENCY(map_pop_with_default, self, key, def)
 	           : CALL_DEPENDENCY(map_pop, self, key);
-err:
-	return NULL;
 }
 
 

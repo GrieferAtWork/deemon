@@ -23,11 +23,7 @@
 /************************************************************************/
 [[alias(Mapping.remove)]]
 __map_remove__(key)->?Dbool {
-	int result;
-	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:__map_remove__", &key))
-		goto err;
-	result = CALL_DEPENDENCY(map_remove, self, key);
+	int result = CALL_DEPENDENCY(map_remove, self, key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);

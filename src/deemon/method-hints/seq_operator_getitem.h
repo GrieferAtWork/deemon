@@ -22,12 +22,7 @@
 /* deemon.Sequence.operator []()                                        */
 /************************************************************************/
 __seq_getitem__(index:?Dint)->?O {
-	DeeObject *index;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_getitem__", &index))
-		goto err;
 	return CALL_DEPENDENCY(seq_operator_getitem, self, index);
-err:
-	return NULL;
 }
 
 

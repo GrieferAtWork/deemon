@@ -22,12 +22,7 @@
 /* deemon.Mapping.operator []()                                        */
 /************************************************************************/
 __map_getitem__(key)->?O {
-	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:__map_getitem__", &key))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_getitem, self, key);
-err:
-	return NULL;
 }
 
 %[define(DEFINE_default_map_getitem_with_enumerate_cb =

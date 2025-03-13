@@ -23,12 +23,7 @@
 /************************************************************************/
 [[alias(Set.unify)]]
 __set_unify__(key)->?O {
-	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:__set_unify__", &key))
-		goto err;
 	return CALL_DEPENDENCY(set_unify, self, key);
-err:
-	return NULL;
 }
 
 %[define(DEFINE_set_unify_foreach_cb =

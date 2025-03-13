@@ -22,9 +22,6 @@
 /* deemon.Mapping.operator []=()                                        */
 /************************************************************************/
 __map_setitem__(key,value)->?O {
-	DeeObject *key, *value;
-	if (DeeArg_Unpack(argc, argv, "oo:__map_setitem__", &key, &value))
-		goto err;
 	if unlikely(CALL_DEPENDENCY(map_operator_setitem, self, key, value))
 		goto err;
 	return_none;

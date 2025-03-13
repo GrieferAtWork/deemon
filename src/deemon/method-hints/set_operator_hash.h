@@ -22,13 +22,8 @@
 /* deemon.Set.operator hash()                                           */
 /************************************************************************/
 __set_hash__()->?Dint {
-	Dee_hash_t result;
-	if (DeeArg_Unpack(argc, argv, ":__set_hash__"))
-		goto err;
-	result = CALL_DEPENDENCY(set_operator_hash, self);
+	Dee_hash_t result = CALL_DEPENDENCY(set_operator_hash, self);
 	return DeeInt_NewHash(result);
-err:
-	return NULL;
 }
 
 %[define(DEFINE_default_set_hash_with_foreach_cb =

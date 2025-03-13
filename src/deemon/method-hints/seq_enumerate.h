@@ -21,13 +21,10 @@
 /************************************************************************/
 /* deemon.Sequence.__seq_enumerate__()                                  */
 /************************************************************************/
-__seq_enumerate__(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N {
+__seq_enumerate__(cb:?DCallable, size_t start = 0, size_t end = (size_t)-1)->?X2?O?N {
 	Dee_ssize_t foreach_status;
 	struct seq_enumerate_data data;
-	size_t start = 0;
-	size_t end = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":__seq_enumerate__", &data.sed_cb, &start, &end))
-		goto err;
+	data.sed_cb = cb;
 	if (start == 0 && end == (size_t)-1) {
 		foreach_status = CALL_DEPENDENCY(seq_enumerate, self, &seq_enumerate_cb, &data);
 	} else {

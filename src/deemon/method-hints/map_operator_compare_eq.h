@@ -22,11 +22,7 @@
 /* deemon.Mapping.__map_compare_eq__()                                      */
 /************************************************************************/
 __map_compare_eq__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?X2?Dbool?Dint {
-	int result;
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__map_compare_eq__", &rhs))
-		goto err;
-	result = CALL_DEPENDENCY(map_operator_compare_eq, self, rhs);
+	int result = CALL_DEPENDENCY(map_operator_compare_eq, self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
@@ -164,12 +160,7 @@ map_operator_trycompare_eq = {
 /* deemon.Mapping.operator == ()                                        */
 /************************************************************************/
 __map_eq__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__map_eq__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_eq, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Mapping: tp_cmp->tp_eq)]]
@@ -200,12 +191,7 @@ map_operator_eq = {
 /* deemon.Mapping.operator != ()                                        */
 /************************************************************************/
 __map_ne__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__map_ne__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_ne, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Mapping: tp_cmp->tp_ne)]]

@@ -22,13 +22,7 @@
 /* deemon.Sequence.insertall()                                          */
 /************************************************************************/
 [[kw, alias(Sequence.insertall)]]
-__seq_insertall__(index:?Dint,items:?S?O) {
-	size_t index;
-	DeeObject *items;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_items,
-	                    UNPuSIZ "o:__seq_insertall__",
-	                    &index, &items))
-		goto err;
+__seq_insertall__(size_t index, items:?S?O) {
 	if unlikely(CALL_DEPENDENCY(seq_insertall, self, index, items))
 		goto err;
 	return_none;

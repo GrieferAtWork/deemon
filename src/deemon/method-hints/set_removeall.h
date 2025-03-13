@@ -23,9 +23,6 @@
 /************************************************************************/
 [[alias(Set.removeall)]]
 __set_removeall__(keys:?X3?DSet?DSequence?S?O) {
-	DeeObject *keys;
-	if (DeeArg_Unpack(argc, argv, "o:__set_removeall__", &keys))
-		goto err;
 	if unlikely(CALL_DEPENDENCY(set_removeall, self, keys))
 		goto err;
 	return_none;

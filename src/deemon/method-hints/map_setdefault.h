@@ -23,9 +23,6 @@
 /************************************************************************/
 [[alias(Mapping.setdefault)]]
 __map_setdefault__(key,value)->?O {
-	DeeObject *key, *value;
-	if (DeeArg_Unpack(argc, argv, "oo:__map_setdefault__", &key, &value))
-		goto err;
 	return CALL_DEPENDENCY(map_setdefault, self, key, value);
 err:
 	return NULL;

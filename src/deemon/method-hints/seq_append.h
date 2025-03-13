@@ -24,9 +24,6 @@
 [[alias(Sequence.append)]]
 [[alias(Sequence.pushback)]]
 __seq_append__(item) {
-	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_append__", &item))
-		goto err;
 	if unlikely(CALL_DEPENDENCY(seq_append, self, item))
 		goto err;
 	return_none;

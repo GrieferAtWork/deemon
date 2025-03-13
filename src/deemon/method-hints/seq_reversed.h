@@ -22,15 +22,8 @@
 /* deemon.Sequence.reversed()                                            */
 /************************************************************************/
 [[kw, alias(Sequence.reversed)]]
-__seq_reversed__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?DSequence {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPuSIZ UNPuSIZ ":reversed",
-	                    &start, &end))
-		goto err;
+__seq_reversed__(size_t start = 0, size_t end = (size_t)-1)->?DSequence {
 	return CALL_DEPENDENCY(seq_reversed, self, start, end);
-err:
-	return NULL;
 }
 
 %[define(DEFINE_DeeSeq_GetForeachSubRangeAsTuple =

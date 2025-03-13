@@ -22,12 +22,7 @@
 /* deemon.Sequence.reverse()                                            */
 /************************************************************************/
 [[kw, alias(Sequence.reverse)]]
-__seq_reverse__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPuSIZ UNPuSIZ ":reverse",
-	                    &start, &end))
-		goto err;
+__seq_reverse__(size_t start = 0, size_t end = (size_t)-1) {
 	if unlikely(CALL_DEPENDENCY(seq_reverse, self, start, end))
 		goto err;
 	return_none;

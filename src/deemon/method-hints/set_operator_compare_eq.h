@@ -22,11 +22,7 @@
 /* deemon.Set.__set_compare_eq__()                                      */
 /************************************************************************/
 __set_compare_eq__(rhs:?X2?DSet?S?O)->?X2?Dbool?Dint {
-	int result;
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__set_compare_eq__", &rhs))
-		goto err;
-	result = CALL_DEPENDENCY(set_operator_compare_eq, self, rhs);
+	int result = CALL_DEPENDENCY(set_operator_compare_eq, self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
@@ -166,12 +162,7 @@ set_operator_trycompare_eq = {
 /* deemon.Set.operator == ()                                            */
 /************************************************************************/
 __set_eq__(rhs:?X2?DSet?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__set_eq__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(set_operator_eq, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Set: tp_cmp->tp_eq)]]
@@ -202,12 +193,7 @@ set_operator_eq = {
 /* deemon.Set.operator != ()                                            */
 /************************************************************************/
 __set_ne__(rhs:?X2?DSet?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__set_ne__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(set_operator_ne, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Set: tp_cmp->tp_ne)]]

@@ -22,14 +22,8 @@
 /* deemon.Sequence.all()                                                */
 /************************************************************************/
 [[kw, alias(Sequence.all)]]
-__seq_all__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
+__seq_all__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?Dbool {
 	int result;
-	DeeObject *key = Dee_None;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:__seq_all__",
-	                    &start, &end, &key))
-		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
 		         ? CALL_DEPENDENCY(seq_all_with_key, self, key)

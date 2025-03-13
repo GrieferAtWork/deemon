@@ -22,7 +22,7 @@
 /* deemon.Sequence.unpack()                                             */
 /************************************************************************/
 [[alias(Sequence.unpack)]]
-__seq_unpack__(min:?Dint,max?:?Dint)->?DTuple {
+__seq_unpack__(size_t min, size_t max?)->?DTuple {{
 	DREF DeeTupleObject *result;
 	size_t min_count, max_count;
 	if (argc == 1) {
@@ -69,7 +69,7 @@ err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
 	return NULL;
-}
+}}
 
 
 %[define(DEFINE_default_unpack_with_foreach_cb =

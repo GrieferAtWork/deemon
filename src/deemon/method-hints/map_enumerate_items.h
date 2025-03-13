@@ -25,15 +25,10 @@
 /* Operators for the purpose of constructing `DefaultEnumeration_With*' objects.
  * Together with `__map_enumerate__', this API is used to implement `Mapping.enumerate()' */
 
-__map_enumerate_items__(start?,end?)->?S?T2?O?O {
-	DeeObject *start, *end = NULL;
-	if (DeeArg_Unpack(argc, argv, "|oo:__map_enumerate_items__", &start, &end))
-		goto err;
+__map_enumerate_items__(start?=?,end?)->?S?T2?O?O {
 	if (end)
 		return DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, start, end);
 	return DeeObject_InvokeMethodHint(map_makeenumeration, self);
-err:
-	return NULL;
 }
 
 [[wunused]] DREF DeeObject *

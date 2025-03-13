@@ -23,12 +23,7 @@
 /************************************************************************/
 [[alias(Set.union)]]
 __set_add__(rhs:?X3?DSet?DSequence?S?O)->?DSet {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__set_add__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(set_operator_add, self, rhs);
-err:
-	return NULL;
 }
 
 

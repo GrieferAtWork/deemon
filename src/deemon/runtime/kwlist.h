@@ -88,7 +88,7 @@ local kw_lists = {
 	{"match", "start", "end", "def"},
 	{"should", "start", "end", "max"},
 	{"size", "filler"},
-	{"start", "end", "values"},
+	{"start", "end", "items"},
 	{"start", "end", "filler"},
 	{"start", "end"},
 	{"start", "end", "key"},
@@ -240,8 +240,8 @@ DECLARE_KWLIST(kwlist__signed, { KEX("signed", 0x17a15883, 0x58a245b6f802625f), 
 DECLARE_KWLIST(kwlist__size_filler, { KEX("size", 0xed8917fa, 0x3fe8023bdf261c0f), KEX("filler", 0xb990988f, 0x6067d27b1e35cd17), KEND });
 DECLARE_KWLIST(kwlist__start_end, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEND });
 DECLARE_KWLIST(kwlist__start_end_filler, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("filler", 0xb990988f, 0x6067d27b1e35cd17), KEND });
+DECLARE_KWLIST(kwlist__start_end_items, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("items", 0x8858badc, 0xa52ef5f42baafa42), KEND });
 DECLARE_KWLIST(kwlist__start_end_key, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("key", 0xe29c6a44, 0x612dd31212e90587), KEND });
-DECLARE_KWLIST(kwlist__start_end_values, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("values", 0x33b551c8, 0xf6e3e991b86d1574), KEND });
 DECLARE_KWLIST(kwlist__sym_scope_loc, { KEX("sym", 0x17fd993c, 0x1c0e6e19c328844b), KEX("scope", 0x8b65b2f8, 0x52824a24d6447e5), KEX("loc", 0x4f1e6896, 0xc8a6c6e417ce00f9), KEND });
 DECLARE_KWLIST(kwlist__template, { KEX("template", 0xa21c009f, 0xb466762d86160f07), KEND });
 DECLARE_KWLIST(kwlist__text_module_constants_except_nlocal_nstack_nref_nstatic_argc_keywords_defaults_flags_ddi, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("module", 0xae3684a4, 0xbb78a82535e5801e), KEX("constants", 0x8d73036e, 0xba127eb7623ae369), KEX("except", 0x8aae072b, 0xac70487e4861a6f3), KEX("nlocal", 0xae97b3ed, 0x23bb6e6e6190e9d7), KEX("nstack", 0xb92ec26e, 0x80220c290516f55), KEX("nref", 0x7951b608, 0xb8d28d6292d2f6cb), KEX("nstatic", 0xf17d253b, 0x6229886d9780e339), KEX("argc", 0xe5c6c120, 0xd96a642eb89eed13), KEX("keywords", 0xe751d20, 0x68e3cfd5fbfbc77a), KEX("defaults", 0xd48dea84, 0x2f0dce9444829201), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("ddi", 0xe141111d, 0x958d321a1dacb4ed), KEND });

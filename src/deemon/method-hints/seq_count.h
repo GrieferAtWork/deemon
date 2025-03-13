@@ -22,14 +22,8 @@
 /* deemon.Sequence.count()                                                */
 /************************************************************************/
 [[kw, alias(Sequence.count)]]
-__seq_count__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint {
+__seq_count__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?Dint {
 	size_t result;
-	DeeObject *item, *key = Dee_None;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_count__",
-	                    &item, &start, &end, &key))
-		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		if (DeeNone_Check(key)) {
 			result = CALL_DEPENDENCY(seq_count, self, item);

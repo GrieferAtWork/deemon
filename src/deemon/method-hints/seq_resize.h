@@ -22,12 +22,7 @@
 /* deemon.Sequence.resize()                                             */
 /************************************************************************/
 [[kw, alias(Sequence.resize)]]
-__seq_resize__(size:?Dint,filler=!N) {
-	size_t size;
-	DeeObject *filler = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__size_filler,
-	                    UNPuSIZ "|o:resize", &size, &filler))
-		goto err;
+__seq_resize__(size_t size, filler=!N) {
 	if unlikely(CALL_DEPENDENCY(seq_resize, self, size, filler))
 		goto err;
 	return_none;

@@ -1167,7 +1167,7 @@ err:
 PRIVATE struct type_method tpconst writer_methods[] = {
 	TYPE_METHOD_F(STR_get, &writer_get, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
-	              "Synchronize and retrieve all data that has already been written"),
+	              "Deprecated alias for reading from ?#string"),
 	TYPE_METHOD_F("pack", &writer_get, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "Deprecated alias for reading from ?#string"),

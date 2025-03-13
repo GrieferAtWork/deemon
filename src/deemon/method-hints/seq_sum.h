@@ -22,13 +22,8 @@
 /* deemon.Sequence.sum()                                                */
 /************************************************************************/
 [[kw, alias(Sequence.sum)]]
-__seq_sum__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?O {
+__seq_sum__(size_t start = 0, size_t end = (size_t)-1)->?O {
 	DREF DeeObject *result;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPuSIZ UNPuSIZ ":__seq_sum__",
-	                    &start, &end))
-		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = CALL_DEPENDENCY(seq_sum, self);
 	} else {

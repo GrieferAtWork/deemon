@@ -22,12 +22,7 @@
 /* deemon.Sequence.operator * ()                                        */
 /************************************************************************/
 __seq_mul__(repeat:?Dint)->?. {
-	DeeObject *repeat;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_mul__", &repeat))
-		goto err;
 	return CALL_DEPENDENCY(seq_operator_mul, self, repeat);
-err:
-	return NULL;
 }
 
 [[operator(Sequence: tp_math->tp_mul)]]

@@ -22,11 +22,7 @@
 /* deemon.Mapping.operator size()                                       */
 /************************************************************************/
 __map_size__()->?Dint {
-	if (DeeArg_Unpack(argc, argv, ":__map_size__"))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_sizeob, self);
-err:
-	return NULL;
 }
 
 [[operator(Mapping: tp_seq->tp_sizeob)]] /* TODO: Allow operator init for Set, but not method hint init */

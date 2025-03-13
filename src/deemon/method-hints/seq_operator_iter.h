@@ -22,11 +22,7 @@
 /* deemon.Sequence.operator iter()                                      */
 /************************************************************************/
 __seq_iter__()->?DIterator {
-	if (DeeArg_Unpack(argc, argv, ":__seq_iter__"))
-		goto err;
 	return CALL_DEPENDENCY(seq_operator_iter, self);
-err:
-	return NULL;
 }
 
 /* The "iter" operator callbacks are special, in that methods hints

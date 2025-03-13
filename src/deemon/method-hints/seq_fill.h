@@ -22,13 +22,7 @@
 /* deemon.Sequence.fill()                                               */
 /************************************************************************/
 [[kw, alias(Sequence.fill)]]
-__seq_fill__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *filler = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_filler,
-	                    "|" UNPuSIZ UNPuSIZ "o:fill",
-	                    &start, &end, &filler))
-		goto err;
+__seq_fill__(size_t start = 0, size_t end = (size_t)-1, filler=!N) {
 	if unlikely(CALL_DEPENDENCY(seq_fill, self, start, end, filler))
 		goto err;
 	return_none;

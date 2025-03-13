@@ -23,12 +23,7 @@
 /************************************************************************/
 [[alias(Mapping.symmetric_difference)]]
 __map_xor__(rhs:?X2?M?O?O?S?T2?O?O)->?DMapping {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__map_xor__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_xor, self, rhs);
-err:
-	return NULL;
 }
 
 

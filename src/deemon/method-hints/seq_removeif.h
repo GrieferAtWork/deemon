@@ -22,15 +22,8 @@
 /* deemon.Sequence.removeif()                                           */
 /************************************************************************/
 [[kw, alias(Sequence.removeif)]]
-__seq_removeif__(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint {
-	size_t result;
-	DeeObject *should;
-	size_t start = 0, end = (size_t)-1, max = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__should_start_end_max,
-	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ ":removeif",
-	                    &should, &start, &end, &max))
-		goto err;
-	result = CALL_DEPENDENCY(seq_removeif, self, should, start, end, max);
+__seq_removeif__(should:?DCallable, size_t start = 0, size_t end = (size_t)-1, size_t max = (size_t)-1)->?Dint {
+	size_t result = CALL_DEPENDENCY(seq_removeif, self, should, start, end, max);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);

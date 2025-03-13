@@ -22,11 +22,7 @@
 /* deemon.Set.operator ~ ()                                             */
 /************************************************************************/
 __set_inv__()->?DSet {
-	if (DeeArg_Unpack(argc, argv, ":__set_inv__"))
-		goto err;
 	return CALL_DEPENDENCY(set_operator_inv, self);
-err:
-	return NULL;
 }
 
 

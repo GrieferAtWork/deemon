@@ -22,10 +22,7 @@
 /* deemon.Sequence.operator bool()                                      */
 /************************************************************************/
 __seq_bool__()->?Dbool {
-	int result;
-	if (DeeArg_Unpack(argc, argv, ":__seq_bool__"))
-		goto err;
-	result = CALL_DEPENDENCY(seq_operator_bool, self);
+	int result = CALL_DEPENDENCY(seq_operator_bool, self);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);

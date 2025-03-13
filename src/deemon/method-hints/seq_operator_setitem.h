@@ -22,9 +22,6 @@
 /* deemon.Sequence.operator []=()                                       */
 /************************************************************************/
 __seq_setitem__(index:?Dint,value) {
-	DeeObject *index, *value;
-	if (DeeArg_Unpack(argc, argv, "oo:__seq_setitem__", &index, &value))
-		goto err;
 	if (CALL_DEPENDENCY(seq_operator_setitem, self, index, value))
 		goto err;
 	return_none;

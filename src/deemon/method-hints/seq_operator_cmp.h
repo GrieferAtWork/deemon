@@ -31,12 +31,7 @@ for (local op, eq, ne, Eq, EQ, isEq: {
 	print('' '/* deemon.Sequence.operator ', op, ' ()                                       *' '/');
 	print('' '/************************************************************************' '/');
 	print('__seq_', eq, '__(rhs:?S?O)->?Dbool {');
-	print('	DeeObject *rhs;');
-	print('	if (DeeArg_Unpack(argc, argv, "o:__seq_', eq, '__", &rhs))');
-	print('		goto err;');
 	print('	return CALL_DEPENDENCY(seq_operator_', eq, ', self, rhs);');
-	print('err:');
-	print('	return NULL;');
 	print('}');
 	print;
 	print("[[operator(Sequence: tp_cmp->tp_", eq, ")]]");
@@ -75,12 +70,7 @@ for (local op, eq, ne, Eq, EQ, isEq: {
 /* deemon.Sequence.operator == ()                                       */
 /************************************************************************/
 __seq_eq__(rhs:?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_eq__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(seq_operator_eq, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Sequence: tp_cmp->tp_eq)]]
@@ -117,12 +107,7 @@ seq_operator_eq = {
 /* deemon.Sequence.operator != ()                                       */
 /************************************************************************/
 __seq_ne__(rhs:?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_ne__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(seq_operator_ne, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Sequence: tp_cmp->tp_ne)]]
@@ -159,12 +144,7 @@ seq_operator_ne = {
 /* deemon.Sequence.operator < ()                                       */
 /************************************************************************/
 __seq_lo__(rhs:?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_lo__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(seq_operator_lo, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Sequence: tp_cmp->tp_lo)]]
@@ -201,12 +181,7 @@ seq_operator_lo = {
 /* deemon.Sequence.operator <= ()                                       */
 /************************************************************************/
 __seq_le__(rhs:?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_le__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(seq_operator_le, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Sequence: tp_cmp->tp_le)]]
@@ -243,12 +218,7 @@ seq_operator_le = {
 /* deemon.Sequence.operator > ()                                       */
 /************************************************************************/
 __seq_gr__(rhs:?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_gr__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(seq_operator_gr, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Sequence: tp_cmp->tp_gr)]]
@@ -285,12 +255,7 @@ seq_operator_gr = {
 /* deemon.Sequence.operator >= ()                                       */
 /************************************************************************/
 __seq_ge__(rhs:?S?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_ge__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(seq_operator_ge, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Sequence: tp_cmp->tp_ge)]]

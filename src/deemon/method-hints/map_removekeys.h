@@ -23,9 +23,6 @@
 /************************************************************************/
 [[alias(Mapping.removekeys)]]
 __map_removekeys__(keys:?X3?DSet?DSequence?S?O) {
-	DeeObject *keys;
-	if (DeeArg_Unpack(argc, argv, "o:__map_removekeys__", &keys))
-		goto err;
 	if unlikely(CALL_DEPENDENCY(map_removekeys, self, keys))
 		goto err;
 	return_none;

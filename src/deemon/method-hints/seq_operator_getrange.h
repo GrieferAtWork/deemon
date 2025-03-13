@@ -22,14 +22,8 @@
 /* deemon.Sequence.operator [:]()                                       */
 /************************************************************************/
 [[kw]]
-__seq_getrange__(start?:?X2?Dint?N,end?:?X2?Dint?N)->?S?O {
-	DeeObject *start = Dee_None, *end = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|oo:__seq_getrange__", &start, &end))
-		goto err;
+__seq_getrange__(start?:?X2?Dint?N=!N,end?:?X2?Dint?N=!N)->?S?O {
 	return CALL_DEPENDENCY(seq_operator_getrange, self, start, end);
-err:
-	return NULL;
 }
 
 

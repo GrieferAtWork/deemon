@@ -22,12 +22,7 @@
 /* deemon.Mapping.operator contains()                                   */
 /************************************************************************/
 __map_contains__(key)->?Dbool {
-	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:__map_contains__", &key))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_contains, self, key);
-err:
-	return NULL;
 }
 
 [[operator(Mapping: tp_seq->tp_contains)]]

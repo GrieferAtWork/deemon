@@ -22,12 +22,7 @@
 /* deemon.Sequence.erase()                                              */
 /************************************************************************/
 [[kw, alias(Sequence.erase)]]
-__seq_erase__(index:?Dint,count=!1) {
-	size_t index, count = 1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_count,
-	                    UNPuSIZ "|" UNPuSIZ ":__seq_erase__",
-	                    &index, &count))
-		goto err;
+__seq_erase__(size_t index, size_t count = 1) {
 	if unlikely(CALL_DEPENDENCY(seq_erase, self, index, count))
 		goto err;
 	return_none;

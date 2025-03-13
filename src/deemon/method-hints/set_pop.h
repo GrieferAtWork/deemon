@@ -23,13 +23,8 @@
 /************************************************************************/
 [[alias(Set.pop)]]
 __set_pop__(def?)->?O {
-	DeeObject *def = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:__set_pop__", &def))
-		goto err;
 	return def ? CALL_DEPENDENCY(set_pop_with_default, self, def)
 	           : CALL_DEPENDENCY(set_pop, self);
-err:
-	return NULL;
 }
 
 

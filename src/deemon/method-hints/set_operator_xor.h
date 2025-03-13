@@ -23,12 +23,7 @@
 /************************************************************************/
 [[alias(Set.symmetric_difference)]]
 __set_xor__(rhs:?X3?DSet?DSequence?S?O)->?DSet {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__set_xor__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(set_operator_xor, self, rhs);
-err:
-	return NULL;
 }
 
 

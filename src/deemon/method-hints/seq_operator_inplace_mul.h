@@ -22,9 +22,6 @@
 /* deemon.Sequence.operator *=()                                        */
 /************************************************************************/
 __seq_inplace_mul__(repeat:?Dint)->?. {
-	DeeObject *repeat;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_inplace_mul__", &repeat))
-		goto err;
 	Dee_Incref(self);
 	if unlikely(CALL_DEPENDENCY(seq_operator_inplace_mul, (DeeObject **)&self, repeat))
 		goto err_self;

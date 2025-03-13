@@ -19,16 +19,10 @@
  */
 
 /************************************************************************/
-/* deemon.Sequence.reduce()                                                */
+/* deemon.Sequence.reduce()                                             */
 /************************************************************************/
 [[kw, alias(Sequence.reduce)]]
-__seq_reduce__(combine:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,init?)->?O {
-	DeeObject *combine, *init = NULL;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__combine_start_end_init,
-	                    "o|" UNPuSIZ UNPuSIZ "o:reduce",
-	                    &combine, &start, &end, &init))
-		goto err;
+__seq_reduce__(combine:?DCallable, size_t start = 0, size_t end = (size_t)-1, init?)->?O {
 	if (start == 0 && end == (size_t)-1) {
 		if (init)
 			return CALL_DEPENDENCY(seq_reduce_with_init, self, combine, init);

@@ -22,16 +22,8 @@
 /* deemon.Sequence.xchitem()                                            */
 /************************************************************************/
 [[kw, alias(Sequence.xchitem)]]
-__seq_xchitem__(index:?Dint,item)->?O {
-	size_t index;
-	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
-	                    UNPuSIZ "o:__seq_xchitem__",
-	                    &index, &item))
-		goto err;
+__seq_xchitem__(size_t index, item)->?O {
 	return CALL_DEPENDENCY(seq_xchitem_index, self, index, item);
-err:
-	return NULL;
 }
 
 

@@ -22,13 +22,7 @@
 /* deemon.Sequence.sort()                                               */
 /************************************************************************/
 [[kw, alias(Sequence.sort)]]
-__seq_sort__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *key = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:sort",
-	                    &start, &end, &key))
-		goto err;
+__seq_sort__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N) {
 	if unlikely(!DeeNone_Check(key)
 	            ? CALL_DEPENDENCY(seq_sort_with_key, self, start, end, key)
 	            : CALL_DEPENDENCY(seq_sort, self, start, end))

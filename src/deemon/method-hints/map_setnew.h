@@ -23,11 +23,7 @@
 /************************************************************************/
 [[alias(Mapping.setnew)]]
 __map_setnew__(key,value)->?Dbool {
-	int result;
-	DeeObject *key, *value;
-	if (DeeArg_Unpack(argc, argv, "oo:__map_setnew__", &key, &value))
-		goto err;
-	result = CALL_DEPENDENCY(map_setnew, self, key, value);
+	int result = CALL_DEPENDENCY(map_setnew, self, key, value);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);

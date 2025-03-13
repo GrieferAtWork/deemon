@@ -22,11 +22,7 @@
 /* deemon.Sequence.operator size()                                      */
 /************************************************************************/
 __seq_size__()->?Dint {
-	if (DeeArg_Unpack(argc, argv, ":__seq_size__"))
-		goto err;
 	return CALL_DEPENDENCY(seq_operator_sizeob, self);
-err:
-	return NULL;
 }
 
 

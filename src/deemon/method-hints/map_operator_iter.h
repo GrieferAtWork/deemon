@@ -22,11 +22,7 @@
 /* deemon.Mapping.operator iter()                                           */
 /************************************************************************/
 __map_iter__()->?DIterator {
-	if (DeeArg_Unpack(argc, argv, ":__map_iter__"))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_iter, self);
-err:
-	return NULL;
 }
 
 

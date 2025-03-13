@@ -23,12 +23,7 @@
 /************************************************************************/
 [[alias(Mapping.intersection)]]
 __map_and__(keys:?X2?DSet?S?O)->?DMapping {
-	DeeObject *keys;
-	if (DeeArg_Unpack(argc, argv, "o:__map_and__", &keys))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_and, self, keys);
-err:
-	return NULL;
 }
 
 

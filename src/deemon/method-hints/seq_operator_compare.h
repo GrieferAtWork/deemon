@@ -22,11 +22,7 @@
 /* deemon.Sequence.__seq_compare__()                                    */
 /************************************************************************/
 __seq_compare__(rhs:?S?O)->?Dint {
-	int result;
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_compare__", &rhs))
-		goto err;
-	result = CALL_DEPENDENCY(seq_operator_compare, self, rhs);
+	int result = CALL_DEPENDENCY(seq_operator_compare, self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_reference(DeeInt_FromSign(result));
@@ -39,11 +35,7 @@ err:
 /* deemon.Sequence.__seq_compare_eq__()                                 */
 /************************************************************************/
 __seq_compare_eq__(rhs:?S?O)->?X2?Dbool?Dint {
-	int result;
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_compare_eq__", &rhs))
-		goto err;
-	result = CALL_DEPENDENCY(seq_operator_compare_eq, self, rhs);
+	int result = CALL_DEPENDENCY(seq_operator_compare_eq, self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */

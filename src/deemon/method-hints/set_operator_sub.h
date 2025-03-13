@@ -23,12 +23,7 @@
 /************************************************************************/
 [[alias(Set.difference)]]
 __set_sub__(rhs:?X3?DSet?DSequence?S?O)->?DSet {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__set_sub__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(set_operator_sub, self, rhs);
-err:
-	return NULL;
 }
 
 

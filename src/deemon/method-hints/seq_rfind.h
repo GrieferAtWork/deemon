@@ -22,16 +22,10 @@
 /* deemon.Sequence.rfind()                                              */
 /************************************************************************/
 [[kw, alias(Sequence.rfind)]]
-__seq_rfind__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint {
-	DeeObject *item, *key = Dee_None;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_rfind__",
-	                    &item, &start, &end, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? CALL_DEPENDENCY(seq_rfind_with_key, self, item, start, end, key)
-	         : CALL_DEPENDENCY(seq_rfind, self, item, start, end);
+__seq_rfind__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?Dint {
+	size_t result = !DeeNone_Check(key)
+	                ? CALL_DEPENDENCY(seq_rfind_with_key, self, item, start, end, key)
+	                : CALL_DEPENDENCY(seq_rfind, self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)

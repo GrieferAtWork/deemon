@@ -30,12 +30,7 @@ for (local lo, ge: {
 	("ge", "lo"),
 }) {
 	print('__map_', lo, '__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool {');
-	print('	DeeObject *rhs;');
-	print('	if (DeeArg_Unpack(argc, argv, "o:__map_', lo, '__", &rhs))');
-	print('		goto err;');
 	print('	return CALL_DEPENDENCY(map_operator_', lo, ', self, rhs);');
-	print('err:');
-	print('	return NULL;');
 	print('}');
 	print;
 	print('[[operator(Mapping: tp_cmp->tp_', lo, ')]]');
@@ -105,12 +100,7 @@ if (lo in ["lo", "ge"]) {
 }
 ]]]*/
 __map_lo__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__map_lo__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_lo, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Mapping: tp_cmp->tp_lo)]]
@@ -161,12 +151,7 @@ map_operator_lo = {
 
 
 __map_le__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__map_le__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_le, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Mapping: tp_cmp->tp_le)]]
@@ -211,12 +196,7 @@ map_operator_le = {
 
 
 __map_gr__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__map_gr__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_gr, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Mapping: tp_cmp->tp_gr)]]
@@ -261,12 +241,7 @@ map_operator_gr = {
 
 
 __map_ge__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__map_ge__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(map_operator_ge, self, rhs);
-err:
-	return NULL;
 }
 
 [[operator(Mapping: tp_cmp->tp_ge)]]

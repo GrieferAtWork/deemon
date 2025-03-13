@@ -22,12 +22,7 @@
 /* deemon.Sequence.operator + ()                                        */
 /************************************************************************/
 __seq_add__(rhs:?S?O)->?. {
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_add__", &rhs))
-		goto err;
 	return CALL_DEPENDENCY(seq_operator_add, self, rhs);
-err:
-	return NULL;
 }
 
 

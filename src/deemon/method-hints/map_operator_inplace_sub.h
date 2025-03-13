@@ -22,9 +22,6 @@
 /* deemon.Mapping.operator -= ()                                        */
 /************************************************************************/
 __map_inplace_sub__(keys:?X2?DSet?DSequence?S?O)->?. {
-	DeeObject *keys;
-	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_sub__", &keys))
-		goto err;
 	Dee_Incref(self);
 	if unlikely(CALL_DEPENDENCY(map_operator_inplace_sub, (DeeObject **)&self, keys))
 		goto err_self;

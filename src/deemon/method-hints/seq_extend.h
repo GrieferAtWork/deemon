@@ -23,9 +23,6 @@
 /************************************************************************/
 [[alias(Sequence.extend)]]
 __seq_extend__(items:?S?O) {
-	DeeObject *items;
-	if (DeeArg_Unpack(argc, argv, "o:__seq_extend__", &items))
-		goto err;
 	if unlikely(CALL_DEPENDENCY(seq_extend, self, items))
 		goto err;
 	return_none;
