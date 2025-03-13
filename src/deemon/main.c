@@ -2025,6 +2025,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	char *override_end_ptr;
 	bool has_leading_linefeed;
 	DREF DeeStringObject *script_result;
+	unsigned int scan_recursion;
 	ASSERT(tok == TOK_COMMENT);
 	override_start_ptr    = token.t_end;
 	is_file_relative_code = (format_code_start >= file->f_begin &&
@@ -2054,6 +2055,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	TPPLexer_Current->l_eob_file = file;
 
 	/* Search for the block-end-token. */
+	scan_recursion = 0;
 	for (;;) {
 		tok_t next = yield();
 		if (next < 0)
@@ -2063,12 +2065,17 @@ try_exec_format_impl(DeeObject *__restrict stream,
 			            * TODO: Emit a warning, telling the user that the end is missing. */
 		if (token.t_file == file) {
 			int type = get_comment_type();
-			if (type == COMMENT_TYPE_BLOCK_START)
-				goto done; /* Another block-start found prior to the end of the current.
-				            * TODO: Emit a warning, telling the user that the inner one
-				            *       will get executed, rather than the outer one. */
-			if (type == COMMENT_TYPE_BLOCK_END)
-				break; /* The end of the current block was found! */
+			if (type == COMMENT_TYPE_BLOCK_START) {
+				/* Another block-start found prior to the end of the current.
+				 * This can happen when the outer format script echoes the contents
+				 * of another file, in which case we want to skip that inner script
+				 * from it originates from elsewhere. */
+				++scan_recursion;
+			} else if (type == COMMENT_TYPE_BLOCK_END) {
+				if likely(scan_recursion == 0)
+					break; /* The end of the current block was found! */
+				--scan_recursion;
+			}
 		}
 	}
 	override_end_ptr = token.t_begin;
