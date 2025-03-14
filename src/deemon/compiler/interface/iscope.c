@@ -199,15 +199,15 @@ PRIVATE struct type_getset tpconst scope_getsets[] = {
 	TYPE_GETSET_END
 };
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* Re-used in "./iast.c" */
 print_scope_repr(DeeScopeObject *__restrict self,
-                 dformatprinter printer, void *arg) {
+                 Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<scope at %p>", self);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 scope_print(DeeCompilerScopeObject *__restrict self,
-            dformatprinter printer, void *arg) {
+            Dee_formatprinter_t printer, void *arg) {
 	return print_scope_repr(self->ci_value, printer, arg);
 }
 
@@ -487,8 +487,8 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&scope_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&scope_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&scope_print
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&scope_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&scope_print
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerObjItem_Visit,
 	/* .tp_gc            = */ NULL,

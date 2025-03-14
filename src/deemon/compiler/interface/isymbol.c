@@ -214,10 +214,10 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 symbol_print(DeeCompilerSymbolObject *__restrict self,
-             dformatprinter printer, void *arg) {
-	dssize_t result = -1;
+             Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result = -1;
 	struct symbol *sym;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
@@ -233,10 +233,10 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 symbol_printrepr(DeeCompilerSymbolObject *__restrict self,
-                 dformatprinter printer, void *arg) {
-	dssize_t result = -1;
+                 Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result = -1;
 	struct symbol *sym;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
@@ -493,8 +493,8 @@ INTERN DeeTypeObject DeeCompilerSymbol_Type = {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&symbol_name,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&symbol_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&symbol_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&symbol_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&symbol_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&symbol_printrepr
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,

@@ -402,10 +402,10 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 keyword_print(DeeCompilerItemObject *__restrict self,
-              dformatprinter printer, void *arg) {
-	dssize_t result = -1;
+              Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result = -1;
 	struct TPPKeyword *item;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
@@ -873,7 +873,7 @@ INTERN DeeTypeObject DeeCompilerKeyword_Type = {
 		/* .tp_str   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_str,
 		/* .tp_repr  = */ NULL,
 		/* .tp_bool  = */ NULL,
-		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&keyword_print
+		/* .tp_print = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&keyword_print
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
@@ -894,37 +894,37 @@ INTERN DeeTypeObject DeeCompilerKeyword_Type = {
 };
 
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_keywords(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerKeywords(self->cw_compiler);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_extensions(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerExtensions(self->cw_compiler);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_warnings(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerWarnings(self->cw_compiler);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_syspaths(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerSyspaths(self->cw_compiler);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_ifdef(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerIfdef(self->cw_compiler);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_token(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerToken(self->cw_compiler);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_file(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -941,7 +941,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_textfile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	struct TPPFile *file;
@@ -960,7 +960,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_basefile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	struct TPPFile *file;
@@ -979,7 +979,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_textposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
@@ -1017,7 +1017,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_textendposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
@@ -1055,7 +1055,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_tokenposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
@@ -1083,7 +1083,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_tokenendposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
@@ -1111,7 +1111,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_atstartofline(DeeCompilerWrapperObject *__restrict self) {
 	int result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1124,7 +1124,7 @@ err:
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_flags(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1136,7 +1136,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_flags(DeeCompilerWrapperObject *__restrict self,
                 DeeObject *__restrict value) {
 	uint32_t new_flags;
@@ -1153,7 +1153,7 @@ err:
 }
 
 #define DEFINE_LEXER_FLAG_FUNCTIONS(name, flag)                        \
-	INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL          \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL          \
 	lexer_get_##name(DeeCompilerWrapperObject *__restrict self) {      \
 		DREF DeeObject *result;                                        \
 		if (COMPILER_BEGIN(self->cw_compiler))                         \
@@ -1165,7 +1165,7 @@ err:
 	err:                                                               \
 		return NULL;                                                   \
 	}                                                                  \
-	INTERN WUNUSED NONNULL((1)) int DCALL                      \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                      \
 	lexer_del_##name(DeeCompilerWrapperObject *__restrict self) {      \
 		if (COMPILER_BEGIN(self->cw_compiler))                         \
 			goto err;                                                  \
@@ -1175,7 +1175,7 @@ err:
 	err:                                                               \
 		return -1;                                                     \
 	}                                                                  \
-	INTERN WUNUSED NONNULL((1, 2)) int DCALL                           \
+	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                           \
 	lexer_set_##name(DeeCompilerWrapperObject *self,                   \
 	                 DeeObject *value) {                               \
 		int newval = DeeObject_Bool(value);                            \
@@ -1222,7 +1222,7 @@ DEFINE_LEXER_FLAG_FUNCTIONS(reemitunknownpragma, TPPLEXER_FLAG_REEMIT_UNKNOWN_PR
 DEFINE_LEXER_FLAG_FUNCTIONS(eofonparen, TPPLEXER_FLAG_EOF_ON_PAREN)
 #undef DEFINE_LEXER_FLAG_FUNCTIONS
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_eofparen(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1234,7 +1234,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 lexer_del_eofparen(DeeCompilerWrapperObject *__restrict self) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
@@ -1245,7 +1245,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_eofparen(DeeCompilerWrapperObject *__restrict self,
                    DeeObject *__restrict value) {
 	size_t new_eofparen;
@@ -1260,7 +1260,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_eobfile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1272,7 +1272,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 lexer_del_eobfile(DeeCompilerWrapperObject *__restrict self) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
@@ -1290,7 +1290,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       "File is associated with a different compiler");
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_eobfile(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -1316,7 +1316,7 @@ done:
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_eoffile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1328,7 +1328,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 lexer_del_eoffile(DeeCompilerWrapperObject *__restrict self) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
@@ -1339,7 +1339,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_eoffile(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -1366,7 +1366,7 @@ done:
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_macrolimit(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1378,7 +1378,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 lexer_del_macrolimit(DeeCompilerWrapperObject *__restrict self) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
@@ -1389,7 +1389,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_macrolimit(DeeCompilerWrapperObject *__restrict self,
                      DeeObject *__restrict value) {
 	size_t new_macrolimit;
@@ -1404,7 +1404,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_includelimit(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1416,7 +1416,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 lexer_del_includelimit(DeeCompilerWrapperObject *__restrict self) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
@@ -1427,7 +1427,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_includelimit(DeeCompilerWrapperObject *__restrict self,
                        DeeObject *__restrict value) {
 	size_t new_includelimit;
@@ -1442,7 +1442,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_warningcount(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1454,7 +1454,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 lexer_del_warningcount(DeeCompilerWrapperObject *__restrict self) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
@@ -1465,7 +1465,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_warningcount(DeeCompilerWrapperObject *__restrict self,
                        DeeObject *__restrict value) {
 	size_t new_warningcount;
@@ -1480,7 +1480,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_errorcount(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1492,7 +1492,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 lexer_del_errorcount(DeeCompilerWrapperObject *__restrict self) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
@@ -1503,7 +1503,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_errorcount(DeeCompilerWrapperObject *__restrict self,
                      DeeObject *__restrict value) {
 	size_t new_errorcount;
@@ -1518,7 +1518,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_maxerrors(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1530,7 +1530,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 lexer_del_maxerrors(DeeCompilerWrapperObject *__restrict self) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
@@ -1541,7 +1541,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_maxerrors(DeeCompilerWrapperObject *__restrict self,
                     DeeObject *__restrict value) {
 	size_t new_maxerrors;
@@ -1556,7 +1556,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_tabsize(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1568,7 +1568,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 lexer_del_tabsize(DeeCompilerWrapperObject *__restrict self) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
@@ -1579,7 +1579,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_tabsize(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *__restrict value) {
 	size_t new_tabsize;
@@ -1594,7 +1594,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_counter(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -1606,7 +1606,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 lexer_del_counter(DeeCompilerWrapperObject *__restrict self) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
@@ -1617,7 +1617,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_counter(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *__restrict value) {
 	int64_t new_counter;
@@ -2004,9 +2004,9 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            "The size of tabs (or rather their alignment multiple), as used "
 	            /**/ "when calculating column offsets for source positions"),
 	TYPE_GETSET("counter",
-	            &lexer_get_tabsize,
-	            &lexer_del_tabsize,
-	            &lexer_set_tabsize,
+	            &lexer_get_counter,
+	            &lexer_del_counter,
+	            &lexer_set_counter,
 	            "->?Dint\n"
 	            "The counter value returned and incremented by the "
 	            /**/ "$__COUNTER__ builtin macro"),
@@ -2026,7 +2026,7 @@ PRIVATE struct type_member tpconst lexer_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_include(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *arg, *filename = Dee_None;
 	DREF DeeObject *stream;
@@ -2077,7 +2077,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_nextraw(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
@@ -2095,7 +2095,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_nextpp(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
@@ -2113,7 +2113,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_next(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
@@ -2131,7 +2131,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_nextraw_nb(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
@@ -2149,7 +2149,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_nextpp_nb(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
@@ -2167,7 +2167,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_next_nb(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
@@ -2185,7 +2185,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_seterr(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":seterr"))
@@ -2199,7 +2199,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_unseterr(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":unseterr"))
@@ -2213,7 +2213,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_popfile(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	bool result;
 	if (DeeArg_Unpack(argc, argv, ":popfile"))
@@ -2235,7 +2235,7 @@ DOC_DEF(lexer_getkwd_doc,
         "Lookup the keyword associated with @name and return it, or ?N "
         /**/ "when @create is ?f and the keyword hasn't been accessed yet");
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
@@ -2276,7 +2276,7 @@ DOC_DEF(lexer_getxkwd_doc,
         "Same as ?#getkwd, however the given @name may contain escaped "
         /**/ "line-feeds that are removed prior to it being used to lookup "
         /**/ "a keyword");
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
@@ -2317,7 +2317,7 @@ DOC_DEF(lexer_getkwdid_doc,
         "Lookup the keyword associated with the given @id, "
         /**/ "returning it or ?N if no such keyword exists.\n"
         "WARNING: This is an O(n) operation and should be avoided if at all possible");
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getkwdid(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	unsigned int id;
@@ -2339,7 +2339,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_undef(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name;
 	int error;
@@ -2364,7 +2364,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_define(DeeCompilerWrapperObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name, *value;
@@ -2399,7 +2399,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_addassert(DeeCompilerWrapperObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name, *value;
@@ -2431,7 +2431,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_delassert(DeeCompilerWrapperObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name, *value = NULL;
@@ -3031,7 +3031,7 @@ err:
 
 PRIVATE ptrdiff_t
 (TPPCALL unicode_printer_tppappend)(void *arg, char const *__restrict buf, size_t bufsize) {
-	dssize_t result;
+	Dee_ssize_t result;
 	result = unicode_printer_print((struct unicode_printer *)arg, buf, bufsize);
 	return unlikely(result < 0) ? -1 : 0;
 }
@@ -3054,7 +3054,7 @@ err_printer:
 
 PRIVATE ptrdiff_t
 (TPPCALL unicode_printer_tppappend_escape)(void *arg, char const *__restrict buf, size_t bufsize) {
-	dssize_t result;
+	Dee_ssize_t result;
 	result = DeeFormat_Quote(&unicode_printer_print, arg, buf, bufsize);
 	return unlikely(result < 0) ? -1 : 0;
 }

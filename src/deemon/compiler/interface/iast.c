@@ -3205,14 +3205,14 @@ err:
 #define PRINT_NONE()  print(STR_none, 4)
 
 
-PRIVATE WUNUSED NONNULL((2, 3, 6, 7)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((2, 3, 6, 7)) Dee_ssize_t DCALL
 print_enter_scope(DeeScopeObject *caller_scope,
                   DeeScopeObject *__restrict child_scope,
-                  dformatprinter printer, void *arg,
+                  Dee_formatprinter_t printer, void *arg,
                   bool is_expression,
                   size_t *__restrict p_indent,
                   bool *__restrict p_is_scope) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	if (child_scope == caller_scope)
 		return 0;
 	if (is_expression) {
@@ -3300,11 +3300,11 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
-print_leave_scope(dformatprinter printer, void *arg,
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+print_leave_scope(Dee_formatprinter_t printer, void *arg,
                   bool is_expression, bool need_semicolon,
                   size_t indent, bool is_scope) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	if (is_scope) {
 		if (need_semicolon) {
 			PRINT(";\n");
@@ -3338,16 +3338,16 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL
 DeeString_IsSymbol(DeeStringObject *__restrict self,
                    size_t start_index,
                    size_t end_index);
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 print_ast_code(struct ast *__restrict self,
-               dformatprinter printer, void *arg, bool is_expression,
+               Dee_formatprinter_t printer, void *arg, bool is_expression,
                DeeScopeObject *caller_scope, size_t indent);
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 print_symbol(struct symbol *__restrict sym,
              DeeScopeObject *__restrict ref_scope,
-             dformatprinter printer, void *arg) {
-	dssize_t temp, result = 0;
+             Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result = 0;
 	if (sym->s_name == &TPPKeyword_Empty) {
 		if (sym->s_type == SYMBOL_TYPE_EXTERN) {
 			PRINT("(");
@@ -3380,10 +3380,10 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 print_code_tags(DeeBaseScopeObject *__restrict function_scope,
-                dformatprinter printer, void *arg) {
-	dssize_t temp, result = 0;
+                Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result = 0;
 	if (function_scope->bs_flags & CODE_FCOPYABLE)
 		PRINT("@copyable ");
 	if (function_scope->bs_flags & CODE_FTHISCALL)
@@ -3403,11 +3403,11 @@ is_instance_method(DeeBaseScopeObject *__restrict self) {
 	return true;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 print_function_atargs(struct ast *__restrict self,
-                      dformatprinter printer, void *arg,
+                      Dee_formatprinter_t printer, void *arg,
                       size_t indent, bool print_tags) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	DeeBaseScopeObject *function_scope;
 	size_t i;
 	function_scope = self->a_function.f_scope;
@@ -3441,12 +3441,12 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 print_asm_operator(struct asm_operand *__restrict operand,
-                   dformatprinter printer, void *arg,
+                   Dee_formatprinter_t printer, void *arg,
                    DeeScopeObject *caller_scope,
                    size_t indent) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	if (operand->ao_name)
 		printf("[%$s] ", operand->ao_name->k_size, operand->ao_name->k_name);
@@ -3462,10 +3462,10 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 print_asm_label_operator(struct asm_operand *__restrict operand,
-                         dformatprinter printer, void *arg) {
-	dssize_t temp, result = 0;
+                         Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result = 0;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	if (operand->ao_name)
 		printf("[%$s] ", operand->ao_name->k_size, operand->ao_name->k_name);
@@ -3492,11 +3492,11 @@ find_class_member(struct ast *__restrict self, uint16_t index) {
 PRIVATE char const property_names[3][4] = { "get", "del", "set" };
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 print_ast_code(struct ast *__restrict self,
-               dformatprinter printer, void *arg, bool is_expression,
+               Dee_formatprinter_t printer, void *arg, bool is_expression,
                DeeScopeObject *caller_scope, size_t indent) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	bool need_semicolon = true;
 	ENTER_SCOPE(is_scope, caller_scope, self->a_scope, is_expression);
 	__IF0 {
@@ -4871,9 +4871,9 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 print_operator_name(Dee_operator_t opid,
-                    dformatprinter printer, void *arg) {
+                    Dee_formatprinter_t printer, void *arg) {
 	struct opinfo const *info;
 	switch (opid) {
 
@@ -4925,15 +4925,15 @@ PRIVATE char const action_names[][10] = {
 	/* [AST_FACTION_ASSERT_M & AST_FACTION_KINDMASK] = */ "assert",
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* From "./iscope.c" */
 print_scope_repr(DeeScopeObject *__restrict self,
-                 dformatprinter printer, void *arg);
+                 Dee_formatprinter_t printer, void *arg);
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 print_ast_repr(struct ast *__restrict self,
-               dformatprinter printer, void *arg) {
-	dssize_t temp, result = 0;
+               Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result = 0;
 	switch (self->a_type) {
 
 	case AST_CONSTEXPR:
@@ -5295,10 +5295,10 @@ err:
 #undef print
 #undef DO
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ast_print(DeeCompilerAstObject *__restrict self,
-          dformatprinter printer, void *arg) {
-	dssize_t result;
+          Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	result = print_ast_code(self->ci_value, printer, arg, false, NULL, 0);
@@ -5308,10 +5308,10 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ast_printrepr(DeeCompilerAstObject *__restrict self,
-              dformatprinter printer, void *arg) {
-	dssize_t result;
+              Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	result = print_ast_repr(self->ci_value, printer, arg);
@@ -5709,8 +5709,8 @@ INTERN DeeTypeObject DeeCompilerAst_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ast_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ast_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ast_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ast_printrepr
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
