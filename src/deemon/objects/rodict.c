@@ -95,7 +95,9 @@ rodict_verify(RoDict *__restrict self) {
 	ASSERT(self->rd_htab == _DeeRoDict_GetRealVTab(self) + self->rd_vsize);
 	hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->rd_vsize);
 	ASSERT(/*hidxio >= 0 &&*/ hidxio < DEE_DICT_HIDXIO_COUNT);
-	ASSERT(self->rd_hidxget == Dee_dict_hidxio[hidxio].dhxio_get);
+	/* hidxio==0 may differ if "self" was statically initialized in a dex module,
+	 * in which case `self->rd_hidxget' might point into that module's PLT/GOT. */
+	ASSERT(self->rd_hidxget == Dee_dict_hidxio[hidxio].dhxio_get || hidxio == 0);
 	for (i = Dee_dict_vidx_tovirt(0), real_vused = 0;
 	     Dee_dict_vidx_virt_lt_real(i, self->rd_vsize); ++i) {
 		struct Dee_dict_item *item = &_DeeRoDict_GetVirtVTab(self)[i];
