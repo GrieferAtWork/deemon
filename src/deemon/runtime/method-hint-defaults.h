@@ -1956,6 +1956,16 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL default__map_operator_size__with__map_o
 #define default__map_operator_size__empty (*(size_t (DCALL *)(DeeObject *__restrict))&default__seq_operator_size__empty)
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__map_operator_size__with__map_operator_foreach_pair(DeeObject *__restrict self);
 
+/* map_operator_hash */
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__map_operator_hash(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__map_operator_hash__with_callattr___map_hash__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__map_operator_hash__with_callobjectcache___map_hash__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL tdefault__map_operator_hash__with_callobjectcache___map_hash__(DeeTypeObject *tp_self, DeeObject *self);
+#define default__map_operator_hash__unsupported (*(Dee_hash_t (DCALL *)(DeeObject *__restrict))&default__seq_operator_hash__unsupported)
+#define default__map_operator_hash__none (*(Dee_hash_t (DCALL *)(DeeObject *__restrict))&_DeeNone_rets0_1)
+#define default__map_operator_hash__empty (*(Dee_hash_t (DCALL *)(DeeObject *__restrict))&_DeeNone_rets0_1)
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__map_operator_hash__with__map_operator_foreach_pair(DeeObject *__restrict self);
+
 /* map_operator_getitem */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_getitem(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_getitem__with_callattr___map_getitem__(DeeObject *self, DeeObject *key);

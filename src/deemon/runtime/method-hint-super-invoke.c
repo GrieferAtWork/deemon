@@ -2745,6 +2745,21 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_size[2] = 
 	MH_SUPER_MAP_TYPED_INIT(&default__size__with__sizeob, &tdefault__size__with__sizeob),
 	MH_SUPER_MAP_TYPED_END
 };
+PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_hash[7] = {
+	(Dee_funptr_t)&default__map_operator_hash,
+	(Dee_funptr_t)&default__map_operator_hash__with_callattr___map_hash__,
+	(Dee_funptr_t)&default__map_operator_hash__unsupported,
+	(Dee_funptr_t)&default__map_operator_hash__none,
+	(Dee_funptr_t)&default__map_operator_hash__empty,
+	(Dee_funptr_t)&default__map_operator_hash__with__map_operator_foreach_pair,
+	NULL
+};
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_hash[4] = {
+	MH_SUPER_MAP_TYPED_INIT(&default__map_operator_hash__with_callobjectcache___map_hash__, &tdefault__map_operator_hash__with_callobjectcache___map_hash__),
+	MH_SUPER_MAP_TYPED_INIT(&usrtype__hash__with__HASH, &tusrtype__hash__with__HASH),
+	MH_SUPER_MAP_TYPED_INIT(&usrtype__hash__with__, &tusrtype__hash__with__),
+	MH_SUPER_MAP_TYPED_END
+};
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_getitem[12] = {
 	(Dee_funptr_t)&default__map_operator_getitem,
 	(Dee_funptr_t)&default__map_operator_getitem__with_callattr___map_getitem__,
@@ -3716,7 +3731,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_popitem[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__map_popitem__with_callobjectcache___map_popitem__, &tdefault__map_popitem__with_callobjectcache___map_popitem__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE struct mh_super_map tpconst mh_super_maps[240] = {
+PRIVATE struct mh_super_map tpconst mh_super_maps[241] = {
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_bool, msm_with_type__seq_operator_bool),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_sizeob, msm_with_type__seq_operator_sizeob),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_size, msm_with_type__seq_operator_size),
@@ -3896,6 +3911,7 @@ PRIVATE struct mh_super_map tpconst mh_super_maps[240] = {
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_operator_foreach_pair, msm_with_type__map_operator_foreach_pair),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_operator_sizeob, msm_with_type__map_operator_sizeob),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_operator_size, msm_with_type__map_operator_size),
+	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_operator_hash, msm_with_type__map_operator_hash),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_operator_getitem, msm_with_type__map_operator_getitem),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_operator_trygetitem, msm_with_type__map_operator_trygetitem),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_operator_getitem_index, msm_with_type__map_operator_getitem_index),

@@ -248,6 +248,7 @@ struct Dee_type_mh_cache {
 	DeeMH_map_operator_foreach_pair_t mh_map_operator_foreach_pair;
 	DeeMH_map_operator_sizeob_t mh_map_operator_sizeob;
 	DeeMH_map_operator_size_t mh_map_operator_size;
+	DeeMH_map_operator_hash_t mh_map_operator_hash;
 	DeeMH_map_operator_getitem_t mh_map_operator_getitem;
 	DeeMH_map_operator_trygetitem_t mh_map_operator_trygetitem;
 	DeeMH_map_operator_getitem_index_t mh_map_operator_getitem_index;
@@ -319,7 +320,7 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 136
+#define MHC_COUNT 137
 #define MHC_FIRST mhc___seq_bool__
 	Dee_mhc_slot_t mhc___seq_bool__;
 	Dee_mhc_slot_t mhc___seq_size__;
@@ -421,6 +422,7 @@ struct Dee_type_mh_cache {
 	Dee_mhc_slot_t mhc___set_pop__;
 	Dee_mhc_slot_t mhc___map_iter__;
 	Dee_mhc_slot_t mhc___map_size__;
+	Dee_mhc_slot_t mhc___map_hash__;
 	Dee_mhc_slot_t mhc___map_getitem__;
 	Dee_mhc_slot_t mhc___map_delitem__;
 	Dee_mhc_slot_t mhc___map_setitem__;

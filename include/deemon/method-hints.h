@@ -314,6 +314,7 @@ enum Dee_tmh_id {
 	Dee_TMH_map_operator_foreach_pair,
 	Dee_TMH_map_operator_sizeob,
 	Dee_TMH_map_operator_size,
+	Dee_TMH_map_operator_hash,
 	Dee_TMH_map_operator_getitem,
 	Dee_TMH_map_operator_trygetitem,
 	Dee_TMH_map_operator_getitem_index,
@@ -746,6 +747,9 @@ typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_map_operator_forea
 /* __map_size__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_map_operator_sizeob_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeMH_map_operator_size_t)(DeeObject *__restrict self);
+
+/* __map_hash__ */
+typedef WUNUSED_T NONNULL_T((1)) Dee_hash_t (DCALL *DeeMH_map_operator_hash_t)(DeeObject *__restrict self);
 
 /* __map_getitem__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_map_operator_getitem_t)(DeeObject *self, DeeObject *key);
@@ -1569,6 +1573,11 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_iter__(DeeObject *__restr
 #define DeeMA___map_size___name  _DeeMA_ATTRSTR(__map_size__)
 #define DeeMA___map_size___doc   "->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___map_hash___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___map_hash___name  _DeeMA_ATTRSTR(__map_hash__)
+#define DeeMA___map_hash___doc   "->?Dint"
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_hash__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_getitem___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___map_getitem___name  _DeeMA_ATTRSTR(__map_getitem__)

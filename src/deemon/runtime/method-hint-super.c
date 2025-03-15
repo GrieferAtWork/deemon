@@ -2947,6 +2947,22 @@ super_mh__map_operator_size(DeeSuperObject *__restrict self) {
 	__builtin_unreachable();
 }
 
+INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
+super_mh__map_operator_hash(DeeSuperObject *__restrict self) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_map_operator_hash, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_map_operator_hash_t)specs.smh_cb)(self->s_self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_map_operator_hash_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(Dee_hash_t (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+	default: break;
+	}
+	__builtin_unreachable();
+}
+
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_mh__map_operator_getitem(DeeSuperObject *self, DeeObject *key) {
 	struct Dee_super_method_hint specs;
@@ -4149,6 +4165,7 @@ INTERN struct Dee_type_mh_cache super_mhcache = {
 	(DeeMH_map_operator_foreach_pair_t)&super_mh__map_operator_foreach_pair,
 	(DeeMH_map_operator_sizeob_t)&super_mh__map_operator_sizeob,
 	(DeeMH_map_operator_size_t)&super_mh__map_operator_size,
+	(DeeMH_map_operator_hash_t)&super_mh__map_operator_hash,
 	(DeeMH_map_operator_getitem_t)&super_mh__map_operator_getitem,
 	(DeeMH_map_operator_trygetitem_t)&super_mh__map_operator_trygetitem,
 	(DeeMH_map_operator_getitem_index_t)&super_mh__map_operator_getitem_index,

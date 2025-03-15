@@ -230,7 +230,7 @@
  * For that reason, also need "map_operator_size" and "map_operator_sizeob" */
 %[include("map_operator_iter.h")]
 %[include("map_operator_size.h")]
-//TODO:%[include("map_operator_hash.h")]
+%[include("map_operator_hash.h")]
 
 %[include("map_operator_getitem.h")]
 %[include("map_operator_delitem.h")]

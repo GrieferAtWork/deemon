@@ -642,7 +642,7 @@ PRIVATE struct type_math map_math = {
 };
 
 PRIVATE struct type_cmp map_cmp = {
-	/* .tp_hash          = */ &default__set_operator_hash,
+	/* .tp_hash          = */ &default__map_operator_hash,
 	/* .tp_compare_eq    = */ &default__map_operator_compare_eq,
 	/* .tp_compare       = */ DEFIMPL_UNSUPPORTED(&default__compare__unsupported),
 	/* .tp_trycompare_eq = */ &default__map_operator_trycompare_eq,

@@ -2802,6 +2802,16 @@ mh_select_map_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	return NULL;
 }
 
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_hash_t DCALL
+mh_select_map_operator_hash(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair = (DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_foreach_pair);
+	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
+		return &default__map_operator_hash__empty;
+	if (map_operator_foreach_pair)
+		return default__map_operator_hash__with__map_operator_foreach_pair;
+	return NULL;
+}
+
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_getitem_t DCALL
 mh_select_map_operator_getitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_map_enumerate_t map_enumerate;

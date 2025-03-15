@@ -209,6 +209,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_operator_iter(De
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL super_mh__map_operator_foreach_pair(DeeSuperObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_operator_sizeob(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL super_mh__map_operator_size(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL super_mh__map_operator_hash(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__map_operator_getitem(DeeSuperObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__map_operator_trygetitem(DeeSuperObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_operator_getitem_index(DeeSuperObject *self, size_t key);

@@ -200,6 +200,7 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_iter_t DCALL mh_sele
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_foreach_pair_t DCALL mh_select_map_operator_foreach_pair(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_sizeob_t DCALL mh_select_map_operator_sizeob(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_size_t DCALL mh_select_map_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_hash_t DCALL mh_select_map_operator_hash(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_getitem_t DCALL mh_select_map_operator_getitem(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_trygetitem_t DCALL mh_select_map_operator_trygetitem(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_getitem_index_t DCALL mh_select_map_operator_getitem_index(DeeTypeObject *self, DeeTypeObject *orig_type);

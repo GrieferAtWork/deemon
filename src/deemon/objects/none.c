@@ -840,6 +840,7 @@ PRIVATE struct Dee_type_mh_cache mh_cache_none = {
 	/* .mh_map_operator_foreach_pair               = */ &default__map_operator_foreach_pair__empty,
 	/* .mh_map_operator_sizeob                     = */ &default__map_operator_sizeob__none,
 	/* .mh_map_operator_size                       = */ &default__map_operator_size__none,
+	/* .mh_map_operator_hash                       = */ &default__map_operator_hash__none,
 	/* .mh_map_operator_getitem                    = */ &default__map_operator_getitem__none,
 	/* .mh_map_operator_trygetitem                 = */ &default__map_operator_trygetitem__none,
 	/* .mh_map_operator_getitem_index              = */ &default__map_operator_getitem_index__none,

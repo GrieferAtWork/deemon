@@ -16685,6 +16685,70 @@ default__map_operator_size__with__map_operator_foreach_pair(DeeObject *__restric
 }
 
 
+/* map_operator_hash */
+INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
+default__map_operator_hash(DeeObject *__restrict self) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_hash))(self);
+}
+
+#ifndef DEFINED_map_handle_hash_error
+#define DEFINED_map_handle_hash_error
+PRIVATE NONNULL((1)) Dee_hash_t DCALL
+map_handle_hash_error(DeeObject *self) {
+	DeeError_Print("Unhandled error in `Mapping.operator hash'\n",
+	               ERROR_PRINT_DOHANDLE);
+	return DeeObject_HashGeneric(self);
+}
+#endif /* !DEFINED_map_handle_hash_error */
+INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
+default__map_operator_hash__with_callattr___map_hash__(DeeObject *__restrict self) {
+	int temp;
+	Dee_hash_t result;
+	DREF DeeObject *resultob;
+	resultob = DeeObject_CallAttr(self, (DeeObject *)&str___map_hash__, 0, NULL);
+	if unlikely(!resultob)
+		goto err;
+	temp = DeeObject_AsUIntX(resultob, &result);
+	Dee_Decref(resultob);
+	if unlikely(temp)
+		goto err;
+	return result;
+err:
+	return map_handle_hash_error(self);
+}
+
+INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
+default__map_operator_hash__with_callobjectcache___map_hash__(DeeObject *__restrict self) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__map_operator_hash__with_callobjectcache___map_hash__(Dee_TYPE(self), self);
+#else /* __OPTIMIZE_SIZE__ */
+	int temp;
+	Dee_hash_t result;
+	DREF DeeObject *resultob;
+	resultob = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_hash__, 1, (DeeObject *const *)&self);
+	if unlikely(!resultob)
+		goto err;
+	temp = DeeObject_AsUIntX(resultob, &result);
+	Dee_Decref(resultob);
+	if unlikely(temp)
+		goto err;
+	return result;
+err:
+	return map_handle_hash_error(self);
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
+default__map_operator_hash__with__map_operator_foreach_pair(DeeObject *__restrict self) {
+	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, &default_set_hash_with_foreach_pair_cb, &result))
+		goto err;
+	return result;
+err:
+	return map_handle_hash_error(self);
+}
+
+
 /* map_operator_getitem */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_getitem(DeeObject *self, DeeObject *key) {
@@ -22448,6 +22512,33 @@ tdefault__map_operator_iter__with_callobjectcache___map_iter__(DeeTypeObject *tp
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__map_operator_sizeob__with_callobjectcache___map_size__(DeeTypeObject *tp_self, DeeObject *self) {
 	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_size__, 1, (DeeObject *const *)&self);
+}
+
+/* map_operator_hash */
+#ifndef DEFINED_map_handle_hash_error
+#define DEFINED_map_handle_hash_error
+PRIVATE NONNULL((1)) Dee_hash_t DCALL
+map_handle_hash_error(DeeObject *self) {
+	DeeError_Print("Unhandled error in `Mapping.operator hash'\n",
+	               ERROR_PRINT_DOHANDLE);
+	return DeeObject_HashGeneric(self);
+}
+#endif /* !DEFINED_map_handle_hash_error */
+INTERN WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL
+tdefault__map_operator_hash__with_callobjectcache___map_hash__(DeeTypeObject *tp_self, DeeObject *self) {
+	int temp;
+	Dee_hash_t result;
+	DREF DeeObject *resultob;
+	resultob = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_hash__, 1, (DeeObject *const *)&self);
+	if unlikely(!resultob)
+		goto err;
+	temp = DeeObject_AsUIntX(resultob, &result);
+	Dee_Decref(resultob);
+	if unlikely(temp)
+		goto err;
+	return result;
+err:
+	return map_handle_hash_error(self);
 }
 
 /* map_operator_getitem */

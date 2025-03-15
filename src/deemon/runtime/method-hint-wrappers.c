@@ -1685,6 +1685,16 @@ err:
 }}
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_hash__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+	_DeeArg_Unpack0(err, argc, argv, "__map_hash__");
+{
+	Dee_hash_t result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_hash))(self);
+	return DeeInt_NewHash(result);
+err:
+	return NULL;
+}}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___map_getitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *key;

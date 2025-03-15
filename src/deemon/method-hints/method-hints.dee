@@ -2866,6 +2866,9 @@ final class _SpecParserFile {
 	public member tokEnd: int = 0;
 };
 
+global final _ReCache: {string...} = HashSet();
+#define RECACHE(x) _ReCache.unify(x)
+
 final class _SpecParser {
 	this = default;
 	public member data: string;
@@ -3786,9 +3789,8 @@ done:
 								local argName = param.name;
 								local outName = param.cOutNameEx("args");
 								if (argName != outName) {
-									/* TODO: Generating regex patterns like this is inefficient! */
 									nativeBody = nativeBody.rereplace(
-										r"\b" + argName + r"\b", outName);
+										RECACHE(r"\b" + argName + r"\b"), outName);
 								}
 							}
 							
