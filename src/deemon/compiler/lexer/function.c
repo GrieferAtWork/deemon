@@ -406,8 +406,7 @@ err_default_expr:
 				if (default_expr->a_type != AST_CONSTEXPR) {
 					if (WARNAST(default_expr, W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT, arg))
 						goto err_default_expr;
-					default_value = Dee_None;
-					Dee_Incref(Dee_None);
+					default_value = DeeNone_NewRef();
 				} else {
 					default_value = default_expr->a_constexpr;
 					Dee_Incref(default_value);

@@ -37,7 +37,7 @@ __seq_sorted__.seq_sorted([[nonnull]] DeeObject *self,
                           size_t start, size_t end)
 %{unsupported(auto)}
 %{$none = return_none}
-%{$empty = return_empty_seq}
+%{$empty = return DeeSeq_NewEmpty()}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DeeTupleObject *result;
@@ -50,7 +50,7 @@ __seq_sorted__.seq_sorted([[nonnull]] DeeObject *self,
 		start = end;
 	end -= start;
 	if (!end)
-		return_empty_tuple;
+		return DeeTuple_NewEmpty();
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;
@@ -85,7 +85,7 @@ err:
 		start = end;
 	end -= start;
 	if (!end)
-		return_empty_tuple;
+		return DeeTuple_NewEmpty();
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;
@@ -144,7 +144,7 @@ __seq_sorted__.seq_sorted_with_key([[nonnull]] DeeObject *self,
                                    [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
 %{$none = return_none}
-%{$empty = return_empty_seq}
+%{$empty = return DeeSeq_NewEmpty()}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DeeTupleObject *result;
@@ -157,7 +157,7 @@ __seq_sorted__.seq_sorted_with_key([[nonnull]] DeeObject *self,
 		start = end;
 	end -= start;
 	if (!end)
-		return_empty_tuple;
+		return DeeTuple_NewEmpty();
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;
@@ -192,7 +192,7 @@ err:
 		start = end;
 	end -= start;
 	if (!end)
-		return_empty_tuple;
+		return DeeTuple_NewEmpty();
 	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;

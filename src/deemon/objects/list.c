@@ -3367,7 +3367,7 @@ list_reserve(List *me, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		}
 	}
 	DeeList_LockEndWrite(me);
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -3377,7 +3377,7 @@ list_shrink(List *me, size_t argc, DeeObject *const *argv) {
 	bool result;
 	_DeeArg_Unpack0(err, argc, argv, "shrink");
 	result = list_do_shrink(me);
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }

@@ -75,9 +75,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 im_ctor(InstanceMethod *__restrict self) {
 	/* Initialize a stub instance-method. */
-	self->im_func = Dee_None;
-	self->im_this = Dee_None;
-	Dee_Incref_n(Dee_None, 2);
+	Dee_Incref_n(&DeeNone_Singleton, 2);
+	self->im_func = (DeeObject *)&DeeNone_Singleton;
+	self->im_this = (DeeObject *)&DeeNone_Singleton;
 	return 0;
 }
 

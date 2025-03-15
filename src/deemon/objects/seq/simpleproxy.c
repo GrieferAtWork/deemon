@@ -43,8 +43,7 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_ctor(SeqSimpleProxy *__restrict self) {
-	self->sp_seq = Dee_EmptySeq;
-	Dee_Incref(Dee_EmptySeq);
+	self->sp_seq = DeeSeq_NewEmpty();
 	return 0;
 }
 
@@ -302,7 +301,7 @@ ids_contains(SeqSimpleProxy *self, DeeObject *id_obj) {
 	status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->sp_seq, &ids_contains_foreach_cb, (void *)id_value);
 	if unlikely(status == -1)
 		goto err;
-	return_bool_(status == 0);
+	return_bool(status == 0);
 err:
 	return NULL;
 }
@@ -321,7 +320,7 @@ types_contains(SeqSimpleProxy *self,
 	status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->sp_seq, &types_contains_foreach_cb, typ);
 	if unlikely(status == -1)
 		goto err;
-	return_bool_(status == 0);
+	return_bool(status == 0);
 err:
 	return NULL;
 }
@@ -340,7 +339,7 @@ classes_contains(SeqSimpleProxy *self,
 	status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->sp_seq, &classes_contains_foreach_cb, typ);
 	if unlikely(status == -1)
 		goto err;
-	return_bool_(status == 0);
+	return_bool(status == 0);
 err:
 	return NULL;
 }

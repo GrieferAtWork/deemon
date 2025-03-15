@@ -110,8 +110,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 se_ctor(SeqEachBase *__restrict self) {
-	self->se_seq = Dee_EmptySeq;
-	Dee_Incref(Dee_EmptySeq);
+	self->se_seq = DeeSeq_NewEmpty();
 	return 0;
 }
 
@@ -2064,10 +2063,9 @@ done:
 /* SeqEach<WRAPPER> -- Operator */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seo_ctor(SeqEachOperator *__restrict self) {
-	self->se_seq    = Dee_EmptySeq;
+	self->se_seq    = DeeSeq_NewEmpty();
 	self->so_opname = OPERATOR_BOOL;
 	self->so_opargc = 0;
-	Dee_Incref(Dee_EmptySeq);
 	return 0;
 }
 

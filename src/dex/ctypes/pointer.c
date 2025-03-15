@@ -128,7 +128,7 @@ pointer_bool(DeePointerTypeObject *UNUSED(tp_self),
 		union pointer value;                                      \
 		if (DeeObject_AsPointer(other, tp_self->pt_orig, &value)) \
 			goto err;                                             \
-		return_bool_(self->ptr op value.ptr);                     \
+		return_bool(self->ptr op value.ptr);                     \
 	err:                                                          \
 		return NULL;                                              \
 	}

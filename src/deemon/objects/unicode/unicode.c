@@ -921,7 +921,7 @@ load_2byte_width:
 			utf = ((String *)self)->s_data;
 			ASSERT(utf != NULL);
 			ASSERT(result == (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE]);
-			*(uint16_t **)&utf->u_utf16 = result;
+			utf->u_utf16 = (_Dee_string_utf_utf16_t *)result;
 			return result;
 		}
 	} else {
@@ -978,7 +978,7 @@ load_2byte_width:
 					result = new_result;
 			}
 			/* Save the utf-16 encoded string. */
-			if (!atomic_cmpxch((uint16_t **)&utf->u_utf16, NULL, result)) {
+			if (!atomic_cmpxch(&utf->u_utf16, NULL, (_Dee_string_utf_utf16_t *)result)) {
 				DeeString_Free2ByteBuffer(result);
 				return (uint16_t *)utf->u_utf16;
 			}
@@ -987,7 +987,7 @@ load_2byte_width:
 		}
 		/* The 2-byte variant doesn't contain any illegal characters,
 		 * so we can simply re-use it as the utf-16 variant. */
-		atomic_cmpxch((uint16_t **)&utf->u_utf16, NULL, str);
+		atomic_cmpxch(&utf->u_utf16, NULL, (_Dee_string_utf_utf16_t *)str);
 		return (uint16_t *)utf->u_utf16;
 	}	break;
 
@@ -1046,7 +1046,7 @@ err_invalid_unicode:
 		ASSERT(dst == result + result_length);
 		*dst = 0;
 		/* Save the utf-16 encoded string. */
-		if (!atomic_cmpxch((uint16_t **)&utf->u_utf16, NULL, result)) {
+		if (!atomic_cmpxch(&utf->u_utf16, NULL, (_Dee_string_utf_utf16_t *)result)) {
 			DeeString_Free2ByteBuffer(result);
 			return (uint16_t *)utf->u_utf16;
 		}
@@ -1425,7 +1425,7 @@ DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
-		return_empty_string;
+		return DeeString_NewEmpty();
 	}
 	text[length] = 0;
 	utf8_length  = 0;
@@ -1479,7 +1479,7 @@ DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
-		return_empty_string;
+		return DeeString_NewEmpty();
 	}
 	text[length] = 0;
 	utf8_length  = 0;
@@ -1539,7 +1539,7 @@ DeeString_PackUtf16Buffer(/*inherit(always)*/ uint16_t *__restrict text,
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
-		return_empty_string;
+		return DeeString_NewEmpty();
 	}
 	text[length]    = 0;
 	utf8_length     = 0;
@@ -1632,7 +1632,7 @@ read_text_i:
 	if unlikely(!utf)
 		goto err_r;
 	bzero(utf, sizeof(struct string_utf));
-	*(uint16_t **)&utf->u_utf16 = (uint16_t *)text; /* Inherit data */
+	utf->u_utf16 = (_Dee_string_utf_utf16_t *)text; /* Inherit data */
 	if (utf8_length == length) {
 		size_t j;
 		/* Pure UTF-16 in ASCII range. */
@@ -1721,7 +1721,7 @@ DeeString_TryPackUtf16Buffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
-		return_empty_string;
+		return DeeString_NewEmpty();
 	}
 	text[length]    = 0;
 	utf8_length     = 0;
@@ -1788,7 +1788,7 @@ continue_at_i:
 	if unlikely(!utf)
 		goto err_r;
 	bzero(utf, sizeof(struct string_utf));
-	*(uint16_t **)&utf->u_utf16 = (uint16_t *)text; /* Inherit data */
+	utf->u_utf16 = (_Dee_string_utf_utf16_t *)text; /* Inherit data */
 	if (utf8_length == length) {
 		size_t j;
 		/* Pure UTF-16 in ASCII range. */
@@ -1873,7 +1873,7 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
-		return_empty_string;
+		return DeeString_NewEmpty();
 	}
 	text[length] = 0;
 	utf8_length  = 0;
@@ -1951,7 +1951,7 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
-		return_empty_string;
+		return DeeString_NewEmpty();
 	}
 	text[length] = 0;
 	utf8_length  = 0;
@@ -3479,7 +3479,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_unicode_printer_pack(/*inherit(always)*/ struct unicode_printer *__restrict self) {
 	void *result_buffer = self->up_buffer;
 	if unlikely(!result_buffer)
-		return_empty_string;
+		return DeeString_NewEmpty();
 	if (self->up_length < WSTR_LENGTH(result_buffer)) {
 		void *new_buffer;
 		new_buffer = DeeString_TryResizeWidthBuffer(result_buffer,
@@ -3500,7 +3500,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct unicode_printer *__restrict self) {
 	void *result_buffer = self->up_buffer;
 	if unlikely(!result_buffer)
-		return_empty_string;
+		return DeeString_NewEmpty();
 	ASSERT(self->up_length <= WSTR_LENGTH(result_buffer));
 	if (self->up_length < WSTR_LENGTH(result_buffer)) {
 		void *new_buffer;

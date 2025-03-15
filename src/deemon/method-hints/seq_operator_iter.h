@@ -40,7 +40,7 @@ __seq_iter__()->?DIterator {
 __seq_iter__.seq_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
 %{$none = return_none}
-%{$empty = return_empty_iterator}
+%{$empty = return DeeIterator_NewEmpty()}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DefaultIterator_WithSizeAndGetItemIndex *result;
@@ -140,8 +140,7 @@ err:
 	result = DeeGCObject_MALLOC(DefaultIterator_WithGetItem);
 	if unlikely(!result)
 		goto err;
-	Dee_Incref(DeeInt_Zero);
-	result->dig_index = DeeInt_Zero;
+	result->dig_index = DeeInt_NewZero();
 	Dee_Incref(self);
 	result->dig_seq        = self; /* Inherit reference */
 	result->dig_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
@@ -424,8 +423,7 @@ err:
 %{$with__seq_operator_getitem = {
 	PRELOAD_DEPENDENCY(seq_operator_getitem)
 	Dee_ssize_t temp, result = 0;
-	DREF DeeIntObject *index = (DREF DeeIntObject *)DeeInt_Zero;
-	Dee_Incref(DeeInt_Zero);
+	DREF DeeIntObject *index = (DREF DeeIntObject *)DeeInt_NewZero();
 	for (;;) {
 		DREF DeeObject *elem;
 		elem = CALL_DEPENDENCY(seq_operator_getitem, self, (DeeObject *)index);

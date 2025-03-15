@@ -36,9 +36,8 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_tuple_object   tuple_object
-#define DEFINE_TUPLE       Dee_DEFINE_TUPLE
-#define return_empty_tuple Dee_return_empty_tuple
+#define Dee_tuple_object tuple_object
+#define DEFINE_TUPLE     Dee_DEFINE_TUPLE
 #endif /* DEE_SOURCE */
 
 typedef struct Dee_tuple_object DeeTupleObject;
@@ -84,21 +83,16 @@ struct Dee_tuple_object {
 	}
 
 
-#ifdef GUARD_DEEMON_OBJECTS_TUPLE_C
-struct empty_tuple_object {
+struct Dee_empty_tuple_struct {
 	Dee_OBJECT_HEAD
 	size_t t_size;
 };
-DDATDEF struct empty_tuple_object DeeTuple_Empty;
-#define Dee_EmptyTuple ((DeeObject *)&DeeTuple_Empty)
-#else /* GUARD_DEEMON_OBJECTS_TUPLE_C */
-DDATDEF DeeObject        DeeTuple_Empty;
-#define Dee_EmptyTuple (&DeeTuple_Empty)
-#endif /* !GUARD_DEEMON_OBJECTS_TUPLE_C */
+DDATDEF struct Dee_empty_tuple_struct DeeTuple_Empty;
+#define Dee_EmptyTuple      ((DeeObject *)&DeeTuple_Empty)
 #ifdef __INTELLISENSE__
-#define Dee_return_empty_tuple return Dee_EmptyTuple
+#define DeeTuple_NewEmpty() Dee_EmptyTuple
 #else /* __INTELLISENSE__ */
-#define Dee_return_empty_tuple Dee_return_reference_(Dee_EmptyTuple)
+#define DeeTuple_NewEmpty() (Dee_Incref(&DeeTuple_Empty), (DeeObject *)&DeeTuple_Empty)
 #endif /* !__INTELLISENSE__ */
 
 DDATDEF DeeTypeObject DeeTuple_Type;

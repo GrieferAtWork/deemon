@@ -3100,7 +3100,7 @@ dict_shrink(Dict *__restrict self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__fully, "|b:shrink", &fully))
 		goto err;
 	result = dict_shrink_impl(self, fully);
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -3127,7 +3127,7 @@ dict_reserve(Dict *__restrict self, size_t argc,
 		result = dict_trygrow_vtab_and_htab_with(self, total, weak);
 	}
 	DeeDict_LockEndWrite(self);
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -3370,7 +3370,7 @@ dict_contains(Dict *self, DeeObject *key) {
 	int result = dict_hasitem(self, key);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }

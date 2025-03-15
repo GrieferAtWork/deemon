@@ -23,10 +23,10 @@
 #include "api.h"
 /**/
 
-#include "types.h"
 #ifndef __INTELLISENSE__
 #include "object.h"
 #endif /* !__INTELLISENSE__ */
+#include "types.h"
 /**/
 
 #include <hybrid/typecore.h>
@@ -38,11 +38,10 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_bytes_object   bytes_object
-#define Dee_bytes_printer  bytes_printer
-#define DEFINE_BYTES       Dee_DEFINE_BYTES
-#define DEFINE_BYTES_EX    Dee_DEFINE_BYTES_EX
-#define return_empty_bytes Dee_return_empty_bytes
+#define Dee_bytes_object  bytes_object
+#define Dee_bytes_printer bytes_printer
+#define DEFINE_BYTES      Dee_DEFINE_BYTES
+#define DEFINE_BYTES_EX   Dee_DEFINE_BYTES_EX
 #endif /* DEE_SOURCE */
 
 
@@ -105,17 +104,21 @@ DDATDEF DeeTypeObject DeeBytes_Type;
  *       Other instances may be used as well!
  * NOTE: The empty Bytes object is writable (though there is no memory to write to)
  */
-#ifdef GUARD_DEEMON_OBJECTS_BYTES_C
-DDATDEF DeeBytesObject                DeeBytes_Empty;
+struct Dee_empty_bytes_struct {
+	Dee_OBJECT_HEAD
+	__BYTE_TYPE__  *b_base;
+	size_t          b_size;
+	DREF DeeObject *b_orig;
+	DeeBuffer       b_buffer;
+	unsigned int    b_flags;
+	__BYTE_TYPE__   b_data[1];
+};
+DDATDEF struct Dee_empty_bytes_struct DeeBytes_Empty;
 #define Dee_EmptyBytes ((DeeObject *)&DeeBytes_Empty)
-#else /* GUARD_DEEMON_OBJECTS_BYTES_C */
-DDATDEF DeeObject                     DeeBytes_Empty;
-#define Dee_EmptyBytes              (&DeeBytes_Empty)
-#endif /* !GUARD_DEEMON_OBJECTS_BYTES_C */
 #ifdef __INTELLISENSE__
-#define Dee_return_empty_bytes return Dee_EmptyBytes
+#define DeeBytes_NewEmpty() ((DeeObject *)&DeeBytes_Empty)
 #else /* __INTELLISENSE__ */
-#define Dee_return_empty_bytes Dee_return_reference_(Dee_EmptyBytes)
+#define DeeBytes_NewEmpty() (Dee_Incref(&DeeBytes_Empty), (DeeObject *)&DeeBytes_Empty)
 #endif /* !__INTELLISENSE__ */
 
 

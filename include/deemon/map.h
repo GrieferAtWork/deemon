@@ -23,6 +23,9 @@
 #include "api.h"
 /**/
 
+#ifndef __INTELLISENSE__
+#include "object.h"
+#endif /* !__INTELLISENSE__ */
 #include "types.h"
 /**/
 
@@ -96,8 +99,14 @@ DDATDEF DeeTypeObject DeeMapping_Type; /* `Mapping from deemon' */
  *       Though this statically allocated instance is used by most
  *       internal sequence functions.
  * HINT: Any exact instance of `DeeMapping_Type' should be considered stub/empty. */
-DDATDEF DeeObject          DeeMapping_EmptyInstance;
+DDATDEF DeeObject DeeMapping_EmptyInstance;
 #define Dee_EmptyMapping (&DeeMapping_EmptyInstance)
+#ifdef __INTELLISENSE__
+#define DeeMapping_NewEmpty() (&DeeMapping_EmptyInstance)
+#else /* __INTELLISENSE__ */
+#define DeeMapping_NewEmpty() (Dee_Incref(&DeeMapping_EmptyInstance), &DeeMapping_EmptyInstance)
+#endif /* !__INTELLISENSE__ */
+
 
 
 /* Wrapper for `DeeObject_BoolInherited(DeeObject_InvokeMethodHint(map_operator_contains, self, key))' */

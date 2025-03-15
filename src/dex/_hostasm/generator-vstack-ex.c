@@ -7025,11 +7025,11 @@ _fg_vpush_type_member(struct fungen *__restrict self,
 	/* Behavior here mirrors `Dee_type_member_get()' */
 	if (TYPE_MEMBER_ISCONST(desc)) {
 		DO(fg_vpop(self)); /* N/A */
-		return fg_vpush_const(self, desc->m_const);
+		return fg_vpush_const(self, desc->m_desc.md_const);
 	}
 
 	/* Inline the set operation when possible. */
-	switch (desc->m_field.m_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 #define CASE(x) case (x) & ~(STRUCT_CONST | STRUCT_ATOMIC)
 
 	CASE(STRUCT_NONE):
@@ -7049,7 +7049,7 @@ _fg_vpush_type_member(struct fungen *__restrict self,
 	}	break;
 
 	CASE(Dee_STRUCT_BOOL(HOST_SIZEOF_POINTER)): {
-		DO(fg_vind(self, desc->m_field.m_offset)); /* FIELD */
+		DO(fg_vind(self, desc->m_desc.md_field.mdf_offset)); /* FIELD */
 		DO(fg_vreg(self, NULL));                   /* reg:FIELD */
 		DO(fg_vdirect1(self));                     /* reg:FIELD */
 		ASSERT(fg_vtop_isdirect(self));
@@ -7059,11 +7059,11 @@ _fg_vpush_type_member(struct fungen *__restrict self,
 
 	CASE(Dee_STRUCT_INTEGER(HOST_SIZEOF_POINTER)):
 	CASE(Dee_STRUCT_UNSIGNED | Dee_STRUCT_INTEGER(HOST_SIZEOF_POINTER)): {
-		DO(fg_vind(self, desc->m_field.m_offset)); /* FIELD */
+		DO(fg_vind(self, desc->m_desc.md_field.mdf_offset)); /* FIELD */
 		DO(fg_vreg(self, NULL));                   /* reg:FIELD */
 		DO(fg_vdirect1(self));                     /* reg:FIELD */
 		ASSERT(fg_vtop_isdirect(self));
-		fg_vtop(self)->mv_vmorph = (desc->m_field.m_type & Dee_STRUCT_UNSIGNED)
+		fg_vtop(self)->mv_vmorph = (desc->m_desc.md_field.mdf_type & Dee_STRUCT_UNSIGNED)
 		                                               ? MEMVAL_VMORPH_UINT
 		                                               : MEMVAL_VMORPH_INT;
 		return 0;
@@ -7091,7 +7091,7 @@ push_true:
 		DO(fg_vpop(self)); /* N/A */
 		return fg_vpush_const(self, Dee_True);
 	}
-	switch (desc->m_field.m_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 
 #define CASE(x) case (x) & ~(STRUCT_CONST | STRUCT_ATOMIC)
 	CASE(STRUCT_NONE):
@@ -7130,14 +7130,14 @@ push_true:
 
 	CASE(STRUCT_WOBJECT): {
 		/* Check if the reference is bound by generating a call to `Dee_weakref_bound()' */
-		DO(fg_vdelta(self, desc->m_field.m_offset)); /* &FIELD */
+		DO(fg_vdelta(self, desc->m_desc.md_field.mdf_offset)); /* &FIELD */
 		return fg_vcallapi(self, &Dee_weakref_bound, VCALL_CC_BOOL_NX, 1);
 	}	break;
 
 	CASE(STRUCT_OBJECT):
 	CASE(STRUCT_CSTR): {
 		struct memval *vtop;
-		DO(fg_vind(self, desc->m_field.m_offset)); /* FIELD */
+		DO(fg_vind(self, desc->m_desc.md_field.mdf_offset)); /* FIELD */
 		DO(fg_vreg(self, NULL));                   /* reg:FIELD */
 		DO(fg_vdirect1(self));                     /* reg:FIELD */
 		vtop = fg_vtop(self);
@@ -7177,7 +7177,7 @@ fg_vpop_type_member(struct fungen *__restrict self,
 	/* Behavior here mirrors `Dee_type_member_set()' */
 	if unlikely(TYPE_MEMBER_ISCONST(desc))
 		goto fallback;
-	if unlikely(desc->m_field.m_type & STRUCT_CONST)
+	if unlikely(desc->m_desc.md_field.mdf_type & STRUCT_CONST)
 		goto fallback;
 
 	/* XXX: Inline the set operation where possible. */

@@ -1756,7 +1756,7 @@ stat_class_exists(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			DBG_ALIGNMENT_ENABLE();
 			if unlikely(error < 0)
 				goto err;
-			return_bool_(error == 0);
+			return_bool(error == 0);
 		}
 #endif /* !__OPTIMIZE_SIZE__ && posix_stat_USE_WINDOWS */
 		if (stat_unpack_args(argc, argv, stat_unpack_args_format("exists"),
@@ -1776,7 +1776,7 @@ stat_class_exists(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(error < 0)
 		goto err;
 	dee_stat_fini(&st);
-	return_bool_(error == 0);
+	return_bool(error == 0);
 err:
 	return NULL;
 }
@@ -1828,8 +1828,7 @@ stat_class_isdir(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0) {
-		result = Dee_False;
-		Dee_Incref(Dee_False);
+		result = DeeBool_NewFalse();
 	} else {
 		result = stat_isdir(COMPILER_CONTAINER_OF(&st, DeeStatObject, so_stat));
 	}
@@ -1866,8 +1865,7 @@ stat_class_ischr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0) {
-		result = Dee_False;
-		Dee_Incref(Dee_False);
+		result = DeeBool_NewFalse();
 	} else {
 		result = stat_ischr(COMPILER_CONTAINER_OF(&st, DeeStatObject, so_stat));
 	}
@@ -1904,8 +1902,7 @@ stat_class_isblk(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0) {
-		result = Dee_False;
-		Dee_Incref(Dee_False);
+		result = DeeBool_NewFalse();
 	} else {
 		result = stat_isblk(COMPILER_CONTAINER_OF(&st, DeeStatObject, so_stat));
 	}
@@ -1942,8 +1939,7 @@ stat_class_isdev(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0) {
-		result = Dee_False;
-		Dee_Incref(Dee_False);
+		result = DeeBool_NewFalse();
 	} else {
 		result = stat_isdev(COMPILER_CONTAINER_OF(&st, DeeStatObject, so_stat));
 	}
@@ -1996,8 +1992,7 @@ stat_class_isreg(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0) {
-		result = Dee_False;
-		Dee_Incref(Dee_False);
+		result = DeeBool_NewFalse();
 	} else {
 		result = stat_isreg(COMPILER_CONTAINER_OF(&st, DeeStatObject, so_stat));
 	}
@@ -2034,8 +2029,7 @@ stat_class_isfifo(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0) {
-		result = Dee_False;
-		Dee_Incref(Dee_False);
+		result = DeeBool_NewFalse();
 	} else {
 		result = stat_isfifo(COMPILER_CONTAINER_OF(&st, DeeStatObject, so_stat));
 	}
@@ -2079,8 +2073,7 @@ stat_class_islnk(DeeObject *UNUSED(self),
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0) {
-		result = Dee_False;
-		Dee_Incref(Dee_False);
+		result = DeeBool_NewFalse();
 	} else {
 		result = stat_islnk(COMPILER_CONTAINER_OF(&st, DeeStatObject, so_stat));
 	}
@@ -2123,8 +2116,7 @@ stat_class_issock(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0) {
-		result = Dee_False;
-		Dee_Incref(Dee_False);
+		result = DeeBool_NewFalse();
 	} else {
 		result = stat_issock(COMPILER_CONTAINER_OF(&st, DeeStatObject, so_stat));
 	}
@@ -2242,7 +2234,7 @@ err:
 		result = stat_is_unix_hidden_filename(abs_path);
 		Dee_Decref(abs_path);
 	}
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 #endif /* !posix_stat_USE_WINDOWS */
@@ -2365,7 +2357,7 @@ stat_class_isexe(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	}
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 #elif defined(posix_stat_USED_STRUCT_STAT)

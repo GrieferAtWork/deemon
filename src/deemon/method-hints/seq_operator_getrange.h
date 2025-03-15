@@ -36,7 +36,7 @@ __seq_getrange__.seq_operator_getrange([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *end)
 %{unsupported(auto("operator [:]"))}
 %{$none = return_none}
-%{$empty = return_empty_seq}
+%{$empty = return DeeSeq_NewEmpty()}
 %{using [seq_operator_getrange_index, seq_operator_getrange_index_n]: {
 	Dee_ssize_t start_index, end_index;
 	if (DeeObject_AsSSize(start, &start_index))
@@ -113,7 +113,7 @@ __seq_getrange__.seq_operator_getrange_index([[nonnull]] DeeObject *self,
                                              Dee_ssize_t start, Dee_ssize_t end)
 %{unsupported(auto("operator [:]"))}
 %{$none = return_none}
-%{$empty = return_empty_seq}
+%{$empty = return DeeSeq_NewEmpty()}
 %{using seq_operator_getrange: {
 	DREF DeeObject *startob, *endob, *result;
 	startob = DeeInt_NewSSize(start);
@@ -245,7 +245,7 @@ err:
 	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
 	return (DREF DeeObject *)result;
 empty_seq:
-	return_empty_seq;
+	return DeeSeq_NewEmpty();
 err:
 	return NULL;
 }} = $with__seq_operator_getrange;
@@ -290,7 +290,7 @@ __seq_getrange__.seq_operator_getrange_index_n([[nonnull]] DeeObject *self,
 	return NULL;
 })}
 %{$none = return_none}
-%{$empty = return_empty_seq}
+%{$empty = return DeeSeq_NewEmpty()}
 %{using seq_operator_getrange: {
 	DREF DeeObject *startob, *result;
 	startob = DeeInt_NewSSize(start);
@@ -329,7 +329,7 @@ err:
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
 	return (DREF DeeObject *)result;
 empty_range:
-	return_empty_seq;
+	return DeeSeq_NewEmpty();
 err:
 	return NULL;
 }}
@@ -349,7 +349,7 @@ err:
 	}
 	return CALL_DEPENDENCY(seq_operator_getrange_index, self, start, (Dee_ssize_t)size);
 empty_range:
-	return_empty_seq;
+	return DeeSeq_NewEmpty();
 err:
 	return NULL;
 }}
@@ -379,7 +379,7 @@ err:
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
 	return (DREF DeeObject *)result;
 empty_range:
-	return_empty_seq;
+	return DeeSeq_NewEmpty();
 err:
 	return NULL;
 }}
@@ -409,7 +409,7 @@ err:
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
 	return (DREF DeeObject *)result;
 empty_range:
-	return_empty_seq;
+	return DeeSeq_NewEmpty();
 err:
 	return NULL;
 }}
@@ -443,7 +443,7 @@ err:
 	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 	return (DREF DeeObject *)result;
 empty_range:
-	return_empty_seq;
+	return DeeSeq_NewEmpty();
 err_r_start:
 	Dee_Decref(result->dssg_start);
 err_r:

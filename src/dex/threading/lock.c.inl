@@ -758,7 +758,7 @@ LOCAL_lockapi_tryacquire(LOCAL_DeeLockObject *self,
 	bool result;
 	_DeeArg_Unpack0(err, argc, argv, "tryacquire");
 	result = LOCAL_lock_tryacquire(&self->l_lock);
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }

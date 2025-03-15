@@ -232,7 +232,7 @@ shlib_contains(Shlib *self,
 	if unlikely(!utf8_name)
 		goto err;
 	symaddr = DeeSystem_DlSym(self->sh_lib, utf8_name);
-	return_bool_(symaddr != NULL);
+	return_bool(symaddr != NULL);
 err:
 	return NULL;
 }

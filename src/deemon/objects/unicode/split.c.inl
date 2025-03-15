@@ -1101,9 +1101,8 @@ PRIVATE struct type_member tpconst linesplit_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 linesplit_ctor(LineSplit *__restrict self) {
-	self->ls_str  = (DREF DeeStringObject *)Dee_EmptyString;
+	self->ls_str  = (DREF DeeStringObject *)DeeString_NewEmpty();
 	self->ls_keep = false;
-	Dee_Incref(Dee_EmptyString);
 	return 0;
 }
 

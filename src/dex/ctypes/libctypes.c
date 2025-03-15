@@ -346,8 +346,10 @@ f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 
 	default: break;
 	}
-	if (result)
-		return_reference_(DeeSType_AsObject(result));
+	if (result) {
+		Dee_Incref(DeeSType_AsType(result));
+		return DeeSType_AsObject(result);
+	}
 	DeeError_Throwf(&DeeError_ValueError,
 	                "No C integer type with a width of `%" PRFuSIZ "' bytes exists",
 	                intsize);

@@ -108,8 +108,8 @@ STATIC_ASSERT(STRUCT_BOOLBIT(0x80) == STRUCT_BOOLBIT7);
 INTERN WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 type_member_typefor(struct type_member const *__restrict self) {
 	if (TYPE_MEMBER_ISCONST(self))
-		return Dee_TYPE(self->m_const);
-	switch (self->m_field.m_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+		return Dee_TYPE(self->m_desc.md_const);
+	switch (self->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 
 	case STRUCT_NONE & ~(STRUCT_CONST):
 		return &DeeNone_Type;
@@ -224,7 +224,7 @@ type_obmemb_enum(DeeTypeObject *__restrict tp_self,
 	ASSERT(chain != NULL);
 	for (; chain->m_name; ++chain) {
 		uint16_t perm = ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PERMGET | ATTR_WRAPPER;
-		if (!(chain->m_field.m_type & STRUCT_CONST))
+		if (!(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
 			perm |= ATTR_PERMDEL | ATTR_PERMSET;
 		temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
 		               perm, type_member_typefor(chain) /*&DeeClsMember_Type*/, arg);
@@ -266,10 +266,10 @@ type_member_enum(DeeTypeObject *__restrict tp_self,
 	for (; chain->m_name; ++chain) {
 		if (TYPE_MEMBER_ISCONST(chain)) {
 			temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
-			               flags | ATTR_PERMGET, Dee_TYPE(chain->m_const), arg);
+			               flags | ATTR_PERMGET, Dee_TYPE(chain->m_desc.md_const), arg);
 		} else {
 			uint16_t perm = flags | ATTR_PERMGET;
-			if (!(chain->m_field.m_type & STRUCT_CONST))
+			if (!(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
 				perm |= (ATTR_PERMDEL | ATTR_PERMSET);
 			temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
 			               perm, type_member_typefor(chain), arg);
@@ -583,16 +583,16 @@ err:
 }
 
 
-#define FIELD(T)  (*(T *)((uintptr_t)self + desc->m_field.m_offset))
+#define FIELD(T)  (*(T *)((uintptr_t)self + desc->m_desc.md_field.mdf_offset))
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Dee_type_member_get(struct type_member const *desc,
                     DeeObject *__restrict self) {
 	if (TYPE_MEMBER_ISCONST(desc)) {
-		ASSERT_OBJECT(desc->m_const);
-		return_reference_(desc->m_const);
+		ASSERT_OBJECT(desc->m_desc.md_const);
+		return_reference_(desc->m_desc.md_const);
 	}
-	switch (desc->m_field.m_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 #define CASE(x) case (x) & ~(STRUCT_CONST | STRUCT_ATOMIC)
 
 	CASE(STRUCT_NONE):
@@ -614,7 +614,7 @@ ret_none:
 		ob = FIELD(DeeObject *);
 		if unlikely(!ob) {
 handle_null_ob:
-			if (!(desc->m_field.m_type & (STRUCT_OBJECT_OPT & ~(STRUCT_OBJECT))))
+			if (!(desc->m_desc.md_field.mdf_type & (STRUCT_OBJECT_OPT & ~(STRUCT_OBJECT))))
 				goto is_unbound;
 			ob = Dee_None;
 		}
@@ -628,7 +628,7 @@ handle_null_ob:
 		char const *cstr;
 		cstr = FIELD(char *);
 		if unlikely(!cstr) {
-			switch (desc->m_field.m_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+			switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 
 			CASE(STRUCT_CSTR_OPT):
 				goto ret_none;
@@ -669,7 +669,7 @@ handle_null_ob:
 	CASE(STRUCT_BOOLBIT2): CASE(STRUCT_BOOLBIT3):
 	CASE(STRUCT_BOOLBIT4): CASE(STRUCT_BOOLBIT5):
 	CASE(STRUCT_BOOLBIT6): CASE(STRUCT_BOOLBIT7):
-		return_bool((FIELD(uint8_t) & STRUCT_BOOLBITMASK(desc->m_field.m_type & ~(STRUCT_CONST | STRUCT_ATOMIC))) != 0);
+		return_bool((FIELD(uint8_t) & STRUCT_BOOLBITMASK(desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC))) != 0);
 #else /* __OPTIMIZE_SIZE__ */
 	CASE(STRUCT_BOOLBIT0): return_bool((FIELD(uint8_t) & 0x01) != 0);
 	CASE(STRUCT_BOOLBIT1): return_bool((FIELD(uint8_t) & 0x02) != 0);
@@ -733,10 +733,10 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_type_member_bound(struct type_member const *desc,
                       DeeObject *__restrict self) {
 	if (TYPE_MEMBER_ISCONST(desc)) {
-		ASSERT_OBJECT(desc->m_const);
+		ASSERT_OBJECT(desc->m_desc.md_const);
 		return true;
 	}
-	switch (desc->m_field.m_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 
 #define CASE(x) case (x) & ~(STRUCT_CONST | STRUCT_ATOMIC)
 	CASE(STRUCT_NONE):
@@ -791,9 +791,9 @@ Dee_type_member_set(struct type_member const *desc,
                     DeeObject *self, DeeObject *value) {
 	if (TYPE_MEMBER_ISCONST(desc))
 		goto cant_access;
-	if (desc->m_field.m_type & STRUCT_CONST)
+	if (desc->m_desc.md_field.mdf_type & STRUCT_CONST)
 		goto cant_access;
-	switch (desc->m_field.m_type & ~(STRUCT_ATOMIC)) {
+	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC)) {
 #define WRITE(dst, src) atomic_write(&dst, src)
 
 	case STRUCT_WOBJECT_OPT:
@@ -829,7 +829,7 @@ Dee_type_member_set(struct type_member const *desc,
 		if unlikely(boolval < 0)
 			goto err;
 		boolval = !!boolval;
-		switch (desc->m_field.m_type & ~(STRUCT_ATOMIC)) {
+		switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC)) {
 		case STRUCT_BOOL8:  FIELD(uint8_t)  = (uint8_t )(unsigned int)boolval; break;
 		case STRUCT_BOOL16: FIELD(uint16_t) = (uint16_t)(unsigned int)boolval; break;
 		case STRUCT_BOOL32: FIELD(uint32_t) = (uint32_t)(unsigned int)boolval; break;
@@ -852,16 +852,16 @@ Dee_type_member_set(struct type_member const *desc,
 		boolval = DeeObject_Bool(value);
 		if unlikely(boolval < 0)
 			goto err;
-		mask = STRUCT_BOOLBITMASK(desc->m_field.m_type & ~STRUCT_ATOMIC);
+		mask = STRUCT_BOOLBITMASK(desc->m_desc.md_field.mdf_type & ~STRUCT_ATOMIC);
 		pfield = &FIELD(uint8_t);
 		if (boolval) {
-			IF_THREADS(if (desc->m_field.m_type & STRUCT_ATOMIC) {
+			IF_THREADS(if (desc->m_desc.md_field.mdf_type & STRUCT_ATOMIC) {
 				atomic_or(pfield, mask);
 			} else) {
 				*pfield |= mask;
 			}
 		} else {
-			IF_THREADS(if (desc->m_field.m_type & STRUCT_ATOMIC) {
+			IF_THREADS(if (desc->m_desc.md_field.mdf_type & STRUCT_ATOMIC) {
 				atomic_and(pfield, ~mask);
 			} else) {
 				*pfield &= ~mask;
@@ -876,7 +876,7 @@ Dee_type_member_set(struct type_member const *desc,
 		double data;
 		if (DeeObject_AsDouble(value, &data))
 			goto err;
-		switch (desc->m_field.m_type & ~(STRUCT_ATOMIC)) {
+		switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC)) {
 
 		case STRUCT_FLOAT:
 			FIELD(float) = (float)data;

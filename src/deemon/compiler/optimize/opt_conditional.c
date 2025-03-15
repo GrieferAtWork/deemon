@@ -156,8 +156,7 @@ err_ff_tt_assumes:
 			 *       if `other_branch' contains a `label'. */
 			ast_fini_contents(self);
 			self->a_type      = AST_CONSTEXPR;
-			self->a_constexpr = Dee_None;
-			Dee_Incref(Dee_None);
+			self->a_constexpr = DeeNone_NewRef();
 		} else if (eval_branch == self->a_conditional.c_cond) {
 			/* Special case: The branch that is getting evaluated
 			 *               is referencing the condition. */

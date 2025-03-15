@@ -181,8 +181,7 @@ symbol_setkind(DeeCompilerSymbolObject *__restrict self,
 				sym->s_ambig.a_declv        = NULL;
 				break;
 			case SYMBOL_TYPE_CONST:
-				sym->s_const = Dee_None;
-				Dee_Incref(Dee_None);
+				sym->s_const = DeeNone_NewRef();
 				break;
 
 			default: break;

@@ -317,7 +317,7 @@ seq_empty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	result = DeeObject_InvokeMethodHint(seq_operator_bool, self);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result == 0);
+	return_bool(result == 0);
 err:
 	return NULL;
 }
@@ -393,7 +393,7 @@ seq_distribute(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	mylen += segsize - 1;
 	mylen /= segsize;
 	if unlikely(!mylen)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	return DeeSeq_Segments(self, mylen);
 err_invalid_segsize:
 	err_invalid_distribution_count(segsize);
@@ -626,7 +626,7 @@ seq_bcontains(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	         : DeeObject_InvokeMethodHint(seq_bfind, self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
-	return_bool_(result != (size_t)-1);
+	return_bool(result != (size_t)-1);
 err:
 	return NULL;
 }
@@ -2061,7 +2061,7 @@ seq_get_isempty(DeeObject *__restrict self) {
 	int result = DeeObject_InvokeMethodHint(seq_operator_bool, self);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(!result);
+	return_bool(!result);
 err:
 	return NULL;
 }
@@ -2071,7 +2071,7 @@ seq_get_isnonempty(DeeObject *__restrict self) {
 	int result = DeeObject_InvokeMethodHint(seq_operator_bool, self);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -2428,7 +2428,7 @@ seq_class_concat(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	if (!argc)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	if (argc == 1)
 		return_reference_(argv[0]);
 	result = DeeTuple_NewVector(argc, argv);

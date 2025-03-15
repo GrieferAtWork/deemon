@@ -317,8 +317,7 @@ DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	if unlikely(!num_bytes) {
 		if (self)
 			Dee_DecrefDokill(self);
-		Dee_Incref(Dee_EmptyString);
-		return Dee_EmptyString;
+		return DeeString_NewEmpty();
 	}
 
 	/* Re-allocate the buffer. */
@@ -349,8 +348,7 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	if unlikely(!num_bytes) {
 		if (self)
 			Dee_DecrefDokill(self);
-		Dee_Incref(Dee_EmptyString);
-		return Dee_EmptyString;
+		return DeeString_NewEmpty();
 	}
 
 	/* Re-allocate the buffer. */
@@ -380,10 +378,8 @@ PUBLIC WUNUSED DREF DeeObject *
 #endif /* !NDEBUG */
 {
 	DREF String *result;
-	if unlikely(!num_bytes) {
-		Dee_Incref(Dee_EmptyString);
-		return Dee_EmptyString;
-	}
+	if unlikely(!num_bytes)
+		return DeeString_NewEmpty();
 #ifdef NDEBUG
 	result = (DREF String *)DeeObject_Mallocc(offsetof(String, s_str),
 	                                          num_bytes + 1, sizeof(char));
@@ -460,7 +456,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	switch (length) {
 
 	case 0:
-		return_empty_string;
+		return DeeString_NewEmpty();
 
 	case 1:
 		return DeeString_Chr((uint8_t)str[0]);
@@ -510,7 +506,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 string_new_empty(void) {
-	return_empty_string;
+	return DeeString_NewEmpty();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1141,11 +1137,10 @@ stringiter_bool(StringIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_ctor(StringIterator *__restrict self) {
-	self->si_string   = (DREF String *)Dee_EmptyString;
-	self->si_iter.ptr = DeeString_STR(Dee_EmptyString);
-	self->si_end.ptr  = DeeString_STR(Dee_EmptyString);
+	self->si_string   = (DREF String *)DeeString_NewEmpty();
+	self->si_iter.ptr = DeeString_STR(self->si_string);
+	self->si_end.ptr  = DeeString_STR(self->si_string);
 	self->si_width    = STRING_WIDTH_1BYTE;
-	Dee_Incref(Dee_EmptyString);
 	return 0;
 }
 
@@ -1471,7 +1466,7 @@ string_getrange_index(String *__restrict self,
 	DeeSeqRange_Clamp(&range, begin, end, len);
 	range_size = range.sr_end - range.sr_start;
 	if unlikely(range_size <= 0)
-		return_empty_string;
+		return DeeString_NewEmpty();
 	return DeeString_NewWithWidth((byte_t *)str +
 	                              (range.sr_start * STRING_SIZEOF_WIDTH(width)),
 	                              range_size, width);
@@ -1489,7 +1484,7 @@ string_getrange_index_n(String *__restrict self, Dee_ssize_t begin) {
 	start = DeeSeqRange_Clamp_n(begin, len);
 	range_size = len - start;
 	if unlikely(range_size <= 0)
-		return_empty_string;
+		return DeeString_NewEmpty();
 	return DeeString_NewWithWidth((byte_t *)str +
 	                              (start * STRING_SIZEOF_WIDTH(width)),
 	                              range_size, width);

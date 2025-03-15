@@ -568,8 +568,7 @@ FUNC(BraceItems)(JITLexer *__restrict self) {
 		JITLexer_Yield(self);
 		/* Empty sequence. */
 #ifdef JIT_EVAL
-		result = Dee_EmptySeq;
-		Dee_Incref(Dee_EmptySeq);
+		result = DeeSeq_NewEmpty();
 #else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
@@ -987,8 +986,7 @@ not_a_java_lambda:
 			if (self->jl_tok == ')') {
 				/* Empty tuple. */
 #ifdef JIT_EVAL
-				result = Dee_EmptyTuple;
-				Dee_Incref(Dee_EmptyTuple);
+				result = DeeTuple_NewEmpty();
 #else /* JIT_EVAL */
 				result = 0;
 #endif /* !JIT_EVAL */
@@ -1463,8 +1461,7 @@ skip_rbrck_and_done:
 			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('n', 'o', 'n', 'e')) {
 #ifdef JIT_EVAL
-				result = Dee_None;
-				Dee_Incref(Dee_None);
+				result = DeeNone_NewRef();
 #else /* JIT_EVAL */
 				result = 0;
 #endif /* !JIT_EVAL */
@@ -1472,8 +1469,7 @@ skip_rbrck_and_done:
 			}
 			if (name == ENCODE_INT32('t', 'r', 'u', 'e')) {
 #ifdef JIT_EVAL
-				result = Dee_True;
-				Dee_Incref(Dee_True);
+				result = DeeBool_NewTrue();
 #else /* JIT_EVAL */
 				result = 0;
 #endif /* !JIT_EVAL */
@@ -1557,8 +1553,7 @@ skip_rbrck_and_done:
 						goto err;
 				} else {
 #ifdef JIT_EVAL
-					result = Dee_EmptyTuple;
-					Dee_Incref(Dee_EmptyTuple);
+					result = DeeTuple_NewEmpty();
 #else /* JIT_EVAL */
 					result = 0;
 #endif /* !JIT_EVAL */
@@ -1608,8 +1603,7 @@ skip_rbrck_and_done:
 			if (name == ENCODE_INT32('f', 'a', 'l', 's') &&
 			    UNALIGNED_GET8(tok_begin + 4) == 'e') {
 #ifdef JIT_EVAL
-				result = Dee_False;
-				Dee_Incref(Dee_False);
+				result = DeeBool_NewFalse();
 #else /* JIT_EVAL */
 				result = 0;
 #endif /* !JIT_EVAL */
@@ -2133,9 +2127,9 @@ err_result_copy:
 					ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
 					self->jl_lvalue.lv_kind           = JIT_LVALUE_RANGE;
 					self->jl_lvalue.lv_range.lr_base  = lhs; /* Inherit reference. */
-					self->jl_lvalue.lv_range.lr_start = Dee_None;
-					self->jl_lvalue.lv_range.lr_end   = Dee_None;
-					Dee_Incref_n(Dee_None, 2);
+					self->jl_lvalue.lv_range.lr_start = (DeeObject *)&DeeNone_Singleton;
+					self->jl_lvalue.lv_range.lr_end   = (DeeObject *)&DeeNone_Singleton;
+					Dee_Incref_n(&DeeNone_Singleton, 2);
 					lhs = JIT_LVALUE;
 #endif /* JIT_EVAL */
 				} else {
@@ -2155,9 +2149,8 @@ err_r_temp_expected_rbrck:
 					ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
 					self->jl_lvalue.lv_kind           = JIT_LVALUE_RANGE;
 					self->jl_lvalue.lv_range.lr_base  = lhs; /* Inherit reference. */
-					self->jl_lvalue.lv_range.lr_start = Dee_None;
+					self->jl_lvalue.lv_range.lr_start = DeeNone_NewRef();
 					self->jl_lvalue.lv_range.lr_end   = temp; /* Inherit reference. */
-					Dee_Incref(Dee_None);
 					lhs = JIT_LVALUE;
 #endif /* JIT_EVAL */
 				}
@@ -2175,8 +2168,7 @@ err_r_temp_expected_rbrck:
 						self->jl_lvalue.lv_kind           = JIT_LVALUE_RANGE;
 						self->jl_lvalue.lv_range.lr_base  = lhs;  /* Inherit reference. */
 						self->jl_lvalue.lv_range.lr_start = temp; /* Inherit reference. */
-						self->jl_lvalue.lv_range.lr_end   = Dee_None;
-						Dee_Incref(Dee_None);
+						self->jl_lvalue.lv_range.lr_end   = DeeNone_NewRef();
 						lhs = JIT_LVALUE;
 #endif /* JIT_EVAL */
 					} else {
@@ -2260,8 +2252,7 @@ err_start_expr:
 				self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
 				if (self->jl_tok == ')') {
 					JITLexer_Yield(self);
-					rhs = Dee_EmptyTuple;
-					Dee_Incref(Dee_EmptyTuple);
+					rhs  = DeeTuple_NewEmpty();
 					kwds = NULL;
 				} else {
 					rhs = JITLexer_EvalArgumentList(self, &kwds);
@@ -2293,8 +2284,7 @@ err_function_lvalue:
 				if (self->jl_tok == ')') {
 					JITLexer_Yield(self);
 #ifdef JIT_EVAL
-					rhs = Dee_EmptyTuple;
-					Dee_Incref(Dee_EmptyTuple);
+					rhs  = DeeTuple_NewEmpty();
 					kwds = NULL;
 #endif /* JIT_EVAL */
 				} else {
@@ -3206,8 +3196,7 @@ DEFINE_SECONDARY(LandOperand) {
 			} else {
 				if unlikely(JITLexer_SkipAs(self, flags))
 					goto err;
-				lhs = Dee_False;
-				Dee_Incref(Dee_False);
+				lhs = DeeBool_NewFalse();
 			}
 		}
 #else /* JIT_EVAL */
@@ -3268,8 +3257,7 @@ DEFINE_SECONDARY(LorOperand) {
 			if (b) {
 				if unlikely(JITLexer_SkipLand(self, flags))
 					goto err;
-				lhs = Dee_True;
-				Dee_Incref(Dee_True);
+				lhs = DeeBool_NewTrue();
 			} else {
 				lhs = CALL_PRIMARY(As);
 				if (ISERR(lhs))
@@ -3362,8 +3350,7 @@ DEFINE_SECONDARY(CondOperand) {
 					goto err_r;
 				if (self->jl_tok != ':') {
 					Dee_Decref(lhs);
-					lhs = Dee_None;
-					Dee_Incref(Dee_None);
+					lhs = DeeNone_NewRef();
 				} else {
 					JITLexer_Yield(self);
 					if (JITLexer_MaybeExpressionBegin(self)) {
@@ -3599,8 +3586,7 @@ DEFINE_SECONDARY(CommaTupleOperand) {
 #ifdef JIT_EVAL
 	DREF DeeTupleObject *result;
 	DREF DeeTupleObject *new_result;
-	result = (DREF DeeTupleObject *)Dee_EmptyTuple;
-	Dee_Incref(Dee_EmptyTuple);
+	result = (DREF DeeTupleObject *)DeeTuple_NewEmpty();
 #else /* JIT_EVAL */
 	RETURN_TYPE result;
 	int lhs;

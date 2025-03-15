@@ -155,7 +155,7 @@ PUBLIC ATTR_CONST WUNUSED Dee_hash_t
 #define r2 13
 #define m  5
 #define n  UINT32_C(0xe6546b64)
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 	uint8_t const *tail;
 	uint32_t k1;
@@ -199,7 +199,7 @@ Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	uint16_t const *tail;
 	uint32_t k1;
@@ -250,7 +250,7 @@ Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	uint32_t const *tail;
 	uint32_t k1;
@@ -305,7 +305,7 @@ Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 	uint8_t const *tail;
 	uint32_t k1;
@@ -358,7 +358,7 @@ Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	uint16_t const *tail;
 	uint32_t k1;
@@ -409,7 +409,7 @@ Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	uint32_t const *tail;
 	uint32_t k1;
@@ -463,7 +463,7 @@ Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
 	char const *end = ptr + n_bytes;
 	uint32_t k1     = 0;
@@ -519,7 +519,7 @@ done:
 	return hash;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
 	char const *end = ptr + n_bytes;
 	uint32_t k1     = 0;
@@ -592,17 +592,18 @@ done:
 #define m    UINT64_C(0xc6a4a7935bd1e995)
 #define r    47
 //#define seed 0xe17a1465
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
-	dhash_t h = seed ^ (n_bytes * m);
+	Dee_hash_t h = seed ^ (n_bytes * m);
 #else /* seed */
-	dhash_t h = 0;
+	Dee_hash_t h = 0;
 #endif /* !seed */
 	size_t len8 = n_bytes >> 3;
 	while (len8--) {
-		dhash_t k;
-		k = UNALIGNED_GETLE64((*(dhash_t **)&ptr)++);
+		Dee_hash_t k;
+		k = UNALIGNED_GETLE64((Dee_hash_t *)ptr);
+		ptr = (void const *)((byte_t *)ptr + sizeof(Dee_hash_t));
 		k *= m;
 		k ^= k >> r;
 		k *= m;
@@ -611,25 +612,25 @@ Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 	}
 	switch (n_bytes & 7) {
 	case 7:
-		h ^= (dhash_t)((uint8_t *)ptr)[6] << 48;
+		h ^= (Dee_hash_t)((uint8_t *)ptr)[6] << 48;
 		ATTR_FALLTHROUGH
 	case 6:
-		h ^= (dhash_t)((uint8_t *)ptr)[5] << 40;
+		h ^= (Dee_hash_t)((uint8_t *)ptr)[5] << 40;
 		ATTR_FALLTHROUGH
 	case 5:
-		h ^= (dhash_t)((uint8_t *)ptr)[4] << 32;
+		h ^= (Dee_hash_t)((uint8_t *)ptr)[4] << 32;
 		ATTR_FALLTHROUGH
 	case 4:
-		h ^= (dhash_t)((uint8_t *)ptr)[3] << 24;
+		h ^= (Dee_hash_t)((uint8_t *)ptr)[3] << 24;
 		ATTR_FALLTHROUGH
 	case 3:
-		h ^= (dhash_t)((uint8_t *)ptr)[2] << 16;
+		h ^= (Dee_hash_t)((uint8_t *)ptr)[2] << 16;
 		ATTR_FALLTHROUGH
 	case 2:
-		h ^= (dhash_t)((uint8_t *)ptr)[1] << 8;
+		h ^= (Dee_hash_t)((uint8_t *)ptr)[1] << 8;
 		ATTR_FALLTHROUGH
 	case 1:
-		h ^= (dhash_t)((uint8_t *)ptr)[0];
+		h ^= (Dee_hash_t)((uint8_t *)ptr)[0];
 		h *= m;
 		break;
 	default: break;
@@ -640,24 +641,24 @@ Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 	return h;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 #ifdef seed
-	dhash_t h = seed ^ (n_words * m);
+	Dee_hash_t h = seed ^ (n_words * m);
 #else /* seed */
-	dhash_t h = 0;
+	Dee_hash_t h = 0;
 #endif /* !seed */
 	size_t len8 = n_words >> 3;
 	while (len8--) {
-		dhash_t k;
-		k = (dhash_t)packw(ptr[0]) << ESEL(0, 56);
-		k |= (dhash_t)packw(ptr[1]) << ESEL(8, 48);
-		k |= (dhash_t)packw(ptr[2]) << ESEL(16, 40);
-		k |= (dhash_t)packw(ptr[3]) << ESEL(24, 32);
-		k |= (dhash_t)packw(ptr[4]) << ESEL(32, 24);
-		k |= (dhash_t)packw(ptr[5]) << ESEL(40, 16);
-		k |= (dhash_t)packw(ptr[6]) << ESEL(48, 8);
-		k |= (dhash_t)packw(ptr[7]) << ESEL(56, 0);
+		Dee_hash_t k;
+		k = (Dee_hash_t)packw(ptr[0]) << ESEL(0, 56);
+		k |= (Dee_hash_t)packw(ptr[1]) << ESEL(8, 48);
+		k |= (Dee_hash_t)packw(ptr[2]) << ESEL(16, 40);
+		k |= (Dee_hash_t)packw(ptr[3]) << ESEL(24, 32);
+		k |= (Dee_hash_t)packw(ptr[4]) << ESEL(32, 24);
+		k |= (Dee_hash_t)packw(ptr[5]) << ESEL(40, 16);
+		k |= (Dee_hash_t)packw(ptr[6]) << ESEL(48, 8);
+		k |= (Dee_hash_t)packw(ptr[7]) << ESEL(56, 0);
 		ptr += 8;
 		k *= m;
 		k ^= k >> r;
@@ -667,25 +668,25 @@ Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	}
 	switch (n_words & 7) {
 	case 7:
-		h ^= (dhash_t)packw(ptr[6]) << 48;
+		h ^= (Dee_hash_t)packw(ptr[6]) << 48;
 		ATTR_FALLTHROUGH
 	case 6:
-		h ^= (dhash_t)packw(ptr[5]) << 40;
+		h ^= (Dee_hash_t)packw(ptr[5]) << 40;
 		ATTR_FALLTHROUGH
 	case 5:
-		h ^= (dhash_t)packw(ptr[4]) << 32;
+		h ^= (Dee_hash_t)packw(ptr[4]) << 32;
 		ATTR_FALLTHROUGH
 	case 4:
-		h ^= (dhash_t)packw(ptr[3]) << 24;
+		h ^= (Dee_hash_t)packw(ptr[3]) << 24;
 		ATTR_FALLTHROUGH
 	case 3:
-		h ^= (dhash_t)packw(ptr[2]) << 16;
+		h ^= (Dee_hash_t)packw(ptr[2]) << 16;
 		ATTR_FALLTHROUGH
 	case 2:
-		h ^= (dhash_t)packw(ptr[1]) << 8;
+		h ^= (Dee_hash_t)packw(ptr[1]) << 8;
 		ATTR_FALLTHROUGH
 	case 1:
-		h ^= (dhash_t)packw(ptr[0]);
+		h ^= (Dee_hash_t)packw(ptr[0]);
 		h *= m;
 		break;
 	default: break;
@@ -696,24 +697,24 @@ Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	return h;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 #ifdef seed
-	dhash_t h = seed ^ (n_dwords * m);
+	Dee_hash_t h = seed ^ (n_dwords * m);
 #else /* seed */
-	dhash_t h = 0;
+	Dee_hash_t h = 0;
 #endif /* !seed */
 	size_t len8 = n_dwords >> 3;
 	while (len8--) {
-		dhash_t k;
-		k = (dhash_t)packl(ptr[0]) << ESEL(0, 56);
-		k |= (dhash_t)packl(ptr[1]) << ESEL(8, 48);
-		k |= (dhash_t)packl(ptr[2]) << ESEL(16, 40);
-		k |= (dhash_t)packl(ptr[3]) << ESEL(24, 32);
-		k |= (dhash_t)packl(ptr[4]) << ESEL(32, 24);
-		k |= (dhash_t)packl(ptr[5]) << ESEL(40, 16);
-		k |= (dhash_t)packl(ptr[6]) << ESEL(48, 8);
-		k |= (dhash_t)packl(ptr[7]) << ESEL(56, 0);
+		Dee_hash_t k;
+		k = (Dee_hash_t)packl(ptr[0]) << ESEL(0, 56);
+		k |= (Dee_hash_t)packl(ptr[1]) << ESEL(8, 48);
+		k |= (Dee_hash_t)packl(ptr[2]) << ESEL(16, 40);
+		k |= (Dee_hash_t)packl(ptr[3]) << ESEL(24, 32);
+		k |= (Dee_hash_t)packl(ptr[4]) << ESEL(32, 24);
+		k |= (Dee_hash_t)packl(ptr[5]) << ESEL(40, 16);
+		k |= (Dee_hash_t)packl(ptr[6]) << ESEL(48, 8);
+		k |= (Dee_hash_t)packl(ptr[7]) << ESEL(56, 0);
 		ptr += 8;
 		k *= m;
 		k ^= k >> r;
@@ -723,25 +724,25 @@ Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	}
 	switch (n_dwords & 7) {
 	case 7:
-		h ^= (dhash_t)packl(ptr[6]) << 48;
+		h ^= (Dee_hash_t)packl(ptr[6]) << 48;
 		ATTR_FALLTHROUGH
 	case 6:
-		h ^= (dhash_t)packl(ptr[5]) << 40;
+		h ^= (Dee_hash_t)packl(ptr[5]) << 40;
 		ATTR_FALLTHROUGH
 	case 5:
-		h ^= (dhash_t)packl(ptr[4]) << 32;
+		h ^= (Dee_hash_t)packl(ptr[4]) << 32;
 		ATTR_FALLTHROUGH
 	case 4:
-		h ^= (dhash_t)packl(ptr[3]) << 24;
+		h ^= (Dee_hash_t)packl(ptr[3]) << 24;
 		ATTR_FALLTHROUGH
 	case 3:
-		h ^= (dhash_t)packl(ptr[2]) << 16;
+		h ^= (Dee_hash_t)packl(ptr[2]) << 16;
 		ATTR_FALLTHROUGH
 	case 2:
-		h ^= (dhash_t)packl(ptr[1]) << 8;
+		h ^= (Dee_hash_t)packl(ptr[1]) << 8;
 		ATTR_FALLTHROUGH
 	case 1:
-		h ^= (dhash_t)packl(ptr[0]);
+		h ^= (Dee_hash_t)packl(ptr[0]);
 		h *= m;
 		break;
 	default: break;
@@ -752,20 +753,21 @@ Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	return h;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
-	dhash_t h = seed ^ (n_bytes * m);
+	Dee_hash_t h = seed ^ (n_bytes * m);
 #else /* seed */
-	dhash_t h = 0;
+	Dee_hash_t h = 0;
 #endif /* !seed */
 	size_t len8 = n_bytes >> 3;
 	while (len8--) {
 		union {
 			char ch[8];
-			dhash_t x;
+			Dee_hash_t x;
 		} k;
-		k.x     = UNALIGNED_GETLE64((*(dhash_t **)&ptr)++);
+		k.x = UNALIGNED_GETLE64((Dee_hash_t *)ptr);
+		ptr = (void const *)((byte_t *)ptr + sizeof(Dee_hash_t));
 		k.ch[0] = (char)DeeUni_ToLower(k.ch[0]);
 		k.ch[1] = (char)DeeUni_ToLower(k.ch[1]);
 		k.ch[2] = (char)DeeUni_ToLower(k.ch[2]);
@@ -782,25 +784,25 @@ Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 	}
 	switch (n_bytes & 7) {
 	case 7:
-		h ^= (dhash_t)DeeUni_ToLower(((uint8_t *)ptr)[6]) << 48;
+		h ^= (Dee_hash_t)DeeUni_ToLower(((uint8_t *)ptr)[6]) << 48;
 		ATTR_FALLTHROUGH
 	case 6:
-		h ^= (dhash_t)DeeUni_ToLower(((uint8_t *)ptr)[5]) << 40;
+		h ^= (Dee_hash_t)DeeUni_ToLower(((uint8_t *)ptr)[5]) << 40;
 		ATTR_FALLTHROUGH
 	case 5:
-		h ^= (dhash_t)DeeUni_ToLower(((uint8_t *)ptr)[4]) << 32;
+		h ^= (Dee_hash_t)DeeUni_ToLower(((uint8_t *)ptr)[4]) << 32;
 		ATTR_FALLTHROUGH
 	case 4:
-		h ^= (dhash_t)DeeUni_ToLower(((uint8_t *)ptr)[3]) << 24;
+		h ^= (Dee_hash_t)DeeUni_ToLower(((uint8_t *)ptr)[3]) << 24;
 		ATTR_FALLTHROUGH
 	case 3:
-		h ^= (dhash_t)DeeUni_ToLower(((uint8_t *)ptr)[2]) << 16;
+		h ^= (Dee_hash_t)DeeUni_ToLower(((uint8_t *)ptr)[2]) << 16;
 		ATTR_FALLTHROUGH
 	case 2:
-		h ^= (dhash_t)DeeUni_ToLower(((uint8_t *)ptr)[1]) << 8;
+		h ^= (Dee_hash_t)DeeUni_ToLower(((uint8_t *)ptr)[1]) << 8;
 		ATTR_FALLTHROUGH
 	case 1:
-		h ^= (dhash_t)DeeUni_ToLower(((uint8_t *)ptr)[0]);
+		h ^= (Dee_hash_t)DeeUni_ToLower(((uint8_t *)ptr)[0]);
 		h *= m;
 		break;
 	default: break;
@@ -811,33 +813,33 @@ Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 	return h;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 #ifdef seed
-	dhash_t h = seed ^ (n_words * m);
+	Dee_hash_t h = seed ^ (n_words * m);
 #else /* seed */
-	dhash_t h = 0;
+	Dee_hash_t h = 0;
 #endif /* !seed */
 	size_t len8 = n_words >> 3;
 	uint32_t ch;
 	while (len8--) {
-		dhash_t k;
+		Dee_hash_t k;
 		ch = DeeUni_ToLower(ptr[0]);
-		k  = (dhash_t)packl(ch) << ESEL(0, 56);
+		k  = (Dee_hash_t)packl(ch) << ESEL(0, 56);
 		ch = DeeUni_ToLower(ptr[1]);
-		k |= (dhash_t)packl(ch) << ESEL(8, 48);
+		k |= (Dee_hash_t)packl(ch) << ESEL(8, 48);
 		ch = DeeUni_ToLower(ptr[2]);
-		k |= (dhash_t)packl(ch) << ESEL(16, 40);
+		k |= (Dee_hash_t)packl(ch) << ESEL(16, 40);
 		ch = DeeUni_ToLower(ptr[3]);
-		k |= (dhash_t)packl(ch) << ESEL(24, 32);
+		k |= (Dee_hash_t)packl(ch) << ESEL(24, 32);
 		ch = DeeUni_ToLower(ptr[4]);
-		k |= (dhash_t)packl(ch) << ESEL(32, 24);
+		k |= (Dee_hash_t)packl(ch) << ESEL(32, 24);
 		ch = DeeUni_ToLower(ptr[5]);
-		k |= (dhash_t)packl(ch) << ESEL(40, 16);
+		k |= (Dee_hash_t)packl(ch) << ESEL(40, 16);
 		ch = DeeUni_ToLower(ptr[6]);
-		k |= (dhash_t)packl(ch) << ESEL(48, 8);
+		k |= (Dee_hash_t)packl(ch) << ESEL(48, 8);
 		ch = DeeUni_ToLower(ptr[7]);
-		k |= (dhash_t)packl(ch) << ESEL(56, 0);
+		k |= (Dee_hash_t)packl(ch) << ESEL(56, 0);
 		ptr += 8;
 		k *= m;
 		k ^= k >> r;
@@ -848,31 +850,31 @@ Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	switch (n_words & 7) {
 	case 7:
 		ch = DeeUni_ToLower(ptr[6]);
-		h ^= (dhash_t)packl(ch) << 48;
+		h ^= (Dee_hash_t)packl(ch) << 48;
 		ATTR_FALLTHROUGH
 	case 6:
 		ch = DeeUni_ToLower(ptr[5]);
-		h ^= (dhash_t)packl(ch) << 40;
+		h ^= (Dee_hash_t)packl(ch) << 40;
 		ATTR_FALLTHROUGH
 	case 5:
 		ch = DeeUni_ToLower(ptr[4]);
-		h ^= (dhash_t)packl(ch) << 32;
+		h ^= (Dee_hash_t)packl(ch) << 32;
 		ATTR_FALLTHROUGH
 	case 4:
 		ch = DeeUni_ToLower(ptr[3]);
-		h ^= (dhash_t)packl(ch) << 24;
+		h ^= (Dee_hash_t)packl(ch) << 24;
 		ATTR_FALLTHROUGH
 	case 3:
 		ch = DeeUni_ToLower(ptr[2]);
-		h ^= (dhash_t)packl(ch) << 16;
+		h ^= (Dee_hash_t)packl(ch) << 16;
 		ATTR_FALLTHROUGH
 	case 2:
 		ch = DeeUni_ToLower(ptr[1]);
-		h ^= (dhash_t)packl(ch) << 8;
+		h ^= (Dee_hash_t)packl(ch) << 8;
 		ATTR_FALLTHROUGH
 	case 1:
 		ch = DeeUni_ToLower(ptr[0]);
-		h ^= (dhash_t)packl(ch);
+		h ^= (Dee_hash_t)packl(ch);
 		h *= m;
 		break;
 	default: break;
@@ -883,33 +885,33 @@ Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	return h;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 #ifdef seed
-	dhash_t h   = seed ^ (n_dwords * m);
+	Dee_hash_t h   = seed ^ (n_dwords * m);
 #else /* seed */
-	dhash_t h = 0;
+	Dee_hash_t h = 0;
 #endif /* !seed */
 	size_t len8 = n_dwords >> 3;
 	uint32_t ch;
 	while (len8--) {
-		dhash_t k;
+		Dee_hash_t k;
 		ch = DeeUni_ToLower(ptr[0]);
-		k  = (dhash_t)packl(ch) << ESEL(0, 56);
+		k  = (Dee_hash_t)packl(ch) << ESEL(0, 56);
 		ch = DeeUni_ToLower(ptr[1]);
-		k |= (dhash_t)packl(ch) << ESEL(8, 48);
+		k |= (Dee_hash_t)packl(ch) << ESEL(8, 48);
 		ch = DeeUni_ToLower(ptr[2]);
-		k |= (dhash_t)packl(ch) << ESEL(16, 40);
+		k |= (Dee_hash_t)packl(ch) << ESEL(16, 40);
 		ch = DeeUni_ToLower(ptr[3]);
-		k |= (dhash_t)packl(ch) << ESEL(24, 32);
+		k |= (Dee_hash_t)packl(ch) << ESEL(24, 32);
 		ch = DeeUni_ToLower(ptr[4]);
-		k |= (dhash_t)packl(ch) << ESEL(32, 24);
+		k |= (Dee_hash_t)packl(ch) << ESEL(32, 24);
 		ch = DeeUni_ToLower(ptr[5]);
-		k |= (dhash_t)packl(ch) << ESEL(40, 16);
+		k |= (Dee_hash_t)packl(ch) << ESEL(40, 16);
 		ch = DeeUni_ToLower(ptr[6]);
-		k |= (dhash_t)packl(ch) << ESEL(48, 8);
+		k |= (Dee_hash_t)packl(ch) << ESEL(48, 8);
 		ch = DeeUni_ToLower(ptr[7]);
-		k |= (dhash_t)packl(ch) << ESEL(56, 0);
+		k |= (Dee_hash_t)packl(ch) << ESEL(56, 0);
 		ptr += 8;
 		k *= m;
 		k ^= k >> r;
@@ -920,31 +922,31 @@ Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	switch (n_dwords & 7) {
 	case 7:
 		ch = DeeUni_ToLower(ptr[6]);
-		h ^= (dhash_t)packl(ch) << 48;
+		h ^= (Dee_hash_t)packl(ch) << 48;
 		ATTR_FALLTHROUGH
 	case 6:
 		ch = DeeUni_ToLower(ptr[5]);
-		h ^= (dhash_t)packl(ch) << 40;
+		h ^= (Dee_hash_t)packl(ch) << 40;
 		ATTR_FALLTHROUGH
 	case 5:
 		ch = DeeUni_ToLower(ptr[4]);
-		h ^= (dhash_t)packl(ch) << 32;
+		h ^= (Dee_hash_t)packl(ch) << 32;
 		ATTR_FALLTHROUGH
 	case 4:
 		ch = DeeUni_ToLower(ptr[3]);
-		h ^= (dhash_t)packl(ch) << 24;
+		h ^= (Dee_hash_t)packl(ch) << 24;
 		ATTR_FALLTHROUGH
 	case 3:
 		ch = DeeUni_ToLower(ptr[2]);
-		h ^= (dhash_t)packl(ch) << 16;
+		h ^= (Dee_hash_t)packl(ch) << 16;
 		ATTR_FALLTHROUGH
 	case 2:
 		ch = DeeUni_ToLower(ptr[1]);
-		h ^= (dhash_t)packl(ch) << 8;
+		h ^= (Dee_hash_t)packl(ch) << 8;
 		ATTR_FALLTHROUGH
 	case 1:
 		ch = DeeUni_ToLower(ptr[0]);
-		h ^= (dhash_t)packl(ch);
+		h ^= (Dee_hash_t)packl(ch);
 		h *= m;
 		break;
 	default: break;
@@ -955,17 +957,17 @@ Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	return h;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
-	dhash_t h = seed ^ (n_bytes * m); /* XXX: num_characters */
+	Dee_hash_t h = seed ^ (n_bytes * m); /* XXX: num_characters */
 #else /* seed */
-	dhash_t h = 0;
+	Dee_hash_t h = 0;
 #endif /* !seed */
 	char const *end = ptr + n_bytes;
 	uint32_t block[8];
 	for (;;) {
-		dhash_t k;
+		Dee_hash_t k;
 		if unlikely(ptr >= end)
 			goto done;
 		block[0] = unicode_readutf8_n(&ptr, end);
@@ -990,14 +992,14 @@ Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
 		if unlikely(ptr >= end)
 			goto do_tail_7;
 		block[7] = unicode_readutf8_n(&ptr, end);
-		k        = (dhash_t)packl(block[0]) << ESEL(0, 56);
-		k |= (dhash_t)packl(block[1]) << ESEL(8, 48);
-		k |= (dhash_t)packl(block[2]) << ESEL(16, 40);
-		k |= (dhash_t)packl(block[3]) << ESEL(24, 32);
-		k |= (dhash_t)packl(block[4]) << ESEL(32, 24);
-		k |= (dhash_t)packl(block[5]) << ESEL(40, 16);
-		k |= (dhash_t)packl(block[6]) << ESEL(48, 8);
-		k |= (dhash_t)packl(block[7]) << ESEL(56, 0);
+		k        = (Dee_hash_t)packl(block[0]) << ESEL(0, 56);
+		k |= (Dee_hash_t)packl(block[1]) << ESEL(8, 48);
+		k |= (Dee_hash_t)packl(block[2]) << ESEL(16, 40);
+		k |= (Dee_hash_t)packl(block[3]) << ESEL(24, 32);
+		k |= (Dee_hash_t)packl(block[4]) << ESEL(32, 24);
+		k |= (Dee_hash_t)packl(block[5]) << ESEL(40, 16);
+		k |= (Dee_hash_t)packl(block[6]) << ESEL(48, 8);
+		k |= (Dee_hash_t)packl(block[7]) << ESEL(56, 0);
 		k *= m;
 		k ^= k >> r;
 		k *= m;
@@ -1006,19 +1008,19 @@ Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
 	}
 	goto done;
 do_tail_7:
-	h ^= (dhash_t)packl(block[6]) << 48;
+	h ^= (Dee_hash_t)packl(block[6]) << 48;
 do_tail_6:
-	h ^= (dhash_t)packl(block[5]) << 40;
+	h ^= (Dee_hash_t)packl(block[5]) << 40;
 do_tail_5:
-	h ^= (dhash_t)packl(block[4]) << 32;
+	h ^= (Dee_hash_t)packl(block[4]) << 32;
 do_tail_4:
-	h ^= (dhash_t)packl(block[3]) << 24;
+	h ^= (Dee_hash_t)packl(block[3]) << 24;
 do_tail_3:
-	h ^= (dhash_t)packl(block[2]) << 16;
+	h ^= (Dee_hash_t)packl(block[2]) << 16;
 do_tail_2:
-	h ^= (dhash_t)packl(block[1]) << 8;
+	h ^= (Dee_hash_t)packl(block[1]) << 8;
 do_tail_1:
-	h ^= (dhash_t)packl(block[0]);
+	h ^= (Dee_hash_t)packl(block[0]);
 	h *= m;
 done:
 	h ^= h >> r;
@@ -1027,17 +1029,17 @@ done:
 	return h;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t DCALL
 Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
-	dhash_t h = seed ^ (n_bytes * m); /* XXX: num_characters */
+	Dee_hash_t h = seed ^ (n_bytes * m); /* XXX: num_characters */
 #else /* seed */
-	dhash_t h = 0;
+	Dee_hash_t h = 0;
 #endif /* !seed */
 	char const *end = ptr + n_bytes;
 	uint32_t block[8];
 	for (;;) {
-		dhash_t k;
+		Dee_hash_t k;
 		if unlikely(ptr >= end)
 			goto done;
 		block[0] = unicode_readutf8_n(&ptr, end);
@@ -1070,14 +1072,14 @@ Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
 			goto do_tail_7;
 		block[7] = unicode_readutf8_n(&ptr, end);
 		block[7] = DeeUni_ToLower(block[7]);
-		k = (dhash_t)packl(block[0]) << ESEL(0, 56);
-		k |= (dhash_t)packl(block[1]) << ESEL(8, 48);
-		k |= (dhash_t)packl(block[2]) << ESEL(16, 40);
-		k |= (dhash_t)packl(block[3]) << ESEL(24, 32);
-		k |= (dhash_t)packl(block[4]) << ESEL(32, 24);
-		k |= (dhash_t)packl(block[5]) << ESEL(40, 16);
-		k |= (dhash_t)packl(block[6]) << ESEL(48, 8);
-		k |= (dhash_t)packl(block[7]) << ESEL(56, 0);
+		k = (Dee_hash_t)packl(block[0]) << ESEL(0, 56);
+		k |= (Dee_hash_t)packl(block[1]) << ESEL(8, 48);
+		k |= (Dee_hash_t)packl(block[2]) << ESEL(16, 40);
+		k |= (Dee_hash_t)packl(block[3]) << ESEL(24, 32);
+		k |= (Dee_hash_t)packl(block[4]) << ESEL(32, 24);
+		k |= (Dee_hash_t)packl(block[5]) << ESEL(40, 16);
+		k |= (Dee_hash_t)packl(block[6]) << ESEL(48, 8);
+		k |= (Dee_hash_t)packl(block[7]) << ESEL(56, 0);
 		k *= m;
 		k ^= k >> r;
 		k *= m;
@@ -1086,19 +1088,19 @@ Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
 	}
 	goto done;
 do_tail_7:
-	h ^= (dhash_t)packl(block[6]) << 48;
+	h ^= (Dee_hash_t)packl(block[6]) << 48;
 do_tail_6:
-	h ^= (dhash_t)packl(block[5]) << 40;
+	h ^= (Dee_hash_t)packl(block[5]) << 40;
 do_tail_5:
-	h ^= (dhash_t)packl(block[4]) << 32;
+	h ^= (Dee_hash_t)packl(block[4]) << 32;
 do_tail_4:
-	h ^= (dhash_t)packl(block[3]) << 24;
+	h ^= (Dee_hash_t)packl(block[3]) << 24;
 do_tail_3:
-	h ^= (dhash_t)packl(block[2]) << 16;
+	h ^= (Dee_hash_t)packl(block[2]) << 16;
 do_tail_2:
-	h ^= (dhash_t)packl(block[1]) << 8;
+	h ^= (Dee_hash_t)packl(block[1]) << 8;
 do_tail_1:
-	h ^= (dhash_t)packl(block[0]);
+	h ^= (Dee_hash_t)packl(block[0]);
 	h *= m;
 done:
 	h ^= h >> r;
@@ -1115,7 +1117,7 @@ done:
 #error "Unable to determine desired hash algorithm"
 #endif /* !... */
 
-PUBLIC ATTR_PURE WUNUSED ATTR_IN(1) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_IN(1) Dee_hash_t DCALL
 Dee_HashStr(char const *__restrict str) {
 	return Dee_HashPtr(str, strlen(str));
 }

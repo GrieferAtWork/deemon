@@ -1502,7 +1502,7 @@ string_bytes(String *self, size_t argc,
 	return DeeBytes_NewView((DeeObject *)self, my_bytes + start,
 	                        mylen, Dee_BUFFER_FREADONLY);
 empty_substr:
-	return_empty_bytes;
+	return DeeBytes_NewEmpty();
 err:
 	return NULL;
 }
@@ -1985,7 +1985,7 @@ string_find(String *self, size_t argc,
 	}
 	return DeeInt_NewSize(result);
 not_found:
-	return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -2053,7 +2053,7 @@ string_rfind(String *self, size_t argc,
 	}
 	return DeeInt_NewSize(result);
 not_found:
-	return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -3103,8 +3103,7 @@ string_getsubstr(String *__restrict self,
 		if (end >= len)
 			end = len;
 		if (start >= end) {
-			result = (DREF String *)Dee_EmptyString;
-			Dee_Incref(Dee_EmptyString);
+			result = (DREF String *)DeeString_NewEmpty();
 		} else {
 			int width = DeeString_WIDTH(self);
 			result = (DREF String *)DeeString_NewWithWidth(str.cp8 +
@@ -3210,7 +3209,7 @@ string_startswith(String *self, size_t argc,
 			goto nope;
 		return_bool(MEMEQL(my_str.cp32 + begin, ot_str.cp32, ot_len));
 	}
-	return_bool_(ot_len == 0);
+	return_bool(ot_len == 0);
 nope:
 	return_false;
 err:
@@ -3302,7 +3301,7 @@ string_endswith(String *self, size_t argc,
 		begin -= ot_len;
 		return_bool(MEMEQL(my_str.cp32 + begin, ot_str.cp32, ot_len));
 	}
-	return_bool_(ot_len == 0);
+	return_bool(ot_len == 0);
 nope:
 	return_false;
 err:
@@ -3367,7 +3366,7 @@ string_casestartswith(String *self, size_t argc,
 		my_len -= begin;
 		return_bool(MEMCASESTARTSWITHL(my_str.cp32 + begin, my_len, ot_str.cp32, ot_len));
 	}
-	return_bool_(ot_len == 0);
+	return_bool(ot_len == 0);
 err:
 	return NULL;
 }
@@ -3430,7 +3429,7 @@ string_caseendswith(String *self, size_t argc,
 		my_len -= begin;
 		return_bool(MEMCASEENDSWITHL(my_str.cp32 + begin, my_len, ot_str.cp32, ot_len));
 	}
-	return_bool_(ot_len == 0);
+	return_bool(ot_len == 0);
 err:
 	return NULL;
 }
@@ -3515,7 +3514,7 @@ string_distribute(String *self, size_t argc, DeeObject *const *argv) {
 	substring_length += substring_count - 1;
 	substring_length /= substring_count;
 	if unlikely(!substring_length)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	return DeeString_Segments(self, substring_length);
 err:
 	return NULL;
@@ -7110,7 +7109,7 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 		                      ot_str.cp32, ot_len) == 0;
 		break;
 	}
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -7324,7 +7323,7 @@ string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 		result = wildcasecomparel(&my_reader.l, &ot_reader.l);
 		break;
 	}
-	return_bool_(result == 0);
+	return_bool(result == 0);
 err:
 	return NULL;
 }
@@ -7507,7 +7506,7 @@ string_findmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 	return DeeInt_NewSize(result);
 err_not_found:
-	return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -7889,7 +7888,7 @@ string_rfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 	return DeeInt_NewSize(result);
 err_not_found:
-	return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -9007,7 +9006,7 @@ string_regmatch(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReGroups_Free(groups);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	string_bytecnt2charcnt_v(self, (char const *)exec.rx_inbase,
 	                         groups->rg_groups + 1,
@@ -9097,7 +9096,7 @@ string_rescanf(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReSubStrings_Free(substrings);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	ReSubStrings_Init(substrings, (DeeObject *)self,
 	                  exec.rx_inbase,
@@ -9127,7 +9126,7 @@ string_regfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReGroups_Free(groups);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	string_bytecnt2charcnt_v(self, (char const *)exec.rewr_exec.rx_inbase,
 	                         groups->rg_groups + 1,
@@ -9163,7 +9162,7 @@ string_regrfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReGroups_Free(groups);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	string_bytecnt2charcnt_v(self, (char const *)exec.rewr_exec.rx_inbase,
 	                         groups->rg_groups + 1,
@@ -9199,7 +9198,7 @@ string_reglocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *k
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReSubStrings_Free(substrings);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	substrings->rss_groups[0].rm_so = (size_t)result;
 	substrings->rss_groups[0].rm_eo = (size_t)result + match_size;
@@ -9231,7 +9230,7 @@ string_regrlocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReSubStrings_Free(substrings);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	substrings->rss_groups[0].rm_so = (size_t)result;
 	substrings->rss_groups[0].rm_eo = (size_t)result + match_size;
@@ -9411,14 +9410,13 @@ string_pack_utf8_partition_not_found(char const *__restrict utf8_base,
 		                         STRING_ERROR_FSTRICT);
 		if unlikely(!str0)
 			goto err_r;
-		DeeTuple_SET(result, 0, str0);
+		result->t_elem[0] = str0;
 	} else {
-		DeeTuple_SET(result, 0, Dee_EmptyString);
-		Dee_Incref(Dee_EmptyString);
+		result->t_elem[0] = DeeString_NewEmpty();
 	}
-	DeeTuple_SET(result, 1, Dee_EmptyString);
-	DeeTuple_SET(result, 2, Dee_EmptyString);
-	Dee_Incref_n(Dee_EmptyString, 2);
+	Dee_Incref_n(&DeeString_Empty, 2);
+	result->t_elem[1] = (DeeObject *)&DeeString_Empty;
+	result->t_elem[2] = (DeeObject *)&DeeString_Empty;
 	return result;
 done:
 	return result;
@@ -12041,7 +12039,7 @@ string_contains(String *self, DeeObject *some_object) {
 			break;
 		}
 	}
-	return_bool_(ptr.ptr != NULL);
+	return_bool(ptr.ptr != NULL);
 err:
 	return NULL;
 }

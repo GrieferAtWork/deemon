@@ -574,7 +574,7 @@ lock_available_get(DeeObject *__restrict self) {
 	int result = lock_is_acquired(self);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(!result);
+	return_bool(!result);
 err:
 	return NULL;
 }

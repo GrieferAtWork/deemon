@@ -34,8 +34,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 
 	case '}':
 		/* Special case: empty sequence. */
-		result = IFELSE(Dee_EmptySeq, 0);
-		IF_EVAL(Dee_Incref(Dee_EmptySeq));
+		result = IFELSE(DeeSeq_NewEmpty(), 0);
 		JITLexer_Yield(self);
 		if (p_was_expression)
 			*p_was_expression = AST_PARSE_WASEXPR_MAYBE;

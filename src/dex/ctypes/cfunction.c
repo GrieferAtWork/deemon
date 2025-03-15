@@ -369,7 +369,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 			goto err;
 #ifndef NDEBUG
 		for (i = 0; i < argc; ++i)
-			ASSERT_OBJECT_TYPE(DeeSType_AsObject(argv[i]), &DeeSType_Type);
+			ASSERT_OBJECT_TYPE(DeeSType_AsType(argv[i]), &DeeSType_Type);
 #endif /* !NDEBUG */
 		Dee_Movrefv((DeeObject **)argv_copy, (DeeObject **)argv, argc);
 	}
@@ -384,7 +384,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 		goto err_argv_r;
 
 	/* Store a reference to the cfunction-base type. */
-	Dee_Incref(DeeSType_AsObject(return_type));
+	Dee_Incref(DeeSType_AsType(return_type));
 	Dee_Incref(DeeCFunctionType_AsType(&DeeCFunction_Type));
 
 	/* Initialize fields. */
@@ -455,7 +455,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 		result->ft_woff_argptr = 0;
 
 	/* Finalize the cfunction type. */
-	DeeObject_Init(DeeCFunctionType_AsObject(result), &DeeCFunctionType_Type);
+	DeeObject_Init(DeeCFunctionType_AsType(result), &DeeCFunctionType_Type);
 	return DeeType_AsCFunctionType((DeeTypeObject *)DeeGC_Track(DeeCFunctionType_AsObject(result)));
 err_argv_r_name_ffi_typev:
 	Dee_Free(result->ft_ffi_arg_type_v);
@@ -574,7 +574,7 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 	dhash_t hash;
 	DREF DeeCFunctionTypeObject *result, *new_result;
 	DREF struct cfunction_type_list *bucket;
-	ASSERT_OBJECT_TYPE(DeeSType_AsObject(return_type), &DeeSType_Type);
+	ASSERT_OBJECT_TYPE(DeeSType_AsType(return_type), &DeeSType_Type);
 	DeeSType_CacheLockRead(return_type);
 	ASSERT(!return_type->st_cfunction.sf_size ||
 	       return_type->st_cfunction.sf_mask);
@@ -586,7 +586,7 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 		        !cfunction_equals(result, return_type, calling_convention, argc, argv)))
 			result = LIST_NEXT(result, ft_chain);
 		/* Check if we can re-use an existing type. */
-		if (result && Dee_IncrefIfNotZero(DeeCFunctionType_AsObject(result))) {
+		if (result && Dee_IncrefIfNotZero(DeeCFunctionType_AsType(result))) {
 			DeeSType_CacheLockEndRead(return_type);
 			if (inherit_argv)
 				Dee_Free(argv);
@@ -614,9 +614,9 @@ register_type:
 			new_result = LIST_NEXT(new_result, ft_chain);
 
 		/* Check if we can re-use an existing type. */
-		if (new_result && Dee_IncrefIfNotZero(DeeCFunctionType_AsObject(new_result))) {
+		if (new_result && Dee_IncrefIfNotZero(DeeCFunctionType_AsType(new_result))) {
 			DeeSType_CacheLockEndRead(return_type);
-			Dee_Decref(DeeCFunctionType_AsObject(result));
+			Dee_Decref(DeeCFunctionType_AsType(result));
 			return new_result;
 		}
 	}
@@ -634,7 +634,7 @@ register_type:
 			goto register_type;
 
 		/* Failed to allocate the initial hash-map. */
-		Dee_Decref(DeeCFunctionType_AsObject(result));
+		Dee_Decref(DeeCFunctionType_AsType(result));
 		result = NULL;
 		goto done;
 	}

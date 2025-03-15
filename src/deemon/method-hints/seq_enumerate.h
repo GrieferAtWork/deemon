@@ -302,8 +302,7 @@ err:
 	PRELOAD_DEPENDENCY(seq_operator_getitem)
 	Dee_ssize_t temp, result = 0;
 	DREF DeeIntObject *indexob;
-	Dee_Incref(DeeInt_Zero);
-	indexob = (DREF DeeIntObject *)DeeInt_Zero;
+	indexob = (DREF DeeIntObject *)DeeInt_NewZero();
 	for (;;) {
 		DREF DeeObject *index_value;
 		index_value = CALL_DEPENDENCY(seq_operator_getitem, self, (DeeObject *)indexob);

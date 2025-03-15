@@ -23,6 +23,9 @@
 #include "api.h"
 /**/
 
+#ifndef __INTELLISENSE__
+#include "object.h"
+#endif /* !__INTELLISENSE__ */
 #include "types.h"
 
 DECL_BEGIN
@@ -107,6 +110,11 @@ DDATDEF DeeTypeObject DeeSet_Type; /* `Set from deemon' */
  * HINT: Any exact instance of `DeeSet_Type' should be considered stub/empty. */
 DDATDEF DeeObject DeeSet_EmptyInstance;
 #define Dee_EmptySet (&DeeSet_EmptyInstance)
+#ifdef __INTELLISENSE__
+#define DeeSet_NewEmpty() (&DeeSet_EmptyInstance)
+#else /* __INTELLISENSE__ */
+#define DeeSet_NewEmpty() (Dee_Incref(&DeeSet_EmptyInstance), &DeeSet_EmptyInstance)
+#endif /* !__INTELLISENSE__ */
 
 /* A universal instance of a generic set object (i.e. the set of everything in the universe).
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by calling `~Set()'. */
@@ -114,6 +122,11 @@ DDATDEF DeeObject DeeSet_EmptyInstance;
 DDATDEF DeeObject DeeSet_UniversalInstance;
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SETS_C */
 #define Dee_UniversalSet (&DeeSet_UniversalInstance)
+#ifdef __INTELLISENSE__
+#define DeeSet_NewUniversal() (&DeeSet_UniversalInstance)
+#else /* __INTELLISENSE__ */
+#define DeeSet_NewUniversal() (Dee_Incref(&DeeSet_UniversalInstance), &DeeSet_UniversalInstance)
+#endif /* !__INTELLISENSE__ */
 
 DECL_END
 

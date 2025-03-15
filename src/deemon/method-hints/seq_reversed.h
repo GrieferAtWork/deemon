@@ -74,15 +74,14 @@ DeeSeq_GetForeachSubRangeAsTuple(DeeObject *self, size_t start, size_t end) {
 	Dee_ssize_t foreach_status;
 	struct foreach_subrange_as_tuple_data data;
 	if unlikely(start >= end)
-		return_empty_tuple;
+		return DeeTuple_NewEmpty();
 	fast_size = DeeObject_SizeFast(self);
 	if (fast_size != (size_t)-1) {
 		data.fesrat_result = DeeTuple_NewUninitialized(fast_size);
 		if unlikely(!data.fesrat_result)
 			goto err;
 	} else {
-		Dee_Incref(Dee_EmptyTuple);
-		data.fesrat_result = (DREF DeeTupleObject *)Dee_EmptyTuple;
+		data.fesrat_result = (DREF DeeTupleObject *)DeeTuple_NewEmpty();
 	}
 	data.fesrat_used    = 0;
 	data.fesrat_maxsize = end - start;

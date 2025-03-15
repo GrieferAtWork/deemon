@@ -58,8 +58,7 @@ STATIC_ASSERT(offsetof(DefaultEnumeration, de_seq) == offsetof(ProxyObject, po_o
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DefaultEnumeration__ctor(DefaultEnumeration *__restrict self) {
-	Dee_Incref(Dee_EmptySeq);
-	self->de_seq = Dee_EmptySeq;
+	self->de_seq = DeeSeq_NewEmpty();
 	return 0;
 }
 
@@ -84,11 +83,10 @@ PRIVATE struct type_member tpconst DefaultEnumerationWithFilter__members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DefaultEnumerationWithFilter__ctor(DefaultEnumerationWithFilter *__restrict self) {
-	Dee_Incref(Dee_EmptySeq);
-	self->dewf_seq = Dee_EmptySeq;
-	Dee_Incref_n(DeeInt_Zero, 2);
-	self->dewf_start = DeeInt_Zero;
-	self->dewf_end   = DeeInt_Zero;
+	self->dewf_seq = DeeSeq_NewEmpty();
+	Dee_Incref_n(_DeeInt_Zero, 2);
+	self->dewf_start = (DeeObject *)_DeeInt_Zero;
+	self->dewf_end   = (DeeObject *)_DeeInt_Zero;
 	return 0;
 }
 
@@ -143,8 +141,7 @@ DefaultEnumerationWithIntFilter__copy(DefaultEnumerationWithIntFilter *__restric
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DefaultEnumerationWithIntFilter__ctor(DefaultEnumerationWithIntFilter *__restrict self) {
-	Dee_Incref(Dee_EmptySeq);
-	self->dewif_seq   = Dee_EmptySeq;
+	self->dewif_seq   = DeeSeq_NewEmpty();
 	self->dewif_start = 0;
 	self->dewif_end   = 0;
 	return 0;
@@ -828,8 +825,7 @@ de_sog__iter(DefaultEnumeration *__restrict self) {
 	result = DeeGCObject_MALLOC(DefaultIterator_WithGetItem);
 	if unlikely(!result)
 		goto err;
-	Dee_Incref(DeeInt_Zero);
-	result->dig_index = DeeInt_Zero;
+	result->dig_index      = DeeInt_NewZero();
 	result->dig_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self->de_seq), seq_operator_getitem);
 	Dee_Incref(self->de_seq);
 	result->dig_seq = self->de_seq;

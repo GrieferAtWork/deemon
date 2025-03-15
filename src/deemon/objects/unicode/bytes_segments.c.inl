@@ -75,11 +75,10 @@ DeeBytes_Segments(DeeBytesObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsegiter_ctor(BytesSegmentsIterator *__restrict self) {
-	self->b_str = (DREF DeeBytesObject *)Dee_EmptyBytes;
+	self->b_str = (DREF DeeBytesObject *)DeeBytes_NewEmpty();
 	self->b_siz = 1;
-	self->b_ptr = DeeBytes_DATA(Dee_EmptyBytes);
-	self->b_end = DeeBytes_DATA(Dee_EmptyBytes);
-	Dee_Incref(Dee_EmptyBytes);
+	self->b_ptr = DeeBytes_DATA(self->b_str);
+	self->b_end = DeeBytes_DATA(self->b_str);
 	return 0;
 }
 
@@ -208,9 +207,8 @@ INTERN DeeTypeObject BytesSegmentsIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bseg_ctor(BytesSegments *__restrict self) {
-	self->b_str = (DREF DeeBytesObject *)Dee_EmptyBytes;
+	self->b_str = (DREF DeeBytesObject *)DeeBytes_NewEmpty();
 	self->b_siz = 1;
-	Dee_Incref(Dee_EmptyBytes);
 	return 0;
 }
 

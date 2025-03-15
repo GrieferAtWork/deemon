@@ -251,9 +251,9 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 /* Initialize the standard objects fields of a freshly allocated object.
  * @param: DeeObject      *self: The object to initialize
  * @param: DeeTypeoObject *type: The type to assign to the object */
-#define DeeObject_Init(self, type)    \
-	(Dee_Incref((DeeObject *)(type)), \
-	 DeeObject_InitNoref(self, type))
+#define DeeObject_Init(self, type) \
+	(Dee_Incref(type),             \
+	 DeeObject_InitNoref(self, (DeeTypeObject *)(type)))
 
 
 #ifndef NDEBUG
@@ -867,11 +867,11 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 #define Dee_XClear_unlikely_traced(x, file, line)  (void)(!(x) || (Dee_Decref_unlikely_traced(x, file, line), (x) = NULL, 0))
 
 /* NOTE: `(Dee_)return_reference()' only evaluates `ob' _once_! */
-#define Dee_return_reference(ob)                                              \
-	do {                                                                      \
-		DeeObject *const _drr_result_ = (DeeObject *)Dee_REQUIRES_OBJECT(ob); \
-		Dee_Incref(_drr_result_);                                             \
-		return _drr_result_;                                                  \
+#define Dee_return_reference(ob)                                                       \
+	do {                                                                               \
+		__register DeeObject *const _rr_result = (DeeObject *)Dee_REQUIRES_OBJECT(ob); \
+		Dee_Incref(_rr_result);                                                        \
+		return _rr_result;                                                             \
 	}	__WHILE0
 
 /* NOTE: `(Dee_)return_reference_()' may evaluate `ob' multiple times */
@@ -3211,46 +3211,44 @@ struct Dee_type_getset {
 #endif /* DEE_SOURCE */
 
 
+union Dee_type_member_desc {
+	DeeObject *md_const;  /* [valid_if(Dee_TYPE_MEMBER_ISCONST(this))][1..1] Constant. */
+	struct {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+		__UINTPTR_HALF_TYPE__ mdf_type;   /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field type (One of `STRUCT_*'). */
+		__UINTPTR_HALF_TYPE__ mdf_offset; /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field offset (offsetof() field). */
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+		__UINTPTR_HALF_TYPE__ mdf_offset; /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field offset (offsetof() field). */
+		__UINTPTR_HALF_TYPE__ mdf_type;   /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field type (One of `STRUCT_*'). */
+#endif /* !... */
+	}          md_field; /* Field descriptor */
+};
+#define Dee_TYPE_MEMBER_DESC_INITCONST(value) { (DeeObject *)Dee_REQUIRES_OBJECT(value) }
+#if __SIZEOF_POINTER__ == 4
+#define Dee_TYPE_MEMBER_DESC_INITFIELD(type, offset) \
+	{ (DeeObject *)(uintptr_t)((uint32_t)(type) | ((uint32_t)(offset) << 16)) }
+#elif __SIZEOF_POINTER__ == 8
+#define Dee_TYPE_MEMBER_DESC_INITFIELD(type, offset) \
+	{ (DeeObject *)(uintptr_t)((uint64_t)(type) | ((uint64_t)(offset) << 32)) }
+#else /* __SIZEOF_POINTER__ == ... */
+#define Dee_TYPE_MEMBER_DESC_INITFIELD(type, offset) \
+	{ (DeeObject *)(uintptr_t)((uintptr_t)(type) | ((uintptr_t)(offset) << (__SIZEOF_POINTER__ * 8))) }
+#endif /* __SIZEOF_POINTER__ != ... */
 
 struct Dee_type_member {
-	char const           *m_name;   /* [1..1][SENTINAL(NULL)] Member name. */
-	union {
-		DeeObject        *m_const;  /* [valid_if(Dee_TYPE_MEMBER_ISCONST(this))][1..1] Constant. */
-		struct {
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-			__UINTPTR_HALF_TYPE__ m_type;   /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field type (One of `STRUCT_*'). */
-			__UINTPTR_HALF_TYPE__ m_offset; /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field offset (offsetof() field). */
-#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-			__UINTPTR_HALF_TYPE__ m_offset; /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field offset (offsetof() field). */
-			__UINTPTR_HALF_TYPE__ m_type;   /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field type (One of `STRUCT_*'). */
-#endif /* !... */
-		}                 m_field;
-	}
-#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
-	_dee_aunion
-#define m_const _dee_aunion.m_const
-#define m_field _dee_aunion.m_field
-#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
-	;
-	/*utf-8*/ char const *m_doc;    /* [0..1] Documentation string. */
+	char const                *m_name; /* [1..1][SENTINAL(NULL)] Member name. */
+	union Dee_type_member_desc m_desc; /* Type member descriptor */
+	/*utf-8*/ char const      *m_doc;  /* [0..1] Documentation string. */
 };
 
-#define Dee_TYPE_MEMBER_ISCONST(x) (((x)->m_field.m_type & 1) == 0)
-#define Dee_TYPE_MEMBER_ISFIELD(x) (((x)->m_field.m_type & 1) != 0)
+#define Dee_TYPE_MEMBER_ISCONST(x) (((x)->m_desc.md_field.mdf_type & 1) == 0)
+#define Dee_TYPE_MEMBER_ISFIELD(x) (((x)->m_desc.md_field.mdf_type & 1) != 0)
 #define Dee_TYPE_MEMBER_END \
 	{ NULL }
-#if __SIZEOF_POINTER__ == 4
 #define Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, doc) \
-	{ name, { (DeeObject *)(uintptr_t)((uint32_t)(type) | ((uint32_t)(offset) << 16)) }, DOC(doc) }
-#elif __SIZEOF_POINTER__ == 8
-#define Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, doc) \
-	{ name, { (DeeObject *)(uintptr_t)((uint64_t)(type) | ((uint64_t)(offset) << 32)) }, DOC(doc) }
-#else /* __SIZEOF_POINTER__ == ... */
-#define Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, doc) \
-	{ name, { (DeeObject *)(uintptr_t)((uintptr_t)(type) | ((uintptr_t)(offset) << (__SIZEOF_POINTER__ * 8))) }, DOC(doc) }
-#endif /* __SIZEOF_POINTER__ != ... */
+	{ name, Dee_TYPE_MEMBER_DESC_INITFIELD(type, offset), DOC(doc) }
 #define Dee_TYPE_MEMBER_CONST_DOC(name, value, doc) \
-	{ name, { (DeeObject *)Dee_REQUIRES_OBJECT(value) }, DOC(doc) }
+	{ name, Dee_TYPE_MEMBER_DESC_INITCONST(value), DOC(doc) }
 #define Dee_TYPE_MEMBER_FIELD(name, type, offset) \
 	Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, NULL)
 #define Dee_TYPE_MEMBER_CONST(name, value) \

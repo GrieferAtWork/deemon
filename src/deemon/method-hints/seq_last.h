@@ -86,8 +86,7 @@ err:
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_default_getlast_with_foreach_cb)]] {
 	DREF DeeObject *result;
 	Dee_ssize_t foreach_status;
-	Dee_Incref(Dee_None);
-	result = Dee_None;
+	result = DeeNone_NewRef();
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_default_getlast_with_foreach_cb, &result);
 	if likely(foreach_status > 0)
 		return result;

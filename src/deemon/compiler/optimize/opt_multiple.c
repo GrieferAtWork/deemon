@@ -109,12 +109,10 @@ multiple_continue_at_iter:
 		if (self->a_multiple.m_astc == 0) {
 			DREF DeeObject *cexpr;
 			if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
-				cexpr = Dee_None;
-				Dee_Incref(cexpr);
+				cexpr = DeeNone_NewRef();
 			} else if (self->a_flag == AST_FMULTIPLE_TUPLE ||
 			           self->a_flag == AST_FMULTIPLE_GENERIC) {
-				cexpr = Dee_EmptyTuple;
-				Dee_Incref(cexpr);
+				cexpr = DeeTuple_NewEmpty();
 			} else if (self->a_flag == AST_FMULTIPLE_LIST) {
 				cexpr = DeeList_New();
 				if unlikely(!cexpr)
@@ -245,8 +243,7 @@ after_multiple_constexpr:
 			Dee_Free(self->a_multiple.m_astv);
 			self->a_type      = AST_CONSTEXPR;
 			self->a_flag      = AST_FNORMAL;
-			self->a_constexpr = Dee_None;
-			Dee_Incref(Dee_None);
+			self->a_constexpr = DeeNone_NewRef();
 			OPTIMIZE_VERBOSE("Replace empty multi-ast with `none'\n");
 			goto did_optimize;
 

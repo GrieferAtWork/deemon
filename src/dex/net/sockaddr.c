@@ -441,7 +441,7 @@ again:
 	sysdb_lock_endwrite();
 	if (!ent)
 		return ITER_DONE;
-	return_empty_string;
+	return DeeString_NewEmpty();
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL

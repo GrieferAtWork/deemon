@@ -1233,7 +1233,7 @@ next_instr:
 #if 0
 	Dee_CHECKMEMORY();
 #endif
-#if 0
+#if 1
 	if (_Dee_dprint_enabled) {
 		struct ddi_state state;
 		code_addr_t ip_addr = (code_addr_t)(ip.ptr - code->co_code);
@@ -1311,8 +1311,7 @@ next_instr:
 				frame->cf_result = ITER_DONE;
 			} else {
 				/* Non-yielding `ASM_RET_NONE': Simply return `none' to the caller. */
-				frame->cf_result = Dee_None;
-				Dee_Incref(Dee_None);
+				frame->cf_result = DeeNone_NewRef();
 			}
 			goto end_return;
 		}
@@ -1900,8 +1899,7 @@ do_push_arg:
 #endif /* !EXEC_SAFE */
 			if (!frame->cf_vargs) {
 				if (frame->cf_argc <= code->co_argc_max) {
-					frame->cf_vargs = (DREF DeeTupleObject *)Dee_EmptyTuple;
-					Dee_Incref(Dee_EmptyTuple);
+					frame->cf_vargs = (DREF DeeTupleObject *)DeeTuple_NewEmpty();
 				} else {
 					frame->cf_vargs = (DREF DeeTupleObject *)DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
 					                                                            frame->cf_argv + code->co_argc_max);
@@ -2086,8 +2084,7 @@ do_unpack:
 		}
 
 		TARGET(ASM_PUSH_NONE, -0, +1) {
-			Dee_Incref(Dee_None);
-			PUSH(Dee_None);
+			PUSH(DeeNone_NewRef());
 			DISPATCH();
 		}
 
@@ -3372,11 +3369,9 @@ do_setitem_c:
 					frame->cf_result = ITER_DONE;
 				} else {
 					ASSERT(frame->cf_result != ITER_DONE);
-					if (!frame->cf_result) {
-						/* Return `none' when no return value has been set. */
-						frame->cf_result = Dee_None;
-						Dee_Incref(Dee_None);
-					}
+					/* Return `none' when no return value has been set. */
+					if (!frame->cf_result)
+						frame->cf_result = DeeNone_NewRef();
 				}
 				if (error == TRIGGER_BREAKPOINT_EXIT_NOFIN)
 					goto end_without_finally;
@@ -3388,10 +3383,8 @@ do_setitem_c:
 						frame->cf_result = ITER_DONE;
 					goto end_without_finally;
 				}
-				if (frame->cf_result == NULL) {
-					frame->cf_result = Dee_None;
-					Dee_Incref(Dee_None);
-				}
+				if (frame->cf_result == NULL)
+					frame->cf_result = DeeNone_NewRef();
 				goto end_return;
 
 #ifdef EXEC_FAST
@@ -5368,8 +5361,7 @@ do_pack_dict:
 					ASSERT(code->co_flags & CODE_FVARARGS);
 #endif /* !EXEC_SAFE */
 					if (frame->cf_argc <= code->co_argc_max) {
-						varsize = DeeInt_Zero;
-						Dee_Incref(varsize);
+						varsize = DeeInt_NewZero();
 					} else {
 						varsize = DeeInt_NewSize((size_t)(frame->cf_argc - code->co_argc_max));
 						if unlikely(!varsize)
@@ -6367,8 +6359,7 @@ do_prefix_push_module:
 				}
 
 				PREFIX_RAW_TARGET(ASM_PUSH_NONE) {
-					Dee_Incref(Dee_None);
-					if (set_prefix_object(Dee_None))
+					if (set_prefix_object(DeeNone_NewRef()))
 						HANDLE_EXCEPT();
 					DISPATCH();
 				}
@@ -6419,8 +6410,7 @@ do_prefix_push_arg:
 #endif /* !EXEC_SAFE */
 					if (!frame->cf_vargs) {
 						if (frame->cf_argc <= code->co_argc_max) {
-							frame->cf_vargs = (DREF DeeTupleObject *)Dee_EmptyTuple;
-							Dee_Incref(Dee_EmptyTuple);
+							frame->cf_vargs = (DREF DeeTupleObject *)DeeTuple_NewEmpty();
 						} else {
 							frame->cf_vargs = (DREF DeeTupleObject *)DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
 							                                                            frame->cf_argv + code->co_argc_max);
@@ -7103,15 +7093,13 @@ again_check_staticimm_for_cmpxch_ub_lock:
 						}
 
 						PREFIX_RAW_TARGET(ASM_PUSH_TRUE) {
-							Dee_Incref(Dee_True);
-							if (set_prefix_object(Dee_True))
+							if (set_prefix_object(DeeBool_NewTrue()))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}
 
 						PREFIX_RAW_TARGET(ASM_PUSH_FALSE) {
-							Dee_Incref(Dee_False);
-							if (set_prefix_object(Dee_False))
+							if (set_prefix_object(DeeBool_NewFalse()))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}

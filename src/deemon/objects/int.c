@@ -827,8 +827,7 @@ DeeInt_NewSleb(byte_t const **__restrict p_reader) {
 				if (dst == result->ob_digit) {
 					/* Special case: INT(0) */
 					DeeInt_Destroy(result);
-					result = (DeeIntObject *)DeeInt_Zero;
-					Dee_Incref(result);
+					result = (DeeIntObject *)DeeInt_NewZero();
 					goto done2;
 				}
 
@@ -911,8 +910,7 @@ DeeInt_NewUleb(byte_t const **__restrict p_reader) {
 				if (dst == result->ob_digit) {
 					/* Special case: INT(0) */
 					DeeInt_Destroy(result);
-					result = (DeeIntObject *)DeeInt_Zero;
-					Dee_Incref(result);
+					result = (DeeIntObject *)DeeInt_NewZero();
 					goto done2;
 				}
 				/* Simple case: unused. */
@@ -1070,7 +1068,7 @@ DeeInt_NewInt8(int8_t val) {
 	uint8_t abs_val = (uint8_t)val;
 	if (val <= 0) {
 		if (!val)
-			return_reference_(DeeInt_Zero);
+			return DeeInt_NewZero();
 		sign    = -1;
 		abs_val = (uint8_t)0 - (uint8_t)val;
 	}
@@ -1090,7 +1088,7 @@ DeeInt_NewUInt8(uint8_t val) {
 #else /* DeeInt_8bit */
 	DREF DeeIntObject *result;
 	if (!val)
-		return_reference_(DeeInt_Zero);
+		return DeeInt_NewZero();
 	result = DeeInt_Alloc(1);
 	if likely(result) {
 		result->ob_size     = 1;
@@ -1110,7 +1108,7 @@ DeeInt_NewUInt16(uint16_t val) {
 		return_reference(DeeInt_8bit + val);
 #else /* DeeInt_8bit */
 	if (!val)
-		return_reference_(DeeInt_Zero);
+		return DeeInt_NewZero();
 #endif /* !DeeInt_8bit */
 	result = DeeInt_Alloc(1);
 	if likely(result) {
@@ -1124,7 +1122,7 @@ DeeInt_NewUInt16(uint16_t val) {
 			return_reference(DeeInt_8bit + val);
 #else /* DeeInt_8bit */
 		if (!val)
-			return_reference_(DeeInt_Zero);
+			return DeeInt_NewZero();
 #endif /* !DeeInt_8bit */
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
@@ -1161,7 +1159,7 @@ DeeInt_NewUInt32(uint32_t val) {
 			return_reference(DeeInt_8bit + val);
 #else /* DeeInt_8bit && DIGIT_BITS >= 8 */
 		if (!val)
-			return_reference_(DeeInt_Zero);
+			return DeeInt_NewZero();
 #endif /* !DeeInt_8bit || DIGIT_BITS < 8 */
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
@@ -1207,7 +1205,7 @@ DeeInt_NewUInt64(uint64_t val) {
 #if __SIZEOF_REGISTER__ >= 8 || DIGIT_BITS > 32
 	if (!(val >> DIGIT_BITS)) {
 		if (!val)
-			return_reference_(DeeInt_Zero);
+			return DeeInt_NewZero();
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
@@ -1244,7 +1242,7 @@ DeeInt_NewInt16(int16_t val) {
 #if DIGIT_BITS >= 16
 	if (val <= 0) {
 		if (!val)
-			return_reference_(DeeInt_Zero);
+			return DeeInt_NewZero();
 		sign    = -1;
 		abs_val = (uint16_t)0 - (uint16_t)val;
 	}
@@ -1261,7 +1259,7 @@ DeeInt_NewInt16(int16_t val) {
 	if (!(abs_val >> DIGIT_BITS)) {
 #ifndef DeeInt_8bit
 		if (!val)
-			return_reference_(DeeInt_Zero);
+			return DeeInt_NewZero();
 #endif /* !DeeInt_8bit */
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
@@ -1301,7 +1299,7 @@ DeeInt_NewInt32(int32_t val) {
 	}
 	if (!(abs_val >> DIGIT_BITS)) {
 		if (!val)
-			return_reference_(DeeInt_Zero);
+			return DeeInt_NewZero();
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
@@ -1352,7 +1350,7 @@ DeeInt_NewInt64(int64_t val) {
 #if __SIZEOF_REGISTER__ >= 8 || DIGIT_BITS > 32
 	if (!(abs_val >> DIGIT_BITS)) {
 		if (!val)
-			return_reference_(DeeInt_Zero);
+			return DeeInt_NewZero();
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
@@ -1736,7 +1734,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 		leading_zero = unicode_readutf8_n(&start, end);
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
 			if (start >= end) /* Special case: int(0) */
-				return_reference_(DeeInt_Zero);
+				return DeeInt_NewZero();
 			while (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 				uint32_t begin_plus_one;
 				char const *new_begin = start + 1;
@@ -1903,7 +1901,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
 			++start;
 			if (start >= end) /* Special case: int(0) */
-				return_reference_(DeeInt_Zero);
+				return DeeInt_NewZero();
 			while (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 				char begin_plus_one = start[1];
 				if (DeeUni_IsLF(begin_plus_one)) {
@@ -3675,9 +3673,9 @@ done_decr:
 done:
 	return (DREF DeeObject *)result;
 return_m1:
-	return_reference_((DeeObject *)DeeInt_MinusOne);
+	return DeeInt_NewMinusOne();
 return_zero:
-	return_reference_(DeeInt_Zero);
+	return DeeInt_NewZero();
 }
 
 
@@ -3685,7 +3683,7 @@ return_zero:
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL int_return_zero(void) {
-	return_reference_(DeeInt_Zero);
+	return DeeInt_NewZero();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -4570,7 +4568,7 @@ err:
 			goto err;                                                     \
 		diff = int_compareint(self, y);                                   \
 		Dee_Decref(y);                                                    \
-		return_bool_(diff cmp 0);                                         \
+		return_bool(diff cmp 0);                                         \
 	err:                                                                  \
 		return NULL;                                                      \
 	}
@@ -4908,7 +4906,7 @@ int_get_fls(DeeIntObject *__restrict self) {
 	digit msb_digit;
 	if unlikely(self->ob_size <= 0) {
 		if likely(self->ob_size == 0)
-			return_reference_((DeeIntObject *)DeeInt_Zero);
+			return (DeeIntObject *)DeeInt_NewZero();
 		goto err_neg;
 	}
 	result    = ((size_t)self->ob_size - 1) * DIGIT_BITS;
@@ -4945,7 +4943,7 @@ int_get_bitmask(DeeIntObject *__restrict self) {
 	if unlikely(DeeInt_AsSize((DeeObject *)self, &n_bits))
 		goto err;
 	if unlikely(!n_bits)
-		return_reference_((DeeIntObject *)DeeInt_Zero);
+		return (DeeIntObject *)DeeInt_NewZero();
 	n_digits = CEILDIV(n_bits, DIGIT_BITS);
 	result = DeeInt_Alloc(n_digits);
 	if unlikely(!result)

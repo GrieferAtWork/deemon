@@ -976,10 +976,9 @@ di_g_deepload(DefaultIterator_WithGetItem *__restrict self) {
 PRIVATE NONNULL((1)) void DCALL
 di_g_clear(DefaultIterator_WithGetItem *__restrict self) {
 	DREF DeeObject *index;
-	Dee_Incref(Dee_None);
 	DefaultIterator_WithGetItem_LockAcquire(self);
-	index = self->dig_index;
-	self->dig_index = Dee_None;
+	index           = self->dig_index;
+	self->dig_index = DeeNone_NewRef();
 	DefaultIterator_WithGetItem_LockRelease(self);
 	Dee_Decref(index);
 }

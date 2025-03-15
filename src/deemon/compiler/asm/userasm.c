@@ -1478,7 +1478,7 @@ abs_stack_any:
 				goto err;
 		} else {
 			/* Output-only stack-top operand (user-assembly must leave the value ontop of the stack) */
-			return_empty_string;
+			return DeeString_NewEmpty();
 		}
 		result = DeeString_Newf("stack #%" PRFu16, current_assembler.a_stackcur - 1);
 		break;

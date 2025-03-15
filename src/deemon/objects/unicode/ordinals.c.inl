@@ -57,10 +57,9 @@ STATIC_ASSERT(offsetof(StringOrdinals, so_str) == offsetof(ProxyObject, po_obj))
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringordinals_ctor(StringOrdinals *__restrict self) {
-	self->so_str     = (DREF DeeStringObject *)Dee_EmptyString;
+	self->so_str     = (DREF DeeStringObject *)DeeString_NewEmpty();
 	self->so_width   = STRING_WIDTH_1BYTE;
-	self->so_ptr.ptr = DeeString_STR(Dee_EmptyString);
-	Dee_Incref(Dee_EmptyString);
+	self->so_ptr.ptr = DeeString_STR(self->so_str);
 	return 0;
 }
 

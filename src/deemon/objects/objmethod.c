@@ -832,7 +832,7 @@ doc_decode_kwds(DeeObject *owner, char const *doc) {
 done:
 	return (DREF DeeObject *)result;
 no_kwds:
-	return_empty_seq;
+	return DeeSeq_NewEmpty();
 }
 
 
@@ -1903,7 +1903,7 @@ PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 clsmember_hash(DeeClsMemberObject *__restrict self) {
 	return (Dee_HashPointer(self->cm_type) ^
 	        Dee_HashPointer(self->cm_memb.m_name) ^
-	        Dee_HashPointer(self->cm_memb.m_const));
+	        Dee_HashPointer(self->cm_memb.m_desc.md_const));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1913,7 +1913,7 @@ clsmember_compare_eq(DeeClsMemberObject *self,
 		goto err;
 	return ((self->cm_type == other->cm_type) &&
 	        (self->cm_memb.m_name == other->cm_memb.m_name) &&
-	        (self->cm_memb.m_const == other->cm_memb.m_const))
+	        (self->cm_memb.m_desc.md_const == other->cm_memb.m_desc.md_const))
 	       ? 0
 	       : 1;
 err:
@@ -1953,7 +1953,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_canset(DeeClsMemberObject *__restrict self) {
 	if (TYPE_MEMBER_ISCONST(&self->cm_memb))
 		return_false;
-	return_bool(!(self->cm_memb.m_field.m_type & STRUCT_CONST));
+	return_bool(!(self->cm_memb.m_desc.md_field.mdf_type & STRUCT_CONST));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2091,11 +2091,11 @@ type_member_search_cmethod(DeeTypeObject *type,
 	for (; chain->m_name; ++chain) {
 		if (!TYPE_MEMBER_ISCONST(chain))
 			continue;
-		if (DeeType_Check(chain->m_const)) {
+		if (DeeType_Check(chain->m_desc.md_const)) {
 			/* XXX: Recursively search sub-types? (would require keeping a working set to prevent recursion) */
-		} else if (DeeCMethod_Check(chain->m_const) ||
-		           DeeKwCMethod_Check(chain->m_const)) {
-			if (DeeCMethod_FUNC(chain->m_const) == func_ptr)
+		} else if (DeeCMethod_Check(chain->m_desc.md_const) ||
+		           DeeKwCMethod_Check(chain->m_desc.md_const)) {
+			if (DeeCMethod_FUNC(chain->m_desc.md_const) == func_ptr)
 				goto gotit;
 		}
 	}

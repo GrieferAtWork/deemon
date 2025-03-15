@@ -4174,7 +4174,7 @@ ipc_nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 		case ERROR_GEN_FAILURE:
 			/* Generated for Zombie Processes */
 			DeeString_FreeWideBuffer(buffer);
-			return_empty_string;
+			return DeeString_NewEmpty();
 
 		case ERROR_BUFFER_OVERFLOW:
 		case ERROR_MORE_DATA:
@@ -4365,8 +4365,7 @@ ipc_unix_strings_from_nulterm_bytes(char const *__restrict data,
 			--end;
 	}
 	if unlikely(data >= end) {
-		result = (DREF DeeTupleObject *)Dee_EmptyTuple;
-		Dee_Incref(result);
+		result = (DREF DeeTupleObject *)DeeTuple_NewEmpty();
 		goto done;
 	}
 
@@ -5260,7 +5259,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_class_self(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	_DeeArg_Unpack0(err, argc, argv, "self");
-	return_reference_((DeeObject *)&this_process);
+	Dee_Incref(&this_process);
+	return (DeeObject *)&this_process;
 err:
 	return NULL;
 }

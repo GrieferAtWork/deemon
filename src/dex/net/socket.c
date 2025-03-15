@@ -2163,15 +2163,13 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (result_text == ITER_DONE) {
 		/* A somewhat different story: must return (none, "") */
 		DeeObject_FREE(result_addr);
-		DeeTuple_SET(result, 0, Dee_None);
-		DeeTuple_SET(result, 1, Dee_EmptyString);
-		Dee_Incref(Dee_None);
-		Dee_Incref(Dee_EmptyString);
+		result->t_elem[0] = DeeNone_NewRef();
+		result->t_elem[1] = DeeString_NewEmpty();
 	} else {
 		DeeObject_Init(result_addr, &DeeSockAddr_Type);
 		/* Fill the result tuple with the socket address and text. */
-		DeeTuple_SET(result, 0, (DeeObject *)result_addr); /* Inherit */
-		DeeTuple_SET(result, 1, (DeeObject *)result_text); /* Inherit */
+		result->t_elem[0] = (DeeObject *)result_addr; /* Inherit */
+		result->t_elem[1] = (DeeObject *)result_text; /* Inherit */
 	}
 	return result;
 err_text:
@@ -2242,10 +2240,8 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (result_size == 0) {
 		/* A somewhat different story: must return (none, "") */
 		DeeObject_FREE(result_addr);
-		DeeTuple_SET(result, 0, Dee_None);
-		DeeTuple_SET(result, 1, DeeInt_Zero);
-		Dee_Incref(Dee_None);
-		Dee_Incref(DeeInt_Zero);
+		result->t_elem[0] = DeeNone_NewRef();
+		result->t_elem[1] = DeeInt_NewZero();
 	} else {
 		DREF DeeObject *result_size_ob;
 		result_size_ob = DeeInt_NewSize((size_t)result_size);
@@ -2411,7 +2407,7 @@ socket_wasshutdown(Socket *self, size_t argc, DeeObject *const *argv) {
 	}
 	/* If the socket is't open any more, then it was shut down. */
 	mode |= !(state & SOCKET_FOPENED);
-	return_bool_(mode);
+	return_bool(mode);
 err:
 	return NULL;
 }

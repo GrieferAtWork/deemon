@@ -45,6 +45,8 @@
 #include <deemon/util/futex.h>
 #include <deemon/util/rlock.h>
 
+#include <hybrid/typecore.h>
+
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -52,6 +54,12 @@
 #include "function-wrappers.h"
 
 DECL_BEGIN
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
+#define PTR_iadd(T, ptr, delta) (void)((ptr) = (T *)((byte_t *)(ptr) + (delta)))
+#define PTR_isub(T, ptr, delta) (void)((ptr) = (T *)((byte_t *)(ptr) - (delta)))
 
 #ifndef NDEBUG
 #define DBG_memset (void)memset
@@ -368,7 +376,8 @@ DeeFunction_NewNoRefs(DeeObject *__restrict code_) {
 		result = (DREF Function *)DeeGCObject_Malloc(offsetof(Function, fo_refv));
 	} else {
 		result = (DREF Function *)DeeGCObject_Callocc(offsetof(Function, fo_refv),
-		                                              code->co_refstaticc, sizeof(DREF DeeObject *));
+		                                              code->co_refstaticc,
+		                                              sizeof(DREF DeeObject *));
 	}
 	if unlikely(!result)
 		goto done;
@@ -448,7 +457,7 @@ function_get_kwds(Function *__restrict self) {
 		                                (DeeObject *const *)code->co_keywords);
 	}
 	if (code->co_argc_max == 0)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	err_unbound_attribute_string(&DeeFunction_Type, STR___kwds__);
 	return NULL;
 }
@@ -1858,8 +1867,7 @@ exec_finally:
 				Dee_Decref(*self->yi_frame.cf_sp);
 			}
 			while (self->yi_frame.cf_sp < req_sp) {
-				*self->yi_frame.cf_sp = Dee_None;
-				Dee_Incref(Dee_None);
+				*self->yi_frame.cf_sp = DeeNone_NewRef();
 				++self->yi_frame.cf_sp;
 			}
 		}
@@ -1869,8 +1877,7 @@ exec_finally:
 		 *
 		 * Normally, this is done when the return value has been
 		 * assigned, so we simply fake that by pre-assigning `none'. */
-		self->yi_frame.cf_result = Dee_None;
-		Dee_Incref(Dee_None);
+		self->yi_frame.cf_result = DeeNone_NewRef();
 		if unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY) {
 			/* Special case: Execute the code using the safe runtime, rather than the fast. */
 			result = DeeCode_ExecFrameSafe(&self->yi_frame);
@@ -2165,7 +2172,7 @@ again:
 	/* In case the other frame is currently executing, mark ours as not. */
 	self->yi_frame.cf_prev = CODE_FRAME_NOT_EXECUTING;
 	if (code) {
-		*(uintptr_t *)&self->yi_frame.cf_sp -= (uintptr_t)self->yi_frame.cf_stack;
+		PTR_isub(DeeObject *, self->yi_frame.cf_sp, (uintptr_t)self->yi_frame.cf_stack);
 		if (self->yi_frame.cf_stacksz) {
 			/* Copy a heap-allocated, extended stack. */
 			self->yi_frame.cf_stack = (DREF DeeObject **)Dee_TryMallocc(self->yi_frame.cf_stacksz,
@@ -2187,7 +2194,7 @@ again:
 		if (!self->yi_frame.cf_stacksz) {
 			/* Relocate + copy a frame-shared stack. */
 			self->yi_frame.cf_stack = self->yi_frame.cf_frame + code->co_localc;
-			*(uintptr_t *)&self->yi_frame.cf_sp += (uintptr_t)self->yi_frame.cf_stack;
+			PTR_iadd(DeeObject *, self->yi_frame.cf_sp, (uintptr_t)self->yi_frame.cf_stack);
 			stack_size = (self->yi_frame.cf_sp - self->yi_frame.cf_stack);
 			ASSERTF(stack_size * sizeof(DeeObject *) <=
 			        (code->co_framesize - code->co_localc * sizeof(DeeObject *)),
@@ -2197,7 +2204,7 @@ again:
 			            other->yi_frame.cf_stack,
 			            stack_size);
 		} else {
-			*(uintptr_t *)&self->yi_frame.cf_sp += (uintptr_t)self->yi_frame.cf_stack;
+			PTR_iadd(DeeObject *, self->yi_frame.cf_sp, (uintptr_t)self->yi_frame.cf_stack);
 			stack_size = self->yi_frame.cf_stacksz;
 		}
 	} else {

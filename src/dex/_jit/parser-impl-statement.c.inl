@@ -251,8 +251,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 	case ';':
 		JITLexer_Yield(self);
 #ifdef JIT_EVAL
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 #else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
@@ -262,8 +261,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 		JITLexer_Yield(self);
 		if (self->jl_tok == '}') {
 #ifdef JIT_EVAL
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 #else /* JIT_EVAL */
 			result = 0;
 #endif /* !JIT_EVAL */
@@ -439,8 +437,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 					JITLexer_Yield(self);
 #ifdef JIT_EVAL
 					ASSERT(self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET);
-					self->jl_context->jc_retval = Dee_None;
-					Dee_Incref(Dee_None);
+					self->jl_context->jc_retval = DeeNone_NewRef();
 					result = NULL;
 #else /* JIT_EVAL */
 					result = 0;
@@ -660,8 +657,7 @@ check_trailing_asm_semicolon:
 					syn_asm_expected_semi_after_asm(self);
 				}
 #ifdef JIT_EVAL
-				result = Dee_None;
-				Dee_Incref(Dee_None);
+				result = DeeNone_NewRef();
 #else /* JIT_EVAL */
 				result = 0;
 #endif /* !JIT_EVAL */

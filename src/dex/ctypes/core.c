@@ -1513,7 +1513,7 @@ err_tpres_r:
 	DeeObject_FREE(result);
 #endif /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
 err_tpres:
-	Dee_Decref(DeeLValueType_AsObject(tp_result));
+	Dee_Decref(DeeLValueType_AsType(tp_result));
 	goto err;
 }
 
@@ -1542,7 +1542,7 @@ DeePointer_NewFor(DeeSTypeObject *pointer_type,
 	if unlikely(!ptr_type)
 		goto err;
 	result = DeePointer_New(ptr_type, pointer_value);
-	Dee_Decref(DeePointerType_AsObject(ptr_type));
+	Dee_Decref(DeePointerType_AsType(ptr_type));
 	return result;
 err:
 	return NULL;
@@ -1947,7 +1947,7 @@ atype_fini(DeeArrayTypeObject *__restrict self) {
 	ASSERT(LIST_ISBOUND(self, at_chain));
 	LIST_REMOVE(self, at_chain);
 	DeeSType_CacheLockEndWrite(orig);
-	Dee_Decref(DeeSType_AsObject(orig));
+	Dee_Decref(DeeSType_AsType(orig));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

@@ -53,7 +53,7 @@ set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	result = SetIntersection_NonEmpty(self, rhs);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(!result);
+	return_bool(!result);
 err:
 	return NULL;
 }

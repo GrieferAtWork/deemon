@@ -456,9 +456,12 @@ struct _Dee_int_1digit_object {
 };
 
 DDATDEF struct _Dee_int_1digit_object DeeInt_MinusOne_Zero_One[3];
-#define DeeInt_MinusOne ((DeeObject *)&DeeInt_MinusOne_Zero_One[0])
-#define DeeInt_Zero     ((DeeObject *)&DeeInt_MinusOne_Zero_One[1])
-#define DeeInt_One      ((DeeObject *)&DeeInt_MinusOne_Zero_One[2])
+#define _DeeInt_MinusOne     (&DeeInt_MinusOne_Zero_One[0])
+#define _DeeInt_Zero         (&DeeInt_MinusOne_Zero_One[1])
+#define _DeeInt_One          (&DeeInt_MinusOne_Zero_One[2])
+#define DeeInt_MinusOne      ((DeeObject *)_DeeInt_MinusOne)
+#define DeeInt_Zero          ((DeeObject *)_DeeInt_Zero)
+#define DeeInt_One           ((DeeObject *)_DeeInt_One)
 
 /* Return an integer object for the values `-1', `0' and `1' */
 #define DeeInt_FromSign(sign)                                                         \
@@ -466,8 +469,27 @@ DDATDEF struct _Dee_int_1digit_object DeeInt_MinusOne_Zero_One[3];
 	 (DeeObject *)((DeeInt_MinusOne_Zero_One + 1) + (sign)))
 
 /* Return an integer object for small values */
-#define DeeInt_ForSmallInt(val) ((DeeObject *)((DeeInt_MinusOne_Zero_One + 1) + (val)))
+#define _DeeInt_ForSmallInt(val) (DeeInt_MinusOne_Zero_One + 1 + (val))
+#define DeeInt_ForSmallInt(val) ((DeeObject *)_DeeInt_ForSmallInt(val))
 #define DeeInt_IsSmallInt(val)  ((val) >= -1 && (val) <= 1)
+#ifdef __INTELLISENSE__
+#define DeeInt_NewMinusOne()     DeeInt_MinusOne
+#define DeeInt_NewZero()         DeeInt_Zero
+#define DeeInt_NewOne()          DeeInt_One
+#define DeeInt_NewSmallInt(val)  DeeInt_ForSmallInt(val)
+#define Dee_return_smallint(val) return DeeInt_NewSmallInt(val)
+#else /* __INTELLISENSE__ */
+#define DeeInt_NewMinusOne()    (Dee_Incref(_DeeInt_MinusOne), (DeeObject *)_DeeInt_MinusOne)
+#define DeeInt_NewZero()        (Dee_Incref(_DeeInt_Zero), (DeeObject *)_DeeInt_Zero)
+#define DeeInt_NewOne()         (Dee_Incref(_DeeInt_One), (DeeObject *)_DeeInt_One)
+#define DeeInt_NewSmallInt(val) (Dee_Incref(_DeeInt_ForSmallInt(val)), (DeeObject *)_DeeInt_ForSmallInt(val))
+#define Dee_return_smallint(val)                                                                \
+	do {                                                                                        \
+		__register struct _Dee_int_1digit_object *const _rsi_result = _DeeInt_ForSmallInt(val); \
+		Dee_Incref(_rsi_result);                                                                \
+		return (DREF DeeObject *)_rsi_result;                                                   \
+	}	__WHILE0
+#endif /* !__INTELLISENSE__ */
 
 
 

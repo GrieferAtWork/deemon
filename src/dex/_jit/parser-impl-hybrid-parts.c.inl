@@ -419,8 +419,7 @@ do_else_branch:
 				}
 			}
 #ifdef JIT_EVAL
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 #endif /* JIT_EVAL */
 		}
 	}
@@ -708,8 +707,7 @@ do_continue_normal_forloop:
 		}
 done_for:
 		JITContext_PopScope(self->jl_context);
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 #else /* JIT_EVAL */
 		if (JITLexer_SkipPair(self, '(', ')'))
 			goto err;
@@ -853,8 +851,7 @@ err_iter:
 				goto err_scope;
 		}
 		JITContext_PopScope(self->jl_context);
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 #else /* JIT_EVAL */
 		if (JITLexer_SkipPair(self, '(', ')'))
 			goto err;
@@ -986,8 +983,7 @@ do_check_while_condition:
 		}
 done_loop:
 		JITContext_PopScope(self->jl_context);
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 #else /* JIT_EVAL */
 		if (JITLexer_SkipPair(self, '(', ')'))
 			goto err;
@@ -1118,8 +1114,7 @@ done_loop_rparen:
 			syn_dowhile_expected_semi_after_while(self);
 			goto err;
 		}
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 #else /* JIT_EVAL */
 		if (JITLexer_SkipStatement(self))
 			goto err;

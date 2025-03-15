@@ -945,7 +945,7 @@ type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
 	for (; chain->m_name; ++chain) {
 		uint16_t flags = perm;
 		if (!TYPE_MEMBER_ISCONST(chain) &&
-		    !(chain->m_field.m_type & STRUCT_CONST))
+		    !(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
 			flags |= (ATTR_PERMDEL | ATTR_PERMSET);
 		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
 			continue;
@@ -976,7 +976,7 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker,
 	for (; chain->m_name; ++chain) {
 		uint16_t flags = perm;
 		if (!TYPE_MEMBER_ISCONST(chain) &&
-		    !(chain->m_field.m_type & STRUCT_CONST))
+		    !(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
 			flags |= (ATTR_PERMDEL | ATTR_PERMSET);
 		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
 			continue;

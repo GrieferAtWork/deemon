@@ -156,10 +156,8 @@ rebfaiter_ctor(ReSequenceIterator *__restrict self) {
 	self->rsi_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL, NULL);
 	if unlikely(!self->rsi_exec.rx_code)
 		return -1;
-	self->rsi_data            = Dee_EmptyBytes;
-	self->rsi_exec.rx_pattern = (DREF String *)Dee_EmptyString;
-	Dee_Incref(Dee_EmptyBytes);
-	Dee_Incref(Dee_EmptyString);
+	self->rsi_data            = DeeBytes_NewEmpty();
+	self->rsi_exec.rx_pattern = (DREF String *)DeeString_NewEmpty();
 	Dee_atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 }
@@ -1463,10 +1461,8 @@ rebfa_ctor(ReSequence *__restrict self) {
 	self->rs_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL, NULL);
 	if unlikely(!self->rs_exec.rx_code)
 		return -1;
-	self->rs_data            = Dee_EmptyBytes;
-	self->rs_exec.rx_pattern = (DREF String *)Dee_EmptyString;
-	Dee_Incref(Dee_EmptyBytes);
-	Dee_Incref(Dee_EmptyString);
+	self->rs_data            = DeeBytes_NewEmpty();
+	self->rs_exec.rx_pattern = (DREF String *)DeeString_NewEmpty();
 	return 0;
 }
 

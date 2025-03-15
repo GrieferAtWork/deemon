@@ -283,8 +283,8 @@ tls_getvalue(TLS *__restrict self) {
 		err_tls_unbound();
 		goto err;
 	} else if (DeeNone_Check(self->t_factory)) {
-		Dee_Incref_n(Dee_None, 2);
-		result = *p_result = Dee_None; /* Save and return `none'. */
+		Dee_Incref_n(&DeeNone_Singleton, 2);
+		result = *p_result = (DeeObject *)&DeeNone_Singleton; /* Save and return `none'. */
 	} else {
 		/* Invoke the factory. */
 		result = DeeObject_Call(self->t_factory, 0, NULL);
@@ -623,7 +623,7 @@ tls_hash(TLS *__restrict self) {
 	name(TLS *self, TLS *other) {                         \
 		if (DeeObject_AssertType(other, &DeeTLS_Type))    \
 			goto err;                                     \
-		return_bool_(self op other);                      \
+		return_bool(self op other);                      \
 	err:                                                  \
 		return NULL;                                      \
 	}
@@ -703,7 +703,7 @@ tls_delete(TLS *self, size_t argc, DeeObject *const *argv) {
 	result = tls_dodelitem(self);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result == 0);
+	return_bool(result == 0);
 err:
 	return NULL;
 }

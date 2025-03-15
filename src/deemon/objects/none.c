@@ -52,8 +52,8 @@ STATIC_ASSERT(__SIZEOF_REGISTER__ >= __SIZEOF_INT__);
 #endif /* DCALL_RETURN_COMMON */
 
 PUBLIC ATTR_RETNONNULL WUNUSED DREF DeeObject *(DCALL DeeNone_NewRef)(void) {
-	Dee_Incref(Dee_None);
-	return Dee_None;
+	Dee_Incref(&DeeNone_Singleton);
+	return (DREF DeeObject *)&DeeNone_Singleton;
 }
 
 
@@ -212,7 +212,7 @@ DeeNone_OperatorDouble(DeeObject *__restrict UNUSED(self), double *__restrict re
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeNone_OperatorInt(DeeObject *__restrict UNUSED(self)) {
-	return_reference_(DeeInt_Zero);
+	return DeeInt_NewZero();
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -544,7 +544,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeNone_OperatorGetBuf(DeeObject *__restrict UNUSED(self),
                        DeeBuffer *__restrict info,
                        unsigned int UNUSED(flags)) {
-	info->bb_base = DeeObject_DATA(Dee_None);
+	info->bb_base = DeeObject_DATA(&DeeNone_Singleton);
 	info->bb_size = 0;
 	return 0;
 }

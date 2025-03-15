@@ -373,9 +373,8 @@ stack_next:
 						 *    that the constant currently being used. */
 						OPTIMIZE_VERBOSE("Store `none' in symbol `%s' only ever checked for being bound, rather than `%r'\n",
 						                 SYMBOL_NAME(target_sym), self->a_action.a_act1->a_constexpr);
-						Dee_Incref(Dee_None);
 						Dee_Decref(self->a_action.a_act1->a_constexpr);
-						self->a_action.a_act1->a_constexpr = Dee_None;
+						self->a_action.a_act1->a_constexpr = DeeNone_NewRef();
 						goto did_optimize;
 					}
 				}

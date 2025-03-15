@@ -39,6 +39,7 @@
 #include <deemon/system-features.h>
 
 #include <hybrid/sequence/list.h>
+#include <hybrid/typecore.h>
 /**/
 
 #include "../../runtime/strings.h"
@@ -334,6 +335,13 @@ err:
 	return NULL;
 }
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
+#define PTR_iadd(T, ptr, delta) (void)((ptr) = (T *)((byte_t *)(ptr) + (delta)))
+#define PTR_isub(T, ptr, delta) (void)((ptr) = (T *)((byte_t *)(ptr) - (delta)))
+
+
 
 #define TOK_IS_SYMBOL_NAME_CH(x)               \
 	((x) == '$' || (x) == '.' || (x) == '@' || \
@@ -381,11 +389,11 @@ continue_without_inc:
 			int chunk_state;
 
 			/* Load more input text. */
-			*(uintptr_t *)&symbol_start -= (uintptr_t)token.t_file->f_begin;
-			*(uintptr_t *)&symbol_end -= (uintptr_t)token.t_file->f_begin;
+			PTR_isub(char, symbol_start, (uintptr_t)token.t_file->f_begin);
+			PTR_isub(char, symbol_end, (uintptr_t)token.t_file->f_begin);
 			chunk_state = TPPFile_NextChunk(token.t_file, TPPFILE_NEXTCHUNK_FLAG_EXTEND);
-			*(uintptr_t *)&symbol_start += (uintptr_t)token.t_file->f_begin;
-			*(uintptr_t *)&symbol_end += (uintptr_t)token.t_file->f_begin;
+			PTR_iadd(char, symbol_start, (uintptr_t)token.t_file->f_begin);
+			PTR_iadd(char, symbol_end, (uintptr_t)token.t_file->f_begin);
 			if (!chunk_state)
 				break;
 			goto continue_without_inc;
@@ -525,7 +533,7 @@ yield_done:
 		if (result->ie_sym && WARN(W_UASM_CANNOT_PERFORM_OPERATION_WITH_SYMBOL))
 			goto err;
 		if (operation == '!') {
-			result->ie_val = !result->ie_val;
+			result->ie_val = result->ie_val ? 0 : 1;
 		} else if (operation == '~') {
 			result->ie_val = ~result->ie_val;
 		} else {

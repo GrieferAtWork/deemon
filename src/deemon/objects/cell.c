@@ -473,7 +473,7 @@ cell_cmpdel(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
 	_DeeArg_Unpack1(err, argc, argv, "o:cmpdel", &oldval);
 	result = DeeCell_CmpXch((DeeObject *)self, oldval, NULL);
 	Dee_XDecref(result);
-	return_bool_(result == oldval);
+	return_bool(result == oldval);
 err:
 	return NULL;
 }
@@ -494,9 +494,8 @@ cell_cmpxch(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
 		result = DeeCell_CmpXch((DeeObject *)self, NULL, oldval);
 		if (!result)
 			return_true;
-		Dee_Incref(Dee_False);
 		Dee_Decref(result);
-		result = Dee_False;
+		result = DeeBool_NewFalse();
 	}
 	return result;
 err_empty:
@@ -511,7 +510,7 @@ cell_cmpset(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
 	_DeeArg_Unpack1Or2(err, argc, argv, "cmpset", &oldval, &newval);
 	result = DeeCell_CmpXch((DeeObject *)self, oldval, newval);
 	Dee_XDecref(result);
-	return_bool_(result == oldval);
+	return_bool(result == oldval);
 err:
 	return NULL;
 }

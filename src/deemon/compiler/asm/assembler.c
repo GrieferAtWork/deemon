@@ -1547,8 +1547,7 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 			struct TPPKeyword *name;
 			name = current_basescope->bs_argv[i]->s_name;
 			if (!name->k_size) {
-				kwds[i] = (DREF DeeStringObject *)Dee_EmptyString;
-				Dee_Incref(Dee_EmptyString);
+				kwds[i] = (DREF DeeStringObject *)DeeString_NewEmpty();
 			} else {
 				DREF DeeStringObject *nameob;
 				nameob = (DREF DeeStringObject *)DeeString_NewUtf8(name->k_name,
@@ -3627,10 +3626,8 @@ code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
 					                                                     sizeof(DREF DeeObject *));
 					if unlikely(!new_default_vector)
 						goto err_r;
-					for (i = result->co_argc_max;
-					     i < result->co_argc_max + current_assembler.a_argrefc; ++i)
-						new_default_vector[i] = Dee_None;
-					Dee_Incref_n(Dee_None, current_assembler.a_argrefc);
+					Dee_Setrefv(new_default_vector + result->co_argc_max,
+					            Dee_None, current_assembler.a_argrefc);
 				}
 				result->co_argc_max += current_assembler.a_argrefc;
 			}

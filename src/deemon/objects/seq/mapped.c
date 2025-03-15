@@ -138,8 +138,7 @@ mappediter_ctor(SeqMappedIterator *__restrict self) {
 	self->smi_iter = DeeObject_Iter(Dee_EmptySeq);
 	if unlikely(!self->smi_iter)
 		goto err;
-	self->smi_mapper = Dee_None;
-	Dee_Incref(Dee_None);
+	self->smi_mapper = DeeNone_NewRef();
 	return 0;
 err:
 	return -1;
@@ -529,10 +528,8 @@ PRIVATE struct type_seq mapped_seq = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapped_ctor(SeqMapped *__restrict self) {
-	self->sm_seq = Dee_EmptySeq;
-	self->sm_mapper = Dee_None;
-	Dee_Incref(Dee_EmptySeq);
-	Dee_Incref(Dee_None);
+	self->sm_seq    = DeeSeq_NewEmpty();
+	self->sm_mapper = DeeNone_NewRef();
 	return 0;
 }
 

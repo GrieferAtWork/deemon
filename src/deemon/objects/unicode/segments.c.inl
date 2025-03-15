@@ -72,12 +72,11 @@ DeeString_Segments(String *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_ctor(StringSegmentsIterator *__restrict self) {
-	self->s_str   = (DREF DeeStringObject *)Dee_EmptyString;
+	self->s_str   = (DREF DeeStringObject *)DeeString_NewEmpty();
 	self->s_siz   = 1;
-	self->s_ptr   = (uint8_t *)DeeString_STR(Dee_EmptyString);
-	self->s_end   = (uint8_t *)DeeString_STR(Dee_EmptyString);
+	self->s_ptr   = (uint8_t *)DeeString_STR(self->s_str);
+	self->s_end   = (uint8_t *)DeeString_STR(self->s_str);
 	self->s_width = STRING_WIDTH_1BYTE;
-	Dee_Incref(Dee_EmptyString);
 	return 0;
 }
 
@@ -239,9 +238,8 @@ INTERN DeeTypeObject StringSegmentsIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sseg_ctor(StringSegments *__restrict self) {
-	self->s_str = (DREF DeeStringObject *)Dee_EmptyString;
+	self->s_str = (DREF DeeStringObject *)DeeString_NewEmpty();
 	self->s_siz = 1;
-	Dee_Incref(Dee_EmptyString);
 	return 0;
 }
 

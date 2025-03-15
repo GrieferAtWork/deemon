@@ -895,7 +895,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_tags_doc(struct decl_ast const *__restrict decl) {
 #if 0
 	(void)decl;
-	return_empty_string;
+	return DeeString_NewEmpty();
 #else
 	bool decl_is_empty;
 	if unlikely(!UNICODE_PRINTER_ISEMPTY(&current_tags.at_decl)) {
@@ -945,7 +945,7 @@ ast_tags_doc(struct decl_ast const *__restrict decl) {
 	decl_is_empty = decl_ast_isempty(decl);
 	if (decl_is_empty &&
 	    UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc))
-		return_empty_string;
+		return DeeString_NewEmpty();
 	{
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		/* Print the prefix containing declaration information. */

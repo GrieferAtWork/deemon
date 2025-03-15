@@ -406,10 +406,12 @@ struct Dee_string_utf {
 	                       * A lazily allocated width-string (meaning you can use `Dee_WSTR_LENGTH' to
 	                       * determine its length), representing the UTF-8 variant of this string. */
 #if __SIZEOF_WCHAR_T__ == 2
+#define _Dee_string_utf_utf16_t Dee_wchar_t
 	Dee_wchar_t *u_utf16; /* [0..1][lock(WRITE_ONCE)][owned_if(!= u_data[Dee_STRING_WIDTH_2BYTE])]
 	                       * A lazily allocated width-string (meaning you can use `Dee_WSTR_LENGTH' to
 	                       * determine its length), representing the UTF-16 variant of this string. */
 #else /* __SIZEOF_WCHAR_T__ == 2 */
+#define _Dee_string_utf_utf16_t uint16_t
 	uint16_t    *u_utf16; /* [0..1][lock(WRITE_ONCE)][owned_if(!= u_data[Dee_STRING_WIDTH_2BYTE])]
 	                       * A lazily allocated width-string (meaning you can use `Dee_WSTR_LENGTH' to
 	                       * determine its length), representing the UTF-16 variant of this string. */
@@ -522,18 +524,16 @@ struct Dee_empty_string_struct {
 };
 
 DDATDEF struct Dee_empty_string_struct DeeString_Empty;
-
 #define Dee_EmptyString ((DeeObject *)&DeeString_Empty)
 #ifdef __INTELLISENSE__
-#define Dee_return_empty_string return Dee_EmptyString
+#define DeeString_NewEmpty() Dee_EmptyString
 #else /* __INTELLISENSE__ */
-#define Dee_return_empty_string Dee_return_reference_(Dee_EmptyString)
+#define DeeString_NewEmpty() (Dee_Incref(&DeeString_Empty), Dee_EmptyString)
 #endif /* !__INTELLISENSE__ */
 
 #ifdef DEE_SOURCE
-#define DEFINE_STRING       Dee_DEFINE_STRING
-#define DEFINE_STRING_EX    Dee_DEFINE_STRING_EX
-#define return_empty_string Dee_return_empty_string
+#define DEFINE_STRING    Dee_DEFINE_STRING
+#define DEFINE_STRING_EX Dee_DEFINE_STRING_EX
 #endif /* DEE_SOURCE */
 
 

@@ -155,7 +155,7 @@ PUBLIC WUNUSED DREF Tuple *DCALL
 DeeTuple_NewUninitialized(size_t n) {
 	DREF Tuple *result;
 	if unlikely(!n)
-		return_reference_((Tuple *)Dee_EmptyTuple);
+		return (Tuple *)DeeTuple_NewEmpty();
 #if CONFIG_TUPLE_CACHE_MAXCOUNT
 	if (n < CONFIG_TUPLE_CACHE_MAXCOUNT) {
 		struct tuple_cache *c = &cache[n - 1];
@@ -197,7 +197,7 @@ PUBLIC WUNUSED DREF Tuple *DCALL
 DeeTuple_TryNewUninitialized(size_t n) {
 	DREF Tuple *result;
 	if unlikely(!n)
-		return_reference_((Tuple *)Dee_EmptyTuple);
+		return (Tuple *)DeeTuple_NewEmpty();
 #if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
 	if (n < CONFIG_TUPLE_CACHE_MAXCOUNT) {
 		struct tuple_cache *c = &cache[n - 1];
@@ -299,7 +299,7 @@ DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF Tuple *__restrict self
 		/* Special case: Resize to an empty tuple. */
 		Dee_DecrefNokill(&DeeTuple_Type);
 		tuple_tp_free(self);
-		return_reference_((Tuple *)Dee_EmptyTuple);
+		return (Tuple *)DeeTuple_NewEmpty();
 	}
 
 #if CONFIG_TUPLE_CACHE_MAXCOUNT
@@ -377,7 +377,7 @@ DeeTuple_TryResizeUninitialized(/*inherit(on_success)*/ DREF Tuple *__restrict s
 		/* Special case: Resize to an empty tuple. */
 		Dee_DecrefNokill(&DeeTuple_Type);
 		tuple_tp_free(self);
-		return_reference_((Tuple *)Dee_EmptyTuple);
+		return (Tuple *)DeeTuple_NewEmpty();
 	}
 
 #if CONFIG_TUPLE_CACHE_MAXCOUNT
@@ -450,7 +450,7 @@ DeeTuple_TruncateUninitialized(/*inherit(always)*/ DREF Tuple *__restrict self,
 		/* Special case: Resize to an empty tuple. */
 		Dee_DecrefNokill(&DeeTuple_Type);
 		tuple_tp_free(self);
-		return_reference_((Tuple *)Dee_EmptyTuple);
+		return (Tuple *)DeeTuple_NewEmpty();
 	}
 
 #if CONFIG_TUPLE_CACHE_MAXCOUNT
@@ -614,7 +614,7 @@ DeeTuple_FromIterator(DeeObject *__restrict self) {
 	if unlikely(!elem)
 		goto err;
 	if (elem == ITER_DONE)
-		return_empty_tuple;
+		return DeeTuple_NewEmpty();
 	next = DeeObject_IterNext(self);
 	if unlikely(!next)
 		goto err_elem;
@@ -908,9 +908,8 @@ INTDEF DeeTypeObject DeeTupleIterator_Type;
 
 PRIVATE NONNULL((1)) int DCALL
 tuple_iterator_ctor(TupleIterator *__restrict self) {
-	self->ti_tuple = (DREF Tuple *)Dee_EmptyTuple;
+	self->ti_tuple = (DREF Tuple *)DeeTuple_NewEmpty();
 	self->ti_index = 0;
-	Dee_Incref(Dee_EmptyTuple);
 	return 0;
 }
 
@@ -1180,7 +1179,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 /*  ====== `Tuple' type implementation ======  */
 
 PRIVATE WUNUSED DREF Tuple *DCALL tuple_ctor(void) {
-	return_reference_((DREF Tuple *)Dee_EmptyTuple);
+	return (DREF Tuple *)DeeTuple_NewEmpty();
 }
 
 INTERN WUNUSED NONNULL((1)) DREF Tuple *DCALL
@@ -2135,7 +2134,7 @@ tuple_repeat(Tuple *self, DeeObject *other) {
 	}
 	return result;
 return_empty:
-	return_reference_((Tuple *)Dee_EmptyTuple);
+	return (Tuple *)DeeTuple_NewEmpty();
 err_overflow:
 	err_integer_overflow(other, sizeof(size_t) * 8, true);
 err:
@@ -2377,7 +2376,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	/* .tp_operators_size= */ COMPILER_LENOF(tuple_operators),
 };
 
-PUBLIC struct empty_tuple_object DeeTuple_Empty = {
+PUBLIC struct Dee_empty_tuple_struct DeeTuple_Empty = {
 	4, /* +1 in contrast to OBJECT_HEAD_INIT for the reference
 	    * saved as the original value for `Dee_GetArgv()' */
 	&DeeTuple_Type,
@@ -2390,7 +2389,7 @@ PUBLIC struct empty_tuple_object DeeTuple_Empty = {
 
 
 
-PRIVATE struct empty_tuple_object DeeNullableTuple_Empty = {
+PRIVATE struct Dee_empty_tuple_struct DeeNullableTuple_Empty = {
 	OBJECT_HEAD_INIT(&DeeNullableTuple_Type),
 	0
 };
@@ -2398,8 +2397,8 @@ PRIVATE struct empty_tuple_object DeeNullableTuple_Empty = {
 
 LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 make_nullable(DREF DeeTupleObject *__restrict self) {
-	if unlikely(self == (DREF DeeTupleObject *)Dee_EmptyTuple) {
-		Dee_DecrefNokill(Dee_EmptyTuple);
+	if unlikely(self == (DREF DeeTupleObject *)&DeeTuple_Empty) {
+		Dee_DecrefNokill(&DeeTuple_Empty);
 		Dee_Incref(&DeeNullableTuple_Empty);
 		return (DREF DeeTupleObject *)&DeeNullableTuple_Empty;
 	}
@@ -2433,7 +2432,8 @@ done:
 
 
 PRIVATE WUNUSED DREF Tuple *DCALL nullable_tuple_ctor(void) {
-	return_reference_((DREF Tuple *)&DeeNullableTuple_Empty);
+	Dee_Incref(&DeeNullableTuple_Empty);
+	return (DREF DeeTupleObject *)&DeeNullableTuple_Empty;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF Tuple *DCALL
@@ -2765,7 +2765,7 @@ Dee_tuple_builder_pack(struct Dee_tuple_builder *__restrict self) {
 	DeeTupleObject *result = self->tb_tuple;
 	if unlikely(!result) {
 		ASSERT(self->tb_size == 0);
-		return_empty_tuple;
+		return DeeTuple_NewEmpty();
 	}
 	return (DREF DeeObject *)DeeTuple_TruncateUninitialized(result, self->tb_size);
 }

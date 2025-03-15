@@ -280,20 +280,46 @@ STATIC_ASSERT(sizeof(double) == __SIZEOF_DOUBLE__);
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 float_hash(Float *__restrict self) {
 #if __SIZEOF_DOUBLE__ == Dee_SIZEOF_HASH_T
-	return *(Dee_hash_t const *)&self->f_value;
+	union {
+		double f;
+		Dee_hash_t i;
+	} value;
+	value.f = self->f_value;
+	return value.i;
 #elif __SIZEOF_DOUBLE__ >= 8
+	union {
+		double f;
+		uint64_t i64;
+		uint32_t i32[2];
+	} value;
+	value.f = self->f_value;
 #if Dee_SIZEOF_HASH_T >= 8
-	return (Dee_hash_t)(*(uint64_t const *)&self->f_value);
+	return (Dee_hash_t)value.i64;
 #else /* Dee_SIZEOF_HASH_T >= 8 */
-	return ((Dee_hash_t)((uint32_t const *)&self->f_value)[0] ^
-	        (Dee_hash_t)((uint32_t const *)&self->f_value)[1]);
+	return ((Dee_hash_t)value.i32[0] ^
+	        (Dee_hash_t)value.i32[1]);
 #endif /* Dee_SIZEOF_HASH_T < 8 */
 #elif __SIZEOF_DOUBLE__ >= 4
-	return (Dee_hash_t)(*(uint32_t const *)&self->f_value);
+	union {
+		double f;
+		uint32_t i;
+	} value;
+	value.f = self->f_value;
+	return (Dee_hash_t)value.i;
 #elif __SIZEOF_DOUBLE__ >= 2
-	return (Dee_hash_t)(*(uint16_t const *)&self->f_value);
+	union {
+		double f;
+		uint16_t i;
+	} value;
+	value.f = self->f_value;
+	return (Dee_hash_t)value.i;
 #else /* __SIZEOF_DOUBLE__ >= ... */
-	return (Dee_hash_t)(*(uint8_t const *)&self->f_value);
+	union {
+		double f;
+		uint8_t i;
+	} value;
+	value.f = self->f_value;
+	return (Dee_hash_t)value.i;
 #endif /* __SIZEOF_DOUBLE__ < ... */
 }
 
@@ -410,15 +436,26 @@ float_rounds(DeeObject *__restrict self) {
 #define float_inf_IS_CONSTANT
 #define float_nan_IS_CONSTANT
 struct Dee_float_ieee754_object {
+#undef f_words
+#undef f_double
 	Dee_OBJECT_HEAD
-	uint32_t f_words[2];
+	union {
+		uint32_t f_words[2];
+		double   f_double;
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_ieee754_v
+#define f_words  _ieee754_v.f_words
+#define f_double _ieee754_v.f_double
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 #ifdef CONFIG_HAVE_IEEE754_LE
-#define FLOAT_IEEE754_INIT(msw, lsw) { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), { lsw, msw } }
+#define FLOAT_IEEE754_INIT(msw, lsw) { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), { { lsw, msw } } }
 #define float_ieee754_word0(x) (((struct Dee_float_ieee754_object *)(x))->f_words[0])
 #define float_ieee754_word1(x) (((struct Dee_float_ieee754_object *)(x))->f_words[1])
 #else /* CONFIG_HAVE_IEEE754_LE */
-#define FLOAT_IEEE754_INIT(msw, lsw) { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), { msw, lsw } }
+#define FLOAT_IEEE754_INIT(msw, lsw) { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), { { msw, lsw } } }
 #define float_ieee754_word0(x) (((struct Dee_float_ieee754_object *)(x))->f_words[1])
 #define float_ieee754_word1(x) (((struct Dee_float_ieee754_object *)(x))->f_words[0])
 #endif /* !CONFIG_HAVE_IEEE754_LE */
@@ -427,8 +464,8 @@ PRIVATE struct Dee_float_ieee754_object float_inf =
 FLOAT_IEEE754_INIT(UINT32_C(0x7ff00000), UINT32_C(0x00000000));
 PRIVATE struct Dee_float_ieee754_object float_nan =
 FLOAT_IEEE754_INIT(UINT32_C(0x7ff80000), UINT32_C(0x00000000));
-#define float_inf_value (*(double const *)float_inf.f_words)
-#define float_nan_value (*(double const *)float_nan.f_words)
+#define float_inf_value float_inf.f_double
+#define float_nan_value float_nan.f_double
 
 #undef FLOAT_IEEE754_INIT
 #elif defined(CONFIG_HAVE_CONSTANT_HUGE_VAL)

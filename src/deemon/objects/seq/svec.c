@@ -671,8 +671,7 @@ PRIVATE struct type_getset tpconst rvec_getsets[] = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_init(RefVector *__restrict self) {
-	self->rv_owner = Dee_None;
-	Dee_Incref(Dee_None);
+	self->rv_owner  = DeeNone_NewRef();
 	self->rv_length = 0;
 	self->rv_vector = NULL;
 #ifndef CONFIG_NO_THREADS

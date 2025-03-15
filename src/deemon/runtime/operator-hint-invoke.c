@@ -2161,7 +2161,7 @@ DeeObject_BoolOb(DeeObject *__restrict self) {
 	result = (*tp_bool)(self);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -2181,7 +2181,7 @@ DeeObject_BoolObInherited(/*inherit(always)*/ DREF DeeObject *__restrict self) {
 	Dee_Decref(self);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -2201,7 +2201,7 @@ DeeObject_BoolObInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__res
 	if unlikely(result < 0)
 		goto err;
 	Dee_Decref(self);
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }

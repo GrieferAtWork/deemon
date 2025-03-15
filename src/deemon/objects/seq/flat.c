@@ -111,8 +111,7 @@ sfi_inititer_withseq(SeqFlatIterator *__restrict self, DeeObject *seq) {
 		goto err_baseiter;
 	if unlikely(firstseq == ITER_DONE) {
 		/* Special case: "{}.flatten" */
-		Dee_Incref(Dee_EmptyIterator);
-		self->sfi_curriter = Dee_EmptyIterator;
+		self->sfi_curriter = DeeIterator_NewEmpty();
 	} else {
 		self->sfi_curriter = DeeObject_Iter(seq);
 		if unlikely(!self->sfi_curriter)
@@ -147,8 +146,7 @@ STATIC_ASSERT(offsetof(SeqFlat, sf_seq) == offsetof(ProxyObject, po_obj));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_ctor(SeqFlat *__restrict self) {
-	Dee_Incref(Dee_EmptySeq);
-	self->sf_seq = Dee_EmptySeq;
+	self->sf_seq = DeeSeq_NewEmpty();
 	return 0;
 }
 
@@ -1037,10 +1035,9 @@ sfi_visit(SeqFlatIterator *__restrict self,
 PRIVATE NONNULL((1)) void DCALL
 sfi_clear(SeqFlatIterator *__restrict self) {
 	DREF DeeObject *old_curriter;
-	Dee_Incref(Dee_EmptyIterator);
 	SeqFlatIterator_LockAcquire(self);
-	old_curriter = self->sfi_curriter;
-	self->sfi_curriter = Dee_EmptyIterator;
+	old_curriter       = self->sfi_curriter;
+	self->sfi_curriter = DeeIterator_NewEmpty();
 	SeqFlatIterator_LockRelease(self);
 	Dee_Decref(old_curriter);
 }

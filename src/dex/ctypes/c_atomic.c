@@ -168,7 +168,7 @@ capi_atomic_cmpxch(size_t argc, DeeObject *const *argv) {
 			}
 		}
 	}, goto err);
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }

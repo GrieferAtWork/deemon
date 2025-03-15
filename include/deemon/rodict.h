@@ -24,6 +24,9 @@
 /**/
 
 #include "dict.h" /* struct Dee_dict_item */
+#ifndef __INTELLISENSE__
+#include "object.h"
+#endif /* !__INTELLISENSE__ */
 #include "types.h"
 /**/
 
@@ -78,7 +81,6 @@ DeeRoDict_FromDict(/*Dict*/ DeeObject *__restrict self);
 
 /* Special empty instance of `DeeRoDict_Type'
  * NOTE: This is _NOT_ a singleton! */
-#ifdef GUARD_DEEMON_OBJECTS_RODICT_C
 struct Dee_empty_rodict_object {
 	Dee_OBJECT_HEAD
 	size_t                                        rd_vsize;        /* # of key-value pairs in the dict. */
@@ -90,10 +92,11 @@ struct Dee_empty_rodict_object {
 };
 DDATDEF struct Dee_empty_rodict_object DeeRoDict_EmptyInstance;
 #define Dee_EmptyRoDict ((DeeObject *)&DeeRoDict_EmptyInstance)
-#else /* GUARD_DEEMON_OBJECTS_RODICT_C */
-DDATDEF DeeObject DeeRoDict_EmptyInstance;
-#define Dee_EmptyRoDict (&DeeRoDict_EmptyInstance)
-#endif /* !GUARD_DEEMON_OBJECTS_RODICT_C */
+#ifdef __INTELLISENSE__
+#define DeeRoDict_NewEmpty() ((DeeObject *)&DeeRoDict_EmptyInstance)
+#else /* __INTELLISENSE__ */
+#define DeeRoDict_NewEmpty() (Dee_Incref(&DeeRoDict_EmptyInstance), (DeeObject *)&DeeRoDict_EmptyInstance)
+#endif /* !__INTELLISENSE__ */
 
 
 

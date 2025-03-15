@@ -60,8 +60,7 @@ STATIC_ASSERT(offsetof(SeqCombinations, sc_seq) == offsetof(ProxyObject, po_obj)
 #define sp_ctor  sc_ctor
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sc_ctor(SeqCombinations *__restrict self) {
-	Dee_Incref(Dee_EmptySeq);
-	self->sc_seq              = Dee_EmptySeq;
+	self->sc_seq              = DeeSeq_NewEmpty();
 	self->sc_trygetitem_index = &default__seq_operator_trygetitem_index__empty;
 	self->sc_seqsize          = 0;
 	self->sc_rparam           = 1;
@@ -159,7 +158,7 @@ sc_iter(SeqCombinations *__restrict self) {
 	if unlikely(rparam == (size_t)-1)
 		goto err;
 	if unlikely(rparam > seqsize)
-		return_empty_iterator;
+		return DeeIterator_NewEmpty();
 	result = (DREF SeqCombinationsIterator *)DeeObject_Mallocc(offsetof(SeqCombinationsIterator, sci_idx),
 	                                                           rparam, sizeof(size_t));
 	if unlikely(!result)
@@ -212,7 +211,7 @@ sp_iter(SeqCombinations *__restrict self) {
 	if unlikely(rparam == (size_t)-1)
 		goto err;
 	if unlikely(rparam > seqsize)
-		return_empty_iterator;
+		return DeeIterator_NewEmpty();
 	result = (DREF SeqCombinationsIterator *)DeeObject_Mallocc(offsetof(SeqCombinationsIterator, sci_idx),
 	                                                           rparam, sizeof(size_t));
 	if unlikely(!result)
@@ -1521,7 +1520,8 @@ SeqCombinations_New(/*inherit(always)*/ DREF DeeObject *__restrict seq,
 	DREF SeqCombinations *result;
 	if unlikely(!rparam) {
 		Dee_Decref(seq);
-		return_reference_((DeeObject *)&empty_combinations);
+		Dee_Incref(&empty_combinations);
+		return (DeeObject *)&empty_combinations;
 	}
 	result = DeeObject_MALLOC(SeqCombinations);
 	if unlikely(!result)

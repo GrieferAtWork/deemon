@@ -44,13 +44,11 @@ struct Dee_none_object {
 DDATDEF DeeTypeObject DeeNone_Type;
 #ifdef GUARD_DEEMON_OBJECTS_NONE_C
 DDATDEF DeeNoneObject DeeNone_Singleton;
-#define Dee_None    ((DeeObject *)&DeeNone_Singleton)
+#define Dee_None ((DeeObject *)&DeeNone_Singleton)
 #else /* GUARD_DEEMON_OBJECTS_NONE_C */
-DDATDEF DeeObject     DeeNone_Singleton;
-#define Dee_None    (&DeeNone_Singleton)
+DDATDEF DeeObject DeeNone_Singleton;
+#define Dee_None (&DeeNone_Singleton)
 #endif /* !GUARD_DEEMON_OBJECTS_NONE_C */
-
-#define Dee_return_none return DeeNone_NewRef()
 
 /* WARNING: If these two macros are ever changed, make sure to allow
  *          `NULL' to be passed for `x', as code exists that assumes
@@ -61,8 +59,9 @@ DDATDEF DeeObject     DeeNone_Singleton;
 /* No-op/none function pointers */
 DFUNDEF ATTR_RETNONNULL WUNUSED DREF DeeObject *(DCALL DeeNone_NewRef)(void);
 #if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
-#define DeeNone_NewRef() (Dee_Incref(Dee_None), Dee_None)
+#define DeeNone_NewRef() (Dee_Incref(&DeeNone_Singleton), (DeeObject *)&DeeNone_Singleton)
 #endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
+#define Dee_return_none return DeeNone_NewRef()
 
 DECL_END
 

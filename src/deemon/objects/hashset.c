@@ -1324,7 +1324,7 @@ hashset_contains(HashSet *self, DeeObject *search_item) {
 	int result = DeeHashSet_Contains((DeeObject *)self, search_item);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -2029,7 +2029,8 @@ PRIVATE struct type_method_hint tpconst hashset_method_hints[] = {
 PRIVATE DEFINE_FLOAT(float_1_point_0, 1.0);
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deprecated_d100_get_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
-	return_reference_((DeeObject *)&float_1_point_0);
+	Dee_Incref(&float_1_point_0);
+	return (DeeObject *)&float_1_point_0;
 }
 #define deprecated_d100_del_maxloadfactor (*(int (DCALL *)(DeeObject *))&_DeeNone_reti0_1)
 #define deprecated_d100_set_maxloadfactor (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)

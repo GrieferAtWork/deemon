@@ -167,7 +167,7 @@ x_sub(DeeIntObject *a, DeeIntObject *b) {
 		while (--i >= 0 && a->ob_digit[i] == b->ob_digit[i])
 			;
 		if (i < 0)
-			return_reference_((DeeIntObject *)DeeInt_Zero);
+			return (DeeIntObject *)DeeInt_NewZero();
 		if (a->ob_digit[i] < b->ob_digit[i]) {
 			DeeIntObject *temp;
 			sign = -1;
@@ -411,7 +411,7 @@ x_sub_revint3(uint32_t a, DeeIntObject *__restrict b) {
 		b_value <<= DIGIT_BITS;
 		b_value |= b->ob_digit[0];
 		if (a == b_value)
-			return_reference_((DeeIntObject *)DeeInt_Zero);
+			return (DeeIntObject *)DeeInt_NewZero();
 		if (a < b_value) {
 			z = (DeeIntObject *)DeeInt_NewUInt64(b_value - a);
 			if (z)
@@ -483,7 +483,7 @@ x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
 		a_value <<= DIGIT_BITS;
 		a_value |= a->ob_digit[0];
 		if (a_value == b)
-			return_reference_((DeeIntObject *)DeeInt_Zero);
+			return (DeeIntObject *)DeeInt_NewZero();
 		if (a_value < b) {
 			b -= a_value;
 			if (b <= DIGIT_MASK) {
@@ -562,7 +562,7 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 		a_value <<= DIGIT_BITS;
 		a_value |= a->ob_digit[0];
 		if (a_value == b)
-			return_reference_((DeeIntObject *)DeeInt_Zero);
+			return (DeeIntObject *)DeeInt_NewZero();
 		if (a_value < b) {
 			b -= (uint32_t)a_value;
 			if (b <= DIGIT_MASK) {
@@ -656,7 +656,7 @@ x_sub_revint2(twodigits a, DeeIntObject *__restrict b) {
 	ASSERT(2 == size_b);
 	if ((a & DIGIT_MASK) == b->ob_digit[0]) {
 		if (((a >> DIGIT_BITS) & DIGIT_MASK) == b->ob_digit[1])
-			return_reference_((DeeIntObject *)DeeInt_Zero);
+			return (DeeIntObject *)DeeInt_NewZero();
 		if (((a >> DIGIT_BITS) & DIGIT_MASK) < b->ob_digit[1])
 			goto do_reverse;
 	} else if ((a & DIGIT_MASK) < b->ob_digit[0]) {
@@ -690,8 +690,7 @@ int_inc(DREF DeeIntObject **__restrict p_self) {
 		size_t i;
 		/* Try to do the increment in-line, thus not having to allocate a new integer. */
 		if unlikely(a->ob_size == 0) {
-			*p_self = (DeeIntObject *)DeeInt_One;
-			Dee_Incref(DeeInt_One);
+			*p_self = (DeeIntObject *)DeeInt_NewOne();
 			DeeInt_Destroy(a);
 			goto done2;
 		}
@@ -719,8 +718,7 @@ int_inc(DREF DeeIntObject **__restrict p_self) {
 				}
 				if (oldval == 1 && a->ob_size == -1) {
 					ASSERT(i == 0);
-					*p_self = (DeeIntObject *)DeeInt_Zero;
-					Dee_Incref(DeeInt_Zero);
+					*p_self = (DeeIntObject *)DeeInt_NewZero();
 					DeeInt_Destroy(a);
 					goto done2;
 				}
@@ -759,8 +757,7 @@ int_dec(DREF DeeIntObject **__restrict p_self) {
 		size_t i;
 		/* Try to do the decrement in-line, thus not having to allocate a new integer. */
 		if unlikely(a->ob_size == 0) {
-			*p_self = (DeeIntObject *)DeeInt_MinusOne;
-			Dee_Incref(DeeInt_MinusOne);
+			*p_self = (DeeIntObject *)DeeInt_NewMinusOne();
 			DeeInt_Destroy(a);
 			goto done2;
 		}
@@ -775,8 +772,7 @@ int_dec(DREF DeeIntObject **__restrict p_self) {
 				}
 				if (oldval == 1 && a->ob_size == 1) {
 					ASSERT(i == 0);
-					*p_self = (DeeIntObject *)DeeInt_Zero;
-					Dee_Incref(DeeInt_Zero);
+					*p_self = (DeeIntObject *)DeeInt_NewZero();
 					DeeInt_Destroy(a);
 					goto done2;
 				}
@@ -1164,7 +1160,7 @@ k_mul(DeeIntObject *a, DeeIntObject *b) {
 	i = a == b ? KARATSUBA_SQUARE_CUTOFF : KARATSUBA_CUTOFF;
 	if (asize <= i) {
 		if (asize == 0)
-			return_reference_((DeeIntObject *)DeeInt_Zero);
+			return (DeeIntObject *)DeeInt_NewZero();
 		return x_mul(a, b);
 	}
 	if (2 * asize <= bsize)
@@ -1341,9 +1337,8 @@ int_divrem(DeeIntObject *a,
 	if (size_a < size_b ||
 	    (size_a == size_b && (a->ob_digit[size_a - 1] <
 	                          b->ob_digit[size_b - 1]))) {
-		Dee_Incref(DeeInt_Zero);
 		Dee_Incref(a);
-		*p_div = (DeeIntObject *)DeeInt_Zero;
+		*p_div = (DeeIntObject *)DeeInt_NewZero();
 		*p_rem = a;
 		return 0;
 	}
@@ -1633,7 +1628,7 @@ int_shr(DeeIntObject *a, DeeObject *b) {
 		wordshift = shiftby / DIGIT_BITS;
 		newsize   = ABS(a->ob_size) - wordshift;
 		if (newsize <= 0)
-			return_reference_((DeeIntObject *)DeeInt_Zero);
+			return (DeeIntObject *)DeeInt_NewZero();
 		loshift = shiftby % DIGIT_BITS;
 		hishift = DIGIT_BITS - loshift;
 		lomask  = ((digit)1 << hishift) - 1;

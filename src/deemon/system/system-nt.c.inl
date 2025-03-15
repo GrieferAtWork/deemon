@@ -3379,10 +3379,8 @@ DeeNTSystem_FormatErrorMessage(DeeNT_DWORD dwError) {
 	result = DeeNTSystem_FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwError,
 	                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 	                                   NULL);
-	if (result == ITER_DONE) {
-		result = Dee_EmptyString;
-		Dee_Incref(Dee_EmptyString);
-	}
+	if (result == ITER_DONE)
+		result = DeeString_NewEmpty();
 	return result;
 }
 

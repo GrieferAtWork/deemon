@@ -2810,7 +2810,7 @@ type_get_ctable(DeeTypeObject *__restrict self) {
 	DREF ObjectTable *result;
 	struct class_desc *desc;
 	if (!DeeType_IsClass(self))
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	desc   = DeeClass_DESC(self);
 	result = DeeObject_MALLOC(ObjectTable);
 	if unlikely(!result)
@@ -2835,7 +2835,7 @@ instance_get_itable(DeeObject *__restrict self) {
 		real_self = DeeSuper_SELF(self);
 	}
 	if (!DeeType_IsClass(type))
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	desc   = DeeClass_DESC(type);
 	result = DeeObject_MALLOC(ObjectTable);
 	if unlikely(!result)

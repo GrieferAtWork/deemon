@@ -25,7 +25,7 @@ __seq_bool__()->?Dbool {
 	int result = CALL_DEPENDENCY(seq_operator_bool, self);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }

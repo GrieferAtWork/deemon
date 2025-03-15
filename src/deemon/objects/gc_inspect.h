@@ -58,7 +58,7 @@ typedef struct {
 	DREF DeeObject *gs_elem[1]; /* [0..1][const][gs_mask+1] Hash-vector. */
 } GCSet_Empty;
 INTDEF GCSet_Empty DeeGCSet_Empty;
-#define Dee_EmptyGCSet ((GCSet *)&DeeGCSet_Empty)
+#define DeeGCSet_NewEmpty() (Dee_Incref(&DeeGCSet_Empty), (GCSet *)&DeeGCSet_Empty)
 
 #define GCSET_HASHOBJ(x)          Dee_HashPointer(x)
 #define GCSET_HASHNXT(i, perturb) ((i) = ((i) << 2) + (i) + (perturb) + 1, (perturb) >>= 5)

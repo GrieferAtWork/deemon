@@ -865,6 +865,23 @@ err_noargs:
 
 
 
+#ifndef DEFINED_type_member_buffer
+#define DEFINED_type_member_buffer
+struct type_member_buffer {
+	char const                *mb_name;
+	union Dee_type_member_desc mb_desc;
+};
+STATIC_ASSERT(offsetof(struct type_member_buffer, mb_name) == offsetof(struct type_member, m_name));
+STATIC_ASSERT(offsetof(struct type_member_buffer, mb_desc) == offsetof(struct type_member, m_desc));
+#define type_member_buffer_init(self, member)  \
+	(void)((self)->mb_name = (member)->m_name, \
+	       (self)->mb_desc = (member)->m_desc)
+#define type_member_buffer_asmember(self) \
+	COMPILER_CONTAINER_OF(&(self)->mb_name, struct type_member, m_name)
+#endif /* !DEFINED_type_member_buffer */
+
+
+
 #ifdef LOCAL_IS_GET
 /* Lookup an attribute from cache.
  * @return: * :        The attribute value.
@@ -1300,12 +1317,10 @@ check_and_invoke_callback:
 		case MEMBERCACHE_MEMBER: {
 #ifdef LOCAL_IS_GET
 #ifdef LOCAL_HAS_self
-			struct buffer {
-				uint8_t dat[offsetof(struct type_member, m_doc)];
-			} buf;
-			buf = *(struct buffer *)&item->mcs_member;
+			struct type_member_buffer buf;
+			type_member_buffer_init(&buf, &item->mcs_member);
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			return type_member_get((struct type_member const *)&buf, LOCAL_self);
+			return type_member_get(type_member_buffer_asmember(&buf), LOCAL_self);
 #else /* LOCAL_HAS_self */
 			struct type_member member;
 			DeeTypeObject *decl;
@@ -1316,21 +1331,17 @@ check_and_invoke_callback:
 #endif /* !LOCAL_HAS_self */
 #else /* LOCAL_IS_GET */
 #ifdef LOCAL_HAS_self
-			struct buffer {
-				uint8_t dat[offsetof(struct type_member, m_doc)];
-			} buf;
-			buf = *(struct buffer *)&item->mcs_member;
+			struct type_member_buffer buf;
+			type_member_buffer_init(&buf, &item->mcs_member);
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			callback = type_member_get((struct type_member const *)&buf, LOCAL_self);
+			callback = type_member_get(type_member_buffer_asmember(&buf), LOCAL_self);
 			goto check_and_invoke_callback;
 #else /* LOCAL_HAS_self */
-			struct buffer {
-				uint8_t dat[offsetof(struct type_member, m_doc)];
-			} buf;
+			struct type_member_buffer buf;
 			DREF DeeObject *result;
 			/*maybe:DREF*/ DeeObject *thisarg;
 			DeeTypeObject *decl;
-			buf  = *(struct buffer *)&item->mcs_member;
+			type_member_buffer_init(&buf, &item->mcs_member);
 			decl = item->mcs_decl;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 			if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
@@ -1339,7 +1350,7 @@ check_and_invoke_callback:
 			if unlikely(DeeObject_AssertTypeOrAbstract(LOCAL_argv[0], decl)) {
 				result = NULL;
 			} else {
-				result = type_member_get((struct type_member const *)&buf, thisarg);
+				result = type_member_get(type_member_buffer_asmember(&buf), thisarg);
 			}
 			LOCAL_unpack_one_for_getter_cleanup(thisarg);
 			return result;
@@ -1470,13 +1481,11 @@ check_and_invoke_callback:
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 			return DeeClsMember_New(decl, &member);
 #else /* LOCAL_IS_GET */
-			struct buffer {
-				uint8_t dat[offsetof(struct type_member, m_doc)];
-			} buf;
+			struct type_member_buffer buf;
 			DREF DeeObject *result;
 			/*maybe:DREF*/ DeeObject *thisarg;
 			DeeTypeObject *decl;
-			buf  = *(struct buffer *)&item->mcs_member;
+			type_member_buffer_init(&buf, &item->mcs_member);
 			decl = item->mcs_decl;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 			if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
@@ -1485,7 +1494,7 @@ check_and_invoke_callback:
 			if unlikely(DeeObject_AssertTypeOrAbstract(thisarg, decl)) {
 				result = NULL;
 			} else {
-				result = type_member_get((struct type_member const *)&buf, thisarg);
+				result = type_member_get(type_member_buffer_asmember(&buf), thisarg);
 			}
 			LOCAL_unpack_one_for_getter_cleanup(thisarg);
 			return result;
@@ -1595,20 +1604,18 @@ check_and_invoke_callback:
 
 #ifdef LOCAL_HAS_self
 		case MEMBERCACHE_MEMBER: {
-			struct buffer {
-				uint8_t dat[offsetof(struct type_member, m_doc)];
-			} buf;
-			buf = *(struct buffer *)&item->mcs_member;
+			struct type_member_buffer buf;
+			type_member_buffer_init(&buf, &item->mcs_member);
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 #ifdef LOCAL_IS_BOUND
 			{
-				bool bound = type_member_bound((struct type_member const *)&buf, LOCAL_self);
+				bool bound = type_member_bound(type_member_buffer_asmember(&buf), LOCAL_self);
 				return Dee_BOUND_FROMBOOL(bound);
 			}
 #elif defined(LOCAL_IS_DEL)
-			return type_member_del((struct type_member const *)&buf, LOCAL_self);
+			return type_member_del(type_member_buffer_asmember(&buf), LOCAL_self);
 #elif defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
-			return type_member_set((struct type_member const *)&buf, LOCAL_self, value);
+			return type_member_set(type_member_buffer_asmember(&buf), LOCAL_self, value);
 #else /* ... */
 #error "Invalid configuration"
 #endif /* !... */
@@ -1700,7 +1707,7 @@ check_and_invoke_callback:
 			attr_perm = LOCAL_ATTR_xMEMBER | ATTR_PERMGET;
 			attr_doc  = item->mcs_member.m_doc;
 			if (TYPE_MEMBER_ISCONST(&item->mcs_member)) {
-				attr_type = Dee_TYPE(item->mcs_member.m_const);
+				attr_type = Dee_TYPE(item->mcs_member.m_desc.md_const);
 				Dee_Incref(attr_type);
 			} else {
 #ifdef LOCAL_IS_CLASS
@@ -1710,7 +1717,7 @@ check_and_invoke_callback:
 #endif /* !LOCAL_IS_CLASS */
 				attr_type = type_member_typefor(&item->mcs_member);
 				Dee_XIncref(attr_type);
-				if (!(item->mcs_member.m_field.m_type & STRUCT_CONST))
+				if (!(item->mcs_member.m_desc.md_field.mdf_type & STRUCT_CONST))
 					attr_perm |= ATTR_PERMDEL | ATTR_PERMSET;
 			}
 			break;
@@ -1802,12 +1809,12 @@ check_and_invoke_callback:
 			attr_doc  = item->mcs_member.m_doc;
 			/*attr_type = &DeeClsMember_Type*/;
 			if (TYPE_MEMBER_ISCONST(&item->mcs_member)) {
-				attr_type = Dee_TYPE(item->mcs_member.m_const);
+				attr_type = Dee_TYPE(item->mcs_member.m_desc.md_const);
 				Dee_Incref(attr_type);
 			} else {
 				attr_type = type_member_typefor(&item->mcs_member);
 				Dee_XIncref(attr_type);
-				if (!(item->mcs_member.m_field.m_type & STRUCT_CONST))
+				if (!(item->mcs_member.m_desc.md_field.mdf_type & STRUCT_CONST))
 					attr_perm |= ATTR_PERMDEL | ATTR_PERMSET;
 			}
 			break;

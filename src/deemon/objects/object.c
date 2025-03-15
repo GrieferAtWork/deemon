@@ -2256,7 +2256,7 @@ object_hasattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	result = DeeObject_HasAttr(self, name);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -2335,7 +2335,7 @@ object_not(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	temp = DeeObject_Bool(self);
 	if unlikely(temp < 0)
 		goto err;
-	return_bool_(!temp);
+	return_bool(!temp);
 err:
 	return NULL;
 }
@@ -2352,7 +2352,7 @@ object_is(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	} else {
 		is_instance = DeeObject_Implements(self, tp);
 	}
-	Dee_return_reference_((DeeObject *)&Dee_FalseTrue[is_instance]);
+	Dee_return_bool01(is_instance);
 err:
 	return NULL;
 }
@@ -3237,12 +3237,10 @@ unpack_init_info(DeeObject *__restrict info,
 		fields_args_kw[2] = NULL;
 	}
 	if (n_args < 2) {
-		Dee_Incref(Dee_EmptyTuple);
-		fields_args_kw[1] = Dee_EmptyTuple;
+		fields_args_kw[1] = DeeTuple_NewEmpty();
 	} else if (DeeNone_Check(fields_args_kw[1])) {
 		Dee_DecrefNokill(fields_args_kw[1]);
-		Dee_Incref(Dee_EmptyTuple);
-		fields_args_kw[1] = Dee_EmptyTuple;
+		fields_args_kw[1] = DeeTuple_NewEmpty();
 	}
 	if (DeeNone_Check(fields_args_kw[0])) {
 		Dee_DecrefNokill(fields_args_kw[0]);
@@ -3342,8 +3340,7 @@ type_new_extended(DeeTypeObject *self,
 	if unlikely(!init_info)
 		goto err_r;
 	if (init_info == ITER_DONE) {
-		Dee_Incref(Dee_EmptyTuple);
-		init_args   = Dee_EmptyTuple;
+		init_args   = DeeTuple_NewEmpty();
 		init_fields = NULL;
 		init_kw     = NULL;
 	} else {
@@ -3542,7 +3539,7 @@ type_hasinstanceattr(DeeTypeObject *self, size_t argc,
 	result = DeeType_HasInstanceAttr(self, name);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }

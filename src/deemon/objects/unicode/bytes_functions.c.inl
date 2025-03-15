@@ -159,7 +159,7 @@ bytes_find(Bytes *self, size_t argc,
 	if (result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 not_found:
-	return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -211,7 +211,7 @@ bytes_casefind(Bytes *self, size_t argc,
 		return DeeTuple_NewII(index, index + needle.n_size);
 	}
 not_found:
-	return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -263,7 +263,7 @@ bytes_rfind(Bytes *self, size_t argc,
 	if (result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 not_found:
-	return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -968,7 +968,7 @@ bytes_hex(Bytes *self, size_t argc,
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
-		return_empty_string;
+		return DeeString_NewEmpty();
 	end -= start;
 	data = DeeBytes_DATA(self);
 	data += start;
@@ -2060,6 +2060,8 @@ err_r_0:
 	return NULL;
 }
 
+#define empty_bytes_partition__newref() \
+	(Dee_Incref(&empty_bytes_partition), (DeeTupleObject *)&empty_bytes_partition)
 PRIVATE DEFINE_TUPLE(empty_bytes_partition, 3, {
 	Dee_EmptyBytes,
 	Dee_EmptyBytes,
@@ -2079,7 +2081,7 @@ bytes_partition(Bytes *self, size_t argc,
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
-		return_reference_((DREF DeeTupleObject *)&empty_bytes_partition);
+		return empty_bytes_partition__newref();
 	end -= start;
 	return bytes_pack_partition(self,
 	                            memmemb(DeeBytes_DATA(self) + start,
@@ -2106,7 +2108,7 @@ bytes_casepartition(Bytes *self, size_t argc,
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
-		return_reference_((DREF DeeTupleObject *)&empty_bytes_partition);
+		return empty_bytes_partition__newref();
 	end -= start;
 	return bytes_pack_partition(self,
 	                            memasciicasemem(DeeBytes_DATA(self) + start,
@@ -2133,7 +2135,7 @@ bytes_rpartition(Bytes *self, size_t argc,
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
-		return_reference_((DREF DeeTupleObject *)&empty_bytes_partition);
+		return empty_bytes_partition__newref();
 	end -= start;
 	return bytes_pack_partition(self,
 	                            memrmemb(DeeBytes_DATA(self) + start,
@@ -2160,7 +2162,7 @@ bytes_caserpartition(Bytes *self, size_t argc,
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
-		return_reference_((DREF DeeTupleObject *)&empty_bytes_partition);
+		return empty_bytes_partition__newref();
 	end -= start;
 	return bytes_pack_partition(self,
 	                            memasciicasermem(DeeBytes_DATA(self) + start,
@@ -2583,11 +2585,11 @@ bytes_compare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (args.lhs_len < args.rhs_len) {
 		result = memcmp(args.lhs_ptr, args.rhs_ptr, args.lhs_len);
 		if (result == 0)
-			return_reference_(DeeInt_MinusOne);
+			return DeeInt_NewMinusOne();
 	} else if (args.lhs_len > args.rhs_len) {
 		result = memcmp(args.lhs_ptr, args.rhs_ptr, args.rhs_len);
 		if (result == 0)
-			return_reference_(DeeInt_One);
+			return DeeInt_NewOne();
 	} else {
 		result = memcmp(args.lhs_ptr, args.rhs_ptr, args.lhs_len);
 	}
@@ -2645,7 +2647,7 @@ bytes_wmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	result = wildcompareb(args.lhs_ptr, args.lhs_len,
 	                      args.rhs_ptr, args.lhs_len);
-	return_bool_(result == 0);
+	return_bool(result == 0);
 err:
 	return NULL;
 }
@@ -2659,11 +2661,11 @@ bytes_casecompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (args.lhs_len < args.rhs_len) {
 		result = memasciicasecmp(args.lhs_ptr, args.rhs_ptr, args.lhs_len);
 		if (result == 0)
-			return_reference_(DeeInt_MinusOne);
+			return DeeInt_NewMinusOne();
 	} else if (args.lhs_len > args.rhs_len) {
 		result = memasciicasecmp(args.lhs_ptr, args.rhs_ptr, args.rhs_len);
 		if (result == 0)
-			return_reference_(DeeInt_One);
+			return DeeInt_NewOne();
 	} else {
 		result = memasciicasecmp(args.lhs_ptr, args.rhs_ptr, args.lhs_len);
 	}
@@ -2721,7 +2723,7 @@ bytes_casewmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	result = dee_wildasccicasecompareb(args.lhs_ptr, args.lhs_len,
 	                                   args.rhs_ptr, args.lhs_len);
-	return_bool_(result == 0);
+	return_bool(result == 0);
 err:
 	return NULL;
 }
@@ -3282,7 +3284,7 @@ bytes_findmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 err_not_found:
-	return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -3314,7 +3316,7 @@ bytes_rfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 err_not_found:
-	return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -3833,7 +3835,7 @@ bytes_distribute(Bytes *self, size_t argc, DeeObject *const *argv) {
 	substring_length += substring_count - 1;
 	substring_length /= substring_count;
 	if unlikely(!substring_length)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	return DeeBytes_Segments(self, substring_length);
 err:
 	return NULL;
@@ -3982,7 +3984,7 @@ bytes_regmatch(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReGroups_Free(groups);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	groups->rg_groups[0].rm_so = 0;
 	groups->rg_groups[0].rm_eo = (size_t)result;
@@ -4073,7 +4075,7 @@ bytes_rescanf(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReSubBytes_Free(subbytes);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	ReSubBytes_Init(subbytes, (DeeObject *)self,
 	                exec.rx_inbase,
@@ -4105,7 +4107,7 @@ bytes_regfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReGroups_Free(groups);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	match_size += (size_t)result;
 	groups->rg_groups[0].rm_so = (size_t)result;
@@ -4138,7 +4140,7 @@ bytes_regrfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReGroups_Free(groups);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	match_size += (size_t)result;
 	groups->rg_groups[0].rm_so = (size_t)result;
@@ -4171,7 +4173,7 @@ bytes_reglocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReGroups_Free(subbytes);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	match_size += (size_t)result;
 	subbytes->rss_groups[0].rm_so = (size_t)result;
@@ -4206,7 +4208,7 @@ bytes_regrlocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		ReGroups_Free(subbytes);
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	}
 	match_size += (size_t)result;
 	subbytes->rss_groups[0].rm_so = (size_t)result;
@@ -4389,14 +4391,13 @@ bytes_pack_partition_not_found(Bytes *__restrict self,
 		                           endoff - startoff);
 		if unlikely(!str0)
 			goto err_r;
-		DeeTuple_SET(result, 0, str0);
+		result->t_elem[0] = str0;
 	} else {
-		DeeTuple_SET(result, 0, Dee_EmptyString);
-		Dee_Incref(Dee_EmptyString);
+		result->t_elem[0] = DeeString_NewEmpty();
 	}
-	DeeTuple_SET(result, 1, Dee_EmptyString);
-	DeeTuple_SET(result, 2, Dee_EmptyString);
-	Dee_Incref_n(Dee_EmptyString, 2);
+	Dee_Incref_n(&DeeString_Empty, 2);
+	result->t_elem[1] = (DeeObject *)&DeeString_Empty;
+	result->t_elem[2] = (DeeObject *)&DeeString_Empty;
 	return result;
 done:
 	return result;

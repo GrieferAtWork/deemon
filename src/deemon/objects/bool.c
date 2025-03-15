@@ -112,7 +112,7 @@ bool_double(DeeObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bool_int(DeeObject *__restrict self) {
-	return_reference(DeeBool_IsTrue(self) ? DeeInt_One : DeeInt_Zero);
+	Dee_return_smallint(DeeBool_IsTrue(self) ? 1 : 0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -210,7 +210,7 @@ bool_pow(DeeObject *self, DeeObject *other) {
 	temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
 		goto err;
-	return_bool_(!temp);
+	return_bool(!temp);
 err:
 	return NULL;
 }
@@ -307,7 +307,7 @@ bool_eq(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	return_bool_((!error) != DeeBool_IsTrue(self));
+	return_bool((!error) != DeeBool_IsTrue(self));
 err:
 	return NULL;
 }
@@ -317,7 +317,7 @@ bool_ne(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	return_bool_((!error) == DeeBool_IsTrue(self));
+	return_bool((!error) == DeeBool_IsTrue(self));
 err:
 	return NULL;
 }
@@ -351,7 +351,7 @@ bool_ge(DeeObject *self, DeeObject *other) {
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	return_bool_(!error); /* false >= X --> !X */
+	return_bool(!error); /* false >= X --> !X */
 err:
 	return NULL;
 }

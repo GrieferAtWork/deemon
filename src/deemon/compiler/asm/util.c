@@ -162,7 +162,7 @@ again:
 	if unlikely(range_size <= 0) {
 		/* Empty list. */
 		DeeList_LockEndRead(self);
-		return_empty_tuple;
+		return DeeTuple_NewEmpty();
 	}
 	result = (DREF DeeTupleObject *)DeeObject_TryMalloc(DeeTuple_SIZEOF(range_size));
 	if unlikely(!result) {

@@ -39,8 +39,7 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 byattr_ctor(MapByAttr *__restrict self) {
-	self->mba_map = Dee_EmptyMapping;
-	Dee_Incref(Dee_EmptyMapping);
+	self->mba_map = DeeMapping_NewEmpty();
 	return 0;
 }
 

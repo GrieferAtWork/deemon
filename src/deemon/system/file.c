@@ -20,9 +20,6 @@
 #ifndef GUARD_DEEMON_SYSTEM_FILE_C
 #define GUARD_DEEMON_SYSTEM_FILE_C 1
 
-#include <deemon/api.h>
-#include <deemon/filetypes.h>
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -42,6 +39,7 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/byteorder.h>
+#include <hybrid/debug-alignment.h>
 #include <hybrid/host.h>
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
@@ -372,7 +370,7 @@ DeeFile_OpenFd(Dee_fd_t fd, /*String*/ DeeObject *filename,
 	Dee_XIncref(filename);
 #endif /* DEESYSTEM_FILE_USE_STDIO */
 
-	DeeObject_Init(result, &DeeSystemFile_Type);
+	DeeFileObject_Init(result, &DeeSystemFile_Type);
 done:
 	return (DREF DeeObject *)result;
 #endif /* !DEESYSTEM_FILE_USE_STUB */
@@ -634,7 +632,7 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	result = DeeObject_MALLOC(SystemFile);
 	if unlikely(!result)
 		goto err_fp;
-	DeeObject_Init(result, &DeeFSFile_Type);
+	DeeFileObject_Init(result, &DeeFSFile_Type);
 	result->sf_handle    = hFile;
 	result->sf_ownhandle = hFile;    /* Inherit handle. */
 	result->sf_filename  = filename; /* Inherit reference. */
@@ -817,7 +815,7 @@ err:
 	result = DeeObject_MALLOC(SystemFile);
 	if unlikely(!result)
 		goto err_fd;
-	DeeObject_Init(result, &DeeFSFile_Type);
+	DeeFileObject_Init(result, &DeeFSFile_Type);
 	result->sf_handle    = (Dee_fd_t)fd;
 	result->sf_ownhandle = (Dee_fd_t)fd; /* Inherit stream. */
 	result->sf_filename  = filename;
@@ -886,7 +884,7 @@ err:
 	result->sf_ownhandle = fp; /* Inherit stream. */
 	result->sf_filename  = filename;
 	Dee_Incref(filename);
-	DeeObject_Init(result, &DeeFSFile_Type);
+	DeeFileObject_Init(result, &DeeFSFile_Type);
 	return (DREF DeeObject *)result;
 err_unsupported_mode:
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
@@ -2554,7 +2552,7 @@ sysfile_isatty(SystemFile *__restrict self) {
 	result = nt_sysfile_gettype(self);
 	if unlikely(result == FILE_TYPE_UNKNOWN)
 		goto err;
-	return_bool_(result == FILE_TYPE_CHAR);
+	return_bool(result == FILE_TYPE_CHAR);
 err:
 	return NULL;
 #endif /* sysfile_isatty_USE_nt_sysfile_gettype */

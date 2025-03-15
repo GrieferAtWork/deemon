@@ -40,7 +40,7 @@ __seq_startswith__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallab
 	}
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }

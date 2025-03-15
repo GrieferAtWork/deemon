@@ -30,7 +30,7 @@ __map_values__->?DSequence;
 __map_values__.map_values([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$none = return_none}
-%{$empty = return_empty_seq}
+%{$empty = return DeeSeq_NewEmpty()}
 %{$with__map_itervalues = {
 	DREF DefaultSequence_MapProxy *result;
 	result = DeeObject_MALLOC(DefaultSequence_MapProxy);

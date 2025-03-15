@@ -325,10 +325,8 @@ ob_weakref_try_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	_DeeArg_Unpack0(err, argc, argv, "try_lock");
 	result = Dee_weakref_lock(&self->wr_ref);
-	if (!result) {
-		result = Dee_None;
-		Dee_Incref(Dee_None);
-	}
+	if (!result)
+		result = DeeNone_NewRef();
 	return result;
 err:
 	return NULL;

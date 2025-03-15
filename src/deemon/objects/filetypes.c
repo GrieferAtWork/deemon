@@ -335,7 +335,7 @@ DeeFile_OpenRoMemory(void const *data, size_t data_size) {
 	result->mf_end   = (byte_t const *)data + data_size;
 	result->mf_ptr   = result->mf_begin;
 	Dee_atomic_rwlock_init(&result->mf_lock);
-	DeeObject_Init(result, &DeeMemoryFile_Type);
+	DeeFileObject_Init(result, &DeeMemoryFile_Type);
 done:
 	return (DREF DeeObject *)result;
 }
@@ -346,7 +346,7 @@ DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(self, (DeeTypeObject *)&DeeMemoryFile_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* The file also went away, so we can simply not free its data! */
-		Dee_DecrefNokill((DeeObject *)&DeeMemoryFile_Type);
+		Dee_DecrefNokill(DeeFileType_AsType(&DeeMemoryFile_Type));
 		DeeObject_FreeTracker(me);
 		DeeObject_Free(me);
 	} else {
@@ -829,7 +829,7 @@ DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
 	result->r_buffer.bb_put = NULL; /* Hide the buffer interface component. */
 #endif /* !__INTELLISENSE__ */
 	Dee_atomic_rwlock_init(&result->r_lock);
-	DeeObject_Init(result, &DeeFileReader_Type);
+	DeeFileObject_Init(result, &DeeFileReader_Type);
 done:
 	return (DREF DeeObject *)result;
 }
@@ -861,7 +861,7 @@ DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
 	result->r_end   = (byte_t const *)result->r_buffer.bb_base + end;
 	result->r_ptr   = result->r_begin;
 	Dee_atomic_rwlock_init(&result->r_lock);
-	DeeObject_Init(result, &DeeFileReader_Type);
+	DeeFileObject_Init(result, &DeeFileReader_Type);
 done:
 	return (DREF DeeObject *)result;
 err_r:
@@ -961,7 +961,7 @@ again:
 		ASSERT(!me->w_string);
 		if (!me->w_printer.up_buffer) {
 			DeeFileWriter_LockEndRead(me);
-			return_empty_string;
+			return DeeString_NewEmpty();
 		}
 		result = COMPILER_CONTAINER_OF(me->w_printer.up_buffer,
 		                               DeeStringObject,
@@ -1757,7 +1757,7 @@ PUBLIC WUNUSED DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void) {
 	if unlikely(!result)
 		goto done;
 	writer_ctor(result);
-	DeeObject_Init(result, &DeeFileWriter_Type);
+	DeeFileObject_Init(result, &DeeFileWriter_Type);
 done:
 	return (DREF DeeObject *)result;
 }
@@ -1883,7 +1883,7 @@ DeeFile_OpenPrinter(Dee_formatprinter_t printer, void *arg) {
 	result->fp_arg     = arg;
 	result->fp_result  = 0;
 	Dee_shared_rwlock_init(&result->fp_lock);
-	DeeObject_Init(result, &DeeFilePrinter_Type);
+	DeeFileObject_Init(result, &DeeFilePrinter_Type);
 done:
 	return (DREF DeeObject *)result;
 }

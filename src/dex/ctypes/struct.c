@@ -166,7 +166,7 @@ DeeStructType_FromSequence(DeeObject *name,
 	data.staf_result->st_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject) + data.staf_sizeof;
 
 	/* Fill in remaining fields and start tracking the new struct type. */
-	Dee_Incref(DeeStructType_AsObject(&DeeStruct_Type));
+	Dee_Incref(DeeStructType_AsType(&DeeStruct_Type));
 	Dee_atomic_rwlock_cinit(&data.staf_result->st_base.st_cachelock);
 	data.staf_result->st_base.st_base.tp_base  = (DREF DeeTypeObject *)&DeeStruct_Type;
 	data.staf_result->st_base.st_base.tp_name  = DeeStruct_Type.st_base.st_base.tp_name;
@@ -185,7 +185,7 @@ err_r:
 		if (!data.staf_result->st_fvec[i].sf_name)
 			continue;
 		Dee_Decref(data.staf_result->st_fvec[i].sf_name);
-		Dee_Decref(DeeLValueType_AsObject(data.staf_result->st_fvec[i].sf_type));
+		Dee_Decref(DeeLValueType_AsType(data.staf_result->st_fvec[i].sf_type));
 	}
 	DeeGCObject_Free(data.staf_result);
 err:
@@ -193,8 +193,8 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL struct_type_new_empty(void) {
-	Dee_Incref(DeeStructType_AsObject(&DeeStruct_Type));
-	return &DeeStruct_Type;
+	Dee_Incref(DeeStructType_AsType(&DeeStruct_Type));
+	return (DREF DeeStructTypeObject *)&DeeStruct_Type;
 }
 
 PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL
@@ -218,7 +218,7 @@ struct_type_fini(DeeStructTypeObject *__restrict self) {
 		if (!self->st_fvec[i].sf_name)
 			continue;
 		Dee_Decref(self->st_fvec[i].sf_name);
-		Dee_Decref(DeeLValueType_AsObject(self->st_fvec[i].sf_type));
+		Dee_Decref(DeeLValueType_AsType(self->st_fvec[i].sf_type));
 	}
 }
 
@@ -229,7 +229,7 @@ struct_type_visit(DeeStructTypeObject *__restrict self, dvisit_t proc, void *arg
 		if (!self->st_fvec[i].sf_name)
 			continue;
 		Dee_Visit(self->st_fvec[i].sf_name);
-		Dee_Visit(DeeLValueType_AsObject(self->st_fvec[i].sf_type));
+		Dee_Visit(DeeLValueType_AsType(self->st_fvec[i].sf_type));
 	}
 }
 
@@ -602,7 +602,6 @@ err:
 }
 
 
-#undef DeeStruct_Type
 INTERN struct empty_struct_type_object DeeStruct_Type = {
 	/* .st_base = */ {
 		/* .st_base = */ {

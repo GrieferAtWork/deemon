@@ -677,7 +677,7 @@ DeeBytes_FindAll(Bytes *self, DeeObject *other,
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	result->bf_bytes = self;
 	result->bf_other = other;
 	result->bf_start = DeeBytes_DATA(self) + start;
@@ -704,7 +704,7 @@ DeeBytes_CaseFindAll(Bytes *self, DeeObject *other,
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	result->bf_bytes = self;
 	result->bf_other = other;
 	result->bf_start = DeeBytes_DATA(self) + start;

@@ -424,10 +424,8 @@ PRIVATE struct type_member tpconst map_filter_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 filter_ctor(HashFilter *__restrict self) {
-	self->f_seq  = Dee_EmptySeq;
+	self->f_seq  = DeeSeq_NewEmpty();
 	self->f_hash = 0;
-	Dee_Incref(Dee_EmptySeq);
-	Dee_Incref(Dee_None);
 	return 0;
 }
 
@@ -455,10 +453,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seq_filter_init(HashFilter *__restrict self,
                 size_t argc, DeeObject *const *argv) {
+	self->f_seq = Dee_EmptySeq;
 	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqHashFilter",
 	                  &self->f_seq, &self->f_hash))
 		goto err;
-	self->f_seq = Dee_EmptySeq;
 	Dee_Incref(self->f_seq);
 	return 0;
 err:
@@ -468,10 +466,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 map_filter_init(HashFilter *__restrict self,
                 size_t argc, DeeObject *const *argv) {
+	self->f_seq = Dee_EmptySeq;
 	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_MapHashFilter",
 	                  &self->f_seq, &self->f_hash))
 		goto err;
-	self->f_seq = Dee_EmptySeq;
 	Dee_Incref(self->f_seq);
 	return 0;
 err:

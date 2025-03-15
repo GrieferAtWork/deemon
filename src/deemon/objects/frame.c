@@ -532,8 +532,7 @@ frame_getlocation(Frame *__restrict self) {
 		char *path, *file;
 		file = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file);
 		if unlikely(!file) {
-			fileob = Dee_None;
-			Dee_Incref(Dee_None);
+			fileob = DeeNone_NewRef();
 		} else {
 			if (!state.rs_regs.dr_path-- ||
 			    (path = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file)) == NULL) {
@@ -550,8 +549,7 @@ frame_getlocation(Frame *__restrict self) {
 		}
 		path = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_name);
 		if (!path) {
-			nameob = Dee_None;
-			Dee_Incref(Dee_None);
+			nameob = DeeNone_NewRef();
 		} else {
 			nameob = DeeString_New(path);
 			if unlikely(!nameob)
@@ -597,8 +595,7 @@ frame_getfile(Frame *__restrict self) {
 		goto err;
 	file = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file);
 	if unlikely(!file) {
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 	} else {
 		if (!state.rs_regs.dr_path-- ||
 		    (path = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_path)) == NULL) {

@@ -306,7 +306,7 @@ DeeFileBuffer_New(DeeObject *__restrict file,
 	/* Initialize the buffer. */
 	if unlikely(buffer_init(result, file, mode, size))
 		goto err_r;
-	DeeObject_Init(result, &DeeFileBuffer_Type);
+	DeeFileObject_Init(result, &DeeFileBuffer_Type);
 done:
 	return (DREF DeeObject *)result;
 err_r:

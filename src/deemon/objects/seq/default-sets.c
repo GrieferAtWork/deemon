@@ -128,8 +128,7 @@ invset_ge(SetInversion *self, DeeObject *rhs) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 invset_ctor(SetInversion *__restrict self) {
-	self->si_set = Dee_EmptySet;
-	Dee_Incref(Dee_EmptySet);
+	self->si_set = DeeSet_NewEmpty();
 	return 0;
 }
 
@@ -152,7 +151,7 @@ invset_contains(SetInversion *self, DeeObject *key) {
 	int result = DeeObject_InvokeMethodHint(seq_contains, self->si_set, key);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(!result);
+	return_bool(!result);
 err:
 	return NULL;
 }
@@ -427,9 +426,8 @@ PRIVATE NONNULL((1)) void DCALL
 suiter_clear(SetUnionIterator *__restrict self) {
 	DREF DeeObject *iter;
 	SetUnionIterator_LockWrite(self);
-	iter = self->sui_iter;
-	Dee_Incref(Dee_None);
-	self->sui_iter = Dee_None;
+	iter           = self->sui_iter;
+	self->sui_iter = DeeNone_NewRef();
 	SetUnionIterator_LockEndWrite(self);
 	Dee_Decref(iter);
 }
@@ -795,10 +793,9 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 su_ctor(SetUnion *__restrict self) {
-	self->su_a = Dee_EmptySet;
-	self->su_b = Dee_EmptySet;
-	Dee_Incref(Dee_EmptySet);
-	Dee_Incref(Dee_EmptySet);
+	Dee_Incref_n(&DeeSet_EmptyInstance, 2);
+	self->su_a = (DeeObject *)&DeeSet_EmptyInstance;
+	self->su_b = (DeeObject *)&DeeSet_EmptyInstance;
 	return 0;
 }
 
@@ -1852,7 +1849,7 @@ sd_contains(SetDifference *self, DeeObject *item) {
 	temp = DeeObject_InvokeMethodHint(seq_contains, self->sd_b, item);
 	if unlikely(temp < 0)
 		goto err;
-	return_bool_(!temp);
+	return_bool(!temp);
 err:
 	return NULL;
 }

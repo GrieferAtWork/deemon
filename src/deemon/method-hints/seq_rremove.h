@@ -28,7 +28,7 @@ __seq_rremove__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=
 	             : CALL_DEPENDENCY(seq_rremove, self, item, start, end);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }

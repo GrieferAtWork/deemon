@@ -585,8 +585,7 @@ again:
 			DeeObject *ob = *oiter;
 			if (DeeNone_Check(ob))
 				continue;
-			*oiter = Dee_None;
-			Dee_Incref(Dee_None);
+			*oiter = DeeNone_NewRef();
 			if (!Dee_DecrefIfNotOne(ob)) {
 				*decref_later++ = ob;
 				if (decref_later == COMPILER_ENDOF(decref_later_buffer))
@@ -600,8 +599,7 @@ again:
 			DeeObject *ob = *oiter;
 			if (DeeNone_Check(ob))
 				continue;
-			*oiter = Dee_None;
-			Dee_Incref(Dee_None);
+			*oiter = DeeNone_NewRef();
 			if (!Dee_DecrefIfNotOne(ob)) {
 				*decref_later++ = ob;
 				if (decref_later == COMPILER_ENDOF(decref_later_buffer))

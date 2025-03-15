@@ -2176,7 +2176,7 @@ environ_contains(DeeObject *UNUSED(self), DeeObject *key) {
 	exists = posix_environ_hasenv((DeeStringObject *)key);
 	if unlikely(exists < 0)
 		goto err;
-	return_bool_(exists);
+	return_bool(exists);
 err:
 	return NULL;
 }
@@ -2462,7 +2462,7 @@ FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_unsetenv_f_impl(DeeOb
 	error = posix_environ_unsetenv((DeeStringObject *)varname);
 	if unlikely(error < 0)
 		goto err;
-	return_bool_(error == 0);
+	return_bool(error == 0);
 err:
 	return NULL;
 }

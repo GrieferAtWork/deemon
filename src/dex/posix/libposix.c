@@ -1551,7 +1551,7 @@ pst_contains(DeeObject *__restrict UNUSED(self),
 	           sizeof(posix_missing_features.s_str),
 	           DeeString_STR(function_name),
 	           (DeeString_SIZE(function_name) + 1) * sizeof(char));
-	return_bool_(p != NULL);
+	return_bool(p != NULL);
 }
 
 PRIVATE struct type_seq pst_seq = {
@@ -2759,20 +2759,20 @@ PRIVATE struct dex_symbol symbols[] = {
 	 * We mark this global variable a a CONSTEXPR (in user-code: `final'), so that the compiler
 	 * is allowed to substitute it with a constant expression at compile-time. */
 #ifdef DEE_SYSTEM_FS_ICASE
-#define posix_FS_ICASE (*Dee_True)
+#define OBJ_posix_FS_ICASE Dee_True
 #else /* DEE_SYSTEM_FS_ICASE */
-#define posix_FS_ICASE (*Dee_False)
+#define OBJ_posix_FS_ICASE Dee_False
 #endif /* !DEE_SYSTEM_FS_ICASE */
-	{ "FS_ICASE", (DeeObject *)&posix_FS_ICASE, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+	{ "FS_ICASE", OBJ_posix_FS_ICASE, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("Evaluations to true if the host has a case-insensitive file-system") },
 
 	/* Allow user-code to dynamically determine if the host has drives. */
 #ifdef DEE_SYSTEM_FS_DRIVES
-#define posix_FS_DRIVES (*Dee_True)
+#define OBJ_posix_FS_DRIVES Dee_True
 #else /* DEE_SYSTEM_FS_DRIVES */
-#define posix_FS_DRIVES (*Dee_False)
+#define OBJ_posix_FS_DRIVES Dee_False
 #endif /* !DEE_SYSTEM_FS_DRIVES */
-	{ "FS_DRIVES", (DeeObject *)&posix_FS_DRIVES, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+	{ "FS_DRIVES", OBJ_posix_FS_DRIVES, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("Evaluations to true if the host has DOS-like, drive-based file-system") },
 
 	{ NULL }

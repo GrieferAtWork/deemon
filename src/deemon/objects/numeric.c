@@ -575,7 +575,7 @@ numeric_get_isfloat(DeeObject *__restrict self) {
 			if unlikely(error < 0)
 				goto err_flt_val;
 			Dee_Decref(flt_val);
-			return_bool_(error);
+			return_bool(error);
 		}
 	} while ((tp = DeeTypeMRO_Next(&mro, tp)) != NULL);
 	return_false;
@@ -832,8 +832,7 @@ numeric_get_isnan(DeeObject *__restrict self) {
 	if unlikely(error < 0)
 		goto err_res;
 	if (!error) {
-		result = Dee_False;
-		Dee_Incref(Dee_False);
+		result = DeeBool_NewFalse();
 	} else {
 		result = float_get_isnan((DeeFloatObject *)res);
 	}
@@ -865,8 +864,7 @@ numeric_get_isinf(DeeObject *__restrict self) {
 	if unlikely(error < 0)
 		goto err_res;
 	if (!error) {
-		result = Dee_False;
-		Dee_Incref(Dee_False);
+		result = DeeBool_NewFalse();
 	} else {
 		result = float_get_isinf((DeeFloatObject *)res);
 	}

@@ -1902,7 +1902,7 @@ DeeJson_ParseNumber(struct json_parser *__restrict self) {
 
 			/* Special case: '0' */
 			json_skip_whitespace_at(self, ch, pos);
-			return_reference_(DeeInt_Zero);
+			return DeeInt_NewZero();
 		}
 	}
 	for (;;) {

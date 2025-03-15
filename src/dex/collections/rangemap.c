@@ -419,7 +419,7 @@ rangemap_iterself(DeeObject *__restrict self) {
 	if unlikely(Dee_TYPE(self) == &DeeMapping_Type) {
 		/* Special case: Create an empty iterator.
 		 * >> This can happen when someone tries to iterate a symbolic empty-mapping object. */
-		return_empty_iterator;
+		return DeeIterator_NewEmpty();
 	}
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 	return NULL;
@@ -942,9 +942,9 @@ proxy_iterself_keys(RangeMapProxy *__restrict self) {
 		goto err_r;
 	result->rmpki_base.rmpii_base.rmpi_rmap = self->rmp_rmap;
 	Dee_Incref(result->rmpki_base.rmpii_base.rmpi_rmap);
-	result->rmpki_prvkey = DeeInt_Zero;
-	result->rmpki_maxkey = DeeInt_Zero;
-	Dee_Incref_n(DeeInt_Zero, 2);
+	Dee_Incref_n(_DeeInt_Zero, 2);
+	result->rmpki_prvkey = (DeeObject *)_DeeInt_Zero;
+	result->rmpki_maxkey = (DeeObject *)_DeeInt_Zero;
 	Dee_atomic_lock_init(&result->rmpki_lock);
 	result->rmpki_first = false;
 	DeeObject_Init(&result->rmpki_base.rmpii_base, &RangeMapKeysIterator_Type);
@@ -1000,10 +1000,10 @@ make_RangeMapProxyMapItemsIterator(RangeMapProxy *self, DeeTypeObject *type) {
 		goto err_r;
 	result->rmpki_base.rmpii_base.rmpi_rmap = self->rmp_rmap;
 	Dee_Incref(result->rmpki_base.rmpii_base.rmpi_rmap);
-	result->rmpki_base.rmpii_value = DeeInt_Zero;
-	result->rmpki_prvkey           = DeeInt_Zero;
-	result->rmpki_maxkey           = DeeInt_Zero;
-	Dee_Incref_n(DeeInt_Zero, 3);
+	Dee_Incref_n(_DeeInt_Zero, 3);
+	result->rmpki_base.rmpii_value = (DeeObject *)_DeeInt_Zero;
+	result->rmpki_prvkey           = (DeeObject *)_DeeInt_Zero;
+	result->rmpki_maxkey           = (DeeObject *)_DeeInt_Zero;
 	Dee_atomic_lock_init(&result->rmpki_lock);
 	result->rmpki_first = false;
 	DeeObject_Init(&result->rmpki_base.rmpii_base, type);
@@ -2642,9 +2642,9 @@ proxy_keys_iterator_ctor(RangeMapProxyKeysIterator *__restrict self) {
 		goto err;
 	self->rmpki_base.rmpii_base.rmpi_rmap = Dee_EmptyRangeMap;
 	Dee_Incref(self->rmpki_base.rmpii_base.rmpi_rmap);
-	self->rmpki_prvkey = DeeInt_Zero;
-	self->rmpki_maxkey = DeeInt_Zero;
-	Dee_Incref_n(DeeInt_Zero, 2);
+	Dee_Incref_n(_DeeInt_Zero, 2);
+	self->rmpki_prvkey = (DeeObject *)_DeeInt_Zero;
+	self->rmpki_maxkey = (DeeObject *)_DeeInt_Zero;
 	Dee_atomic_lock_init(&self->rmpki_lock);
 	self->rmpki_first = false;
 	return 0;
@@ -2661,9 +2661,9 @@ proxy_keys_iterator_init(RangeMapProxyKeysIterator *__restrict self,
 	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
 		goto err;
 	Dee_Incref(self->rmpki_base.rmpii_base.rmpi_rmap);
-	self->rmpki_prvkey = DeeInt_Zero;
-	self->rmpki_maxkey = DeeInt_Zero;
-	Dee_Incref_n(DeeInt_Zero, 2);
+	Dee_Incref_n(_DeeInt_Zero, 2);
+	self->rmpki_prvkey = (DeeObject *)_DeeInt_Zero;
+	self->rmpki_maxkey = (DeeObject *)_DeeInt_Zero;
 	Dee_atomic_lock_init(&self->rmpki_lock);
 	self->rmpki_first = false;
 	return 0;
@@ -2745,10 +2745,10 @@ proxy_mapitems_iterator_ctor(RangeMapProxyKeysIterator *__restrict self) {
 		goto err;
 	self->rmpki_base.rmpii_base.rmpi_rmap = Dee_EmptyRangeMap;
 	Dee_Incref(self->rmpki_base.rmpii_base.rmpi_rmap);
-	self->rmpki_base.rmpii_value = DeeInt_Zero;
-	self->rmpki_prvkey           = DeeInt_Zero;
-	self->rmpki_maxkey           = DeeInt_Zero;
-	Dee_Incref_n(DeeInt_Zero, 3);
+	Dee_Incref_n(_DeeInt_Zero, 3);
+	self->rmpki_base.rmpii_value = (DeeObject *)_DeeInt_Zero;
+	self->rmpki_prvkey           = (DeeObject *)_DeeInt_Zero;
+	self->rmpki_maxkey           = (DeeObject *)_DeeInt_Zero;
 	Dee_atomic_lock_init(&self->rmpki_lock);
 	self->rmpki_first = false;
 	return 0;
@@ -2765,10 +2765,10 @@ proxy_mapitems_iterator_init(RangeMapProxyKeysIterator *__restrict self,
 	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
 		goto err;
 	Dee_Incref(self->rmpki_base.rmpii_base.rmpi_rmap);
-	self->rmpki_base.rmpii_value = DeeInt_Zero;
-	self->rmpki_prvkey           = DeeInt_Zero;
-	self->rmpki_maxkey           = DeeInt_Zero;
-	Dee_Incref_n(DeeInt_Zero, 3);
+	Dee_Incref_n(_DeeInt_Zero, 3);
+	self->rmpki_base.rmpii_value = (DeeObject *)_DeeInt_Zero;
+	self->rmpki_prvkey           = (DeeObject *)_DeeInt_Zero;
+	self->rmpki_maxkey           = (DeeObject *)_DeeInt_Zero;
 	Dee_atomic_lock_init(&self->rmpki_lock);
 	self->rmpki_first = false;
 	return 0;

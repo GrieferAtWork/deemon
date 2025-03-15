@@ -145,10 +145,9 @@ catiterator_visit(CatIterator *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE NONNULL((1)) void DCALL
 catiterator_clear(CatIterator *__restrict self) {
 	DREF DeeObject *iter;
-	Dee_Incref(Dee_None);
 	CatIterator_LockWrite(self);
-	self->cti_curr = Dee_None;
-	iter = self->cti_curr;
+	iter           = self->cti_curr;
+	self->cti_curr = DeeNone_NewRef();
 	CatIterator_LockEndWrite(self);
 	Dee_Decref(iter);
 }

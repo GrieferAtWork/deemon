@@ -476,9 +476,8 @@ PRIVATE NONNULL((1)) void DCALL
 muiter_clear(MapUnionIterator *__restrict self) {
 	DREF DeeObject *iter;
 	MapUnionIterator_LockWrite(self);
-	iter = self->mui_iter;
-	Dee_Incref(Dee_None);
-	self->mui_iter = Dee_None;
+	iter           = self->mui_iter;
+	self->mui_iter = DeeNone_NewRef();
 	MapUnionIterator_LockEndWrite(self);
 	Dee_Decref(iter);
 }
@@ -1387,10 +1386,8 @@ STATIC_ASSERT(offsetof(MapDifference, md_keys) == offsetof(ProxyObject2, po_obj2
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 md_ctor(MapDifference *__restrict self) {
-	self->md_map = Dee_EmptyMapping;
-	Dee_Incref(Dee_EmptyMapping);
-	self->md_keys = Dee_EmptySet;
-	Dee_Incref(Dee_EmptySet);
+	self->md_map  = DeeMapping_NewEmpty();
+	self->md_keys = DeeSet_NewEmpty();
 	return 0;
 }
 
@@ -2326,9 +2323,8 @@ PRIVATE NONNULL((1)) void DCALL
 msditer_clear(MapSymmetricDifferenceIterator *__restrict self) {
 	DREF DeeObject *iter;
 	MapSymmetricDifferenceIterator_LockWrite(self);
-	iter = self->msdi_iter;
-	Dee_Incref(Dee_None);
-	self->msdi_iter = Dee_None;
+	iter            = self->msdi_iter;
+	self->msdi_iter = DeeNone_NewRef();
 	MapSymmetricDifferenceIterator_LockEndWrite(self);
 	Dee_Decref(iter);
 }

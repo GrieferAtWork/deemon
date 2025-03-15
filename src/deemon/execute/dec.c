@@ -1295,8 +1295,7 @@ DecFile_LoadObject(DecFile *__restrict self,
 
 	case DTYPE_NONE:
 set_none_result:
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 		break;
 
 	case DTYPE_IEEE754: {
@@ -2639,8 +2638,7 @@ err_kwds_i:
 					goto corrupt_kwds_i;
 				size = Dec_DecodePointer((uint8_t const **)&kwd_reader);
 				if (!size) {
-					kwds[i] = (DREF DeeStringObject *)Dee_EmptyString;
-					Dee_Incref(Dee_EmptyString);
+					kwds[i] = (DREF DeeStringObject *)DeeString_NewEmpty();
 					continue;
 				}
 				addr = Dec_DecodePointer((uint8_t const **)&kwd_reader);

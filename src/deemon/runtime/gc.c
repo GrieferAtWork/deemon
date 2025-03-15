@@ -1225,18 +1225,19 @@ collect_restart_with_pending_hint:
 	for (iter = gc_root; iter; iter = iter->gc_next) {
 		instruction_t old_instr;
 		uint16_t old_flags;
+		DeeCodeObject *iter_code;
 		ASSERT_OBJECT(&iter->gc_object);
 		ASSERT(iter != iter->gc_next);
 		if unlikely(!iter->gc_object.ob_refcnt)
 			continue; /* Object is currently being destroyed. */
 		if (!DeeCode_Check(&iter->gc_object))
 			continue; /* Not a code object. */
-		if (!((DeeCodeObject *)&iter->gc_object)->co_codebytes)
+		iter_code = (DeeCodeObject *)&iter->gc_object;
+		if (!iter_code->co_codebytes)
 			continue; /* Empty code? */
 
 		/* Exchange the first instruction with `ASM_RET_NONE' */
-		old_instr = atomic_xch(&((DeeCodeObject *)&iter->gc_object)->co_code[0],
-		                       ASM_RET_NONE);
+		old_instr = atomic_xch(&iter_code->co_code[0], ASM_RET_NONE);
 
 		/* One last thing: The interpreter checks the FFINALLY flag
 		 *                 to see if there might be finally-handlers
@@ -1245,7 +1246,7 @@ collect_restart_with_pending_hint:
 		 *              -- Delete that flag! We can't have the code
 		 *                 re-acquiring control, simply by pre-defining
 		 *                 a finally handler to guard the first text byte. */
-		old_flags = atomic_fetchand(&((DeeCodeObject *)&iter->gc_object)->co_flags, ~CODE_FFINALLY);
+		old_flags = atomic_fetchand(&iter_code->co_flags, ~CODE_FFINALLY);
 		if (old_instr != ASM_RET_NONE || (old_flags & CODE_FFINALLY))
 			++result;
 	}

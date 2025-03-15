@@ -229,9 +229,8 @@ STATIC_ASSERT(offsetof(Segments, s_len) == offsetof(SegmentsIterator, si_len));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seg_ctor(Segments *__restrict self) {
-	self->s_seq = Dee_EmptySeq;
+	self->s_seq = DeeSeq_NewEmpty();
 	self->s_len = 1;
-	Dee_Incref(Dee_EmptySeq);
 	return 0;
 }
 

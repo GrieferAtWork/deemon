@@ -1222,7 +1222,7 @@ code_get_kwds(DeeCodeObject *__restrict self) {
 		                                (DeeObject *const *)self->co_keywords);
 	}
 	if (self->co_argc_max == 0)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	err_unbound_attribute_string(&DeeCode_Type, STR___kwds__);
 	return NULL;
 }

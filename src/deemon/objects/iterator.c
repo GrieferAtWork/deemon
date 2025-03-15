@@ -326,7 +326,7 @@ iterator_prev(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	error = DeeIterator_Prev(self);
 	if unlikely(error < 0)
 		goto err;
-	return_bool_(!error);
+	return_bool(!error);
 err:
 	return NULL;
 }
@@ -2032,7 +2032,7 @@ DeeIterator_GetSeq(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	if unlikely(tp_self == &DeeIterator_Type)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	while (tp_self != &DeeIterator_Type) {
 		struct type_nii const *nii;
 		if (tp_self->tp_cmp &&
@@ -2092,7 +2092,7 @@ iterator_get_isbidirectional(DeeObject *__restrict self) {
 	int temp = iterator_is_bidirectional(self);
 	if unlikely(temp < 0)
 		goto err;
-	return_bool_(temp);
+	return_bool(temp);
 err:
 	return NULL;
 }
@@ -2102,7 +2102,7 @@ iterator_get_hasnext(DeeObject *__restrict self) {
 	int temp = DeeObject_Bool(self);
 	if unlikely(temp < 0)
 		goto err;
-	return_bool_(temp);
+	return_bool(temp);
 err:
 	return NULL;
 }
@@ -2112,7 +2112,7 @@ iterator_get_hasprev(DeeObject *__restrict self) {
 	int error = DeeIterator_HasPrev(self);
 	if unlikely(error < 0)
 		goto err;
-	return_bool_(error);
+	return_bool(error);
 err:
 	return NULL;
 }

@@ -59,7 +59,7 @@ f_builtin_hasattr(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_HasAttr(self, attr);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -72,7 +72,7 @@ f_builtin_hasitem(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_HasItem(self, key);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -153,7 +153,7 @@ f_builtin_equals(size_t argc, DeeObject *const *argv) {
 	diff = DeeObject_TryCompareEq(a, b);
 	if unlikely(diff == Dee_COMPARE_ERR)
 		goto err;
-	return_bool_(diff == 0);
+	return_bool(diff == 0);
 err:
 	return NULL;
 }

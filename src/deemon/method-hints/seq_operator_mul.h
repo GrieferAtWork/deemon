@@ -31,13 +31,13 @@ __seq_mul__.seq_operator_mul([[nonnull]] DeeObject *self,
                              [[nonnull]] DeeObject *repeat)
 %{unsupported_alias("default__seq_operator_mul__with__DeeSeq_Repeat")}
 %{$none = return_none}
-%{$empty = return_empty_seq}
+%{$empty = return DeeSeq_NewEmpty()}
 %{$with__DeeSeq_Repeat = {
 	size_t repeatval;
 	if (DeeObject_AsSize(repeat, &repeatval))
 		goto err;
 	if (repeatval == 0)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	if (repeatval == 1)
 		return_reference_(self);
 	return DeeSeq_Repeat(self, repeatval);

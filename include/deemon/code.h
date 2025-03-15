@@ -148,7 +148,6 @@ DECL_BEGIN
 #define DDI_REGS_FSECONE                    Dee_DDI_REGS_FSECONE
 #define DDI_REGS_FMASK                      Dee_DDI_REGS_FMASK
 #define DDI_REGS_UNBOUND_NAME               Dee_DDI_REGS_UNBOUND_NAME
-#define DDI_STATE_FIRSTSAVE                 Dee_DDI_STATE_FIRSTSAVE
 #define DDI_STATE_DO                        Dee_DDI_STATE_DO
 #define DDI_STATE_WHILE                     Dee_DDI_STATE_WHILE
 #define DDI_STATE_FNORMAL                   Dee_DDI_STATE_FNORMAL
@@ -289,9 +288,6 @@ struct Dee_ddi_state {
 	                                     * the list of inline function calls. */
 };
 
-/* The `struct Dee_ddi_state' matches the binary layout of `struct Dee_ddi_saved' */
-#define Dee_DDI_STATE_FIRSTSAVE(self) ((struct Dee_ddi_saved *)(self))
-
 /* Enumerate all the frames of a given DDI-state from most- to least-recent:
  * >> struct Dee_ddi_state state;
  * >> struct Dee_ddi_xregs *iter;
@@ -299,11 +295,11 @@ struct Dee_ddi_state {
  * >>     printf("line = %d\n", iter->dx_base.dr_lno);
  * >> } DDI_STATE_WHILE(iter, &state);
  */
-#define Dee_DDI_STATE_DO(ddi_xregs_iter, self)                 \
-	(ddi_xregs_iter) = &Dee_DDI_STATE_FIRSTSAVE(self)->s_save; \
+#define Dee_DDI_STATE_DO(ddi_xregs_iter, self) \
+	(ddi_xregs_iter) = &(self)->rs_xregs;      \
 	do
 #define Dee_DDI_STATE_WHILE(ddi_xregs_iter, self) \
-	while (((ddi_xregs_iter) = &((struct Dee_ddi_saved *)(ddi_xregs_iter))->s_prev->s_save) != NULL)
+	while (((ddi_xregs_iter) = &__COMPILER_CONTAINER_OF(ddi_xregs_iter, struct Dee_ddi_saved, s_save)->s_prev->s_save) != NULL)
 
 
 

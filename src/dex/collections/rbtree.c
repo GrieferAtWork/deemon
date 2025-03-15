@@ -968,7 +968,7 @@ rbtreeiter_get_isred(RBTreeIterator *__restrict self) {
 		goto err_unlock_unbound;
 	result = rbtree_node_isred(node);
 	RBTree_LockEndRead(tree);
-	return_bool_(result);
+	return_bool(result);
 err_unlock_unbound:
 	RBTree_LockEndRead(tree);
 	err_unbound_attribute_string(&RBTreeIterator_Type, "__isred__");

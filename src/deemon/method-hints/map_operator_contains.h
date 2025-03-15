@@ -46,7 +46,7 @@ __map_contains__.map_operator_contains([[nonnull]] DeeObject *self,
 	int result = CALL_DEPENDENCY(map_operator_bounditem, self, key);
 	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
-	return_bool_(Dee_BOUND_ISBOUND(result));
+	return_bool(Dee_BOUND_ISBOUND(result));
 err:
 	return NULL;
 }} {

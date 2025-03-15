@@ -140,10 +140,9 @@ STATIC_ASSERT(offsetof(RepeatIterator, rpi_iter) == offsetof(ProxyObject2, po_ob
 PRIVATE NONNULL((1)) void DCALL
 repeatiter_clear(RepeatIterator *__restrict self) {
 	DREF DeeObject *iter;
-	Dee_Incref(Dee_None);
 	RepeatIterator_LockWrite(self);
-	iter = self->rpi_iter;
-	self->rpi_iter = Dee_None;
+	iter           = self->rpi_iter;
+	self->rpi_iter = DeeNone_NewRef();
 	RepeatIterator_LockEndWrite(self);
 	Dee_Decref(iter);
 }
@@ -386,8 +385,7 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeat_ctor(Repeat *__restrict self) {
 	self->rp_num = 1;
-	self->rp_seq = Dee_EmptySeq;
-	Dee_Incref(Dee_EmptySeq);
+	self->rp_seq = DeeSeq_NewEmpty();
 	return 0;
 }
 
@@ -864,8 +862,7 @@ INTERN DeeTypeObject SeqItemRepeatIterator_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_ctor(RepeatItem *__restrict self) {
 	self->rpit_num = 1;
-	self->rpit_obj = Dee_None;
-	Dee_Incref(Dee_None);
+	self->rpit_obj = DeeNone_NewRef();
 	return 0;
 }
 
@@ -1170,7 +1167,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_RepeatItem(DeeObject *__restrict item, size_t count) {
 	DREF RepeatItem *result;
 	if unlikely(!count)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	result = DeeObject_MALLOC(RepeatItem);
 	if unlikely(!result)
 		goto done;

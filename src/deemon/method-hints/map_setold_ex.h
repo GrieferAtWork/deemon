@@ -28,14 +28,15 @@ __map_setold_ex__(key,value)->?T2?Dbool?X2?O?N {
 	DREF DeeObject *old_value = CALL_DEPENDENCY(map_setold_ex, self, key, value);
 	if unlikely(!old_value)
 		goto err;
-	if (old_value == ITER_DONE)
-		return_reference_((DeeObject *)&setold_failed_result);
+	if (old_value == ITER_DONE) {
+		Dee_Incref(&setold_failed_result);
+		return (DeeObject *)&setold_failed_result;
+	}
 	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_old_value;
-	Dee_Incref(Dee_True);
-	DeeTuple_SET(result, 0, Dee_True);
-	DeeTuple_SET(result, 1, old_value); /* Inherit reference */
+	result->t_elem[0] = DeeBool_NewTrue();
+	result->t_elem[1] = old_value; /* Inherit reference */
 	return (DREF DeeObject *)result;
 err_old_value:
 	Dee_Decref(old_value);

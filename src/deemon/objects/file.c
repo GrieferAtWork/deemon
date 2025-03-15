@@ -1810,15 +1810,18 @@ PRIVATE struct type_getset tpconst file_class_getsets[] = {
 
 
 #if SEEK_SET == 0
-#define file_SEEK_SET (*DeeInt_Zero)
+#define OBJ_file_SEEK_SET DeeInt_Zero
 #else /* SEEK_SET == 0 */
+#define OBJ_file_SEEK_SET ((DeeObject *)&file_SEEK_SET)
 PRIVATE DEFINE_UINT32(file_SEEK_SET, SEEK_SET);
 #endif /* SEEK_SET != 0 */
 #if SEEK_CUR == 1
-#define file_SEEK_CUR (*DeeInt_One)
+#define OBJ_file_SEEK_CUR DeeInt_One
 #else /* SEEK_CUR == 1 */
+#define OBJ_file_SEEK_CUR ((DeeObject *)&file_SEEK_CUR)
 PRIVATE DEFINE_UINT32(file_SEEK_CUR, SEEK_CUR);
 #endif /* SEEK_CUR != 1 */
+#define OBJ_file_SEEK_END ((DeeObject *)&file_SEEK_END)
 #if SEEK_END <= ((1 << 15) - 1)
 PRIVATE DEFINE_UINT15(file_SEEK_END, SEEK_END);
 #else /* SEEK_END <= ((1 << 15) - 1) */
@@ -1839,11 +1842,11 @@ PRIVATE struct type_member tpconst file_class_members[] = {
 	                      /**/ "under ${File.stdxxx} and the ${File.io} type has been "
 	                      /**/ "renamed to ?#System\n"
 	                      /**/ "With that in mind, this field is now simply an alias for ?DFile"),
-	TYPE_MEMBER_CONST_DOC("SEEK_SET", (DeeObject *)&file_SEEK_SET,
+	TYPE_MEMBER_CONST_DOC("SEEK_SET", OBJ_file_SEEK_SET,
 	                      "Deprecated argument for ?#seek (Use the string $\"set\" instead)"),
-	TYPE_MEMBER_CONST_DOC("SEEK_CUR", (DeeObject *)&file_SEEK_CUR,
+	TYPE_MEMBER_CONST_DOC("SEEK_CUR", OBJ_file_SEEK_CUR,
 	                      "Deprecated argument for ?#seek (Use the string $\"cur\" instead)"),
-	TYPE_MEMBER_CONST_DOC("SEEK_END", (DeeObject *)&file_SEEK_END,
+	TYPE_MEMBER_CONST_DOC("SEEK_END", OBJ_file_SEEK_END,
 	                      "Deprecated argument for ?#seek (Use the string $\"end\" instead)"),
 	TYPE_MEMBER_END
 };
@@ -2163,7 +2166,7 @@ file_ungetc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	result = DeeFile_Ungetc(self, result);
 	if unlikely(result == GETC_ERR)
 		goto err;
-	return_bool_(result != GETC_EOF);
+	return_bool(result != GETC_EOF);
 err:
 	return NULL;
 }
@@ -2177,7 +2180,7 @@ file_putc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	result = DeeFile_Putc(self, (int)(unsigned int)byte);
 	if unlikely(result == GETC_ERR)
 		goto err;
-	return_bool_(result != GETC_EOF);
+	return_bool(result != GETC_EOF);
 err:
 	return NULL;
 }
@@ -2190,7 +2193,7 @@ file_getutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(result == (uint32_t)GETC_ERR)
 		goto err;
 	if (result == (uint32_t)GETC_EOF)
-		return_empty_string;
+		return DeeString_NewEmpty();
 	return DeeString_Chr(result);
 err:
 	return NULL;
@@ -2205,7 +2208,7 @@ file_ungetutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	result = DeeFile_UngetUtf8(self, ch);
 	if unlikely(result == GETC_ERR)
 		goto err;
-	return_bool_(result != GETC_EOF);
+	return_bool(result != GETC_EOF);
 err:
 	return NULL;
 }
@@ -2225,7 +2228,7 @@ file_pututf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(written == (size_t)-1)
 		goto err;
 	ASSERT(written <= WSTR_LENGTH(utf8));
-	return_bool_(written >= WSTR_LENGTH(utf8));
+	return_bool(written >= WSTR_LENGTH(utf8));
 err:
 	return NULL;
 }
@@ -2265,10 +2268,8 @@ file_readline(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 	}
 	result = DeeFile_ReadLine(self, args.maxbytes, args.keeplf);
-	if (result == ITER_DONE) {
-		result = Dee_None;
-		Dee_Incref(Dee_None);
-	}
+	if (result == ITER_DONE)
+		result = DeeNone_NewRef();
 	return result;
 err:
 	return NULL;

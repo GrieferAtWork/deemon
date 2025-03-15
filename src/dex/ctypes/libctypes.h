@@ -1045,15 +1045,11 @@ struct struct_type_object {
 	COMPILER_FLEXIBLE_ARRAY(struct struct_field, st_fvec); /* [1..st_fmsk+1][const] Hash-vector of field names. */
 };
 
-#ifdef __INTELLISENSE__
-#define empty_struct_type_object struct_type_object
-#else /* __INTELLISENSE__ */
 struct empty_struct_type_object {
 	DeeSTypeObject      st_base;    /* The underlying type object. */
 	size_t              st_fmsk;    /* [== 0][const] Field-vector mask. */
 	struct struct_field st_fvec[1]; /* [1..st_fmsk+1][const] Hash-vector of field names. */
 };
-#endif /* !__INTELLISENSE__ */
 
 #define DeeStructType_AsObject(x) DeeSType_AsObject(DeeStructType_AsSType(x))
 #define DeeStructType_AsType(x)   (&(x)->st_base.st_base)
@@ -1065,11 +1061,7 @@ struct empty_struct_type_object {
 
 
 INTDEF DeeTypeObject DeeStructType_Type;
-#undef DeeStruct_Type
 INTDEF struct empty_struct_type_object DeeStruct_Type;
-#ifndef __INTELLISENSE__
-#define DeeStruct_Type (*(DeeStructTypeObject *)&DeeStruct_Type)
-#endif /* !__INTELLISENSE__ */
 #define DeeStructType_Check(ob) \
 	DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeStructType_Type) /* `struct_type' is final */
 

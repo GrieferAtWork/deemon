@@ -46,7 +46,7 @@ err:
 __seq_enumerate_items__.seq_makeenumeration([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$none = return_none}
-%{$empty = return_empty_seq}
+%{$empty = return DeeSeq_NewEmpty()}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__getitem_index_fast, self);
@@ -83,7 +83,7 @@ __seq_enumerate_items__.seq_makeenumeration_with_range([[nonnull]] DeeObject *se
                                                        [[nonnull]] DeeObject *end)
 %{unsupported(auto)}
 %{$none = return_none}
-%{$empty = return_empty_seq}
+%{$empty = return DeeSeq_NewEmpty()}
 %{using seq_makeenumeration_with_intrange: {
 	size_t start_index, end_index;
 	if (DeeObject_AsSize(start, &start_index))
@@ -115,7 +115,7 @@ __seq_enumerate_items__.seq_makeenumeration_with_intrange([[nonnull]] DeeObject 
                                                           size_t start, size_t end)
 %{unsupported(auto)}
 %{$none = return_none}
-%{$empty = return_empty_seq}
+%{$empty = return DeeSeq_NewEmpty()}
 %{using seq_makeenumeration_with_range: {
 	DREF DeeObject *result, *startob, *endob;
 	startob = DeeInt_NewSize(start);

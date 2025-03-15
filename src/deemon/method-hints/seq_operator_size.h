@@ -32,7 +32,7 @@ __seq_size__()->?Dint {
 DREF DeeObject *__seq_size__.seq_operator_sizeob([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
 %{$none = return_none}
-%{$empty = return_reference_(DeeInt_Zero)}
+%{$empty = return DeeInt_NewZero()}
 %{using seq_operator_size: {
 	size_t seqsize = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(seqsize == (size_t)-1)

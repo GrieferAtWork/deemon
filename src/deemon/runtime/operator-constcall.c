@@ -127,9 +127,9 @@ check_foreach_field(DeeObject *ob, bool (DCALL *check)(DeeObject *ob)) {
 			for (; iter->m_name; ++iter) {
 				if (!Dee_TYPE_MEMBER_ISFIELD(iter))
 					continue;
-				if (iter->m_field.m_type == Dee_STRUCT_OBJECT ||
-				    iter->m_field.m_type == Dee_STRUCT_OBJECT_OPT) {
-					DeeObject *value = *(DeeObject *const *)((byte_t *)ob + iter->m_field.m_offset);
+				if (iter->m_desc.md_field.mdf_type == Dee_STRUCT_OBJECT ||
+				    iter->m_desc.md_field.mdf_type == Dee_STRUCT_OBJECT_OPT) {
+					DeeObject *value = *(DeeObject *const *)((byte_t *)ob + iter->m_desc.md_field.mdf_offset);
 					if (value && !(*check)(value))
 						goto nope;
 				}
@@ -158,10 +158,10 @@ check_foreach_field2(DeeObject *a, DeeObject *b,
 			for (; iter->m_name; ++iter) {
 				if (!Dee_TYPE_MEMBER_ISFIELD(iter))
 					continue;
-				if (iter->m_field.m_type == Dee_STRUCT_OBJECT ||
-				    iter->m_field.m_type == Dee_STRUCT_OBJECT_OPT) {
-					DeeObject *lhs = *(DeeObject *const *)((byte_t *)a + iter->m_field.m_offset);
-					DeeObject *rhs = *(DeeObject *const *)((byte_t *)b + iter->m_field.m_offset);
+				if (iter->m_desc.md_field.mdf_type == Dee_STRUCT_OBJECT ||
+				    iter->m_desc.md_field.mdf_type == Dee_STRUCT_OBJECT_OPT) {
+					DeeObject *lhs = *(DeeObject *const *)((byte_t *)a + iter->m_desc.md_field.mdf_offset);
+					DeeObject *rhs = *(DeeObject *const *)((byte_t *)b + iter->m_desc.md_field.mdf_offset);
 					if ((lhs != NULL) != (rhs != NULL))
 						goto nope;
 					if (lhs && !(*check)(lhs, rhs))
@@ -394,7 +394,7 @@ ob_is_func_constcall(DeeObject *ob, size_t argc,
 		if (TYPE_MEMBER_ISCONST(&me->cm_memb))
 			return true;
 		/* "Const && Atomic" would mean that the field can change, so we require "Const && !Atomic" */
-		return (me->cm_memb.m_field.m_type & (STRUCT_ATOMIC | STRUCT_CONST)) == STRUCT_CONST;
+		return (me->cm_memb.m_desc.md_field.mdf_type & (STRUCT_ATOMIC | STRUCT_CONST)) == STRUCT_CONST;
 	} else if (tp == &DeeCMethod_Type ||
 	           tp == &DeeKwCMethod_Type) {
 		DeeCMethodObject *me = (DeeCMethodObject *)ob;

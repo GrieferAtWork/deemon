@@ -35,7 +35,7 @@ __seq_any__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?Dboo
 	}
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }

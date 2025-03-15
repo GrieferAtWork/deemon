@@ -99,6 +99,14 @@ struct Dee_file_object {
 	Dee_OBJECT_HEAD_EX(DeeFileTypeObject)
 };
 
+/* Initialize the standard objects fields of a freshly allocated object.
+ * @param: DeeObject      *self: The object to initialize
+ * @param: DeeTypeoObject *type: The type to assign to the object */
+#define DeeFileObject_Init(self, type) \
+	(Dee_Incref(&(type)->ft_base),     \
+	 DeeObject_InitNoref(self, (DeeFileTypeObject *)(type)))
+
+
 /* The underlying system file descriptor type. */
 /* When `CONFIG_HOST_WINDOWS' is defined:
  *     HANDLE

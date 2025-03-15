@@ -2173,8 +2173,7 @@ DeeKwBlackList_New(struct Dee_code_object *__restrict code,
 			 * -> This can happen depending on how keyword arguments
 			 *    have been routed throughout the runtime.
 			 * Note that we use "Dee_EmptyRoDict" because the mapping needs to be kw-capable */
-			Dee_Incref(Dee_EmptyRoDict);
-			return Dee_EmptyRoDict;
+			return DeeRoDict_NewEmpty();
 		}
 		positional_argv += positional_argc;
 		if (positional_argc >= code->co_argc_max || unlikely(!code->co_keywords)) {

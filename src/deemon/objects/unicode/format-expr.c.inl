@@ -143,7 +143,7 @@ sfa_evalcallargs(struct string_format_advanced *__restrict self, /*out*/ DREF De
 		return 0;
 #else /* DEFINE_sfa_skipexpr */
 		*p_kw = NULL;
-		return_reference_((DeeTupleObject *)Dee_EmptyTuple);
+		return (DREF DeeTupleObject *)DeeTuple_NewEmpty();
 #endif /* !DEFINE_sfa_skipexpr */
 	}
 
@@ -507,8 +507,7 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 		sfa_yield(self);
 		if (self->sfa_exprtok == ')') {
 			sfa_yield(self);
-			LOCAL_IFEVAL(result = Dee_EmptyTuple);
-			LOCAL_IFEVAL(Dee_Incref(result));
+			LOCAL_IFEVAL(result = DeeTuple_NewEmpty());
 			break;
 		}
 		saved_sfa_inparen = self->sfa_inparen;
@@ -612,8 +611,7 @@ err_tuple_items_count:
 		sfa_yield(self);
 		if (self->sfa_exprtok == ']') {
 			sfa_yield(self);
-			LOCAL_IFEVAL(result = Dee_EmptyTuple);
-			LOCAL_IFEVAL(Dee_Incref(result));
+			LOCAL_IFEVAL(result = DeeTuple_NewEmpty());
 			break;
 		}
 #ifndef DEFINE_sfa_skipexpr

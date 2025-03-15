@@ -3440,15 +3440,13 @@ thread_clear(DeeThreadObject *__restrict self) {
 			} else {
 				old_objects[0] = self->t_inout.io_result; /* Inherit reference */
 			}
-			self->t_inout.io_result = Dee_None;
-			Dee_Incref(Dee_None);
+			self->t_inout.io_result = DeeNone_NewRef();
 		}
 	} else {
 		old_objects[0] = self->t_inout.io_main;                    /* Inherit reference */
 		old_objects[1] = (DREF DeeObject *)self->t_context.d_args; /* Inherit reference */
 		self->t_inout.io_main  = NULL;
-		self->t_context.d_args = (DREF struct Dee_tuple_object *)Dee_EmptyTuple;
-		Dee_Incref(Dee_EmptyTuple);
+		self->t_context.d_args = (DREF struct Dee_tuple_object *)DeeTuple_NewEmpty();
 	}
 	_DeeThread_ReleaseSetup(self);
 
@@ -3897,7 +3895,7 @@ thread_start(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	error = DeeThread_Start(self);
 	if unlikely(error < 0)
 		goto err;
-	return_bool_(error == 0);
+	return_bool(error == 0);
 err:
 	return NULL;
 }
@@ -3909,7 +3907,7 @@ thread_detach(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	error = DeeThread_Detach(self);
 	if unlikely(error < 0)
 		goto err;
-	return_bool_(error == 0);
+	return_bool(error == 0);
 err:
 	return NULL;
 }
@@ -3974,7 +3972,7 @@ thread_timedwaitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	error = DeeThread_WaitFor(self, timeout_in_nanoseconds);
 	if unlikely(error < 0)
 		goto err;
-	return_bool_(error == 0);
+	return_bool(error == 0);
 err:
 	return NULL;
 }
@@ -3992,7 +3990,7 @@ thread_interrupt_impl(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	error = DeeThread_Interrupt(self, sig, args);
 	if unlikely(error < 0)
 		goto err;
-	return_bool_(error == 0);
+	return_bool(error == 0);
 err:
 	return NULL;
 }
@@ -4575,7 +4573,7 @@ again:
 		if (self != caller)
 			_DeeThread_ReleaseSetup(self);
 #endif /* !DeeThread_USE_SINGLE_THREADED */
-		return_reference_((DeeTupleObject *)Dee_EmptyTuple);
+		return (DREF DeeTupleObject *)DeeTuple_NewEmpty();
 	}
 	result = DeeTuple_TryNewUninitialized(count);
 	if unlikely(!result) {

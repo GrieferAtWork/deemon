@@ -158,7 +158,7 @@ DEFINE_OPERATOR_INVOKE(operator_bool, &usrtype__bool__with__BOOL, &do_inherit_bu
 	result = DeeObject_TBool(tp_self, self);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }

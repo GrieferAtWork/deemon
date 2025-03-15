@@ -1852,7 +1852,7 @@ ds_ial_getrange_index(DefaultSequence_WithIterAndLimit *__restrict self,
 		DeeSeqRange_Clamp(&range, start, end, size);
 	}
 	if (range.sr_start >= range.sr_end)
-		return_empty_seq;
+		return DeeSeq_NewEmpty();
 	result = DeeObject_MALLOC(DefaultSequence_WithIterAndLimit);
 	if unlikely(!result)
 		goto err;

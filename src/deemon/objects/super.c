@@ -133,9 +133,8 @@ nosuper:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 super_ctor(Super *__restrict self) {
 	self->s_type = &DeeNone_Type;
-	self->s_self = Dee_None;
+	self->s_self = DeeNone_NewRef();
 	Dee_Incref(&DeeNone_Type);
-	Dee_Incref(Dee_None);
 	return 0;
 }
 

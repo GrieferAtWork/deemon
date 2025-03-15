@@ -285,8 +285,7 @@ again:
 			Dee_Decref((DeeObject *)self->a_label.l_base);
 			self->a_type      = AST_CONSTEXPR;
 			self->a_flag      = AST_FNORMAL;
-			self->a_constexpr = Dee_None;
-			Dee_Incref(Dee_None);
+			self->a_constexpr = DeeNone_NewRef();
 			OPTIMIZE_VERBOSE("Removing unused label\n");
 			goto did_optimize;
 		}

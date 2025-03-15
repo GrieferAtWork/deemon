@@ -372,11 +372,10 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bs_ctor(BytesSplit *__restrict self) {
-	self->bs_bytes     = (DREF Bytes *)Dee_EmptyBytes;
+	self->bs_bytes     = (DREF Bytes *)DeeBytes_NewEmpty();
 	self->bs_sep_owner = NULL;
 	self->bs_sep_ptr   = NULL;
 	self->bs_sep_len   = 0;
-	Dee_Incref(Dee_EmptyBytes);
 	return 0;
 }
 
@@ -868,11 +867,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 blsi_ctor(BytesLineSplitIterator *__restrict self) {
-	self->blsi_bytes    = (DREF Bytes *)Dee_EmptyBytes;
+	self->blsi_bytes    = (DREF Bytes *)DeeBytes_NewEmpty();
 	self->blsi_iter     = NULL;
-	self->blsi_end      = DeeBytes_DATA(Dee_EmptyBytes);
+	self->blsi_end      = DeeBytes_DATA(self->blsi_bytes);
 	self->blsi_keepends = false;
-	Dee_Incref(Dee_EmptyBytes);
 	return 0;
 }
 
@@ -1031,9 +1029,8 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bls_ctor(BytesLineSplit *__restrict self) {
-	self->bls_bytes    = (DREF Bytes *)Dee_EmptyBytes;
+	self->bls_bytes    = (DREF Bytes *)DeeBytes_NewEmpty();
 	self->bls_keepends = false;
-	Dee_Incref(Dee_EmptyBytes);
 	return 0;
 }
 

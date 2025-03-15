@@ -33,6 +33,7 @@ __set_size__.set_operator_inv([[nonnull]] DeeObject *__restrict self)
 	return (DREF DeeObject *)SetInversion_New(self);
 })}
 %{$none = return_none}
-%{$empty = "default__set_operator_inv__unsupported"} {
+%{$empty = return DeeSet_NewUniversal()}
+{
 	return LOCAL_CALLATTR(self, 0, NULL);
 }

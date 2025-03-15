@@ -87,7 +87,7 @@ srwrip_call(SeqRemoveWithRemoveIfPredicate *self, size_t argc, DeeObject *const 
 	equals = DeeObject_TryCompareEq(self->srwrip_item, item);
 	if unlikely(equals == Dee_COMPARE_ERR)
 		goto err;
-	return_bool_(equals == 0);
+	return_bool(equals == 0);
 err:
 	return NULL;
 }
@@ -100,7 +100,7 @@ srwripwk_call(SeqRemoveWithRemoveIfPredicateWithKey *self, size_t argc, DeeObjec
 	equals = DeeObject_TryCompareKeyEq(self->srwripwk_item, item, self->srwripwk_key);
 	if unlikely(equals == Dee_COMPARE_ERR)
 		goto err;
-	return_bool_(equals == 0);
+	return_bool(equals == 0);
 err:
 	return NULL;
 }

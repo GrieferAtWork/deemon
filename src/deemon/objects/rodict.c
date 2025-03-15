@@ -599,8 +599,7 @@ STATIC_ASSERT(offsetof(RoDictIterator, rodi_dict) == offsetof(ProxyObject, po_ob
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rditer_ctor(RoDictIterator *__restrict self) {
-	self->rodi_dict = (DREF RoDict *)Dee_EmptyRoDict;
-	Dee_Incref(Dee_EmptyRoDict);
+	self->rodi_dict = (DREF RoDict *)DeeRoDict_NewEmpty();
 	self->rodi_vidx = 0;
 	return 0;
 }
@@ -1198,7 +1197,7 @@ rodict_contains(RoDict *self, DeeObject *key) {
 	DeeObject *value = rodict_trygetitemnr(self, key);
 	if unlikely(!value)
 		goto err;
-	return_bool_(value != ITER_DONE);
+	return_bool(value != ITER_DONE);
 err:
 	return NULL;
 }

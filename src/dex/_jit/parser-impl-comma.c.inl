@@ -352,8 +352,7 @@ err_currrent_var_symbol:
 				    (!has_paren && !JITLexer_MaybeExpressionBegin(self))) {
 					/* Empty argument list (Same as none at all). */
 #ifdef JIT_EVAL
-					args = Dee_EmptyTuple;
-					Dee_Incref(Dee_EmptyTuple);
+					args = DeeTuple_NewEmpty();
 #endif /* JIT_EVAL */
 				} else {
 #ifdef JIT_EVAL
@@ -377,8 +376,7 @@ err_currrent_var_symbol:
 			} else {
 				/* No argument list. */
 #ifdef JIT_EVAL
-				args = Dee_EmptyTuple;
-				Dee_Incref(Dee_EmptyTuple);
+				args = DeeTuple_NewEmpty();
 #endif /* JIT_EVAL */
 			}
 #ifdef JIT_EVAL
@@ -835,11 +833,9 @@ done_expression_nocurrent:
 		/* If the caller wants to force us to package
 		 * everything in a multi-branch, grant that wish. */
 		if (!seq_type) {
-			current = Dee_EmptySeq;
-			Dee_Incref(Dee_EmptySeq);
+			current = DeeSeq_NewEmpty();
 		} else if (seq_type == &DeeTuple_Type) {
-			current = Dee_EmptyTuple;
-			Dee_Incref(Dee_EmptyTuple);
+			current = DeeTuple_NewEmpty();
 		} else {
 			current = DeeList_New();
 			if unlikely(!current)

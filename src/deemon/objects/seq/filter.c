@@ -57,10 +57,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 filter_ctor(Filter *__restrict self) {
-	self->f_seq = Dee_EmptySeq;
-	self->f_fun = Dee_None;
-	Dee_Incref(Dee_EmptySeq);
-	Dee_Incref(Dee_None);
+	self->f_seq = DeeSeq_NewEmpty();
+	self->f_fun = DeeNone_NewRef();
 	return 0;
 }
 
@@ -75,8 +73,7 @@ filteriterator_ctor(FilterIterator *__restrict self) {
 	self->fi_iter = DeeObject_Iter(Dee_EmptySeq);
 	if unlikely(!self->fi_iter)
 		goto err;
-	self->fi_func = Dee_None;
-	Dee_Incref(Dee_None);
+	self->fi_func = DeeNone_NewRef();
 	return 0;
 err:
 	return -1;

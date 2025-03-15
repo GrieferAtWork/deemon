@@ -195,12 +195,13 @@ function gi(
 	if (value is none)
 		value = name;
 	function define_with_bits(sign, n_bits) {
+		print("#define OBJ_", libname, name, " ((DeeObject *)&", libname, name, ")");
 		print(visi, " DEFINE_", sign ? "" : "U", "INT", n_bits, "(", libname, name, ", ", value, ");");
 	}
 	local macro_name = f"{libname.upper()}{name.upper()}_DEF";
 	print File.stderr: macro_name;
 	print("#define ", macro_name, " \\\n\t",
-		"{ ", repr name, ", (DeeObject *)&", libname, name, ", ",
+		"{ ", repr name, ", OBJ_", libname, name, ", ",
 		isvarying ? "MODSYM_FNORMAL" : "MODSYM_FREADONLY | MODSYM_FCONSTEXPR"),;
 	if (doc !is none)
 		print(", ", repr doc),;
@@ -211,17 +212,17 @@ function gi(
 		local existingName = KNOWN_INTEGER_CONSTANTS.get(value);
 		if (existingName is none) {
 			final local DEFAULT_KNOWN_CONSTANTS: {int: string} = {
-				-1 : "(*DeeInt_MinusOne)",
-				0 : "(*DeeInt_Zero)",
-				1 : "(*DeeInt_One)",
+				-1 : "DeeInt_MinusOne",
+				0 : "DeeInt_Zero",
+				1 : "DeeInt_One",
 			};
 			existingName = DEFAULT_KNOWN_CONSTANTS.get(value);
 		}
 		if (existingName !is none) {
-			print("#define ", libname, name, " ", existingName);
+			print("#define OBJ_", libname, name, " ", existingName);
 			return;
 		}
-		KNOWN_INTEGER_CONSTANTS[value] = libname + name;
+		KNOWN_INTEGER_CONSTANTS[value] = f"OBJ_{libname}{name}";
 		if (value < 0) {
 			for (local b: valid_bits) {
 				if (value < -(1 << (b - 1)))
@@ -242,7 +243,7 @@ function gi(
 	} else {
 		/* The constant is given via a macro that, meaning we must generate dynamic code. */
 		print("#if DeeInt_IsSmallInt(", value, ")");
-		print("#define ", libname, name, " (*DeeInt_ForSmallInt(", value, "))");
+		print("#define OBJ_", libname, name, " DeeInt_ForSmallInt(", value, ")");
 		print("#elif ", value, " >= 0");
 		local isFirst = true;
 		for (local b: valid_bits) {

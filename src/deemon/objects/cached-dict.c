@@ -63,8 +63,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cdict_ctor(CachedDict *__restrict self) {
 	self->cd_mask = 0;
 	self->cd_size = 0;
-	self->cd_map  = Dee_EmptyMapping;
-	Dee_Incref(Dee_EmptyMapping);
+	self->cd_map  = DeeMapping_NewEmpty();
 	self->cd_elem = empty_cdict_items;
 	Dee_atomic_rwlock_init(&self->cd_lock);
 	return 0;
@@ -746,7 +745,7 @@ cdict_contains(CachedDict *self, DeeObject *key) {
 	DeeObject *value = cdict_trygetitemnr(self, key);
 	if unlikely(!value)
 		goto err;
-	return_bool_(value != ITER_DONE);
+	return_bool(value != ITER_DONE);
 err:
 	return NULL;
 }

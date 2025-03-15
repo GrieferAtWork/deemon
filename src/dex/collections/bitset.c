@@ -810,7 +810,7 @@ bs_flip(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		}
 		old_state = bitset_atomic_fetchflip(self->bs_bitset, index);
-		return_bool_(old_state);
+		return_bool(old_state);
 	}	break;
 
 	case 2: {
@@ -852,7 +852,7 @@ bs_set(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		}
 		old_state = bitset_atomic_fetchset(self->bs_bitset, index);
-		return_bool_(old_state);
+		return_bool(old_state);
 	}	break;
 
 	case 2: {
@@ -894,7 +894,7 @@ bs_clear(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		}
 		old_state = bitset_atomic_fetchclear(self->bs_bitset, index);
-		return_bool_(old_state);
+		return_bool(old_state);
 	}	break;
 
 	case 2: {
@@ -2917,7 +2917,7 @@ bsv_flip(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 		}
 		old_state = bitset_atomic_fetchflip(BitsetView_GetBitset(self),
 		                                    self->bsv_startbit + index);
-		return_bool_(old_state);
+		return_bool(old_state);
 	}	break;
 
 	case 2: {
@@ -2968,7 +2968,7 @@ bsv_set(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 		}
 		old_state = bitset_atomic_fetchset(BitsetView_GetBitset(self),
 		                                   self->bsv_startbit + index);
-		return_bool_(old_state);
+		return_bool(old_state);
 	}	break;
 
 	case 2: {
@@ -3019,7 +3019,7 @@ bsv_clear(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 		}
 		old_state = bitset_atomic_fetchclear(BitsetView_GetBitset(self),
 		                                     self->bsv_startbit + index);
-		return_bool_(old_state);
+		return_bool(old_state);
 	}	break;
 
 	case 2: {
@@ -3391,9 +3391,8 @@ bsv_nbits(BitsetView *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsv_ctor(BitsetView *__restrict self) {
-	Dee_Incref(Dee_EmptyBytes);
-	self->bsv_owner       = Dee_EmptyBytes;
-	self->bsv_buf.bb_base = DeeBytes_DATA(Dee_EmptyBytes);
+	self->bsv_owner       = DeeBytes_NewEmpty();
+	self->bsv_buf.bb_base = DeeBytes_DATA(self->bsv_owner);
 	self->bsv_buf.bb_size = 0;
 #ifndef __INTELLISENSE__
 	self->bsv_buf.bb_put = NULL;

@@ -939,8 +939,7 @@ deq_pclear(Deque *__restrict self, unsigned int gc_priority) {
 			orig_ob = DequeIterator_ITEM(&iter);
 			if (DeeObject_GCPriority(orig_ob) >= gc_priority) {
 				/* Inherit reference to `orig_ob' */
-				DequeIterator_ITEM(&iter) = Dee_None;
-				Dee_Incref(Dee_None);
+				DequeIterator_ITEM(&iter) = DeeNone_NewRef();
 				/* Drop a reference from the cleared object. */
 				if (!Dee_DecrefIfNotOne(orig_ob)) {
 					Deque_LockEndWrite(self);

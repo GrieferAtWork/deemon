@@ -60,8 +60,7 @@ typedef struct {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 gcsetiterator_ctor(GCSetIterator *__restrict self) {
-	self->gsi_set = Dee_EmptyGCSet;
-	Dee_Incref(Dee_EmptyGCSet);
+	self->gsi_set   = DeeGCSet_NewEmpty();
 	self->gsi_index = 0;
 	return 0;
 }
@@ -212,7 +211,7 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 
 
 PRIVATE WUNUSED DREF GCSet *DCALL gcset_ctor(void) {
-	return_reference_(Dee_EmptyGCSet);
+	return DeeGCSet_NewEmpty();
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
@@ -530,8 +529,7 @@ GCSetMaker_Pack(/*inherit(always)*/ GCSetMaker *__restrict self) {
 	if ((result = self->gs_set) != NULL) {
 		DeeObject_Init(result, &DeeGCSet_Type);
 	} else {
-		result = Dee_EmptyGCSet;
-		Dee_Incref(result);
+		result = DeeGCSet_NewEmpty();
 	}
 	return result;
 }

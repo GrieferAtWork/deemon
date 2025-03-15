@@ -48,7 +48,7 @@ DeeMA___seq_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_bool))(self);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }}
@@ -525,7 +525,7 @@ DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	}
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }}
@@ -555,7 +555,7 @@ DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	}
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }}
@@ -585,7 +585,7 @@ DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	}
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }}
@@ -759,7 +759,7 @@ DeeMA___seq_contains__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	}
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }}
@@ -836,7 +836,7 @@ DeeMA___seq_startswith__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	}
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }}
@@ -871,7 +871,7 @@ DeeMA___seq_endswith__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	}
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }}
@@ -896,7 +896,7 @@ DeeMA___seq_find__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
-		return_reference_(DeeInt_MinusOne);
+		return DeeInt_NewMinusOne();
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -922,7 +922,7 @@ DeeMA___seq_rfind__(DeeObject *__restrict self, size_t argc, DeeObject *const *a
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
-		return_reference_(DeeInt_MinusOne);
+		return DeeInt_NewMinusOne();
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1077,7 +1077,7 @@ DeeMA___seq_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	             : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_remove))(self, args.item, args.start, args.end);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }}
@@ -1101,7 +1101,7 @@ DeeMA___seq_rremove__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	             : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_rremove))(self, args.item, args.start, args.end);
 	if unlikely(result < 0)
 		goto err;
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }}
@@ -2003,14 +2003,15 @@ DeeMA___map_setold_ex__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	DREF DeeObject *old_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setold_ex))(self, args.key, args.value);
 	if unlikely(!old_value)
 		goto err;
-	if (old_value == ITER_DONE)
-		return_reference_((DeeObject *)&setold_failed_result);
+	if (old_value == ITER_DONE) {
+		Dee_Incref(&setold_failed_result);
+		return (DeeObject *)&setold_failed_result;
+	}
 	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_old_value;
-	Dee_Incref(Dee_True);
-	DeeTuple_SET(result, 0, Dee_True);
-	DeeTuple_SET(result, 1, old_value); /* Inherit reference */
+	result->t_elem[0] = DeeBool_NewTrue();
+	result->t_elem[1] = old_value; /* Inherit reference */
 	return (DREF DeeObject *)result;
 err_old_value:
 	Dee_Decref(old_value);
@@ -2047,14 +2048,15 @@ DeeMA___map_setnew_ex__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	DREF DeeObject *old_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setnew_ex))(self, args.key, args.value);
 	if unlikely(!old_value)
 		goto err;
-	if (old_value == ITER_DONE)
-		return_reference_((DeeObject *)&setnew_success_result);
+	if (old_value == ITER_DONE) {
+		Dee_Incref(&setnew_success_result);
+		return (DeeObject *)&setnew_success_result;
+	}
 	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_old_value;
-	Dee_Incref(Dee_False);
-	DeeTuple_SET(result, 0, Dee_False);
-	DeeTuple_SET(result, 1, old_value); /* Inherit reference */
+	result->t_elem[0] = DeeBool_NewFalse();
+	result->t_elem[1] = old_value; /* Inherit reference */
 	return (DREF DeeObject *)result;
 err_old_value:
 	Dee_Decref(old_value);

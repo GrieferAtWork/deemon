@@ -986,10 +986,8 @@ LOCAL_seX(printrepr)(LOCAL_SeqEach *__restrict self,
 #ifdef DEFINE_SeqEachGetAttr
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seX(ctor)(LOCAL_SeqEach *__restrict self) {
-	self->se_seq  = Dee_EmptySeq;
-	self->sg_attr = (DREF DeeStringObject *)Dee_EmptyString;
-	Dee_Incref(Dee_EmptySeq);
-	Dee_Incref(Dee_EmptyString);
+	self->se_seq  = DeeSeq_NewEmpty();
+	self->sg_attr = (DREF DeeStringObject *)DeeString_NewEmpty();
 	return 0;
 }
 
@@ -1037,15 +1035,12 @@ PRIVATE WUNUSED DREF LOCAL_SeqEach *DCALL LOCAL_seX(ctor)(void) {
 	result = (DREF LOCAL_SeqEach *)DeeObject_Malloc(offsetof(LOCAL_SeqEach, sg_argv));
 	if unlikely(!result)
 		goto done;
-	result->se_seq  = Dee_EmptySeq;
-	result->sg_attr = (DREF DeeStringObject *)Dee_EmptyString;
+	result->se_seq  = DeeSeq_NewEmpty();
+	result->sg_attr = (DREF DeeStringObject *)DeeString_NewEmpty();
 	result->sg_argc = 0;
 #ifdef DEFINE_SeqEachCallAttrKw
-	result->sg_kw   = Dee_EmptyMapping;
-	Dee_Incref(Dee_EmptyMapping);
+	result->sg_kw   = DeeMapping_NewEmpty();
 #endif /* DEFINE_SeqEachCallAttrKw */
-	Dee_Incref(Dee_EmptySeq);
-	Dee_Incref(Dee_EmptyString);
 	DeeObject_Init(result, &LOCAL_SeqEach_Type);
 done:
 	return result;

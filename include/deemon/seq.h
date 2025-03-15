@@ -36,13 +36,6 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define return_empty_seq      Dee_return_empty_seq
-#define return_empty_iterator Dee_return_empty_iterator
-#endif /* DEE_SOURCE */
-
-
-
 /* The following things are required from sub-class of `Sequence':
  *     - Must either implement `tp_iter' or `tp_sizeob' + `tp_getitem'
  * Many things are implemented by `Sequence'.
@@ -96,20 +89,20 @@ DeeIterator_ForeachPair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void 
  *       internal sequence functions.
  * HINT: Any exact instance of `DeeSeq_Type' should be considered stub/empty,
  *       but obviously something like an empty tuple is also an empty sequence. */
-DDATDEF DeeObject      DeeSeq_EmptyInstance;
+DDATDEF DeeObject DeeSeq_EmptyInstance;
 #define Dee_EmptySeq (&DeeSeq_EmptyInstance)
 #ifdef __INTELLISENSE__
-#define Dee_return_empty_seq return Dee_EmptySeq
+#define DeeSeq_NewEmpty() (&DeeSeq_EmptyInstance)
 #else /* __INTELLISENSE__ */
-#define Dee_return_empty_seq Dee_return_reference_(Dee_EmptySeq)
+#define DeeSeq_NewEmpty() (Dee_Incref(&DeeSeq_EmptyInstance), &DeeSeq_EmptyInstance)
 #endif /* !__INTELLISENSE__ */
 
-DDATDEF DeeObject           DeeIterator_EmptyInstance;
+DDATDEF DeeObject DeeIterator_EmptyInstance;
 #define Dee_EmptyIterator (&DeeIterator_EmptyInstance)
 #ifdef __INTELLISENSE__
-#define Dee_return_empty_iterator return Dee_EmptyIterator
+#define DeeIterator_NewEmpty() (&DeeIterator_EmptyInstance)
 #else /* __INTELLISENSE__ */
-#define Dee_return_empty_iterator Dee_return_reference_(Dee_EmptyIterator)
+#define DeeIterator_NewEmpty() (Dee_Incref(&DeeIterator_EmptyInstance), &DeeIterator_EmptyInstance)
 #endif /* !__INTELLISENSE__ */
 
 

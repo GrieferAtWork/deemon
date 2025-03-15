@@ -866,8 +866,7 @@ handle_error:
 			goto load_return_value;
 		} while (lexer.jl_tok != TOK_EOF);
 do_return_none:
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 	}
 	if (ts->t_exceptsz > context.jc_except) {
 		if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
@@ -1044,12 +1043,12 @@ PRIVATE struct type_cmp jf_cmp = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_hasvarargs(JITFunction *__restrict self) {
-	return_bool_(self->jf_varargs != (size_t)-1);
+	return_bool(self->jf_varargs != (size_t)-1);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_hasvarkwds(JITFunction *__restrict self) {
-	return_bool_(self->jf_varkwds != (size_t)-1);
+	return_bool(self->jf_varkwds != (size_t)-1);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL

@@ -61,6 +61,7 @@
 
 #include <hybrid/byteorder.h>
 #include <hybrid/debug-alignment.h>
+#include <hybrid/typecore.h>
 #include <hybrid/host.h>
 
 #include "cmdline.h"
@@ -2002,7 +2003,11 @@ out:
 	return result;
 }
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
+#define PTR_iadd(T, ptr, delta) (void)((ptr) = (T *)((byte_t *)(ptr) + (delta)))
+#define PTR_isub(T, ptr, delta) (void)((ptr) = (T *)((byte_t *)(ptr) - (delta)))
 
 
 /* With the current token set to the last token apart of the initial format-code comment,
@@ -2031,23 +2036,23 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	is_file_relative_code = (format_code_start >= file->f_begin &&
 	                         format_code_start < file->f_end);
 	if (is_file_relative_code) {
-		*(uintptr_t *)&format_code_start -= (uintptr_t)file->f_begin;
-		*(uintptr_t *)&format_code_end -= (uintptr_t)file->f_begin;
+		PTR_isub(char, format_code_start, (uintptr_t)file->f_begin);
+		PTR_isub(char, format_code_end, (uintptr_t)file->f_begin);
 	}
-	*(uintptr_t *)&token.t_begin -= (uintptr_t)file->f_begin;
-	*(uintptr_t *)&token.t_end -= (uintptr_t)file->f_begin;
-	*(uintptr_t *)&override_start_ptr -= (uintptr_t)file->f_begin;
+	PTR_isub(char, token.t_begin, (uintptr_t)file->f_begin);
+	PTR_isub(char, token.t_end, (uintptr_t)file->f_begin);
+	PTR_isub(char, override_start_ptr, (uintptr_t)file->f_begin);
 	/* Load the remainder of the current file. */
 	do {
 		error = TPPFile_NextChunk(file, TPPFILE_NEXTCHUNK_FLAG_EXTEND);
 	} while (error > 0);
 	if (is_file_relative_code) {
-		*(uintptr_t *)&format_code_start += (uintptr_t)file->f_begin;
-		*(uintptr_t *)&format_code_end += (uintptr_t)file->f_begin;
+		PTR_iadd(char, format_code_start, (uintptr_t)file->f_begin);
+		PTR_iadd(char, format_code_end, (uintptr_t)file->f_begin);
 	}
-	*(uintptr_t *)&token.t_begin += (uintptr_t)file->f_begin;
-	*(uintptr_t *)&token.t_end += (uintptr_t)file->f_begin;
-	*(uintptr_t *)&override_start_ptr += (uintptr_t)file->f_begin;
+	PTR_iadd(char, token.t_begin, (uintptr_t)file->f_begin);
+	PTR_iadd(char, token.t_end, (uintptr_t)file->f_begin);
+	PTR_iadd(char, override_start_ptr, (uintptr_t)file->f_begin);
 	if (error < 0)
 		goto err;
 

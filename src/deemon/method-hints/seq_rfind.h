@@ -29,7 +29,7 @@ __seq_rfind__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
-		return_reference_(DeeInt_MinusOne);
+		return DeeInt_NewMinusOne();
 	return DeeInt_NewSize(result);
 err:
 	return NULL;

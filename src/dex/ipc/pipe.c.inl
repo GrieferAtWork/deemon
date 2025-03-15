@@ -31,6 +31,9 @@
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/debug-alignment.h>
+/**/
+
 #include "libipc.h"
 
 #undef ipc_Pipe_USE_CreatePipe
@@ -163,8 +166,8 @@ pipe_new_impl(size_t pipe_size) {
 	reader_file->sf_filename = NULL;
 	writer_file->sf_filename = NULL;
 #endif /* DEESYSTEM_FILE_HAVE_sf_filename */
-	DeeObject_Init(reader_file, &DeePipeReader_Type);
-	DeeObject_Init(writer_file, &DeePipeWriter_Type);
+	DeeFileObject_Init(reader_file, &DeePipeReader_Type);
+	DeeFileObject_Init(writer_file, &DeePipeWriter_Type);
 	DeeTuple_SET(result, 0, (DeeObject *)reader_file); /* Inherit reference */
 	DeeTuple_SET(result, 1, (DeeObject *)writer_file); /* Inherit reference */
 	return result;

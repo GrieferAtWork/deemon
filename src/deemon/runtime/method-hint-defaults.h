@@ -1741,7 +1741,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_inv__wit
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__set_operator_inv__with_callobjectcache___set_size__(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_inv__unsupported(DeeObject *__restrict self);
 #define default__set_operator_inv__none (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_NewRef1)
-#define default__set_operator_inv__empty (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&default__set_operator_inv__unsupported)
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_inv__empty(DeeObject *__restrict self);
 
 /* set_operator_add */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_add(DeeObject *lhs, DeeObject *rhs);

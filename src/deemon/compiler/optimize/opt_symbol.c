@@ -69,8 +69,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 		                 sym->s_name->k_size, sym->s_name->k_name);
 		SYMBOL_DEC_NREAD(sym);
 		self->a_type      = AST_CONSTEXPR;
-		self->a_constexpr = Dee_None;
-		Dee_Incref(Dee_None);
+		self->a_constexpr = DeeNone_NewRef();
 		goto did_optimize;
 	}
 	SYMBOL_INPLACE_UNWIND_ALIAS(sym);

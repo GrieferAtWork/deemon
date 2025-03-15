@@ -724,11 +724,9 @@ gencode_failed:
 			if (DeeObject_IsShared(self->im_frame.cf_func)) {
 				DeeFunctionObject *new_self_func;
 				/* Must create a new function-object. */
-				Dee_Incref(Dee_EmptyTuple);
 				new_self_func = (DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)current_code);
 				Dee_DecrefNokill(current_code);
 				if unlikely(!new_self_func) {
-					Dee_DecrefNokill(Dee_EmptyTuple);
 					result = NULL;
 					if (is_reusing_code_object)
 						goto recover_old_code_object;
@@ -1097,8 +1095,7 @@ imod_init(InteractiveModule *__restrict self,
 				goto err_options;
 			self->im_module.mo_name = (DREF struct string_object *)module_name; /* Inherit reference */
 		} else {
-			module_name = Dee_EmptyString;
-			Dee_Incref(Dee_EmptyString);
+			module_name = DeeString_NewEmpty();
 		}
 	} else {
 		Dee_Incref(module_name);

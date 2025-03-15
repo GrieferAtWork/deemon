@@ -413,7 +413,7 @@ DEFINE_OPERATOR_INVOKE(operator_read, &instance_read, &filetype_inherit_read) {
 		buf_end = buf.bb_size;
 	if (buf_begin >= buf_end) {
 		DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
-		return_reference_(DeeInt_Zero);
+		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_read(tp_self, tp_self->ft_read, self,
 	                                    (byte_t *)buf.bb_base + buf_begin,
@@ -462,7 +462,7 @@ DEFINE_OPERATOR_INVOKE(operator_write, &instance_write, &filetype_inherit_write)
 		buf_end = buf.bb_size;
 	if (buf_begin >= buf_end) {
 		DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
-		return_reference_(DeeInt_Zero);
+		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_write(tp_self, tp_self->ft_write, self,
 	                                     (byte_t const *)buf.bb_base + buf_begin,
@@ -608,7 +608,7 @@ DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread, &filetype_inherit_pread)
 		end = buf.bb_size;
 	if (start >= end) {
 		DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
-		return_reference_(DeeInt_Zero);
+		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_pread(tp_self, tp_self->ft_pread, self,
 	                                     (byte_t *)buf.bb_base + start,
@@ -666,7 +666,7 @@ DEFINE_OPERATOR_INVOKE(operator_pwrite, &instance_pwrite, &filetype_inherit_pwri
 		end = buf.bb_size;
 	if (start >= end) {
 		DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
-		return_reference_(DeeInt_Zero);
+		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_pwrite(tp_self, tp_self->ft_pwrite, self,
 	                                      (byte_t *)buf.bb_base + start,
@@ -708,7 +708,7 @@ DEFINE_OPERATOR_INVOKE(operator_ungetc, &instance_ungetc, &filetype_inherit_unge
 	ch = DeeFileType_invoke_ft_ungetc(tp_self, tp_self->ft_ungetc, self, ch);
 	if unlikely(ch == GETC_ERR)
 		goto err;
-	return_bool_(ch != GETC_EOF);
+	return_bool(ch != GETC_EOF);
 err:
 	return NULL;
 }
@@ -725,7 +725,7 @@ DEFINE_OPERATOR_INVOKE(operator_putc, &instance_putc, &filetype_inherit_putc) {
 	ch = DeeFileType_invoke_ft_putc(tp_self, tp_self->ft_putc, self, ch, flags);
 	if unlikely(ch == GETC_ERR)
 		goto err;
-	return_bool_(ch != GETC_EOF);
+	return_bool(ch != GETC_EOF);
 err:
 	return NULL;
 }

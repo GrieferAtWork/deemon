@@ -329,7 +329,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 get_token_name(tok_t id, struct TPPKeyword *kwd) {
 	if ((unsigned int)id <= 255) {
 		switch (id) {
-		case TOK_EOF: return_empty_string;
+		case TOK_EOF: return DeeString_NewEmpty();
 		case TOK_FLOAT: return DeeString_NewSized(".0", 2);
 		case TOK_COMMENT: return DeeString_NewSized("//", 2);
 		default: break;
@@ -440,8 +440,7 @@ keyword_macrofile(DeeCompilerItemObject *__restrict self) {
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (!item->k_macro) {
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 		} else {
 			result = DeeCompiler_GetFile(item->k_macro);
 		}
@@ -460,8 +459,7 @@ keyword_oldmacrofile(DeeCompilerItemObject *__restrict self) {
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (!item->k_rare || !item->k_rare->kr_oldmacro) {
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 		} else {
 			result = DeeCompiler_GetFile(item->k_rare->kr_oldmacro);
 		}
@@ -480,8 +478,7 @@ keyword_defmacrofile(DeeCompilerItemObject *__restrict self) {
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (!item->k_rare || !item->k_rare->kr_defmacro) {
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 		} else {
 			result = DeeCompiler_GetFile(item->k_rare->kr_defmacro);
 		}
@@ -500,8 +497,7 @@ keyword_cachedfile(DeeCompilerItemObject *__restrict self) {
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (!item->k_rare || !item->k_rare->kr_file) {
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 		} else {
 			result = DeeCompiler_GetFile(item->k_rare->kr_file);
 		}
@@ -614,8 +610,7 @@ keyword_get_counter(DeeCompilerItemObject *__restrict self) {
 		if (item->k_rare) {
 			result = DeeInt_NewInt64(item->k_rare->kr_counter);
 		} else {
-			result = DeeInt_Zero;
-			Dee_Incref(DeeInt_Zero);
+			result = DeeInt_NewZero();
 		}
 	}
 	COMPILER_END();
@@ -678,8 +673,7 @@ keyword_get_uservalue(DeeCompilerItemObject *__restrict self) {
 		if (item->k_rare) {
 			result = DeeInt_NewUIntptr((uintptr_t)item->k_rare->kr_user);
 		} else {
-			result = DeeInt_Zero;
-			Dee_Incref(DeeInt_Zero);
+			result = DeeInt_NewZero();
 		}
 	}
 	COMPILER_END();
@@ -930,8 +924,7 @@ lexer_get_file(DeeCompilerWrapperObject *__restrict self) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
 	if (TPPLexer_Current->l_token.t_file == &TPPFile_Empty) {
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 	} else {
 		result = DeeCompiler_GetFile(TPPLexer_Current->l_token.t_file);
 	}
@@ -949,8 +942,7 @@ lexer_get_textfile(DeeCompilerWrapperObject *__restrict self) {
 		goto err;
 	file = TPPLexer_Textfile();
 	if (file == &TPPFile_Empty) {
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 	} else {
 		result = DeeCompiler_GetFile(file);
 	}
@@ -968,8 +960,7 @@ lexer_get_basefile(DeeCompilerWrapperObject *__restrict self) {
 		goto err;
 	file = TPPLexer_Basefile();
 	if (file == &TPPFile_Empty) {
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 	} else {
 		result = DeeCompiler_GetFile(file);
 	}
@@ -989,8 +980,7 @@ lexer_get_textposition(DeeCompilerWrapperObject *__restrict self) {
 	file = TPPLexer_Current->l_token.t_file;
 	if (file == &TPPFile_Empty) {
 is_empty_file:
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 	} else {
 		char *pointer;
 		struct TPPLCInfo lc;
@@ -1027,8 +1017,7 @@ lexer_get_textendposition(DeeCompilerWrapperObject *__restrict self) {
 	file = TPPLexer_Current->l_token.t_file;
 	if (file == &TPPFile_Empty) {
 is_empty_file:
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 	} else {
 		char *pointer;
 		struct TPPLCInfo lc;
@@ -1064,8 +1053,7 @@ lexer_get_tokenposition(DeeCompilerWrapperObject *__restrict self) {
 		goto err;
 	file = TPPLexer_Current->l_token.t_file;
 	if (file == &TPPFile_Empty) {
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 	} else {
 		struct TPPLCInfo lc;
 		TPPFile_LCAt(file, &lc, TPPLexer_Current->l_token.t_begin);
@@ -1092,8 +1080,7 @@ lexer_get_tokenendposition(DeeCompilerWrapperObject *__restrict self) {
 		goto err;
 	file = TPPLexer_Current->l_token.t_file;
 	if (file == &TPPFile_Empty) {
-		result = Dee_None;
-		Dee_Incref(Dee_None);
+		result = DeeNone_NewRef();
 	} else {
 		struct TPPLCInfo lc;
 		TPPFile_LCAt(file, &lc, TPPLexer_Current->l_token.t_end);
@@ -1118,7 +1105,7 @@ lexer_get_atstartofline(DeeCompilerWrapperObject *__restrict self) {
 		goto err;
 	result = TPPLexer_AtStartOfLine();
 	COMPILER_END();
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -2186,7 +2173,7 @@ lexer_seterr(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv
 		goto err;
 	result = TPPLexer_SetErr();
 	COMPILER_END();
-	return_bool_(result != 0);
+	return_bool(result != 0);
 err:
 	return NULL;
 }
@@ -2199,7 +2186,7 @@ lexer_unseterr(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *ar
 		goto err;
 	result = TPPLexer_UnsetErr();
 	COMPILER_END();
-	return_bool_(result != 0);
+	return_bool(result != 0);
 err:
 	return NULL;
 }
@@ -2214,7 +2201,7 @@ lexer_popfile(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *arg
 	if (result)
 		TPPLexer_PopFile();
 	COMPILER_END();
-	return_bool_(result);
+	return_bool(result);
 err:
 	return NULL;
 }
@@ -2249,8 +2236,7 @@ lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
 		if (create) {
 			result = NULL;
 		} else {
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 		}
 	} else {
 		result = DeeCompiler_GetKeyword(kwd);
@@ -2290,8 +2276,7 @@ lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
 		if (create) {
 			result = NULL;
 		} else {
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 		}
 	} else {
 		result = DeeCompiler_GetKeyword(kwd);
@@ -2449,7 +2434,7 @@ lexer_delassert(DeeCompilerWrapperObject *self, size_t argc,
 	COMPILER_END();
 	if unlikely(old_exceptsz != DeeThread_Self()->t_exceptsz)
 		goto err;
-	return_bool_(error != 0);
+	return_bool(error != 0);
 err:
 	return NULL;
 }
@@ -2786,7 +2771,7 @@ lexer_syspaths_pop(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const
 		goto err;
 	result = TPPLexer_PopInclude();
 	COMPILER_END();
-	return_bool_(result != 0);
+	return_bool(result != 0);
 err:
 	return NULL;
 }
@@ -2813,7 +2798,7 @@ lexer_syspaths_insert(DeeCompilerWrapperObject *self, size_t argc, DeeObject *co
 	Dee_Free(copy);
 	if unlikely(!result)
 		goto err;
-	return_bool_(result == 1);
+	return_bool(result == 1);
 err:
 	return NULL;
 }
@@ -2838,7 +2823,7 @@ lexer_syspaths_remove(DeeCompilerWrapperObject *self, size_t argc, DeeObject *co
 	result = TPPLexer_DelIncludePath(copy, WSTR_LENGTH(path));
 	COMPILER_END();
 	Dee_Free(copy);
-	return_bool_(result != 0);
+	return_bool(result != 0);
 err:
 	return NULL;
 }
@@ -3540,8 +3525,7 @@ file_origin(DeeCompilerItemObject *__restrict self) {
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (!file->f_prev || file->f_prev == &TPPFile_Empty) {
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 		} else {
 			result = DeeCompiler_GetFile(file->f_prev);
 		}
@@ -4274,8 +4258,7 @@ file_definitionsfile(DeeCompilerItemObject *__restrict self) {
 		if (file->f_kind != TPPFILE_KIND_MACRO) {
 			err_not_a_macrofile(file);
 		} else if (!file->f_macro.m_deffile) {
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 		} else {
 			result = DeeCompiler_GetFile(file->f_macro.m_deffile);
 		}
@@ -4296,8 +4279,7 @@ file_definitionsposition(DeeCompilerItemObject *__restrict self) {
 		if (file->f_kind != TPPFILE_KIND_MACRO) {
 			err_not_a_macrofile(file);
 		} else if (!file->f_macro.m_deffile) {
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 		} else {
 			result = DeeTuple_Newf("dd",
 			                       (int)file->f_macro.m_defloc.lc_line,
@@ -4320,8 +4302,7 @@ file_previousdefinition(DeeCompilerItemObject *__restrict self) {
 		if (file->f_kind != TPPFILE_KIND_MACRO) {
 			err_not_a_macrofile(file);
 		} else if (!file->f_macro.m_pushprev) {
-			result = Dee_None;
-			Dee_Incref(Dee_None);
+			result = DeeNone_NewRef();
 		} else {
 			result = DeeCompiler_GetFile(file->f_macro.m_pushprev);
 		}

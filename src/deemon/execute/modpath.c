@@ -38,6 +38,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/debug-alignment.h>
 #include <hybrid/minmax.h>
 #include <hybrid/sched/yield.h>
 
@@ -2844,8 +2845,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 			if unlikely(!module_name)
 				goto err;
 		} else {
-			module_name = Dee_EmptyString;
-			Dee_Incref(Dee_EmptyString);
+			module_name = DeeString_NewEmpty();
 		}
 	} else {
 		Dee_Incref(module_name);

@@ -1464,61 +1464,61 @@ LOCAL void (DCALL Dee_XFreea)(void *p) {
 }
 #endif /* __NO_XBLOCK */
 
-#define Dee_MallocaNoFail(p, s)                                \
-	do {                                                       \
-		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;            \
-		if (_s_ > DEE_MALLOCA_MAX &&                           \
-		    (*(void **)&(p) = Dee_Malloc(_s_)) != __NULLPTR) { \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;    \
-			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;      \
-		} else {                                               \
-			*(void **)&(p)        = Dee_Alloca(_s_);           \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;    \
-			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;      \
-			bzero((void *)(p), _s_ - DEE_MALLOCA_ALIGN);       \
-		}                                                      \
-	}	__WHILE0
-#define Dee_TryMallocaNoFail(p, s)                                \
-	do {                                                          \
-		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;               \
-		if (_s_ > DEE_MALLOCA_MAX &&                              \
-		    (*(void **)&(p) = Dee_TryMalloc(_s_)) != __NULLPTR) { \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;       \
-			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;         \
-		} else {                                                  \
-			*(void **)&(p)        = Dee_Alloca(_s_);              \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;       \
-			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;         \
-			bzero((void *)(p), _s_ - DEE_MALLOCA_ALIGN);          \
-		}                                                         \
-	}	__WHILE0
-#define Dee_CallocaNoFail(p, s)                                                  \
+#define Dee_MallocaNoFail(p, s)                                                  \
 	do {                                                                         \
 		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                              \
 		if (_s_ > DEE_MALLOCA_MAX &&                                             \
-		    (*(void **)&(p) = Dee_Calloc(_s_)) != __NULLPTR) {                   \
+		    (*(void **)&(p) = Dee_Malloc(_s_)) != __NULLPTR) {                   \
 			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;                      \
-			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;                        \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN;           \
 		} else {                                                                 \
 			*(void **)&(p)        = Dee_Alloca(_s_);                             \
 			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;                      \
-			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;                        \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN;           \
 			(void)DEE_MALLOCA_SKEW_ALLOCA((void *)(p), _s_ - DEE_MALLOCA_ALIGN); \
 		}                                                                        \
 	}	__WHILE0
-#define Dee_TryCallocaNoFail(p, s)                                               \
+#define Dee_TryMallocaNoFail(p, s)                                               \
 	do {                                                                         \
 		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                              \
 		if (_s_ > DEE_MALLOCA_MAX &&                                             \
-		    (*(void **)&(p) = Dee_TryCalloc(_s_)) != __NULLPTR) {                \
+		    (*(void **)&(p) = Dee_TryMalloc(_s_)) != __NULLPTR) {                \
 			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;                      \
-			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;                        \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN;           \
 		} else {                                                                 \
 			*(void **)&(p)        = Dee_Alloca(_s_);                             \
 			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;                      \
-			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;                        \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN;           \
 			(void)DEE_MALLOCA_SKEW_ALLOCA((void *)(p), _s_ - DEE_MALLOCA_ALIGN); \
 		}                                                                        \
+	}	__WHILE0
+#define Dee_CallocaNoFail(p, s)                                        \
+	do {                                                               \
+		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                    \
+		if (_s_ > DEE_MALLOCA_MAX &&                                   \
+		    (*(void **)&(p) = Dee_Calloc(_s_)) != __NULLPTR) {         \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;            \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN; \
+		} else {                                                       \
+			*(void **)&(p)        = Dee_Alloca(_s_);                   \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;            \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN; \
+			bzero((void *)(p), _s_ - DEE_MALLOCA_ALIGN);               \
+		}                                                              \
+	}	__WHILE0
+#define Dee_TryCallocaNoFail(p, s)                                     \
+	do {                                                               \
+		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                    \
+		if (_s_ > DEE_MALLOCA_MAX &&                                   \
+		    (*(void **)&(p) = Dee_TryCalloc(_s_)) != __NULLPTR) {      \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;            \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN; \
+		} else {                                                       \
+			*(void **)&(p)        = Dee_Alloca(_s_);                   \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;            \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN; \
+			bzero((void *)(p), _s_ - DEE_MALLOCA_ALIGN);               \
+		}                                                              \
 	}	__WHILE0
 #endif /* Dee_Alloca && NO_DBG_ALIGNMENT */
 

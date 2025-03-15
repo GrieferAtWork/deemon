@@ -104,10 +104,9 @@ bytesiter_next(BytesIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytesiter_ctor(BytesIterator *__restrict self) {
-	self->bi_bytes = (DREF Bytes *)Dee_EmptyBytes;
+	self->bi_bytes = (DREF Bytes *)DeeBytes_NewEmpty();
 	self->bi_iter  = self->bi_bytes->b_data;
 	self->bi_end   = self->bi_bytes->b_data;
-	Dee_Incref(Dee_EmptyBytes);
 	return 0;
 }
 
@@ -332,7 +331,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	bufsize = DeeFastSeq_GetSize_deprecated(seq);
 	if (bufsize != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (bufsize == 0)
-			return_empty_bytes;
+			return DeeBytes_NewEmpty();
 		result = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data),
 		                                         bufsize, sizeof(byte_t));
 		if unlikely(!result)
@@ -1520,7 +1519,7 @@ PRIVATE struct type_seq bytes_seq = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_isreadonly(Bytes *__restrict self) {
-	return_bool_(!(self->b_flags & Dee_BUFFER_FWRITABLE));
+	return_bool(!(self->b_flags & Dee_BUFFER_FWRITABLE));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1851,7 +1850,7 @@ PRIVATE struct type_member tpconst bytes_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PUBLIC DeeBytesObject DeeBytes_Empty = {
+PUBLIC struct Dee_empty_bytes_struct DeeBytes_Empty = {
 	OBJECT_HEAD_INIT(&DeeBytes_Type),
 	/* .b_base   = */ NULL,
 	/* .b_size   = */ 0,
@@ -2136,7 +2135,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self) {
 	DREF Bytes *result = self->bp_bytes;
 	if unlikely(!result)
-		return_empty_bytes;
+		return DeeBytes_NewEmpty();
 
 	/* Deallocate unused memory. */
 	if likely(self->bp_length != result->b_size) {
