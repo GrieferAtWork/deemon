@@ -2085,7 +2085,8 @@ final class ErrorMethodKey {
 			print(" "),;
 		print(body.recontains(r"\bself\b") ? "self" : "UNUSED(self)"),;
 		print(((
-			for (local x: paramTypes[1:]) ", " + x
+			for (local i, x: paramTypes.enumerate()[1:])
+				f", {x}{x.endswith("*") ? "" : " "}UNUSED(arg{i})"
 		) + ...) ?? "", ") ", body),;
 		print;
 	}
