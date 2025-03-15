@@ -603,7 +603,7 @@ PRIVATE struct type_member tpconst roset_members[] = {
 
 PRIVATE struct type_member tpconst roset_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &RoSetIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &DeeRoSet_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &DeeRoSet_Type),
 	TYPE_MEMBER_END
 };
 

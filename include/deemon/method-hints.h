@@ -1586,12 +1586,12 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_getitem__(DeeObject *__re
 
 #define DeeMA___map_delitem___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___map_delitem___name  _DeeMA_ATTRSTR(__map_delitem__)
-#define DeeMA___map_delitem___doc   "(key)->"
+#define DeeMA___map_delitem___doc   "(key)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_delitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_setitem___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___map_setitem___name  _DeeMA_ATTRSTR(__map_setitem__)
-#define DeeMA___map_setitem___doc   "(key,value)->"
+#define DeeMA___map_setitem___doc   "(key,value)"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_setitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_contains___flags Dee_TYPE_METHOD_FNORMAL
@@ -1601,12 +1601,12 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_contains__(DeeObject *__r
 
 #define DeeMA___map_enumerate___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___map_enumerate___name  _DeeMA_ATTRSTR(__map_enumerate__)
-#define DeeMA___map_enumerate___doc   "(cb:?DCallable,start?,end?)->?X2?O?N"
+#define DeeMA___map_enumerate___doc   "(cb)->?X2?O?N\n(cb,start,end)->?X2?O?N\n"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_enumerate_items___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___map_enumerate_items___name  _DeeMA_ATTRSTR(__map_enumerate_items__)
-#define DeeMA___map_enumerate_items___doc   "(start?,end?)->?S?T2?O?O"
+#define DeeMA___map_enumerate_items___doc   "->?S?T2?O?O\n(start,end)->?S?T2?O?O\n"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___map_compare_eq___flags Dee_TYPE_METHOD_FNORMAL

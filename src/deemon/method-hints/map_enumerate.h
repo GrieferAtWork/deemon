@@ -27,6 +27,7 @@
  * "(cb:?DCallable,start,end)->?X2?O?N" */
 
 /* function cb(key, value?) */
+[[docstring("(cb)->?X2?O?N\n(cb,start,end)->?X2?O?N\n")]]
 __map_enumerate__(cb:?DCallable,start? = ?,end?)->?X2?O?N {{
 	Dee_ssize_t foreach_status;
 	struct seq_enumerate_data data;

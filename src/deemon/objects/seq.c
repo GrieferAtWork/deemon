@@ -301,7 +301,7 @@ PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 	            "->?DType\n"
 	            "Returns the Iterator class used by instances of @this Sequence type\n"
 	            "Should a sub-class implement its own Iterator, this attribute should be overwritten"),
-	TYPE_GETTER("Frozen", &seq_Frozen_get,
+	TYPE_GETTER(STR_Frozen, &seq_Frozen_get,
 	            "->?DType\n"
 	            "Returns the type of Sequence returned by the #i:frozen property"),
 	TYPE_GETSET_END

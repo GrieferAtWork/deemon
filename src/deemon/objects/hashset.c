@@ -2057,7 +2057,7 @@ INTERN_TPCONST struct type_getset tpconst hashset_getsets[] = {
 
 PRIVATE struct type_member tpconst hashset_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &HashSetIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &DeeRoSet_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &DeeRoSet_Type),
 	TYPE_MEMBER_END
 };
 

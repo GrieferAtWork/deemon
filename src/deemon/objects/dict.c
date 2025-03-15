@@ -3921,7 +3921,7 @@ PRIVATE struct type_member tpconst dict_members[] = {
 
 PRIVATE struct type_member tpconst dict_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DictIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &DeeRoDict_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &DeeRoDict_Type),
 	TYPE_MEMBER_END
 };
 

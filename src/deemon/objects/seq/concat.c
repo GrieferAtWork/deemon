@@ -481,7 +481,7 @@ PRIVATE struct type_getset tpconst cat_getsets[] = {
 
 PRIVATE struct type_member tpconst cat_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqConcatIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SeqConcat_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &SeqConcat_Type),
 	TYPE_MEMBER_END
 };
 

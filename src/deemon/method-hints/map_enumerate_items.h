@@ -25,6 +25,7 @@
 /* Operators for the purpose of constructing `DefaultEnumeration_With*' objects.
  * Together with `__map_enumerate__', this API is used to implement `Mapping.enumerate()' */
 
+[[docstring("->?S?T2?O?O\n(start,end)->?S?T2?O?O\n")]]
 __map_enumerate_items__(start?=?,end?)->?S?T2?O?O {{
 	if (argc == 2)
 		return DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self, argv[0], argv[1]);

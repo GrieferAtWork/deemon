@@ -412,13 +412,13 @@ PRIVATE struct type_member tpconst map_filter_members[] = {
 
 PRIVATE struct type_member tpconst seq_filter_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqHashFilterIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SeqHashFilter_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &SeqHashFilter_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst map_filter_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &MapHashFilterIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &MapHashFilter_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &MapHashFilter_Type),
 	TYPE_MEMBER_END
 };
 

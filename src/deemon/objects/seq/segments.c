@@ -409,7 +409,7 @@ PRIVATE struct type_getset tpconst seg_getsets[] = {
 
 PRIVATE struct type_member tpconst seg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqSegmentsIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SeqSegments_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &SeqSegments_Type),
 	TYPE_MEMBER_END
 };
 

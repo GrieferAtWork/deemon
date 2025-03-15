@@ -2841,6 +2841,7 @@ final class _SpecParserAttrib {
 	public member nonnull: bool = false;
 	public member getset: bool = false;
 	public member getsetMember: string = "";
+	public member docstring: string = "";
 	public member noSelfInvocationWrapper: bool = false;
 	public member attr: string | none = none;
 	public member cc: string = "DCALL";
@@ -3214,6 +3215,13 @@ done:
 				next();
 				skip("(");
 				attrib.customBadAllocImplName = parseSymbol();
+				skip(")");
+				break;
+
+			case "docstring":
+				next();
+				skip("(");
+				attrib.docstring = parseString();
 				skip(")");
 				break;
 
@@ -3750,7 +3758,7 @@ done:
 					local methodHint: MethodHint = MethodHint(
 							name: returnType,
 							attr: attrib.attr ?? returnType,
-							doc: cMethod.docstring,
+							doc: attrib.docstring ?: cMethod.docstring,
 							aliases: attrib.aliases,
 							kw: attrib.kw,
 							getset: attrib.getset,

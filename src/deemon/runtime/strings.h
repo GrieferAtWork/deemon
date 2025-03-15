@@ -1285,6 +1285,21 @@ DEF_STRING(str_this_function, "this_function", 0xe2b69fa3, 0xdf2ba17d58877ece)
 #ifndef STR_ItemType
 #define STR_ItemType "ItemType"
 #endif /* !STR_ItemType */
+#ifndef STR_Frozen
+#define STR_Frozen "Frozen"
+#endif /* !STR_Frozen */
+#ifndef STR_Keys
+#define STR_Keys "Keys"
+#endif /* !STR_Keys */
+#ifndef STR_Values
+#define STR_Values "Values"
+#endif /* !STR_Values */
+#ifndef STR_IterKeys
+#define STR_IterKeys "IterKeys"
+#endif /* !STR_IterKeys */
+#ifndef STR_IterValues
+#define STR_IterValues "IterValues"
+#endif /* !STR_IterValues */
 
 /* Some versions of GCC think that using DeeString_STR() on a static
  * string object will result in us reading from out-of-bounds memory,

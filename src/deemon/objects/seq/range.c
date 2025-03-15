@@ -1003,7 +1003,7 @@ PRIVATE struct type_getset tpconst range_getsets[] = {
 
 PRIVATE struct type_member tpconst range_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqRangeIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SeqRange_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &SeqRange_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1540,7 +1540,7 @@ PRIVATE struct type_member tpconst intrange_members[] = {
 #define intrange_getsets range_getsets
 PRIVATE struct type_member tpconst intrange_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqIntRangeIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SeqIntRange_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &SeqIntRange_Type),
 	TYPE_MEMBER_END
 };
 

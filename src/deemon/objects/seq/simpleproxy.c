@@ -694,19 +694,19 @@ PRIVATE struct type_method_hint tpconst classes_method_hints[] = {
 
 PRIVATE struct type_member tpconst ids_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqIdsIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SeqIds_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &SeqIds_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst types_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqTypesIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SeqTypes_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &SeqTypes_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst classes_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqClassesIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SeqClasses_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &SeqClasses_Type),
 	TYPE_MEMBER_END
 };
 

@@ -643,7 +643,7 @@ PRIVATE struct type_member tpconst repeat_members[] = {
 
 PRIVATE struct type_member tpconst repeat_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqRepeatIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SeqRepeat_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &SeqRepeat_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1089,7 +1089,7 @@ PRIVATE struct type_getset tpconst repeatitem_getsets[] = {
 
 PRIVATE struct type_member tpconst repeatitem_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqItemRepeatIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SeqItemRepeat_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &SeqItemRepeat_Type),
 	TYPE_MEMBER_END
 };
 

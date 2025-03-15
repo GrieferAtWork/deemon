@@ -808,7 +808,7 @@ PRIVATE struct type_getset tpconst smap_getsets[] = {
 
 PRIVATE struct type_member tpconst smap_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SharedMapIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &DeeSharedMap_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &DeeSharedMap_Type),
 	TYPE_MEMBER_END
 };
 

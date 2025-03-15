@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.operator []=()                                        */
 /************************************************************************/
-__map_setitem__(key,value)->?O {
+__map_setitem__(key,value) {
 	if unlikely(CALL_DEPENDENCY(map_operator_setitem, self, key, value))
 		goto err;
 	return_none;

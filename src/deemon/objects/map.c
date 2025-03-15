@@ -259,135 +259,100 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	              "Enumerate keys and associated values of @this mapping\n"
 	              "This function can be used to easily enumerate mapping keys and values, "
 	              /**/ "including being able to enumerate keys that are currently unbound"),
+
+	/* Method hint API functions. */
 	TYPE_METHOD(DeeMA_Mapping_union_name, &DeeMA_Mapping_union,
-	            "(rhs:?X3?.?M?O?O?S?T2?O?O)->?.\n"
+	            "" DeeMA_Mapping_union_doc "\n"
 	            "Same as ${(this as Mapping) | rhs}"),
 	TYPE_METHOD(DeeMA_Mapping_difference_name, &DeeMA_Mapping_difference,
-	            "(keys:?X2?DSet?S?O)->?.\n"
+	            "" DeeMA_Mapping_difference_doc "\n"
 	            "Same as ${(this as Mapping) - keys}"),
 	TYPE_METHOD(DeeMA_Mapping_intersection_name, &DeeMA_Mapping_intersection,
-	            "(keys:?X2?DSet?S?O)->?.\n"
+	            "" DeeMA_Mapping_intersection_doc "\n"
 	            "Same as ${(this as Mapping) & keys}"),
 	TYPE_METHOD(DeeMA_Mapping_symmetric_difference_name, &DeeMA_Mapping_symmetric_difference,
-	            "(rhs:?X2?M?O?O?S?T2?O?O)->?.\n"
+	            "" DeeMA_Mapping_symmetric_difference_doc "\n"
 	            "Same as ${(this as Mapping) ^ rhs}"),
-
-	/* Default operations for modifiable mappings. */
 	TYPE_METHOD(DeeMA_Mapping_setold_name, &DeeMA_Mapping_setold,
-	            "(key,value)->?Dbool\n"
+	            "" DeeMA_Mapping_setold_doc "\n"
 	            "#r{Indicative of @value having been assigned to @key}"
 	            "Assign @value to @key, only succeeding when @key already existed to begin with"),
 	TYPE_METHOD(DeeMA_Mapping_setold_ex_name, &DeeMA_Mapping_setold_ex,
-	            "(key,value)->?T2?Dbool?O\n"
+	            "" DeeMA_Mapping_setold_ex_doc "\n"
 	            "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
 	            "Same as ?#setold but also return the previously assigned value"),
 	TYPE_METHOD(DeeMA_Mapping_setnew_name, &DeeMA_Mapping_setnew,
-	            "(key,value)->?Dbool\n"
+	            "" DeeMA_Mapping_setnew_doc "\n"
 	            "#r{Indicative of @value having been assigned to @key}"
 	            "Assign @value to @key, only succeeding when @key didn't exist before"),
 	TYPE_METHOD(DeeMA_Mapping_setnew_ex_name, &DeeMA_Mapping_setnew_ex,
-	            "(key,value)->?T2?Dbool?O\n"
+	            "" DeeMA_Mapping_setnew_ex_doc "\n"
 	            "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
 	            "Same as ?#setnew but return the previously assigned value on failure"),
 	TYPE_METHOD(DeeMA_Mapping_setdefault_name, &DeeMA_Mapping_setdefault,
-	            "(key,def)->\n"
+	            "" DeeMA_Mapping_setdefault_doc "\n"
 	            "#r{The object currently assigned to @key}"
 	            "Lookup @key in @this ?. and return its value if found. "
 	            /**/ "Otherwise, assign @def to @key and return it instead"),
 	TYPE_METHOD(DeeMA_Mapping_update_name, &DeeMA_Mapping_update,
-	            "(items:?S?T2?O?O)\n"
+	            "" DeeMA_Mapping_update_doc "\n"
 	            "Iterate @items and unpack each element into 2 others, "
 	            /**/ "using them as key and value to insert into @this ?."),
-	TYPE_METHOD(DeeMA_Mapping_remove_name, &DeeMA_Mapping_remove, "(key)->?Dbool"),
-	TYPE_METHOD(DeeMA_Mapping_removekeys_name, &DeeMA_Mapping_removekeys, "(keys:?S?O)"),
+	TYPE_METHOD(DeeMA_Mapping_remove_name, &DeeMA_Mapping_remove,
+	            "" DeeMA_Mapping_remove_doc "\n"
+	            "Similar to ?#{op:delitem}, but returns indicative of a @key having been removed"),
+	TYPE_METHOD(DeeMA_Mapping_removekeys_name, &DeeMA_Mapping_removekeys,
+	            "" DeeMA_Mapping_removekeys_doc "\n"
+	            "Remove all of the given @keys from @this mapping. "
+	            /**/ "Same as ${for (local k: keys) del this[k];}"),
 	TYPE_METHOD(DeeMA_Mapping_pop_name, &DeeMA_Mapping_pop,
-	            "(key)->\n"
-	            "(key,def)->\n"
+	            "" DeeMA_Mapping_pop_doc "\n"
 	            "#tKeyError{No @def was given and @key was not found}"
 	            "Delete @key from @this ?. and return its previously assigned "
 	            /**/ "value or @def when @key had no item associated"),
 	TYPE_METHOD(DeeMA_Mapping_popitem_name, &DeeMA_Mapping_popitem,
-	            "->?T2?O?O\n"
-	            "#r{A random pair key-value pair that has been removed}"
-	            "#tValueError{@this ?. was empty}"),
+	            "" DeeMA_Mapping_popitem_doc "\n"
+	            "#r{A random pair key-value pair that has been removed, or !N if the mapping was empty}"
+	            "Remove a random key-value pair from @this mapping, and return it. "
+	            /**/ "If the mapping is empty, return !N instead"),
 
-	TYPE_METHOD("__contains__", &DeeMA___map_contains__,
-	            "(item)->?Dbool\n"
-	            "Alias for ${item in (this as Mapping)}"),
-	TYPE_METHOD("__getitem__", &DeeMA___map_getitem__,
-	            "(key)->\n"
-	            "Alias for ${(this as Mapping)[key]}"),
-	TYPE_METHOD("__delitem__", &DeeMA___map_delitem__,
-	            "(key)\n"
-	            "Alias for ${del (this as Mapping)[key]}"),
-	TYPE_METHOD("__setitem__", &DeeMA___map_setitem__,
-	            "(key,value)\n"
-	            "Alias for ${(this as Mapping)[key] = value}"),
-	TYPE_METHOD("__enumerate__", &DeeMA___map_enumerate__,
-	            "(cb)->?X2?O?N\n"
-	            "(cb,start,end)->?X2?O?N\n"
-	            "Alias for ${(this as Mapping).enumerate(cb[,start,end])}"),
-	TYPE_METHOD("__enumerate_items__", &DeeMA___map_enumerate_items__,
-	            "()->?T2?O?O\n"
-	            "(start,end)->?T2?O?O\n"
-	            "Alias for ${(this as Mapping).enumerate([start,end])}"),
+	/* Method hint operator invocation. */
+	TYPE_METHOD("__iter__", &DeeMA___map_iter__, "->?#Iterator\nAlias for ${(this as Mapping).operator iter()} (s.a. ?#{op:iter})"),
+	TYPE_METHOD("__size__", &DeeMA___map_size__, DeeMA___map_size___doc "\nAlias for ${##(this as Mapping)} (s.a. ?#{op:size})"),
+	TYPE_METHOD("__hash__", &DeeMA___map_hash__, DeeMA___map_hash___doc "\nAlias for ${(this as Mapping).operator hash()} (s.a. ?#{op:hash})"),
+	TYPE_METHOD("__getitem__", &DeeMA___map_getitem__, DeeMA___map_getitem___doc "\nAlias for ${(this as Mapping)[key]} (s.a. ?#{op:getitem})"),
+	TYPE_METHOD("__delitem__", &DeeMA___map_delitem__, DeeMA___map_delitem___doc "\nAlias for ${del (this as Mapping)[key]} (s.a. ?#{op:delitem})"),
+	TYPE_METHOD("__setitem__", &DeeMA___map_setitem__, DeeMA___map_setitem___doc "\nAlias for ${(this as Mapping)[key] = value} (s.a. ?#{op:setitem})"),
+	TYPE_METHOD("__contains__", &DeeMA___map_contains__, DeeMA___map_contains___doc "\nAlias for ${item in (this as Mapping)} (s.a. ?#{op:contains})"),
+	TYPE_METHOD("__enumerate__", &DeeMA___map_enumerate__, DeeMA___map_enumerate___doc "\nAlias for ${(this as Mapping).enumerate(cb[,start,end])} (s.a. ?#enumerate)"),
+	TYPE_METHOD("__enumerate_items__", &DeeMA___map_enumerate_items__, DeeMA___map_enumerate_items___doc "\nAlias for ${(this as Mapping).enumerate([start,end])} (s.a. ?#enumerate)"),
 	TYPE_METHOD("__compare_eq__", &DeeMA___map_compare_eq__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Mapping).operator == (rhs)}"),
-	TYPE_METHOD("__eq__", &DeeMA___map_eq__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Mapping) == (rhs)}"),
-	TYPE_METHOD("__ne__", &DeeMA___map_ne__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Mapping) != (rhs)}"),
-	TYPE_METHOD("__lo__", &DeeMA___map_lo__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Mapping) < (rhs)}"),
-	TYPE_METHOD("__le__", &DeeMA___map_le__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Mapping) <= (rhs)}"),
-	TYPE_METHOD("__gr__", &DeeMA___map_gr__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Mapping) > (rhs)}"),
-	TYPE_METHOD("__ge__", &DeeMA___map_ge__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Mapping) >= (rhs)}"),
-
-	TYPE_METHOD("__add__", &DeeMA___map_add__,
-	            "(rhs:?S?O)->?DMapping\n"
-	            "Alias for ${(this as Mapping) + rhs}"),
-	TYPE_METHOD("__sub__", &DeeMA___map_sub__,
-	            "(rhs:?S?O)->?DMapping\n"
-	            "Alias for ${(this as Mapping) - rhs}"),
-	TYPE_METHOD("__and__", &DeeMA___map_and__,
-	            "(rhs:?S?O)->?DMapping\n"
-	            "Alias for ${(this as Mapping) & rhs}"),
-	TYPE_METHOD("__xor__", &DeeMA___map_xor__,
-	            "(rhs:?S?O)->?DMapping\n"
-	            "Alias for ${(this as Mapping) ^ rhs}"),
-	TYPE_METHOD("__inplace_add__", &DeeMA___map_inplace_add__,
-	            "(rhs:?S?O)->?.\n"
-	            "Alias for ${(this as Mapping) += rhs}"),
-	TYPE_METHOD("__inplace_sub__", &DeeMA___map_inplace_sub__,
-	            "(rhs:?S?O)->?.\n"
-	            "Alias for ${(this as Mapping) -= rhs}"),
-	TYPE_METHOD("__inplace_and__", &DeeMA___map_inplace_and__,
-	            "(rhs:?S?O)->?.\n"
-	            "Alias for ${(this as Mapping) &= rhs}"),
-	TYPE_METHOD("__inplace_xor__", &DeeMA___map_inplace_xor__,
-	            "(rhs:?S?O)->?.\n"
-	            "Alias for ${(this as Mapping) ^= rhs}"),
-	TYPE_METHOD("__or__", &DeeMA___map_add__,
-	            "(rhs:?S?O)->?DMapping\n"
-	            "Alias for ?#__add__"),
-	TYPE_METHOD("__inplace_or__", &DeeMA___map_inplace_add__,
-	            "(rhs:?S?O)->?DMapping\n"
-	            "Alias for ?#__inplace_add__"),
+	            "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool\n"
+	            "Alias for ${deemon.equals(this as Mapping, rhs)}\n"
+	            "Note that use user-operator version of this ($__map_compare_eq__) is "
+	            /**/ "allowed to return ?Dint, in which case $0 means equal (causing this "
+	            /**/ "function to return !t), and all other values mean non-empty."),
+	TYPE_METHOD("__eq__", &DeeMA___map_eq__, DeeMA___map_eq___doc "\nAlias for ${(this as Mapping) == (rhs)} (s.a. ?#{op:eq})"),
+	TYPE_METHOD("__ne__", &DeeMA___map_ne__, DeeMA___map_ne___doc "\nAlias for ${(this as Mapping) != (rhs)} (s.a. ?#{op:ne})"),
+	TYPE_METHOD("__lo__", &DeeMA___map_lo__, DeeMA___map_lo___doc "\nAlias for ${(this as Mapping) < (rhs)} (s.a. ?#{op:lo})"),
+	TYPE_METHOD("__le__", &DeeMA___map_le__, DeeMA___map_le___doc "\nAlias for ${(this as Mapping) <= (rhs)} (s.a. ?#{op:le})"),
+	TYPE_METHOD("__gr__", &DeeMA___map_gr__, DeeMA___map_gr___doc "\nAlias for ${(this as Mapping) > (rhs)} (s.a. ?#{op:gr})"),
+	TYPE_METHOD("__ge__", &DeeMA___map_ge__, DeeMA___map_ge___doc "\nAlias for ${(this as Mapping) >= (rhs)} (s.a. ?#{op:ge})"),
+	TYPE_METHOD("__add__", &DeeMA___map_add__, DeeMA___map_add___doc "\nAlias for ${(this as Mapping) + rhs}, ${(this as Mapping) | rhs} (s.a. ?#union, ?#{op:add}, ?#{op:or}, ?#__or__)"),
+	TYPE_METHOD("__sub__", &DeeMA___map_sub__, DeeMA___map_sub___doc "\nAlias for ${(this as Mapping) - keys} (s.a. ?#difference, ?#{op:sub})"),
+	TYPE_METHOD("__and__", &DeeMA___map_and__, DeeMA___map_and___doc "\nAlias for ${(this as Mapping) & keys} (s.a. ?#intersection, ?#{op:and})"),
+	TYPE_METHOD("__xor__", &DeeMA___map_xor__, DeeMA___map_xor___doc "\nAlias for ${(this as Mapping) ^ rhs} (s.a. ?#symmetric_difference, ?#{op:xor})"),
+	TYPE_METHOD("__inplace_add__", &DeeMA___map_inplace_add__, DeeMA___map_inplace_add___doc "\nAlias for ${(this as Mapping) += rhs} (s.a. ?#{op:iadd}, ?#{op:ior})"),
+	TYPE_METHOD("__inplace_sub__", &DeeMA___map_inplace_sub__, DeeMA___map_inplace_sub___doc "\nAlias for ${(this as Mapping) -= keys} (s.a. ?#{op:isub})"),
+	TYPE_METHOD("__inplace_and__", &DeeMA___map_inplace_and__, DeeMA___map_inplace_and___doc "\nAlias for ${(this as Mapping) &= keys} (s.a. ?#{op:iand})"),
+	TYPE_METHOD("__inplace_xor__", &DeeMA___map_inplace_xor__, DeeMA___map_inplace_xor___doc "\nAlias for ${(this as Mapping) ^= rhs} (s.a. ?#{op:ixor})"),
+	TYPE_METHOD("__or__", &DeeMA___map_add__, DeeMA___map_add___doc "\nAlias for ?#__add__ (s.a. ?#union, ?#{op:add}, ?#{op:or}, ?#__add__)"),
+	TYPE_METHOD("__inplace_or__", &DeeMA___map_inplace_add__, DeeMA___map_inplace_add___doc "\nAlias for ?#__inplace_add__ (s.a. ?#{op:iadd}, ?#{op:ior})"),
 
 	/* Old function names. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_METHOD("insert_all", &DeeMA_Mapping_update,
-	            "(items:?S?T2?O?O)\n"
+	            "" DeeMA_Mapping_update_doc "\n"
 	            "A deprecated alias for ?#update"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_METHOD_END
@@ -513,6 +478,8 @@ map_Frozen_get(DeeTypeObject *__restrict self) {
 		result = self;
 	} else if (map_frozen == &DeeRoDict_FromSequence) {
 		result = &DeeRoDict_Type;
+	} else if (map_frozen == &default__map_frozen__none) {
+		result = &DeeNone_Type;
 	}
 	return_reference_(result);
 }
@@ -523,6 +490,8 @@ map_Iterator_get(DeeTypeObject *__restrict self) {
 	DeeMH_map_operator_iter_t map_operator_iter = DeeType_RequireMethodHint(self, map_operator_iter);
 	if (map_operator_iter == &default__map_operator_iter__with__seq_operator_iter) {
 		result = &DistinctMappingIterator_Type;
+	} else if (map_operator_iter == &default__map_operator_iter__none) {
+		result = &DeeNone_Type;
 	}
 	return_reference_(result);
 }
@@ -533,6 +502,8 @@ map_Keys_get(DeeTypeObject *__restrict self) {
 	DeeMH_map_keys_t map_keys = DeeType_RequireMethodHint(self, map_keys);
 	if (map_keys == &default__map_keys__with__map_iterkeys) {
 		result = &DefaultSequence_MapKeys_Type;
+	} else if (map_keys == &default__map_keys__none) {
+		result = &DeeNone_Type;
 	}
 	return_reference_(result);
 }
@@ -543,6 +514,8 @@ map_Values_get(DeeTypeObject *__restrict self) {
 	DeeMH_map_values_t map_values = DeeType_RequireMethodHint(self, map_values);
 	if (map_values == &default__map_values__with__map_itervalues) {
 		result = &DefaultSequence_MapValues_Type;
+	} else if (map_values == &default__map_values__none) {
+		result = &DeeNone_Type;
 	}
 	return_reference_(result);
 }
@@ -555,6 +528,8 @@ map_IterKeys_get(DeeTypeObject *__restrict self) {
 		/* TODO: Custom iterator type that uses "map_enumerate" */
 	} else if (map_iterkeys == &default__map_iterkeys__with__map_operator_iter) {
 		result = &DefaultIterator_WithNextKey;
+	} else if (map_iterkeys == &default__map_iterkeys__none) {
+		result = &DeeNone_Type;
 	}
 	return_reference_(result);
 }
@@ -565,6 +540,8 @@ map_IterValues_get(DeeTypeObject *__restrict self) {
 	DeeMH_map_itervalues_t map_itervalues = DeeType_RequireMethodHint(self, map_itervalues);
 	if (map_itervalues == &default__map_itervalues__with__map_operator_iter) {
 		result = &DefaultIterator_WithNextValue;
+	} else if (map_itervalues == &default__map_itervalues__none) {
+		result = &DeeNone_Type;
 	}
 	return_reference_(result);
 }
@@ -575,19 +552,19 @@ PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	            "->?DType\n"
 	            "Returns the iterator class used by instances of @this ?. type\n"
 	            "This member must be overwritten by sub-classes of ?."),
-	TYPE_GETTER("Frozen", &map_Frozen_get,
+	TYPE_GETTER(STR_Frozen, &map_Frozen_get,
 	            "->?DType\n"
 	            "Returns the type of sequence returned by the ?#i:frozen property"),
-	TYPE_GETTER("Keys", &map_Keys_get,
+	TYPE_GETTER(STR_Keys, &map_Keys_get,
 	            "->?DType\n"
 	            "Returns the type of sequence returned by the ?#i:keys property"),
-	TYPE_GETTER("Values", &map_Values_get,
+	TYPE_GETTER(STR_Values, &map_Values_get,
 	            "->?DType\n"
 	            "Returns the type of sequence returned by the ?#i:values property"),
-	TYPE_GETTER("IterKeys", &map_IterKeys_get,
+	TYPE_GETTER(STR_IterKeys, &map_IterKeys_get,
 	            "->?DType\n"
 	            "Returns the type of sequence returned by the ?#i:iterkeys property"),
-	TYPE_GETTER("IterValues", &map_IterValues_get,
+	TYPE_GETTER(STR_IterValues, &map_IterValues_get,
 	            "->?DType\n"
 	            "Returns the type of sequence returned by the ?#i:itervalues property"),
 	TYPE_GETSET_END

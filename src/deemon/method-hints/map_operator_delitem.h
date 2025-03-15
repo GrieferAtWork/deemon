@@ -21,7 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.operator del[]()                                      */
 /************************************************************************/
-__map_delitem__(key)->?O {
+__map_delitem__(key) {
 	if unlikely(CALL_DEPENDENCY(map_operator_delitem, self, key))
 		goto err;
 	return_none;

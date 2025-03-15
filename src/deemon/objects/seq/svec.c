@@ -1298,7 +1298,7 @@ PRIVATE struct type_getset tpconst svec_getsets[] = {
 
 PRIVATE struct type_member tpconst svec_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SharedVectorIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &DeeSharedVector_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &DeeSharedVector_Type),
 	TYPE_MEMBER_END
 };
 
