@@ -132,13 +132,13 @@
 #endif /* !... */
 
 #if DIGIT_BITS <= 8
-#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_vec8_significand(var, 0) & DIGIT_MASK)
+#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_getword8_significand(var, 0) & DIGIT_MASK)
 #elif DIGIT_BITS <= 16
-#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_vec16_significand(var, 0) & DIGIT_MASK)
+#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_getword16_significand(var, 0) & DIGIT_MASK)
 #elif DIGIT_BITS <= 32
-#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_vec32_significand(var, 0) & DIGIT_MASK)
+#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_getword32_significand(var, 0) & DIGIT_MASK)
 #else /* DIGIT_BITS <= ... */
-#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_vec64_significand(var, 0) & DIGIT_MASK)
+#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_getword64_significand(var, 0) & DIGIT_MASK)
 #endif /* DIGIT_BITS > ... */
 
 #undef shift_t
@@ -1426,7 +1426,7 @@ DeeInt_NewInt128(Dee_int128_t val) {
 		sign = -1;
 		__hybrid_int128_neg(abs_val.s);
 	}
-	for (iter = abs_val, req_digits = 0; !__hybrid_int128_iszero(iter.s);
+	for (iter.u = abs_val.u, req_digits = 0; !__hybrid_int128_iszero(iter.s);
 	     __hybrid_uint128_shr_DIGIT_BITS(iter.u), ++req_digits)
 		;
 	ASSERT(req_digits > 0);
@@ -2888,12 +2888,12 @@ DeeInt_TryGet128Bit(/*Int*/ DeeObject *__restrict self,
 		__hybrid_int128_setzero(*value);
 		return INT_UNSIGNED;
 	case 1:
-		__hybrid_int128_vec64_significand(*value, 0) = me->ob_digit[0];
-		__hybrid_int128_vec64_significand(*value, 1) = 0;
+		__hybrid_int128_setword64_significand(*value, 0, me->ob_digit[0]);
+		__hybrid_int128_setword64_significand(*value, 1, 0);
 		return INT_UNSIGNED;
 	case -1:
-		__hybrid_int128_vec64_significand(*value, 0) = -(sdigit)me->ob_digit[0];
-		__hybrid_int128_vec64_significand(*value, 1) = -1;
+		__hybrid_int128_setword64_significand(*value, 0, -(sdigit)me->ob_digit[0]);
+		__hybrid_int128_setword64_significand(*value, 1, -1);
 		return INT_SIGNED;
 	default: break;
 	}

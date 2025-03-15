@@ -39,6 +39,7 @@
 #include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
@@ -315,23 +316,21 @@ DECL_BEGIN
 #define DEE_UNALIGNED128_DEFINED
 PRIVATE Dee_uint128_t Dee_UNALIGNED_GETU128(void const *p) {
 	Dee_uint128_t result;
-	__hybrid_uint128_vec64(result)[0] = UNALIGNED_GET64((__BYTE_TYPE__ const *)p + 0);
-	__hybrid_uint128_vec64(result)[1] = UNALIGNED_GET64((__BYTE_TYPE__ const *)p + 8);
+	__hybrid_uint128_setword64(result, 0, UNALIGNED_GET64((__BYTE_TYPE__ const *)p + 0));
+	__hybrid_uint128_setword64(result, 1, UNALIGNED_GET64((__BYTE_TYPE__ const *)p + 8));
 	return result;
 }
 PRIVATE Dee_int128_t Dee_UNALIGNED_GETS128(void const *p) {
 	Dee_int128_t result;
-	__hybrid_int128_vec64(result)[0] = (int64_t)UNALIGNED_GET64((__BYTE_TYPE__ const *)p + 0);
-	__hybrid_int128_vec64(result)[1] = (int64_t)UNALIGNED_GET64((__BYTE_TYPE__ const *)p + 8);
+	__hybrid_int128_setword64(result, 0, (int64_t)UNALIGNED_GET64((__BYTE_TYPE__ const *)p + 0));
+	__hybrid_int128_setword64(result, 1, (int64_t)UNALIGNED_GET64((__BYTE_TYPE__ const *)p + 8));
 	return result;
 }
 PRIVATE void Dee_UNALIGNED_SETU128(void *p, Dee_uint128_t val) {
-	UNALIGNED_SET64(&__hybrid_uint128_vec64(*(Dee_uint128_t *)p)[0], __hybrid_uint128_vec64(val)[0]);
-	UNALIGNED_SET64(&__hybrid_uint128_vec64(*(Dee_uint128_t *)p)[1], __hybrid_uint128_vec64(val)[1]);
+	(void)memcpy(p, &val, sizeof(Dee_uint128_t));
 }
 PRIVATE void Dee_UNALIGNED_SETS128(void *p, Dee_int128_t val) {
-	UNALIGNED_SET64((uint64_t *)&__hybrid_int128_vec64(*(Dee_int128_t *)p)[0], (uint64_t)__hybrid_int128_vec64(val)[0]);
-	UNALIGNED_SET64((uint64_t *)&__hybrid_int128_vec64(*(Dee_int128_t *)p)[1], (uint64_t)__hybrid_int128_vec64(val)[1]);
+	(void)memcpy(p, &val, sizeof(Dee_int128_t));
 }
 #endif /* !DEE_UNALIGNED128_DEFINED */
 #endif /* !UNALIGNED_GET128 */

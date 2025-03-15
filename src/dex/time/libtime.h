@@ -117,6 +117,7 @@ struct time_object {
 		 *       The implementation does however take leap years into account!
 		 */
 		Dee_int128_t t_nanos;   /* TIME_TYPE_NANOSECONDS */
+		Dee_uint128_t t_unanos; /* TIME_TYPE_NANOSECONDS */
 
 		/* Because months can have differing lengths dependent on
 		 * which which they refer to, the time type needs to be able

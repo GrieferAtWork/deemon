@@ -2797,15 +2797,15 @@ PRIVATE WUNUSED DREF DeeTimeObject *DCALL
 f_libtime__mkunix(size_t argc, DeeObject *const *argv) {
 	uint32_t extra_nanoseconds;
 	DREF DeeTimeObject *result;
+	int64_t seconds;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
 	extra_nanoseconds = 0;
-	__hybrid_int128_vec64_significand(result->t_nanos, 1) = 0;
 	if (DeeArg_Unpack(argc, argv, UNPd64 "|" UNPu32 ":_mkunix",
-	                  &__hybrid_int128_vec64_significand(result->t_nanos, 0),
-	                  &extra_nanoseconds))
+	                  &seconds, &extra_nanoseconds))
 		goto err_r;
+	__hybrid_int128_set64(result->t_nanos, seconds);
 	__hybrid_int128_add64(result->t_nanos, UNIX_TIME_T_BASE_SECONDS);
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
 	__hybrid_int128_add32(result->t_nanos, extra_nanoseconds);
@@ -2837,15 +2837,15 @@ done:
 PRIVATE WUNUSED DREF DeeTimeObject *DCALL
 f_libtime__mkFILETIME(size_t argc, DeeObject *const *argv) {
 	DREF DeeTimeObject *result;
+	uint64_t filetime;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	__hybrid_int128_vec64_significand(result->t_nanos, 1) = 0;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":_mkFILETIME",
-	                  &__hybrid_int128_vec64_significand(result->t_nanos, 0)))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":_mkFILETIME", &filetime))
 		goto err_r;
-	__hybrid_uint128_mul8(*(Dee_uint128_t *)&result->t_nanos, 100);
-	__hybrid_uint128_add128(*(Dee_uint128_t *)&result->t_nanos, NANOSECONDS_01_01_1601);
+	__hybrid_uint128_set64(result->t_unanos, filetime);
+	__hybrid_uint128_mul8(result->t_unanos, 100);
+	__hybrid_uint128_add128(result->t_unanos, NANOSECONDS_01_01_1601);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	DeeObject_Init(result, &DeeTime_Type);
 done:

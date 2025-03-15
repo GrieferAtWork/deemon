@@ -404,8 +404,8 @@ f_ctypes_bswap128(size_t argc, DeeObject *const *argv) {
 #ifdef BSWAP128
 	res = BSWAP128(i);
 #else /* BSWAP128 */
-	__hybrid_uint128_vec64(res)[0] = BSWAP64(__hybrid_uint128_vec64(i)[1]);
-	__hybrid_uint128_vec64(res)[1] = BSWAP64(__hybrid_uint128_vec64(i)[0]);
+	__hybrid_uint128_setword64(res, 0, BSWAP64(__hybrid_uint128_getword64(i, 1)));
+	__hybrid_uint128_setword64(res, 1, BSWAP64(__hybrid_uint128_getword64(i, 0)));
 #endif /* !BSWAP128 */
 	return int_newu128(res);
 err:
