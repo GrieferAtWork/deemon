@@ -21,7 +21,8 @@
 /************************************************************************/
 /* deemon.Sequence.__seq_compare__()                                    */
 /************************************************************************/
-__seq_compare__(rhs:?S?O)->?Dint {
+[[alias(Sequence.compare)]]
+__seq_compare__(rhs:?X2?DSequence?S?O)->?Dint {
 	int result = CALL_DEPENDENCY(seq_operator_compare, self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
@@ -34,7 +35,8 @@ err:
 /************************************************************************/
 /* deemon.Sequence.__seq_compare_eq__()                                 */
 /************************************************************************/
-__seq_compare_eq__(rhs:?S?O)->?X2?Dbool?Dint {
+[[alias(Sequence.equals)]]
+__seq_compare_eq__(rhs:?X2?DSequence?S?O)->?X2?Dbool?Dint {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;

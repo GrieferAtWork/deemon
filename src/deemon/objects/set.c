@@ -68,6 +68,14 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	            /**/ "common (meaning their ?#intersection is empty)"),
 
 	/* Method hint API functions. */
+	TYPE_METHOD(DeeMA_Set_equals_name, &DeeMA_Set_equals,
+	            "(rhs:?X2?DSet?S?O)->?Dbool\n"
+	            "Used to implement ?Dequals for Set objects. Calling this function "
+	            "directly is equivalent to ${deemon.equals(this as Set, rhs)}\n"
+	            "#T{Requirements|Implementation~"
+	            /**/ "TODO|TODO&"
+	            /**/ "TODO|TODO"
+	            "}"),
 	TYPE_METHOD(DeeMA_Set_union_name, &DeeMA_Set_union,
 	            "" DeeMA_Set_union_doc "\n"
 	            "Same as ${(this as Set) | rhs}"),
@@ -116,12 +124,7 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	TYPE_METHOD("__iter__", &DeeMA___set_iter__, "->?#Iterator\nAlias for ${(this as Set).operator iter()} (s.a. ?#{op:iter})"),
 	TYPE_METHOD("__size__", &DeeMA___set_size__, DeeMA___set_size___doc "\nAlias for ${##(this as Set)} (s.a. ?#{op:size})"),
 	TYPE_METHOD("__hash__", &DeeMA___set_hash__, DeeMA___set_hash___doc "\nAlias for ${(this as Set).operator hash()} (s.a. ?#{op:hash})"),
-	TYPE_METHOD("__compare_eq__", &DeeMA___set_compare_eq__,
-	            "(rhs:?X2?DSet?S?O)->?Dbool\n"
-	            "Alias for ${deemon.equals(this as Set, rhs)}\n"
-	            "Note that use user-operator version of this ($__set_compare_eq__) is "
-	            /**/ "allowed to return ?Dint, in which case $0 means equal (causing this "
-	            /**/ "function to return !t), and all other values mean non-empty."),
+	TYPE_METHOD("__compare_eq__", &DeeMA___set_compare_eq__, "(rhs:?X2?DSet?S?O)->?Dbool\nAlias for ${Set.equals(this, rhs)} (s.a. ?#equals)"),
 	TYPE_METHOD("__eq__", &DeeMA___set_eq__, DeeMA___set_eq___doc "\nAlias for ${(this as Set) == rhs} (s.a. ?#{op:eq})"),
 	TYPE_METHOD("__ne__", &DeeMA___set_ne__, DeeMA___set_ne___doc "\nAlias for ${(this as Set) != rhs} (s.a. ?#{op:ne})"),
 	TYPE_METHOD("__lo__", &DeeMA___set_lo__, DeeMA___set_lo___doc "\nAlias for ${(this as Set) < rhs} (s.a. ?#{op:lo})"),

@@ -1746,6 +1746,10 @@ class Expression: WeakRefAble {
 						m_kind = "S";
 					} else if (id == "V" && #m_docstring >= 3 && m_docstring[2] == "A") {
 						m_kind = "A";
+					} else if (m_docstring == "!A!Dint!PSIZE_MAX") {
+						/* TODO: Remove this hack and implement proper support for all missing expression types */
+						m_kind = "C";
+						m_cache = int.SIZE_MAX;
 					} else {
 						if (id == "!" && #m_docstring >= 4) {
 							id = m_docstring[2];
@@ -2004,8 +2008,8 @@ done:
 			local map = {
 				"L" : "?DList",
 				"T" : "?DTuple",
-				"D" : "?Ddict",
-				"S" : "?Dhashset",
+				"D" : "?DDict",
+				"S" : "?DHashSet",
 			};
 			return TypeExpr(docdecl, map[m_docstring[1]]);
 		}

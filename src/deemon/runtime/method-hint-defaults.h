@@ -47,6 +47,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bool__with__seq_oper
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bool__with__seq_operator_sizeob(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bool__with__seq_operator_compare_eq(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bool__with__set_operator_compare_eq(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bool__with__map_operator_compare_eq(DeeObject *__restrict self);
 
 /* seq_operator_sizeob */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob(DeeObject *__restrict self);
@@ -370,6 +371,7 @@ INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__s
 
 /* seq_operator_compare */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_compare(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_compare__with_callattr_compare(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_compare__with_callattr___seq_compare__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_compare__with_callobjectcache___seq_compare__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__seq_operator_compare__with_callobjectcache___seq_compare__(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
@@ -393,6 +395,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_compare__with__se
 
 /* seq_operator_compare_eq */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_compare_eq(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_compare_eq__with_callattr_equals(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_compare_eq__with_callattr___seq_compare_eq__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_compare_eq__with_callobjectcache___seq_compare_eq__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__seq_operator_compare_eq__with_callobjectcache___seq_compare_eq__(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
@@ -410,6 +413,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_compare_eq__with_
 
 /* seq_operator_trycompare_eq */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
+#define default__seq_operator_trycompare_eq__with_callattr_equals (*(int (DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_trycompare_eq__with__seq_operator_compare_eq)
 #define default__seq_operator_trycompare_eq__with_callattr___seq_compare_eq__ (*(int (DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_trycompare_eq__with__seq_operator_compare_eq)
 #define default__seq_operator_trycompare_eq__with_callobjectcache___seq_compare_eq__ (*(int (DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_trycompare_eq__with__seq_operator_compare_eq)
 #define default__seq_operator_trycompare_eq__unsupported (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)
@@ -1657,6 +1661,7 @@ INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with__m
 
 /* set_operator_compare_eq */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__with_callattr_equals(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__with_callattr___set_compare_eq__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__with_callobjectcache___set_compare_eq__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__set_operator_compare_eq__with_callobjectcache___set_compare_eq__(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
@@ -1668,6 +1673,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__with_
 
 /* set_operator_trycompare_eq */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
+#define default__set_operator_trycompare_eq__with_callattr_equals (*(int (DCALL *)(DeeObject *, DeeObject *))&default__set_operator_trycompare_eq__with__set_operator_compare_eq)
 #define default__set_operator_trycompare_eq__with_callattr___set_compare_eq__ (*(int (DCALL *)(DeeObject *, DeeObject *))&default__set_operator_trycompare_eq__with__set_operator_compare_eq)
 #define default__set_operator_trycompare_eq__with_callobjectcache___set_compare_eq__ (*(int (DCALL *)(DeeObject *, DeeObject *))&default__set_operator_trycompare_eq__with__set_operator_compare_eq)
 #define default__set_operator_trycompare_eq__unsupported (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)
@@ -2317,6 +2323,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__map_makeenumera
 
 /* map_operator_compare_eq */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_compare_eq(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_compare_eq__with_callattr_equals(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_compare_eq__with_callattr___map_compare_eq__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_compare_eq__with_callobjectcache___map_compare_eq__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__map_operator_compare_eq__with_callobjectcache___map_compare_eq__(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
@@ -2328,6 +2335,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_compare_eq__with_
 
 /* map_operator_trycompare_eq */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
+#define default__map_operator_trycompare_eq__with_callattr_equals (*(int (DCALL *)(DeeObject *, DeeObject *))&default__map_operator_trycompare_eq__with__map_operator_compare_eq)
 #define default__map_operator_trycompare_eq__with_callattr___map_compare_eq__ (*(int (DCALL *)(DeeObject *, DeeObject *))&default__map_operator_trycompare_eq__with__map_operator_compare_eq)
 #define default__map_operator_trycompare_eq__with_callobjectcache___map_compare_eq__ (*(int (DCALL *)(DeeObject *, DeeObject *))&default__map_operator_trycompare_eq__with__map_operator_compare_eq)
 #define default__map_operator_trycompare_eq__unsupported (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)

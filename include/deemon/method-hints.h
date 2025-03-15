@@ -432,10 +432,10 @@ typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_assign_t)(Dee
 /* __seq_hash__ */
 typedef WUNUSED_T NONNULL_T((1)) Dee_hash_t (DCALL *DeeMH_seq_operator_hash_t)(DeeObject *__restrict self);
 
-/* __seq_compare__ */
+/* Sequence_compare, __seq_compare__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_compare_t)(DeeObject *lhs, DeeObject *rhs);
 
-/* __seq_compare_eq__ */
+/* Sequence_equals, __seq_compare_eq__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_compare_eq_t)(DeeObject *lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_trycompare_eq_t)(DeeObject *lhs, DeeObject *rhs);
 
@@ -672,7 +672,7 @@ typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_operator_inv_
 /* __set_hash__ */
 typedef WUNUSED_T NONNULL_T((1)) Dee_hash_t (DCALL *DeeMH_set_operator_hash_t)(DeeObject *__restrict self);
 
-/* __set_compare_eq__ */
+/* Set_equals, __set_compare_eq__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_set_operator_compare_eq_t)(DeeObject *lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_set_operator_trycompare_eq_t)(DeeObject *lhs, DeeObject *rhs);
 
@@ -804,7 +804,7 @@ typedef WUNUSED_T NONNULL_T((1, 2, 4, 5)) Dee_ssize_t (DCALL *DeeMH_map_enumerat
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_map_makeenumeration_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_map_makeenumeration_with_range_t)(DeeObject *self, DeeObject *start, DeeObject *end);
 
-/* __map_compare_eq__ */
+/* Mapping_equals, __map_compare_eq__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_map_operator_compare_eq_t)(DeeObject *lhs, DeeObject *rhs);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_map_operator_trycompare_eq_t)(DeeObject *lhs, DeeObject *rhs);
 
@@ -960,42 +960,50 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_hash__(DeeObject *__restr
 
 #define DeeMA___seq_compare___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___seq_compare___name  _DeeMA_ATTRSTR(__seq_compare__)
-#define DeeMA___seq_compare___doc   "(rhs:?S?O)->?Dint"
+#define DeeMA___seq_compare___doc   "(rhs:?X2?DSequence?S?O)->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_compare__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Sequence_compare_flags DeeMA___seq_compare___flags
+#define DeeMA_Sequence_compare_name  _DeeMA_ATTRSTR(compare)
+#define DeeMA_Sequence_compare_doc   DeeMA___seq_compare___doc
+#define DeeMA_Sequence_compare       DeeMA___seq_compare__
 
 #define DeeMA___seq_compare_eq___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___seq_compare_eq___name  _DeeMA_ATTRSTR(__seq_compare_eq__)
-#define DeeMA___seq_compare_eq___doc   "(rhs:?S?O)->?X2?Dbool?Dint"
+#define DeeMA___seq_compare_eq___doc   "(rhs:?X2?DSequence?S?O)->?X2?Dbool?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Sequence_equals_flags DeeMA___seq_compare_eq___flags
+#define DeeMA_Sequence_equals_name  _DeeMA_ATTRSTR(equals)
+#define DeeMA_Sequence_equals_doc   DeeMA___seq_compare_eq___doc
+#define DeeMA_Sequence_equals       DeeMA___seq_compare_eq__
 
 #define DeeMA___seq_eq___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___seq_eq___name  _DeeMA_ATTRSTR(__seq_eq__)
-#define DeeMA___seq_eq___doc   "(rhs:?S?O)->?Dbool"
+#define DeeMA___seq_eq___doc   "(rhs:?X2?DSequence?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_ne___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___seq_ne___name  _DeeMA_ATTRSTR(__seq_ne__)
-#define DeeMA___seq_ne___doc   "(rhs:?S?O)->?Dbool"
+#define DeeMA___seq_ne___doc   "(rhs:?X2?DSequence?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_lo___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___seq_lo___name  _DeeMA_ATTRSTR(__seq_lo__)
-#define DeeMA___seq_lo___doc   "(rhs:?S?O)->?Dbool"
+#define DeeMA___seq_lo___doc   "(rhs:?X2?DSequence?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_lo__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_le___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___seq_le___name  _DeeMA_ATTRSTR(__seq_le__)
-#define DeeMA___seq_le___doc   "(rhs:?S?O)->?Dbool"
+#define DeeMA___seq_le___doc   "(rhs:?X2?DSequence?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_le__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_gr___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___seq_gr___name  _DeeMA_ATTRSTR(__seq_gr__)
-#define DeeMA___seq_gr___doc   "(rhs:?S?O)->?Dbool"
+#define DeeMA___seq_gr___doc   "(rhs:?X2?DSequence?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_gr__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_ge___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___seq_ge___name  _DeeMA_ATTRSTR(__seq_ge__)
-#define DeeMA___seq_ge___doc   "(rhs:?S?O)->?Dbool"
+#define DeeMA___seq_ge___doc   "(rhs:?X2?DSequence?S?O)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_add___flags Dee_TYPE_METHOD_FNORMAL
@@ -1030,7 +1038,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_enumerate_items__(DeeObje
 
 #define DeeMA___seq_unpack___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___seq_unpack___name  _DeeMA_ATTRSTR(__seq_unpack__)
-#define DeeMA___seq_unpack___doc   "(min:?Dint,max?:?Dint)->?DTuple"
+#define DeeMA___seq_unpack___doc   "(length:?Dint)->?DTuple\n(min:?Dint,max:?Dint)->?DTuple"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_unpack__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Sequence_unpack_flags DeeMA___seq_unpack___flags
 #define DeeMA_Sequence_unpack_name  _DeeMA_ATTRSTR(unpack)
@@ -1039,7 +1047,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_unpack__(DeeObject *__res
 
 #define DeeMA___seq_unpackub___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___seq_unpackub___name  _DeeMA_ATTRSTR(__seq_unpackub__)
-#define DeeMA___seq_unpackub___doc   "(min:?Dint,max?:?Dint)->?Ert:NullableTuple"
+#define DeeMA___seq_unpackub___doc   "(length:?Dint)->?Ert:NullableTuple\n(min:?Dint,max:?Dint)->?Ert:NullableTuple"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_unpackub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 #define DeeMA_Sequence_unpackub_flags DeeMA___seq_unpackub___flags
 #define DeeMA_Sequence_unpackub_name  _DeeMA_ATTRSTR(unpackub)
@@ -1410,6 +1418,10 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_hash__(DeeObject *__restr
 #define DeeMA___set_compare_eq___name  _DeeMA_ATTRSTR(__set_compare_eq__)
 #define DeeMA___set_compare_eq___doc   "(rhs:?X2?DSet?S?O)->?X2?Dbool?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Set_equals_flags DeeMA___set_compare_eq___flags
+#define DeeMA_Set_equals_name  _DeeMA_ATTRSTR(equals)
+#define DeeMA_Set_equals_doc   DeeMA___set_compare_eq___doc
+#define DeeMA_Set_equals       DeeMA___set_compare_eq__
 
 #define DeeMA___set_eq___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___set_eq___name  _DeeMA_ATTRSTR(__set_eq__)
@@ -1613,6 +1625,10 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_enumerate_items__(DeeObje
 #define DeeMA___map_compare_eq___name  _DeeMA_ATTRSTR(__map_compare_eq__)
 #define DeeMA___map_compare_eq___doc   "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?X2?Dbool?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Mapping_equals_flags DeeMA___map_compare_eq___flags
+#define DeeMA_Mapping_equals_name  _DeeMA_ATTRSTR(equals)
+#define DeeMA_Mapping_equals_doc   DeeMA___map_compare_eq___doc
+#define DeeMA_Mapping_equals       DeeMA___map_compare_eq__
 
 #define DeeMA___map_eq___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___map_eq___name  _DeeMA_ATTRSTR(__map_eq__)

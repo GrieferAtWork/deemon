@@ -261,6 +261,14 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	              /**/ "including being able to enumerate keys that are currently unbound"),
 
 	/* Method hint API functions. */
+	TYPE_METHOD(DeeMA_Mapping_equals_name, &DeeMA_Mapping_equals,
+	            "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool\n"
+	            "Used to implement ?Dequals for Mapping objects. Calling this function "
+	            "directly is equivalent to ${deemon.equals(this as Mapping, rhs)}\n"
+	            "#T{Requirements|Implementation~"
+	            /**/ "TODO|TODO&"
+	            /**/ "TODO|TODO"
+	            "}"),
 	TYPE_METHOD(DeeMA_Mapping_union_name, &DeeMA_Mapping_union,
 	            "" DeeMA_Mapping_union_doc "\n"
 	            "Same as ${(this as Mapping) | rhs}"),
@@ -326,12 +334,7 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	TYPE_METHOD("__contains__", &DeeMA___map_contains__, DeeMA___map_contains___doc "\nAlias for ${item in (this as Mapping)} (s.a. ?#{op:contains})"),
 	TYPE_METHOD("__enumerate__", &DeeMA___map_enumerate__, DeeMA___map_enumerate___doc "\nAlias for ${(this as Mapping).enumerate(cb[,start,end])} (s.a. ?#enumerate)"),
 	TYPE_METHOD("__enumerate_items__", &DeeMA___map_enumerate_items__, DeeMA___map_enumerate_items___doc "\nAlias for ${(this as Mapping).enumerate([start,end])} (s.a. ?#enumerate)"),
-	TYPE_METHOD("__compare_eq__", &DeeMA___map_compare_eq__,
-	            "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool\n"
-	            "Alias for ${deemon.equals(this as Mapping, rhs)}\n"
-	            "Note that use user-operator version of this ($__map_compare_eq__) is "
-	            /**/ "allowed to return ?Dint, in which case $0 means equal (causing this "
-	            /**/ "function to return !t), and all other values mean non-empty."),
+	TYPE_METHOD("__compare_eq__", &DeeMA___map_compare_eq__, "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool\nAlias for ${Mapping.equals(this, rhs)} (s.a. ?#equals)"),
 	TYPE_METHOD("__eq__", &DeeMA___map_eq__, DeeMA___map_eq___doc "\nAlias for ${(this as Mapping) == (rhs)} (s.a. ?#{op:eq})"),
 	TYPE_METHOD("__ne__", &DeeMA___map_ne__, DeeMA___map_ne___doc "\nAlias for ${(this as Mapping) != (rhs)} (s.a. ?#{op:ne})"),
 	TYPE_METHOD("__lo__", &DeeMA___map_lo__, DeeMA___map_lo___doc "\nAlias for ${(this as Mapping) < (rhs)} (s.a. ?#{op:lo})"),

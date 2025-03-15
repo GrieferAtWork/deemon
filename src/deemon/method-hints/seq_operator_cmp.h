@@ -30,7 +30,7 @@ for (local op, eq, ne, Eq, EQ, isEq: {
 	print('' '/************************************************************************' '/');
 	print('' '/* deemon.Sequence.operator ', op, ' ()                                       *' '/');
 	print('' '/************************************************************************' '/');
-	print('__seq_', eq, '__(rhs:?S?O)->?Dbool {');
+	print('__seq_', eq, '__(rhs:?X2?DSequence?S?O)->?Dbool {');
 	print('	return CALL_DEPENDENCY(seq_operator_', eq, ', self, rhs);');
 	print('}');
 	print;
@@ -69,7 +69,7 @@ for (local op, eq, ne, Eq, EQ, isEq: {
 /************************************************************************/
 /* deemon.Sequence.operator == ()                                       */
 /************************************************************************/
-__seq_eq__(rhs:?S?O)->?Dbool {
+__seq_eq__(rhs:?X2?DSequence?S?O)->?Dbool {
 	return CALL_DEPENDENCY(seq_operator_eq, self, rhs);
 }
 
@@ -106,7 +106,7 @@ seq_operator_eq = {
 /************************************************************************/
 /* deemon.Sequence.operator != ()                                       */
 /************************************************************************/
-__seq_ne__(rhs:?S?O)->?Dbool {
+__seq_ne__(rhs:?X2?DSequence?S?O)->?Dbool {
 	return CALL_DEPENDENCY(seq_operator_ne, self, rhs);
 }
 
@@ -143,7 +143,7 @@ seq_operator_ne = {
 /************************************************************************/
 /* deemon.Sequence.operator < ()                                       */
 /************************************************************************/
-__seq_lo__(rhs:?S?O)->?Dbool {
+__seq_lo__(rhs:?X2?DSequence?S?O)->?Dbool {
 	return CALL_DEPENDENCY(seq_operator_lo, self, rhs);
 }
 
@@ -180,7 +180,7 @@ seq_operator_lo = {
 /************************************************************************/
 /* deemon.Sequence.operator <= ()                                       */
 /************************************************************************/
-__seq_le__(rhs:?S?O)->?Dbool {
+__seq_le__(rhs:?X2?DSequence?S?O)->?Dbool {
 	return CALL_DEPENDENCY(seq_operator_le, self, rhs);
 }
 
@@ -217,7 +217,7 @@ seq_operator_le = {
 /************************************************************************/
 /* deemon.Sequence.operator > ()                                       */
 /************************************************************************/
-__seq_gr__(rhs:?S?O)->?Dbool {
+__seq_gr__(rhs:?X2?DSequence?S?O)->?Dbool {
 	return CALL_DEPENDENCY(seq_operator_gr, self, rhs);
 }
 
@@ -254,7 +254,7 @@ seq_operator_gr = {
 /************************************************************************/
 /* deemon.Sequence.operator >= ()                                       */
 /************************************************************************/
-__seq_ge__(rhs:?S?O)->?Dbool {
+__seq_ge__(rhs:?X2?DSequence?S?O)->?Dbool {
 	return CALL_DEPENDENCY(seq_operator_ge, self, rhs);
 }
 

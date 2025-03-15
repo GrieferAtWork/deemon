@@ -310,7 +310,12 @@ default__seq_operator_bool__with_callattr___seq_bool__(DeeObject *__restrict sel
 	DREF DeeObject *result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_bool__, 0, NULL);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
+		goto err_r;
+	Dee_DecrefNokill(result);
+	return DeeBool_IsTrue(result);
+err_r:
+	Dee_Decref(result);
 err:
 	return -1;
 }
@@ -323,7 +328,12 @@ default__seq_operator_bool__with_callobjectcache___seq_bool__(DeeObject *__restr
 	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_bool__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
+		goto err_r;
+	Dee_DecrefNokill(result);
+	return DeeBool_IsTrue(result);
+err_r:
+	Dee_Decref(result);
 err:
 	return -1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -391,6 +401,16 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bool__with__set_operator_compare_eq(DeeObject *__restrict self) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_compare_eq))(self, Dee_EmptySet);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return result == 0 ? 1 : 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__seq_operator_bool__with__map_operator_compare_eq(DeeObject *__restrict self) {
+	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_compare_eq))(self, Dee_EmptyMapping);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return result == 0 ? 1 : 0;
@@ -3001,6 +3021,30 @@ default__seq_operator_compare(DeeObject *lhs, DeeObject *rhs) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__seq_operator_compare__with_callattr_compare(DeeObject *lhs, DeeObject *rhs) {
+	int result;
+	DREF DeeObject *resultob;
+	resultob = DeeObject_CallAttr(lhs, (DeeObject *)&str_compare, 1, &rhs);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
+		goto err_resultob;
+	if (DeeInt_IsZero(resultob)) {
+		result = 0;
+	} else if (DeeInt_IsNeg(resultob)) {
+		result = -1;
+	} else {
+		result = 1;
+	}
+	Dee_Decref(resultob);
+	return result;
+err_resultob:
+	Dee_Decref(resultob);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_operator_compare__with_callattr___seq_compare__(DeeObject *lhs, DeeObject *rhs) {
 	int result;
 	DREF DeeObject *resultob;
@@ -3640,6 +3684,32 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_compare_eq))(lhs, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__seq_operator_compare_eq__with_callattr_equals(DeeObject *lhs, DeeObject *rhs) {
+	int result;
+	DREF DeeObject *resultob;
+	resultob = DeeObject_CallAttr(lhs, (DeeObject *)&str_equals, 1, &rhs);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeBool_Check(resultob)) {
+		Dee_DecrefNokill(resultob);
+		return DeeBool_IsTrue(resultob) ? 0 : 1;
+	}
+	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
+		goto err_resultob;
+	if (DeeInt_IsZero(resultob)) {
+		result = 0;
+	} else {
+		result = 1;
+	}
+	Dee_Decref(resultob);
+	return result;
+err_resultob:
+	Dee_Decref(resultob);
+err:
+	return Dee_COMPARE_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -14895,6 +14965,32 @@ default__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__set_operator_compare_eq__with_callattr_equals(DeeObject *lhs, DeeObject *rhs) {
+	int result;
+	DREF DeeObject *resultob;
+	resultob = DeeObject_CallAttr(lhs, (DeeObject *)&str_equals, 1, &rhs);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeBool_Check(resultob)) {
+		Dee_DecrefNokill(resultob);
+		return DeeBool_IsTrue(resultob) ? 0 : 1;
+	}
+	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
+		goto err_resultob;
+	if (DeeInt_IsZero(resultob)) {
+		result = 0;
+	} else {
+		result = 1;
+	}
+	Dee_Decref(resultob);
+	return result;
+err_resultob:
+	Dee_Decref(resultob);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_operator_compare_eq__with_callattr___set_compare_eq__(DeeObject *lhs, DeeObject *rhs) {
 	int result;
 	DREF DeeObject *resultob;
@@ -18678,6 +18774,32 @@ default__map_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__map_operator_compare_eq__with_callattr_equals(DeeObject *lhs, DeeObject *rhs) {
+	int result;
+	DREF DeeObject *resultob;
+	resultob = DeeObject_CallAttr(lhs, (DeeObject *)&str_equals, 1, &rhs);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeBool_Check(resultob)) {
+		Dee_DecrefNokill(resultob);
+		return DeeBool_IsTrue(resultob) ? 0 : 1;
+	}
+	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
+		goto err_resultob;
+	if (DeeInt_IsZero(resultob)) {
+		result = 0;
+	} else {
+		result = 1;
+	}
+	Dee_Decref(resultob);
+	return result;
+err_resultob:
+	Dee_Decref(resultob);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_compare_eq__with_callattr___map_compare_eq__(DeeObject *lhs, DeeObject *rhs) {
 	int result;
 	DREF DeeObject *resultob;
@@ -20797,7 +20919,12 @@ tdefault__seq_operator_bool__with_callobjectcache___seq_bool__(DeeTypeObject *tp
 	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_bool__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
+		goto err_r;
+	Dee_DecrefNokill(result);
+	return DeeBool_IsTrue(result);
+err_r:
+	Dee_Decref(result);
 err:
 	return -1;
 }

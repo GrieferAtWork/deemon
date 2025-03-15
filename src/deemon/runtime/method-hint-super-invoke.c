@@ -74,7 +74,7 @@ struct mh_super_map {
 
 /* clang-format off */
 /*[[[deemon (printMhSuperMap from "..method-hints.method-hints")();]]]*/
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_bool[11] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_bool[12] = {
 	(Dee_funptr_t)&default__seq_operator_bool,
 	(Dee_funptr_t)&default__seq_operator_bool__with_callattr___seq_bool__,
 	(Dee_funptr_t)&default__seq_operator_bool__unsupported,
@@ -85,6 +85,7 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_bool[11] = {
 	(Dee_funptr_t)&default__seq_operator_bool__with__seq_operator_sizeob,
 	(Dee_funptr_t)&default__seq_operator_bool__with__seq_operator_compare_eq,
 	(Dee_funptr_t)&default__seq_operator_bool__with__set_operator_compare_eq,
+	(Dee_funptr_t)&default__seq_operator_bool__with__map_operator_compare_eq,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_bool[3] = {
@@ -595,8 +596,9 @@ PRIVATE struct mh_super_map_replace tpconst msm_replace__seq_operator_compare[2]
 	MH_SUPER_MAP_REPLACE_INIT(&default__seq_operator_compare__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_compare__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	MH_SUPER_MAP_REPLACE_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_compare[19] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_compare[20] = {
 	(Dee_funptr_t)&default__seq_operator_compare,
+	(Dee_funptr_t)&default__seq_operator_compare__with_callattr_compare,
 	(Dee_funptr_t)&default__seq_operator_compare__with_callattr___seq_compare__,
 	(Dee_funptr_t)&default__seq_operator_compare__unsupported,
 	(Dee_funptr_t)&default__seq_operator_compare__empty,
@@ -635,8 +637,9 @@ PRIVATE struct mh_super_map_replace tpconst msm_replace__seq_operator_compare_eq
 	MH_SUPER_MAP_REPLACE_INIT(&default__seq_operator_compare_eq__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_compare_eq__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	MH_SUPER_MAP_REPLACE_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_compare_eq[13] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_compare_eq[14] = {
 	(Dee_funptr_t)&default__seq_operator_compare_eq,
+	(Dee_funptr_t)&default__seq_operator_compare_eq__with_callattr_equals,
 	(Dee_funptr_t)&default__seq_operator_compare_eq__with_callattr___seq_compare_eq__,
 	(Dee_funptr_t)&default__seq_operator_compare_eq__unsupported,
 	(Dee_funptr_t)&default__seq_operator_compare_eq__empty,
@@ -660,8 +663,9 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_compare_eq
 	MH_SUPER_MAP_TYPED_INIT(&default__compare_eq__with__le__and__ge, &tdefault__compare_eq__with__le__and__ge),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_trycompare_eq[6] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_trycompare_eq[7] = {
 	(Dee_funptr_t)&default__seq_operator_trycompare_eq,
+	(Dee_funptr_t)&default__seq_operator_trycompare_eq__with_callattr_equals,
 	(Dee_funptr_t)&default__seq_operator_trycompare_eq__with_callattr___seq_compare_eq__,
 	(Dee_funptr_t)&default__seq_operator_trycompare_eq__unsupported,
 	(Dee_funptr_t)&default__seq_operator_trycompare_eq__with__seq_operator_compare_eq,
@@ -2309,8 +2313,9 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_hash[4] = 
 	MH_SUPER_MAP_TYPED_INIT(&usrtype__hash__with__, &tusrtype__hash__with__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_compare_eq[8] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_compare_eq[9] = {
 	(Dee_funptr_t)&default__set_operator_compare_eq,
+	(Dee_funptr_t)&default__set_operator_compare_eq__with_callattr_equals,
 	(Dee_funptr_t)&default__set_operator_compare_eq__with_callattr___set_compare_eq__,
 	(Dee_funptr_t)&default__set_operator_compare_eq__unsupported,
 	(Dee_funptr_t)&default__set_operator_compare_eq__empty,
@@ -2329,8 +2334,9 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_compare_eq
 	MH_SUPER_MAP_TYPED_INIT(&default__compare_eq__with__le__and__ge, &tdefault__compare_eq__with__le__and__ge),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_trycompare_eq[6] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_trycompare_eq[7] = {
 	(Dee_funptr_t)&default__set_operator_trycompare_eq,
+	(Dee_funptr_t)&default__set_operator_trycompare_eq__with_callattr_equals,
 	(Dee_funptr_t)&default__set_operator_trycompare_eq__with_callattr___set_compare_eq__,
 	(Dee_funptr_t)&default__set_operator_trycompare_eq__unsupported,
 	(Dee_funptr_t)&default__set_operator_trycompare_eq__with__set_operator_compare_eq,
@@ -3307,8 +3313,9 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_makeenumeration_wit
 	MH_SUPER_MAP_TYPED_INIT(&default__map_makeenumeration_with_range__with_callobjectcache___map_enumerate_items__, &tdefault__map_makeenumeration_with_range__with_callobjectcache___map_enumerate_items__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_compare_eq[8] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_compare_eq[9] = {
 	(Dee_funptr_t)&default__map_operator_compare_eq,
+	(Dee_funptr_t)&default__map_operator_compare_eq__with_callattr_equals,
 	(Dee_funptr_t)&default__map_operator_compare_eq__with_callattr___map_compare_eq__,
 	(Dee_funptr_t)&default__map_operator_compare_eq__unsupported,
 	(Dee_funptr_t)&default__map_operator_compare_eq__empty,
@@ -3327,8 +3334,9 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_compare_eq
 	MH_SUPER_MAP_TYPED_INIT(&default__compare_eq__with__le__and__ge, &tdefault__compare_eq__with__le__and__ge),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_trycompare_eq[6] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_trycompare_eq[7] = {
 	(Dee_funptr_t)&default__map_operator_trycompare_eq,
+	(Dee_funptr_t)&default__map_operator_trycompare_eq__with_callattr_equals,
 	(Dee_funptr_t)&default__map_operator_trycompare_eq__with_callattr___map_compare_eq__,
 	(Dee_funptr_t)&default__map_operator_trycompare_eq__unsupported,
 	(Dee_funptr_t)&default__map_operator_trycompare_eq__with__map_operator_compare_eq,

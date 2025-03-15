@@ -21,6 +21,7 @@
 /************************************************************************/
 /* deemon.Set.__set_compare_eq__()                                      */
 /************************************************************************/
+[[alias(Set.equals)]]
 __set_compare_eq__(rhs:?X2?DSet?S?O)->?X2?Dbool?Dint {
 	int result = CALL_DEPENDENCY(set_operator_compare_eq, self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)

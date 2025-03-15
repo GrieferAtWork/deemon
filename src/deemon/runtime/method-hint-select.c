@@ -41,6 +41,7 @@ mh_select_seq_operator_bool(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_size_t seq_operator_size;
 	DeeMH_seq_operator_compare_eq_t seq_operator_compare_eq;
 	DeeMH_set_operator_compare_eq_t set_operator_compare_eq;
+	DeeMH_map_operator_compare_eq_t map_operator_compare_eq;
 
 	seq_operator_compare_eq = (DeeMH_seq_operator_compare_eq_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_compare_eq);
 	if (seq_operator_compare_eq) {
@@ -64,6 +65,15 @@ mh_select_seq_operator_bool(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		if (set_operator_compare_eq == &default__set_operator_compare_eq__with__set_operator_foreach)
 			goto use_size; /* return &$with__seq_operator_foreach; */
 		return &default__seq_operator_bool__with__set_operator_compare_eq;
+	}
+
+	map_operator_compare_eq = (DeeMH_map_operator_compare_eq_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_compare_eq);
+	if (map_operator_compare_eq) {
+		if (map_operator_compare_eq == &default__map_operator_compare_eq__empty)
+			return &default__seq_operator_bool__empty;
+		if (map_operator_compare_eq == &default__map_operator_compare_eq__with__map_operator_foreach_pair)
+			goto use_size; /* return &$with__seq_operator_foreach; */
+		return &default__seq_operator_bool__with__map_operator_compare_eq;
 	}
 
 use_size:

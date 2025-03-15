@@ -21,6 +21,7 @@
 /************************************************************************/
 /* deemon.Mapping.__map_compare_eq__()                                      */
 /************************************************************************/
+[[alias(Mapping.equals)]]
 __map_compare_eq__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?X2?Dbool?Dint {
 	int result = CALL_DEPENDENCY(map_operator_compare_eq, self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)

@@ -532,60 +532,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_unpack(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	size_t size_or_minsize;
-	DeeObject *maxsize_ob = NULL;
-	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:unpack", &size_or_minsize, &maxsize_ob))
-		goto err;
-	if (maxsize_ob == NULL) {
-#ifndef __OPTIMIZE_SIZE__
-		if (DeeTuple_Check(self)) {
-			size_t real_size = DeeTuple_SIZE(self);
-			if unlikely(real_size != size_or_minsize) {
-				err_invalid_unpack_size(self, size_or_minsize, real_size);
-				goto err;
-			}
-			return_reference_(self);
-		}
-#endif /* !__OPTIMIZE_SIZE__ */
-		result = DeeTuple_NewUninitialized(size_or_minsize);
-		if unlikely(!result)
-			goto err;
-		if unlikely(DeeSeq_Unpack(self, size_or_minsize, DeeTuple_ELEM(result)))
-			goto err_r;
-	} else {
-		size_t maxsize, realsize;
-		if unlikely(DeeObject_AsSize(maxsize_ob, &maxsize))
-			goto err;
-#ifndef __OPTIMIZE_SIZE__
-		if (DeeTuple_Check(self)) {
-			size_t real_size = DeeTuple_SIZE(self);
-			if unlikely(real_size < size_or_minsize || real_size > maxsize) {
-				err_invalid_unpack_size_minmax(self, size_or_minsize, maxsize, real_size);
-				goto err;
-			}
-			return_reference_(self);
-		}
-#endif /* !__OPTIMIZE_SIZE__ */
-		result = DeeTuple_NewUninitialized(maxsize);
-		if unlikely(!result)
-			goto err;
-		realsize = DeeObject_InvokeMethodHint(seq_unpack_ex, self,
-		                                      size_or_minsize, maxsize,
-		                                      DeeTuple_ELEM(result));
-		if unlikely(realsize == (size_t)-1)
-			goto err_r;
-		result = DeeTuple_TruncateUninitialized(result, realsize);
-	}
-	return (DREF DeeObject *)result;
-err_r:
-	DeeTuple_FreeUninitialized(result);
-err:
-	return NULL;
-}
-
 #ifdef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE
 #else /* CONFIG_NO_DEEMON_100_COMPAT */
@@ -931,162 +877,93 @@ err:
 
 INTDEF struct type_method tpconst seq_methods[];
 INTERN_TPCONST struct type_method tpconst seq_methods[] = {
-	TYPE_KWMETHOD(DeeMA_Sequence_reduce_name, &DeeMA_Sequence_reduce,
-	              "(combine:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,init?)->\n"
-	              DOC_throws_ValueError_if_empty
-	              "Combines consecutive elements of @this Sequence by passing them as pairs of 2 to @combine, "
-	              /**/ "then re-using its return value in the next invocation, before finally returning its last "
-	              /**/ "return value. If the Sequence consists of only 1 element, @combine is never invoked.\n"
-	              "When given, @init is used as the initial lhs-operand, rather than the first element of the Sequence\n"
-	              "#T{Requirements|Implementation~"
-	              /**/ "${function reduce}¹|${this.reduce(combine)}&"
-	              /**/ "${function reduce}²|${"
-	              /**/ /**/ "return start != 0 || end != int.SIZE_MAX ? this.reduce(combine, start, end)\n"
-	              /**/ /**/ "                                         : this.reduce(combine);"
-	              /**/ "}&"
-	              /**/ "?#enumerate³|${"
-	              /**/ /**/ "local result = init is bound ? Cell(init) : Cell();\n"
-	              /**/ /**/ "Sequence.enumerate(this, (none, value?) -\\> {\n"
-	              /**/ /**/ "	if (value is bound)\n"
-	              /**/ /**/ "		result.value = result.value is bound ? combine(result.value, value) : value;\n"
-	              /**/ /**/ "}, start, end);\n"
-	              /**/ /**/ "if (result.value !is bound)\n"
-	              /**/ /**/ "	throw ValueError(...);\n"
-	              /**/ /**/ "return result.value;"
-	              /**/ "}"
-	              "}"
-	              "#L{"
-	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
-	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
-	              /**/ "{³}Only when ?#enumerate has a valid implementation for the given arguments"
-	              "}"),
-	TYPE_KWMETHOD("enumerate", &seq_enumerate,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?T2?Dint?O\n"
-	              "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N\n"
-	              "Enumerate indices/keys and associated values of @this sequence\n"
-	              "This function can be used to easily enumerate sequence indices and values, "
-	              /**/ "including being able to enumerate indices/keys that are currently unbound\n"
-	              "${"
-	              /**/ "import FixedList from collections;\n"
-	              /**/ "local x = FixedList(4);\n"
-	              /**/ "x[1] = 10;\n"
-	              /**/ "x[3] = 20;\n"
-	              /**/ "/* [1]: 10                 [3]: 20 */\n"
-	              /**/ "for (local key, value: x.enumerate())\n"
-	              /**/ "	print f\"[{repr key}]: {repr value}\"\n"
-	              /**/ "/* [0]: <unbound>          [1]: 10\n"
-	              /**/ " * [2]: <unbound>          [3]: 20 */\n"
-	              /**/ "x.enumerate((key, value?) -\\> {\n"
-	              /**/ "	print f\"[{repr key}]: {value is bound ? repr value : \"<unbound>\"}\";\n"
-	              /**/ "});"
-	              "}\n"
-	              "#T{Requirements|Implementation~"
-	              /**/ "${property iterkeys}¹³|${"
-	              /**/ /**/ "foreach (local key: Mapping.iterkeys(this)) {\n"
-	              /**/ /**/ "	local myItem\n"
-	              /**/ /**/ "	local status;\n"
-	              /**/ /**/ "	if (!(start <= key) || !(end > key))\n"
-	              /**/ /**/ "		continue; // Only when given\n"
-	              /**/ /**/ "	try {\n"
-	              /**/ /**/ "		myItem = this[index];\n"
-	              /**/ /**/ "	} catch (UnboundItem | KeyError | IndexError) {\n"
-	              /**/ /**/ "		goto invokeWithUnbound;\n"
-	              /**/ /**/ "	}\n"
-	              /**/ /**/ "	status = cb(key, myItem);\n"
-	              /**/ /**/ "	goto handleStatus;\n"
-	              /**/ /**/ "invokeWithUnbound:\n"
-	              /**/ /**/ "	status = cb(key);\n"
-	              /**/ /**/ "handleStatus:\n"
-	              /**/ /**/ "	if (status !is none)\n"
-	              /**/ /**/ "		return status;\n"
-	              /**/ /**/ "}\n"
-	              /**/ /**/ "return none;"
-	              /**/ "}&"
-	              /**/ "${operator size}, ${operator getitem}¹²|${"
-	              /**/ /**/ "local realSize = ##this;\n"
-	              /**/ /**/ "if (end > realSize)\n"
-	              /**/ /**/ "	end = realSize;\n"
-	              /**/ /**/ "if (start > end)\n"
-	              /**/ /**/ "	start = end;\n"
-	              /**/ /**/ "for (local i: [start:end]) {\n"
-	              /**/ /**/ "	local myItem\n"
-	              /**/ /**/ "	local status;\n"
-	              /**/ /**/ "	try {\n"
-	              /**/ /**/ "		myItem = this[index];\n"
-	              /**/ /**/ "	} catch (UnboundItem) {\n"
-	              /**/ /**/ "		goto invokeWithUnbound;\n"
-	              /**/ /**/ "	} catch (IndexError) {\n"
-	              /**/ /**/ "		break;\n"
-	              /**/ /**/ "	}\n"
-	              /**/ /**/ "	status = cb(i, myItem);\n"
-	              /**/ /**/ "	goto handleStatus;\n"
-	              /**/ /**/ "invokeWithUnbound:\n"
-	              /**/ /**/ "	status = cb(i);\n"
-	              /**/ /**/ "handleStatus:\n"
-	              /**/ /**/ "	if (status !is none)\n"
-	              /**/ /**/ "		return status;\n"
-	              /**/ /**/ "}\n"
-	              /**/ /**/ "return none;"
-	              /**/ "}&"
-	              /**/ "${operator iter}¹²|${"
-	              /**/ /**/ "local it = this.operator iter();\n"
-	              /**/ /**/ "for (none: [:start]) {\n"
-	              /**/ /**/ "	foreach (none: it)\n"
-	              /**/ /**/ "		break;\n"
-	              /**/ /**/ "}\n"
-	              /**/ /**/ "for (local i: [start:end]) {\n"
-	              /**/ /**/ "	foreach (local v: it) {\n"
-	              /**/ /**/ "		local status = cb(i, v);\n"
-	              /**/ /**/ "		if (status !is none)\n"
-	              /**/ /**/ "			return status;\n"
-	              /**/ /**/ "		goto next_i;\n"
-	              /**/ /**/ "	}\n"
-	              /**/ /**/ "	break;\n"
-	              /**/ /**/ "next_i:;\n"
-	              /**/ /**/ "}\n"
-	              /**/ /**/ "return none;"
-	              /**/ "}"
-	              "}"
-	              "#L{"
-	              /**/ "{¹}When @cb isn't given, filter for bound items and yield as ${(key, value)} pairs|"
-	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
-	              /**/ "{³}Only when ?A__seqclass__?DType is ?DMapping"
-	              "}"),
-	TYPE_KWMETHOD(DeeMA_Sequence_sum_name, &DeeMA_Sequence_sum,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N\n"
-	              "Returns the sum of all elements, or ?N if the Sequence is empty\n"
-	              "This, alongside ?Ajoin?Dstring is the preferred way of merging lists "
-	              /**/ "of strings into a single string\n"
-	              "#T{Requirements|Implementation~"
-	              /**/ "${function sum}|${"
-	              /**/ /**/ "return start != 0 || end != int.SIZE_MAX ? this.sum(start, end)\n"
-	              /**/ /**/ "                                         : this.sum();"
-	              /**/ "}&"
-	              /**/ "${operator iter}¹|${"
-	              /**/ /**/ "local result;\n"
-	              /**/ /**/ "for (local x: this)\n"
-	              /**/ /**/ "	result = result is bound ? result + x : x;\n"
-	              /**/ /**/ "if (result !is bound)\n"
-	              /**/ /**/ "	result = none;\n"
-	              /**/ /**/ "return result;"
-	              /**/ "}&"
-	              /**/ "${operator size}, ${operator getitem}²|${"
-	              /**/ /**/ "local result = Cell();\n"
-	              /**/ /**/ "Sequence.enumerate(this, (none, value?) -\\> {\n"
-	              /**/ /**/ "	if (value is bound)\n"
-	              /**/ /**/ "		result.value = result.value is bound ? result.value + value : value;\n"
-	              /**/ /**/ "}, start, end);\n"
-	              /**/ /**/ "if (result.value !is bound)\n"
-	              /**/ /**/ "	return none;\n"
-	              /**/ /**/ "return result.value;"
-	              /**/ "}"
-	              "}"
-	              "#L{"
-	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
-	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
-	              "}"),
+
+	TYPE_METHOD(DeeMA_Sequence_compare_name, &DeeMA_Sequence_compare,
+	            "" DeeMA_Sequence_compare_doc "\n"
+	            "Used to implement ?Dcompare for Sequence objects. Calling this function "
+	            "directly is equivalent to ${deemon.compare(this as Sequence, rhs)}\n"
+	            "#T{Requirements|Implementation~"
+	            /**/ "${function compare(rhs: Sequence): int} (?A__seqclass__?DType is ?.)" /**/ "|${return this.compare(rhs);}&"
+	            /**/ "${function __seq_compare__(rhs: Sequence): int}" /*                     */ "|${return this.__seq_compare__(rhs);}&"
+	            /**/ "?#{op:eq}, ?#{op:lo}" /**/ "|${return Sequence.__eq__(this, rhs) ? 0 : Sequence.__lo__(this, rhs) ? -1 : 1;}&"
+	            /**/ "?#{op:eq}, ?#{op:le}" /**/ "|${return Sequence.__eq__(this, rhs) ? 0 : Sequence.__le__(this, rhs) ? -1 : 1;}&"
+	            /**/ "?#{op:eq}, ?#{op:gr}" /**/ "|${return Sequence.__eq__(this, rhs) ? 0 : Sequence.__gr__(this, rhs) ? 1 : -1;}&"
+	            /**/ "?#{op:eq}, ?#{op:ge}" /**/ "|${return Sequence.__eq__(this, rhs) ? 0 : Sequence.__ge__(this, rhs) ? 1 : -1;}&"
+	            /**/ "?#{op:ne}, ?#{op:lo}" /**/ "|${return Sequence.__ne__(this, rhs) ? (Sequence.__lo__(this, rhs) ? -1 : 1) : 0;}&"
+	            /**/ "?#{op:ne}, ?#{op:le}" /**/ "|${return Sequence.__ne__(this, rhs) ? (Sequence.__le__(this, rhs) ? -1 : 1) : 0;}&"
+	            /**/ "?#{op:ne}, ?#{op:gr}" /**/ "|${return Sequence.__ne__(this, rhs) ? (Sequence.__gr__(this, rhs) ? 1 : -1) : 0;}&"
+	            /**/ "?#{op:ne}, ?#{op:ge}" /**/ "|${return Sequence.__ne__(this, rhs) ? (Sequence.__ge__(this, rhs) ? 1 : -1) : 0;}&"
+	            /**/ "?#{op:lo}, ?#{op:gr}" /**/ "|${return Sequence.__lo__(this, rhs) ? -1 : Sequence.__gr__(this, rhs) ? 1 : 0;}&"
+	            /**/ "?#{op:le}, ?#{op:ge}" /**/ "|${return Sequence.__le__(this, rhs) ? (Sequence.__ge__(this, rhs) ? 0 : -1) : 1;}&"
+	            /**/ "?#{op:iter}" /*         */ "|${"
+	            /**/ /**/ "##define TAKE1(v, iter) ({ local _r = false; foreach(v: iter) { _r = true; break; } _r; })\n"
+	            /**/ /**/ "local lhsIter = Sequence.__iter__(this);\n"
+	            /**/ /**/ "local rhsIter = rhs.operator iter();\n"
+	            /**/ /**/ "for (;;) {\n"
+	            /**/ /**/ "	local lhsItem, rhsItem;\n"
+	            /**/ /**/ "	if (TAKE1(lhsItem, lhsIter)) {\n"
+	            /**/ /**/ "		if (!TAKE1(rhsItem, rhsIter))\n"
+	            /**/ /**/ "			return 1;\n"
+	            /**/ /**/ "		local cmp = deemon.compare(lhsItem, rhsItem);\n"
+	            /**/ /**/ "		if (cmp != 0)\n"
+	            /**/ /**/ "			return cmp;\n"
+	            /**/ /**/ "	} else {\n"
+	            /**/ /**/ "		return TAKE1(rhsItem, rhsIter) ? -1 : 0;\n"
+	            /**/ /**/ "	}\n"
+	            /**/ /**/ "}"
+	            /**/ "}&"
+	            "}"),
+
+	TYPE_METHOD(DeeMA_Sequence_equals_name, &DeeMA_Sequence_equals,
+	            "(rhs:?X2?DSequence?S?O)->?Dbool\n"
+	            "Used to implement ?Dequals for Sequence objects. Calling this function "
+	            "directly is equivalent to ${deemon.equals(this as Sequence, rhs)}\n"
+	            "#T{Requirements|Implementation~"
+	            /**/ "${function equals(rhs: Sequence): int | bool} (?A__seqclass__?DType is ?.)" /**/ "|${"
+	            /**/ /**/ "local result = this.equals(rhs);\n"
+	            /**/ /**/ "return result is int ? (result == 0) : !!result;"
+	            /**/ "}&"
+	            /**/ "${function __seq_compare_eq__(rhs: Sequence): int | bool}" /*                 */ "|${"
+	            /**/ /**/ "local result = this.__seq_compare_eq__(rhs);\n"
+	            /**/ /**/ "return result is int ? (result == 0) : !!result;"
+	            /**/ "}&"
+	            /**/ "?#{op:eq}" /*  */ "|${return !!Sequence.__eq__(this, rhs);}&"
+	            /**/ "?#{op:ne}" /*  */ "|${return !Sequence.__ne__(this, rhs);}&"
+	            /**/ "?#{op:iter}" /**/ "|${"
+	            /**/ /**/ "##define TAKE1(v, iter) ({ local _r = false; foreach(v: iter) { _r = true; break; } _r; })\n"
+	            /**/ /**/ "local lhsIter = Sequence.__iter__(this);\n"
+	            /**/ /**/ "local rhsIter = rhs.operator iter();\n"
+	            /**/ /**/ "for (;;) {\n"
+	            /**/ /**/ "	local lhsItem, rhsItem;\n"
+	            /**/ /**/ "	if (TAKE1(lhsItem, lhsIter)) {\n"
+	            /**/ /**/ "		if (!TAKE1(rhsItem, rhsIter))\n"
+	            /**/ /**/ "			return false;\n"
+	            /**/ /**/ "		if (!deemon.equals(lhsItem, rhsItem))\n"
+	            /**/ /**/ "			return false;\n"
+	            /**/ /**/ "	} else {\n"
+	            /**/ /**/ "		return !TAKE1(rhsItem, rhsIter);\n"
+	            /**/ /**/ "	}\n"
+	            /**/ /**/ "}"
+	            /**/ "}&"
+	            /**/ "?#compare" /**/ "|${return Sequence.compare(this, rhs) == 0;}"
+	            "}"),
+
+	/* TODO: REWRITE DOCUMENTATION FOR EVERYTHING BELOW */
+	/* TODO: REWRITE DOCUMENTATION FOR EVERYTHING BELOW */
+	/* TODO: REWRITE DOCUMENTATION FOR EVERYTHING BELOW */
+
+	/* Method hint API functions. */
+	TYPE_METHOD(DeeMA_Sequence_unpack_name, &DeeMA_Sequence_unpack,
+	            "" DeeMA___seq_unpack___doc "\n"
+	            "Unpack elements of this sequence (skipping over unbound items), whilst asserting "
+	            /**/ "that the resulting sequence's size is either equal to @length, or lies within "
+	            /**/ "the (inclusive) bounds ${[minsize, maxsize]}"),
+	TYPE_METHOD(DeeMA_Sequence_unpackub_name, &DeeMA_Sequence_unpackub,
+	            "" DeeMA___seq_unpackub___doc "\n"
+	            "Same as ?#unpack, but don't skip over unbound items. As a consequence, "
+	            /**/ "not all of the returned sequence's indices are necessarily bound."),
 	TYPE_KWMETHOD(DeeMA_Sequence_any_name, &DeeMA_Sequence_any,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "" DeeMA_Sequence_any_doc "\n"
 	              "Returns ?t if any element of @this Sequence evaluates to ?t\n"
 	              "If @this Sequence is empty, ?f is returned\n"
 	              "This function has the same effect as ${this || ...}\n"
@@ -1121,7 +998,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
 	TYPE_KWMETHOD(DeeMA_Sequence_all_name, &DeeMA_Sequence_all,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "" DeeMA_Sequence_all_doc "\n"
 	              DOC_param_key
 	              "Returns ?t if all elements of @this Sequence evaluate to ?t\n"
 	              "If @this Sequence is empty, ?t is returned\n"
@@ -1157,7 +1034,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
 	TYPE_KWMETHOD(DeeMA_Sequence_parity_name, &DeeMA_Sequence_parity,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "" DeeMA_Sequence_parity_doc "\n"
 	              DOC_param_key
 	              "Returns ?t or ?f indicative of the parity of Sequence elements that are ?t\n"
 	              "If @this Sequence is empty, ?f is returned\n"
@@ -1196,8 +1073,37 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
+	TYPE_KWMETHOD(DeeMA_Sequence_reduce_name, &DeeMA_Sequence_reduce,
+	              "" DeeMA_Sequence_reduce_doc "\n"
+	              DOC_throws_ValueError_if_empty
+	              "Combines consecutive elements of @this Sequence by passing them as pairs of 2 to @combine, "
+	              /**/ "then re-using its return value in the next invocation, before finally returning its last "
+	              /**/ "return value. If the Sequence consists of only 1 element, @combine is never invoked.\n"
+	              "When given, @init is used as the initial lhs-operand, rather than the first element of the Sequence\n"
+	              "#T{Requirements|Implementation~"
+	              /**/ "${function reduce}¹|${this.reduce(combine)}&"
+	              /**/ "${function reduce}²|${"
+	              /**/ /**/ "return start != 0 || end != int.SIZE_MAX ? this.reduce(combine, start, end)\n"
+	              /**/ /**/ "                                         : this.reduce(combine);"
+	              /**/ "}&"
+	              /**/ "?#enumerate³|${"
+	              /**/ /**/ "local result = init is bound ? Cell(init) : Cell();\n"
+	              /**/ /**/ "Sequence.enumerate(this, (none, value?) -\\> {\n"
+	              /**/ /**/ "	if (value is bound)\n"
+	              /**/ /**/ "		result.value = result.value is bound ? combine(result.value, value) : value;\n"
+	              /**/ /**/ "}, start, end);\n"
+	              /**/ /**/ "if (result.value !is bound)\n"
+	              /**/ /**/ "	throw ValueError(...);\n"
+	              /**/ /**/ "return result.value;"
+	              /**/ "}"
+	              "}"
+	              "#L{"
+	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
+	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
+	              /**/ "{³}Only when ?#enumerate has a valid implementation for the given arguments"
+	              "}"),
 	TYPE_KWMETHOD(DeeMA_Sequence_min_name, &DeeMA_Sequence_min,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N\n"
+	              "" DeeMA_Sequence_min_doc "\n"
 	              DOC_param_key
 	              "Returns the smallest element of @this Sequence. If @this Sequence is empty, ?N is returned.\n"
 	              "When no @key is given, this function has the same effect as ${this < ...}\n"
@@ -1262,7 +1168,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
 	TYPE_KWMETHOD(DeeMA_Sequence_max_name, &DeeMA_Sequence_max,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N\n"
+	              "" DeeMA_Sequence_max_doc "\n"
 	              DOC_param_key
 	              "Returns the greatest element of @this Sequence. If @this Sequence is empty, ?N is returned.\n"
 	              "When no @key is given, this function has the same effect as ${this > ...}\n"
@@ -1326,8 +1232,41 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
+	TYPE_KWMETHOD(DeeMA_Sequence_sum_name, &DeeMA_Sequence_sum,
+	              "" DeeMA_Sequence_sum_doc "\n"
+	              "Returns the sum of all elements, or ?N if the Sequence is empty\n"
+	              "This, alongside ?Ajoin?Dstring is the preferred way of merging lists "
+	              /**/ "of strings into a single string\n"
+	              "#T{Requirements|Implementation~"
+	              /**/ "${function sum}|${"
+	              /**/ /**/ "return start != 0 || end != int.SIZE_MAX ? this.sum(start, end)\n"
+	              /**/ /**/ "                                         : this.sum();"
+	              /**/ "}&"
+	              /**/ "${operator iter}¹|${"
+	              /**/ /**/ "local result;\n"
+	              /**/ /**/ "for (local x: this)\n"
+	              /**/ /**/ "	result = result is bound ? result + x : x;\n"
+	              /**/ /**/ "if (result !is bound)\n"
+	              /**/ /**/ "	result = none;\n"
+	              /**/ /**/ "return result;"
+	              /**/ "}&"
+	              /**/ "${operator size}, ${operator getitem}²|${"
+	              /**/ /**/ "local result = Cell();\n"
+	              /**/ /**/ "Sequence.enumerate(this, (none, value?) -\\> {\n"
+	              /**/ /**/ "	if (value is bound)\n"
+	              /**/ /**/ "		result.value = result.value is bound ? result.value + value : value;\n"
+	              /**/ /**/ "}, start, end);\n"
+	              /**/ /**/ "if (result.value !is bound)\n"
+	              /**/ /**/ "	return none;\n"
+	              /**/ /**/ "return result.value;"
+	              /**/ "}"
+	              "}"
+	              "#L{"
+	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
+	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
+	              "}"),
 	TYPE_KWMETHOD(DeeMA_Sequence_count_name, &DeeMA_Sequence_count,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "" DeeMA_Sequence_count_doc "\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Returns the number of instances of a given object @item in @this Sequence\n"
@@ -1371,8 +1310,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
+	TYPE_KWMETHOD(DeeMA_Sequence_contains_name, &DeeMA_Sequence_contains,
+	              "" DeeMA_Sequence_contains_doc "\n"
+	              DOC_param_item
+	              DOC_param_key
+	              "Returns ?t if @this Sequence contains an element matching @item"
+	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_locate_name, &DeeMA_Sequence_locate,
-	              "(match:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]\n"
+	              "" DeeMA_Sequence_locate_doc "\n"
 	              "Locate and return the first element such that ${match(elem)} "
 	              /**/ "is true, or @def when no such element exists\n"
 	              "#T{Requirements|Implementation~"
@@ -1402,7 +1347,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{³}Only when ?A__seqclass__?DType is ?DSet or ?DMapping"
 	              "}"),
 	TYPE_KWMETHOD(DeeMA_Sequence_rlocate_name, &DeeMA_Sequence_rlocate,
-	              "(match:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]\n"
+	              "" DeeMA_Sequence_rlocate_doc "\n"
 	              "Locate and return the last element such that ${match(elem)} "
 	              /**/ "is true, or @def when no such element exists\n"
 	              "#T{Requirements|Implementation~"
@@ -1443,7 +1388,192 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
 	              /**/ "{³}Only when ?A__seqclass__?DType is ?DSet or ?DMapping"
 	              "}"),
+	TYPE_KWMETHOD(DeeMA_Sequence_startswith_name, &DeeMA_Sequence_startswith,
+	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              DOC_param_item
+	              DOC_param_key
+	              "Returns ?t / ?f indicative of @this Sequence's first element matching :item\n"
+	              "The implementation of this is derived from #first, where the found is then compared "
+	              /**/ "against @item, potentially through use of @{key}: ${key(first) == key(item)} or ${first == item}, "
+	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_endswith_name, &DeeMA_Sequence_endswith,
+	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              DOC_param_item
+	              DOC_param_key
+	              "Returns ?t / ?f indicative of @this Sequence's last element matching :item\n"
+	              "The implementation of this is derived from #last, where the found is then compared "
+	              /**/ "against @item, potentially through use of @{key}: ${key(last) == key(item)} or ${last == item}, "
+	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_find_name, &DeeMA_Sequence_find,
+	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              DOC_param_item
+	              DOC_param_key
+	              "Search for the first element matching @item and return its index. "
+	              /**/ "If no such element exists, return ${-1} instead"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_rfind_name, &DeeMA_Sequence_rfind,
+	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              DOC_param_item
+	              DOC_param_key
+	              "Search for the last element matching @item and return its index. "
+	              /**/ "If no such element exists, return ${-1} instead"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_erase_name, &DeeMA_Sequence_erase,
+	              "(index:?Dint,count=!1)\n"
+	              "#tIntegerOverflow{The given @index is negative, or too large}"
+	              "#tIndexError{The given @index is out of bounds}"
+	              "#tSequenceError{@this Sequence cannot be resized}"
+	              "Erase up to @count elements starting at @index"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_insert_name, &DeeMA_Sequence_insert,
+	              "(index:?Dint,item)\n"
+	              "#tIntegerOverflow{The given @index is negative, or too large}"
+	              "#tSequenceError{@this Sequence cannot be resized}"
+	              "Insert the given @item under @index"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_insertall_name, &DeeMA_Sequence_insertall,
+	              "(index:?Dint,items:?DSequence)\n"
+	              "#tIntegerOverflow{The given @index is negative, or too large}"
+	              "#tSequenceError{@this Sequence cannot be resized}"
+	              "Insert all elements from @items at @index"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_METHOD(DeeMA_Sequence_pushfront_name, &DeeMA_Sequence_pushfront,
+	            "(item)\n"
+	            "#tIndexError{The given @index is out of bounds}"
+	            "#tSequenceError{@this Sequence cannot be resized}"
+	            "Convenience wrapper for ?#insert at position $0"
+	            ""), /* TODO: Requirements|Implementation table */
+	TYPE_METHOD(DeeMA_Sequence_append_name, &DeeMA_Sequence_append,
+	            "(item)\n"
+	            "#tIndexError{The given @index is out of bounds}"
+	            "#tSequenceError{@this Sequence cannot be resized}"
+	            "Append the given @item at the end of @this Sequence"
+	            ""), /* TODO: Requirements|Implementation table */
+	TYPE_METHOD(DeeMA_Sequence_pushback_name, &DeeMA_Sequence_pushback,
+	            "(item)\n"
+	            "#tIndexError{The given @index is out of bounds}"
+	            "#tSequenceError{@this Sequence cannot be resized}"
+	            "Alias for ?#append"),
+	TYPE_METHOD(DeeMA_Sequence_extend_name, &DeeMA_Sequence_extend,
+	            "(items:?DSequence)\n"
+	            "#tSequenceError{@this Sequence cannot be resized}"
+	            "Append all elements from @items at the end of @this Sequence"
+	            ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_xchitem_name, &DeeMA_Sequence_xchitem,
+	              "(index:?Dint,value)->\n"
+	              "#tIntegerOverflow{The given @index is negative, or too large}"
+	              "#tIndexError{The given @index is out of bounds}"
+	              "#tSequenceError{@this Sequence cannot be resized}"
+	              "Exchange the @index'th element of @this Sequence with the given "
+	              /**/ "@value, returning the old element found under that index"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_METHOD(DeeMA_Sequence_clear_name, &DeeMA_Sequence_clear,
+	            "()\n"
+	            "#tSequenceError{@this Sequence is immutable}"
+	            "Clear all elements from the Sequence"
+	            ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_pop_name, &DeeMA_Sequence_pop,
+	              "(index=!-1)->\n"
+	              "#tIntegerOverflow{The given @index is too large}"
+	              "#tIndexError{The given @index is out of bounds}"
+	              "#tSequenceError{@this Sequence cannot be resized}"
+	              "Pop the @index'th element of @this Sequence and return it. When @index is lower "
+	              /**/ "than $0, add ${##this} prior to index selection"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_remove_name, &DeeMA_Sequence_remove,
+	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              DOC_param_key
+	              "#tSequenceError{@this Sequence is immutable}"
+	              "Find the first instance of @item and remove it, returning ?t if an "
+	              /**/ "element got removed, or ?f if @item could not be found"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_rremove_name, &DeeMA_Sequence_rremove,
+	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              DOC_param_key
+	              "#tSequenceError{@this Sequence is immutable}"
+	              "Find the last instance of @item and remove it, returning ?t if an "
+	              /**/ "element got removed, or ?f if @item could not be found"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_removeall_name, &DeeMA_Sequence_removeall,
+	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              DOC_param_key
+	              "#tSequenceError{@this Sequence is immutable}"
+	              "Find all instance of @item and remove them, returning the number of "
+	              /**/ "instances found (and consequently removed)"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_removeif_name, &DeeMA_Sequence_removeif,
+	              "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              DOC_param_key
+	              "#tSequenceError{@this Sequence is immutable}"
+	              "Remove all elements within the given sub-range, for which ${should(item)} "
+	              /**/ "evaluates to ?t, and return the number of elements found (and consequently removed)"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_resize_name, &DeeMA_Sequence_resize,
+	              "(size:?Dint,filler=!N)\n"
+	              "#tSequenceError{@this Sequence isn't resizable}"
+	              "Resize @this Sequence to have a new length of @size "
+	              /**/ "items, using @filler to initialize newly added entries"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_fill_name, &DeeMA_Sequence_fill,
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)\n"
+	              "#tSequenceError{@this Sequence is immutable}"
+	              "Assign @filler to all elements within the given sub-range"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_reverse_name, &DeeMA_Sequence_reverse,
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
+	              "#tSequenceError{@this Sequence is immutable}"
+	              "Reverse the order of all elements within the given range"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_reversed_name, &DeeMA_Sequence_reversed,
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?DSequence\n"
+	              "Return a Sequence that contains the elements of @this Sequence in reverse order\n"
+	              "The point at which @this Sequence is enumerated is implementation-defined"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_sort_name, &DeeMA_Sequence_sort,
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)\n"
+	              DOC_param_key
+	              "#tSequenceError{@this Sequence is immutable}"
+	              "Sort the elements within the given range"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_sorted_name, &DeeMA_Sequence_sorted,
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?DSequence\n"
+	              "Return a Sequence that contains all elements from @this Sequence, "
+	              /**/ "but sorted in ascending order, or in accordance to @key\n"
+	              "The point at which @this Sequence is enumerated is implementation-defined"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_bfind_name, &DeeMA_Sequence_bfind,
+	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N\n"
+	              DOC_param_item
+	              DOC_param_key
+	              "Do a binary search (requiring @this to be sorted via @key) for @item\n"
+	              "In case multiple elements match @item, the returned index will be "
+	              /**/ "that for one of them, though it is undefined which one specifically.\n"
+	              "When no elements of @this match, ?N is returned."
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_bposition_name, &DeeMA_Sequence_bposition,
+	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              DOC_param_item
+	              DOC_param_key
+	              "Same as ?#bfind, but return (an) index where @item should be inserted, rather "
+	              /**/ "than ?N when @this doesn't contain any matching object"
+	              ""), /* TODO: Requirements|Implementation table */
+	TYPE_KWMETHOD(DeeMA_Sequence_brange_name, &DeeMA_Sequence_brange,
+	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint\n"
+	              DOC_param_item
+	              DOC_param_key
+	              "Similar to ?#bfind, but return a tuple ${[begin,end)} of integers representing "
+	              /**/ "the lower and upper bound of indices for elements from @this matching @item.\n"
+	              "NOTE: The returned tuple is allowed to be an ASP, meaning that its elements may "
+	              /**/ "be calculated lazily, and are prone to change as the result of @this changing."
+	              ""), /* TODO: Requirements|Implementation table */
 
+
+
+
+
+	/* Default operations for all sequences. */
 	TYPE_METHOD("filter", &seq_filter,
 	            "(keep:?DCallable)->?DSequence\n"
 	            "#pkeep{A key function which is called for each element of @this Sequence}"
@@ -1478,44 +1608,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "}"
 	            "}"),
 
-	TYPE_KWMETHOD(DeeMA_Sequence_contains_name, &DeeMA_Sequence_contains,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
-	              DOC_param_item
-	              DOC_param_key
-	              "Returns ?t if @this Sequence contains an element matching @item"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_startswith_name, &DeeMA_Sequence_startswith,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
-	              DOC_param_item
-	              DOC_param_key
-	              "Returns ?t / ?f indicative of @this Sequence's first element matching :item\n"
-	              "The implementation of this is derived from #first, where the found is then compared "
-	              /**/ "against @item, potentially through use of @{key}: ${key(first) == key(item)} or ${first == item}, "
-	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_endswith_name, &DeeMA_Sequence_endswith,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
-	              DOC_param_item
-	              DOC_param_key
-	              "Returns ?t / ?f indicative of @this Sequence's last element matching :item\n"
-	              "The implementation of this is derived from #last, where the found is then compared "
-	              /**/ "against @item, potentially through use of @{key}: ${key(last) == key(item)} or ${last == item}, "
-	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_find_name, &DeeMA_Sequence_find,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
-	              DOC_param_item
-	              DOC_param_key
-	              "Search for the first element matching @item and return its index. "
-	              /**/ "If no such element exists, return ${-1} instead"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_rfind_name, &DeeMA_Sequence_rfind,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
-	              DOC_param_item
-	              DOC_param_key
-	              "Search for the last element matching @item and return its index. "
-	              /**/ "If no such element exists, return ${-1} instead"
-	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(STR_index, &seq_index,
 	              "(item,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
@@ -1610,13 +1702,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	TYPE_KWMETHOD("byhash", &seq_byhash, DOC_GET(seq_byhash_doc)),
 
-	TYPE_METHOD("unpack", &seq_unpack,
-	            "(size:?Dint)->?S?O\n"
-	            "(minsize:?Dint,maxsize:?Dint)->?S?O\n"
-	            "Unpack elements of this sequence (skipping over unbound items), whilst asserting "
-	            /**/ "that the resulting sequence's size is either equal to @size, or lies within "
-	            /**/ "the (inclusive) bounds ${[minsize, maxsize]}"),
-
 	TYPE_KWMETHOD("distinct", &seq_distinct,
 	              "(key?:?DCallable)->?DSet\n"
 	              DOC_param_key
@@ -1638,7 +1723,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "}"
 	              "}"),
 	/* TODO: unique(key?:?DCallable)->?.
-	 * Similar to ?#distinct (and actually identical when @this is stored),
+	 * Similar to ?#distinct (and actually identical when @this is sorted),
 	 * but only skip identical, consecutive items (iow: only keep track of
 	 * the most-recently encountered item, rather than all that have been
 	 * encountered across the entire sequence). */
@@ -1727,183 +1812,125 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	/* TODO: endswithseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = SIZE_MAX, key: Callable = none): bool */
 
-	/* Functions for mutable sequences. */
-	TYPE_KWMETHOD(DeeMA_Sequence_reversed_name, &DeeMA_Sequence_reversed,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?DSequence\n"
-	              "Return a Sequence that contains the elements of @this Sequence in reverse order\n"
-	              "The point at which @this Sequence is enumerated is implementation-defined"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_sorted_name, &DeeMA_Sequence_sorted,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?DSequence\n"
-	              "Return a Sequence that contains all elements from @this Sequence, "
-	              /**/ "but sorted in ascending order, or in accordance to @key\n"
-	              "The point at which @this Sequence is enumerated is implementation-defined"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_insert_name, &DeeMA_Sequence_insert,
-	              "(index:?Dint,item)\n"
-	              "#tIntegerOverflow{The given @index is negative, or too large}"
-	              "#tSequenceError{@this Sequence cannot be resized}"
-	              "Insert the given @item under @index"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_insertall_name, &DeeMA_Sequence_insertall,
-	              "(index:?Dint,items:?DSequence)\n"
-	              "#tIntegerOverflow{The given @index is negative, or too large}"
-	              "#tSequenceError{@this Sequence cannot be resized}"
-	              "Insert all elements from @items at @index"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(DeeMA_Sequence_append_name, &DeeMA_Sequence_append,
-	            "(item)\n"
-	            "#tIndexError{The given @index is out of bounds}"
-	            "#tSequenceError{@this Sequence cannot be resized}"
-	            "Append the given @item at the end of @this Sequence"
-	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(DeeMA_Sequence_extend_name, &DeeMA_Sequence_extend,
-	            "(items:?DSequence)\n"
-	            "#tSequenceError{@this Sequence cannot be resized}"
-	            "Append all elements from @items at the end of @this Sequence"
-	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_erase_name, &DeeMA_Sequence_erase,
-	              "(index:?Dint,count=!1)\n"
-	              "#tIntegerOverflow{The given @index is negative, or too large}"
-	              "#tIndexError{The given @index is out of bounds}"
-	              "#tSequenceError{@this Sequence cannot be resized}"
-	              "Erase up to @count elements starting at @index"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_xchitem_name, &DeeMA_Sequence_xchitem,
-	              "(index:?Dint,value)->\n"
-	              "#tIntegerOverflow{The given @index is negative, or too large}"
-	              "#tIndexError{The given @index is out of bounds}"
-	              "#tSequenceError{@this Sequence cannot be resized}"
-	              "Exchange the @index'th element of @this Sequence with the given "
-	              /**/ "@value, returning the old element found under that index"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_pop_name, &DeeMA_Sequence_pop,
-	              "(index=!-1)->\n"
-	              "#tIntegerOverflow{The given @index is too large}"
-	              "#tIndexError{The given @index is out of bounds}"
-	              "#tSequenceError{@this Sequence cannot be resized}"
-	              "Pop the @index'th element of @this Sequence and return it. When @index is lower "
-	              /**/ "than $0, add ${##this} prior to index selection"
-	              ""), /* TODO: Requirements|Implementation table */
+
+	/* Special proxy functions that are implemented using multiple method hints */
+	TYPE_KWMETHOD("enumerate", &seq_enumerate,
+	              "" DeeMA___seq_enumerate___doc "\n"
+	              "" DeeMA___seq_enumerate_items___doc "\n"
+	              "Enumerate indices/keys and associated values of @this sequence\n"
+	              "This function can be used to easily enumerate sequence indices and values, "
+	              /**/ "including being able to enumerate indices/keys that are currently unbound\n"
+	              "${"
+	              /**/ "import FixedList from collections;\n"
+	              /**/ "local x = FixedList(4);\n"
+	              /**/ "x[1] = 10;\n"
+	              /**/ "x[3] = 20;\n"
+	              /**/ "/* [1]: 10                 [3]: 20 */\n"
+	              /**/ "for (local key, value: x.enumerate())\n"
+	              /**/ "	print f\"[{repr key}]: {repr value}\"\n"
+	              /**/ "/* [0]: <unbound>          [1]: 10\n"
+	              /**/ " * [2]: <unbound>          [3]: 20 */\n"
+	              /**/ "x.enumerate((key, value?) -\\> {\n"
+	              /**/ "	print f\"[{repr key}]: {value is bound ? repr value : \"<unbound>\"}\";\n"
+	              /**/ "});"
+	              "}\n"
+	              "#T{Requirements|Implementation~"
+	              /**/ "${property iterkeys}¹³|${"
+	              /**/ /**/ "foreach (local key: Mapping.iterkeys(this)) {\n"
+	              /**/ /**/ "	local myItem\n"
+	              /**/ /**/ "	local status;\n"
+	              /**/ /**/ "	if (!(start <= key) || !(end > key))\n"
+	              /**/ /**/ "		continue; // Only when given\n"
+	              /**/ /**/ "	try {\n"
+	              /**/ /**/ "		myItem = this[index];\n"
+	              /**/ /**/ "	} catch (UnboundItem | KeyError | IndexError) {\n"
+	              /**/ /**/ "		goto invokeWithUnbound;\n"
+	              /**/ /**/ "	}\n"
+	              /**/ /**/ "	status = cb(key, myItem);\n"
+	              /**/ /**/ "	goto handleStatus;\n"
+	              /**/ /**/ "invokeWithUnbound:\n"
+	              /**/ /**/ "	status = cb(key);\n"
+	              /**/ /**/ "handleStatus:\n"
+	              /**/ /**/ "	if (status !is none)\n"
+	              /**/ /**/ "		return status;\n"
+	              /**/ /**/ "}\n"
+	              /**/ /**/ "return none;"
+	              /**/ "}&"
+	              /**/ "${operator size}, ${operator getitem}¹²|${"
+	              /**/ /**/ "local realSize = ##this;\n"
+	              /**/ /**/ "if (end > realSize)\n"
+	              /**/ /**/ "	end = realSize;\n"
+	              /**/ /**/ "if (start > end)\n"
+	              /**/ /**/ "	start = end;\n"
+	              /**/ /**/ "for (local i: [start:end]) {\n"
+	              /**/ /**/ "	local myItem\n"
+	              /**/ /**/ "	local status;\n"
+	              /**/ /**/ "	try {\n"
+	              /**/ /**/ "		myItem = this[index];\n"
+	              /**/ /**/ "	} catch (UnboundItem) {\n"
+	              /**/ /**/ "		goto invokeWithUnbound;\n"
+	              /**/ /**/ "	} catch (IndexError) {\n"
+	              /**/ /**/ "		break;\n"
+	              /**/ /**/ "	}\n"
+	              /**/ /**/ "	status = cb(i, myItem);\n"
+	              /**/ /**/ "	goto handleStatus;\n"
+	              /**/ /**/ "invokeWithUnbound:\n"
+	              /**/ /**/ "	status = cb(i);\n"
+	              /**/ /**/ "handleStatus:\n"
+	              /**/ /**/ "	if (status !is none)\n"
+	              /**/ /**/ "		return status;\n"
+	              /**/ /**/ "}\n"
+	              /**/ /**/ "return none;"
+	              /**/ "}&"
+	              /**/ "${operator iter}¹²|${"
+	              /**/ /**/ "local it = this.operator iter();\n"
+	              /**/ /**/ "for (none: [:start]) {\n"
+	              /**/ /**/ "	foreach (none: it)\n"
+	              /**/ /**/ "		break;\n"
+	              /**/ /**/ "}\n"
+	              /**/ /**/ "for (local i: [start:end]) {\n"
+	              /**/ /**/ "	foreach (local v: it) {\n"
+	              /**/ /**/ "		local status = cb(i, v);\n"
+	              /**/ /**/ "		if (status !is none)\n"
+	              /**/ /**/ "			return status;\n"
+	              /**/ /**/ "		goto next_i;\n"
+	              /**/ /**/ "	}\n"
+	              /**/ /**/ "	break;\n"
+	              /**/ /**/ "next_i:;\n"
+	              /**/ /**/ "}\n"
+	              /**/ /**/ "return none;"
+	              /**/ "}"
+	              "}"
+	              "#L{"
+	              /**/ "{¹}When @cb isn't given, filter for bound items and yield as ${(key, value)} pairs|"
+	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
+	              /**/ "{³}Only when ?A__seqclass__?DType is ?DMapping"
+	              "}"),
+
+	/* Hlper functions for mutable sequences. */
 	TYPE_METHOD(STR_popfront, &seq_popfront,
 	            "->\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
-	            "Convenience wrapper for ${this.pop(0)}"
-	              ""), /* TODO: Requirements|Implementation table */
+	            "Convenience wrapper for ${this.pop(0)}"),
 	TYPE_METHOD(STR_popback, &seq_popback,
 	            "->\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
-	            "Convenience wrapper for ${this.pop(-1)}"
-	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(DeeMA_Sequence_pushfront_name, &DeeMA_Sequence_pushfront,
-	            "(item)\n"
-	            "#tIndexError{The given @index is out of bounds}"
-	            "#tSequenceError{@this Sequence cannot be resized}"
-	            "Convenience wrapper for ?#insert at position $0"
-	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(DeeMA_Sequence_pushback_name, &DeeMA_Sequence_pushback,
-	            "(item)\n"
-	            "#tIndexError{The given @index is out of bounds}"
-	            "#tSequenceError{@this Sequence cannot be resized}"
-	            "Alias for ?#append"),
-	TYPE_KWMETHOD(DeeMA_Sequence_remove_name, &DeeMA_Sequence_remove,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
-	              DOC_param_key
-	              "#tSequenceError{@this Sequence is immutable}"
-	              "Find the first instance of @item and remove it, returning ?t if an "
-	              /**/ "element got removed, or ?f if @item could not be found"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_rremove_name, &DeeMA_Sequence_rremove,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
-	              DOC_param_key
-	              "#tSequenceError{@this Sequence is immutable}"
-	              "Find the last instance of @item and remove it, returning ?t if an "
-	              /**/ "element got removed, or ?f if @item could not be found"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_removeall_name, &DeeMA_Sequence_removeall,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
-	              DOC_param_key
-	              "#tSequenceError{@this Sequence is immutable}"
-	              "Find all instance of @item and remove them, returning the number of "
-	              /**/ "instances found (and consequently removed)"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_removeif_name, &DeeMA_Sequence_removeif,
-	              "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              DOC_param_key
-	              "#tSequenceError{@this Sequence is immutable}"
-	              "Remove all elements within the given sub-range, for which ${should(item)} "
-	              /**/ "evaluates to ?t, and return the number of elements found (and consequently removed)"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(DeeMA_Sequence_clear_name, &DeeMA_Sequence_clear,
-	            "()\n"
-	            "#tSequenceError{@this Sequence is immutable}"
-	            "Clear all elements from the Sequence"
-	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_resize_name, &DeeMA_Sequence_resize,
-	              "(size:?Dint,filler=!N)\n"
-	              "#tSequenceError{@this Sequence isn't resizable}"
-	              "Resize @this Sequence to have a new length of @size "
-	              /**/ "items, using @filler to initialize newly added entries"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_fill_name, &DeeMA_Sequence_fill,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)\n"
-	              "#tSequenceError{@this Sequence is immutable}"
-	              "Assign @filler to all elements within the given sub-range"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_reverse_name, &DeeMA_Sequence_reverse,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
-	              "#tSequenceError{@this Sequence is immutable}"
-	              "Reverse the order of all elements within the given range"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_sort_name, &DeeMA_Sequence_sort,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)\n"
-	              DOC_param_key
-	              "#tSequenceError{@this Sequence is immutable}"
-	              "Sort the elements within the given range"
-	              ""), /* TODO: Requirements|Implementation table */
+	            "Convenience wrapper for ${this.pop(-1)}"),
 
 	/* Binary search API */
-	TYPE_KWMETHOD(DeeMA_Sequence_bfind_name, &DeeMA_Sequence_bfind,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N\n"
-	              DOC_param_item
-	              DOC_param_key
-	              "Do a binary search (requiring @this to be sorted via @key) for @item\n"
-	              "In case multiple elements match @item, the returned index will be "
-	              /**/ "that for one of them, though it is undefined which one specifically.\n"
-	              "When no elements of @this match, ?N is returned."
-	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD("bcontains", &seq_bcontains,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
-	              "Wrapper around ?#bfind that simply returns ${this.bfind(...) !is none}"
-	              ""), /* TODO: Requirements|Implementation table */
+	              "Wrapper around ?#bfind that simply returns ${this.bfind(...) !is none}"),
 	TYPE_KWMETHOD("bindex", &seq_bindex,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "#tValueError{The Sequence does not contain an item matching @item}"
-	              "Same as ?#bfind, but throw an :ValueError instead of returning ?N."
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_bposition_name, &DeeMA_Sequence_bposition,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
-	              DOC_param_item
-	              DOC_param_key
-	              "Same as ?#bfind, but return (an) index where @item should be inserted, rather "
-	              /**/ "than ?N when @this doesn't contain any matching object"
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(DeeMA_Sequence_brange_name, &DeeMA_Sequence_brange,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint\n"
-	              DOC_param_item
-	              DOC_param_key
-	              "Similar to ?#bfind, but return a tuple ${[begin,end)} of integers representing "
-	              /**/ "the lower and upper bound of indices for elements from @this matching @item.\n"
-	              "NOTE: The returned tuple is allowed to be an ASP, meaning that its elements may "
-	              /**/ "be calculated lazily, and are prone to change as the result of @this changing."
-	              ""), /* TODO: Requirements|Implementation table */
-
+	              "Same as ?#bfind, but throw an :ValueError instead of returning ?N."),
 	TYPE_KWMETHOD("blocateall", &seq_blocateall,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?O\n"
 	              DOC_param_item
@@ -1913,7 +1940,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "function blocateall(args..., **kwds) {\n"
 	              /**/ "	import Sequence from deemon;\n"
 	              /**/ "	local begin, end = this.brange(args..., **kwds)...;\n"
-	              /**/ "	return (this as Sequence)[begin:end];\n"
+	              /**/ "	return Sequence.__getrange__(this, begin, end);\n"
 	              /**/ "}"
 	              "}\n"
 	              "Here is a really neat usage-example for this function: find all strings within "
@@ -1940,6 +1967,10 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 
 
+
+
+
+
 	/* Sequence operators as member functions:
 	 * >> __getitem__(index:?Dint)->
 	 * >> __delitem__(index:?Dint)
@@ -1950,76 +1981,40 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	 * >> Sequence.__getitem__(ob, 42);
 	 * instead of (and needing to create a super-proxy):
 	 * >> (ob as Sequence)[42]; */
-	TYPE_METHOD("__bool__", &DeeMA___seq_bool__,
-	            "->?Dbool\n"
-	            "Alias for ${!!(this as Sequence)}"),
-	TYPE_METHOD("__iter__", &DeeMA___seq_iter__,
-	            "->?DIterator\n"
-	            "Alias for ${(this as Sequence).operator iter()}"),
-	TYPE_METHOD("__size__", &DeeMA___seq_size__,
-	            "->?Dint\n"
-	            "Alias for ${##(this as Sequence)}"),
-	TYPE_METHOD("__getitem__", &DeeMA___seq_getitem__,
-	            "(index:?Dint)->\n"
-	            "Alias for ${(this as Sequence)[index]}"),
-	TYPE_METHOD("__delitem__", &DeeMA___seq_delitem__,
-	            "(index:?Dint)\n"
-	            "Alias for ${del (this as Sequence)[index]}"),
-	TYPE_METHOD("__setitem__", &DeeMA___seq_setitem__,
-	            "(index:?Dint,value)\n"
-	            "Alias for ${(this as Sequence)[index] = value}"),
-	TYPE_KWMETHOD("__getrange__", &DeeMA___seq_getrange__,
-	              "(start=!0,end?:?X2?N?Dint)->?S?O\n"
-	              "Alias for ${(this as Sequence)[start:end]}"),
-	TYPE_KWMETHOD("__delrange__", &DeeMA___seq_delrange__,
-	              "(start=!0,end?:?X2?N?Dint)\n"
-	              "Alias for ${del (this as Sequence)[start:end]}"),
-	TYPE_KWMETHOD("__setrange__", &DeeMA___seq_setrange__,
-	              "(start=!0,end?:?X2?N?Dint,values:?S?O)\n"
-	              "Alias for ${(this as Sequence)[start:end] = values}"),
-	TYPE_METHOD("__enumerate__", &DeeMA___seq_enumerate__,
-	            "(cb)->\n"
-	            "Alias for ${(this as Sequence).enumerate(cb)}"),
-	TYPE_METHOD("__hash__", &DeeMA___seq_hash__,
-	            "->?Dint\n"
-	            "Alias for ${(this as Sequence).operator hash()}"),
-	TYPE_METHOD("__compare_eq__", &DeeMA___seq_compare_eq__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Sequence).operator == (rhs)}"),
-	TYPE_METHOD("__compare__", &DeeMA___seq_compare__,
-	            "(rhs:?S?O)->?Dint\n"
-	            "Alias for ${deemon.compare(this as Sequence, rhs)}"),
-	TYPE_METHOD("__eq__", &DeeMA___seq_eq__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Sequence) == (rhs)}"),
-	TYPE_METHOD("__ne__", &DeeMA___seq_ne__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Sequence) != (rhs)}"),
-	TYPE_METHOD("__lo__", &DeeMA___seq_lo__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Sequence) < (rhs)}"),
-	TYPE_METHOD("__le__", &DeeMA___seq_le__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Sequence) <= (rhs)}"),
-	TYPE_METHOD("__gr__", &DeeMA___seq_gr__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Sequence) > (rhs)}"),
-	TYPE_METHOD("__ge__", &DeeMA___seq_ge__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Sequence) >= (rhs)}"),
-	TYPE_METHOD("__inplace_add__", &DeeMA___seq_inplace_add__,
-	            "(rhs:?S?O)->?.\n"
-	            "Alias for ${(this as Sequence) += rhs}"),
-	TYPE_METHOD("__inplace_mul__", &DeeMA___seq_inplace_mul__,
-	            "(factor:?Dint)->?.\n"
-	            "Alias for ${(this as Sequence) *= factor}"),
+
+	/* Method hint operator invocation. */
+	TYPE_METHOD("__bool__", &DeeMA___seq_bool__, DeeMA___seq_bool___doc "\nAlias for ${!!(this as Sequence)} (s.a. ?#{op:bool})"),
+	TYPE_METHOD("__size__", &DeeMA___seq_size__, DeeMA___seq_size___doc "\nAlias for ${##(this as Sequence)} (s.a. ?#{op:size})"),
+	TYPE_METHOD("__iter__", &DeeMA___seq_iter__, "->?#Iterator\nAlias for ${(this as Sequence).operator iter()} (s.a. ?#{op:iter})"),
+	TYPE_METHOD("__getitem__", &DeeMA___seq_getitem__, DeeMA___seq_getitem___doc "\nAlias for ${(this as Sequence)[index]} (s.a. ?#{op:getitem})"),
+	TYPE_METHOD("__delitem__", &DeeMA___seq_delitem__, DeeMA___seq_delitem___doc "\nAlias for ${del (this as Sequence)[index]} (s.a. ?#{op:delitem})"),
+	TYPE_METHOD("__setitem__", &DeeMA___seq_setitem__, DeeMA___seq_setitem___doc "\nAlias for ${(this as Sequence)[index] = value} (s.a. ?#{op:setitem})"),
+	TYPE_KWMETHOD("__getrange__", &DeeMA___seq_getrange__, DeeMA___seq_getrange___doc "\nAlias for ${(this as Sequence)[start:end]} (s.a. ?#{op:getrange})"),
+	TYPE_KWMETHOD("__delrange__", &DeeMA___seq_delrange__, "(start=!0,end?:?X2?N?Dint)\nAlias for ${del (this as Sequence)[start:end]} (s.a. ?#{op:delrange})"),
+	TYPE_KWMETHOD("__setrange__", &DeeMA___seq_setrange__, "(start=!0,end?:?X2?N?Dint,values:?S?O)\nAlias for ${(this as Sequence)[start:end] = values} (s.a. ?#{op:setrange})"),
+	TYPE_METHOD("__assign__", &DeeMA___seq_assign__, DeeMA___seq_assign___doc "\nAlias for ${(this as Sequence) := items} (s.a. ?#{op:assign})"),
+	TYPE_METHOD("__hash__", &DeeMA___seq_hash__, DeeMA___seq_hash___doc "\nAlias for ${(this as Sequence).operator hash()} (s.a. ?#{op:hash})"),
+	TYPE_METHOD("__compare__", &DeeMA___seq_compare__, DeeMA___seq_compare___doc "\nAlias for ${Sequence.compare(this, rhs)} (s.a. ?#compare)"),
+	TYPE_METHOD("__compare_eq__", &DeeMA___seq_compare_eq__, "(rhs:?X2?DSequence?S?O)->?Dbool\nAlias for ${Sequence.equals(this, rhs)} (s.a. ?#equals)"),
+	TYPE_METHOD("__eq__", &DeeMA___seq_eq__, DeeMA___seq_eq___doc "\nAlias for ${(this as Sequence) == rhs} (s.a. ?#{op:eq})"),
+	TYPE_METHOD("__ne__", &DeeMA___seq_ne__, DeeMA___seq_ne___doc "\nAlias for ${(this as Sequence) != rhs} (s.a. ?#{op:ne})"),
+	TYPE_METHOD("__lo__", &DeeMA___seq_lo__, DeeMA___seq_lo___doc "\nAlias for ${(this as Sequence) < rhs} (s.a. ?#{op:lo})"),
+	TYPE_METHOD("__le__", &DeeMA___seq_le__, DeeMA___seq_le___doc "\nAlias for ${(this as Sequence) <= rhs} (s.a. ?#{op:le})"),
+	TYPE_METHOD("__gr__", &DeeMA___seq_gr__, DeeMA___seq_gr___doc "\nAlias for ${(this as Sequence) > rhs} (s.a. ?#{op:gr})"),
+	TYPE_METHOD("__ge__", &DeeMA___seq_ge__, DeeMA___seq_ge___doc "\nAlias for ${(this as Sequence) >= rhs} (s.a. ?#{op:ge})"),
+	TYPE_METHOD("__add__", &DeeMA___seq_add__, DeeMA___seq_add___doc "\nAlias for ${(this as Sequence) + rhs} (s.a. ?#{op:add})"),
+	TYPE_METHOD("__mul__", &DeeMA___seq_mul__, DeeMA___seq_mul___doc "\nAlias for ${(this as Sequence) * repeat} (s.a. ?#{op:mul})"),
+	TYPE_METHOD("__inplace_add__", &DeeMA___seq_inplace_add__, DeeMA___seq_inplace_add___doc "\nAlias for ${(this as Sequence) += rhs} (s.a. ?#{op:iadd})"),
+	TYPE_METHOD("__inplace_mul__", &DeeMA___seq_inplace_mul__, DeeMA___seq_inplace_mul___doc "\nAlias for ${(this as Sequence) *= repeat} (s.a. ?#{op:imul})"),
+	TYPE_METHOD("__enumerate__", &DeeMA___seq_enumerate__, DeeMA___seq_enumerate___doc "\nAlias for ${(this as Sequence).enumerate(cb[,start,end])} (s.a. ?#enumerate)"),
+	TYPE_METHOD("__enumerate_items__", &DeeMA___seq_enumerate_items__, DeeMA___seq_enumerate_items___doc "\nAlias for ${(this as Sequence).enumerate([start,end])} (s.a. ?#enumerate)"),
 
 	/* Old function names/deprecated functions. */
 	TYPE_METHOD("transform", &seq_map,
 	            "(mapper:?DCallable)->?DSequence\n"
 	            "Deprecated alias for ?#map"),
 	TYPE_KWMETHOD("xch", &DeeMA_Sequence_xchitem,
-	              "(index:?Dint,value)->\n"
+	              "" DeeMA_Sequence_xchitem_doc "\n"
 	              "Deprecated alias for ?#xchitem (will be removed soon)"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_METHOD("front", &seq_front_deprecated,
@@ -2602,28 +2597,249 @@ PRIVATE char const seq_doc[] =
 "bool->\n"
 "Returns ?t/?f indicative of @this Sequence being non-empty.\n"
 "#T{Requirements|Implementation~"
-/**/ "${operator bool}¹|${return !!this;}&"
-/**/ "${operator size}¹²|${return !!##this;}&"
-/**/ "${operator iter}²|${"
-/**/ /**/ "for (none: this)\n"
-/**/ /**/ "	return true;\n"
-/**/ /**/ "return false;"
+/**/ "${function __seq_bool__(): bool}" /*                    */ "|${"
+/**/ /**/ "local r = this.__seq_bool__();\n"
+/**/ /**/ "if (r !is bool)\n"
+/**/ /**/ "	throw TypeError(...);\n"
+/**/ /**/ "return !!r;"
 /**/ "}&"
-/**/ "${operator ==}¹²|${return !(this == {});}&"
-/**/ "${operator !=}¹²|${return this != {};}"
-"}"
-"#L{"
-/**/ "{¹}Only when ?A__seqclass__?DType is ?.|"
-/**/ "{²}Default implementation provided if sub-class matches requirements"
+/**/ "${operator bool} (?A__seqclass__?DType is ?.)" /*       */ "|${return !!this;}&"
+/**/ "${operator bool} (?A__seqclass__?DType is ?DSet)" /*    */ "|${return !!this;}&"
+/**/ "${operator bool} (?A__seqclass__?DType is ?DMapping)" /**/ "|${return !!this;}&"
+/**/ "?#equals" /*                                            */ "|${return !Sequence.equals(this, {});}&"
+/**/ "?Aequals?DSet" /*                                       */ "|${return !Set.equals(this, {} as Set);}&"
+/**/ "?Aequals?DMapping" /*                                   */ "|${return !Mapping.equals({} as Mapping);}&"
+/**/ "?#{op:size}" /*                                         */ "|${return !!##(this as Sequence);}"
 "}\n"
 "\n"
+
+
+"#->\n"
+"Returns the length of @this Sequence, as determinable by enumeration\n"
+"#T{Requirements|Implementation~"
+/**/ "${function __seq_size__(): int}" /*            */ "|${return this.__seq_size__();}&"
+/**/ "${operator ##} (?A__seqclass__?DType is ?.)" /**/ "|${return ##this;}&"
+/**/ "?#{op:iter}" /**/ "|${"
+/**/ /**/ "local result = 0;\n"
+/**/ /**/ "foreach (none: Sequence.__iter__(this))\n"
+/**/ /**/ "	++result;\n"
+/**/ /**/ "return result;"
+/**/ "}"
+"}\n"
+"\n"
+
+
+"iter->\n"
+"Construct an iterator for enumerating @this Sequence. "
+/**/ "The iterator may be implemented using a size+index approach.\n"
+"#T{Requirements|Implementation~"
+/**/ "${function __seq_iter__(): Iterator}" /**/ "|${return this.__seq_iter__();}&"
+/**/ "${operator iter} (any type of ?O)" /*   */ "|${return this.operator iter();}&"
+/**/ "?#{op:getitem}, ?#{op:size}" /*         */ "|${"
+/**/ /**/ "for (local i: [:Sequence.__size__(this)]) {\n"
+/**/ /**/ "	try {\n"
+/**/ /**/ "		yield Sequence.__getitem__(this, i);\n"
+/**/ /**/ "	} catch (UnboundItem from errors) {\n"
+/**/ /**/ "		continue;\n"
+/**/ /**/ "	} catch (IndexError from errors) {\n"
+/**/ /**/ "		break;\n"
+/**/ /**/ "	}\n"
+/**/ /**/ "}"
+/**/ "}&"
+/**/ "?#{op:getitem}" /*                      */ "|${"
+/**/ /**/ "for (local i = 0;; ++i) {\n"
+/**/ /**/ "	try {\n"
+/**/ /**/ "		yield Sequence.__getitem__(this, i);\n"
+/**/ /**/ "	} catch (UnboundItem) {\n"
+/**/ /**/ "		continue;\n"
+/**/ /**/ "	} catch (IndexError) {\n"
+/**/ /**/ "		break;\n"
+/**/ /**/ "	}\n"
+/**/ /**/ "}"
+/**/ "}&"
+/**/ "${operator iter} (?DSet)|${return Set.__iter__(this);}&"
+/**/ "${operator iter} (?DMapping)|${return Mapping.__iter__(this);}"
+"}\n"
+"\n"
+
+
+"[]->\n"
+"#tOverflowError{The given @index is negative}"
+"#tIndexError{The given @index is greater than the length of @this Sequence (s.a. ?#{op:size})}"
+"#tUnboundItem{The item associated with @index is unbound}"
+"Returns the @{index}th element of @this Sequence\n"
+"#T{Requirements|Implementation~"
+/**/ "${function __seq_getitem__(index: int): Object}" /**/ "|${return this.__seq_getitem__(index);}&"
+/**/ "${operator []} (?A__seqclass__?DType is ?.)" /*    */ "|${return this[index];}&"
+/**/ "?#{op:iter}" /*                                    */ "|${"
+/**/ /**/ "local i = 0;\n"
+/**/ /**/ "foreach (local v: Sequence.__iter__(this)) {\n"
+/**/ /**/ "	if (i >= index)\n"
+/**/ /**/ "		return v;\n"
+/**/ /**/ "	++i;\n"
+/**/ /**/ "}\n"
+/**/ /**/ "throw IndexError(...);"
+/**/ "}"
+"}\n"
+"\n"
+
+
+"del[]->\n"
+"#tIntegerOverflow{The given @index is negative, or too large}"
+"#tIndexError{The given @index is out of bounds}"
+"Either remove (as per ?#erase) the item under @index (?#{op:size} changes), or mark "
+/**/ "said item as unbound (?#{op:size} remains unchanged)\n"
+"#T{Requirements|Implementation~"
+/**/ "${function __seq_delitem__(index: int)}" /*       */ "|${return this.__seq_delitem__(index);}&"
+/**/ "${operator del[]} (?A__seqclass__?DType is ?.)" /**/ "|${del this[index];}&"
+/**/ "?#erase, ?#{op:size}" /*                          */ "|${"
+/**/ /**/ "if (index < 0)\n"
+/**/ /**/ "	throw IntegerOverflow(...);\n"
+/**/ /**/ "local size = Sequence.__size__(this);\n"
+/**/ /**/ "if (index >= size)\n"
+/**/ /**/ "	throw IndexError(...);\n"
+/**/ /**/ "Sequence.erase(this, index, 1);"
+/**/ "}"
+"}\n"
+"\n"
+
+
+"[]=->\n"
+"#tIntegerOverflow{The given @index is negative, or too large}"
+"#tIndexError{The given @index is out of bounds}"
+"Set the value of @index to @value\n"
+"#T{Requirements|Implementation~"
+/**/ "${function __seq_setitem__(index: int, value: Object)}" /**/ "|${return this.__seq_setitem__(index, value);}&"
+/**/ "${operator []=} (?A__seqclass__?DType is ?.)" /*          */ "|${this[index] = value;}"
+"}\n"
+"\n"
+
+
+"[:](start:?X2?N?Dint,end:?X2?N?Dint)->\n"
+"Returns a sub-range of @this Sequence, spanning across all elements from @start to @end\n"
+"If either @start or @end is smaller than ${0}, ${##this} is added once to either\n"
+"If @end is greater than the length of @this Sequence, it is clamped to its length\n"
+"When @start is greater than, or equal to @end or ${##this}, an empty Sequence is returned\n"
+"This operator is implemented similar to the following, however the actual "
+/**/ "return type may be a proxy Sequence that further optimizes the iteration "
+/**/ "strategy used, based on which operators have been implemented by sub-classes, as well "
+/**/ "as how the sub-range is accessed (i.e. ${this[10:20][3]} will invoke ${this[13]}).\n"
+"#T{Requirements|Implementation~"
+/**/ "${function __seq_getrange__(start: int | none, end: int | none)}: Sequence" /**/ "|${return this.__seq_getrange__(start, end);}&"
+/**/ "${operator [:]} (?A__seqclass__?DType is ?.)" /*                              */ "|${return this[start:end];}&"
+/**/ "?#{op:getitem}, ?#{op:size}" /*                                               */ "|${"
+/**/ /**/ "start, end = util.clamprange(start, end, Sequence.__size__(this))...;\n"
+/**/ /**/ "for (local i: [start:end]) {\n"
+/**/ /**/ "	try {\n"
+/**/ /**/ "		yield Sequence.__getitem__(this, i);\n"
+/**/ /**/ "	} catch (UnboundItem) {\n"
+/**/ /**/ "		continue;\n"
+/**/ /**/ "	} catch (IndexError) {\n"
+/**/ /**/ "		break;\n"
+/**/ /**/ "	}\n"
+/**/ /**/ "}"
+/**/ "}&"
+/**/ "?#{op:iter}, ?#{op:size}" /*                                                  */ "|${"
+/**/ /**/ "start, end = util.clamprange(start, end, Sequence.__size__(this))...;\n"
+/**/ /**/ "local it = Sequence.__iter__(this);\n"
+/**/ /**/ "Iteartor.advance(it, start);\n"
+/**/ /**/ "for (none: [start:end]) {\n"
+/**/ /**/ "	foreach (local x: it) {\n"
+/**/ /**/ "		yield x;\n"
+/**/ /**/ "		break;\n"
+/**/ /**/ "	}\n"
+/**/ /**/ "}"
+/**/ "}"
+"}\n"
+"\n"
+
+
+"del[:]->\n"
+"#tIntegerOverflow{@start or @end are too large}"
+"#tSequenceError{@this Sequence cannot be resized}"
+"Delete, or unbind all items within the given range\n"
+"#T{Requirements|Implementation~"
+/**/ "${function __seq_delrange__(start: int | none, end: int | none)}" /**/ "|${this.__seq_delrange__(start, end);}&"
+/**/ "${operator del[:]} (?A__seqclass__?DType is ?.)" /*                 */ "|${del this[start:end];}&"
+/**/ "?#{op:setrange}" /*                                                 */ "|${Sequence.__setrange__(this, start, end, none);}&"
+/**/ "?#erase, ?#{op:size}" /*                                            */ "|${"
+/**/ /**/ "start, end = util.clamprange(start, end, Sequence.__size__(this));\n"
+/**/ /**/ "if (start < end)\n"
+/**/ /**/ "	Sequence.erase(this, start, end - start);"
+/**/ "}"
+"}\n"
+"\n"
+
+
+"[:]=->\n"
+"#tIntegerOverflow{@start or @end are too large}"
+"#tSequenceError{@this Sequence is immutable, or cannot be resized}"
+"Override the given range with items from @{values}. With @values is smaller than "
+/**/ "the target range, @this sequence will be shrunk. When it is larger, it will grow. "
+/**/ "Note that unlike ?#{op:delrange}, this operator is required to resize the sequence, and "
+/**/ "is not allowed to leave items unbound.\n"
+"#T{Requirements|Implementation~"
+/**/ "${function __seq_setrange__(start: int | none, end: int | none, values: {Object...})}" /**/ "|${this.__seq_setrange__(start, end, values);}&"
+/**/ "${operator [:]=} (?A__seqclass__?DType is ?.)" /*                                        */ "|${this[start:end] = values;}&"
+/**/ "?#{op:size}, ?#erase, ?#insertall" /*                                                    */ "|${"
+/**/ /**/ "start, end = util.clamprange(start, end, Sequence.__size__(this));\n"
+/**/ /**/ "if (start < end)\n"
+/**/ /**/ "	Sequence.erase(this, start, end - start);\n"
+/**/ /**/ "Sequence.insertall(this, start, values);"
+/**/ "}"
+"}\n"
+"\n"
+
+
+":=(items:?X2?DSequence?S?O)->\n"
+"Overeride the items of @this sequence with those of @other (semantically equivalent to ${this[:] = items})\n"
+"#T{Requirements|Implementation~"
+/**/ "${function __seq_assign__(items: {Object...})}" /**/ "|${this.__seq_assign__(items);}&"
+/**/ "${operator :=} (?A__seqclass__?DType is ?.)" /*   */ "|${this[start:end] = items;}&"
+/**/ "?#{op:setrange}" /*                               */ "|${Sequence.__setrange__(this, none, none, items);}"
+"}\n"
+"\n"
+
+
+"hash->\n"
+"Returns the hash of all items of @this ?.\n"
+"#T{Requirements|Implementation~"
+/**/ "${function __seq_hash__(): int}" /*              */ "|${return this.__seq_hash__();}&"
+/**/ "${operator hash} (?A__seqclass__?DType is ?.)" /**/ "|${return this.operator hash();}&"
+/**/ "?#{op:iter}" /*                                  */ "|${"
+/**/ /**/ "local result = rt.HASHOF_EMPTY_SEQUENCE;\n"
+/**/ /**/ "foreach (local x: Sequence.__iter__(this))\n"
+/**/ /**/ "	result = deemon.hash(result, x);\n"
+/**/ /**/ "return result;"
+/**/ "}"
+"}\n"
+"\n"
+
+
+/* TODO: __seq_eq__ */
+/* TODO: __seq_ne__ */
+/* TODO: __seq_lo__ */
+/* TODO: __seq_le__ */
+/* TODO: __seq_gr__ */
+/* TODO: __seq_ge__ */
+/* TODO: __seq_add__ */
+/* TODO: __seq_mul__ */
+/* TODO: __seq_inplace_add__ */
+/* TODO: __seq_inplace_mul__ */
+/* TODO: __seq_contains__ */
+
+
+/* TODO: REWRITE DOCUMENTATION FOR EVERYTHING BELOW */
+/* TODO: REWRITE DOCUMENTATION FOR EVERYTHING BELOW */
+/* TODO: REWRITE DOCUMENTATION FOR EVERYTHING BELOW */
+
 
 "repr->\n"
 "Returns the representation of all Sequence elements, using "
 /**/ "abstract Sequence syntax\n"
 "e.g.: ${{ 10, 20, \"foo\" }}\n"
 "${"
-/**/ "operator repr(fp) {\n"
+/**/ "operator repr(fp: File) {\n"
 /**/ "	print fp: \"{ \",\n"
 /**/ "	local isFirst = true;\n"
 /**/ "	for (local item: (this as Sequence)) {\n"
@@ -2635,6 +2851,7 @@ PRIVATE char const seq_doc[] =
 /**/ "}"
 "}\n"
 "\n"
+
 
 "+(other:?DSequence)->\n"
 "Returns a proxy Sequence for accessing elements from @this "
@@ -2650,6 +2867,7 @@ PRIVATE char const seq_doc[] =
 /**/ "}"
 "}\n"
 "\n"
+
 
 "*(count:?Dint)->\n"
 "#tIntegerOverflow{@count is negative, or larger than ?ASIZE_MAX?Dint}"
@@ -2675,38 +2893,6 @@ PRIVATE char const seq_doc[] =
 "}\n"
 "\n"
 
-"hash->\n"
-"Returns the hash of all items of @this ?.\n"
-"#T{Requirements|Implementation~"
-/**/ "${operator hash}¹|${return this.operator hash();}&"
-/**/ "${operator iter}²|${"
-/**/ /**/ "local result = rt.HASHOF_EMPTY_SEQUENCE;\n"
-/**/ /**/ "for (local x: this)\n"
-/**/ /**/ "	result = deemon.hash(result, x);\n"
-/**/ /**/ "return result;"
-/**/ "}&"
-/**/ "${operator size}, ${operator getitem}¹²|${"
-/**/ /**/ "local size = ##this;\n"
-/**/ /**/ "local result = rt.HASHOF_EMPTY_SEQUENCE;\n"
-/**/ /**/ "for (local i: [:size]) {\n"
-/**/ /**/ "	local item;\n"
-/**/ /**/ "	try {\n"
-/**/ /**/ "		item = this[i];\n"
-/**/ /**/ "	} catch (UnboundItem) {\n"
-/**/ /**/ "		item = rt.HASHOF_UNBOUND_ITEM;\n"
-/**/ /**/ "	} catch (IndexError) {\n"
-/**/ /**/ "		break;\n"
-/**/ /**/ "	}\n"
-/**/ /**/ "	result = deemon.hash(result, item);\n"
-/**/ /**/ "}\n"
-/**/ /**/ "return result;"
-/**/ "}"
-"}"
-"#L{"
-/**/ "{¹}Only when ?A__seqclass__?DType is ?.|"
-/**/ "{²}Default implementation provided if sub-class matches requirements"
-"}\n"
-"\n"
 
 "<->\n"
 "<=->\n"
@@ -2832,44 +3018,6 @@ PRIVATE char const seq_doc[] =
 "}\n"
 "\n"
 
-"[]->\n"
-"#tOverflowError{The given @index is negative}"
-"#tIndexError{The given @index is greater than the length of @this Sequence (${##this})}"
-"#tUnboundItem{The item associated with @index is unbound}"
-"Returns the @{index}th element of @this Sequence, as determinable by enumeration\n"
-"#T{Requirements|Implementation~"
-/**/ "${operator getitem}¹|${return this[index];}&"
-/**/ "${operator iter}|${"
-/**/ /**/ "local i = 0;\n"
-/**/ /**/ "for (local v: this) {\n"
-/**/ /**/ "	if (i >= index)\n"
-/**/ /**/ "		return v;\n"
-/**/ /**/ "	++i;\n"
-/**/ /**/ "}\n"
-/**/ /**/ "throw IndexError(...);"
-/**/ "}"
-"}"
-"#L{"
-/**/ "{¹}Only when ?A__seqclass__?DType is ?."
-"}\n"
-"\n"
-
-"#->\n"
-"Returns the length of @this Sequence, as determinable by enumeration\n"
-"#T{Requirements|Implementation~"
-/**/ "${operator size}¹|${return #this;}&"
-/**/ "${operator iter}²|${"
-/**/ /**/ "local result = 0;\n"
-/**/ /**/ "for (none: this)\n"
-/**/ /**/ "	++result;\n"
-/**/ /**/ "return result;"
-/**/ "}&"
-"}"
-"#L{"
-/**/ "{¹}Only when ?A__seqclass__?DType is ?.|"
-/**/ "{²}Default implementation provided if sub-class matches requirements"
-"}\n"
-"\n"
 
 "contains->\n"
 "Returns ?t/?f indicative of @item being apart of @this Sequence\n"
@@ -2919,10 +3067,11 @@ PRIVATE char const seq_doc[] =
 "#L{"
 /**/ "{¹}Only when ?A__seqclass__?DType is ?.|"
 /**/ "{²}Default implementation provided if sub-class matches requirements"
-"}\n"
-"\n"
+"}"
 
 #ifdef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
+"\n"
+"\n"
 "~->?DSet\n"
 "Alias for ${(this as Set).operator ~ ()}. S.a. ?Aop:inv?DSet\n"
 "\n"
@@ -2940,207 +3089,9 @@ PRIVATE char const seq_doc[] =
 "\n"
 
 "^->?DSet\n"
-"Alias for ${(this as Set).operator ^ (other)}. S.a. ?Aop:xor?DSet\n"
-"\n"
+"Alias for ${(this as Set).operator ^ (other)}. S.a. ?Aop:xor?DSet"
 #endif /* CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
-
-"[:](start:?X2?N?Dint,end:?X2?N?Dint)->\n"
-"Returns a sub-range of @this Sequence, spanning across all elements from @start to @end\n"
-"If either @start or @end is smaller than ${0}, ${##this} is added once to either\n"
-"If @end is greater than the length of @this Sequence, it is clamped to its length\n"
-"When @start is greater than, or equal to @end or ${##this}, an empty Sequence is returned\n"
-"This operator is implemented similar to the following, however the actual "
-/**/ "return type may be a proxy Sequence that further optimizes the iteration "
-/**/ "strategy used, based on which operators have been implemented by sub-classes, as well "
-/**/ "as how the sub-range is accessed (i.e. ${this[10:20][3]} will invoke ${this[13]}).\n"
-"#T{Requirements|Implementation~"
-/**/ "${operator getrange}¹|${return this[start:end];}&"
-/**/ "${operator getitem}, ${operator size}¹²|${"
-/**/ /**/ "start, end = util.clamprange(start, end, ##this)...;\n"
-/**/ /**/ "for (local i: [start:end]) {\n"
-/**/ /**/ "	try {\n"
-/**/ /**/ "		yield this[i];\n"
-/**/ /**/ "	} catch (UnboundItem) {\n"
-/**/ /**/ "		continue;\n"
-/**/ /**/ "	} catch (IndexError) {\n"
-/**/ /**/ "		break;\n"
-/**/ /**/ "	}\n"
-/**/ /**/ "}"
-/**/ "}"
-/**/ "${operator iter}, ${operator size}²|${"
-/**/ /**/ "start, end = util.clamprange(start, end, ##this)...;\n"
-/**/ /**/ "local it = this.operator iter();\n"
-/**/ /**/ "for (none: [:start]) {\n"
-/**/ /**/ "	foreach (none: it)\n"
-/**/ /**/ "		break;\n"
-/**/ /**/ "}\n"
-/**/ /**/ "for (none: [start:end]) {\n"
-/**/ /**/ "	foreach (local x: it) {\n"
-/**/ /**/ "		yield x;\n"
-/**/ /**/ "		break;\n"
-/**/ /**/ "	}\n"
-/**/ /**/ "}"
-/**/ "}"
-"}"
-"#L{"
-/**/ "{¹}Only when ?A__seqclass__?DType is ?.|"
-/**/ "{²}Default implementation provided if sub-class matches requirements"
-"}\n"
-"\n"
-
-"iter->\n"
-"Returns a general-purpose Iterator using ${operator []} (getitem) and ${operator ##} (size) "
-/**/ "to enumerate a Sequence that is implemented using a size+index approach\n"
-"#T{Requirements|Implementation~"
-/**/ "${operator iter}|${return this.operator iter();}&"
-/**/ "${operator getitem}, ${operator size}¹²|${"
-/**/ /**/ "local size = ##this;\n"
-/**/ /**/ "for (local i: [:size]) {\n"
-/**/ /**/ "	local item;\n"
-/**/ /**/ "	try {\n"
-/**/ /**/ "		item = this[i];\n"
-/**/ /**/ "	} catch (UnboundItem) {\n"
-/**/ /**/ "		continue;\n"
-/**/ /**/ "	} catch (IndexError) {\n"
-/**/ /**/ "		break;\n"
-/**/ /**/ "	}\n"
-/**/ /**/ "	yield item;\n"
-/**/ /**/ "}\n"
-/**/ /**/ "return false;"
-/**/ "}&"
-/**/ "${operator getitem}¹²|${"
-/**/ /**/ "for (local i = 0;; ++i) {\n"
-/**/ /**/ "	local item;\n"
-/**/ /**/ "	try {\n"
-/**/ /**/ "		item = this[i];\n"
-/**/ /**/ "	} catch (UnboundItem) {\n"
-/**/ /**/ "		continue;\n"
-/**/ /**/ "	} catch (IndexError) {\n"
-/**/ /**/ "		break;\n"
-/**/ /**/ "	}\n"
-/**/ /**/ "	yield item;\n"
-/**/ /**/ "}\n"
-/**/ /**/ "return false;"
-/**/ "}"
-"}"
-"#L{"
-/**/ "{¹}Only when ?A__seqclass__?DType is ?.|"
-/**/ "{²}Default implementation provided if sub-class matches requirements"
-"}\n"
-"\n"
-
-":=->\n"
-"Alias for ${this[:] = other}\n"
-"\n"
-
-"del[]->\n"
-"#tIntegerOverflow{The given @index is negative, or too large}"
-"#tIndexError{The given @index is out of bounds}"
-"Either remove (as per ?#erase) the item under @index (?#{op:size} changes), or mark "
-/**/ "said item as unbound (?#{op:size} remains unchanged)\n"
-"#T{Requirements|Implementation~"
-/**/ "${operator delitem}¹|${del this[index];}"
-"}"
-"#L{"
-/**/ "{¹}Only when ?A__seqclass__?DType is ?."
-"}\n"
-"\n"
-
-"[]=->\n"
-"#tIntegerOverflow{The given @index is negative, or too large}"
-"#tIndexError{The given @index is out of bounds}"
-"Set the value of @index to @value\n"
-"#T{Requirements|Implementation~"
-/**/ "${operator setitem}¹|${this[index] = value;}"
-"}"
-"#L{"
-/**/ "{¹}Only when ?A__seqclass__?DType is ?."
-"}\n"
-"\n"
-
-"del[:]->\n"
-"#tIntegerOverflow{@start or @end are too large}"
-"#tSequenceError{@this Sequence cannot be resized}"
-"Delete, or unbind all items within the given range\n"
-"#T{Requirements|Implementation~"
-/**/ "${operator delrange}¹|${del this[start:end];}&"
-/**/ "${operator setrange}¹²|${this[start:end] = none;}&"
-/**/ "${operator size}, ${function erase}¹²|${"
-/**/ /**/ "start, end = util.clamprange(start, end, ##this);\n"
-/**/ /**/ "if (start < end)\n"
-/**/ /**/ "	this.erase(start, end - start);"
-/**/ "}&"
-/**/ "${operator size}, ${function pop}¹²|${"
-/**/ /**/ "start, end = util.clamprange(start, end, ##this);\n"
-/**/ /**/ "if (start < end) {\n"
-/**/ /**/ "	while (end > start) {\n"
-/**/ /**/ "		--end\n"
-/**/ /**/ "		this.pop(end);\n"
-/**/ /**/ "	}\n"
-/**/ /**/ "}"
-/**/ "}&"
-/**/ "${operator size}, ${operator delitem}¹²|${"
-/**/ /**/ "start, end = util.clamprange(start, end, ##this);\n"
-/**/ /**/ "if (start < end) {\n"
-/**/ /**/ "	while (end > start) {\n"
-/**/ /**/ "		--end\n"
-/**/ /**/ "		del this[end];\n"
-/**/ /**/ "	}\n"
-/**/ /**/ "}"
-/**/ "}"
-"}"
-"#L{"
-/**/ "{¹}Only when ?A__seqclass__?DType is ?.|"
-/**/ "{²}Default implementation provided if sub-class matches requirements"
-"}\n"
-"\n"
-
-"[:]=->\n"
-"#tIntegerOverflow{@start or @end are too large}"
-"#tSequenceError{@this Sequence is immutable, or cannot be resized}"
-"Override the given range with items from @{values}. With @values is smaller than "
-/**/ "the target range, @this sequence will be shrunk. When it is larger, it will grow. "
-/**/ "Note that unlike ?#{op:delrange}, this operator is required to resize the sequence, and "
-/**/ "is not allowed to leave items unbound.\n"
-"#T{Requirements|Implementation~"
-/**/ "${operator setrange}¹|${this[start:end] = values;}&"
-/**/ "${operator size}, ${function erase}, ${function insertall}¹²|${"
-/**/ /**/ "start, end = util.clamprange(start, end, ##this);\n"
-/**/ /**/ "if (start < end)\n"
-/**/ /**/ "	this.erase(start, end - start);\n"
-/**/ /**/ "this.insertall(start, values);"
-/**/ "}&"
-/**/ "${operator size}, ${function pop}, ${function insertall}¹²|${"
-/**/ /**/ "start, end = util.clamprange(start, end, ##this);\n"
-/**/ /**/ "if (start < end) {\n"
-/**/ /**/ "	while (end > start) {\n"
-/**/ /**/ "		--end\n"
-/**/ /**/ "		this.pop(end);\n"
-/**/ /**/ "	}\n"
-/**/ /**/ "}\n"
-/**/ /**/ "this.insertall(start, values);"
-/**/ "}&"
-/**/ "${operator size}, ${function erase}, ${function insert}¹²|${"
-/**/ /**/ "start, end = util.clamprange(start, end, ##this);\n"
-/**/ /**/ "if (start < end)\n"
-/**/ /**/ "	this.erase(start, end - start);\n"
-/**/ /**/ "for (local v: values)\n"
-/**/ /**/ "	this.insert(start++, v);"
-/**/ "}&"
-/**/ "${operator size}, ${function pop}, ${function insert}¹²|${"
-/**/ /**/ "start, end = util.clamprange(start, end, ##this);\n"
-/**/ /**/ "if (start < end) {\n"
-/**/ /**/ "	while (end > start) {\n"
-/**/ /**/ "		--end\n"
-/**/ /**/ "		this.pop(end);\n"
-/**/ /**/ "	}\n"
-/**/ /**/ "}\n"
-/**/ /**/ "for (local v: values)\n"
-/**/ /**/ "	this.insert(start++, v);"
-/**/ "}&"
-"}"
-"#B{¹}: Only when ?A__seqclass__?DType is ?.\n"
-"#B{²}: Default implementation provided if sub-class matches requirements";
+"";
 #endif /* !CONFIG_NO_DOC */
 
 
