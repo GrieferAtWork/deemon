@@ -98,8 +98,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsegiter_init(BytesSegmentsIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	BytesSegments *seg;
-	if (DeeArg_Unpack(argc, argv, "o:_BytesSegmentsIterator", &seg))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_BytesSegmentsIterator", &seg);
 	if (DeeObject_AssertTypeExact(seg, &BytesSegments_Type))
 		goto err;
 	self->b_str = seg->b_str;

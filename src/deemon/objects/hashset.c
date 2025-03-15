@@ -1442,8 +1442,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashsetiterator_init(HashSetIterator *__restrict self,
                      size_t argc, DeeObject *const *argv) {
 	HashSet *set;
-	if (DeeArg_Unpack(argc, argv, "o:_HashSetIterator", &set))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_HashSetIterator", &set);
 	if (DeeObject_AssertType(set, &DeeHashSet_Type))
 		goto err;
 	self->hsi_set = set;
@@ -1934,8 +1933,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashset_init(HashSet *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	if unlikely(DeeArg_Unpack(argc, argv, "o:HashSet", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "HashSet", &seq);
 	return hashset_init_sequence(self, seq);
 err:
 	return -1;

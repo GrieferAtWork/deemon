@@ -313,8 +313,7 @@ PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_empty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
-	if (DeeArg_Unpack(argc, argv, ":empty"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "empty");
 	result = DeeObject_InvokeMethodHint(seq_operator_bool, self);
 	if unlikely(result < 0)
 		goto err;
@@ -325,8 +324,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_front_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":front"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "front");
 	return DeeObject_InvokeMethodHint(seq_getfirst, self);
 err:
 	return NULL;
@@ -334,8 +332,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_back_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":back"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "back");
 	return DeeObject_InvokeMethodHint(seq_getlast, self);
 err:
 	return NULL;
@@ -345,8 +342,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_filter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *pred_keep;
-	if (DeeArg_Unpack(argc, argv, "o:filter", &pred_keep))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "filter", &pred_keep);
 	return DeeSeq_Filter(self, pred_keep);
 err:
 	return NULL;
@@ -355,8 +351,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_ubfilter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *pred_keep;
-	if (DeeArg_Unpack(argc, argv, "o:ubfilter", &pred_keep))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "ubfilter", &pred_keep);
 	return DeeSeq_FilterAsUnbound(self, pred_keep);
 err:
 	return NULL;
@@ -365,8 +360,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_map(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *mapper;
-	if (DeeArg_Unpack(argc, argv, "o:map", &mapper))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "map", &mapper);
 	return DeeSeq_Map(self, mapper);
 err:
 	return NULL;
@@ -702,8 +696,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_front' */
 seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":popfront"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "popfront");
 	return DeeObject_InvokeMethodHint(seq_pop, self, 0);
 err:
 	return NULL;
@@ -711,8 +704,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_back' */
 seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":popback"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "popback");
 	return DeeObject_InvokeMethodHint(seq_pop, self, -1);
 err:
 	return NULL;
@@ -2391,8 +2383,7 @@ seq_class_range(DeeObject *UNUSED(self),
 	 *  behavior from a core function (since `Sequence' is a
 	 *  builtin type like `List', `Tuple', etc.). */
 	DeeObject *start, *end = NULL, *step = NULL, *result;
-	if (DeeArg_Unpack(argc, argv, "o|oo:range", &start, &end, &step))
-		goto err;
+	_DeeArg_Unpack1Or2Or3(err, argc, argv, "range", &start, &end, &step);
 	if (end)
 		return DeeRange_New(start, end, step);
 	/* Use a default-constructed instance of `type(start)' for the real start. */

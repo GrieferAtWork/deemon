@@ -93,8 +93,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_init, NULL, NULL) {
 	DeeObject *args;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cinit"), &args))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cinit"), &args);
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err;
 	if unlikely((*tp_self->st_init)(tp_self, DeeStruct_Data(self),
@@ -111,8 +110,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_assign, NULL, NULL) {
 	DeeObject *value;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cassign"), &value))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cassign"), &value);
 	if unlikely((*tp_self->st_assign)(tp_self, DeeStruct_Data(self), value))
 		goto err;
 	return_none;
@@ -124,8 +122,7 @@ err:
 DEFINE_OPERATOR_INVOKE(stype_operator_str, NULL, NULL) {
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("cstr")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("cstr"));
 	return (*tp_self->st_cast.st_str)(tp_self, DeeStruct_Data(self));
 err:
 	return NULL;
@@ -135,8 +132,7 @@ err:
 DEFINE_OPERATOR_INVOKE(stype_operator_repr, NULL, NULL) {
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("crepr")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("crepr"));
 	return (*tp_self->st_cast.st_repr)(tp_self, DeeStruct_Data(self));
 err:
 	return NULL;
@@ -147,8 +143,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_bool, NULL, NULL) {
 	int result;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("cbool")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("cbool"));
 	result = (*tp_self->st_cast.st_bool)(tp_self, DeeStruct_Data(self));
 	if unlikely(result < 0)
 		goto err;
@@ -162,8 +157,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_call, NULL, NULL) {
 	DeeObject *args;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ccall"), &args))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("ccall"), &args);
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err;
 	return (*tp_self->st_call)(tp_self, DeeStruct_Data(self),
@@ -443,8 +437,7 @@ do_DeeSType_InheritCInt(DeeSTypeObject *__restrict self,
 DEFINE_OPERATOR_INVOKE(stype_operator_int, NULL, &do_DeeSType_InheritCInt) {
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("cbool")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("cbool"));
 	return (*tp_self->st_math->st_int)(tp_self, DeeStruct_Data(self));
 err:
 	return NULL;
@@ -455,8 +448,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_double, NULL, &do_DeeSType_InheritCInt) {
 	double value;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("cdouble")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("cdouble"));
 	if unlikely((*tp_self->st_math->st_double)(tp_self, DeeStruct_Data(self), &value))
 		goto err;
 	return DeeFloat_New(value);
@@ -468,8 +460,7 @@ err:
 DEFINE_OPERATOR_INVOKE(stype_operator_inv, NULL, NULL) {
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("cinv")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("cinv"));
 	return (*tp_self->st_math->st_inv)(tp_self, DeeStruct_Data(self));
 err:
 	return NULL;
@@ -479,8 +470,7 @@ err:
 DEFINE_OPERATOR_INVOKE(stype_operator_pos, NULL, NULL) {
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("cpos")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("cpos"));
 	return (*tp_self->st_math->st_pos)(tp_self, DeeStruct_Data(self));
 err:
 	return NULL;
@@ -490,8 +480,7 @@ err:
 DEFINE_OPERATOR_INVOKE(stype_operator_neg, NULL, NULL) {
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("cneg")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("cneg"));
 	return (*tp_self->st_math->st_neg)(tp_self, DeeStruct_Data(self));
 err:
 	return NULL;
@@ -502,8 +491,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_add, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cadd"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cadd"), &other);
 	return (*tp_self->st_math->st_add)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -514,8 +502,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_sub, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("csub"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("csub"), &other);
 	return (*tp_self->st_math->st_sub)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -526,8 +513,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_mul, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cmul"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cmul"), &other);
 	return (*tp_self->st_math->st_mul)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -538,8 +524,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_div, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cdiv"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cdiv"), &other);
 	return (*tp_self->st_math->st_div)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -550,8 +535,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_mod, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cmod"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cmod"), &other);
 	return (*tp_self->st_math->st_mod)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -562,8 +546,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_shl, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cshl"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cshl"), &other);
 	return (*tp_self->st_math->st_shl)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -574,8 +557,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_shr, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cshr"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cshr"), &other);
 	return (*tp_self->st_math->st_shr)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -586,8 +568,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_and, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cand"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cand"), &other);
 	return (*tp_self->st_math->st_and)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -598,8 +579,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_or, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cor"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cor"), &other);
 	return (*tp_self->st_math->st_or)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -610,8 +590,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_xor, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cxor"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cxor"), &other);
 	return (*tp_self->st_math->st_xor)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -622,8 +601,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_pow, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cpow"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cpow"), &other);
 	return (*tp_self->st_math->st_pow)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -633,8 +611,7 @@ err:
 DEFINE_OPERATOR_INVOKE(stype_operator_inc, NULL, NULL) {
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("cinc")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("cinc"));
 	if unlikely((*tp_self->st_math->st_inc)(tp_self, DeeStruct_Data(self)))
 		goto err;
 	return_reference_(self);
@@ -646,8 +623,7 @@ err:
 DEFINE_OPERATOR_INVOKE(stype_operator_dec, NULL, NULL) {
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("cdec")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("cdec"));
 	if unlikely((*tp_self->st_math->st_dec)(tp_self, DeeStruct_Data(self)))
 		goto err;
 	return_reference_(self);
@@ -660,8 +636,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_inplace_add, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ciadd"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("ciadd"), &other);
 	if unlikely((*tp_self->st_math->st_add)(tp_self, DeeStruct_Data(self), other))
 		goto err;
 	return_reference_(self);
@@ -674,8 +649,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_inplace_sub, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cisub"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cisub"), &other);
 	if unlikely((*tp_self->st_math->st_sub)(tp_self, DeeStruct_Data(self), other))
 		goto err;
 	return_reference_(self);
@@ -688,8 +662,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_inplace_mul, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cimul"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cimul"), &other);
 	if unlikely((*tp_self->st_math->st_mul)(tp_self, DeeStruct_Data(self), other))
 		goto err;
 	return_reference_(self);
@@ -702,8 +675,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_inplace_div, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cidiv"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cidiv"), &other);
 	if unlikely((*tp_self->st_math->st_div)(tp_self, DeeStruct_Data(self), other))
 		goto err;
 	return_reference_(self);
@@ -716,8 +688,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_inplace_mod, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cimod"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cimod"), &other);
 	if unlikely((*tp_self->st_math->st_mod)(tp_self, DeeStruct_Data(self), other))
 		goto err;
 	return_reference_(self);
@@ -730,8 +701,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_inplace_shl, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cishl"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cishl"), &other);
 	if unlikely((*tp_self->st_math->st_shl)(tp_self, DeeStruct_Data(self), other))
 		goto err;
 	return_reference_(self);
@@ -744,8 +714,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_inplace_shr, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cishr"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cishr"), &other);
 	if unlikely((*tp_self->st_math->st_shr)(tp_self, DeeStruct_Data(self), other))
 		goto err;
 	return_reference_(self);
@@ -758,8 +727,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_inplace_and, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ciand"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("ciand"), &other);
 	if unlikely((*tp_self->st_math->st_and)(tp_self, DeeStruct_Data(self), other))
 		goto err;
 	return_reference_(self);
@@ -772,8 +740,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_inplace_or, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cior"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cior"), &other);
 	if unlikely((*tp_self->st_math->st_or)(tp_self, DeeStruct_Data(self), other))
 		goto err;
 	return_reference_(self);
@@ -786,8 +753,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_inplace_xor, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cixor"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cixor"), &other);
 	if unlikely((*tp_self->st_math->st_xor)(tp_self, DeeStruct_Data(self), other))
 		goto err;
 	return_reference_(self);
@@ -800,8 +766,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_inplace_pow, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cipow"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cipow"), &other);
 	if unlikely((*tp_self->st_math->st_pow)(tp_self, DeeStruct_Data(self), other))
 		goto err;
 	return_reference_(self);
@@ -814,8 +779,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_eq, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ceq"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("ceq"), &other);
 	return (*tp_self->st_cmp->st_eq)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -826,8 +790,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_ne, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cne"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cne"), &other);
 	return (*tp_self->st_cmp->st_ne)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -838,8 +801,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_lo, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("clo"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("clo"), &other);
 	return (*tp_self->st_cmp->st_lo)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -850,8 +812,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_le, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cle"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cle"), &other);
 	return (*tp_self->st_cmp->st_le)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -862,8 +823,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_gr, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cgr"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cgr"), &other);
 	return (*tp_self->st_cmp->st_gr)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -874,8 +834,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_ge, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cge"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cge"), &other);
 	return (*tp_self->st_cmp->st_ge)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -885,8 +844,7 @@ err:
 DEFINE_OPERATOR_INVOKE(stype_operator_iter, NULL, NULL) {
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("citer")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("citer"));
 	return (*tp_self->st_seq->st_iter_self)(tp_self, DeeStruct_Data(self));
 err:
 	return NULL;
@@ -896,8 +854,7 @@ err:
 DEFINE_OPERATOR_INVOKE(stype_operator_size, NULL, NULL) {
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("csize")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("csize"));
 	return (*tp_self->st_seq->st_size)(tp_self, DeeStruct_Data(self));
 err:
 	return NULL;
@@ -908,8 +865,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_contains, NULL, NULL) {
 	DeeObject *other;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ccontains"), &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("ccontains"), &other);
 	return (*tp_self->st_seq->st_contains)(tp_self, DeeStruct_Data(self), other);
 err:
 	return NULL;
@@ -920,8 +876,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_getitem, NULL, NULL) {
 	DeeObject *index;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cgetitem"), &index))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cgetitem"), &index);
 	return (*tp_self->st_seq->st_get)(tp_self, DeeStruct_Data(self), index);
 err:
 	return NULL;
@@ -932,8 +887,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_delitem, NULL, NULL) {
 	DeeObject *index;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cdelitem"), &index))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cdelitem"), &index);
 	if unlikely((*tp_self->st_seq->st_del)(tp_self, DeeStruct_Data(self), index))
 		goto err;
 	return_none;
@@ -946,8 +900,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_setitem, NULL, NULL) {
 	DeeObject *index, *value;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("csetitem"), &index, &value))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, OPNAME("csetitem"), &index, &value);
 	if unlikely((*tp_self->st_seq->st_set)(tp_self, DeeStruct_Data(self), index, value))
 		goto err;
 	return_none;
@@ -960,8 +913,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_getrange, NULL, NULL) {
 	DeeObject *start, *end;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("cgetrange"), &start, &end))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, OPNAME("cgetrange"), &start, &end);
 	return (*tp_self->st_seq->st_range_get)(tp_self, DeeStruct_Data(self), start, end);
 err:
 	return NULL;
@@ -972,8 +924,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_delrange, NULL, NULL) {
 	DeeObject *start, *end;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("cdelrange"), &start, &end))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, OPNAME("cdelrange"), &start, &end);
 	if unlikely((*tp_self->st_seq->st_range_del)(tp_self, DeeStruct_Data(self), start, end))
 		goto err;
 	return_none;
@@ -986,8 +937,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_setrange, NULL, NULL) {
 	DeeObject *start, *end, *value;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "ooo:" OPNAME("csetrange"), &start, &end, &value))
-		goto err;
+	_DeeArg_Unpack3(err, argc, argv, OPNAME("csetrange"), &start, &end, &value);
 	if unlikely((*tp_self->st_seq->st_range_set)(tp_self, DeeStruct_Data(self), start, end, value))
 		goto err;
 	return_none;
@@ -1001,8 +951,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_getattr, NULL, NULL) {
 	DeeObject *attr;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cgetattr"), &attr))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cgetattr"), &attr);
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
 	result = (*tp_self->st_attr->st_getattr)(tp_self, DeeStruct_Data(self), attr);
@@ -1019,8 +968,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_delattr, NULL, NULL) {
 	int error;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("cdelattr"), &attr))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, OPNAME("cdelattr"), &attr);
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
 	error = (*tp_self->st_attr->st_delattr)(tp_self, DeeStruct_Data(self), attr);
@@ -1041,8 +989,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_setattr, NULL, NULL) {
 	int error;
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("csetattr"), &attr, &value))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, OPNAME("csetattr"), &attr, &value);
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
 	error = (*tp_self->st_attr->st_setattr)(tp_self, DeeStruct_Data(self), attr, value);
@@ -1062,8 +1009,7 @@ DEFINE_OPERATOR_INVOKE(stype_operator_enumattr, NULL, NULL) {
 	DeeObject *args[2];
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("cenumattr")))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, OPNAME("cenumattr"));
 	args[0] = (DeeObject *)tp_self;
 	args[1] = self;
 	return DeeObject_New(&DeeEnumAttr_Type, 2, args);

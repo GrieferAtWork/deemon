@@ -224,8 +224,7 @@ f_ctypes_sizeof(size_t argc, DeeObject *const *argv) {
 	DeeSTypeObject *type;
 	DeeObject *arg;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "o:sizeof", &arg))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "sizeof", &arg);
 	if (DeeStruct_Check(arg)) {
 		type = DeeType_AsSType(Dee_TYPE(arg));
 	} else {
@@ -248,8 +247,7 @@ f_ctypes_alignof(size_t argc, DeeObject *const *argv) {
 	DeeSTypeObject *type;
 	DeeObject *arg;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "o:alignof", &arg))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "alignof", &arg);
 	if (DeeStruct_Check(arg)) {
 		type = DeeType_AsSType(Dee_TYPE(arg));
 	} else {
@@ -360,8 +358,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_union(size_t argc, DeeObject *const *argv) {
 	DeeObject *fields;
-	if (DeeArg_Unpack(argc, argv, "o:union", &fields))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "union", &fields);
 	return (DREF DeeObject *)DeeStructType_FromSequence(NULL, fields, STRUCT_TYPE_FUNION);
 err:
 	return NULL;

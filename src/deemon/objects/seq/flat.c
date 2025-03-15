@@ -1017,8 +1017,7 @@ PRIVATE NONNULL((1)) int DCALL
 sfi_init(SeqFlatIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	SeqFlat *flat;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqFlatIterator", &flat))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SeqFlatIterator", &flat);
 	if (DeeObject_AssertTypeExact(flat, &SeqFlat_Type))
 		goto err;
 	return sfi_inititer_withseq(self, flat->sf_seq);

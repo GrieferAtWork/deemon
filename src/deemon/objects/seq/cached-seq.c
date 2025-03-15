@@ -159,8 +159,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswi_init(CachedSeq_WithIter *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_CachedSeqWithIter", &self->cswi_iter))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_CachedSeqWithIter", &self->cswi_iter);
 	Dee_Incref(self->cswi_iter);
 	Dee_atomic_lock_init(&self->cswi_lock);
 	objectlist_init(&self->cswi_cache);
@@ -520,7 +519,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cswi_populate(CachedSeq_WithIter *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	size_t count = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, ":populate", &count))
+	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ ":populate", &count))
 		goto err;
 	if likely(count) {
 		--count;

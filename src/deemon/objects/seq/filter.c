@@ -86,8 +86,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 filteriterator_init(FilterIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
 	Filter *filter;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqFilterIterator", &filter))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SeqFilterIterator", &filter);
 	if (DeeObject_AssertTypeExact(filter, &SeqFilter_Type))
 		goto err;
 	self->fi_iter = DeeObject_InvokeMethodHint(seq_operator_iter, filter->f_seq);

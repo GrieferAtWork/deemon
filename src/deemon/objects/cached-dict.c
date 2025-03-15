@@ -1033,8 +1033,7 @@ cdict_bool(CachedDict *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cdict_init(CachedDict *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	if unlikely(DeeArg_Unpack(argc, argv, "o:CachedDict", &self->cd_map))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "CachedDict", &self->cd_map);
 	self->cd_mask = 0;
 	self->cd_size = 0;
 	self->cd_elem = empty_cdict_items;

@@ -97,8 +97,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_init(StringSegmentsIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	StringSegments *seg;
-	if (DeeArg_Unpack(argc, argv, "o:_StringSegmentsIterator", &seg))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_StringSegmentsIterator", &seg);
 	if (DeeObject_AssertTypeExact(seg, &StringSegments_Type))
 		goto err;
 	self->s_str   = seg->s_str;

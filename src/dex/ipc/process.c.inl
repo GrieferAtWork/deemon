@@ -915,10 +915,9 @@ process_init(Process *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeObject *exe_or_cmdline_or_pid, *proc_argv = NULL;
 	self->p_envp = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|oo:Process",
-	                  &exe_or_cmdline_or_pid,
-	                  &proc_argv, &self->p_envp))
-		goto err;
+	_DeeArg_Unpack1Or2Or3(err, argc, argv, "Process",
+	                      &exe_or_cmdline_or_pid,
+	                      &proc_argv, &self->p_envp);
 	if (proc_argv) {
 #ifdef ipc_Process_USE_CreateProcessW
 		self->p_cmdline = ipc_argv2cmdline(proc_argv);
@@ -3920,8 +3919,7 @@ process_getpid_or_unlock(Process *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_start(Process *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	if (DeeArg_Unpack(argc, argv, ":start"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "start");
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_start_impl(self);
@@ -3957,8 +3955,7 @@ ipc_throw_process_already_joined(Process *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_join(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, status;
-	if (DeeArg_Unpack(argc, argv, ":join"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "join");
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_join_impl(self, (uint64_t)-1, &status);
@@ -3976,8 +3973,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_tryjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, status;
-	if (DeeArg_Unpack(argc, argv, ":tryjoin"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "tryjoin");
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_join_impl(self, 0, &status);
@@ -4021,8 +4017,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	if (DeeArg_Unpack(argc, argv, ":detach"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "detach");
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_detach_impl(self);
@@ -5264,8 +5259,7 @@ PRIVATE struct type_member tpconst process_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_class_self(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":self"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "self");
 	return_reference_((DeeObject *)&this_process);
 err:
 	return NULL;

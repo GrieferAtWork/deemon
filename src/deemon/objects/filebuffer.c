@@ -1501,13 +1501,17 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_init_operator(Buffer *__restrict self,
                      size_t argc, DeeObject *const *argv) {
 	uint16_t mode = (FILE_BUFFER_MODE_AUTO);
-	DeeObject *file;
-	char const *mode_str = NULL;
-	size_t size          = 0;
-	if (DeeArg_Unpack(argc, argv, "o|sd:_FileBuffer", &file, &mode_str, &size))
+	struct {
+		DeeObject *file;
+		char const *mode_str;
+		size_t size;
+	} args;
+	args.mode_str = NULL;
+	args.size     = 0;
+	if (DeeArg_UnpackStruct(argc, argv, "o|sd:_FileBuffer", &args))
 		goto err;
-	if (mode_str) {
-		char const *mode_iter = mode_str;
+	if (args.mode_str) {
+		char const *mode_iter = args.mode_str;
 		unsigned int i;
 		union {
 			char chrs[4];
@@ -1589,11 +1593,11 @@ buffer_init_operator(Buffer *__restrict self,
 			break;
 		}
 	}
-	return buffer_init(self, file, mode, size);
+	return buffer_init(self, args.file, mode, args.size);
 err_invalid_mode:
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Unrecognized buffer mode `%s'",
-	                mode_str);
+	                args.mode_str);
 err:
 	return -1;
 }
@@ -1691,8 +1695,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_flush(Buffer *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	if (DeeArg_Unpack(argc, argv, ":flush"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "flush");
 	if (DeeFileBuffer_LockWrite(self))
 		goto err;
 	/* Synchronize the buffer, but don't synchronize its file. */
@@ -1870,8 +1873,7 @@ PRIVATE struct type_getset tpconst buffer_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_class_sync(DeeObject *UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":sync"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "sync");
 	if (DeeFileBuffer_SyncTTYs(NULL) < 0)
 		goto err;
 #ifdef DEESYSTEM_FILE_USE_STDIO

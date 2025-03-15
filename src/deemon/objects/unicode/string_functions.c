@@ -4316,8 +4316,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_join(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	struct string_join_data data;
-	if (DeeArg_Unpack(argc, argv, "o:join", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "join", &seq);
 	unicode_printer_init(&data.sjd_out);
 	data.sjd_sep   = self;
 	data.sjd_first = true;
@@ -4333,8 +4332,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_unifylines(String *self, size_t argc, DeeObject *const *argv) {
 	String *replacement = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:unifylines", &replacement))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "unifylines", &replacement);
 	if likely(!replacement)
 		return DeeString_UnifyLinesLf(self);
 	if (DeeObject_AssertTypeExact(replacement, &DeeString_Type))
@@ -5004,8 +5002,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_strip(String *self, size_t argc, DeeObject *const *argv) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:strip", &mask))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "strip", &mask);
 	if (!mask)
 		return DeeString_StripSpc(self);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
@@ -5052,8 +5049,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casestrip(String *self, size_t argc, DeeObject *const *argv) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:casestrip", &mask))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "casestrip", &mask);
 	if (!mask)
 		return DeeString_StripSpc(self);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
@@ -5100,8 +5096,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_sstrip(String *self, size_t argc, DeeObject *const *argv) {
 	String *needle;
-	if (DeeArg_Unpack(argc, argv, "o:sstrip", &needle))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "sstrip", &needle);
 	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	return DeeString_SStrip(self, needle);
@@ -5142,8 +5137,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casesstrip(String *self, size_t argc, DeeObject *const *argv) {
 	String *needle;
-	if (DeeArg_Unpack(argc, argv, "o:casesstrip", &needle))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "casesstrip", &needle);
 	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	return DeeString_CaseSStrip(self, needle);
@@ -5184,8 +5178,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_striplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:striplines", &mask))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "striplines", &mask);
 	if (!mask)
 		return DeeString_StripLinesSpc(self);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
@@ -5198,8 +5191,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:lstriplines", &mask))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "lstriplines", &mask);
 	if (!mask)
 		return DeeString_LStripLinesSpc(self);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
@@ -5212,8 +5204,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:rstriplines", &mask))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "rstriplines", &mask);
 	if (!mask)
 		return DeeString_RStripLinesSpc(self);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
@@ -5226,8 +5217,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casestriplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:casestriplines", &mask))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "casestriplines", &mask);
 	if (!mask)
 		return DeeString_StripLinesSpc(self);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
@@ -5240,8 +5230,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:caselstriplines", &mask))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "caselstriplines", &mask);
 	if (!mask)
 		return DeeString_LStripLinesSpc(self);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
@@ -5254,8 +5243,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caserstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:caserstriplines", &mask))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "caserstriplines", &mask);
 	if (!mask)
 		return DeeString_RStripLinesSpc(self);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
@@ -5268,8 +5256,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_sstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *needle;
-	if (DeeArg_Unpack(argc, argv, "o:sstriplines", &needle))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "sstriplines", &needle);
 	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	return DeeString_SStripLines(self, needle);
@@ -5280,8 +5267,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lsstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *needle;
-	if (DeeArg_Unpack(argc, argv, "o:lsstriplines", &needle))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "lsstriplines", &needle);
 	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	return DeeString_LSStripLines(self, needle);
@@ -5292,8 +5278,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rsstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *needle;
-	if (DeeArg_Unpack(argc, argv, "o:rsstriplines", &needle))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "rsstriplines", &needle);
 	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	return DeeString_RSStripLines(self, needle);
@@ -5304,8 +5289,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casesstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *needle;
-	if (DeeArg_Unpack(argc, argv, "o:casesstriplines", &needle))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "casesstriplines", &needle);
 	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	return DeeString_CaseSStripLines(self, needle);
@@ -5316,8 +5300,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselsstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *needle;
-	if (DeeArg_Unpack(argc, argv, "o:caselsstriplines", &needle))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "caselsstriplines", &needle);
 	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	return DeeString_CaseLSStripLines(self, needle);
@@ -5328,8 +5311,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casersstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	String *needle;
-	if (DeeArg_Unpack(argc, argv, "o:casersstriplines", &needle))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "casersstriplines", &needle);
 	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	return DeeString_CaseRSStripLines(self, needle);
@@ -7353,8 +7335,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeString_CaseSplit(String 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_split(String *self, size_t argc, DeeObject *const *argv) {
 	String *other;
-	if (DeeArg_Unpack(argc, argv, "o:split", &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "split", &other);
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
 	return DeeString_Split(self, other);
@@ -7365,8 +7346,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casesplit(String *self, size_t argc, DeeObject *const *argv) {
 	String *other;
-	if (DeeArg_Unpack(argc, argv, "o:casesplit", &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "casesplit", &other);
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
 	return DeeString_CaseSplit(self, other);
@@ -7390,8 +7370,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_indent(String *self, size_t argc, DeeObject *const *argv) {
 	String *filler = &str_tab;
-	if (DeeArg_Unpack(argc, argv, "|o:indent", &filler))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "indent", &filler);
 	if (DeeObject_AssertTypeExact(filler, &DeeString_Type))
 		goto err;
 	return DeeString_Indent(self, filler);
@@ -7418,8 +7397,7 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 string_format(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *args;
-	if (DeeArg_Unpack(argc, argv, "o:format", &args))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "format", &args);
 	return (DREF String *)DeeString_Format((DeeObject *)self, args);
 err:
 	return NULL;
@@ -7431,8 +7409,7 @@ DeeString_Scanf(DeeObject *self, DeeObject *format);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_scanf(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *format;
-	if (DeeArg_Unpack(argc, argv, "o:scanf", &format))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "scanf", &format);
 	if (DeeObject_AssertTypeExact(format, &DeeString_Type))
 		goto err;
 	return DeeString_Scanf((DeeObject *)self, format);
@@ -9983,8 +9960,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_forcecopy(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr wstr;
 	size_t wlen;
-	if (DeeArg_Unpack(argc, argv, ":__forcecopy__"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "__forcecopy__");
 	wstr.ptr = DeeString_WSTR(self);
 	wlen     = WSTR_LENGTH(wstr.ptr);
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {

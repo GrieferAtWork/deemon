@@ -59,8 +59,7 @@ typemroiter_copy(TypeMROIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typemroiter_init(TypeMROIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_TypeMROIterator", &self->tmi_mro.tp_mro_orig))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_TypeMROIterator", &self->tmi_mro.tp_mro_orig);
 	if (DeeObject_InstanceOfExact(self->tmi_mro.tp_mro_orig, &TypeMRO_Type)) {
 		self->tmi_mro.tp_mro_orig = ((TypeMRO *)self->tmi_mro.tp_mro_orig)->tm_type;
 	} else {
@@ -79,8 +78,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 typebasesiter_init(TypeMROIterator *__restrict self,
                    size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *type;
-	if (DeeArg_Unpack(argc, argv, "o:_TypeBasesIterator", &type))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_TypeBasesIterator", &type);
 	if (DeeObject_InstanceOfExact(type, &TypeBases_Type)) {
 		type = ((TypeMRO *)type)->tm_type;
 	} else {
@@ -438,8 +436,7 @@ INTERN DeeTypeObject TypeBasesIterator_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typemro_init(TypeMRO *__restrict self,
              size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_TypeMRO", &self->tm_type))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_TypeMRO", &self->tm_type);
 	if (DeeObject_AssertType(self->tm_type, &DeeType_Type))
 		goto err;
 	return 0;
@@ -450,8 +447,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typebases_init(TypeMRO *__restrict self,
                size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_TypeBases", &self->tm_type))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_TypeBases", &self->tm_type);
 	if (DeeObject_AssertType(self->tm_type, &DeeType_Type))
 		goto err;
 	return 0;

@@ -516,8 +516,7 @@ string_new_empty(void) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 string_new(size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
-	if (DeeArg_Unpack(argc, argv, "o:string", &ob))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "string", &ob);
 	return DeeObject_Str(ob);
 err:
 	return NULL;
@@ -1165,8 +1164,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_init(StringIterator *__restrict self,
                 size_t argc, DeeObject *const *argv) {
 	String *str;
-	if (DeeArg_Unpack(argc, argv, "o:string.Iterator", &str))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "string.Iterator", &str);
 	if (DeeObject_AssertTypeExact(str, &DeeString_Type))
 		goto err;
 	self->si_string = str;
@@ -1974,8 +1972,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_class_fromseq(DeeObject *UNUSED(self),
                      size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, "o:fromseq", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "fromseq", &seq);
 	/* XXX: Fast-sequence optimizations? */
 	{
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;

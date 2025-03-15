@@ -527,8 +527,7 @@ dockwdsiter_copy(DocKwdsIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dockwdsiter_init(DocKwdsIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_DocKwdsIterator", &self->dki_kwds))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_DocKwdsIterator", &self->dki_kwds);
 	if (DeeObject_AssertTypeExact(self->dki_kwds, &DocKwds_Type))
 		goto err;
 	Dee_Incref(self->dki_kwds);
@@ -740,8 +739,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 dockwds_init(DocKwds *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeObject *text;
-	if (DeeArg_Unpack(argc, argv, "o:_DocKwds", &text))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_DocKwds", &text);
 	if (DeeObject_AssertTypeExact(text, &DeeString_Type))
 		goto err;
 	if (DeeString_STR(text)[0] != '(') {
@@ -1512,8 +1510,7 @@ clsproperty_get(DeeClsPropertyObject *__restrict self,
 		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
 		goto err;
 	}
-	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
 		goto err;
@@ -1840,8 +1837,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_get(DeeClsMemberObject *self, size_t argc,
               DeeObject *const *argv) {
 	DeeObject *thisarg;
-	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
 		goto err;

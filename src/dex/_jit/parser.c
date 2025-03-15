@@ -1163,10 +1163,11 @@ do_with_paren:
 			                    "o:__import__", &module_name))
 				goto err_args_kwds;
 		} else {
-			if (DeeArg_Unpack(DeeTuple_SIZE(args),
-			                  DeeTuple_ELEM(args),
-			                  "o:__import__", &module_name))
-				goto err_args_kwds;
+			_DeeArg_Unpack1(err_args_kwds,
+							DeeTuple_SIZE(args),
+			                DeeTuple_ELEM(args),
+			                "__import__",
+			                &module_name);
 		}
 		if (DeeObject_AssertTypeExact(module_name, &DeeString_Type))
 			goto err_args_kwds;

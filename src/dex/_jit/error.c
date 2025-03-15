@@ -871,24 +871,6 @@ syn_import_unexpected_star_duplication_in_import_list(JITLexer *__restrict self)
 
 
 
-INTERN ATTR_COLD int
-(DCALL err_invalid_argc)(char const *function_name, size_t argc_cur,
-                         size_t argc_min, size_t argc_max) {
-	if (argc_min == argc_max) {
-		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%s expects %" PRFuSIZ " arguments when %" PRFuSIZ " w%s given",
-		                       function_name ? " " : "", function_name ? function_name : "",
-		                       argc_min, argc_cur, argc_cur == 1 ? "as" : "ere");
-	} else {
-		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%s expects between %" PRFuSIZ " and %" PRFuSIZ " "
-		                       "arguments when %" PRFuSIZ " w%s given",
-		                       function_name ? " " : "", function_name ? function_name : "",
-		                       argc_min, argc_max, argc_cur, argc_cur == 1 ? "as" : "ere");
-	}
-}
-
-
 PRIVATE ATTR_RETNONNULL WUNUSED char const *DCALL
 get_desc_name(struct class_desc *__restrict desc) {
 	return desc->cd_desc->cd_name

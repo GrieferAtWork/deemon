@@ -220,8 +220,7 @@ PRIVATE struct type_iterator smapiter_iterator = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 smapiter_ctor(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SharedMapIterator", &self->si_seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SharedMapIterator", &self->si_seq);
 	if (DeeObject_AssertTypeExact(self->si_seq, &DeeSharedMap_Type))
 		goto err;
 	Dee_Incref(self->si_seq);

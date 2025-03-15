@@ -1268,8 +1268,7 @@ capi_strlen(size_t argc, DeeObject *const *argv) {
 	DeeObject *ob_str;
 	union pointer str;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "o:strlen", &ob_str))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "strlen", &ob_str);
 	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
 		goto err;
 	CTYPES_FAULTPROTECT(result = strlen(str.pchar), goto err);
@@ -1282,8 +1281,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_strend(size_t argc, DeeObject *const *argv) {
 	DeeObject *ob_str;
 	union pointer str;
-	if (DeeArg_Unpack(argc, argv, "o:strend", &ob_str))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "strend", &ob_str);
 	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
 		goto err;
 	CTYPES_FAULTPROTECT(str.pchar = strend(str.pchar), goto err);
@@ -1528,8 +1526,7 @@ capi_strcmp(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	int result;
 	union pointer a, b;
-	if (DeeArg_Unpack(argc, argv, "oo:strcmp", &ob_a, &ob_b))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "strcmp", &ob_a, &ob_b);
 	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
@@ -1564,8 +1561,7 @@ capi_strcasecmp(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	int result;
 	union pointer a, b;
-	if (DeeArg_Unpack(argc, argv, "oo:strcasecmp", &ob_a, &ob_b))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "strcasecmp", &ob_a, &ob_b);
 	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
@@ -1599,8 +1595,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcpy(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	union pointer a, b, result;
-	if (DeeArg_Unpack(argc, argv, "oo:strcpy", &ob_a, &ob_b))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "strcpy", &ob_a, &ob_b);
 	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
@@ -1632,8 +1627,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcat(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	union pointer a, b, result;
-	if (DeeArg_Unpack(argc, argv, "oo:strcat", &ob_a, &ob_b))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "strcat", &ob_a, &ob_b);
 	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
@@ -1665,8 +1659,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_stpcpy(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	union pointer a, b, result;
-	if (DeeArg_Unpack(argc, argv, "oo:stpcpy", &ob_a, &ob_b))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "stpcpy", &ob_a, &ob_b);
 	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
@@ -1698,8 +1691,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_strstr(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	union pointer a, b, result;
-	if (DeeArg_Unpack(argc, argv, "oo:strstr", &ob_a, &ob_b))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "strstr", &ob_a, &ob_b);
 	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
@@ -1714,8 +1706,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcasestr(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	union pointer a, b, result;
-	if (DeeArg_Unpack(argc, argv, "oo:strcasestr", &ob_a, &ob_b))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "strcasestr", &ob_a, &ob_b);
 	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
@@ -1765,8 +1756,7 @@ capi_strverscmp(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	int result;
 	union pointer a, b;
-	if (DeeArg_Unpack(argc, argv, "oo:strcmp", &ob_a, &ob_b))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "strcmp", &ob_a, &ob_b);
 	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
@@ -1934,8 +1924,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_basename(size_t argc, DeeObject *const *argv) {
 	DeeObject *ob_str;
 	union pointer str;
-	if (DeeArg_Unpack(argc, argv, "o:basename", &ob_str))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "basename", &ob_str);
 	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
 		goto err;
 	CTYPES_FAULTPROTECT(str.pchar = basename(str.pchar), goto err);

@@ -145,8 +145,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_init(BytesFindIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	BytesFind *find;
-	if (DeeArg_Unpack(argc, argv, "o:_BytesFindIterator", &find))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_BytesFindIterator", &find);
 	if (DeeObject_AssertTypeExact(find, &BytesFind_Type))
 		goto err;
 	return bfi_setup(self, find);
@@ -158,8 +157,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 bcfi_init(BytesFindIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	BytesFind *find;
-	if (DeeArg_Unpack(argc, argv, "o:_BytesCaseFindIterator", &find))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_BytesCaseFindIterator", &find);
 	if (DeeObject_AssertTypeExact(find, &BytesCaseFind_Type))
 		goto err;
 	return bfi_setup(self, find);

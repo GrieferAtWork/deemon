@@ -934,8 +934,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f(size_t argc, DeeOb
 #define LIBWIN32_GETLASTERROR_DEF_DOC(doc) { "GetLastError", (DeeObject *)&libwin32_GetLastError, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetLastError, &libwin32_GetLastError_f, METHOD_FPURECALL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetLastError"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetLastError");
 	return libwin32_GetLastError_f_impl();
 err:
 	return NULL;
@@ -1768,8 +1767,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetTempPath_f(size_t argc, DeeObj
 #define LIBWIN32_GETTEMPPATH_DEF_DOC(doc) { "GetTempPath", (DeeObject *)&libwin32_GetTempPath, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetTempPath, &libwin32_GetTempPath_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetTempPath_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetTempPath"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetTempPath");
 	return libwin32_GetTempPath_f_impl();
 err:
 	return NULL;
@@ -1825,8 +1823,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f(size_t argc, De
 #define LIBWIN32_GETDLLDIRECTORY_DEF_DOC(doc) { "GetDllDirectory", (DeeObject *)&libwin32_GetDllDirectory, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetDllDirectory, &libwin32_GetDllDirectory_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetDllDirectory"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetDllDirectory");
 	return libwin32_GetDllDirectory_f_impl();
 err:
 	return NULL;
@@ -2210,8 +2207,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemDirectory_f(size_t argc,
 #define LIBWIN32_GETSYSTEMDIRECTORY_DEF_DOC(doc) { "GetSystemDirectory", (DeeObject *)&libwin32_GetSystemDirectory, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetSystemDirectory, &libwin32_GetSystemDirectory_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemDirectory_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetSystemDirectory"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetSystemDirectory");
 	return libwin32_GetSystemDirectory_f_impl();
 err:
 	return NULL;
@@ -2270,8 +2266,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f(size_t argc
 #define LIBWIN32_GETWINDOWSDIRECTORY_DEF_DOC(doc) { "GetWindowsDirectory", (DeeObject *)&libwin32_GetWindowsDirectory, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetWindowsDirectory, &libwin32_GetWindowsDirectory_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetWindowsDirectory"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetWindowsDirectory");
 	return libwin32_GetWindowsDirectory_f_impl();
 err:
 	return NULL;
@@ -2328,8 +2323,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f(size_
 #define LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF_DOC(doc) { "GetSystemWindowsDirectory", (DeeObject *)&libwin32_GetSystemWindowsDirectory, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetSystemWindowsDirectory, &libwin32_GetSystemWindowsDirectory_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetSystemWindowsDirectory"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetSystemWindowsDirectory");
 	return libwin32_GetSystemWindowsDirectory_f_impl();
 err:
 	return NULL;
@@ -2388,8 +2382,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f(size_t 
 #define LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF_DOC(doc) { "GetSystemWow64Directory", (DeeObject *)&libwin32_GetSystemWow64Directory, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetSystemWow64Directory, &libwin32_GetSystemWow64Directory_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetSystemWow64Directory"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetSystemWow64Directory");
 	return libwin32_GetSystemWow64Directory_f_impl();
 err:
 	return NULL;
@@ -2487,8 +2480,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f(size_t a
 #define LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC(doc) { "GetLogicalDriveStrings", (DeeObject *)&libwin32_GetLogicalDriveStrings, MODSYM_FREADONLY, DOC("->?S?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetLogicalDriveStrings, &libwin32_GetLogicalDriveStrings_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetLogicalDriveStrings"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetLogicalDriveStrings");
 	return libwin32_GetLogicalDriveStrings_f_impl();
 err:
 	return NULL;
@@ -3320,8 +3312,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f(size_t argc, 
 #define LIBWIN32_GETCURRENTPROCESS_DEF_DOC(doc) { "GetCurrentProcess", (DeeObject *)&libwin32_GetCurrentProcess, MODSYM_FREADONLY, DOC("->?GHANDLE\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentProcess, &libwin32_GetCurrentProcess_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetCurrentProcess"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetCurrentProcess");
 	return libwin32_GetCurrentProcess_f_impl();
 err:
 	return NULL;
@@ -3345,8 +3336,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f(size_t argc, D
 #define LIBWIN32_GETCURRENTTHREAD_DEF_DOC(doc) { "GetCurrentThread", (DeeObject *)&libwin32_GetCurrentThread, MODSYM_FREADONLY, DOC("->?GHANDLE\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentThread, &libwin32_GetCurrentThread_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetCurrentThread"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetCurrentThread");
 	return libwin32_GetCurrentThread_f_impl();
 err:
 	return NULL;
@@ -3370,8 +3360,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f(size_t argc
 #define LIBWIN32_GETCURRENTPROCESSID_DEF_DOC(doc) { "GetCurrentProcessId", (DeeObject *)&libwin32_GetCurrentProcessId, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentProcessId, &libwin32_GetCurrentProcessId_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetCurrentProcessId"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetCurrentProcessId");
 	return libwin32_GetCurrentProcessId_f_impl();
 err:
 	return NULL;
@@ -3395,8 +3384,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f(size_t argc,
 #define LIBWIN32_GETCURRENTTHREADID_DEF_DOC(doc) { "GetCurrentThreadId", (DeeObject *)&libwin32_GetCurrentThreadId, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentThreadId, &libwin32_GetCurrentThreadId_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":GetCurrentThreadId"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "GetCurrentThreadId");
 	return libwin32_GetCurrentThreadId_f_impl();
 err:
 	return NULL;
@@ -4087,8 +4075,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_EnumProcesses_f(size_t argc, DeeO
 #define LIBWIN32_ENUMPROCESSES_DEF_DOC(doc) { "EnumProcesses", (DeeObject *)&libwin32_EnumProcesses, MODSYM_FREADONLY, DOC("->?S?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_EnumProcesses, &libwin32_EnumProcesses_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_EnumProcesses_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":EnumProcesses"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "EnumProcesses");
 	return libwin32_EnumProcesses_f_impl();
 err:
 	return NULL;

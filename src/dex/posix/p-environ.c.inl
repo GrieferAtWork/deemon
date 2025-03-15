@@ -2475,8 +2475,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_clearenv_f(size_t argc, DeeObject *c
 #define POSIX_CLEARENV_DEF_DOC(doc) { "clearenv", (DeeObject *)&posix_clearenv, MODSYM_FREADONLY, DOC("()\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_clearenv, &posix_clearenv_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_clearenv_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":clearenv"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "clearenv");
 	return posix_clearenv_f_impl();
 err:
 	return NULL;

@@ -75,8 +75,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeObject *key, *def = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "get", &key, &def);
 	result = DeeObject_InvokeMethodHint(map_operator_trygetitem, self, key);
 	if (result == ITER_DONE) {
 		Dee_Incref(def);

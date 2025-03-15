@@ -241,8 +241,7 @@ PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 ew_docall(EnumerateWrapper *self, size_t argc, DeeObject *const *argv) {
 	Dee_ssize_t result;
 	DeeObject *key, *value = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:EnumerateWrapper.__call__", &key, &value))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "EnumerateWrapper.__call__", &key, &value);
 	if (Dee_TYPE(self) == &EnumerateWrapper_Type) {
 		result = (*self->ew_cb.cb_enumerate)(self->ew_arg, key, value);
 	} else {

@@ -393,8 +393,7 @@ function_init(size_t argc, DeeObject *const *argv) {
 	DREF Function *result;
 	DeeCodeObject *code = &DeeCode_Empty;
 	DeeObject *refs     = Dee_EmptyTuple;
-	if (DeeArg_Unpack(argc, argv, "|oo:Function", &code, &refs))
-		goto err;
+	_DeeArg_Unpack0Or1Or2(err, argc, argv, "Function", &code, &refs);
 	if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
 		goto err;
 	ASSERT(code->co_refc <= code->co_refstaticc);
@@ -2078,8 +2077,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfi_new(YFIterator *__restrict self,
         size_t argc, DeeObject *const *argv) {
 	YFunction *func;
-	if (DeeArg_Unpack(argc, argv, "o:_YieldFunctionIterator", &func))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_YieldFunctionIterator", &func);
 	if (DeeObject_AssertType(func, &DeeYieldFunction_Type))
 		goto err;
 	return yfi_init(self, func);

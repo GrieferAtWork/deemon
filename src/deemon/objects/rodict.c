@@ -874,8 +874,7 @@ err:
 PRIVATE WUNUSED DREF RoDict *DCALL
 rodict_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, "o:_RoDict", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_RoDict", &seq);
 	return (DREF RoDict *)DeeRoDict_FromSequence(seq);
 err:
 	return NULL;

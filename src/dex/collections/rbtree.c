@@ -822,8 +822,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtreeiter_removenode(RBTreeIterator *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	RBTree *tree = self->rbti_tree;
-	if (DeeArg_Unpack(argc, argv, ":removenode"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "removenode");
 	RBTree_LockWrite(tree);
 	if unlikely(!RBTreeIterator_VersionOK(self, tree))
 		goto err_changed_unlock;
@@ -1009,8 +1008,7 @@ rbtreeiter_copy(RBTreeIterator *self, RBTreeIterator *other) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rbtreeiter_init(RBTreeIterator *self, size_t argc, DeeObject *const *argv) {
 	RBTree *tree;
-	if (DeeArg_Unpack(argc, argv, "o:_RBTreeIterator", &tree))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_RBTreeIterator", &tree);
 	if (DeeObject_AssertType(tree, &RBTree_Type))
 		goto err;
 	self->rbti_tree = tree;
@@ -2356,8 +2354,7 @@ rbtree_locate(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
 	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:locate", &key))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "locate", &key);
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -2381,8 +2378,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 rbtree_rlocate(RBTree *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *minkey, *maxkey;
-	if (DeeArg_Unpack(argc, argv, "oo:rlocate", &minkey, &maxkey))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "rlocate", &minkey, &maxkey);
 	(void)self;
 	/* TODO */
 	DeeError_NOTIMPLEMENTED();
@@ -2395,8 +2391,7 @@ rbtree_itlocate(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF RBTreeIterator *result;
 	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:itlocate", &key))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "itlocate", &key);
 	result = DeeObject_MALLOC(RBTreeIterator);
 	if unlikely(!result)
 		goto err;
@@ -2423,8 +2418,7 @@ rbtree_remove(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
 	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:locate", &key))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "locate", &key);
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -2462,8 +2456,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_rremove(RBTree *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *minkey, *maxkey;
-	if (DeeArg_Unpack(argc, argv, "oo:rremove", &minkey, &maxkey))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "rremove", &minkey, &maxkey);
 	(void)self;
 	/* TODO */
 	DeeError_NOTIMPLEMENTED();
@@ -2476,8 +2469,7 @@ rbtree_prevnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
 	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:prevnode", &key))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "prevnode", &key);
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -2509,8 +2501,7 @@ rbtree_nextnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
 	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:nextnode", &key))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "nextnode", &key);
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -2542,8 +2533,7 @@ rbtree_itprevnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF RBTreeIterator *result;
 	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:itprevnode", &key))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "itprevnode", &key);
 	result = DeeObject_MALLOC(RBTreeIterator);
 	if unlikely(!result)
 		goto err;
@@ -2576,8 +2566,7 @@ rbtree_itnextnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF RBTreeIterator *result;
 	DeeObject *key;
-	if (DeeArg_Unpack(argc, argv, "o:itnextnode", &key))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "itnextnode", &key);
 	result = DeeObject_MALLOC(RBTreeIterator);
 	if unlikely(!result)
 		goto err;
@@ -2609,8 +2598,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_popfront(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, ":popfront"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "popfront");
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -2640,8 +2628,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_popback(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, ":popback"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "popback");
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -2805,8 +2792,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_optimize(RBTree *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":clear"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "clear");
 	if unlikely(rbtree_optimize_impl(self))
 		goto err;
 	return_none;
@@ -2816,8 +2802,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_doclear(RBTree *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":clear"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "clear");
 	rbtree_clear(self);
 	return_none;
 err:
@@ -2827,8 +2812,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_pop(RBTree *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *def = ITER_DONE;
-	if (DeeArg_Unpack(argc, argv, "o|o:pop", &key, &def))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "pop", &key, &def);
 	(void)self;
 	/* TODO */
 	DeeError_NOTIMPLEMENTED();
@@ -2920,8 +2904,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_update(RBTree *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *items;
-	if (DeeArg_Unpack(argc, argv, "o:update", &items))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "update", &items);
 	if unlikely(rbtree_insert_sequence(self, items))
 		goto err;
 	return_none;
@@ -3222,8 +3205,7 @@ rbtree_visit(RBTree *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rbtree_init(RBTree *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, "o:RBTree", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "RBTree", &seq);
 	self->rbt_root    = NULL;
 	self->rbt_version = 0;
 	Dee_atomic_rwlock_init(&self->rbt_lock);

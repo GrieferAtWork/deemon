@@ -78,8 +78,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rosetiterator_init(RoSetIterator *__restrict self,
                    size_t argc, DeeObject *const *argv) {
 	RoSet *set;
-	if (DeeArg_Unpack(argc, argv, "o:_RoSetIterator", &set))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_RoSetIterator", &set);
 	if (DeeObject_AssertTypeExact(set, &DeeRoSet_Type))
 		goto err;
 	self->rosi_set = set;
@@ -654,8 +653,7 @@ err:
 PRIVATE WUNUSED DREF RoSet *DCALL
 roset_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, "o:_RoSet", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_RoSet", &seq);
 	return (DREF RoSet *)DeeRoSet_FromSequence(seq);
 err:
 	return NULL;

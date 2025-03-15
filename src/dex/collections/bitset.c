@@ -827,7 +827,7 @@ bs_flip(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 	}	break;
 
 	default:
-		err_invalid_argc("flip", argc, 0, 2);
+		DeeArg_BadArgcEx("flip", argc, 0, 2);
 		goto err;
 	}
 	return_none;
@@ -869,7 +869,7 @@ bs_set(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 	}	break;
 
 	default:
-		err_invalid_argc("set", argc, 0, 2);
+		DeeArg_BadArgcEx("set", argc, 0, 2);
 		goto err;
 	}
 	return_none;
@@ -911,7 +911,7 @@ bs_clear(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 	}	break;
 
 	default:
-		err_invalid_argc("clear", argc, 0, 2);
+		DeeArg_BadArgcEx("clear", argc, 0, 2);
 		goto err;
 	}
 	return_none;
@@ -1177,8 +1177,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bs_bytes(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":bytes"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "bytes");
 	return DeeBytes_NewView((DeeObject *)self,
 	                        self->bs_bitset,
 	                        BITSET_SIZEOF(self->bs_nbits),
@@ -1241,8 +1240,7 @@ bs_init(size_t argc, DeeObject *const *argv) {
 	DREF Bitset *result;
 	DeeObject *seq_or_nbits;
 	DeeObject *init_or_minbits = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:Bitset", &seq_or_nbits, &init_or_minbits))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "Bitset", &seq_or_nbits, &init_or_minbits);
 	if (!DeeInt_Check(seq_or_nbits))
 		return bs_init_fromseq_or_bitset(seq_or_nbits, init_or_minbits);
 	/* Initialize fixed-length bitset. */
@@ -2115,8 +2113,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 robs_bytes(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":bytes"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "bytes");
 	return DeeBytes_NewView((DeeObject *)self,
 	                        self->bs_bitset,
 	                        BITSET_SIZEOF(self->bs_nbits),
@@ -2141,8 +2138,7 @@ err:
 PRIVATE WUNUSED DREF Bitset *DCALL
 robs_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, "o:Bitset.Frozen", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "Bitset.Frozen", &seq);
 	return robs_init_fromseq_or_bitset(seq);
 err:
 	return NULL;
@@ -2941,7 +2937,7 @@ bsv_flip(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	}	break;
 
 	default:
-		err_invalid_argc("flip", argc, 0, 2);
+		DeeArg_BadArgcEx("flip", argc, 0, 2);
 		goto err;
 	}
 	return_none;
@@ -2992,7 +2988,7 @@ bsv_set(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	}	break;
 
 	default:
-		err_invalid_argc("set", argc, 0, 2);
+		DeeArg_BadArgcEx("set", argc, 0, 2);
 		goto err;
 	}
 	return_none;
@@ -3043,7 +3039,7 @@ bsv_clear(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	}	break;
 
 	default:
-		err_invalid_argc("clear", argc, 0, 2);
+		DeeArg_BadArgcEx("clear", argc, 0, 2);
 		goto err;
 	}
 	return_none;
@@ -3342,8 +3338,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsv_bytes(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	struct bitset_ref ref;
 	DeeObject *owner;
-	if (DeeArg_Unpack(argc, argv, ":bytes"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "bytes");
 	bitset_ref_fromview(&ref, self);
 	owner = (DeeObject *)self;
 #ifndef __INTELLISENSE__
@@ -3526,7 +3521,7 @@ err_readonly:
 	                Dee_TYPE(ob));
 	goto err;
 err_args:
-	err_invalid_argc("BitsetView", argc, 1, 4);
+	DeeArg_BadArgcEx("BitsetView", argc, 1, 4);
 	goto err;
 err_invalid_mode:
 	DeeError_Throwf(&DeeError_ValueError,
@@ -4430,8 +4425,7 @@ bsiter_copy(BitsetIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsiter_init(BitsetIterator *__restrict self,
             size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:BitsetIterator", &self->bsi_owner))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "BitsetIterator", &self->bsi_owner);
 	if (BitsetView_Check(self->bsi_owner)) {
 		BitsetView *o = (BitsetView *)self->bsi_owner;
 		self->bsi_bitset = BitsetView_GetBitset(o);

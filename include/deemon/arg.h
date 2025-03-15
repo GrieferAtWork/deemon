@@ -70,6 +70,166 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 (DCALL DeeArg_VUnpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
                        char const *__restrict format, va_list args);
 
+#ifdef __OPTIMIZE_SIZE__
+#define _DeeArg_Unpack0(err, argc, argv, function_name)   \
+	do {                                                  \
+		if (DeeArg_Unpack(argc, argv, ":" function_name)) \
+			goto err;                                     \
+	}	__WHILE0
+#define _DeeArg_Unpack1(err, argc, argv, function_name, p_arg0)    \
+	do {                                                           \
+		if (DeeArg_Unpack(argc, argv, "o:" function_name, p_arg0)) \
+			goto err;                                              \
+	}	__WHILE0
+#define _DeeArg_Unpack2(err, argc, argv, function_name, p_arg0, p_arg1)     \
+	do {                                                                    \
+		if (DeeArg_Unpack(argc, argv, "oo:" function_name, p_arg0, p_arg1)) \
+			goto err;                                                       \
+	}	__WHILE0
+#define _DeeArg_Unpack3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2)      \
+	do {                                                                             \
+		if (DeeArg_Unpack(argc, argv, "ooo:" function_name, p_arg0, p_arg1, p_arg2)) \
+			goto err;                                                                \
+	}	__WHILE0
+#define _DeeArg_Unpack0Or1(err, argc, argv, function_name, p_arg0)  \
+	do {                                                            \
+		if (DeeArg_Unpack(argc, argv, "|o:" function_name, p_arg0)) \
+			goto err;                                               \
+	}	__WHILE0
+#define _DeeArg_Unpack1Or2(err, argc, argv, function_name, p_arg0, p_arg1)   \
+	do {                                                                     \
+		if (DeeArg_Unpack(argc, argv, "o|o:" function_name, p_arg0, p_arg1)) \
+			goto err;                                                        \
+	}	__WHILE0
+#define _DeeArg_Unpack0Or1Or2(err, argc, argv, function_name, p_arg0, p_arg1) \
+	do {                                                                      \
+		if (DeeArg_Unpack(argc, argv, "|oo:" function_name, p_arg0, p_arg1))  \
+			goto err;                                                         \
+	}	__WHILE0
+#define _DeeArg_Unpack1Or2Or3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2) \
+	do {                                                                              \
+		if (DeeArg_Unpack(argc, argv, "o|oo:" function_name, p_arg0, p_arg1, p_arg2)) \
+			goto err;                                                                 \
+	}	__WHILE0
+#else /* __OPTIMIZE_SIZE__ */
+#define _DeeArg_Unpack0(err, argc, argv, function_name) \
+	if unlikely((argc) != 0) {                          \
+		DeeArg_BadArgc0(function_name, argc);           \
+		goto err;                                       \
+	} else                                              \
+		(void)(argv)
+#define _DeeArg_Unpack1(err, argc, argv, function_name, p_arg0) \
+	if unlikely((argc) != 1) {                                  \
+		DeeArg_BadArgc1(function_name, argc);                   \
+		goto err;                                               \
+	} else                                                      \
+		(void)(*(DeeObject **)(p_arg0) = (argv)[0],             \
+		       __builtin_assume(*(p_arg0) != NULL))
+#define _DeeArg_Unpack2(err, argc, argv, function_name, p_arg0, p_arg1) \
+	if unlikely((argc) != 2) {                                          \
+		DeeArg_BadArgc(function_name, argc, 2);                         \
+		goto err;                                                       \
+	} else                                                              \
+		(void)(*(DeeObject **)(p_arg0) = (argv)[0],                     \
+		       *(DeeObject **)(p_arg1) = (argv)[1],                     \
+		       __builtin_assume(*(p_arg0) != NULL),                     \
+		       __builtin_assume(*(p_arg1) != NULL))
+#define _DeeArg_Unpack3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2) \
+	if unlikely((argc) != 3) {                                                  \
+		DeeArg_BadArgc(function_name, argc, 3);                                 \
+		goto err;                                                               \
+	} else                                                                      \
+		(void)(*(DeeObject **)(p_arg0) = (argv)[0],                             \
+		       *(DeeObject **)(p_arg1) = (argv)[1],                             \
+		       *(DeeObject **)(p_arg2) = (argv)[2],                             \
+		       __builtin_assume(*(p_arg0) != NULL),                             \
+		       __builtin_assume(*(p_arg1) != NULL),                             \
+		       __builtin_assume(*(p_arg2) != NULL))
+#define _DeeArg_Unpack0Or1(err, argc, argv, function_name, p_arg0) \
+	do {                                                           \
+		switch (argc) {                                            \
+		case 1:                                                    \
+			*(DeeObject **)(p_arg0) = (argv)[0];                   \
+			__builtin_assume(*(p_arg0) != NULL);                   \
+			break;                                                 \
+		case 0:                                                    \
+			break;                                                 \
+		default:                                                   \
+			DeeArg_BadArgcEx(function_name, argc, 0, 1);           \
+			goto err;                                              \
+		}                                                          \
+	}	__WHILE0
+#define _DeeArg_Unpack1Or2(err, argc, argv, function_name, p_arg0, p_arg1) \
+	do {                                                                   \
+		switch (argc) {                                                    \
+		case 2:                                                            \
+			*(DeeObject **)(p_arg1) = (argv)[1];                           \
+			__builtin_assume(*(p_arg1) != NULL);                           \
+			ATTR_FALLTHROUGH                                               \
+		case 1:                                                            \
+			*(DeeObject **)(p_arg0) = (argv)[0];                           \
+			__builtin_assume(*(p_arg0) != NULL);                           \
+			break;                                                         \
+		default:                                                           \
+			DeeArg_BadArgcEx(function_name, argc, 1, 2);                   \
+			goto err;                                                      \
+		}                                                                  \
+	}	__WHILE0
+#define _DeeArg_Unpack0Or1Or2(err, argc, argv, function_name, p_arg0, p_arg1) \
+	do {                                                                      \
+		switch (argc) {                                                       \
+		case 2:                                                               \
+			*(DeeObject **)(p_arg1) = (argv)[1];                              \
+			__builtin_assume(*(p_arg1) != NULL);                              \
+			ATTR_FALLTHROUGH                                                  \
+		case 1:                                                               \
+			*(DeeObject **)(p_arg0) = (argv)[0];                              \
+			__builtin_assume(*(p_arg0) != NULL);                              \
+			break;                                                            \
+		case 0:                                                               \
+			break;                                                            \
+		default:                                                              \
+			DeeArg_BadArgcEx(function_name, argc, 0, 2);                      \
+			goto err;                                                         \
+		}                                                                     \
+	}	__WHILE0
+#define _DeeArg_Unpack1Or2Or3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2) \
+	do {                                                                              \
+		switch (argc) {                                                               \
+		case 3:                                                                       \
+			*(DeeObject **)(p_arg2) = (argv)[2];                                      \
+			__builtin_assume(*(p_arg2) != NULL);                                      \
+			ATTR_FALLTHROUGH                                                          \
+		case 2:                                                                       \
+			*(DeeObject **)(p_arg1) = (argv)[1];                                      \
+			__builtin_assume(*(p_arg1) != NULL);                                      \
+			ATTR_FALLTHROUGH                                                          \
+		case 1:                                                                       \
+			*(DeeObject **)(p_arg0) = (argv)[0];                                      \
+			__builtin_assume(*(p_arg0) != NULL);                                      \
+			break;                                                                    \
+		default:                                                                      \
+			DeeArg_BadArgcEx(function_name, argc, 1, 3);                              \
+			goto err;                                                                 \
+		}                                                                             \
+	}	__WHILE0
+#endif /* !__OPTIMIZE_SIZE__ */
+
+/* Helper functions for throwing invalid-argc errors */
+DFUNDEF ATTR_COLD int (DCALL DeeArg_BadArgc)(char const *function_name, size_t real_argc, size_t want_argc);
+DFUNDEF ATTR_COLD int (DCALL DeeArg_BadArgc0)(char const *function_name, size_t real_argc);
+DFUNDEF ATTR_COLD int (DCALL DeeArg_BadArgc1)(char const *function_name, size_t real_argc);
+DFUNDEF ATTR_COLD int (DCALL DeeArg_BadArgcEx)(char const *function_name, size_t real_argc, size_t want_argc_min, size_t want_argc_max);
+#ifndef Dee_ASSUMED_VALUE_IS_NOOP
+#define DeeArg_BadArgc(function_name, real_argc, want_argc) \
+	Dee_ASSUMED_VALUE((DeeArg_BadArgc)(function_name, real_argc, want_argc), -1)
+#define DeeArg_BadArgc0(function_name, real_argc) \
+	Dee_ASSUMED_VALUE((DeeArg_BadArgc0)(function_name, real_argc), -1)
+#define DeeArg_BadArgc1(function_name, real_argc) \
+	Dee_ASSUMED_VALUE((DeeArg_BadArgc1)(function_name, real_argc), -1)
+#define DeeArg_BadArgcEx(function_name, real_argc, want_argc_min, want_argc_max) \
+	Dee_ASSUMED_VALUE((DeeArg_BadArgcEx)(function_name, real_argc, want_argc_min, want_argc_max), -1)
+#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
 
 struct Dee_keyword {

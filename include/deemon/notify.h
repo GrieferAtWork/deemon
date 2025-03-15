@@ -90,8 +90,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Dee_GetEnv(DeeObject *__restr
  * >> DREF DeeObject *DCALL
  * >> get_my_envint(size_t argc, DeeObject *const *argv) {
  * >>     int result;
- * >>     if (DeeArg_Unpack(argc, argv, ":get_my_envint"))
- * >>         goto err;
+ * >>     _DeeArg_Unpack0(err, argc, argv, "get_my_envint");
  * >>     if (my_envint_get(&result))
  * >>         goto err;
  * >>     return DeeInt_NewInt(result);

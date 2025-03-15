@@ -810,8 +810,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 enumattr_init(EnumAttr *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	DeeObject *a, *b = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:enumattr", &a, &b))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "enumattr", &a, &b);
 	if (b) {
 		if (DeeObject_AssertType(a, &DeeType_Type))
 			goto err;
@@ -1070,8 +1069,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 enumattriter_init(EnumAttrIter *__restrict self,
                   size_t argc, DeeObject *const *argv) {
 	EnumAttr *seq;
-	if (DeeArg_Unpack(argc, argv, "o:_EnumAttrIterator", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_EnumAttrIterator", &seq);
 	if (DeeObject_AssertTypeExact(seq, &DeeEnumAttr_Type)) /* DeeEnumAttr_Type is final, so *Exact is OK */
 		goto err;
 	enumattriter_setup(self, seq);

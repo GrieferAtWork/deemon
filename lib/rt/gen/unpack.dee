@@ -796,6 +796,7 @@ function print_DeeArg_Unpack(name: string = "",
                              err: string = "err") {
 	if (params is string)
 		params = parseParamSpec(params).cached;
+	local nameRepr = name ? repr name : "NULL";
 	if (params) {
 		print("	struct {");
 		for (local param: params) {
@@ -810,9 +811,26 @@ function print_DeeArg_Unpack(name: string = "",
 			if (param.cInit !is none && param.cInit != "?")
 				print(f"	{args}.{param.cName} = {param.cInit};");
 		}
-		print(f"	if (DeeArg_UnpackStruct({argc}, {argv}, {
-				getUnpackFormat(name: name, params: params)}, &{args}))");
-		print(f"		goto {err};");
+		local simpleFormat = getUnpackFormat(params: params);
+		local argsPointerList = ", ".join(for (local x: params) f"&{args}.{x.cName}");
+		local dedicatedUnpackFunction: string | none = {
+			'""': "_DeeArg_Unpack0",
+			'"o"': "_DeeArg_Unpack1",
+			'"oo"': "_DeeArg_Unpack2",
+			'"ooo"': "_DeeArg_Unpack3",
+			'"|o"': "_DeeArg_Unpack0Or1",
+			'"o|o"': "_DeeArg_Unpack1Or2",
+			'"|oo"': "_DeeArg_Unpack0Or1Or2",
+			'"o|oo"': "_DeeArg_Unpack1Or2Or3",
+		}.get(simpleFormat);
+		if (dedicatedUnpackFunction !is none) {
+			print(f"	{dedicatedUnpackFunction}({err}, {argc}, {argv}, {
+					nameRepr}{argsPointerList ? ", " : ""}{argsPointerList});");
+		} else {
+			print(f"	if (DeeArg_UnpackStruct({argc}, {argv}, {
+					getUnpackFormat(name: name, params: params)}, &{args}))");
+			print(f"		goto {err};");
+		}
 		for (local param: params) {
 			if (param.decode !is none) {
 				param.decode.printCDecodeDecl(
@@ -821,9 +839,7 @@ function print_DeeArg_Unpack(name: string = "",
 			}
 		}
 	} else {
-		print(f"	if (DeeArg_Unpack({argc}, {argv}, {
-				getUnpackFormat(name: name, params: params)}))");
-		print(f"		goto {err};");
+		print(f"	_DeeArg_Unpack0({err}, {argc}, {argv}, {nameRepr});");
 	}
 }
 
@@ -1029,7 +1045,7 @@ function print_libMethod(name: string,
                          params: string | {UnpackParam...} = (),
                          dReturnType: string = "",
                          kw: bool | none = none,
-                         libname: string = none,
+                         libname: string | none = none,
                          visi: string = "PRIVATE",
                          isvarying: bool = false,
                          ispure: bool = false,

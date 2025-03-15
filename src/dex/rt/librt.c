@@ -234,8 +234,7 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_getstacklimit_f(size_t argc, DeeObject *const *argv) {
 	uint16_t result;
-	if (DeeArg_Unpack(argc, argv, ":getstacklimit"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "getstacklimit");
 	result = atomic_read(&DeeExec_StackLimit);
 	return DeeInt_NewUInt16(result);
 err:
@@ -256,8 +255,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_getcalloptimizethreshold_f(size_t argc, DeeObject *const *argv) {
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, ":getcalloptimizethreshold"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "getcalloptimizethreshold");
 	result = DeeCode_GetOptimizeCallThreshold();
 	return DeeInt_NewSize(result);
 err:
@@ -3442,8 +3440,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByNameKeysIterator, &librt_get_Fram
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_argv_get_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":argv.getter"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "argv.getter");
 	return Dee_GetArgv();
 err:
 	return NULL;
@@ -3453,8 +3450,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_argv_set_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *new_tuple;
 	size_t i;
-	if (DeeArg_Unpack(argc, argv, "o:argv.setter", &new_tuple))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "argv.setter", &new_tuple);
 	if (DeeObject_AssertTypeExact(new_tuple, &DeeTuple_Type))
 		goto err;
 	for (i = 0; i < DeeTuple_SIZE(new_tuple); ++i) {
@@ -3475,8 +3471,7 @@ PRIVATE DEFINE_CMETHOD(librt_argv_set, &librt_argv_set_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_kw_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *kw;
-	if (DeeArg_Unpack(argc, argv, "o:kw", &kw))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "kw", &kw);
 	return DeeKw_Wrap(kw);
 err:
 	return NULL;
@@ -3487,8 +3482,7 @@ PRIVATE DEFINE_CMETHOD(librt_kw, &librt_kw_f, METHOD_FCONSTCALL);
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_ctypes_addrof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
-	if (DeeArg_Unpack(argc, argv, "o:kw", &ob))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "kw", &ob);
 	return DeeCTypes_CreateVoidPointer(ob);
 err:
 	return NULL;

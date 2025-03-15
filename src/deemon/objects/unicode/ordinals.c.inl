@@ -67,8 +67,7 @@ stringordinals_ctor(StringOrdinals *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringordinals_init(StringOrdinals *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_StringOrdinals", &self->so_str))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_StringOrdinals", &self->so_str);
 	if (DeeObject_AssertTypeExact(self->so_str, &DeeString_Type))
 		goto err;
 	self->so_width   = DeeString_WIDTH(self->so_str);

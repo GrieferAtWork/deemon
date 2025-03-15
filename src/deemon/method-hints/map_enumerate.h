@@ -27,14 +27,18 @@
  * "(cb:?DCallable,start,end)->?X2?O?N" */
 
 /* function cb(key, value?) */
-__map_enumerate__(cb:?DCallable,start? = ?,end?)->?X2?O?N {
+__map_enumerate__(cb:?DCallable,start? = ?,end?)->?X2?O?N {{
 	Dee_ssize_t foreach_status;
 	struct seq_enumerate_data data;
-	data.sed_cb = cb;
-	if (end) {
-		foreach_status = CALL_DEPENDENCY(map_enumerate_range, self, &seq_enumerate_cb, &data, start, end);
-	} else {
+	if (argc == 3) {
+		data.sed_cb = argv[0];
+		foreach_status = CALL_DEPENDENCY(map_enumerate_range, self, &seq_enumerate_cb, &data, argv[1], argv[2]);
+	} else if (argc == 1) {
+		data.sed_cb = argv[0];
 		foreach_status = CALL_DEPENDENCY(map_enumerate, self, &seq_enumerate_cb, &data);
+	} else {
+		DeeArg_BadArgcEx("__map_enumerate__", argc, 1, 3);
+		goto err;
 	}
 	if unlikely(foreach_status == -1)
 		goto err;
@@ -43,7 +47,7 @@ __map_enumerate__(cb:?DCallable,start? = ?,end?)->?X2?O?N {
 	return_none;
 err:
 	return NULL;
-}
+}}
 
 
 [[no_self_invocation_wrapper]]

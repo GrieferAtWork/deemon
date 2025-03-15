@@ -97,8 +97,7 @@ kwdsiter_copy(KwdsIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_KwdsIterator", &self->ki_map))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_KwdsIterator", &self->ki_map);
 	if (DeeObject_AssertTypeExact(self->ki_map, &DeeKwds_Type))
 		goto err;
 	Dee_Incref(self->ki_map);
@@ -478,8 +477,7 @@ kwds_init(size_t argc, DeeObject *const *argv) {
 	DREF Kwds *result;
 	DeeObject *init;
 	DREF DeeObject *iter, *elem;
-	if (DeeArg_Unpack(argc, argv, "o:Kwds", &init))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "Kwds", &init);
 	result = kwds_ctor();
 	if unlikely(!result)
 		goto err;
@@ -930,8 +928,7 @@ err:
 #define kmapiter_deep kwdsiter_deep
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_KwdsMappingIterator", &self->ki_map))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_KwdsMappingIterator", &self->ki_map);
 	if (DeeObject_AssertTypeExact(self->ki_map, &DeeKwdsMapping_Type))
 		goto err;
 	Dee_Incref(self->ki_map);
@@ -1175,8 +1172,7 @@ kmap_init(size_t argc, DeeObject *const *argv) {
 	DeeKwdsObject *kwds;
 	DeeTupleObject *args;
 	size_t kw_argc;
-	if (DeeArg_Unpack(argc, argv, "oo:_KwdsMapping", &kwds, &args))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "_KwdsMapping", &kwds, &args);
 	if (DeeObject_AssertTypeExact(kwds, &DeeKwds_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))

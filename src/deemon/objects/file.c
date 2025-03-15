@@ -2079,8 +2079,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_tell(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	Dee_pos_t result;
-	if (DeeArg_Unpack(argc, argv, ":tell"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "tell");
 	result = DeeFile_Tell(self);
 	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
@@ -2091,8 +2090,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_rewind(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":rewind"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "rewind");
 	if (DeeFile_Rewind(self) == (Dee_pos_t)-1)
 		goto err;
 	return_none;
@@ -2109,7 +2107,7 @@ file_trunc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 	} else {
 		/* Truncate at the current position. */
-		if (DeeArg_Unpack(argc, argv, "|" UNPuN(Dee_SIZEOF_POS_T) ":trunc", &trunc_pos))
+		if (DeeArg_UnpackStruct(argc, argv, "|" UNPuN(Dee_SIZEOF_POS_T) ":trunc", &trunc_pos))
 			goto err;
 		if (DeeFile_Trunc(self, trunc_pos))
 			goto err;
@@ -2123,8 +2121,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_sync(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":sync"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "sync");
 	if (DeeFile_Sync(self))
 		goto err;
 	return_none;
@@ -2134,8 +2131,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_close(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":close"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "close");
 	if (DeeFile_Close(self))
 		goto err;
 	return_none;
@@ -2146,8 +2142,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
-	if (DeeArg_Unpack(argc, argv, ":getc"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "getc");
 	result = DeeFile_Getc(self);
 	if unlikely(result == GETC_ERR)
 		goto err;
@@ -2163,7 +2158,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_ungetc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
-	if (DeeArg_Unpack(argc, argv, "d:ungetc", &result))
+	if (DeeArg_UnpackStruct(argc, argv, "d:ungetc", &result))
 		goto err;
 	result = DeeFile_Ungetc(self, result);
 	if unlikely(result == GETC_ERR)
@@ -2177,7 +2172,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_putc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	byte_t byte;
-	if (DeeArg_Unpack(argc, argv, UNPuB ":putc", &byte))
+	if (DeeArg_UnpackStruct(argc, argv, UNPuB ":putc", &byte))
 		goto err;
 	result = DeeFile_Putc(self, (int)(unsigned int)byte);
 	if unlikely(result == GETC_ERR)
@@ -2190,8 +2185,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	uint32_t result;
-	if (DeeArg_Unpack(argc, argv, ":getutf8"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "getutf8");
 	result = DeeFile_GetUtf8(self);
 	if unlikely(result == (uint32_t)GETC_ERR)
 		goto err;
@@ -2206,7 +2200,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_ungetutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	uint32_t ch;
-	if (DeeArg_Unpack(argc, argv, UNPu32 ":ungetutf8", &ch))
+	if (DeeArg_UnpackStruct(argc, argv, UNPu32 ":ungetutf8", &ch))
 		goto err;
 	result = DeeFile_UngetUtf8(self, ch);
 	if unlikely(result == GETC_ERR)
@@ -2221,8 +2215,7 @@ file_pututf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *str;
 	char const *utf8;
 	size_t written;
-	if (DeeArg_Unpack(argc, argv, "o:pututf8", &str))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "pututf8", &str);
 	if (DeeObject_AssertTypeExact(str, &DeeString_Type))
 		goto err;
 	utf8 = DeeString_AsUtf8(str);
@@ -2240,8 +2233,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	Dee_pos_t old_pos, result;
-	if (DeeArg_Unpack(argc, argv, ":size"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "size");
 	old_pos = DeeFile_Seek(self, 0, SEEK_CUR);
 	if unlikely(old_pos == (Dee_pos_t)-1)
 		goto err;
@@ -2260,15 +2252,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readline(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	size_t maxbytes = (size_t)-1;
-	bool keeplf     = true;
+	struct {
+		size_t maxbytes;
+		bool keeplf;
+	} args;
+	args.maxbytes = (size_t)-1;
+	args.keeplf   = true;
 	if (argc == 1 && DeeBool_Check(argv[0])) {
-		keeplf = DeeBool_IsTrue(argv[0]);
+		args.keeplf = DeeBool_IsTrue(argv[0]);
 	} else {
-		if (DeeArg_Unpack(argc, argv, "|" UNPdSIZ "b:readline", &maxbytes, &keeplf))
+		if (DeeArg_UnpackStruct(argc, argv, "|" UNPdSIZ "b:readline", &args))
 			goto err;
 	}
-	result = DeeFile_ReadLine(self, maxbytes, keeplf);
+	result = DeeFile_ReadLine(self, args.maxbytes, args.keeplf);
 	if (result == ITER_DONE) {
 		result = Dee_None;
 		Dee_Incref(Dee_None);
@@ -2282,7 +2278,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readall(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	size_t maxbytes = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "|" UNPdSIZ ":readall", &maxbytes))
+	if (DeeArg_UnpackStruct(argc, argv, "|" UNPdSIZ ":readall", &maxbytes))
 		goto err;
 	return DeeFile_ReadBytes(self, maxbytes, true);
 err:
@@ -2292,13 +2288,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readallat(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	Dee_pos_t file_pos;
-	size_t maxbytes = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv,
-	                  UNPuN(Dee_SIZEOF_POS_T) "|" UNPdSIZ ":readallat",
-	                  &file_pos, &maxbytes))
+	struct {
+		Dee_pos_t file_pos;
+		size_t maxbytes;
+	} args;
+	args.maxbytes = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuN(Dee_SIZEOF_POS_T) "|" UNPdSIZ ":readallat", &args))
 		goto err;
-	return DeeFile_PReadBytes(self, maxbytes, file_pos, true);
+	return DeeFile_PReadBytes(self, args.maxbytes, args.file_pos, true);
 err:
 	return NULL;
 }

@@ -911,9 +911,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_g_init(DefaultIterator_WithGetItem *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "oo:_IterWithGetItem",
-	                  &self->dig_seq, &self->dig_index))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "_IterWithGetItem",
+	                &self->dig_seq, &self->dig_index);
 	seqtyp = Dee_TYPE(self->dig_seq);
 	self->dig_tp_getitem = DeeType_RequireSupportedNativeOperator(seqtyp, getitem);
 	if unlikely(!self->dig_tp_getitem)
@@ -1340,9 +1339,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_sg_init(DefaultIterator_WithSizeObAndGetItem *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "ooo:_IterWithSizeObAndGetItem",
-	                  &self->disg_seq, &self->disg_index, &self->disg_end))
-		goto err;
+	_DeeArg_Unpack3(err, argc, argv, "_IterWithSizeObAndGetItem",
+	                &self->disg_seq, &self->disg_index, &self->disg_end);
 	seqtyp = Dee_TYPE(self->disg_seq);
 	self->disg_tp_getitem = DeeType_RequireSupportedNativeOperator(seqtyp, getitem);
 	if unlikely(!self->disg_tp_getitem)
@@ -1853,9 +1851,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_ikgim_init(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp, *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "oo:_IterWithIterKeysAndGetItemForMap",
-	                  &self->diikgi_seq, &self->diikgi_iter))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "_IterWithIterKeysAndGetItemForMap",
+	                &self->diikgi_seq, &self->diikgi_iter);
 	itertyp = Dee_TYPE(self->diikgi_iter);
 	self->diikgi_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
 	if unlikely(!self->diikgi_tp_next)
@@ -1879,9 +1876,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_iktrgim_init(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
                 size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp, *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "oo:_IterWithIterKeysAndTryGetItemForMap",
-	                  &self->diikgi_seq, &self->diikgi_iter))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "_IterWithIterKeysAndTryGetItemForMap",
+	                &self->diikgi_seq, &self->diikgi_iter);
 	itertyp = Dee_TYPE(self->diikgi_iter);
 	self->diikgi_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
 	if unlikely(!self->diikgi_tp_next)
@@ -2732,9 +2728,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_nuf_init(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	if (DeeArg_Unpack(argc, argv, "ooo:_IterWithNextAndUnpackFilter",
-	                  &self->dinuf_iter, &self->dinuf_start, &self->dinuf_end))
-		goto err;
+	_DeeArg_Unpack3(err, argc, argv, "_IterWithNextAndUnpackFilter",
+	                &self->dinuf_iter, &self->dinuf_start, &self->dinuf_end);
 	itertyp = Dee_TYPE(self->dinuf_iter);
 	self->dinuf_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
 	if unlikely(!self->dinuf_tp_next)
@@ -3008,8 +3003,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_nk_init(DefaultIterator_PairSubItem *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	if (DeeArg_Unpack(argc, argv, "o:_IterWithNextKey", &self->dipsi_iter))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_IterWithNextKey", &self->dipsi_iter);
 	itertyp          = Dee_TYPE(self->dipsi_iter);
 	self->dipsi_next = DeeType_RequireSupportedNativeOperator(itertyp, nextkey);
 	if unlikely(!self->dipsi_next)
@@ -3026,8 +3020,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_nv_init(DefaultIterator_PairSubItem *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	if (DeeArg_Unpack(argc, argv, "o:_IterWithNextValue", &self->dipsi_iter))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_IterWithNextValue", &self->dipsi_iter);
 	itertyp = Dee_TYPE(self->dipsi_iter);
 	self->dipsi_next = DeeType_RequireSupportedNativeOperator(itertyp, nextvalue);
 	if unlikely(!self->dipsi_next)

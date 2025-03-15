@@ -149,8 +149,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 mappediter_init(SeqMappedIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
 	SeqMapped *trans;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqMappedIterator", &trans))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SeqMappedIterator", &trans);
 	if (DeeObject_AssertTypeExact(trans, &SeqMapped_Type))
 		goto err;
 	self->smi_iter = DeeObject_Iter(trans->sm_seq);

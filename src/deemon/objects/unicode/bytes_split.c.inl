@@ -79,9 +79,8 @@ typedef struct {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsi_init(BytesSplitIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_BytesSplitIterator",
-	                  &self->bsi_split))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_BytesSplitIterator",
+	                  &self->bsi_split);
 	if (DeeObject_AssertTypeExact(self->bsi_split,
 	                              Dee_TYPE(self) == &BytesSplitIterator_Type
 	                              ? &BytesSplit_Type
@@ -434,8 +433,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bs_init(BytesSplit *__restrict self, size_t argc,
         DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oo:_BytesSplit", &self->bs_bytes, &self->bs_sep_owner))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "_BytesSplit", &self->bs_bytes, &self->bs_sep_owner);
 	if (DeeObject_AssertTypeExact(self->bs_bytes, &DeeBytes_Type))
 		goto err;
 	if (DeeBytes_Check(self->bs_sep_owner)) {
@@ -853,8 +851,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 blsi_init(BytesLineSplitIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	BytesLineSplit *ls;
-	if (DeeArg_Unpack(argc, argv, "o:_BytesLineSplitIterator", &ls))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_BytesLineSplitIterator", &ls);
 	if (DeeObject_AssertTypeExact(ls, &BytesLineSplit_Type))
 		goto err;
 	self->blsi_bytes    = ls->bls_bytes;

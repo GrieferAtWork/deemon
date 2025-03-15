@@ -39,8 +39,7 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 srwrip_init(SeqRemoveWithRemoveIfPredicate *__restrict self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveWithRemoveIfPredicate", &self->srwrip_item))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SeqRemoveWithRemoveIfPredicate", &self->srwrip_item);
 	Dee_Incref(self->srwrip_item);
 	return 0;
 err:
@@ -49,9 +48,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 srwripwk_init(SeqRemoveWithRemoveIfPredicateWithKey *__restrict self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oo:_SeqRemoveWithRemoveIfPredicateWithKey",
-	                  &self->srwripwk_item, &self->srwripwk_key))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "_SeqRemoveWithRemoveIfPredicateWithKey",
+	                &self->srwripwk_item, &self->srwripwk_key);
 	Dee_Incref(self->srwripwk_item);
 	Dee_Incref(self->srwripwk_key);
 	return 0;
@@ -85,8 +83,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 srwrip_call(SeqRemoveWithRemoveIfPredicate *self, size_t argc, DeeObject *const *argv) {
 	int equals;
 	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveWithRemoveIfPredicate", &item))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SeqRemoveWithRemoveIfPredicate", &item);
 	equals = DeeObject_TryCompareEq(self->srwrip_item, item);
 	if unlikely(equals == Dee_COMPARE_ERR)
 		goto err;
@@ -99,8 +96,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 srwripwk_call(SeqRemoveWithRemoveIfPredicateWithKey *self, size_t argc, DeeObject *const *argv) {
 	int equals;
 	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveWithRemoveIfPredicateWithKey", &item))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SeqRemoveWithRemoveIfPredicateWithKey", &item);
 	equals = DeeObject_TryCompareKeyEq(self->srwripwk_item, item, self->srwripwk_key);
 	if unlikely(equals == Dee_COMPARE_ERR)
 		goto err;
@@ -310,8 +306,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_removeif_with_removeall_key_call(SeqRemoveIfWithRemoveAllKey *__restrict self,
                                      size_t argc, DeeObject *const *argv) {
 	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveIfWithRemoveAllKey", &item))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SeqRemoveIfWithRemoveAllKey", &item);
 	if (item == &SeqRemoveIfWithRemoveAllItem_DummyInstance)
 		return_reference_(item);
 	return DeeObject_Call(self->sriwrak_should, argc, argv);

@@ -188,8 +188,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_abort_f(size_t argc, DeeObject *cons
 #define POSIX_ABORT_DEF_DOC(doc) { "abort", (DeeObject *)&posix_abort, MODSYM_FREADONLY, DOC("()\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_abort, &posix_abort_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_abort_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":abort"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "abort");
 	return posix_abort_f_impl();
 err:
 	return NULL;

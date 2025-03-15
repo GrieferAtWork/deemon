@@ -226,8 +226,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 coti_init(ClassOperatorTableIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	ClassOperatorTable *tab;
-	if (DeeArg_Unpack(argc, argv, "o:_ClassOperatorTableIterator", &tab))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_ClassOperatorTableIterator", &tab);
 	if (DeeObject_AssertTypeExact(tab, &ClassOperatorTableIterator_Type))
 		goto err;
 	self->co_desc = tab->co_desc;
@@ -357,8 +356,7 @@ STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) == offsetof(ProxyObject, po_
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cot_init(ClassOperatorTable *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_ClassOperatorTable", &self->co_desc))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_ClassOperatorTable", &self->co_desc);
 	if (DeeObject_AssertTypeExact(self->co_desc, &DeeClassDescriptor_Type))
 		goto err;
 	Dee_Incref(self->co_desc);
@@ -677,8 +675,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cati_iter(ClassAttributeTableIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	ClassAttributeTable *tab;
-	if (DeeArg_Unpack(argc, argv, "o:_ClassAttributeTableIterator", &tab))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_ClassAttributeTableIterator", &tab);
 	if (DeeObject_AssertTypeExact(tab, &ClassAttributeTable_Type))
 		goto err;
 	self->ca_desc = tab->ca_desc;
@@ -2717,8 +2714,7 @@ ot_init(ObjectTable *__restrict self,
 	DeeObject *ob;
 	DeeTypeObject *type = NULL;
 	struct class_desc *desc;
-	if (DeeArg_Unpack(argc, argv, "o|o:_ObjectTable", &ob, &type))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "_ObjectTable", &ob, &type);
 	if (type) {
 		if (DeeObject_AssertImplements(ob, type))
 			goto err;
@@ -3926,10 +3922,10 @@ DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type,
 		args_tuple = DeeTuple_VNewf(format, args);
 		if unlikely(!args_tuple)
 			goto err;
-		if (DeeArg_Unpack(DeeTuple_SIZE(args_tuple),
-		                  DeeTuple_ELEM(args_tuple),
-		                  "o:get", &thisarg))
-			goto err_args_tuple;
+		_DeeArg_Unpack1(err_args_tuple,
+		                DeeTuple_SIZE(args_tuple),
+		                DeeTuple_ELEM(args_tuple),
+		                "get", &thisarg);
 		if (DeeObject_AssertTypeOrAbstract(thisarg, class_type))
 			goto err_args_tuple;
 		result = DeeInstance_GetAttribute(my_class,

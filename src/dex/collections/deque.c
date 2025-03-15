@@ -1195,8 +1195,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_popfront(Deque *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":popfront"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "popfront");
 	return Deque_PopFront(self);
 err:
 	return NULL;
@@ -1204,8 +1203,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_popback(Deque *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":popback"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "popback");
 	return Deque_PopBack(self);
 err:
 	return NULL;

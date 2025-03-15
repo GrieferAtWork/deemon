@@ -134,8 +134,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 diter_init(DictIterator *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	Dict *dict;
-	if (DeeArg_Unpack(argc, argv, "o:_DictIterator", &dict))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_DictIterator", &dict);
 	if (DeeObject_AssertType(dict, &DeeDict_Type))
 		goto err;
 	self->di_dict = dict;

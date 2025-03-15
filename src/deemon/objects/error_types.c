@@ -252,8 +252,6 @@ err:
 	return -1;
 }
 
-PRIVATE char const error_init_fmt[] = "|oo:Error";
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_init(DeeErrorObject *__restrict self,
            size_t argc, DeeObject *const *argv) {
@@ -267,8 +265,7 @@ error_init(DeeErrorObject *__restrict self,
 	        Dee_TYPE(self)->tp_name);
 	self->e_message = NULL;
 	self->e_inner   = NULL;
-	if (DeeArg_Unpack(argc, argv, error_init_fmt, &self->e_message, &self->e_inner))
-		goto err;
+	_DeeArg_Unpack0Or1Or2(err, argc, argv, "Error", &self->e_message, &self->e_inner);
 	if (self->e_message &&
 	    DeeObject_AssertTypeExact(self->e_message, &DeeString_Type))
 		goto err;
@@ -291,7 +288,7 @@ error_init_kw(DeeErrorObject *__restrict self, size_t argc,
 	ASSERT(sizeof_instance >= sizeof(DeeErrorObject));
 	self->e_message = NULL;
 	self->e_inner   = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__message_inner, error_init_fmt,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__message_inner, "|oo:Error",
 	                    &self->e_message, &self->e_inner))
 		goto err;
 	if (self->e_message &&
@@ -537,7 +534,7 @@ nomemory_ctor(DeeNoMemoryErrorObject *__restrict self,
 	if (error_try_init((DeeErrorObject *)self, argc, argv))
 		goto done;
 	self->nm_allocsize = 1;
-	if (DeeArg_Unpack(argc, argv, "|" UNPuSIZ ":NoMemory", &self->nm_allocsize))
+	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ ":NoMemory", &self->nm_allocsize))
 		goto err;
 done:
 	return 0;
@@ -1185,9 +1182,9 @@ appexit_init(struct appexit_object *__restrict self,
 	int result;
 	self->ae_exitcode = EXIT_SUCCESS;
 	/* Read the exitcode from arguments. */
-	result = DeeArg_Unpack(argc, argv,
-	                       "|d:appexit",
-	                       &self->ae_exitcode);
+	result = DeeArg_UnpackStruct(argc, argv,
+	                             "|d:appexit",
+	                             &self->ae_exitcode);
 	return result;
 }
 
@@ -1221,8 +1218,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 appexit_class_atexit(DeeTypeObject *UNUSED(self),
                      size_t argc, DeeObject *const *argv) {
 	DeeObject *callback, *args = Dee_EmptyTuple;
-	if (DeeArg_Unpack(argc, argv, "o|o:atexit", &callback, &args))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "atexit", &callback, &args);
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err;
 	if (Dee_AtExit(callback, args))
@@ -1275,11 +1271,15 @@ PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 appexit_class_exit(DeeTypeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
-	int exitcode = EXIT_SUCCESS;
-	bool run_atexit = true;
-	if (DeeArg_Unpack(argc, argv, "|db:exit", &exitcode, &run_atexit))
+	struct {
+		int exitcode;
+		bool run_atexit;
+	} args;
+	args.exitcode   = EXIT_SUCCESS;
+	args.run_atexit = true;
+	if (DeeArg_UnpackStruct(argc, argv, "|db:exit", &args))
 		goto err;
-	Dee_Exit(exitcode, run_atexit);
+	Dee_Exit(args.exitcode, args.run_atexit);
 err:
 	return NULL;
 }
@@ -1401,8 +1401,7 @@ PRIVATE int DCALL
 threadexit_init(struct threadexit_object *__restrict self,
                 size_t argc, DeeObject *const *argv) {
 	self->te_result = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "|o", &self->te_result))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "ThreadExit", &self->te_result);
 	Dee_Incref(self->te_result);
 	return 0;
 err:

@@ -997,8 +997,7 @@ list_init(List *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	DeeObject *sequence;
 	DeeObject *filler = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:List", &sequence, &filler))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "List", &sequence, &filler);
 	weakref_support_init(self);
 	Dee_atomic_rwlock_init(&self->l_lock);
 	if (filler || DeeInt_Check(sequence)) {
@@ -3376,8 +3375,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_shrink(List *me, size_t argc, DeeObject *const *argv) {
 	bool result;
-	if (DeeArg_Unpack(argc, argv, ":shrink"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "shrink");
 	result = list_do_shrink(me);
 	return_bool_(result);
 err:

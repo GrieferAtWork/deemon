@@ -792,8 +792,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_format(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *args;
 	struct bytes_printer printer;
-	if (DeeArg_Unpack(argc, argv, "o:format", &args))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "format", &args);
 	bytes_printer_init(&printer);
 	if unlikely(DeeString_FormatPrinter((char const *)DeeBytes_DATA(self), DeeBytes_SIZE(self), args,
 	                                    (dformatprinter)&bytes_printer_append, &bytes_printer_print,
@@ -933,8 +932,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_makereadonly(Bytes *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":makereadonly"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "makereadonly");
 	if (!DeeBytes_WRITABLE(self))
 		return_reference_(self);
 	return (DREF Bytes *)DeeBytes_NewSubViewRo(self,
@@ -946,8 +944,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_makewritable(Bytes *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":makewritable"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "makewritable");
 	if (DeeBytes_WRITABLE(self))
 		return_reference_(self);
 	/* Return a copy of `self' */
@@ -1020,8 +1017,7 @@ DeeString_Scanf(DeeObject *self, DeeObject *format);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_scanf(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *format;
-	if (DeeArg_Unpack(argc, argv, "o:scanf", &format))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "scanf", &format);
 	if (DeeObject_AssertTypeExact(format, &DeeString_Type))
 		goto err;
 	return DeeString_Scanf((DeeObject *)self, format);
@@ -1894,8 +1890,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_join(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	struct bytes_join_data data;
-	if (DeeArg_Unpack(argc, argv, "o:join", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "join", &seq);
 	bytes_printer_init(&data.bjd_out);
 	data.bjd_sep   = self;
 	data.bjd_first = true;
@@ -1912,8 +1907,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_split(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	byte_t sep;
-	if (DeeArg_Unpack(argc, argv, "o:split", &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "split", &other);
 	if (DeeString_Check(other) || DeeBytes_Check(other))
 		return DeeBytes_Split(self, other);
 	if (DeeObject_AsUIntX(other, &sep))
@@ -1927,8 +1921,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casesplit(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	byte_t sep;
-	if (DeeArg_Unpack(argc, argv, "o:casesplit", &other))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "casesplit", &other);
 	if (DeeString_Check(other) || DeeBytes_Check(other))
 		return DeeBytes_CaseSplit(self, other);
 	if (DeeObject_AsUIntX(other, &sep))
@@ -2958,8 +2951,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_unifylines(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *replace_ob = NULL;
 	Needle replace;
-	if (DeeArg_Unpack(argc, argv, "|o:unifylines", &replace_ob))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "unifylines", &replace_ob);
 	if (replace_ob) {
 		if (get_needle(&replace, replace_ob))
 			goto err;
@@ -3017,8 +3009,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *filler_ob = NULL;
 	Needle filler;
-	if (DeeArg_Unpack(argc, argv, "|o:indent", &filler_ob))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "indent", &filler_ob);
 	if (filler_ob) {
 		if (get_needle(&filler, filler_ob))
 			goto err;

@@ -58,8 +58,7 @@ PRIVATE int DCALL
 shlib_init(Shlib *__restrict self, size_t argc,
            DREF DeeObject *const *argv) {
 	DeeStringObject *name, *cc_name = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:shlib", &name, &cc_name))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "shlib", &name, &cc_name);
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 		/* Parse the given default calling convention. */
@@ -322,8 +321,7 @@ shlib_base(Shlib *self, size_t argc,
            DeeObject *const *argv) {
 	DREF struct pointer_object *result;
 	DREF DeeSTypeObject *result_type;
-	if (DeeArg_Unpack(argc, argv, ":base"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "base");
 	result_type = get_void_pointer();
 	if unlikely(!result_type)
 		goto err;
@@ -492,8 +490,7 @@ shlib_addr2name(DeeTypeObject *UNUSED(tp_self),
                 size_t argc, DeeObject *const *argv) {
 	union pointer addr;
 	DeeObject *addrob;
-	if (DeeArg_Unpack(argc, argv, "o:addr2name", &addrob))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "addr2name", &addrob);
 	if (DeeObject_AsPointer(addrob, &DeeCVoid_Type, &addr))
 		goto err;
 	return shlib_addr2name_impl(addr.ptr);

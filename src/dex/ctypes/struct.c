@@ -201,8 +201,7 @@ PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL
 struct_type_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *fields_or_name, *fields = NULL;
 	unsigned int flags = STRUCT_TYPE_FNORMAL; /* TODO */
-	if (DeeArg_Unpack(argc, argv, "o|o:StructType", &fields_or_name, &fields))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "StructType", &fields_or_name, &fields);
 	if (!fields)
 		return DeeStructType_FromSequence(NULL, fields_or_name, flags);
 	if (DeeObject_AssertTypeExact(fields_or_name, &DeeString_Type))
@@ -238,8 +237,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_type_offsetof(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
 	Dee_hash_t i, perturb, hash;
 	DeeObject *name;
-	if (DeeArg_Unpack(argc, argv, "o:offsetof", &name))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "offsetof", &name);
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	hash = DeeString_Hash(name);
@@ -265,8 +263,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_type_offsetafter(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
 	Dee_hash_t i, perturb, hash;
 	DeeObject *name;
-	if (DeeArg_Unpack(argc, argv, "o:offsetafter", &name))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "offsetafter", &name);
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	hash = DeeString_Hash(name);
@@ -294,8 +291,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
 	Dee_hash_t i, perturb, hash;
 	DeeObject *name;
-	if (DeeArg_Unpack(argc, argv, "o:typeof", &name))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "typeof", &name);
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	hash = DeeString_Hash(name);
@@ -565,8 +561,7 @@ PRIVATE NONNULL((1)) int DCALL
 struct_init(DeeStructTypeObject *tp_self, void *self,
             size_t argc, DeeObject *const *argv) {
 	DeeObject *value = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "|o:struct", &value))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "struct", &value);
 
 	/* Do an initial assignment using the initializer. */
 	CTYPES_FAULTPROTECT(bzero(self, tp_self->st_base.st_sizeof), goto err);

@@ -152,8 +152,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 usetiterator_init(USetIterator *__restrict self,
                   size_t argc, DeeObject *const *argv) {
 	USet *set;
-	if (DeeArg_Unpack(argc, argv, "o:_UniqueSetIterator", &set))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_UniqueSetIterator", &set);
 	if (DeeObject_AssertType(set, &USet_Type))
 		goto err;
 	self->usi_set = set;
@@ -1052,8 +1051,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 uset_init(USet *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	if unlikely(DeeArg_Unpack(argc, argv, "o:UniqueSet", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "UniqueSet", &seq);
 	return USet_InitSequence(self, seq);
 err:
 	return -1;
@@ -1378,8 +1376,7 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 urosetiterator_init(URoSetIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
 	URoSet *set;
-	if (DeeArg_Unpack(argc, argv, "o:_UniqueRoSetIterator", &set))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_UniqueRoSetIterator", &set);
 	if (DeeObject_AssertTypeExact(set, &URoSet_Type))
 		goto err;
 	self->ursi_set = set;
@@ -1946,8 +1943,7 @@ err:
 PRIVATE WUNUSED DREF URoSet *DCALL
 uroset_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, "o:_UniqueRoSet", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_UniqueRoSet", &seq);
 	return URoSet_FromSequence(seq);
 err:
 	return NULL;

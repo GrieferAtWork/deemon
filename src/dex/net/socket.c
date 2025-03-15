@@ -328,8 +328,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_close(Socket *self, size_t argc, DeeObject *const *argv) {
 	sock_t socket_handle;
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
-	if (DeeArg_Unpack(argc, argv, "|o:close", &shutdown_mode))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "close", &shutdown_mode);
 	if (!DeeString_Check(shutdown_mode) ||
 	    !DeeString_IsEmpty(shutdown_mode)) {
 		int error, mode;
@@ -395,8 +394,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_shutdown(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
-	if (DeeArg_Unpack(argc, argv, "|o:shutdown", &shutdown_mode))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "shutdown", &shutdown_mode);
 	if (!DeeString_Check(shutdown_mode) ||
 	    !DeeString_IsEmpty(shutdown_mode)) {
 		int error, mode;
@@ -1981,8 +1979,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_tryaccept(Socket *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":tryaccept"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "tryaccept");
 	return socket_doaccept(self, 0);
 err:
 	return NULL;
@@ -2056,8 +2053,7 @@ socket_recvinto(Socket *self, size_t argc, DeeObject *const *argv) {
 	uint64_t timeout;
 	int flags;
 	dssize_t result;
-	if (DeeArg_Unpack(argc, argv, "o|oo:recvinto", &data, &arg1, &arg2))
-		goto err;
+	_DeeArg_Unpack1Or2Or3(err, argc, argv, "recvinto", &data, &arg1, &arg2);
 	if (!arg1) {
 		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 		timeout = (uint64_t)-1;
@@ -2197,8 +2193,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	dssize_t result_size;
 	DREF DeeSockAddrObject *result_addr;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, "o|oo:recvfrominto", &data, &arg1, &arg2))
-		goto err;
+	_DeeArg_Unpack1Or2Or3(err, argc, argv, "recvfrominto", &data, &arg1, &arg2);
 	if (!arg1) {
 		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 		timeout = (uint64_t)-1;
@@ -2278,8 +2273,7 @@ socket_send(Socket *self, size_t argc, DeeObject *const *argv) {
 	uint64_t timeout;
 	int flags;
 	dssize_t result;
-	if (DeeArg_Unpack(argc, argv, "o|oo:send", &data, &arg_0, &arg_1))
-		goto err;
+	_DeeArg_Unpack1Or2Or3(err, argc, argv, "send", &data, &arg_0, &arg_1);
 	if (!arg_0) {
 		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
 		timeout = (uint64_t)-1;
@@ -2401,8 +2395,7 @@ socket_wasshutdown(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	int mode;
 	uint16_t state = self->s_state;
-	if (DeeArg_Unpack(argc, argv, "|o:wasshutdown", &shutdown_mode))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "wasshutdown", &shutdown_mode);
 	if (DeeString_Check(shutdown_mode) &&
 	    DeeString_IsEmpty(shutdown_mode))
 		return_bool(!(state & SOCKET_FOPENED));
@@ -2425,8 +2418,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_fileno(Socket *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":fileno"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "fileno");
 #ifdef CONFIG_HOST_WINDOWS
 	return DeeInt_NewUIntptr((uintptr_t)self->s_socket);
 #else /* CONFIG_HOST_WINDOWS */

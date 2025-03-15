@@ -171,8 +171,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 super_init(Super *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
 	DeeTypeObject *tp = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:Super", &ob, &tp))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "Super", &ob, &tp);
 
 	/* Special handling when the base-object is another super-object. */
 	if (DeeSuper_Check(ob)) {
@@ -1120,8 +1119,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_typeof(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	Super *super_object;
-	if (DeeArg_Unpack(argc, argv, "o:typeof", &super_object))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "typeof", &super_object);
 	if (DeeObject_AssertTypeExact(super_object, &DeeSuper_Type))
 		goto err;
 	return_reference_((DeeObject *)super_object->s_type);
@@ -1133,8 +1131,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_selfof(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	Super *super_object;
-	if (DeeArg_Unpack(argc, argv, "o:selfof", &super_object))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "selfof", &super_object);
 	if (DeeObject_AssertTypeExact(super_object, &DeeSuper_Type))
 		goto err;
 	return_reference_((DeeObject *)super_object->s_self);

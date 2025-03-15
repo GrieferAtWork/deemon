@@ -117,24 +117,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       tp, info ? info->oi_sname : Q3);
 }
 
-INTERN ATTR_COLD int
-(DCALL err_invalid_argc)(char const *function_name, size_t argc_cur,
-                         size_t argc_min, size_t argc_max) {
-	if (argc_min == argc_max) {
-		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%s expects %" PRFuSIZ " arguments when %" PRFuSIZ " w%s given",
-		                       function_name ? " " : "", function_name ? function_name : "",
-		                       argc_min, argc_cur, argc_cur == 1 ? "as" : "ere");
-	} else {
-		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%s expects between %" PRFuSIZ " and %" PRFuSIZ " "
-		                       "arguments when %" PRFuSIZ " w%s given",
-		                       function_name ? " " : "", function_name ? function_name : "",
-		                       argc_min, argc_max, argc_cur, argc_cur == 1 ? "as" : "ere");
-	}
-}
-
-
 PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: user-code API for `Dee_accu'
 	 * >> class Accu {

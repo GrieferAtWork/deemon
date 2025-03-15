@@ -756,8 +756,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_lockapi_tryacquire(LOCAL_DeeLockObject *self,
                          size_t argc, DeeObject *const *argv) {
 	bool result;
-	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "tryacquire");
 	result = LOCAL_lock_tryacquire(&self->l_lock);
 	return_bool_(result);
 err:
@@ -767,8 +766,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_lockapi_acquire(LOCAL_DeeLockObject *self,
                       size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":acquire"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "acquire");
 	LOCAL_lock_acquire_p(&self->l_lock, err);
 	return_none;
 err:
@@ -790,8 +788,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_lockapi_waitfor(LOCAL_DeeLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitfor"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "waitfor");
 	LOCAL_lock_waitfor_p(&self->l_lock, err);
 	return_none;
 err:
@@ -813,8 +810,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_lockapi_release(LOCAL_DeeLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":release"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "release");
 	if unlikely(LOCAL_lockapi_leave(self) != 0)
 		goto err;
 	return_none;
@@ -1058,8 +1054,7 @@ LOCAL_rwlockapi_printrepr(LOCAL_DeeRWLockObject *__restrict self,
 #ifndef LOCAL_IS_ATOMIC_AS_SHARED
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_tryread(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":tryread"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "tryread");
 	return_bool(LOCAL_rwlock_tryread(&self->rwl_lock));
 err:
 	return NULL;
@@ -1067,8 +1062,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_trywrite(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":trywrite"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "trywrite");
 	return_bool(LOCAL_rwlock_trywrite(&self->rwl_lock));
 err:
 	return NULL;
@@ -1076,8 +1070,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_tryupgrade(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":tryupgrade"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "tryupgrade");
 	return_bool(LOCAL_rwlock_tryupgrade(&self->rwl_lock));
 err:
 	return NULL;
@@ -1085,8 +1078,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_endread(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":endread"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "endread");
 	if unlikely(!LOCAL_rwlock_canendread(&self->rwl_lock))
 		goto err_no_read_lock;
 	_LOCAL_rwlock_endread_NDEBUG(&self->rwl_lock);
@@ -1099,8 +1091,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_endwrite(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":endwrite"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "endwrite");
 	if unlikely(!LOCAL_rwlock_canendwrite(&self->rwl_lock))
 		goto err_no_write_lock;
 	_LOCAL_rwlock_endwrite_NDEBUG(&self->rwl_lock);
@@ -1113,8 +1104,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_end(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":end"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "end");
 	if unlikely(!LOCAL_rwlock_canend(&self->rwl_lock))
 		goto err_nolock;
 	_LOCAL_rwlock_end_NDEBUG(&self->rwl_lock);
@@ -1127,8 +1117,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_downgrade(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":downgrade"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "downgrade");
 	if unlikely(!LOCAL_rwlock_canendwrite(&self->rwl_lock))
 		goto err_no_write_lock;
 	_LOCAL_rwlock_downgrade_NDEBUG(&self->rwl_lock);
@@ -1141,8 +1130,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_read(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":read"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "read");
 	LOCAL_rwlock_read_p(&self->rwl_lock, err);
 	return_none;
 err:
@@ -1151,8 +1139,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_write(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":write"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "write");
 	LOCAL_rwlock_write_p(&self->rwl_lock, err);
 	return_none;
 err:
@@ -1161,8 +1148,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_upgrade(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":upgrade"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "upgrade");
 	if (LOCAL_rwlock_tryupgrade(&self->rwl_lock))
 		return_true;
 	if unlikely(!LOCAL_rwlock_canendread(&self->rwl_lock))
@@ -1204,8 +1190,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_waitread(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitread"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "waitread");
 	LOCAL_rwlock_waitread_p(&self->rwl_lock, err);
 	return_none;
 err:
@@ -1214,8 +1199,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_waitwrite(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitwrite"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "waitwrite");
 	LOCAL_rwlock_waitwrite_p(&self->rwl_lock, err);
 	return_none;
 err:
@@ -1412,8 +1396,7 @@ INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_rwlockapi_readlock_init(DeeGenericRWLockProxyObject *__restrict self,
                               size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:" LOCAL_S_RWLockReadLock, &self->grwl_lock))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, LOCAL_S_RWLockReadLock, &self->grwl_lock);
 	if (DeeObject_AssertType(self->grwl_lock, &LOCAL_DeeRWLock_Type))
 		goto err;
 	Dee_Incref(self->grwl_lock);
@@ -1425,8 +1408,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_rwlockapi_writelock_init(DeeGenericRWLockProxyObject *__restrict self,
                                size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:" LOCAL_S_RWLockWriteLock, &self->grwl_lock))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, LOCAL_S_RWLockWriteLock, &self->grwl_lock);
 	if (DeeObject_AssertType(self->grwl_lock, &LOCAL_DeeRWLock_Type))
 		goto err;
 	Dee_Incref(self->grwl_lock);

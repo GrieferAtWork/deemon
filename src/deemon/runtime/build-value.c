@@ -643,6 +643,27 @@ ASSERT_ALIGNMENT(__LONGDOUBLE, __ALIGNOF_LONG_DOUBLE__);
 #endif /* __LONGDOUBLE */
 
 
+/* Helper functions for throwing invalid-argc errors */
+PUBLIC ATTR_COLD int
+(DCALL DeeArg_BadArgc)(char const *function_name, size_t real_argc, size_t want_argc) {
+	return err_invalid_argc(function_name, real_argc, want_argc, want_argc);
+}
+
+PUBLIC ATTR_COLD int
+(DCALL DeeArg_BadArgc0)(char const *function_name, size_t real_argc) {
+	return err_invalid_argc(function_name, real_argc, 0, 0);
+}
+
+PUBLIC ATTR_COLD int
+(DCALL DeeArg_BadArgc1)(char const *function_name, size_t real_argc) {
+	return err_invalid_argc(function_name, real_argc, 1, 1);
+}
+
+PUBLIC ATTR_COLD int
+(DCALL DeeArg_BadArgcEx)(char const *function_name, size_t real_argc, size_t want_argc_min, size_t want_argc_max) {
+	return err_invalid_argc(function_name, real_argc, want_argc_min, want_argc_max);
+}
+
 DECL_END
 
 #ifndef __INTELLISENSE__

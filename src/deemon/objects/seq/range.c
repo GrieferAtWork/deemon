@@ -104,8 +104,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ri_init(RangeIterator *__restrict self,
         size_t argc, DeeObject *const *argv) {
 	Range *range;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRangeIterator", &range))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SeqRangeIterator", &range);
 	if (DeeObject_AssertTypeExact(range, &SeqRange_Type))
 		goto err;
 	Dee_Incref(range->r_start);
@@ -1171,8 +1170,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 iri_init(IntRangeIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	IntRange *range;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqIntRangeIterator", &range))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SeqIntRangeIterator", &range);
 	if (DeeObject_AssertTypeExact(range, &SeqIntRange_Type))
 		goto err;
 	self->iri_end   = range->ir_end;

@@ -1019,9 +1019,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seX(init)(LOCAL_SeqEach *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oo:_" LOCAL_SeqEach_Type_NAME,
-	                  &self->se_seq, &self->sg_attr))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "_" LOCAL_SeqEach_Type_NAME,
+	                &self->se_seq, &self->sg_attr);
 	if (DeeObject_AssertTypeExact(self->sg_attr, &DeeString_Type))
 		goto err;
 	Dee_Incref(self->se_seq);
@@ -1332,8 +1331,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seXi(init)(SeqEachIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_" LOCAL_SeqEach_Type_NAME "Iterator", &self->ei_each))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_" LOCAL_SeqEach_Type_NAME "Iterator", &self->ei_each);
 	if (DeeObject_AssertTypeExact(self->ei_each, &LOCAL_SeqEach_Type))
 		goto err;
 	self->ei_iter = DeeObject_Iter(self->ei_each->se_seq);

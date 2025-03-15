@@ -1208,8 +1208,7 @@ err:
 PRIVATE WUNUSED DREF Tuple *DCALL
 tuple_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *items;
-	if (DeeArg_Unpack(argc, argv, "o:Tuple", &items))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "Tuple", &items);
 	return (DREF Tuple *)DeeTuple_FromSequence(items);
 err:
 	return NULL;
@@ -2466,8 +2465,7 @@ PRIVATE WUNUSED DREF Tuple *DCALL
 nullable_tuple_init(size_t argc, DeeObject *const *argv) {
 	DREF Tuple *result;
 	DeeObject *items;
-	if (DeeArg_Unpack(argc, argv, "o:NullableTuple", &items))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "NullableTuple", &items);
 	result = (DREF Tuple *)DeeTuple_FromSequence(items);
 	if likely(result)
 		result = make_nullable(result);

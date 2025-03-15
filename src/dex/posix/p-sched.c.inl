@@ -239,8 +239,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f(size_t argc, DeeObject
 #define POSIX_SCHED_YIELD_DEF_DOC(doc) { "sched_yield", (DeeObject *)&posix_sched_yield, MODSYM_FREADONLY, DOC("()\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_sched_yield, &posix_sched_yield_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":sched_yield"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "sched_yield");
 	return posix_sched_yield_f_impl();
 err:
 	return NULL;
@@ -266,8 +265,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *con
 #define POSIX_GETPID_DEF_DOC(doc) { "getpid", (DeeObject *)&posix_getpid, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_getpid, &posix_getpid_f, METHOD_FPURECALL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":getpid"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "getpid");
 	return posix_getpid_f_impl();
 err:
 	return NULL;

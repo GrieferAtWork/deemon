@@ -498,8 +498,7 @@ PRIVATE struct type_with lock_with = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_acquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":acquire"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "acquire");
 	for (;;) {
 		int error = lock_do_tryacquire(self);
 		if unlikely(error < 0)
@@ -582,8 +581,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_waitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitfor"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "waitfor");
 	for (;;) {
 		int error = lock_is_acquired(self);
 		if unlikely(error < 0)
@@ -998,8 +996,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_read(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":read"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "read");
 	if unlikely(rwlock_do_read(self))
 		goto err;
 	return_none;
@@ -1009,8 +1006,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_write(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":write"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "write");
 	if unlikely(rwlock_do_write(self))
 		goto err;
 	return_none;
@@ -1021,8 +1017,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_end(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	if (DeeArg_Unpack(argc, argv, ":end"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "end");
 	error = rwlock_do_writing(self);
 	if unlikely(error < 0)
 		goto err;
@@ -1041,8 +1036,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_upgrade(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	if (DeeArg_Unpack(argc, argv, ":upgrade"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "upgrade");
 	error = rwlock_do_tryupgrade(self);
 	if unlikely(error < 0)
 		goto err;
@@ -1087,8 +1081,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_waitread(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitread"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "waitread");
 	if unlikely(rwlock_do_waitread(self))
 		goto err;
 	return_none;
@@ -1098,8 +1091,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_waitwrite(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitwrite"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "waitwrite");
 	if unlikely(rwlock_do_waitwrite(self))
 		goto err;
 	return_none;
@@ -1282,8 +1274,7 @@ INTERN DeeTypeObject DeeRWLock_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_readlock_init(DeeGenericRWLockProxyObject *__restrict self,
                      size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:RWLockReadLock", &self->grwl_lock))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "RWLockReadLock", &self->grwl_lock);
 	if (DeeObject_AssertType(self->grwl_lock, &DeeLock_Type))
 		goto err;
 	Dee_Incref(self->grwl_lock);
@@ -1295,8 +1286,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_writelock_init(DeeGenericRWLockProxyObject *__restrict self,
                       size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:RWLockWriteLock", &self->grwl_lock))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "RWLockWriteLock", &self->grwl_lock);
 	if (DeeObject_AssertType(self->grwl_lock, &DeeLock_Type))
 		goto err;
 	Dee_Incref(self->grwl_lock);
@@ -1705,8 +1695,7 @@ semaphore_leave(DeeSemaphoreObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_tryacquire(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "tryacquire");
 	return_bool(Dee_semaphore_tryacquire(&self->sem_semaphore));
 err:
 	return NULL;
@@ -1714,8 +1703,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_acquire(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":acquire"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "acquire");
 	if unlikely(Dee_semaphore_acquire(&self->sem_semaphore))
 		goto err;
 	return_none;
@@ -1751,8 +1739,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_waitfor(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitfor"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "waitfor");
 	if unlikely(Dee_semaphore_waitfor(&self->sem_semaphore))
 		goto err;
 	return_none;
@@ -1929,8 +1916,7 @@ event_printrepr(DeeEventObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 event_waitfor(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitfor"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "waitfor");
 	if unlikely(Dee_event_waitfor(&self->e_event))
 		goto err;
 	return_none;
@@ -1954,8 +1940,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 event_set(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":set"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "set");
 	Dee_event_set(&self->e_event);
 	return_none;
 err:
@@ -1964,8 +1949,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 event_clear(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":clear"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "clear");
 	Dee_event_clear(&self->e_event);
 	return_none;
 err:
@@ -2248,8 +2232,7 @@ err:
 PRIVATE WUNUSED DREF LockUnion *DCALL
 lock_union_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, "o:LockUnion", &seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "LockUnion", &seq);
 	return LockUnion_FromSequence(seq);
 err:
 	return NULL;
@@ -2673,8 +2656,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_tryacquire(LockUnion *__restrict self,
                       size_t argc, DeeObject *const *argv) {
 	int error;
-	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "tryacquire");
 	error = lock_union_do_tryacquire(self);
 	if unlikely(error < 0)
 		goto err;
@@ -2686,8 +2668,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_acquire(LockUnion *__restrict self,
                    size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":acquire"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "acquire");
 	if unlikely(lock_union_do_acquire(self))
 		goto err;
 	return_none;
@@ -2698,8 +2679,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_release(LockUnion *__restrict self,
                    size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":release"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "release");
 	if unlikely(lock_union_do_release(self))
 		goto err;
 	return_none;
@@ -2725,8 +2705,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_waitfor(LockUnion *__restrict self,
                    size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitfor"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "waitfor");
 	if unlikely(lock_union_do_waitfor(self))
 		goto err;
 	return_none;

@@ -234,8 +234,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_init(TLS *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	self->t_factory = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:TLS", &self->t_factory))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "TLS", &self->t_factory);
 	self->t_index = tls_alloc();
 	if unlikely(self->t_index == (size_t)-1)
 		goto err;
@@ -450,8 +449,7 @@ tls_init(TLS *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	self->t_value   = NULL;
 	self->t_factory = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:TLS", &self->t_factory))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "TLS", &self->t_factory);
 	/* Save a reference for the factory. */
 	Dee_XIncref(self->t_factory);
 	return 0;
@@ -676,8 +674,7 @@ PRIVATE struct type_getset tpconst tls_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_xch(TLS *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *newval;
-	if (DeeArg_Unpack(argc, argv, "o:xch", &newval))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "xch", &newval);
 	return tls_xchitem(self, newval);
 err:
 	return NULL;
@@ -685,8 +682,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_pop(TLS *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":pop"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "pop");
 	return tls_xchitem(self, ITER_DONE);
 err:
 	return NULL;
@@ -694,8 +690,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_get(TLS *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":get"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "get");
 	return tls_getvalue(self);
 err:
 	return NULL;
@@ -704,8 +699,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_delete(TLS *self, size_t argc, DeeObject *const *argv) {
 	int result;
-	if (DeeArg_Unpack(argc, argv, ":delete"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "delete");
 	result = tls_dodelitem(self);
 	if unlikely(result < 0)
 		goto err;
@@ -717,8 +711,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_set(TLS *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
-	if (DeeArg_Unpack(argc, argv, "o:set", &ob))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "set", &ob);
 	if (tls_setvalue(self, ob))
 		goto err;
 	return_none;

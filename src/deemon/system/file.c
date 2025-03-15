@@ -2864,8 +2864,7 @@ sysfile_visit(SystemFile *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":sync"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "sync");
 #ifdef CONFIG_HAVE_sync
 	DBG_ALIGNMENT_DISABLE();
 	(void)sync();
@@ -3032,8 +3031,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_flush(SystemFile *self, size_t argc, DeeObject *const *argv) {
-	if unlikely(DeeArg_Unpack(argc, argv, ":flush"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "flush");
 	if unlikely(sysfile_sync(self))
 		goto err;
 	return_none;

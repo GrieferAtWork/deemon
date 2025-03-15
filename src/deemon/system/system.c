@@ -36,6 +36,7 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/byteorder.h>
+#include <hybrid/debug-alignment.h>
 #include <hybrid/host.h>
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
@@ -1618,8 +1619,8 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
  *                    this number of bytes has been reached,  nul bytes are mapped for its  remainder.
  *                    Note that this doesn't include `num_trailing_nulbytes', meaning that (e.g.) when
  *                    an entirely empty file is mapped you get a buffer like:
- *                    >> mf_addr = calloc(min_size + num_trailing_nulbytes);
- *                    >> mf_size = min_size;
+ *                    >> mf_addr = calloc(min_bytes + num_trailing_nulbytes);
+ *                    >> mf_size = min_bytes;
  *                    This argument essentially acts as if `fd' was at least `min_bytes' bytes large
  *                    by filling the non-present address range with all zeroes.
  * @param: max_bytes: The max number of bytes (excluding num_trailing_nulbytes) that should be mapped
@@ -2309,7 +2310,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 	if (DeeSystemFile_Check(file)) {
 		Dee_fd_t sfd = DeeSystemFile_Fileno(file);
 		if (sfd == Dee_fd_INVALID)
-			return -1;
+			goto err;
 		return DeeMapFile_InitSysFd(self, sfd,
 		                            offset, min_bytes, max_bytes,
 		                            num_trailing_nulbytes, flags);
@@ -2319,7 +2320,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 	if unlikely(max_bytes == 0) {
 		buf = (unsigned char *)Dee_Calloc(num_trailing_nulbytes);
 		if unlikely(!buf)
-			return -1;
+			goto err;
 		DeeMapFile_SETADDR(self, buf);
 		DeeMapFile_SETSIZE(self, 0);
 		DeeMapFile_SETHEAP(self);
@@ -2355,7 +2356,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 			bufsize = min_bytes;
 		buf = (unsigned char *)Dee_Malloc(bufsize + num_trailing_nulbytes);
 		if unlikely(!buf)
-			return -1;
+			goto err;
 	}
 	bufused = 0;
 	buffree = bufsize;
@@ -2543,6 +2544,7 @@ empty_file:
 	return 0;
 err_buf:
 	Dee_Free(buf);
+err:
 	return -1;
 err_buf_2big:
 	Dee_Free(buf);

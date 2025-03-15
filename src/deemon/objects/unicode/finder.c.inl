@@ -191,8 +191,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_init(StringFindIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	StringFind *find;
-	if (DeeArg_Unpack(argc, argv, "o:_StringFindIterator", &find))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_StringFindIterator", &find);
 	if (DeeObject_AssertTypeExact(find, &StringFind_Type))
 		goto err;
 	return sfi_setup(self, find);
@@ -204,8 +203,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 scfi_init(StringFindIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	StringFind *find;
-	if (DeeArg_Unpack(argc, argv, "o:_StringCaseFindIterator", &find))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_StringCaseFindIterator", &find);
 	if (DeeObject_AssertTypeExact(find, &StringCaseFind_Type))
 		goto err;
 	return sfi_setup(self, find);

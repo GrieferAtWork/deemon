@@ -82,8 +82,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f(size_t argc, DeeObject *const
 #define POSIX_PIPE_DEF_DOC(doc) { "pipe", (DeeObject *)&posix_pipe, MODSYM_FREADONLY, DOC("->?T2?Dint?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_pipe, &posix_pipe_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f(size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":pipe"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "pipe");
 	return posix_pipe_f_impl();
 err:
 	return NULL;

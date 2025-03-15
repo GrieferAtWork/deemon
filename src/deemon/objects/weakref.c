@@ -116,8 +116,7 @@ ob_weakref_init(WeakRef *__restrict self,
                 size_t argc, DeeObject *const *argv) {
 	DeeObject *obj;
 	self->wr_del = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:WeakRef", &obj, &self->wr_del))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "WeakRef", &obj, &self->wr_del);
 	if (self->wr_del) {
 		Dee_Incref(self->wr_del);
 		if unlikely(!Dee_weakref_init(&self->wr_ref, obj, &ob_weakref_invoke_callback))
@@ -301,8 +300,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ob_weakref_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeObject *alt = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:lock", &alt))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "lock", &alt);
 	result = Dee_weakref_lock(&self->wr_ref);
 	if (!result) {
 		if ((result = alt) == NULL) {
@@ -325,8 +323,7 @@ ob_weakref_alive(WeakRef *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ob_weakref_try_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	if (DeeArg_Unpack(argc, argv, ":try_lock"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "try_lock");
 	result = Dee_weakref_lock(&self->wr_ref);
 	if (!result) {
 		result = Dee_None;

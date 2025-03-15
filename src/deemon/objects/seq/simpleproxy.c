@@ -878,14 +878,9 @@ iter_init(SeqSimpleProxyIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	SeqSimpleProxy *seq;
 	DeeTypeObject *tp;
-	if (DeeArg_Unpack(argc, argv,
-	                  self->ob_type == &SeqIdsIterator_Type
-	                  ? "o:_SeqIdsIterator"
-	                  : self->ob_type == &SeqTypesIterator_Type
-	                    ? "o:_SeqTypesIterator"
-	                    : "o:_SeqClassesIterator",
-	                  &seq))
-		goto err;
+	if unlikely(argc != 1)
+		return DeeArg_BadArgc1(Dee_TYPE(self)->tp_name, argc);
+	seq = (SeqSimpleProxy *)argv[0];
 	tp = (self->ob_type == &SeqIdsIterator_Type)
 	     ? &SeqIds_Type
 	     : (self->ob_type == &SeqTypesIterator_Type)

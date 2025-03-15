@@ -3893,8 +3893,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_start(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	if (DeeArg_Unpack(argc, argv, ":start"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "start");
 	error = DeeThread_Start(self);
 	if unlikely(error < 0)
 		goto err;
@@ -3906,8 +3905,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_detach(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	if (DeeArg_Unpack(argc, argv, ":detach"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "detach");
 	error = DeeThread_Detach(self);
 	if unlikely(error < 0)
 		goto err;
@@ -3919,8 +3917,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_join(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *result;
-	if (DeeArg_Unpack(argc, argv, ":join"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "join");
 	result = DeeThread_Join(self, (uint64_t)-1);
 	ASSERT(result != ITER_DONE);
 	return result;
@@ -3931,8 +3928,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_tryjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *result;
-	if (DeeArg_Unpack(argc, argv, ":tryjoin"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "tryjoin");
 	result = DeeThread_Join(self, 0);
 	if unlikely(result == NULL)
 		goto err;
@@ -3961,8 +3957,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_waitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitfor"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "waitfor");
 	if (DeeThread_WaitFor(self, (uint64_t)-1) < 0)
 		goto err;
 	return_none;
@@ -3989,8 +3984,7 @@ thread_interrupt_impl(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *sig  = &DeeError_Interrupt_instance;
 	DeeObject *args = NULL;
 	int error;
-	if (DeeArg_Unpack(argc, argv, "|oo:interrupt", &sig, &args))
-		goto err;
+	_DeeArg_Unpack0Or1Or2(err, argc, argv, "interrupt", &sig, &args);
 	if (args) {
 		if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 			goto err;
@@ -4005,8 +3999,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_started(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":started"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "started");
 	(void)self;
 	return_bool(DeeThread_HasStarted(self));
 err:
@@ -4015,8 +4008,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_detached(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":detached"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "detached");
 	(void)self;
 	return_bool(DeeThread_WasDetached(self));
 err:
@@ -4025,8 +4017,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_terminated(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":terminated"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "terminated");
 	(void)self;
 #ifdef DeeThread_USE_SINGLE_THREADED
 	return_false;
@@ -4039,8 +4030,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_interrupted(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":interrupted"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "interrupted");
 	(void)self;
 	return_bool(DeeThread_WasInterrupted(self));
 err:
@@ -4049,8 +4039,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_crashed(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":crashed"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "crashed");
 	(void)self;
 	return_bool(DeeThread_HasCrashed(self));
 err:
@@ -4069,8 +4058,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_crash_error(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *caller = DeeThread_Self();
 	DREF DeeObject *result;
-	if (DeeArg_Unpack(argc, argv, ":crash_error"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "crash_error");
 	if (self != caller) {
 #ifdef DeeThread_USE_SINGLE_THREADED
 		err_not_terminated(self);
@@ -4110,8 +4098,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *caller = DeeThread_Self();
 	DREF DeeObject *result;
-	if (DeeArg_Unpack(argc, argv, ":crash_traceback"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "crash_traceback");
 	if (self != caller) {
 #ifdef DeeThread_USE_SINGLE_THREADED
 		err_not_terminated(self);
@@ -4259,8 +4246,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_self(DeeObject *UNUSED(self),
             size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *result;
-	if (DeeArg_Unpack(argc, argv, ":self"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "self");
 	result = DeeThread_Self();
 	return_reference_((DeeObject *)result);
 err:
@@ -4271,8 +4257,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_selfid(DeeObject *UNUSED(self),
               size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":selfid"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "selfid");
 #ifdef DeeThread_GetCurrentTid
 	{
 		Dee_pid_t pid;
@@ -4291,8 +4276,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_yield(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":yield"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "yield");
 	SCHED_YIELD();
 	return_none;
 err:
@@ -4302,8 +4286,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_check_interrupt(DeeObject *UNUSED(self),
                        size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":check_interrupt"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "check_interrupt");
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	return_none;
@@ -4329,8 +4312,7 @@ thread_exit(DeeObject *UNUSED(self),
             size_t argc, DeeObject *const *argv) {
 	DeeObject *result = Dee_None;
 	DREF struct threadexit_object *error;
-	if (DeeArg_Unpack(argc, argv, "|o:exit", &result))
-		goto err;
+	_DeeArg_Unpack0Or1(err, argc, argv, "exit", &result);
 	error = DeeObject_MALLOC(struct threadexit_object);
 	if unlikely(!error)
 		goto err;

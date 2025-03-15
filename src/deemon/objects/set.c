@@ -49,8 +49,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:isdisjoint", &rhs))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "isdisjoint", &rhs);
 	result = SetIntersection_NonEmpty(self, rhs);
 	if unlikely(result < 0)
 		goto err;

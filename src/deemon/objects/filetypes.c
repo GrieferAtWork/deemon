@@ -885,8 +885,7 @@ writer_ctor(Writer *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_init(Writer *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeStringObject *init_string;
-	if (DeeArg_Unpack(argc, argv, "o:_FileWriter", &init_string))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_FileWriter", &init_string);
 	if (DeeObject_AssertTypeExact(init_string, &DeeString_Type))
 		goto err;
 	Dee_atomic_rwlock_init(&self->w_lock);
@@ -1131,8 +1130,7 @@ PRIVATE struct type_getset tpconst writer_getsets[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 writer_get(Writer *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":get"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "get");
 	return (DREF DeeStringObject *)DeeFileWriter_GetString((DeeObject *)self);
 err:
 	return NULL;
@@ -1141,8 +1139,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_size(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, ":size"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "size");
 	result = atomic_read(&self->w_printer.up_length);
 	return DeeInt_NewSize(result);
 err:
@@ -1152,8 +1149,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_allocated(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, ":allocated"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "allocated");
 	DeeFileWriter_LockRead(self);
 	result = self->w_printer.up_buffer
 	         ? WSTR_LENGTH(self->w_printer.up_buffer)
@@ -2014,8 +2010,7 @@ mapfile_getbuf(DeeMapFileObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapfile_bytes(DeeMapFileObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":bytes"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "bytes");
 	return DeeBytes_NewView((DeeObject *)self,
 	                        (void *)DeeMapFile_GetBase(&self->mf_map),
 	                        self->mf_rsize, Dee_BUFFER_FWRITABLE);

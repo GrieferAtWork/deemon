@@ -3525,7 +3525,7 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 			 * >>     addl  $28, %esp
 			 * >>     ret   $8 */
 			/* TODO: Can inline more than this! (see impl of `string_format()'):
-			 * - Inline "DeeArg_Unpack(argc, argv, "o:format", &args)"
+			 * - Inline "_DeeArg_Unpack1(err, argc, argv, "format", &args)"
 			 * - Inline "DeeString_AsUtf8((DeeObject *)self)"
 			 */
 

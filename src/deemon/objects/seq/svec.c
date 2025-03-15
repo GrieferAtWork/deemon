@@ -69,8 +69,7 @@ rveciter_copy(RefVectorIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rveciter_ctor(RefVectorIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_RefVectorIterator", &self->rvi_vector))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_RefVectorIterator", &self->rvi_vector);
 	if (DeeObject_AssertTypeExact(self->rvi_vector, &RefVector_Type))
 		goto err;
 	Dee_Incref(self->rvi_vector);
@@ -800,8 +799,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sveciter_init(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SharedVectorIterator", &self->si_seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SharedVectorIterator", &self->si_seq);
 	if (DeeObject_AssertTypeExact(self->si_seq, &DeeSharedVector_Type))
 		goto err;
 	Dee_Incref(self->si_seq);

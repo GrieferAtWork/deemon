@@ -1674,8 +1674,7 @@ numeric_divmod(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeTupleObject *result;
 	DREF DeeObject *d, *m;
 	DeeObject *y;
-	if (DeeArg_Unpack(argc, argv, "o:divmod", &y))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "divmod", &y);
 	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err;
@@ -1761,8 +1760,7 @@ numeric_nextafter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *y;
 	DREF DeeObject *result;
 	int error;
-	if (DeeArg_Unpack(argc, argv, "o:nextafter", &y))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "nextafter", &y);
 
 	/* >> if (this.isfloat)
 	 * >>     return this.operator float().nextafter(y); */
@@ -1806,8 +1804,7 @@ err:
 	numeric_##name(DeeObject *self, size_t argc, DeeObject *const *argv) { \
 		DeeObject *y;                                                      \
 		int error;                                                         \
-		if (DeeArg_Unpack(argc, argv, "o:" #name, &y))                     \
-			goto err;                                                      \
+		_DeeArg_Unpack1(err, argc, argv, #name, &y);                       \
 		/* >> if (this.isfloat)                                            \
 		 * >>     return this.operator float().name(y); */                 \
 		error = DeeObject_IsFloat(self);                                   \
@@ -1838,8 +1835,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_isunordered(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *y;
 	int error;
-	if (DeeArg_Unpack(argc, argv, "o:isunordered", &y))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "isunordered", &y);
 
 	/* >> if (this.isfloat)
 	 * >>     return this.operator float().isunordered(y); */

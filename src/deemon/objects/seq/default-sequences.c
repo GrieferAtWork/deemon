@@ -1173,9 +1173,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sg_init(DefaultSequence_WithSizeObAndGetItem *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "ooo:_SeqWithSizeObAndGetItem",
-	                  &self->dssg_seq, &self->dssg_start, &self->dssg_end))
-		goto err;
+	_DeeArg_Unpack3(err, argc, argv, "_SeqWithSizeObAndGetItem",
+	                &self->dssg_seq, &self->dssg_start, &self->dssg_end);
 	seqtyp = Dee_TYPE(self->dssg_seq);
 	self->dssg_tp_getitem = DeeType_RequireSupportedNativeOperator(seqtyp, getitem);
 	if unlikely(!self->dssg_tp_getitem)
@@ -1693,8 +1692,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_i_init(DefaultSequence_WithIter *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqWithIter", &self->dsi_seq))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SeqWithIter", &self->dsi_seq);
 	itertyp = Dee_TYPE(self->dsi_seq);
 	self->dsi_tp_iter = DeeType_RequireSupportedNativeOperator(itertyp, iter);
 	if unlikely(!self->dsi_tp_iter)

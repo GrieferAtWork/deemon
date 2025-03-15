@@ -331,8 +331,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 symbol_getalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
-	if (DeeArg_Unpack(argc, argv, ":getalias"))
-		goto done;
+	_DeeArg_Unpack0(done, argc, argv, "getalias");
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
@@ -360,8 +359,7 @@ symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *ar
 	struct symbol *sym;
 	DeeCompilerSymbolObject *other;
 	struct symbol *other_sym;
-	if (DeeArg_Unpack(argc, argv, "o:setalias", &other))
-		goto done;
+	_DeeArg_Unpack1(done, argc, argv, "setalias", &other);
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
 	if (DeeObject_AssertTypeExact(other, &DeeCompilerSymbol_Type))
@@ -411,8 +409,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 symbol_setnone(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":setnone"))
-		goto err;
+	_DeeArg_Unpack0(err, argc, argv, "setnone");
 	if (symbol_delkind(self))
 		goto err;
 	return_reference_((DeeObject *)self);

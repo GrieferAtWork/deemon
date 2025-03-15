@@ -94,8 +94,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 float_init(Float *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeObject *arg;
-	if (DeeArg_Unpack(argc, argv, "o:float", &arg))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "float", &arg);
 
 	/* Special case for when a string is given. */
 	if (DeeString_Check(arg)) {
@@ -735,8 +734,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_isunordered(Float *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *y_obj;
 	double y;
-	if (DeeArg_Unpack(argc, argv, "o:isunordered", &y_obj))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "isunordered", &y_obj);
 	if (DeeInt_Check(y_obj))
 		return float_get_isnan(self);
 	if (DeeObject_AsDouble(y_obj, &y))
@@ -765,8 +763,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_isunordered(Float *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *y_obj;
 	double y;
-	if (DeeArg_Unpack(argc, argv, "o:isunordered", &y_obj))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "isunordered", &y_obj);
 	if (DeeInt_Check(y_obj)) {
 		y = 0.0;
 	} else {

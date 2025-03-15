@@ -1238,8 +1238,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 scv_init(SeqCombinationsView *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	size_t i, rparam, *idx_copy, *idx_other;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqCombinationsView", &self->scv_iter))
-		goto err;
+	_DeeArg_Unpack1(err, argc, argv, "_SeqCombinationsView", &self->scv_iter);
 	if unlikely(!DeeObject_InstanceOfExact(self->scv_iter, &SeqCombinationsIterator_Type) &&
 	            !DeeObject_InstanceOfExact(self->scv_iter, &SeqRepeatCombinationsIterator_Type) &&
 	            !DeeObject_InstanceOfExact(self->scv_iter, &SeqPermutationsIterator_Type))

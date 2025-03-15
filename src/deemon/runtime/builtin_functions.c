@@ -53,8 +53,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_hasattr(size_t argc, DeeObject *const *argv) {
 	DeeObject *self, *attr;
 	int result;
-	if (DeeArg_Unpack(argc, argv, "oo:hasattr", &self, &attr))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "hasattr", &self, &attr);
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
 	result = DeeObject_HasAttr(self, attr);
@@ -69,8 +68,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_hasitem(size_t argc, DeeObject *const *argv) {
 	DeeObject *self, *key;
 	int result;
-	if (DeeArg_Unpack(argc, argv, "oo:hasitem", &self, &key))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "hasitem", &self, &key);
 	result = DeeObject_HasItem(self, key);
 	if unlikely(result < 0)
 		goto err;
@@ -151,8 +149,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_equals(size_t argc, DeeObject *const *argv) {
 	int diff;
 	DeeObject *a, *b;
-	if (DeeArg_Unpack(argc, argv, "oo:equals", &a, &b))
-		goto err;
+	_DeeArg_Unpack2(err, argc, argv, "equals", &a, &b);
 	diff = DeeObject_TryCompareEq(a, b);
 	if unlikely(diff == Dee_COMPARE_ERR)
 		goto err;

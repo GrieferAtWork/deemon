@@ -48,8 +48,7 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeFunctionObject *func;
 	DeeTupleObject *args = (DeeTupleObject *)Dee_EmptyTuple;
-	if (DeeArg_Unpack(argc, argv, "o|o:test_compile_and_run", &func, &args))
-		goto err;
+	_DeeArg_Unpack1Or2(err, argc, argv, "test_compile_and_run", &func, &args);
 	if (DeeObject_AssertTypeExact(func, &DeeFunction_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))

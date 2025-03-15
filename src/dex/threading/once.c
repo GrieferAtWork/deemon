@@ -182,16 +182,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 once_init(DeeOnceObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	int error;
 	Dee_once_init(&self->o_once);
 	self->o_value = NULL;
 #ifndef CONFIG_NO_THREADS
 	self->o_inuse = 0;
 #endif /* !CONFIG_NO_THREADS */
-	error = DeeArg_Unpack(argc, argv, "|o:Once", &self->o_value);
-	if likely(error == 0)
-		Dee_XIncref(self->o_value);
-	return error;
+	_DeeArg_Unpack0Or1(err, argc, argv, "Once", &self->o_value);
+	Dee_XIncref(self->o_value);
+	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
