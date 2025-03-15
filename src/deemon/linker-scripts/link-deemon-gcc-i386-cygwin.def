@@ -3,6 +3,10 @@ EXPORTS
 	; stdcall symbols with a leading underscore.
 	; See this mail that noone ever bothered to reply to:
 	; https://cygwin.com/ml/cygwin/2001-03/msg00514.html
+	_DeeArg_BadArgc0@8=DeeArg_BadArgc0@8
+	_DeeArg_BadArgc1@8=DeeArg_BadArgc1@8
+	_DeeArg_BadArgc@12=DeeArg_BadArgc@12
+	_DeeArg_BadArgcEx@16=DeeArg_BadArgcEx@16
 	_DeeArg_GetKwNR@16=DeeArg_GetKwNR@16
 	_DeeArg_GetKwNRStringHash@20=DeeArg_GetKwNRStringHash@20
 	_DeeArg_GetKwNRStringLenHash@24=DeeArg_GetKwNRStringLenHash@24
