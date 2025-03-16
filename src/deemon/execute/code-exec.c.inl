@@ -1233,7 +1233,7 @@ next_instr:
 #if 0
 	Dee_CHECKMEMORY();
 #endif
-#if 1
+#if 0
 	if (_Dee_dprint_enabled) {
 		struct ddi_state state;
 		code_addr_t ip_addr = (code_addr_t)(ip.ptr - code->co_code);
