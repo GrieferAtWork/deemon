@@ -1,3 +1,4 @@
+#!/usr/bin/deemon
 /* Copyright (c) 2018-2025 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
@@ -17,38 +18,41 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_SEQ_SIMPLEPROXY_H
-#define GUARD_DEEMON_OBJECTS_SEQ_SIMPLEPROXY_H 1
 
-#include <deemon/api.h>
-#include <deemon/object.h>
-/**/
+import * from deemon;
+import rt;
 
-#include "../generic-proxy.h"
-
-DECL_BEGIN
-
-typedef struct {
-	PROXY_OBJECT_HEAD(sp_seq) /* [1..1][const] The underlying sequence. */
-} SeqSimpleProxy;
-
-typedef struct {
-	PROXY_OBJECT_HEAD(si_iter) /* [1..1][const] The underlying iterator. */
-} SeqSimpleProxyIterator;
+function assertEquals(a, b) {
+	assert equals(a, b);
+	assert equals(b, a);
+	assert a == b;
+	assert b == a;
+	assert !(a != b);
+	assert !(b != a);
+}
 
 
-INTDEF DeeTypeObject SeqIds_Type;             /* Sequence.Ids */
-INTDEF DeeTypeObject SeqTypes_Type;           /* Sequence.Types */
-INTDEF DeeTypeObject SeqClasses_Type;         /* Sequence.Classes */
-INTDEF DeeTypeObject SeqIdsIterator_Type;     /* Sequence.Ids.Iterator */
-INTDEF DeeTypeObject SeqTypesIterator_Type;   /* Sequence.Types.Iterator */
-INTDEF DeeTypeObject SeqClassesIterator_Type; /* Sequence.Classes.Iterator */
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqIds_New(DeeObject *__restrict seq);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqTypes_New(DeeObject *__restrict seq);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqClasses_New(DeeObject *__restrict seq);
+local withValue = Mapping.fromkeys(
+	keys: { 10, 20, 30, 10 },
+	value: "value"
+);
+local withValuefor = Mapping.fromkeys(
+	keys: { 10, 20, 30, 10 },
+	valuefor: key -> str(100 + key)
+);
 
+assert withValue is rt.MapFromKeysAndValue;
+assert withValuefor is rt.MapFromKeysAndCallback;
 
-DECL_END
+assertEquals(withValue, {
+	10: "value",
+	20: "value",
+	30: "value",
+});
 
-#endif /* !GUARD_DEEMON_OBJECTS_SEQ_SIMPLEPROXY_H */
+assertEquals(withValuefor, {
+	10: "110",
+	20: "120",
+	30: "130",
+});

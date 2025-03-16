@@ -3687,15 +3687,19 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF Dict *DCALL
-dict_fromkeys_f(DeeTypeObject *__restrict UNUSED(dict),
-                size_t argc, DeeObject *const *argv,
-                DeeObject *kw) {
-	DeeObject *keys, *value = Dee_None;
-	DeeObject *valuefor = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__keys_value_valuefor,
-	                    "o|oo:fromkeys", &keys, &value, &valuefor))
+dict_fromkeys_f(DeeTypeObject *UNUSED(dict), size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
+	struct {
+		DeeObject *keys;
+		DeeObject *value;
+		DeeObject *valuefor;
+	} args;
+	args.value    = Dee_None;
+	args.valuefor = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__keys_value_valuefor,
+	                          "o|oo:fromkeys", &args))
 		goto err;
-	return dict_fromkeys(keys, value, valuefor);
+	return dict_fromkeys(args.keys, args.value, args.valuefor);
 err:
 	return NULL;
 }

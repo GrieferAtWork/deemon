@@ -238,6 +238,11 @@ generic_proxy__iter_advance(ProxyObject *__restrict self, size_t step) {
 	return DeeObject_IterAdvance(self->po_obj, step);
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__iter_next(ProxyObject *__restrict self) {
+	return DeeObject_IterNext(self->po_obj);
+}
+
 
 INTERN WUNUSED NONNULL((1)) size_t DCALL
 generic_proxy__size_fast(ProxyObject *__restrict self) {
@@ -351,6 +356,26 @@ generic_proxy__seq_operator_contains(ProxyObject *self, DeeObject *item){
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy__seq_clear(ProxyObject *__restrict self){
 	return DeeObject_InvokeMethodHint(seq_clear, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__seq_contains(ProxyObject *self, DeeObject *item){
+	return DeeObject_InvokeMethodHint(seq_contains, self->po_obj, item);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__set_operator_iter(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_operator_iter, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+generic_proxy__set_operator_size(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_operator_size, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__set_operator_sizeob(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_operator_sizeob, self->po_obj);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

@@ -50,6 +50,7 @@
 #include "seq/default-map-proxy.h"
 #include "seq/enumerate-cb.h"
 #include "seq/hashfilter.h"
+#include "seq/map-fromkeys.h"
 #include "seq/unique-iterator.h"
 
 DECL_BEGIN
@@ -550,6 +551,62 @@ map_IterValues_get(DeeTypeObject *__restrict self) {
 }
 
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_fromkeys(DeeTypeObject *self, size_t argc,
+               DeeObject *const *argv, DeeObject *kw) {
+	DREF MapFromKeys *result;
+	struct {
+		DeeObject *keys;
+		DeeObject *value;
+		DeeObject *valuefor;
+	} args;
+	args.value    = Dee_None;
+	args.valuefor = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__keys_value_valuefor,
+	                          "o|oo:fromkeys", &args))
+		goto err;
+	result = args.valuefor ? MapFromKeysAndCallback_New(args.keys, args.valuefor)
+	                       : MapFromKeysAndValue_New(args.keys, args.value);
+	if unlikely(!result)
+		goto err;
+
+	/* Special case: if the accessed mapping type isn't "Mapping" (iow:
+	 * the caller is calling <SubClassOfMapping>.fromkeys()), then cast
+	 * the produced wrapper into an instance of `SubClassOfMapping'. */
+	if (self != &DeeMapping_Type) {
+		DREF DeeObject *instance;
+		instance = DeeObject_New(self, 1, (DeeObject *const *)&result);
+		Dee_Decref_likely(result);
+		return instance;
+	}
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+
+PRIVATE struct type_method tpconst map_class_methods[] = {
+	TYPE_KWMETHOD_F("fromkeys", &map_fromkeys, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	                "(keys:?DSet,value=!N,valuefor?:?DCallable)->?.\n"
+	                "Construct a new ?. from @keys, and @value (or ${valuefor(key)}) as value.\n"
+	                "Behavior is similar to the following (although a proper proxy is used, meaning \n"
+	                /**/ "that operations like $getitem on the returned mapping don't require "
+	                /**/ "enumeration of all keys):\n"
+	                "${"
+	                /**/ "local result = () -> {\n"
+	                /**/ "	for (local k: keys) {\n"
+	                /**/ "		local v = valuefor is bound ? valuefor(k) : value;\n"
+	                /**/ "		yield (k, v);\n"
+	                /**/ "	}\n"
+	                /**/ "}() as Mapping;\n"
+	                /**/ "if (this !== Mapping)\n"
+	                /**/ "	result = this(result); /* When called via a sub-class */\n"
+	                /**/ "return result;"
+	                "}"
+	),
+	TYPE_METHOD_END
+};
+
 PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	TYPE_GETTER(STR_Iterator, &map_Iterator_get,
 	            "->?DType\n"
@@ -756,16 +813,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_methods       = */ map_methods,
 	/* .tp_getsets       = */ map_getsets,
 	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL, /* TODO: fromkeys(keys:?DSet,value=!N,valuefor?:?DCallable)->?.
-	                                 * >> local result = () -> {
-	                                 * >>     for (local k: keys) {
-	                                 * >>         local v = valuefor is bound ? valuefor(k) : value;
-	                                 * >>         yield (k, v);
-	                                 * >>     }
-	                                 * >> }() as Mapping;
-	                                 * >> if (this !== Mapping)
-	                                 * >>     result = this(result); // When called via a sub-class
-	                                 * >> return result; */
+	/* .tp_class_methods = */ map_class_methods,
 	/* .tp_class_getsets = */ map_class_getsets,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,

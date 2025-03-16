@@ -1,0 +1,739 @@
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_OBJECTS_SEQ_MAP_FROMKEYS_C
+#define GUARD_DEEMON_OBJECTS_SEQ_MAP_FROMKEYS_C 1
+
+#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/map.h>
+#include <deemon/method-hints.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/seq.h>
+#include <deemon/set.h>
+#include <deemon/super.h>
+/**/
+
+#include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
+#include "../generic-proxy.h"
+#include "map-fromkeys.h"
+#include "mapped.h"
+#include "repeat.h"
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+
+DECL_BEGIN
+
+
+
+
+
+/************************************************************************/
+/* MapFromKeysIterator                                                  */
+/************************************************************************/
+STATIC_ASSERT(offsetof(MapFromKeysIterator, mfki_iter) == offsetof(ProxyObject2, po_obj1));
+STATIC_ASSERT(offsetof(MapFromKeysIterator, mfki_base) == offsetof(ProxyObject2, po_obj2));
+#define mfkvi_copy  generic_proxy2__copy_recursive1_alias2
+#define mfkci_copy  generic_proxy2__copy_recursive1_alias2
+#define mfkvi_deep  generic_proxy2__deepcopy
+#define mfkci_deep  generic_proxy2__deepcopy
+#define mfkvi_fini  generic_proxy2__fini
+#define mfkci_fini  generic_proxy2__fini
+#define mfkvi_visit generic_proxy2__visit
+#define mfkci_visit generic_proxy2__visit
+
+STATIC_ASSERT(offsetof(MapFromKeysIterator, mfki_iter) == offsetof(ProxyObject, po_obj));
+#define mfkvi_bool generic_proxy__bool
+#define mfkci_bool generic_proxy__bool
+#define mfkvi_cmp  generic_proxy__cmp_recursive
+#define mfkci_cmp  generic_proxy__cmp_recursive
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mfkvi_ctor(MapFromKeysIterator *__restrict self) {
+	self->mfki_base = MapFromKeysAndValue_New(Dee_EmptySet, Dee_None);
+	if unlikely(!self->mfki_base)
+		goto err;
+	self->mfki_iter = DeeIterator_NewEmpty();
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mfkci_ctor(MapFromKeysIterator *__restrict self) {
+	self->mfki_base = MapFromKeysAndCallback_New(Dee_EmptySet, Dee_None);
+	if unlikely(!self->mfki_base)
+		goto err;
+	self->mfki_iter = DeeIterator_NewEmpty();
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mfkvi_init(MapFromKeysIterator *__restrict self, size_t argc, DeeObject *const *argv) {
+	_DeeArg_Unpack1(err, argc, argv, "_MapFromKeysAndValueIterator", &self->mfki_base);
+	if (DeeObject_AssertTypeExact(self->mfki_base, &MapFromKeysAndValue_Type))
+		goto err;
+	self->mfki_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->mfki_base->mfk_keys);
+	if unlikely(!self->mfki_iter)
+		goto err;
+	Dee_Incref(self->mfki_base);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mfkci_init(MapFromKeysIterator *__restrict self, size_t argc, DeeObject *const *argv) {
+	_DeeArg_Unpack1(err, argc, argv, "_MapFromKeysAndCallbackIterator", &self->mfki_base);
+	if (DeeObject_AssertTypeExact(self->mfki_base, &MapFromKeysAndCallback_Type))
+		goto err;
+	self->mfki_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->mfki_base->mfk_keys);
+	if unlikely(!self->mfki_iter)
+		goto err;
+	Dee_Incref(self->mfki_base);
+	return 0;
+err:
+	return -1;
+}
+
+STATIC_ASSERT(offsetof(MapFromKeysIterator, mfki_iter) == offsetof(ProxyObject, po_obj));
+#define mfkvi_nextkey generic_proxy__iter_next
+#define mfkci_nextkey generic_proxy__iter_next
+#define mfkvi_advance generic_proxy__iter_advance
+#define mfkci_advance generic_proxy__iter_advance
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mfkvi_nextpair(MapFromKeysIterator *__restrict self, DREF DeeObject *key_and_value[2]) {
+	key_and_value[0] = DeeObject_IterNext(self->mfki_iter);
+	if (!ITER_ISOK(key_and_value[0]))
+		return likely(key_and_value[0]) ? 1 : -1;
+	key_and_value[1] = self->mfki_base->mfk_value;
+	Dee_Incref(key_and_value[1]);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mfkci_nextpair(MapFromKeysIterator *__restrict self, DREF DeeObject *key_and_value[2]) {
+	key_and_value[0] = DeeObject_IterNext(self->mfki_iter);
+	if (!ITER_ISOK(key_and_value[0]))
+		return likely(key_and_value[0]) ? 1 : -1;
+	key_and_value[1] = DeeObject_Call(self->mfki_base->mfk_value, 1, key_and_value);
+	if unlikely(!key_and_value[1])
+		goto err_key;
+	return 0;
+err_key:
+	Dee_Decref(key_and_value[0]);
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mfkvi_nextvalue(MapFromKeysIterator *__restrict self) {
+	DREF DeeObject *result = DeeObject_IterNext(self->mfki_iter);
+	if (ITER_ISOK(result)) {
+		Dee_Decref(result);
+		result = self->mfki_base->mfk_value;
+		Dee_Incref(result);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mfkci_nextvalue(MapFromKeysIterator *__restrict self) {
+	DREF DeeObject *result = DeeObject_IterNext(self->mfki_iter);
+	if (ITER_ISOK(result)) {
+		DREF DeeObject *new_result;
+		new_result = DeeObject_Call(self->mfki_base->mfk_value, 1, &result);
+		Dee_Decref(result);
+		result = new_result;
+	}
+	return result;
+}
+
+PRIVATE struct type_iterator mfkvi_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&mfkvi_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkvi_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkvi_nextvalue,
+	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&mfkvi_advance,
+};
+
+PRIVATE struct type_iterator mfkci_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&mfkci_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkci_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkci_nextvalue,
+	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&mfkci_advance,
+};
+
+
+PRIVATE struct type_member tpconst mfkvi_members[] = {
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(MapFromKeysIterator, mfki_base), "->?Ert:MapFromKeysAndValue"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(MapFromKeysIterator, mfki_iter), "->?DIterator"),
+	TYPE_MEMBER_END
+};
+
+#ifdef CONFIG_NO_DOC
+#define mfkci_members mfkvi_members
+#else /* CONFIG_NO_DOC */
+PRIVATE struct type_member tpconst mfkci_members[] = {
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(MapFromKeysIterator, mfki_base), "->?Ert:MapFromKeysAndCallback"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(MapFromKeysIterator, mfki_iter), "->?DIterator"),
+	TYPE_MEMBER_END
+};
+#endif /* !CONFIG_NO_DOC */
+
+
+INTERN DeeTypeObject MapFromKeysAndValueIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_MapFromKeysAndValueIterator",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(map:?Ert:MapFromKeysAndValue)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&mfkvi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&mfkvi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&mfkvi_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&mfkvi_init,
+				TYPE_FIXED_ALLOCATOR(MapFromKeysIterator)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkvi_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&mfkvi_bool,
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mfkvi_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &mfkvi_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &mfkvi_iterator,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ mfkvi_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
+};
+
+INTERN DeeTypeObject MapFromKeysAndCallbackIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_MapFromKeysAndCallbackIterator",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(map:?Ert:MapFromKeysAndCallback)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&mfkci_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&mfkci_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&mfkci_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&mfkci_init,
+				TYPE_FIXED_ALLOCATOR(MapFromKeysIterator)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkci_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&mfkci_bool,
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mfkci_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &mfkci_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &mfkci_iterator,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ mfkci_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
+};
+
+
+
+
+
+/************************************************************************/
+/* MapFromKeys                                                          */
+/************************************************************************/
+STATIC_ASSERT(offsetof(MapFromKeys, mfk_keys) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(MapFromKeys, mfk_keys) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(MapFromKeys, mfk_value) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(MapFromKeys, mfk_value) == offsetof(ProxyObject2, po_obj2));
+#define mfkv_copy  generic_proxy2__copy_alias12
+#define mfkc_copy  generic_proxy2__copy_alias12
+#define mfkv_deep  generic_proxy2__deepcopy
+#define mfkc_deep  generic_proxy2__deepcopy
+#define mfkv_fini  generic_proxy2__fini
+#define mfkc_fini  generic_proxy2__fini
+#define mfkv_visit generic_proxy2__visit
+#define mfkc_visit generic_proxy2__visit
+
+STATIC_ASSERT(offsetof(MapFromKeys, mfk_keys) == offsetof(ProxyObject2, po_obj1));
+STATIC_ASSERT(offsetof(MapFromKeys, mfk_value) == offsetof(ProxyObject2, po_obj2));
+#define mfkv_init generic_proxy2__init
+#define mfkc_init generic_proxy2__init
+
+STATIC_ASSERT(offsetof(MapFromKeys, mfk_keys) == offsetof(ProxyObject, po_obj));
+#define mfkv_bool generic_proxy__seq_operator_bool
+#define mfkc_bool generic_proxy__seq_operator_bool
+
+#define mfkc_ctor mfkv_ctor
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mfkv_ctor(MapFromKeys *__restrict self) {
+	self->mfk_keys  = DeeSet_NewEmpty();
+	self->mfk_value = DeeNone_NewRef();
+	return 0;
+}
+
+#define mfkc_iterkeys generic_proxy__set_operator_iter
+#define mfkv_iterkeys generic_proxy__set_operator_iter
+#define mfkc_keys     mfkv_keys
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mfkv_keys(MapFromKeys *__restrict self) {
+	return DeeSuper_New(&DeeSet_Type, self->mfk_keys);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mfkv_values(MapFromKeys *__restrict self) {
+	size_t size = DeeObject_InvokeMethodHint(set_operator_size, self->mfk_keys);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	return DeeSeq_RepeatItem(self->mfk_value, size);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mfkc_values(MapFromKeys *__restrict self) {
+	return DeeSeq_Map(self->mfk_keys, self->mfk_value);
+}
+
+PRIVATE struct type_member tpconst mfkv_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &MapFromKeysAndValueIterator_Type),
+	TYPE_MEMBER_CONST(STR_Keys, &DeeSet_Type),
+	TYPE_MEMBER_CONST(STR_Values, &SeqItemRepeat_Type),
+	TYPE_MEMBER_CONST(STR_IterValues, &SeqItemRepeatIterator_Type),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_getset tpconst mfkv_getsets[] = {
+	TYPE_GETTER_AB(STR_keys, &mfkv_keys, "->?DSet"),
+	TYPE_GETTER_AB(STR_values, &mfkv_values, "->?Ert:SeqItemRepeat"),
+	TYPE_GETTER_AB(STR_iterkeys, &mfkv_iterkeys, "->?DIterator"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst mfkc_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &MapFromKeysAndCallbackIterator_Type),
+	TYPE_MEMBER_CONST(STR_Keys, &DeeSet_Type),
+	TYPE_MEMBER_CONST(STR_Values, &SeqMapped_Type),
+	TYPE_MEMBER_CONST(STR_IterValues, &SeqMappedIterator_Type),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_getset tpconst mfkc_getsets[] = {
+	TYPE_GETTER_AB(STR_keys, &mfkc_keys, "->?DSet"),
+	TYPE_GETTER_AB(STR_values, &mfkc_values, "->?Ert:SeqMapped"),
+	TYPE_GETTER_AB(STR_iterkeys, &mfkc_iterkeys, "->?DIterator"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst mfkv_members[] = {
+	TYPE_MEMBER_FIELD("__keys__", STRUCT_OBJECT, offsetof(MapFromKeys, mfk_keys)),
+	TYPE_MEMBER_FIELD("__value__", STRUCT_OBJECT, offsetof(MapFromKeys, mfk_value)),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst mfkc_members[] = {
+	TYPE_MEMBER_FIELD("__keys__", STRUCT_OBJECT, offsetof(MapFromKeys, mfk_keys)),
+	TYPE_MEMBER_FIELD_DOC("__valuefor__", STRUCT_OBJECT, offsetof(MapFromKeys, mfk_value), "->?DCallable"),
+	TYPE_MEMBER_END
+};
+
+PRIVATE WUNUSED NONNULL((1)) DREF MapFromKeysIterator *DCALL
+mfkv_iter(MapFromKeys *__restrict self) {
+	DREF MapFromKeysIterator *result;
+	result = DeeObject_MALLOC(MapFromKeysIterator);
+	if unlikely(!result)
+		goto err;
+	result->mfki_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->mfk_keys);
+	if unlikely(!result->mfki_iter)
+		goto err_r;
+	result->mfki_base = self;
+	Dee_Incref(self);
+	DeeObject_Init(result, &MapFromKeysAndValueIterator_Type);
+	return result;
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF MapFromKeysIterator *DCALL
+mfkc_iter(MapFromKeys *__restrict self) {
+	DREF MapFromKeysIterator *result;
+	result = DeeObject_MALLOC(MapFromKeysIterator);
+	if unlikely(!result)
+		goto err;
+	result->mfki_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->mfk_keys);
+	if unlikely(!result->mfki_iter)
+		goto err_r;
+	result->mfki_base = self;
+	Dee_Incref(self);
+	DeeObject_Init(result, &MapFromKeysAndCallbackIterator_Type);
+	return result;
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
+
+
+STATIC_ASSERT(offsetof(MapFromKeys, mfk_keys) == offsetof(ProxyObject, po_obj));
+#define mfkv_sizeob   generic_proxy__set_operator_sizeob
+#define mfkc_sizeob   generic_proxy__set_operator_sizeob
+#define mfkv_contains generic_proxy__seq_operator_contains
+#define mfkc_contains generic_proxy__seq_operator_contains
+#define mfkv_size     generic_proxy__set_operator_size
+#define mfkc_size     generic_proxy__set_operator_size
+#define mfkv_hasitem  generic_proxy__seq_contains
+#define mfkc_hasitem  generic_proxy__seq_contains
+
+#define mfkc_bounditem mfkv_bounditem
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mfkv_bounditem(MapFromKeys *__restrict self, DeeObject *key) {
+	int result = DeeObject_InvokeMethodHint(seq_contains, self->mfk_keys, key);
+	if unlikely(result < 0)
+		goto err;
+	return Dee_BOUND_FROMPRESENT_BOUND(result);
+err:
+	return Dee_BOUND_ERR;
+}
+
+#define mfkc_delitem mfkv_delitem
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mfkv_delitem(MapFromKeys *__restrict self, DeeObject *key) {
+	int result = DeeObject_InvokeMethodHint(set_remove, self->mfk_keys, key);
+	if (result > 0)
+		result = 0;
+	return result;
+}
+
+
+struct mfkX_foreach_pair_data {
+	Dee_foreach_pair_t mfkX_fpd_cb;    /* [1..1] Inner callback. */
+	void              *mfkX_fpd_arg;   /* [?..?] Cookie for `mfkX_fpd_cb'. */
+	DeeObject         *mfkX_fpd_value; /* [1..1] Value to yield for every possible key, or callback. */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+mfkv_foreach_pair_cb(void *arg, DeeObject *key) {
+	struct mfkX_foreach_pair_data *data = (struct mfkX_foreach_pair_data *)arg;
+	return (*data->mfkX_fpd_cb)(data->mfkX_fpd_arg, key, data->mfkX_fpd_value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+mfkv_foreach_pair(MapFromKeys *__restrict self, Dee_foreach_pair_t cb, void *arg) {
+	struct mfkX_foreach_pair_data data;
+	data.mfkX_fpd_cb    = cb;
+	data.mfkX_fpd_arg   = arg;
+	data.mfkX_fpd_value = self->mfk_value;
+	return DeeObject_InvokeMethodHint(set_operator_foreach, self->mfk_keys,
+	                                  &mfkv_foreach_pair_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+mfkc_foreach_pair_cb(void *arg, DeeObject *key) {
+	Dee_ssize_t result;
+	struct mfkX_foreach_pair_data *data = (struct mfkX_foreach_pair_data *)arg;
+	DREF DeeObject *value = DeeObject_Call(data->mfkX_fpd_value, 1, &key);
+	if unlikely(!value)
+		goto err;
+	result = (*data->mfkX_fpd_cb)(data->mfkX_fpd_arg, key, value);
+	Dee_Decref(value);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+mfkc_foreach_pair(MapFromKeys *__restrict self, Dee_foreach_pair_t cb, void *arg) {
+	struct mfkX_foreach_pair_data data;
+	data.mfkX_fpd_cb    = cb;
+	data.mfkX_fpd_arg   = arg;
+	data.mfkX_fpd_value = self->mfk_value;
+	return DeeObject_InvokeMethodHint(set_operator_foreach, self->mfk_keys,
+	                                  &mfkc_foreach_pair_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+mfkv_getitem(MapFromKeys *self, DeeObject *key) {
+	int result = DeeObject_InvokeMethodHint(seq_contains, self->mfk_keys, key);
+	if unlikely(result <= 0) {
+		if (result == 0)
+			err_unknown_key((DeeObject *)self, key);
+		goto err;
+	}
+	return_reference_(self->mfk_value);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+mfkv_trygetitem(MapFromKeys *self, DeeObject *key) {
+	int result = DeeObject_InvokeMethodHint(seq_contains, self->mfk_keys, key);
+	if unlikely(result <= 0) {
+		if (result == 0)
+			return ITER_DONE;
+		goto err;
+	}
+	return_reference_(self->mfk_value);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+mfkc_getitem(MapFromKeys *self, DeeObject *key) {
+	int result = DeeObject_InvokeMethodHint(seq_contains, self->mfk_keys, key);
+	if unlikely(result <= 0) {
+		if (result == 0)
+			err_unknown_key((DeeObject *)self, key);
+		goto err;
+	}
+	return DeeObject_Call(self->mfk_value, 1, &key);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+mfkc_trygetitem(MapFromKeys *self, DeeObject *key) {
+	int result = DeeObject_InvokeMethodHint(seq_contains, self->mfk_keys, key);
+	if unlikely(result <= 0) {
+		if (result == 0)
+			return ITER_DONE;
+		goto err;
+	}
+	return DeeObject_Call(self->mfk_value, 1, &key);
+err:
+	return NULL;
+}
+
+
+
+PRIVATE struct type_seq mfkv_seq = {
+	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkv_iter,
+	/* .tp_sizeob             = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkv_sizeob,
+	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mfkv_contains,
+	/* .tp_getitem            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mfkv_getitem,
+	/* .tp_delitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&mfkv_delitem,
+	/* .tp_setitem            = */ NULL,
+	/* .tp_getrange           = */ NULL,
+	/* .tp_delrange           = */ NULL,
+	/* .tp_setrange           = */ NULL,
+	/* .tp_foreach            = */ NULL,
+	/* .tp_foreach_pair       = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&mfkv_foreach_pair,
+	/* .tp_bounditem          = */ (int (DCALL *)(DeeObject *, DeeObject *))&mfkv_bounditem,
+	/* .tp_hasitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&mfkv_hasitem,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&mfkv_size,
+	/* .tp_size_fast          = */ NULL,
+	/* .tp_getitem_index      = */ NULL,
+	/* .tp_getitem_index_fast = */ NULL,
+	/* .tp_delitem_index      = */ NULL,
+	/* .tp_setitem_index      = */ NULL,
+	/* .tp_bounditem_index    = */ NULL,
+	/* .tp_hasitem_index      = */ NULL,
+	/* .tp_getrange_index     = */ NULL,
+	/* .tp_delrange_index     = */ NULL,
+	/* .tp_setrange_index     = */ NULL,
+	/* .tp_getrange_index_n   = */ NULL,
+	/* .tp_delrange_index_n   = */ NULL,
+	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_trygetitem         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mfkv_trygetitem,
+};
+
+PRIVATE struct type_seq mfkc_seq = {
+	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkc_iter,
+	/* .tp_sizeob             = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkc_sizeob,
+	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mfkc_contains,
+	/* .tp_getitem            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mfkc_getitem,
+	/* .tp_delitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&mfkc_delitem,
+	/* .tp_setitem            = */ NULL,
+	/* .tp_getrange           = */ NULL,
+	/* .tp_delrange           = */ NULL,
+	/* .tp_setrange           = */ NULL,
+	/* .tp_foreach            = */ NULL,
+	/* .tp_foreach_pair       = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&mfkc_foreach_pair,
+	/* .tp_bounditem          = */ (int (DCALL *)(DeeObject *, DeeObject *))&mfkc_bounditem,
+	/* .tp_hasitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&mfkc_hasitem,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&mfkc_size,
+	/* .tp_size_fast          = */ NULL,
+	/* .tp_getitem_index      = */ NULL,
+	/* .tp_getitem_index_fast = */ NULL,
+	/* .tp_delitem_index      = */ NULL,
+	/* .tp_setitem_index      = */ NULL,
+	/* .tp_bounditem_index    = */ NULL,
+	/* .tp_hasitem_index      = */ NULL,
+	/* .tp_getrange_index     = */ NULL,
+	/* .tp_delrange_index     = */ NULL,
+	/* .tp_setrange_index     = */ NULL,
+	/* .tp_getrange_index_n   = */ NULL,
+	/* .tp_delrange_index_n   = */ NULL,
+	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_trygetitem         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mfkc_trygetitem,
+};
+
+
+INTERN DeeTypeObject MapFromKeysAndValue_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_MapFromKeysAndValue",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(keys:?DSet,value)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&mfkv_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&mfkv_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&mfkv_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&mfkv_init,
+				TYPE_FIXED_ALLOCATOR(MapFromKeys)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkv_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&mfkv_bool,
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mfkv_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &mfkv_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ mfkv_getsets,
+	/* .tp_members       = */ mfkv_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ mfkv_class_members,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
+};
+
+INTERN DeeTypeObject MapFromKeysAndCallback_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_MapFromKeysAndCallback",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(keys:?DSet,valuefor:?DCallable)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&mfkc_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&mfkc_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&mfkc_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&mfkc_init,
+				TYPE_FIXED_ALLOCATOR(MapFromKeys)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkc_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&mfkc_bool,
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mfkc_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &mfkc_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ mfkc_getsets,
+	/* .tp_members       = */ mfkc_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ mfkc_class_members,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
+};
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_OBJECTS_SEQ_MAP_FROMKEYS_C */

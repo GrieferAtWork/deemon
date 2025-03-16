@@ -180,6 +180,13 @@ assertRtTypeName("MapByAttr");
 assertRtTypeName("MapKeys");
 assertRtTypeName("MapValues");
 
+assertRtTypeName("MapFromKeysAndValue");
+assertRtTypeName("MapFromKeysAndCallback");
+assertRtTypeName("MapFromKeysAndValueIterator");
+assertRtTypeName("MapFromKeysAndCallbackIterator");
+
+assertRtTypeName("NullableTuple", "NullableTuple");
+
 assertRtTypeName("SharedVector");
 assertRtTypeName("SharedVectorIterator");
 assertRtTypeName("SharedMap");
