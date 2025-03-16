@@ -254,6 +254,7 @@
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_contains.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_delitem.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_getitem.h" />
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_hash.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_add.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_and.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_sub.h" />

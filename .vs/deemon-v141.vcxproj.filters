@@ -738,6 +738,9 @@
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_getitem.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_hash.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_add.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>

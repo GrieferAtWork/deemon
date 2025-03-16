@@ -62,19 +62,6 @@ INTERN struct type_callable default__tp_callable__E31EBEB26CC72F83 = {
 	/* .tp_thiscall_tuple    = */ &default__thiscall_tuple__with__thiscall,
 	/* .tp_thiscall_tuple_kw = */ &default__thiscall_tuple_kw__with__thiscall_kw,
 };
-INTERN struct type_cmp default__tp_cmp__22DEF1D4118F5821 = {
-	/* .tp_hash          = */ &default__set_operator_hash__with__set_operator_foreach,
-	/* .tp_compare_eq    = */ &default__map_operator_compare_eq__with__map_operator_foreach_pair,
-	/* .tp_compare       = */ UNSUPPORTED(&default__compare__unsupported),
-	/* .tp_trycompare_eq = */ &default__map_operator_trycompare_eq__with__map_operator_compare_eq,
-	/* .tp_eq            = */ &default__map_operator_eq__with__map_operator_compare_eq,
-	/* .tp_ne            = */ &default__map_operator_ne__with__map_operator_compare_eq,
-	/* .tp_lo            = */ &default__map_operator_lo__with__map_operator_foreach_pair,
-	/* .tp_le            = */ &default__map_operator_le__with__map_operator_foreach_pair,
-	/* .tp_gr            = */ &default__map_operator_gr__with__map_operator_foreach_pair,
-	/* .tp_ge            = */ &default__map_operator_ge__with__map_operator_foreach_pair,
-	/* .tp_nii           = */ NULL,
-};
 INTERN struct type_cmp default__tp_cmp__247219960F1E745D = {
 	/* .tp_hash          = */ &default__seq_operator_hash__with__seq_operator_foreach,
 	/* .tp_compare_eq    = */ &default__seq_operator_compare_eq__with__seq_operator_size__and__seq_operator_trygetitem_index,
@@ -125,6 +112,19 @@ INTERN struct type_cmp default__tp_cmp__2B5761B4075B51D3 = {
 	/* .tp_le            = */ &default__seq_operator_le__with__seq_operator_compare,
 	/* .tp_gr            = */ &default__seq_operator_gr__with__seq_operator_compare,
 	/* .tp_ge            = */ &default__seq_operator_ge__with__seq_operator_compare,
+	/* .tp_nii           = */ NULL,
+};
+INTERN struct type_cmp default__tp_cmp__2BD018178123F93E = {
+	/* .tp_hash          = */ &default__map_operator_hash__with__map_operator_foreach_pair,
+	/* .tp_compare_eq    = */ &default__map_operator_compare_eq__with__map_operator_foreach_pair,
+	/* .tp_compare       = */ UNSUPPORTED(&default__compare__unsupported),
+	/* .tp_trycompare_eq = */ &default__map_operator_trycompare_eq__with__map_operator_compare_eq,
+	/* .tp_eq            = */ &default__map_operator_eq__with__map_operator_compare_eq,
+	/* .tp_ne            = */ &default__map_operator_ne__with__map_operator_compare_eq,
+	/* .tp_lo            = */ &default__map_operator_lo__with__map_operator_foreach_pair,
+	/* .tp_le            = */ &default__map_operator_le__with__map_operator_foreach_pair,
+	/* .tp_gr            = */ &default__map_operator_gr__with__map_operator_foreach_pair,
+	/* .tp_ge            = */ &default__map_operator_ge__with__map_operator_foreach_pair,
 	/* .tp_nii           = */ NULL,
 };
 INTERN struct type_cmp default__tp_cmp__3C4D336761465F8A = {
@@ -216,19 +216,6 @@ INTERN struct type_cmp default__tp_cmp__ABC6920EC80A6EC1 = {
 	/* .tp_le            = */ &default__seq_operator_le__with__seq_operator_compare,
 	/* .tp_gr            = */ &default__seq_operator_gr__with__seq_operator_compare,
 	/* .tp_ge            = */ &default__seq_operator_ge__with__seq_operator_compare,
-	/* .tp_nii           = */ NULL,
-};
-INTERN struct type_cmp default__tp_cmp__B2BE65C46A4CA39B = {
-	/* .tp_hash          = */ &default__set_operator_hash__with__map_operator_foreach_pair,
-	/* .tp_compare_eq    = */ &default__map_operator_compare_eq__with__map_operator_foreach_pair,
-	/* .tp_compare       = */ UNSUPPORTED(&default__compare__unsupported),
-	/* .tp_trycompare_eq = */ &default__map_operator_trycompare_eq__with__map_operator_compare_eq,
-	/* .tp_eq            = */ &default__map_operator_eq__with__map_operator_compare_eq,
-	/* .tp_ne            = */ &default__map_operator_ne__with__map_operator_compare_eq,
-	/* .tp_lo            = */ &default__map_operator_lo__with__map_operator_foreach_pair,
-	/* .tp_le            = */ &default__map_operator_le__with__map_operator_foreach_pair,
-	/* .tp_gr            = */ &default__map_operator_gr__with__map_operator_foreach_pair,
-	/* .tp_ge            = */ &default__map_operator_ge__with__map_operator_foreach_pair,
 	/* .tp_nii           = */ NULL,
 };
 INTERN struct type_cmp default__tp_cmp__B8EC3298B952DF3A = {

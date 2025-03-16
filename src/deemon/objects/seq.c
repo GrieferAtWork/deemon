@@ -38,6 +38,7 @@
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h> /* memset */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
@@ -63,6 +64,10 @@
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t */
 
 /* Provide aliases for certain Set operators in Sequence */
 #undef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
@@ -2241,7 +2246,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	 * >> } */
 
 	/* TODO: pairwise->?S?T2?O?O
-	 * Yield every elements of @this (except for the first) sequence as a pair (predecessor, elem):
+	 * Yield every element of @this sequence (except for the first) as a pair (predecessor, elem):
 	 * >> property pairwise: {(Object, Object)...} = {
 	 * >>     get() {
 	 * >>         local iter = (this as Sequence).operator iter();
@@ -2257,12 +2262,13 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	 * >>     }
 	 * >> } */
 
-	/* TODO: unboundas(item)->?S?O
+	/* TODO: asunbound(item)->?S?O
 	 * Return a view of @this sequence that replaces every instance of "item" with
 	 * unbound elements. Same as:
-	 * >> this.ubfilter(e -> !deemon.equals(item, e));
-	 */
+	 * >> this.ubfilter(e -> !deemon.equals(item, e)); */
 
+	/* TODO: unboundas(item)->?S?O
+	 * Return a view of @this sequence that replaces every unbound element with "item" */
 
 	/* TODO: findall: "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"
 	 * > Find not just the first, but all indices of @item */
@@ -2306,96 +2312,25 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "" DeeMA___seq_enumerate___doc "\n"
 	              "" DeeMA___seq_enumerate_items___doc "\n"
 	              "Enumerate indices/keys and associated values of @this sequence\n"
-	              "This function can be used to easily enumerate sequence indices and values, "
-	              /**/ "including being able to enumerate indices/keys that are currently unbound\n"
+	              "This function can be used to easily enumerate sequence indices and "
+	              /**/ "values, including being able to enumerate indices/keys that "
+	              /**/ "are currently unbound. (s.a. ?#__enumerate__, ?#__enumerate_items__)\n"
 	              "${"
 	              /**/ "import FixedList from collections;\n"
 	              /**/ "local x = FixedList(4);\n"
 	              /**/ "x[1] = 10;\n"
 	              /**/ "x[3] = 20;\n"
 	              /**/ "/* [1]: 10                 [3]: 20 */\n"
-	              /**/ "for (local key, value: x.enumerate())\n"
-	              /**/ "	print f\"[{repr key}]: {repr value}\"\n"
+	              /**/ "for (local index, value: x.enumerate())\n"
+	              /**/ "	print f\"[{repr index}]: {repr value}\"\n"
 	              /**/ "/* [0]: <unbound>          [1]: 10\n"
 	              /**/ " * [2]: <unbound>          [3]: 20 */\n"
-	              /**/ "x.enumerate((key, value?) -\\> {\n"
-	              /**/ "	print f\"[{repr key}]: {value is bound ? repr value : \"<unbound>\"}\";\n"
+	              /**/ "x.enumerate((index, value?) -\\> {\n"
+	              /**/ "	print f\"[{repr index}]: {value is bound ? repr value : \"<unbound>\"}\";\n"
 	              /**/ "});"
-	              "}\n"
-	              "#T{Requirements|Implementation~"
-	              /**/ "${property iterkeys}¹³|${"
-	              /**/ /**/ "foreach (local key: Mapping.iterkeys(this)) {\n"
-	              /**/ /**/ "	local myItem\n"
-	              /**/ /**/ "	local status;\n"
-	              /**/ /**/ "	if (!(start <= key) || !(end > key))\n"
-	              /**/ /**/ "		continue; // Only when given\n"
-	              /**/ /**/ "	try {\n"
-	              /**/ /**/ "		myItem = this[index];\n"
-	              /**/ /**/ "	} catch (UnboundItem | KeyError | IndexError) {\n"
-	              /**/ /**/ "		goto invokeWithUnbound;\n"
-	              /**/ /**/ "	}\n"
-	              /**/ /**/ "	status = cb(key, myItem);\n"
-	              /**/ /**/ "	goto handleStatus;\n"
-	              /**/ /**/ "invokeWithUnbound:\n"
-	              /**/ /**/ "	status = cb(key);\n"
-	              /**/ /**/ "handleStatus:\n"
-	              /**/ /**/ "	if (status !is none)\n"
-	              /**/ /**/ "		return status;\n"
-	              /**/ /**/ "}\n"
-	              /**/ /**/ "return none;"
-	              /**/ "}&"
-	              /**/ "${operator size}, ${operator getitem}¹²|${"
-	              /**/ /**/ "local realSize = ##this;\n"
-	              /**/ /**/ "if (end > realSize)\n"
-	              /**/ /**/ "	end = realSize;\n"
-	              /**/ /**/ "if (start > end)\n"
-	              /**/ /**/ "	start = end;\n"
-	              /**/ /**/ "for (local i: [start:end]) {\n"
-	              /**/ /**/ "	local myItem\n"
-	              /**/ /**/ "	local status;\n"
-	              /**/ /**/ "	try {\n"
-	              /**/ /**/ "		myItem = this[index];\n"
-	              /**/ /**/ "	} catch (UnboundItem) {\n"
-	              /**/ /**/ "		goto invokeWithUnbound;\n"
-	              /**/ /**/ "	} catch (IndexError) {\n"
-	              /**/ /**/ "		break;\n"
-	              /**/ /**/ "	}\n"
-	              /**/ /**/ "	status = cb(i, myItem);\n"
-	              /**/ /**/ "	goto handleStatus;\n"
-	              /**/ /**/ "invokeWithUnbound:\n"
-	              /**/ /**/ "	status = cb(i);\n"
-	              /**/ /**/ "handleStatus:\n"
-	              /**/ /**/ "	if (status !is none)\n"
-	              /**/ /**/ "		return status;\n"
-	              /**/ /**/ "}\n"
-	              /**/ /**/ "return none;"
-	              /**/ "}&"
-	              /**/ "${operator iter}¹²|${"
-	              /**/ /**/ "local it = this.operator iter();\n"
-	              /**/ /**/ "for (none: [:start]) {\n"
-	              /**/ /**/ "	foreach (none: it)\n"
-	              /**/ /**/ "		break;\n"
-	              /**/ /**/ "}\n"
-	              /**/ /**/ "for (local i: [start:end]) {\n"
-	              /**/ /**/ "	foreach (local v: it) {\n"
-	              /**/ /**/ "		local status = cb(i, v);\n"
-	              /**/ /**/ "		if (status !is none)\n"
-	              /**/ /**/ "			return status;\n"
-	              /**/ /**/ "		goto next_i;\n"
-	              /**/ /**/ "	}\n"
-	              /**/ /**/ "	break;\n"
-	              /**/ /**/ "next_i:;\n"
-	              /**/ /**/ "}\n"
-	              /**/ /**/ "return none;"
-	              /**/ "}"
-	              "}"
-	              "#L{"
-	              /**/ "{¹}When @cb isn't given, filter for bound items and yield as ${(key, value)} pairs|"
-	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
-	              /**/ "{³}Only when ?A__seqclass__?DType is ?DMapping"
 	              "}"),
 
-	/* Hlper functions for mutable sequences. */
+	/* Helper functions for mutable sequences. */
 	TYPE_METHOD(STR_popfront, &seq_popfront,
 	            "->\n"
 	            "#tIndexError{The given @index is out of bounds}"
@@ -2412,24 +2347,31 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
-	              "Wrapper around ?#bfind that simply returns ${this.bfind(...) !is none}"),
+	              "Wrapper around ?#bfind that returns indicative of @item being bound:\n"
+	              "${"
+	              /**/ "local index = Sequence.bfind(this, start, end, key);\n"
+	              /**/ "return index !is none;"
+	              "}"),
 	TYPE_KWMETHOD("bindex", &seq_bindex,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "#tValueError{The Sequence does not contain an item matching @item}"
-	              "Same as ?#bfind, but throw an :ValueError instead of returning ?N."),
+	              "Same as ?#bfind, but throw an :ValueError instead of returning ?N:\n"
+	              "${"
+	              /**/ "local index = Sequence.bfind(this, start, end, key);\n"
+	              /**/ "if (index is none)\n"
+	              /**/ "	throw ValueError(...);\n"
+	              /**/ "return index;"
+	              "}"),
 	TYPE_KWMETHOD("blocateall", &seq_blocateall,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?O\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Return the sub-range from @this of elements matching @item, as returned by ?#brange\n"
 	              "${"
-	              /**/ "function blocateall(args..., **kwds) {\n"
-	              /**/ "	import Sequence from deemon;\n"
-	              /**/ "	local begin, end = this.brange(args..., **kwds)...;\n"
-	              /**/ "	return Sequence.__getrange__(this, begin, end);\n"
-	              /**/ "}"
+	              /**/ "local rstart, rend = Sequence.brange(this, item, start, end, key)...;\n"
+	              /**/ "return Sequence.__getrange__(this, rstart, rend);\n"
 	              "}\n"
 	              "Here is a really neat usage-example for this function: find all strings within "
 	              /**/ "a sorted sequence of strings that start with a given prefix-string:\n"
@@ -2448,10 +2390,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "seen in the following template, meaning it usually doesn't need to be overwritten "
 	              /**/ "by sub-classes.\n"
 	              "${"
-	              /**/ "function binsert(item: Object, key: Callable = none) {\n"
-	              /**/ "	local index = this.bposition(item, key);\n"
-	              /**/ "	return this.insert(index, item);\n"
-	              /**/ "}"
+	              /**/ "local index = this.bposition(item, key);\n"
+	              /**/ "return this.insert(index, item);"
 	              "}"),
 
 

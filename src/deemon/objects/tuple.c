@@ -2551,6 +2551,26 @@ nullable_tuple_mh_seq_unpack_ub(Tuple *self, size_t min_count, size_t max_count,
 	return self->t_size;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+nullable_tuple_asvector(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+	size_t i, result = 0;
+	for (i = 0; i < self->t_size; ++i) {
+		DeeObject *item = self->t_elem[i];
+		if (!item)
+			continue;
+		if (result == dst_length) {
+			size_t j;
+			for (j = 0; j < dst_length; ++j)
+				Dee_DecrefNokill(dst[j]);
+		} else if (result < dst_length) {
+			dst[result] = item;
+			Dee_Incref(item);
+		}
+		++result;
+	}
+	return result;
+}
+
 
 PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_iter                       = */ DEFIMPL(&default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast),
@@ -2594,8 +2614,8 @@ PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
 	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
 	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
-	/* .tp_asvector                   = */ NULL, /* TODO */
-	/* .tp_asvector_nothrow           = */ NULL, /* TODO */
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, /*out*/ DREF DeeObject **))&nullable_tuple_asvector,
+	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, /*out*/ DREF DeeObject **))&nullable_tuple_asvector,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

@@ -337,11 +337,9 @@ PRIVATE struct oh_init_spec_class tpconst oh_class_hash[3] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__hash__with__, OPERATOR_USERCOUNT, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_hash[6] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_hash[4] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_hash, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_hash, NULL, Dee_SEQCLASS_SET),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_hash, NULL, Dee_SEQCLASS_MAP),
-	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_hash, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_hash, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };

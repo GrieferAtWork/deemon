@@ -757,7 +757,7 @@ Type_assert(deemon.Dict, {
 	"tp_repr":                                    "default__repr__with__printrepr",
 	"tp_printrepr":                               "dict_printrepr",
 	"tp_bool":                                    "dict_bool",
-	"tp_hash":                                    "default__set_operator_hash__with__map_operator_foreach_pair",
+	"tp_hash":                                    "default__map_operator_hash__with__map_operator_foreach_pair",
 	"tp_compare_eq":                              "default__map_operator_compare_eq__with__map_operator_foreach_pair",
 	"tp_compare":                                 "NULL", // TODO: Should be default__compare__with__eq__and__lo
 	"tp_trycompare_eq":                           "default__map_operator_trycompare_eq__with__map_operator_compare_eq",

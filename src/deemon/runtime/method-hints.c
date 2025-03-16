@@ -1257,9 +1257,8 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_set_operator_size[2] =
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_SET),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_spec_operator tpconst mh_operators_set_operator_hash[3] = {
+PRIVATE struct mh_init_spec_operator tpconst mh_operators_set_operator_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hash, NULL, Dee_SEQCLASS_SET),
-	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hash, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_operator_compare_eq[2] = {
@@ -1428,8 +1427,7 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_size[2] =
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_size, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_hash[3] = {
-	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hash, NULL, Dee_SEQCLASS_SET),
+PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hash, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };

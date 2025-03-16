@@ -1154,13 +1154,13 @@ function_compare_eq(Function *self, Function *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeFunction_Type))
 		goto err;
 	result = DeeObject_CompareEq((DeeObject *)code,
-	                                      (DeeObject *)other->fo_code);
-	if unlikely(result != 0)
+	                             (DeeObject *)other->fo_code);
+	if (result != 0)
 		goto done;
 	ASSERT(code->co_refc == other->fo_code->co_refc);
 	for (i = 0; i < code->co_refc; ++i) {
 		result = DeeObject_TryCompareEq(self->fo_refv[i],
-		                                         other->fo_refv[i]);
+		                                other->fo_refv[i]);
 		if (result != 0)
 			goto done;
 	}
@@ -1190,7 +1190,7 @@ function_compare_eq(Function *self, Function *other) {
 			goto not_equal;
 		} else {
 			result = DeeObject_TryCompareEq(self->fo_refv[i],
-			                                         other->fo_refv[i]);
+			                                other->fo_refv[i]);
 			Dee_Decref_unlikely(lhs);
 			Dee_Decref_unlikely(rhs);
 			if (result != 0)

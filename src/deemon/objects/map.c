@@ -756,7 +756,16 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_methods       = */ map_methods,
 	/* .tp_getsets       = */ map_getsets,
 	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
+	/* .tp_class_methods = */ NULL, /* TODO: fromkeys(keys:?DSet,value=!N,valuefor?:?DCallable)->?.
+	                                 * >> local result = () -> {
+	                                 * >>     for (local k: keys) {
+	                                 * >>         local v = valuefor is bound ? valuefor(k) : value;
+	                                 * >>         yield (k, v);
+	                                 * >>     }
+	                                 * >> }() as Mapping;
+	                                 * >> if (this !== Mapping)
+	                                 * >>     result = this(result); // When called via a sub-class
+	                                 * >> return result; */
 	/* .tp_class_getsets = */ map_class_getsets,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,

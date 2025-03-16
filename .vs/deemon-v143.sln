@@ -298,6 +298,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gen", "gen", "{2360741E-FB4
 		..\lib\rt\gen\dexutils.dee = ..\lib\rt\gen\dexutils.dee
 		..\lib\rt\gen\hash.dee = ..\lib\rt\gen\hash.dee
 		..\lib\rt\gen\string.dee = ..\lib\rt\gen\string.dee
+		..\lib\rt\gen\unpack.dee = ..\lib\rt\gen\unpack.dee
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hints", "hints", "{2360741E-FB49-40D4-B684-00C103B84A53}"
@@ -468,6 +469,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\posix-DIR.dee = ..\util\test\posix-DIR.dee
 		..\util\test\posix-walklink.dee = ..\util\test\posix-walklink.dee
 		..\util\test\rt-classdescriptor-reprcopy.dee = ..\util\test\rt-classdescriptor-reprcopy.dee
+		..\util\test\rt-code-constructor.dee = ..\util\test\rt-code-constructor.dee
 		..\util\test\rt-hash.dee = ..\util\test\rt-hash.dee
 		..\util\test\rt-linkage.dee = ..\util\test\rt-linkage.dee
 		..\util\test\threading-lock.dee = ..\util\test\threading-lock.dee
