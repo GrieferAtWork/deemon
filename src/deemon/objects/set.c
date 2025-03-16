@@ -325,7 +325,8 @@ PRIVATE char const set_doc[] =
 
 "()\n"
 "A no-op default constructor that is implicitly called by sub-classes\n"
-"When invoked manually, a general-purpose, empty ?. is returned\n"
+"When invoked manually, a general-purpose, empty ?. equivalent "
+/**/ "to ?Ert:Set_empty is returned\n"
 "\n"
 
 "repr->\n"
