@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/callable.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
@@ -235,20 +236,20 @@ err:
 /************************************************************************/
 
 /* Special non-none value that indicates that the enumeration should stop. */
-PRIVATE DeeObject ew_stop = { OBJECT_HEAD_INIT(&DeeObject_Type) };
+PRIVATE DeeObject sew_stop = { OBJECT_HEAD_INIT(&DeeObject_Type) };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-ew_docall(EnumerateWrapper *self, size_t argc, DeeObject *const *argv) {
+sew_docall(SeqEnumerateWrapper *self, size_t argc, DeeObject *const *argv) {
 	Dee_ssize_t result;
 	DeeObject *key, *value = NULL;
-	_DeeArg_Unpack1Or2(err, argc, argv, "EnumerateWrapper.__call__", &key, &value);
-	if (Dee_TYPE(self) == &EnumerateWrapper_Type) {
-		result = (*self->ew_cb.cb_enumerate)(self->ew_arg, key, value);
+	_DeeArg_Unpack1Or2(err, argc, argv, "SeqEnumerateWrapper.__call__", &key, &value);
+	if (Dee_TYPE(self) == &SeqEnumerateWrapper_Type) {
+		result = (*self->sew_cb.cb_enumerate)(self->sew_arg, key, value);
 	} else {
 		size_t index;
 		if (DeeObject_AsSize(key, &index))
 			goto err;
-		result = (*self->ew_cb.cb_enumerate_index)(self->ew_arg, index, value);
+		result = (*self->sew_cb.cb_enumerate_index)(self->sew_arg, index, value);
 	}
 	return result;
 err:
@@ -256,20 +257,20 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ew_call(EnumerateWrapper *self, size_t argc, DeeObject *const *argv) {
+sew_call(SeqEnumerateWrapper *self, size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *thread;
 	Dee_ssize_t foreach_status;
 	uint16_t old_exceptsz;
-	if (Dee_rshared_lock_acquire(&self->ew_lock))
+	if (Dee_rshared_lock_acquire(&self->sew_lock))
 		goto err;
-	if unlikely(self->ew_res < 0) {
+	if unlikely(self->sew_res < 0) {
 stop_unlock:
-		Dee_rshared_lock_release(&self->ew_lock);
-		return_reference_(&ew_stop);
+		Dee_rshared_lock_release(&self->sew_lock);
+		return_reference_(&sew_stop);
 	}
 	thread = DeeThread_Self();
 	old_exceptsz   = thread->t_exceptsz;
-	foreach_status = ew_docall(self, argc, argv);
+	foreach_status = sew_docall(self, argc, argv);
 	if (foreach_status < 0) {
 		/* Have to be careful here: only a return value of "-1" guaranties
 		 * that an error was thrown, but any other negative status can still
@@ -280,11 +281,11 @@ stop_unlock:
 		 * an optional error (and just check if one was thrown). */
 		ASSERT((old_exceptsz + 0) == thread->t_exceptsz ||
 		       (old_exceptsz + 1) == thread->t_exceptsz);
-		self->ew_res = foreach_status;
-		ASSERT(!self->ew_err);
+		self->sew_res = foreach_status;
+		ASSERT(!self->sew_err);
 		if (old_exceptsz != thread->t_exceptsz) {
-			self->ew_err = thread->t_except->ef_error;
-			Dee_Incref(self->ew_err);
+			self->sew_err = thread->t_except->ef_error;
+			Dee_Incref(self->sew_err);
 			goto err_unlock;
 		}
 		goto stop_unlock;
@@ -293,80 +294,39 @@ stop_unlock:
 		/* For safety: usually we don't check for overflow, but here we
 		 *             do because this callback is under the complete
 		 *             control of user-code (which might do weird stuff) */
-		if (OVERFLOW_SADD(self->ew_res, foreach_status, &self->ew_res))
-			self->ew_res = SSIZE_MAX;
-		self->ew_res += foreach_status;
+		if (OVERFLOW_SADD(self->sew_res, foreach_status, &self->sew_res))
+			self->sew_res = SSIZE_MAX;
+		self->sew_res += foreach_status;
 	}
-	Dee_rshared_lock_release(&self->ew_lock);
+	Dee_rshared_lock_release(&self->sew_lock);
 	return_none; /* Continue enumeration */
 err_unlock:
-	Dee_rshared_lock_release(&self->ew_lock);
+	Dee_rshared_lock_release(&self->sew_lock);
 err:
 	return NULL;
 }
 
 PRIVATE NONNULL((1)) void DCALL
-ew_fini(EnumerateWrapper *__restrict self) {
-	Dee_XDecref(self->ew_err);
+sew_fini(SeqEnumerateWrapper *__restrict self) {
+	Dee_XDecref(self->sew_err);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-ew_visit(EnumerateWrapper *__restrict self, dvisit_t proc, void *arg) {
-	Dee_rshared_lock_acquire_noint(&self->ew_lock);
-	Dee_XVisit(self->ew_err);
-	Dee_rshared_lock_release(&self->ew_lock);
+sew_visit(SeqEnumerateWrapper *__restrict self, dvisit_t proc, void *arg) {
+	Dee_rshared_lock_acquire_noint(&self->sew_lock);
+	Dee_XVisit(self->sew_err);
+	Dee_rshared_lock_release(&self->sew_lock);
 }
 
-INTERN DeeTypeObject EnumerateWrapper_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_EnumerateWrapper",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeCallable_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_S(EnumerateWrapper)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ew_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
-	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ew_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL, /* TODO: Expose `EnumerateWrapper.ew_res' (read-only) */
-	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject *const *))&ew_call,
+PRIVATE struct type_member tpconst sew_members[] = {
+	TYPE_MEMBER_FIELD("__status__", STRUCT_SSIZE_T | STRUCT_CONST | STRUCT_ATOMIC,
+	                  offsetof(SeqEnumerateWrapper, sew_res)),
+	TYPE_MEMBER_END
 };
 
-INTERN DeeTypeObject EnumerateIndexWrapper_Type = {
+INTERN DeeTypeObject SeqEnumerateWrapper_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_EnumerateIndexWrapper",
+	/* .tp_name     = */ "_SeqEnumerateWrapper",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
@@ -379,36 +339,89 @@ INTERN DeeTypeObject EnumerateIndexWrapper_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_S(EnumerateWrapper)
+				TYPE_FIXED_ALLOCATOR_S(SeqEnumerateWrapper)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ew_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sew_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&object_repr),
+		/* .tp_bool = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ew_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sew_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
+	/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__8F384E6A64571883),
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL, /* TODO: Expose `EnumerateWrapper.ew_res' (read-only) */
-	/* .tp_members       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ sew_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject *const *))&ew_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject *const *))&sew_call,
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+};
+
+INTERN DeeTypeObject SeqEnumerateIndexWrapper_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqEnumerateIndexWrapper",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeCallable_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR_S(SeqEnumerateWrapper)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sew_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&object_repr),
+		/* .tp_bool = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sew_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
+	/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__8F384E6A64571883),
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ sew_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject *const *))&sew_call,
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
 };
 
 
@@ -420,9 +433,9 @@ deleted_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value)
 	return DeeError_Throwf(&DeeError_RuntimeError, "Enumeration has stopped");
 }
 
-/* Destroy "self" if not shared, else clear the "ew_cb" callback,
+/* Destroy "self" if not shared, else clear the "sew_cb" callback,
  * to ensure that it won't be called anymore. This function also
- * briefly acquires a lock to "ew_lock" (without interrupts) to
+ * briefly acquires a lock to "sew_lock" (without interrupts) to
  * ensure that after a call to this function, nothing may still
  * invoke the callback.
  *
@@ -430,32 +443,32 @@ deleted_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value)
  *                         May be "NULL" if the user-defined callback threw
  *                         an error. */
 INTERN WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-EnumerateWrapper_Decref(/*inherit(always)*/ DREF EnumerateWrapper *self,
+SeqEnumerateWrapper_Decref(/*inherit(always)*/ DREF SeqEnumerateWrapper *self,
                         /*inherit(always)*/ DREF DeeObject *userproc_result) {
 	DREF DeeObject *err;
 	Dee_ssize_t result;
 	bool shared;
 	ASSERT_OBJECT(self);
-	ASSERT(Dee_TYPE(self) == &EnumerateWrapper_Type ||
-	       Dee_TYPE(self) == &EnumerateIndexWrapper_Type);
+	ASSERT(Dee_TYPE(self) == &SeqEnumerateWrapper_Type ||
+	       Dee_TYPE(self) == &SeqEnumerateIndexWrapper_Type);
 	shared = DeeObject_IsShared(self);
 	if (shared)
-		Dee_rshared_lock_acquire_noint(&self->ew_lock);
+		Dee_rshared_lock_acquire_noint(&self->sew_lock);
 	if unlikely(!userproc_result) {
 		result = -1;
 	} else {
-		result = self->ew_res;
-		if (self->ew_err) {
+		result = self->sew_res;
+		if (self->sew_err) {
 			ASSERT(result < 0);
-			DeeError_Throw(self->ew_err);
+			DeeError_Throw(self->sew_err);
 		}
 	}
-	err = self->ew_err;
+	err = self->sew_err;
 	if (shared) {
-		self->ew_cb.cb_enumerate = &deleted_enumerate_cb;
-		self->ew_res = 0;
-		self->ew_err = NULL;
-		Dee_rshared_lock_release(&self->ew_lock);
+		self->sew_cb.cb_enumerate = &deleted_enumerate_cb;
+		self->sew_res = 0;
+		self->sew_err = NULL;
+		Dee_rshared_lock_release(&self->sew_lock);
 		Dee_Decref_unlikely(self);
 	} else {
 		Dee_DecrefNokill(Dee_TYPE(self));
@@ -466,35 +479,35 @@ EnumerateWrapper_Decref(/*inherit(always)*/ DREF EnumerateWrapper *self,
 }
 
 /* Create new enumerate/enumerate_index wrapper objects. */
-INTERN WUNUSED NONNULL((1)) DREF EnumerateWrapper *DCALL
-EnumerateWrapper_New(Dee_seq_enumerate_t cb, void *arg) {
-	DREF EnumerateWrapper *result;
-	result = DeeObject_MALLOC(EnumerateWrapper);
+INTERN WUNUSED NONNULL((1)) DREF SeqEnumerateWrapper *DCALL
+SeqEnumerateWrapper_New(Dee_seq_enumerate_t cb, void *arg) {
+	DREF SeqEnumerateWrapper *result;
+	result = DeeObject_MALLOC(SeqEnumerateWrapper);
 	if unlikely(!result)
 		goto err;
-	result->ew_cb.cb_enumerate = cb;
-	result->ew_arg = arg;
-	result->ew_res = 0;
-	result->ew_err = NULL;
-	Dee_rshared_lock_init(&result->ew_lock);
-	DeeObject_Init(result, &EnumerateWrapper_Type);
+	result->sew_cb.cb_enumerate = cb;
+	result->sew_arg = arg;
+	result->sew_res = 0;
+	result->sew_err = NULL;
+	Dee_rshared_lock_init(&result->sew_lock);
+	DeeObject_Init(result, &SeqEnumerateWrapper_Type);
 	return result;
 err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF EnumerateWrapper *DCALL
-EnumerateIndexWrapper_New(Dee_seq_enumerate_index_t cb, void *arg) {
-	DREF EnumerateWrapper *result;
-	result = DeeObject_MALLOC(EnumerateWrapper);
+INTERN WUNUSED NONNULL((1)) DREF SeqEnumerateWrapper *DCALL
+SeqEnumerateIndexWrapper_New(Dee_seq_enumerate_index_t cb, void *arg) {
+	DREF SeqEnumerateWrapper *result;
+	result = DeeObject_MALLOC(SeqEnumerateWrapper);
 	if unlikely(!result)
 		goto err;
-	result->ew_cb.cb_enumerate_index = cb;
-	result->ew_arg = arg;
-	result->ew_res = 0;
-	result->ew_err = NULL;
-	Dee_rshared_lock_init(&result->ew_lock);
-	DeeObject_Init(result, &EnumerateIndexWrapper_Type);
+	result->sew_cb.cb_enumerate_index = cb;
+	result->sew_arg = arg;
+	result->sew_res = 0;
+	result->sew_err = NULL;
+	Dee_rshared_lock_init(&result->sew_lock);
+	DeeObject_Init(result, &SeqEnumerateIndexWrapper_Type);
 	return result;
 err:
 	return NULL;

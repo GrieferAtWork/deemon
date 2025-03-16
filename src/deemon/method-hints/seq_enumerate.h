@@ -350,12 +350,12 @@ err_indexob:
 	return CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_enumerate_with_counter__and__seq_foreach_cb, &data);
 }} {
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = LOCAL_CALLATTR(self, 1, (DeeObject *const *)&wrapper);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }
@@ -584,12 +584,12 @@ err:
 	return result;
 }} {
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateIndexWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateIndexWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ, wrapper, start, end);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }

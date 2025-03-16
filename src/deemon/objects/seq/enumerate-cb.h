@@ -76,24 +76,24 @@ map_call_enumerate_with_range(DeeObject *self, DeeObject *cb,
 typedef struct {
 	OBJECT_HEAD
 	union {
-		Dee_seq_enumerate_t       cb_enumerate;       /* For `EnumerateWrapper_Type' */
-		Dee_seq_enumerate_index_t cb_enumerate_index; /* For `EnumerateIndexWrapper_Type' */
-	}                  ew_cb;   /* [1..1][lock(ew_lock)] User-defined callback (unless deleted) */
-	void              *ew_arg;  /* [?..?][lock(ew_lock)] Cookie for `ew_cb' */
-	Dee_ssize_t        ew_res;  /* [lock(ew_lock)] Result status. */
-	DREF DeeObject    *ew_err;  /* [0..1][lock(ew_lock)] Error that was thrown by the last invocation of "ew_cb" (must be NULL when `ew_res >= 0') */
+		Dee_seq_enumerate_t       cb_enumerate;       /* For `SeqEnumerateWrapper_Type' */
+		Dee_seq_enumerate_index_t cb_enumerate_index; /* For `SeqEnumerateIndexWrapper_Type' */
+	}                  sew_cb;   /* [1..1][lock(sew_lock)] User-defined callback (unless deleted) */
+	void              *sew_arg;  /* [?..?][lock(sew_lock)] Cookie for `sew_cb' */
+	Dee_ssize_t        sew_res;  /* [lock(sew_lock)] Result status. */
+	DREF DeeObject    *sew_err;  /* [0..1][lock(sew_lock)] Error that was thrown by the last invocation of "sew_cb" (must be NULL when `sew_res >= 0') */
 #ifndef CONFIG_NO_THREADS
-	Dee_rshared_lock_t ew_lock; /* Lock for ensuring that `ew_cb' is only called from
+	Dee_rshared_lock_t sew_lock; /* Lock for ensuring that `sew_cb' is only called from
 	                             * **1** thread, and can be deleted, even if shared. */
 #endif /* !CONFIG_NO_THREADS */
-} EnumerateWrapper;
+} SeqEnumerateWrapper;
 
-INTDEF DeeTypeObject EnumerateWrapper_Type;
-INTDEF DeeTypeObject EnumerateIndexWrapper_Type;
+INTDEF DeeTypeObject SeqEnumerateWrapper_Type;
+INTDEF DeeTypeObject SeqEnumerateIndexWrapper_Type;
 
-/* Destroy "self" if not shared, else clear the "ew_cb" callback,
+/* Destroy "self" if not shared, else clear the "sew_cb" callback,
  * to ensure that it won't be called anymore. This function also
- * briefly acquires a lock to "ew_lock" (without interrupts) to
+ * briefly acquires a lock to "sew_lock" (without interrupts) to
  * ensure that after a call to this function, nothing may still
  * invoke the callback.
  *
@@ -101,14 +101,14 @@ INTDEF DeeTypeObject EnumerateIndexWrapper_Type;
  *                         May be "NULL" if the user-defined callback threw
  *                         an error. */
 INTDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-EnumerateWrapper_Decref(/*inherit(always)*/ DREF EnumerateWrapper *self,
-                        /*inherit(always)*/ DREF DeeObject *userproc_result);
+SeqEnumerateWrapper_Decref(/*inherit(always)*/ DREF SeqEnumerateWrapper *self,
+                           /*inherit(always)*/ DREF DeeObject *userproc_result);
 
 /* Create new enumerate/enumerate_index wrapper objects. */
-INTDEF WUNUSED NONNULL((1)) DREF EnumerateWrapper *DCALL
-EnumerateWrapper_New(Dee_seq_enumerate_t cb, void *arg);
-INTDEF WUNUSED NONNULL((1)) DREF EnumerateWrapper *DCALL
-EnumerateIndexWrapper_New(Dee_seq_enumerate_index_t cb, void *arg);
+INTDEF WUNUSED NONNULL((1)) DREF SeqEnumerateWrapper *DCALL
+SeqEnumerateWrapper_New(Dee_seq_enumerate_t cb, void *arg);
+INTDEF WUNUSED NONNULL((1)) DREF SeqEnumerateWrapper *DCALL
+SeqEnumerateIndexWrapper_New(Dee_seq_enumerate_index_t cb, void *arg);
 
 DECL_END
 

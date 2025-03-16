@@ -3030,7 +3030,7 @@ PRIVATE DEFINE_CODE(DeeCode_EmptyYielding,
                     /* co_argc_min:   */ 0,
                     /* co_argc_max:   */ 0,
                     /* co_framesize:  */ 0,
-                    /* co_codebytes:  */ sizeof(instruction_t),
+                    /* co_codebytes:  */ 1,
                     /* co_module:     */ &DeeModule_Deemon,
                     /* co_keywords:   */ NULL,
                     /* co_defaultv:   */ NULL,
@@ -3249,6 +3249,95 @@ librt_get_MapFromKeysAndCallbackIterator_f(size_t UNUSED(argc), DeeObject *const
 }
 
 
+struct custom_seq_enumerate_ob {
+	OBJECT_HEAD
+	DREF DeeObject *cse_wrapper; /* [0..1] The wrapper that was generated (out). */
+};
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+custom_seq_enumerate(struct custom_seq_enumerate_ob *self,
+                     size_t argc, DeeObject *const *argv) {
+	if likely(argc >= 1) {
+		DeeObject *wrapper = argv[0];
+		Dee_Incref(wrapper);
+		if unlikely(!atomic_cmpxch(&self->cse_wrapper, NULL, wrapper))
+			Dee_DecrefNokill(wrapper);
+	}
+	return_none;
+}
+
+PRIVATE struct type_method tpconst type_with_custom_seq_enumerate_methods[] = {
+	TYPE_METHOD_NODOC(DeeMA___seq_enumerate___name, &custom_seq_enumerate),
+	TYPE_METHOD_END
+};
+PRIVATE DeeTypeObject type_with_custom_seq_enumerate = INIT_CUSTOM_SEQ_TYPE_EX(&DeeSet_Type, NULL, type_with_custom_seq_enumerate_methods, NULL, NULL);
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+noop_seq_enumerate_cb(void *UNUSED(arg),
+                      DeeObject *UNUSED(key),
+                      DeeObject *UNUSED(value)) {
+	return 0;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_EnumerateWrapper_Type_uncached_impl_f(void) {
+	Dee_ssize_t error;
+	struct custom_seq_enumerate_ob ob = { OBJECT_HEAD_INIT(&type_with_custom_seq_enumerate), NULL };
+	ASSERT(ob.ob_refcnt == Dee_STATIC_REFCOUNT_INIT);
+	error = DeeObject_InvokeMethodHint(seq_enumerate, (DeeObject *)&ob, &noop_seq_enumerate_cb, NULL);
+	ASSERT(ob.ob_refcnt == Dee_STATIC_REFCOUNT_INIT);
+	if unlikely(error < 0)
+		goto err;
+	ASSERT(ob.cse_wrapper);
+	return get_type_of(ob.cse_wrapper);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED Dee_ssize_t DCALL
+noop_seq_enumerate_index_cb(void *UNUSED(arg),
+                            size_t UNUSED(key),
+                            DeeObject *UNUSED(value)) {
+	return 0;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_EnumerateIndexWrapper_Type_uncached_impl_f(void) {
+	Dee_ssize_t error;
+	struct custom_seq_enumerate_ob ob = { OBJECT_HEAD_INIT(&type_with_custom_seq_enumerate), NULL };
+	ASSERT(ob.ob_refcnt == Dee_STATIC_REFCOUNT_INIT);
+	error = DeeObject_InvokeMethodHint(seq_enumerate_index, (DeeObject *)&ob, &noop_seq_enumerate_index_cb, NULL, 0, (size_t)-1);
+	ASSERT(ob.ob_refcnt == Dee_STATIC_REFCOUNT_INIT);
+	if unlikely(error < 0)
+		goto err;
+	ASSERT(ob.cse_wrapper);
+	return get_type_of(ob.cse_wrapper);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_EnumerateWrapper_Type_impl_f(void) {
+	return_cached(librt_get_EnumerateWrapper_Type_uncached_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_EnumerateIndexWrapper_Type_impl_f(void) {
+	return_cached(librt_get_EnumerateIndexWrapper_Type_uncached_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_EnumerateWrapper_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_EnumerateWrapper_Type_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_EnumerateIndexWrapper_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_EnumerateIndexWrapper_Type_impl_f();
+}
+
+
+
 
 
 
@@ -3328,6 +3417,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqWithSizeAndTryGetItemIndex, &librt_get_SeqWi
 PRIVATE DEFINE_CMETHOD(librt_get_SeqWithSizeAndGetItem, &librt_get_SeqWithSizeAndGetItem_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqWithIter, &librt_get_SeqWithIter_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqWithIterAndLimit, &librt_get_SeqWithIterAndLimit_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_EnumerateWrapper, &librt_get_EnumerateWrapper_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_EnumerateIndexWrapper, &librt_get_EnumerateIndexWrapper_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithGetItemIndex, &librt_get_IterWithGetItemIndex_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithGetItemIndexPair, &librt_get_IterWithGetItemIndexPair_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithSizeAndGetItemIndex, &librt_get_IterWithSizeAndGetItemIndex_Type_f, METHOD_FCONSTCALL);
@@ -3730,12 +3821,13 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqWithIterAndLimit", (DeeObject *)&librt_get_SeqWithIterAndLimit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* DefaultSequence_WithIterAndLimit_Type */
 
 	/* Misc. helper types for sequences */
-//TODO:	{ "EnumerateWrapper", (DeeObject *)&librt_get_EnumerateWrapper, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* EnumerateWrapper_Type */
-//TODO:	{ "EnumerateIndexWrapper", (DeeObject *)&librt_get_EnumerateIndexWrapper_Type, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                            /* EnumerateIndexWrapper_Type */
+	{ "SeqEnumerateWrapper", (DeeObject *)&librt_get_EnumerateWrapper, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* SeqEnumerateWrapper_Type */
+	{ "SeqEnumerateIndexWrapper", (DeeObject *)&librt_get_EnumerateIndexWrapper, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* SeqEnumerateIndexWrapper_Type */
 //TODO:	{ "SeqRemoveWithRemoveIfPredicate", (DeeObject *)&librt_get_SeqRemoveWithRemoveIfPredicate, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* SeqRemoveWithRemoveIfPredicate_Type */
 //TODO:	{ "SeqRemoveWithRemoveIfPredicateWithKey", (DeeObject *)&librt_get_SeqRemoveWithRemoveIfPredicateWithKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* SeqRemoveWithRemoveIfPredicateWithKey_Type */
 //TODO:	{ "SeqRemoveIfWithRemoveAllItem", (DeeObject *)&librt_get_SeqRemoveIfWithRemoveAllItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SeqRemoveIfWithRemoveAllItem_Type */
 //TODO:	{ "SeqRemoveIfWithRemoveAllKey", (DeeObject *)&librt_get_SeqRemoveIfWithRemoveAllKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* SeqRemoveIfWithRemoveAllKey_Type */
+//TODO:	{ "SeqRemoveIfWithRemoveAllItem_DummyInstance", (DeeObject *)&librt_get_SeqRemoveIfWithRemoveAllItem_DummyInstance, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SeqRemoveIfWithRemoveAllItem_DummyInstance */
 
 	/* Default iterator types */
 	{ "IterWithGetItemIndex", (DeeObject *)&librt_get_IterWithGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultIterator_WithGetItemIndex_Type */
@@ -3778,13 +3870,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Default sequence cache types */
 	{ "CachedSeqWithIter", (DeeObject *)&librt_get_CachedSeqWithIter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* CachedSeq_WithIter_Type */
 	{ "CachedSeqWithIterIterator", (DeeObject *)&librt_get_CachedSeqWithIterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* CachedSeq_WithIter_Iterator_Type */
-
-	/* TODO: SeqRemoveWithRemoveIfPredicate             = SeqRemoveWithRemoveIfPredicate_Type */
-	/* TODO: SeqRemoveWithRemoveIfPredicateWithKey      = SeqRemoveWithRemoveIfPredicateWithKey_Type */
-	/* TODO: SeqRemoveIfWithRemoveAllItem               = SeqRemoveIfWithRemoveAllItem_Type */
-	/* TODO: SeqRemoveIfWithRemoveAllItem_DummyInstance = SeqRemoveIfWithRemoveAllItem_DummyInstance */
-	/* TODO: SeqRemoveIfWithRemoveAllKey                = SeqRemoveIfWithRemoveAllKey_Type */
-	/* TODO: All of the sequence enumeration wrappers */
 
 	/* Internal types used to drive set proxies */
 	{ "SetInversion", (DeeObject *)&librt_get_SetInversion, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* SetInversion_Type */

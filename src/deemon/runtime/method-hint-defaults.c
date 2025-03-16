@@ -4716,12 +4716,12 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_enumerate__with_callattr___seq_enumerate__(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_enumerate__, 1, (DeeObject *const *)&wrapper);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }
@@ -4732,12 +4732,12 @@ default__seq_enumerate__with_callobjectcache___seq_enumerate__(DeeObject *__rest
 	return tdefault__seq_enumerate__with_callobjectcache___seq_enumerate__(Dee_TYPE(self), self, cb, arg);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_enumerate__, self, 1, (DeeObject *const *)&wrapper);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -5052,12 +5052,12 @@ default__seq_enumerate__with__seq_operator_foreach__and__counter(DeeObject *__re
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_enumerate_index__with_callattr___seq_enumerate__(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end) {
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateIndexWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateIndexWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_enumerate__, "o" PCKuSIZ PCKuSIZ, wrapper, start, end);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }
@@ -5068,12 +5068,12 @@ default__seq_enumerate_index__with_callobjectcache___seq_enumerate__(DeeObject *
 	return tdefault__seq_enumerate_index__with_callobjectcache___seq_enumerate__(Dee_TYPE(self), self, cb, arg, start, end);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateIndexWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateIndexWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_enumerate__, self, "o" PCKuSIZ PCKuSIZ, wrapper, start, end);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -18500,12 +18500,12 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__map_enumerate__with_callattr___map_enumerate__(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___map_enumerate__, 1, (DeeObject *const *)&wrapper);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }
@@ -18516,12 +18516,12 @@ default__map_enumerate__with_callobjectcache___map_enumerate__(DeeObject *__rest
 	return tdefault__map_enumerate__with_callobjectcache___map_enumerate__(Dee_TYPE(self), self, cb, arg);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_enumerate__, self, 1, (DeeObject *const *)&wrapper);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -18589,15 +18589,15 @@ INTERN WUNUSED NONNULL((1, 2, 4, 5)) Dee_ssize_t DCALL
 default__map_enumerate_range__with_callattr___map_enumerate__(DeeObject *self, Dee_seq_enumerate_t cb, void *arg, DeeObject *start, DeeObject *end) {
 	DeeObject *args[3];
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	args[0] = (DeeObject *)wrapper;
 	args[1] = start;
 	args[2] = end;
 	result  = DeeObject_CallAttr(self, (DeeObject *)&str___map_enumerate__, 3, args);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }
@@ -18609,15 +18609,15 @@ default__map_enumerate_range__with_callobjectcache___map_enumerate__(DeeObject *
 #else /* __OPTIMIZE_SIZE__ */
 	DeeObject *args[3];
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	args[0] = (DeeObject *)wrapper;
 	args[1] = start;
 	args[2] = end;
 	result  = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_enumerate__, self, 3, args);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -21215,12 +21215,12 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 tdefault__seq_enumerate__with_callobjectcache___seq_enumerate__(DeeTypeObject *tp_self, DeeObject *self, Dee_seq_enumerate_t cb, void *arg) {
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_enumerate__, self, 1, (DeeObject *const *)&wrapper);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }
@@ -21229,12 +21229,12 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 tdefault__seq_enumerate_index__with_callobjectcache___seq_enumerate__(DeeTypeObject *tp_self, DeeObject *self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end) {
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateIndexWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateIndexWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_enumerate__, self, "o" PCKuSIZ PCKuSIZ, wrapper, start, end);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }
@@ -22737,12 +22737,12 @@ tdefault__map_itervalues__with_callobjectcache___map_itervalues__(DeeTypeObject 
 INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 tdefault__map_enumerate__with_callobjectcache___map_enumerate__(DeeTypeObject *tp_self, DeeObject *self, Dee_seq_enumerate_t cb, void *arg) {
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___map_enumerate__, self, 1, (DeeObject *const *)&wrapper);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }
@@ -22752,15 +22752,15 @@ INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) Dee_ssize_t DCALL
 tdefault__map_enumerate_range__with_callobjectcache___map_enumerate__(DeeTypeObject *tp_self, DeeObject *self, Dee_seq_enumerate_t cb, void *arg, DeeObject *start, DeeObject *end) {
 	DeeObject *args[3];
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	args[0] = (DeeObject *)wrapper;
 	args[1] = start;
 	args[2] = end;
 	result  = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___map_enumerate__, self, 3, args);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }

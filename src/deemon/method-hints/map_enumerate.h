@@ -113,12 +113,12 @@ err:
 	return -1;
 }} {
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = LOCAL_CALLATTR(self, 1, (DeeObject *const *)&wrapper);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }
@@ -182,15 +182,15 @@ __map_enumerate__.map_enumerate_range([[nonnull]] DeeObject *self,
 }} {
 	DeeObject *args[3];
 	DREF DeeObject *result;
-	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(cb, arg);
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	args[0] = (DeeObject *)wrapper;
 	args[1] = start;
 	args[2] = end;
 	result  = LOCAL_CALLATTR(self, 3, args);
-	return EnumerateWrapper_Decref(wrapper, result);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }

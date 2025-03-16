@@ -734,7 +734,7 @@ struct Dee_code_object {
 		DREF struct Dee_module_object        *co_module;           \
 		DREF struct Dee_string_object *const *co_keywords;         \
 		DREF DeeObject                *const *co_defaultv;         \
-		DREF DeeObject                      **co_constv;           \
+		DREF DeeObject                *const *co_constv;           \
 		struct Dee_except_handler            *co_exceptv;          \
 		DREF DeeDDIObject                    *co_ddi;              \
 		_DEE_CODE_CO_METRICS_FIELD                                 \

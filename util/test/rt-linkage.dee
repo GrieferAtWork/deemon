@@ -115,8 +115,13 @@ assertRtTypeName("SeqWithSizeObAndGetItem");
 assertRtTypeName("SeqWithIter");
 assertRtTypeName("SeqWithIterAndLimit");
 
-//TODO:assertRtTypeName("EnumerateWrapper");
-//TODO:assertRtTypeName("EnumerateIndexWrapper");
+assertRtTypeName("SeqEnumerateWrapper");
+assertRtTypeName("SeqEnumerateIndexWrapper");
+//TODO: SeqRemoveWithRemoveIfPredicate
+//TODO: SeqRemoveWithRemoveIfPredicateWithKey
+//TODO: SeqRemoveIfWithRemoveAllItem
+//TODO: SeqRemoveIfWithRemoveAllKey
+//TODO: SeqRemoveIfWithRemoveAllItem_DummyInstance
 
 assertRtTypeName("IterWithGetItemIndex");
 assertRtTypeName("IterWithGetItemIndexPair");
