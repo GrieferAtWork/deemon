@@ -32,6 +32,9 @@ __map_iter__.map_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
 %{$none = return_none}
 %{$empty = "default__seq_operator_iter__empty"}
+%{$with__map_enumerate = "default__seq_operator_iter__with__map_enumerate"}
+%{$with__map_iterkeys__and__map_operator_trygetitem = "default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem"}
+%{$with__map_iterkeys__and__map_operator_getitem = "default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem"}
 %{$with__seq_operator_iter = {
 	DREF DeeObject *iter;
 	DeeTypeObject *itertyp;

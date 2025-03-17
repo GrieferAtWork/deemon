@@ -74,13 +74,15 @@ struct mh_super_map {
 
 /* clang-format off */
 /*[[[deemon (printMhSuperMap from "..method-hints.method-hints")();]]]*/
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_bool[12] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_bool[14] = {
 	(Dee_funptr_t)&default__seq_operator_bool,
 	(Dee_funptr_t)&default__seq_operator_bool__with_callattr___seq_bool__,
 	(Dee_funptr_t)&default__seq_operator_bool__unsupported,
 	(Dee_funptr_t)&default__seq_operator_bool__none,
 	(Dee_funptr_t)&default__seq_operator_bool__empty,
 	(Dee_funptr_t)&default__seq_operator_bool__with__seq_operator_foreach,
+	(Dee_funptr_t)&default__seq_operator_bool__with__seq_operator_foreach_pair,
+	(Dee_funptr_t)&default__seq_operator_bool__with__seq_operator_iter,
 	(Dee_funptr_t)&default__seq_operator_bool__with__seq_operator_size,
 	(Dee_funptr_t)&default__seq_operator_bool__with__seq_operator_sizeob,
 	(Dee_funptr_t)&default__seq_operator_bool__with__seq_operator_compare_eq,
@@ -108,7 +110,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_sizeob[4] 
 	MH_SUPER_MAP_TYPED_INIT(&default__sizeob__with__size, &tdefault__sizeob__with__size),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_size[10] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_size[12] = {
 	(Dee_funptr_t)&default__seq_operator_size,
 	(Dee_funptr_t)&default__seq_operator_size__with_callattr___seq_size__,
 	(Dee_funptr_t)&default__seq_operator_size__unsupported,
@@ -117,7 +119,9 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_size[10] = {
 	(Dee_funptr_t)&default__seq_operator_size__with__seq_operator_foreach,
 	(Dee_funptr_t)&default__seq_operator_size__with__seq_operator_foreach_pair,
 	(Dee_funptr_t)&default__seq_operator_size__with__set_operator_sizeob,
+	(Dee_funptr_t)&default__seq_operator_size__with__map_operator_sizeob,
 	(Dee_funptr_t)&default__seq_operator_size__with__map_enumerate,
+	(Dee_funptr_t)&default__seq_operator_size__with__seq_operator_iter,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_size[2] = {
@@ -153,7 +157,7 @@ PRIVATE struct mh_super_map_replace tpconst msm_replace__seq_operator_foreach[2]
 	MH_SUPER_MAP_REPLACE_INIT(&default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	MH_SUPER_MAP_REPLACE_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_foreach[14] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_foreach[13] = {
 	(Dee_funptr_t)&default__seq_operator_foreach,
 	(Dee_funptr_t)&default__seq_operator_foreach__with_callattr___seq_iter__,
 	(Dee_funptr_t)&default__seq_operator_foreach__unsupported,
@@ -163,7 +167,6 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_foreach[14] = {
 	(Dee_funptr_t)&default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index,
 	(Dee_funptr_t)&default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index,
 	(Dee_funptr_t)&default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem,
-	(Dee_funptr_t)&default__seq_operator_foreach__with__map_operator_foreach_pair,
 	(Dee_funptr_t)&default__seq_operator_foreach__with__seq_operator_getitem_index,
 	(Dee_funptr_t)&default__seq_operator_foreach__with__seq_operator_getitem,
 	(Dee_funptr_t)&default__seq_operator_foreach__with__map_enumerate,
@@ -858,7 +861,7 @@ PRIVATE struct mh_super_map_replace tpconst msm_replace__seq_enumerate_index[2] 
 	MH_SUPER_MAP_REPLACE_INIT(&default__seq_enumerate_index__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_enumerate_index__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	MH_SUPER_MAP_REPLACE_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_enumerate_index[9] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_enumerate_index[10] = {
 	(Dee_funptr_t)&default__seq_enumerate_index__with_callattr___seq_enumerate__,
 	(Dee_funptr_t)&default__seq_enumerate_index__unsupported,
 	(Dee_funptr_t)&default__seq_enumerate_index__with__seq_enumerate,
@@ -866,6 +869,7 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_enumerate_index[9] = {
 	(Dee_funptr_t)&default__seq_enumerate_index__with__seq_operator_size__and__seq_operator_getitem_index,
 	(Dee_funptr_t)&default__seq_enumerate_index__with__seq_operator_size__and__seq_operator_trygetitem_index,
 	(Dee_funptr_t)&default__seq_enumerate_index__with__seq_operator_getitem_index,
+	(Dee_funptr_t)&default__seq_enumerate_index__with__seq_operator_iter,
 	(Dee_funptr_t)&default__seq_enumerate_index__with__seq_operator_foreach__and__counter,
 	NULL
 };
@@ -2240,12 +2244,15 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_brange_with_key[2] 
 	MH_SUPER_MAP_TYPED_INIT(&default__seq_brange_with_key__with_callobjectcache___seq_brange__, &tdefault__seq_brange_with_key__with_callobjectcache___seq_brange__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_iter[7] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_iter[10] = {
 	(Dee_funptr_t)&default__set_operator_iter,
 	(Dee_funptr_t)&default__set_operator_iter__with_callattr___set_iter__,
 	(Dee_funptr_t)&default__set_operator_iter__unsupported,
 	(Dee_funptr_t)&default__set_operator_iter__none,
 	(Dee_funptr_t)&default__set_operator_iter__empty,
+	(Dee_funptr_t)&default__set_operator_iter__with__map_enumerate,
+	(Dee_funptr_t)&default__set_operator_iter__with__map_iterkeys__and__map_operator_trygetitem,
+	(Dee_funptr_t)&default__set_operator_iter__with__map_iterkeys__and__map_operator_getitem,
 	(Dee_funptr_t)&default__set_operator_iter__with__seq_operator_iter,
 	NULL
 };
@@ -2284,13 +2291,14 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_sizeob[4] 
 	MH_SUPER_MAP_TYPED_INIT(&default__sizeob__with__size, &tdefault__sizeob__with__size),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_size[7] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_size[8] = {
 	(Dee_funptr_t)&default__set_operator_size,
 	(Dee_funptr_t)&default__set_operator_size__with_callattr___set_size__,
 	(Dee_funptr_t)&default__set_operator_size__unsupported,
 	(Dee_funptr_t)&default__set_operator_size__with__set_operator_sizeob,
 	(Dee_funptr_t)&default__set_operator_size__empty,
 	(Dee_funptr_t)&default__set_operator_size__with__set_operator_foreach,
+	(Dee_funptr_t)&default__set_operator_size__with__set_operator_iter,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_size[2] = {
@@ -2693,12 +2701,15 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_pop_with_default[2]
 	MH_SUPER_MAP_TYPED_INIT(&default__set_pop_with_default__with_callobjectcache___set_pop__, &tdefault__set_pop_with_default__with_callobjectcache___set_pop__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_iter[7] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_iter[10] = {
 	(Dee_funptr_t)&default__map_operator_iter,
 	(Dee_funptr_t)&default__map_operator_iter__with_callattr___map_iter__,
 	(Dee_funptr_t)&default__map_operator_iter__unsupported,
 	(Dee_funptr_t)&default__map_operator_iter__none,
 	(Dee_funptr_t)&default__map_operator_iter__empty,
+	(Dee_funptr_t)&default__map_operator_iter__with__map_enumerate,
+	(Dee_funptr_t)&default__map_operator_iter__with__map_iterkeys__and__map_operator_trygetitem,
+	(Dee_funptr_t)&default__map_operator_iter__with__map_iterkeys__and__map_operator_getitem,
 	(Dee_funptr_t)&default__map_operator_iter__with__seq_operator_iter,
 	NULL
 };
@@ -2737,7 +2748,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_sizeob[4] 
 	MH_SUPER_MAP_TYPED_INIT(&default__sizeob__with__size, &tdefault__sizeob__with__size),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_size[8] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_size[9] = {
 	(Dee_funptr_t)&default__map_operator_size,
 	(Dee_funptr_t)&default__map_operator_size__with_callattr___map_size__,
 	(Dee_funptr_t)&default__map_operator_size__unsupported,
@@ -2745,6 +2756,7 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_size[8] = {
 	(Dee_funptr_t)&default__map_operator_size__none,
 	(Dee_funptr_t)&default__map_operator_size__empty,
 	(Dee_funptr_t)&default__map_operator_size__with__map_operator_foreach_pair,
+	(Dee_funptr_t)&default__map_operator_size__with__map_operator_iter,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_size[2] = {

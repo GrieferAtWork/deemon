@@ -447,7 +447,7 @@ PRIVATE struct type_seq dswk_seq = {
 	/* .tp_foreach_pair = */ DEFIMPL(&default__foreach_pair__with__iter),
 	/* .tp_bounditem    = */ DEFIMPL_UNSUPPORTED(&default__bounditem__unsupported),
 	/* .tp_hasitem      = */ DEFIMPL_UNSUPPORTED(&default__hasitem__unsupported),
-	/* .tp_size         = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_size         = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter),
 	/* .tp_size_fast                  = */ NULL,
 	/* .tp_getitem_index              = */ DEFIMPL_UNSUPPORTED(&default__getitem_index__unsupported),
 	/* .tp_getitem_index_fast         = */ NULL,
@@ -513,7 +513,7 @@ INTERN DeeTypeObject DistinctSetWithKey_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_foreach),
+		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_iter),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_set_printrepr),
 	},

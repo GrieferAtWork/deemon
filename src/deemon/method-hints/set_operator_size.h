@@ -51,7 +51,18 @@ __set_size__.set_operator_size([[nonnull]] DeeObject *__restrict self)
 %{$with__set_operator_foreach = [[prefix(DEFINE_default_seq_size_with_foreach_cb)]] {
 	return (size_t)CALL_DEPENDENCY(set_operator_foreach, self, &default_seq_size_with_foreach_cb, NULL);
 }}
- %{using set_operator_sizeob: {
+%{$with__set_operator_iter = {
+	size_t result;
+	DREF DeeObject *iter = CALL_DEPENDENCY(set_operator_iter, self);
+	if unlikely(!iter)
+		goto err;
+	result = DeeObject_IterAdvance(iter, (size_t)-1);
+	Dee_Decref_likely(iter);
+	return result;
+err:
+	return (size_t)-1;
+}}
+%{using set_operator_sizeob: {
 	DREF DeeObject *sizeob;
 	sizeob = CALL_DEPENDENCY(set_operator_sizeob, self);
 	if unlikely(!sizeob)
@@ -84,6 +95,8 @@ set_operator_size = {
 	set_operator_foreach = REQUIRE(set_operator_foreach);
 	if (set_operator_foreach == &default__set_operator_foreach__empty)
 		return &$empty;
+	if (set_operator_foreach == &default__set_operator_foreach__with__set_operator_iter)
+		return &$with__set_operator_iter;
 	if (set_operator_foreach)
-		return $with__set_operator_foreach;
+		return &$with__set_operator_foreach;
 };

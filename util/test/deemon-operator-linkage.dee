@@ -956,7 +956,7 @@ Type_assert(deemon.Dict, {
 	"mh_seq_brange":                              "default__seq_brange__with__seq_operator_size__and__seq_operator_trygetitem_index",
 	"mh_seq_brange_with_key":                     "default__seq_brange_with_key__with__seq_operator_size__and__seq_operator_trygetitem_index",
 	"mh_set_operator_iter":                       "dict_iter",
-	"mh_set_operator_foreach":                    "default__set_operator_foreach__with__map_operator_foreach_pair",
+	"mh_set_operator_foreach":                    "default__seq_operator_foreach__with__seq_operator_foreach_pair",
 	"mh_set_operator_sizeob":                     "dict_sizeob",
 	"mh_set_operator_size":                       "dict_size",
 	"mh_set_operator_hash":                       "default__set_operator_hash__with__map_operator_foreach_pair",

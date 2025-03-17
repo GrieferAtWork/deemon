@@ -388,12 +388,6 @@ err:
 	data.dfwfp_arg = arg;
 	return CALL_DEPENDENCY(seq_operator_foreach_pair, self, &default_foreach_with_foreach_pair_cb, &data);
 }}
-%{$with__map_operator_foreach_pair = [[prefix(DEFINE_default_foreach_with_foreach_pair_cb)]] {
-	struct default_foreach_with_foreach_pair_data data;
-	data.dfwfp_cb  = cb;
-	data.dfwfp_arg = arg;
-	return CALL_DEPENDENCY(map_operator_foreach_pair, self, &default_foreach_with_foreach_pair_cb, &data);
-}}
 %{$with__seq_operator_getitem_index = {
 	PRELOAD_DEPENDENCY(seq_operator_getitem_index)
 	Dee_ssize_t temp, result = 0;
@@ -591,10 +585,9 @@ with_seq_operator_size:
 
 seq_operator_foreach = {
 	DeeMH_seq_operator_iter_t seq_operator_iter;
-	if (REQUIRE_NODEFAULT(seq_operator_foreach_pair))
+	if (REQUIRE_NODEFAULT(seq_operator_foreach_pair) ||
+	    REQUIRE_NODEFAULT(map_operator_foreach_pair))
 		return &$with__seq_operator_foreach_pair;
-	if (REQUIRE_NODEFAULT(map_operator_foreach_pair))
-		return &$with__map_operator_foreach_pair;
 	seq_operator_iter = REQUIRE(seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &$empty;

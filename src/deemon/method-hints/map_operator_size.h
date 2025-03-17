@@ -52,7 +52,18 @@ __map_size__.map_operator_size([[nonnull]] DeeObject *__restrict self)
 %{$with__map_operator_foreach_pair = [[prefix(DEFINE_default_seq_size_with_foreach_pair_cb)]] {
 	return (size_t)CALL_DEPENDENCY(map_operator_foreach_pair, self, &default_seq_size_with_foreach_pair_cb, NULL);
 }}
- %{using map_operator_sizeob: {
+%{$with__map_operator_iter = {
+	size_t result;
+	DREF DeeObject *iter = CALL_DEPENDENCY(map_operator_iter, self);
+	if unlikely(!iter)
+		goto err;
+	result = DeeObject_IterAdvance(iter, (size_t)-1);
+	Dee_Decref_likely(iter);
+	return result;
+err:
+	return (size_t)-1;
+}}
+%{using map_operator_sizeob: {
 	DREF DeeObject *sizeob;
 	sizeob = CALL_DEPENDENCY(map_operator_sizeob, self);
 	if unlikely(!sizeob)
@@ -78,6 +89,8 @@ map_operator_size = {
 	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
 	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
 		return &$empty;
+	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__with__map_operator_iter)
+		return &$with__map_operator_iter;
 	if (map_operator_foreach_pair)
-		return $with__map_operator_foreach_pair;
+		return &$with__map_operator_foreach_pair;
 };

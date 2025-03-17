@@ -42,6 +42,19 @@ default_seq_bool_with_foreach_cb(void *arg, DeeObject *elem) {
 #endif /* !DEFINED_default_seq_bool_with_foreach_cb */
 )]
 
+%[define(DEFINE_default_seq_bool_with_foreach_pair_cb =
+#ifndef DEFINED_default_seq_bool_with_foreach_pair_cb
+#define DEFINED_default_seq_bool_with_foreach_pair_cb
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_bool_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	(void)arg;
+	(void)key;
+	(void)value;
+	return -2;
+}
+#endif /* !DEFINED_default_seq_bool_with_foreach_pair_cb */
+)]
+
 [[wunused]]
 [[operator([Sequence, Set, Mapping]: tp_cast.tp_bool)]]
 int __seq_bool__.seq_operator_bool([[nonnull]] DeeObject *__restrict self)
@@ -55,6 +68,26 @@ int __seq_bool__.seq_operator_bool([[nonnull]] DeeObject *__restrict self)
 	if (foreach_status == -2)
 		foreach_status = 1;
 	return (int)foreach_status;
+}}
+%{$with__seq_operator_foreach_pair = [[prefix(DEFINE_default_seq_bool_with_foreach_pair_cb)]] {
+	Dee_ssize_t foreach_status;
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach_pair, self, &default_seq_bool_with_foreach_pair_cb, NULL);
+	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
+	if (foreach_status == -2)
+		foreach_status = 1;
+	return (int)foreach_status;
+}}
+%{$with__seq_operator_iter = {
+	size_t skip;
+	DREF DeeObject *iter = CALL_DEPENDENCY(seq_operator_iter, self);
+	if unlikely(!iter)
+		goto err;
+	skip = DeeObject_IterAdvance(iter, 1);
+	Dee_Decref_likely(iter);
+	ASSERT(skip == 0 || skip == 1 || skip == (size_t)-1);
+	return (int)(Dee_ssize_t)skip;
+err:
+	return -1;
 }}
 %{$with__seq_operator_size = {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
@@ -157,8 +190,12 @@ use_size:
 	seq_operator_size = REQUIRE(seq_operator_size);
 	if (seq_operator_size == &default__seq_operator_size__empty)
 		return &$empty;
+	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_iter)
+		return &$with__seq_operator_iter;
 	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach)
 		return &$with__seq_operator_foreach;
+	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach_pair)
+		return &$with__seq_operator_foreach_pair;
 	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
 		return &$with__seq_operator_sizeob;
 	if (seq_operator_size)

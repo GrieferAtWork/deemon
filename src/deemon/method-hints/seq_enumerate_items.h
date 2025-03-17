@@ -180,6 +180,7 @@ seq_makeenumeration = {
 		if (seq_operator_size == &default__seq_operator_size__empty)
 			return &$empty;
 		if (seq_operator_size != &default__seq_operator_size__unsupported &&
+		    seq_operator_size != &default__seq_operator_size__with__seq_operator_iter &&
 		    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach &&
 		    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach_pair &&
 		    seq_operator_size != &default__seq_operator_size__with__map_enumerate) {

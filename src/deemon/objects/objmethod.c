@@ -674,7 +674,7 @@ PRIVATE struct type_seq dockwds_seq = {
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
-	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter),
 	/* .tp_size_fast                  = */ NULL,
 	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
 	/* .tp_getitem_index_fast         = */ NULL,
@@ -788,7 +788,7 @@ INTERN DeeTypeObject DocKwds_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool      = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_foreach),
+		/* .tp_bool      = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_iter),
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&dockwds_print,
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},

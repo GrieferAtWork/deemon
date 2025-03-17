@@ -426,7 +426,8 @@ seq_operator_hasitem_index = {
 	}
 	if (seq_operator_size == &default__seq_operator_size__empty)
 		return &$empty;
-	if (seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach)
+	if (seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach &&
+	    seq_operator_size != &default__seq_operator_size__with__seq_operator_iter)
 		return &$with__seq_operator_size;
 	seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
 	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)

@@ -108,7 +108,8 @@ seq_fill = {
 		if (seq_operator_size != &default__seq_operator_size__unsupported) {
 			if (seq_operator_size == &default__seq_operator_size__empty)
 				return &$empty;
-			if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach ||
+			if (seq_operator_size == &default__seq_operator_size__with__seq_operator_iter ||
+			    seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach ||
 			    seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach_pair ||
 			    seq_operator_size == &default__seq_operator_size__with__map_enumerate) {
 				if (REQUIRE_NODEFAULT(seq_operator_setitem_index))

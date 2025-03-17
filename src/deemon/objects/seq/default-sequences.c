@@ -2318,7 +2318,7 @@ INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_foreach),
+		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_iter),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},

@@ -102,8 +102,28 @@ err:
 err:
 	return (size_t)-1;
 }}
+%{$with__map_operator_sizeob = {
+	DREF DeeObject *sizeob;
+	sizeob = CALL_DEPENDENCY(map_operator_sizeob, self);
+	if unlikely(!sizeob)
+		goto err;
+	return DeeObject_AsDirectSizeInherited(sizeob);
+err:
+	return (size_t)-1;
+}}
 %{$with__map_enumerate = [[prefix(DEFINE_default_seq_size_with_foreach_pair_cb)]] {
 	return (size_t)CALL_DEPENDENCY(map_enumerate, self, &default_seq_size_with_foreach_pair_cb, NULL);
+}}
+%{$with__seq_operator_iter = {
+	size_t result;
+	DREF DeeObject *iter = CALL_DEPENDENCY(seq_operator_iter, self);
+	if unlikely(!iter)
+		goto err;
+	result = DeeObject_IterAdvance(iter, (size_t)-1);
+	Dee_Decref_likely(iter);
+	return result;
+err:
+	return (size_t)-1;
 }} = $with__seq_operator_sizeob;
 
 
@@ -121,20 +141,32 @@ seq_operator_sizeob = {
 
 seq_operator_size = {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach;
-	DeeMH_set_operator_size_t set_operator_size = REQUIRE_NODEFAULT(set_operator_size);
-	if (set_operator_size)
+	DeeMH_set_operator_size_t set_operator_size;
+	DeeMH_map_operator_size_t map_operator_size;
+	if ((set_operator_size = REQUIRE_NODEFAULT(set_operator_size)) != NULL)
 		return set_operator_size;
+	if ((map_operator_size = REQUIRE_NODEFAULT(map_operator_size)) != NULL)
+		return map_operator_size;
 	if (REQUIRE_NODEFAULT(seq_operator_sizeob))
 		return &$with__seq_operator_sizeob;
 	if (REQUIRE_NODEFAULT(set_operator_sizeob))
 		return &$with__set_operator_sizeob;
+	if (REQUIRE_NODEFAULT(map_operator_sizeob))
+		return &$with__map_operator_sizeob;
+
 	seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
-	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_foreach_pair)
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_foreach_pair) {
+		DeeMH_seq_operator_foreach_pair_t seq_operator_foreach_pair = REQUIRE(seq_operator_foreach_pair);
+		if (seq_operator_foreach_pair == &default__seq_operator_foreach_pair__with__seq_operator_iter)
+			return &$with__seq_operator_iter;
 		return &$with__seq_operator_foreach_pair;
+	}
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__map_enumerate)
 		return &$with__map_enumerate;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_iter)
+		return &$with__seq_operator_iter;
 	if (seq_operator_foreach)
 		return $with__seq_operator_foreach;
 };

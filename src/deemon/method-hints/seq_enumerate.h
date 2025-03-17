@@ -569,6 +569,42 @@ err:
 	data.deiwe_end   = end;
 	return CALL_DEPENDENCY(seq_enumerate, self, &default_enumerate_index_with_enumerate_cb, &data);
 }}
+%{$with__seq_operator_iter = {
+	size_t skip;
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *iter = CALL_DEPENDENCY(seq_operator_iter, self);
+	if unlikely(!iter)
+		goto err;
+	skip = DeeObject_IterAdvance(iter, start);
+	ASSERT(skip <= start || skip == (size_t)-1);
+	if unlikely(skip != start) {
+		if (skip != (size_t)-1)
+			skip = 0;
+		return skip;
+	}
+	for (; start < end; ++start) {
+		DREF DeeObject *elem = DeeObject_IterNext(iter);
+		if unlikely(!ITER_ISOK(elem)) {
+			if unlikely(!elem)
+				goto err_iter;
+			break;
+		}
+		temp = (*cb)(arg, start, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			goto err_iter_temp;
+		result += temp;
+	}
+	Dee_Decref_likely(iter);
+	return result;
+err_iter_temp:
+	Dee_Decref_likely(iter);
+	return temp;
+err_iter:
+	Dee_Decref_likely(iter);
+err:
+	return -1;
+}}
 %{$with__seq_operator_foreach__and__counter =
 [[prefix(DEFINE_default_seq_enumerate_index_with_counter__and__seq_foreach_cb)]] {
 	struct default_seq_enumerate_index_with_counter__and__seq_foreach_data data;
@@ -608,6 +644,8 @@ seq_enumerate = {
 		if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast)
 			return &$with__seq_operator_size__and__operator_getitem_index_fast;
 		if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach)
+			goto use_seq_operator_foreach;
+		if (seq_operator_size == &default__seq_operator_size__with__seq_operator_iter)
 			goto use_seq_operator_foreach;
 		if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach_pair)
 			goto use_seq_operator_foreach;
@@ -661,8 +699,14 @@ seq_enumerate_index = {
 	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem_index ||
 	    seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem)
 		return &$with__seq_operator_getitem_index;
-	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter) {
+		DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
+		if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+			return &$empty;
+		if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_iter)
+			return &$with__seq_operator_iter;
 		return &$with__seq_operator_foreach__and__counter;
+	}
 	if (seq_enumerate)
 		return &$with__seq_enumerate;
 };

@@ -363,6 +363,40 @@ default__seq_operator_bool__with__seq_operator_foreach(DeeObject *__restrict sel
 	return (int)foreach_status;
 }
 
+#ifndef DEFINED_default_seq_bool_with_foreach_pair_cb
+#define DEFINED_default_seq_bool_with_foreach_pair_cb
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_bool_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	(void)arg;
+	(void)key;
+	(void)value;
+	return -2;
+}
+#endif /* !DEFINED_default_seq_bool_with_foreach_pair_cb */
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__seq_operator_bool__with__seq_operator_foreach_pair(DeeObject *__restrict self) {
+	Dee_ssize_t foreach_status;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach_pair))(self, &default_seq_bool_with_foreach_pair_cb, NULL);
+	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
+	if (foreach_status == -2)
+		foreach_status = 1;
+	return (int)foreach_status;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__seq_operator_bool__with__seq_operator_iter(DeeObject *__restrict self) {
+	size_t skip;
+	DREF DeeObject *iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter))(self);
+	if unlikely(!iter)
+		goto err;
+	skip = DeeObject_IterAdvance(iter, 1);
+	Dee_Decref_likely(iter);
+	ASSERT(skip == 0 || skip == 1 || skip == (size_t)-1);
+	return (int)(Dee_ssize_t)skip;
+err:
+	return -1;
+}
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bool__with__seq_operator_size(DeeObject *__restrict self) {
 	size_t size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
@@ -524,8 +558,32 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) size_t DCALL
+default__seq_operator_size__with__map_operator_sizeob(DeeObject *__restrict self) {
+	DREF DeeObject *sizeob;
+	sizeob = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_sizeob))(self);
+	if unlikely(!sizeob)
+		goto err;
+	return DeeObject_AsDirectSizeInherited(sizeob);
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
 default__seq_operator_size__with__map_enumerate(DeeObject *__restrict self) {
 	return (size_t)(*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_seq_size_with_foreach_pair_cb, NULL);
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+default__seq_operator_size__with__seq_operator_iter(DeeObject *__restrict self) {
+	size_t result;
+	DREF DeeObject *iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter))(self);
+	if unlikely(!iter)
+		goto err;
+	result = DeeObject_IterAdvance(iter, (size_t)-1);
+	Dee_Decref_likely(iter);
+	return result;
+err:
+	return (size_t)-1;
 }
 
 
@@ -934,14 +992,6 @@ err_size:
 	Dee_Decref(size);
 err:
 	return -1;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default__seq_operator_foreach__with__map_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
-	struct default_foreach_with_foreach_pair_data data;
-	data.dfwfp_cb  = cb;
-	data.dfwfp_arg = arg;
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, &default_foreach_with_foreach_pair_cb, &data);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -5241,6 +5291,44 @@ default__seq_enumerate_index__with__seq_operator_getitem_index(DeeObject *__rest
 	return result;
 err_temp:
 	return temp;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default__seq_enumerate_index__with__seq_operator_iter(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end) {
+	size_t skip;
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter))(self);
+	if unlikely(!iter)
+		goto err;
+	skip = DeeObject_IterAdvance(iter, start);
+	ASSERT(skip <= start || skip == (size_t)-1);
+	if unlikely(skip != start) {
+		if (skip != (size_t)-1)
+			skip = 0;
+		return skip;
+	}
+	for (; start < end; ++start) {
+		DREF DeeObject *elem = DeeObject_IterNext(iter);
+		if unlikely(!ITER_ISOK(elem)) {
+			if unlikely(!elem)
+				goto err_iter;
+			break;
+		}
+		temp = (*cb)(arg, start, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			goto err_iter_temp;
+		result += temp;
+	}
+	Dee_Decref_likely(iter);
+	return result;
+err_iter_temp:
+	Dee_Decref_likely(iter);
+	return temp;
+err_iter:
+	Dee_Decref_likely(iter);
 err:
 	return -1;
 }
@@ -14793,14 +14881,6 @@ default__set_operator_foreach__with__seq_operator_foreach(DeeObject *__restrict 
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default__set_operator_foreach__with__map_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
-	struct default_foreach_with_foreach_pair_data data;
-	data.dfwfp_cb  = cb;
-	data.dfwfp_arg = arg;
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, &default_foreach_with_foreach_pair_cb, &data);
-}
-
 
 /* set_operator_sizeob */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -14864,6 +14944,19 @@ err:
 INTERN WUNUSED NONNULL((1)) size_t DCALL
 default__set_operator_size__with__set_operator_foreach(DeeObject *__restrict self) {
 	return (size_t)(*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_foreach))(self, &default_seq_size_with_foreach_cb, NULL);
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+default__set_operator_size__with__set_operator_iter(DeeObject *__restrict self) {
+	size_t result;
+	DREF DeeObject *iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_iter))(self);
+	if unlikely(!iter)
+		goto err;
+	result = DeeObject_IterAdvance(iter, (size_t)-1);
+	Dee_Decref_likely(iter);
+	return result;
+err:
+	return (size_t)-1;
 }
 
 
@@ -16778,6 +16871,19 @@ err:
 INTERN WUNUSED NONNULL((1)) size_t DCALL
 default__map_operator_size__with__map_operator_foreach_pair(DeeObject *__restrict self) {
 	return (size_t)(*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, &default_seq_size_with_foreach_pair_cb, NULL);
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+default__map_operator_size__with__map_operator_iter(DeeObject *__restrict self) {
+	size_t result;
+	DREF DeeObject *iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_iter))(self);
+	if unlikely(!iter)
+		goto err;
+	result = DeeObject_IterAdvance(iter, (size_t)-1);
+	Dee_Decref_likely(iter);
+	return result;
+err:
+	return (size_t)-1;
 }
 
 

@@ -1825,7 +1825,7 @@ PRIVATE struct type_seq to_seq = {
 	/* .tp_foreach_pair = */ DEFIMPL(&default__foreach_pair__with__iter),
 	/* .tp_bounditem    = */ DEFIMPL_UNSUPPORTED(&default__bounditem__unsupported),
 	/* .tp_hasitem      = */ DEFIMPL_UNSUPPORTED(&default__hasitem__unsupported),
-	/* .tp_size         = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
+	/* .tp_size         = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter),
 	/* .tp_size_fast                  = */ NULL,
 	/* .tp_getitem_index              = */ DEFIMPL_UNSUPPORTED(&default__getitem_index__unsupported),
 	/* .tp_getitem_index_fast         = */ NULL,
@@ -2025,7 +2025,7 @@ INTERN DeeTypeObject TypeOperators_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&to_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&to_repr,
-		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_foreach),
+		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_iter),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},

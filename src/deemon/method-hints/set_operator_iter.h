@@ -32,6 +32,9 @@ __set_iter__.set_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
 %{$none = return_none}
 %{$empty = "default__seq_operator_iter__empty"}
+%{$with__map_enumerate = "default__seq_operator_iter__with__map_enumerate"}
+%{$with__map_iterkeys__and__map_operator_trygetitem = "default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem"}
+%{$with__map_iterkeys__and__map_operator_getitem = "default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem"}
 %{$with__seq_operator_iter = {
 	DREF DeeObject *iter;
 	DeeTypeObject *itertyp;
@@ -96,12 +99,7 @@ __set_iter__.set_operator_foreach([[nonnull]] DeeObject *__restrict self,
 	Dee_simple_hashset_fini(&data.dsfud_encountered);
 	return result;
 }}
-%{$with__map_operator_foreach_pair = [[prefix(DEFINE_default_foreach_with_foreach_pair_cb)]] {
-	struct default_foreach_with_foreach_pair_data data;
-	data.dfwfp_cb  = cb;
-	data.dfwfp_arg = arg;
-	return CALL_DEPENDENCY(map_operator_foreach_pair, self, &default_foreach_with_foreach_pair_cb, &data);
-}}
+%{$with__map_operator_foreach_pair = "default__seq_operator_foreach__with__seq_operator_foreach_pair"}
 %{using set_operator_iter: {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
