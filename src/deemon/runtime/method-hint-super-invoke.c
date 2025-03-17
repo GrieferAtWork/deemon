@@ -4046,8 +4046,9 @@ PUBLIC NONNULL((1, 3)) bool
 	Dee_funptr_t view_impl;
 	if (view_type->tp_mhcache == &mh_cache_empty) {
 		/* Hack needed so that invoking method hints on something like "foo as Set"
-		 * doesn't *actually* like an instance of "Set()", but rather invokes the
-		 * true and proper method hints of "foo".
+		 * doesn't *actually* treat it as an instance of "Set()" (which would hint
+		 * the "$empty" impls of method hints), but rather invokes the true and
+		 * proper method hints of "foo".
 		 *
 		 * Technically, this check doesn't belong here, and instead we'd need to
 		 * implement all the callbacks from "mh_cache_empty" to instead do:
@@ -4122,7 +4123,7 @@ fallback:
 	/* Fallback: anything we don't recognize can't be made to have
 	 *           super-object support. As such, better be safe and
 	 *           invoke the *real* impl of the target type (even
-	 *           if that means that we loose type information) */
+	 *           if that means losing type information) */
 	{
 		DeeObject *super_self = DeeSuper_SELF(super);
 		DeeTypeObject *real_type = Dee_TYPE(super_self);

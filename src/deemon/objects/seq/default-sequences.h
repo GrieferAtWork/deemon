@@ -24,13 +24,15 @@
 #include <deemon/object.h>
 /**/
 
+#include "../generic-proxy.h"
+/**/
+
 #include <stddef.h> /* size_t */
 
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *dssgi_seq;   /* [1..1][const] The sequence being iterated. */
+	PROXY_OBJECT_HEAD(dssgi_seq)  /* [1..1][const] The sequence being iterated. */
 	/* [1..1][const] Callback to load the `index'th element of `dssgi_seq'.
 	 * This is either a `tp_getitem_index' or `tp_getitem_index_fast' operator. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dssgi_tp_getitem_index)(DeeObject *self, size_t index);
@@ -39,24 +41,21 @@ typedef struct {
 } DefaultSequence_WithSizeAndGetItemIndex;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *dssg_seq;   /* [1..1][const] The sequence being iterated. */
+	PROXY_OBJECT_HEAD3(dssg_seq,   /* [1..1][const] The sequence being iterated. */
+	                   dssg_start, /* [1..1][const] Starting index for enumeration. */
+	                   dssg_end)   /* [1..1][const] Enumeration stop index. */
 	/* [1..1][const] Callback to load the `index'th element of `dssg_seq'. */
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *dssg_tp_getitem)(DeeObject *self, DeeObject *index);
-	DREF DeeObject *dssg_start; /* [1..1][const] Starting index for enumeration. */
-	DREF DeeObject *dssg_end;   /* [1..1][const] Enumeration stop index. */
 } DefaultSequence_WithSizeObAndGetItem;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *dsi_seq;   /* [1..1][const] The sequence being iterated. */
+	PROXY_OBJECT_HEAD(dsi_seq) /* [1..1][const] The sequence being iterated. */
 	/* [1..1][const] Callback to construct an iterator for `dsi_seq'. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dsi_tp_iter)(DeeObject *self);
 } DefaultSequence_WithIter;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *dsial_seq;   /* [1..1][const] The sequence being iterated. */
+	PROXY_OBJECT_HEAD(dsial_seq) /* [1..1][const] The sequence being iterated. */
 	/* [1..1][const] Callback to construct an iterator for `dsial_seq'. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dsial_tp_iter)(DeeObject *self);
 	size_t          dsial_start; /* [const] # of items to skip in constructed iterators. */

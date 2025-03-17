@@ -52,7 +52,7 @@ DECL_BEGIN
  *    and thus forms a reference loop with "MyClass1" (one that cannot be
  *    resolved because when "MyClass1" is cleared, we don't drop the cached
  *    reference to "MyClass1.__seq_size__")
- *    So to prevent this front happening, we do the next-best thing by just
+ *    So to prevent this from happening, we do the next-best thing by just
  *    storing the addresses where relevant callbacks can be found in the
  *    type's class member table.
  */

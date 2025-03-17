@@ -5055,7 +5055,7 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	                 "CountTrailingOnes: return the number of trailing 1-bits:\n"
 	                 "${"
 	                 /**/ "local n = this.ct1;\n"
-	                 /**/ "assert this == ((this >> n) << n) | ((1 << ct1) - 1);"
+	                 /**/ "assert this == ((this >> n) << n) | n.bitmask;"
 	                 "}"),
 	TYPE_GETTER_AB_F("msb", &int_get_msb,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
