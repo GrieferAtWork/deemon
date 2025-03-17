@@ -21,6 +21,14 @@
 
 import * from deemon;
 
+assert (-100024).nth == "-100024th";
+assert (-100023).nth == "-100023rd";
+assert (-100022).nth == "-100022nd";
+assert (-100021).nth == "-100021st";
+assert (-24).nth == "-24th";
+assert (-23).nth == "-23rd";
+assert (-22).nth == "-22nd";
+assert (-21).nth == "-21st";
 assert (-4).nth == "-4th";
 assert (-3).nth == "-3rd";
 assert (-2).nth == "-2nd";
@@ -30,5 +38,13 @@ assert (1).nth == "1st";
 assert (2).nth == "2nd";
 assert (3).nth == "3rd";
 assert (4).nth == "4th";
+assert (21).nth == "21st";
+assert (22).nth == "22nd";
+assert (23).nth == "23rd";
+assert (24).nth == "24th";
+assert (100021).nth == "100021st";
+assert (100022).nth == "100022nd";
+assert (100023).nth == "100023rd";
+assert (100024).nth == "100024th";
 
 
