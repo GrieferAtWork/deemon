@@ -770,14 +770,15 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 #define DEEINT_STRING_FTRY     0x0002 /* Don't throw a ValueError, but return ITER_DONE. */
 #define DEEINT_STRING_FNOSEPS  0x0004 /* Error out if _-characters are encountered during parsing. */
 
-/* @return:  0: Successfully parsed an integer.
+/* @param: radix_and_flags: Set of `DEEINT_STRING_F* | DEEATOI_STRING_F*',
+ * @return:  0: Successfully parsed an integer.
  * @return: -1: An error occurred. (never returned when `DEEINT_STRING_FTRY' is set)
  * @return:  1: Failed to parse an integer. (returned when `DEEINT_STRING_FTRY' is set) */
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi8)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int8_t *__restrict value);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi16)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int16_t *__restrict value);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi32)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int32_t *__restrict value);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int64_t *__restrict value);
-#define DEEATOI_STRING_FSIGNED 0x0004 /* The generated value is signed. */
+#define DEEATOI_STRING_FSIGNED 0x0008 /* The generated value is signed. */
 
 #ifdef __INTELLISENSE__
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atos8)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int8_t *__restrict value);
