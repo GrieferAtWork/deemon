@@ -22,6 +22,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/system.h>
 #include <deemon/thread.h>
@@ -33,6 +34,7 @@
 #include <hybrid/sched/atomic-once.h>
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
+#include <hybrid/typecore.h>
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* uintptr_t */

@@ -873,12 +873,12 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 
 /* Create a new integer object by looking at sizeof(v). */
 #ifdef __NO_builtin_choose_expr
-#define DeeInt_NEWS(value)                                  \
+#define DeeInt_NEWS(value)                                    \
 	(sizeof(value) <= 1 ? DeeInt_NewInt8((int8_t)(value)) :   \
 	 sizeof(value) <= 2 ? DeeInt_NewInt16((int16_t)(value)) : \
 	 sizeof(value) <= 4 ? DeeInt_NewInt32((int32_t)(value)) : \
 	                      DeeInt_NewInt64((int64_t)(value)))
-#define DeeInt_NEWU(value)                                   \
+#define DeeInt_NEWU(value)                                      \
 	(sizeof(value) <= 1 ? DeeInt_NewUInt8((uint8_t)(value)) :   \
 	 sizeof(value) <= 2 ? DeeInt_NewUInt16((uint16_t)(value)) : \
 	 sizeof(value) <= 4 ? DeeInt_NewUInt32((uint32_t)(value)) : \
@@ -896,46 +896,88 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 	                                          DeeInt_NewUInt64((uint64_t)(value)))))
 #endif /* !__NO_builtin_choose_expr */
 
+#ifdef __COMPILER_HAVE_TYPEOF
+#define _Dee_PRIVATE_ISSIGNED(v) (((__typeof__(v))-1) < 0)
+#elif defined(__COMPILER_HAVE_C11_GENERIC)
+#ifdef __SIZEOF_LONG_LONG__
+#define _Dee_PRIVATE_ISSIGNED(v) \
+	_Generic(v,char:1,signed char:1,short:1,int:1,long:1,__LONGLONG:1,default:0)
+#else /* __SIZEOF_LONG_LONG__ */
+#define _Dee_PRIVATE_ISSIGNED(v) \
+	_Generic(v,char:1,signed char:1,short:1,int:1,long:1,default:0)
+#endif /* !__SIZEOF_LONG_LONG__ */
+#elif defined(__cplusplus)
+DECL_END
+#include <__stdcxx.h>
+DECL_BEGIN
+#ifdef __COMPILER_HAVE_CXX_DECLTYPE
+extern "C++" {
+template<class T> T _Dee_PRIVATE_CXX_ExprVal(T);
+#define _Dee_PRIVATE_ISSIGNED(v) (((decltype(_Dee_PRIVATE_CXX_ExprVal(v)))-1) < 0)
+} /* extern "C++" */
+#endif /* __COMPILER_HAVE_CXX_DECLTYPE */
+#endif /* ... */
+#ifndef _Dee_PRIVATE_ISSIGNED
+/* This fallback version wrongfully detects "unsigned char"
+ * and "unsigned short" as signed. The reason for this is
+ * integer promotion (and which promotes these types to
+ * "signed int", as per STDC rules...) */
+#define _Dee_PRIVATE_ISSIGNED(v) ((0 ? (v) : -1) < 0)
+#endif /* !_Dee_PRIVATE_ISSIGNED */
+
+/* Type-safe master macro to  */
+#ifdef __NO_builtin_choose_expr
+#define DeeInt_New(value)                              \
+	(_Dee_PRIVATE_ISSIGNED(value) ? DeeInt_NEWS(value) \
+	                              : DeeInt_NEWU(value))
+#else /* __NO_builtin_choose_expr */
+#define DeeInt_New(value)                               \
+	__builtin_choose_expr(_Dee_PRIVATE_ISSIGNED(value), \
+	                      DeeInt_NEWS(value),           \
+	                      DeeInt_NEWU(value))
+#endif /* !__NO_builtin_choose_expr */
+
+
 
 
 /* Create a new integer object with an input integral value `val' of `size' bytes. */
-#define DeeInt_NewIntN(size, val)  DEE_PRIVATE_NEWINT(size)(val)
-#define DeeInt_NewUIntN(size, val) DEE_PRIVATE_NEWUINT(size)(val)
+#define _DeeInt_NewS(size, val) DEE_PRIVATE_NEWINT(size)(val)
+#define _DeeInt_NewU(size, val) DEE_PRIVATE_NEWUINT(size)(val)
 
 #ifndef __CHAR_UNSIGNED__
-#define DeeInt_NewChar(val)    DeeInt_NewIntN(__SIZEOF_CHAR__, val)
+#define DeeInt_NewChar(val)    _DeeInt_NewS(__SIZEOF_CHAR__, val)
 #else /* !__CHAR_UNSIGNED__ */
-#define DeeInt_NewChar(val)    DeeInt_NewUIntN(__SIZEOF_CHAR__, val)
+#define DeeInt_NewChar(val)    _DeeInt_NewU(__SIZEOF_CHAR__, val)
 #endif /* __CHAR_UNSIGNED__ */
-#define DeeInt_NewSChar(val)   DeeInt_NewIntN(__SIZEOF_CHAR__, val)
-#define DeeInt_NewUChar(val)   DeeInt_NewUIntN(__SIZEOF_CHAR__, val)
-#define DeeInt_NewShort(val)   DeeInt_NewIntN(__SIZEOF_SHORT__, val)
-#define DeeInt_NewUShort(val)  DeeInt_NewUIntN(__SIZEOF_SHORT__, val)
-#define DeeInt_NewInt(val)     DeeInt_NewIntN(__SIZEOF_INT__, val)
-#define DeeInt_NewUInt(val)    DeeInt_NewUIntN(__SIZEOF_INT__, val)
-#define DeeInt_NewLong(val)    DeeInt_NewIntN(__SIZEOF_LONG__, val)
-#define DeeInt_NewULong(val)   DeeInt_NewUIntN(__SIZEOF_LONG__, val)
+#define DeeInt_NewSChar(val)   _DeeInt_NewS(__SIZEOF_CHAR__, val)
+#define DeeInt_NewUChar(val)   _DeeInt_NewU(__SIZEOF_CHAR__, val)
+#define DeeInt_NewShort(val)   _DeeInt_NewS(__SIZEOF_SHORT__, val)
+#define DeeInt_NewUShort(val)  _DeeInt_NewU(__SIZEOF_SHORT__, val)
+#define DeeInt_NewInt(val)     _DeeInt_NewS(__SIZEOF_INT__, val)
+#define DeeInt_NewUInt(val)    _DeeInt_NewU(__SIZEOF_INT__, val)
+#define DeeInt_NewLong(val)    _DeeInt_NewS(__SIZEOF_LONG__, val)
+#define DeeInt_NewULong(val)   _DeeInt_NewU(__SIZEOF_LONG__, val)
 #ifdef __COMPILER_HAVE_LONGLONG
-#define DeeInt_NewLLong(val)   DeeInt_NewIntN(__SIZEOF_LONG_LONG__, val)
-#define DeeInt_NewULLong(val)  DeeInt_NewUIntN(__SIZEOF_LONG_LONG__, val)
+#define DeeInt_NewLLong(val)   _DeeInt_NewS(__SIZEOF_LONG_LONG__, val)
+#define DeeInt_NewULLong(val)  _DeeInt_NewU(__SIZEOF_LONG_LONG__, val)
 #endif /* __COMPILER_HAVE_LONGLONG */
-#define DeeInt_NewSize(val)    DeeInt_NewUIntN(__SIZEOF_SIZE_T__, val)
-#define DeeInt_NewHash(val)    DeeInt_NewUIntN(__SIZEOF_POINTER__, val)
-#define DeeInt_NewSSize(val)   DeeInt_NewIntN(__SIZEOF_SIZE_T__, val)
-#define DeeInt_NewPtrdiff(val) DeeInt_NewIntN(__SIZEOF_PTRDIFF_T__, val)
-#define DeeInt_NewIntptr(val)  DeeInt_NewIntN(__SIZEOF_POINTER__, val)
-#define DeeInt_NewUIntptr(val) DeeInt_NewUIntN(__SIZEOF_POINTER__, val)
+#define DeeInt_NewSize(val)    _DeeInt_NewU(__SIZEOF_SIZE_T__, val)
+#define DeeInt_NewHash(val)    _DeeInt_NewU(__SIZEOF_POINTER__, val)
+#define DeeInt_NewSSize(val)   _DeeInt_NewS(__SIZEOF_SIZE_T__, val)
+#define DeeInt_NewPtrdiff(val) _DeeInt_NewS(__SIZEOF_PTRDIFF_T__, val)
+#define DeeInt_NewIntptr(val)  _DeeInt_NewS(__SIZEOF_POINTER__, val)
+#define DeeInt_NewUIntptr(val) _DeeInt_NewU(__SIZEOF_POINTER__, val)
 
 #if DIGIT_BITS <= 16
-#define DeeInt_NewDigit(val)      DeeInt_NewUIntN(2, val)
-#define DeeInt_NewSDigit(val)     DeeInt_NewIntN(2, val)
-#define DeeInt_NewTwoDigits(val)  DeeInt_NewUIntN(4, val)
-#define DeeInt_NewSTwoDigits(val) DeeInt_NewIntN(4, val)
+#define DeeInt_NewDigit(val)      _DeeInt_NewU(2, val)
+#define DeeInt_NewSDigit(val)     _DeeInt_NewS(2, val)
+#define DeeInt_NewTwoDigits(val)  _DeeInt_NewU(4, val)
+#define DeeInt_NewSTwoDigits(val) _DeeInt_NewS(4, val)
 #else /* DIGIT_BITS <= 16 */
-#define DeeInt_NewDigit(val)      DeeInt_NewUIntN(4, val)
-#define DeeInt_NewSDigit(val)     DeeInt_NewIntN(4, val)
-#define DeeInt_NewTwoDigits(val)  DeeInt_NewUIntN(8, val)
-#define DeeInt_NewSTwoDigits(val) DeeInt_NewIntN(8, val)
+#define DeeInt_NewDigit(val)      _DeeInt_NewU(4, val)
+#define DeeInt_NewSDigit(val)     _DeeInt_NewS(4, val)
+#define DeeInt_NewTwoDigits(val)  _DeeInt_NewU(8, val)
+#define DeeInt_NewSTwoDigits(val) _DeeInt_NewS(8, val)
 #endif /* DIGIT_BITS > 16 */
 
 #ifndef __INTELLISENSE__

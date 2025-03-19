@@ -929,7 +929,7 @@ DDATDEF DeeTypeObject DeeInteractiveModule_Type;
  * >> if (!p_add)
  * >>     return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
  * >> // Invoke the native symbol.
- * >> return DeeInt_NewIntN((*p_add)(x, y)); */
+ * >> return DeeInt_NewInt((*p_add)(x, y)); */
 DFUNDEF WUNUSED NONNULL((1, 2)) void *DCALL
 DeeModule_GetNativeSymbol(/*Module*/ DeeObject *__restrict self,
                           char const *__restrict name);

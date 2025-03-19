@@ -239,7 +239,7 @@ err:
  * >> if (!p_add)
  * >>     return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
  * >> // Invoke the native symbol.
- * >> return DeeInt_NewIntN((*p_add)(x, y)); */
+ * >> return DeeInt_NewInt((*p_add)(x, y)); */
 PUBLIC WUNUSED NONNULL((1, 2)) void *DCALL
 DeeModule_GetNativeSymbol(DeeObject *__restrict self,
                           char const *__restrict name) {
@@ -947,7 +947,7 @@ DECL_BEGIN
  * >> // Fallback: Invoke a member attribute `add' if the native symbol doesn't exist.
  * >> if (!p_add) return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
  * >> // Invoke the native symbol.
- * >> return DeeInt_NewIntN((*p_add)(x, y)); */
+ * >> return DeeInt_NewInt((*p_add)(x, y)); */
 PUBLIC WUNUSED NONNULL((1, 2)) void *DCALL
 DeeModule_GetNativeSymbol(DeeObject *__restrict self,
                           char const *__restrict name) {

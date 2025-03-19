@@ -612,9 +612,9 @@ F(int_int)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
 #ifdef SIGNED
-	return DeeInt_NewIntN(SIZEOF, value);
+	return _DeeInt_NewS(SIZEOF, value);
 #else /* SIGNED */
-	return DeeInt_NewUIntN(SIZEOF, value);
+	return _DeeInt_NewU(SIZEOF, value);
 #endif /* !SIGNED */
 }
 
