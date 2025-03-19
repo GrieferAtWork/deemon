@@ -700,22 +700,22 @@ bytes_init(size_t argc, DeeObject *const *argv) {
 				goto err_invalid_mode;
 			}
 			if (argc >= 3) {
-				if (DeeObject_AsSSize(argv[2], (dssize_t *)&start))
+				if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&start))
 					goto err;
 				if (argc >= 4) {
 					if unlikely(argc > 4)
 						goto err_args;
-					if (DeeObject_AsSSize(argv[3], (dssize_t *)&end))
+					if (DeeObject_AsSSize(argv[3], (Dee_ssize_t *)&end))
 						goto err;
 				}
 			}
 		} else {
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&start))
+			if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&start))
 				goto err;
 			if (argc >= 3) {
 				if unlikely(argc > 3)
 					goto err_args;
-				if (DeeObject_AsSSize(argv[2], (dssize_t *)&end))
+				if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&end))
 					goto err;
 			}
 		}
@@ -801,9 +801,9 @@ err_readonly:
 	return err_bytes_not_writable((DeeObject *)self);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeBytes_Print(DeeObject *__restrict self,
-               dformatprinter printer, void *arg) {
+               Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Print8(printer, arg,
 	                        DeeBytes_DATA(self),
 	                        DeeBytes_SIZE(self));
@@ -816,11 +816,11 @@ DeeBytes_Print(DeeObject *__restrict self,
 		result += temp;                  \
 	}	__WHILE0
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeBytes_PrintRepr(DeeObject *__restrict self,
-                   dformatprinter printer,
+                   Dee_formatprinter_t printer,
                    void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	Bytes *me = (Bytes *)self;
 	result = DeeFormat_PRINT(printer, arg, "\"");
 	if unlikely(result < 0)
@@ -1144,9 +1144,9 @@ err:
 	return NULL;
 }
 
-INTDEF WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
-DeeString_CFormat(dformatprinter printer,
-                  dformatprinter format_printer, void *arg,
+INTDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
+DeeString_CFormat(Dee_formatprinter_t printer,
+                  Dee_formatprinter_t format_printer, void *arg,
                   /*utf-8*/ char const *__restrict format, size_t format_len,
                   size_t argc, DeeObject *const *argv);
 
@@ -1166,7 +1166,7 @@ bytes_mod(Bytes *self, DeeObject *args) {
 	/* Use a different printer for format-copy-characters, thus allowing
 	 * us to not need to both encoding the bytes from `self' as UTF-8. */
 	if unlikely(DeeString_CFormat(&bytes_printer_print,
-	                              (dformatprinter)&bytes_printer_append,
+	                              (Dee_formatprinter_t)&bytes_printer_append,
 	                              &printer,
 	                              (char const *)DeeBytes_DATA(self),
 	                              DeeBytes_SIZE(self),
@@ -1301,8 +1301,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_getrange_index(Bytes *__restrict self,
-                   dssize_t i_begin,
-                   dssize_t i_end) {
+                     Dee_ssize_t i_begin,
+                     Dee_ssize_t i_end) {
 	struct Dee_seq_range range;
 	size_t range_size;
 	DeeSeqRange_Clamp(&range, i_begin, i_end, DeeBytes_SIZE(self));
@@ -1319,7 +1319,7 @@ bytes_getrange_index(Bytes *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_getrange_index_n(Bytes *__restrict self,
-                     dssize_t i_begin) {
+                       Dee_ssize_t i_begin) {
 #ifdef __OPTIMIZE_SIZE__
 	return bytes_getrange_index(self, i_begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
@@ -1339,9 +1339,9 @@ bytes_getrange_index_n(Bytes *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 bytes_setrange_index(Bytes *self,
-                   dssize_t i_begin,
-                   dssize_t i_end,
-                   DeeObject *value) {
+                     Dee_ssize_t i_begin,
+                     Dee_ssize_t i_end,
+                     DeeObject *value) {
 	struct Dee_seq_range range;
 	size_t range_size;
 	byte_t *dst;
@@ -1356,8 +1356,8 @@ err_readonly:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-bytes_setrange_index_n(Bytes *self, dssize_t i_begin,
-                     DeeObject *value) {
+bytes_setrange_index_n(Bytes *self, Dee_ssize_t i_begin,
+                       DeeObject *value) {
 #ifdef __OPTIMIZE_SIZE__
 	return bytes_setrange_index(self, i_begin, SSIZE_MAX, value);
 #else /* __OPTIMIZE_SIZE__ */
@@ -1375,7 +1375,7 @@ err_readonly:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bytes_delrange_index(Bytes *self, dssize_t i_begin, dssize_t i_end) {
+bytes_delrange_index(Bytes *self, Dee_ssize_t i_begin, Dee_ssize_t i_end) {
 #ifdef __OPTIMIZE_SIZE__
 	return bytes_setrange_index(self, i_begin, i_end, Dee_None);
 #else /* __OPTIMIZE_SIZE__ */
@@ -1395,7 +1395,7 @@ err_readonly:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bytes_delrange_index_n(Bytes *self, dssize_t i_begin) {
+bytes_delrange_index_n(Bytes *self, Dee_ssize_t i_begin) {
 #ifdef __OPTIMIZE_SIZE__
 	return bytes_delrange_index(self, i_begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
@@ -1438,7 +1438,7 @@ err_temp:
 }
 
 #ifdef DeeInt_8bit
-#define bytes_asvector_nothrow bytes_asvector
+#define bytes_asvector_nothrow     bytes_asvector
 #define bytes_asvector_nothrow_PTR &bytes_asvector_nothrow
 #endif /* DeeInt_8bit */
 #ifndef bytes_asvector_nothrow_PTR
@@ -2166,7 +2166,7 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self
  *    do with any kind of encoding. - It just blindly copies the given
  *    data into the buffer of the resulting Bytes object.
  * -> The equivalent unicode_printer function is `unicode_printer_print8' */
-PUBLIC WUNUSED NONNULL((1)) dssize_t DPRINTER_CC
+PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DPRINTER_CC
 Dee_bytes_printer_append(struct bytes_printer *__restrict self,
                          byte_t const *__restrict data, size_t datalen) {
 	Bytes *bytes;
@@ -2227,7 +2227,7 @@ realloc_again:
 	memcpy(bytes->b_data + self->bp_length, data, datalen);
 	self->bp_length += datalen;
 done:
-	return (dssize_t)datalen;
+	return (Dee_ssize_t)datalen;
 }
 
 PUBLIC WUNUSED NONNULL((1)) int
@@ -2248,7 +2248,7 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1)) dssize_t
+PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
 (DCALL Dee_bytes_printer_repeat)(struct bytes_printer *__restrict self,
                                  byte_t ch, size_t count) {
 	byte_t *buffer;
@@ -2258,7 +2258,7 @@ PUBLIC WUNUSED NONNULL((1)) dssize_t
 
 	/* Simply do a memset to initialize bytes data. */
 	memset(buffer, ch, count);
-	return (dssize_t)count;
+	return (Dee_ssize_t)count;
 err:
 	return -1;
 }

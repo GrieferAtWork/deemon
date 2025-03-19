@@ -760,9 +760,9 @@ cdict_size_fast(CachedDict *__restrict self) {
 	return DeeObject_SizeFast(self->cd_map);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cdict_printrepr(CachedDict *__restrict self,
-                dformatprinter printer, void *arg) {
+                Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "CachedDict(%r)", self->cd_map);
 }
 
@@ -1084,7 +1084,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&cdict_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cdict_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cdict_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cdict_visit,
 	/* .tp_gc            = */ &cdict_gc,

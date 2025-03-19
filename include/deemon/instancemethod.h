@@ -28,8 +28,8 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_instance_method    instance_method
-#define DEFINE_INSTANCEMETHOD  Dee_DEFINE_INSTANCEMETHOD
+#define Dee_instance_method   instance_method
+#define DEFINE_INSTANCEMETHOD Dee_DEFINE_INSTANCEMETHOD
 #endif /* DEE_SOURCE */
 
 typedef struct Dee_instance_method DeeInstanceMethodObject;
@@ -49,15 +49,17 @@ DDATDEF DeeTypeObject DeeInstanceMethod_Type;
 #define Dee_DEFINE_INSTANCEMETHOD(name, func, thisarg) \
 	DeeInstanceMethodObject name = {                   \
 		Dee_OBJECT_HEAD_INIT(&DeeInstanceMethod_Type), \
-		(DREF DeeObject *)(func),                      \
-		(DREF DeeObject *)(thisarg)                    \
+		(DREF DeeObject *)Dee_REQUIRES_OBJECT(func),   \
+		(DREF DeeObject *)Dee_REQUIRES_OBJECT(thisarg) \
 	}
 
 /* Create a new instance method.
+ *
  * This is a simple wrapper object that simply invokes a thiscall on
  * `im_func', using `this_arg' as the this-argument when called normally.
- * In user-code, it is used to implement the temporary/split type when
- * an instance attribute with the `CLASS_ATTRIBUTE_FMETHOD' flag is loaded
+ *
+ * In user-code, it is used to implement the temporary/split type when an
+ * instance attribute with the `CLASS_ATTRIBUTE_FMETHOD' flag is loaded
  * as an object, rather than being called directly. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMethod_New(DeeObject *func, DeeObject *this_arg);

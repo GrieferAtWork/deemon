@@ -35,25 +35,25 @@ err:
 	return NULL;
 }
 
-%[define(DEFINE_seq_find_cb =
-#ifndef DEFINED_seq_find_cb
-#define DEFINED_seq_find_cb
-union seq_find_data {
-	DeeObject *gsfd_elem;  /* [in][1..1] Element to search for */
-	size_t     gsfd_index; /* [out] Located index */
+%[define(DEFINE_default_seq_find_foreach_cb =
+#ifndef DEFINED_default_seq_find_foreach_cb
+#define DEFINED_default_seq_find_foreach_cb
+union default_seq_find_foreach_data {
+	DeeObject *dsff_elem;  /* [in][1..1] Element to search for */
+	size_t     dsff_index; /* [out] Located index */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-seq_find_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+default_seq_find_foreach_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 	int cmp;
-	union seq_find_data *data;
-	data = (union seq_find_data *)arg;
+	union default_seq_find_foreach_data *data;
+	data = (union default_seq_find_foreach_data *)arg;
 	if (!value)
 		return 0;
-	cmp = DeeObject_TryCompareEq(data->gsfd_elem, value);
+	cmp = DeeObject_TryCompareEq(data->dsff_elem, value);
 	if (cmp == 0) {
 		/* Found the index! */
-		data->gsfd_index = index;
+		data->dsff_index = index;
 		return -2;
 	}
 	if unlikely(cmp == Dee_COMPARE_ERR)
@@ -62,7 +62,7 @@ seq_find_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 err:
 	return -1;
 }
-#endif /* !DEFINED_seq_find_cb */
+#endif /* !DEFINED_default_seq_find_foreach_cb */
 )]
 
 
@@ -79,15 +79,15 @@ __seq_find__.seq_find([[nonnull]] DeeObject *self,
 	return (size_t)Dee_COMPARE_ERR;
 })}
 %{$empty = (size_t)-1}
-%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_find_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_default_seq_find_foreach_cb)]] {
 	Dee_ssize_t status;
-	union seq_find_data data;
-	data.gsfd_elem = item;
-	status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_find_cb, &data, start, end);
+	union default_seq_find_foreach_data data;
+	data.dsff_elem = item;
+	status = CALL_DEPENDENCY(seq_enumerate_index, self, &default_seq_find_foreach_cb, &data, start, end);
 	if likely(status == -2) {
-		if unlikely(data.gsfd_index == (size_t)Dee_COMPARE_ERR)
+		if unlikely(data.dsff_index == (size_t)Dee_COMPARE_ERR)
 			err_integer_overflow_i(sizeof(size_t) * 8, true);
-		return data.gsfd_index;
+		return data.dsff_index;
 	}
 	if unlikely(status == -1)
 		goto err;
@@ -112,25 +112,25 @@ err:
 	return (size_t)Dee_COMPARE_ERR;
 }
 
-%[define(DEFINE_seq_find_with_key_cb =
-#ifndef DEFINED_seq_find_with_key_cb
-#define DEFINED_seq_find_with_key_cb
-struct seq_find_with_key_data {
-	union seq_find_data gsfwk_base; /* Base find data */
-	DeeObject          *gsfwk_key;  /* Find element key */
+%[define(DEFINE_default_seq_find_with_key_foreach_cb =
+#ifndef DEFINED_default_seq_find_with_key_foreach_cb
+#define DEFINED_default_seq_find_with_key_foreach_cb
+struct default_seq_find_with_key_foreach_data {
+	union default_seq_find_foreach_data dsfwkf_base; /* Base find data */
+	DeeObject                          *dsfwkf_key;  /* Find element key */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-seq_find_with_key_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+default_seq_find_with_key_foreach_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 	int cmp;
-	struct seq_find_with_key_data *data;
-	data = (struct seq_find_with_key_data *)arg;
+	struct default_seq_find_with_key_foreach_data *data;
+	data = (struct default_seq_find_with_key_foreach_data *)arg;
 	if (!value)
 		return 0;
-	cmp = DeeObject_TryCompareKeyEq(data->gsfwk_base.gsfd_elem, value, data->gsfwk_key);
+	cmp = DeeObject_TryCompareKeyEq(data->dsfwkf_base.dsff_elem, value, data->dsfwkf_key);
 	if (cmp == 0) {
 		/* Found the index! */
-		data->gsfwk_base.gsfd_index = index;
+		data->dsfwkf_base.dsff_index = index;
 		return -2;
 	}
 	if unlikely(cmp == Dee_COMPARE_ERR)
@@ -139,7 +139,7 @@ seq_find_with_key_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 err:
 	return -1;
 }
-#endif /* !DEFINED_seq_find_with_key_cb */
+#endif /* !DEFINED_default_seq_find_with_key_foreach_cb */
 )]
 
 
@@ -156,19 +156,19 @@ __seq_find__.seq_find_with_key([[nonnull]] DeeObject *self,
 	return (size_t)Dee_COMPARE_ERR;
 })}
 %{$empty = (size_t)-1}
-%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_find_with_key_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_default_seq_find_with_key_foreach_cb)]] {
 	Dee_ssize_t status;
-	struct seq_find_with_key_data data;
-	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gsfwk_base.gsfd_elem)
+	struct default_seq_find_with_key_foreach_data data;
+	data.dsfwkf_base.dsff_elem = DeeObject_Call(key, 1, &item);
+	if unlikely(!data.dsfwkf_base.dsff_elem)
 		goto err;
-	data.gsfwk_key = key;
-	status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_find_with_key_cb, &data, start, end);
-	Dee_Decref(data.gsfwk_base.gsfd_elem);
+	data.dsfwkf_key = key;
+	status = CALL_DEPENDENCY(seq_enumerate_index, self, &default_seq_find_with_key_foreach_cb, &data, start, end);
+	Dee_Decref(data.dsfwkf_base.dsff_elem);
 	if likely(status == -2) {
-		if unlikely(data.gsfwk_base.gsfd_index == (size_t)Dee_COMPARE_ERR)
+		if unlikely(data.dsfwkf_base.dsff_index == (size_t)Dee_COMPARE_ERR)
 			err_integer_overflow_i(sizeof(size_t) * 8, true);
-		return data.gsfwk_base.gsfd_index;
+		return data.dsfwkf_base.dsff_index;
 	}
 	if unlikely(status == -1)
 		goto err;

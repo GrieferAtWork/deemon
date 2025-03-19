@@ -160,17 +160,17 @@ again_locked:
 
 	case SEEK_CUR:
 		result = (size_t)(old_pointer - self->mf_begin);
-		result += (dssize_t)off;
+		result += (Dee_ssize_t)off;
 		if unlikely((Dee_off_t)result < 0)
 			goto err_invalid;
-		new_pointer = old_pointer + (dssize_t)off;
+		new_pointer = old_pointer + (Dee_ssize_t)off;
 		if unlikely(off > 0 && new_pointer < old_pointer)
 			goto err_overflow;
 		break;
 
 	case SEEK_END:
 		result = (size_t)(self->mf_end - self->mf_begin);
-		result += (dssize_t)off;
+		result += (Dee_ssize_t)off;
 		if unlikely((Dee_off_t)result < 0)
 			goto err_invalid;
 		new_pointer = self->mf_begin + result;
@@ -473,17 +473,17 @@ again_locked:
 
 	case SEEK_CUR:
 		result = (size_t)(old_pointer - self->r_begin);
-		result += (dssize_t)off;
+		result += (Dee_ssize_t)off;
 		if unlikely((Dee_off_t)result < 0)
 			goto err_invalid;
-		new_pointer = old_pointer + (dssize_t)off;
+		new_pointer = old_pointer + (Dee_ssize_t)off;
 		if unlikely(off > 0 && new_pointer < old_pointer)
 			goto err_overflow;
 		break;
 
 	case SEEK_END:
 		result = (size_t)(self->r_end - self->r_begin);
-		result += (dssize_t)off;
+		result += (Dee_ssize_t)off;
 		if unlikely((Dee_off_t)result < 0)
 			goto err_invalid;
 		new_pointer = self->r_begin + result;
@@ -659,7 +659,7 @@ reader_fini(Reader *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-reader_visit(Reader *__restrict self, dvisit_t proc, void *arg) {
+reader_visit(Reader *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisit(self->r_owner);
 }
 
@@ -704,9 +704,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1, 2)) dssize_t DCALL
-reader_printrepr(Reader *__restrict self, dformatprinter printer, void *arg) {
-	dssize_t result, temp;
+PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
+reader_printrepr(Reader *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result, temp;
 	size_t start = (size_t)(self->r_begin - (byte_t const *)self->r_buffer.bb_base);
 	size_t end   = (size_t)(self->r_end - (byte_t const *)self->r_buffer.bb_base);
 	size_t pos   = (size_t)(self->r_ptr - self->r_begin);
@@ -769,9 +769,9 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 			/* .tp_repr      = */ NULL,
 			/* .tp_bool      = */ NULL,
 			/* .tp_print     = */ NULL,
-			/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&reader_printrepr,
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&reader_printrepr,
 		},
-			/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&reader_visit,
+			/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&reader_visit,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,
@@ -921,7 +921,7 @@ writer_fini(Writer *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-writer_visit(Writer *__restrict self, dvisit_t proc, void *arg) {
+writer_visit(Writer *__restrict self, Dee_visit_t proc, void *arg) {
 	DeeFileWriter_LockRead(self);
 	if (self->w_string) {
 		Dee_Visit(self->w_string);
@@ -937,8 +937,8 @@ writer_visit(Writer *__restrict self, dvisit_t proc, void *arg) {
 	DeeFileWriter_LockEndRead(self);
 }
 
-PRIVATE NONNULL((1, 2)) dssize_t DCALL
-writer_printrepr(Writer *__restrict self, dformatprinter printer, void *arg) {
+PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
+writer_printrepr(Writer *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	DREF DeeObject *str;
 	str = DeeFileWriter_GetString((DeeObject *)self);
 	if unlikely(!str)
@@ -1718,9 +1718,9 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 			/* .tp_repr      = */ NULL,
 			/* .tp_bool      = */ NULL,
 			/* .tp_print     = */ NULL,
-			/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&writer_printrepr,
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&writer_printrepr,
 		},
-			/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&writer_visit,
+			/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&writer_visit,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,
@@ -1775,7 +1775,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 printer_write(Printer *__restrict self,
               uint8_t const *__restrict buffer,
               size_t bufsize, dioflag_t UNUSED(flags)) {
-	dssize_t status;
+	Dee_ssize_t status;
 	if (DeeFilePrinter_LockRead(self))
 		goto err;
 	if unlikely(!self->fp_printer) {

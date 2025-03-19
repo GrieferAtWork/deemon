@@ -3194,17 +3194,17 @@ err:
 }
 
 
-INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 instance_builtin_auto_tprintrepr(DeeTypeObject *tp_self,
                                  DeeObject *__restrict self,
-                                 dformatprinter printer, void *arg) {
+                                 Dee_formatprinter_t printer, void *arg) {
 #define DO(err, expr)                    \
 	do {                                 \
 		if unlikely((temp = (expr)) < 0) \
 			goto err;                    \
 		result += temp;                  \
 	}	__WHILE0
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	uint16_t i, count = desc->cd_desc->cd_imemb_size;
@@ -3252,9 +3252,9 @@ err:
 #undef DO
 }
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 instance_builtin_auto_printrepr(DeeObject *__restrict self,
-                                dformatprinter printer, void *arg) {
+                                Dee_formatprinter_t printer, void *arg) {
 	return instance_builtin_auto_tprintrepr(Dee_TYPE(self), self, printer, arg);
 }
 
@@ -3618,10 +3618,10 @@ instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc,
 
 
 /* Builtin hash & comparison support. */
-INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 instance_enumattr(DeeTypeObject *tp_self,
                   DeeObject *__restrict self,
-                  denum_t proc, void *arg) {
+                  Dee_enum_t proc, void *arg) {
 	/* Hook function for user-defined enumattr() callbacks! */
 	(void)tp_self;
 	(void)self;

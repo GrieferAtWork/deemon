@@ -950,9 +950,9 @@ PUBLIC WUNUSED NONNULL((1)) int
 }
 
 #define print_ob_str(self, ob) \
-	DeeObject_Print(ob, (dformatprinter)&DeeFile_WriteAll, self)
+	DeeObject_Print(ob, (Dee_formatprinter_t)&DeeFile_WriteAll, self)
 #define print_ob_repr(self, ob) \
-	DeeObject_PrintRepr(ob, (dformatprinter)&DeeFile_WriteAll, self)
+	DeeObject_PrintRepr(ob, (Dee_formatprinter_t)&DeeFile_WriteAll, self)
 
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
@@ -1072,21 +1072,21 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 /* HINT: `DeeFile_Printf' is literally implemented as
  *       `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)'
  * @return: -1: Error */
-PUBLIC WUNUSED NONNULL((1, 2)) dssize_t
+PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t
 DeeFile_Printf(DeeObject *__restrict self,
                char const *__restrict format, ...) {
 	va_list args;
-	dssize_t result;
+	Dee_ssize_t result;
 	va_start(args, format);
 	result = DeeFile_VPrintf(self, format, args);
 	va_end(args);
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeFile_VPrintf(DeeObject *__restrict self,
                 char const *__restrict format, va_list args) {
-	return DeeFormat_VPrintf((dformatprinter)&DeeFile_WriteAll, self, format, args);
+	return DeeFormat_VPrintf((Dee_formatprinter_t)&DeeFile_WriteAll, self, format, args);
 }
 
 

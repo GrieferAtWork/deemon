@@ -92,7 +92,7 @@ DECL_BEGIN
 			/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str),               \
 			/* .tp_repr  = */ NULL,                                                                    \
 			/* .tp_bool  = */ NULL,                                                                    \
-			/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))(tp_print) \
+			/* .tp_print = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))(tp_print) \
 		},                                                                                             \
 		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))(tp_visit), \
 		/* .tp_gc            = */ NULL,                                                                \
@@ -325,11 +325,11 @@ error_str(DeeErrorObject *__restrict self) {
 	return DeeObject_Str((DeeObject *)Dee_TYPE(self));
 }
 
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
-type_print(DeeObject *__restrict self, dformatprinter printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+type_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-error_print(DeeErrorObject *__restrict self, dformatprinter printer, void *arg) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+error_print(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	if (self->e_message)
 		return DeeString_PrintUtf8((DeeObject *)self->e_message, printer, arg);
 	if (self->e_inner)
@@ -337,8 +337,8 @@ error_print(DeeErrorObject *__restrict self, dformatprinter printer, void *arg) 
 	return type_print((DeeObject *)Dee_TYPE(self), printer, arg);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-error_printrepr(DeeErrorObject *__restrict self, dformatprinter printer, void *arg) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+error_printrepr(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	if (self->e_inner) {
 		if (self->e_message) {
 			return DeeFormat_Printf(printer, arg, "%r(%r, inner: %r)",
@@ -396,8 +396,8 @@ PUBLIC DeeTypeObject DeeError_Error = {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&error_str,
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&error_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&error_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&error_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&error_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&error_visit,
 	/* .tp_gc            = */ NULL,
@@ -565,9 +565,9 @@ nomemory_str(DeeNoMemoryErrorObject *__restrict self) {
 	return error_str((DeeErrorObject *)self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 nomemory_print(DeeNoMemoryErrorObject *__restrict self,
-               dformatprinter printer, void *arg) {
+               Dee_formatprinter_t printer, void *arg) {
 	if (self->nm_allocsize) {
 		return DeeFormat_Printf(printer, arg,
 		                        "Failed to allocated %" PRFuSIZ " bytes",
@@ -837,9 +837,9 @@ systemerror_getnterrmsg_np(DeeSystemErrorObject *__restrict self) {
 		result += temp;                  \
 	}	__WHILE0
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-systemerror_print(DeeSystemErrorObject *__restrict self, dformatprinter printer, void *arg) {
-	dssize_t temp, result;
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+systemerror_print(DeeSystemErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result;
 	DREF DeeObject *errno_name, *errno_desc;
 	result = DeeObject_Print(self->e_message
 	                         ? (DeeObject *)self->e_message
@@ -929,9 +929,9 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-systemerror_printrepr(DeeSystemErrorObject *__restrict self, dformatprinter printer, void *arg) {
-	dssize_t temp, result;
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+systemerror_printrepr(DeeSystemErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result;
 	bool is_first = true;
 	result = DeeFormat_Printf(printer, arg, "%k(", Dee_TYPE(self));
 	if unlikely(result < 0)
@@ -1047,8 +1047,8 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&systemerror_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&systemerror_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&systemerror_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&systemerror_printrepr,
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
@@ -1195,15 +1195,15 @@ appexit_copy(struct appexit_object *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 appexit_print(struct appexit_object *__restrict self,
-              dformatprinter printer, void *arg) {
+              Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<AppExit with exitcode %d>", self->ae_exitcode);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 appexit_printrepr(struct appexit_object *__restrict self,
-                  dformatprinter printer, void *arg) {
+                  Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "AppExit(%d)", self->ae_exitcode);
 }
 
@@ -1339,8 +1339,8 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 		/* .tp_str      = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr     = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool     = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_strrepr  = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&appexit_print,
-		/* .tp_reprrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&appexit_printrepr,
+		/* .tp_strrepr  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&appexit_print,
+		/* .tp_reprrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&appexit_printrepr,
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
@@ -1439,9 +1439,9 @@ PRIVATE struct type_member tpconst signal_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 signal_printrepr(DeeSignalObject *__restrict self,
-                 dformatprinter printer, void *arg) {
+                 Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "%k()", Dee_TYPE(self));
 }
 
@@ -1474,7 +1474,7 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&signal_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&signal_printrepr,
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,

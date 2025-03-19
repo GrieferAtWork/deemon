@@ -1415,9 +1415,9 @@ PRIVATE struct mode_name const mode_names[] = {
 /* CASEEQ(x, 'w') --> x == 'w' || x == 'W' */
 #define CASEEQ(x, ch) ((x) == (ch) || (x) == (ch) - ('a' - 'A'))
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-buffer_print(Buffer *__restrict self, dformatprinter printer, void * arg) {
-	dssize_t result;
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+buffer_print(Buffer *__restrict self, Dee_formatprinter_t printer, void * arg) {
+	Dee_ssize_t result;
 	char const *mode;
 	DREF DeeObject *inner_file;
 	uint16_t buffer_flags;
@@ -1449,10 +1449,10 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-buffer_printrepr(Buffer *__restrict self, dformatprinter printer, void * arg) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+buffer_printrepr(Buffer *__restrict self, Dee_formatprinter_t printer, void * arg) {
 	char mode[sizeof("sync,close,readonly,auto")], *mode_iter;
-	dssize_t result;
+	Dee_ssize_t result;
 	DREF DeeObject *inner_file;
 	uint16_t buffer_flags;
 	size_t buffer_size;
@@ -1967,8 +1967,8 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 			/* .tp_str       = */ NULL,
 			/* .tp_repr      = */ NULL,
 			/* .tp_bool      = */ NULL,
-			/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&buffer_print,
-			/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&buffer_printrepr
+			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&buffer_print,
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&buffer_printrepr
 		},
 			/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&buffer_visit,
 		/* .tp_gc            = */ NULL,

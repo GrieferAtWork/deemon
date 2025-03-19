@@ -100,8 +100,8 @@ err:
 
 
 seq_fill = {
+	DeeMH_seq_operator_setitem_index_t seq_operator_setitem_index;
 	DeeMH_seq_operator_setrange_index_t seq_operator_setrange_index = REQUIRE(seq_operator_setrange_index);
-	DeeMH_seq_operator_setitem_index_t seq_operator_setitem_index = REQUIRE(seq_operator_setitem_index);
 	if (seq_operator_setrange_index != NULL &&
 	    seq_operator_setrange_index != &default__seq_operator_setrange_index__with__seq_operator_size__and__seq_erase__and__seq_insertall) {
 		DeeMH_seq_operator_size_t seq_operator_size = REQUIRE_ANY(seq_operator_size);
@@ -119,6 +119,7 @@ seq_fill = {
 		}
 	}
 
+	seq_operator_setitem_index = REQUIRE(seq_operator_setitem_index);
 	if (seq_operator_setitem_index) {
 		DeeMH_seq_enumerate_index_t seq_enumerate_index;
 		if (seq_operator_setitem_index == &default__seq_operator_setitem_index__empty)

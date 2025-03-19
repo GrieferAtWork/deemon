@@ -33,21 +33,21 @@ __seq_rlocate__(match, size_t start = 0, size_t end = (size_t)-1, def=!N)->?X2?O
 
 
 
-%[define(DEFINE_seq_rlocate_foreach_cb =
-#ifndef DEFINED_seq_rlocate_foreach_cb
-#define DEFINED_seq_rlocate_foreach_cb
-struct seq_rlocate_with_foreach_data {
-	DeeObject      *gsrlwf_match;  /* [1..1] Matching function. */
-	DREF DeeObject *gsrlwf_result; /* [1..1] Match result. */
+%[define(DEFINE_default_seq_rlocate_foreach_cb =
+#ifndef DEFINED_default_seq_rlocate_foreach_cb
+#define DEFINED_default_seq_rlocate_foreach_cb
+struct default_seq_rlocate_foreach_data {
+	DeeObject      *dsrlwf_match;  /* [1..1] Matching function. */
+	DREF DeeObject *dsrlwf_result; /* [1..1] Match result. */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-seq_rlocate_foreach_cb(void *arg, DeeObject *item) {
+default_seq_rlocate_foreach_cb(void *arg, DeeObject *item) {
 	int match_result;
 	DREF DeeObject *match_result_ob;
-	struct seq_rlocate_with_foreach_data *data;
-	data = (struct seq_rlocate_with_foreach_data *)arg;
-	match_result_ob = DeeObject_Call(data->gsrlwf_match, 1, &item);
+	struct default_seq_rlocate_foreach_data *data;
+	data = (struct default_seq_rlocate_foreach_data *)arg;
+	match_result_ob = DeeObject_Call(data->dsrlwf_match, 1, &item);
 	if unlikely(!match_result_ob)
 		goto err;
 	match_result = DeeObject_BoolInherited(match_result_ob);
@@ -55,14 +55,14 @@ seq_rlocate_foreach_cb(void *arg, DeeObject *item) {
 		goto err;
 	if (match_result) {
 		Dee_Incref(item);
-		Dee_Decref(data->gsrlwf_result);
-		data->gsrlwf_result = item;
+		Dee_Decref(data->dsrlwf_result);
+		data->dsrlwf_result = item;
 	}
 	return 0;
 err:
 	return -1;
 }
-#endif /* !DEFINED_seq_rlocate_foreach_cb */
+#endif /* !DEFINED_default_seq_rlocate_foreach_cb */
 )]
 
 
@@ -81,16 +81,16 @@ __seq_rlocate__.seq_rlocate([[nonnull]] DeeObject *self,
 		return match;
 	return_reference_(def);
 }}
-%{$with__seq_operator_foreach = [[prefix(DEFINE_seq_rlocate_foreach_cb)]] {
+%{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_rlocate_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	struct seq_rlocate_with_foreach_data data;
-	data.gsrlwf_match  = match;
-	data.gsrlwf_result = def;
+	struct default_seq_rlocate_foreach_data data;
+	data.dsrlwf_match  = match;
+	data.dsrlwf_result = def;
 	Dee_Incref(def);
-	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_rlocate_foreach_cb, &data);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_rlocate_foreach_cb, &data);
 	if likely(foreach_status == 0)
-		return data.gsrlwf_result;
-	Dee_Decref_unlikely(data.gsrlwf_result);
+		return data.dsrlwf_result;
+	Dee_Decref_unlikely(data.dsrlwf_result);
 	return NULL;
 }} {
 	DeeObject *args[2];
@@ -116,7 +116,7 @@ seq_rlocate = {
 
 
 %[define(DEFINE_seq_rlocate_enumerate_index_cb =
-DEFINE_seq_rlocate_foreach_cb
+DEFINE_default_seq_rlocate_foreach_cb
 #ifndef DEFINED_seq_rlocate_enumerate_index_cb
 #define DEFINED_seq_rlocate_enumerate_index_cb
 PRIVATE WUNUSED Dee_ssize_t DCALL
@@ -124,7 +124,7 @@ seq_rlocate_enumerate_index_cb(void *arg, size_t index, DeeObject *item) {
 	(void)index;
 	if (!item)
 		return 0;
-	return seq_rlocate_foreach_cb(arg, item);
+	return default_seq_rlocate_foreach_cb(arg, item);
 }
 #endif /* !DEFINED_seq_rlocate_enumerate_index_cb */
 )]

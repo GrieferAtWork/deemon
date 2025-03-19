@@ -46,12 +46,13 @@ DECL_BEGIN
 
 typedef DeeInstanceMethodObject InstanceMethod;
 
-
 /* Create a new instance method.
+ *
  * This is a simple wrapper object that simply invokes a thiscall on
  * `im_func', using `this_arg' as the this-argument when called normally.
- * In user-code, it is used to implement the temporary/split type when
- * an instance attribute with the `CLASS_ATTRIBUTE_FMETHOD' flag is loaded
+ *
+ * In user-code, it is used to implement the temporary/split type when an
+ * instance attribute with the `CLASS_ATTRIBUTE_FMETHOD' flag is loaded
  * as an object, rather than being called directly. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMethod_New(DeeObject *func,
@@ -94,12 +95,17 @@ STATIC_ASSERT(offsetof(InstanceMethod, im_this) == offsetof(ProxyObject2, po_obj
 #define im_trycompare_eq generic_proxy2__trycompare_eq_recursive
 #define im_cmp           generic_proxy2__cmp_recursive_ordered
 
+STATIC_ASSERT(offsetof(InstanceMethod, im_func) == offsetof(ProxyObject2, po_obj1));
+STATIC_ASSERT(offsetof(InstanceMethod, im_this) == offsetof(ProxyObject2, po_obj2));
+#define im_init generic_proxy2__init
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 im_init_kw(InstanceMethod *__restrict self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__func_thisarg,
-	                    "oo:InstanceMethod",
-	                    &self->im_func, &self->im_this))
+	STATIC_ASSERT((offsetof(InstanceMethod, im_func) + sizeof(void *)) ==
+	              (offsetof(InstanceMethod, im_this)));
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__func_thisarg,
+	                          "oo:InstanceMethod", &self->im_func))
 		goto err;
 	Dee_Incref(self->im_this);
 	Dee_Incref(self->im_func);
@@ -122,10 +128,27 @@ im_call(InstanceMethod *self, size_t argc, DeeObject *const *argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-im_callkw(InstanceMethod *self, size_t argc,
-          DeeObject *const *argv, DeeObject *kw) {
+im_call_kw(InstanceMethod *self, size_t argc,
+           DeeObject *const *argv, DeeObject *kw) {
 	return DeeObject_ThisCallKw(self->im_func, self->im_this, argc, argv, kw);
 }
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define im_call_tuple_PTR &im_call_tuple
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+im_call_tuple(InstanceMethod *self, DeeObject *args) {
+	return DeeObject_ThisCallTuple(self->im_func, self->im_this, args);
+}
+
+#define im_call_tuple_kw_PTR &im_call_tuple_kw
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+im_call_tuple_kw(InstanceMethod *self,  DeeObject *args, DeeObject *kw) {
+	return DeeObject_ThisCallTupleKw(self->im_func, self->im_this, args, kw);
+}
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define im_call_tuple_PTR    NULL
+#define im_call_tuple_kw_PTR NULL
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 PRIVATE WUNUSED NONNULL((1)) struct class_attribute *DCALL
 instancemethod_getattr(InstanceMethod *__restrict self,
@@ -260,11 +283,11 @@ instancemethod_bound_module(InstanceMethod *__restrict self) {
 }
 
 PRIVATE struct type_callable im_callable = {
-	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&im_callkw,
+	/* .tp_call_kw           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&im_call_kw,
 	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
 	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
-	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
-	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
+	/* .tp_call_tuple        = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))im_call_tuple_PTR,
+	/* .tp_call_tuple_kw     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))im_call_tuple_kw_PTR,
 	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
 	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
 };
@@ -329,9 +352,9 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	                         "Construct an object-bound instance method that can be used to invoke @func\n"
 	                         "\n"
 
-	                         "call(args!)->\n"
+	                         "call(args!,kwds!!)->\n"
 	                         "Invoke the $func used to construct @this "
-	                         /**/ "InstanceMethod as ${func(thisarg, args...)}"),
+	                         /**/ "InstanceMethod as ${func(thisarg, args..., **kwds)}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -342,7 +365,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 				/* .tp_ctor        = */ (dfunptr_t)&im_ctor,
 				/* .tp_copy_ctor   = */ (dfunptr_t)&im_copy,
 				/* .tp_deep_ctor   = */ (dfunptr_t)&im_deepcopy,
-				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor    = */ (dfunptr_t)&im_init,
 				TYPE_FIXED_ALLOCATOR(InstanceMethod),
 				/* .tp_any_ctor_kw = */ (dfunptr_t)&im_init_kw,
 			}

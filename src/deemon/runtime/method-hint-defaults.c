@@ -10303,20 +10303,20 @@ default__seq_rlocate__with__seq_foreach_reverse(DeeObject *self, DeeObject *matc
 	return_reference_(def);
 }
 
-#ifndef DEFINED_seq_rlocate_foreach_cb
-#define DEFINED_seq_rlocate_foreach_cb
-struct seq_rlocate_with_foreach_data {
-	DeeObject      *gsrlwf_match;  /* [1..1] Matching function. */
-	DREF DeeObject *gsrlwf_result; /* [1..1] Match result. */
+#ifndef DEFINED_default_seq_rlocate_foreach_cb
+#define DEFINED_default_seq_rlocate_foreach_cb
+struct default_seq_rlocate_foreach_data {
+	DeeObject      *dsrlwf_match;  /* [1..1] Matching function. */
+	DREF DeeObject *dsrlwf_result; /* [1..1] Match result. */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-seq_rlocate_foreach_cb(void *arg, DeeObject *item) {
+default_seq_rlocate_foreach_cb(void *arg, DeeObject *item) {
 	int match_result;
 	DREF DeeObject *match_result_ob;
-	struct seq_rlocate_with_foreach_data *data;
-	data = (struct seq_rlocate_with_foreach_data *)arg;
-	match_result_ob = DeeObject_Call(data->gsrlwf_match, 1, &item);
+	struct default_seq_rlocate_foreach_data *data;
+	data = (struct default_seq_rlocate_foreach_data *)arg;
+	match_result_ob = DeeObject_Call(data->dsrlwf_match, 1, &item);
 	if unlikely(!match_result_ob)
 		goto err;
 	match_result = DeeObject_BoolInherited(match_result_ob);
@@ -10324,25 +10324,25 @@ seq_rlocate_foreach_cb(void *arg, DeeObject *item) {
 		goto err;
 	if (match_result) {
 		Dee_Incref(item);
-		Dee_Decref(data->gsrlwf_result);
-		data->gsrlwf_result = item;
+		Dee_Decref(data->dsrlwf_result);
+		data->dsrlwf_result = item;
 	}
 	return 0;
 err:
 	return -1;
 }
-#endif /* !DEFINED_seq_rlocate_foreach_cb */
+#endif /* !DEFINED_default_seq_rlocate_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 default__seq_rlocate__with__seq_operator_foreach(DeeObject *self, DeeObject *match, DeeObject *def) {
 	Dee_ssize_t foreach_status;
-	struct seq_rlocate_with_foreach_data data;
-	data.gsrlwf_match  = match;
-	data.gsrlwf_result = def;
+	struct default_seq_rlocate_foreach_data data;
+	data.dsrlwf_match  = match;
+	data.dsrlwf_result = def;
 	Dee_Incref(def);
-	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_rlocate_foreach_cb, &data);
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_seq_rlocate_foreach_cb, &data);
 	if likely(foreach_status == 0)
-		return data.gsrlwf_result;
-	Dee_Decref_unlikely(data.gsrlwf_result);
+		return data.dsrlwf_result;
+	Dee_Decref_unlikely(data.dsrlwf_result);
 	return NULL;
 }
 
@@ -10386,20 +10386,20 @@ default__seq_rlocate_with_range__with__seq_enumerate_index_reverse(DeeObject *se
 	return_reference_(def);
 }
 
-#ifndef DEFINED_seq_rlocate_foreach_cb
-#define DEFINED_seq_rlocate_foreach_cb
-struct seq_rlocate_with_foreach_data {
-	DeeObject      *gsrlwf_match;  /* [1..1] Matching function. */
-	DREF DeeObject *gsrlwf_result; /* [1..1] Match result. */
+#ifndef DEFINED_default_seq_rlocate_foreach_cb
+#define DEFINED_default_seq_rlocate_foreach_cb
+struct default_seq_rlocate_foreach_data {
+	DeeObject      *dsrlwf_match;  /* [1..1] Matching function. */
+	DREF DeeObject *dsrlwf_result; /* [1..1] Match result. */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-seq_rlocate_foreach_cb(void *arg, DeeObject *item) {
+default_seq_rlocate_foreach_cb(void *arg, DeeObject *item) {
 	int match_result;
 	DREF DeeObject *match_result_ob;
-	struct seq_rlocate_with_foreach_data *data;
-	data = (struct seq_rlocate_with_foreach_data *)arg;
-	match_result_ob = DeeObject_Call(data->gsrlwf_match, 1, &item);
+	struct default_seq_rlocate_foreach_data *data;
+	data = (struct default_seq_rlocate_foreach_data *)arg;
+	match_result_ob = DeeObject_Call(data->dsrlwf_match, 1, &item);
 	if unlikely(!match_result_ob)
 		goto err;
 	match_result = DeeObject_BoolInherited(match_result_ob);
@@ -10407,14 +10407,14 @@ seq_rlocate_foreach_cb(void *arg, DeeObject *item) {
 		goto err;
 	if (match_result) {
 		Dee_Incref(item);
-		Dee_Decref(data->gsrlwf_result);
-		data->gsrlwf_result = item;
+		Dee_Decref(data->dsrlwf_result);
+		data->dsrlwf_result = item;
 	}
 	return 0;
 err:
 	return -1;
 }
-#endif /* !DEFINED_seq_rlocate_foreach_cb */
+#endif /* !DEFINED_default_seq_rlocate_foreach_cb */
 #ifndef DEFINED_seq_rlocate_enumerate_index_cb
 #define DEFINED_seq_rlocate_enumerate_index_cb
 PRIVATE WUNUSED Dee_ssize_t DCALL
@@ -10422,7 +10422,7 @@ seq_rlocate_enumerate_index_cb(void *arg, size_t index, DeeObject *item) {
 	(void)index;
 	if (!item)
 		return 0;
-	return seq_rlocate_foreach_cb(arg, item);
+	return default_seq_rlocate_foreach_cb(arg, item);
 }
 #endif /* !DEFINED_seq_rlocate_enumerate_index_cb */
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
@@ -11068,24 +11068,24 @@ default__seq_find__unsupported(DeeObject *self, DeeObject *item, size_t start, s
 	return (size_t)Dee_COMPARE_ERR;
 }
 
-#ifndef DEFINED_seq_find_cb
-#define DEFINED_seq_find_cb
-union seq_find_data {
-	DeeObject *gsfd_elem;  /* [in][1..1] Element to search for */
-	size_t     gsfd_index; /* [out] Located index */
+#ifndef DEFINED_default_seq_find_foreach_cb
+#define DEFINED_default_seq_find_foreach_cb
+union default_seq_find_foreach_data {
+	DeeObject *dsff_elem;  /* [in][1..1] Element to search for */
+	size_t     dsff_index; /* [out] Located index */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-seq_find_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+default_seq_find_foreach_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 	int cmp;
-	union seq_find_data *data;
-	data = (union seq_find_data *)arg;
+	union default_seq_find_foreach_data *data;
+	data = (union default_seq_find_foreach_data *)arg;
 	if (!value)
 		return 0;
-	cmp = DeeObject_TryCompareEq(data->gsfd_elem, value);
+	cmp = DeeObject_TryCompareEq(data->dsff_elem, value);
 	if (cmp == 0) {
 		/* Found the index! */
-		data->gsfd_index = index;
+		data->dsff_index = index;
 		return -2;
 	}
 	if unlikely(cmp == Dee_COMPARE_ERR)
@@ -11094,17 +11094,17 @@ seq_find_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 err:
 	return -1;
 }
-#endif /* !DEFINED_seq_find_cb */
+#endif /* !DEFINED_default_seq_find_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_find__with__seq_enumerate_index(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	Dee_ssize_t status;
-	union seq_find_data data;
-	data.gsfd_elem = item;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_find_cb, &data, start, end);
+	union default_seq_find_foreach_data data;
+	data.dsff_elem = item;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_find_foreach_cb, &data, start, end);
 	if likely(status == -2) {
-		if unlikely(data.gsfd_index == (size_t)Dee_COMPARE_ERR)
+		if unlikely(data.dsff_index == (size_t)Dee_COMPARE_ERR)
 			err_integer_overflow_i(sizeof(size_t) * 8, true);
-		return data.gsfd_index;
+		return data.dsff_index;
 	}
 	if unlikely(status == -1)
 		goto err;
@@ -11182,24 +11182,24 @@ default__seq_find_with_key__unsupported(DeeObject *self, DeeObject *item, size_t
 	return (size_t)Dee_COMPARE_ERR;
 }
 
-#ifndef DEFINED_seq_find_with_key_cb
-#define DEFINED_seq_find_with_key_cb
-struct seq_find_with_key_data {
-	union seq_find_data gsfwk_base; /* Base find data */
-	DeeObject          *gsfwk_key;  /* Find element key */
+#ifndef DEFINED_default_seq_find_with_key_foreach_cb
+#define DEFINED_default_seq_find_with_key_foreach_cb
+struct default_seq_find_with_key_foreach_data {
+	union default_seq_find_foreach_data dsfwkf_base; /* Base find data */
+	DeeObject                          *dsfwkf_key;  /* Find element key */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-seq_find_with_key_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+default_seq_find_with_key_foreach_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 	int cmp;
-	struct seq_find_with_key_data *data;
-	data = (struct seq_find_with_key_data *)arg;
+	struct default_seq_find_with_key_foreach_data *data;
+	data = (struct default_seq_find_with_key_foreach_data *)arg;
 	if (!value)
 		return 0;
-	cmp = DeeObject_TryCompareKeyEq(data->gsfwk_base.gsfd_elem, value, data->gsfwk_key);
+	cmp = DeeObject_TryCompareKeyEq(data->dsfwkf_base.dsff_elem, value, data->dsfwkf_key);
 	if (cmp == 0) {
 		/* Found the index! */
-		data->gsfwk_base.gsfd_index = index;
+		data->dsfwkf_base.dsff_index = index;
 		return -2;
 	}
 	if unlikely(cmp == Dee_COMPARE_ERR)
@@ -11208,21 +11208,21 @@ seq_find_with_key_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 err:
 	return -1;
 }
-#endif /* !DEFINED_seq_find_with_key_cb */
+#endif /* !DEFINED_default_seq_find_with_key_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_find_with_key__with__seq_enumerate_index(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
-	struct seq_find_with_key_data data;
-	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gsfwk_base.gsfd_elem)
+	struct default_seq_find_with_key_foreach_data data;
+	data.dsfwkf_base.dsff_elem = DeeObject_Call(key, 1, &item);
+	if unlikely(!data.dsfwkf_base.dsff_elem)
 		goto err;
-	data.gsfwk_key = key;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_find_with_key_cb, &data, start, end);
-	Dee_Decref(data.gsfwk_base.gsfd_elem);
+	data.dsfwkf_key = key;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_find_with_key_foreach_cb, &data, start, end);
+	Dee_Decref(data.dsfwkf_base.dsff_elem);
 	if likely(status == -2) {
-		if unlikely(data.gsfwk_base.gsfd_index == (size_t)Dee_COMPARE_ERR)
+		if unlikely(data.dsfwkf_base.dsff_index == (size_t)Dee_COMPARE_ERR)
 			err_integer_overflow_i(sizeof(size_t) * 8, true);
-		return data.gsfwk_base.gsfd_index;
+		return data.dsfwkf_base.dsff_index;
 	}
 	if unlikely(status == -1)
 		goto err;
@@ -11303,16 +11303,16 @@ default__seq_rfind__unsupported(DeeObject *self, DeeObject *item, size_t start, 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_rfind__with__seq_enumerate_index_reverse(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	Dee_ssize_t status;
-	union seq_find_data data;
+	union default_seq_find_foreach_data data;
 	DeeMH_seq_enumerate_index_reverse_t renum;
-	data.gsfd_elem = item;
+	data.dsff_elem = item;
 	renum = DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index_reverse);
 	ASSERT(renum);
-	status = (*renum)(self, &seq_find_cb, &data, start, end);
+	status = (*renum)(self, &default_seq_find_foreach_cb, &data, start, end);
 	if likely(status == -2) {
-		if unlikely(data.gsfd_index == (size_t)Dee_COMPARE_ERR)
+		if unlikely(data.dsff_index == (size_t)Dee_COMPARE_ERR)
 			err_integer_overflow_i(sizeof(size_t) * 8, true);
-		return data.gsfd_index;
+		return data.dsff_index;
 	}
 	if unlikely(status == -1)
 		goto err;
@@ -11321,43 +11321,43 @@ err:
 	return (size_t)Dee_COMPARE_ERR;
 }
 
-#ifndef DEFINED_seq_rfind_cb
-#define DEFINED_seq_rfind_cb
-struct seq_rfind_data {
-	DeeObject *gsrfd_elem;   /* [1..1] The element to search for */
-	size_t     gsrfd_result; /* The last-matched index. */
+#ifndef DEFINED_default_seq_rfind_foreach_cb
+#define DEFINED_default_seq_rfind_foreach_cb
+struct default_seq_rfind_foreach_data {
+	DeeObject *dsrf_elem;   /* [1..1] The element to search for */
+	size_t     dsrf_result; /* The last-matched index. */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-seq_rfind_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+default_seq_rfind_foreach_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 	int cmp;
-	struct seq_rfind_data *data;
-	data = (struct seq_rfind_data *)arg;
+	struct default_seq_rfind_foreach_data *data;
+	data = (struct default_seq_rfind_foreach_data *)arg;
 	if (!value)
 		return 0;
-	cmp = DeeObject_TryCompareEq(data->gsrfd_elem, value);
+	cmp = DeeObject_TryCompareEq(data->dsrf_elem, value);
 	if (cmp == 0)
-		data->gsrfd_result = index;
+		data->dsrf_result = index;
 	if unlikely(cmp == Dee_COMPARE_ERR)
 		goto err;
 	return 0;
 err:
 	return -1;
 }
-#endif /* !DEFINED_seq_rfind_cb */
+#endif /* !DEFINED_default_seq_rfind_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_rfind__with__seq_enumerate_index(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	Dee_ssize_t status;
-	struct seq_rfind_data data;
-	data.gsrfd_elem   = item;
-	data.gsrfd_result = (size_t)-1;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_rfind_cb, &data, start, end);
+	struct default_seq_rfind_foreach_data data;
+	data.dsrf_elem   = item;
+	data.dsrf_result = (size_t)-1;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_rfind_foreach_cb, &data, start, end);
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status == -1)
 		goto err;
-	if unlikely(data.gsrfd_result == (size_t)Dee_COMPARE_ERR)
+	if unlikely(data.dsrf_result == (size_t)Dee_COMPARE_ERR)
 		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return data.gsrfd_result;
+	return data.dsrf_result;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -11434,20 +11434,20 @@ default__seq_rfind_with_key__unsupported(DeeObject *self, DeeObject *item, size_
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_rfind_with_key__with__seq_enumerate_index_reverse(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
-	struct seq_find_with_key_data data;
+	struct default_seq_find_with_key_foreach_data data;
 	DeeMH_seq_enumerate_index_reverse_t renum;
-	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gsfwk_base.gsfd_elem)
+	data.dsfwkf_base.dsff_elem = DeeObject_Call(key, 1, &item);
+	if unlikely(!data.dsfwkf_base.dsff_elem)
 		goto err;
-	data.gsfwk_key = key;
+	data.dsfwkf_key = key;
 	renum = DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index_reverse);
 	ASSERT(renum);
-	status = (*renum)(self, &seq_find_with_key_cb, &data, start, end);
-	Dee_Decref(data.gsfwk_base.gsfd_elem);
+	status = (*renum)(self, &default_seq_find_with_key_foreach_cb, &data, start, end);
+	Dee_Decref(data.dsfwkf_base.dsff_elem);
 	if likely(status == -2) {
-		if unlikely(data.gsfwk_base.gsfd_index == (size_t)Dee_COMPARE_ERR)
+		if unlikely(data.dsfwkf_base.dsff_index == (size_t)Dee_COMPARE_ERR)
 			err_integer_overflow_i(sizeof(size_t) * 8, true);
-		return data.gsfwk_base.gsfd_index;
+		return data.dsfwkf_base.dsff_index;
 	}
 	if unlikely(status == -1)
 		goto err;
@@ -11456,47 +11456,47 @@ err:
 	return (size_t)Dee_COMPARE_ERR;
 }
 
-#ifndef DEFINED_seq_rfind_with_key_cb
-#define DEFINED_seq_rfind_with_key_cb
-struct seq_rfind_with_key_data {
-	DeeObject *gsrfwkd_kelem;   /* [1..1] The element to search for */
-	size_t     gsrfwkd_result; /* The last-matched index. */
-	DeeObject *gsrfwkd_key;    /* [1..1] Search key. */
+#ifndef DEFINED_default_seq_rfind_with_key_foreach_cb
+#define DEFINED_default_seq_rfind_with_key_foreach_cb
+struct default_seq_rfind_with_key_foreach_data {
+	DeeObject *dsrfwk_kelem;   /* [1..1] The element to search for */
+	size_t     dsrfwk_result; /* The last-matched index. */
+	DeeObject *dsrfwk_key;    /* [1..1] Search key. */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-seq_rfind_with_key_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+default_seq_rfind_with_key_foreach_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 	int cmp;
-	struct seq_rfind_with_key_data *data;
-	data = (struct seq_rfind_with_key_data *)arg;
+	struct default_seq_rfind_with_key_foreach_data *data;
+	data = (struct default_seq_rfind_with_key_foreach_data *)arg;
 	if (!value)
 		return 0;
-	cmp = DeeObject_TryCompareEq(data->gsrfwkd_kelem, value);
+	cmp = DeeObject_TryCompareEq(data->dsrfwk_kelem, value);
 	if (cmp == 0)
-		data->gsrfwkd_result = index;
+		data->dsrfwk_result = index;
 	if unlikely(cmp == Dee_COMPARE_ERR)
 		goto err;
 	return 0;
 err:
 	return -1;
 }
-#endif /* !DEFINED_seq_rfind_with_key_cb */
+#endif /* !DEFINED_default_seq_rfind_with_key_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_rfind_with_key__with__seq_enumerate_index(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
-	struct seq_rfind_with_key_data data;
-	data.gsrfwkd_kelem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gsrfwkd_kelem)
+	struct default_seq_rfind_with_key_foreach_data data;
+	data.dsrfwk_kelem = DeeObject_Call(key, 1, &item);
+	if unlikely(!data.dsrfwk_kelem)
 		goto err;
-	data.gsrfwkd_result = (size_t)-1;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_rfind_with_key_cb, &data, start, end);
-	Dee_Decref(data.gsrfwkd_kelem);
+	data.dsrfwk_result = (size_t)-1;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_rfind_with_key_foreach_cb, &data, start, end);
+	Dee_Decref(data.dsrfwk_kelem);
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status == -1)
 		goto err;
-	if unlikely(data.gsrfwkd_result == (size_t)Dee_COMPARE_ERR)
+	if unlikely(data.dsrfwk_result == (size_t)Dee_COMPARE_ERR)
 		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return data.gsrfwkd_result;
+	return data.dsrfwk_result;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }

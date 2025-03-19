@@ -68,7 +68,7 @@ bool_str(DeeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 bool_print(DeeObject *__restrict self,
-           dformatprinter printer, void *arg) {
+           Dee_formatprinter_t printer, void *arg) {
 	DeeObject *str = bool_string(self);
 	return DeeString_PrintAscii(str, printer, arg);
 }
