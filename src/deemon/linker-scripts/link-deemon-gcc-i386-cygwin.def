@@ -328,18 +328,14 @@ EXPORTS
 	_DeeGC_Track@4=DeeGC_Track@4
 	_DeeGC_Untrack@4=DeeGC_Untrack@4
 	_DeeHashSet_Contains@8=DeeHashSet_Contains@8
-	_DeeHashSet_ContainsString@12=DeeHashSet_ContainsString@12
 	_DeeHashSet_FromRoSet@4=DeeHashSet_FromRoSet@4
 	_DeeHashSet_FromSequence@4=DeeHashSet_FromSequence@4
 	_DeeHashSet_FromSequenceInherited@4=DeeHashSet_FromSequenceInherited@4
 	_DeeHashSet_Insert@8=DeeHashSet_Insert@8
-	_DeeHashSet_InsertString@12=DeeHashSet_InsertString@12
 	_DeeHashSet_NewItemsInherited@8=DeeHashSet_NewItemsInherited@8
 	_DeeHashSet_NewWithHint@4=DeeHashSet_NewWithHint@4
 	_DeeHashSet_Remove@8=DeeHashSet_Remove@8
-	_DeeHashSet_RemoveString@12=DeeHashSet_RemoveString@12
 	_DeeHashSet_Unify@8=DeeHashSet_Unify@8
-	_DeeHashSet_UnifyString@12=DeeHashSet_UnifyString@12
 	_DeeInstanceMember_New@8=DeeInstanceMember_New@8
 	_DeeInstanceMethod_New@8=DeeInstanceMethod_New@8
 	_DeeInstance_BoundAttribute@16=DeeInstance_BoundAttribute@16
@@ -487,6 +483,7 @@ EXPORTS
 	_DeeMA___map_ge__@12=DeeMA___map_ge__@12
 	_DeeMA___map_getitem__@12=DeeMA___map_getitem__@12
 	_DeeMA___map_gr__@12=DeeMA___map_gr__@12
+	_DeeMA___map_hash__@12=DeeMA___map_hash__@12
 	_DeeMA___map_inplace_add__@12=DeeMA___map_inplace_add__@12
 	_DeeMA___map_inplace_and__@12=DeeMA___map_inplace_and__@12
 	_DeeMA___map_inplace_sub__@12=DeeMA___map_inplace_sub__@12
@@ -1400,8 +1397,8 @@ EXPORTS
 	_Dee_ddi_next_state@12=Dee_ddi_next_state@12
 	_Dee_ddi_state_fini@4=Dee_ddi_state_fini@4
 	_Dee_ddi_state_init@12=Dee_ddi_state_init@12
-	_Dee_dict_gethidx8@8=Dee_dict_gethidx8@8
-	_Dee_dict_sethidx8@12=Dee_dict_sethidx8@12
+	_Dee_hashtab_gethidx8@8=Dee_hashtab_gethidx8@8
+	_Dee_hashtab_sethidx8@12=Dee_hashtab_sethidx8@12
 	_Dee_event_waitfor@4=Dee_event_waitfor@4
 	_Dee_event_waitfor_timed@12=Dee_event_waitfor_timed@12
 	_Dee_once_abort@4=Dee_once_abort@4
