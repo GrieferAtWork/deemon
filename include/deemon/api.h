@@ -426,6 +426,16 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #define CONFIG_NO_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+
+/* Experimental feature switch: use altered status codes for "boundattr" / "bounditem" */
+#if (!defined(CONFIG_EXPERIMENTAL_ORDERED_HASHSET) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_ORDERED_HASHSET))
+#if 0 /* TODO: Implementation is incomplete */
+#define CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+#else
+#define CONFIG_NO_EXPERIMENTAL_ORDERED_HASHSET
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_ORDERED_HASHSET */
 /************************************************************************/
 
 
