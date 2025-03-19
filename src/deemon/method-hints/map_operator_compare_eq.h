@@ -113,9 +113,9 @@ err:
 map_operator_compare_eq = {
 	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
 	if (REQUIRE_NODEFAULT(map_operator_eq))
-		return $with__map_operator_eq;
+		return &$with__map_operator_eq;
 	if (REQUIRE_NODEFAULT(map_operator_ne))
-		return $with__map_operator_ne;
+		return &$with__map_operator_ne;
 	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
 	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
 		return &$empty;

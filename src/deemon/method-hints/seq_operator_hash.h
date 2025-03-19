@@ -321,8 +321,9 @@ seq_operator_hash = {
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_foreach_pair)
 		return &$with__seq_operator_foreach_pair;
 	if (seq_operator_foreach) {
-		if (REQUIRE_NODEFAULT(seq_operator_foreach_pair))
+		if (REQUIRE_NODEFAULT(seq_operator_foreach_pair) ||
+		    REQUIRE_NODEFAULT(map_operator_foreach_pair))
 			return &$with__seq_operator_foreach_pair;
-		return $with__seq_operator_foreach;
+		return &$with__seq_operator_foreach;
 	}
 };

@@ -212,12 +212,12 @@ err:
 seq_operator_setrange_index_n = {
 	DeeMH_seq_operator_setrange_index_t seq_operator_setrange_index = REQUIRE(seq_operator_setrange_index);
 	if (seq_operator_setrange_index == &default__seq_operator_setrange_index__empty)
-		return $empty;
+		return &$empty;
 	if (seq_operator_setrange_index == &default__seq_operator_setrange_index__with__seq_operator_setrange)
-		return $with__seq_operator_setrange;
+		return &$with__seq_operator_setrange;
 	if (seq_operator_setrange_index &&
 	    REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
-		return $with__seq_operator_size__and__seq_operator_setrange_index;
+		return &$with__seq_operator_size__and__seq_operator_setrange_index;
 };
 
 

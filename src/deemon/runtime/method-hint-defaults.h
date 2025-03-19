@@ -1665,7 +1665,7 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL tdefault__set_operator_hash__wit
 #define default__set_operator_hash__none (*(Dee_hash_t (DCALL *)(DeeObject *__restrict))&_DeeNone_rets0_1)
 #define default__set_operator_hash__empty (*(Dee_hash_t (DCALL *)(DeeObject *__restrict))&_DeeNone_rets0_1)
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with__set_operator_foreach(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with__map_operator_foreach_pair(DeeObject *__restrict self);
+#define default__set_operator_hash__with__map_operator_foreach_pair (*(Dee_hash_t (DCALL *)(DeeObject *__restrict))&default__map_operator_hash__with__map_operator_foreach_pair)
 
 /* set_operator_compare_eq */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs);

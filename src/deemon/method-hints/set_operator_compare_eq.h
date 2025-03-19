@@ -115,9 +115,9 @@ err:
 set_operator_compare_eq = {
 	DeeMH_set_operator_foreach_t set_operator_foreach;
 	if (REQUIRE_NODEFAULT(set_operator_eq))
-		return $with__set_operator_eq;
+		return &$with__set_operator_eq;
 	if (REQUIRE_NODEFAULT(set_operator_ne))
-		return $with__set_operator_ne;
+		return &$with__set_operator_ne;
 	set_operator_foreach = REQUIRE(set_operator_foreach);
 	if (set_operator_foreach == &default__set_operator_foreach__empty)
 		return &$empty;

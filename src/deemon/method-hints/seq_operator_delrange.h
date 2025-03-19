@@ -205,12 +205,12 @@ seq_operator_delrange_index_n = {
 		return &$with__seq_operator_setrange_index_n;
 	seq_operator_delrange_index = REQUIRE(seq_operator_delrange_index);
 	if (seq_operator_delrange_index == &default__seq_operator_delrange_index__empty)
-		return $empty;
+		return &$empty;
 	if (seq_operator_delrange_index == &default__seq_operator_delrange_index__with__seq_operator_delrange)
-		return $with__seq_operator_delrange;
+		return &$with__seq_operator_delrange;
 	if (seq_operator_delrange_index &&
 	    REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
-		return $with__seq_operator_size__and__seq_operator_delrange_index;
+		return &$with__seq_operator_size__and__seq_operator_delrange_index;
 };
 
 

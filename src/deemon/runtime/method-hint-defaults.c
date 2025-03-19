@@ -15031,25 +15031,6 @@ err:
 	return set_handle_hash_error(self);
 }
 
-#ifndef DEFINED_default_set_hash_with_foreach_pair_cb
-#define DEFINED_default_set_hash_with_foreach_pair_cb
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_set_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
-	*(Dee_hash_t *)arg ^= Dee_HashCombine(DeeObject_Hash(key),
-	                                      DeeObject_Hash(value));
-	return 0;
-}
-#endif /* !DEFINED_default_set_hash_with_foreach_pair_cb */
-INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
-default__set_operator_hash__with__map_operator_foreach_pair(DeeObject *__restrict self) {
-	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, &default_set_hash_with_foreach_pair_cb, &result))
-		goto err;
-	return result;
-err:
-	return set_handle_hash_error(self);
-}
-
 
 /* set_operator_compare_eq */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -16940,10 +16921,19 @@ err:
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
+#ifndef DEFINED_default_map_hash_with_foreach_pair_cb
+#define DEFINED_default_map_hash_with_foreach_pair_cb
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	*(Dee_hash_t *)arg ^= Dee_HashCombine(DeeObject_Hash(key),
+	                                      DeeObject_Hash(value));
+	return 0;
+}
+#endif /* !DEFINED_default_map_hash_with_foreach_pair_cb */
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 default__map_operator_hash__with__map_operator_foreach_pair(DeeObject *__restrict self) {
 	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, &default_set_hash_with_foreach_pair_cb, &result))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, &default_map_hash_with_foreach_pair_cb, &result))
 		goto err;
 	return result;
 err:

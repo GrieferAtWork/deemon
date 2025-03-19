@@ -38,6 +38,18 @@ map_handle_hash_error(DeeObject *self) {
 #endif /* !DEFINED_map_handle_hash_error */
 )]
 
+%[define(DEFINE_default_map_hash_with_foreach_pair_cb =
+#ifndef DEFINED_default_map_hash_with_foreach_pair_cb
+#define DEFINED_default_map_hash_with_foreach_pair_cb
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	*(Dee_hash_t *)arg ^= Dee_HashCombine(DeeObject_Hash(key),
+	                                      DeeObject_Hash(value));
+	return 0;
+}
+#endif /* !DEFINED_default_map_hash_with_foreach_pair_cb */
+)]
+
 [[operator(Mapping: tp_cmp->tp_hash)]]
 [[wunused]] Dee_hash_t
 __map_hash__.map_operator_hash([[nonnull]] DeeObject *__restrict self)
@@ -45,11 +57,11 @@ __map_hash__.map_operator_hash([[nonnull]] DeeObject *__restrict self)
 %{$none = 0}
 %{$empty = DEE_HASHOF_EMPTY_SEQUENCE}
 %{$with__map_operator_foreach_pair =
-[[prefix(DEFINE_default_set_hash_with_foreach_pair_cb)]]
+[[prefix(DEFINE_default_map_hash_with_foreach_pair_cb)]]
 [[prefix(DEFINE_map_handle_hash_error)]] {
 	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
 	if unlikely(CALL_DEPENDENCY(map_operator_foreach_pair, self,
-	                            &default_set_hash_with_foreach_pair_cb,
+	                            &default_map_hash_with_foreach_pair_cb,
 	                            &result))
 		goto err;
 	return result;
@@ -77,5 +89,5 @@ map_operator_hash = {
 	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
 		return &$empty;
 	if (map_operator_foreach_pair)
-		return $with__map_operator_foreach_pair;
+		return &$with__map_operator_foreach_pair;
 };

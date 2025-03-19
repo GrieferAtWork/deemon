@@ -37,18 +37,6 @@ default_set_hash_with_foreach_cb(void *arg, DeeObject *elem) {
 #endif /* !DEFINED_default_set_hash_with_foreach_cb */
 )]
 
-%[define(DEFINE_default_set_hash_with_foreach_pair_cb =
-#ifndef DEFINED_default_set_hash_with_foreach_pair_cb
-#define DEFINED_default_set_hash_with_foreach_pair_cb
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_set_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
-	*(Dee_hash_t *)arg ^= Dee_HashCombine(DeeObject_Hash(key),
-	                                      DeeObject_Hash(value));
-	return 0;
-}
-#endif /* !DEFINED_default_set_hash_with_foreach_pair_cb */
-)]
-
 %[define(DEFINE_set_handle_hash_error =
 #ifndef DEFINED_set_handle_hash_error
 #define DEFINED_set_handle_hash_error
@@ -79,18 +67,10 @@ __set_hash__.set_operator_hash([[nonnull]] DeeObject *__restrict self)
 err:
 	return set_handle_hash_error(self);
 }}
-%{$with__map_operator_foreach_pair =
-[[prefix(DEFINE_default_set_hash_with_foreach_pair_cb)]]
-[[prefix(DEFINE_set_handle_hash_error)]] {
-	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	if unlikely(CALL_DEPENDENCY(map_operator_foreach_pair, self,
-	                            &default_set_hash_with_foreach_pair_cb,
-	                            &result))
-		goto err;
-	return result;
-err:
-	return set_handle_hash_error(self);
-}}
+%{$with__map_operator_foreach_pair = /* Map hashing just does `DeeHash_Combine(key, value)',
+                                      * which is also what DeeObject_Hash(key_and_value_tuple)
+                                      * would do, so we can re-use that hash function here. */
+	"default__map_operator_hash__with__map_operator_foreach_pair"}
 [[prefix(DEFINE_set_handle_hash_error)]] {
 	int temp;
 	Dee_hash_t result;
@@ -108,11 +88,27 @@ err:
 }
 
 set_operator_hash = {
-	DeeMH_set_operator_foreach_t set_operator_foreach = REQUIRE(set_operator_foreach);
-	if (set_operator_foreach == &default__set_operator_foreach__empty)
+	/* The mapping hash-operator is actually semantically compatible, so we
+	 * can use *it* to determine how to implement the set hash-operator! */
+	DeeMH_map_operator_hash_t map_operator_hash = REQUIRE(map_operator_hash);
+	if (map_operator_hash == &default__map_operator_hash__empty)
 		return &$empty;
-	if (set_operator_foreach == &default__set_operator_foreach__with__map_operator_foreach_pair)
-		return &$with__map_operator_foreach_pair;
-	if (set_operator_foreach)
-		return $with__set_operator_foreach;
+	if (map_operator_hash == &default__map_operator_hash__with__map_operator_foreach_pair) {
+		DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
+		if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
+			return &$empty;
+		if (map_operator_foreach_pair == &default__map_operator_foreach_pair__with__seq_operator_foreach_pair ||
+		    map_operator_foreach_pair == &default__map_operator_foreach_pair__with__map_operator_iter ||
+			map_operator_foreach_pair == &default__map_operator_foreach_pair__with__map_enumerate) {
+			DeeMH_set_operator_foreach_t set_operator_foreach = REQUIRE(set_operator_foreach);
+			if (set_operator_foreach == &default__set_operator_foreach__empty)
+				return &$empty;
+			if (set_operator_foreach == &default__set_operator_foreach__with__map_operator_foreach_pair)
+				return &$with__map_operator_foreach_pair;
+			if (set_operator_foreach)
+				return &$with__set_operator_foreach;
+		}
+	}
+	if (map_operator_hash)
+		return map_operator_hash;
 };

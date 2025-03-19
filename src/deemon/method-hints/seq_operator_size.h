@@ -168,5 +168,5 @@ seq_operator_size = {
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_iter)
 		return &$with__seq_operator_iter;
 	if (seq_operator_foreach)
-		return $with__seq_operator_foreach;
+		return &$with__seq_operator_foreach;
 };
