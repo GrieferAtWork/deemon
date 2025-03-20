@@ -26,14 +26,15 @@
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/method-hints.h>
-#include <deemon/none.h>
 #include <deemon/none-operator.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
+#include <deemon/super.h>
 
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"
@@ -145,6 +146,18 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	TYPE_METHOD_END
 };
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_asseq(DeeObject *__restrict self) {
+	return DeeSuper_New(&DeeSeq_Type, self);
+}
+
+#define set_asset DeeObject_NewRef
+
+#define set_asmap seq_asmap
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_asmap(DeeObject *__restrict self);
+
+
 INTDEF struct type_getset tpconst set_getsets[];
 INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
 	TYPE_GETTER(STR_frozen, &default__set_frozen,
@@ -153,7 +166,9 @@ INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
 	            /**/ "constructing a snapshot of the set's current elements. - The actual type of "
 	            /**/ "set returned is implementation- and type- specific, and copying itself may "
 	            /**/ "either be done immediately, or as copy-on-write"),
-	/* TODO: "asseq->?DSequence"  -- alias for `this as Sequence' */
+	TYPE_GETTER_AB("asseq", &set_asseq, "->?DSequence\nOptimized version of ${this as Sequence}"),
+	TYPE_GETTER_AB("asset", &set_asset, "->?.\nOptimized version of ${this as Set}"),
+	TYPE_GETTER_AB("asmap", &set_asmap, "->?DMapping\nOptimized version of ${this as Mapping}"),
 	TYPE_GETSET_END
 };
 

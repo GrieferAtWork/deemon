@@ -428,6 +428,16 @@ map_items(DeeObject *self) {
 	return DeeSuper_New(&DeeSet_Type, self);
 }
 
+#define map_asseq set_asseq
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_asseq(DeeObject *__restrict self);
+
+#define map_asset seq_asset
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_asset(DeeObject *__restrict self);
+
+#define map_asmap DeeObject_NewRef
+
 PRIVATE struct type_getset tpconst map_getsets[] = {
 	TYPE_GETTER(STR_keys, &default__map_keys,
 	            "->?#Keys\n"
@@ -461,6 +471,10 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	TYPE_GETTER(STR_frozen, &default__map_frozen,
 	            "->?#Frozen\n"
 	            "Returns a read-only (frozen) copy of @this ?."),
+	TYPE_GETTER_AB("asseq", &map_asseq, "->?DSequence\nOptimized version of ${this as Sequence}"),
+	TYPE_GETTER_AB("asset", &map_asset, "->?DSet\nOptimized version of ${this as Set}"),
+	TYPE_GETTER_AB("asmap", &map_asmap, "->?.\nOptimized version of ${this as Mapping}"),
+
 	/* TODO: KeyType->?DType
 	 *       Check if the type of @this overrides the ?#KeyType class attribute.
 	 *       If so, return its value; else, return the common base-class of all

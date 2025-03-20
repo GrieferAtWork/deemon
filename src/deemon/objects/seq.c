@@ -29,6 +29,7 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
@@ -2711,6 +2712,18 @@ err:
 	return NULL;
 }
 
+#define seq_asseq DeeObject_NewRef
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_asset(DeeObject *__restrict self) {
+	return DeeSuper_New(&DeeSet_Type, self);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_asmap(DeeObject *__restrict self) {
+	return DeeSuper_New(&DeeMapping_Type, self);
+}
+
 
 PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER("length", &default__seq_operator_sizeob,
@@ -2912,6 +2925,9 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	               /**/ "local x = { {0, 1, 2}, {5, 7, 9}, {1, 10, 1} };\n"
 	               /**/ "print repr x.flatten; /* { 0, 1, 2, 5, 7, 9, 1, 10, 1 } */"
 	               "}"),
+	TYPE_GETTER_AB("asseq", &seq_asseq, "->?.\nOptimized version of ${this as Sequence}"),
+	TYPE_GETTER_AB("asset", &seq_asset, "->?DSet\nOptimized version of ${this as Set}"),
+	TYPE_GETTER_AB("asmap", &seq_asmap, "->?DMapping\nOptimized version of ${this as Mapping}"),
 
 	/* TODO: Variants of this need to be added for `Set' and `Mapping' */
 	TYPE_GETTER(STR_cached, &default__seq_cached,
