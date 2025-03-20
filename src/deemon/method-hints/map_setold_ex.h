@@ -230,7 +230,7 @@ err:
 	if unlikely(temp < 0)
 		goto err_status1;
 	if (temp) {
-		Dee_Decref_unlikely(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
 		return ITER_DONE;
 	}
 	return status[1];

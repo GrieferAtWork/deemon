@@ -103,7 +103,7 @@ err:
 	result = LOCAL_CALLATTRF(self, PCKuSIZ "o", newsize, filler);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;

@@ -71,7 +71,7 @@ __map_removekeys__.map_removekeys([[nonnull]] DeeObject *self,
 	result = LOCAL_CALLATTR(self, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;

@@ -31,7 +31,7 @@ tp_attr->tp_delattr([[nonnull]] DeeObject *self,
 %{class using OPERATOR_DELATTR: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_DELATTR, 1, &attr);
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;

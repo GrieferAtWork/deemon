@@ -118,7 +118,7 @@ err:
 	result = LOCAL_CALLATTR(self, 1, &key);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because return value is probably "none" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;

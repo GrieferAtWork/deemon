@@ -35,7 +35,7 @@ tp_attr->tp_setattr([[nonnull]] DeeObject *self,
 	args[0] = attr;
 	args[1] = value;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_SETATTR, 2, args);
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;

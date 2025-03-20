@@ -52,6 +52,8 @@
 
 DECL_BEGIN
 
+#define Dee_Decref_probably_none(x) \
+	Dee_Decref_unlikely(x) /* *_unlikely because it's probably `Dee_None' */
 
 #ifdef __OPTIMIZE_SIZE__
 #define return_DeeClass_CallOperator(tp_self, self, operator, argc, argv) \
@@ -8377,7 +8379,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__delattr__with__DELATTR(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_DELATTR, 1, &attr);
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -8395,7 +8397,7 @@ usrtype__delattr__with__DELATTR(DeeObject *self, DeeObject *attr) {
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_DELATTR, 1, &attr);
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -8482,7 +8484,7 @@ tusrtype__setattr__with__SETATTR(DeeTypeObject *tp_self, DeeObject *self, DeeObj
 	args[0] = attr;
 	args[1] = value;
 	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_SETATTR, 2, args);
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -8503,7 +8505,7 @@ usrtype__setattr__with__SETATTR(DeeObject *self, DeeObject *attr, DeeObject *val
 	args[0] = attr;
 	args[1] = value;
 	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_SETATTR, 2, args);
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;

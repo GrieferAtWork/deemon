@@ -90,6 +90,9 @@ DECL_BEGIN
 #define do_fix_negative_range_index(index, size) \
 	((size) - ((size_t)(-(index)) % (size)))
 
+#define Dee_Decref_probably_none(x) \
+	Dee_Decref_unlikely(x) /* *_unlikely because it's probably `Dee_None' */
+
 STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by `detectConstantReturnValue()'");
 STATIC_ASSERT_MSG(DEE_HASHOF_EMPTY_SEQUENCE == 0, "Assumed by `detectConstantReturnValue()'");
 STATIC_ASSERT_MSG(DEE_HASHOF_UNBOUND_ITEM == 0, "Assumed by `detectConstantReturnValue()'");
@@ -214,7 +217,7 @@ mhcache_call_int(DeeTypeObject *tp_self, Dee_mhc_slot_t addr,
 	result = mhcache_call(tp_self, addr, argc, argv);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -227,7 +230,7 @@ mhcache_thiscall_int(DeeTypeObject *tp_self, Dee_mhc_slot_t addr,
 	result = mhcache_thiscall(tp_self, addr, self, argc, argv);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12977,7 +12980,7 @@ default__seq_resize__with_callattr_resize(DeeObject *self, size_t newsize, DeeOb
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_resize, PCKuSIZ "o", newsize, filler);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12989,7 +12992,7 @@ default__seq_resize__with_callattr___seq_resize__(DeeObject *self, size_t newsiz
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_resize__, PCKuSIZ "o", newsize, filler);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13004,7 +13007,7 @@ default__seq_resize__with_callobjectcache___seq_resize__(DeeObject *self, size_t
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_resize__, self, PCKuSIZ "o", newsize, filler);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13094,7 +13097,7 @@ default__seq_fill__with_callattr_fill(DeeObject *self, size_t start, size_t end,
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_fill, PCKuSIZ PCKuSIZ "o", start, end, filler);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13106,7 +13109,7 @@ default__seq_fill__with_callattr___seq_fill__(DeeObject *self, size_t start, siz
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_fill__, PCKuSIZ PCKuSIZ "o", start, end, filler);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13121,7 +13124,7 @@ default__seq_fill__with_callobjectcache___seq_fill__(DeeObject *self, size_t sta
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_fill__, self, PCKuSIZ PCKuSIZ "o", start, end, filler);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13188,7 +13191,7 @@ default__seq_reverse__with_callattr_reverse(DeeObject *self, size_t start, size_
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_reverse, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13200,7 +13203,7 @@ default__seq_reverse__with_callattr___seq_reverse__(DeeObject *self, size_t star
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_reverse__, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13215,7 +13218,7 @@ default__seq_reverse__with_callobjectcache___seq_reverse__(DeeObject *self, size
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_reverse__, self, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13508,7 +13511,7 @@ default__seq_sort__with_callattr_sort(DeeObject *self, size_t start, size_t end)
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_sort, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13520,7 +13523,7 @@ default__seq_sort__with_callattr___seq_sort__(DeeObject *self, size_t start, siz
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_sort__, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13535,7 +13538,7 @@ default__seq_sort__with_callobjectcache___seq_sort__(DeeObject *self, size_t sta
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_sort__, self, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13572,7 +13575,7 @@ default__seq_sort_with_key__with_callattr_sort(DeeObject *self, size_t start, si
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_sort, PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13584,7 +13587,7 @@ default__seq_sort_with_key__with_callattr___seq_sort__(DeeObject *self, size_t s
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_sort__, PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -13599,7 +13602,7 @@ default__seq_sort_with_key__with_callobjectcache___seq_sort__(DeeObject *self, s
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_sort__, self, PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -16284,7 +16287,7 @@ default__set_insertall__with_callattr_insertall(DeeObject *self, DeeObject *keys
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_insertall, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -16296,7 +16299,7 @@ default__set_insertall__with_callattr___set_insertall__(DeeObject *self, DeeObje
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___set_insertall__, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -16311,7 +16314,7 @@ default__set_insertall__with_callobjectcache___set_insertall__(DeeObject *self, 
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_insertall__, self, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -16468,7 +16471,7 @@ default__set_removeall__with_callattr_removeall(DeeObject *self, DeeObject *keys
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_removeall, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -16480,7 +16483,7 @@ default__set_removeall__with_callattr___set_removeall__(DeeObject *self, DeeObje
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___set_removeall__, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -16495,7 +16498,7 @@ default__set_removeall__with_callobjectcache___set_removeall__(DeeObject *self, 
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_removeall__, self, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -17762,7 +17765,7 @@ default__map_operator_delitem__with_callattr___map_delitem__(DeeObject *self, De
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___map_delitem__, 1, &key);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because return value is probably "none" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -17777,7 +17780,7 @@ default__map_operator_delitem__with_callobjectcache___map_delitem__(DeeObject *s
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_delitem__, self, 1, &key);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because return value is probably "none" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -17970,7 +17973,7 @@ default__map_operator_setitem__with_callattr___map_setitem__(DeeObject *self, De
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___map_setitem__, 2, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because return value is probably "none" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -17988,7 +17991,7 @@ default__map_operator_setitem__with_callobjectcache___map_setitem__(DeeObject *s
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_setitem__, self, 2, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because return value is probably "none" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -18441,7 +18444,7 @@ default__map_iterkeys__with__map_keys(DeeObject *__restrict self) {
 	if unlikely(!keys)
 		goto err;
 	result = DeeObject_Iter(keys);
-	Dee_Decref_unlikely(keys); /* *_unlikely because it's probably referenced by the iterator */
+	Dee_Decref_probably_none(keys);
 	return result;
 err:
 	return NULL;
@@ -18565,7 +18568,7 @@ default__map_itervalues__with__map_values(DeeObject *__restrict self) {
 	if unlikely(!values)
 		goto err;
 	result = DeeObject_Iter(values);
-	Dee_Decref_unlikely(values); /* *_unlikely because it's probably referenced by the iterator */
+	Dee_Decref_probably_none(values);
 	return result;
 err:
 	return NULL;
@@ -19903,7 +19906,7 @@ default__map_setold_ex__with_callattr_setold_ex(DeeObject *self, DeeObject *key,
 	if unlikely(temp < 0)
 		goto err_status1;
 	if (temp) {
-		Dee_Decref_unlikely(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
 		return ITER_DONE;
 	}
 	return status[1];
@@ -19931,7 +19934,7 @@ default__map_setold_ex__with_callattr___map_setold_ex__(DeeObject *self, DeeObje
 	if unlikely(temp < 0)
 		goto err_status1;
 	if (temp) {
-		Dee_Decref_unlikely(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
 		return ITER_DONE;
 	}
 	return status[1];
@@ -19962,7 +19965,7 @@ default__map_setold_ex__with_callobjectcache___map_setold_ex__(DeeObject *self, 
 	if unlikely(temp < 0)
 		goto err_status1;
 	if (temp) {
-		Dee_Decref_unlikely(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
 		return ITER_DONE;
 	}
 	return status[1];
@@ -20170,7 +20173,7 @@ default__map_setnew_ex__with_callattr_setnew_ex(DeeObject *self, DeeObject *key,
 	if unlikely(temp < 0)
 		goto err_status1;
 	if (temp) {
-		Dee_Decref_unlikely(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
 		return ITER_DONE;
 	}
 	return status[1];
@@ -20198,7 +20201,7 @@ default__map_setnew_ex__with_callattr___map_setnew_ex__(DeeObject *self, DeeObje
 	if unlikely(temp < 0)
 		goto err_status1;
 	if (temp) {
-		Dee_Decref_unlikely(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
 		return ITER_DONE;
 	}
 	return status[1];
@@ -20229,7 +20232,7 @@ default__map_setnew_ex__with_callobjectcache___map_setnew_ex__(DeeObject *self, 
 	if unlikely(temp < 0)
 		goto err_status1;
 	if (temp) {
-		Dee_Decref_unlikely(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
 		return ITER_DONE;
 	}
 	return status[1];
@@ -20392,7 +20395,7 @@ default__map_update__with_callattr_update(DeeObject *self, DeeObject *items) {
 	DREF DeeObject *result = DeeObject_CallAttr(self, (DeeObject *)&str_update, 1, &items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -20403,7 +20406,7 @@ default__map_update__with_callattr___map_update__(DeeObject *self, DeeObject *it
 	DREF DeeObject *result = DeeObject_CallAttr(self, (DeeObject *)&str___map_update__, 1, &items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -20417,7 +20420,7 @@ default__map_update__with_callobjectcache___map_update__(DeeObject *self, DeeObj
 	DREF DeeObject *result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_update__, self, 1, &items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -20651,7 +20654,7 @@ default__map_removekeys__with_callattr_removekeys(DeeObject *self, DeeObject *ke
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_removekeys, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -20663,7 +20666,7 @@ default__map_removekeys__with_callattr___map_removekeys__(DeeObject *self, DeeOb
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___map_removekeys__, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -20678,7 +20681,7 @@ default__map_removekeys__with_callobjectcache___map_removekeys__(DeeObject *self
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___map_removekeys__, self, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22249,7 +22252,7 @@ tdefault__seq_resize__with_callobjectcache___seq_resize__(DeeTypeObject *tp_self
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_resize__, self, PCKuSIZ "o", newsize, filler);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22262,7 +22265,7 @@ tdefault__seq_fill__with_callobjectcache___seq_fill__(DeeTypeObject *tp_self, De
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_fill__, self, PCKuSIZ PCKuSIZ "o", start, end, filler);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22275,7 +22278,7 @@ tdefault__seq_reverse__with_callobjectcache___seq_reverse__(DeeTypeObject *tp_se
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_reverse__, self, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22294,7 +22297,7 @@ tdefault__seq_sort__with_callobjectcache___seq_sort__(DeeTypeObject *tp_self, De
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_sort__, self, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22307,7 +22310,7 @@ tdefault__seq_sort_with_key__with_callobjectcache___seq_sort__(DeeTypeObject *tp
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_sort__, self, PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22682,7 +22685,7 @@ tdefault__set_insertall__with_callobjectcache___set_insertall__(DeeTypeObject *t
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___set_insertall__, self, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22707,7 +22710,7 @@ tdefault__set_removeall__with_callobjectcache___set_removeall__(DeeTypeObject *t
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___set_removeall__, self, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22777,7 +22780,7 @@ tdefault__map_operator_delitem__with_callobjectcache___map_delitem__(DeeTypeObje
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___map_delitem__, self, 1, &key);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because return value is probably "none" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22793,7 +22796,7 @@ tdefault__map_operator_setitem__with_callobjectcache___map_setitem__(DeeTypeObje
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___map_setitem__, self, 2, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because return value is probably "none" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -23059,7 +23062,7 @@ tdefault__map_setold_ex__with_callobjectcache___map_setold_ex__(DeeTypeObject *t
 	if unlikely(temp < 0)
 		goto err_status1;
 	if (temp) {
-		Dee_Decref_unlikely(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
 		return ITER_DONE;
 	}
 	return status[1];
@@ -23103,7 +23106,7 @@ tdefault__map_setnew_ex__with_callobjectcache___map_setnew_ex__(DeeTypeObject *t
 	if unlikely(temp < 0)
 		goto err_status1;
 	if (temp) {
-		Dee_Decref_unlikely(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
 		return ITER_DONE;
 	}
 	return status[1];
@@ -23128,7 +23131,7 @@ tdefault__map_update__with_callobjectcache___map_update__(DeeTypeObject *tp_self
 	DREF DeeObject *result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___map_update__, self, 1, &items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -23152,7 +23155,7 @@ tdefault__map_removekeys__with_callobjectcache___map_removekeys__(DeeTypeObject 
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___map_removekeys__, self, 1, &keys);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;

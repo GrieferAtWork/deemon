@@ -36,7 +36,7 @@ __map_itervalues__.map_itervalues([[nonnull]] DeeObject *__restrict self)
 	if unlikely(!values)
 		goto err;
 	result = DeeObject_Iter(values);
-	Dee_Decref_unlikely(values); /* *_unlikely because it's probably referenced by the iterator */
+	Dee_Decref_probably_none(values);
 	return result;
 err:
 	return NULL;

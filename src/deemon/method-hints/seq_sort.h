@@ -57,7 +57,7 @@ __seq_sort__.seq_sort([[nonnull]] DeeObject *self,
 	result = LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -92,7 +92,7 @@ __seq_sort__.seq_sort_with_key([[nonnull]] DeeObject *self,
 	result = LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
