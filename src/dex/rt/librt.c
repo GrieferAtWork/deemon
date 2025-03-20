@@ -3284,7 +3284,7 @@ librt_get_EnumerateWrapper_Type_uncached_impl_f(void) {
 	Dee_ssize_t error;
 	struct custom_seq_enumerate_ob ob = { OBJECT_HEAD_INIT(&type_with_custom_seq_enumerate), NULL };
 	ASSERT(ob.ob_refcnt == Dee_STATIC_REFCOUNT_INIT);
-	error = DeeObject_InvokeMethodHint(seq_enumerate, (DeeObject *)&ob, &noop_seq_enumerate_cb, NULL);
+	error = (*DeeObject_RequireMethodHint(&ob, seq_enumerate))((DeeObject *)&ob, &noop_seq_enumerate_cb, NULL);
 	ASSERT(ob.ob_refcnt == Dee_STATIC_REFCOUNT_INIT);
 	if unlikely(error < 0)
 		goto err;
@@ -3306,7 +3306,7 @@ librt_get_EnumerateIndexWrapper_Type_uncached_impl_f(void) {
 	Dee_ssize_t error;
 	struct custom_seq_enumerate_ob ob = { OBJECT_HEAD_INIT(&type_with_custom_seq_enumerate), NULL };
 	ASSERT(ob.ob_refcnt == Dee_STATIC_REFCOUNT_INIT);
-	error = DeeObject_InvokeMethodHint(seq_enumerate_index, (DeeObject *)&ob, &noop_seq_enumerate_index_cb, NULL, 0, (size_t)-1);
+	error = (*DeeObject_RequireMethodHint(&ob, seq_enumerate_index))((DeeObject *)&ob, &noop_seq_enumerate_index_cb, NULL, 0, (size_t)-1);
 	ASSERT(ob.ob_refcnt == Dee_STATIC_REFCOUNT_INIT);
 	if unlikely(error < 0)
 		goto err;
