@@ -896,48 +896,6 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 	                                          DeeInt_NewUInt64((uint64_t)(value)))))
 #endif /* !__NO_builtin_choose_expr */
 
-#ifdef __COMPILER_HAVE_TYPEOF
-#define _Dee_PRIVATE_ISSIGNED(v) (((__typeof__(v))-1) < 0)
-#elif defined(__COMPILER_HAVE_C11_GENERIC)
-#ifdef __SIZEOF_LONG_LONG__
-#define _Dee_PRIVATE_ISSIGNED(v) \
-	_Generic(v,char:1,signed char:1,short:1,int:1,long:1,__LONGLONG:1,default:0)
-#else /* __SIZEOF_LONG_LONG__ */
-#define _Dee_PRIVATE_ISSIGNED(v) \
-	_Generic(v,char:1,signed char:1,short:1,int:1,long:1,default:0)
-#endif /* !__SIZEOF_LONG_LONG__ */
-#elif defined(__cplusplus)
-DECL_END
-#include <__stdcxx.h>
-DECL_BEGIN
-#ifdef __COMPILER_HAVE_CXX_DECLTYPE
-extern "C++" {
-template<class T> T _Dee_PRIVATE_CXX_ExprVal(T);
-#define _Dee_PRIVATE_ISSIGNED(v) (((decltype(_Dee_PRIVATE_CXX_ExprVal(v)))-1) < 0)
-} /* extern "C++" */
-#endif /* __COMPILER_HAVE_CXX_DECLTYPE */
-#endif /* ... */
-#ifndef _Dee_PRIVATE_ISSIGNED
-/* This fallback version wrongfully detects "unsigned char"
- * and "unsigned short" as signed. The reason for this is
- * integer promotion (and which promotes these types to
- * "signed int", as per STDC rules...) */
-#define _Dee_PRIVATE_ISSIGNED(v) ((0 ? (v) : -1) < 0)
-#endif /* !_Dee_PRIVATE_ISSIGNED */
-
-/* Type-safe master macro to  */
-#ifdef __NO_builtin_choose_expr
-#define DeeInt_New(value)                              \
-	(_Dee_PRIVATE_ISSIGNED(value) ? DeeInt_NEWS(value) \
-	                              : DeeInt_NEWU(value))
-#else /* __NO_builtin_choose_expr */
-#define DeeInt_New(value)                               \
-	__builtin_choose_expr(_Dee_PRIVATE_ISSIGNED(value), \
-	                      DeeInt_NEWS(value),           \
-	                      DeeInt_NEWU(value))
-#endif /* !__NO_builtin_choose_expr */
-
-
 
 
 /* Create a new integer object with an input integral value `val' of `size' bytes. */

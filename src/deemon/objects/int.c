@@ -159,21 +159,6 @@ STATIC_ASSERT(Dee_CompareEqFromDiff(-10) == -1 || Dee_CompareEqFromDiff(-10) == 
 STATIC_ASSERT(Dee_CompareEqFromDiff(10) == -1 || Dee_CompareEqFromDiff(10) == 1);
 STATIC_ASSERT(Dee_CompareEqFromDiff(0) == 0);
 
-/* These here work all the time, but sadly the same can't be said
- * about integer types smaller than "int" due to integer promotion. */
-/*STATIC_ASSERT(_Dee_PRIVATE_ISSIGNED((char)0));*/  /* May not work due to integer promotion */
-/*STATIC_ASSERT(_Dee_PRIVATE_ISSIGNED((short)0));*/ /* May not work due to integer promotion */
-STATIC_ASSERT(_Dee_PRIVATE_ISSIGNED(0));
-STATIC_ASSERT(_Dee_PRIVATE_ISSIGNED(0l));
-STATIC_ASSERT(!_Dee_PRIVATE_ISSIGNED((unsigned char)0));
-STATIC_ASSERT(!_Dee_PRIVATE_ISSIGNED((unsigned short)0));
-STATIC_ASSERT(!_Dee_PRIVATE_ISSIGNED(0u));
-STATIC_ASSERT(!_Dee_PRIVATE_ISSIGNED(0ul));
-#ifdef __COMPILER_HAVE_LONGLONG
-STATIC_ASSERT(_Dee_PRIVATE_ISSIGNED(0ll));
-STATIC_ASSERT(!_Dee_PRIVATE_ISSIGNED(0ull));
-#endif /* __COMPILER_HAVE_LONGLONG */
-
 
 #ifndef CONFIG_HAVE_memend
 #define CONFIG_HAVE_memend
