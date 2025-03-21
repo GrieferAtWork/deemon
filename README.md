@@ -7,7 +7,8 @@ Deemon is a scripting language with a syntax inspired by C and other languages d
 ```
 import * from deemon;
 
-print "Deemon is totally rad, right?\n> ",;
+print "Deemon is totally rad, right?";
+print "> ",;
 local l = File.stdin.readline().strip().lower();
 if (l in { "y", "yes" }) {
 	print "Thank you! :D";
