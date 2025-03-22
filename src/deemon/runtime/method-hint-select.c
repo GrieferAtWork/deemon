@@ -188,9 +188,9 @@ with_seq_operator_size:
 	if (map_operator_iter)
 		return map_operator_iter;
 
-	if ((DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate))
+	if ((DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate) || (DeeMH_map_enumerate_range_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate_range))
 		return &default__seq_operator_iter__with__map_enumerate;
-	if ((DeeMH_map_iterkeys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_iterkeys)) {
+	if ((DeeMH_map_iterkeys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_iterkeys) || (DeeMH_map_keys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_keys)) {
 		if ((DeeMH_map_operator_trygetitem_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_trygetitem))
 			return &default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem;
 		if ((DeeMH_map_operator_getitem_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_getitem))
@@ -2823,7 +2823,7 @@ mh_select_map_operator_iter(DeeTypeObject *self, DeeTypeObject *orig_type) {
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_foreach_pair_t DCALL
 mh_select_map_operator_foreach_pair(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_map_operator_iter_t map_operator_iter;
-	if ((DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate))
+	if ((DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate) || (DeeMH_map_enumerate_range_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate_range))
 		return &default__map_operator_foreach_pair__with__map_enumerate;
 	map_operator_iter = (DeeMH_map_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_iter);
 	if (map_operator_iter == &default__map_operator_iter__empty)
@@ -2872,7 +2872,7 @@ mh_select_map_operator_hash(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_getitem_t DCALL
 mh_select_map_operator_getitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_map_enumerate_t map_enumerate;
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
 	/*if (REQUIRE_NODEFAULT(map_operator_getitem_string_len_hash)) {
 		return REQUIRE_NODEFAULT(map_operator_getitem_index)
 		       ? &$with__map_operator_getitem_index__and__map_operator_getitem_string_len_hash
@@ -2884,11 +2884,14 @@ mh_select_map_operator_getitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	} else if (REQUIRE_NODEFAULT(map_operator_getitem_index)) {
 		return &$with__map_operator_getitem_index;
 	}*/
-	map_enumerate = (DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_enumerate);
-	if (map_enumerate == &default__map_enumerate__empty)
-		return &default__map_operator_getitem__empty;
-	if (map_enumerate)
+	if ((DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate) || (DeeMH_map_enumerate_range_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate_range))
 		return &default__map_operator_getitem__with__map_enumerate;
+	map_operator_foreach_pair = (DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_foreach_pair);
+	if (map_operator_foreach_pair) {
+		if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
+			return &default__map_operator_getitem__empty;
+		return &default__map_operator_getitem__with__map_enumerate;
+	}
 	return NULL;
 }
 
@@ -3310,25 +3313,49 @@ mh_select_map_itervalues(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_enumerate_t DCALL
 mh_select_map_enumerate(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
+	DeeMH_map_keys_t map_keys;
 	DeeMH_map_iterkeys_t map_iterkeys;
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
 	/*if (REQUIRE_NODEFAULT(map_enumerate_range))
 		return &$with__map_enumerate_range;*/
+
+	map_keys = (DeeMH_map_keys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_keys);
+	if (map_keys) {
+		if (map_keys == &default__map_keys__empty)
+			return &default__map_enumerate__empty;
+		if (map_keys != &default__map_keys__with__map_iterkeys)
+			goto check_with_iterkeys;
+	}
+
 	map_iterkeys = (DeeMH_map_iterkeys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_iterkeys);
 	if (map_iterkeys) {
 		if (map_iterkeys == &default__map_iterkeys__empty)
 			return &default__map_enumerate__empty;
 		if (map_iterkeys != &default__map_iterkeys__with__map_operator_iter) {
-			DeeMH_map_operator_trygetitem_t map_operator_trygetitem = (DeeMH_map_operator_trygetitem_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_trygetitem);
+			DeeMH_map_operator_trygetitem_t map_operator_trygetitem;
+check_with_iterkeys:
+			map_operator_trygetitem = (DeeMH_map_operator_trygetitem_t)DeeType_GetMethodHint(orig_type, Dee_TMH_map_operator_trygetitem);
 			if (map_operator_trygetitem == &default__map_operator_trygetitem__empty)
 				return &default__map_enumerate__empty;
 			if (map_operator_trygetitem)
 				return &default__map_enumerate__with__map_iterkeys__and__map_operator_trygetitem;
 		}
 	}
+
 	map_operator_foreach_pair = (DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_foreach_pair);
-	if (map_operator_foreach_pair)
+	if (map_operator_foreach_pair) {
+		if (map_operator_foreach_pair == &default__map_operator_foreach_pair__with__map_operator_iter) {
+			DeeMH_map_operator_iter_t map_operator_iter = (DeeMH_map_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_iter);
+			if (map_operator_iter == &default__map_operator_iter__empty)
+				return &default__map_enumerate__empty;
+			if (map_operator_iter == &default__map_operator_iter__with__map_iterkeys__and__map_operator_trygetitem ||
+			    map_operator_iter == &default__map_operator_iter__with__map_iterkeys__and__map_operator_getitem)
+				return &default__map_enumerate__with__map_iterkeys__and__map_operator_trygetitem;
+		}/* else if (map_operator_foreach_pair == &default__map_operator_foreach_pair__with__seq_operator_foreach_pair) {
+			// ...
+		}*/
 		return map_operator_foreach_pair; /* Binary-compatible */
+	}
 	return NULL;
 }
 

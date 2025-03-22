@@ -61,6 +61,8 @@ __map_enumerate__.map_enumerate([[nonnull]] DeeObject *__restrict self,
 	return err_map_unsupportedf(self, "__map_enumerate__(<callback>)");
 })}
 %{$empty = "default__map_operator_foreach_pair__empty"}
+%{$with__seq_operator_foreach_pair = "default__map_operator_foreach_pair__with__seq_operator_foreach_pair"}
+%{$with__map_operator_iter = "default__map_operator_foreach_pair__with__map_operator_iter"}
 /*%{$with__map_operator_foreach_pair = {
 	// Not explicitly defined; we just directly alias "map_operator_foreach_pair"!
 	return CALL_DEPENDENCY(seq_operator_foreach_pair, self, cb, arg);
@@ -197,25 +199,49 @@ err:
 
 
 map_enumerate = {
-	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
+	DeeMH_map_keys_t map_keys;
 	DeeMH_map_iterkeys_t map_iterkeys;
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
 	/*if (REQUIRE_NODEFAULT(map_enumerate_range))
 		return &$with__map_enumerate_range;*/
+
+	map_keys = REQUIRE_NODEFAULT(map_keys);
+	if (map_keys) {
+		if (map_keys == &default__map_keys__empty)
+			return &$empty;
+		if (map_keys != &default__map_keys__with__map_iterkeys)
+			goto check_with_iterkeys;
+	}
+
 	map_iterkeys = REQUIRE_NODEFAULT(map_iterkeys);
 	if (map_iterkeys) {
 		if (map_iterkeys == &default__map_iterkeys__empty)
 			return &$empty;
 		if (map_iterkeys != &default__map_iterkeys__with__map_operator_iter) {
-			DeeMH_map_operator_trygetitem_t map_operator_trygetitem = REQUIRE_NODEFAULT(map_operator_trygetitem);
+			DeeMH_map_operator_trygetitem_t map_operator_trygetitem;
+check_with_iterkeys:
+			map_operator_trygetitem = REQUIRE_ANY(map_operator_trygetitem);
 			if (map_operator_trygetitem == &default__map_operator_trygetitem__empty)
 				return &$empty;
 			if (map_operator_trygetitem)
 				return &$with__map_iterkeys__and__map_operator_trygetitem;
 		}
 	}
+
 	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
-	if (map_operator_foreach_pair)
+	if (map_operator_foreach_pair) {
+		if (map_operator_foreach_pair == &default__map_operator_foreach_pair__with__map_operator_iter) {
+			DeeMH_map_operator_iter_t map_operator_iter = REQUIRE(map_operator_iter);
+			if (map_operator_iter == &default__map_operator_iter__empty)
+				return &$empty;
+			if (map_operator_iter == &default__map_operator_iter__with__map_iterkeys__and__map_operator_trygetitem ||
+			    map_operator_iter == &default__map_operator_iter__with__map_iterkeys__and__map_operator_getitem)
+				return &$with__map_iterkeys__and__map_operator_trygetitem;
+		}/* else if (map_operator_foreach_pair == &default__map_operator_foreach_pair__with__seq_operator_foreach_pair) {
+			// ...
+		}*/
 		return map_operator_foreach_pair; /* Binary-compatible */
+	}
 };
 
 map_enumerate_range = {

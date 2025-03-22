@@ -156,7 +156,7 @@ map_operator_iter = {
 
 map_operator_foreach_pair = {
 	DeeMH_map_operator_iter_t map_operator_iter;
-	if (REQUIRE_NODEFAULT(map_enumerate))
+	if (REQUIRE_NODEFAULT(map_enumerate) || REQUIRE_NODEFAULT(map_enumerate_range))
 		return &$with__map_enumerate;
 	map_operator_iter = REQUIRE(map_operator_iter);
 	if (map_operator_iter == &default__map_operator_iter__empty)

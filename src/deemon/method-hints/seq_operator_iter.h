@@ -572,9 +572,9 @@ with_seq_operator_size:
 	if (map_operator_iter)
 		return map_operator_iter;
 
-	if (REQUIRE_NODEFAULT(map_enumerate))
+	if (REQUIRE_NODEFAULT(map_enumerate) || REQUIRE_NODEFAULT(map_enumerate_range))
 		return &$with__map_enumerate;
-	if (REQUIRE_NODEFAULT(map_iterkeys)) {
+	if (REQUIRE_NODEFAULT(map_iterkeys) || REQUIRE_NODEFAULT(map_keys)) {
 		if (REQUIRE_NODEFAULT(map_operator_trygetitem))
 			return &$with__map_iterkeys__and__map_operator_trygetitem;
 		if (REQUIRE_NODEFAULT(map_operator_getitem))

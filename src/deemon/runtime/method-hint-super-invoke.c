@@ -3265,11 +3265,13 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_itervalues[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__map_itervalues__with_callobjectcache___map_itervalues__, &tdefault__map_itervalues__with_callobjectcache___map_itervalues__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__map_enumerate[6] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__map_enumerate[8] = {
 	(Dee_funptr_t)&default__map_enumerate__with_callattr___map_enumerate__,
 	(Dee_funptr_t)&default__map_enumerate__unsupported,
 	(Dee_funptr_t)&default__map_enumerate__with__map_enumerate_range,
 	(Dee_funptr_t)&default__map_enumerate__empty,
+	(Dee_funptr_t)&default__map_enumerate__with__seq_operator_foreach_pair,
+	(Dee_funptr_t)&default__map_enumerate__with__map_operator_iter,
 	(Dee_funptr_t)&default__map_enumerate__with__map_iterkeys__and__map_operator_trygetitem,
 	NULL
 };

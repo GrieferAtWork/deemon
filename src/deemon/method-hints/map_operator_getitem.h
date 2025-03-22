@@ -143,7 +143,7 @@ err:
 
 
 map_operator_getitem = {
-	DeeMH_map_enumerate_t map_enumerate;
+	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
 	/*if (REQUIRE_NODEFAULT(map_operator_getitem_string_len_hash)) {
 		return REQUIRE_NODEFAULT(map_operator_getitem_index)
 		       ? &$with__map_operator_getitem_index__and__map_operator_getitem_string_len_hash
@@ -155,11 +155,14 @@ map_operator_getitem = {
 	} else if (REQUIRE_NODEFAULT(map_operator_getitem_index)) {
 		return &$with__map_operator_getitem_index;
 	}*/
-	map_enumerate = REQUIRE(map_enumerate);
-	if (map_enumerate == &default__map_enumerate__empty)
-		return &$empty;
-	if (map_enumerate)
+	if (REQUIRE_NODEFAULT(map_enumerate) || REQUIRE_NODEFAULT(map_enumerate_range))
 		return &$with__map_enumerate;
+	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
+	if (map_operator_foreach_pair) {
+		if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
+			return &$empty;
+		return &$with__map_enumerate;
+	}
 };
 
 

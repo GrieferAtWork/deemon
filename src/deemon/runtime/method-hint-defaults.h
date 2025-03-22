@@ -2297,6 +2297,8 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tdefault__map_enumerate__wit
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_enumerate__unsupported(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_enumerate__with__map_enumerate_range(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);
 #define default__map_enumerate__empty (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&default__map_operator_foreach_pair__empty)
+#define default__map_enumerate__with__seq_operator_foreach_pair (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&default__map_operator_foreach_pair__with__seq_operator_foreach_pair)
+#define default__map_enumerate__with__map_operator_iter (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&default__map_operator_foreach_pair__with__map_operator_iter)
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_enumerate__with__map_iterkeys__and__map_operator_trygetitem(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);
 
 /* map_enumerate_range */
