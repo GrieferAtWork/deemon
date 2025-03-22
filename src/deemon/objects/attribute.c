@@ -205,7 +205,7 @@ PRIVATE struct type_member tpconst attr_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 attr_get_name(Attr *__restrict self) {
 	DREF DeeStringObject *result;
 	char const *name_str;
@@ -1227,7 +1227,7 @@ enumattr_start(void *arg) {
 #endif /* CONFIG_LONGJMP_ENUMATTR */
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF Attr *DCALL
+INTERN WUNUSED NONNULL((1)) DREF Attr *DCALL
 enumattriter_next(EnumAttrIter *__restrict self) {
 #ifdef CONFIG_LONGJMP_ENUMATTR
 	DREF Attr *result;

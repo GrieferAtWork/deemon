@@ -50,6 +50,7 @@
 #include "seq/default-map-proxy.h"
 #include "seq/enumerate-cb.h"
 #include "seq/hashfilter.h"
+#include "seq/map-fromattr.h"
 #include "seq/map-fromkeys.h"
 #include "seq/unique-iterator.h"
 
@@ -567,7 +568,7 @@ map_IterValues_get(DeeTypeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_fromkeys(DeeTypeObject *self, size_t argc,
-               DeeObject *const *argv, DeeObject *kw) {
+             DeeObject *const *argv, DeeObject *kw) {
 	DREF MapFromKeys *result;
 	struct {
 		DeeObject *keys;
@@ -598,6 +599,16 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF MapFromAttr *DCALL
+map_fromattr(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *ob;
+	_DeeArg_Unpack1(err, argc, argv, "fromattr", &ob);
+	(void)self;
+	return MapFromAttr_New(ob);
+err:
+	return NULL;
+}
+
 
 PRIVATE struct type_method tpconst map_class_methods[] = {
 	TYPE_KWMETHOD_F("fromkeys", &map_fromkeys, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
@@ -617,6 +628,9 @@ PRIVATE struct type_method tpconst map_class_methods[] = {
 	                /**/ "	result = this(result); /* When called via a sub-class */\n"
 	                /**/ "return result;"
 	                "}"),
+	TYPE_METHOD_F("fromattr", &map_fromattr, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	              "(ob)->?.\n"
+	              "Returns the attributes of a given @ob as a mapping (doing the inverse of ?#byattr)"),
 	TYPE_METHOD_END
 };
 

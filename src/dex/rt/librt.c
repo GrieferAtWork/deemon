@@ -158,6 +158,7 @@ print define_Dee_HashStr("map");
 print define_Dee_HashStr("types");
 print define_Dee_HashStr("distinct");
 print define_Dee_HashStr("fromkeys");
+print define_Dee_HashStr("fromattr");
 print define_Dee_HashStr("__SeqWithIter__");
 print define_Dee_HashStr("__IterWithForeach__");
 print define_Dee_HashStr("__IterWithForeachPair__");
@@ -221,6 +222,7 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 #define Dee_HashStr__types _Dee_HashSelectC(0x871b2836, 0xde8693a2d24930)
 #define Dee_HashStr__distinct _Dee_HashSelectC(0xe1eb56d, 0x9c50bb058e287b02)
 #define Dee_HashStr__fromkeys _Dee_HashSelectC(0xa8bdff1e, 0x34221e7828fcf94f)
+#define Dee_HashStr__fromattr _Dee_HashSelectC(0x3db0dca7, 0x665ab1c0e444f870)
 #define Dee_HashStr____SeqWithIter__ _Dee_HashSelectC(0x337ea2df, 0xb25329aebe2c9945)
 #define Dee_HashStr____IterWithForeach__ _Dee_HashSelectC(0xb9e197d8, 0xa7821cd4b81f3978)
 #define Dee_HashStr____IterWithForeachPair__ _Dee_HashSelectC(0xb64dbee5, 0xc91aa0d30329b6f3)
@@ -3229,6 +3231,18 @@ librt_get_MapFromKeysAndCallbackIterator_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapFromAttr_impl_f(void) {
+	DeeObject *argv[] = { (DeeObject *)&DeeFunction_EmptyYielding.ob };
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&DeeMapping_Type, STR_AND_HASH(fromattr), 1, argv));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapFromAttrKeysIterator_impl_f(void) {
+	return_cached(get_KeysIterator_of(librt_get_MapFromAttr_impl_f()));
+}
+
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapFromKeysAndValue_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MapFromKeysAndValue_impl_f();
 }
@@ -3246,6 +3260,16 @@ librt_get_MapFromKeysAndValueIterator_f(size_t UNUSED(argc), DeeObject *const *U
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapFromKeysAndCallbackIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MapFromKeysAndCallbackIterator_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapFromAttr_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_MapFromAttr_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapFromAttrKeysIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_MapFromAttrKeysIterator_impl_f();
 }
 
 
@@ -3515,6 +3539,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_MapFromKeysAndValue, librt_get_MapFromKeysAndVa
 PRIVATE DEFINE_CMETHOD(librt_get_MapFromKeysAndCallback, librt_get_MapFromKeysAndCallback_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MapFromKeysAndValueIterator, librt_get_MapFromKeysAndValueIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MapFromKeysAndCallbackIterator, librt_get_MapFromKeysAndCallbackIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapFromAttr, librt_get_MapFromAttr_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapFromAttrKeysIterator, librt_get_MapFromAttrKeysIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedVectorIterator, &librt_get_SharedVectorIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedMapIterator, &librt_get_SharedMapIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_RefVector, &librt_get_RefVector_f, METHOD_FCONSTCALL);
@@ -3904,6 +3930,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "MapFromKeysAndCallback", (DeeObject *)&librt_get_MapFromKeysAndCallback, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* MapFromKeysAndCallback_Type */
 	{ "MapFromKeysAndValueIterator", (DeeObject *)&librt_get_MapFromKeysAndValueIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* MapFromKeysAndValueIterator_Type */
 	{ "MapFromKeysAndCallbackIterator", (DeeObject *)&librt_get_MapFromKeysAndCallbackIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapFromKeysAndCallbackIterator_Type */
+
+	/* Internal types used to implement "Mapping.fromattr" */
+	{ "MapFromAttr", (DeeObject *)&librt_get_MapFromAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* MapFromAttr_Type */
+	{ "MapFromAttrKeysIterator", (DeeObject *)&librt_get_MapFromAttrKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapFromAttrKeysIterator_Type */
 
 	/* The special "nullable" tuple sequence type. */
 	{ "NullableTuple", (DeeObject *)&DeeNullableTuple_Type, MODSYM_FREADONLY },

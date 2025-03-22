@@ -418,6 +418,7 @@
 		<ClInclude Include="..\src\deemon\objects\seq\filter.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\flat.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\hashfilter.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\map-fromattr.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\map-fromkeys.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\mapped.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\range.h" />
@@ -614,6 +615,7 @@
 		<ClCompile Include="..\src\deemon\objects\seq\filter.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\flat.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\hashfilter.c" />
+		<ClCompile Include="..\src\deemon\objects\seq\map-fromattr.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\map-fromkeys.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\mapped.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\range.c" />

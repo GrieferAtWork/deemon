@@ -36,7 +36,7 @@ DECL_BEGIN
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy__copy_alias(ProxyObject *__restrict self,
-                         ProxyObject *__restrict other) {
+                          ProxyObject *__restrict other) {
 	Dee_Incref(other->po_obj);
 	self->po_obj = other->po_obj;
 	return 0;
@@ -44,7 +44,7 @@ generic_proxy__copy_alias(ProxyObject *__restrict self,
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy__copy_recursive(ProxyObject *__restrict self,
-                             ProxyObject *__restrict other) {
+                              ProxyObject *__restrict other) {
 	self->po_obj = DeeObject_Copy(other->po_obj);
 	if unlikely(!self->po_obj)
 		goto err;
@@ -55,7 +55,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy__deepcopy(ProxyObject *__restrict self,
-                       ProxyObject *__restrict other) {
+                        ProxyObject *__restrict other) {
 	self->po_obj = DeeObject_DeepCopy(other->po_obj);
 	if unlikely(!self->po_obj)
 		goto err;
@@ -66,7 +66,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy__init(ProxyObject *__restrict self,
-                   size_t argc, DeeObject *const *argv) {
+                    size_t argc, DeeObject *const *argv) {
 	char const *tp_name;
 	if likely(argc == 1) {
 		self->po_obj = argv[0];
@@ -81,7 +81,7 @@ generic_proxy__init(ProxyObject *__restrict self,
 
 INTERN NONNULL((1, 2)) void DCALL
 generic_proxy__visit(ProxyObject *__restrict self,
-                    dvisit_t proc, void *arg) {
+                     dvisit_t proc, void *arg) {
 	Dee_Visit(self->po_obj);
 }
 
@@ -92,7 +92,7 @@ generic_proxy__fini(ProxyObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy2__copy_alias12(ProxyObject2 *__restrict self,
-                            ProxyObject2 *__restrict other) {
+                             ProxyObject2 *__restrict other) {
 	Dee_Incref(other->po_obj1);
 	self->po_obj1 = other->po_obj1;
 	Dee_Incref(other->po_obj2);
@@ -102,7 +102,7 @@ generic_proxy2__copy_alias12(ProxyObject2 *__restrict self,
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy2__copy_recursive1_alias2(ProxyObject2 *__restrict self,
-                                      ProxyObject2 *__restrict other) {
+                                       ProxyObject2 *__restrict other) {
 	self->po_obj1 = DeeObject_Copy(other->po_obj1);
 	if unlikely(!self->po_obj1)
 		goto err;
@@ -115,7 +115,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy2__deepcopy(ProxyObject2 *__restrict self,
-                        ProxyObject2 *__restrict other) {
+                         ProxyObject2 *__restrict other) {
 	self->po_obj1 = DeeObject_DeepCopy(other->po_obj1);
 	if unlikely(!self->po_obj1)
 		goto err;
@@ -131,7 +131,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy2__init(ProxyObject2 *__restrict self,
-                    size_t argc, DeeObject *const *argv) {
+                     size_t argc, DeeObject *const *argv) {
 	char const *tp_name;
 	if likely(argc == 2) {
 		self->po_obj1 = argv[0];
@@ -148,7 +148,7 @@ generic_proxy2__init(ProxyObject2 *__restrict self,
 
 INTERN NONNULL((1, 2)) void DCALL
 generic_proxy2__visit(ProxyObject2 *__restrict self,
-                     dvisit_t proc, void *arg) {
+                      dvisit_t proc, void *arg) {
 	Dee_Visit(self->po_obj1);
 	Dee_Visit(self->po_obj2);
 }
@@ -162,7 +162,7 @@ generic_proxy2__fini(ProxyObject2 *__restrict self) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy3__copy_alias123(ProxyObject3 *__restrict self,
-                             ProxyObject3 *__restrict other) {
+                              ProxyObject3 *__restrict other) {
 	Dee_Incref(other->po_obj1);
 	self->po_obj1 = other->po_obj1;
 	Dee_Incref(other->po_obj2);
@@ -174,7 +174,7 @@ generic_proxy3__copy_alias123(ProxyObject3 *__restrict self,
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy3__deepcopy(ProxyObject3 *__restrict self,
-                        ProxyObject3 *__restrict other) {
+                         ProxyObject3 *__restrict other) {
 	self->po_obj1 = DeeObject_DeepCopy(other->po_obj1);
 	if unlikely(!self->po_obj1)
 		goto err;
@@ -195,7 +195,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy3__init(ProxyObject3 *__restrict self,
-                    size_t argc, DeeObject *const *argv) {
+                     size_t argc, DeeObject *const *argv) {
 	char const *tp_name;
 	if likely(argc == 3) {
 		self->po_obj1 = argv[0];
@@ -248,6 +248,30 @@ INTERN WUNUSED NONNULL((1)) size_t DCALL
 generic_proxy__size_fast(ProxyObject *__restrict self) {
 	return DeeObject_SizeFast(self->po_obj);
 }
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__hasattr_string_hash(ProxyObject *self, char const *attr, Dee_hash_t hash) {
+	return DeeObject_HasAttrStringHash(self->po_obj, attr, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__boundattr_string_hash(ProxyObject *self, char const *attr, Dee_hash_t hash) {
+	return DeeObject_BoundAttrStringHash(self->po_obj, attr, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__hasattr_string_len_hash(ProxyObject *self, char const *attr,
+                                       size_t attrlen, Dee_hash_t hash) {
+	return DeeObject_HasAttrStringLenHash(self->po_obj, attr, attrlen, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__boundattr_string_len_hash(ProxyObject *self, char const *attr,
+                                         size_t attrlen, Dee_hash_t hash) {
+	return DeeObject_BoundAttrStringLenHash(self->po_obj, attr, attrlen, hash);
+}
+
+
 
 /*[[[deemon
 import * from deemon;
@@ -552,7 +576,7 @@ generic_proxy2__hash_recursive_ordered(ProxyObject2 *__restrict self) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy2__trycompare_eq_recursive(ProxyObject2 *self,
-                                       ProxyObject2 *other) {
+                                        ProxyObject2 *other) {
 	int result;
 	if (!DeeObject_InstanceOf(other, Dee_TYPE(self)))
 		return 1;
@@ -564,7 +588,7 @@ generic_proxy2__trycompare_eq_recursive(ProxyObject2 *self,
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy2__compare_eq_recursive(ProxyObject2 *self,
-                                    ProxyObject2 *other) {
+                                     ProxyObject2 *other) {
 	int result;
 	if (DeeObject_AssertType(other, Dee_TYPE(self)))
 		goto err;

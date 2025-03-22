@@ -108,7 +108,12 @@ INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__bool(ProxyObject *__restric
 INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy__iter_advance(ProxyObject *__restrict self, size_t step); /* DeeObject_IterAdvance(self->po_obj, step) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__iter_next(ProxyObject *__restrict self);        /* DeeObject_IterNext(self->po_obj) */
 
-INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy__size_fast(ProxyObject *self);                                             /* DeeObject_SizeFast(self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy__size_fast(ProxyObject *self); /* DeeObject_SizeFast(self->po_obj) */
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__hasattr_string_hash(ProxyObject *self, char const *attr, Dee_hash_t hash);                       /* DeeObject_HasAttrStringHash(self->po_obj, attr, hash) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__boundattr_string_hash(ProxyObject *self, char const *attr, Dee_hash_t hash);                     /* DeeObject_BoundAttrStringHash(self->po_obj, attr, hash) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__hasattr_string_len_hash(ProxyObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);   /* DeeObject_HasAttrStringLenHash(self->po_obj, attr, attrlen, hash) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__boundattr_string_len_hash(ProxyObject *self, char const *attr, size_t attrlen, Dee_hash_t hash); /* DeeObject_BoundAttrStringLenHash(self->po_obj, attr, attrlen, hash) */
 
 /*[[[deemon
 import printProxyObjectMethodHintWrapper from "..method-hints.method-hints";
