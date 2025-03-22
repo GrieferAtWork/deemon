@@ -162,7 +162,7 @@ buffer_deltty(Buffer *__restrict self) {
 }
 
 
-LOCAL int DCALL
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
 buffer_init(Buffer *__restrict self,
             DeeObject *__restrict file,
             uint16_t mode, size_t size) {
@@ -1604,6 +1604,13 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 buffer_fini(Buffer *__restrict self) {
+	/* Synchronize the buffer one last time. */
+	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FNORMAL)) {
+		DeeError_Print("Discarding error in buffer synchronization in finalization\n",
+		               ERROR_PRINT_DOHANDLE);
+	}
+
+	/* Unlink from TTY buffers (must happen *AFTER* the final sync) */
 	if (LIST_ISBOUND(self, fb_ttych)) {
 #ifndef CONFIG_NO_THREADS
 		COMPILER_READ_BARRIER();
@@ -1615,11 +1622,7 @@ buffer_fini(Buffer *__restrict self) {
 		}
 		buffer_ttys_lock_release();
 	}
-	/* Synchronize the buffer one last time. */
-	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FNORMAL)) {
-		DeeError_Print("Discarding error in buffer synchronization in finalization\n",
-		               ERROR_PRINT_DOHANDLE);
-	}
+
 	Dee_XDecref(self->fb_file);
 	if (!(self->fb_flag & FILE_BUFFER_FSTATICBUF))
 		Dee_Free(self->fb_base);
