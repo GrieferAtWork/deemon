@@ -43,6 +43,7 @@ byattr_ctor(MapByAttr *__restrict self) {
 	return 0;
 }
 
+STATIC_ASSERT(offsetof(MapByAttr, mba_map) == offsetof(ProxyObject, po_obj));
 #define byattr_copy generic_proxy__copy_alias
 #define byattr_deep generic_proxy__deepcopy
 #define byattr_init generic_proxy__init
@@ -66,7 +67,6 @@ byattr_enumattr_foreach(void *arg, DeeObject *key, DeeObject *value) {
 		                              ATTR_IMEMBER | ATTR_PROPERTY | ATTR_NAMEOBJ,
 		                              Dee_TYPE(value), cookie->befd_arg);
 	}
-	Dee_Decref(key);
 	return result;
 }
 
@@ -83,6 +83,7 @@ byattr_enumattr(DeeTypeObject *tp_self, MapByAttr *self,
 	                             &cookie);
 }
 
+STATIC_ASSERT(offsetof(MapByAttr, mba_map) == offsetof(ProxyObject, po_obj));
 #define byattr_fini                      generic_proxy__fini
 #define byattr_visit                     generic_proxy__visit
 #define byattr_getattr                   generic_proxy__map_operator_getitem

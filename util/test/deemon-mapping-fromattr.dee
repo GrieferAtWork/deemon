@@ -62,6 +62,6 @@ assert TRY(map["c"]) == 7;
 assert TRY(map["d"]) is KeyError;
 
 
-// FIXME: This crashes:
-//local x = { "a": 10, "b": 20 }.byattr;
-//assert Mapping.fromattr(x) == { "a": 10, "b": 20 };
+/* Make sure that "fromattr" is able to perfectly undo "byattr" */
+local x = { "a": 10, "b": 20 }.byattr;
+assert Mapping.fromattr(x) == { "a": 10, "b": 20 };
