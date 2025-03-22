@@ -684,7 +684,7 @@ PRIVATE char const doc_cmdE[]    = "Emit preprocessor output, rather than runnin
 PRIVATE char const doc_cmdP[]    = "Disable emission of #line adjustment directives (Default: on)";
 PRIVATE char const doc_cmdD[]    = "sym[=val=1]\tDefines `sym' as `val'";
 PRIVATE char const doc_cmdU[]    = "sym\tUndefine a previously defined symbol `sym'";
-PRIVATE char const doc_cmdL[]    = "<path>\tAdd `path' to the system module search path (s.a.: `(module from deemon).path')";
+PRIVATE char const doc_cmdL[]    = "<path>\tAdd `path' to the system module search path (s.a.: `(Module from deemon).path')";
 PRIVATE char const doc_cmdI[]    = "<dir>\tAdd `dir' to the list of #include <...> paths";
 PRIVATE char const doc_cmdtok[]  = "Outline all tokens using the [...] notation (Default: off)";
 PRIVATE char const doc_cmdpp[]   = "Enable preprocess-mode, which emits all tokens separated by `\\0'-bytes\n"

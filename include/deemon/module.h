@@ -881,13 +881,13 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_OpenInteractive(/*File*/ DeeObject *source_stream, unsigned int mode,
                           int start_line, int start_col, struct Dee_compiler_options *options,
                           /*String*/ DeeObject *source_pathname, /*String*/ DeeObject *module_name,
-                          /*Tuple*/ DeeObject *argv, /*Mapping{(string, Object)...}*/ DeeObject *default_symbols);
+                          /*Tuple*/ DeeObject *argv, /*Mapping{string: Object}*/ DeeObject *default_symbols);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_OpenInteractiveString(/*File*/ DeeObject *source_stream, unsigned int mode,
                                 int start_line, int start_col, struct Dee_compiler_options *options,
                                 /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                 /*utf-8*/ char const *module_name, size_t module_namesize,
-                                /*Tuple*/ DeeObject *argv, /*Mapping{(string, Object)...}*/ DeeObject *default_symbols);
+                                /*Tuple*/ DeeObject *argv, /*Mapping{string: Object}*/ DeeObject *default_symbols);
 
 /* No special syntactical changes are made. - The root scope is a yield-like
  * function, and streamed source code must include `yield'-statements in

@@ -208,7 +208,9 @@ INTERN DeeTypeObject MapFromKeysAndValueIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapFromKeysAndValueIterator",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?Ert:MapFromKeysAndValue)"),
+	                         "(map:?Ert:MapFromKeysAndValue)\n"
+	                         "\n"
+	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -259,7 +261,9 @@ INTERN DeeTypeObject MapFromKeysAndCallbackIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapFromKeysAndCallbackIterator",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?Ert:MapFromKeysAndCallback)"),
+	                         "(map:?Ert:MapFromKeysAndCallback)\n"
+	                         "\n"
+	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

@@ -40,6 +40,7 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/align.h>
+#include <hybrid/debug-alignment.h>
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
 

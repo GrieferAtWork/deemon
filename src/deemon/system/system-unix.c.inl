@@ -85,7 +85,7 @@ got_tp:
 	    DeeType_Extends(tp, &DeeError_SystemError)) {
 		DREF DeeSystemErrorObject *error;
 		DREF DeeStringObject *message;
-		error = (DREF DeeSystemErrorObject *)DeeObject_MALLOC(DeeSystemErrorObject);
+		error = DeeObject_MALLOC(DeeSystemErrorObject);
 		if unlikely(!error)
 			goto err;
 		message = (DREF DeeStringObject *)DeeString_VNewf(format, args);

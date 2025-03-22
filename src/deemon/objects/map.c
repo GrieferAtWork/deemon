@@ -616,8 +616,7 @@ PRIVATE struct type_method tpconst map_class_methods[] = {
 	                /**/ "if (this !== Mapping)\n"
 	                /**/ "	result = this(result); /* When called via a sub-class */\n"
 	                /**/ "return result;"
-	                "}"
-	),
+	                "}"),
 	TYPE_METHOD_END
 };
 
