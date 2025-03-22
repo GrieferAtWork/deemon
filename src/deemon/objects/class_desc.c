@@ -3375,8 +3375,8 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeClass_FindClassAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
-                            struct attribute_info *__restrict result,
-                            struct attribute_lookup_rules const *__restrict rules) {
+                            struct Dee_attribute_info *__restrict result,
+                            struct Dee_attribute_lookup_rules const *__restrict rules) {
 	struct class_attribute *attr;
 	struct class_desc *my_class = DeeClass_DESC(self);
 	uint16_t perm;
@@ -3444,8 +3444,8 @@ not_found:
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
-                                    struct attribute_info *__restrict result,
-                                    struct attribute_lookup_rules const *__restrict rules) {
+                                    struct Dee_attribute_info *__restrict result,
+                                    struct Dee_attribute_lookup_rules const *__restrict rules) {
 	struct class_attribute *attr;
 	struct class_desc *my_class = DeeClass_DESC(self);
 	uint16_t perm;
@@ -3518,8 +3518,8 @@ not_found:
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
 DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, DeeObject *instance,
-                               struct attribute_info *__restrict result,
-                               struct attribute_lookup_rules const *__restrict rules) {
+                               struct Dee_attribute_info *__restrict result,
+                               struct Dee_attribute_lookup_rules const *__restrict rules) {
 	struct class_attribute *attr;
 	struct instance_desc *inst;
 	struct class_desc *my_class = DeeClass_DESC(self);

@@ -157,11 +157,11 @@ type_member_typefor(struct type_member const *__restrict self) {
 }
 
 
-INTERN WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 type_method_enum(DeeTypeObject *__restrict tp_self,
                  struct type_method const *chain,
                  uint16_t flags, denum_t proc, void *arg) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	flags |= ATTR_PERMGET | ATTR_PERMCALL;
 	for (; chain->m_name; ++chain) {
 		temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
@@ -173,11 +173,11 @@ type_method_enum(DeeTypeObject *__restrict tp_self,
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 type_obmeth_enum(DeeTypeObject *__restrict tp_self,
                  denum_t proc, void *arg) {
 	struct type_method const *chain;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	chain = tp_self->tp_methods;
 	ASSERT(chain != NULL);
 	for (; chain->m_name; ++chain) {
@@ -191,11 +191,11 @@ type_obmeth_enum(DeeTypeObject *__restrict tp_self,
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 type_obprop_enum(DeeTypeObject *__restrict tp_self,
                  denum_t proc, void *arg) {
 	struct type_getset const *chain;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	chain = tp_self->tp_getsets;
 	ASSERT(chain != NULL);
 	for (; chain->gs_name; ++chain) {
@@ -215,11 +215,11 @@ type_obprop_enum(DeeTypeObject *__restrict tp_self,
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 type_obmemb_enum(DeeTypeObject *__restrict tp_self,
                  denum_t proc, void *arg) {
 	struct type_member const *chain;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	chain = tp_self->tp_members;
 	ASSERT(chain != NULL);
 	for (; chain->m_name; ++chain) {
@@ -235,11 +235,11 @@ type_obmemb_enum(DeeTypeObject *__restrict tp_self,
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 type_getset_enum(DeeTypeObject *__restrict tp_self,
                  struct type_getset const *chain,
                  uint16_t flags, denum_t proc, void *arg) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	ASSERT(flags & ATTR_PROPERTY);
 	for (; chain->gs_name; ++chain) {
 		uint16_t perm = flags;
@@ -258,11 +258,11 @@ type_getset_enum(DeeTypeObject *__restrict tp_self,
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 type_member_enum(DeeTypeObject *__restrict tp_self,
                  struct type_member const *chain,
                  uint16_t flags, denum_t proc, void *arg) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	for (; chain->m_name; ++chain) {
 		if (TYPE_MEMBER_ISCONST(chain)) {
 			temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,

@@ -2573,7 +2573,7 @@ err:
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vopgetattr_constattr(struct fungen *__restrict self,
-                     struct attrinfo const *__restrict attr) {
+                     struct Dee_attrinfo const *__restrict attr) {
 	switch (attr->ai_type) {
 
 	case Dee_ATTRINFO_CUSTOM: {
@@ -2830,7 +2830,7 @@ err:
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vopboundattr_constattr(struct fungen *__restrict self,
-                       struct attrinfo const *__restrict attr) {
+                       struct Dee_attrinfo const *__restrict attr) {
 	switch (attr->ai_type) {
 
 	case Dee_ATTRINFO_CUSTOM:
@@ -2887,7 +2887,7 @@ err:
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vopdelattr_constattr(struct fungen *__restrict self,
-                     struct attrinfo const *__restrict attr) {
+                     struct Dee_attrinfo const *__restrict attr) {
 	switch (attr->ai_type) {
 
 	case Dee_ATTRINFO_CUSTOM: {
@@ -2942,7 +2942,7 @@ err:
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vopsetattr_constattr(struct fungen *__restrict self,
-                     struct attrinfo const *__restrict attr) {
+                     struct Dee_attrinfo const *__restrict attr) {
 	switch (attr->ai_type) {
 
 	case Dee_ATTRINFO_CUSTOM: {
@@ -3000,7 +3000,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 vopcallattrkw_constattr(struct fungen *__restrict self,
                         vstackaddr_t argc,
-                        struct attrinfo const *__restrict attr) {
+                        struct Dee_attrinfo const *__restrict attr) {
 	switch (attr->ai_type) {
 
 	case Dee_ATTRINFO_ATTR:
@@ -3138,7 +3138,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 do_impl_vopTcallattrkw(struct fungen *__restrict self,
                        vstackaddr_t argc) {
-	struct attrinfo attr;
+	struct Dee_attrinfo attr;
 	struct memval *thisval;
 	struct memval *typeval;
 	struct memval *attrval;
@@ -3210,7 +3210,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 impl_vopcallattrkw(struct fungen *__restrict self,
                    vstackaddr_t argc) {
-	struct attrinfo attr;
+	struct Dee_attrinfo attr;
 	DeeTypeObject *this_type;
 	struct memval *thisval;
 	struct memval *attrval;
@@ -3752,7 +3752,7 @@ fg_vopcallattrtuple(struct fungen *__restrict self) {
 /* this, attr -> result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopgetattr(struct fungen *__restrict self) {
-	struct attrinfo attr;
+	struct Dee_attrinfo attr;
 	DeeTypeObject *this_type;
 	struct memval *thisval;
 	struct memval *attrval;
@@ -3827,7 +3827,7 @@ err:
 /* this, attr -> bound */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopboundattr(struct fungen *__restrict self) {
-	struct attrinfo attr;
+	struct Dee_attrinfo attr;
 	DeeTypeObject *this_type;
 	struct memval *thisval;
 	struct memval *attrval;
@@ -3894,7 +3894,7 @@ err:
 /* this, attr -> N/A */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopdelattr(struct fungen *__restrict self) {
-	struct attrinfo attr;
+	struct Dee_attrinfo attr;
 	DeeTypeObject *this_type;
 	struct memval *thisval;
 	struct memval *attrval;
@@ -3952,7 +3952,7 @@ err:
 /* this, attr, value -> N/A */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopsetattr(struct fungen *__restrict self) {
-	struct attrinfo attr;
+	struct Dee_attrinfo attr;
 	DeeTypeObject *this_type;
 	struct memval *thisval;
 	struct memval *attrval;

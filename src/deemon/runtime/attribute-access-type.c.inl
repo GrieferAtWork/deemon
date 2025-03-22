@@ -442,8 +442,8 @@ DECL_BEGIN
 INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 (DCALL LOCAL_DeeType_AccessAttr)(DeeTypeObject *self,
 #ifdef LOCAL_IS_FIND
-                                 struct attribute_info *__restrict retinfo,
-                                 struct attribute_lookup_rules const *__restrict rules
+                                 struct Dee_attribute_info *__restrict retinfo,
+                                 struct Dee_attribute_lookup_rules const *__restrict rules
 #elif defined(LOCAL_IS_ENUM)
                                  denum_t proc, void *arg
 #else /* ... */
@@ -467,7 +467,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
                                  , DeeObject *value
 #endif /* LOCAL_IS_SET */
 #ifdef LOCAL_IS_FINDINFO
-                                 , struct attrinfo *__restrict retinfo
+                                 , struct Dee_attrinfo *__restrict retinfo
 #endif /* LOCAL_IS_FINDINFO */
 #endif /* !... */
                                  ) {

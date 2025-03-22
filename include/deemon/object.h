@@ -94,9 +94,6 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 #define Dee_type_buffer            type_buffer
 #define Dee_type_operator          type_operator
 #define Dee_opinfo                 opinfo
-#define Dee_attribute_info         attribute_info
-#define Dee_attribute_lookup_rules attribute_lookup_rules
-#define Dee_attrinfo               attrinfo
 #endif /* DEE_SOURCE */
 
 /* Hashing helpers. */

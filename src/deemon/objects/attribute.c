@@ -93,7 +93,7 @@ PRIVATE NONNULL((1)) void DCALL
 attr_fini(Attr *__restrict self) {
 	if (self->a_info.a_perm & ATTR_NAMEOBJ)
 		Dee_Decref(COMPILER_CONTAINER_OF(self->a_name, DeeStringObject, s_str));
-	attribute_info_fini(&self->a_info);
+	Dee_attribute_info_fini(&self->a_info);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -405,7 +405,7 @@ attribute_init(DeeAttributeObject *__restrict self,
 	int lookup_error;
 	DeeObject *search_self, *search_name;
 	DeeObject *flagmask = NULL, *flagval = NULL;
-	struct attribute_lookup_rules rules;
+	struct Dee_attribute_lookup_rules rules;
 	rules.alr_decl       = NULL;
 	rules.alr_perm_mask  = 0;
 	rules.alr_perm_value = 0;
@@ -469,10 +469,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	int lookup_error;
-	struct attribute_info info;
+	struct Dee_attribute_info info;
 	DeeObject *search_self, *search_name;
 	DeeObject *flagmask = NULL, *flagval = NULL;
-	struct attribute_lookup_rules rules;
+	struct Dee_attribute_lookup_rules rules;
 	rules.alr_decl       = NULL;
 	rules.alr_perm_mask  = 0;
 	rules.alr_perm_value = 0;
@@ -522,7 +522,7 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 			return_false;
 		goto err;
 	}
-	attribute_info_fini(&info);
+	Dee_attribute_info_fini(&info);
 	return_true;
 err:
 	return NULL;
@@ -533,10 +533,10 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeAttributeObject *result;
 	int lookup_error;
-	struct attribute_info info;
+	struct Dee_attribute_info info;
 	DeeObject *search_self, *search_name;
 	DeeObject *flagmask = NULL, *flagval = NULL;
-	struct attribute_lookup_rules rules;
+	struct Dee_attribute_lookup_rules rules;
 	rules.alr_decl       = NULL;
 	rules.alr_perm_mask  = 0;
 	rules.alr_perm_value = 0;
@@ -591,12 +591,12 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 		goto err_info;
 	DeeObject_Init(result, &DeeAttribute_Type);
 	info.a_perm |= ATTR_NAMEOBJ;
-	memcpy(&result->a_info, &info, sizeof(struct attribute_info)); /* Inherit references */
+	memcpy(&result->a_info, &info, sizeof(struct Dee_attribute_info)); /* Inherit references */
 	result->a_name = DeeString_STR(search_name);
 	Dee_Incref(search_name);
 	return (DREF DeeObject *)result;
 err_info:
-	attribute_info_fini(&info);
+	Dee_attribute_info_fini(&info);
 err:
 	return NULL;
 }

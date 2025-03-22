@@ -1261,8 +1261,8 @@ err_m1:
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeModule_FindAttr(DeeModuleObject *__restrict self,
-                   struct attribute_info *__restrict result,
-                   struct attribute_lookup_rules const *__restrict rules) {
+                   struct Dee_attribute_info *__restrict result,
+                   struct Dee_attribute_lookup_rules const *__restrict rules) {
 	ASSERT_OBJECT(self);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -1351,7 +1351,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2, 5)) bool DCALL
 DeeModule_FindAttrInfoStringLenHash(DeeModuleObject *self, char const *__restrict attr, size_t attrlen,
-                                    Dee_hash_t hash, struct attrinfo *__restrict retinfo) {
+                                    Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo) {
 	struct Dee_module_symbol const *sym;
 	sym = DeeModule_GetSymbolStringLenHash(self, attr, attrlen, hash);
 	if (sym) {
@@ -1365,8 +1365,8 @@ DeeModule_FindAttrInfoStringLenHash(DeeModuleObject *self, char const *__restric
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 module_findattr(DeeTypeObject *UNUSED(tp_self), DeeModuleObject *self,
-                struct attribute_info *__restrict result,
-                struct attribute_lookup_rules const *__restrict rules) {
+                struct Dee_attribute_info *__restrict result,
+                struct Dee_attribute_lookup_rules const *__restrict rules) {
 	return DeeModule_FindAttr(self, result, rules);
 }
 
@@ -1395,7 +1395,7 @@ PRIVATE struct type_attr module_attr = {
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&module_setattr,
 	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&module_enumattr,
-	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct attribute_info *__restrict, struct attribute_lookup_rules const *__restrict))&module_findattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attribute_info *__restrict, struct Dee_attribute_lookup_rules const *__restrict))&module_findattr,
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_boundattr,
 	/* .tp_callattr                      = */ NULL,

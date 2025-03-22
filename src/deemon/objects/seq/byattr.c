@@ -78,6 +78,8 @@ byattr_enumattr(DeeTypeObject *tp_self, MapByAttr *self,
 	cookie.befd_self = self;
 	cookie.befd_proc = proc;
 	cookie.befd_arg  = arg;
+	/* FIXME: This can invoke user-defined code, which can break big
+	 *        time due to the stack switching done by enumattr() */
 	return DeeObject_ForeachPair(self->mba_map,
 	                             &byattr_enumattr_foreach,
 	                             &cookie);

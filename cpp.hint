@@ -1286,8 +1286,6 @@
 
 #define appexit_object                 Dee_appexit_object
 #define ascii_printer                  Dee_ascii_printer
-#define attribute_info                 Dee_attribute_info
-#define attribute_lookup_rules         Dee_attribute_lookup_rules
 #define attribute_object               Dee_attribute_object
 #define bool_object                    Dee_bool_object
 #define bytes_object                   Dee_bytes_object

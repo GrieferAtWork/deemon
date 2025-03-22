@@ -85,9 +85,6 @@ DECL_BEGIN
 #define Dee_attribute_object         attribute_object
 #define Dee_enumattr_object          enumattr_object
 #define Dee_enumattr_iterator_object enumattr_iterator_object
-#define Dee_attribute_info           attribute_info
-#define Dee_attribute_lookup_rules   attribute_lookup_rules
-#define attribute_info_fini          Dee_attribute_info_fini
 #endif /* DEE_SOURCE */
 
 typedef struct Dee_attribute_object DeeAttributeObject;
@@ -186,7 +183,7 @@ struct Dee_attribute_lookup_rules {
  * @param: rules: The result of follow for the lookup.
  * @return:  0: Successfully queried the attribute.
  *              The given `result' was filled, and the must finalize
- *              it through use of `attribute_info_fini()'.
+ *              it through use of `Dee_attribute_info_fini()'.
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL

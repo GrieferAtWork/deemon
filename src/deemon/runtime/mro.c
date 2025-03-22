@@ -816,8 +816,8 @@ type_member_typefor(struct type_member const *__restrict self);
 INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* METHOD */
 type_method_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_method const *chain, uint16_t perm,
-                     struct attribute_info *__restrict result,
-                     struct attribute_lookup_rules const *__restrict rules) {
+                     struct Dee_attribute_info *__restrict result,
+                     struct Dee_attribute_lookup_rules const *__restrict rules) {
 	ASSERT(perm & (ATTR_IMEMBER | ATTR_CMEMBER));
 	perm |= ATTR_PERMGET | ATTR_PERMCALL;
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value)
@@ -844,8 +844,8 @@ nope:
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker,
                                DeeTypeObject *tp_self,
-                               struct attribute_info *__restrict result,
-                               struct attribute_lookup_rules const *__restrict rules) {
+                               struct Dee_attribute_info *__restrict result,
+                               struct Dee_attribute_lookup_rules const *__restrict rules) {
 	uint16_t perm;
 	struct type_method const *chain;
 	perm = ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PERMGET | ATTR_PERMCALL | ATTR_WRAPPER;
@@ -874,8 +874,8 @@ nope:
 INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* GETSET */
 type_getset_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_getset const *chain, uint16_t perm,
-                     struct attribute_info *__restrict result,
-                     struct attribute_lookup_rules const *__restrict rules) {
+                     struct Dee_attribute_info *__restrict result,
+                     struct Dee_attribute_lookup_rules const *__restrict rules) {
 	ASSERT(perm & (ATTR_IMEMBER | ATTR_CMEMBER));
 	perm |= ATTR_PROPERTY;
 	for (; chain->gs_name; ++chain) {
@@ -905,8 +905,8 @@ type_getset_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker,
                                DeeTypeObject *tp_self,
-                               struct attribute_info *__restrict result,
-                               struct attribute_lookup_rules const *__restrict rules) {
+                               struct Dee_attribute_info *__restrict result,
+                               struct Dee_attribute_lookup_rules const *__restrict rules) {
 	uint16_t perm;
 	struct type_getset const *chain;
 	perm  = ATTR_PROPERTY | ATTR_WRAPPER | ATTR_IMEMBER | ATTR_CMEMBER;
@@ -938,8 +938,8 @@ DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker,
 INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* MEMBER */
 type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_member const *chain, uint16_t perm,
-                     struct attribute_info *__restrict result,
-                     struct attribute_lookup_rules const *__restrict rules) {
+                     struct Dee_attribute_info *__restrict result,
+                     struct Dee_attribute_lookup_rules const *__restrict rules) {
 	ASSERT(perm & (ATTR_IMEMBER | ATTR_CMEMBER));
 	perm |= ATTR_PERMGET;
 	for (; chain->m_name; ++chain) {
@@ -967,8 +967,8 @@ type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker,
                                DeeTypeObject *tp_self,
-                               struct attribute_info *__restrict result,
-                               struct attribute_lookup_rules const *__restrict rules) {
+                               struct Dee_attribute_info *__restrict result,
+                               struct Dee_attribute_lookup_rules const *__restrict rules) {
 	uint16_t perm;
 	struct type_member const *chain;
 	perm  = ATTR_WRAPPER | ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PERMGET;

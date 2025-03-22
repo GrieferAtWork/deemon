@@ -82,9 +82,9 @@
 //#define DEFINE_DeeObject_TFindAttrInfoStringHash
 //#define DEFINE_DeeObject_TFindAttrInfoStringLenHash
 //#define DEFINE_DeeObject_TFindPrivateAttrInfoStringHash
-#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
+//#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
 //#define DEFINE_DeeObject_FindAttr
-//#define DEFINE_DeeObject_EnumAttr
+#define DEFINE_DeeObject_EnumAttr
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
@@ -799,10 +799,10 @@ DECL_BEGIN
 #ifndef DEE_OBJECT_FINDATTR_HELPERS_DEFINED
 #define DEE_OBJECT_FINDATTR_HELPERS_DEFINED
 struct attribute_lookup_data {
-	struct attribute_info               *ald_info;    /* [1..1] The result info. */
-	struct attribute_lookup_rules const *ald_rules;   /* [1..1] Lookup rules */
-	bool                                 ald_fnddecl; /* [valid_if(ald_rules->alr_decl != NULL)]
-	                                                   * Set to true after `alr_decl' had been encountered. */
+	struct Dee_attribute_info               *ald_info;    /* [1..1] The result info. */
+	struct Dee_attribute_lookup_rules const *ald_rules;   /* [1..1] Lookup rules */
+	bool                                     ald_fnddecl; /* [valid_if(ald_rules->alr_decl != NULL)]
+	                                                       * Set to true after `alr_decl' had been encountered. */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2, 6)) Dee_ssize_t DCALL
@@ -811,8 +811,8 @@ attribute_lookup_enum(DeeObject *__restrict declarator,
                       uint16_t perm, DeeTypeObject *attr_type,
                       struct attribute_lookup_data *__restrict arg) {
 	dhash_t attr_hash;
-	struct attribute_info *result;
-	struct attribute_lookup_rules const *rules = arg->ald_rules;
+	struct Dee_attribute_info *result;
+	struct Dee_attribute_lookup_rules const *rules = arg->ald_rules;
 	if (rules->alr_decl) {
 		if (declarator != rules->alr_decl) {
 			if (arg->ald_fnddecl)
@@ -871,8 +871,8 @@ LOCAL_DECL WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
                                    , denum_t proc, void *arg
 #else /* LOCAL_IS_ENUM */
 #ifdef LOCAL_IS_FIND
-                                   , struct attribute_info *__restrict retinfo
-                                   , struct attribute_lookup_rules const *__restrict rules
+                                   , struct Dee_attribute_info *__restrict retinfo
+                                   , struct Dee_attribute_lookup_rules const *__restrict rules
 #else /* LOCAL_IS_FIND */
 #ifdef LOCAL_HAS_string
                                    , char const *__restrict attr
@@ -1011,7 +1011,7 @@ continue_at_iter:
 #elif defined(LOCAL_IS_FIND)
 			result = DeeClass_FindInstanceAttribute(tp_self, tp_iter, self, retinfo, rules);
 			LOCAL_process_result(result, done);
-#else /* LOCAL_IS_ENUM */
+#else /* ... */
 			struct class_attribute *cattr;
 			cattr = LOCAL_DeeType_QueryAttribute(tp_self, tp_iter);
 			if (cattr != NULL) {
@@ -1034,7 +1034,7 @@ continue_at_iter:
 				                                         self, cattr);
 #endif /* !LOCAL_IS_HAS */
 			}
-#endif /* !LOCAL_IS_ENUM */
+#endif /* !... */
 		} else {
 			/* Check for C-level attribute declarations */
 			if (tp_iter->tp_methods) {

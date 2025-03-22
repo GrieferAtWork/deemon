@@ -767,7 +767,7 @@ NLenHash(DeeType_HasInstanceMemberAttrString)(DeeTypeObject *tp_invoker,
 INTERN WUNUSED NONNULL((1, 2, 3, 5, IFELSE(7, 8))) bool DCALL /* METHOD */
 N_len_hash(type_method_findattrinfo_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
                                             struct type_method const *chain, uintptr_t type,
-                                            ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+                                            ATTR_ARG, dhash_t hash, struct Dee_attrinfo *__restrict retinfo) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
@@ -783,7 +783,7 @@ N_len_hash(type_method_findattrinfo_string)(struct Dee_membercache *cache, DeeTy
 INTERN WUNUSED NONNULL((1, 2, 3, 5, IFELSE(7, 8))) bool DCALL /* GETSET */
 N_len_hash(type_getset_findattrinfo_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
                                             struct type_getset const *chain, uintptr_t type,
-                                            ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+                                            ATTR_ARG, dhash_t hash, struct Dee_attrinfo *__restrict retinfo) {
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
@@ -799,7 +799,7 @@ N_len_hash(type_getset_findattrinfo_string)(struct Dee_membercache *cache, DeeTy
 INTERN WUNUSED NONNULL((1, 2, 3, 5, IFELSE(7, 8))) bool DCALL /* MEMBER */
 N_len_hash(type_member_findattrinfo_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
                                             struct type_member const *chain, uintptr_t type,
-                                            ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+                                            ATTR_ARG, dhash_t hash, struct Dee_attrinfo *__restrict retinfo) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
@@ -816,7 +816,7 @@ N_len_hash(type_member_findattrinfo_string)(struct Dee_membercache *cache, DeeTy
 #undef DeeType_FindInstanceMethodAttrInfoStringLenHash
 INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) bool DCALL
 NLenHash(DeeType_FindInstanceMethodAttrInfoString)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
-                                                   ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+                                                   ATTR_ARG, dhash_t hash, struct Dee_attrinfo *__restrict retinfo) {
 	struct type_method const *chain = tp_self->tp_methods;
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
@@ -834,7 +834,7 @@ NLenHash(DeeType_FindInstanceMethodAttrInfoString)(DeeTypeObject *tp_invoker, De
 #undef DeeType_FindInstanceGetSetAttrInfoStringLenHash
 INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) bool DCALL
 NLenHash(DeeType_FindInstanceGetSetAttrInfoString)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
-                                                   ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+                                                   ATTR_ARG, dhash_t hash, struct Dee_attrinfo *__restrict retinfo) {
 	struct type_getset const *chain = tp_self->tp_getsets;
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
@@ -852,7 +852,7 @@ NLenHash(DeeType_FindInstanceGetSetAttrInfoString)(DeeTypeObject *tp_invoker, De
 #undef DeeType_FindInstanceMemberAttrInfoStringLenHash
 INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) bool DCALL
 NLenHash(DeeType_FindInstanceMemberAttrInfoString)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
-                                                   ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+                                                   ATTR_ARG, dhash_t hash, struct Dee_attrinfo *__restrict retinfo) {
 	struct type_member const *chain = tp_self->tp_members;
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))

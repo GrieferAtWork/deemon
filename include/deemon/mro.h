@@ -569,19 +569,19 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_VCallCachedInst
 //#define DeeType_VCallCachedInstanceAttrStringLenf(tp_self, attr, attrlen, format, args)       DeeType_VCallCachedInstanceAttrStringLenHashf(tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), format, args)
 
 
-struct attribute_info;
-struct attribute_lookup_rules;
+struct Dee_attribute_info;
+struct Dee_attribute_lookup_rules;
 
 /* @return:  0: Attribute was found.
  * @return:  1: Attribute wasn't found.
  * @return: -1: An error occurred. */
-INTDEF WUNUSED NONNULL((1, 3, 4)) int (DCALL DeeType_FindCachedAttr)(DeeTypeObject *tp_self, DeeObject *instance, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_FindCachedClassAttr)(DeeTypeObject *tp_self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 3, 4)) int (DCALL DeeType_FindCachedAttr)(DeeTypeObject *tp_self, DeeObject *instance, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_FindCachedClassAttr)(DeeTypeObject *tp_self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
 
 /* @return: true:  Attribute was found.
  * @return: false: Attribute wasn't found. */
-INTDEF WUNUSED NONNULL((1, 2, 5)) bool (DCALL DeeType_FindCachedAttrInfoStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
-INTDEF WUNUSED NONNULL((1, 2, 5)) bool (DCALL DeeType_FindCachedClassAttrInfoStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 5)) bool (DCALL DeeType_FindCachedAttrInfoStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 5)) bool (DCALL DeeType_FindCachedClassAttrInfoStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 #define DeeType_FindCachedAttrInfoStringHash(tp_self, attr, hash, retinfo)      DeeType_FindCachedAttrInfoStringLenHash(tp_self, attr, strlen(attr), hash, retinfo)
 #define DeeType_FindCachedClassAttrInfoStringHash(tp_self, attr, hash, retinfo) DeeType_FindCachedClassAttrInfoStringLenHash(tp_self, attr, strlen(attr), hash, retinfo)
 
@@ -1420,101 +1420,101 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMemberAttrStrin
 
 /* Find matching attributes. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindMethodAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindClassMethodAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindInstanceMethodAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindGetSetAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindClassGetSetAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindInstanceGetSetAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindMemberAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindClassMemberAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindInstanceMemberAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindMethodAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindClassMethodAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindInstanceMethodAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindGetSetAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindClassGetSetAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindInstanceGetSetAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindMemberAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindClassMemberAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindInstanceMemberAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* METHOD */
 type_method_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_method const *chain, uint16_t perm,
-                     struct attribute_info *__restrict retinfo,
-                     struct attribute_lookup_rules const *__restrict rules);
+                     struct Dee_attribute_info *__restrict retinfo,
+                     struct Dee_attribute_lookup_rules const *__restrict rules);
 #define DeeType_FindMethodAttr(tp_invoker, tp_self, retinfo, rules)      type_method_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, Dee_ATTR_IMEMBER, retinfo, rules)
 #define DeeType_FindClassMethodAttr(tp_invoker, tp_self, retinfo, rules) type_method_findattr(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, Dee_ATTR_CMEMBER, retinfo, rules)
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
-                               struct attribute_info *__restrict retinfo,
-                               struct attribute_lookup_rules const *__restrict rules);
+                               struct Dee_attribute_info *__restrict retinfo,
+                               struct Dee_attribute_lookup_rules const *__restrict rules);
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* GETSET */
 type_getset_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_getset const *chain, uint16_t perm,
-                     struct attribute_info *__restrict retinfo,
-                     struct attribute_lookup_rules const *__restrict rules);
+                     struct Dee_attribute_info *__restrict retinfo,
+                     struct Dee_attribute_lookup_rules const *__restrict rules);
 #define DeeType_FindGetSetAttr(tp_invoker, tp_self, retinfo, rules)      type_getset_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, Dee_ATTR_IMEMBER, retinfo, rules)
 #define DeeType_FindClassGetSetAttr(tp_invoker, tp_self, retinfo, rules) type_getset_findattr(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, Dee_ATTR_CMEMBER, retinfo, rules)
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
-                               struct attribute_info *__restrict retinfo,
-                               struct attribute_lookup_rules const *__restrict rules);
+                               struct Dee_attribute_info *__restrict retinfo,
+                               struct Dee_attribute_lookup_rules const *__restrict rules);
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* MEMBER */
 type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_member const *chain, uint16_t perm,
-                     struct attribute_info *__restrict retinfo,
-                     struct attribute_lookup_rules const *__restrict rules);
+                     struct Dee_attribute_info *__restrict retinfo,
+                     struct Dee_attribute_lookup_rules const *__restrict rules);
 #define DeeType_FindMemberAttr(tp_invoker, tp_self, retinfo, rules)      type_member_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, Dee_ATTR_IMEMBER, retinfo, rules)
 #define DeeType_FindClassMemberAttr(tp_invoker, tp_self, retinfo, rules) type_member_findattr(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, Dee_ATTR_CMEMBER, retinfo, rules)
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
-                               struct attribute_info *__restrict retinfo,
-                               struct attribute_lookup_rules const *__restrict rules);
+                               struct Dee_attribute_info *__restrict retinfo,
+                               struct Dee_attribute_lookup_rules const *__restrict rules);
 #endif /* !__INTELLISENSE__ */
 
 
 /* Find attribute info. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindMethodAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindClassMethodAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindInstanceMethodAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindGetSetAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindClassGetSetAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindInstanceGetSetAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindMemberAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindClassMemberAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindInstanceMemberAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindMethodAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindClassMethodAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindInstanceMethodAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindGetSetAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindClassGetSetAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindInstanceGetSetAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindMemberAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindClassMemberAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool (DCALL DeeType_FindInstanceMemberAttrInfoStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 8)) bool DCALL /* METHOD */
 type_method_findattrinfo_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                          struct type_method const *chain, uintptr_t type,
                                          char const *__restrict attr, size_t attrlen,
-                                         Dee_hash_t hash, struct attrinfo *__restrict retinfo);
+                                         Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 #define DeeType_FindMethodAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo)      type_method_findattrinfo_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, Dee_ATTRINFO_METHOD, attr, attrlen, hash, retinfo)
 #define DeeType_FindClassMethodAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo) type_method_findattrinfo_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, Dee_ATTRINFO_METHOD, attr, attrlen, hash, retinfo)
 INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool DCALL
 DeeType_FindInstanceMethodAttrInfoStringLenHash(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
                                                 char const *__restrict attr, size_t attrlen,
-                                                Dee_hash_t hash, struct attrinfo *__restrict retinfo);
+                                                Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 8)) bool DCALL /* GETSET */
 type_getset_findattrinfo_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                          struct type_getset const *chain, uintptr_t type,
                                          char const *__restrict attr, size_t attrlen,
-                                         Dee_hash_t hash, struct attrinfo *__restrict retinfo);
+                                         Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 #define DeeType_FindGetSetAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo)      type_getset_findattrinfo_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, Dee_ATTRINFO_GETSET, attr, attrlen, hash, retinfo)
 #define DeeType_FindClassGetSetAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo) type_getset_findattrinfo_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, Dee_ATTRINFO_GETSET, attr, attrlen, hash, retinfo)
 INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool DCALL
 DeeType_FindInstanceGetSetAttrInfoStringLenHash(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
                                                 char const *__restrict attr, size_t attrlen,
-                                                Dee_hash_t hash, struct attrinfo *__restrict retinfo);
+                                                Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 8)) bool DCALL /* MEMBER */
 type_member_findattrinfo_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                          struct type_member const *chain, uintptr_t type,
                                          char const *__restrict attr, size_t attrlen,
-                                         Dee_hash_t hash, struct attrinfo *__restrict retinfo);
+                                         Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 #define DeeType_FindMemberAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo)      type_member_findattrinfo_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, Dee_ATTRINFO_MEMBER, attr, attrlen, hash, retinfo)
 #define DeeType_FindClassMemberAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo) type_member_findattrinfo_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, Dee_ATTRINFO_MEMBER, attr, attrlen, hash, retinfo)
 INTDEF WUNUSED NONNULL((1, 2, 3, 6)) bool DCALL
 DeeType_FindInstanceMemberAttrInfoStringLenHash(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
                                                 char const *__restrict attr, size_t attrlen,
-                                                Dee_hash_t hash, struct attrinfo *__restrict retinfo);
+                                                Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 #endif /* !__INTELLISENSE__ */
 #define DeeType_FindMethodAttrInfoStringHash(tp_invoker, tp_self, attr, hash, retinfo)         DeeType_FindMethodAttrInfoStringLenHash(tp_invoker, tp_self, attr, strlen(attr), hash, retinfo)
 #define DeeType_FindClassMethodAttrInfoStringHash(tp_invoker, tp_self, attr, hash, retinfo)    DeeType_FindClassMethodAttrInfoStringLenHash(tp_invoker, tp_self, attr, strlen(attr), hash, retinfo)
@@ -1693,8 +1693,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelAttrStringHash)(DeeTypeObje
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) bool (DCALL DeeType_FindAttrInfoStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_FindAttr)(DeeTypeObject *self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 5)) bool (DCALL DeeType_FindAttrInfoStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_FindAttr)(DeeTypeObject *self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeType_EnumAttr)(DeeTypeObject *self, denum_t proc, void *arg);
 #define DeeType_CallAttrStringHashTuple(self, attr, hash, args)                   DeeType_CallAttrStringHash(self, attr, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeType_CallAttrStringLenHashTuple(self, attr, attrlen, hash, args)       DeeType_CallAttrStringLenHash(self, attr, attrlen, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args))

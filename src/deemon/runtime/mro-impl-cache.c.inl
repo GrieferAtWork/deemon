@@ -935,8 +935,8 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #ifndef LOCAL_IS_CLASS
                                        DeeObject *instance,
 #endif /* !LOCAL_IS_CLASS */
-                                       struct attribute_info *__restrict result,
-                                       struct attribute_lookup_rules const *__restrict rules
+                                       struct Dee_attribute_info *__restrict result,
+                                       struct Dee_attribute_lookup_rules const *__restrict rules
 #else /* LOCAL_IS_FIND */
 #ifdef LOCAL_HAS_self
                                        DeeObject *self,
@@ -959,7 +959,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
                                        , DeeObject *kw
 #endif /* LOCAL_HAS_kw */
 #ifdef LOCAL_IS_FINDINFO
-                                       , struct attrinfo *__restrict retinfo
+                                       , struct Dee_attrinfo *__restrict retinfo
 #endif /* LOCAL_IS_FINDINFO */
 #endif /* !LOCAL_IS_FIND */
                                        ) {

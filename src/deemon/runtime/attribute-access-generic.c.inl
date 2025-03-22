@@ -346,8 +346,8 @@ PUBLIC WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
                                            DeeObject *self,
 #endif /* LOCAL_HAS_self */
 #ifdef LOCAL_IS_FIND
-                                           struct attribute_info *__restrict retinfo,
-                                           struct attribute_lookup_rules const *__restrict rules
+                                           struct Dee_attribute_info *__restrict retinfo,
+                                           struct Dee_attribute_lookup_rules const *__restrict rules
 #else /* LOCAL_IS_FIND */
                                            char const *__restrict attr,
 #ifdef LOCAL_HAS_len
@@ -369,7 +369,7 @@ PUBLIC WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
                                            , DeeObject *value
 #endif /* LOCAL_IS_SET */
 #ifdef LOCAL_IS_FINDINFO
-                                           , struct attrinfo *__restrict retinfo
+                                           , struct Dee_attrinfo *__restrict retinfo
 #endif /* LOCAL_IS_FINDINFO */
 #endif /* !LOCAL_IS_FIND */
 #endif /* !LOCAL_IS_ENUM */

@@ -697,8 +697,8 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeClass_BoundMemberSafe(DeeTypeObject *_
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-struct attribute_info;
-struct attribute_lookup_rules;
+struct Dee_attribute_info;
+struct Dee_attribute_lookup_rules;
 
 /* Enumerate user-defined class or instance attributes. */
 INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
@@ -719,16 +719,16 @@ DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self, denum_t pro
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeClass_FindClassAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
-                            struct attribute_info *__restrict result,
-                            struct attribute_lookup_rules const *__restrict rules);
+                            struct Dee_attribute_info *__restrict result,
+                            struct Dee_attribute_lookup_rules const *__restrict rules);
 INTDEF WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
 DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, DeeObject *instance,
-                               struct attribute_info *__restrict result,
-                               struct attribute_lookup_rules const *__restrict rules);
+                               struct Dee_attribute_info *__restrict result,
+                               struct Dee_attribute_lookup_rules const *__restrict rules);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
-                                    struct attribute_info *__restrict result,
-                                    struct attribute_lookup_rules const *__restrict rules);
+                                    struct Dee_attribute_info *__restrict result,
+                                    struct Dee_attribute_lookup_rules const *__restrict rules);
 
 /* Used to initialize attributes in default constructor calls.
  * @return:  0: Basic attribute successfully set
