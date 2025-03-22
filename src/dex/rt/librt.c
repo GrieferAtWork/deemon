@@ -3690,7 +3690,7 @@ gi("HASHOF_RECURSIVE_ITEM", "DEE_HASHOF_RECURSIVE_ITEM");
 
 /* NOTE: At first glance, the combination of `MODSYM_FPROPERTY|MODSYM_FCONSTEXPR' may
  *       not look like it would make sense, but by using this combination, we prevent
- *       the symbols to be considered properties during enumeration (`ATTR_PROPERTY'
+ *       the symbols to be considered properties during enumeration (`Dee_ATTRPERM_F_PROPERTY'
  *       doesn't get set), thus allowing the doc server to browse them unrestricted. */
 PRIVATE struct dex_symbol symbols[] = {
 	{ "getstacklimit", (DeeObject *)&librt_getstacklimit, MODSYM_FREADONLY, /* varying */

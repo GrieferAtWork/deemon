@@ -1130,7 +1130,7 @@ PRIVATE struct type_with se_with = {
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
-se_enumattr_impl(DeeObject *seq, denum_t proc, void *arg) {
+se_enumattr_impl(DeeObject *seq, Dee_enum_t proc, void *arg) {
 	(void)seq;
 	(void)proc;
 	(void)arg;
@@ -1141,7 +1141,7 @@ se_enumattr_impl(DeeObject *seq, denum_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 se_enumattr(DeeTypeObject *UNUSED(tp_self),
-            SeqEachBase *self, denum_t proc, void *arg) {
+            SeqEachBase *self, Dee_enum_t proc, void *arg) {
 	return se_enumattr_impl(self->se_seq, proc, arg);
 }
 
@@ -1207,7 +1207,7 @@ PRIVATE struct type_attr se_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&se_setattr,
-	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&se_enumattr,
+	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&se_enumattr,
 	/* .tp_findattr                      = */ NULL,
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_boundattr,
@@ -1744,7 +1744,7 @@ PRIVATE struct type_seq ss_seq = {
 };
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
-ss_enumattr_impl(DeeObject *seq, denum_t proc, void *arg) {
+ss_enumattr_impl(DeeObject *seq, Dee_enum_t proc, void *arg) {
 	(void)seq;
 	(void)proc;
 	(void)arg;
@@ -1755,7 +1755,7 @@ ss_enumattr_impl(DeeObject *seq, denum_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 ss_enumattr(DeeTypeObject *UNUSED(tp_self),
-            SeqEachBase *self, denum_t proc, void *arg) {
+            SeqEachBase *self, Dee_enum_t proc, void *arg) {
 	return ss_enumattr_impl(self->se_seq, proc, arg);
 }
 
@@ -1918,7 +1918,7 @@ PRIVATE struct type_attr ss_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&ss_getattr,
 	/* .tp_delattr                       = */ NULL,
 	/* .tp_setattr                       = */ NULL,
-	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&ss_enumattr,
+	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&ss_enumattr,
 	/* .tp_findattr                      = */ NULL,
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&ss_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&ss_boundattr,
@@ -2488,7 +2488,7 @@ PRIVATE struct type_with sew_with = {
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 sew_enumattr(DeeTypeObject *UNUSED(tp_self),
-             SeqEachBase *self, denum_t proc, void *arg) {
+             SeqEachBase *self, Dee_enum_t proc, void *arg) {
 	return se_enumattr_impl((DeeObject *)self, proc, arg);
 }
 
@@ -2946,7 +2946,7 @@ PRIVATE struct type_attr seo_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&seo_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&seo_setattr,
-	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&sew_enumattr,
+	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&sew_enumattr,
 	/* .tp_findattr                      = */ NULL,
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_boundattr,
@@ -3682,7 +3682,7 @@ sso_hasattr_string_len_hash(SeqEachOperator *self, char const *attr, size_t attr
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 ssw_enumattr(DeeTypeObject *UNUSED(tp_self),
-             SeqEachBase *self, denum_t proc, void *arg) {
+             SeqEachBase *self, Dee_enum_t proc, void *arg) {
 	return ss_enumattr_impl((DeeObject *)self, proc, arg);
 }
 
@@ -3690,7 +3690,7 @@ PRIVATE struct type_attr sso_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&ssw_getattr,
 	/* .tp_delattr                       = */ NULL,
 	/* .tp_setattr                       = */ NULL,
-	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&ssw_enumattr,
+	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&ssw_enumattr,
 	/* .tp_findattr                      = */ NULL,
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&sso_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&sso_boundattr,

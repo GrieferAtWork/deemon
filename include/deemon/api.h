@@ -427,7 +427,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
-/* Experimental feature switch: use altered status codes for "boundattr" / "bounditem" */
+/* Experimental feature switch: HashSet remembers the order in which items are inserted. */
 #if (!defined(CONFIG_EXPERIMENTAL_ORDERED_HASHSET) && \
      !defined(CONFIG_NO_EXPERIMENTAL_ORDERED_HASHSET))
 #if 0 /* TODO: Implementation is incomplete */
@@ -436,6 +436,16 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #define CONFIG_NO_EXPERIMENTAL_ORDERED_HASHSET
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ORDERED_HASHSET */
+
+/* Experimental feature switch: Use a new struct-based method of enumerating attributes */
+#if (!defined(CONFIG_EXPERIMENTAL_ATTRITER) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_ATTRITER))
+#if 0 /* TODO: Implementation is incomplete */
+#define CONFIG_EXPERIMENTAL_ATTRITER
+#else
+#define CONFIG_NO_EXPERIMENTAL_ATTRITER
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_ITERATTR */
 /************************************************************************/
 
 

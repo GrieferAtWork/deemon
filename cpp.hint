@@ -1233,6 +1233,8 @@
 #define DeeSystem_DEFINE_mempsetq(n) _DeeSystem_DEFINE_mempsetT(uint64_t,n)
 #define DeeSystem_DEFINE_mempsetp(n) _DeeSystem_DEFINE_mempsetT(uintptr_t,n)
 
+#define Dee_ATTRITER_HEAD struct Dee_attriter_type const *ai_type;
+
 #define cache_struct Dee_cache_struct
 #define cache_object Dee_cache_object
 #define DEFINE_STRUCT_CACHE            DEE_DEFINE_STRUCT_CACHE

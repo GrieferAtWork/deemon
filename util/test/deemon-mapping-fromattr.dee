@@ -46,8 +46,8 @@ assert map["a"] is bound;
 assert map["b"] is bound;
 assert map["c"] !is bound;
 assert map["d"] !is bound;
-#define TRY(x) (try (x) catch (_e...) _e)
 
+#define TRY(x) (try (x) catch (_e...) _e)
 assert TRY(map["a"]) == 10;
 assert TRY(map["b"]) == 20;
 assert TRY(map["c"]) is UnboundItem;

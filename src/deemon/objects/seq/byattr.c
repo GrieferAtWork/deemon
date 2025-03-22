@@ -63,8 +63,8 @@ byattr_enumattr_foreach(void *arg, DeeObject *key, DeeObject *value) {
 	if (DeeString_Check(key)) {
 		result = (*cookie->befd_proc)((DeeObject *)cookie->befd_self,
 		                              DeeString_STR(key), NULL,
-		                              ATTR_PERMGET | ATTR_PERMDEL | ATTR_PERMSET |
-		                              ATTR_IMEMBER | ATTR_PROPERTY | ATTR_NAMEOBJ,
+		                              Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET |
+		                              Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_NAMEOBJ,
 		                              Dee_TYPE(value), cookie->befd_arg);
 	}
 	return result;

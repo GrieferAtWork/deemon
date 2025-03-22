@@ -37,6 +37,7 @@
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
+#include <hybrid/overflow.h>
 /**/
 
 #include <stddef.h>
@@ -73,6 +74,210 @@ DeeSystem_DEFINE_strcmpz(dee_strcmpz)
 #else /* !NDEBUG */
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
+
+
+
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+/************************************************************************/
+/* Special built-in attribute iterator for concating multiple others.   */
+/************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+Dee_attriterchain_next(struct Dee_attriterchain *__restrict self,
+                       /*out*/ struct Dee_attrdesc *__restrict desc) {
+	for (;;) {
+		int result;
+		bool writeok;
+		struct Dee_attriter *current, *next;
+		struct Dee_attriterchain_item *current_item;
+		current = atomic_read(&self->aic_current);
+		if (!current)
+			return 1;
+		result = Dee_attriter_next(current, desc);
+		if (result != 0)
+			return result;
+
+		/* Move on to the next iterator. */
+		if (Dee_shared_rwlock_write(&self->aic_curlock))
+			goto err;
+		current_item = Dee_attriterchain_item_fromiter(current);
+		next         = current_item->aici_next;
+		writeok = atomic_cmpxch_or_write(&self->aic_current, current, next);
+		Dee_shared_rwlock_endwrite(&self->aic_curlock);
+		if (writeok)
+			Dee_attriter_fini(current);
+	}
+	__builtin_unreachable();
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+Dee_attriterchain_fini(struct Dee_attriterchain *__restrict self) {
+	struct Dee_attriter *iter;
+	for (iter = self->aic_current; iter != NULL;
+	     iter = Dee_attriterchain_item_fromiter(iter)->aici_next)
+		Dee_attriter_fini(iter);
+}
+
+PRIVATE NONNULL((1, 2)) int DCALL
+Dee_attriterchain_copy(struct Dee_attriterchain *__restrict self,
+                       struct Dee_attriterchain *__restrict other,
+                       size_t other_bufsize) {
+	struct Dee_attriter *src_iter;
+	struct Dee_attriter *dst_iter;
+	struct Dee_attriterchain_item *src_item;
+	struct Dee_attriterchain_item *dst_item;
+	struct Dee_attriter **p_dst_item;
+	Dee_shared_rwlock_init(&self->aic_curlock);
+	if (Dee_shared_rwlock_read(&other->aic_curlock))
+		goto err;
+	src_iter = atomic_read(&other->aic_current);
+	if unlikely(!src_iter) {
+		Dee_shared_rwlock_endread(&other->aic_curlock);
+		self->aic_current = NULL;
+		return 0;
+	}
+	dst_iter = &self->aic_first.aici_iter;
+	self->aic_current = NULL;
+	p_dst_item = &self->aic_current;
+	do {
+		int temp;
+		size_t src_iter_bufsize = other_bufsize;
+		src_item = Dee_attriterchain_item_fromiter(src_iter);
+		dst_item = Dee_attriterchain_item_fromiter(dst_iter);
+		if (src_item->aici_next) {
+			src_iter_bufsize = (size_t)((byte_t *)src_item->aici_next -
+			                            (byte_t *)(&src_item->aici_iter));
+		}
+
+		/* Copy this singular iterator. */
+		temp = Dee_attriter_copy(dst_iter, src_iter, src_iter_bufsize);
+		if unlikely(temp) {
+			Dee_shared_rwlock_endread(&other->aic_curlock);
+			*p_dst_item = NULL;
+			Dee_attriterchain_fini(self);
+			return temp;
+		}
+
+		/* Link into the chain of copied iterators. */
+		*p_dst_item = dst_iter;
+		p_dst_item = &dst_item->aici_next;
+		dst_iter = (struct Dee_attriter *)((byte_t *)dst_iter + src_iter_bufsize);
+	} while ((src_iter = src_item->aici_next) != NULL);
+	*p_dst_item = NULL;
+	Dee_shared_rwlock_endread(&other->aic_curlock);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN_TPCONST struct Dee_attriter_type tpconst Dee_attriterchain_type = {
+	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&Dee_attriterchain_next,
+	/* .ait_copy = */ (int (DCALL *)(struct Dee_attriter *__restrict, struct Dee_attriter *__restrict, size_t))&Dee_attriterchain_copy,
+	/* .ait_fini = */ (void (DCALL *)(struct Dee_attriter *__restrict))&Dee_attriterchain_fini,
+};
+
+
+/* Initialize a builder for use with a given "iterbuf" and "bufsize" */
+INTERN NONNULL((1)) void DCALL
+Dee_attriterchain_builder_init(struct Dee_attriterchain_builder *__restrict self,
+                               struct Dee_attriter *iterbuf, size_t bufsize) {
+	struct Dee_attriterchain *iterchain = (struct Dee_attriterchain *)iterbuf;
+	self->aicb_curiter = &iterchain->aic_first.aici_iter;
+	self->aicb_require = offsetof(struct Dee_attriterchain, aic_first.aici_iter);
+	if (!OVERFLOW_USUB(bufsize, offsetof(struct Dee_attriterchain, aic_first.aici_iter),
+	                   &self->aicb_bufsize)) {
+		DBG_memset(&iterchain->aic_current, 0xcc, sizeof(iterchain->aic_current));
+		Dee_shared_rwlock_init(&iterchain->aic_curlock);
+		Dee_attriter_init(iterchain, &Dee_attriterchain_type);
+		self->aicb_iterchain = iterchain;
+		self->aicb_pnext = &self->aicb_iterchain->aic_current;
+	} else {
+		self->aicb_bufsize = 0;
+		self->aicb_pnext   = NULL;
+	}
+}
+
+/* Finalize any iterator that had been constructed by the builder. */
+INTERN NONNULL((1)) void DCALL
+Dee_attriterchain_builder_fini(struct Dee_attriterchain_builder *__restrict self) {
+	if (self->aicb_pnext) {
+		*self->aicb_pnext = NULL;
+		Dee_attriterchain_fini(self->aicb_iterchain);
+	}
+	DBG_memset(self, 0xcc, sizeof(*self));
+}
+
+
+/* Consume "n_bytes" from the builder's buffer and advance pointers. */
+INTERN NONNULL((1)) void DCALL
+Dee_attriterchain_builder_consume(struct Dee_attriterchain_builder *__restrict self,
+                                  size_t n_bytes) {
+	size_t aligned_size = n_bytes;
+	/* Account for extra space needed for the next chain element's header */
+	aligned_size += offsetof(struct Dee_attriterchain_item, aici_iter);
+	aligned_size += Dee_ALIGNOF_ATTRITER - 1;
+	aligned_size &= ~(Dee_ALIGNOF_ATTRITER - 1);
+	if (!OVERFLOW_USUB(self->aicb_bufsize, aligned_size, &self->aicb_bufsize)) {
+		/* Was able to successfully write this item (and have enough space to write the next one). */
+		struct Dee_attriterchain_item *curitem;
+		ASSERT(self->aicb_pnext);
+		curitem = COMPILER_CONTAINER_OF(self->aicb_curiter, struct Dee_attriterchain_item, aici_iter);
+		*self->aicb_pnext  = self->aicb_curiter; /* Link in the newly initialize iterator */
+		self->aicb_pnext   = &curitem->aici_next;
+		self->aicb_curiter = (struct Dee_attriter *)((byte_t *)self->aicb_curiter + aligned_size);
+	} else {
+		if unlikely(n_bytes <= Dee_attriterchain_builder_getbufsize(self)) {
+			/* Must finalize the iterator because the was written,
+			 * but now the buffer is too small for the header of
+			 * the next item. */
+			Dee_attriter_fini(self->aicb_curiter);
+		}
+		if (self->aicb_pnext) {
+			/* Must finalize all iterators previously initialized */
+			struct Dee_attriterchain_item *chain;
+			*self->aicb_pnext = NULL;
+			self->aicb_pnext = NULL;
+			Dee_attriterchain_fini(self->aicb_iterchain);
+		}
+		self->aicb_bufsize = 0;
+	}
+	self->aicb_require += aligned_size;
+}
+
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct type_method const *DCALL
+locate_type_method(struct type_method const *__restrict chain, char const *name_ptr) {
+	for (;;) {
+		ASSERTF(chain->m_name, "Failed to locate %p:%q in chain", name_ptr, name_ptr);
+		if (chain->m_name == name_ptr)
+			return chain;
+	}
+}
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct type_getset const *DCALL
+locate_type_getset(struct type_getset const *__restrict chain, char const *name_ptr) {
+	for (;;) {
+		ASSERTF(chain->gs_name, "Failed to locate %p:%q in chain", name_ptr, name_ptr);
+		if (chain->gs_name == name_ptr)
+			return chain;
+	}
+}
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct type_member const *DCALL
+locate_type_member(struct type_member const *__restrict chain, char const *name_ptr) {
+	for (;;) {
+		ASSERTF(chain->m_name, "Failed to locate %p:%q in chain", name_ptr, name_ptr);
+		if (chain->m_name == name_ptr)
+			return chain;
+	}
+}
+#endif /* CONFIG_EXPERIMENTAL_ATTRITER */
+
+
+
+
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_lock_t membercache_list_lock = DEE_ATOMIC_LOCK_INIT;
@@ -808,25 +1013,216 @@ DeeTypeMRO_PatchClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 
-/* Reurns the object-type used to represent a given type-member. */
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* METHOD */
+type_method_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
+                     struct type_method const *chain, uint16_t chain_perm,
+                     struct Dee_attrspec const *__restrict specs,
+                     struct Dee_attrdesc *__restrict result) {
+	ASSERT(chain_perm & (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER));
+	ASSERT(chain_perm & Dee_ATTRPERM_F_CANGET);
+	ASSERT(chain_perm & Dee_ATTRPERM_F_CANCALL);
+	if ((chain_perm & specs->as_perm_mask) != specs->as_perm_value)
+		goto nope;
+	for (; chain->m_name; ++chain) {
+		if (!streq(chain->m_name, specs->as_name))
+			continue;
+		Dee_membercache_addmethod(cache, decl, specs->as_hash, chain);
+		ASSERT(!(chain_perm & Dee_ATTRPERM_F_NAMEOBJ));
+		ASSERT(!(chain_perm & Dee_ATTRPERM_F_DOCOBJ));
+		result->ad_name = chain->m_name;
+		result->ad_doc  = chain->m_doc;
+		result->ad_perm = chain_perm;
+		result->ad_info.ai_type = Dee_ATTRINFO_METHOD;
+		result->ad_info.ai_decl = (DeeObject *)decl;
+		result->ad_info.ai_value.v_method = chain;
+		return 0;
+	}
+nope:
+	return 1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker,
+                               DeeTypeObject *tp_self,
+                               struct Dee_attrspec const *__restrict specs,
+                               struct Dee_attrdesc *__restrict result) {
+	uint16_t const chain_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER |
+	                            Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL |
+	                            Dee_ATTRPERM_F_WRAPPER;
+	struct type_method const *chain;
+	if ((chain_perm & specs->as_perm_mask) != specs->as_perm_value)
+		goto nope;
+	for (chain = tp_self->tp_methods; chain->m_name; ++chain) {
+		if (!streq(chain->m_name, specs->as_name))
+			continue;
+		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, specs->as_hash, chain);
+		ASSERT(!(chain_perm & Dee_ATTRPERM_F_NAMEOBJ));
+		ASSERT(!(chain_perm & Dee_ATTRPERM_F_DOCOBJ));
+		result->ad_name         = chain->m_name;
+		result->ad_doc          = chain->m_doc;
+		result->ad_perm         = chain_perm;
+		result->ad_info.ai_decl = (DeeObject *)tp_self;
+		result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_METHOD;
+		result->ad_info.ai_value.v_instance_method = chain;
+		return 0;
+	}
+nope:
+	return 1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* GETSET */
+type_getset_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
+                     struct type_getset const *chain, uint16_t chain_perm,
+                     struct Dee_attrspec const *__restrict specs,
+                     struct Dee_attrdesc *__restrict result) {
+	ASSERT(chain_perm & (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER));
+	ASSERT(chain_perm & Dee_ATTRPERM_F_PROPERTY);
+	for (; chain->gs_name; ++chain) {
+		uint16_t item_perm;
+		if (!streq(chain->gs_name, specs->as_name))
+			continue;
+		item_perm = chain_perm;
+		if (chain->gs_get)
+			item_perm |= Dee_ATTRPERM_F_CANGET;
+		if (chain->gs_del)
+			item_perm |= Dee_ATTRPERM_F_CANDEL;
+		if (chain->gs_set)
+			item_perm |= Dee_ATTRPERM_F_CANSET;
+		if ((item_perm & specs->as_perm_mask) != specs->as_perm_value)
+			continue;
+		Dee_membercache_addgetset(cache, decl, specs->as_hash, chain);
+		ASSERT(!(item_perm & Dee_ATTRPERM_F_NAMEOBJ));
+		ASSERT(!(item_perm & Dee_ATTRPERM_F_DOCOBJ));
+		result->ad_name         = chain->gs_name;
+		result->ad_doc          = chain->gs_doc;
+		result->ad_perm         = item_perm;
+		result->ad_info.ai_decl = (DeeObject *)decl;
+		result->ad_info.ai_type = Dee_ATTRINFO_GETSET;
+		result->ad_info.ai_value.v_getset = chain;
+		return 0;
+	}
+	return 1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker,
+                               DeeTypeObject *tp_self,
+                               struct Dee_attrspec const *__restrict specs,
+                               struct Dee_attrdesc *__restrict result) {
+	uint16_t const chain_perm  = Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_WRAPPER |
+	                            Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER;
+	struct type_getset const *chain;
+	for (chain = tp_self->tp_getsets; chain->gs_name; ++chain) {
+		uint16_t item_perm;
+		if (!streq(chain->gs_name, specs->as_name))
+			continue;
+		item_perm = chain_perm;
+		if (chain->gs_get)
+			item_perm |= Dee_ATTRPERM_F_CANGET;
+		if (chain->gs_del)
+			item_perm |= Dee_ATTRPERM_F_CANDEL;
+		if (chain->gs_set)
+			item_perm |= Dee_ATTRPERM_F_CANSET;
+		if ((item_perm & specs->as_perm_mask) != specs->as_perm_value)
+			continue;
+		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache,
+		                                  tp_self, specs->as_hash, chain);
+		ASSERT(!(item_perm & Dee_ATTRPERM_F_NAMEOBJ));
+		ASSERT(!(item_perm & Dee_ATTRPERM_F_DOCOBJ));
+		result->ad_name         = chain->gs_name;
+		result->ad_doc          = chain->gs_doc;
+		result->ad_perm         = item_perm;
+		result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_GETSET;
+		result->ad_info.ai_decl = (DeeObject *)tp_self;
+		result->ad_info.ai_value.v_instance_getset = chain;
+		return 0;
+	}
+	return 1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* MEMBER */
+type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
+                     struct type_member const *chain, uint16_t chain_perm,
+                     struct Dee_attrspec const *__restrict specs,
+                     struct Dee_attrdesc *__restrict result) {
+	ASSERT(chain_perm & (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER));
+	ASSERT(chain_perm & Dee_ATTRPERM_F_CANGET);
+	for (; chain->m_name; ++chain) {
+		uint16_t item_perm;
+		if (!streq(chain->m_name, specs->as_name))
+			continue;
+		item_perm = chain_perm;
+		if (!TYPE_MEMBER_ISCONST(chain) &&
+		    !(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
+			item_perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+		if ((item_perm & specs->as_perm_mask) != specs->as_perm_value)
+			continue;
+		Dee_membercache_addmember(cache, decl, specs->as_hash, chain);
+		ASSERT(!(item_perm & Dee_ATTRPERM_F_NAMEOBJ));
+		ASSERT(!(item_perm & Dee_ATTRPERM_F_DOCOBJ));
+		result->ad_name         = chain->m_name;
+		result->ad_doc          = chain->m_doc;
+		result->ad_perm         = item_perm;
+		result->ad_info.ai_type = Dee_ATTRINFO_MEMBER;
+		result->ad_info.ai_decl = (DeeObject *)decl;
+		result->ad_info.ai_value.v_member = chain;
+		return 0;
+	}
+	return 1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker,
+                               DeeTypeObject *tp_self,
+                               struct Dee_attrspec const *__restrict specs,
+                               struct Dee_attrdesc *__restrict result) {
+	uint16_t const chain_perm = Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_IMEMBER |
+	                            Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET;
+	struct type_member const *chain;
+	for (chain = tp_self->tp_members; chain->m_name; ++chain) {
+		uint16_t item_perm;
+		if (!streq(chain->m_name, specs->as_name))
+			continue;
+		item_perm = chain_perm;
+		if (!TYPE_MEMBER_ISCONST(chain) &&
+		    !(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
+			item_perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+		if ((item_perm & specs->as_perm_mask) != specs->as_perm_value)
+			continue;
+		Dee_membercache_addinstancemember(&tp_invoker->tp_class_cache,
+		                                  tp_self, specs->as_hash, chain);
+		ASSERT(!(item_perm & Dee_ATTRPERM_F_NAMEOBJ));
+		ASSERT(!(item_perm & Dee_ATTRPERM_F_DOCOBJ));
+		result->ad_name         = chain->m_name;
+		result->ad_doc          = chain->m_doc;
+		result->ad_perm         = item_perm;
+		result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_MEMBER;
+		result->ad_info.ai_decl = (DeeObject *)tp_self;
+		result->ad_info.ai_value.v_instance_member = chain;
+		return 0;
+	}
+	return 1;
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+/* Returns the object-type used to represent a given type-member. */
 INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 type_member_typefor(struct type_member const *__restrict self);
-
 
 INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* METHOD */
 type_method_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_method const *chain, uint16_t perm,
                      struct Dee_attribute_info *__restrict result,
                      struct Dee_attribute_lookup_rules const *__restrict rules) {
-	ASSERT(perm & (ATTR_IMEMBER | ATTR_CMEMBER));
-	perm |= ATTR_PERMGET | ATTR_PERMCALL;
+	ASSERT(perm & (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER));
+	perm |= Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value)
 		goto nope;
 	for (; chain->m_name; ++chain) {
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
 		Dee_membercache_addmethod(cache, decl, rules->alr_hash, chain);
-		ASSERT(!(perm & ATTR_DOCOBJ));
+		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_decl     = (DREF DeeObject *)decl;
 		result->a_perm     = perm;
@@ -848,7 +1244,7 @@ DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker,
                                struct Dee_attribute_lookup_rules const *__restrict rules) {
 	uint16_t perm;
 	struct type_method const *chain;
-	perm = ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PERMGET | ATTR_PERMCALL | ATTR_WRAPPER;
+	perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL | Dee_ATTRPERM_F_WRAPPER;
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value)
 		goto nope;
 	chain = tp_self->tp_methods;
@@ -856,7 +1252,7 @@ DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker,
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
 		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
-		ASSERT(!(perm & ATTR_DOCOBJ));
+		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_decl     = (DREF DeeObject *)tp_self;
 		result->a_perm     = perm;
@@ -876,22 +1272,22 @@ type_getset_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_getset const *chain, uint16_t perm,
                      struct Dee_attribute_info *__restrict result,
                      struct Dee_attribute_lookup_rules const *__restrict rules) {
-	ASSERT(perm & (ATTR_IMEMBER | ATTR_CMEMBER));
-	perm |= ATTR_PROPERTY;
+	ASSERT(perm & (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER));
+	perm |= Dee_ATTRPERM_F_PROPERTY;
 	for (; chain->gs_name; ++chain) {
 		uint16_t flags = perm;
 		if (chain->gs_get)
-			flags |= ATTR_PERMGET;
+			flags |= Dee_ATTRPERM_F_CANGET;
 		if (chain->gs_del)
-			flags |= ATTR_PERMDEL;
+			flags |= Dee_ATTRPERM_F_CANDEL;
 		if (chain->gs_set)
-			flags |= ATTR_PERMSET;
+			flags |= Dee_ATTRPERM_F_CANSET;
 		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
 			continue;
 		if (!streq(chain->gs_name, rules->alr_name))
 			continue;
 		Dee_membercache_addgetset(cache, decl, rules->alr_hash, chain);
-		ASSERT(!(perm & ATTR_DOCOBJ));
+		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
 		result->a_doc      = chain->gs_doc;
 		result->a_perm     = flags;
 		result->a_decl     = (DREF DeeObject *)decl;
@@ -909,22 +1305,22 @@ DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker,
                                struct Dee_attribute_lookup_rules const *__restrict rules) {
 	uint16_t perm;
 	struct type_getset const *chain;
-	perm  = ATTR_PROPERTY | ATTR_WRAPPER | ATTR_IMEMBER | ATTR_CMEMBER;
+	perm  = Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER;
 	chain = tp_self->tp_getsets;
 	for (; chain->gs_name; ++chain) {
 		uint16_t flags = perm;
 		if (chain->gs_get)
-			flags |= ATTR_PERMGET;
+			flags |= Dee_ATTRPERM_F_CANGET;
 		if (chain->gs_del)
-			flags |= ATTR_PERMDEL;
+			flags |= Dee_ATTRPERM_F_CANDEL;
 		if (chain->gs_set)
-			flags |= ATTR_PERMSET;
+			flags |= Dee_ATTRPERM_F_CANSET;
 		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
 			continue;
 		if (!streq(chain->gs_name, rules->alr_name))
 			continue;
 		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
-		ASSERT(!(perm & ATTR_DOCOBJ));
+		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
 		result->a_doc      = chain->gs_doc;
 		result->a_perm     = flags;
 		result->a_decl     = (DREF DeeObject *)tp_self;
@@ -940,19 +1336,19 @@ type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_member const *chain, uint16_t perm,
                      struct Dee_attribute_info *__restrict result,
                      struct Dee_attribute_lookup_rules const *__restrict rules) {
-	ASSERT(perm & (ATTR_IMEMBER | ATTR_CMEMBER));
-	perm |= ATTR_PERMGET;
+	ASSERT(perm & (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER));
+	perm |= Dee_ATTRPERM_F_CANGET;
 	for (; chain->m_name; ++chain) {
 		uint16_t flags = perm;
 		if (!TYPE_MEMBER_ISCONST(chain) &&
 		    !(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
-			flags |= (ATTR_PERMDEL | ATTR_PERMSET);
+			flags |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
 			continue;
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
 		Dee_membercache_addmember(cache, decl, rules->alr_hash, chain);
-		ASSERT(!(perm & ATTR_DOCOBJ));
+		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_perm     = flags;
 		result->a_decl     = (DREF DeeObject *)decl;
@@ -971,19 +1367,19 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker,
                                struct Dee_attribute_lookup_rules const *__restrict rules) {
 	uint16_t perm;
 	struct type_member const *chain;
-	perm  = ATTR_WRAPPER | ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PERMGET;
+	perm  = Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET;
 	chain = tp_self->tp_members;
 	for (; chain->m_name; ++chain) {
 		uint16_t flags = perm;
 		if (!TYPE_MEMBER_ISCONST(chain) &&
 		    !(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
-			flags |= (ATTR_PERMDEL | ATTR_PERMSET);
+			flags |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
 			continue;
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
 		Dee_membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
-		ASSERT(!(perm & ATTR_DOCOBJ));
+		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_perm     = flags;
 		result->a_decl     = (DREF DeeObject *)tp_self;
@@ -994,6 +1390,8 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker,
 	}
 	return 1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
+
 
 
 DECL_END

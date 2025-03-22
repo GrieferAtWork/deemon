@@ -3275,10 +3275,10 @@ json_foreach_write_attribute(DeeObject *declarator,
 	 * - The attribute must not be a function
 	 * - The attribute must not be part of the class definition (i.e. must not be static)
 	 * - The attribute must be readable */
-	if ((perm & (Dee_ATTR_PRIVATE | Dee_ATTR_PROPERTY | Dee_ATTR_CMEMBER |
-	             Dee_ATTR_PERMGET | Dee_ATTR_PERMCALL)) != (Dee_ATTR_PERMGET))
+	if ((perm & (Dee_ATTRPERM_F_PRIVATE | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_CMEMBER |
+	             Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL)) != (Dee_ATTRPERM_F_CANGET))
 		return 0;
-	if (perm & Dee_ATTR_NAMEOBJ) {
+	if (perm & Dee_ATTRPERM_F_NAMEOBJ) {
 		DeeStringObject *str_name;
 		str_name   = COMPILER_CONTAINER_OF(attr_name, DeeStringObject, s_str);
 		attr_value = DeeObject_GetAttr(me->djw_obj, (DeeObject *)str_name);
@@ -3293,7 +3293,7 @@ json_foreach_write_attribute(DeeObject *declarator,
 	}
 
 	/* All right! Let's write this attribute. */
-	if (perm & Dee_ATTR_NAMEOBJ) {
+	if (perm & Dee_ATTRPERM_F_NAMEOBJ) {
 		char const *name_utf8;
 		DeeStringObject *str_name;
 		str_name  = COMPILER_CONTAINER_OF(attr_name, DeeStringObject, s_str);

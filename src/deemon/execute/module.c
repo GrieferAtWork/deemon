@@ -1142,9 +1142,9 @@ module_str(DeeObject *__restrict self) {
 	return_reference_((DeeObject *)me->mo_name);
 }
 
-DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 module_printrepr(DeeObject *__restrict self,
-                 dformatprinter printer, void *arg) {
+                 Dee_formatprinter_t printer, void *arg) {
 	DeeModuleObject *me = (DeeModuleObject *)self;
 	return DeeFormat_Printf(printer, arg, "import(%r)", me->mo_name);
 }
@@ -1169,11 +1169,11 @@ module_setattr(DeeModuleObject *__restrict self,
 	return DeeModule_SetAttr(self, name, value);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 module_enumattr(DeeTypeObject *UNUSED(tp_self),
-                DeeModuleObject *self, denum_t proc, void *arg) {
+                DeeModuleObject *self, Dee_enum_t proc, void *arg) {
 	struct module_symbol *iter, *end, *doc_iter;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	ASSERT_OBJECT(self);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -1188,14 +1188,14 @@ module_enumattr(DeeTypeObject *UNUSED(tp_self),
 		/* Skip empty and hidden entries. */
 		if (!MODULE_SYMBOL_GETNAMESTR(iter) || (iter->ss_flags & MODSYM_FHIDDEN))
 			continue;
-		perm = ATTR_IMEMBER | ATTR_ACCESS_GET;
+		perm = Dee_ATTRPERM_F_IMEMBER | ATTR_ACCESS_GET;
 		ASSERT(iter->ss_index < self->mo_globalc);
 		if (!(iter->ss_flags & MODSYM_FREADONLY))
 			perm |= (ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
 		if (iter->ss_flags & MODSYM_FPROPERTY) {
 			perm &= ~(ATTR_ACCESS_GET | ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
 			if (!(iter->ss_flags & MODSYM_FCONSTEXPR))
-				perm |= ATTR_PROPERTY;
+				perm |= Dee_ATTRPERM_F_PROPERTY;
 		}
 		attr_type = NULL;
 #if 0 /* Always allow this! (we allow it for user-classes, as well!) */
@@ -1237,9 +1237,9 @@ module_enumattr(DeeTypeObject *UNUSED(tp_self),
 		}
 		/* NOTE: Pass the module instance as declarator! */
 		if (iter->ss_flags & MODSYM_FNAMEOBJ)
-			perm |= ATTR_NAMEOBJ;
+			perm |= Dee_ATTRPERM_F_NAMEOBJ;
 		if (doc_iter->ss_flags & MODSYM_FDOCOBJ)
-			perm |= ATTR_DOCOBJ;
+			perm |= Dee_ATTRPERM_F_DOCOBJ;
 		temp = (*proc)((DeeObject *)self,
 		               MODULE_SYMBOL_GETNAMESTR(iter),
 		               doc_iter->ss_doc,
@@ -1278,14 +1278,14 @@ DeeModule_FindAttr(DeeModuleObject *__restrict self,
 		if (sym) {
 			uint16_t perm;
 			DREF DeeTypeObject *attr_type;
-			perm = ATTR_IMEMBER | ATTR_ACCESS_GET;
+			perm = Dee_ATTRPERM_F_IMEMBER | ATTR_ACCESS_GET;
 			ASSERT(sym->ss_index < self->mo_globalc);
 			if (!(sym->ss_flags & MODSYM_FREADONLY))
 				perm |= (ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
 			if (sym->ss_flags & MODSYM_FPROPERTY) {
 				perm &= ~(ATTR_ACCESS_GET | ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
 				if (!(sym->ss_flags & MODSYM_FCONSTEXPR))
-					perm |= ATTR_PROPERTY;
+					perm |= Dee_ATTRPERM_F_PROPERTY;
 			}
 			attr_type = NULL;
 #if 0 /* Always allow this! (we allow it for user-classes, as well!) */
@@ -1326,14 +1326,14 @@ DeeModule_FindAttr(DeeModuleObject *__restrict self,
 				ASSERT(doc_sym != NULL);
 			}
 			if (doc_sym->ss_flags & MODSYM_FDOCOBJ)
-				perm |= ATTR_DOCOBJ;
+				perm |= Dee_ATTRPERM_F_DOCOBJ;
 			if ((perm & rules->alr_perm_mask) == rules->alr_perm_value) {
 				/* NOTE: Pass the module instance as declarator! */
 				result->a_decl     = (DREF DeeObject *)self;
 				result->a_doc      = MODULE_SYMBOL_GETDOCSTR(doc_sym);
 				result->a_perm     = perm;
 				result->a_attrtype = attr_type; /* Inherit reference. */
-				if (perm & ATTR_DOCOBJ)
+				if (perm & Dee_ATTRPERM_F_DOCOBJ)
 					Dee_Incref(Dee_attribute_info_docobj(result));
 				Dee_Incref(self);
 				return 0;
@@ -1394,7 +1394,7 @@ PRIVATE struct type_attr module_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&module_setattr,
-	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&module_enumattr,
+	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&module_enumattr,
 	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attribute_info *__restrict, struct Dee_attribute_lookup_rules const *__restrict))&module_findattr,
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_boundattr,
@@ -1768,7 +1768,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&module_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&module_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&module_visit,
 	/* .tp_gc            = */ &module_gc,

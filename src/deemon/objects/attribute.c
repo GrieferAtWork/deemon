@@ -91,7 +91,7 @@ typedef DeeEnumAttrIteratorObject /**/ EnumAttrIter;
 
 PRIVATE NONNULL((1)) void DCALL
 attr_fini(Attr *__restrict self) {
-	if (self->a_info.a_perm & ATTR_NAMEOBJ)
+	if (self->a_info.a_perm & Dee_ATTRPERM_F_NAMEOBJ)
 		Dee_Decref(COMPILER_CONTAINER_OF(self->a_name, DeeStringObject, s_str));
 	Dee_attribute_info_fini(&self->a_info);
 }
@@ -108,7 +108,7 @@ attr_hash(Attr *__restrict self) {
 	result = self->a_info.a_perm;
 	result = Dee_HashCombine(result, DeeObject_Hash(self->a_info.a_decl));
 	result = Dee_HashCombine(result, Dee_HashPointer(self->a_info.a_attrtype));
-	if (self->a_info.a_perm & ATTR_NAMEOBJ) {
+	if (self->a_info.a_perm & Dee_ATTRPERM_F_NAMEOBJ) {
 		DeeStringObject *string;
 		string = COMPILER_CONTAINER_OF(self->a_name, DeeStringObject, s_str);
 		result = Dee_HashCombine(result, DeeString_Hash((DeeObject *)string));
@@ -126,13 +126,13 @@ attr_compare_eq(Attr *self, Attr *other) {
 		goto nope;
 	if (self->a_info.a_decl != other->a_info.a_decl)
 		Dee_return_DeeObject_TryCompareEq_if_ne(self->a_info.a_decl, other->a_info.a_decl);
-	if ((self->a_info.a_perm & ~(ATTR_NAMEOBJ | ATTR_DOCOBJ)) !=
-	    (other->a_info.a_perm & ~(ATTR_NAMEOBJ | ATTR_DOCOBJ)))
+	if ((self->a_info.a_perm & ~(Dee_ATTRPERM_F_NAMEOBJ | Dee_ATTRPERM_F_DOCOBJ)) !=
+	    (other->a_info.a_perm & ~(Dee_ATTRPERM_F_NAMEOBJ | Dee_ATTRPERM_F_DOCOBJ)))
 		goto nope;
 	if (self->a_name == other->a_name)
 		goto yup;
-	if ((self->a_info.a_perm & ATTR_NAMEOBJ) &&
-	    (other->a_info.a_perm & ATTR_NAMEOBJ)) {
+	if ((self->a_info.a_perm & Dee_ATTRPERM_F_NAMEOBJ) &&
+	    (other->a_info.a_perm & Dee_ATTRPERM_F_NAMEOBJ)) {
 		DeeStringObject *my_name = COMPILER_CONTAINER_OF(self->a_name, DeeStringObject, s_str);
 		DeeStringObject *ot_name = COMPILER_CONTAINER_OF(other->a_name, DeeStringObject, s_str);
 		if (DeeString_Hash((DeeObject *)my_name) != DeeString_Hash((DeeObject *)ot_name))
@@ -170,36 +170,36 @@ PRIVATE struct type_member tpconst attr_members[] = {
 	TYPE_MEMBER_FIELD_DOC("attrtype", STRUCT_OBJECT_OPT, offsetof(Attr, a_info.a_attrtype),
 	                      "->?X2?DType?N\n"
 	                      "The type of this ?., or ?N if not known"),
-	TYPE_MEMBER_BITFIELD_DOC("canget", STRUCT_CONST, Attr, a_info.a_perm, ATTR_PERMGET,
+	TYPE_MEMBER_BITFIELD_DOC("canget", STRUCT_CONST, Attr, a_info.a_perm, Dee_ATTRPERM_F_CANGET,
 	                         "Check if the ?. has a way of being read from"),
-	TYPE_MEMBER_BITFIELD_DOC("candel", STRUCT_CONST, Attr, a_info.a_perm, ATTR_PERMDEL,
+	TYPE_MEMBER_BITFIELD_DOC("candel", STRUCT_CONST, Attr, a_info.a_perm, Dee_ATTRPERM_F_CANDEL,
 	                         "Check if the ?. has a way of being deleted"),
-	TYPE_MEMBER_BITFIELD_DOC("canset", STRUCT_CONST, Attr, a_info.a_perm, ATTR_PERMSET,
+	TYPE_MEMBER_BITFIELD_DOC("canset", STRUCT_CONST, Attr, a_info.a_perm, Dee_ATTRPERM_F_CANSET,
 	                         "Check if the ?. has a way of being written to"),
-	TYPE_MEMBER_BITFIELD_DOC("cancall", STRUCT_CONST, Attr, a_info.a_perm, ATTR_PERMCALL,
+	TYPE_MEMBER_BITFIELD_DOC("cancall", STRUCT_CONST, Attr, a_info.a_perm, Dee_ATTRPERM_F_CANCALL,
 	                         "Returns ?t if the ?. is intended to be called as a function. "
 	                         /**/ "Note that this feature alone does not meant that the ?. really can, or "
 	                         /**/ "cannot be called, only that calling it as a function might be the intended use."),
-	TYPE_MEMBER_BITFIELD_DOC("isprivate", STRUCT_CONST, Attr, a_info.a_perm, ATTR_PRIVATE,
+	TYPE_MEMBER_BITFIELD_DOC("isprivate", STRUCT_CONST, Attr, a_info.a_perm, Dee_ATTRPERM_F_PRIVATE,
 	                         "Check if the ?. is considered to be private\n"
 	                         "Private attributes only appear in user-classes, prohibiting access to only thiscall "
 	                         /**/ "functions with a this-argument that is an instance of the declaring class."),
-	TYPE_MEMBER_BITFIELD_DOC("isproperty", STRUCT_CONST, Attr, a_info.a_perm, ATTR_PROPERTY,
+	TYPE_MEMBER_BITFIELD_DOC("isproperty", STRUCT_CONST, Attr, a_info.a_perm, Dee_ATTRPERM_F_PROPERTY,
 	                         "Check if the ?. is property-like, meaning that access by "
 	                         /**/ "reading, deletion, or writing causes unpredictable side-effects"),
-	TYPE_MEMBER_BITFIELD_DOC("iswrapper", STRUCT_CONST, Attr, a_info.a_perm, ATTR_WRAPPER,
+	TYPE_MEMBER_BITFIELD_DOC("iswrapper", STRUCT_CONST, Attr, a_info.a_perm, Dee_ATTRPERM_F_WRAPPER,
 	                         "Check if the ?. is accessed from the implementing type, which "
 	                         /**/ "exposes it as a wrapper for an instance member (e.g. ${string.find} is an unbound "
 	                         /**/ "wrapper (aka. ${Attribute(string, \"find\").iswrapper == true}) for the instance function, "
 	                         /**/ "member or property that would be bound in ${\"foo\".find} (aka. "
 	                         /**/ "${Attribute(\"foo\", \"find\").iswrapper == false}))"),
-	TYPE_MEMBER_BITFIELD_DOC("isinstance", STRUCT_CONST, Attr, a_info.a_perm, ATTR_IMEMBER,
+	TYPE_MEMBER_BITFIELD_DOC("isinstance", STRUCT_CONST, Attr, a_info.a_perm, Dee_ATTRPERM_F_IMEMBER,
 	                         "Check if accessing this ?. requires an instance of the declaring object "
 	                         /**/ "?#decl, rather than being an ?. of the declaring object ?#decl itself.\n"
 	                         "Note that practically all attributes, such as member functions, are available as both "
 	                         /**/ "instance and class attributes, while in other cases an ?. will evaluate to different "
 	                         /**/ "objects depending on being invoked on a class or an instance (such as ?Aisreg?Eposix:stat)"),
-	TYPE_MEMBER_BITFIELD_DOC("isclass", STRUCT_CONST, Attr, a_info.a_perm, ATTR_CMEMBER,
+	TYPE_MEMBER_BITFIELD_DOC("isclass", STRUCT_CONST, Attr, a_info.a_perm, Dee_ATTRPERM_F_CMEMBER,
 	                         "Check if access to this ?. must be made though the declaring type ?#decl.\n"
 	                         "To test if an ?. can only be accessed through an instance, use ?#isinstance instead"),
 	TYPE_MEMBER_END
@@ -214,7 +214,7 @@ again:
 	name_str = self->a_name;
 	atomic_thread_fence(Dee_ATOMIC_ACQUIRE);
 	perm = self->a_info.a_perm;
-	if (perm & ATTR_NAMEOBJ) {
+	if (perm & Dee_ATTRPERM_F_NAMEOBJ) {
 		result = COMPILER_CONTAINER_OF(name_str,
 		                               DeeStringObject,
 		                               s_str);
@@ -233,7 +233,7 @@ again:
 				Dee_Decref(result);
 				goto again;
 			}
-			atomic_or(&self->a_info.a_perm, ATTR_NAMEOBJ);
+			atomic_or(&self->a_info.a_perm, Dee_ATTRPERM_F_NAMEOBJ);
 			Dee_Incref(result);
 		}
 	}
@@ -250,7 +250,7 @@ again:
 	doc_str = self->a_info.a_doc;
 	atomic_thread_fence(Dee_ATOMIC_ACQUIRE);
 	perm = self->a_info.a_perm;
-	if (perm & ATTR_DOCOBJ) {
+	if (perm & Dee_ATTRPERM_F_DOCOBJ) {
 		result = COMPILER_CONTAINER_OF(doc_str,
 		                               DeeStringObject,
 		                               s_str);
@@ -271,7 +271,7 @@ again:
 				Dee_Decref(result);
 				goto again;
 			}
-			atomic_or(&self->a_info.a_perm, ATTR_DOCOBJ);
+			atomic_or(&self->a_info.a_perm, Dee_ATTRPERM_F_DOCOBJ);
 			Dee_Incref(result);
 		}
 	}
@@ -281,15 +281,15 @@ done:
 
 
 PRIVATE char attr_flags[] = {
-	/* [FFS(ATTR_PERMGET) - 1]  = */ 'g',
-	/* [FFS(ATTR_PERMDEL) - 1]  = */ 'd',
-	/* [FFS(ATTR_PERMSET) - 1]  = */ 's',
-	/* [FFS(ATTR_PERMCALL) - 1] = */ 'f',
-	/* [FFS(ATTR_IMEMBER) - 1]  = */ 'i',
-	/* [FFS(ATTR_CMEMBER) - 1]  = */ 'c',
-	/* [FFS(ATTR_PRIVATE) - 1]  = */ 'h',
-	/* [FFS(ATTR_PROPERTY) - 1] = */ 'p',
-	/* [FFS(ATTR_WRAPPER) - 1]  = */ 'w',
+	/* [FFS(Dee_ATTRPERM_F_CANGET) - 1]  = */ 'g',
+	/* [FFS(Dee_ATTRPERM_F_CANDEL) - 1]  = */ 'd',
+	/* [FFS(Dee_ATTRPERM_F_CANSET) - 1]  = */ 's',
+	/* [FFS(Dee_ATTRPERM_F_CANCALL) - 1] = */ 'f',
+	/* [FFS(Dee_ATTRPERM_F_IMEMBER) - 1]  = */ 'i',
+	/* [FFS(Dee_ATTRPERM_F_CMEMBER) - 1]  = */ 'c',
+	/* [FFS(Dee_ATTRPERM_F_PRIVATE) - 1]  = */ 'h',
+	/* [FFS(Dee_ATTRPERM_F_PROPERTY) - 1] = */ 'p',
+	/* [FFS(Dee_ATTRPERM_F_WRAPPER) - 1]  = */ 'w',
 };
 
 
@@ -457,7 +457,7 @@ attribute_init(DeeAttributeObject *__restrict self,
 	}
 	if likely(!lookup_error) {
 		self->a_name = DeeString_STR(argv[1]);
-		self->a_info.a_perm |= ATTR_NAMEOBJ;
+		self->a_info.a_perm |= Dee_ATTRPERM_F_NAMEOBJ;
 		Dee_Incref(argv[1]);
 	}
 	return lookup_error;
@@ -590,7 +590,7 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	if unlikely(!result)
 		goto err_info;
 	DeeObject_Init(result, &DeeAttribute_Type);
-	info.a_perm |= ATTR_NAMEOBJ;
+	info.a_perm |= Dee_ATTRPERM_F_NAMEOBJ;
 	memcpy(&result->a_info, &info, sizeof(struct Dee_attribute_info)); /* Inherit references */
 	result->a_name = DeeString_STR(search_name);
 	Dee_Incref(search_name);
@@ -781,12 +781,12 @@ do_realloc:
 	if unlikely(!new_attr)
 		goto err;
 	new_attr->a_name = attr_name;
-	if (perm & ATTR_NAMEOBJ)
+	if (perm & Dee_ATTRPERM_F_NAMEOBJ)
 		Dee_Incref(COMPILER_CONTAINER_OF(attr_name, DeeStringObject, s_str));
 	if (!attr_doc) {
-		ASSERT(!(perm & ATTR_DOCOBJ));
+		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
 		new_attr->a_info.a_doc = NULL;
-	} else if (perm & ATTR_DOCOBJ) {
+	} else if (perm & Dee_ATTRPERM_F_DOCOBJ) {
 		new_attr->a_info.a_doc = attr_doc;
 		Dee_Incref(COMPILER_CONTAINER_OF(attr_doc, DeeStringObject, s_str));
 	} else {
@@ -836,7 +836,7 @@ enumattr_init(EnumAttr *__restrict self,
 		list.al_v             = NULL;
 
 		/* Enumerate all the attributes. */
-		if (DeeObject_EnumAttr(self->ea_type, self->ea_obj, (denum_t)&save_attr, &list) < 0) {
+		if (DeeObject_EnumAttr(self->ea_type, self->ea_obj, (Dee_enum_t)&save_attr, &list) < 0) {
 			Dee_Decrefv(list.al_v, list.al_c);
 			Dee_Free(list.al_v);
 			Dee_Decref(self->ea_type);
@@ -1136,12 +1136,12 @@ again:
 	new_attribute->a_info.a_perm     = perm;
 	new_attribute->a_info.a_attrtype = attr_type;
 	new_attribute->a_name            = attr_name;
-	if (perm & ATTR_NAMEOBJ)
+	if (perm & Dee_ATTRPERM_F_NAMEOBJ)
 		Dee_Incref(COMPILER_CONTAINER_OF(attr_name, DeeStringObject, s_str));
 	if (!attr_doc) {
-		ASSERT(!(perm & ATTR_DOCOBJ));
+		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
 		new_attribute->a_info.a_doc = NULL;
-	} else if (perm & ATTR_DOCOBJ) {
+	} else if (perm & Dee_ATTRPERM_F_DOCOBJ) {
 		new_attribute->a_info.a_doc = attr_doc;
 		Dee_Incref(COMPILER_CONTAINER_OF(attr_doc, DeeStringObject, s_str));
 	} else {
@@ -1190,7 +1190,7 @@ enumattr_start(void *arg) {
 	self->ei_bufpos = self->ei_buffer;
 	enum_error = DeeObject_EnumAttr(self->ei_seq->ea_type,
 	                                self->ei_seq->ea_obj,
-	                                (denum_t)&enumattr_longjmp, self);
+	                                (Dee_enum_t)&enumattr_longjmp, self);
 
 	/* -1 indicates an internal error, rather than stop-enumeration (with is -2). */
 	if unlikely(enum_error == -1) {

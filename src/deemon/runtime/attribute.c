@@ -101,8 +101,13 @@ DECL_END
 #include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericFindAttr
 #include "attribute-access-generic.c.inl"
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+#define DEFINE_DeeObject_TGenericIterAttr
+#include "attribute-access-generic.c.inl"
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 #define DEFINE_DeeObject_TGenericEnumAttr
 #include "attribute-access-generic.c.inl"
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 /* DeeType_*Attr */
 #define DEFINE_DeeType_GetAttrStringHash
@@ -141,8 +146,13 @@ DECL_END
 #include "attribute-access-type.c.inl"
 #define DEFINE_DeeType_FindAttr
 #include "attribute-access-type.c.inl"
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+#define DEFINE_DeeType_IterAttr
+#include "attribute-access-type.c.inl"
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 #define DEFINE_DeeType_EnumAttr
 #include "attribute-access-type.c.inl"
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 /* DeeType_*InstanceAttr */
 #define DEFINE_DeeType_GetInstanceAttrStringHash
@@ -167,8 +177,13 @@ DECL_END
 #include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_FindAttr
 #include "attribute-access-object.c.inl"
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+#define DEFINE_DeeObject_IterAttr
+#include "attribute-access-object.c.inl"
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 #define DEFINE_DeeObject_EnumAttr
 #include "attribute-access-object.c.inl"
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #define DEFINE_DeeObject_HasAttr
 #include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_HasAttrStringHash

@@ -538,7 +538,7 @@ PRIVATE struct type_member tpconst cot_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cot_print(ClassOperatorTable *__restrict self,
           Dee_formatprinter_t printer, void *arg) {
 	DeeStringObject *name = self->co_desc->cd_name;
@@ -547,7 +547,7 @@ cot_print(ClassOperatorTable *__restrict self,
 	return DeeFormat_Printf(printer, arg, "<operator table for %k>", name);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cot_printrepr(ClassOperatorTable *__restrict self,
               Dee_formatprinter_t printer, void *arg) {
 	DeeStringObject *name = self->co_desc->cd_name;
@@ -582,8 +582,8 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&cot_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cot_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cot_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cot_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cot_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cot_visit,
 	/* .tp_gc            = */ NULL,
@@ -888,7 +888,7 @@ PRIVATE struct type_member tpconst cat_class_members[] = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ca_print(ClassAttribute *__restrict self,
          Dee_formatprinter_t printer, void *arg) {
 	DeeStringObject *cnam = self->ca_desc->cd_name;
@@ -898,7 +898,7 @@ ca_print(ClassAttribute *__restrict self,
 	                        cnam, self->ca_attr->ca_name);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ca_printrepr(ClassAttribute *__restrict self,
              Dee_formatprinter_t printer, void *arg) {
 	ClassDescriptor *desc = self->ca_desc;
@@ -1161,8 +1161,8 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ca_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ca_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ca_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ca_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ca_visit,
 	/* .tp_gc            = */ NULL,
@@ -1238,7 +1238,7 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cat_print(ClassAttributeTable *__restrict self,
           Dee_formatprinter_t printer, void *arg) {
 	ClassDescriptor *desc = self->ca_desc;
@@ -1250,7 +1250,7 @@ cat_print(ClassAttributeTable *__restrict self,
 	                        name);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cat_printrepr(ClassAttributeTable *__restrict self,
               Dee_formatprinter_t printer, void *arg) {
 	ClassDescriptor *desc = self->ca_desc;
@@ -1289,8 +1289,8 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&cat_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cat_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cat_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cat_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cat_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cat_visit,
 	/* .tp_gc            = */ NULL,
@@ -1644,7 +1644,7 @@ PRIVATE struct type_member tpconst cd_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cd_print(ClassDescriptor *__restrict self,
          Dee_formatprinter_t printer, void *arg) {
 	DeeStringObject *name = self->cd_name;
@@ -1653,10 +1653,10 @@ cd_print(ClassDescriptor *__restrict self,
 	return DeeFormat_Printf(printer, arg, "<ClassDescriptor for %k>", name);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 xattr_table_printrepr(struct Dee_class_attribute *table, size_t mask,
                       Dee_formatprinter_t printer, void *arg) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	size_t i;
 	bool is_first = true;
 	for (i = 0; i <= mask; ++i) {
@@ -1699,10 +1699,10 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cd_printrepr(ClassDescriptor *__restrict self,
              Dee_formatprinter_t printer, void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	result = DeeFormat_PRINT(printer, arg, "rt.ClassDescriptor(");
 	if unlikely(result < 0)
 		goto done;
@@ -2380,8 +2380,8 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cd_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cd_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cd_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cd_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cd_visit,
 	/* .tp_gc            = */ NULL,
@@ -2418,7 +2418,7 @@ STATIC_ASSERT(offsetof(ObjectTable, ot_owner) == offsetof(ProxyObject, po_obj));
 #define ot_fini  generic_proxy__fini
 #define ot_visit generic_proxy__visit
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ot_print(ObjectTable *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	DeeTypeObject *tp = DeeObject_Class(self->ot_owner);
 	if (DeeType_IsTypeType(tp))
@@ -2426,7 +2426,7 @@ ot_print(ObjectTable *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<object table for instance of %k>", tp);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ot_printrepr(ObjectTable *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	DeeTypeObject *tp = DeeObject_Class(self->ot_owner);
 	if (DeeType_IsTypeType(tp))
@@ -2780,8 +2780,8 @@ INTERN DeeTypeObject ObjectTable_Type = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&ot_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ot_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ot_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ot_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ot_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ot_visit,
 	/* .tp_gc            = */ NULL,
@@ -3070,7 +3070,7 @@ PRIVATE struct type_cmp instancemember_cmp = {
 	/* .tp_ge            = */ DEFIMPL_UNSUPPORTED(&default__ge__unsupported),
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 instancemember_print(DeeInstanceMemberObject *__restrict self,
                      Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<InstanceMember %k.%k>",
@@ -3082,7 +3082,7 @@ DeeString_IsSymbol(DeeStringObject *__restrict self,
                    size_t start_index,
                    size_t end_index);
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 instancemember_printrepr(DeeInstanceMemberObject *__restrict self,
                          Dee_formatprinter_t printer, void *arg) {
 	DeeStringObject *name = (DeeStringObject *)self->im_attribute->ca_name;
@@ -3129,8 +3129,8 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&instancemember_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&instancemember_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&instancemember_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&instancemember_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&instancemember_visit,
 	/* .tp_gc            = */ NULL,
@@ -3172,10 +3172,487 @@ done:
 }
 
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+
+struct class_ciattriter {
+	Dee_ATTRITER_HEAD
+	DeeTypeObject *cciai_class; /* [1..1][const] Class whose instance attributes to iterate. */
+	Dee_hash_t     cciai_index; /* [lock(ATOMIC)] Index into `cciai_desc->cd_iattr_list' (valid if `<= cciai_desc->cd_iattr_mask') */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+class_ciattriter_next(struct class_ciattriter *__restrict self,
+                      /*out*/ struct Dee_attrdesc *__restrict desc) {
+	struct class_desc *my_class     = DeeClass_DESC(self->cciai_class);
+	DeeClassDescriptorObject *cdesc = my_class->cd_desc;
+	Dee_hash_t old_index, new_index;
+	struct class_attribute *attr;
+	uint16_t perm;
+	do {
+		old_index = atomic_read(&self->cciai_index);
+		new_index = old_index;
+		for (;;) {
+			if (new_index > cdesc->cd_iattr_mask)
+				return 1;
+			attr = &cdesc->cd_iattr_list[new_index];
+			++new_index;
+			if (attr->ca_name)
+				break;
+		}
+	} while (!atomic_cmpxch(&self->cciai_index, old_index, new_index));
+	perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_WRAPPER |
+	        Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_NAMEOBJ | Dee_ATTRPERM_F_DOCOBJ);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		perm |= Dee_ATTRPERM_F_PROPERTY;
+	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+		perm |= Dee_ATTRPERM_F_CANCALL;
+	}
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+		perm |= Dee_ATTRPERM_F_PRIVATE;
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+		Dee_class_desc_lock_read(my_class);
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			/* Special case: Figure out what property callbacks have been assigned. */
+			perm &= ~Dee_ATTRPERM_F_CANGET;
+			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET])
+				perm |= Dee_ATTRPERM_F_CANGET;
+			if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+				if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL])
+					perm |= Dee_ATTRPERM_F_CANDEL;
+				if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET])
+					perm |= Dee_ATTRPERM_F_CANSET;
+			}
+		} else {
+			if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY))
+				perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+		}
+		Dee_class_desc_lock_endread(my_class);
+	} else {
+		if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)))
+			perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+	}
+
+	Dee_Incref(attr->ca_name);
+	desc->ad_name = DeeString_STR(attr->ca_name);
+	desc->ad_doc  = NULL;
+	if (attr->ca_doc) {
+		Dee_Incref(attr->ca_doc);
+		desc->ad_doc = DeeString_STR(attr->ca_doc);
+	}
+	desc->ad_perm = perm;
+	desc->ad_info.ai_decl = (DeeObject *)self->cciai_class;
+	desc->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_ATTR;
+	desc->ad_info.ai_value.v_instance_attr = attr;
+	return 0;
+}
+
+PRIVATE struct Dee_attriter_type tpconst class_ciattriter_type = {
+	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&class_ciattriter_next,
+};
+
+
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeClass_IterClassInstanceAttributes(DeeTypeObject *__restrict self,
+                                     struct Dee_attriter *iterbuf, size_t bufsize) {
+	struct class_ciattriter *iter = (struct class_ciattriter *)iterbuf;
+	if likely(bufsize >= sizeof(struct class_ciattriter)) {
+		iter->cciai_class = self;
+		iter->cciai_index = 0;
+		Dee_attriter_init(iter, &class_ciattriter_type);
+	}
+	return sizeof(struct class_ciattriter);
+}
+
+
+
+
+struct class_cattriter {
+	Dee_ATTRITER_HEAD
+	DeeTypeObject *ccai_class; /* [1..1][const] Class whose class attributes to iterate. */
+	Dee_hash_t     ccai_index; /* [lock(ATOMIC)] Index into `ccai_desc->cd_iattr_list' (valid if `<= ccai_desc->cd_iattr_mask') */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+class_cattriter_next(struct class_cattriter *__restrict self,
+                     /*out*/ struct Dee_attrdesc *__restrict desc) {
+	struct class_desc *my_class     = DeeClass_DESC(self->ccai_class);
+	DeeClassDescriptorObject *cdesc = my_class->cd_desc;
+	Dee_hash_t old_index, new_index;
+	struct class_attribute *attr;
+	uint16_t perm;
+	do {
+		old_index = atomic_read(&self->ccai_index);
+		new_index = old_index;
+		for (;;) {
+			if (new_index > cdesc->cd_cattr_mask)
+				return 1;
+			attr = &cdesc->cd_cattr_list[new_index];
+			++new_index;
+			if (attr->ca_name)
+				break;
+		}
+	} while (!atomic_cmpxch(&self->ccai_index, old_index, new_index));
+
+	perm = (Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET |
+	        Dee_ATTRPERM_F_NAMEOBJ | Dee_ATTRPERM_F_DOCOBJ);
+	/* Figure out which instance descriptor the property is connected to. */
+	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+		perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			perm = (Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_NAMEOBJ);
+			/* Actually figure out what callbacks are assigned. */
+			Dee_class_desc_lock_read(my_class);
+			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET])
+				perm |= Dee_ATTRPERM_F_CANGET;
+			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL])
+				perm |= Dee_ATTRPERM_F_CANDEL;
+			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET])
+				perm |= Dee_ATTRPERM_F_CANSET;
+			Dee_class_desc_lock_endread(my_class);
+		}
+	}
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		perm |= Dee_ATTRPERM_F_PROPERTY;
+	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+		perm |= Dee_ATTRPERM_F_CANCALL;
+	}
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+		perm |= Dee_ATTRPERM_F_PRIVATE;
+	Dee_Incref(attr->ca_name);
+	desc->ad_name = DeeString_STR(attr->ca_name);
+	desc->ad_doc  = NULL;
+	if (attr->ca_doc) {
+		Dee_Incref(attr->ca_doc);
+		desc->ad_doc = DeeString_STR(attr->ca_doc);
+	}
+	desc->ad_perm = perm;
+	desc->ad_info.ai_decl = (DeeObject *)self->ccai_class;
+	desc->ad_info.ai_type = Dee_ATTRINFO_ATTR;
+	desc->ad_info.ai_value.v_instance_attr = attr;
+	return 0;
+}
+
+PRIVATE struct Dee_attriter_type tpconst class_cattriter_type = {
+	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&class_cattriter_next,
+};
+
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeClass_IterClassAttributes(DeeTypeObject *__restrict self,
+                             struct Dee_attriter *iterbuf, size_t bufsize) {
+	struct class_cattriter *iter = (struct class_cattriter *)iterbuf;
+	if likely(bufsize >= sizeof(struct class_cattriter)) {
+		iter->ccai_class = self;
+		iter->ccai_index = 0;
+		Dee_attriter_init(iter, &class_cattriter_type);
+	}
+	return sizeof(struct class_cattriter);
+}
+
+
+
+
+
+
+struct class_iattriter {
+	Dee_ATTRITER_HEAD
+	DeeTypeObject *ciai_class; /* [1..1][const] Class whose class attributes to iterate. */
+	Dee_hash_t     ciai_index; /* [lock(ATOMIC)] Index into `ciai_desc->cd_iattr_list' (valid if `<= ciai_desc->cd_iattr_mask') */
+	DeeObject     *ciai_inst;  /* [0..1][const] Class instance. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+class_iattriter_next(struct class_iattriter *__restrict self,
+                     /*out*/ struct Dee_attrdesc *__restrict desc) {
+	struct class_desc *my_class     = DeeClass_DESC(self->ciai_class);
+	DeeClassDescriptorObject *cdesc = my_class->cd_desc;
+	Dee_hash_t old_index, new_index;
+	struct class_attribute *attr;
+	struct instance_desc *inst;
+	uint16_t perm;
+	do {
+		old_index = atomic_read(&self->ciai_index);
+		new_index = old_index;
+		for (;;) {
+			if (new_index > cdesc->cd_iattr_mask)
+				return 1;
+			attr = &cdesc->cd_iattr_list[new_index];
+			++new_index;
+			if (attr->ca_name)
+				break;
+		}
+	} while (!atomic_cmpxch(&self->ciai_index, old_index, new_index));
+	perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET |
+	        Dee_ATTRPERM_F_NAMEOBJ | Dee_ATTRPERM_F_DOCOBJ);
+	/* Figure out which instance descriptor the property is connected to. */
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+		inst = class_desc_as_instance(my_class);
+	} else if (self->ciai_inst) {
+		inst = DeeInstance_DESC(my_class, self->ciai_inst);
+	}
+	if (inst)
+		Dee_instance_desc_lock_read(inst);
+	if (inst && !(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
+		/* Actually figure out the type of the attr. */
+		if (!inst->id_vtab[attr->ca_addr])
+			perm &= ~Dee_ATTRPERM_F_CANGET;
+	}
+	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+		perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+		if (inst && attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_NAMEOBJ);
+			/* Actually figure out what callbacks are assigned. */
+			if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET])
+				perm |= Dee_ATTRPERM_F_CANGET;
+			if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_DEL])
+				perm |= Dee_ATTRPERM_F_CANDEL;
+			if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_SET])
+				perm |= Dee_ATTRPERM_F_CANSET;
+		}
+	}
+	if (inst)
+		Dee_instance_desc_lock_endread(inst);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		perm |= Dee_ATTRPERM_F_PROPERTY;
+	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+		perm |= Dee_ATTRPERM_F_CANCALL;
+	}
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+		perm |= Dee_ATTRPERM_F_PRIVATE;
+	Dee_Incref(attr->ca_name);
+	desc->ad_name = DeeString_STR(attr->ca_name);
+	desc->ad_doc  = NULL;
+	if (attr->ca_doc) {
+		Dee_Incref(attr->ca_doc);
+		desc->ad_doc = DeeString_STR(attr->ca_doc);
+	}
+	desc->ad_perm = perm;
+	desc->ad_info.ai_decl = (DeeObject *)self->ciai_class;
+	desc->ad_info.ai_type = Dee_ATTRINFO_ATTR;
+	desc->ad_info.ai_value.v_instance_attr = attr;
+	return 0;
+}
+
+PRIVATE struct Dee_attriter_type tpconst class_iattriter_type = {
+	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&class_iattriter_next,
+};
+
+INTERN WUNUSED NONNULL((1, 3)) size_t DCALL
+DeeClass_IterInstanceAttributes(DeeTypeObject *__restrict self, DeeObject *instance,
+                                struct Dee_attriter *iterbuf, size_t bufsize) {
+	struct class_iattriter *iter = (struct class_iattriter *)iterbuf;
+	if likely(bufsize >= sizeof(struct class_iattriter)) {
+		iter->ciai_class = self;
+		iter->ciai_index = 0;
+		Dee_attriter_init(iter, &class_iattriter_type);
+	}
+	return sizeof(struct class_iattriter);
+}
+
+/* Find a specific class-attribute, matching the given lookup rules.
+ * @return:  0: Attribute found (*result was filled with data).
+ * @return:  1: No attribute matching the given requirements was found.
+ * @return: -1: An error occurred. */
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeClass_FindClassAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
+                            struct Dee_attrspec const *__restrict specs,
+                            struct Dee_attrdesc *__restrict result) {
+	uint16_t perm;
+	struct class_attribute *attr;
+	struct class_desc *my_class = DeeClass_DESC(self);
+	attr = DeeType_QueryClassAttributeStringHash(tp_invoker, self,
+	                                             specs->as_name,
+	                                             specs->as_hash);
+	if (!attr)
+		goto not_found;
+	perm = (Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_NAMEOBJ);
+	/* Figure out which instance descriptor the property is connected to. */
+	Dee_class_desc_lock_read(my_class);
+	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+		perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			perm = (Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_NAMEOBJ);
+			/* Actually figure out what callbacks are assigned. */
+			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET])
+				perm |= Dee_ATTRPERM_F_CANGET;
+			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL])
+				perm |= Dee_ATTRPERM_F_CANDEL;
+			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET])
+				perm |= Dee_ATTRPERM_F_CANSET;
+		}
+	}
+	Dee_class_desc_lock_endread(my_class);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		perm |= Dee_ATTRPERM_F_PROPERTY;
+	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+		perm |= Dee_ATTRPERM_F_CANCALL;
+	}
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+		perm |= Dee_ATTRPERM_F_PRIVATE;
+	if ((perm & specs->as_perm_mask) != specs->as_perm_value) {
+not_found:
+		return 1;
+	}
+	result->ad_name = DeeString_STR(attr->ca_name);
+	result->ad_doc  = NULL;
+	result->ad_perm = perm | Dee_ATTRPERM_F_NAMEOBJ;
+	result->ad_info.ai_decl = (DREF DeeObject *)self;
+	result->ad_info.ai_type = Dee_ATTRINFO_ATTR;
+	result->ad_info.ai_value.v_attr = attr;
+	Dee_Incref(attr->ca_name);
+	if (attr->ca_doc) {
+		result->ad_doc = DeeString_STR(attr->ca_doc);
+		result->ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
+		Dee_Incref(attr->ca_doc);
+	}
+	return 0;
+}
+
+
+/* Find a specific instance-through-class-attribute, matching the given lookup rules.
+ * @return:  0: Attribute found (*result was filled with data).
+ * @return:  1: No attribute matching the given requirements was found.
+ * @return: -1: An error occurred. */
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
+                                    struct Dee_attrspec const *__restrict specs,
+                                    struct Dee_attrdesc *__restrict result) {
+	uint16_t perm;
+	struct class_attribute *attr;
+	struct class_desc *my_class = DeeClass_DESC(self);
+	attr = DeeType_QueryInstanceAttributeStringHash(tp_invoker, self,
+	                                                specs->as_name,
+	                                                specs->as_hash);
+	if (!attr)
+		goto not_found;
+	perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER |
+	        Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_CANGET |
+	        Dee_ATTRPERM_F_NAMEOBJ);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		perm |= Dee_ATTRPERM_F_PROPERTY;
+	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+		perm |= Dee_ATTRPERM_F_CANCALL;
+	}
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+		perm |= Dee_ATTRPERM_F_PRIVATE;
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+		Dee_class_desc_lock_read(my_class);
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			/* Special case: Figure out what property callbacks have been assigned. */
+			perm &= ~Dee_ATTRPERM_F_CANGET;
+			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET])
+				perm |= Dee_ATTRPERM_F_CANGET;
+			if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+				if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL])
+					perm |= Dee_ATTRPERM_F_CANDEL;
+				if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET])
+					perm |= Dee_ATTRPERM_F_CANSET;
+			}
+		} else {
+			if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY))
+				perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+		}
+		Dee_class_desc_lock_endread(my_class);
+	} else {
+		if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)))
+			perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+	}
+	if ((perm & specs->as_perm_mask) != specs->as_perm_value) {
+not_found:
+		return 1;
+	}
+	result->ad_name = DeeString_STR(attr->ca_name);
+	result->ad_doc  = NULL;
+	result->ad_perm = perm | Dee_ATTRPERM_F_NAMEOBJ;
+	result->ad_info.ai_decl = (DREF DeeObject *)self;
+	result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_ATTR;
+	result->ad_info.ai_value.v_instance_attr = attr;
+	Dee_Incref(attr->ca_name);
+	if (attr->ca_doc) {
+		result->ad_doc = DeeString_STR(attr->ca_doc);
+		result->ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
+		Dee_Incref(attr->ca_doc);
+	}
+	return 0;
+}
+
+/* Find a specific instance-attribute, matching the given lookup rules.
+ * @return:  0: Attribute found (*result was filled with data).
+ * @return:  1: No attribute matching the given requirements was found.
+ * @return: -1: An error occurred. */
+INTERN WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
+DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, DeeObject *instance,
+                               struct Dee_attrspec const *__restrict specs,
+                               struct Dee_attrdesc *__restrict result) {
+	uint16_t perm;
+	struct class_attribute *attr;
+	struct instance_desc *inst;
+	struct class_desc *my_class = DeeClass_DESC(self);
+	attr = DeeType_QueryAttributeStringHash(tp_invoker, self,
+	                                        specs->as_name,
+	                                        specs->as_hash);
+	if (!attr)
+		goto not_found;
+	perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_NAMEOBJ);
+
+	/* Figure out which instance descriptor the property is connected to. */
+	inst = NULL;
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+		inst = class_desc_as_instance(my_class);
+	} else if (instance) {
+		inst = DeeInstance_DESC(my_class, instance);
+	}
+	if (inst)
+		Dee_instance_desc_lock_read(inst);
+	if (inst && !(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
+		/* Actually figure out the type of the attr. */
+		if (!inst->id_vtab[attr->ca_addr])
+			perm &= ~Dee_ATTRPERM_F_CANGET;
+	}
+	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+		perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+		if (inst && attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_NAMEOBJ);
+			/* Actually figure out what callbacks are assigned. */
+			if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET])
+				perm |= Dee_ATTRPERM_F_CANGET;
+			if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_DEL])
+				perm |= Dee_ATTRPERM_F_CANDEL;
+			if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_SET])
+				perm |= Dee_ATTRPERM_F_CANSET;
+		}
+	}
+	if (inst)
+		Dee_instance_desc_lock_endread(inst);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		perm |= Dee_ATTRPERM_F_PROPERTY;
+	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+		perm |= Dee_ATTRPERM_F_CANCALL;
+	}
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+		perm |= Dee_ATTRPERM_F_PRIVATE;
+	if ((perm & specs->as_perm_mask) != specs->as_perm_value) {
+not_found:
+		return 1;
+	}
+	result->ad_name = DeeString_STR(attr->ca_name);
+	result->ad_doc  = NULL;
+	result->ad_perm = perm | Dee_ATTRPERM_F_NAMEOBJ;
+	result->ad_info.ai_decl = (DREF DeeObject *)self;
+	result->ad_info.ai_type = Dee_ATTRINFO_ATTR;
+	result->ad_info.ai_value.v_attr = attr;
+	Dee_Incref(attr->ca_name);
+	if (attr->ca_doc) {
+		result->ad_doc = DeeString_STR(attr->ca_doc);
+		result->ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
+		Dee_Incref(attr->ca_doc);
+	}
+	return 0;
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self,
-                                     denum_t proc, void *arg) {
-	dssize_t temp, result = 0;
+                                     Dee_enum_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
 	size_t i;
 	struct class_desc *my_class    = DeeClass_DESC(self);
 	DeeClassDescriptorObject *desc = my_class->cd_desc;
@@ -3187,32 +3664,32 @@ DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self,
 		if (!attr->ca_name)
 			continue;
 		attr_type = NULL;
-		perm = (ATTR_IMEMBER | ATTR_CMEMBER | ATTR_WRAPPER |
-		        ATTR_PERMGET | ATTR_NAMEOBJ);
+		perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_WRAPPER |
+		        Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_NAMEOBJ);
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-			perm |= ATTR_PROPERTY;
+			perm |= Dee_ATTRPERM_F_PROPERTY;
 		} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
-			perm |= ATTR_PERMCALL;
+			perm |= Dee_ATTRPERM_F_CANCALL;
 		}
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
-			perm |= ATTR_PRIVATE;
+			perm |= Dee_ATTRPERM_F_PRIVATE;
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 			Dee_class_desc_lock_read(my_class);
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 				/* Special case: Figure out what property callbacks have been assigned. */
-				perm &= ~ATTR_PERMGET;
+				perm &= ~Dee_ATTRPERM_F_CANGET;
 				if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET])
-					perm |= ATTR_PERMGET;
+					perm |= Dee_ATTRPERM_F_CANGET;
 				if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
 					if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL])
-						perm |= ATTR_PERMDEL;
+						perm |= Dee_ATTRPERM_F_CANDEL;
 					if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET])
-						perm |= ATTR_PERMSET;
+						perm |= Dee_ATTRPERM_F_CANSET;
 				}
 			} else {
 				DeeObject *obj;
 				if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY))
-					perm |= (ATTR_PERMDEL | ATTR_PERMSET);
+					perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 				obj = my_class->cd_members[attr->ca_addr];
 				if (obj) {
 					attr_type = Dee_TYPE(obj);
@@ -3222,10 +3699,10 @@ DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self,
 			Dee_class_desc_lock_endread(my_class);
 		} else {
 			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)))
-				perm |= (ATTR_PERMDEL | ATTR_PERMSET);
+				perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 		}
 		if (attr->ca_doc)
-			perm |= ATTR_DOCOBJ;
+			perm |= Dee_ATTRPERM_F_DOCOBJ;
 		temp = (*proc)((DeeObject *)self, DeeString_STR(attr->ca_name),
 		               attr->ca_doc ? DeeString_STR(attr->ca_doc) : NULL,
 		               perm, attr_type, arg);
@@ -3237,10 +3714,10 @@ DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self,
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self,
-                             denum_t proc, void *arg) {
-	dssize_t temp, result = 0;
+                             Dee_enum_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
 	size_t i;
 	struct class_desc *my_class    = DeeClass_DESC(self);
 	DeeClassDescriptorObject *desc = my_class->cd_desc;
@@ -3252,7 +3729,7 @@ DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self,
 		if (!attr->ca_name)
 			continue;
 		attr_type = NULL;
-		perm      = (ATTR_CMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);
+		perm      = (Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_NAMEOBJ);
 		/* Figure out which instance descriptor the property is connected to. */
 		Dee_class_desc_lock_read(my_class);
 		if (!(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
@@ -3264,28 +3741,28 @@ DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self,
 			}
 		}
 		if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-			perm |= (ATTR_PERMDEL | ATTR_PERMSET);
+			perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-				perm = (ATTR_CMEMBER | ATTR_NAMEOBJ);
+				perm = (Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_NAMEOBJ);
 				/* Actually figure out what callbacks are assigned. */
 				if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET])
-					perm |= ATTR_PERMGET;
+					perm |= Dee_ATTRPERM_F_CANGET;
 				if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL])
-					perm |= ATTR_PERMDEL;
+					perm |= Dee_ATTRPERM_F_CANDEL;
 				if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET])
-					perm |= ATTR_PERMSET;
+					perm |= Dee_ATTRPERM_F_CANSET;
 			}
 		}
 		Dee_class_desc_lock_endread(my_class);
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-			perm |= ATTR_PROPERTY;
+			perm |= Dee_ATTRPERM_F_PROPERTY;
 		} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
-			perm |= ATTR_PERMCALL;
+			perm |= Dee_ATTRPERM_F_CANCALL;
 		}
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
-			perm |= ATTR_PRIVATE;
+			perm |= Dee_ATTRPERM_F_PRIVATE;
 		if (attr->ca_doc)
-			perm |= ATTR_DOCOBJ;
+			perm |= Dee_ATTRPERM_F_DOCOBJ;
 		temp = (*proc)((DeeObject *)self, DeeString_STR(attr->ca_name),
 		               attr->ca_doc ? DeeString_STR(attr->ca_doc) : NULL,
 		               perm, attr_type, arg);
@@ -3297,11 +3774,11 @@ DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self,
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
                                 DeeObject *instance,
-                                denum_t proc, void *arg) {
-	dssize_t temp, result = 0;
+                                Dee_enum_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
 	size_t i;
 	struct class_desc *my_class    = DeeClass_DESC(self);
 	DeeClassDescriptorObject *desc = my_class->cd_desc;
@@ -3314,7 +3791,7 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
 		if (!attr->ca_name)
 			continue;
 		inst = NULL, attr_type = NULL;
-		perm = (ATTR_IMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);
+		perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_NAMEOBJ);
 		/* Figure out which instance descriptor the property is connected to. */
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 			inst = class_desc_as_instance(my_class);
@@ -3330,33 +3807,33 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
 				attr_type = Dee_TYPE(attr_type);
 				Dee_Incref(attr_type);
 			} else {
-				perm &= ~ATTR_PERMGET;
+				perm &= ~Dee_ATTRPERM_F_CANGET;
 			}
 		}
 		if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-			perm |= (ATTR_PERMDEL | ATTR_PERMSET);
+			perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 			if (inst && attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-				perm = (ATTR_IMEMBER | ATTR_NAMEOBJ);
+				perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_NAMEOBJ);
 				/* Actually figure out what callbacks are assigned. */
 				if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET])
-					perm |= ATTR_PERMGET;
+					perm |= Dee_ATTRPERM_F_CANGET;
 				if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_DEL])
-					perm |= ATTR_PERMDEL;
+					perm |= Dee_ATTRPERM_F_CANDEL;
 				if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_SET])
-					perm |= ATTR_PERMSET;
+					perm |= Dee_ATTRPERM_F_CANSET;
 			}
 		}
 		if (inst)
 			Dee_instance_desc_lock_endread(inst);
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-			perm |= ATTR_PROPERTY;
+			perm |= Dee_ATTRPERM_F_PROPERTY;
 		} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
-			perm |= ATTR_PERMCALL;
+			perm |= Dee_ATTRPERM_F_CANCALL;
 		}
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
-			perm |= ATTR_PRIVATE;
+			perm |= Dee_ATTRPERM_F_PRIVATE;
 		if (attr->ca_doc)
-			perm |= ATTR_DOCOBJ;
+			perm |= Dee_ATTRPERM_F_DOCOBJ;
 		temp = (*proc)((DeeObject *)self, DeeString_STR(attr->ca_name),
 		               attr->ca_doc ? DeeString_STR(attr->ca_doc) : NULL,
 		               perm, attr_type, arg);
@@ -3367,7 +3844,6 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
 	}
 	return result;
 }
-
 
 /* Find a specific class-attribute, matching the given lookup rules.
  * @return:  0: Attribute found (*result was filled with data).
@@ -3387,7 +3863,7 @@ DeeClass_FindClassAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
 	if (!attr)
 		goto not_found;
 	attr_type = NULL;
-	perm      = (ATTR_CMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);
+	perm      = (Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_NAMEOBJ);
 	/* Figure out which instance descriptor the property is connected to. */
 	Dee_class_desc_lock_read(my_class);
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
@@ -3399,26 +3875,26 @@ DeeClass_FindClassAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
 		}
 	}
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-		perm |= (ATTR_PERMDEL | ATTR_PERMSET);
+		perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-			perm = (ATTR_CMEMBER | ATTR_NAMEOBJ);
+			perm = (Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_NAMEOBJ);
 			/* Actually figure out what callbacks are assigned. */
 			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET])
-				perm |= ATTR_PERMGET;
+				perm |= Dee_ATTRPERM_F_CANGET;
 			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL])
-				perm |= ATTR_PERMDEL;
+				perm |= Dee_ATTRPERM_F_CANDEL;
 			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET])
-				perm |= ATTR_PERMSET;
+				perm |= Dee_ATTRPERM_F_CANSET;
 		}
 	}
 	Dee_class_desc_lock_endread(my_class);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-		perm |= ATTR_PROPERTY;
+		perm |= Dee_ATTRPERM_F_PROPERTY;
 	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
-		perm |= ATTR_PERMCALL;
+		perm |= Dee_ATTRPERM_F_CANCALL;
 	}
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
-		perm |= ATTR_PRIVATE;
+		perm |= Dee_ATTRPERM_F_PRIVATE;
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
 		Dee_XDecref(attr_type);
 not_found:
@@ -3429,7 +3905,7 @@ not_found:
 	result->a_attrtype = attr_type; /* Inherit reference. */
 	if (attr->ca_doc) {
 		result->a_doc = DeeString_STR(attr->ca_doc);
-		perm |= ATTR_DOCOBJ;
+		perm |= Dee_ATTRPERM_F_DOCOBJ;
 		Dee_Incref(attr->ca_doc);
 	}
 	result->a_perm = perm;
@@ -3456,33 +3932,33 @@ DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *se
 	if (!attr)
 		goto not_found;
 	attr_type = NULL;
-	perm = (ATTR_IMEMBER | ATTR_CMEMBER |
-	        ATTR_WRAPPER | ATTR_PERMGET |
-	        ATTR_NAMEOBJ);
+	perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER |
+	        Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_CANGET |
+	        Dee_ATTRPERM_F_NAMEOBJ);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-		perm |= ATTR_PROPERTY;
+		perm |= Dee_ATTRPERM_F_PROPERTY;
 	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
-		perm |= ATTR_PERMCALL;
+		perm |= Dee_ATTRPERM_F_CANCALL;
 	}
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
-		perm |= ATTR_PRIVATE;
+		perm |= Dee_ATTRPERM_F_PRIVATE;
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 		Dee_class_desc_lock_read(my_class);
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 			/* Special case: Figure out what property callbacks have been assigned. */
-			perm &= ~ATTR_PERMGET;
+			perm &= ~Dee_ATTRPERM_F_CANGET;
 			if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET])
-				perm |= ATTR_PERMGET;
+				perm |= Dee_ATTRPERM_F_CANGET;
 			if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
 				if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL])
-					perm |= ATTR_PERMDEL;
+					perm |= Dee_ATTRPERM_F_CANDEL;
 				if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET])
-					perm |= ATTR_PERMSET;
+					perm |= Dee_ATTRPERM_F_CANSET;
 			}
 		} else {
 			DeeObject *obj;
 			if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY))
-				perm |= (ATTR_PERMDEL | ATTR_PERMSET);
+				perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 			obj = my_class->cd_members[attr->ca_addr];
 			if (obj) {
 				attr_type = Dee_TYPE(obj);
@@ -3492,7 +3968,7 @@ DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *se
 		Dee_class_desc_lock_endread(my_class);
 	} else {
 		if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)))
-			perm |= (ATTR_PERMDEL | ATTR_PERMSET);
+			perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 	}
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
 		Dee_XDecref(attr_type);
@@ -3504,7 +3980,7 @@ not_found:
 	result->a_doc      = NULL;
 	if (attr->ca_doc) {
 		result->a_doc = DeeString_STR(attr->ca_doc);
-		perm |= ATTR_DOCOBJ;
+		perm |= Dee_ATTRPERM_F_DOCOBJ;
 		Dee_Incref(attr->ca_doc);
 	}
 	result->a_perm = perm;
@@ -3531,7 +4007,7 @@ DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, D
 	if (!attr)
 		goto not_found;
 	attr_type = NULL, inst = NULL;
-	perm = (ATTR_IMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);
+	perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_NAMEOBJ);
 
 	/* Figure out which instance descriptor the property is connected to. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
@@ -3548,31 +4024,31 @@ DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, D
 			attr_type = Dee_TYPE(attr_type);
 			Dee_Incref(attr_type);
 		} else {
-			perm &= ~ATTR_PERMGET;
+			perm &= ~Dee_ATTRPERM_F_CANGET;
 		}
 	}
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-		perm |= (ATTR_PERMDEL | ATTR_PERMSET);
+		perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 		if (inst && attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-			perm = (ATTR_IMEMBER | ATTR_NAMEOBJ);
+			perm = (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_NAMEOBJ);
 			/* Actually figure out what callbacks are assigned. */
 			if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET])
-				perm |= ATTR_PERMGET;
+				perm |= Dee_ATTRPERM_F_CANGET;
 			if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_DEL])
-				perm |= ATTR_PERMDEL;
+				perm |= Dee_ATTRPERM_F_CANDEL;
 			if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_SET])
-				perm |= ATTR_PERMSET;
+				perm |= Dee_ATTRPERM_F_CANSET;
 		}
 	}
 	if (inst)
 		Dee_instance_desc_lock_endread(inst);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-		perm |= ATTR_PROPERTY;
+		perm |= Dee_ATTRPERM_F_PROPERTY;
 	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
-		perm |= ATTR_PERMCALL;
+		perm |= Dee_ATTRPERM_F_CANCALL;
 	}
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
-		perm |= ATTR_PRIVATE;
+		perm |= Dee_ATTRPERM_F_PRIVATE;
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
 		Dee_XDecref(attr_type);
 not_found:
@@ -3583,13 +4059,16 @@ not_found:
 	result->a_doc      = NULL;
 	if (attr->ca_doc) {
 		result->a_doc = DeeString_STR(attr->ca_doc);
-		perm |= ATTR_DOCOBJ;
+		perm |= Dee_ATTRPERM_F_DOCOBJ;
 		Dee_Incref(attr->ca_doc);
 	}
 	result->a_perm = perm;
 	Dee_Incref(result->a_decl);
 	return 0;
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
+
+
 
 
 

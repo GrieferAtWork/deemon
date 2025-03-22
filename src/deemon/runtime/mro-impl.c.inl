@@ -22,6 +22,9 @@
 //#define DEFINE_MRO_ATTRLEN_FUNCTIONS
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/error.h>
+#include <deemon/none.h>
+
 DECL_BEGIN
 
 #ifdef DEFINE_MRO_ATTRLEN_FUNCTIONS

@@ -104,7 +104,7 @@ STATIC_ASSERT(STRUCT_BOOLBIT(0x40) == STRUCT_BOOLBIT6);
 STATIC_ASSERT(STRUCT_BOOLBIT(0x80) == STRUCT_BOOLBIT7);
 
 
-/* Reurns the object-type used to represent a given type-member. */
+/* Returns the object-type used to represent a given type-member. */
 INTERN WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 type_member_typefor(struct type_member const *__restrict self) {
 	if (TYPE_MEMBER_ISCONST(self))
@@ -157,12 +157,217 @@ type_member_typefor(struct type_member const *__restrict self) {
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+
+struct type_method_attriter {
+	Dee_ATTRITER_HEAD
+	DeeTypeObject            *tmai_tpself; /* [1..1][const] The type declaring "tmai_chain" (either via its "tp_methods" or "tp_class_methods") */
+	struct type_method const *tmai_chain;  /* [1..1][lock(ATOMIC)] Next method to yield. */
+	uint16_t                  tmai_perm;   /* [const] Chain access base perms. */
+	uint16_t                  tmai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_METHOD' or `Dee_ATTRINFO_METHOD' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+type_method_attriter_next(struct type_method_attriter *__restrict self,
+                          /*out*/ struct Dee_attrdesc *__restrict desc) {
+	struct type_method const *item;
+	do {
+		item = atomic_read(&self->tmai_chain);
+		if (!item->m_name)
+			return 1;
+	} while (!atomic_cmpxch_or_write(&self->tmai_chain, item, item + 1));
+	desc->ad_name = item->m_name;
+	desc->ad_doc  = item->m_doc;
+	desc->ad_perm = self->tmai_perm;
+	desc->ad_info.ai_type = self->tmai_type;
+	desc->ad_info.ai_decl = (DeeObject *)self->ai_type;
+	desc->ad_info.ai_value.v_method = item;
+	return 0;
+}
+
+
+PRIVATE struct Dee_attriter_type tpconst type_method_attriter_type = {
+	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&type_method_attriter_next,
+};
+
+
+
+struct type_getset_attriter {
+	Dee_ATTRITER_HEAD
+	DeeTypeObject            *tgsai_tpself; /* [1..1][const] The type declaring "tgsai_chain" (either via its "tp_getsets" or "tp_class_getsets") */
+	struct type_getset const *tgsai_chain;  /* [1..1][lock(ATOMIC)] Next getset to yield. */
+	uint16_t                  tgsai_perm;   /* [const] Chain access base perms. */
+	uint16_t                  tgsai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_GETSET' or `Dee_ATTRINFO_GETSET' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+type_getset_attriter_next(struct type_getset_attriter *__restrict self,
+                          /*out*/ struct Dee_attrdesc *__restrict desc) {
+	struct type_getset const *item;
+	do {
+		item = atomic_read(&self->tgsai_chain);
+		if (!item->gs_name)
+			return 1;
+	} while (!atomic_cmpxch_or_write(&self->tgsai_chain, item, item + 1));
+	desc->ad_name = item->gs_name;
+	desc->ad_doc  = item->gs_doc;
+	desc->ad_perm = self->tgsai_perm;
+	if (item->gs_get)
+		desc->ad_perm |= Dee_ATTRPERM_F_CANGET;
+	if (item->gs_del)
+		desc->ad_perm |= Dee_ATTRPERM_F_CANDEL;
+	if (item->gs_set)
+		desc->ad_perm |= Dee_ATTRPERM_F_CANSET;
+	desc->ad_info.ai_type = self->tgsai_type;
+	desc->ad_info.ai_decl = (DeeObject *)self->ai_type;
+	desc->ad_info.ai_value.v_getset = item;
+	return 0;
+}
+
+
+PRIVATE struct Dee_attriter_type tpconst type_getset_attriter_type = {
+	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&type_getset_attriter_next,
+};
+
+
+
+struct type_member_attriter {
+	Dee_ATTRITER_HEAD
+	DeeTypeObject            *tmai_tpself; /* [1..1][const] The type declaring "tmai_chain" (either via its "tp_members" or "tp_class_members") */
+	struct type_member const *tmai_chain;  /* [1..1][lock(ATOMIC)] Next member to yield. */
+	uint16_t                  tmai_perm;   /* [const] Chain access base perms. */
+	uint16_t                  tmai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_MEMBER' or `Dee_ATTRINFO_MEMBER' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+type_member_attriter_next(struct type_member_attriter *__restrict self,
+                          /*out*/ struct Dee_attrdesc *__restrict desc) {
+	struct type_member const *item;
+	do {
+		item = atomic_read(&self->tmai_chain);
+		if (!item->m_name)
+			return 1;
+	} while (!atomic_cmpxch_or_write(&self->tmai_chain, item, item + 1));
+	desc->ad_name = item->m_name;
+	desc->ad_doc  = item->m_doc;
+	desc->ad_perm = self->tmai_perm;
+	if (!TYPE_MEMBER_ISCONST(item)) {
+		if (!(item->m_desc.md_field.mdf_type & STRUCT_CONST))
+			desc->ad_perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+	}
+	desc->ad_info.ai_type = self->tmai_type;
+	desc->ad_info.ai_decl = (DeeObject *)self->ai_type;
+	desc->ad_info.ai_value.v_member = item;
+	return 0;
+}
+
+
+PRIVATE struct Dee_attriter_type tpconst type_member_attriter_type = {
+	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&type_member_attriter_next,
+};
+
+
+
+INTERN WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+type_method_iterattr(DeeTypeObject *__restrict tp_self,
+                     struct type_method const *chain, uint16_t chain_perm,
+                     struct Dee_attriter *iterbuf, size_t bufsize) {
+	struct type_method_attriter *iter = (struct type_method_attriter *)iterbuf;
+	ASSERT(chain_perm == (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL) ||
+	       chain_perm == (Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL));
+	if (bufsize >= sizeof(struct type_method_attriter)) {
+		iter->tmai_tpself = tp_self;
+		iter->tmai_chain  = chain;
+		iter->tmai_perm   = chain_perm;
+		iter->tmai_type   = Dee_ATTRINFO_METHOD;
+		Dee_attriter_init(iter, &type_method_attriter_type);
+	}
+	return sizeof(struct type_method_attriter);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+type_getset_iterattr(DeeTypeObject *__restrict tp_self,
+                     struct type_getset const *chain, uint16_t chain_perm,
+                     struct Dee_attriter *iterbuf, size_t bufsize) {
+	struct type_getset_attriter *iter = (struct type_getset_attriter *)iterbuf;
+	ASSERT(chain_perm == (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY) ||
+	       chain_perm == (Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_PROPERTY));
+	if (bufsize >= sizeof(struct type_getset_attriter)) {
+		iter->tgsai_tpself = tp_self;
+		iter->tgsai_chain  = chain;
+		iter->tgsai_perm   = chain_perm;
+		iter->tgsai_type   = Dee_ATTRINFO_GETSET;
+		Dee_attriter_init(iter, &type_getset_attriter_type);
+	}
+	return sizeof(struct type_getset_attriter);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+type_member_iterattr(DeeTypeObject *__restrict tp_self,
+                     struct type_member const *chain, uint16_t chain_perm,
+                     struct Dee_attriter *iterbuf, size_t bufsize) {
+	struct type_member_attriter *iter = (struct type_member_attriter *)iterbuf;
+	ASSERT(chain_perm == (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET) ||
+	       chain_perm == (Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET));
+	if (bufsize >= sizeof(struct type_member_attriter)) {
+		iter->tmai_tpself = tp_self;
+		iter->tmai_chain  = chain;
+		iter->tmai_perm   = chain_perm;
+		iter->tmai_type   = Dee_ATTRINFO_MEMBER;
+		Dee_attriter_init(iter, &type_member_attriter_type);
+	}
+	return sizeof(struct type_member_attriter);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+type_obmeth_iterattr(DeeTypeObject *__restrict tp_self,
+                     struct Dee_attriter *iterbuf, size_t bufsize) {
+	struct type_method_attriter *iter = (struct type_method_attriter *)iterbuf;
+	if (bufsize >= sizeof(struct type_method_attriter)) {
+		iter->tmai_tpself = tp_self;
+		iter->tmai_chain  = tp_self->tp_methods;
+		iter->tmai_perm   = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL | Dee_ATTRPERM_F_WRAPPER;
+		iter->tmai_type   = Dee_ATTRINFO_INSTANCE_METHOD;
+		Dee_attriter_init(iter, &type_method_attriter_type);
+	}
+	return sizeof(struct type_method_attriter);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+type_obprop_iterattr(DeeTypeObject *__restrict tp_self,
+                     struct Dee_attriter *iterbuf, size_t bufsize) {
+	struct type_getset_attriter *iter = (struct type_getset_attriter *)iterbuf;
+	if (bufsize >= sizeof(struct type_getset_attriter)) {
+		iter->tgsai_tpself = tp_self;
+		iter->tgsai_chain  = tp_self->tp_getsets;
+		iter->tgsai_perm   = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_WRAPPER;
+		iter->tgsai_type   = Dee_ATTRINFO_INSTANCE_GETSET;
+		Dee_attriter_init(iter, &type_getset_attriter_type);
+	}
+	return sizeof(struct type_getset_attriter);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+type_obmemb_iterattr(DeeTypeObject *__restrict tp_self,
+                     struct Dee_attriter *iterbuf, size_t bufsize) {
+	struct type_member_attriter *iter = (struct type_member_attriter *)iterbuf;
+	if (bufsize >= sizeof(struct type_member_attriter)) {
+		iter->tmai_tpself = tp_self;
+		iter->tmai_chain  = tp_self->tp_members;
+		iter->tmai_perm   = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_WRAPPER;
+		iter->tmai_type   = Dee_ATTRINFO_INSTANCE_MEMBER;
+		Dee_attriter_init(iter, &type_member_attriter_type);
+	}
+	return sizeof(struct type_member_attriter);
+}
+
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 INTERN WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 type_method_enum(DeeTypeObject *__restrict tp_self,
                  struct type_method const *chain,
-                 uint16_t flags, denum_t proc, void *arg) {
+                 uint16_t flags, Dee_enum_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
-	flags |= ATTR_PERMGET | ATTR_PERMCALL;
+	flags |= Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
 	for (; chain->m_name; ++chain) {
 		temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
 		               flags, &DeeObjMethod_Type, arg);
@@ -173,82 +378,20 @@ type_method_enum(DeeTypeObject *__restrict tp_self,
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-type_obmeth_enum(DeeTypeObject *__restrict tp_self,
-                 denum_t proc, void *arg) {
-	struct type_method const *chain;
-	Dee_ssize_t temp, result = 0;
-	chain = tp_self->tp_methods;
-	ASSERT(chain != NULL);
-	for (; chain->m_name; ++chain) {
-		temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
-		               ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PERMGET | ATTR_PERMCALL | ATTR_WRAPPER,
-		               &DeeObjMethod_Type /*&DeeClsMethod_Type*/, arg);
-		if unlikely(temp < 0)
-			return temp;
-		result += temp;
-	}
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-type_obprop_enum(DeeTypeObject *__restrict tp_self,
-                 denum_t proc, void *arg) {
-	struct type_getset const *chain;
-	Dee_ssize_t temp, result = 0;
-	chain = tp_self->tp_getsets;
-	ASSERT(chain != NULL);
-	for (; chain->gs_name; ++chain) {
-		uint16_t perm = ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PROPERTY | ATTR_WRAPPER;
-		if (chain->gs_get)
-			perm |= ATTR_PERMGET;
-		if (chain->gs_del)
-			perm |= ATTR_PERMDEL;
-		if (chain->gs_set)
-			perm |= ATTR_PERMSET;
-		temp = (*proc)((DeeObject *)tp_self, chain->gs_name, chain->gs_doc,
-		               perm, NULL /*&DeeClsProperty_Type*/, arg);
-		if unlikely(temp < 0)
-			return temp;
-		result += temp;
-	}
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-type_obmemb_enum(DeeTypeObject *__restrict tp_self,
-                 denum_t proc, void *arg) {
-	struct type_member const *chain;
-	Dee_ssize_t temp, result = 0;
-	chain = tp_self->tp_members;
-	ASSERT(chain != NULL);
-	for (; chain->m_name; ++chain) {
-		uint16_t perm = ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PERMGET | ATTR_WRAPPER;
-		if (!(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
-			perm |= ATTR_PERMDEL | ATTR_PERMSET;
-		temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
-		               perm, type_member_typefor(chain) /*&DeeClsMember_Type*/, arg);
-		if unlikely(temp < 0)
-			return temp;
-		result += temp;
-	}
-	return result;
-}
-
 INTERN WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 type_getset_enum(DeeTypeObject *__restrict tp_self,
                  struct type_getset const *chain,
-                 uint16_t flags, denum_t proc, void *arg) {
+                 uint16_t flags, Dee_enum_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
-	ASSERT(flags & ATTR_PROPERTY);
+	ASSERT(flags & Dee_ATTRPERM_F_PROPERTY);
 	for (; chain->gs_name; ++chain) {
 		uint16_t perm = flags;
 		if (chain->gs_get)
-			perm |= ATTR_PERMGET;
+			perm |= Dee_ATTRPERM_F_CANGET;
 		if (chain->gs_del)
-			perm |= ATTR_PERMDEL;
+			perm |= Dee_ATTRPERM_F_CANDEL;
 		if (chain->gs_set)
-			perm |= ATTR_PERMSET;
+			perm |= Dee_ATTRPERM_F_CANSET;
 		temp = (*proc)((DeeObject *)tp_self, chain->gs_name,
 		               chain->gs_doc, perm, NULL, arg);
 		if unlikely(temp < 0)
@@ -261,16 +404,16 @@ type_getset_enum(DeeTypeObject *__restrict tp_self,
 INTERN WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 type_member_enum(DeeTypeObject *__restrict tp_self,
                  struct type_member const *chain,
-                 uint16_t flags, denum_t proc, void *arg) {
+                 uint16_t flags, Dee_enum_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
 	for (; chain->m_name; ++chain) {
 		if (TYPE_MEMBER_ISCONST(chain)) {
 			temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
-			               flags | ATTR_PERMGET, Dee_TYPE(chain->m_desc.md_const), arg);
+			               flags | Dee_ATTRPERM_F_CANGET, Dee_TYPE(chain->m_desc.md_const), arg);
 		} else {
-			uint16_t perm = flags | ATTR_PERMGET;
+			uint16_t perm = flags | Dee_ATTRPERM_F_CANGET;
 			if (!(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
-				perm |= (ATTR_PERMDEL | ATTR_PERMSET);
+				perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 			temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
 			               perm, type_member_typefor(chain), arg);
 		}
@@ -280,6 +423,69 @@ type_member_enum(DeeTypeObject *__restrict tp_self,
 	}
 	return result;
 }
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+type_obmeth_enum(DeeTypeObject *__restrict tp_self,
+                 Dee_enum_t proc, void *arg) {
+	struct type_method const *chain;
+	Dee_ssize_t temp, result = 0;
+	chain = tp_self->tp_methods;
+	ASSERT(chain != NULL);
+	for (; chain->m_name; ++chain) {
+		temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
+		               Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL | Dee_ATTRPERM_F_WRAPPER,
+		               &DeeObjMethod_Type /*&DeeClsMethod_Type*/, arg);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+type_obprop_enum(DeeTypeObject *__restrict tp_self,
+                 Dee_enum_t proc, void *arg) {
+	struct type_getset const *chain;
+	Dee_ssize_t temp, result = 0;
+	chain = tp_self->tp_getsets;
+	ASSERT(chain != NULL);
+	for (; chain->gs_name; ++chain) {
+		uint16_t perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_WRAPPER;
+		if (chain->gs_get)
+			perm |= Dee_ATTRPERM_F_CANGET;
+		if (chain->gs_del)
+			perm |= Dee_ATTRPERM_F_CANDEL;
+		if (chain->gs_set)
+			perm |= Dee_ATTRPERM_F_CANSET;
+		temp = (*proc)((DeeObject *)tp_self, chain->gs_name, chain->gs_doc,
+		               perm, NULL /*&DeeClsProperty_Type*/, arg);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+type_obmemb_enum(DeeTypeObject *__restrict tp_self,
+                 Dee_enum_t proc, void *arg) {
+	struct type_member const *chain;
+	Dee_ssize_t temp, result = 0;
+	chain = tp_self->tp_members;
+	ASSERT(chain != NULL);
+	for (; chain->m_name; ++chain) {
+		uint16_t perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_WRAPPER;
+		if (!(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
+			perm |= Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
+		temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
+		               perm, type_member_typefor(chain) /*&DeeClsMember_Type*/, arg);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+}
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL

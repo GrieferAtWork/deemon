@@ -478,7 +478,7 @@ struct_setattr(DeeStructTypeObject *tp_self,
 }
 
 PRIVATE NONNULL((1, 2)) dssize_t DCALL
-struct_enumattr(DeeStructTypeObject *__restrict self, denum_t proc, void *arg) {
+struct_enumattr(DeeStructTypeObject *__restrict self, Dee_enum_t proc, void *arg) {
 	size_t i;
 	dssize_t temp, result = 0;
 	for (i = 0; i < self->st_fmsk; ++i) {
@@ -486,7 +486,7 @@ struct_enumattr(DeeStructTypeObject *__restrict self, denum_t proc, void *arg) {
 			continue;
 		temp = (*proc)(DeeStructType_AsObject(self),
 		               DeeString_STR(self->st_fvec[i].sf_name), NULL,
-		               ATTR_PERMGET | ATTR_PERMDEL | ATTR_PERMSET,
+		               Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET,
 		               DeeLValueType_AsType(self->st_fvec[i].sf_type),
 		               arg);
 		if unlikely(temp < 0)
@@ -503,7 +503,7 @@ PRIVATE struct stype_attr struct_attr = {
 	/* .st_getattr  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&struct_getattr,
 	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&struct_delattr,
 	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&struct_setattr,
-	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, denum_t, void *))&struct_enumattr
+	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, Dee_enum_t, void *))&struct_enumattr
 };
 
 

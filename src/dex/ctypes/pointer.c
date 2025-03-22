@@ -495,7 +495,7 @@ DEFINE_TRINARY_LVALUE_OPERATOR(int, -1, lvalue_setattr, DeeStruct_SetAttr)
 
 PRIVATE NONNULL((1, 2)) dssize_t DCALL
 lvalue_enumattr(DeeLValueTypeObject *__restrict tp_self,
-                denum_t proc, void *arg) {
+                Dee_enum_t proc, void *arg) {
 	return DeeStruct_EnumAttr(tp_self->lt_orig, proc, arg);
 }
 
@@ -565,7 +565,7 @@ PRIVATE struct stype_attr lvalue_attr = {
 	/* .st_getattr  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *self, DeeObject *))&lvalue_getattr,
 	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *, void *self, DeeObject *))&lvalue_delattr,
 	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *, void *self, DeeObject *, DeeObject *))&lvalue_setattr,
-	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, denum_t, void *))&lvalue_enumattr
+	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, Dee_enum_t, void *))&lvalue_enumattr
 };
 
 PRIVATE WUNUSED DREF struct pointer_object *DCALL

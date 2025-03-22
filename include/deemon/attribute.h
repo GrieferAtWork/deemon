@@ -24,8 +24,12 @@
 /**/
 
 #include "types.h"
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+#include "mro.h"
+#endif /* CONFIG_EXPERIMENTAL_ATTRITER */
 /**/
 
+#ifndef CONFIG_EXPERIMENTAL_ATTRITER
 #ifdef CONFIG_NO_LONGJMP_ENUMATTR
 #undef CONFIG_LONGJMP_ENUMATTR
 #else /* CONFIG_NO_LONGJMP_ENUMATTR */
@@ -74,6 +78,7 @@
 #include "util/lock.h"
 #endif /* CONFIG_LONGJMP_ENUMATTR */
 #endif /* CONFIG_LONGJMP_ENUMATTR */
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 /**/
 
 #include <stddef.h> /* size_t */
@@ -91,14 +96,15 @@ typedef struct Dee_attribute_object DeeAttributeObject;
 typedef struct Dee_enumattr_object DeeEnumAttrObject;
 typedef struct Dee_enumattr_iterator_object DeeEnumAttrIteratorObject;
 
+#ifndef CONFIG_EXPERIMENTAL_ATTRITER
 struct Dee_attribute_info {
 	DREF DeeObject     *a_decl;     /* [1..1] The type defining the attribute. */
-	char const         *a_doc;      /* [if(a_perm & Dee_ATTR_DOCOBJ,
+	char const         *a_doc;      /* [if(a_perm & Dee_ATTRPERM_F_DOCOBJ,
 	                                 *     DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
 	                                 * [0..1] The documentation string of the attribute (when known).
 	                                 * NOTE: This may also be an empty string, which should be
 	                                 *       interpreted as no documentation string being there at all.
-	                                 * NOTE: When the `Dee_ATTR_DOCOBJ' flag is set, then this is actually
+	                                 * NOTE: When the `Dee_ATTRPERM_F_DOCOBJ' flag is set, then this is actually
 	                                 *       the `DeeString_STR()' of a string objects, to which a
 	                                 *       reference is being held. */
 	uint16_t            a_perm;     /* Set of `Dee_ATTR_*' flags, describing the attribute's behavior. */
@@ -108,18 +114,23 @@ struct Dee_attribute_info {
 	COMPILER_CONTAINER_OF((self)->a_doc, DeeStringObject, s_str)
 #define Dee_attribute_info_fini(self)                             \
 	(Dee_Decref((self)->a_decl), Dee_XDecref((self)->a_attrtype), \
-	 ((self)->a_perm & Dee_ATTR_DOCOBJ)                           \
+	 ((self)->a_perm & Dee_ATTRPERM_F_DOCOBJ)                           \
 	 ? Dee_Decref(Dee_attribute_info_docobj(self))                \
 	 : (void)0)
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 struct Dee_attribute_object {
-	/* Wrapper object for attribute information provided to `denum_t' */
+	/* Wrapper object for attribute information provided to `Dee_enum_t' */
 	Dee_OBJECT_HEAD
-	char const               *a_name; /* [if(a_info.a_perm & Dee_ATTR_NAMEOBJ,
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	struct Dee_attrdesc a_desc; /* [OVERRIDE(.ad_info.ai_decl, [DREF])] Attribute descriptor. */
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+	char const               *a_name; /* [if(a_info.a_perm & Dee_ATTRPERM_F_NAMEOBJ,
 	                                   *     DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
 	                                   * [1..1] The name of the attribute. */
 	struct Dee_attribute_info a_info; /* [const] Attribute information. */
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 };
 
 struct Dee_enumattr_object {
@@ -169,7 +180,7 @@ DDATDEF DeeTypeObject DeeEnumAttrIterator_Type; /* `(enumattr from deemon).Itera
 #define DeeEnumAttr_Check(x)      DeeObject_InstanceOfExact(x, &DeeEnumAttr_Type) /* `enumattr' is final */
 #define DeeEnumAttr_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeEnumAttr_Type)
 
-
+#ifndef CONFIG_EXPERIMENTAL_ATTRITER
 struct Dee_attribute_lookup_rules {
 	char const *alr_name;       /* [1..1] The name of the attribute to look up. */
 	Dee_hash_t  alr_hash;       /* [== Dee_HashStr(alr_name)] Hash of `alr_name' */
@@ -190,6 +201,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeObject_FindAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attribute_info *__restrict result,
                    struct Dee_attribute_lookup_rules const *__restrict rules);
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 DECL_END
 

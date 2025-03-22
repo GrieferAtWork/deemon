@@ -1132,7 +1132,7 @@ struct_setattr(DeeObject *self, DeeObject *attr, DeeObject *value) {
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 struct_enumattr(DeeTypeObject *tp_self, DeeObject *UNUSED(self),
-                denum_t proc, void *arg) {
+                Dee_enum_t proc, void *arg) {
 	dssize_t result;
 	result = DeeStruct_EnumAttr(DeeType_AsSType(tp_self), proc, arg);
 	if (result >= 0) {
@@ -1928,7 +1928,7 @@ DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self,
 /* Enumerate struct attributes (excluding generic attributes) */
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
-                   denum_t proc, void *arg) {
+                   Dee_enum_t proc, void *arg) {
 	if ((tp_self->st_attr && tp_self->st_attr->st_enumattr) ||
 	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_ENUMATTR))
 		return (*tp_self->st_attr->st_enumattr)(tp_self, proc, arg);

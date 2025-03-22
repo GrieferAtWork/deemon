@@ -218,10 +218,17 @@
 #define LOCAL_HAS_len
 #elif defined(DEFINE_DeeType_FindInstanceAttr)
 #define LOCAL_DeeType_AccessInstanceAttr                             DeeType_FindInstanceAttr
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_FindCachedInstanceAttr(self, specs, result)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_FindIInstanceMethodAttr(tp_invoker, tp_self, specs, result)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_FindIInstanceGetSetAttr(tp_invoker, tp_self, specs, result)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_FindIInstanceMemberAttr(tp_invoker, tp_self, specs, result)
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 #define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_FindCachedInstanceAttr(self, retinfo, rules)
 #define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_FindIInstanceMethodAttr(tp_invoker, tp_self, retinfo, rules)
 #define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_FindIInstanceGetSetAttr(tp_invoker, tp_self, retinfo, rules)
 #define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_FindIInstanceMemberAttr(tp_invoker, tp_self, retinfo, rules)
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #define LOCAL_IS_FIND
 #else /* ... */
 #error "Invalid configuration"
@@ -303,8 +310,13 @@ DECL_BEGIN
 INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 (DCALL LOCAL_DeeType_AccessInstanceAttr)(DeeTypeObject *self,
 #ifdef LOCAL_IS_FIND
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+                                         struct Dee_attrspec const *__restrict specs,
+                                         struct Dee_attrdesc *__restrict result
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
                                          struct Dee_attribute_info *__restrict retinfo,
                                          struct Dee_attribute_lookup_rules const *__restrict rules
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #else /* LOCAL_IS_FIND */
                                          char const *__restrict attr,
 #ifdef LOCAL_HAS_len
@@ -328,11 +340,11 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #endif /* !LOCAL_IS_FIND */
                                          ) {
 #ifdef LOCAL_IS_CALL_LIKE
-#define LOCAL_invoke_result_OR_done invoke_result
+#define LOCAL_invoke_retval_OR_done invoke_retval
 #else /* LOCAL_IS_CALL_LIKE */
-#define LOCAL_invoke_result_OR_done done
+#define LOCAL_invoke_retval_OR_done done
 #endif /* !LOCAL_IS_CALL_LIKE */
-	LOCAL_return_t result;
+	LOCAL_return_t retval;
 	DeeTypeObject *iter;
 	DeeTypeMRO mro;
 
@@ -357,16 +369,16 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 	 * >> // Access to the unbound function `/posix/stat/i:isreg':
 	 * >> print stat.getinstanceattr("isreg"); // callable (unbound) -- tp_methods       -- class->tp_cache
 	 */
-	result = LOCAL_DeeType_AccessCachedInstanceAttr(self);
-	if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
+	retval = LOCAL_DeeType_AccessCachedInstanceAttr(self);
+	if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 		goto done;
 	iter = self;
 	DeeTypeMRO_Init(&mro, iter);
 	do {
 		if (DeeType_IsClass(iter)) {
 #ifdef LOCAL_IS_FIND
-			result = DeeClass_FindIInstanceAttribute(self, iter, retinfo, rules);
-			if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
+			retval = DeeClass_FindIInstanceAttribute(self, iter, retinfo, rules);
+			if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 				goto done;
 #else /* LOCAL_IS_FIND */
 			struct class_attribute *cattr;
@@ -385,18 +397,18 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #endif /* !LOCAL_IS_FIND */
 		} else {
 			if (iter->tp_methods) { /* Access instance methods using `DeeClsMethodObject' */
-				result = LOCAL_DeeType_AccessIInstanceMethodAttr(self, iter);
-				if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
+				retval = LOCAL_DeeType_AccessIInstanceMethodAttr(self, iter);
+				if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 					goto done;
 			}
 			if (iter->tp_getsets) { /* Access instance getsets using `DeeClsPropertyObject' */
-				result = LOCAL_DeeType_AccessIInstanceGetSetAttr(self, iter);
-				if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
+				retval = LOCAL_DeeType_AccessIInstanceGetSetAttr(self, iter);
+				if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 					goto done;
 			}
 			if (iter->tp_members) { /* Access instance members using `DeeClsMemberObject' */
-				result = LOCAL_DeeType_AccessIInstanceMemberAttr(self, iter);
-				if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
+				retval = LOCAL_DeeType_AccessIInstanceMemberAttr(self, iter);
+				if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 					goto done;
 			}
 		}
@@ -412,8 +424,8 @@ err:
 	return LOCAL_ERROR_RETURN_VALUE;
 #endif /* !LOCAL_IS_HAS && !LOCAL_IS_FIND */
 done:
-	return result;
-#undef LOCAL_invoke_result_OR_done
+	return retval;
+#undef LOCAL_invoke_retval_OR_done
 }
 
 #undef LOCAL_return_t

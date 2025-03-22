@@ -334,7 +334,7 @@ DeeNone_OperatorGetItemNRStringLenHash(DeeObject *__restrict UNUSED(self),
 #define DeeNone_OperatorGetAttr                   (*(DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&_DeeNone_NewRef2)
 #define DeeNone_OperatorDelAttr                   (*(int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&_DeeNone_reti0_2)
 #define DeeNone_OperatorSetAttr                   (*(int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&_DeeNone_reti0_3)
-#define DeeNone_OperatorEnumAttr                  (*(Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&_DeeNone_rets0_4)
+#define DeeNone_OperatorEnumAttr                  (*(Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&_DeeNone_rets0_4)
 #define DeeNone_OperatorFindAttr                  (*(int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attribute_info *__restrict, struct Dee_attribute_lookup_rules const *__restrict))&_DeeNone_reti1_4)
 #define DeeNone_OperatorHasAttr                   (*(int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&_DeeNone_reti1_2)
 #define DeeNone_OperatorBoundAttr                 (*(int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&_DeeNone_reti1_2)

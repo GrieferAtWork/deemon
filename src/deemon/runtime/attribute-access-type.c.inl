@@ -40,8 +40,9 @@
 //#define DEFINE_DeeType_SetAttrStringHash
 //#define DEFINE_DeeType_SetAttrStringLenHash
 //#define DEFINE_DeeType_FindAttrInfoStringHash
-#define DEFINE_DeeType_FindAttrInfoStringLenHash
+//#define DEFINE_DeeType_FindAttrInfoStringLenHash
 //#define DEFINE_DeeType_FindAttr
+#define DEFINE_DeeType_IterAttr
 //#define DEFINE_DeeType_EnumAttr
 #endif /* __INTELLISENSE__ */
 
@@ -75,6 +76,7 @@
      defined(DEFINE_DeeType_FindAttrInfoStringHash) +       \
      defined(DEFINE_DeeType_FindAttrInfoStringLenHash) +    \
      defined(DEFINE_DeeType_FindAttr) +                     \
+     defined(DEFINE_DeeType_IterAttr) +                     \
      defined(DEFINE_DeeType_EnumAttr)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
@@ -312,6 +314,17 @@
 #define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_GenericFindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo)
 #define LOCAL_HAS_len
 #define LOCAL_IS_FINDINFO
+#elif defined(DEFINE_DeeType_FindAttr) && defined(CONFIG_EXPERIMENTAL_ATTRITER)
+#define LOCAL_DeeType_AccessAttr                                    DeeType_FindAttr
+#define LOCAL_DeeType_AccessCachedClassAttr(self)                   DeeType_FindCachedClassAttr(self, specs, result)
+#define LOCAL_DeeType_AccessClassMethodAttr(tp_invoker, tp_self)    DeeType_FindClassMethodAttr(tp_invoker, tp_self, specs, result)
+#define LOCAL_DeeType_AccessClassGetSetAttr(tp_invoker, tp_self)    DeeType_FindClassGetSetAttr(tp_invoker, tp_self, specs, result)
+#define LOCAL_DeeType_AccessClassMemberAttr(tp_invoker, tp_self)    DeeType_FindClassMemberAttr(tp_invoker, tp_self, specs, result)
+#define LOCAL_DeeType_AccessInstanceMethodAttr(tp_invoker, tp_self) DeeType_FindInstanceMethodAttr(tp_invoker, tp_self, specs, result)
+#define LOCAL_DeeType_AccessInstanceGetSetAttr(tp_invoker, tp_self) DeeType_FindInstanceGetSetAttr(tp_invoker, tp_self, specs, result)
+#define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) DeeType_FindInstanceMemberAttr(tp_invoker, tp_self, specs, result)
+#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_GenericFindAttr(self, specs, result)
+#define LOCAL_IS_FIND
 #elif defined(DEFINE_DeeType_FindAttr)
 #define LOCAL_DeeType_AccessAttr                                    DeeType_FindAttr
 #define LOCAL_DeeType_AccessCachedClassAttr(self)                   DeeType_FindCachedClassAttr(self, retinfo, rules)
@@ -323,11 +336,21 @@
 #define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) DeeType_FindInstanceMemberAttr(tp_invoker, tp_self, retinfo, rules)
 #define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_GenericFindAttr(self, retinfo, rules)
 #define LOCAL_IS_FIND
+#elif defined(DEFINE_DeeType_IterAttr)
+#define LOCAL_DeeType_AccessAttr                                    DeeType_IterAttr
+#define LOCAL_DeeType_AccessClassMethodAttr(tp_invoker, tp_self)    type_method_iterattr(tp_self, (tp_self)->tp_class_methods, Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder))
+#define LOCAL_DeeType_AccessClassGetSetAttr(tp_invoker, tp_self)    type_getset_iterattr(tp_self, (tp_self)->tp_class_getsets, Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_PROPERTY, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder))
+#define LOCAL_DeeType_AccessClassMemberAttr(tp_invoker, tp_self)    type_member_iterattr(tp_self, (tp_self)->tp_class_members, Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder))
+#define LOCAL_DeeType_AccessInstanceMethodAttr(tp_invoker, tp_self) type_obmeth_iterattr(tp_self, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder))
+#define LOCAL_DeeType_AccessInstanceGetSetAttr(tp_invoker, tp_self) type_obprop_iterattr(tp_self, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder))
+#define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) type_obmemb_iterattr(tp_self, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder))
+#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_GenericIterAttr(self, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder), hint)
+#define LOCAL_IS_ITER
 #elif defined(DEFINE_DeeType_EnumAttr)
 #define LOCAL_DeeType_AccessAttr                                    DeeType_EnumAttr
-#define LOCAL_DeeType_AccessClassMethodAttr(tp_invoker, tp_self)    type_method_enum(tp_self, (tp_self)->tp_class_methods, ATTR_CMEMBER, proc, arg)
-#define LOCAL_DeeType_AccessClassGetSetAttr(tp_invoker, tp_self)    type_getset_enum(tp_self, (tp_self)->tp_class_getsets, ATTR_CMEMBER | ATTR_PROPERTY, proc, arg)
-#define LOCAL_DeeType_AccessClassMemberAttr(tp_invoker, tp_self)    type_member_enum(tp_self, (tp_self)->tp_class_members, ATTR_CMEMBER, proc, arg)
+#define LOCAL_DeeType_AccessClassMethodAttr(tp_invoker, tp_self)    type_method_enum(tp_self, (tp_self)->tp_class_methods, Dee_ATTRPERM_F_CMEMBER, proc, arg)
+#define LOCAL_DeeType_AccessClassGetSetAttr(tp_invoker, tp_self)    type_getset_enum(tp_self, (tp_self)->tp_class_getsets, Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_PROPERTY, proc, arg)
+#define LOCAL_DeeType_AccessClassMemberAttr(tp_invoker, tp_self)    type_member_enum(tp_self, (tp_self)->tp_class_members, Dee_ATTRPERM_F_CMEMBER, proc, arg)
 #define LOCAL_DeeType_AccessInstanceMethodAttr(tp_invoker, tp_self) type_obmeth_enum(tp_self, proc, arg)
 #define LOCAL_DeeType_AccessInstanceGetSetAttr(tp_invoker, tp_self) type_obprop_enum(tp_self, proc, arg)
 #define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) type_obmemb_enum(tp_self, proc, arg)
@@ -370,6 +393,10 @@ DECL_BEGIN
 #define LOCAL_return_t              int
 #define LOCAL_ATTR_NOT_FOUND_RESULT 1
 #define LOCAL_ERROR_RETURN_VALUE    (-1)
+#elif defined(LOCAL_IS_ITER)
+#define LOCAL_return_t              size_t
+#define LOCAL_ATTR_NOT_FOUND_RESULT DONT_USE_THIS_MACRO
+#define LOCAL_ERROR_RETURN_VALUE    (size_t)-1
 #elif defined(LOCAL_IS_ENUM)
 #define LOCAL_return_t              Dee_ssize_t
 #define LOCAL_ATTR_NOT_FOUND_RESULT DONT_USE_THIS_MACRO
@@ -442,10 +469,18 @@ DECL_BEGIN
 INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 (DCALL LOCAL_DeeType_AccessAttr)(DeeTypeObject *self,
 #ifdef LOCAL_IS_FIND
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+                                 struct Dee_attrspec const *__restrict specs,
+                                 struct Dee_attrdesc *__restrict result
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
                                  struct Dee_attribute_info *__restrict retinfo,
                                  struct Dee_attribute_lookup_rules const *__restrict rules
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
+#elif defined(LOCAL_IS_ITER)
+                                 struct Dee_attriter *iterbuf, size_t bufsize,
+                                 struct Dee_attrhint *__restrict hint
 #elif defined(LOCAL_IS_ENUM)
-                                 denum_t proc, void *arg
+                                 Dee_enum_t proc, void *arg
 #else /* ... */
                                  char const *__restrict attr,
 #ifdef LOCAL_HAS_len
@@ -472,44 +507,58 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #endif /* !... */
                                  ) {
 #ifdef LOCAL_IS_CALL_LIKE
-#define LOCAL_invoke_result_OR_done invoke_result
+#define LOCAL_invoke_retval_OR_done invoke_retval
 #else /* LOCAL_IS_CALL_LIKE */
-#define LOCAL_invoke_result_OR_done done
+#define LOCAL_invoke_retval_OR_done done
 #endif /* !LOCAL_IS_CALL_LIKE */
 #ifdef LOCAL_IS_ENUM
-	LOCAL_return_t final_result = 0;
+	LOCAL_return_t final_retval = 0;
 #endif /* LOCAL_IS_ENUM */
-	LOCAL_return_t result;
+	LOCAL_return_t retval;
 	DeeTypeObject *iter;
 	DeeTypeMRO mro;
+#ifdef LOCAL_IS_ITER
+	struct Dee_attriterchain_builder builder;
+	Dee_attriterchain_builder_init(&builder, iterbuf, bufsize);
+#endif /* LOCAL_IS_ITER */
 
 	/* Try to access the cached version of the attribute. */
 #ifdef LOCAL_DeeType_AccessCachedClassAttr
-	result = LOCAL_DeeType_AccessCachedClassAttr(self);
-	if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
+	retval = LOCAL_DeeType_AccessCachedClassAttr(self);
+	if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 		goto done;
 #endif /* LOCAL_DeeType_AccessCachedClassAttr */
 
 	iter = self;
 	DeeTypeMRO_Init(&mro, iter);
 	do {
-#ifdef LOCAL_IS_ENUM
-#define LOCAL_process_result(result, done) \
-	if unlikely(result < 0)                \
+#ifdef LOCAL_IS_ITER
+#define LOCAL_process_retval(retval, done) \
+	if unlikely(retval == (size_t)-1)      \
 		goto err;                          \
-	final_result += result
+	Dee_attriterchain_builder_consume(&builder, retval)
+#elif defined(LOCAL_IS_ENUM)
+#define LOCAL_process_retval(retval, done) \
+	if unlikely(retval < 0)                \
+		goto err;                          \
+	final_retval += retval
 #else /* LOCAL_IS_ENUM */
-#define LOCAL_process_result(result, done)     \
-	if (result != LOCAL_ATTR_NOT_FOUND_RESULT) \
+#define LOCAL_process_retval(retval, done)     \
+	if (retval != LOCAL_ATTR_NOT_FOUND_RESULT) \
 		goto done
 #endif /* !LOCAL_IS_ENUM */
 
 #ifdef LOCAL_IS_FIND
 continue_at_iter:
-		if (rules->alr_decl && rules->alr_decl != (DeeObject *)iter) {
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+		if (specs->as_decl && specs->as_decl != (DeeObject *)iter)
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+		if (rules->alr_decl && rules->alr_decl != (DeeObject *)iter)
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
+		{
 #ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-			result = LOCAL_DeeObject_GenericAccessAttr((DeeObject *)iter);
-			LOCAL_process_result(result, done);
+			retval = LOCAL_DeeObject_GenericAccessAttr((DeeObject *)iter);
+			LOCAL_process_retval(retval, done);
 #endif /* CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC */
 			iter = DeeTypeMRO_Next(&mro, iter);
 			if (!iter)
@@ -525,15 +574,27 @@ continue_at_iter:
 
 		if (DeeType_IsClass(iter)) {
 #ifdef LOCAL_IS_FIND
-			result = DeeClass_FindClassAttribute(self, iter, retinfo, rules);
-			LOCAL_process_result(result, done);
-			result = DeeClass_FindClassInstanceAttribute(self, iter, retinfo, rules);
-			LOCAL_process_result(result, done);
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+			retval = DeeClass_FindClassAttribute(self, iter, specs, result);
+			LOCAL_process_retval(retval, done);
+			retval = DeeClass_FindClassInstanceAttribute(self, iter, specs, result);
+			LOCAL_process_retval(retval, done);
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+			retval = DeeClass_FindClassAttribute(self, iter, retinfo, rules);
+			LOCAL_process_retval(retval, done);
+			retval = DeeClass_FindClassInstanceAttribute(self, iter, retinfo, rules);
+			LOCAL_process_retval(retval, done);
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
+#elif defined(LOCAL_IS_ITER)
+			retval = DeeClass_IterClassAttributes(iter, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder));
+			LOCAL_process_retval(retval, done);
+			retval = DeeClass_IterClassInstanceAttributes(iter, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder));
+			LOCAL_process_retval(retval, done);
 #elif defined(LOCAL_IS_ENUM)
-			result = DeeClass_EnumClassAttributes(iter, proc, arg);
-			LOCAL_process_result(result, done);
-			result = DeeClass_EnumClassInstanceAttributes(iter, proc, arg);
-			LOCAL_process_result(result, done);
+			retval = DeeClass_EnumClassAttributes(iter, proc, arg);
+			LOCAL_process_retval(retval, done);
+			retval = DeeClass_EnumClassInstanceAttributes(iter, proc, arg);
+			LOCAL_process_retval(retval, done);
 #else /* ... */
 			struct class_attribute *cattr;
 			cattr = LOCAL_DeeType_QueryClassAttribute(self, iter);
@@ -573,16 +634,16 @@ continue_at_iter:
 #endif /* !... */
 		} else {
 			if (iter->tp_class_methods) {
-				result = LOCAL_DeeType_AccessClassMethodAttr(self, iter);
-				LOCAL_process_result(result, done);
+				retval = LOCAL_DeeType_AccessClassMethodAttr(self, iter);
+				LOCAL_process_retval(retval, done);
 			}
 			if (iter->tp_class_getsets) {
-				result = LOCAL_DeeType_AccessClassGetSetAttr(self, iter);
-				LOCAL_process_result(result, LOCAL_invoke_result_OR_done);
+				retval = LOCAL_DeeType_AccessClassGetSetAttr(self, iter);
+				LOCAL_process_retval(retval, LOCAL_invoke_retval_OR_done);
 			}
 			if (iter->tp_class_members) {
-				result = LOCAL_DeeType_AccessClassMemberAttr(self, iter);
-				LOCAL_process_result(result, LOCAL_invoke_result_OR_done);
+				retval = LOCAL_DeeType_AccessClassMemberAttr(self, iter);
+				LOCAL_process_retval(retval, LOCAL_invoke_retval_OR_done);
 			}
 
 #ifdef CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE
@@ -590,35 +651,35 @@ continue_at_iter:
 #endif /* CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE */
 			{
 				if (iter->tp_methods) { /* Access instance methods using `DeeClsMethodObject' */
-					result = LOCAL_DeeType_AccessInstanceMethodAttr(self, iter);
-					LOCAL_process_result(result, done);
+					retval = LOCAL_DeeType_AccessInstanceMethodAttr(self, iter);
+					LOCAL_process_retval(retval, done);
 				}
 				if (iter->tp_getsets) { /* Access instance getsets using `DeeClsPropertyObject' */
-					result = LOCAL_DeeType_AccessInstanceGetSetAttr(self, iter);
-					LOCAL_process_result(result, done);
+					retval = LOCAL_DeeType_AccessInstanceGetSetAttr(self, iter);
+					LOCAL_process_retval(retval, done);
 				}
 				if (iter->tp_members) { /* Access instance members using `DeeClsMemberObject' */
-					result = LOCAL_DeeType_AccessInstanceMemberAttr(self, iter);
-					LOCAL_process_result(result, done);
+					retval = LOCAL_DeeType_AccessInstanceMemberAttr(self, iter);
+					LOCAL_process_retval(retval, done);
 				}
 			}
 		}
 
 #ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-		result = LOCAL_DeeObject_GenericAccessAttr((DeeObject *)iter);
-		LOCAL_process_result(result, done);
+		retval = LOCAL_DeeObject_GenericAccessAttr((DeeObject *)iter);
+		LOCAL_process_retval(retval, done);
 #endif /* CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC */
 
-#undef LOCAL_process_result
+#undef LOCAL_process_retval
 	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
 
 #ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
-	result = LOCAL_DeeObject_GenericAccessAttr((DeeObject *)self);
-	if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
+	retval = LOCAL_DeeObject_GenericAccessAttr((DeeObject *)self);
+	if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 		goto done;
 #endif /* CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC */
 
-#if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FINDINFO) && !defined(LOCAL_IS_FIND) && !defined(LOCAL_IS_ENUM)
+#if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FINDINFO) && !defined(LOCAL_IS_FIND) && !defined(LOCAL_IS_ENUM) && !defined(LOCAL_IS_ITER)
 #ifdef LOCAL_HAS_len
 	err_unknown_attribute_string_len(self, attr, attrlen, LOCAL_ATTR_ACCESS_OP);
 #else /* LOCAL_HAS_len */
@@ -626,37 +687,41 @@ continue_at_iter:
 #endif /* !LOCAL_HAS_len */
 err:
 	return LOCAL_ERROR_RETURN_VALUE;
-#endif /* !LOCAL_IS_HAS && !LOCAL_IS_FIND && !LOCAL_IS_ENUM */
+#endif /* !LOCAL_IS_HAS && !LOCAL_IS_FIND && !LOCAL_IS_ENUM && !LOCAL_IS_ITER */
 #ifdef LOCAL_IS_CALL_LIKE
-invoke_result:
-	if (result) {
-		DREF DeeObject *real_result;
+invoke_retval:
+	if (retval) {
+		DREF DeeObject *real_retval;
 #ifdef LOCAL_IS_CALL
-		real_result = DeeObject_Call(result, argc, argv);
+		real_retval = DeeObject_Call(retval, argc, argv);
 #elif defined(LOCAL_IS_CALL_KW)
-		real_result = DeeObject_CallKw(result, argc, argv, kw);
+		real_retval = DeeObject_CallKw(retval, argc, argv, kw);
 #elif defined(LOCAL_IS_CALL_TUPLE)
-		real_result = DeeObject_CallTuple(result, args);
+		real_retval = DeeObject_CallTuple(retval, args);
 #elif defined(LOCAL_IS_CALL_TUPLE_KW)
-		real_result = DeeObject_CallTupleKw(result, args, kw);
+		real_retval = DeeObject_CallTupleKw(retval, args, kw);
 #elif defined(LOCAL_IS_VCALLF)
-		real_result = DeeObject_VCallf(result, format, args);
+		real_retval = DeeObject_VCallf(retval, format, args);
 #else /* ... */
 #error "Invalid configuration"
 #endif /* !... */
-		Dee_Decref(result);
-		result = real_result;
+		Dee_Decref(retval);
+		retval = real_retval;
 	}
 #endif /* LOCAL_IS_CALL_LIKE */
-#ifndef LOCAL_IS_ENUM
+#if !defined(LOCAL_IS_ENUM) && !defined(LOCAL_IS_ITER)
 done:
-	return result;
-#else /* !LOCAL_IS_ENUM */
-	return final_result;
+	return retval;
+#else /* !LOCAL_IS_ENUM && !LOCAL_IS_ITER */
+#ifdef LOCAL_IS_ITER
+	return Dee_attriterchain_builder_pack(&builder);
+#else /* LOCAL_IS_ITER */
+	return final_retval;
+#endif /* !LOCAL_IS_ITER */
 err:
-	return result;
-#endif /* LOCAL_IS_ENUM */
-#undef LOCAL_invoke_result_OR_done
+	return retval;
+#endif /* LOCAL_IS_ENUM || LOCAL_IS_ITER */
+#undef LOCAL_invoke_retval_OR_done
 }
 
 #undef LOCAL_return_t
@@ -676,6 +741,7 @@ err:
 #undef LOCAL_IS_SET
 #undef LOCAL_IS_FIND
 #undef LOCAL_IS_FINDINFO
+#undef LOCAL_IS_ITER
 #undef LOCAL_IS_ENUM
 #undef LOCAL_HAS_len
 #undef LOCAL_ATTR_NONNULL
@@ -719,4 +785,5 @@ DECL_END
 #undef DEFINE_DeeType_FindAttrInfoStringHash
 #undef DEFINE_DeeType_FindAttrInfoStringLenHash
 #undef DEFINE_DeeType_FindAttr
+#undef DEFINE_DeeType_IterAttr
 #undef DEFINE_DeeType_EnumAttr

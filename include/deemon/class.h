@@ -700,17 +700,50 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeClass_BoundMemberSafe(DeeTypeObject *_
 struct Dee_attribute_info;
 struct Dee_attribute_lookup_rules;
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+/* Iterate user-defined class or instance attributes. */
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeClass_IterClassAttributes(DeeTypeObject *__restrict self,
+                             struct Dee_attriter *iterbuf, size_t bufsize);
+INTDEF WUNUSED NONNULL((1, 3)) size_t DCALL
+DeeClass_IterInstanceAttributes(DeeTypeObject *__restrict self, DeeObject *instance,
+                                struct Dee_attriter *iterbuf, size_t bufsize);
+
+/* Iterate user-defined instance attributes, as
+ * accessed by `DeeClass_GetInstanceAttribute()'. */
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeClass_IterClassInstanceAttributes(DeeTypeObject *__restrict self,
+                                     struct Dee_attriter *iterbuf, size_t bufsize);
+
+/* Find a specific class-, instance- or
+ * instance-through-class-attribute, matching the given lookup rules.
+ * @return:  0: Attribute found (*result was filled with data).
+ * @return:  1: No attribute matching the given requirements was found.
+ * @return: -1: An error occurred. */
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeClass_FindClassAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
+                            struct Dee_attrspec const *__restrict specs,
+                            struct Dee_attrdesc *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
+DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, DeeObject *instance,
+                               struct Dee_attrspec const *__restrict specs,
+                               struct Dee_attrdesc *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
+                                    struct Dee_attrspec const *__restrict specs,
+                                    struct Dee_attrdesc *__restrict result);
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 /* Enumerate user-defined class or instance attributes. */
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self, denum_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self, Dee_enum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
-                                DeeObject *instance, denum_t proc, void *arg);
+                                DeeObject *instance, Dee_enum_t proc, void *arg);
 
 /* Enumerate user-defined instance attributes, as
  * accessed by `DeeClass_GetInstanceAttribute()'. */
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self, Dee_enum_t proc, void *arg);
 
 /* Find a specific class-, instance- or
  * instance-through-class-attribute, matching the given lookup rules.
@@ -729,6 +762,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
                                     struct Dee_attribute_info *__restrict result,
                                     struct Dee_attribute_lookup_rules const *__restrict rules);
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 /* Used to initialize attributes in default constructor calls.
  * @return:  0: Basic attribute successfully set
@@ -1010,7 +1044,11 @@ INTDEF NONNULL((1, 2)) void DCALL instance_tpclear(DeeTypeObject *tp_self, DeeOb
 INTDEF NONNULL((1)) void DCALL instance_pclear(DeeObject *__restrict self, unsigned int gc_priority);
 INTDEF struct type_gc Dee_tpconst instance_gc;
 
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL instance_enumattr(DeeTypeObject *tp_self, DeeObject *__restrict self, denum_t proc, void *arg);
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL instance_iterattr(DeeTypeObject *tp_self, DeeObject *__restrict self, struct Dee_attriter *iterbuf, size_t bufsize, struct Dee_attrhint *__restrict hint);
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL instance_enumattr(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_enum_t proc, void *arg);
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Instance-member wrapper objects

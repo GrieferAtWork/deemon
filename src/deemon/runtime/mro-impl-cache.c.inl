@@ -159,9 +159,9 @@
 //#define DEFINE_DeeType_VCallCachedInstanceAttrStringLenHashf
 //#define DEFINE_DeeType_FindCachedAttrInfoStringHash
 //#define DEFINE_DeeType_FindCachedClassAttrInfoStringHash
-#define DEFINE_DeeType_FindCachedAttrInfoStringLenHash
+//#define DEFINE_DeeType_FindCachedAttrInfoStringLenHash
 //#define DEFINE_DeeType_FindCachedClassAttrInfoStringLenHash
-//#define DEFINE_DeeType_FindCachedAttr
+#define DEFINE_DeeType_FindCachedAttr
 //#define DEFINE_DeeType_FindCachedClassAttr
 #endif /* __INTELLISENSE__ */
 
@@ -935,8 +935,13 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #ifndef LOCAL_IS_CLASS
                                        DeeObject *instance,
 #endif /* !LOCAL_IS_CLASS */
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+                                       struct Dee_attrspec const *__restrict specs,
+                                       struct Dee_attrdesc *__restrict result
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
                                        struct Dee_attribute_info *__restrict result,
                                        struct Dee_attribute_lookup_rules const *__restrict rules
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #else /* LOCAL_IS_FIND */
 #ifdef LOCAL_HAS_self
                                        DeeObject *self,
@@ -971,8 +976,13 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #endif /* LOCAL_IS_CLASS */
 
 #ifdef LOCAL_IS_FIND
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+#define LOCAL_attr specs->as_name
+#define LOCAL_hash specs->as_hash
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 #define LOCAL_attr rules->alr_name
 #define LOCAL_hash rules->alr_hash
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #else /* LOCAL_IS_FIND */
 #define LOCAL_attr attr
 #define LOCAL_hash hash
@@ -1019,9 +1029,11 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 	perturb = i = Dee_membercache_table_hashst(table, LOCAL_hash);
 	for (;; Dee_membercache_table_hashnx(i, perturb)) {
 #ifdef LOCAL_IS_FIND
+#ifndef CONFIG_EXPERIMENTAL_ATTRITER
 		DREF DeeTypeObject *attr_type;
 		char const *attr_doc;
 		uint16_t attr_perm;
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #endif /* LOCAL_IS_FIND */
 		struct Dee_membercache_slot *item;
 		uint16_t type;
@@ -1037,9 +1049,15 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			continue;
 
 #ifdef LOCAL_IS_FIND
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+		if (specs->as_decl != NULL &&
+		    specs->as_decl != (DeeObject *)item->mcs_decl)
+			break; /* Attribute isn't declared by the requested declarator. */
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 		if (rules->alr_decl != NULL &&
 		    rules->alr_decl != (DeeObject *)item->mcs_decl)
 			break; /* Attribute isn't declared by the requested declarator. */
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #endif /* LOCAL_IS_FIND */
 
 		/* Referenced attribute found! */
@@ -1677,13 +1695,183 @@ check_and_invoke_callback:
 #elif defined(LOCAL_IS_FIND)
 
 #ifdef LOCAL_IS_CLASS
-#define LOCAL_ATTR_xMEMBER ATTR_CMEMBER
+#define LOCAL_ATTR_xMEMBER Dee_ATTRPERM_F_CMEMBER
 #else /* LOCAL_IS_CLASS */
-#define LOCAL_ATTR_xMEMBER ATTR_IMEMBER
+#define LOCAL_ATTR_xMEMBER Dee_ATTRPERM_F_IMEMBER
 #endif /* !LOCAL_IS_CLASS */
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+#ifdef LOCAL_IS_CLASS
+#define LOCAL_tp_methods tp_class_methods
+#define LOCAL_tp_getsets tp_class_getsets
+#define LOCAL_tp_members tp_class_members
+#else /* LOCAL_IS_CLASS */
+#define LOCAL_tp_methods tp_methods
+#define LOCAL_tp_getsets tp_getsets
+#define LOCAL_tp_members tp_members
+#endif /* !LOCAL_IS_CLASS */
 		case MEMBERCACHE_METHOD:
-			attr_perm = LOCAL_ATTR_xMEMBER | ATTR_PERMGET | ATTR_PERMCALL;
+			result->ad_perm = LOCAL_ATTR_xMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
+			result->ad_doc = item->mcs_method.m_doc;
+			result->ad_info.ai_type = Dee_ATTRINFO_METHOD;
+			result->ad_info.ai_value.v_method = locate_type_method(item->mcs_decl->LOCAL_tp_methods, item->mcs_method.m_name);
+			break;
+
+		case MEMBERCACHE_GETSET:
+			result->ad_perm = LOCAL_ATTR_xMEMBER | Dee_ATTRPERM_F_PROPERTY;
+			result->ad_doc = item->mcs_getset.gs_doc;
+			result->ad_info.ai_type = Dee_ATTRINFO_GETSET;
+			result->ad_info.ai_value.v_getset = locate_type_getset(item->mcs_decl->LOCAL_tp_getsets, item->mcs_getset.gs_name);
+			if (item->mcs_getset.gs_get)
+				result->ad_perm |= Dee_ATTRPERM_F_CANGET;
+			if (item->mcs_getset.gs_del)
+				result->ad_perm |= Dee_ATTRPERM_F_CANDEL;
+			if (item->mcs_getset.gs_set)
+				result->ad_perm |= Dee_ATTRPERM_F_CANSET;
+			break;
+
+		case MEMBERCACHE_MEMBER:
+			result->ad_perm = LOCAL_ATTR_xMEMBER | Dee_ATTRPERM_F_CANGET;
+			result->ad_doc = item->mcs_member.m_doc;
+			result->ad_info.ai_type = Dee_ATTRINFO_MEMBER;
+			result->ad_info.ai_value.v_member = locate_type_member(item->mcs_decl->LOCAL_tp_members, item->mcs_member.m_name);
+			if (!TYPE_MEMBER_ISCONST(&item->mcs_member)) {
+				if (!(item->mcs_member.m_desc.md_field.mdf_type & STRUCT_CONST))
+					result->ad_perm |= Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
+			}
+			break;
+#undef LOCAL_tp_methods
+#undef LOCAL_tp_getsets
+#undef LOCAL_tp_members
+
+		case MEMBERCACHE_ATTRIB: {
+			struct class_attribute *catt;
+			struct instance_desc *inst;
+			catt = item->mcs_attrib.a_attr;
+			result->ad_info.ai_type = Dee_ATTRINFO_ATTR;
+			result->ad_info.ai_value.v_attr = catt;
+			result->ad_perm = LOCAL_ATTR_xMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
+			result->ad_doc = NULL;
+			result->ad_perm |= Dee_ATTRPERM_F_NAMEOBJ | Dee_ATTRPERM_F_DOCOBJ;
+			Dee_Incref(catt->ca_name);
+			ASSERT(result->ad_name == DeeString_STR(catt->ca_name));
+			if (catt->ca_doc) {
+				result->ad_doc = DeeString_STR(catt->ca_doc);
+				Dee_Incref(catt->ca_doc);
+			}
+			if (catt->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+				result->ad_perm |= Dee_ATTRPERM_F_PRIVATE;
+			if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+				result->ad_perm |= Dee_ATTRPERM_F_PROPERTY;
+			} else if (catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+				result->ad_perm |= Dee_ATTRPERM_F_CANCALL;
+			}
+
+#ifdef LOCAL_IS_CLASS
+			inst = class_desc_as_instance(item->mcs_attrib.a_desc);
+#else /* LOCAL_IS_CLASS */
+			inst = NULL;
+			if (catt->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+				inst = class_desc_as_instance(item->mcs_attrib.a_desc);
+			} else if (instance) {
+				inst = DeeInstance_DESC(item->mcs_attrib.a_desc, instance);
+			}
+			if (inst != NULL)
+#endif /* !LOCAL_IS_CLASS */
+			{
+				Dee_instance_desc_lock_read(inst);
+				if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+					if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
+						result->ad_perm &= ~Dee_ATTRPERM_F_CANGET;
+					if (!(catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_DEL])
+							result->ad_perm &= ~Dee_ATTRPERM_F_CANDEL;
+						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_SET])
+							result->ad_perm &= ~Dee_ATTRPERM_F_CANSET;
+					}
+				}
+				Dee_instance_desc_lock_endread(inst);
+			}
+			if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+				result->ad_perm &= ~(Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+		}	break;
+
+#ifdef LOCAL_IS_CLASS
+		case MEMBERCACHE_INSTANCE_METHOD:
+			result->ad_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
+			result->ad_doc = item->mcs_method.m_doc;
+			result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_METHOD;
+			result->ad_info.ai_value.v_instance_method = locate_type_method(item->mcs_decl->tp_methods, item->mcs_method.m_name);
+			break;
+
+		case MEMBERCACHE_INSTANCE_GETSET:
+			result->ad_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_PROPERTY;
+			result->ad_doc = item->mcs_getset.gs_doc;
+			result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_GETSET;
+			result->ad_info.ai_value.v_instance_getset = locate_type_getset(item->mcs_decl->tp_getsets, item->mcs_getset.gs_name);
+			if (item->mcs_getset.gs_get)
+				result->ad_perm |= Dee_ATTRPERM_F_CANGET;
+			if (item->mcs_getset.gs_del)
+				result->ad_perm |= Dee_ATTRPERM_F_CANDEL;
+			if (item->mcs_getset.gs_set)
+				result->ad_perm |= Dee_ATTRPERM_F_CANSET;
+			break;
+
+		case MEMBERCACHE_INSTANCE_MEMBER:
+			result->ad_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER;
+			result->ad_doc = item->mcs_member.m_doc;
+			result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_MEMBER;
+			result->ad_info.ai_value.v_instance_member = locate_type_member(item->mcs_decl->tp_members, item->mcs_member.m_name);
+			if (!TYPE_MEMBER_ISCONST(&item->mcs_member)) {
+				if (!(item->mcs_member.m_desc.md_field.mdf_type & STRUCT_CONST))
+					result->ad_perm |= Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
+			}
+			break;
+
+		case MEMBERCACHE_INSTANCE_ATTRIB: {
+			struct class_attribute *catt;
+			result->ad_doc = NULL;
+			catt = item->mcs_attrib.a_attr;
+			result->ad_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
+			result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_ATTR;
+			result->ad_info.ai_value.v_instance_attr = catt;
+			result->ad_perm |= Dee_ATTRPERM_F_NAMEOBJ | Dee_ATTRPERM_F_DOCOBJ;
+			Dee_Incref(catt->ca_name);
+			ASSERT(result->ad_name == DeeString_STR(catt->ca_name));
+			if (catt->ca_doc) {
+				result->ad_doc = DeeString_STR(catt->ca_doc);
+				Dee_Incref(catt->ca_doc);
+			}
+			if (catt->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+				result->ad_perm |= Dee_ATTRPERM_F_PRIVATE;
+			if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+				result->ad_perm |= Dee_ATTRPERM_F_PROPERTY;
+			} else if (catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+				result->ad_perm |= Dee_ATTRPERM_F_CANCALL;
+			}
+			if (catt->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+				struct instance_desc *inst;
+				inst = class_desc_as_instance(item->mcs_attrib.a_desc);
+				Dee_instance_desc_lock_read(inst);
+				if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+					if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
+						result->ad_perm &= ~Dee_ATTRPERM_F_CANGET;
+					if (!(catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_DEL])
+							result->ad_perm &= ~Dee_ATTRPERM_F_CANDEL;
+						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_SET])
+							result->ad_perm &= ~Dee_ATTRPERM_F_CANSET;
+					}
+				}
+				Dee_instance_desc_lock_endread(inst);
+			}
+			if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+				result->ad_perm &= ~(Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+		}	break;
+#endif /* LOCAL_IS_CLASS */
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+		case MEMBERCACHE_METHOD:
+			attr_perm = LOCAL_ATTR_xMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
 			attr_doc  = item->mcs_method.m_doc;
 			attr_type = &DeeObjMethod_Type;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS)
@@ -1692,19 +1880,19 @@ check_and_invoke_callback:
 			break;
 
 		case MEMBERCACHE_GETSET:
-			attr_perm = LOCAL_ATTR_xMEMBER | ATTR_PROPERTY;
+			attr_perm = LOCAL_ATTR_xMEMBER | Dee_ATTRPERM_F_PROPERTY;
 			attr_doc  = item->mcs_getset.gs_doc;
 			attr_type = NULL;
 			if (item->mcs_getset.gs_get)
-				attr_perm |= ATTR_PERMGET;
+				attr_perm |= Dee_ATTRPERM_F_CANGET;
 			if (item->mcs_getset.gs_del)
-				attr_perm |= ATTR_PERMDEL;
+				attr_perm |= Dee_ATTRPERM_F_CANDEL;
 			if (item->mcs_getset.gs_set)
-				attr_perm |= ATTR_PERMSET;
+				attr_perm |= Dee_ATTRPERM_F_CANSET;
 			break;
 
 		case MEMBERCACHE_MEMBER:
-			attr_perm = LOCAL_ATTR_xMEMBER | ATTR_PERMGET;
+			attr_perm = LOCAL_ATTR_xMEMBER | Dee_ATTRPERM_F_CANGET;
 			attr_doc  = item->mcs_member.m_doc;
 			if (TYPE_MEMBER_ISCONST(&item->mcs_member)) {
 				attr_type = Dee_TYPE(item->mcs_member.m_desc.md_const);
@@ -1718,7 +1906,7 @@ check_and_invoke_callback:
 				attr_type = type_member_typefor(&item->mcs_member);
 				Dee_XIncref(attr_type);
 				if (!(item->mcs_member.m_desc.md_field.mdf_type & STRUCT_CONST))
-					attr_perm |= ATTR_PERMDEL | ATTR_PERMSET;
+					attr_perm |= Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
 			}
 			break;
 
@@ -1727,19 +1915,19 @@ check_and_invoke_callback:
 			struct instance_desc *inst;
 			attr_doc = NULL;
 			catt     = item->mcs_attrib.a_attr;
-			attr_perm = LOCAL_ATTR_xMEMBER | ATTR_PERMGET | ATTR_PERMDEL | ATTR_PERMSET;
+			attr_perm = LOCAL_ATTR_xMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
 			if (catt->ca_doc) {
 				attr_doc = DeeString_STR(catt->ca_doc);
-				attr_perm |= ATTR_DOCOBJ;
+				attr_perm |= Dee_ATTRPERM_F_DOCOBJ;
 				Dee_Incref(catt->ca_doc);
 			}
 			if (catt->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
-				attr_perm |= ATTR_PRIVATE;
+				attr_perm |= Dee_ATTRPERM_F_PRIVATE;
 			if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-				attr_perm |= ATTR_PROPERTY;
+				attr_perm |= Dee_ATTRPERM_F_PROPERTY;
 				attr_type = NULL;
 			} else if (catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
-				attr_perm |= ATTR_PERMCALL;
+				attr_perm |= Dee_ATTRPERM_F_CANCALL;
 				attr_type = &DeeInstanceMethod_Type;
 				Dee_Incref(attr_type);
 			} else {
@@ -1761,12 +1949,12 @@ check_and_invoke_callback:
 				Dee_instance_desc_lock_read(inst);
 				if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 					if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
-						attr_perm &= ~ATTR_PERMGET;
+						attr_perm &= ~Dee_ATTRPERM_F_CANGET;
 					if (!(catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
 						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_DEL])
-							attr_perm &= ~ATTR_PERMDEL;
+							attr_perm &= ~Dee_ATTRPERM_F_CANDEL;
 						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_SET])
-							attr_perm &= ~ATTR_PERMSET;
+							attr_perm &= ~Dee_ATTRPERM_F_CANSET;
 					}
 				} else if (!(catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
 					ASSERT(!attr_type);
@@ -1779,12 +1967,12 @@ check_and_invoke_callback:
 				Dee_instance_desc_lock_endread(inst);
 			}
 			if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
-				attr_perm &= ~(ATTR_PERMDEL | ATTR_PERMSET);
+				attr_perm &= ~(Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 		}	break;
 
 #ifdef LOCAL_IS_CLASS
 		case MEMBERCACHE_INSTANCE_METHOD:
-			attr_perm = ATTR_CMEMBER | ATTR_IMEMBER | ATTR_WRAPPER | ATTR_PERMGET | ATTR_PERMCALL;
+			attr_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
 			attr_doc  = item->mcs_method.m_doc;
 			attr_type = (item->mcs_method.m_flag & TYPE_METHOD_FKWDS)
 			              ? &DeeKwClsMethod_Type
@@ -1793,19 +1981,19 @@ check_and_invoke_callback:
 			break;
 
 		case MEMBERCACHE_INSTANCE_GETSET:
-			attr_perm = ATTR_CMEMBER | ATTR_IMEMBER | ATTR_WRAPPER | ATTR_PROPERTY;
+			attr_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_PROPERTY;
 			attr_doc  = item->mcs_getset.gs_doc;
 			attr_type = NULL /*&DeeClsProperty_Type*/;
 			if (item->mcs_getset.gs_get)
-				attr_perm |= ATTR_PERMGET;
+				attr_perm |= Dee_ATTRPERM_F_CANGET;
 			if (item->mcs_getset.gs_del)
-				attr_perm |= ATTR_PERMDEL;
+				attr_perm |= Dee_ATTRPERM_F_CANDEL;
 			if (item->mcs_getset.gs_set)
-				attr_perm |= ATTR_PERMSET;
+				attr_perm |= Dee_ATTRPERM_F_CANSET;
 			break;
 
 		case MEMBERCACHE_INSTANCE_MEMBER:
-			attr_perm = ATTR_CMEMBER | ATTR_IMEMBER | ATTR_WRAPPER;
+			attr_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER;
 			attr_doc  = item->mcs_member.m_doc;
 			/*attr_type = &DeeClsMember_Type*/;
 			if (TYPE_MEMBER_ISCONST(&item->mcs_member)) {
@@ -1815,7 +2003,7 @@ check_and_invoke_callback:
 				attr_type = type_member_typefor(&item->mcs_member);
 				Dee_XIncref(attr_type);
 				if (!(item->mcs_member.m_desc.md_field.mdf_type & STRUCT_CONST))
-					attr_perm |= ATTR_PERMDEL | ATTR_PERMSET;
+					attr_perm |= Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
 			}
 			break;
 
@@ -1823,19 +2011,19 @@ check_and_invoke_callback:
 			struct class_attribute *catt;
 			attr_doc  = NULL;
 			catt = item->mcs_attrib.a_attr;
-			attr_perm = ATTR_CMEMBER | ATTR_IMEMBER | ATTR_WRAPPER | ATTR_PERMGET | ATTR_PERMDEL | ATTR_PERMSET;
+			attr_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
 			if (catt->ca_doc) {
 				attr_doc = DeeString_STR(catt->ca_doc);
-				attr_perm |= ATTR_DOCOBJ;
+				attr_perm |= Dee_ATTRPERM_F_DOCOBJ;
 				Dee_Incref(catt->ca_doc);
 			}
 			if (catt->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
-				attr_perm |= ATTR_PRIVATE;
+				attr_perm |= Dee_ATTRPERM_F_PRIVATE;
 			if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-				attr_perm |= ATTR_PROPERTY;
+				attr_perm |= Dee_ATTRPERM_F_PROPERTY;
 				attr_type = NULL;
 			} else if (catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
-				attr_perm |= ATTR_PERMCALL;
+				attr_perm |= Dee_ATTRPERM_F_CANCALL;
 				attr_type = &DeeInstanceMethod_Type;
 				Dee_Incref(attr_type);
 			} else {
@@ -1847,12 +2035,12 @@ check_and_invoke_callback:
 				Dee_instance_desc_lock_read(inst);
 				if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 					if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
-						attr_perm &= ~ATTR_PERMGET;
+						attr_perm &= ~Dee_ATTRPERM_F_CANGET;
 					if (!(catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
 						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_DEL])
-							attr_perm &= ~ATTR_PERMDEL;
+							attr_perm &= ~Dee_ATTRPERM_F_CANDEL;
 						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_SET])
-							attr_perm &= ~ATTR_PERMSET;
+							attr_perm &= ~Dee_ATTRPERM_F_CANSET;
 					}
 				} else if (!(catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
 					ASSERT(!attr_type);
@@ -1865,9 +2053,10 @@ check_and_invoke_callback:
 				Dee_instance_desc_lock_endread(inst);
 			}
 			if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
-				attr_perm &= ~(ATTR_PERMDEL | ATTR_PERMSET);
+				attr_perm &= ~(Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 		}	break;
 #endif /* LOCAL_IS_CLASS */
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 #undef LOCAL_ATTR_xMEMBER
 
@@ -1889,8 +2078,23 @@ check_and_invoke_callback:
 #ifdef LOCAL_IS_FIND
 		/* If the caller is looking for an attribute with
 		 * specific permissions, check if we match those. */
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+		if ((result->ad_perm & specs->as_perm_mask) != specs->as_perm_value) {
+			if (result->ad_perm & Dee_ATTRPERM_F_NAMEOBJ)
+				Dee_Decref(COMPILER_CONTAINER_OF(result->ad_name, DeeStringObject, s_str));
+			if ((result->ad_perm & Dee_ATTRPERM_F_DOCOBJ) && result->ad_doc)
+				Dee_Decref(COMPILER_CONTAINER_OF(result->ad_doc, DeeStringObject, s_str));
+			break;
+		}
+
+		/* Found it! */
+		result->ad_name         = item->mcs_name;
+		result->ad_info.ai_decl = (DeeObject *)item->mcs_decl;
+		Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
+		return 0;
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 		if ((attr_perm & rules->alr_perm_mask) != rules->alr_perm_value) {
-			if (attr_perm & ATTR_DOCOBJ)
+			if (attr_perm & Dee_ATTRPERM_F_DOCOBJ)
 				Dee_Decref(COMPILER_CONTAINER_OF(attr_doc, DeeStringObject, s_str));
 			Dee_XDecref_unlikely(attr_type);
 			break;
@@ -1904,6 +2108,7 @@ check_and_invoke_callback:
 		result->a_perm     = attr_perm;
 		result->a_attrtype = attr_type; /* Inherit reference. */
 		return 0;
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #endif /* LOCAL_IS_FIND */
 	} /* for (;; Dee_membercache_table_hashnx(i, perturb)) */
 

@@ -189,7 +189,7 @@ struct stype_attr {
 
 	/* Enumerate struct attributes (excluding generic attributes) */
 	WUNUSED_T NONNULL_T((1, 2)) dssize_t
-	(DCALL *st_enumattr)(DeeSTypeObject *__restrict tp_self, denum_t proc, void *arg);
+	(DCALL *st_enumattr)(DeeSTypeObject *__restrict tp_self, Dee_enum_t proc, void *arg);
 };
 
 
@@ -639,7 +639,7 @@ DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self,
 /* Enumerate struct attributes (excluding generic attributes) */
 INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
-                   denum_t proc, void *arg);
+                   Dee_enum_t proc, void *arg);
 
 
 #ifdef __SIZEOF_BOOL__
