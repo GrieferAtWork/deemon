@@ -705,7 +705,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Other, platform-specific C-types. */
 	{ "size_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_SIZE_T__)), MODSYM_FREADONLY },
 	{ "ssize_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_SIZE_T__)), MODSYM_FREADONLY },
-	{ "ptrdiff_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_PTRDIFF_T__)), MODSYM_FREADONLY },
+	{ "ptrdiff_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_PTRDIFF_T__)), MODSYM_FREADONLY },
 	{ "intptr_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_POINTER__)), MODSYM_FREADONLY },
 	{ "uintptr_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_POINTER__)), MODSYM_FREADONLY },
 
