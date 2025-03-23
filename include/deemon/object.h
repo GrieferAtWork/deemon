@@ -2591,7 +2591,7 @@ struct Dee_type_attr {
 	 * @return: <= bufsize: Success; the given `iterbuf' was initialized and you can start enumeration
 	 * @return: > bufsize:  Failure: need a larger buffer size (specifically: one of at least "return" bytes)
 	 * @return: (size_t)-1: An error was thrown. */
-	WUNUSED_T NONNULL_T((1, 2, 3, 5))
+	WUNUSED_T NONNULL_T((1, 2, 5))
 	size_t (DCALL *tp_iterattr)(DeeTypeObject *tp_self, DeeObject *self,
 	                            struct Dee_attriter *iterbuf, size_t bufsize,
 	                            struct Dee_attrhint *__restrict hint);

@@ -1261,7 +1261,7 @@ PRIVATE struct Dee_attriter_type tpconst module_attriter_type = {
 	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&module_attriter_next,
 };
 
-PRIVATE WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 module_iterattr(DeeTypeObject *UNUSED(tp_self), DeeModuleObject *self,
                 struct Dee_attriter *iterbuf, size_t bufsize,
                 struct Dee_attrhint *__restrict hint) {

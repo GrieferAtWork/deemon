@@ -440,7 +440,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 /* Experimental feature switch: Use a new struct-based method of enumerating attributes */
 #if (!defined(CONFIG_EXPERIMENTAL_ATTRITER) && \
      !defined(CONFIG_NO_EXPERIMENTAL_ATTRITER))
-#if 0 /* TODO: Implementation is incomplete */
+#if 1 /* TODO: Implementation is incomplete */
 #define CONFIG_EXPERIMENTAL_ATTRITER
 #else
 #define CONFIG_NO_EXPERIMENTAL_ATTRITER

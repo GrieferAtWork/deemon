@@ -834,7 +834,7 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 3, 4)) int DCALL
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 attribute_find_with_enum(DeeTypeObject *type_with_tp_iterattr, DeeObject *self,
                          struct Dee_attrspec const *__restrict specs,
                          struct Dee_attrdesc *__restrict result) {
@@ -845,7 +845,6 @@ again_alloc_iterbuf:
 	iterbuf = (struct Dee_attriter *)Dee_Malloca(bufsiz);
 	if unlikely(!iterbuf)
 		goto err;
-	ASSERT(type_with_tp_iterattr);
 	ASSERT(type_with_tp_iterattr->tp_attr);
 	ASSERT(type_with_tp_iterattr->tp_attr->tp_iterattr);
 	reqsiz = (*type_with_tp_iterattr->tp_attr->tp_iterattr)(type_with_tp_iterattr, self,

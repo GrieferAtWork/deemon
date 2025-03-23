@@ -902,7 +902,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF EnumAttrIter *DCALL
+PRIVATE WUNUSED DREF EnumAttrIter *DCALL
 enumattriter_init(size_t argc, DeeObject *const *argv) {
 	EnumAttr *ea;
 	_DeeArg_Unpack1(err, argc, argv, "_EnumAttrIterator", &ea);

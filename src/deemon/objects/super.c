@@ -881,7 +881,7 @@ super_setattr(Super *self, /*String*/ DeeObject *name, DeeObject *value) {
 }
 
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-PRIVATE WUNUSED NONNULL((1, 2, 3, 5)) size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 super_iterattr(DeeTypeObject *UNUSED(tp_self), Super *self,
                struct Dee_attriter *iterbuf, size_t bufsize,
                struct Dee_attrhint *__restrict hint) {

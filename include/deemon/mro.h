@@ -353,7 +353,7 @@ DFUNDEF WUNUSED size_t DCALL Dee_attriter_initempty(struct Dee_attriter *iterbuf
  *              it through use of `Dee_attribute_info_fini()'.
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeObject_FindAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attrspec const *__restrict specs,
                    struct Dee_attrdesc *__restrict result);
@@ -368,7 +368,7 @@ DeeObject_FindAttr(DeeTypeObject *tp_self, DeeObject *self,
  *                               case, you also *have* to finalize the iterator using `Dee_attriter_fini'
  * @return: > bufsize:  Failure: need a larger buffer size (specifically: one of at least "return" bytes)
  * @return: (size_t)-1: An error was thrown. */
-DFUNDEF WUNUSED NONNULL((1, 3, 5)) size_t DCALL
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) size_t DCALL
 DeeObject_IterAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attriter *iterbuf, size_t bufsize,
                    struct Dee_attrhint *__restrict hint);
@@ -387,7 +387,7 @@ typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t
  * @return: >= 0: Success (return value is the sum of invocations of `cb')
  * @return: -1:   An error was thrown
  * @return: < -1: Negative return value returned by `cb' */
-DFUNDEF WUNUSED NONNULL((1, 3, 4, 5)) Dee_ssize_t DCALL
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) Dee_ssize_t DCALL
 DeeObject_EnumAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attrhint *__restrict filter,
                    Dee_enumattr_t cb, void *arg);
@@ -1953,12 +1953,12 @@ DeeType_FindInstanceMemberAttrInfoStringLenHash(DeeTypeObject *tp_invoker, DeeTy
  *                                  Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_PROPERTY
  *          - type_member_iterattr: Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET
  *                                  Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET */
-INTDEF WUNUSED NONNULL((1, 2, 4)) size_t DCALL type_method_iterattr(DeeTypeObject *__restrict tp_self, struct type_method const *chain, uint16_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
-INTDEF WUNUSED NONNULL((1, 2, 4)) size_t DCALL type_getset_iterattr(DeeTypeObject *__restrict tp_self, struct type_getset const *chain, uint16_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
-INTDEF WUNUSED NONNULL((1, 2, 4)) size_t DCALL type_member_iterattr(DeeTypeObject *__restrict tp_self, struct type_member const *chain, uint16_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_obmeth_iterattr(DeeTypeObject *__restrict tp_self, struct Dee_attriter *iterbuf, size_t bufsize);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_obprop_iterattr(DeeTypeObject *__restrict tp_self, struct Dee_attriter *iterbuf, size_t bufsize);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_obmemb_iterattr(DeeTypeObject *__restrict tp_self, struct Dee_attriter *iterbuf, size_t bufsize);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_method_iterattr(DeeTypeObject *__restrict tp_self, struct type_method const *chain, uint16_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_getset_iterattr(DeeTypeObject *__restrict tp_self, struct type_getset const *chain, uint16_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_member_iterattr(DeeTypeObject *__restrict tp_self, struct type_member const *chain, uint16_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obmeth_iterattr(DeeTypeObject *__restrict tp_self, struct Dee_attriter *iterbuf, size_t bufsize);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obprop_iterattr(DeeTypeObject *__restrict tp_self, struct Dee_attriter *iterbuf, size_t bufsize);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obmemb_iterattr(DeeTypeObject *__restrict tp_self, struct Dee_attriter *iterbuf, size_t bufsize);
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 INTDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL type_method_enum(DeeTypeObject *__restrict tp_self, struct type_method const *chain, uint16_t flags, Dee_enum_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL type_getset_enum(DeeTypeObject *__restrict tp_self, struct type_getset const *chain, uint16_t flags, Dee_enum_t proc, void *arg);

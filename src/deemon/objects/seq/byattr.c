@@ -25,6 +25,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/format.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -51,7 +52,7 @@ STATIC_ASSERT(offsetof(MapByAttr, mba_map) == offsetof(ProxyObject, po_obj));
 #define byattr_init generic_proxy__init
 
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-PRIVATE WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 byattr_iterattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
                 struct Dee_attriter *iterbuf, size_t bufsize,
                 struct Dee_attrhint *__restrict hint);
@@ -217,7 +218,7 @@ PRIVATE struct Dee_attriter_type tpconst byattr_attriter_type = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 byattr_iterattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
                 struct Dee_attriter *iterbuf, size_t bufsize,
                 struct Dee_attrhint *__restrict UNUSED(hint)) {

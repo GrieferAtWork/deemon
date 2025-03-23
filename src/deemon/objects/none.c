@@ -390,7 +390,7 @@ STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by defini
 #define DeeNone_OperatorIterNext (*(DREF DeeObject *(DCALL *)(DeeObject *))&_DeeNone_retsm1_1)
 
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-PRIVATE WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 DeeNone_OperatorIterAttr(DeeTypeObject *UNUSED(tp_self), DeeObject *UNUSED(self),
                          struct Dee_attriter *iterbuf, size_t bufsize,
                          struct Dee_attrhint *__restrict UNUSED(hint)) {

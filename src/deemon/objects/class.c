@@ -3619,11 +3619,14 @@ instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc,
 
 /* Builtin hash & comparison support. */
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 instance_iterattr(DeeTypeObject *tp_self, DeeObject *__restrict self,
                   struct Dee_attriter *iterbuf, size_t bufsize,
                   struct Dee_attrhint *__restrict hint) {
-	/* Hook function for user-defined enumattr() callbacks! */
+	/* Hook function for user-defined enumattr() callbacks!
+	 * User-code should be allowed to yield either:
+	 *  - deemon.Attribute   (gets forwarded as-is)
+	 *  - deemon.string      (gets wrapped as `Attribute(tp_self, <value>)') */
 	(void)tp_self;
 	(void)self;
 	(void)iterbuf;

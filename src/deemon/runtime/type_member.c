@@ -271,7 +271,7 @@ PRIVATE struct Dee_attriter_type tpconst type_member_attriter_type = {
 
 
 
-INTERN WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 type_method_iterattr(DeeTypeObject *__restrict tp_self,
                      struct type_method const *chain, uint16_t chain_perm,
                      struct Dee_attriter *iterbuf, size_t bufsize) {
@@ -288,7 +288,7 @@ type_method_iterattr(DeeTypeObject *__restrict tp_self,
 	return sizeof(struct type_method_attriter);
 }
 
-INTERN WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 type_getset_iterattr(DeeTypeObject *__restrict tp_self,
                      struct type_getset const *chain, uint16_t chain_perm,
                      struct Dee_attriter *iterbuf, size_t bufsize) {
@@ -305,7 +305,7 @@ type_getset_iterattr(DeeTypeObject *__restrict tp_self,
 	return sizeof(struct type_getset_attriter);
 }
 
-INTERN WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 type_member_iterattr(DeeTypeObject *__restrict tp_self,
                      struct type_member const *chain, uint16_t chain_perm,
                      struct Dee_attriter *iterbuf, size_t bufsize) {
@@ -322,7 +322,7 @@ type_member_iterattr(DeeTypeObject *__restrict tp_self,
 	return sizeof(struct type_member_attriter);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+INTERN WUNUSED NONNULL((1)) size_t DCALL
 type_obmeth_iterattr(DeeTypeObject *__restrict tp_self,
                      struct Dee_attriter *iterbuf, size_t bufsize) {
 	struct type_method_attriter *iter = (struct type_method_attriter *)iterbuf;
@@ -336,7 +336,7 @@ type_obmeth_iterattr(DeeTypeObject *__restrict tp_self,
 	return sizeof(struct type_method_attriter);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+INTERN WUNUSED NONNULL((1)) size_t DCALL
 type_obprop_iterattr(DeeTypeObject *__restrict tp_self,
                      struct Dee_attriter *iterbuf, size_t bufsize) {
 	struct type_getset_attriter *iter = (struct type_getset_attriter *)iterbuf;
@@ -350,7 +350,7 @@ type_obprop_iterattr(DeeTypeObject *__restrict tp_self,
 	return sizeof(struct type_getset_attriter);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+INTERN WUNUSED NONNULL((1)) size_t DCALL
 type_obmemb_iterattr(DeeTypeObject *__restrict tp_self,
                      struct Dee_attriter *iterbuf, size_t bufsize) {
 	struct type_member_attriter *iter = (struct type_member_attriter *)iterbuf;

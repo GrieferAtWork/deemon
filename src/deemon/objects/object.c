@@ -4767,7 +4767,7 @@ type_setattr(DeeObject *self, DeeObject *name, DeeObject *value) {
 }
 
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-PRIVATE WUNUSED NONNULL((1, 2, 3, 5)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 5)) Dee_ssize_t DCALL
 type_enumattr(DeeTypeObject *UNUSED(tp_self), DeeTypeObject *self,
               struct Dee_attriter *iterbuf, size_t bufsize,
               struct Dee_attrhint *__restrict hint) {
