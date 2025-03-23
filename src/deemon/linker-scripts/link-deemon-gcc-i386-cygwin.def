@@ -792,6 +792,7 @@ EXPORTS
 	_DeeObject_Div@8=DeeObject_Div@8
 	_DeeObject_DivInt8@8=DeeObject_DivInt8@8
 	_DeeObject_Enter@4=DeeObject_Enter@4
+	_DeeObject_EnumAttr@20=DeeObject_EnumAttr@20
 	_DeeObject_ExtendInherited@12=DeeObject_ExtendInherited@12
 	_DeeObject_FindAttr@16=DeeObject_FindAttr@16
 	_DeeObject_Foreach@12=DeeObject_Foreach@12
@@ -862,6 +863,7 @@ EXPORTS
 	_DeeObject_InvokeOperator@16=DeeObject_InvokeOperator@16
 	_DeeObject_Iter@4=DeeObject_Iter@4
 	_DeeObject_IterAdvance@8=DeeObject_IterAdvance@8
+	_DeeObject_IterAttr@20=DeeObject_IterAttr@20
 	_DeeObject_IterNext@4=DeeObject_IterNext@4
 	_DeeObject_IterNextKey@4=DeeObject_IterNextKey@4
 	_DeeObject_IterNextPair@8=DeeObject_IterNextPair@8
@@ -987,6 +989,7 @@ EXPORTS
 	_DeeObject_TGenericGetAttrStringLenHash@20=DeeObject_TGenericGetAttrStringLenHash@20
 	_DeeObject_TGenericHasAttrStringHash@12=DeeObject_TGenericHasAttrStringHash@12
 	_DeeObject_TGenericHasAttrStringLenHash@16=DeeObject_TGenericHasAttrStringLenHash@16
+	_DeeObject_TGenericIterAttr@16=DeeObject_TGenericIterAttr@16
 	_DeeObject_TGenericSetAttrStringHash@20=DeeObject_TGenericSetAttrStringHash@20
 	_DeeObject_TGenericSetAttrStringLenHash@24=DeeObject_TGenericSetAttrStringLenHash@24
 	_DeeObject_TGet32Bit@12=DeeObject_TGet32Bit@12
@@ -1381,6 +1384,18 @@ EXPORTS
 	_Dee_ascii_printer_print@12=Dee_ascii_printer_print@12
 	_Dee_ascii_printer_putc@8=Dee_ascii_printer_putc@8
 	_Dee_ascii_printer_release@8=Dee_ascii_printer_release@8
+	_Dee_attrdesc_callbound@8=Dee_attrdesc_callbound@8
+	_Dee_attrdesc_callcall@20=Dee_attrdesc_callcall@20
+	_Dee_attrdesc_calldel@8=Dee_attrdesc_calldel@8
+	_Dee_attrdesc_callget@8=Dee_attrdesc_callget@8
+	_Dee_attrdesc_callset@12=Dee_attrdesc_callset@12
+	_Dee_attrinfo_typeof@4=Dee_attrinfo_typeof@4
+	_Dee_attrinfo_typeof_ininstance@4=Dee_attrinfo_typeof_ininstance@4
+	_Dee_attriter_bool@8=Dee_attriter_bool@8
+	_Dee_attriter_initempty@8=Dee_attriter_initempty@8
+	_Dee_attriterchain_builder_consume@8=Dee_attriterchain_builder_consume@8
+	_Dee_attriterchain_builder_fini@4=Dee_attriterchain_builder_fini@4
+	_Dee_attriterchain_builder_init@12=Dee_attriterchain_builder_init@12
 	_Dee_bytes_printer_alloc@8=Dee_bytes_printer_alloc@8
 	_Dee_bytes_printer_append@12=Dee_bytes_printer_append@12
 	_Dee_bytes_printer_pack@4=Dee_bytes_printer_pack@4
