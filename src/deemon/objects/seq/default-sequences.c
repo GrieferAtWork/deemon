@@ -2025,6 +2025,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_ial_iter(DefaultSequence_WithIterAndLimit *__restrict self) {
+	DeeNO_iter_next_t iter_next;
 	DREF DefaultIterator_WithNextAndLimit *result;
 	DREF DeeObject *iter;
 	size_t iter_status;
@@ -2041,14 +2042,14 @@ ds_ial_iter(DefaultSequence_WithIterAndLimit *__restrict self) {
 			goto err_iter;
 		return iter; /* Exhausted iterator... */
 	}
-	if unlikely(!Dee_TYPE(iter)->tp_iter_next &&
-	            !DeeType_InheritIterNext(Dee_TYPE(iter)))
+	iter_next = DeeType_RequireSupportedNativeOperator(Dee_TYPE(iter), iter_next);
+	if unlikely(!iter_next)
 		goto err_iter_no_iter_next;
 	result = DeeObject_MALLOC(DefaultIterator_WithNextAndLimit);
 	if unlikely(!result)
 		goto err;
 	result->dinl_iter    = iter; /* Inherit reference */
-	result->dinl_tp_next = Dee_TYPE(iter)->tp_iter_next;
+	result->dinl_tp_next = iter_next;
 	result->dinl_limit   = self->dsial_limit;
 	DeeObject_Init(result, &DefaultIterator_WithNextAndLimit_Type);
 	return (DREF DeeObject *)result;

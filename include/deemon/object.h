@@ -1955,7 +1955,8 @@ struct Dee_type_seq {
 	/* Optional sequence-extensions for providing optimized (but
 	 * less generic) variants of the sequence operators above. */
 
-	/* Alternate forms for `tp_iter' (these are inherited by `DeeType_InheritIter()').
+	/* Alternate forms for `tp_iter'...
+	 *
 	 * Instead of defining `tp_iter', you can just define one of these and have the runtime
 	 * use these for enumerating the object. Note however that this is less efficient when
 	 * enumeration still requires an iterator, and that for this purpose, the type should
