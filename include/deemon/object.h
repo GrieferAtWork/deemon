@@ -2594,7 +2594,7 @@ struct Dee_type_attr {
 	WUNUSED_T NONNULL_T((1, 2, 5))
 	size_t (DCALL *tp_iterattr)(DeeTypeObject *tp_self, DeeObject *self,
 	                            struct Dee_attriter *iterbuf, size_t bufsize,
-	                            struct Dee_attrhint *__restrict hint);
+	                            struct Dee_attrhint const *__restrict hint);
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t     (DCALL *tp_enumattr)(DeeTypeObject *tp_self, DeeObject *self, Dee_enum_t proc, void *arg);
 #endif /* !CONFIG_EXPERIMENTAL_ATTRITER */

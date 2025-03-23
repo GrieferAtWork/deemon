@@ -3622,7 +3622,7 @@ instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc,
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 instance_iterattr(DeeTypeObject *tp_self, DeeObject *__restrict self,
                   struct Dee_attriter *iterbuf, size_t bufsize,
-                  struct Dee_attrhint *__restrict hint) {
+                  struct Dee_attrhint const *__restrict hint) {
 	/* Hook function for user-defined enumattr() callbacks!
 	 * User-code should be allowed to yield either:
 	 *  - deemon.Attribute   (gets forwarded as-is)

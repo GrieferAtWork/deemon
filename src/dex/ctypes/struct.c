@@ -526,7 +526,7 @@ PRIVATE struct Dee_attriter_type tpconst ctypes_struct_attriter_type = {
 PRIVATE NONNULL((1, 4)) size_t DCALL
 struct_iterattr(DeeStructTypeObject *__restrict self,
                 struct Dee_attriter *iterbuf, size_t bufsize,
-                struct Dee_attrhint *__restrict hint) {
+                struct Dee_attrhint const *__restrict hint) {
 	struct ctypes_struct_attriter *iter = (struct ctypes_struct_attriter *)iterbuf;
 	if (bufsize >= sizeof(struct ctypes_struct_attriter)) {
 		iter->casi_struct = self;
@@ -565,7 +565,7 @@ PRIVATE struct stype_attr struct_attr = {
 	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&struct_delattr,
 	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&struct_setattr,
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-	/* .st_iterattr = */ (size_t (DCALL *)(DeeSTypeObject *__restrict, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&struct_iterattr,
+	/* .st_iterattr = */ (size_t (DCALL *)(DeeSTypeObject *__restrict, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))&struct_iterattr,
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, Dee_enum_t, void *))&struct_enumattr,
 #endif /* !CONFIG_EXPERIMENTAL_ATTRITER */

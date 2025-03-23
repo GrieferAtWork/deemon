@@ -1135,7 +1135,7 @@ struct_setattr(DeeObject *self, DeeObject *attr, DeeObject *value) {
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 struct_iterattr(DeeTypeObject *tp_self, DeeObject *UNUSED(self),
                 struct Dee_attriter *iterbuf, size_t bufsize,
-                struct Dee_attrhint *__restrict hint) {
+                struct Dee_attrhint const *__restrict hint) {
 	size_t req;
 	struct Dee_attriterchain_builder builder;
 	Dee_attriterchain_builder_init(&builder, iterbuf, bufsize);
@@ -1965,7 +1965,7 @@ DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self,
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
 DeeStruct_IterAttr(DeeSTypeObject *__restrict tp_self,
                    struct Dee_attriter *iterbuf, size_t bufsize,
-                   struct Dee_attrhint *__restrict hint) {
+                   struct Dee_attrhint const *__restrict hint) {
 	if ((tp_self->st_attr && tp_self->st_attr->st_iterattr) ||
 	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_ENUMATTR))
 		return (*tp_self->st_attr->st_iterattr)(tp_self, iterbuf, bufsize, hint);

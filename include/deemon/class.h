@@ -1045,7 +1045,7 @@ INTDEF NONNULL((1)) void DCALL instance_pclear(DeeObject *__restrict self, unsig
 INTDEF struct type_gc Dee_tpconst instance_gc;
 
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL instance_iterattr(DeeTypeObject *tp_self, DeeObject *__restrict self, struct Dee_attriter *iterbuf, size_t bufsize, struct Dee_attrhint *__restrict hint);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL instance_iterattr(DeeTypeObject *tp_self, DeeObject *__restrict self, struct Dee_attriter *iterbuf, size_t bufsize, struct Dee_attrhint const *__restrict hint);
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL instance_enumattr(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_enum_t proc, void *arg);
 #endif /* !CONFIG_EXPERIMENTAL_ATTRITER */

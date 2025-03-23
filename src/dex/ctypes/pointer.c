@@ -497,7 +497,7 @@ DEFINE_TRINARY_LVALUE_OPERATOR(int, -1, lvalue_setattr, DeeStruct_SetAttr)
 PRIVATE NONNULL((1, 2)) size_t DCALL
 lvalue_iterattr(DeeLValueTypeObject *__restrict tp_self,
                 struct Dee_attriter *iterbuf, size_t bufsize,
-                struct Dee_attrhint *__restrict hint) {
+                struct Dee_attrhint const *__restrict hint) {
 	return DeeStruct_IterAttr(tp_self->lt_orig, iterbuf, bufsize, hint);
 }
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
@@ -575,7 +575,7 @@ PRIVATE struct stype_attr lvalue_attr = {
 	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *, void *self, DeeObject *))&lvalue_delattr,
 	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *, void *self, DeeObject *, DeeObject *))&lvalue_setattr,
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-	/* .st_iterattr = */ (size_t (DCALL *)(DeeSTypeObject *__restrict, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&lvalue_iterattr,
+	/* .st_iterattr = */ (size_t (DCALL *)(DeeSTypeObject *__restrict, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))&lvalue_iterattr,
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, Dee_enum_t, void *))&lvalue_enumattr,
 #endif /* !CONFIG_EXPERIMENTAL_ATTRITER */

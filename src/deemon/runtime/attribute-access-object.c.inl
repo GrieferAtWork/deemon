@@ -755,7 +755,7 @@ DECL_BEGIN
 /* Access code for how an attribute is being accessed */
 #if defined(LOCAL_IS_ITER)
 #define LOCAL_tp_accessattr                                                         tp_iterattr
-#define LOCAL_DECLARE_tp_accessattr(tp_accessattr)                                  size_t (DCALL *tp_accessattr)(DeeTypeObject *tp_self, DeeObject *self, struct Dee_attriter *iterbuf, size_t bufsize, struct Dee_attrhint *__restrict hint)
+#define LOCAL_DECLARE_tp_accessattr(tp_accessattr)                                  size_t (DCALL *tp_accessattr)(DeeTypeObject *tp_self, DeeObject *self, struct Dee_attriter *iterbuf, size_t bufsize, struct Dee_attrhint const *__restrict hint)
 #define LOCAL_DeeType_invoke_attr_tp_accessattr(tp_iter, tp_accessattr, self, attr) (*(tp_accessattr))(tp_iter, self, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder), hint)
 #elif defined(LOCAL_IS_FIND) && defined(CONFIG_EXPERIMENTAL_ATTRITER)
 #define LOCAL_tp_accessattr                                                         tp_findattr
@@ -956,7 +956,7 @@ LOCAL_DECL WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #ifdef LOCAL_IS_ITER
                                    ,
                                    struct Dee_attriter *iterbuf, size_t bufsize,
-                                   struct Dee_attrhint *__restrict hint
+                                   struct Dee_attrhint const *__restrict hint
 #elif defined(LOCAL_IS_ENUM)
                                    , Dee_enum_t proc, void *arg
 #else /* LOCAL_IS_ITER */

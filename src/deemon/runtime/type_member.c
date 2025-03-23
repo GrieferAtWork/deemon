@@ -163,7 +163,7 @@ struct type_method_attriter {
 	Dee_ATTRITER_HEAD
 	DeeTypeObject            *tmai_tpself; /* [1..1][const] The type declaring "tmai_chain" (either via its "tp_methods" or "tp_class_methods") */
 	struct type_method const *tmai_chain;  /* [1..1][lock(ATOMIC)] Next method to yield. */
-	uint16_t                  tmai_perm;   /* [const] Chain access base perms. */
+	Dee_attrperm_t            tmai_perm;   /* [const] Chain access base perms. */
 	uint16_t                  tmai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_METHOD' or `Dee_ATTRINFO_METHOD' */
 };
 
@@ -197,7 +197,7 @@ struct type_getset_attriter {
 	Dee_ATTRITER_HEAD
 	DeeTypeObject            *tgsai_tpself; /* [1..1][const] The type declaring "tgsai_chain" (either via its "tp_getsets" or "tp_class_getsets") */
 	struct type_getset const *tgsai_chain;  /* [1..1][lock(ATOMIC)] Next getset to yield. */
-	uint16_t                  tgsai_perm;   /* [const] Chain access base perms. */
+	Dee_attrperm_t            tgsai_perm;   /* [const] Chain access base perms. */
 	uint16_t                  tgsai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_GETSET' or `Dee_ATTRINFO_GETSET' */
 };
 
@@ -237,7 +237,7 @@ struct type_member_attriter {
 	Dee_ATTRITER_HEAD
 	DeeTypeObject            *tmai_tpself; /* [1..1][const] The type declaring "tmai_chain" (either via its "tp_members" or "tp_class_members") */
 	struct type_member const *tmai_chain;  /* [1..1][lock(ATOMIC)] Next member to yield. */
-	uint16_t                  tmai_perm;   /* [const] Chain access base perms. */
+	Dee_attrperm_t            tmai_perm;   /* [const] Chain access base perms. */
 	uint16_t                  tmai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_MEMBER' or `Dee_ATTRINFO_MEMBER' */
 };
 
@@ -273,7 +273,7 @@ PRIVATE struct Dee_attriter_type tpconst type_member_attriter_type = {
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 type_method_iterattr(DeeTypeObject *__restrict tp_self,
-                     struct type_method const *chain, uint16_t chain_perm,
+                     struct type_method const *chain, Dee_attrperm_t chain_perm,
                      struct Dee_attriter *iterbuf, size_t bufsize) {
 	struct type_method_attriter *iter = (struct type_method_attriter *)iterbuf;
 	ASSERT(chain_perm == (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL) ||
@@ -290,7 +290,7 @@ type_method_iterattr(DeeTypeObject *__restrict tp_self,
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 type_getset_iterattr(DeeTypeObject *__restrict tp_self,
-                     struct type_getset const *chain, uint16_t chain_perm,
+                     struct type_getset const *chain, Dee_attrperm_t chain_perm,
                      struct Dee_attriter *iterbuf, size_t bufsize) {
 	struct type_getset_attriter *iter = (struct type_getset_attriter *)iterbuf;
 	ASSERT(chain_perm == (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY) ||
@@ -307,7 +307,7 @@ type_getset_iterattr(DeeTypeObject *__restrict tp_self,
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 type_member_iterattr(DeeTypeObject *__restrict tp_self,
-                     struct type_member const *chain, uint16_t chain_perm,
+                     struct type_member const *chain, Dee_attrperm_t chain_perm,
                      struct Dee_attriter *iterbuf, size_t bufsize) {
 	struct type_member_attriter *iter = (struct type_member_attriter *)iterbuf;
 	ASSERT(chain_perm == (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET) ||

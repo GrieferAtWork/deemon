@@ -55,7 +55,7 @@ STATIC_ASSERT(offsetof(MapByAttr, mba_map) == offsetof(ProxyObject, po_obj));
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 byattr_iterattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
                 struct Dee_attriter *iterbuf, size_t bufsize,
-                struct Dee_attrhint *__restrict hint);
+                struct Dee_attrhint const *__restrict hint);
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 byattr_findattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
                 struct Dee_attrspec const *__restrict specs,
@@ -124,7 +124,7 @@ PRIVATE struct type_attr byattr_attr = {
 	/* .tp_delattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_delattr,
 	/* .tp_setattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&byattr_setattr,
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-	/* .tp_iterattr                  = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&byattr_iterattr,
+	/* .tp_iterattr                  = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))&byattr_iterattr,
 	/* .tp_findattr                  = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&byattr_findattr,
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                  = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&byattr_enumattr,
@@ -221,7 +221,7 @@ PRIVATE struct Dee_attriter_type tpconst byattr_attriter_type = {
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 byattr_iterattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
                 struct Dee_attriter *iterbuf, size_t bufsize,
-                struct Dee_attrhint *__restrict UNUSED(hint)) {
+                struct Dee_attrhint const *__restrict UNUSED(hint)) {
 	struct byattr_attriter *iter = (struct byattr_attriter *)iterbuf;
 	if (bufsize >= sizeof(struct byattr_attriter)) {
 		iter->mba_keysiter = DeeObject_InvokeMethodHint(map_iterkeys, self->mba_map);

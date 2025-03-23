@@ -359,7 +359,7 @@ PUBLIC WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #endif /* LOCAL_HAS_tp_self */
 #ifdef LOCAL_IS_ITER
                                            struct Dee_attriter *iterbuf, size_t bufsize,
-                                           struct Dee_attrhint *__restrict hint
+                                           struct Dee_attrhint const *__restrict hint
 #elif defined(LOCAL_IS_ENUM)
                                            Dee_enum_t proc, void *arg
 #else /* LOCAL_IS_ITER */

@@ -124,7 +124,7 @@ struct Dee_attribute_object {
 	/* Wrapper object for attribute information provided to `Dee_enum_t' */
 	Dee_OBJECT_HEAD
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-	struct Dee_attrdesc a_desc; /* [OVERRIDE(.ad_info.ai_decl, [DREF])] Attribute descriptor. */
+	struct Dee_attrdesc a_desc; /* [OVERRIDE(.ad_info.ai_decl, [DREF])][const] Attribute descriptor. */
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	char const               *a_name; /* [if(a_info.a_perm & Dee_ATTRPERM_F_NAMEOBJ,
 	                                   *     DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
@@ -137,7 +137,7 @@ struct Dee_enumattr_object {
 	Dee_OBJECT_HEAD
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	DREF DeeObject     *ea_obj;  /* [1..1][const] The object whose attributes are being enumerated. */
-	struct Dee_attrhint ea_hint; /* [OVERRIDE(.ah_decl, [DREF])] Filter for attributes matching this hint */
+	struct Dee_attrhint ea_hint; /* [OVERRIDE(.ah_decl, [DREF])][const] Filter for attributes matching this hint */
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	DREF DeeTypeObject *ea_type; /* [1..1][const] The starting type level from which attributes should be enumerated. */
 	DREF DeeObject     *ea_obj;  /* [1..1][const] The object in association of which attributes are enumerated. */
@@ -150,9 +150,9 @@ struct Dee_enumattr_object {
 
 struct Dee_enumattr_iterator_object {
 	Dee_OBJECT_HEAD
-	DREF DeeEnumAttrObject *ei_seq;  /* [1..1] The underlying enumattr() controller. */
+	DREF DeeEnumAttrObject *ei_seq;  /* [1..1][const] The underlying enumattr() controller. */
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-	size_t                  ei_itsz; /* Size of "ei_iter" (in bytes) */
+	size_t                  ei_itsz; /* [const] Size of "ei_iter" (in bytes) */
 	struct Dee_attriter     ei_iter; /* Attribute enumerator. */
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 #ifdef CONFIG_LONGJMP_ENUMATTR

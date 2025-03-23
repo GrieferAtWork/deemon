@@ -1264,7 +1264,7 @@ PRIVATE struct Dee_attriter_type tpconst module_attriter_type = {
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 module_iterattr(DeeTypeObject *UNUSED(tp_self), DeeModuleObject *self,
                 struct Dee_attriter *iterbuf, size_t bufsize,
-                struct Dee_attrhint *__restrict hint) {
+                struct Dee_attrhint const *__restrict hint) {
 	size_t temp;
 	struct Dee_attriterchain_builder builder;
 	ASSERT_OBJECT(self);
@@ -1313,8 +1313,7 @@ module_findattr_impl(DeeModuleObject *__restrict self,
 		                                    specs->as_name,
 		                                    specs->as_hash);
 		if (sym) {
-			uint16_t perm;
-			perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET;
+			Dee_attrperm_t perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET;
 			ASSERT(sym->ss_index < self->mo_globalc);
 			if (!(sym->ss_flags & MODSYM_FREADONLY))
 				perm |= (ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
@@ -1617,7 +1616,7 @@ PRIVATE struct type_attr module_attr = {
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&module_setattr,
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-	/* .tp_iterattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&module_iterattr,
+	/* .tp_iterattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))&module_iterattr,
 	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&module_findattr,
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&module_enumattr,

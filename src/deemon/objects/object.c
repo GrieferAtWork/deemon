@@ -4770,7 +4770,7 @@ type_setattr(DeeObject *self, DeeObject *name, DeeObject *value) {
 PRIVATE WUNUSED NONNULL((1, 2, 5)) Dee_ssize_t DCALL
 type_enumattr(DeeTypeObject *UNUSED(tp_self), DeeTypeObject *self,
               struct Dee_attriter *iterbuf, size_t bufsize,
-              struct Dee_attrhint *__restrict hint) {
+              struct Dee_attrhint const *__restrict hint) {
 	return DeeType_IterAttr(self, iterbuf, bufsize, hint);
 }
 
@@ -4849,7 +4849,7 @@ PRIVATE struct type_attr type_attr_data = {
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&type_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&type_setattr,
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
-	/* .tp_iterattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&type_enumattr,
+	/* .tp_iterattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))&type_enumattr,
 	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&type_findattr,
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&type_enumattr,

@@ -179,26 +179,46 @@ DeeObject_TGenericFindPrivateAttrInfoStringLenHash(DeeTypeObject *tp_self, char 
 
 
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
+/* Attribute access permissions */
+#define Dee_ATTRPERM_F_CANGET   0x0001 /* [NAME("g")] Attribute supports get/has queries (g -- get). */
+#define Dee_ATTRPERM_F_CANDEL   0x0002 /* [NAME("d")] Attribute supports del queries (d -- del). */
+#define Dee_ATTRPERM_F_CANSET   0x0004 /* [NAME("s")] Attribute supports set queries (s -- set). */
+#define Dee_ATTRPERM_F_CANCALL  0x0008 /* [NAME("f")] The attribute is intended to be called (f -- function). */
+#define Dee_ATTRPERM_F_IMEMBER  0x0010 /* [NAME("i")] This attribute is an instance attribute (i -- instance). */
+#define Dee_ATTRPERM_F_CMEMBER  0x0020 /* [NAME("c")] This attribute is a class attribute (c -- class). */
+#define Dee_ATTRPERM_F_PRIVATE  0x0040 /* [NAME("h")] This attribute is considered private (h -- hidden). */
+#define Dee_ATTRPERM_F_PROPERTY 0x0080 /* [NAME("p")] Accessing the attribute may have unpredictable side-effects (p -- property). */
+#define Dee_ATTRPERM_F_WRAPPER  0x0100 /* [NAME("w")] In the current context, the attribute will be accessed as a wrapper. */
+#define Dee_ATTRPERM_F_NAMEOBJ  0x4000 /* `ad_name' holds a reference to a `DeeStringObject', while pointing to its `s_str' field. */
+#define Dee_ATTRPERM_F_DOCOBJ   0x8000 /* `ad_doc' holds a reference to a `DeeStringObject', while pointing to its `s_str' field. */
+
+/* Set of `Dee_ATTRPERM_F_*' */
+typedef uint16_t Dee_attrperm_t;
+#define Dee_SIZEOF_ATTRPERM_T 2
+
+
 struct Dee_attrdesc {
 	char const         *ad_name; /* [if(a_perm & Dee_ATTRPERM_F_NAMEOBJ, DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
 	                              * [1..1] Name of the attribute. */
 	char const         *ad_doc;  /* [if(a_perm & Dee_ATTRPERM_F_DOCOBJ, DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
 	                              * [0..1] The documentation string of the attribute (when known). */
 	struct Dee_attrinfo ad_info; /* Info about this attribute in particular */
-	uint16_t            ad_perm; /* Set of `Dee_ATTRPERM_F_*' flags, describing the attribute's behavior. */
+	Dee_attrperm_t      ad_perm; /* Set of `Dee_ATTRPERM_F_*' flags, describing the attribute's behavior. */
 	DREF DeeTypeObject *ad_type; /* [0..1] Optional: the type of object to report as being returned by `Dee_attrdesc_callget()' */
 };
 #define Dee_attrdesc_nameobj(self) COMPILER_CONTAINER_OF((self)->ad_name, DeeStringObject, s_str)
 #define Dee_attrdesc_docobj(self)  COMPILER_CONTAINER_OF((self)->ad_doc, DeeStringObject, s_str)
 
-#define Dee_attrdesc_fini(self)                                        \
-	(void)(((self)->ad_perm & Dee_ATTRPERM_F_NAMEOBJ)                  \
-	       ? Dee_Decref(Dee_attrdesc_nameobj(self))                    \
-	       : (void)0,                                                  \
-	       ((self)->ad_perm & Dee_ATTRPERM_F_DOCOBJ && (self)->ad_doc) \
-	       ? Dee_Decref(Dee_attrdesc_docobj(self))                     \
-	       : (void)0,                                                  \
-	       Dee_XDecref((self)->ad_type))
+#define _Dee_attrdesc_fini_WITHOUT_NAME(self)                    \
+	(((self)->ad_perm & Dee_ATTRPERM_F_DOCOBJ && (self)->ad_doc) \
+	 ? Dee_Decref(Dee_attrdesc_docobj(self))                     \
+	 : (void)0,                                                  \
+	 Dee_XDecref((self)->ad_type))
+#define Dee_attrdesc_fini(self)                 \
+	(((self)->ad_perm & Dee_ATTRPERM_F_NAMEOBJ) \
+	 ? Dee_Decref(Dee_attrdesc_nameobj(self))   \
+	 : (void)0,                                 \
+	 _Dee_attrdesc_fini_WITHOUT_NAME(self))
 
 /* Returns a reference to the type returned by `Dee_attrdesc_callget()', or `NULL' if unknown. */
 #define Dee_attrdesc_typeof(self)                                     \
@@ -220,23 +240,10 @@ Dee_attrdesc_callcall(struct Dee_attrdesc const *self, DeeObject *thisarg,
 
 
 
-/* Attribute access permissions */
-#define Dee_ATTRPERM_F_CANGET   0x0001 /* [NAME("g")] Attribute supports get/has queries (g -- get). */
-#define Dee_ATTRPERM_F_CANDEL   0x0002 /* [NAME("d")] Attribute supports del queries (d -- del). */
-#define Dee_ATTRPERM_F_CANSET   0x0004 /* [NAME("s")] Attribute supports set queries (s -- set). */
-#define Dee_ATTRPERM_F_CANCALL  0x0008 /* [NAME("f")] The attribute is intended to be called (f -- function). */
-#define Dee_ATTRPERM_F_IMEMBER  0x0010 /* [NAME("i")] This attribute is an instance attribute (i -- instance). */
-#define Dee_ATTRPERM_F_CMEMBER  0x0020 /* [NAME("c")] This attribute is a class attribute (c -- class). */
-#define Dee_ATTRPERM_F_PRIVATE  0x0040 /* [NAME("h")] This attribute is considered private (h -- hidden). */
-#define Dee_ATTRPERM_F_PROPERTY 0x0080 /* [NAME("p")] Accessing the attribute may have unpredictable side-effects (p -- property). */
-#define Dee_ATTRPERM_F_WRAPPER  0x0100 /* [NAME("w")] In the current context, the attribute will be accessed as a wrapper. */
-#define Dee_ATTRPERM_F_NAMEOBJ  0x4000 /* `ad_name' holds a reference to a `DeeStringObject', while pointing to its `s_str' field. */
-#define Dee_ATTRPERM_F_DOCOBJ   0x8000 /* `ad_doc' holds a reference to a `DeeStringObject', while pointing to its `s_str' field. */
-
 struct Dee_attrhint {
-	DeeObject  *ah_decl;       /* [0..1] When non-NULL, filter for `ad_info.ai_decl' */
-	uint16_t    ah_perm_mask;  /* Filter attributes by `(ad_perm & as_perm_mask) == as_perm_value' */
-	uint16_t    ah_perm_value; /* Permissions value for `as_perm_mask' */
+	DeeObject     *ah_decl;       /* [0..1] When non-NULL, filter for `ad_info.ai_decl' */
+	Dee_attrperm_t ah_perm_mask;  /* Filter attributes by `(ad_perm & as_perm_mask) == as_perm_value' */
+	Dee_attrperm_t ah_perm_value; /* Permissions value for `as_perm_mask' */
 };
 
 /* Initialize "self" to match *all* attributes */
@@ -251,16 +258,50 @@ struct Dee_attrhint {
 	(((baseperm) & (self)->ah_perm_mask) == ((self)->ah_perm_value & (self)->ah_perm_mask))
 
 struct Dee_attrspec {
-	char const *as_name;       /* [1..1] The name of the attribute to look up (ad_name). */
-	Dee_hash_t  as_hash;       /* [== Dee_HashStr(alr_name)] Hash of `alr_name' */
-	DeeObject  *as_decl;       /* [0..1] When non-NULL, filter for `ad_info.ai_decl' */
-	uint16_t    as_perm_mask;  /* Filter attributes by `(ad_perm & as_perm_mask) == as_perm_value' */
-	uint16_t    as_perm_value; /* Permissions value for `as_perm_mask' */
+	char const *as_name; /* [1..1] The name of the attribute to look up (ad_name). */
+	Dee_hash_t  as_hash; /* [== Dee_HashStr(alr_name)] Hash of `alr_name' */
+#undef as_decl
+#undef as_perm_mask
+#undef as_perm_value
+#undef as_hint
+	union {
+		struct {
+			DeeObject     *as_decl;       /* [0..1] When non-NULL, filter for `ad_info.ai_decl' */
+			Dee_attrperm_t as_perm_mask;  /* Filter attributes by `(ad_perm & as_perm_mask) == as_perm_value' */
+			Dee_attrperm_t as_perm_value; /* Permissions value for `as_perm_mask' */
+		}
+#ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
+		_dee_astruct
+#define as_decl       _dee_astruct.as_decl
+#define as_perm_mask  _dee_astruct.as_perm_mask
+#define as_perm_value _dee_astruct.as_perm_value
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+		;
+		struct Dee_attrhint as_hint;      /* Attribute hint */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#ifdef __COMPILER_HAVE_TRANSPARENT_STRUCT
+#undef as_decl
+#undef as_perm_mask
+#undef as_perm_value
+#define as_decl       _dee_aunion._dee_astruct.as_decl
+#define as_perm_mask  _dee_aunion._dee_astruct.as_perm_mask
+#define as_perm_value _dee_aunion._dee_astruct.as_perm_value
+#else /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
+#define as_decl       _dee_aunion.as_decl
+#define as_perm_mask  _dee_aunion.as_perm_mask
+#define as_perm_value _dee_aunion.as_perm_value
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+#define as_hint       _dee_aunion.as_hint
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
-#define Dee_attrspec_ashint(self) ((struct Dee_attrhint *)&(self)->as_decl)
+#define Dee_attrspec_ashint(self) (&(self)->as_hint)
 #define Dee_attrspec_accepts_baseperm(self, baseperm) \
 	(((baseperm) & (self)->as_perm_mask) == ((self)->as_perm_value & (self)->as_perm_mask))
+
 
 
 struct Dee_attriter_type {
@@ -351,16 +392,21 @@ struct Dee_attriter {
 };
 
 /* Helper macros for invoking callbacks of `struct Dee_attriter' */
-#define Dee_attriter_next(self, desc)  (*(self)->ai_type->ait_next)(self, desc)
-#define Dee_attriter_fini(self)        ((self)->ai_type->ait_fini ? (*(self)->ai_type->ait_fini)(self) : (void)0)
-#define Dee_attriter_visit(self)       ((self)->ai_type->ait_visit ? (*(self)->ai_type->ait_visit)(self, proc, arg) : (void)0)
+#define Dee_attriter_next(self, desc) (*(self)->ai_type->ait_next)(self, desc)
+#define Dee_attriter_fini(self)       ((self)->ai_type->ait_fini ? (*(self)->ai_type->ait_fini)(self) : (void)0)
+#define Dee_attriter_visit(self)      ((self)->ai_type->ait_visit ? (*(self)->ai_type->ait_visit)(self, proc, arg) : (void)0)
 #define Dee_attriter_copy(self, other, other_bufsize) \
 	((other)->ai_type->ait_copy ? (*(other)->ai_type->ait_copy)(self, other, other_bufsize) : (memcpy(self, other, other_bufsize), 0))
-#define Dee_attriter_init(self, type)  (void)((self)->ai_type = (type))
+#define Dee_attriter_init(self, type)   (void)((self)->ai_type = (type))
 #define Dee_attriter_moved(self, delta) ((self)->ai_type->ait_moved ? (*(self)->ai_type->ait_moved)(self, delta) : (void)0)
 
 /* Initialize a buffer for yielding empty (no) attributes. */
-DFUNDEF WUNUSED size_t DCALL Dee_attriter_initempty(struct Dee_attriter *iterbuf, size_t bufsize);
+DFUNDEF WUNUSED size_t DCALL
+Dee_attriter_initempty(struct Dee_attriter *iterbuf, size_t bufsize);
+
+/* Test if more items can be enumerated from "self" */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+Dee_attriter_bool(struct Dee_attriter *__restrict self, size_t selfsize);
 
 
 
@@ -388,7 +434,7 @@ DeeObject_FindAttr(DeeTypeObject *tp_self, DeeObject *self,
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) size_t DCALL
 DeeObject_IterAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attriter *iterbuf, size_t bufsize,
-                   struct Dee_attrhint *__restrict hint);
+                   struct Dee_attrhint const *__restrict hint);
 
 /* Suggested default buffer size for `DeeObject_IterAttr()' */
 #ifndef Dee_ITERATTR_DEFAULT_BUFSIZE
@@ -411,12 +457,12 @@ typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t
  * @return: < -1: Negative return value returned by `cb' */
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) Dee_ssize_t DCALL
 DeeObject_EnumAttr(DeeTypeObject *tp_self, DeeObject *self,
-                   struct Dee_attrhint *__restrict filter,
+                   struct Dee_attrhint const *__restrict filter,
                    Dee_enumattr_t cb, void *arg);
 
 
 DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_TGenericFindAttr(DeeTypeObject *tp_self, DeeObject *self, struct Dee_attrspec const *__restrict specs, struct Dee_attrdesc *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2, 4)) size_t DCALL DeeObject_TGenericIterAttr(DeeTypeObject *tp_self, struct Dee_attriter *iterbuf, size_t bufsize, struct Dee_attrhint *__restrict hint);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) size_t DCALL DeeObject_TGenericIterAttr(DeeTypeObject *tp_self, struct Dee_attriter *iterbuf, size_t bufsize, struct Dee_attrhint const *__restrict hint);
 #define DeeObject_GenericFindAttr(self, result, rules)          DeeObject_TGenericFindAttr(Dee_TYPE(self), self, result, rules)
 #define DeeObject_GenericIterAttr(self, iterbuf, bufsize, hint) DeeObject_TGenericIterAttr(Dee_TYPE(self), iterbuf, bufsize, hint)
 
@@ -1723,7 +1769,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindInstanceMemberAttr)(
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* METHOD */
 type_method_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
-                     struct type_method const *chain, uint16_t chain_perm,
+                     struct type_method const *chain, Dee_attrperm_t chain_perm,
                      struct Dee_attrspec const *__restrict specs,
                      struct Dee_attrdesc *__restrict result);
 #define DeeType_FindMethodAttr(tp_invoker, tp_self, specs, result)      type_method_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL, specs, result)
@@ -1735,7 +1781,7 @@ DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* GETSET */
 type_getset_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
-                     struct type_getset const *chain, uint16_t chain_perm,
+                     struct type_getset const *chain, Dee_attrperm_t chain_perm,
                      struct Dee_attrspec const *__restrict specs,
                      struct Dee_attrdesc *__restrict result);
 #define DeeType_FindGetSetAttr(tp_invoker, tp_self, specs, result)      type_getset_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY, specs, result)
@@ -1747,7 +1793,7 @@ DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* MEMBER */
 type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
-                     struct type_member const *chain, uint16_t chain_perm,
+                     struct type_member const *chain, Dee_attrperm_t chain_perm,
                      struct Dee_attrspec const *__restrict specs,
                      struct Dee_attrdesc *__restrict result);
 #define DeeType_FindMemberAttr(tp_invoker, tp_self, specs, result)      type_member_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET, specs, result)
@@ -1975,9 +2021,9 @@ DeeType_FindInstanceMemberAttrInfoStringLenHash(DeeTypeObject *tp_invoker, DeeTy
  *                                  Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_PROPERTY
  *          - type_member_iterattr: Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET
  *                                  Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET */
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_method_iterattr(DeeTypeObject *__restrict tp_self, struct type_method const *chain, uint16_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_getset_iterattr(DeeTypeObject *__restrict tp_self, struct type_getset const *chain, uint16_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_member_iterattr(DeeTypeObject *__restrict tp_self, struct type_member const *chain, uint16_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_method_iterattr(DeeTypeObject *__restrict tp_self, struct type_method const *chain, Dee_attrperm_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_getset_iterattr(DeeTypeObject *__restrict tp_self, struct type_getset const *chain, Dee_attrperm_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL type_member_iterattr(DeeTypeObject *__restrict tp_self, struct type_member const *chain, Dee_attrperm_t chain_perm, struct Dee_attriter *iterbuf, size_t bufsize);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obmeth_iterattr(DeeTypeObject *__restrict tp_self, struct Dee_attriter *iterbuf, size_t bufsize);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obprop_iterattr(DeeTypeObject *__restrict tp_self, struct Dee_attriter *iterbuf, size_t bufsize);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obmemb_iterattr(DeeTypeObject *__restrict tp_self, struct Dee_attriter *iterbuf, size_t bufsize);
@@ -2058,7 +2104,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) bool (DCALL DeeType_FindAttrInfoStringLenHash)
 
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
 INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_FindAttr)(DeeTypeObject *self, struct Dee_attrspec const *__restrict specs, struct Dee_attrdesc *__restrict result);
-INTDEF WUNUSED NONNULL((1, 2, 4)) size_t (DCALL DeeType_IterAttr)(DeeTypeObject *self, struct Dee_attriter *iterbuf, size_t bufsize, struct Dee_attrhint *__restrict hint);
+INTDEF WUNUSED NONNULL((1, 2, 4)) size_t (DCALL DeeType_IterAttr)(DeeTypeObject *self, struct Dee_attriter *iterbuf, size_t bufsize, struct Dee_attrhint const *__restrict hint);
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_FindAttr)(DeeTypeObject *self, struct Dee_attribute_info *__restrict retinfo, struct Dee_attribute_lookup_rules const *__restrict rules);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeType_EnumAttr)(DeeTypeObject *self, Dee_enum_t proc, void *arg);

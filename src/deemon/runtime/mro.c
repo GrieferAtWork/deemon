@@ -796,6 +796,35 @@ Dee_attriter_initempty(struct Dee_attriter *iterbuf, size_t bufsize) {
 }
 
 
+/* Test if more items can be enumerated from "self" */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+Dee_attriter_bool(struct Dee_attriter *__restrict self, size_t selfsize) {
+	int result;
+	struct Dee_attrdesc desc;
+	struct Dee_attriter *copy;
+	copy = (struct Dee_attriter *)Dee_Malloca(selfsize);
+	if unlikely(!copy)
+		goto err;
+	if unlikely(Dee_attriter_copy(copy, self, selfsize))
+		goto err_copy;
+	result = Dee_attriter_next(copy, &desc);
+	Dee_attriter_fini(copy);
+	Dee_Freea(copy);
+	if (result == 0) {
+		Dee_attrdesc_fini(&desc);
+		result = 1;
+	} else if (result > 0) {
+		result = 0;
+	}
+	return result;
+err_copy:
+	Dee_Freea(copy);
+err:
+	return -1;
+}
+
+
+
 
 
 
@@ -812,7 +841,7 @@ Dee_attriter_initempty(struct Dee_attriter *iterbuf, size_t bufsize) {
  * @return: < -1: Negative return value returned by `cb' */
 PUBLIC WUNUSED NONNULL((1, 3, 4, 5)) Dee_ssize_t DCALL
 DeeObject_EnumAttr(DeeTypeObject *tp_self, DeeObject *self,
-                   struct Dee_attrhint *__restrict filter,
+                   struct Dee_attrhint const *__restrict filter,
                    Dee_enumattr_t cb, void *arg) {
 #undef DeeObject_EnumAttr_USES_MALLOCA
 #undef DeeObject_EnumAttr_USES_MALLOC

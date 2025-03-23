@@ -81,6 +81,8 @@ DECL_BEGIN
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
+#undef shift_t
+#define shift_t __SHIFT_TYPE__
 
 #ifndef NDEBUG
 #define DBG_memset (void)memset
@@ -183,8 +185,8 @@ attr_trycompare_eq(Attr *lhs, Attr *rhs) {
 	return attr_compare_eq_impl(lhs, rhs);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL /* TODO: Remove INTERN once "Mapping.fromattr" uses IterAttr */
-attr_get_name(Attr *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+attr_getname(Attr *__restrict self) {
 	char const *namestr = self->a_desc.ad_name;
 	if (self->a_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
 		DeeStringObject *result = COMPILER_CONTAINER_OF(namestr, DeeStringObject, s_str);
@@ -195,7 +197,7 @@ attr_get_name(Attr *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-attr_get_doc(Attr *__restrict self) {
+attr_getdoc(Attr *__restrict self) {
 	char const *docstr = self->a_desc.ad_doc;
 	if (!docstr)
 		return (DREF DeeStringObject *)DeeNone_NewRef();
@@ -213,7 +215,7 @@ attr_get_doc(Attr *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_getperm(Attr *__restrict self) {
 	DREF DeeObject *result;
-	uint16_t mask = self->a_desc.ad_perm & ATTR_PERMMASK;
+	Dee_attrperm_t mask = self->a_desc.ad_perm & ATTR_PERMMASK;
 	unsigned int num_flags = 0;
 	char *dst;
 	while (mask) {
@@ -259,14 +261,11 @@ attr_printrepr(Attr *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result;
 	char perm_str[COMPILER_LENOF(attr_permchars) + 1];
 	char *perm_ptr = perm_str;
-	uint16_t flags_index, flags_mask;
-	flags_mask  = self->a_desc.ad_perm & ATTR_PERMMASK;
-	flags_index = 0;
-	while (flags_mask) {
-		if (flags_mask & 1)
-			*perm_ptr++ = attr_permchars[flags_index];
-		flags_mask >>= 1;
-		++flags_index;
+	shift_t perm_index;
+	Dee_attrperm_t perm_mask = self->a_desc.ad_perm & ATTR_PERMMASK;
+	for (perm_index = 0; perm_mask; perm_mask >>= 1, ++perm_index) {
+		if (perm_mask & 1)
+			*perm_ptr++ = attr_permchars[perm_index];
 	}
 	*perm_ptr = '\0';
 	result = DeeFormat_Printf(printer, arg,
@@ -294,11 +293,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 string_to_attrperms(char const *__restrict str,
-                    uint16_t *__restrict p_result) {
+                    Dee_attrperm_t *__restrict p_result) {
 	*p_result = 0;
 	while (*str) {
 		char ch = *str++;
-		unsigned int i;
+		shift_t i;
 		for (i = 0; attr_permchars[i] != ch; ++i) {
 			if unlikely(i >= COMPILER_LENOF(attr_permchars)) {
 				DeeError_Throwf(&DeeError_ValueError,
@@ -307,7 +306,7 @@ string_to_attrperms(char const *__restrict str,
 				goto err;
 			}
 		}
-		*p_result |= (uint16_t)1 << i;
+		*p_result |= (Dee_attrperm_t)1 << i;
 	}
 	return 0;
 err:
@@ -318,7 +317,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 attr_init_kw(DeeAttributeObject *__restrict self,
              size_t argc, DeeObject *const *argv,
              DeeObject *kw) {
-	uint16_t perm;
+	Dee_attrperm_t perm;
 	struct {
 		DeeTypeObject   *decl;
 		DeeStringObject *name;
@@ -358,7 +357,7 @@ attr_init_kw(DeeAttributeObject *__restrict self,
 		if (string_to_attrperms(DeeString_STR(args.perm), &perm))
 			goto err;
 	} else {
-		if (DeeObject_AsUInt16(args.perm, &perm))
+		if (DeeObject_AsUIntX(args.perm, &perm))
 			goto err;
 	}
 
@@ -416,7 +415,7 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 		if (string_to_attrperms(DeeString_STR(args.perm), &specs.as_perm_mask))
 			goto err;
 	} else {
-		if (DeeObject_AsUInt16(args.perm, &specs.as_perm_mask))
+		if (DeeObject_AsUIntX(args.perm, &specs.as_perm_mask))
 			goto err;
 	}
 	if (DeeNone_Check(args.permset)) {
@@ -425,7 +424,7 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 		if (string_to_attrperms(DeeString_STR(args.permset), &specs.as_perm_value))
 			goto err;
 	} else {
-		if (DeeObject_AsUInt16(args.permset, &specs.as_perm_value))
+		if (DeeObject_AsUIntX(args.permset, &specs.as_perm_value))
 			goto err;
 	}
 	status = DeeObject_FindAttr(Dee_TYPE(args.ob), args.ob, &specs, &result);
@@ -469,7 +468,7 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 		if (string_to_attrperms(DeeString_STR(args.perm), &specs.as_perm_mask))
 			goto err;
 	} else {
-		if (DeeObject_AsUInt16(args.perm, &specs.as_perm_mask))
+		if (DeeObject_AsUIntX(args.perm, &specs.as_perm_mask))
 			goto err;
 	}
 	if (DeeNone_Check(args.permset)) {
@@ -478,7 +477,7 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 		if (string_to_attrperms(DeeString_STR(args.permset), &specs.as_perm_value))
 			goto err;
 	} else {
-		if (DeeObject_AsUInt16(args.permset, &specs.as_perm_value))
+		if (DeeObject_AsUIntX(args.permset, &specs.as_perm_value))
 			goto err;
 	}
 	result = DeeObject_MALLOC(Attr);
@@ -640,10 +639,10 @@ PRIVATE struct type_method tpconst attr_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst attr_getsets[] = {
-	TYPE_GETTER_AB_F("name", &attr_get_name, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_AB_F("name", &attr_getname, METHOD_FNOREFESCAPE,
 	                 "->?Dstring\n"
 	                 "The name of this ?."),
-	TYPE_GETTER_AB_F("doc", &attr_get_doc, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_AB_F("doc", &attr_getdoc, METHOD_FNOREFESCAPE,
 	                 "->?X2?Dstring?N\n"
 	                 "The documentation string of this ?., or ?N when no documentation is present"),
 	TYPE_GETTER_AB_F("perm", &attr_getperm, METHOD_FNOREFESCAPE,
@@ -774,7 +773,7 @@ enumattr_init_kw(EnumAttr *__restrict self, size_t argc,
 		if (string_to_attrperms(DeeString_STR(args.perm), &self->ea_hint.ah_perm_mask))
 			goto err;
 	} else {
-		if (DeeObject_AsUInt16(args.perm, &self->ea_hint.ah_perm_mask))
+		if (DeeObject_AsUIntX(args.perm, &self->ea_hint.ah_perm_mask))
 			goto err;
 	}
 	if (DeeNone_Check(args.permset)) {
@@ -783,7 +782,7 @@ enumattr_init_kw(EnumAttr *__restrict self, size_t argc,
 		if (string_to_attrperms(DeeString_STR(args.permset), &self->ea_hint.ah_perm_value))
 			goto err;
 	} else {
-		if (DeeObject_AsUInt16(args.permset, &self->ea_hint.ah_perm_value))
+		if (DeeObject_AsUIntX(args.permset, &self->ea_hint.ah_perm_value))
 			goto err;
 	}
 	Dee_XIncref(args.decl);
@@ -862,6 +861,16 @@ PRIVATE struct type_seq enumattr_seq = {
 	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&enumattr_iter,
 };
 
+PRIVATE struct type_member tpconst enumattr_members[] = {
+	TYPE_MEMBER_FIELD("__ob__", STRUCT_OBJECT, offsetof(EnumAttr, ea_obj)),
+	TYPE_MEMBER_FIELD("__decl__", STRUCT_OBJECT, offsetof(EnumAttr, ea_hint.ah_decl)),
+	TYPE_MEMBER_FIELD("__perm__", STRUCT_CONST | STRUCT_UNSIGNED | Dee_STRUCT_INTEGER(Dee_SIZEOF_ATTRPERM_T),
+	                  offsetof(EnumAttr, ea_hint.ah_perm_mask)),
+	TYPE_MEMBER_FIELD("__permset__", STRUCT_CONST | STRUCT_UNSIGNED | Dee_STRUCT_INTEGER(Dee_SIZEOF_ATTRPERM_T),
+	                  offsetof(EnumAttr, ea_hint.ah_perm_value)),
+	TYPE_MEMBER_END
+};
+
 PRIVATE struct type_member tpconst enumattr_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeEnumAttrIterator_Type),
 	TYPE_MEMBER_END
@@ -917,7 +926,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ enumattr_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ enumattr_class_members,
@@ -962,6 +971,8 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 enumattriter_fini(EnumAttrIter *__restrict self) {
+	/* !!! Iterator must be finalized while still holding
+	 *     (transitive) reference to `self->ei_seq->ea_obj' */
 	Dee_attriter_fini(&self->ei_iter);
 	Dee_Decref(self->ei_seq);
 }
@@ -972,7 +983,7 @@ enumattriter_visit(EnumAttrIter *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ei_seq);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF Attr *DCALL /* TODO: Remove INTERN once "Mapping.fromattr" uses IterAttr */
+PRIVATE WUNUSED NONNULL((1)) DREF Attr *DCALL
 enumattriter_next(EnumAttrIter *__restrict self) {
 	int status;
 	DREF Attr *result;
@@ -1004,8 +1015,14 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+enumattriter_bool(EnumAttrIter *__restrict self) {
+	return Dee_attriter_bool(&self->ei_iter, self->ei_itsz);
+}
+
 PRIVATE struct type_member tpconst enumattriter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(EnumAttrIter, ei_seq), "->?Ert:EnumAttr"),
+	TYPE_MEMBER_FIELD("__itersz__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(EnumAttrIter, ei_itsz)),
 	TYPE_MEMBER_END
 };
 
@@ -1033,21 +1050,19 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ DEFIMPL(&object_str),
-		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&enumattriter_bool,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&enumattriter_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
-	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__439AAF00B07ABA02),
-	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&enumattriter_next,
-	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
+	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
@@ -1056,8 +1071,8 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
 };
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 PRIVATE NONNULL((1)) void DCALL
