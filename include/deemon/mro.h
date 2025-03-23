@@ -286,6 +286,12 @@ struct Dee_attriter_type {
 	NONNULL_T((1, 2))
 	void (DCALL *ait_visit)(struct Dee_attriter *__restrict self,
 	                        Dee_visit_t proc, void *arg);
+
+	/* [0..1] Called when the attribute iterator buffer was moved to a
+	 *        different memory location, where `old_loc + delta == new_loc'. */
+	NONNULL_T((1))
+	void (DCALL *ait_moved)(struct Dee_attriter *__restrict self,
+	                        ptrdiff_t delta);
 };
 
 #if 0
@@ -315,6 +321,15 @@ PRIVATE NONNULL((1, 2)) void DCALL
 myob_attriter_visit(struct myob_attriter *__restrict self,
                     Dee_visit_t proc, void *arg) {
 	(void)self;
+	(void)proc;
+	(void)arg;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+myob_attriter_moved(struct myob_attriter *__restrict self,
+                    ptrdiff_t delta) {
+	(void)self;
+	(void)delta;
 }
 
 PRIVATE struct Dee_attriter_type tpconst myob_attriter_type = {
@@ -322,6 +337,7 @@ PRIVATE struct Dee_attriter_type tpconst myob_attriter_type = {
 	/* .ait_copy  = */ (int (DCALL *)(struct Dee_attriter *__restrict, struct Dee_attriter *__restrict, size_t))&myob_attriter_copy,
 	/* .ait_fini  = */ (void (DCALL *)(struct Dee_attriter *__restrict))&myob_attriter_fini,
 	/* .ait_visit = */ (void (DCALL *)(struct Dee_attriter *__restrict, Dee_visit_t, void *))&myob_attriter_visit,
+	/* .ait_moved = */ (void (DCALL *)(struct Dee_attriter *__restrict, ptrdiff_t))&myob_attriter_moved,
 };
 #endif
 
@@ -341,6 +357,7 @@ struct Dee_attriter {
 #define Dee_attriter_copy(self, other, other_bufsize) \
 	((other)->ai_type->ait_copy ? (*(other)->ai_type->ait_copy)(self, other, other_bufsize) : (memcpy(self, other, other_bufsize), 0))
 #define Dee_attriter_init(self, type)  (void)((self)->ai_type = (type))
+#define Dee_attriter_moved(self, delta) ((self)->ai_type->ait_moved ? (*(self)->ai_type->ait_moved)(self, delta) : (void)0)
 
 /* Initialize a buffer for yielding empty (no) attributes. */
 DFUNDEF WUNUSED size_t DCALL Dee_attriter_initempty(struct Dee_attriter *iterbuf, size_t bufsize);
@@ -372,6 +389,11 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) size_t DCALL
 DeeObject_IterAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attriter *iterbuf, size_t bufsize,
                    struct Dee_attrhint *__restrict hint);
+
+/* Suggested default buffer size for `DeeObject_IterAttr()' */
+#ifndef Dee_ITERATTR_DEFAULT_BUFSIZE
+#define Dee_ITERATTR_DEFAULT_BUFSIZE (64 * __SIZEOF_POINTER__)
+#endif /* !Dee_ITERATTR_DEFAULT_BUFSIZE */
 
 /* Callback prototype for `DeeObject_EnumAttr'
  * @return: * : Dee_formatprinter_t-like return value */

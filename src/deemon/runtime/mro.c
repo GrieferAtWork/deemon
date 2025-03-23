@@ -814,22 +814,47 @@ PUBLIC WUNUSED NONNULL((1, 3, 4, 5)) Dee_ssize_t DCALL
 DeeObject_EnumAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attrhint *__restrict filter,
                    Dee_enumattr_t cb, void *arg) {
+#undef DeeObject_EnumAttr_USES_MALLOCA
+#undef DeeObject_EnumAttr_USES_MALLOC
+#if DEE_MALLOCA_MAX >= Dee_ITERATTR_DEFAULT_BUFSIZE
+#define DeeObject_EnumAttr_USES_MALLOCA
+#else /* DEE_MALLOCA_MAX >= Dee_ITERATTR_DEFAULT_BUFSIZE */
+#define DeeObject_EnumAttr_USES_MALLOC
+#endif /* DEE_MALLOCA_MAX < Dee_ITERATTR_DEFAULT_BUFSIZE */
 	int status;
 	struct Dee_attrdesc desc;
 	Dee_ssize_t temp, result = 0;
-	size_t reqsiz, bufsiz = 16 * sizeof(void *);
+	size_t reqsiz, bufsiz = Dee_ITERATTR_DEFAULT_BUFSIZE;
 	struct Dee_attriter *iterbuf;
+#ifdef DeeObject_EnumAttr_USES_MALLOCA
 again_alloc_iterbuf:
 	iterbuf = (struct Dee_attriter *)Dee_Malloca(bufsiz);
+#endif /* DeeObject_EnumAttr_USES_MALLOCA */
+#ifdef DeeObject_EnumAttr_USES_MALLOC
+	iterbuf = (struct Dee_attriter *)Dee_Malloc(bufsiz);
+#endif /* DeeObject_EnumAttr_USES_MALLOC */
 	if unlikely(!iterbuf)
 		goto err;
+#ifdef DeeObject_EnumAttr_USES_MALLOC
+again_iterattr:
+#endif /* DeeObject_EnumAttr_USES_MALLOC */
 	reqsiz = DeeObject_IterAttr(tp_self, self, iterbuf, bufsiz, filter);
 	if unlikely(reqsiz == (size_t)-1)
 		goto err_iterbuf;
 	if (reqsiz > bufsiz) {
+#ifdef DeeObject_EnumAttr_USES_MALLOCA
 		Dee_Freea(iterbuf);
 		bufsiz = reqsiz;
 		goto again_alloc_iterbuf;
+#endif /* DeeObject_EnumAttr_USES_MALLOCA */
+#ifdef DeeObject_EnumAttr_USES_MALLOC
+		struct Dee_attriter *new_iterbuf;
+		new_iterbuf = (struct Dee_attriter *)Dee_Realloc(iterbuf, bufsiz);
+		if unlikely(!new_iterbuf)
+			goto err_iterbuf;
+		iterbuf = new_iterbuf;
+		goto again_iterattr;
+#endif /* DeeObject_EnumAttr_USES_MALLOC */
 	}
 
 	/* Enumerate attributes */
@@ -843,12 +868,22 @@ again_alloc_iterbuf:
 	if unlikely(status < 0)
 		goto err_iterbuf;
 	Dee_attriter_fini(iterbuf);
+#ifdef DeeObject_EnumAttr_USES_MALLOCA
 	Dee_Freea(iterbuf);
+#endif /* DeeObject_EnumAttr_USES_MALLOCA */
+#ifdef DeeObject_EnumAttr_USES_MALLOC
+	Dee_Free(iterbuf);
+#endif /* DeeObject_EnumAttr_USES_MALLOC */
 	return result;
 err_temp_iterbuf_fini:
 	Dee_attriter_fini(iterbuf);
 err_temp_iterbuf:
+#ifdef DeeObject_EnumAttr_USES_MALLOCA
 	Dee_Freea(iterbuf);
+#endif /* DeeObject_EnumAttr_USES_MALLOCA */
+#ifdef DeeObject_EnumAttr_USES_MALLOC
+	Dee_Free(iterbuf);
+#endif /* DeeObject_EnumAttr_USES_MALLOC */
 err_temp:
 	return temp;
 err:
@@ -918,6 +953,25 @@ Dee_attriterchain_visit(struct Dee_attriterchain *__restrict self,
 	Dee_shared_rwlock_endread(&self->aic_curlock);
 }
 
+PRIVATE NONNULL((1)) void DCALL
+Dee_attriterchain_moved(struct Dee_attriterchain *__restrict self, ptrdiff_t delta) {
+#define ADJUST_PTR(T, ptr_lvalue) (void)((ptr_lvalue) = (T *)((byte_t *)(ptr_lvalue) + delta))
+	struct Dee_attriter *iter;
+	if unlikely(!self->aic_current)
+		return;
+	ADJUST_PTR(struct Dee_attriter, self->aic_current);
+	for (iter = self->aic_current;;) {
+		struct Dee_attriterchain_item *item;
+		Dee_attriter_moved(iter, delta);
+		item = Dee_attriterchain_item_fromiter(iter);
+		if (!item->aici_next)
+			break;
+		ADJUST_PTR(struct Dee_attriter, item->aici_next);
+		iter = item->aici_next;
+	}
+#undef ADJUST_PTR
+}
+
 PRIVATE NONNULL((1, 2)) int DCALL
 Dee_attriterchain_copy(struct Dee_attriterchain *__restrict self,
                        struct Dee_attriterchain *__restrict other,
@@ -975,6 +1029,7 @@ PUBLIC_TPCONST struct Dee_attriter_type tpconst Dee_attriterchain_type = {
 	/* .ait_copy  = */ (int (DCALL *)(struct Dee_attriter *__restrict, struct Dee_attriter *__restrict, size_t))&Dee_attriterchain_copy,
 	/* .ait_fini  = */ (void (DCALL *)(struct Dee_attriter *__restrict))&Dee_attriterchain_fini,
 	/* .ait_visit = */ (void (DCALL *)(struct Dee_attriter *__restrict, Dee_visit_t, void *))&Dee_attriterchain_visit,
+	/* .ait_moved = */ (void (DCALL *)(struct Dee_attriter *__restrict, ptrdiff_t))&Dee_attriterchain_moved,
 };
 
 

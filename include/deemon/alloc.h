@@ -25,9 +25,7 @@
 #ifdef __CC__
 #include <hybrid/__overflow.h>
 #include <hybrid/typecore.h>
-#ifndef __INTELLISENSE__
-#include <hybrid/debug-alignment.h>
-#endif /* !__INTELLISENSE__ */
+#include <hybrid/__debug-alignment.h>
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
@@ -1116,15 +1114,15 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 
 /* Define the deemon api's alloca() function (if it can be implemented) */
 #if !defined(Dee_Alloca) && defined(CONFIG_HAVE_alloca)
-#if defined(NO_DBG_ALIGNMENT) || defined(__INTELLISENSE__)
+#if defined(__NO_hybrid_dbg_alignment) || defined(__INTELLISENSE__)
 #define Dee_Alloca(num_bytes) alloca(num_bytes)
-#else /* NO_DBG_ALIGNMENT || __INTELLISENSE__ */
+#else /* __NO_hybrid_dbg_alignment || __INTELLISENSE__ */
 FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
-	DBG_ALIGNMENT_ENABLE();
+	__hybrid_dbg_alignment_enable();
 	return ptr;
 }
-#define Dee_Alloca(num_bytes) (DBG_ALIGNMENT_DISABLE(), DeeDbg_AllocaCleanup(alloca(num_bytes)))
-#endif /* !NO_DBG_ALIGNMENT && !__INTELLISENSE__ */
+#define Dee_Alloca(num_bytes) (__hybrid_dbg_alignment_disable(), DeeDbg_AllocaCleanup(alloca(num_bytes)))
+#endif /* !__NO_hybrid_dbg_alignment && !__INTELLISENSE__ */
 #endif /* !Dee_Alloca && CONFIG_HAVE_alloca */
 #if !defined(Dee_Allocac) && defined(Dee_Alloca)
 #define Dee_Allocac(elem_count, elem_size) \
@@ -1139,14 +1137,14 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
  * NOTE: In all cases, 'Dee_Freea()' should be used to clean up a
  *       pointer previously allocated using 'Dee_Malloca()' and
  *       friends. */
-#if !defined(Dee_Alloca) || !defined(NO_DBG_ALIGNMENT)
+#if !defined(Dee_Alloca) || !defined(__NO_hybrid_dbg_alignment)
 #define Dee_Malloca(s)    Dee_Malloc(s)
 #define Dee_Calloca(s)    Dee_Calloc(s)
 #define Dee_TryMalloca(s) Dee_TryMalloc(s)
 #define Dee_TryCalloca(s) Dee_TryCalloc(s)
 #define Dee_Freea(p)      Dee_Free(p)
 #define Dee_XFreea(p)     Dee_Free(p)
-#else /* !Dee_Alloca || !NO_DBG_ALIGNMENT */
+#else /* !Dee_Alloca || !__NO_hybrid_dbg_alignment */
 
 #ifdef __SIZEOF_POINTER__
 /* WARNING: This makes Dee_Malloca() unsuitable for floating point allocations. */
@@ -1520,7 +1518,7 @@ LOCAL void (DCALL Dee_XFreea)(void *p) {
 			bzero((void *)(p), _s_ - DEE_MALLOCA_ALIGN);               \
 		}                                                              \
 	}	__WHILE0
-#endif /* Dee_Alloca && NO_DBG_ALIGNMENT */
+#endif /* Dee_Alloca && __NO_hybrid_dbg_alignment */
 
 #ifdef Dee_MallocaNoFail
 #define Dee_MallocaNoFailc(p, elem_count, elem_size)               Dee_MallocaNoFail(p, _Dee_MalloccBufsize(elem_count, elem_size))

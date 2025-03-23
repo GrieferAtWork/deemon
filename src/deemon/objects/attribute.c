@@ -66,6 +66,7 @@ __pragma_GCC_diagnostic_ignored(Wmaybe_uninitialized)
 #include <deemon/util/lock.h>
 
 #include <hybrid/spcall.h>
+#include <hybrid/typecore.h>
 /**/
 
 #include "../runtime/kwlist.h"
@@ -77,6 +78,9 @@ __pragma_GCC_diagnostic_ignored(Wmaybe_uninitialized)
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 #ifndef NDEBUG
 #define DBG_memset (void)memset
@@ -796,7 +800,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF EnumAttrIter *DCALL
 enumattr_iter(EnumAttr *__restrict self) {
 	DREF EnumAttrIter *result;
 	size_t req_bufsize;
-	size_t cur_bufsize = 16 * sizeof(void *);
+	size_t cur_bufsize = Dee_ITERATTR_DEFAULT_BUFSIZE;
 	result = (DREF EnumAttrIter *)DeeObject_Malloc(offsetof(EnumAttrIter, ei_iter) +
 	                                               cur_bufsize);
 	if unlikely(!result)
@@ -817,9 +821,23 @@ again_iterattr:
 		result      = new_result;
 		cur_bufsize = req_bufsize;
 		goto again_iterattr;
+	} else if (req_bufsize < cur_bufsize) {
+		/* Free unused memory */
+		DREF EnumAttrIter *new_result;
+		new_result = (DREF EnumAttrIter *)DeeObject_TryRealloc(result,
+		                                                       offsetof(EnumAttrIter, ei_iter) +
+		                                                       req_bufsize);
+		if (likely(new_result) && unlikely(result != new_result)) {
+			/* Special case: must update pointers within the iterator
+			 *               to reflect the new memory location. */
+			ptrdiff_t delta;
+			delta  = (byte_t *)new_result - (byte_t *)result;
+			result = new_result;
+			Dee_attriter_moved(&result->ei_iter, delta);
+		}
 	}
 	result->ei_itsz = req_bufsize;
-	result->ei_seq = self;
+	result->ei_seq  = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &DeeEnumAttrIterator_Type);
 	return result;
