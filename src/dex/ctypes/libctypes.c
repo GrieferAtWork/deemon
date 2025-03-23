@@ -882,7 +882,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "#r{Always re-returns ${dst + size} as a ?Aptr?Gvoid}"
 	      "Same as ?Gmemset, but returns ${dst + size}") },
 	{ "bzero", (DeeObject *)&ctypes_bzero, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gvoid,size:?Dint,count=!1)\n"
+	  DOC("(dst:?Aptr?Gvoid,size:?Dint)\n"
+	      "(dst:?Aptr?Gvoid,count:?Dint,size:?Dint)\n"
 	      "Same as ?Gmemset, but always fills memory with ${0}s") },
 	{ "memmove", (DeeObject *)&ctypes_memmove, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"

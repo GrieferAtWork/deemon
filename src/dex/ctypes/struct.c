@@ -337,7 +337,7 @@ PRIVATE struct type_method tpconst struct_type_methods[] = {
 	 *       Where type(p) === this.typeof(field).pointer,
 	 *       and type(return) == this.lvalue */
 	TYPE_METHOD_F("typeof", &struct_type_typeof, METHOD_FNOREFESCAPE,
-	              "(field:?Dstring)->structured_type\n"
+	              "(field:?Dstring)->?GStructuredType\n"
 	              "#tAttributeError{No field with the name @field exists}"
 	              "Returns the typing of given @field"),
 	TYPE_METHOD_END
@@ -352,7 +352,8 @@ PRIVATE struct type_member tpconst struct_type_members[] = {
 INTERN DeeTypeObject DeeStructType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "StructType",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)\n"
+	                         "(name:?Dstring,fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -530,7 +531,7 @@ PRIVATE struct Dee_attriter_type tpconst ctypes_struct_attriter_type = {
 	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&ctypes_struct_attriter_next,
 };
 
-PRIVATE NONNULL((1, 4)) size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 struct_iterattr(DeeStructTypeObject *__restrict self,
                 struct Dee_attriter *iterbuf, size_t bufsize,
                 struct Dee_attrhint const *__restrict hint) {
@@ -629,7 +630,7 @@ struct_assign(DeeStructTypeObject *tp_self,
 	return (int)DeeObject_ForeachPair(value, &struct_assign_foreach_cb, &data);
 }
 
-PRIVATE NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 struct_init(DeeStructTypeObject *tp_self, void *self,
             size_t argc, DeeObject *const *argv) {
 	DeeObject *value = Dee_None;
@@ -703,7 +704,7 @@ INTERN struct empty_struct_type_object DeeStruct_Type = {
 				/* .tp_repr = */ NULL,
 				/* .tp_bool = */ NULL
 			},
-					/* .tp_visit         = */ NULL,
+			/* .tp_visit         = */ NULL,
 			/* .tp_gc            = */ NULL,
 			/* .tp_math          = */ NULL,
 			/* .tp_cmp           = */ NULL,

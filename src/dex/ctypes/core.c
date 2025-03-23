@@ -367,8 +367,8 @@ err:
 
 PRIVATE struct type_method tpconst stype_methods[] = {
 	TYPE_METHOD("func", &stype_func,
-	            "(types!:?DType)->?Gfunction_type\n"
-	            "(cc:?Dstring,types!:?DType)->?Gfunction_type\n"
+	            "(types!:?DType)->?GFunctionType\n"
+	            "(cc:?Dstring,types!:?DType)->?GFunctionType\n"
 	            "#tValueError{The given @cc is unknown, or not supported by the host}"
 	            "#pcc{The name of the calling convention}"
 	            "Construct a new function prototype, using @types as argument, @this "
@@ -376,8 +376,8 @@ PRIVATE struct type_method tpconst stype_methods[] = {
 	            "Note that unlike ?#{op:call}, certain types from the ?Mdeemon core "
 	            /**/ "are also accepted as argument types, such as ?Dbool inplace of ?Gbool"),
 	TYPE_METHOD("vfunc", &stype_vfunc,
-	            "(types!:?DType)->function_type\n"
-	            "(cc:?Dstring,types!:?DType)->function_type\n"
+	            "(types!:?DType)->?GFunctionType\n"
+	            "(cc:?Dstring,types!:?DType)->?GFunctionType\n"
 	            "#tValueError{The given @cc is unknown, or not supported by the host}"
 	            "#pcc{The name of the calling convention}"
 	            "Same as ?#func, but enable support for varargs"),
@@ -491,9 +491,9 @@ INTERN DeeTypeObject DeeSType_Type = {
 	                         "Construct new array types using @this type as item type\n"
 	                         "\n"
 
-	                         "call()->?Gstructured\n"
-	                         "call(args!)->?Gstructured\n"
-	                         "call(types!:?Gstructured_type)->?Gfunction\n"
+	                         "call()->?GStructured\n"
+	                         "call(args!)->?GStructured\n"
+	                         "call(types!:?GStructuredType)->?GFunction\n"
 	                         "Construct a new function type using this type as return type, "
 	                         /**/ "or construct a new instance of @this ?GStructuredType"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
@@ -1085,7 +1085,7 @@ DEFINE_BINARY_INPLACE_STRUCT_OPERATOR(int, struct_inplace_and, DeeStruct_Inplace
 DEFINE_BINARY_INPLACE_STRUCT_OPERATOR(int, struct_inplace_or, DeeStruct_InplaceOr)
 DEFINE_BINARY_INPLACE_STRUCT_OPERATOR(int, struct_inplace_xor, DeeStruct_InplaceXor)
 DEFINE_BINARY_INPLACE_STRUCT_OPERATOR(int, struct_inplace_pow, DeeStruct_InplacePow)
-DEFINE_UNARY_STRUCT_OPERATOR(dhash_t, struct_hash, DeeStruct_Hash)
+DEFINE_UNARY_STRUCT_OPERATOR(Dee_hash_t, struct_hash, DeeStruct_Hash)
 DEFINE_BINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_eq, DeeStruct_Eq)
 DEFINE_BINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_ne, DeeStruct_Ne)
 DEFINE_BINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_lo, DeeStruct_Lo)
@@ -1737,7 +1737,7 @@ DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplacePow, st_inplace_pow, STYPE
 #undef DEFINE_BINARY_MATH_OPERATOR
 #undef DEFINE_UNARY_MATH_OPERATOR
 
-INTERN WUNUSED NONNULL((1)) dhash_t DCALL
+INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 DeeStruct_Hash(DeeSTypeObject *tp_self, void *self) {
 	return Dee_HashPtr(self, DeeSType_Sizeof(tp_self));
 }
@@ -2012,7 +2012,8 @@ atype_repr(DeeArrayTypeObject *__restrict self) {
 
 PRIVATE struct type_member tpconst atype_members[] = {
 	TYPE_MEMBER_CONST_DOC("isarray", Dee_True, DOC_GET(isarray_doc)),
-	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeArrayTypeObject, at_orig), "->?GStructuredType"),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeArrayTypeObject, at_orig),
+	                      "->?GStructuredType"),
 	TYPE_MEMBER_FIELD("size", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeArrayTypeObject, at_count)),
 	TYPE_MEMBER_END
 };
@@ -2156,7 +2157,7 @@ ftype_args(DeeCFunctionTypeObject *__restrict self) {
 
 PRIVATE struct type_getset tpconst ftype_getsets[] = {
 	TYPE_GETTER_AB("args", &ftype_args,
-	               "->?S?Gstructured_type\n"
+	               "->?S?GStructuredType\n"
 	               "Returns an immutable sequence describing "
 	               /**/ "the argument types used by this function"),
 	TYPE_GETSET_END
@@ -2165,7 +2166,8 @@ PRIVATE struct type_getset tpconst ftype_getsets[] = {
 PRIVATE struct type_member tpconst ftype_members[] = {
 	TYPE_MEMBER_CONST_DOC("isfunction", Dee_True, DOC_GET(isfunction_doc)),
 #ifndef CONFIG_NO_CFUNCTION
-	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeCFunctionTypeObject, ft_orig), "->?GStructuredType"),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeCFunctionTypeObject, ft_orig),
+	                      "->?GStructuredType"),
 #endif /* !CONFIG_NO_CFUNCTION */
 	TYPE_MEMBER_END
 };
