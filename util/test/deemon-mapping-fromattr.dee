@@ -37,6 +37,34 @@ assert map.keys.contains("b");
 assert map.keys.contains("c");
 assert !map.keys.contains("d");
 
+function assertIterCopyable() {
+	/* Assert that attribute enumeration iterators are copyable */
+	local it = map.keys.operator iter();
+	local first = it.operator next();
+	local second = it.operator next();
+	local itCopy = copy it;
+	local third = it.operator next();
+	local third2 = itCopy.operator next();
+	assert ({first, second, third} as Set) == { "a", "b", "c" };
+	assert third == third2;
+
+	local it = enumattr(x).operator iter();
+	local first = it.operator next().name;
+	local second = it.operator next().name;
+	local itCopy = copy it;
+	local third = it.operator next().name;
+	local third2 = itCopy.operator next().name;
+	assert ({first, second, third} as Set) == { "a", "b", "c" };
+	assert third == third2;
+}
+
+/* Assert that attribute enumeration iterators are copyable.
+ * Only works under "CONFIG_EXPERIMENTAL_ATTRITER" (enumattr
+ * wasn't copyable prior to this) */
+local CONFIG_EXPERIMENTAL_ATTRITER = enumattr.Iterator.hasoperator("copy");
+if (CONFIG_EXPERIMENTAL_ATTRITER)
+	assertIterCopyable();
+
 assert hasitem(map, "a");
 assert hasitem(map, "b");
 assert hasitem(map, "c");

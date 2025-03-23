@@ -395,8 +395,9 @@ struct Dee_attriter {
 #define Dee_attriter_next(self, desc) (*(self)->ai_type->ait_next)(self, desc)
 #define Dee_attriter_fini(self)       ((self)->ai_type->ait_fini ? (*(self)->ai_type->ait_fini)(self) : (void)0)
 #define Dee_attriter_visit(self)      ((self)->ai_type->ait_visit ? (*(self)->ai_type->ait_visit)(self, proc, arg) : (void)0)
-#define Dee_attriter_copy(self, other, other_bufsize) \
-	((other)->ai_type->ait_copy ? (*(other)->ai_type->ait_copy)(self, other, other_bufsize) : (memcpy(self, other, other_bufsize), 0))
+#define Dee_attriter_copy(self, other, other_bufsize)                                                                           \
+	((other)->ai_type->ait_copy ? ((self)->ai_type = (other)->ai_type, *(other)->ai_type->ait_copy)(self, other, other_bufsize) \
+	                            : (memcpy(self, other, other_bufsize), 0))
 #define Dee_attriter_init(self, type)   (void)((self)->ai_type = (type))
 #define Dee_attriter_moved(self, delta) ((self)->ai_type->ait_moved ? (*(self)->ai_type->ait_moved)(self, delta) : (void)0)
 

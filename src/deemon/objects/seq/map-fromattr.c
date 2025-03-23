@@ -134,6 +134,8 @@ mfaki_copy(MapFromAttrIterator *__restrict self) {
 		goto err;
 	if unlikely(Dee_attriter_copy(&result->mfai_iter, &self->mfai_iter, self->mfai_itsz))
 		goto err_r;
+	result->mfai_obj = self->mfai_obj;
+	Dee_Incref(self->mfai_obj);
 	result->mfai_itsz = self->mfai_itsz;
 	DeeObject_Init(result, &MapFromAttrKeysIterator_Type);
 	return result;

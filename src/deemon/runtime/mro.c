@@ -1020,15 +1020,19 @@ Dee_attriterchain_copy(struct Dee_attriterchain *__restrict self,
 		return 0;
 	}
 	dst_iter = &self->aic_first.aici_iter;
-	self->aic_current = NULL;
 	p_dst_item = &self->aic_current;
 	do {
 		int temp;
-		size_t src_iter_bufsize = other_bufsize;
+		size_t src_iter_bufsize;
 		src_item = Dee_attriterchain_item_fromiter(src_iter);
 		dst_item = Dee_attriterchain_item_fromiter(dst_iter);
 		if (src_item->aici_next) {
 			src_iter_bufsize = (size_t)((byte_t *)src_item->aici_next -
+			                            (byte_t *)(&src_item->aici_iter));
+			ASSERT(src_iter_bufsize >= offsetof(struct Dee_attriterchain_item, aici_iter));
+			src_iter_bufsize -= offsetof(struct Dee_attriterchain_item, aici_iter);
+		} else {
+			src_iter_bufsize = (size_t)(((byte_t *)other + other_bufsize) -
 			                            (byte_t *)(&src_item->aici_iter));
 		}
 
@@ -1044,10 +1048,12 @@ Dee_attriterchain_copy(struct Dee_attriterchain *__restrict self,
 		/* Link into the chain of copied iterators. */
 		*p_dst_item = dst_iter;
 		p_dst_item = &dst_item->aici_next;
-		dst_iter = (struct Dee_attriter *)((byte_t *)dst_iter + src_iter_bufsize);
+		dst_iter = (struct Dee_attriter *)((byte_t *)dst_iter +
+		                                   offsetof(struct Dee_attriterchain_item, aici_iter) +
+		                                   src_iter_bufsize);
 	} while ((src_iter = src_item->aici_next) != NULL);
-	*p_dst_item = NULL;
 	Dee_shared_rwlock_endread(&other->aic_curlock);
+	*p_dst_item = NULL;
 	return 0;
 err:
 	return -1;
