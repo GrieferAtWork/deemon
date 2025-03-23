@@ -1251,6 +1251,7 @@ module_attriter_next(struct module_attriter *__restrict self,
 	desc->ad_info.ai_decl = (DeeObject *)mod;
 	desc->ad_info.ai_type = Dee_ATTRINFO_MODSYM;
 	desc->ad_info.ai_value.v_modsym = sym;
+	desc->ad_type = NULL;
 	return 0;
 err:
 	return -1;
@@ -1368,6 +1369,7 @@ module_findattr_impl(DeeModuleObject *__restrict self,
 					Dee_Incref(COMPILER_CONTAINER_OF(result->ad_name, DeeStringObject, s_str));
 				if ((perm & Dee_ATTRPERM_F_DOCOBJ) && result->ad_doc)
 					Dee_Incref(COMPILER_CONTAINER_OF(result->ad_doc, DeeStringObject, s_str));
+				result->ad_type = NULL;
 				return 0;
 			}
 		}

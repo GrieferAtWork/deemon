@@ -179,6 +179,7 @@ again:
 	desc->ad_info.ai_decl = (DeeObject *)&MapByAttr_Type;
 	desc->ad_info.ai_type = Dee_ATTRINFO_CUSTOM;
 	desc->ad_info.ai_value.v_custom = &byattr_attr;
+	desc->ad_type = NULL;
 	return 0;
 err:
 	return -1;
@@ -249,6 +250,7 @@ byattr_findattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
 		result->ad_info.ai_type = Dee_ATTRINFO_CUSTOM;
 		result->ad_info.ai_decl = (DeeObject *)self;
 		result->ad_info.ai_value.v_custom = &byattr_attr;
+		result->ad_type = NULL;
 		return 0;
 	}
 	return 1;

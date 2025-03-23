@@ -182,6 +182,7 @@ type_method_attriter_next(struct type_method_attriter *__restrict self,
 	desc->ad_info.ai_type = self->tmai_type;
 	desc->ad_info.ai_decl = (DeeObject *)self->ai_type;
 	desc->ad_info.ai_value.v_method = item;
+	desc->ad_type = NULL;
 	return 0;
 }
 
@@ -221,6 +222,7 @@ type_getset_attriter_next(struct type_getset_attriter *__restrict self,
 	desc->ad_info.ai_type = self->tgsai_type;
 	desc->ad_info.ai_decl = (DeeObject *)self->ai_type;
 	desc->ad_info.ai_value.v_getset = item;
+	desc->ad_type = NULL;
 	return 0;
 }
 
@@ -258,6 +260,7 @@ type_member_attriter_next(struct type_member_attriter *__restrict self,
 	desc->ad_info.ai_type = self->tmai_type;
 	desc->ad_info.ai_decl = (DeeObject *)self->ai_type;
 	desc->ad_info.ai_value.v_member = item;
+	desc->ad_type = NULL;
 	return 0;
 }
 

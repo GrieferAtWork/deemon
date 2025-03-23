@@ -41,6 +41,7 @@
 #include <deemon/list.h>
 #include <deemon/map.h>
 #include <deemon/module.h>
+#include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/numeric.h>
 #include <deemon/object.h>
@@ -1731,7 +1732,7 @@ DeeJson_PeekCanonicalObjectType(struct json_parser const *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeJson_ParseString(struct json_parser *__restrict self) {
 	int status;
-	dssize_t error;
+	Dee_ssize_t error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	/* Print the JSON string into a unicode-printer to convert it into a deemon string. */
 	status = libjson_parser_printstring(self, &unicode_printer_print, &printer, &error);
@@ -3227,13 +3228,13 @@ DeeObject_PopulateFromMapping(DeeObject *self, DeeObject *mapping) {
 }
 
 
-PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 json_foreach_write_item(void *arg, DeeObject *elem) {
 	DeeJsonWriter *me = (DeeJsonWriter *)arg;
 	return DeeJson_WriteObject(me, elem);
 }
 
-PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 json_foreach_write_pair(void *arg, DeeObject *key, DeeObject *value) {
 	char const *key_utf8;
 	DeeJsonWriter *me = (DeeJsonWriter *)arg;
@@ -3249,7 +3250,66 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+libjson_writer_writeattr(void *arg, struct Dee_attrdesc *__restrict attr) {
+	DeeJsonWriter *me = (DeeJsonWriter *)arg;
+	DREF DeeObject *attr_value;
+	int error;
+
+	/* Skip attributes from low-level base classes. */
+	if (attr->ad_info.ai_decl == (DeeObject *)&DeeObject_Type ||
+	    attr->ad_info.ai_decl == (DeeObject *)&DeeType_Type) {
+		if (attr->ad_info.ai_decl != me->djw_obj)
+			return 0;
+	}
+
+	/* Check if we should include the attribute. For this purpose:
+	 * - The attribute must not be private
+	 * - The attribute must not be a property
+	 * - The attribute must not be a function
+	 * - The attribute must not be part of the class definition (i.e. must not be static)
+	 * - The attribute must be readable */
+	if ((attr->ad_perm & (Dee_ATTRPERM_F_PRIVATE | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_CMEMBER |
+	                      Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL)) != (Dee_ATTRPERM_F_CANGET))
+		return 0;
+	if (attr->ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
+		DeeStringObject *str_name = Dee_attrdesc_nameobj(attr);
+		attr_value = DeeObject_GetAttr(me->djw_obj, (DeeObject *)str_name);
+	} else {
+		attr_value = DeeObject_GetAttrString(me->djw_obj, attr->ad_name);
+	}
+	if unlikely(!attr_value) {
+		/* Unbound attributes simply aren't included in JSON blobs. */
+		if (DeeError_Catch(&DeeError_UnboundAttribute))
+			return 0;
+		goto err;
+	}
+
+	/* All right! Let's write this attribute. */
+	if (attr->ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
+		DeeStringObject *str_name = Dee_attrdesc_nameobj(attr);
+		char const *name_utf8 = DeeString_AsUtf8((DeeObject *)str_name);
+		if unlikely(!name_utf8)
+			goto err_attr_value;
+		error = libjson_writer_addfield(&me->djw_writer, name_utf8, WSTR_LENGTH(name_utf8));
+	} else {
+		error = libjson_writer_addfield(&me->djw_writer, attr->ad_name, strlen(attr->ad_name));
+	}
+	if unlikely(error)
+		goto err_attr_value;
+
+	/* Write the attribute value */
+	error = DeeJson_WriteObject(me, attr_value);
+	Dee_Decref(attr_value);
+	return error;
+err_attr_value:
+	Dee_Decref(attr_value);
+err:
+	return -1;
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 json_foreach_write_attribute(DeeObject *declarator,
                              char const *attr_name, char const *attr_doc,
                              uint16_t perm, DeeTypeObject *attr_type, void *arg) {
@@ -3316,6 +3376,7 @@ err_attr_value:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 /* Convert an object `obj' to JSON and write said JSON to `self'.
@@ -3345,7 +3406,7 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 	           type == &DeeInt_Type ||
 	           type == &DeeBool_Type) {
 		/* Can just print the object representation as-is */
-		dssize_t temp;
+		Dee_ssize_t temp;
 		if unlikely(libjson_writer_putvalue(&self->djw_writer))
 			goto err;
 		temp = DeeObject_PrintRepr(obj, self->djw_writer.jw_printer, self->djw_writer.jw_arg);
@@ -3427,8 +3488,28 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 				goto err;
 			old_obj = self->djw_obj;
 			self->djw_obj = obj;
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+			{
+				struct Dee_attrhint filter;
+				filter.ah_decl = NULL;
+
+				/* Check if we should include the attribute. For this purpose:
+				 * - The attribute must not be private
+				 * - The attribute must not be a property
+				 * - The attribute must not be a function
+				 * - The attribute must not be part of the class definition (i.e. must not be static)
+				 * - The attribute must be readable */
+				filter.ah_perm_mask = Dee_ATTRPERM_F_PRIVATE | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_CMEMBER |
+				                      Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
+				filter.ah_perm_value = Dee_ATTRPERM_F_CANGET;
+				if unlikely(DeeObject_EnumAttr(Dee_TYPE(obj), obj, &filter,
+				                               &libjson_writer_writeattr, self) < 0)
+					goto err;
+			}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 			if unlikely(DeeObject_EnumAttr(Dee_TYPE(obj), obj, &json_foreach_write_attribute, self) < 0)
 				goto err;
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 			self->djw_obj = old_obj;
 			if unlikely(libjson_writer_endobject(&self->djw_writer))
 				goto err;

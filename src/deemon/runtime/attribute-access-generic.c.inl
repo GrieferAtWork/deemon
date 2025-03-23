@@ -442,11 +442,16 @@ PUBLIC WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 		DeeTypeMRO_Init(&mro, iter);
 #endif /* !LOCAL_IS_PRIVATE */
 		do {
-#ifdef LOCAL_IS_FIND
+#if defined(LOCAL_IS_FIND) || defined(LOCAL_IS_ITER)
 continue_at_iter:
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
+#ifdef LOCAL_IS_ITER
+			if (hint->ah_decl != NULL &&
+			    hint->ah_decl != (DeeObject *)iter)
+#else /* LOCAL_IS_ITER */
 			if (specs->as_decl != NULL &&
 			    specs->as_decl != (DeeObject *)iter)
+#endif /* !LOCAL_IS_ITER */
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 			if (rules->alr_decl != NULL &&
 			    rules->alr_decl != (DeeObject *)iter)
@@ -473,6 +478,7 @@ continue_at_iter:
 	if unlikely(retval == (size_t)-1)      \
 		goto err;                          \
 	Dee_attriterchain_builder_consume(&builder, retval)
+
 #elif defined(LOCAL_IS_ENUM)
 #define LOCAL_process_retval(retval, done) \
 	if unlikely(retval < 0)                \
@@ -484,19 +490,28 @@ continue_at_iter:
 		goto done
 #endif /* !LOCAL_IS_ENUM */
 
-			if (iter->tp_methods) {
+#ifdef LOCAL_IS_ITER
+#define LOCAL_accepts_baseperm(baseperm) Dee_attrhint_accepts_baseperm(hint, baseperm)
+#elif defined(LOCAL_IS_FIND) && defined(CONFIG_EXPERIMENTAL_ATTRITER)
+#define LOCAL_accepts_baseperm(baseperm) Dee_attrspec_accepts_baseperm(specs, baseperm)
+#else /* ... */
+#define LOCAL_accepts_baseperm(baseperm) 1
+#endif /* !... */
+
+			if (iter->tp_methods && LOCAL_accepts_baseperm(Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL)) {
 				retval = LOCAL_DeeType_AccessMethodAttr(tp_self, iter, self);
 				LOCAL_process_retval(retval, done);
 			}
-			if (iter->tp_getsets) {
+			if (iter->tp_getsets && LOCAL_accepts_baseperm(Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY)) {
 				retval = LOCAL_DeeType_AccessGetSetAttr(tp_self, iter, self);
 				LOCAL_process_retval(retval, LOCAL_invoke_retval_OR_done);
 			}
-			if (iter->tp_members) {
+			if (iter->tp_members && LOCAL_accepts_baseperm(Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET)) {
 				retval = LOCAL_DeeType_AccessMemberAttr(tp_self, iter, self);
 				LOCAL_process_retval(retval, LOCAL_invoke_retval_OR_done);
 			}
 
+#undef LOCAL_accepts_baseperm
 #undef LOCAL_process_retval
 		}
 #ifdef LOCAL_IS_PRIVATE

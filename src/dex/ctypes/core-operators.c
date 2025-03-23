@@ -1074,7 +1074,11 @@ INTERN_TPCONST struct type_operator tpconst stype_operator_decls[] = {
 	TYPE_OPERATOR_DECL(OPERATOR_STYPE_0032_GETATTR /*    */, offsetof(DeeSTypeObject, st_attr), offsetof(struct stype_attr, st_getattr), /*    */ OPCC_SPECIAL, "cgetattr", /* */ "sgetattr", /* */ "st_getattr", /*    */ &stype_operator_getattr),
 	TYPE_OPERATOR_DECL(OPERATOR_STYPE_0033_DELATTR /*    */, offsetof(DeeSTypeObject, st_attr), offsetof(struct stype_attr, st_delattr), /*    */ OPCC_SPECIAL, "cdelattr", /* */ "sdelattr", /* */ "st_delattr", /*    */ &stype_operator_delattr),
 	TYPE_OPERATOR_DECL(OPERATOR_STYPE_0034_SETATTR /*    */, offsetof(DeeSTypeObject, st_attr), offsetof(struct stype_attr, st_setattr), /*    */ OPCC_SPECIAL, "csetattr", /* */ "ssetattr", /* */ "st_setattr", /*    */ &stype_operator_setattr),
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	TYPE_OPERATOR_DECL(OPERATOR_STYPE_0035_ENUMATTR /*   */, offsetof(DeeSTypeObject, st_attr), offsetof(struct stype_attr, st_iterattr), /*   */ OPCC_SPECIAL, "cenumattr", /**/ "senumattr", /**/ "st_iterattr", /*   */ &stype_operator_enumattr),
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	TYPE_OPERATOR_DECL(OPERATOR_STYPE_0035_ENUMATTR /*   */, offsetof(DeeSTypeObject, st_attr), offsetof(struct stype_attr, st_enumattr), /*   */ OPCC_SPECIAL, "cenumattr", /**/ "senumattr", /**/ "st_enumattr", /*   */ &stype_operator_enumattr),
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 };
 
 DECL_END

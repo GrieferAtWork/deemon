@@ -2091,6 +2091,7 @@ check_and_invoke_callback:
 		result->ad_name         = item->mcs_name;
 		result->ad_info.ai_decl = (DeeObject *)item->mcs_decl;
 		Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
+		result->ad_type = NULL;
 		return 0;
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 		if ((attr_perm & rules->alr_perm_mask) != rules->alr_perm_value) {

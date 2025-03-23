@@ -792,7 +792,6 @@ EXPORTS
 	DeeObject_Div@8=_DeeObject_Div@8
 	DeeObject_DivInt8@8=_DeeObject_DivInt8@8
 	DeeObject_Enter@4=_DeeObject_Enter@4
-	DeeObject_EnumAttr@16=_DeeObject_EnumAttr@16
 	DeeObject_ExtendInherited@12=_DeeObject_ExtendInherited@12
 	DeeObject_FindAttr@16=_DeeObject_FindAttr@16
 	DeeObject_Foreach@12=_DeeObject_Foreach@12
@@ -981,7 +980,6 @@ EXPORTS
 	DeeObject_TGenericCallAttrStringLenHashKw@32=_DeeObject_TGenericCallAttrStringLenHashKw@32
 	DeeObject_TGenericDelAttrStringHash@16=_DeeObject_TGenericDelAttrStringHash@16
 	DeeObject_TGenericDelAttrStringLenHash@20=_DeeObject_TGenericDelAttrStringLenHash@20
-	DeeObject_TGenericEnumAttr@12=_DeeObject_TGenericEnumAttr@12
 	DeeObject_TGenericFindAttr@16=_DeeObject_TGenericFindAttr@16
 	DeeObject_TGenericFindAttrInfoStringLenHash@20=_DeeObject_TGenericFindAttrInfoStringLenHash@20
 	DeeObject_TGenericFindPrivateAttrInfoStringLenHash@20=_DeeObject_TGenericFindPrivateAttrInfoStringLenHash@20

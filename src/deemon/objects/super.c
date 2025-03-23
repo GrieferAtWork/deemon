@@ -249,13 +249,13 @@ super_bool(Super *__restrict self) {
 	return DeeObject_TBool(self->s_type, self->s_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-super_print(Super *__restrict self, dformatprinter printer, void *arg) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+super_print(Super *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	return DeeObject_TPrint(self->s_type, self->s_self, printer, arg);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-super_printrepr(Super *__restrict self, dformatprinter printer, void *arg) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+super_printrepr(Super *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	return DeeObject_TPrintRepr(self->s_type, self->s_self, printer, arg);
 }
 
@@ -880,7 +880,22 @@ super_setattr(Super *self, /*String*/ DeeObject *name, DeeObject *value) {
 	return DeeObject_TSetAttr(self->s_type, self->s_self, name, value);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+PRIVATE WUNUSED NONNULL((1, 2, 3, 5)) size_t DCALL
+super_iterattr(DeeTypeObject *UNUSED(tp_self), Super *self,
+               struct Dee_attriter *iterbuf, size_t bufsize,
+               struct Dee_attrhint *__restrict hint) {
+	return DeeObject_IterAttr(self->s_type, self->s_self, iterbuf, bufsize, hint);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+super_findattr(DeeTypeObject *UNUSED(tp_self), Super *self,
+               struct Dee_attrspec const *__restrict specs,
+               struct Dee_attrdesc *__restrict result) {
+	return DeeObject_FindAttr(self->s_type, self->s_self, specs, result);
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 super_enumattr(DeeTypeObject *UNUSED(tp_self),
                Super *self, Dee_enum_t proc, void *arg) {
 	return DeeObject_EnumAttr(self->s_type, self->s_self, proc, arg);
@@ -892,6 +907,7 @@ super_findattr(DeeTypeObject *UNUSED(tp_self), Super *self,
                struct Dee_attribute_lookup_rules const *__restrict rules) {
 	return DeeObject_FindAttr(self->s_type, self->s_self, result, rules);
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_hasattr(Super *self, DeeObject *name) {
@@ -1028,8 +1044,13 @@ PRIVATE struct type_attr super_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&super_setattr,
-	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&super_enumattr,
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .tp_iterattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&super_iterattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&super_findattr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&super_enumattr,
 	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attribute_info *__restrict, struct Dee_attribute_lookup_rules const *__restrict))&super_findattr,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_boundattr,
 	/* .tp_callattr                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&super_callattr,
@@ -1264,8 +1285,8 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_str,
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_repr,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&super_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&super_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&super_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&super_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&super_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&super_visit,
 	/* .tp_gc            = */ NULL,

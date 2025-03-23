@@ -231,7 +231,7 @@ done:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_getattrtype(Attr *__restrict self) {
 	DREF DeeTypeObject *result;
-	result = Dee_attrinfo_typeof(&self->a_desc.ad_info);
+	result = Dee_attrdesc_typeof(&self->a_desc);
 	if (result)
 		return (DREF DeeObject *)result;
 	return_none;
@@ -314,11 +314,13 @@ attr_init_kw(DeeAttributeObject *__restrict self,
 		DeeStringObject *name;
 		DeeStringObject *doc;
 		DeeObject       *perm;
+		DeeTypeObject   *attrtype;
 	} args;
-	args.doc  = NULL;
-	args.perm = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__decl_name_doc_perm,
-	                          "oo|oo:Attribute", &args))
+	args.doc      = NULL;
+	args.perm     = Dee_None;
+	args.attrtype = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__decl_name_doc_perm_attrtype,
+	                          "oo|ooo:Attribute", &args))
 		goto err;
 	if (DeeObject_AssertType(args.decl, &DeeType_Type))
 		goto err;
@@ -350,6 +352,13 @@ attr_init_kw(DeeAttributeObject *__restrict self,
 			goto err;
 	}
 
+	self->a_desc.ad_type = NULL;
+	if (args.attrtype) {
+		if (DeeObject_AssertType(args.attrtype, &DeeType_Type))
+			goto err;
+		self->a_desc.ad_type = args.attrtype;
+		Dee_Incref(args.attrtype);
+	}
 	Dee_Incref(args.name);
 	self->a_desc.ad_perm = perm | Dee_ATTRPERM_F_NAMEOBJ | Dee_ATTRPERM_F_DOCOBJ;
 	self->a_desc.ad_name = DeeString_STR(args.name);
@@ -595,23 +604,28 @@ PRIVATE struct type_method tpconst attr_methods[] = {
 	              "(thisarg)->\n"
 	              "#tTypeError{The given @thisarg does not implement @this attribute}\n"
 	              "#tAttributeError{?#canget is !f}\n"
-	              "Perform a get-operator with @this attribute"),
+	              "Invoke the get-operator with @this attribute"),
+	TYPE_METHOD_F("callbound", &attr_callbound, METHOD_FNOREFESCAPE,
+	              "(thisarg)->?Dbool\n"
+	              "#tTypeError{The given @thisarg does not implement @this attribute}\n"
+	              "#tAttributeError{?#canget is !f}\n"
+	              "Invoke the bound-operator with @this attribute"),
 	TYPE_METHOD_F("calldel", &attr_calldel, METHOD_FNOREFESCAPE,
 	              "(thisarg)\n"
 	              "#tTypeError{The given @thisarg does not implement @this attribute}\n"
 	              "#tAttributeError{?#candel is !f}\n"
-	              "Perform a del-operator with @this attribute"),
+	              "Invoke the del-operator with @this attribute"),
 	TYPE_METHOD_F("callset", &attr_callset, METHOD_FNOREFESCAPE,
 	              "(thisarg,value)\n"
 	              "#tTypeError{The given @thisarg does not implement @this attribute}\n"
 	              "#tAttributeError{?#canset is !f}\n"
-	              "Perform a set-operator with @this attribute"),
+	              "Invoke the set-operator with @this attribute"),
 	TYPE_KWMETHOD_F("callcall", &attr_callcall, METHOD_FNOREFESCAPE,
 	                "(thisarg,args!,kwds!!)\n"
 	                "#tTypeError{The given @thisarg does not implement @this attribute}\n"
 	                "#tAttributeError{?#cancall and ?#canget is !f}\n"
-	                "Perform a call-operator with @this attribute, or "
-	                /**/ "invoke ?#callget and invoke the result"),
+	                "Invoke the call-operator with @this attribute, "
+	                /**/ "or call ?#callget and invoke the result"),
 	TYPE_METHOD_END
 };
 
@@ -672,7 +686,8 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	/* .tp_doc      = */ DOC("The descriptor object for abstract object attributes\n"
 	                         "\n"
 
-	                         "(decl:?DType,name:?Dstring,doc?:?Dstring,perm:?X3?Dint?Dstring?N=!N)\n"
+	                         "(decl:?DType,name:?Dstring,doc?:?Dstring,perm:?X3?Dint?Dstring?N=!N,attrtype?:?DType)\n"
+	                         "#pattrtype{The type of object returned by the attribute (s.a. ?#attrtype; used by ?Edoc:Doc if not defined by @doc)}"
 	                         "#tTypeError{The given @decl does not define custom attribute operators}"
 	                         "#pperm{Attribute permissions (s.a. ?#perm)}"
 	                         "Construct a descriptor for an attribute @name of type @decl"),
@@ -750,10 +765,8 @@ enumattr_init(EnumAttr *__restrict self,
 	Dee_Incref(self->ea_type);
 	Dee_Incref(self->ea_obj);
 
-	/* TODO: Allow user-code to override these: */
-	self->ea_hint.ah_decl       = NULL;
-	self->ea_hint.ah_perm_mask  = 0;
-	self->ea_hint.ah_perm_value = 0;
+	/* TODO: Allow user-code to override this: */
+	Dee_attrhint_initall(&self->ea_hint);
 	return 0;
 err:
 	return -1;
@@ -939,8 +952,7 @@ enumattriter_next(EnumAttrIter *__restrict self) {
 				return (DREF Attr *)ITER_DONE;
 			goto err;
 		}
-		if ((hint->ah_decl && hint->ah_decl != desc.ad_info.ai_decl) ||
-		    (hint->ah_perm_mask && (desc.ad_perm & hint->ah_perm_mask) != hint->ah_perm_value)) {
+		if (!Dee_attrhint_matches(hint, &desc)) {
 			/* Supposed to skip this attribute */
 			Dee_attrdesc_fini(&desc);
 			continue;

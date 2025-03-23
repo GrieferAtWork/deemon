@@ -31,6 +31,7 @@
 #include <deemon/kwds.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
+#include <deemon/none-operator.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/property.h>
@@ -780,6 +781,90 @@ err_no_keywords:
 
 
 
+
+/* Initialize a buffer for yielding empty (no) attributes. */
+#define empty_attriter_next _DeeNone_reti1_2
+PRIVATE struct Dee_attriter_type tpconst empty_attriter_type = {
+	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&empty_attriter_next,
+};
+
+PUBLIC WUNUSED size_t DCALL
+Dee_attriter_initempty(struct Dee_attriter *iterbuf, size_t bufsize) {
+	if likely(bufsize >= sizeof(struct Dee_attriter))
+		Dee_attriter_init(iterbuf, &empty_attriter_type);
+	return sizeof(struct Dee_attriter);
+}
+
+
+
+
+
+
+
+/* Wrapper around `DeeObject_IterAttr()' that will handle all the instantiation/finalization of the
+ * attribute iterator for you, whilst applying a given `filter' to select which arguments should
+ * actually be enumerated. The given `cb' may also return any negative value to halt enumeration
+ * prematurely (in which case that same negative value is returned by this function), or return a
+ * positive value, which are then summed across all invocations prior to being returned.
+ * @param: filter: Only enumerate attributes matched by this filter
+ * @return: >= 0: Success (return value is the sum of invocations of `cb')
+ * @return: -1:   An error was thrown
+ * @return: < -1: Negative return value returned by `cb' */
+PUBLIC WUNUSED NONNULL((1, 3, 4, 5)) Dee_ssize_t DCALL
+DeeObject_EnumAttr(DeeTypeObject *tp_self, DeeObject *self,
+                   struct Dee_attrhint *__restrict filter,
+                   Dee_enumattr_t cb, void *arg) {
+	int status;
+	struct Dee_attrdesc desc;
+	Dee_ssize_t temp, result = 0;
+	size_t reqsiz, bufsiz = 16 * sizeof(void *);
+	struct Dee_attriter *iterbuf;
+again_alloc_iterbuf:
+	iterbuf = (struct Dee_attriter *)Dee_Malloca(bufsiz);
+	if unlikely(!iterbuf)
+		goto err;
+	reqsiz = DeeObject_IterAttr(tp_self, self, iterbuf, bufsiz, filter);
+	if unlikely(reqsiz == (size_t)-1)
+		goto err_iterbuf;
+	if (reqsiz > bufsiz) {
+		Dee_Freea(iterbuf);
+		bufsiz = reqsiz;
+		goto again_alloc_iterbuf;
+	}
+
+	/* Enumerate attributes */
+	while ((status = Dee_attriter_next(iterbuf, &desc)) == 0) {
+		temp = Dee_attrhint_matches(filter, &desc) ? (*cb)(arg, &desc) : 0;
+		Dee_attrdesc_fini(&desc);
+		if unlikely(temp < 0)
+			goto err_temp_iterbuf_fini;
+		result += temp;
+	}
+	if unlikely(status < 0)
+		goto err_iterbuf;
+	Dee_attriter_fini(iterbuf);
+	Dee_Freea(iterbuf);
+	return result;
+err_temp_iterbuf_fini:
+	Dee_attriter_fini(iterbuf);
+err_temp_iterbuf:
+	Dee_Freea(iterbuf);
+err_temp:
+	return temp;
+err:
+	temp = -1;
+	goto err_temp;
+err_iterbuf:
+	temp = -1;
+	goto err_temp_iterbuf;
+}
+
+
+
+
+
+
+
 /************************************************************************/
 /* Special built-in attribute iterator for concating multiple others.   */
 /************************************************************************/
@@ -885,7 +970,7 @@ err:
 	return -1;
 }
 
-INTERN_TPCONST struct Dee_attriter_type tpconst Dee_attriterchain_type = {
+PUBLIC_TPCONST struct Dee_attriter_type tpconst Dee_attriterchain_type = {
 	/* .ait_next  = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&Dee_attriterchain_next,
 	/* .ait_copy  = */ (int (DCALL *)(struct Dee_attriter *__restrict, struct Dee_attriter *__restrict, size_t))&Dee_attriterchain_copy,
 	/* .ait_fini  = */ (void (DCALL *)(struct Dee_attriter *__restrict))&Dee_attriterchain_fini,
@@ -894,7 +979,7 @@ INTERN_TPCONST struct Dee_attriter_type tpconst Dee_attriterchain_type = {
 
 
 /* Initialize a builder for use with a given "iterbuf" and "bufsize" */
-INTERN NONNULL((1)) void DCALL
+PUBLIC NONNULL((1)) void DCALL
 Dee_attriterchain_builder_init(struct Dee_attriterchain_builder *__restrict self,
                                struct Dee_attriter *iterbuf, size_t bufsize) {
 	struct Dee_attriterchain *iterchain = (struct Dee_attriterchain *)iterbuf;
@@ -914,7 +999,7 @@ Dee_attriterchain_builder_init(struct Dee_attriterchain_builder *__restrict self
 }
 
 /* Finalize any iterator that had been constructed by the builder. */
-INTERN NONNULL((1)) void DCALL
+PUBLIC NONNULL((1)) void DCALL
 Dee_attriterchain_builder_fini(struct Dee_attriterchain_builder *__restrict self) {
 	if (self->aicb_pnext) {
 		*self->aicb_pnext = NULL;
@@ -925,7 +1010,7 @@ Dee_attriterchain_builder_fini(struct Dee_attriterchain_builder *__restrict self
 
 
 /* Consume "n_bytes" from the builder's buffer and advance pointers. */
-INTERN NONNULL((1)) void DCALL
+PUBLIC NONNULL((1)) void DCALL
 Dee_attriterchain_builder_consume(struct Dee_attriterchain_builder *__restrict self,
                                   size_t n_bytes) {
 	size_t aligned_size = n_bytes;
@@ -938,6 +1023,9 @@ Dee_attriterchain_builder_consume(struct Dee_attriterchain_builder *__restrict s
 		struct Dee_attriterchain_item *curitem;
 		ASSERT(self->aicb_pnext);
 		curitem = COMPILER_CONTAINER_OF(self->aicb_curiter, struct Dee_attriterchain_item, aici_iter);
+		if (curitem->aici_iter.ai_type == &Dee_attriterchain_type) {
+			/* TODO: Optimize for this case by inlining the iterators of the inner chain */
+		}
 		*self->aicb_pnext  = self->aicb_curiter; /* Link in the newly initialize iterator */
 		self->aicb_pnext   = &curitem->aici_next;
 		self->aicb_curiter = (struct Dee_attriter *)((byte_t *)self->aicb_curiter + aligned_size);
@@ -1750,6 +1838,7 @@ type_method_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
 		result->ad_info.ai_type = Dee_ATTRINFO_METHOD;
 		result->ad_info.ai_decl = (DeeObject *)decl;
 		result->ad_info.ai_value.v_method = chain;
+		result->ad_type = NULL;
 		return 0;
 	}
 nope:
@@ -1779,6 +1868,7 @@ DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker,
 		result->ad_info.ai_decl = (DeeObject *)tp_self;
 		result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_METHOD;
 		result->ad_info.ai_value.v_instance_method = chain;
+		result->ad_type = NULL;
 		return 0;
 	}
 nope:
@@ -1814,6 +1904,7 @@ type_getset_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
 		result->ad_info.ai_decl = (DeeObject *)decl;
 		result->ad_info.ai_type = Dee_ATTRINFO_GETSET;
 		result->ad_info.ai_value.v_getset = chain;
+		result->ad_type = NULL;
 		return 0;
 	}
 	return 1;
@@ -1850,6 +1941,7 @@ DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker,
 		result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_GETSET;
 		result->ad_info.ai_decl = (DeeObject *)tp_self;
 		result->ad_info.ai_value.v_instance_getset = chain;
+		result->ad_type = NULL;
 		return 0;
 	}
 	return 1;
@@ -1881,6 +1973,7 @@ type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
 		result->ad_info.ai_type = Dee_ATTRINFO_MEMBER;
 		result->ad_info.ai_decl = (DeeObject *)decl;
 		result->ad_info.ai_value.v_member = chain;
+		result->ad_type = NULL;
 		return 0;
 	}
 	return 1;
@@ -1914,6 +2007,7 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker,
 		result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_MEMBER;
 		result->ad_info.ai_decl = (DeeObject *)tp_self;
 		result->ad_info.ai_value.v_instance_member = chain;
+		result->ad_type = NULL;
 		return 0;
 	}
 	return 1;

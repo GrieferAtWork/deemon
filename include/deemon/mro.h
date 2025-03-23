@@ -186,6 +186,7 @@ struct Dee_attrdesc {
 	                              * [0..1] The documentation string of the attribute (when known). */
 	struct Dee_attrinfo ad_info; /* Info about this attribute in particular */
 	uint16_t            ad_perm; /* Set of `Dee_ATTRPERM_F_*' flags, describing the attribute's behavior. */
+	DREF DeeTypeObject *ad_type; /* [0..1] Optional: the type of object to report as being returned by `Dee_attrdesc_callget()' */
 };
 #define Dee_attrdesc_nameobj(self) COMPILER_CONTAINER_OF((self)->ad_name, DeeStringObject, s_str)
 #define Dee_attrdesc_docobj(self)  COMPILER_CONTAINER_OF((self)->ad_doc, DeeStringObject, s_str)
@@ -196,7 +197,13 @@ struct Dee_attrdesc {
 	       : (void)0,                                                  \
 	       ((self)->ad_perm & Dee_ATTRPERM_F_DOCOBJ && (self)->ad_doc) \
 	       ? Dee_Decref(Dee_attrdesc_docobj(self))                     \
-	       : (void)0)
+	       : (void)0,                                                  \
+	       Dee_XDecref((self)->ad_type))
+
+/* Returns a reference to the type returned by `Dee_attrdesc_callget()', or `NULL' if unknown. */
+#define Dee_attrdesc_typeof(self)                                     \
+	((self)->ad_type ? (Dee_Incref((self)->ad_type), (self)->ad_type) \
+	                 : Dee_attrinfo_typeof(&(self)->ad_info))
 
 /* Perform standard operations on the attribute behind `struct Dee_attrdesc' */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -232,6 +239,17 @@ struct Dee_attrhint {
 	uint16_t    ah_perm_value; /* Permissions value for `as_perm_mask' */
 };
 
+/* Initialize "self" to match *all* attributes */
+#define Dee_attrhint_initall(self) \
+	(void)((self)->ah_decl = NULL, (self)->ah_perm_mask = (self)->ah_perm_value = 0)
+
+/* See if "desc" is matched by "self" */
+#define Dee_attrhint_matches(self, desc)                                        \
+	(((self)->ah_decl == NULL || (self)->ah_decl == (desc)->ad_info.ai_decl) && \
+	 ((desc)->ad_perm & (self)->ah_perm_mask) == (self)->ah_perm_value)
+#define Dee_attrhint_accepts_baseperm(self, baseperm) \
+	(((baseperm) & (self)->ah_perm_mask) == ((self)->ah_perm_value & (self)->ah_perm_mask))
+
 struct Dee_attrspec {
 	char const *as_name;       /* [1..1] The name of the attribute to look up (ad_name). */
 	Dee_hash_t  as_hash;       /* [== Dee_HashStr(alr_name)] Hash of `alr_name' */
@@ -239,6 +257,10 @@ struct Dee_attrspec {
 	uint16_t    as_perm_mask;  /* Filter attributes by `(ad_perm & as_perm_mask) == as_perm_value' */
 	uint16_t    as_perm_value; /* Permissions value for `as_perm_mask' */
 };
+
+#define Dee_attrspec_ashint(self) ((struct Dee_attrhint *)&(self)->as_decl)
+#define Dee_attrspec_accepts_baseperm(self, baseperm) \
+	(((baseperm) & (self)->as_perm_mask) == ((self)->as_perm_value & (self)->as_perm_mask))
 
 
 struct Dee_attriter_type {
@@ -320,6 +342,9 @@ struct Dee_attriter {
 	((other)->ai_type->ait_copy ? (*(other)->ai_type->ait_copy)(self, other, other_bufsize) : (memcpy(self, other, other_bufsize), 0))
 #define Dee_attriter_init(self, type)  (void)((self)->ai_type = (type))
 
+/* Initialize a buffer for yielding empty (no) attributes. */
+DFUNDEF WUNUSED size_t DCALL Dee_attriter_initempty(struct Dee_attriter *iterbuf, size_t bufsize);
+
 
 
 /* Lookup the descriptor for an attribute, given a set of `specs'.
@@ -347,6 +372,25 @@ DFUNDEF WUNUSED NONNULL((1, 3, 5)) size_t DCALL
 DeeObject_IterAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attriter *iterbuf, size_t bufsize,
                    struct Dee_attrhint *__restrict hint);
+
+/* Callback prototype for `DeeObject_EnumAttr'
+ * @return: * : Dee_formatprinter_t-like return value */
+typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t
+(DCALL *Dee_enumattr_t)(void *arg, struct Dee_attrdesc *__restrict desc);
+
+/* Wrapper around `DeeObject_IterAttr()' that will handle all the instantiation/finalization of the
+ * attribute iterator for you, whilst applying a given `filter' to select which arguments should
+ * actually be enumerated. The given `cb' may also return any negative value to halt enumeration
+ * prematurely (in which case that same negative value is returned by this function), or return a
+ * positive value, which are then summed across all invocations prior to being returned.
+ * @param: filter: Only enumerate attributes matched by this filter
+ * @return: >= 0: Success (return value is the sum of invocations of `cb')
+ * @return: -1:   An error was thrown
+ * @return: < -1: Negative return value returned by `cb' */
+DFUNDEF WUNUSED NONNULL((1, 3, 4, 5)) Dee_ssize_t DCALL
+DeeObject_EnumAttr(DeeTypeObject *tp_self, DeeObject *self,
+                   struct Dee_attrhint *__restrict filter,
+                   Dee_enumattr_t cb, void *arg);
 
 
 DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_TGenericFindAttr(DeeTypeObject *tp_self, DeeObject *self, struct Dee_attrspec const *__restrict specs, struct Dee_attrdesc *__restrict result);
@@ -2084,6 +2128,7 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetInstanceAttrStringHash)(
 #define DeeType_SetInstanceAttrStringLenHash(self, attr, attrlen, hash, value) __builtin_expect(DeeType_SetInstanceAttrStringLenHash(self, attr, attrlen, hash, value), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 
@@ -2108,7 +2153,7 @@ struct Dee_attriterchain {
 	struct Dee_attriterchain_item aic_first;   /* First iterator in chain */
 };
 
-INTDEF struct Dee_attriter_type tpconst Dee_attriterchain_type;
+DDATDEF struct Dee_attriter_type tpconst Dee_attriterchain_type;
 
 struct Dee_attriterchain_builder {
 	struct Dee_attriter      *aicb_curiter;   /* [0..aicb_bufsize] Pointer to start of remaining buffer */
@@ -2119,12 +2164,12 @@ struct Dee_attriterchain_builder {
 };
 
 /* Initialize a builder for use with a given "iterbuf" and "bufsize" */
-INTDEF NONNULL((1)) void DCALL
+DFUNDEF NONNULL((1)) void DCALL
 Dee_attriterchain_builder_init(struct Dee_attriterchain_builder *__restrict self,
                                struct Dee_attriter *iterbuf, size_t bufsize);
 
 /* Finalize any iterator that had been constructed by the builder. */
-INTDEF NONNULL((1)) void DCALL
+DFUNDEF NONNULL((1)) void DCALL
 Dee_attriterchain_builder_fini(struct Dee_attriterchain_builder *__restrict self);
 
 /* Finalize iterators constructed by the builder and return the final, used buffer size. */
@@ -2144,14 +2189,10 @@ Dee_attriterchain_builder_fini(struct Dee_attriterchain_builder *__restrict self
 #define Dee_attriterchain_builder_getbufsize(self) (self)->aicb_bufsize
 
 /* Consume "n_bytes" from the builder's buffer and advance pointers. */
-INTDEF NONNULL((1)) void DCALL
+DFUNDEF NONNULL((1)) void DCALL
 Dee_attriterchain_builder_consume(struct Dee_attriterchain_builder *__restrict self,
                                   size_t n_bytes);
-
-
 #endif /* CONFIG_EXPERIMENTAL_ATTRITER */
-
-#endif /* CONFIG_BUILDING_DEEMON */
 
 DECL_END
 

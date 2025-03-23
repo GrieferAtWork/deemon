@@ -33,6 +33,7 @@
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
+#include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
@@ -1130,6 +1131,34 @@ struct_setattr(DeeObject *self, DeeObject *attr, DeeObject *value) {
 	return result;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+struct_iterattr(DeeTypeObject *tp_self, DeeObject *UNUSED(self),
+                struct Dee_attriter *iterbuf, size_t bufsize,
+                struct Dee_attrhint *__restrict hint) {
+	size_t req;
+	struct Dee_attriterchain_builder builder;
+	Dee_attriterchain_builder_init(&builder, iterbuf, bufsize);
+	req = DeeStruct_IterAttr(DeeType_AsSType(tp_self),
+	                         Dee_attriterchain_builder_getiterbuf(&builder),
+	                         Dee_attriterchain_builder_getbufsize(&builder),
+	                         hint);
+	if unlikely(req == (size_t)-1)
+		goto err_builder;
+	Dee_attriterchain_builder_consume(&builder, req);
+	req = DeeObject_TGenericIterAttr(tp_self,
+	                                 Dee_attriterchain_builder_getiterbuf(&builder),
+	                                 Dee_attriterchain_builder_getbufsize(&builder),
+	                                 hint);
+	if unlikely(req == (size_t)-1)
+		goto err_builder;
+	Dee_attriterchain_builder_consume(&builder, req);
+	return Dee_attriterchain_builder_pack(&builder, req);
+err_builder:
+	Dee_attriterchain_builder_fini(&builder);
+	return (size_t)-1;
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 struct_enumattr(DeeTypeObject *tp_self, DeeObject *UNUSED(self),
                 Dee_enum_t proc, void *arg) {
@@ -1146,6 +1175,8 @@ struct_enumattr(DeeTypeObject *tp_self, DeeObject *UNUSED(self),
 	}
 	return result;
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
+
 #undef DEFINE_BINARY_INPLACE_STRUCT_OPERATOR
 #undef DEFINE_UNARY_INPLACE_STRUCT_OPERATOR
 #undef DEFINE_TRINARY_STRUCT_OPERATOR
@@ -1215,7 +1246,11 @@ PRIVATE struct type_attr struct_attr = {
 	/* .tp_getattr  = */ &struct_getattr,
 	/* .tp_delattr  = */ &struct_delattr,
 	/* .tp_setattr  = */ &struct_setattr,
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .tp_enumattr = */ &struct_iterattr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr = */ &struct_enumattr,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* TODO: Also define all of the string-based accessors! */
 };
 
@@ -1926,6 +1961,17 @@ DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self,
 }
 
 /* Enumerate struct attributes (excluding generic attributes) */
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeStruct_IterAttr(DeeSTypeObject *__restrict tp_self,
+                   struct Dee_attriter *iterbuf, size_t bufsize,
+                   struct Dee_attrhint *__restrict hint) {
+	if ((tp_self->st_attr && tp_self->st_attr->st_iterattr) ||
+	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_ENUMATTR))
+		return (*tp_self->st_attr->st_iterattr)(tp_self, iterbuf, bufsize, hint);
+	return Dee_attriter_initempty(iterbuf, bufsize);
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
                    Dee_enum_t proc, void *arg) {
@@ -1934,6 +1980,7 @@ DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
 		return (*tp_self->st_attr->st_enumattr)(tp_self, proc, arg);
 	return 0;
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 

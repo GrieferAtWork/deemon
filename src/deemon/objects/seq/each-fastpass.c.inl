@@ -1177,8 +1177,13 @@ PRIVATE struct type_attr LOCAL_seX(attr) = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&LOCAL_seX(delattr),
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&LOCAL_seX(setattr),
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .tp_enumattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&sew_iterattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&sew_findattr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&sew_enumattr,
 	/* .tp_findattr                      = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(hasattr),
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(boundattr),
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
@@ -1670,8 +1675,13 @@ PRIVATE struct type_attr LOCAL_ssX(attr) = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&ssw_getattr,
 	/* .tp_delattr                       = */ NULL,
 	/* .tp_setattr                       = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .tp_enumattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&ssw_iterattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&ssw_findattr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&ssw_enumattr,
 	/* .tp_findattr                      = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_ssX(hasattr),
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_ssX(boundattr),
 	/* .tp_callattr                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&ssw_callattr,

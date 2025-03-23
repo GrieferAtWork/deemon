@@ -31,9 +31,11 @@
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
+#include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero(), ... */
+#include <deemon/util/atomic.h>
 
 DECL_BEGIN
 
@@ -477,6 +479,64 @@ struct_setattr(DeeStructTypeObject *tp_self,
 	return err_unknown_attribute_with_reason(DeeStructType_AsType(tp_self), name, "set");
 }
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+struct ctypes_struct_attriter {
+	Dee_ATTRITER_HEAD
+	DeeStructTypeObject *casi_struct; /* [1..1][const] The struct being enumerated */
+	Dee_hash_t           csai_hidx;   /* [lock(ATOMIC)] Next hash-table index to yield. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ctypes_struct_attriter_next(struct ctypes_struct_attriter *__restrict self,
+                            /*out*/ struct Dee_attrdesc *__restrict desc) {
+	DeeStructTypeObject *strct = self->casi_struct;
+	struct struct_field *field;
+	Dee_hash_t old_hidx;
+	Dee_hash_t new_hidx;
+	do {
+		old_hidx = atomic_read(&self->csai_hidx);
+		new_hidx = old_hidx;
+		for (;;) {
+			if (new_hidx > strct->st_fmsk)
+				return 1;
+			field = &strct->st_fvec[new_hidx];
+			++new_hidx;
+			if (field->sf_name)
+				break;
+		}
+	} while (!atomic_cmpxch_or_write(&self->csai_hidx, old_hidx, new_hidx));
+
+	/* Fill in attribute descriptor based on "field" */
+	Dee_Incref(field->sf_name);
+	desc->ad_name = DeeString_STR(field->sf_name);
+	desc->ad_doc  = NULL;
+	desc->ad_perm = Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET |
+	                Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_NAMEOBJ;
+	desc->ad_info.ai_decl = DeeStructType_AsObject(strct);
+	desc->ad_info.ai_type = Dee_ATTRINFO_CUSTOM;
+	desc->ad_info.ai_value.v_custom = DeeStructured_Type.st_base.tp_attr;
+	desc->ad_type = DeeLValueType_AsType(field->sf_type);
+	return 0;
+}
+
+PRIVATE struct Dee_attriter_type tpconst ctypes_struct_attriter_type = {
+	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&ctypes_struct_attriter_next,
+};
+
+PRIVATE NONNULL((1, 4)) size_t DCALL
+struct_iterattr(DeeStructTypeObject *__restrict self,
+                struct Dee_attriter *iterbuf, size_t bufsize,
+                struct Dee_attrhint *__restrict hint) {
+	struct ctypes_struct_attriter *iter = (struct ctypes_struct_attriter *)iterbuf;
+	if (bufsize >= sizeof(struct ctypes_struct_attriter)) {
+		iter->casi_struct = self;
+		iter->csai_hidx   = 0;
+		Dee_attriter_init(iter, &ctypes_struct_attriter_type);
+	}
+	(void)hint;
+	return sizeof(struct ctypes_struct_attriter);
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 PRIVATE NONNULL((1, 2)) dssize_t DCALL
 struct_enumattr(DeeStructTypeObject *__restrict self, Dee_enum_t proc, void *arg) {
 	size_t i;
@@ -497,13 +557,18 @@ struct_enumattr(DeeStructTypeObject *__restrict self, Dee_enum_t proc, void *arg
 err:
 	return temp;
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 PRIVATE struct stype_attr struct_attr = {
 	/* .st_getattr  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&struct_getattr,
 	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&struct_delattr,
 	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&struct_setattr,
-	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, Dee_enum_t, void *))&struct_enumattr
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .st_iterattr = */ (size_t (DCALL *)(DeeSTypeObject *__restrict, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&struct_iterattr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, Dee_enum_t, void *))&struct_enumattr,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 };
 
 

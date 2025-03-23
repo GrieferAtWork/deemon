@@ -83,8 +83,8 @@
 //#define DEFINE_DeeObject_TFindAttrInfoStringLenHash
 //#define DEFINE_DeeObject_TFindPrivateAttrInfoStringHash
 //#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
-//#define DEFINE_DeeObject_FindAttr
-#define DEFINE_DeeObject_IterAttr
+#define DEFINE_DeeObject_FindAttr
+//#define DEFINE_DeeObject_IterAttr
 //#define DEFINE_DeeObject_EnumAttr
 #endif /* __INTELLISENSE__ */
 
@@ -822,10 +822,68 @@ DECL_BEGIN
 
 
 
-#ifndef CONFIG_EXPERIMENTAL_ATTRITER
 #ifdef LOCAL_IS_FIND
 #ifndef DEE_OBJECT_FINDATTR_HELPERS_DEFINED
 #define DEE_OBJECT_FINDATTR_HELPERS_DEFINED
+
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp
+#undef strcmp
+#define strcmp dee_strcmp
+DeeSystem_DEFINE_strcmp(dee_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 3, 4)) int DCALL
+attribute_find_with_enum(DeeTypeObject *type_with_tp_iterattr, DeeObject *self,
+                         struct Dee_attrspec const *__restrict specs,
+                         struct Dee_attrdesc *__restrict result) {
+	int status;
+	size_t reqsiz, bufsiz = 16 * sizeof(void *);
+	struct Dee_attriter *iterbuf;
+again_alloc_iterbuf:
+	iterbuf = (struct Dee_attriter *)Dee_Malloca(bufsiz);
+	if unlikely(!iterbuf)
+		goto err;
+	ASSERT(type_with_tp_iterattr);
+	ASSERT(type_with_tp_iterattr->tp_attr);
+	ASSERT(type_with_tp_iterattr->tp_attr->tp_iterattr);
+	reqsiz = (*type_with_tp_iterattr->tp_attr->tp_iterattr)(type_with_tp_iterattr, self,
+	                                                        iterbuf, bufsiz,
+	                                                        Dee_attrspec_ashint(specs));
+	if unlikely(reqsiz == (size_t)-1)
+		goto err_iterbuf;
+	if (reqsiz > bufsiz) {
+		Dee_Freea(iterbuf);
+		bufsiz = reqsiz;
+		goto again_alloc_iterbuf;
+	}
+
+	/* Enumerate attributes */
+	while ((status = Dee_attriter_next(iterbuf, result)) == 0) {
+		if ((!specs->as_decl || specs->as_decl == result->ad_info.ai_decl) &&
+		    ((result->ad_perm & specs->as_perm_mask) == specs->as_perm_value) &&
+		    strcmp(result->ad_name, specs->as_name) == 0) {
+			/* Found it! */
+			Dee_attriter_fini(iterbuf);
+			Dee_Freea(iterbuf);
+			return 0;
+		}
+		Dee_attrdesc_fini(result);
+	}
+	Dee_attriter_fini(iterbuf);
+	Dee_Freea(iterbuf);
+	if unlikely(status < 0)
+		goto err;
+	return 1; /* Not found... */
+/*err_iterbuf_fini:
+	Dee_attriter_fini(iterbuf);*/
+err_iterbuf:
+	Dee_Freea(iterbuf);
+err:
+	return -1;
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 struct attribute_lookup_data {
 	struct Dee_attribute_info               *ald_info;    /* [1..1] The result info. */
 	struct Dee_attribute_lookup_rules const *ald_rules;   /* [1..1] Lookup rules */
@@ -879,10 +937,10 @@ attribute_lookup_enum(DeeObject *__restrict declarator,
 	Dee_XIncref(attr_type);
 	return -2; /* Stop enumeration! */
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 #endif /* !DEE_OBJECT_FINDATTR_HELPERS_DEFINED */
 #endif /* LOCAL_IS_FIND */
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 
@@ -1368,7 +1426,10 @@ do_tp_iter_attr:
 #if defined(LOCAL_IS_ITER) || defined(LOCAL_IS_ENUM)
 			retval = LOCAL_DeeType_invoke_attr_tp_accessattr(tp_iter, tp_accessattr, self, attr);
 			LOCAL_process_retval(retval, done);
-#elif defined(LOCAL_IS_FIND) && !defined(CONFIG_EXPERIMENTAL_ATTRITER)
+#elif defined(LOCAL_IS_FIND)
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+			retval = attribute_find_with_enum(tp_iter, self, specs, result);
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 			{
 				Dee_ssize_t enum_error;
 				struct attribute_lookup_data data;
@@ -1386,6 +1447,7 @@ do_tp_iter_attr:
 					retval = 0;
 				}
 			}
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #elif !defined(LOCAL_HAS_string)
 			LOCAL_result_OR_found_object = LOCAL_DeeType_invoke_attr_tp_accessattr(tp_iter, tp_accessattr, self, attr);
 #else /* !LOCAL_HAS_string */

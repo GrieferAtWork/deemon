@@ -27,6 +27,7 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/method-hints.h>
+#include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
@@ -1129,13 +1130,47 @@ PRIVATE struct type_with se_with = {
 };
 
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+se_iterattr_impl(DeeObject *seq, struct Dee_attriter *iterbuf,
+                 size_t bufsize, struct Dee_attrhint *__restrict hint) {
+	(void)seq;
+	(void)hint;
+	/* TODO: Enumerate attributes available to all elements of `seq'. */
+	return Dee_attriter_initempty(iterbuf, bufsize);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+se_findattr_impl(DeeObject *seq,
+                 struct Dee_attrspec const *__restrict specs,
+                 struct Dee_attrdesc *__restrict result) {
+	(void)seq;
+	(void)specs;
+	(void)result;
+	/* TODO: Find attributes available to all elements of `seq'. */
+	return 1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+se_iterattr(DeeTypeObject *UNUSED(tp_self),
+            SeqEachBase *self, struct Dee_attriter *iterbuf,
+            size_t bufsize, struct Dee_attrhint *__restrict hint) {
+	return se_iterattr_impl(self->se_seq, iterbuf, bufsize, hint);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+se_findattr(DeeTypeObject *UNUSED(tp_self), SeqEachBase *self,
+            struct Dee_attrspec const *__restrict specs,
+            struct Dee_attrdesc *__restrict result) {
+	return se_findattr_impl(self->se_seq, specs, result);
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 se_enumattr_impl(DeeObject *seq, Dee_enum_t proc, void *arg) {
 	(void)seq;
 	(void)proc;
 	(void)arg;
-	/* TODO: Enumerate attributes available via the common
-	 *       base class of all elements of `seq'. */
+	/* TODO: Enumerate attributes available to all elements of `seq'. */
 	return 0;
 }
 
@@ -1144,6 +1179,7 @@ se_enumattr(DeeTypeObject *UNUSED(tp_self),
             SeqEachBase *self, Dee_enum_t proc, void *arg) {
 	return se_enumattr_impl(self->se_seq, proc, arg);
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 #define se_getattr seqeach_getattr
@@ -1207,8 +1243,13 @@ PRIVATE struct type_attr se_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&se_setattr,
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .tp_enumattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&se_iterattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&se_findattr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&se_enumattr,
 	/* .tp_findattr                      = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_boundattr,
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
@@ -1743,6 +1784,41 @@ PRIVATE struct type_seq ss_seq = {
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&ss_hasitem_string_len_hash,
 };
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+ss_iterattr_impl(DeeObject *seq, struct Dee_attriter *iterbuf,
+                 size_t bufsize, struct Dee_attrhint *__restrict hint) {
+	(void)seq;
+	(void)hint;
+	/* TODO: Enumerate attributes available to at least one element of `seq'. */
+	return Dee_attriter_initempty(iterbuf, bufsize);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+ss_findattr_impl(DeeObject *seq,
+                 struct Dee_attrspec const *__restrict specs,
+                 struct Dee_attrdesc *__restrict result) {
+	(void)seq;
+	(void)specs;
+	(void)result;
+	/* TODO: Find attributes available to at least one element of `seq'. */
+	return 1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+ss_iterattr(DeeTypeObject *UNUSED(tp_self), SeqEachBase *self,
+            struct Dee_attriter *iterbuf, size_t bufsize,
+            struct Dee_attrhint *__restrict hint) {
+	return ss_iterattr_impl(self->se_seq, iterbuf, bufsize, hint);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+ss_findattr(DeeTypeObject *UNUSED(tp_self), SeqEachBase *self,
+            struct Dee_attrspec const *__restrict specs,
+            struct Dee_attrdesc *__restrict result) {
+	return ss_findattr_impl(self->se_seq, specs, result);
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 ss_enumattr_impl(DeeObject *seq, Dee_enum_t proc, void *arg) {
 	(void)seq;
@@ -1758,6 +1834,7 @@ ss_enumattr(DeeTypeObject *UNUSED(tp_self),
             SeqEachBase *self, Dee_enum_t proc, void *arg) {
 	return ss_enumattr_impl(self->se_seq, proc, arg);
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 #ifdef CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS
 #define ss_getattr seqsome_getattr
@@ -1918,8 +1995,13 @@ PRIVATE struct type_attr ss_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&ss_getattr,
 	/* .tp_delattr                       = */ NULL,
 	/* .tp_setattr                       = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .tp_enumattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&ss_iterattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&ss_findattr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&ss_enumattr,
 	/* .tp_findattr                      = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&ss_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&ss_boundattr,
 #ifdef CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS
@@ -2486,11 +2568,27 @@ PRIVATE struct type_with sew_with = {
 };
 
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+sew_iterattr(DeeTypeObject *UNUSED(tp_self), SeqEachBase *self,
+             struct Dee_attriter *iterbuf, size_t bufsize,
+             struct Dee_attrhint *__restrict hint) {
+	return se_iterattr_impl((DeeObject *)self, iterbuf, bufsize, hint);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+sew_findattr(DeeTypeObject *UNUSED(tp_self), SeqEachBase *self,
+             struct Dee_attrspec const *__restrict specs,
+             struct Dee_attrdesc *__restrict result) {
+	return se_findattr_impl((DeeObject *)self, specs, result);
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 sew_enumattr(DeeTypeObject *UNUSED(tp_self),
              SeqEachBase *self, Dee_enum_t proc, void *arg) {
 	return se_enumattr_impl((DeeObject *)self, proc, arg);
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seo_transform(SeqEachOperator *self, DeeObject *elem) {
@@ -2946,8 +3044,13 @@ PRIVATE struct type_attr seo_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&seo_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&seo_setattr,
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .tp_enumattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&sew_iterattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&sew_findattr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&sew_enumattr,
 	/* .tp_findattr                      = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_boundattr,
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
@@ -3680,18 +3783,39 @@ sso_hasattr_string_len_hash(SeqEachOperator *self, char const *attr, size_t attr
 	return seqsome_map_from_has(seo_foreach(self, &ss_hasattr_string_len_hash_foreach_cb, &data));
 }
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+ssw_iterattr(DeeTypeObject *UNUSED(tp_self), SeqEachBase *self,
+             struct Dee_attriter *iterbuf, size_t bufsize,
+             struct Dee_attrhint *__restrict hint) {
+	return ss_iterattr_impl((DeeObject *)self, iterbuf, bufsize, hint);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+ssw_findattr(DeeTypeObject *UNUSED(tp_self), SeqEachBase *self,
+             struct Dee_attrspec const *__restrict specs,
+             struct Dee_attrdesc *__restrict result) {
+	return ss_findattr_impl((DeeObject *)self, specs, result);
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 ssw_enumattr(DeeTypeObject *UNUSED(tp_self),
              SeqEachBase *self, Dee_enum_t proc, void *arg) {
 	return ss_enumattr_impl((DeeObject *)self, proc, arg);
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 PRIVATE struct type_attr sso_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&ssw_getattr,
 	/* .tp_delattr                       = */ NULL,
 	/* .tp_setattr                       = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .tp_enumattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&ssw_iterattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&ssw_findattr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&ssw_enumattr,
 	/* .tp_findattr                      = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&sso_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&sso_boundattr,
 #ifdef CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS

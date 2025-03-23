@@ -3243,6 +3243,7 @@ class_ciattriter_next(struct class_ciattriter *__restrict self,
 	desc->ad_info.ai_decl = (DeeObject *)self->cciai_class;
 	desc->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_ATTR;
 	desc->ad_info.ai_value.v_instance_attr = attr;
+	desc->ad_type = NULL;
 	return 0;
 }
 
@@ -3329,6 +3330,7 @@ class_cattriter_next(struct class_cattriter *__restrict self,
 	desc->ad_info.ai_decl = (DeeObject *)self->ccai_class;
 	desc->ad_info.ai_type = Dee_ATTRINFO_ATTR;
 	desc->ad_info.ai_value.v_instance_attr = attr;
+	desc->ad_type = NULL;
 	return 0;
 }
 
@@ -3388,6 +3390,8 @@ class_iattriter_next(struct class_iattriter *__restrict self,
 		inst = class_desc_as_instance(my_class);
 	} else if (self->ciai_inst) {
 		inst = DeeInstance_DESC(my_class, self->ciai_inst);
+	} else {
+		inst = NULL;
 	}
 	if (inst)
 		Dee_instance_desc_lock_read(inst);
@@ -3429,6 +3433,7 @@ class_iattriter_next(struct class_iattriter *__restrict self,
 	desc->ad_info.ai_decl = (DeeObject *)self->ciai_class;
 	desc->ad_info.ai_type = Dee_ATTRINFO_ATTR;
 	desc->ad_info.ai_value.v_instance_attr = attr;
+	desc->ad_type = NULL;
 	return 0;
 }
 
@@ -3443,6 +3448,7 @@ DeeClass_IterInstanceAttributes(DeeTypeObject *__restrict self, DeeObject *insta
 	if (bufsize >= sizeof(struct class_iattriter)) {
 		iter->ciai_class = self;
 		iter->ciai_index = 0;
+		iter->ciai_inst  = instance;
 		Dee_attriter_init(iter, &class_iattriter_type);
 	}
 	return sizeof(struct class_iattriter);
@@ -3504,6 +3510,7 @@ not_found:
 		result->ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
 		Dee_Incref(attr->ca_doc);
 	}
+	result->ad_type = NULL;
 	return 0;
 }
 
@@ -3572,6 +3579,7 @@ not_found:
 		result->ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
 		Dee_Incref(attr->ca_doc);
 	}
+	result->ad_type = NULL;
 	return 0;
 }
 
@@ -3646,6 +3654,7 @@ not_found:
 		result->ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
 		Dee_Incref(attr->ca_doc);
 	}
+	result->ad_type = NULL;
 	return 0;
 }
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */

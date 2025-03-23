@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
+#include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/util/lock.h>
 
@@ -188,8 +189,15 @@ struct stype_attr {
 	                    /*String*/ DeeObject *name, DeeObject *value);
 
 	/* Enumerate struct attributes (excluding generic attributes) */
-	WUNUSED_T NONNULL_T((1, 2)) dssize_t
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	WUNUSED_T NONNULL_T((1, 4)) size_t
+	(DCALL *st_iterattr)(DeeSTypeObject *__restrict tp_self,
+	                     struct Dee_attriter *iterbuf, size_t bufsize,
+	                     struct Dee_attrhint *__restrict hint);
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t
 	(DCALL *st_enumattr)(DeeSTypeObject *__restrict tp_self, Dee_enum_t proc, void *arg);
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 };
 
 
@@ -597,7 +605,7 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeStruct_InplaceAnd(DeeSTypeObject *tp
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeStruct_InplaceOr(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeStruct_InplaceXor(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeStruct_InplacePow(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1)) dhash_t DCALL DeeStruct_Hash(DeeSTypeObject *tp_self, void *self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL DeeStruct_Hash(DeeSTypeObject *tp_self, void *self);
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_Eq(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_Ne(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_Lo(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
@@ -637,9 +645,16 @@ DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self,
                   DeeObject *name, DeeObject *value);
 
 /* Enumerate struct attributes (excluding generic attributes) */
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeStruct_IterAttr(DeeSTypeObject *__restrict tp_self,
+                   struct Dee_attriter *iterbuf, size_t bufsize,
+                   struct Dee_attrhint *__restrict hint);
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
                    Dee_enum_t proc, void *arg);
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 #ifdef __SIZEOF_BOOL__
@@ -961,7 +976,7 @@ struct cfunction_type_object {
 #ifndef CONFIG_NO_CFUNCTION
 	DREF DeeSTypeObject               *ft_orig;            /* [1..1][const] The function's return type. */
 	LIST_ENTRY(cfunction_type_object)  ft_chain;           /* [lock(ft_orig->st_cachelock)] Hash-map entry of this c-function. */
-	dhash_t                            ft_hash;            /* [const] A pre-calculated hash used by `struct stype_cfunction' */
+	Dee_hash_t                         ft_hash;            /* [const] A pre-calculated hash used by `struct stype_cfunction' */
 	size_t                             ft_argc;            /* [const] Amount of function argument types. */
 	DREF DeeSTypeObject              **ft_argv;            /* [1..1][0..ft_argc][owned][const] Vector of function argument types. */
 	ctypes_cc_t                        ft_cc;              /* [const] The calling convention used by this function. */
@@ -1034,14 +1049,14 @@ typedef struct struct_type_object DeeStructTypeObject;
 struct string_object;
 struct struct_field {
 	DREF struct string_object *sf_name;   /* [0..1] The name of this field (NULL is used as sentinel) */
-	dhash_t                    sf_hash;   /* [valid_if(sf_name)][const][== DeeString_Hash(sf_name)] */
+	Dee_hash_t                 sf_hash;   /* [valid_if(sf_name)][const][== DeeString_Hash(sf_name)] */
 	uintptr_t                  sf_offset; /* [valid_if(sf_name)] Offset of the field (from `DeeStruct_Data()') */
 	DREF DeeLValueTypeObject  *sf_type;   /* [1..1][valid_if(sf_name)] The l-value variant of this field's type. */
 };
 
 struct struct_type_object {
 	DeeSTypeObject                               st_base;  /* The underlying type object. */
-	size_t                                       st_fmsk;  /* [const] Field-vector mask. */
+	Dee_hash_t                                   st_fmsk;  /* [const] Field-vector mask. */
 	COMPILER_FLEXIBLE_ARRAY(struct struct_field, st_fvec); /* [1..st_fmsk+1][const] Hash-vector of field names. */
 };
 
