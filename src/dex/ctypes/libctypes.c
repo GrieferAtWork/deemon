@@ -368,11 +368,15 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL
 f_ctypes_union(size_t argc, DeeObject *const *argv) {
-	DeeObject *fields;
-	_DeeArg_Unpack1(err, argc, argv, "union", &fields);
-	return (DREF DeeObject *)DeeStructType_FromSequence(NULL, fields, STRUCT_TYPE_FUNION);
+	DeeObject *fields_or_name, *fields = NULL;
+	_DeeArg_Unpack1Or2(err, argc, argv, "union", &fields_or_name, &fields);
+	if (!fields)
+		return DeeStructType_FromSequence(fields_or_name, fields, STRUCT_TYPE_FUNION);
+	if (DeeObject_AssertTypeExact(fields_or_name, &DeeString_Type))
+		goto err;
+	return DeeStructType_FromSequence(fields_or_name, fields, STRUCT_TYPE_FUNION);
 err:
 	return NULL;
 }
@@ -623,7 +627,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Struct", DeeStructType_AsObject(&DeeStruct_Type), MODSYM_FREADONLY },
 	{ "Function", DeeCFunctionType_AsObject(&DeeCFunction_Type), MODSYM_FREADONLY },
 	{ "struct", (DeeObject *)&ctypes_struct, MODSYM_FREADONLY },
-	{ "union", (DeeObject *)&ctypes_union, MODSYM_FREADONLY },
+	{ "union", (DeeObject *)&ctypes_union, MODSYM_FREADONLY,
+	  DOC("(fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType\n"
+	      "(name:?Dstring,fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType") },
 
 	/* TODO: Both Pointer and LValue types need 1 sub-class each: RefPointer and RefLValue
 	 *       These sub-classes behave the same as the original Pointer/LValue-type, except
