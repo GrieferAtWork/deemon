@@ -71,6 +71,9 @@ struct Dee_type_member;
 #define Dee_ATTRINFO_INSTANCE_GETSET 7 /* Wrapper for producing `DeeClsProperty_Type' (ai_decl is a `DeeTypeObject') */
 #define Dee_ATTRINFO_INSTANCE_MEMBER 8 /* Wrapper for producing `DeeClsMember_Type' (ai_decl is a `DeeTypeObject') */
 #define Dee_ATTRINFO_INSTANCE_ATTR   9 /* Wrapper for producing `DeeInstanceMember_Type' / `DeeInstanceMethod_Type' / `DeeProperty_Type' (ai_decl is a `DeeTypeObject' with non-NULL `tp_class') */
+#define Dee_ATTRINFO_ISINSTANCE(x)      ((x) >= Dee_ATTRINFO_INSTANCE_METHOD)
+#define Dee_ATTRINFO_WITHOUTINSTANCE(x) ((x) - (Dee_ATTRINFO_INSTANCE_METHOD - Dee_ATTRINFO_METHOD))
+#define Dee_ATTRINFO_WITHINSTANCE(x)    ((x) + (Dee_ATTRINFO_INSTANCE_METHOD - Dee_ATTRINFO_METHOD))
 
 struct Dee_attrinfo {
 	uintptr_t  ai_type; /* Type of attribute (one of `Dee_ATTRINFO_*'). */
@@ -93,6 +96,14 @@ struct Dee_attrinfo {
  * When the type cannot be determined, return `NULL' instead. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 Dee_attrinfo_typeof(struct Dee_attrinfo *__restrict self);
+
+/* Same as `Dee_attrinfo_typeof()', but `Dee_ATTRINFO_INSTANCE_*' attributes
+ * as though they were the equivalent `Dee_ATTRINFO_*' (iow: the returned type
+ * does not describe the type when accessed using the enumerated object, but
+ * in the case of types and instance-attributes, the type when accessed using
+ * an instance of the enumerated object) */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+Dee_attrinfo_typeof_ininstance(struct Dee_attrinfo *__restrict self);
 
 
 /* Lookup information on how/where "attr" exists in `tp_self:self'
@@ -223,7 +234,7 @@ struct Dee_attrdesc {
 /* Returns a reference to the type returned by `Dee_attrdesc_callget()', or `NULL' if unknown. */
 #define Dee_attrdesc_typeof(self)                                     \
 	((self)->ad_type ? (Dee_Incref((self)->ad_type), (self)->ad_type) \
-	                 : Dee_attrinfo_typeof(&(self)->ad_info))
+	                 : Dee_attrinfo_typeof_ininstance(&(self)->ad_info))
 
 /* Perform standard operations on the attribute behind `struct Dee_attrdesc' */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

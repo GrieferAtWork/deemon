@@ -249,6 +249,15 @@ attr_getattrtype(Attr *__restrict self) {
 	return_none;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+attr_getabiattrtype(Attr *__restrict self) {
+	DREF DeeTypeObject *result;
+	result = Dee_attrinfo_typeof(&self->a_desc.ad_info);
+	if (result)
+		return (DREF DeeObject *)result;
+	return_none;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 attr_print(Attr *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<Attribute %k.%s>",
@@ -662,7 +671,31 @@ PRIVATE struct type_getset tpconst attr_getsets[] = {
 	TYPE_GETTER_AB_F("attrtype", &attr_getattrtype, METHOD_FNOREFESCAPE,
 	                 "->?X2?DType?N\n"
 	                 "The type of the attribute's value when accessed, if this "
-	                 /**/ "can be determined via means unrelated to ?#doc."),
+	                 /**/ "can be determined via means unrelated to ?#doc.\n"
+	                 "The attribute type returned here also has special handling "
+	                 /**/ "to (in the case of a type attribute) return the attribute's "
+	                 /**/ "instance-typing, rather than its class-typing (s.a. ?#abiattrtype):\n"
+	                 "${"
+	                 /**/ "class MyClass {\n"
+	                 /**/ "	this = default;\n"
+	                 /**/ "	public member myMember;\n"
+	                 /**/ "}\n"
+	                 /**/ "\\\n"
+	                 /**/ "local inst = MyClass();\n"
+	                 /**/ "local cAttr = Attribute.lookup(MyClass, \"myMember\");\n"
+	                 /**/ "local iAttr = Attribute.lookup(inst, \"myMember\");\n"
+	                 /**/ "assert cAttr.decl === MyClass;\n"
+	                 /**/ "assert cAttr.attrtype is none;\n"
+	                 /**/ "assert cAttr.abiattrtype === rt.InstanceMember;\n"
+	                 /**/ "assert iAttr.decl === MyClass;\n"
+	                 /**/ "assert iAttr.attrtype is none;\n"
+	                 /**/ "assert iAttr.abiattrtype is none;"
+	                 "}"),
+	TYPE_GETTER_AB_F("abiattrtype", &attr_getabiattrtype, METHOD_FNOREFESCAPE,
+	                 "->?X2?DType?N\n"
+	                 "Similar to ?#attrtype, but ignores the #Cattrtype argument given to the constructor, "
+	                 /**/ "and does #Bnot do special handling for instance attributes to return their instance "
+	                 /**/ "typing when accessed via the associated type."),
 	TYPE_GETTER_AB_F("flags", &attr_getperm, METHOD_FNOREFESCAPE,
 	                 "->?Dstring\n"
 	                 "Deprecated alias for ?#perm"),
