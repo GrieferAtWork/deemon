@@ -25,22 +25,24 @@
 #include <deemon/asm.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
-#include <deemon/dex.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strlen(), ... */
-#include <deemon/util/lock.h>
+
+#include <hybrid/byteswap.h>
+#include <hybrid/minmax.h>
+#include <hybrid/typecore.h>
+#include <hybrid/unaligned.h>
 
 /**/
 #include "libdisasm.h"
-/**/
 
-#include <hybrid/byteorder.h>
-#include <hybrid/byteswap.h>
-#include <hybrid/minmax.h>
-#include <hybrid/unaligned.h>
+/**/
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -475,8 +477,8 @@ do_search_desc:
 									if (!attr->ca_name)
 										continue;
 									if (is_cmember
-									    ? !(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
-									    : (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
+									    ? (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) == 0
+									    : (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) != 0)
 										continue;
 									if (mid < attr->ca_addr)
 										continue;

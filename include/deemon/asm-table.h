@@ -67,7 +67,7 @@ class Opcode {
 	public final member length: int;             // 1             (Total length in bytes)
 	public final member sp_sub: string;          // SP_SUB0       (Stack effect minus, or none if varying)
 	public final member sp_add: string;          // SP_ADD0       (Stack effect plus, or none if varying)
-	public final member mnemonic: string;        // "\"ret\""     (Stack effect minus, or none if varying)
+	public final member mnemonic: string;        // "\"ret\""
 	public final member prefixed: Opcode | none; // Representation when given a prefix
 };
 

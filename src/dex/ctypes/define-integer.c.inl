@@ -31,20 +31,24 @@
 /**/
 
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/super.h>
 #include <deemon/system-features.h>
+#include <deemon/util/lock.h>
 
+#include <hybrid/int128.h>
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
+/**/
 
-#include <stdint.h>
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* intN_t, uintN_t */
 
 DECL_BEGIN
 
@@ -1161,7 +1165,7 @@ PRIVATE struct stype_math F(intmath) = {
 };
 
 #if SIZEOF == 16
-#define DEFINE_COMPARE_OPERATOR(name, op)                       \
+#define CTYPES_INT_DEFINE_COMPARE_OPERATOR(name, op)            \
 	PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL       \
 	F(int_##name)(DeeSTypeObject *UNUSED(tp_self),              \
 	              T *self, DeeObject *some_object) {            \
@@ -1174,7 +1178,7 @@ PRIVATE struct stype_math F(intmath) = {
 		return NULL;                                            \
 	}
 #else /* SIZEOF == 16 */
-#define DEFINE_COMPARE_OPERATOR(name, op)                 \
+#define CTYPES_INT_DEFINE_COMPARE_OPERATOR(name, op)      \
 	PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL \
 	F(int_##name)(DeeSTypeObject *UNUSED(tp_self),        \
 	              T *self, DeeObject *some_object) {      \
@@ -1187,13 +1191,13 @@ PRIVATE struct stype_math F(intmath) = {
 		return NULL;                                      \
 	}
 #endif /* SIZEOF != 16 */
-DEFINE_COMPARE_OPERATOR(eq, ==)
-DEFINE_COMPARE_OPERATOR(ne, !=)
-DEFINE_COMPARE_OPERATOR(lo, <)
-DEFINE_COMPARE_OPERATOR(le, <=)
-DEFINE_COMPARE_OPERATOR(gr, >)
-DEFINE_COMPARE_OPERATOR(ge, >=)
-#undef DEFINE_COMPARE_OPERATOR
+CTYPES_INT_DEFINE_COMPARE_OPERATOR(eq, ==)
+CTYPES_INT_DEFINE_COMPARE_OPERATOR(ne, !=)
+CTYPES_INT_DEFINE_COMPARE_OPERATOR(lo, <)
+CTYPES_INT_DEFINE_COMPARE_OPERATOR(le, <=)
+CTYPES_INT_DEFINE_COMPARE_OPERATOR(gr, >)
+CTYPES_INT_DEFINE_COMPARE_OPERATOR(ge, >=)
+#undef CTYPES_INT_DEFINE_COMPARE_OPERATOR
 
 PRIVATE struct stype_cmp F(intcmp) = {
 	/* .st_eq = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(int_eq),

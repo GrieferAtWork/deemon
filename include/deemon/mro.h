@@ -50,13 +50,21 @@ DECL_BEGIN
  * user-defined. */
 
 #ifdef DEE_SOURCE
+#define Dee_type_attr       type_attr
 #define Dee_class_attribute class_attribute
+#define Dee_type_method     type_method
+#define Dee_type_getset     type_getset
+#define Dee_type_member     type_member
 #define Dee_class_desc      class_desc
 #define Dee_module_symbol   module_symbol
 #define Dee_type_member     type_member
 #endif /* DEE_SOURCE */
 
+struct Dee_type_attr;
 struct Dee_class_attribute;
+struct Dee_type_method;
+struct Dee_type_getset;
+struct Dee_type_member;
 struct Dee_module_symbol;
 struct Dee_type_member;
 

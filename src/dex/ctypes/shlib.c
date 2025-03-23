@@ -26,8 +26,11 @@
 
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
+#include <deemon/api.h>
+#include <deemon/mro.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/int.h>
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -37,10 +40,15 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/once.h>
+/**/
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint64_t, uintptr_t */
 
 DECL_BEGIN
 
@@ -158,7 +166,7 @@ INTERN bool DCALL clear_void_pointer(void) {
 	return true;
 }
 
-LOCAL WUNUSED DREF DeeSTypeObject *DCALL get_void_pointer(void) {
+PRIVATE WUNUSED DREF DeeSTypeObject *DCALL get_void_pointer(void) {
 	DREF DeeSTypeObject *result;
 	static_type_lock_read();
 	result = void_ptr;

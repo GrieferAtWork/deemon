@@ -25,16 +25,21 @@
 #include "libctypes.h"
 /**/
 
-#include "c_api.h"
-/**/
 
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* strnlen() */
+/**/
+
+#include "c_api.h" /* Prototypes... */
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 
@@ -274,9 +279,6 @@ err:
 	return NULL;
 }
 
-
-
 DECL_END
-
 
 #endif /* !GUARD_DEX_CTYPES_C_MALLOC_C */

@@ -673,8 +673,8 @@ DECL_END
 
 DECL_BEGIN
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
-extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
-#define Dee_REQUIRES_TYPE(T, x)  ____INTELLISENSE_req_type<T>(x)
+extern "C++" template<class __ITS_T> __ITS_T ____INTELLISENSE_req_type(__ITS_T x);
+#define Dee_REQUIRES_TYPE(T, x) ____INTELLISENSE_req_type<T>(x)
 #else /* __INTELLISENSE__ && __cplusplus */
 #define Dee_REQUIRES_TYPE(T, x) (x)
 #endif /* !__INTELLISENSE__ || !__cplusplus */

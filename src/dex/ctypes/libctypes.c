@@ -22,8 +22,7 @@
 #define DEE_SOURCE
 
 /* WARNING: Using this module trips the unspoken warranty
- *          of me being responsible when deemon crashes. */
-
+ *          of me feeling responsible when deemon crashes. */
 
 #include "libctypes.h"
 /**/
@@ -47,13 +46,17 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/module.h>
+#include <deemon/object.h>
 #include <deemon/objmethod.h>
-#include <deemon/system-features.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
+#include <hybrid/int128.h>
 #include <hybrid/typecore.h>
+/**/
+
+#include <stdint.h> /* intN_t, uintN_t */
 
 DECL_BEGIN
 

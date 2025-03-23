@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -35,11 +36,18 @@
 #include <deemon/int.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero(), ... */
+#include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
+#include <hybrid/sequence/list.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* uint32_t */
 
 DECL_BEGIN
 
@@ -117,8 +125,8 @@ null_pointer:
 
 	/* int(0) also counts as a NULL-pointer. */
 	if (DeeInt_Check(self)) {
-		uint32_t val;
-		if (DeeInt_TryAsUInt32(self, &val) && val == 0)
+		unsigned int val;
+		if (DeeInt_TryAsUInt(self, &val) && val == 0)
 			goto null_pointer;
 		goto nope;
 	}

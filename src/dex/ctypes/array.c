@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
@@ -32,14 +33,20 @@
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero() */
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
+#include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__
@@ -771,7 +778,7 @@ err:
 	return NULL;
 }
 
-INTERN NONNULL((1)) bool DCALL
+PRIVATE NONNULL((1)) bool DCALL
 stype_array_rehash(DeeSTypeObject *__restrict self,
                    size_t new_mask) {
 	struct array_type_list *new_map;

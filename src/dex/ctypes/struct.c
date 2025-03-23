@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
@@ -33,9 +34,15 @@
 #include <deemon/int.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN
 

@@ -28,5 +28,4 @@
 #include "pointer-math-impl.c.inl"
 #endif /* !__INTELLISENSE__ */
 
-
 #endif /* !GUARD_DEX_CTYPES_POINTER_MATH_C */

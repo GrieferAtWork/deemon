@@ -21,9 +21,9 @@
 #define GUARD_DEX_CTYPES_LIBCTYPES_H 1
 
 #include <deemon/api.h>
-#include <deemon/dex.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/sequence/list.h>
@@ -33,6 +33,10 @@
 #include <ffi.h>
 #include <ffitarget.h>
 #endif /* !CONFIG_NO_CFUNCTION */
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintptr_t, intN_t, uintN_t */
 
 
 DECL_BEGIN

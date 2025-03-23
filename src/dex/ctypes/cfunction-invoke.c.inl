@@ -22,6 +22,26 @@
 #define VARARGS
 #endif /* __INTELLISENSE__ */
 
+#include "libctypes.h"
+/**/
+
+#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/bool.h>
+#include <deemon/error.h>
+#include <deemon/float.h>
+#include <deemon/format.h>
+#include <deemon/int.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/system-features.h>
+
+#include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintptr_t */
+
 #ifdef VARARGS
 INTERN WUNUSED DREF DeeObject *DCALL
 cfunction_call_v(DeeCFunctionTypeObject *__restrict tp_self,

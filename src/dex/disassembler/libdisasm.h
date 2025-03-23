@@ -21,10 +21,12 @@
 #define GUARD_DEX_FS_LIBDISASM_H 1
 
 #include <deemon/api.h>
-#include <deemon/asm.h>
 #include <deemon/code.h>
-#include <deemon/dex.h>
 #include <deemon/object.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -52,14 +54,14 @@ typedef struct {
  * NOTE: When the stack-depth is unknown, pass `(uint16_t)-1' for `stacksz'
  * @param: flags: Set of `PCODE_F*' (Only flags masked by `PCODE_FINSTRMASK' are recognized)
  */
-INTDEF dssize_t DCALL
-libdisasm_printinstr(dformatprinter printer, void *arg,
+INTDEF Dee_ssize_t DCALL
+libdisasm_printinstr(Dee_formatprinter_t printer, void *arg,
                      instruction_t *__restrict instr_start,
                      uint16_t stacksz, struct ddi_state *ddi_info,
                      DeeCodeObject *code, unsigned int flags);
 
-INTDEF dssize_t DCALL
-libdisasm_printlabel(dformatprinter printer, void *arg,
+INTDEF Dee_ssize_t DCALL
+libdisasm_printlabel(Dee_formatprinter_t printer, void *arg,
                      uint16_t opcode, code_addr_t source,
                      code_addr_t target);
 
@@ -67,8 +69,8 @@ libdisasm_printlabel(dformatprinter printer, void *arg,
 /* Print assembly for `code', one instruction per line.
  * When non-NULL, prefix `line_prefix' infront of every
  * line, allowing the caller to specify an indentation. */
-INTDEF WUNUSED NONNULL((1, 3, 4)) dssize_t DCALL
-libdisasm_printcode(dformatprinter printer, void *arg,
+INTDEF WUNUSED NONNULL((1, 3, 4)) Dee_ssize_t DCALL
+libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
                     instruction_t *instr_start,
                     instruction_t *instr_end,
                     DeeCodeObject *code,

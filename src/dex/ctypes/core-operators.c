@@ -24,6 +24,7 @@
 #include "libctypes.h"
 /**/
 
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
@@ -35,33 +36,28 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
-#ifndef INT32_MIN
 #include <hybrid/limitcore.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* intN_t, uintN_t */
+
+#ifndef INT32_MIN
 #define INT32_MIN __INT32_MIN__
 #endif /* !INT32_MIN */
-
 #ifndef INT32_MAX
-#include <hybrid/limitcore.h>
 #define INT32_MAX __INT32_MAX__
 #endif /* !INT32_MAX */
-
 #ifndef UINT32_MAX
-#include <hybrid/limitcore.h>
 #define UINT32_MAX __UINT32_MAX__
 #endif /* !UINT32_MAX */
-
 #ifndef INT64_MIN
-#include <hybrid/limitcore.h>
 #define INT64_MIN __INT64_MIN__
 #endif /* !INT64_MIN */
-
 #ifndef INT64_MAX
-#include <hybrid/limitcore.h>
 #define INT64_MAX __INT64_MAX__
 #endif /* !INT64_MAX */
-
 #ifndef UINT64_MAX
-#include <hybrid/limitcore.h>
 #define UINT64_MAX __UINT64_MAX__
 #endif /* !UINT64_MAX */
 

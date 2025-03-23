@@ -33,13 +33,18 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/system-features.h> /* memcpy, ... */
 #include <deemon/util/atomic.h>
 #include <deemon/util/futex.h>
 
 #include <hybrid/typecore.h>
 
 /**/
-#include "c_api.h"
+#include "c_api.h" /* Prototypes... */
+
+/**/
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* intN_t, uintN_t */
 
 DECL_BEGIN
 
@@ -218,7 +223,7 @@ err:
 #define IF_HAVE_FAULTPROTECT(x) /* nothing */
 #endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 
-#define DEFINE_ATOMIC_BINOP(capi_atomic_name, atomic_name, atomic_func)                                   \
+#define CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_name, atomic_name, atomic_func)                           \
 	INTERN WUNUSED DREF DeeObject *DCALL                                                                  \
 	capi_atomic_name(size_t argc, DeeObject *const *argv) {                                               \
 		DeeObject *ob_ptr, *ob_addend;                                                                    \
@@ -252,55 +257,55 @@ err:
 	err:                                                                                                  \
 		return NULL;                                                                                      \
 	}
-DEFINE_ATOMIC_BINOP(capi_atomic_fetchadd, "atomic_fetchadd", atomic_fetchadd)
-DEFINE_ATOMIC_BINOP(capi_atomic_fetchsub, "atomic_fetchsub", atomic_fetchsub)
-DEFINE_ATOMIC_BINOP(capi_atomic_fetchand, "atomic_fetchand", atomic_fetchand)
-DEFINE_ATOMIC_BINOP(capi_atomic_fetchor, "atomic_fetchor", atomic_fetchor)
-DEFINE_ATOMIC_BINOP(capi_atomic_fetchxor, "atomic_fetchxor", atomic_fetchxor)
-DEFINE_ATOMIC_BINOP(capi_atomic_fetchnand, "atomic_fetchnand", atomic_fetchnand)
-DEFINE_ATOMIC_BINOP(capi_atomic_addfetch, "atomic_addfetch", atomic_addfetch)
-DEFINE_ATOMIC_BINOP(capi_atomic_subfetch, "atomic_subfetch", atomic_subfetch)
-DEFINE_ATOMIC_BINOP(capi_atomic_andfetch, "atomic_andfetch", atomic_andfetch)
-DEFINE_ATOMIC_BINOP(capi_atomic_orfetch, "atomic_orfetch", atomic_orfetch)
-DEFINE_ATOMIC_BINOP(capi_atomic_xorfetch, "atomic_xorfetch", atomic_xorfetch)
-DEFINE_ATOMIC_BINOP(capi_atomic_nandfetch, "atomic_nandfetch", atomic_nandfetch)
-#undef DEFINE_ATOMIC_BINOP
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_fetchadd, "atomic_fetchadd", atomic_fetchadd)
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_fetchsub, "atomic_fetchsub", atomic_fetchsub)
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_fetchand, "atomic_fetchand", atomic_fetchand)
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_fetchor, "atomic_fetchor", atomic_fetchor)
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_fetchxor, "atomic_fetchxor", atomic_fetchxor)
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_fetchnand, "atomic_fetchnand", atomic_fetchnand)
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_addfetch, "atomic_addfetch", atomic_addfetch)
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_subfetch, "atomic_subfetch", atomic_subfetch)
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_andfetch, "atomic_andfetch", atomic_andfetch)
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_orfetch, "atomic_orfetch", atomic_orfetch)
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_xorfetch, "atomic_xorfetch", atomic_xorfetch)
+CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_nandfetch, "atomic_nandfetch", atomic_nandfetch)
+#undef CYTYPES_DEFINE_ATOMIC_BINOP
 
-#define DEFINE_ATOMIC_BINOP_VOID(capi_atomic_name, atomic_name, atomic_func) \
-	INTERN WUNUSED DREF DeeObject *DCALL                                     \
-	capi_atomic_name(size_t argc, DeeObject *const *argv) {                  \
-		DeeObject *ob_ptr, *ob_addend;                                       \
-		union atomic_operand addend;                                         \
-		union pointer ptr;                                                   \
-		DeeSTypeObject *basetype;                                            \
-		_DeeArg_Unpack2(err, argc, argv, atomic_name, &ob_ptr, &ob_addend);  \
-		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))     \
-			goto err;                                                        \
-		if unlikely(get_atomic_operand(ob_addend, basetype, &addend))        \
-			goto err;                                                        \
-		CTYPES_FAULTPROTECT({                                                \
-			switch (basetype->st_sizeof) {                                   \
-			case 1: atomic_func(ptr.p8, addend.ao_u8); break;                \
-			case 2: atomic_func(ptr.p16, addend.ao_u16); break;              \
-			case 4: atomic_func(ptr.p32, addend.ao_u32); break;              \
-			case 8: atomic_func(ptr.p64, addend.ao_u64); break;              \
-			default: __builtin_unreachable();                                \
-			}                                                                \
-		}, goto err);                                                        \
-		return_none;                                                         \
-	err:                                                                     \
-		return NULL;                                                         \
+#define CTYPES_DEFINE_ATOMIC_BINOP_VOID(capi_atomic_name, atomic_name, atomic_func) \
+	INTERN WUNUSED DREF DeeObject *DCALL                                            \
+	capi_atomic_name(size_t argc, DeeObject *const *argv) {                         \
+		DeeObject *ob_ptr, *ob_addend;                                              \
+		union atomic_operand addend;                                                \
+		union pointer ptr;                                                          \
+		DeeSTypeObject *basetype;                                                   \
+		_DeeArg_Unpack2(err, argc, argv, atomic_name, &ob_ptr, &ob_addend);         \
+		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))            \
+			goto err;                                                               \
+		if unlikely(get_atomic_operand(ob_addend, basetype, &addend))               \
+			goto err;                                                               \
+		CTYPES_FAULTPROTECT({                                                       \
+			switch (basetype->st_sizeof) {                                          \
+			case 1: atomic_func(ptr.p8, addend.ao_u8); break;                       \
+			case 2: atomic_func(ptr.p16, addend.ao_u16); break;                     \
+			case 4: atomic_func(ptr.p32, addend.ao_u32); break;                     \
+			case 8: atomic_func(ptr.p64, addend.ao_u64); break;                     \
+			default: __builtin_unreachable();                                       \
+			}                                                                       \
+		}, goto err);                                                               \
+		return_none;                                                                \
+	err:                                                                            \
+		return NULL;                                                                \
 	}
-DEFINE_ATOMIC_BINOP_VOID(capi_atomic_add, "atomic_add", atomic_add)
-DEFINE_ATOMIC_BINOP_VOID(capi_atomic_sub, "atomic_sub", atomic_sub)
-DEFINE_ATOMIC_BINOP_VOID(capi_atomic_and, "atomic_and", atomic_and)
-DEFINE_ATOMIC_BINOP_VOID(capi_atomic_or, "atomic_or", atomic_or)
-DEFINE_ATOMIC_BINOP_VOID(capi_atomic_xor, "atomic_xor", atomic_xor)
-DEFINE_ATOMIC_BINOP_VOID(capi_atomic_nand, "atomic_nand", atomic_nand)
-DEFINE_ATOMIC_BINOP_VOID(capi_atomic_write, "atomic_write", atomic_write)
-#undef DEFINE_ATOMIC_BINOP_VOID
+CTYPES_DEFINE_ATOMIC_BINOP_VOID(capi_atomic_add, "atomic_add", atomic_add)
+CTYPES_DEFINE_ATOMIC_BINOP_VOID(capi_atomic_sub, "atomic_sub", atomic_sub)
+CTYPES_DEFINE_ATOMIC_BINOP_VOID(capi_atomic_and, "atomic_and", atomic_and)
+CTYPES_DEFINE_ATOMIC_BINOP_VOID(capi_atomic_or, "atomic_or", atomic_or)
+CTYPES_DEFINE_ATOMIC_BINOP_VOID(capi_atomic_xor, "atomic_xor", atomic_xor)
+CTYPES_DEFINE_ATOMIC_BINOP_VOID(capi_atomic_nand, "atomic_nand", atomic_nand)
+CTYPES_DEFINE_ATOMIC_BINOP_VOID(capi_atomic_write, "atomic_write", atomic_write)
+#undef CTYPES_DEFINE_ATOMIC_BINOP_VOID
 
-#define DEFINE_ATOMIC_UNOP(capi_atomic_name, atomic_name, atomic_func)                     \
+#define CTYPES_DEFINE_ATOMIC_UNOP(capi_atomic_name, atomic_name, atomic_func)              \
 	INTERN WUNUSED DREF DeeObject *DCALL                                                   \
 	capi_atomic_name(size_t argc, DeeObject *const *argv) {                                \
 		DeeObject *ob_ptr;                                                                 \
@@ -331,38 +336,38 @@ DEFINE_ATOMIC_BINOP_VOID(capi_atomic_write, "atomic_write", atomic_write)
 	err:                                                                                   \
 		return NULL;                                                                       \
 	}
-DEFINE_ATOMIC_UNOP(capi_atomic_fetchinc, "atomic_fetchinc", atomic_fetchinc)
-DEFINE_ATOMIC_UNOP(capi_atomic_fetchdec, "atomic_fetchdec", atomic_fetchdec)
-DEFINE_ATOMIC_UNOP(capi_atomic_incfetch, "atomic_incfetch", atomic_incfetch)
-DEFINE_ATOMIC_UNOP(capi_atomic_decfetch, "atomic_decfetch", atomic_decfetch)
-DEFINE_ATOMIC_UNOP(capi_atomic_read, "atomic_read", atomic_read)
-#undef DEFINE_ATOMIC_UNOP
+CTYPES_DEFINE_ATOMIC_UNOP(capi_atomic_fetchinc, "atomic_fetchinc", atomic_fetchinc)
+CTYPES_DEFINE_ATOMIC_UNOP(capi_atomic_fetchdec, "atomic_fetchdec", atomic_fetchdec)
+CTYPES_DEFINE_ATOMIC_UNOP(capi_atomic_incfetch, "atomic_incfetch", atomic_incfetch)
+CTYPES_DEFINE_ATOMIC_UNOP(capi_atomic_decfetch, "atomic_decfetch", atomic_decfetch)
+CTYPES_DEFINE_ATOMIC_UNOP(capi_atomic_read, "atomic_read", atomic_read)
+#undef CTYPES_DEFINE_ATOMIC_UNOP
 
-#define DEFINE_ATOMIC_UNOP_VOID(capi_atomic_name, atomic_name, atomic_func) \
-	INTERN WUNUSED DREF DeeObject *DCALL                                    \
-	capi_atomic_name(size_t argc, DeeObject *const *argv) {                 \
-		DeeObject *ob_ptr;                                                  \
-		union pointer ptr;                                                  \
-		DeeSTypeObject *basetype;                                           \
-		_DeeArg_Unpack1(err, argc, argv, atomic_name, &ob_ptr);             \
-		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))    \
-			goto err;                                                       \
-		CTYPES_FAULTPROTECT({                                               \
-			switch (basetype->st_sizeof) {                                  \
-			case 1: atomic_func(ptr.p8); break;                             \
-			case 2: atomic_func(ptr.p16); break;                            \
-			case 4: atomic_func(ptr.p32); break;                            \
-			case 8: atomic_func(ptr.p64); break;                            \
-			default: __builtin_unreachable();                               \
-			}                                                               \
-		}, goto err);                                                       \
-		return_none;                                                        \
-	err:                                                                    \
-		return NULL;                                                        \
+#define CTYPES_DEFINE_ATOMIC_UNOP_VOID(capi_atomic_name, atomic_name, atomic_func) \
+	INTERN WUNUSED DREF DeeObject *DCALL                                           \
+	capi_atomic_name(size_t argc, DeeObject *const *argv) {                        \
+		DeeObject *ob_ptr;                                                         \
+		union pointer ptr;                                                         \
+		DeeSTypeObject *basetype;                                                  \
+		_DeeArg_Unpack1(err, argc, argv, atomic_name, &ob_ptr);                    \
+		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))           \
+			goto err;                                                              \
+		CTYPES_FAULTPROTECT({                                                      \
+			switch (basetype->st_sizeof) {                                         \
+			case 1: atomic_func(ptr.p8); break;                                    \
+			case 2: atomic_func(ptr.p16); break;                                   \
+			case 4: atomic_func(ptr.p32); break;                                   \
+			case 8: atomic_func(ptr.p64); break;                                   \
+			default: __builtin_unreachable();                                      \
+			}                                                                      \
+		}, goto err);                                                              \
+		return_none;                                                               \
+	err:                                                                           \
+		return NULL;                                                               \
 	}
-DEFINE_ATOMIC_UNOP_VOID(capi_atomic_inc, "atomic_inc", atomic_inc)
-DEFINE_ATOMIC_UNOP_VOID(capi_atomic_dec, "atomic_dec", atomic_dec)
-#undef DEFINE_ATOMIC_UNOP_VOID
+CTYPES_DEFINE_ATOMIC_UNOP_VOID(capi_atomic_inc, "atomic_inc", atomic_inc)
+CTYPES_DEFINE_ATOMIC_UNOP_VOID(capi_atomic_dec, "atomic_dec", atomic_dec)
+#undef CTYPES_DEFINE_ATOMIC_UNOP_VOID
 
 
 /* Futex API */
@@ -420,7 +425,7 @@ capi_futex_wait(size_t argc, DeeObject *const *argv) {
 
 	case 1: {
 		union {
-			uint8_t v8[2];
+			uint8_t v8[4];
 			uint32_t v32;
 		} expected_oldval;
 		uint32_t *aligned_ptr;
@@ -514,7 +519,7 @@ capi_futex_timedwait(size_t argc, DeeObject *const *argv) {
 
 	case 1: {
 		union {
-			uint8_t v8[2];
+			uint8_t v8[4];
 			uint32_t v32;
 		} expected_oldval;
 		uint32_t *aligned_ptr;
@@ -587,9 +592,6 @@ err:
 	return NULL;
 }
 
-
-
 DECL_END
-
 
 #endif /* !GUARD_DEX_CTYPES_C_ATOMIC_C */

@@ -26,13 +26,11 @@
 #include <deemon/asm.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
-#include <deemon/dex.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strlen(), bzero(), memcpy(), ... */
 
-#include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/debug-alignment.h>
 #include <hybrid/minmax.h>
@@ -40,7 +38,10 @@
 
 /**/
 #include "libdisasm.h"
+
 /**/
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -551,7 +552,7 @@ PRIVATE struct attributeflag const attributeflags[] = {
 	{ "classmem", CLASS_ATTRIBUTE_FCLASSMEM },
 };
 
-INTERN Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 libdisasm_printclassattribute(Dee_formatprinter_t printer, void *arg,
                               struct class_attribute *__restrict self,
                               char const *line_prefix, uint16_t addr_size) {
@@ -607,7 +608,7 @@ libdisasm_get_operator_sname(Dee_operator_t operator_id) {
 }
 
 
-INTERN Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 libdisasm_printclass(Dee_formatprinter_t printer, void *arg,
                      DeeClassDescriptorObject *__restrict self,
                      size_t const_index, char const *line_prefix) {

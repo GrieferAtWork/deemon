@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -32,11 +33,19 @@
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
+#include <deemon/mro.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy() */
+#include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
+#include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* int32_t, int64_t */
 
 DECL_BEGIN
 
@@ -121,24 +130,24 @@ pointer_bool(DeePointerTypeObject *UNUSED(tp_self),
 	return value.ptr != NULL;
 }
 
-#define DEFINE_POINTER_COMPARE(name, op)                          \
+#define CTYPES_DEFINE_POINTER_COMPARE(name, op)                   \
 	PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL         \
 	name(DeePointerTypeObject *tp_self,                           \
 	     union pointer *self, DeeObject *other) {                 \
 		union pointer value;                                      \
 		if (DeeObject_AsPointer(other, tp_self->pt_orig, &value)) \
 			goto err;                                             \
-		return_bool(self->ptr op value.ptr);                     \
+		return_bool(self->ptr op value.ptr);                      \
 	err:                                                          \
 		return NULL;                                              \
 	}
-DEFINE_POINTER_COMPARE(pointer_eq, ==)
-DEFINE_POINTER_COMPARE(pointer_ne, !=)
-DEFINE_POINTER_COMPARE(pointer_lo, <)
-DEFINE_POINTER_COMPARE(pointer_le, <=)
-DEFINE_POINTER_COMPARE(pointer_gr, >)
-DEFINE_POINTER_COMPARE(pointer_ge, >=)
-#undef DEFINE_POINTER_COMPARE
+CTYPES_DEFINE_POINTER_COMPARE(pointer_eq, ==)
+CTYPES_DEFINE_POINTER_COMPARE(pointer_ne, !=)
+CTYPES_DEFINE_POINTER_COMPARE(pointer_lo, <)
+CTYPES_DEFINE_POINTER_COMPARE(pointer_le, <=)
+CTYPES_DEFINE_POINTER_COMPARE(pointer_gr, >)
+CTYPES_DEFINE_POINTER_COMPARE(pointer_ge, >=)
+#undef CTYPES_DEFINE_POINTER_COMPARE
 
 PRIVATE struct stype_cmp pointer_cmp = {
 	/* .st_eq = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&pointer_eq,

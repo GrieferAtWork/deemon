@@ -25,24 +25,22 @@
 /**/
 
 #include <deemon/alloc.h>
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
+#include <deemon/api.h>
 #include <deemon/callable.h>
 #include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
 #include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/super.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/util/lock.h>
 
 #include <hybrid/debug-alignment.h>
 #include <hybrid/minmax.h>
+#include <hybrid/sequence/list.h>
 /**/
 
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* intN_t, uintN_t */
 
 DECL_BEGIN
 
@@ -470,7 +468,7 @@ err:
 	return NULL;
 }
 
-INTERN NONNULL((1)) bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 stype_cfunction_rehash(DeeSTypeObject *__restrict self,
                        size_t new_mask) {
 	struct cfunction_type_list *new_map, *dst;

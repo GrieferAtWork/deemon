@@ -25,13 +25,11 @@
 /**/
 
 #include <deemon/alloc.h>
-#include <deemon/arg.h>
-#include <deemon/bool.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/api.h>
 #include <deemon/numeric.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/super.h>
+#include <deemon/util/lock.h>
 
 #undef FORMAT_TYP
 #undef FORMAT_STR
@@ -361,7 +359,7 @@ INTERN DeeSTypeObject DeeCVoid_Type = {
 			/* .tp_repr = */ NULL,
 			/* .tp_bool = */ NULL
 		},
-			/* .tp_visit         = */ NULL,
+		/* .tp_visit         = */ NULL,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,
