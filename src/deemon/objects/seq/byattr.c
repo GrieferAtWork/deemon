@@ -25,8 +25,10 @@
 #include <deemon/computed-operators.h>
 #include <deemon/format.h>
 #include <deemon/map.h>
+#include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/thread.h>
 
 /**/
 #include "byattr.h"
@@ -48,6 +50,16 @@ STATIC_ASSERT(offsetof(MapByAttr, mba_map) == offsetof(ProxyObject, po_obj));
 #define byattr_deep generic_proxy__deepcopy
 #define byattr_init generic_proxy__init
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+PRIVATE WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+byattr_iterattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
+                struct Dee_attriter *iterbuf, size_t bufsize,
+                struct Dee_attrhint *__restrict hint);
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+byattr_findattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
+                struct Dee_attrspec const *__restrict specs,
+                struct Dee_attrdesc *__restrict result);
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 struct byattr_enumattr_foreach_data {
 	MapByAttr *befd_self;
 	Dee_enum_t befd_proc;
@@ -84,6 +96,7 @@ byattr_enumattr(DeeTypeObject *tp_self, MapByAttr *self,
 	                             &byattr_enumattr_foreach,
 	                             &cookie);
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 STATIC_ASSERT(offsetof(MapByAttr, mba_map) == offsetof(ProxyObject, po_obj));
 #define byattr_fini                      generic_proxy__fini
@@ -109,8 +122,13 @@ PRIVATE struct type_attr byattr_attr = {
 	/* .tp_getattr                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&byattr_getattr,
 	/* .tp_delattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_delattr,
 	/* .tp_setattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&byattr_setattr,
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .tp_iterattr                  = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&byattr_iterattr,
+	/* .tp_findattr                  = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&byattr_findattr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                  = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&byattr_enumattr,
 	/* .tp_findattr                  = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_hasattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_hasattr,
 	/* .tp_boundattr                 = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_boundattr,
 	/* .tp_callattr                  = */ NULL,
@@ -130,6 +148,115 @@ PRIVATE struct type_attr byattr_attr = {
 	/* .tp_hasattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&byattr_hasattr_string_len_hash,
 	/* .tp_boundattr_string_len_hash = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&byattr_boundattr_string_len_hash,
 };
+
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+struct byattr_attriter {
+	Dee_ATTRITER_HEAD
+	DREF DeeObject *mba_keysiter; /* [1..1][const] KeysIterator for the underlying mapping. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_attriter_next(struct byattr_attriter *__restrict self,
+                     /*out*/ struct Dee_attrdesc *__restrict desc) {
+	DREF DeeObject *key;
+again:
+	key = DeeObject_IterNext(self->mba_keysiter);
+	if (!ITER_ISOK(key)) {
+		if unlikely(!key)
+			goto err;
+		return 1;
+	}
+	if unlikely(!DeeString_Check(key)) {
+		Dee_Decref(key);
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		goto again;
+	}
+	desc->ad_name = DeeString_STR(key); /* Inherit reference */
+	desc->ad_doc  = NULL;
+	desc->ad_perm = Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET |
+	                Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_NAMEOBJ;
+	desc->ad_info.ai_decl = (DeeObject *)&MapByAttr_Type;
+	desc->ad_info.ai_type = Dee_ATTRINFO_CUSTOM;
+	desc->ad_info.ai_value.v_custom = &byattr_attr;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_attriter_copy(struct byattr_attriter *__restrict self,
+                     struct byattr_attriter *__restrict other,
+                     size_t other_bufsize) {
+	(void)other_bufsize;
+	self->mba_keysiter = DeeObject_Copy(other->mba_keysiter);
+	if unlikely(!self->mba_keysiter)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+byattr_attriter_fini(struct byattr_attriter *__restrict self) {
+	Dee_Decref_likely(self->mba_keysiter);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+byattr_attriter_visit(struct byattr_attriter *__restrict self,
+                      Dee_visit_t proc, void *arg) {
+	Dee_Visit(self->mba_keysiter);
+}
+
+PRIVATE struct Dee_attriter_type tpconst byattr_attriter_type = {
+	/* .ait_next  = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&byattr_attriter_next,
+	/* .ait_copy  = */ (int (DCALL *)(struct Dee_attriter *__restrict, struct Dee_attriter *__restrict, size_t))&byattr_attriter_copy,
+	/* .ait_fini  = */ (void (DCALL *)(struct Dee_attriter *__restrict))&byattr_attriter_fini,
+	/* .ait_visit = */ (void (DCALL *)(struct Dee_attriter *__restrict, Dee_visit_t, void *))&byattr_attriter_visit,
+};
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+byattr_iterattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
+                struct Dee_attriter *iterbuf, size_t bufsize,
+                struct Dee_attrhint *__restrict UNUSED(hint)) {
+	struct byattr_attriter *iter = (struct byattr_attriter *)iterbuf;
+	if (bufsize >= sizeof(struct byattr_attriter)) {
+		iter->mba_keysiter = DeeObject_InvokeMethodHint(map_iterkeys, self->mba_map);
+		if unlikely(!iter->mba_keysiter)
+			goto err;
+		Dee_attriter_init(iter, &byattr_attriter_type);
+	}
+	return sizeof(struct byattr_attriter);
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+byattr_findattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
+                struct Dee_attrspec const *__restrict specs,
+                struct Dee_attrdesc *__restrict result) {
+	int has = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash,
+	                                     self->mba_map, specs->as_name,
+	                                     specs->as_hash);
+	if unlikely(has < 0)
+		goto err;
+	if (has) {
+		result->ad_name = specs->as_name;
+		result->ad_doc  = NULL;
+		result->ad_perm = Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET |
+		                  Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY;
+		result->ad_info.ai_type = Dee_ATTRINFO_CUSTOM;
+		result->ad_info.ai_decl = (DeeObject *)self;
+		result->ad_info.ai_value.v_custom = &byattr_attr;
+		return 0;
+	}
+	return 1;
+err:
+	return -1;
+}
+#endif /* CONFIG_EXPERIMENTAL_ATTRITER */
+
 
 PRIVATE struct type_member tpconst byattr_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT, offsetof(MapByAttr, mba_map),

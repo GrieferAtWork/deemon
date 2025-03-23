@@ -1482,6 +1482,9 @@ err:
 	return final_retval;
 #endif /* !LOCAL_IS_ITER */
 err:
+#ifdef LOCAL_IS_ITER
+	Dee_attriterchain_builder_fini(&builder);
+#endif /* LOCAL_IS_ITER */
 	return retval;
 #endif /* LOCAL_IS_ENUM || LOCAL_IS_ITER */
 #undef LOCAL_HAS_local_hash

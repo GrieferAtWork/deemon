@@ -24,6 +24,7 @@
 #include <deemon/bool.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
+#include <deemon/mro.h>
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -31,11 +32,10 @@
 
 #include <hybrid/typecore.h>
 
-#include "../runtime/runtime_error.h"
-#include "../runtime/strings.h"
-
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"
+#include "../runtime/runtime_error.h"
+#include "../runtime/strings.h"
 /**/
 
 #include <stddef.h> /* size_t */
@@ -334,8 +334,12 @@ DeeNone_OperatorGetItemNRStringLenHash(DeeObject *__restrict UNUSED(self),
 #define DeeNone_OperatorGetAttr                   (*(DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&_DeeNone_NewRef2)
 #define DeeNone_OperatorDelAttr                   (*(int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&_DeeNone_reti0_2)
 #define DeeNone_OperatorSetAttr                   (*(int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&_DeeNone_reti0_3)
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+#define DeeNone_OperatorFindAttr                  (*(int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&_DeeNone_reti1_4)
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 #define DeeNone_OperatorEnumAttr                  (*(Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&_DeeNone_rets0_4)
 #define DeeNone_OperatorFindAttr                  (*(int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attribute_info *__restrict, struct Dee_attribute_lookup_rules const *__restrict))&_DeeNone_reti1_4)
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #define DeeNone_OperatorHasAttr                   (*(int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&_DeeNone_reti1_2)
 #define DeeNone_OperatorBoundAttr                 (*(int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&_DeeNone_reti1_2)
 #define DeeNone_OperatorCallAttr                  (*(DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *, size_t, DeeObject *const *))&_DeeNone_NewRef4)
@@ -384,6 +388,23 @@ DeeNone_OperatorGetItemNRStringLenHash(DeeObject *__restrict UNUSED(self),
 
 STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by definition of `DeeNone_OperatorIterNext'");
 #define DeeNone_OperatorIterNext (*(DREF DeeObject *(DCALL *)(DeeObject *))&_DeeNone_retsm1_1)
+
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+#define none_attriter_next _DeeNone_reti1_2
+PRIVATE struct Dee_attriter_type tpconst none_attriter_type = {
+	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&none_attriter_next,
+};
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+DeeNone_OperatorIterAttr(DeeTypeObject *UNUSED(tp_self), DeeObject *UNUSED(self),
+                         struct Dee_attriter *iterbuf, size_t bufsize,
+                         struct Dee_attrhint *__restrict UNUSED(hint)) {
+	if likely(bufsize >= sizeof(struct Dee_attriter))
+		Dee_attriter_init(iterbuf, &none_attriter_type);
+	return sizeof(struct Dee_attriter);
+}
+#endif /* CONFIG_EXPERIMENTAL_ATTRITER */
+
 
 PRIVATE struct type_iterator none_iterator = {
 	/* .tp_nextpair  = */ &DeeNone_OperatorNextPair,
@@ -495,7 +516,11 @@ PRIVATE struct type_attr none_attr = {
 	/* .tp_getattr                       = */ &DeeNone_OperatorGetAttr,
 	/* .tp_delattr                       = */ &DeeNone_OperatorDelAttr,
 	/* .tp_setattr                       = */ &DeeNone_OperatorSetAttr,
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .tp_iterattr                      = */ &DeeNone_OperatorIterAttr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                      = */ &DeeNone_OperatorEnumAttr,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_findattr                      = */ &DeeNone_OperatorFindAttr,
 	/* .tp_hasattr                       = */ &DeeNone_OperatorHasAttr,
 	/* .tp_boundattr                     = */ &DeeNone_OperatorBoundAttr,

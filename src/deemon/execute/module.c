@@ -287,7 +287,7 @@ DeeModule_GetSymbolStringLenHash(DeeModuleObject const *__restrict self,
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self,
-                        struct module_symbol *__restrict symbol) {
+                        struct module_symbol const *__restrict symbol) {
 	DREF DeeObject *result;
 	ASSERT(symbol >= self->mo_bucketv &&
 	       symbol <= self->mo_bucketv + self->mo_bucketm);
@@ -329,7 +329,7 @@ read_symbol:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self,
-                          struct module_symbol *__restrict symbol) {
+                          struct module_symbol const *__restrict symbol) {
 	ASSERT(symbol >= self->mo_bucketv &&
 	       symbol <= self->mo_bucketv + self->mo_bucketm);
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
@@ -504,7 +504,7 @@ module_hasattr_len_impl(DeeModuleObject *__restrict self,
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
-                        struct module_symbol *__restrict symbol) {
+                        struct module_symbol const *__restrict symbol) {
 	DREF DeeObject *old_value;
 	ASSERT(symbol >= self->mo_bucketv &&
 	       symbol <= self->mo_bucketv + self->mo_bucketm);
@@ -553,7 +553,7 @@ module_delattr_impl(DeeModuleObject *__restrict self,
 			break; /* Not found */
 		if (item->ss_hash != hash)
 			continue; /* Non-matching hash */
-		if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name))
+		if (strcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name) == 0)
 			return DeeModule_DelAttrSymbol(self, item);
 	}
 
@@ -592,7 +592,7 @@ module_delattr_len_impl(DeeModuleObject *__restrict self,
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self,
-                        struct module_symbol *__restrict symbol,
+                        struct module_symbol const *__restrict symbol,
                         DeeObject *__restrict value) {
 	DREF DeeObject *temp;
 	ASSERT(symbol >= self->mo_bucketv &&
@@ -1169,6 +1169,216 @@ module_setattr(DeeModuleObject *__restrict self,
 	return DeeModule_SetAttr(self, name, value);
 }
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+struct module_attriter {
+	Dee_ATTRITER_HEAD
+	DeeModuleObject *mai_mod;  /* [1..1][const] The module whose attributes to enumerate. */
+	uint16_t         mai_hidx; /* [lock(ATOMIC)] Index into `mai_mod->mo_bucketv' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+module_attriter_next(struct module_attriter *__restrict self,
+                     /*out*/ struct Dee_attrdesc *__restrict desc) {
+	DeeModuleObject *mod = self->mai_mod;
+	struct Dee_module_symbol *sym, *doc_sym;
+	uint16_t old_hidx, new_hidx;
+	uint16_t perm;
+	do {
+		old_hidx = atomic_read(&self->mai_hidx);
+		new_hidx = old_hidx;
+		do {
+			if unlikely(new_hidx > mod->mo_bucketm)
+				return 1;
+			sym = &mod->mo_bucketv[new_hidx];
+			++new_hidx;
+			/* Skip empty and hidden entries. */
+		} while (!MODULE_SYMBOL_GETNAMESTR(sym) || (sym->ss_flags & MODSYM_FHIDDEN));
+	} while (!atomic_cmpxch_or_write(&self->mai_hidx, old_hidx, new_hidx));
+
+	perm = Dee_ATTRPERM_F_IMEMBER | ATTR_ACCESS_GET;
+	ASSERT(sym->ss_index < mod->mo_globalc);
+	if (!(sym->ss_flags & MODSYM_FREADONLY))
+		perm |= (ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
+	if (sym->ss_flags & MODSYM_FPROPERTY) {
+		perm &= ~(ATTR_ACCESS_GET | ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
+		if (!(sym->ss_flags & MODSYM_FCONSTEXPR))
+			perm |= Dee_ATTRPERM_F_PROPERTY;
+	}
+
+#if 0 /* Always allow this! (we allow it for user-classes, as well!) */
+	/* For constant-expression symbols, we can predict
+		* their type (as well as their value)... */
+	if (sym->ss_flags & MODSYM_FCONSTEXPR)
+#endif
+	{
+		if unlikely(DeeModule_RunInit((DeeObject *)mod) < 0)
+			goto err;
+		if (mod->mo_flags & MODULE_FDIDINIT) {
+			DeeModule_LockRead(mod);
+			if (sym->ss_flags & MODSYM_FPROPERTY) {
+				/* Check which property operations have been bound. */
+				if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
+					perm |= ATTR_ACCESS_GET;
+				if (!(sym->ss_flags & MODSYM_FREADONLY)) {
+					/* These callbacks are only allocated if the READONLY flag isn't set. */
+					if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_DEL])
+						perm |= ATTR_ACCESS_DEL;
+					if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_SET])
+						perm |= ATTR_ACCESS_SET;
+				}
+			}
+			DeeModule_LockEndRead(mod);
+		}
+	}
+	doc_sym = sym;
+	if (!doc_sym->ss_doc && (doc_sym->ss_flags & MODSYM_FALIAS)) {
+		doc_sym = DeeModule_GetSymbolID(mod, doc_sym->ss_index);
+		ASSERT(doc_sym != NULL);
+	}
+
+	/* NOTE: Pass the module instance as declarator! */
+	if (sym->ss_flags & MODSYM_FNAMEOBJ)
+		perm |= Dee_ATTRPERM_F_NAMEOBJ;
+	if (doc_sym->ss_flags & MODSYM_FDOCOBJ)
+		perm |= Dee_ATTRPERM_F_DOCOBJ;
+	desc->ad_name = Dee_MODULE_SYMBOL_GETNAMESTR(sym);
+	desc->ad_doc  = Dee_MODULE_SYMBOL_GETDOCSTR(doc_sym);
+	if (perm & Dee_ATTRPERM_F_NAMEOBJ)
+		Dee_Incref(COMPILER_CONTAINER_OF(desc->ad_name, DeeStringObject, s_str));
+	if ((perm & Dee_ATTRPERM_F_DOCOBJ) && desc->ad_doc)
+		Dee_Incref(COMPILER_CONTAINER_OF(desc->ad_doc, DeeStringObject, s_str));
+	desc->ad_perm = perm;
+	desc->ad_info.ai_decl = (DeeObject *)mod;
+	desc->ad_info.ai_type = Dee_ATTRINFO_MODSYM;
+	desc->ad_info.ai_value.v_modsym = sym;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE struct Dee_attriter_type tpconst module_attriter_type = {
+	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&module_attriter_next,
+};
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) size_t DCALL
+module_iterattr(DeeTypeObject *UNUSED(tp_self), DeeModuleObject *self,
+                struct Dee_attriter *iterbuf, size_t bufsize,
+                struct Dee_attrhint *__restrict hint) {
+	size_t temp;
+	struct Dee_attriterchain_builder builder;
+	ASSERT_OBJECT(self);
+	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
+		if (DeeInteractiveModule_Check(self)) {
+			/* TODO: Special handling for enumerating the globals of an interactive module. */
+		}
+		return 0;
+	}
+
+	Dee_attriterchain_builder_init(&builder, iterbuf, bufsize);
+	if (Dee_attriterchain_builder_getbufsize(&builder) >= sizeof(struct module_attriter)) {
+		struct module_attriter *iter;
+		iter = (struct module_attriter *)Dee_attriterchain_builder_getiterbuf(&builder);
+		Dee_attriter_init(iter, &module_attriter_type);
+		iter->mai_hidx = 0;
+		iter->mai_mod  = self;
+	}
+	Dee_attriterchain_builder_consume(&builder, sizeof(struct module_attriter));
+	temp = DeeObject_TGenericIterAttr(&DeeModule_Type,
+	                                  Dee_attriterchain_builder_getiterbuf(&builder),
+	                                  Dee_attriterchain_builder_getbufsize(&builder),
+	                                  hint);
+	if unlikely(temp == (size_t)-1)
+		goto err_temp;
+	return Dee_attriterchain_builder_pack(&builder);
+err_temp:
+	Dee_attriterchain_builder_fini(&builder);
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+module_findattr_impl(DeeModuleObject *__restrict self,
+                     struct Dee_attrspec const *__restrict specs,
+                     struct Dee_attrdesc *__restrict result) {
+	ASSERT_OBJECT(self);
+	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
+		if (DeeInteractiveModule_Check(self)) {
+			/* TODO: Special handling for enumerating the globals of an interactive module. */
+		}
+		return 1;
+	}
+	if (!specs->as_decl || specs->as_decl == (DeeObject *)self) {
+		struct module_symbol *sym, *doc_sym;
+		sym = DeeModule_GetSymbolStringHash(self,
+		                                    specs->as_name,
+		                                    specs->as_hash);
+		if (sym) {
+			uint16_t perm;
+			perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET;
+			ASSERT(sym->ss_index < self->mo_globalc);
+			if (!(sym->ss_flags & MODSYM_FREADONLY))
+				perm |= (ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
+			if (sym->ss_flags & MODSYM_FPROPERTY) {
+				perm &= ~(ATTR_ACCESS_GET | ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
+				if (!(sym->ss_flags & MODSYM_FCONSTEXPR))
+					perm |= Dee_ATTRPERM_F_PROPERTY;
+			}
+#if 0 /* Always allow this! (we allow it for user-classes, as well!) */
+			/* For constant-expression symbols, we can predict
+			 * their type (as well as their value)... */
+			if (sym->ss_flags & MODSYM_FCONSTEXPR)
+#endif
+			{
+				if unlikely(DeeModule_RunInit((DeeObject *)self) < 0)
+					goto err;
+				if (self->mo_flags & MODULE_FDIDINIT) {
+					DeeModule_LockRead(self);
+					if (sym->ss_flags & MODSYM_FPROPERTY) {
+						/* Check which property operations have been bound. */
+						if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
+							perm |= ATTR_ACCESS_GET;
+						if (!(sym->ss_flags & MODSYM_FREADONLY)) {
+							/* These callbacks are only allocated if the READONLY flag isn't set. */
+							if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_DEL])
+								perm |= ATTR_ACCESS_DEL;
+							if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_SET])
+								perm |= ATTR_ACCESS_SET;
+						}
+					}
+					DeeModule_LockEndRead(self);
+				}
+			}
+			doc_sym = sym;
+			if (!doc_sym->ss_doc && (doc_sym->ss_flags & MODSYM_FALIAS)) {
+				doc_sym = DeeModule_GetSymbolID(self, doc_sym->ss_index);
+				ASSERT(doc_sym != NULL);
+			}
+			if (sym->ss_flags & MODSYM_FNAMEOBJ)
+				perm |= Dee_ATTRPERM_F_NAMEOBJ;
+			if (doc_sym->ss_flags & MODSYM_FDOCOBJ)
+				perm |= Dee_ATTRPERM_F_DOCOBJ;
+			if ((perm & specs->as_perm_mask) == specs->as_perm_value) {
+				/* NOTE: Pass the module instance as declarator! */
+				result->ad_name = Dee_MODULE_SYMBOL_GETNAMESTR(sym);
+				result->ad_doc  = Dee_MODULE_SYMBOL_GETDOCSTR(doc_sym);
+				result->ad_perm = perm;
+				result->ad_info.ai_decl = (DeeObject *)self;
+				result->ad_info.ai_type = Dee_ATTRINFO_MODSYM;
+				result->ad_info.ai_value.v_modsym = sym;
+				if (perm & Dee_ATTRPERM_F_NAMEOBJ)
+					Dee_Incref(COMPILER_CONTAINER_OF(result->ad_name, DeeStringObject, s_str));
+				if ((perm & Dee_ATTRPERM_F_DOCOBJ) && result->ad_doc)
+					Dee_Incref(COMPILER_CONTAINER_OF(result->ad_doc, DeeStringObject, s_str));
+				return 0;
+			}
+		}
+	}
+	return DeeObject_TGenericFindAttr(&DeeModule_Type,
+	                                  (DeeObject *)self,
+	                                  specs, result);
+err:
+	return -1;
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 module_enumattr(DeeTypeObject *UNUSED(tp_self),
                 DeeModuleObject *self, Dee_enum_t proc, void *arg) {
@@ -1259,10 +1469,10 @@ err_m1:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeModule_FindAttr(DeeModuleObject *__restrict self,
-                   struct Dee_attribute_info *__restrict result,
-                   struct Dee_attribute_lookup_rules const *__restrict rules) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+module_findattr_impl(DeeModuleObject *__restrict self,
+                     struct Dee_attribute_info *__restrict result,
+                     struct Dee_attribute_lookup_rules const *__restrict rules) {
 	ASSERT_OBJECT(self);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -1348,6 +1558,7 @@ DeeModule_FindAttr(DeeModuleObject *__restrict self,
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 INTERN WUNUSED NONNULL((1, 2, 5)) bool DCALL
 DeeModule_FindAttrInfoStringLenHash(DeeModuleObject *self, char const *__restrict attr, size_t attrlen,
@@ -1363,12 +1574,21 @@ DeeModule_FindAttrInfoStringLenHash(DeeModuleObject *self, char const *__restric
 	return DeeObject_GenericFindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo);
 }
 
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+module_findattr(DeeTypeObject *UNUSED(tp_self), DeeModuleObject *self,
+                struct Dee_attrspec const *__restrict specs,
+                struct Dee_attrdesc *__restrict result) {
+	return module_findattr_impl(self, specs, result);
+}
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 module_findattr(DeeTypeObject *UNUSED(tp_self), DeeModuleObject *self,
                 struct Dee_attribute_info *__restrict result,
                 struct Dee_attribute_lookup_rules const *__restrict rules) {
-	return DeeModule_FindAttr(self, result, rules);
+	return module_findattr_impl(self, result, rules);
 }
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 module_hasattr(DeeModuleObject *__restrict self,
@@ -1394,8 +1614,13 @@ PRIVATE struct type_attr module_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&module_setattr,
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* .tp_iterattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint *__restrict))&module_iterattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&module_findattr,
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&module_enumattr,
 	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attribute_info *__restrict, struct Dee_attribute_lookup_rules const *__restrict))&module_findattr,
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_boundattr,
 	/* .tp_callattr                      = */ NULL,

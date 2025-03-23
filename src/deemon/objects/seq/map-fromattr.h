@@ -35,7 +35,12 @@ typedef struct {
 } MapFromAttr;
 
 typedef struct {
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	/* TODO: Directly inline "struct Dee_attriter" */
 	PROXY_OBJECT_HEAD_EX(DeeEnumAttrIteratorObject, mfai_iter) /* [1..1][const] The underlying enumattr iterator */
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
+	PROXY_OBJECT_HEAD_EX(DeeEnumAttrIteratorObject, mfai_iter) /* [1..1][const] The underlying enumattr iterator */
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 } MapFromAttrIterator;
 
 INTDEF DeeTypeObject MapFromAttr_Type;             /* type(Mapping.fromattr(ob)); */

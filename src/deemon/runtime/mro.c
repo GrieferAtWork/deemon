@@ -25,19 +25,27 @@
 #include <deemon/api.h>
 #include <deemon/attribute.h>
 #include <deemon/class.h>
+#include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/instancemethod.h>
+#include <deemon/kwds.h>
+#include <deemon/module.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/property.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
-#include <hybrid/overflow.h>
+/**/
+
+#include "runtime_error.h"
 /**/
 
 #include <stddef.h>
@@ -77,7 +85,701 @@ DeeSystem_DEFINE_strcmpz(dee_strcmpz)
 
 
 
+INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+type_member_typefor(struct type_member const *__restrict self);
+
+/* Try to determine the type of object returned by `Dee_attrinfo_callget()'
+ * When the type cannot be determined, return `NULL' instead. */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+Dee_attrinfo_typeof(struct Dee_attrinfo *__restrict self) {
+	switch (self->ai_type) {
+
+	case Dee_ATTRINFO_MODSYM: {
+		DeeModuleObject *mod;
+		struct Dee_module_symbol const *sym;
+		mod = (DeeModuleObject *)self->ai_decl;
+		sym = self->ai_value.v_modsym;
+		ASSERT(sym >= mod->mo_bucketv &&
+		       sym <= mod->mo_bucketv + mod->mo_bucketm);
+		if (sym->ss_flags & MODSYM_FPROPERTY)
+			break;
+		if (!(sym->ss_flags & MODSYM_FREADONLY))
+			break;
+		if likely(!(sym->ss_flags & MODSYM_FEXTERN)) {
+			DeeObject *symval;
+read_modsym:
+			ASSERT(sym->ss_index < mod->mo_globalc);
+			DeeModule_LockRead(mod);
+			symval = mod->mo_globalv[sym->ss_index];
+			if (symval) {
+				DREF DeeTypeObject *result;
+				result = Dee_TYPE(symval);
+				Dee_Incref(result);
+				DeeModule_LockEndRead(mod);
+				return result;
+			}
+			DeeModule_LockEndRead(mod);
+			break;
+		}
+
+		/* External symbol. */
+		ASSERT(sym->ss_extern.ss_impid < mod->mo_importc);
+		mod = mod->mo_importv[sym->ss_extern.ss_impid];
+		goto read_modsym;
+	}	break;
+
+	case Dee_ATTRINFO_METHOD: {
+		DeeTypeObject *result = &DeeObjMethod_Type;
+		if (self->ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
+			result = &DeeKwObjMethod_Type;
+		Dee_Incref(result);
+		return result;
+	}	break;
+
+	case Dee_ATTRINFO_MEMBER: {
+		DeeTypeObject *result;
+		result = type_member_typefor(self->ai_value.v_member);
+		if (result) {
+			Dee_Incref(result);
+			return result;
+		}
+	}	break;
+
+	case Dee_ATTRINFO_ATTR: {
+		struct class_desc *desc;
+		struct class_attribute const *attr;
+		DeeObject *value;
+		attr = self->ai_value.v_attr;
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+			break;
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
+			Dee_Incref(&DeeInstanceMethod_Type);
+			return &DeeInstanceMethod_Type;
+		}
+		if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM))
+			break;
+		if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY))
+			break;
+		desc = DeeClass_DESC(self->ai_decl);
+		Dee_class_desc_lock_read(desc);
+		value = desc->cd_members[attr->ca_addr];
+		if (value) {
+			DREF DeeTypeObject *result;
+			result = Dee_TYPE(value);
+			Dee_Incref(result);
+			Dee_class_desc_lock_endread(desc);
+			return result;
+		}
+		Dee_class_desc_lock_endread(desc);
+	}	break;
+
+	case Dee_ATTRINFO_INSTANCE_METHOD: {
+		DeeTypeObject *result = &DeeClsMethod_Type;
+		if (self->ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
+			result = &DeeKwClsMethod_Type;
+		Dee_Incref(result);
+		return result;
+	}	break;
+
+	case Dee_ATTRINFO_INSTANCE_GETSET:
+		Dee_Incref(&DeeClsProperty_Type);
+		return &DeeClsProperty_Type;
+
+	case Dee_ATTRINFO_INSTANCE_MEMBER:
+		Dee_Incref(&DeeClsMember_Type);
+		return &DeeClsMember_Type;
+
+	case Dee_ATTRINFO_INSTANCE_ATTR: {
+		struct class_desc *desc;
+		struct class_attribute const *attr;
+		DeeObject *value;
+		attr = self->ai_value.v_attr;
+		if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)) {
+			Dee_Incref(&DeeInstanceMember_Type);
+			return &DeeInstanceMember_Type;
+		}
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+			Dee_Incref(&DeeProperty_Type);
+			return &DeeProperty_Type;
+		}
+		desc = DeeClass_DESC(self->ai_decl);
+		Dee_class_desc_lock_read(desc);
+		value = desc->cd_members[attr->ca_addr];
+		if (value) {
+			DREF DeeTypeObject *result;
+			result = Dee_TYPE(value);
+			Dee_Incref(result);
+			Dee_class_desc_lock_endread(desc);
+			return result;
+		}
+		Dee_class_desc_lock_endread(desc);
+	}	break;
+
+	default: break;
+	}
+	return NULL;
+}
+
+
+
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
+PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
+err_bad_module_access_thisarg(struct Dee_attrdesc const *self, DeeObject *thisarg) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Bad thisarg for module access: %r (expected %r)",
+	                       thisarg, self->ad_info.ai_decl);
+}
+
+PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
+err_bad_instance_access_thisarg(struct Dee_attrdesc const *self, DeeObject *thisarg) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Bad thisarg for instance access: %r (expected %r)",
+	                       thisarg, self->ad_info.ai_decl);
+}
+
+PRIVATE WUNUSED int DCALL
+bound_fromob(/*inherit(always)*/ DREF DeeObject *value) {
+	if (value) {
+		Dee_Decref(value);
+		return Dee_BOUND_YES;
+	}
+	if (DeeError_Catch(&DeeError_UnboundAttribute))
+		return Dee_BOUND_NO;
+	return Dee_BOUND_ERR;
+}
+
+
+/* Perform standard operations on the attribute behind `struct Dee_attrdesc' */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+Dee_attrdesc_callget(struct Dee_attrdesc const *self, DeeObject *thisarg) {
+	switch (self->ad_info.ai_type) {
+
+	case Dee_ATTRINFO_CUSTOM: {
+		struct type_attr const *tp_attr;
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		tp_attr = self->ad_info.ai_value.v_custom;
+		if (tp_attr->tp_getattr) {
+			DREF DeeObject *attrob, *result;
+			if (self->ad_perm & Dee_ATTRPERM_F_NAMEOBJ)
+				return (*tp_attr->tp_getattr)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self));
+			if (tp_attr->tp_getattr_string_hash)
+				return (*tp_attr->tp_getattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name));
+			attrob = DeeString_New(self->ad_name);
+			if unlikely(!attrob)
+				goto err;
+			result = (*tp_attr->tp_getattr)(thisarg, attrob);
+			Dee_Decref_likely(attrob);
+			return result;
+		}
+	}	break;
+
+	case Dee_ATTRINFO_MODSYM:
+		if unlikely(self->ad_info.ai_decl != thisarg) {
+			err_bad_module_access_thisarg(self, thisarg);
+			goto err;
+		}
+		return DeeModule_GetAttrSymbol((DeeModuleObject *)thisarg,
+		                               self->ad_info.ai_value.v_modsym);
+
+	case Dee_ATTRINFO_METHOD:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		if (self->ad_info.ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
+			return DeeKwObjMethod_New((Dee_kwobjmethod_t)self->ad_info.ai_value.v_method->m_func, thisarg);
+		return DeeObjMethod_New(self->ad_info.ai_value.v_method->m_func, thisarg);
+
+	case Dee_ATTRINFO_GETSET:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		if (self->ad_info.ai_value.v_getset->gs_get)
+			return (*self->ad_info.ai_value.v_getset->gs_get)(thisarg);
+		break;
+
+	case Dee_ATTRINFO_MEMBER:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		return Dee_type_member_get(self->ad_info.ai_value.v_member, thisarg);
+
+	case Dee_ATTRINFO_ATTR: {
+		struct class_desc *desc;
+		struct instance_desc *inst;
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		desc = DeeClass_DESC(self->ad_info.ai_decl);
+		inst = DeeInstance_DESC(desc, thisarg);
+		return DeeInstance_GetAttribute(desc, inst, thisarg, self->ad_info.ai_value.v_attr);
+	}	break;
+
+	case Dee_ATTRINFO_INSTANCE_METHOD:
+	case Dee_ATTRINFO_INSTANCE_GETSET:
+	case Dee_ATTRINFO_INSTANCE_MEMBER:
+	case Dee_ATTRINFO_INSTANCE_ATTR: {
+		if unlikely(thisarg == self->ad_info.ai_decl) {
+			err_bad_instance_access_thisarg(self, thisarg);
+			goto err;
+		}
+		switch (self->ad_info.ai_type) {
+		case Dee_ATTRINFO_INSTANCE_METHOD:
+			if (self->ad_info.ai_value.v_instance_method->m_flag & Dee_TYPE_METHOD_FKWDS)
+				return DeeKwClsMethod_New((DeeTypeObject *)thisarg, (Dee_kwobjmethod_t)self->ad_info.ai_value.v_instance_method->m_func);
+			return DeeClsMethod_New((DeeTypeObject *)thisarg, self->ad_info.ai_value.v_instance_method->m_func);
+		case Dee_ATTRINFO_INSTANCE_GETSET: {
+			struct type_getset const *gs = self->ad_info.ai_value.v_instance_getset;
+			return DeeClsProperty_New((DeeTypeObject *)thisarg, gs->gs_get, gs->gs_del, gs->gs_set);
+		}	break;
+		case Dee_ATTRINFO_INSTANCE_MEMBER:
+			return DeeClsMember_New((DeeTypeObject *)thisarg, self->ad_info.ai_value.v_instance_member);
+		case Dee_ATTRINFO_INSTANCE_ATTR:
+			return DeeClass_GetInstanceAttribute((DeeTypeObject *)thisarg, self->ad_info.ai_value.v_instance_attr);
+		default: __builtin_unreachable();
+		}
+	}	break;
+
+	default: break;
+	}
+	err_cant_access_attribute_string((DeeTypeObject *)self->ad_info.ai_decl,
+	                                 self->ad_name, ATTR_ACCESS_GET);
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+Dee_attrdesc_callbound(struct Dee_attrdesc const *self, DeeObject *thisarg) {
+	switch (self->ad_info.ai_type) {
+
+	case Dee_ATTRINFO_CUSTOM: {
+		struct type_attr const *tp_attr;
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		tp_attr = self->ad_info.ai_value.v_custom;
+		if (tp_attr->tp_getattr) {
+			DREF DeeObject *result;
+			if (tp_attr->tp_boundattr && (self->ad_perm & Dee_ATTRPERM_F_NAMEOBJ))
+				return (*tp_attr->tp_boundattr)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self));
+			if (tp_attr->tp_boundattr_string_hash)
+				return (*tp_attr->tp_boundattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name));
+			if (self->ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
+				result = (*tp_attr->tp_getattr)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self));
+			} else if (tp_attr->tp_getattr_string_hash) {
+				result = (*tp_attr->tp_getattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name));
+			} else {
+				DREF DeeObject *attrob;
+				attrob = DeeString_New(self->ad_name);
+				if unlikely(!attrob)
+					goto err;
+				result = (*tp_attr->tp_getattr)(thisarg, attrob);
+				Dee_Decref_likely(attrob);
+			}
+			return bound_fromob(result);
+		}
+	}	break;
+
+	case Dee_ATTRINFO_MODSYM:
+		if unlikely(self->ad_info.ai_decl != thisarg) {
+			err_bad_module_access_thisarg(self, thisarg);
+			goto err;
+		}
+		return DeeModule_BoundAttrSymbol((DeeModuleObject *)thisarg,
+		                                 self->ad_info.ai_value.v_modsym);
+
+	case Dee_ATTRINFO_METHOD:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		return Dee_BOUND_YES;
+
+	case Dee_ATTRINFO_GETSET:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		if (self->ad_info.ai_value.v_getset->gs_bound)
+			return (*self->ad_info.ai_value.v_getset->gs_bound)(thisarg);
+		if (self->ad_info.ai_value.v_getset->gs_get)
+			return bound_fromob((*self->ad_info.ai_value.v_getset->gs_get)(thisarg));
+		break;
+
+	case Dee_ATTRINFO_MEMBER: {
+		bool isbound;
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		isbound = Dee_type_member_bound(self->ad_info.ai_value.v_member, thisarg);
+		return Dee_BOUND_FROMBOOL(isbound);
+	}	break;
+
+	case Dee_ATTRINFO_ATTR: {
+		struct class_desc *desc;
+		struct instance_desc *inst;
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		desc = DeeClass_DESC(self->ad_info.ai_decl);
+		inst = DeeInstance_DESC(desc, thisarg);
+		return DeeInstance_BoundAttribute(desc, inst, thisarg, self->ad_info.ai_value.v_attr);
+	}	break;
+
+	case Dee_ATTRINFO_INSTANCE_METHOD:
+	case Dee_ATTRINFO_INSTANCE_GETSET:
+	case Dee_ATTRINFO_INSTANCE_MEMBER:
+	case Dee_ATTRINFO_INSTANCE_ATTR: {
+		if unlikely(thisarg == self->ad_info.ai_decl) {
+			err_bad_instance_access_thisarg(self, thisarg);
+			goto err;
+		}
+		switch (self->ad_info.ai_type) {
+		case Dee_ATTRINFO_INSTANCE_METHOD:
+		case Dee_ATTRINFO_INSTANCE_GETSET:
+		case Dee_ATTRINFO_INSTANCE_MEMBER:
+			return Dee_BOUND_YES;
+		case Dee_ATTRINFO_INSTANCE_ATTR:
+			return DeeClass_BoundInstanceAttribute((DeeTypeObject *)thisarg, self->ad_info.ai_value.v_instance_attr);
+		default: __builtin_unreachable();
+		}
+	}	break;
+
+	default: break;
+	}
+	err_cant_access_attribute_string((DeeTypeObject *)self->ad_info.ai_decl,
+	                                 self->ad_name, ATTR_ACCESS_GET);
+err:
+	return Dee_BOUND_ERR;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+Dee_attrdesc_calldel(struct Dee_attrdesc const *self, DeeObject *thisarg) {
+	switch (self->ad_info.ai_type) {
+
+	case Dee_ATTRINFO_CUSTOM: {
+		struct type_attr const *tp_attr;
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		tp_attr = self->ad_info.ai_value.v_custom;
+		if (tp_attr->tp_delattr) {
+			int result;
+			DREF DeeObject *attrob;
+			if (self->ad_perm & Dee_ATTRPERM_F_NAMEOBJ)
+				return (*tp_attr->tp_delattr)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self));
+			if (tp_attr->tp_delattr_string_hash)
+				return (*tp_attr->tp_delattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name));
+			attrob = DeeString_New(self->ad_name);
+			if unlikely(!attrob)
+				goto err;
+			result = (*tp_attr->tp_delattr)(thisarg, attrob);
+			Dee_Decref_likely(attrob);
+			return result;
+		}
+	}	break;
+
+	case Dee_ATTRINFO_MODSYM:
+		if unlikely(self->ad_info.ai_decl != thisarg) {
+			err_bad_module_access_thisarg(self, thisarg);
+			goto err;
+		}
+		return DeeModule_DelAttrSymbol((DeeModuleObject *)thisarg,
+		                               self->ad_info.ai_value.v_modsym);
+
+	case Dee_ATTRINFO_METHOD:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		break;
+
+	case Dee_ATTRINFO_GETSET:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		if (self->ad_info.ai_value.v_getset->gs_del)
+			return (*self->ad_info.ai_value.v_getset->gs_del)(thisarg);
+		break;
+
+	case Dee_ATTRINFO_MEMBER:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		return Dee_type_member_del(self->ad_info.ai_value.v_member, thisarg);
+
+	case Dee_ATTRINFO_ATTR: {
+		struct class_desc *desc;
+		struct instance_desc *inst;
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		desc = DeeClass_DESC(self->ad_info.ai_decl);
+		inst = DeeInstance_DESC(desc, thisarg);
+		return DeeInstance_DelAttribute(desc, inst, thisarg, self->ad_info.ai_value.v_attr);
+	}	break;
+
+	case Dee_ATTRINFO_INSTANCE_METHOD:
+	case Dee_ATTRINFO_INSTANCE_GETSET:
+	case Dee_ATTRINFO_INSTANCE_MEMBER:
+	case Dee_ATTRINFO_INSTANCE_ATTR: {
+		if unlikely(thisarg == self->ad_info.ai_decl) {
+			err_bad_instance_access_thisarg(self, thisarg);
+			goto err;
+		}
+		switch (self->ad_info.ai_type) {
+		case Dee_ATTRINFO_INSTANCE_METHOD:
+		case Dee_ATTRINFO_INSTANCE_GETSET:
+		case Dee_ATTRINFO_INSTANCE_MEMBER:
+			break;
+		case Dee_ATTRINFO_INSTANCE_ATTR:
+			return DeeClass_DelInstanceAttribute((DeeTypeObject *)thisarg, self->ad_info.ai_value.v_instance_attr);
+		default: __builtin_unreachable();
+		}
+	}	break;
+
+	default: break;
+	}
+	err_cant_access_attribute_string((DeeTypeObject *)self->ad_info.ai_decl,
+	                                 self->ad_name, ATTR_ACCESS_DEL);
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_attrdesc_callset(struct Dee_attrdesc const *self, DeeObject *thisarg, DeeObject *value) {
+	switch (self->ad_info.ai_type) {
+
+	case Dee_ATTRINFO_CUSTOM: {
+		struct type_attr const *tp_attr;
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		tp_attr = self->ad_info.ai_value.v_custom;
+		if (tp_attr->tp_setattr) {
+			int result;
+			DREF DeeObject *attrob;
+			if (self->ad_perm & Dee_ATTRPERM_F_NAMEOBJ)
+				return (*tp_attr->tp_setattr)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self), value);
+			if (tp_attr->tp_setattr_string_hash)
+				return (*tp_attr->tp_setattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name), value);
+			attrob = DeeString_New(self->ad_name);
+			if unlikely(!attrob)
+				goto err;
+			result = (*tp_attr->tp_setattr)(thisarg, attrob, value);
+			Dee_Decref_likely(attrob);
+			return result;
+		}
+	}	break;
+
+	case Dee_ATTRINFO_MODSYM:
+		if unlikely(self->ad_info.ai_decl != thisarg) {
+			err_bad_module_access_thisarg(self, thisarg);
+			goto err;
+		}
+		return DeeModule_SetAttrSymbol((DeeModuleObject *)thisarg,
+		                               self->ad_info.ai_value.v_modsym,
+		                               value);
+
+	case Dee_ATTRINFO_METHOD:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		break;
+
+	case Dee_ATTRINFO_GETSET:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		if (self->ad_info.ai_value.v_getset->gs_set)
+			return (*self->ad_info.ai_value.v_getset->gs_set)(thisarg, value);
+		break;
+
+	case Dee_ATTRINFO_MEMBER:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		return Dee_type_member_set(self->ad_info.ai_value.v_member, thisarg, value);
+
+	case Dee_ATTRINFO_ATTR: {
+		struct class_desc *desc;
+		struct instance_desc *inst;
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		desc = DeeClass_DESC(self->ad_info.ai_decl);
+		inst = DeeInstance_DESC(desc, thisarg);
+		return DeeInstance_SetAttribute(desc, inst, thisarg, self->ad_info.ai_value.v_attr, value);
+	}	break;
+
+	case Dee_ATTRINFO_INSTANCE_METHOD:
+	case Dee_ATTRINFO_INSTANCE_GETSET:
+	case Dee_ATTRINFO_INSTANCE_MEMBER:
+	case Dee_ATTRINFO_INSTANCE_ATTR: {
+		if unlikely(thisarg == self->ad_info.ai_decl) {
+			err_bad_instance_access_thisarg(self, thisarg);
+			goto err;
+		}
+		switch (self->ad_info.ai_type) {
+		case Dee_ATTRINFO_INSTANCE_METHOD:
+		case Dee_ATTRINFO_INSTANCE_GETSET:
+		case Dee_ATTRINFO_INSTANCE_MEMBER:
+			break;
+		case Dee_ATTRINFO_INSTANCE_ATTR:
+			return DeeClass_SetInstanceAttribute((DeeTypeObject *)thisarg, self->ad_info.ai_value.v_instance_attr, value);
+		default: __builtin_unreachable();
+		}
+	}	break;
+
+	default: break;
+	}
+	err_cant_access_attribute_string((DeeTypeObject *)self->ad_info.ai_decl,
+	                                 self->ad_name, ATTR_ACCESS_SET);
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+Dee_attrdesc_callcall(struct Dee_attrdesc const *self, DeeObject *thisarg,
+                      size_t argc, DeeObject *const *argv, DeeObject *kw) {
+again:
+	switch (self->ad_info.ai_type) {
+
+	case Dee_ATTRINFO_CUSTOM: {
+		struct type_attr const *tp_attr;
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		tp_attr = self->ad_info.ai_value.v_custom;
+		if (tp_attr->tp_getattr) {
+			DREF DeeObject *callable, *result;
+			if (self->ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
+				if (tp_attr->tp_callattr_kw)
+					return (*tp_attr->tp_callattr_kw)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self), argc, argv, kw);
+				if (tp_attr->tp_callattr) {
+					if (kw)
+						goto assert_no_kw;
+					return (*tp_attr->tp_callattr)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self), argc, argv);
+				}
+			}
+			if (tp_attr->tp_callattr_string_hash_kw)
+				return (*tp_attr->tp_callattr_string_hash_kw)(thisarg, self->ad_name, Dee_HashStr(self->ad_name), argc, argv, kw);
+			if (tp_attr->tp_callattr_string_hash) {
+				if (kw)
+					goto assert_no_kw;
+				return (*tp_attr->tp_callattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name), argc, argv);
+			}
+			if (self->ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
+				callable = (*tp_attr->tp_getattr)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self));
+			} else if (tp_attr->tp_getattr_string_hash) {
+				callable = (*tp_attr->tp_getattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name));
+			} else {
+				DREF DeeObject *attrob;
+				attrob = DeeString_New(self->ad_name);
+				if unlikely(!attrob)
+					goto err;
+				callable = (*tp_attr->tp_getattr)(thisarg, attrob);
+				Dee_Decref_likely(attrob);
+			}
+			if unlikely(!callable)
+				goto err;
+			result = DeeObject_CallKw(callable, argc, argv, kw);
+			Dee_Decref(callable);
+			return result;
+		}
+	}	break;
+
+	case Dee_ATTRINFO_MODSYM:
+	case Dee_ATTRINFO_GETSET:
+	case Dee_ATTRINFO_MEMBER: {
+		DREF DeeObject *callable, *result;
+		callable = Dee_attrdesc_callget(self, thisarg);
+		if unlikely(!callable)
+			goto err;
+		result = DeeObject_CallKw(callable, argc, argv, kw);
+		Dee_Decref_unlikely(callable);
+		return result;
+	}	break;
+
+	case Dee_ATTRINFO_METHOD:
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		if (self->ad_info.ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS) {
+			return DeeKwObjMethod_CallFunc((Dee_kwobjmethod_t)self->ad_info.ai_value.v_method->m_func,
+			                               thisarg, argc, argv, kw);
+		}
+		if (kw)
+			goto assert_no_kw;
+		return DeeObjMethod_CallFunc(self->ad_info.ai_value.v_method->m_func, thisarg, argc, argv);
+
+	case Dee_ATTRINFO_ATTR: {
+		struct class_desc *desc;
+		struct instance_desc *inst;
+		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
+			goto err;
+		desc = DeeClass_DESC(self->ad_info.ai_decl);
+		inst = DeeInstance_DESC(desc, thisarg);
+		return DeeInstance_CallAttributeKw(desc, inst, thisarg, self->ad_info.ai_value.v_attr, argc, argv, kw);
+	}	break;
+
+	case Dee_ATTRINFO_INSTANCE_METHOD:
+	case Dee_ATTRINFO_INSTANCE_GETSET:
+	case Dee_ATTRINFO_INSTANCE_MEMBER:
+	case Dee_ATTRINFO_INSTANCE_ATTR: {
+		DeeObject *real_thisarg;
+		if unlikely(thisarg == self->ad_info.ai_decl) {
+			err_bad_instance_access_thisarg(self, thisarg);
+			goto err;
+		}
+		if unlikely(!argc) {
+			err_invalid_argc_va(self->ad_name, 0, 1);
+			goto err;
+		}
+		real_thisarg = *argv++;
+		--argc;
+		if (DeeObject_AssertTypeOrAbstract(real_thisarg, (DeeTypeObject *)thisarg))
+			goto err;
+		switch (self->ad_info.ai_type) {
+		case Dee_ATTRINFO_INSTANCE_METHOD:
+			if (self->ad_info.ai_value.v_instance_method->m_flag & Dee_TYPE_METHOD_FKWDS) {
+				return DeeKwObjMethod_CallFunc((Dee_kwobjmethod_t)self->ad_info.ai_value.v_instance_method->m_func,
+				                               real_thisarg, argc, argv, kw);
+			}
+			return DeeObjMethod_CallFunc(self->ad_info.ai_value.v_instance_method->m_func,
+			                             real_thisarg, argc, argv);
+		case Dee_ATTRINFO_INSTANCE_GETSET: {
+			struct type_getset const *gs = self->ad_info.ai_value.v_instance_getset;
+			if unlikely(argc) {
+				err_invalid_argc(self->ad_name, argc + 1, 1, 1);
+				goto err;
+			}
+			if (gs->gs_get)
+				return (*gs->gs_get)(real_thisarg);
+		}	break;
+		case Dee_ATTRINFO_INSTANCE_MEMBER: {
+			if unlikely(argc) {
+				err_invalid_argc(self->ad_name, argc + 1, 1, 1);
+				goto err;
+			}
+			return Dee_type_member_get(self->ad_info.ai_value.v_instance_member, real_thisarg);
+		}	break;
+		case Dee_ATTRINFO_INSTANCE_ATTR:
+			return DeeClass_CallInstanceAttributeKw((DeeTypeObject *)thisarg, self->ad_info.ai_value.v_instance_attr,
+			                                        argc, argv, kw);
+		default: __builtin_unreachable();
+		}
+	}	break;
+
+	default: break;
+	}
+	err_cant_access_attribute_string((DeeTypeObject *)self->ad_info.ai_decl,
+	                                 self->ad_name, ATTR_ACCESS_GET);
+err:
+	return NULL;
+assert_no_kw:
+	ASSERT(kw);
+	if (DeeKwds_Check(kw)) {
+		if (DeeKwds_SIZE(kw) != 0)
+			goto err_no_keywords;
+	} else {
+		size_t temp = DeeObject_Size(kw);
+		if unlikely(temp == (size_t)-1)
+			goto err;
+		if (temp != 0)
+			goto err_no_keywords;
+	}
+	kw = NULL;
+	goto again;
+err_no_keywords:
+	DeeError_Throwf(&DeeError_TypeError,
+	                "Attribute `%r.%s' does not accept keyword arguments %r",
+	                (DeeTypeObject *)self->ad_info.ai_decl, self->ad_name, kw);
+	goto err;
+}
+
+
+
+
+
+
+
 /************************************************************************/
 /* Special built-in attribute iterator for concating multiple others.   */
 /************************************************************************/
@@ -118,6 +820,17 @@ Dee_attriterchain_fini(struct Dee_attriterchain *__restrict self) {
 	for (iter = self->aic_current; iter != NULL;
 	     iter = Dee_attriterchain_item_fromiter(iter)->aici_next)
 		Dee_attriter_fini(iter);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+Dee_attriterchain_visit(struct Dee_attriterchain *__restrict self,
+                        Dee_visit_t proc, void *arg) {
+	struct Dee_attriter *iter;
+	Dee_shared_rwlock_read_noint(&self->aic_curlock);
+	for (iter = self->aic_current; iter != NULL;
+	     iter = Dee_attriterchain_item_fromiter(iter)->aici_next)
+		Dee_attriter_visit(iter);
+	Dee_shared_rwlock_endread(&self->aic_curlock);
 }
 
 PRIVATE NONNULL((1, 2)) int DCALL
@@ -173,9 +886,10 @@ err:
 }
 
 INTERN_TPCONST struct Dee_attriter_type tpconst Dee_attriterchain_type = {
-	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&Dee_attriterchain_next,
-	/* .ait_copy = */ (int (DCALL *)(struct Dee_attriter *__restrict, struct Dee_attriter *__restrict, size_t))&Dee_attriterchain_copy,
-	/* .ait_fini = */ (void (DCALL *)(struct Dee_attriter *__restrict))&Dee_attriterchain_fini,
+	/* .ait_next  = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&Dee_attriterchain_next,
+	/* .ait_copy  = */ (int (DCALL *)(struct Dee_attriter *__restrict, struct Dee_attriter *__restrict, size_t))&Dee_attriterchain_copy,
+	/* .ait_fini  = */ (void (DCALL *)(struct Dee_attriter *__restrict))&Dee_attriterchain_fini,
+	/* .ait_visit = */ (void (DCALL *)(struct Dee_attriter *__restrict, Dee_visit_t, void *))&Dee_attriterchain_visit,
 };
 
 

@@ -76,7 +76,7 @@ struct Dee_attrinfo {
 	uintptr_t  ai_type; /* Type of attribute (one of `Dee_ATTRINFO_*'). */
 	DeeObject *ai_decl; /* [1..1] Declaring object (the type implementing the operators/attribute/instance-attribute, or the module for ATTR_TYPE_MODSYM) */
 	union {
-		struct Dee_type_attr const       *v_custom;          /* [1..1][Dee_ATTRINFO_CUSTOM] Custom attribute access operators. */
+		struct Dee_type_attr const       *v_custom;          /* [1..1][Dee_ATTRINFO_CUSTOM] Custom attribute access operators (same as `((DeeTypeObject *)ai_decl)->tp_attr'). */
 		struct Dee_class_attribute const *v_attr;            /* [1..1][Dee_ATTRINFO_ATTR] Attribute to access or produce a `DeeInstanceMethod_Type' for */
 		struct Dee_type_method const     *v_method;          /* [1..1][Dee_ATTRINFO_METHOD] Method to create a `DeeObjMethod_Type' / `DeeKwObjMethod_Type' for */
 		struct Dee_type_getset const     *v_getset;          /* [1..1][Dee_ATTRINFO_GETSET] Getset that should be accessed */
@@ -88,6 +88,12 @@ struct Dee_attrinfo {
 		struct Dee_module_symbol const   *v_modsym;          /* [1..1][Dee_ATTRINFO_MODSYM] Symbol that should be accessed */
 	} ai_value;
 };
+
+/* Try to determine the type of object returned by `Dee_attrinfo_callget()'
+ * When the type cannot be determined, return `NULL' instead. */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+Dee_attrinfo_typeof(struct Dee_attrinfo *__restrict self);
+
 
 /* Lookup information on how/where "attr" exists in `tp_self:self'
  * This function follows normal attribute lookup semantics, except
@@ -179,15 +185,33 @@ struct Dee_attrdesc {
 	char const         *ad_doc;  /* [if(a_perm & Dee_ATTRPERM_F_DOCOBJ, DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
 	                              * [0..1] The documentation string of the attribute (when known). */
 	struct Dee_attrinfo ad_info; /* Info about this attribute in particular */
-	uint16_t            ad_perm; /* Set of `Dee_ATTR_*' flags, describing the attribute's behavior. */
+	uint16_t            ad_perm; /* Set of `Dee_ATTRPERM_F_*' flags, describing the attribute's behavior. */
 };
-#define Dee_attrdesc_fini(self)                                                         \
-	(void)(((self)->ad_perm & Dee_ATTRPERM_F_NAMEOBJ)                                   \
-	       ? Dee_Decref(COMPILER_CONTAINER_OF((self)->ad_name, DeeStringObject, s_str)) \
-	       : (void)0,                                                                   \
-	       ((self)->ad_perm & Dee_ATTRPERM_F_DOCOBJ && (self)->ad_doc)                  \
-	       ? Dee_Decref(COMPILER_CONTAINER_OF((self)->ad_doc, DeeStringObject, s_str))  \
+#define Dee_attrdesc_nameobj(self) COMPILER_CONTAINER_OF((self)->ad_name, DeeStringObject, s_str)
+#define Dee_attrdesc_docobj(self)  COMPILER_CONTAINER_OF((self)->ad_doc, DeeStringObject, s_str)
+
+#define Dee_attrdesc_fini(self)                                        \
+	(void)(((self)->ad_perm & Dee_ATTRPERM_F_NAMEOBJ)                  \
+	       ? Dee_Decref(Dee_attrdesc_nameobj(self))                    \
+	       : (void)0,                                                  \
+	       ((self)->ad_perm & Dee_ATTRPERM_F_DOCOBJ && (self)->ad_doc) \
+	       ? Dee_Decref(Dee_attrdesc_docobj(self))                     \
 	       : (void)0)
+
+/* Perform standard operations on the attribute behind `struct Dee_attrdesc' */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+Dee_attrdesc_callget(struct Dee_attrdesc const *self, DeeObject *thisarg);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_attrdesc_callbound(struct Dee_attrdesc const *self, DeeObject *thisarg);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_attrdesc_calldel(struct Dee_attrdesc const *self, DeeObject *thisarg);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_attrdesc_callset(struct Dee_attrdesc const *self, DeeObject *thisarg, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+Dee_attrdesc_callcall(struct Dee_attrdesc const *self, DeeObject *thisarg,
+                      size_t argc, DeeObject *const *argv, DeeObject *kw);
+
+
 
 /* Attribute access permissions */
 #define Dee_ATTRPERM_F_CANGET   0x0001 /* [NAME("g")] Attribute supports get/has queries (g -- get). */
@@ -227,7 +251,7 @@ struct Dee_attriter_type {
 	                      /*out*/ struct Dee_attrdesc *__restrict desc);
 
 	/* [0..1] Initialize "self" as a copy of "other" (when "NULL", memcpy() can be used for copying) */
-	NONNULL_T((1, 2))
+	WUNUSED_T NONNULL_T((1, 2))
 	int (DCALL *ait_copy)(struct Dee_attriter *__restrict self,
 	                      struct Dee_attriter *__restrict other,
 	                      size_t other_bufsize);
@@ -235,6 +259,11 @@ struct Dee_attriter_type {
 	/* [0..1] Finalizer */
 	NONNULL_T((1))
 	void (DCALL *ait_fini)(struct Dee_attriter *__restrict self);
+
+	/* [0..1] GC visitation */
+	NONNULL_T((1, 2))
+	void (DCALL *ait_visit)(struct Dee_attriter *__restrict self,
+	                        Dee_visit_t proc, void *arg);
 };
 
 #if 0
@@ -243,30 +272,34 @@ myob_attriter_next(struct myob_attriter *__restrict self,
                    /*out*/ struct Dee_attrdesc *__restrict desc) {
 	(void)self;
 	(void)desc;
-	/* TODO */
 	return DeeError_NOTIMPLEMENTED();
 }
 
-PRIVATE NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 myob_attriter_copy(struct myob_attriter *__restrict self,
                    struct myob_attriter *__restrict other,
                    size_t other_bufsize) {
 	(void)self;
 	(void)other;
-	/* TODO */
 	return DeeError_NOTIMPLEMENTED();
 }
 
 PRIVATE NONNULL((1)) void DCALL
 myob_attriter_fini(struct myob_attriter *__restrict self) {
 	(void)self;
-	/* TODO */
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+myob_attriter_visit(struct myob_attriter *__restrict self,
+                    Dee_visit_t proc, void *arg) {
+	(void)self;
 }
 
 PRIVATE struct Dee_attriter_type tpconst myob_attriter_type = {
-	/* .ait_next = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&myob_attriter_next,
-	/* .ait_copy = */ (int (DCALL *)(struct Dee_attriter *__restrict, struct Dee_attriter *__restrict, size_t))&myob_attriter_copy,
-	/* .ait_fini = */ (void (DCALL *)(struct Dee_attriter *__restrict))&myob_attriter_fini,
+	/* .ait_next  = */ (int (DCALL *)(struct Dee_attriter *__restrict, /*out*/ struct Dee_attrdesc *__restrict))&myob_attriter_next,
+	/* .ait_copy  = */ (int (DCALL *)(struct Dee_attriter *__restrict, struct Dee_attriter *__restrict, size_t))&myob_attriter_copy,
+	/* .ait_fini  = */ (void (DCALL *)(struct Dee_attriter *__restrict))&myob_attriter_fini,
+	/* .ait_visit = */ (void (DCALL *)(struct Dee_attriter *__restrict, Dee_visit_t, void *))&myob_attriter_visit,
 };
 #endif
 
@@ -282,9 +315,10 @@ struct Dee_attriter {
 /* Helper macros for invoking callbacks of `struct Dee_attriter' */
 #define Dee_attriter_next(self, desc)  (*(self)->ai_type->ait_next)(self, desc)
 #define Dee_attriter_fini(self)        ((self)->ai_type->ait_fini ? (*(self)->ai_type->ait_fini)(self) : (void)0)
-#define Dee_attriter_init(self, type)  (void)((self)->ai_type = (type))
+#define Dee_attriter_visit(self)       ((self)->ai_type->ait_visit ? (*(self)->ai_type->ait_visit)(self, proc, arg) : (void)0)
 #define Dee_attriter_copy(self, other, other_bufsize) \
 	((other)->ai_type->ait_copy ? (*(other)->ai_type->ait_copy)(self, other, other_bufsize) : (memcpy(self, other, other_bufsize), 0))
+#define Dee_attriter_init(self, type)  (void)((self)->ai_type = (type))
 
 
 
@@ -305,9 +339,9 @@ DeeObject_FindAttr(DeeTypeObject *tp_self, DeeObject *self,
  * @param: hint: Hint specifying which attributes to enumerate (may be ignored by constructed iterator,
  *               meaning you have to do your own additional filtering if you want to be sure that only
  *               attributes matching your filter get enumerated)
- * @return: <= bufsize: Success; the given `iter' was initialized and you can start enumeration. In this
+ * @return: <= bufsize: Success; the given `iterbuf' was initialized and you can start enumeration. In this
  *                               case, you also *have* to finalize the iterator using `Dee_attriter_fini'
- * @return: > bufsize:  Failure: need a larger buffer size (specifically: one of "return" bytes)
+ * @return: > bufsize:  Failure: need a larger buffer size (specifically: one of at least "return" bytes)
  * @return: (size_t)-1: An error was thrown. */
 DFUNDEF WUNUSED NONNULL((1, 3, 5)) size_t DCALL
 DeeObject_IterAttr(DeeTypeObject *tp_self, DeeObject *self,
@@ -2094,15 +2128,17 @@ INTDEF NONNULL((1)) void DCALL
 Dee_attriterchain_builder_fini(struct Dee_attriterchain_builder *__restrict self);
 
 /* Finalize iterators constructed by the builder and return the final, used buffer size. */
-#define Dee_attriterchain_builder_pack(self)                            \
-	((self)->aicb_pnext ? (void)(*(self)->aicb_pnext = NULL) : (void)0, \
-	 (self)->aicb_require - offsetof(struct Dee_attriterchain_item, aici_iter))
-
-/* Return a pointer to the start of the remaining, available buffer space. */
-#define Dee_attriterchain_builder_getiterbuf(self) (self)->aicb_curiter
+#define Dee_attriterchain_builder_pack(self)                                       \
+	((self)->aicb_pnext                                                            \
+	 ? (*(self)->aicb_pnext = NULL,                                                \
+	    (self)->aicb_require - offsetof(struct Dee_attriterchain_item, aici_iter)) \
+	 : (self)->aicb_require)
 
 /* Check if no iterator has yet to be added to the builder. */
 #define Dee_attriterchain_builder_isempty(self) ((self)->aicb_pnext == NULL)
+
+/* Return a pointer to the start of the remaining, available buffer space. */
+#define Dee_attriterchain_builder_getiterbuf(self) (self)->aicb_curiter
 
 /* Return the size (in bytes) of the remaining, available buffer space. */
 #define Dee_attriterchain_builder_getbufsize(self) (self)->aicb_bufsize

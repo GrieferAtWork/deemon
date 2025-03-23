@@ -101,7 +101,9 @@ local kw_lists = {
 	{"needle", "max"},
 	{"mask", "max"},
 	{"codec", "errors"},
-	{"ob", "name", "flagmask", "flagval", "decl"},
+	{"ob", "name", "flagmask", "flagval", "decl"}, // TODO: Remove after "CONFIG_EXPERIMENTAL_ATTRITER"
+	{"ob", "name", "perm", "permset", "decl"},
+	{"decl", "name", "doc", "perm"},
 	{"name", "doc", "flags", "operators", "iattr", "cattr", "isize", "csize"},
 	{"path", "oflags", "mode"},
 	{"maxbytes", "readall"},
@@ -174,6 +176,7 @@ DECLARE_KWLIST(kwlist__cond_tt_ff_flags_scope_loc, { KEX("cond", 0xd089ebf5, 0xe
 DECLARE_KWLIST(kwlist__data_pos_writeall, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("pos", 0xb1aecbb4, 0x277b6d36f75741ae), KEX("writeall", 0x1b1ebbd8, 0x90da47dac64003d1), KEND });
 DECLARE_KWLIST(kwlist__data_start_end_pos, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("pos", 0xb1aecbb4, 0x277b6d36f75741ae), KEND });
 DECLARE_KWLIST(kwlist__data_writeall, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("writeall", 0x1b1ebbd8, 0x90da47dac64003d1), KEND });
+DECLARE_KWLIST(kwlist__decl_name_doc_perm, { KEX("decl", 0x95fe81e2, 0xdc35fdc1dce5cffc), KEX("name", 0xdbaf43f0, 0x8bcdb293dc3cbddc), KEX("doc", 0xd5a05523, 0x96758c759cfa17a6), KEX("perm", 0x7a394a64, 0x8b7755103442f209), KEND });
 DECLARE_KWLIST(kwlist__dst_pos_readall, { KEX("dst", 0x2c96daf8, 0xb9f356c1d6facfce), KEX("pos", 0xb1aecbb4, 0x277b6d36f75741ae), KEX("readall", 0x331ceae8, 0x8ad608764266c76d), KEND });
 DECLARE_KWLIST(kwlist__dst_readall, { KEX("dst", 0x2c96daf8, 0xb9f356c1d6facfce), KEX("readall", 0x331ceae8, 0x8ad608764266c76d), KEND });
 DECLARE_KWLIST(kwlist__elem_iter_loop_scope_loc, { KEX("elem", 0x1aacf22d, 0x705652c4aed9308a), KEX("iter", 0xa249e6cd, 0xcad5071f49906e5f), KEX("loop", 0xe44e70af, 0xadc137e48b7293ee), KEX("scope", 0x8b65b2f8, 0x52824a24d6447e5), KEX("loc", 0x4f1e6896, 0xc8a6c6e417ce00f9), KEND });
@@ -223,6 +226,7 @@ DECLARE_KWLIST(kwlist__needle_max, { KEX("needle", 0xc332b2c9, 0xac5d4abaf21e8ae
 DECLARE_KWLIST(kwlist__needle_start_end, { KEX("needle", 0xc332b2c9, 0xac5d4abaf21e8ae1), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEND });
 DECLARE_KWLIST(kwlist__nonblocking, { KEX("nonblocking", 0xd2f4eb1f, 0xdf83fd2b5752ab51), KEND });
 DECLARE_KWLIST(kwlist__ob_name_flagmask_flagval_decl, { KEX("ob", 0xdfa5fee2, 0x80a90888850ad043), KEX("name", 0xdbaf43f0, 0x8bcdb293dc3cbddc), KEX("flagmask", 0x1ad95b0e, 0xb243c89ffa422745), KEX("flagval", 0x364af42c, 0x4e190d94378badaa), KEX("decl", 0x95fe81e2, 0xdc35fdc1dce5cffc), KEND });
+DECLARE_KWLIST(kwlist__ob_name_perm_permset_decl, { KEX("ob", 0xdfa5fee2, 0x80a90888850ad043), KEX("name", 0xdbaf43f0, 0x8bcdb293dc3cbddc), KEX("perm", 0x7a394a64, 0x8b7755103442f209), KEX("permset", 0x4ee6a00a, 0xd554c804f15d2e0b), KEX("decl", 0x95fe81e2, 0xdc35fdc1dce5cffc), KEND });
 DECLARE_KWLIST(kwlist__obj_callback, { KEX("obj", 0x477b06c1, 0xffb577570f61bd03), KEX("callback", 0x3b9dd39e, 0x1e7dd8df6e98f4c6), KEND });
 DECLARE_KWLIST(kwlist__off_whence, { KEX("off", 0xe95f4e95, 0x499726573b82dfda), KEX("whence", 0x41d86ee7, 0x560314d7be8806a5), KEND });
 DECLARE_KWLIST(kwlist__other, { KEX("other", 0x887ca3a8, 0x353f92c20a856fc5), KEND });

@@ -3255,7 +3255,7 @@ INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeClass_IterClassInstanceAttributes(DeeTypeObject *__restrict self,
                                      struct Dee_attriter *iterbuf, size_t bufsize) {
 	struct class_ciattriter *iter = (struct class_ciattriter *)iterbuf;
-	if likely(bufsize >= sizeof(struct class_ciattriter)) {
+	if (bufsize >= sizeof(struct class_ciattriter)) {
 		iter->cciai_class = self;
 		iter->cciai_index = 0;
 		Dee_attriter_init(iter, &class_ciattriter_type);
@@ -3340,7 +3340,7 @@ INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeClass_IterClassAttributes(DeeTypeObject *__restrict self,
                              struct Dee_attriter *iterbuf, size_t bufsize) {
 	struct class_cattriter *iter = (struct class_cattriter *)iterbuf;
-	if likely(bufsize >= sizeof(struct class_cattriter)) {
+	if (bufsize >= sizeof(struct class_cattriter)) {
 		iter->ccai_class = self;
 		iter->ccai_index = 0;
 		Dee_attriter_init(iter, &class_cattriter_type);
@@ -3440,7 +3440,7 @@ INTERN WUNUSED NONNULL((1, 3)) size_t DCALL
 DeeClass_IterInstanceAttributes(DeeTypeObject *__restrict self, DeeObject *instance,
                                 struct Dee_attriter *iterbuf, size_t bufsize) {
 	struct class_iattriter *iter = (struct class_iattriter *)iterbuf;
-	if likely(bufsize >= sizeof(struct class_iattriter)) {
+	if (bufsize >= sizeof(struct class_iattriter)) {
 		iter->ciai_class = self;
 		iter->ciai_index = 0;
 		Dee_attriter_init(iter, &class_iattriter_type);
@@ -4470,7 +4470,7 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 		DREF DeeObject *old_value;
 		/* Simple case: directly delete a class-based attr. */
 		Dee_class_desc_lock_write(my_class);
-		old_value                           = my_class->cd_members[attr->ca_addr];
+		old_value = my_class->cd_members[attr->ca_addr];
 		my_class->cd_members[attr->ca_addr] = NULL;
 		Dee_class_desc_lock_endwrite(my_class);
 		Dee_XDecref(old_value);

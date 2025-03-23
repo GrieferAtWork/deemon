@@ -114,7 +114,7 @@ struct Dee_attribute_info {
 	COMPILER_CONTAINER_OF((self)->a_doc, DeeStringObject, s_str)
 #define Dee_attribute_info_fini(self)                             \
 	(Dee_Decref((self)->a_decl), Dee_XDecref((self)->a_attrtype), \
-	 ((self)->a_perm & Dee_ATTRPERM_F_DOCOBJ)                           \
+	 ((self)->a_perm & Dee_ATTRPERM_F_DOCOBJ)                     \
 	 ? Dee_Decref(Dee_attribute_info_docobj(self))                \
 	 : (void)0)
 #endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
@@ -135,17 +135,25 @@ struct Dee_attribute_object {
 
 struct Dee_enumattr_object {
 	Dee_OBJECT_HEAD
-	DREF DeeTypeObject        *ea_type;    /* [1..1][const] The starting type level from which attributes should be enumerated. */
-	DREF DeeObject            *ea_obj;     /* [0..1][const] The object in association of which attributes are enumerated. */
+	DREF DeeTypeObject *ea_type; /* [1..1][const] The starting type level from which attributes should be enumerated. */
+	DREF DeeObject     *ea_obj;  /* [0..1][const] The object in association of which attributes are enumerated. */
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	struct Dee_attrhint ea_hint; /* [OVERRIDE(.ah_decl, [DREF])] Filter for attributes matching this hint */
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 #ifndef CONFIG_LONGJMP_ENUMATTR
 	size_t                     ea_attrc;   /* [const] The amount of attributes found. */
 	DREF DeeAttributeObject  **ea_attrv;   /* [1..1][0..ea_attrc][const] The amount of attributes found. */
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 };
 
 struct Dee_enumattr_iterator_object {
 	Dee_OBJECT_HEAD
-	DREF DeeEnumAttrObject   *ei_seq;              /* [1..1] The enumattr object that is being iterated. */
+	DREF DeeEnumAttrObject *ei_seq;  /* [1..1] The underlying enumattr() controller. */
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	size_t                  ei_itsz; /* Size of "ei_iter" (in bytes) */
+	struct Dee_attriter     ei_iter; /* Attribute enumerator. */
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 #ifdef CONFIG_LONGJMP_ENUMATTR
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_lock_t         ei_lock;             /* Lock for accessing the iterator. */
@@ -163,8 +171,10 @@ struct Dee_enumattr_iterator_object {
 	                                                * When exhausted, this point is equal to `ei_end' */
 	DREF DeeAttributeObject **ei_end;              /* [1..1][== ei_seq->ea_attrv+ei_seq->ea_attrc][const] Vector end pointer. */
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 };
 
+#ifndef CONFIG_EXPERIMENTAL_ATTRITER
 #ifdef CONFIG_LONGJMP_ENUMATTR
 #define DeeEnumAttrIterator_LockAvailable(self)  Dee_atomic_lock_available(&(self)->ei_lock)
 #define DeeEnumAttrIterator_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->ei_lock)
@@ -173,6 +183,7 @@ struct Dee_enumattr_iterator_object {
 #define DeeEnumAttrIterator_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->ei_lock)
 #define DeeEnumAttrIterator_LockRelease(self)    Dee_atomic_lock_release(&(self)->ei_lock)
 #endif /* CONFIG_LONGJMP_ENUMATTR */
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 DDATDEF DeeTypeObject DeeAttribute_Type;        /* `Attribute from deemon' */
 DDATDEF DeeTypeObject DeeEnumAttr_Type;         /* `enumattr from deemon' */
