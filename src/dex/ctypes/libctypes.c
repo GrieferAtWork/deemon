@@ -373,7 +373,7 @@ f_ctypes_union(size_t argc, DeeObject *const *argv) {
 	DeeObject *fields_or_name, *fields = NULL;
 	_DeeArg_Unpack1Or2(err, argc, argv, "union", &fields_or_name, &fields);
 	if (!fields)
-		return DeeStructType_FromSequence(fields_or_name, fields, STRUCT_TYPE_FUNION);
+		return DeeStructType_FromSequence(NULL, fields_or_name, STRUCT_TYPE_FUNION);
 	if (DeeObject_AssertTypeExact(fields_or_name, &DeeString_Type))
 		goto err;
 	return DeeStructType_FromSequence(fields_or_name, fields, STRUCT_TYPE_FUNION);
