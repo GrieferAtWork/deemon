@@ -1412,5 +1412,4 @@ PUBLIC struct dex DEX = {
 
 DECL_END
 
-
 #endif /* !GUARD_DEX_CTYPES_LIBCTYPES_C */

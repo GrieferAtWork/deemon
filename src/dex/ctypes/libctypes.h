@@ -208,7 +208,7 @@ struct stype_attr {
 LIST_HEAD(array_type_list, array_type_object);
 struct stype_array {
 	size_t                  sa_size; /* Amount of cached array types. */
-	size_t                  sa_mask; /* Allocated map mask. */
+	Dee_hash_t              sa_mask; /* Allocated map mask. */
 	struct array_type_list *sa_list; /* [0..1][0..sa_mask+1][owned] Hash-map of array types.
 	                                  * As hash for indexing this map, use `at_count'. */
 };
@@ -218,7 +218,7 @@ struct stype_array {
 LIST_HEAD(cfunction_type_list, cfunction_type_object);
 struct stype_cfunction {
 	size_t                      sf_size; /* Amount of cached function types. */
-	size_t                      sf_mask; /* Allocated map mask. */
+	Dee_hash_t                  sf_mask; /* Allocated map mask. */
 	struct cfunction_type_list *sf_list; /* [0..1][0..sf_mask+1][owned] Hash-map of array types.
 	                                      * As hash for indexing this map, use `ft_hash'. */
 };
@@ -512,7 +512,7 @@ struct lvalue_object {
 INTDEF DeePointerTypeObject DeePointer_Type;
 INTDEF DeeLValueTypeObject DeeLValue_Type;
 
-#if 1 /* Both would work, but this one takes constant armored time. */
+#if 1 /* Both would work, but this one returns in O(1) */
 #define DeePointer_Check(ob) DeePointerType_Check(Dee_TYPE(ob))
 #define DeeLValue_Check(ob)  DeeLValueType_Check(Dee_TYPE(ob))
 #else
@@ -945,7 +945,7 @@ INTDEF DeeTypeObject DeeArrayType_Type;
 
 /* Base classes for all C array types. */
 INTDEF DeeArrayTypeObject DeeArray_Type;
-#if 1 /* Both would work, but this one takes constant armored time. */
+#if 1 /* Both would work, but this one returns in O(1) */
 #define DeeArray_Check(ob) DeeArrayType_Check(Dee_TYPE(ob))
 #else
 #define DeeArray_Check(ob) DeeObject_InstanceOf(ob, &DeeArray_Type)
@@ -1021,7 +1021,7 @@ INTDEF DeeTypeObject DeeCFunctionType_Type;
 
 INTDEF DeeCFunctionTypeObject DeeCFunction_Type;
 
-#if 1 /* Both would work, but this one takes constant armored time. */
+#if 1 /* Both would work, but this one returns in O(1) */
 #define DeeCFunction_Check(ob) DeeCFunctionType_Check(Dee_TYPE(ob))
 #else
 #define DeeCFunction_Check(ob) DeeObject_InstanceOf(ob, &DeeCFunction_Type)
@@ -1072,7 +1072,7 @@ struct struct_type_object {
 
 struct empty_struct_type_object {
 	DeeSTypeObject      st_base;    /* The underlying type object. */
-	size_t              st_fmsk;    /* [== 0][const] Field-vector mask. */
+	Dee_hash_t          st_fmsk;    /* [== 0][const] Field-vector mask. */
 	struct struct_field st_fvec[1]; /* [1..st_fmsk+1][const] Hash-vector of field names. */
 };
 
@@ -1159,7 +1159,6 @@ INTDEF WUNUSED DREF DeeObject *DCALL int_newu16(uint16_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_newu32(uint32_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_newu64(uint64_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_newu128(Dee_uint128_t val);
-
 
 DECL_END
 

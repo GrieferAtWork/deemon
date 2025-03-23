@@ -351,7 +351,7 @@ PRIVATE WUNUSED DREF DeeCFunctionTypeObject *DCALL
 cfunctiontype_new(DeeSTypeObject *__restrict return_type,
                   ctypes_cc_t calling_convention, size_t argc,
                   DeeSTypeObject **__restrict argv,
-                  dhash_t function_hash, bool inherit_argv) {
+                  Dee_hash_t function_hash, bool inherit_argv) {
 	DREF DeeCFunctionTypeObject *result;
 	DREF DeeStringObject *name;
 	DREF DeeSTypeObject **argv_copy;
@@ -470,7 +470,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 stype_cfunction_rehash(DeeSTypeObject *__restrict self,
-                       size_t new_mask) {
+                       Dee_hash_t new_mask) {
 	struct cfunction_type_list *new_map, *dst;
 	struct cfunction_type_list *biter, *bend;
 	DeeCFunctionTypeObject *iter, *next;
@@ -509,13 +509,13 @@ again:
 	return true;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 cfunction_hashof(DeeSTypeObject *__restrict return_type,
                  ctypes_cc_t calling_convention, size_t argc,
                  DeeSTypeObject *const *argv) {
-	dhash_t result;
 	size_t i;
-	result = Dee_HashPointer(return_type) ^ (dhash_t)calling_convention ^ (dhash_t)argc;
+	Dee_hash_t result;
+	result = Dee_HashPointer(return_type) ^ (Dee_hash_t)calling_convention ^ (Dee_hash_t)argc;
 	for (i = 0; i < argc; ++i)
 		result ^= Dee_HashPointer(argv[i]);
 	return result;
@@ -569,7 +569,7 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 	err_no_cfunction();
 	return NULL;
 #else /* CONFIG_NO_CFUNCTION */
-	dhash_t hash;
+	Dee_hash_t hash;
 	DREF DeeCFunctionTypeObject *result, *new_result;
 	DREF struct cfunction_type_list *bucket;
 	ASSERT_OBJECT_TYPE(DeeSType_AsType(return_type), &DeeSType_Type);
@@ -647,6 +647,5 @@ done:
 }
 
 DECL_END
-
 
 #endif /* !GUARD_DEX_CTYPES_CFUNCTION_C */

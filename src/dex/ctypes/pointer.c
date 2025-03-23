@@ -47,6 +47,9 @@
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* int32_t, int64_t */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_wcslen
@@ -116,8 +119,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 pointer_repr(DeePointerTypeObject *tp_self,
              union pointer *self) {
 	union pointer value;
-	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
-	                    return NULL);
+	CTYPES_FAULTPROTECT(value.ptr = self->ptr, return NULL);
 	return DeeString_Newf("(%r)0x%p", tp_self, value.ptr);
 }
 
@@ -125,21 +127,21 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 pointer_bool(DeePointerTypeObject *UNUSED(tp_self),
              union pointer *self) {
 	union pointer value;
-	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
-	                    return -1);
+	CTYPES_FAULTPROTECT(value.ptr = self->ptr, return -1);
 	return value.ptr != NULL;
 }
 
-#define CTYPES_DEFINE_POINTER_COMPARE(name, op)                   \
-	PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL         \
-	name(DeePointerTypeObject *tp_self,                           \
-	     union pointer *self, DeeObject *other) {                 \
-		union pointer value;                                      \
-		if (DeeObject_AsPointer(other, tp_self->pt_orig, &value)) \
-			goto err;                                             \
-		return_bool(self->ptr op value.ptr);                      \
-	err:                                                          \
-		return NULL;                                              \
+#define CTYPES_DEFINE_POINTER_COMPARE(name, op)                    \
+	PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL          \
+	name(DeePointerTypeObject *tp_self,                            \
+	     union pointer *self, DeeObject *other) {                  \
+		union pointer lhsval, rhsval;                              \
+		if (DeeObject_AsPointer(other, tp_self->pt_orig, &rhsval)) \
+			goto err;                                              \
+		CTYPES_FAULTPROTECT(lhsval.ptr = self->ptr, goto err);     \
+		return_bool(lhsval.ptr op rhsval.ptr);                     \
+	err:                                                           \
+		return NULL;                                               \
 	}
 CTYPES_DEFINE_POINTER_COMPARE(pointer_eq, ==)
 CTYPES_DEFINE_POINTER_COMPARE(pointer_ne, !=)
@@ -215,8 +217,7 @@ pointer_init(DeePointerTypeObject *tp_self,
 		goto err;
 done:
 	/* Fill in the pointer. */
-	CTYPES_FAULTPROTECT(self->ptr = value.ptr,
-	                    goto err);
+	CTYPES_FAULTPROTECT(self->ptr = value.ptr, goto err);
 	return 0;
 err:
 	return -1;
@@ -610,15 +611,15 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_sizeof(struct lvalue_object *__restrict self) {
-	size_t result;
-	result = DeeSType_Sizeof(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig);
+	DeeLValueTypeObject *tp_self = DeeType_AsLValueType(Dee_TYPE(self));
+	size_t result = DeeSType_Sizeof(tp_self->lt_orig);
 	return DeeInt_NewSize(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_alignof(struct lvalue_object *__restrict self) {
-	size_t result;
-	result = DeeSType_Alignof(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig);
+	DeeLValueTypeObject *tp_self = DeeType_AsLValueType(Dee_TYPE(self));
+	size_t result = DeeSType_Alignof(tp_self->lt_orig);
 	return DeeInt_NewSize(result);
 }
 
@@ -628,9 +629,9 @@ INTDEF ATTR_COLD NONNULL((1)) int /* From "./core.c" */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
 lvalue_tobytes(struct lvalue_object *self, size_t argc, DeeObject *const *argv) {
 	DeeBytesObject *data = NULL;
-	size_t data_size, offset = 0;
 	DeeLValueTypeObject *ltype = DeeType_AsLValueType(Dee_TYPE(self));
 	size_t type_size = DeeSType_Sizeof(ltype->lt_orig);
+	size_t data_size, offset = 0;
 	if (DeeArg_Unpack(argc, argv, "|o" UNPuSIZ, &data, &offset))
 		goto err;
 
@@ -714,14 +715,14 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_copy(struct lvalue_object *__restrict self) {
 	DeeObject *result;
 	size_t datasize;
-	uint8_t *dst, *src;
+	byte_t *dst, *src;
 	DeeSTypeObject *orig_type = DeeType_AsLValueType(Dee_TYPE(self))->lt_orig;
 	result = DeeType_AllocInstance(&orig_type->st_base);
 	if unlikely(!result)
 		goto done;
 	datasize = orig_type->st_sizeof;
-	dst = (uint8_t *)DeeStruct_Data(result);
-	src = (uint8_t *)self->l_ptr.ptr;
+	dst = (byte_t *)DeeStruct_Data(result);
+	src = (byte_t *)self->l_ptr.ptr;
 
 	/* Copy data into the copy of the underlying object. */
 	CTYPES_FAULTPROTECT(memcpy(dst, src, datasize), {
@@ -834,8 +835,6 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 	/* .lt_orig = */ &DeeStructured_Type
 };
 
-
 DECL_END
-
 
 #endif /* !GUARD_DEX_CTYPES_POINTER_C */

@@ -62,7 +62,7 @@ typedef struct {
 	size_t                    ai_siz;   /* [const][== DeeSType_Sizeof(ai_type->lt_orig)]
 	                                     *  Size of a single array element. */
 	union pointer             ai_begin; /* [const] Iterator starting position. */
-	union pointer             ai_pos;   /* [atomic] Current iterator position. */
+	union pointer             ai_pos;   /* [lock(ATOMIC)] Current iterator position. */
 	union pointer             ai_end;   /* [const] Iterator end position. */
 } ArrayIterator;
 
@@ -329,7 +329,7 @@ array_getrange(DeeArrayTypeObject *tp_self, void *base,
 	DREF struct lvalue_object *result;
 	DREF DeeLValueTypeObject *lval_type;
 	DREF DeeArrayTypeObject *array_type;
-	dssize_t i_begin, i_end = (dssize_t)tp_self->at_count;
+	Dee_ssize_t i_begin, i_end = (Dee_ssize_t)tp_self->at_count;
 	struct Dee_seq_range range;
 	size_t range_size;
 	if (DeeObject_AsSSize(begin_ob, &i_begin))
@@ -369,7 +369,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 array_delrange(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *begin_ob, DeeObject *end_ob) {
-	dssize_t i_begin, i_end = (dssize_t)tp_self->at_count;
+	Dee_ssize_t i_begin, i_end = (Dee_ssize_t)tp_self->at_count;
 	struct Dee_seq_range range;
 	size_t range_size;
 	if (DeeObject_AsSSize(begin_ob, &i_begin))
@@ -401,7 +401,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3, 4, 5)) int DCALL
 array_setrange(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *begin_ob, DeeObject *end_ob, DeeObject *value) {
-	dssize_t i_begin, i_end;
+	Dee_ssize_t i_begin, i_end;
 	struct Dee_seq_range range;
 	size_t range_size;
 	DREF DeeObject *iter, *elem;
@@ -409,7 +409,7 @@ array_setrange(DeeArrayTypeObject *tp_self, void *base,
 	/* When `none' is passed, simply clear out affected memory. */
 	if (DeeNone_Check(value))
 		return array_delrange(tp_self, base, begin_ob, end_ob);
-	i_end = (dssize_t)tp_self->at_count;
+	i_end = (Dee_ssize_t)tp_self->at_count;
 	if (DeeObject_AsSSize(begin_ob, &i_begin))
 		goto err;
 	if (!DeeNone_Check(end_ob)) {
@@ -553,7 +553,7 @@ array_repr(DeeArrayTypeObject *tp_self, void *base) {
 	end.uint += tp_self->at_count * item_size;
 	while (iter.ptr < end.ptr) {
 		DREF DeeObject *item_repr;
-		dssize_t temp;
+		Dee_ssize_t temp;
 		if (iter.ptr != base &&
 		    ASCII_PRINTER_PRINT(&p, ", ") < 0)
 			goto err;
@@ -677,7 +677,7 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
 				/* .tp_repr = */ NULL,
 				/* .tp_bool = */ NULL
 			},
-					/* .tp_visit         = */ NULL,
+			/* .tp_visit         = */ NULL,
 			/* .tp_gc            = */ NULL,
 			/* .tp_math          = */ NULL,
 			/* .tp_cmp           = */ NULL,
@@ -780,7 +780,7 @@ err:
 
 PRIVATE NONNULL((1)) bool DCALL
 stype_array_rehash(DeeSTypeObject *__restrict self,
-                   size_t new_mask) {
+                   Dee_hash_t new_mask) {
 	struct array_type_list *new_map;
 again:
 	new_map = (struct array_type_list *)Dee_TryCallocc(new_mask + 1,
@@ -823,8 +823,7 @@ again:
 
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeArrayTypeObject *DCALL
-DeeSType_Array(DeeSTypeObject *__restrict self,
-               size_t num_items) {
+DeeSType_Array(DeeSTypeObject *__restrict self, size_t num_items) {
 	DREF DeeArrayTypeObject *result;
 	DREF struct array_type_list *bucket;
 	ASSERT_OBJECT_TYPE(DeeSType_AsType(self), &DeeSType_Type);
@@ -870,7 +869,9 @@ register_type:
 
 	/* Rehash when there are a lot of items. */
 	if (self->st_array.sa_size >= self->st_array.sa_mask &&
-	    (!stype_array_rehash(self, self->st_array.sa_mask ? (self->st_array.sa_mask << 1) | 1 : 16 - 1) &&
+	    (!stype_array_rehash(self, self->st_array.sa_mask
+	                               ? (self->st_array.sa_mask << 1) | 1
+	                               : 16 - 1) &&
 	     !self->st_array.sa_mask)) {
 
 		/* No space at all! */
@@ -894,9 +895,6 @@ done:
 	return result;
 }
 
-
-
 DECL_END
-
 
 #endif /* !GUARD_DEX_CTYPES_ARRAY_C */

@@ -44,10 +44,14 @@
 
 #include <hybrid/overflow.h>
 #include <hybrid/sequence/list.h>
+#include <hybrid/typecore.h>
 /**/
 
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* uint32_t */
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -287,9 +291,9 @@ stype_fini(DeeSTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stype_dofunc(DeeSTypeObject *self, size_t argc,
              DeeObject *const *argv, ctypes_cc_t cc_flags) {
-	DeeSTypeObject **argv_types;
 	size_t i;
 	ctypes_cc_t cc;
+	DeeSTypeObject **argv_types;
 	cc = (ctypes_cc_t)((unsigned int)CC_DEFAULT |
 	                   (unsigned int)cc_flags);
 	if (argc && DeeString_Check(argv[0])) {
@@ -436,33 +440,30 @@ PRIVATE struct type_member tpconst stype_members[] = {
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeArrayTypeObject *DCALL
-stype_getitem(DeeSTypeObject *self, DeeObject *array_size_ob) {
-	/* Use `operator []' to construct array types. */
-	size_t array_size;
-	if (DeeObject_AsSize(array_size_ob, &array_size))
-		goto err;
-	return DeeSType_Array(self, array_size);
-err:
-	return NULL;
-}
-
 PRIVATE struct type_seq stype_seq = {
-	/* .tp_iter     = */ NULL,
-	/* .tp_sizeob   = */ NULL,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *index))&stype_getitem,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
+	/* .tp_iter          = */ NULL,
+	/* .tp_sizeob        = */ NULL,
+	/* .tp_contains      = */ NULL,
+	/* .tp_getitem       = */ NULL,
+	/* .tp_delitem       = */ NULL,
+	/* .tp_setitem       = */ NULL,
+	/* .tp_getrange      = */ NULL,
+	/* .tp_delrange      = */ NULL,
+	/* .tp_setrange      = */ NULL,
+	/* .tp_foreach       = */ NULL,
+	/* .tp_foreach_pair  = */ NULL,
+	/* .tp_bounditem     = */ NULL,
+	/* .tp_hasitem       = */ NULL,
+	/* .tp_size          = */ NULL,
+	/* .tp_size_fast     = */ NULL,
+	/* .tp_getitem_index = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&DeeSType_Array,
 };
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stype_call(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 	size_t i;
+
 	/* Create a new instance, or create a new function-type. */
 	if (!argc)
 		goto create_inst;
@@ -470,9 +471,11 @@ stype_call(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 		if (!DeeSType_Check(argv[i]))
 			goto create_inst;
 	}
+
 	/* Special case: `xxx(void)' constructs a function prototype with no arguments. */
 	if (argc == 1 && argv[0] == DeeSType_AsObject(&DeeCVoid_Type))
 		argc = 0;
+
 	/* Use the default calling convention for constructing this function type. */
 	return (DREF DeeObject *)DeeSType_CFunction(self, CC_DEFAULT, argc,
 	                                            (DeeSTypeObject **)argv,
@@ -1361,9 +1364,9 @@ PRIVATE struct type_getset tpconst struct_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
 struct_tobytes(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeBytesObject *data = NULL;
-	size_t data_size, offset = 0;
 	DeeSTypeObject *stype = DeeType_AsSType(Dee_TYPE(self));
 	size_t type_size = DeeSType_Sizeof(stype);
+	size_t data_size, offset = 0;
 	if (DeeArg_Unpack(argc, argv, "|o" UNPuSIZ, &data, &offset))
 		goto err;
 
@@ -1635,19 +1638,17 @@ DeeStruct_Assign(DeeSTypeObject *tp_self,
 	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_ASSIGN))
 		return (*tp_self->st_assign)(tp_self, self, value);
 	if (DeeObject_InstanceOf(value, DeeSType_AsType(tp_self))) {
-		uint8_t *dst, *src;
-		size_t size; /* Copy-assign. */
-		dst  = (uint8_t *)self;
-		src  = (uint8_t *)DeeStruct_Data(value);
-		size = DeeSType_Sizeof(tp_self);
+		/* Copy-assign. */
+		byte_t *dst = (byte_t *)self;
+		byte_t *src = (byte_t *)DeeStruct_Data(value);
+		size_t size = DeeSType_Sizeof(tp_self);
 		CTYPES_FAULTPROTECT(memcpy(dst, src, size), return -1);
 		return 0;
 	}
 	if (DeeNone_Check(value)) {
-		uint8_t *dst;
-		size_t size; /* Clear memory. */
-		dst  = (uint8_t *)self;
-		size = DeeSType_Sizeof(tp_self);
+		/* Clear memory. */
+		byte_t *dst = (byte_t *)self;
+		size_t size = DeeSType_Sizeof(tp_self);
 		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
 		return 0;
 	}

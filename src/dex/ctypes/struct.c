@@ -39,17 +39,22 @@
 #include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
+
+#include <hybrid/typecore.h>
 /**/
 
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* uintptr_t */
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStructTypeObject *DCALL
 struct_type_rehash(DeeStructTypeObject *__restrict self) {
 	DREF DeeStructTypeObject *result;
-	size_t i, j, perturb, new_mask;
+	Dee_hash_t i, j, perturb, new_mask;
 	new_mask = (self->st_fmsk << 1) | 1;
 	result = (DREF DeeStructTypeObject *)DeeGCObject_Callocc(offsetof(DeeStructTypeObject, st_fvec),
 	                                                         new_mask + 1, sizeof(struct struct_field));
@@ -63,7 +68,7 @@ struct_type_rehash(DeeStructTypeObject *__restrict self) {
 		j = perturb = self->st_fvec[i].sf_hash;
 		/* Re-insert this item in the hash-vector of the new struct-type. */
 		for (;; STRUCT_TYPE_HASHNX(j, perturb)) {
-			size_t slot = j & new_mask;
+			Dee_hash_t slot = j & new_mask;
 			if (result->st_fvec[slot].sf_name)
 				continue;
 			memcpy(&result->st_fvec[slot],
@@ -87,8 +92,7 @@ struct struct_type_alloc_foreach_data {
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 struct_type_alloc_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
-	size_t i;
-	Dee_hash_t perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	struct struct_type_alloc_foreach_data *data;
 	data = (struct struct_type_alloc_foreach_data *)arg;
 	if (data->staf_nfields >= data->staf_result->st_fmsk) {
@@ -222,7 +226,7 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 struct_type_fini(DeeStructTypeObject *__restrict self) {
-	size_t i;
+	Dee_hash_t i;
 	for (i = 0; i <= self->st_fmsk; ++i) {
 		if (!self->st_fvec[i].sf_name)
 			continue;
@@ -233,7 +237,7 @@ struct_type_fini(DeeStructTypeObject *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 struct_type_visit(DeeStructTypeObject *__restrict self, dvisit_t proc, void *arg) {
-	size_t i;
+	Dee_hash_t i;
 	for (i = 0; i <= self->st_fmsk; ++i) {
 		if (!self->st_fvec[i].sf_name)
 			continue;
@@ -243,7 +247,8 @@ struct_type_visit(DeeStructTypeObject *__restrict self, dvisit_t proc, void *arg
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-struct_type_offsetof(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
+struct_type_offsetof(DeeStructTypeObject *self,
+                     size_t argc, DeeObject *const *argv) {
 	Dee_hash_t i, perturb, hash;
 	DeeObject *name;
 	_DeeArg_Unpack1(err, argc, argv, "offsetof", &name);
@@ -269,7 +274,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-struct_type_offsetafter(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
+struct_type_offsetafter(DeeStructTypeObject *self,
+                        size_t argc, DeeObject *const *argv) {
 	Dee_hash_t i, perturb, hash;
 	DeeObject *name;
 	_DeeArg_Unpack1(err, argc, argv, "offsetafter", &name);
@@ -297,7 +303,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
+struct_type_typeof(DeeStructTypeObject *self,
+                   size_t argc, DeeObject *const *argv) {
 	Dee_hash_t i, perturb, hash;
 	DeeObject *name;
 	_DeeArg_Unpack1(err, argc, argv, "typeof", &name);
@@ -444,7 +451,7 @@ struct_delattr(DeeStructTypeObject *tp_self,
 	i = perturb = STRUCT_TYPE_HASHST(tp_self, hash);
 	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
 		struct struct_field *field;
-		uint8_t *dst;
+		byte_t *dst;
 		size_t size;
 		field = STRUCT_TYPE_HASHIT(tp_self, i);
 		if (!field->sf_name)
@@ -455,7 +462,7 @@ struct_delattr(DeeStructTypeObject *tp_self,
 			continue;
 
 		/* Found it! (clear out the memory of this object) */
-		dst  = (uint8_t *)((uintptr_t)self + field->sf_offset);
+		dst  = (byte_t *)((uintptr_t)self + field->sf_offset);
 		size = DeeSType_Sizeof(field->sf_type->lt_orig);
 		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
 		return 0;
@@ -545,10 +552,10 @@ struct_iterattr(DeeStructTypeObject *__restrict self,
 	return sizeof(struct ctypes_struct_attriter);
 }
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
-PRIVATE NONNULL((1, 2)) dssize_t DCALL
+PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
 struct_enumattr(DeeStructTypeObject *__restrict self, Dee_enum_t proc, void *arg) {
-	size_t i;
-	dssize_t temp, result = 0;
+	Dee_hash_t i;
+	Dee_ssize_t temp, result = 0;
 	for (i = 0; i < self->st_fmsk; ++i) {
 		if (!self->st_fvec[i].sf_name)
 			continue;
@@ -575,7 +582,7 @@ PRIVATE struct stype_attr struct_attr = {
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	/* .st_iterattr = */ (size_t (DCALL *)(DeeSTypeObject *__restrict, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))&struct_iterattr,
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, Dee_enum_t, void *))&struct_enumattr,
+	/* .st_enumattr = */ (Dee_ssize_t (DCALL *)(DeeSTypeObject *__restrict, Dee_enum_t, void *))&struct_enumattr,
 #endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 };
 
@@ -597,19 +604,17 @@ struct_assign(DeeStructTypeObject *tp_self,
               void *self, DeeObject *value) {
 	struct struct_assign_foreach_data data;
 	if (DeeObject_InstanceOfExact(value, DeeStructType_AsType(tp_self))) {
-		uint8_t *dst, *src;
-		size_t size; /* Copy-assign. */
-		dst  = (uint8_t *)self;
-		src  = (uint8_t *)DeeStruct_Data(value);
-		size = DeeSType_Sizeof(tp_self);
+		/* Copy-assign. */
+		byte_t *dst = (byte_t *)self;
+		byte_t *src = (byte_t *)DeeStruct_Data(value);
+		size_t size = DeeSType_Sizeof(tp_self);
 		CTYPES_FAULTPROTECT(memcpy(dst, src, size), return -1);
 		return 0;
 	}
 	if (DeeNone_Check(value)) {
-		uint8_t *dst;
-		size_t size; /* Clear memory. */
-		dst  = (uint8_t *)self;
-		size = DeeSType_Sizeof(tp_self);
+		/* Clear memory. */
+		byte_t *dst = (byte_t *)self;
+		size_t size = DeeSType_Sizeof(tp_self);
 		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
 		return 0;
 	}
@@ -646,23 +651,27 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_repr(DeeStructTypeObject *tp_self, void *self) {
-	size_t i;
+	Dee_hash_t i;
 	bool is_first                = true;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	if (ascii_printer_printf(&printer, "%s { ", tp_self->st_base.st_base.tp_name) < 0)
 		goto err;
+	/* TODO: Print fields in order of offset ascending */
 	for (i = 0; i <= tp_self->st_fmsk; ++i) {
-		if (!tp_self->st_fvec[i].sf_name)
+		byte_t *field_addr;
+		DeeSTypeObject *field_type;
+		DeeStringObject *field_name;
+		field_name = tp_self->st_fvec[i].sf_name;
+		if (!field_name)
 			continue;
 		if (!is_first && ASCII_PRINTER_PRINT(&printer, ", ") < 0)
 			goto err;
 		is_first = false;
+		field_addr = (byte_t *)self + tp_self->st_fvec[i].sf_offset;
+		field_type = tp_self->st_fvec[i].sf_type->lt_orig;
 		if (ascii_printer_printf(&printer, ".%k = %k(%K)",
-		                         tp_self->st_fvec[i].sf_name,
-		                         tp_self->st_fvec[i].sf_type->lt_orig,
-		                         DeeStruct_Repr(tp_self->st_fvec[i].sf_type->lt_orig,
-		                                        (void *)((uint8_t *)self +
-		                                                 tp_self->st_fvec[i].sf_offset))) < 0)
+		                         field_name, field_type,
+		                         DeeStruct_Repr(field_type, field_addr)) < 0)
 			goto err;
 	}
 	if ((is_first ? ascii_printer_putc(&printer, '}')
@@ -749,7 +758,6 @@ INTERN struct empty_struct_type_object DeeStruct_Type = {
 	/* .st_fmsk = */ 0,
 	/* .st_fvec = */ { { NULL, 0, 0, NULL } }
 };
-
 
 DECL_END
 

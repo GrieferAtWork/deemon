@@ -404,5 +404,4 @@ INTERN DeeSTypeObject DeeCVoid_Type = {
 
 DECL_END
 
-
 #endif /* !GUARD_DEX_CTYPES_BUILTINS_C */

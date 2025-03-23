@@ -577,8 +577,6 @@ INTERN DeeTypeObject DeeShlib_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-
 DECL_END
-
 
 #endif /* !GUARD_DEX_CTYPES_SHLIB_C */
