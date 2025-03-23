@@ -178,7 +178,7 @@ PRIVATE WUNUSED DREF MapFromAttrIterator *DCALL mfaki_ctor(void) {
 	return mfaki_ofobj(Dee_None);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF MapFromAttrIterator *DCALL
+PRIVATE WUNUSED DREF MapFromAttrIterator *DCALL
 mfaki_init(size_t argc, DeeObject *const *argv) {
 	MapFromAttr *map;
 	_DeeArg_Unpack1(err, argc, argv, "_MapFromAttrKeysIterator", &map);
