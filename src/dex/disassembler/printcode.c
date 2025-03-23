@@ -34,6 +34,7 @@
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
+#include <hybrid/debug-alignment.h>
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
 
