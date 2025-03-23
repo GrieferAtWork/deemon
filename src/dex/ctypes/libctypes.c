@@ -258,6 +258,22 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED DREF DeeSTypeObject *DCALL
+f_ctypes_typeof(size_t argc, DeeObject *const *argv) {
+	DeeObject *arg;
+	DeeSTypeObject *result;
+	_DeeArg_Unpack1(err, argc, argv, "typeof", &arg);
+	result = DeeSType_GetTypeOf(arg);
+	if unlikely(!result)
+		goto err;
+	if (DeeLValueType_Check(result))
+		result = DeeSType_AsLValueType(result)->lt_orig;
+	Dee_Incref(DeeSType_AsType(result));
+	return result;
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 	DeeSTypeObject *result = NULL;
@@ -706,6 +722,13 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "(ob:?X4?N?Dbool?Dint?Dfloat)->?Dint\n"
 	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
 	      "Returns the alignment of a given structured type or object in bytes") },
+	{ "typeof", (DeeObject *)&ctypes_typeof, MODSYM_FREADONLY,
+	  DOC("(ob:?GStructuredType)->?GStructuredType\n"
+	      "(ob:?GStructured)->?GStructuredType\n"
+	      "(ob:?DType)->?GStructuredType\n"
+	      "(ob:?X4?N?Dbool?Dint?Dfloat)->?GStructuredType\n"
+	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
+	      "Returns the type of a given structured type or object") },
 	{ "intfor", (DeeObject *)&ctypes_intfor, MODSYM_FREADONLY,
 	  DOC("(size:?Dint,signed=!t)->?GStructuredType\n"
 	      "#tValueError{No integer matching the requirements of @size is supported}") },
