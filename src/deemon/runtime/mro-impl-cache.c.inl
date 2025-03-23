@@ -1053,6 +1053,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 		if (specs->as_decl != NULL &&
 		    specs->as_decl != (DeeObject *)item->mcs_decl)
 			break; /* Attribute isn't declared by the requested declarator. */
+		result->ad_name = item->mcs_name;
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 		if (rules->alr_decl != NULL &&
 		    rules->alr_decl != (DeeObject *)item->mcs_decl)
@@ -2088,7 +2089,6 @@ check_and_invoke_callback:
 		}
 
 		/* Found it! */
-		result->ad_name         = item->mcs_name;
 		result->ad_info.ai_decl = (DeeObject *)item->mcs_decl;
 		Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 		result->ad_type = NULL;

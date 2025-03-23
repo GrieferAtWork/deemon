@@ -4632,7 +4632,7 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	                    "#t{UnboundAttribute}"
 	                    "Returns the heap allocation size of instances of @this Type, or throw :UnboundAttribute "
 	                    /**/ "when @this Type cannot be instantiated, is a singleton (such as ?N), or has variable-"
-	                    /**/ "length instances (?#isvariable)"),
+	                    /**/ "length instances (?#__isvariable__)"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_GETTER_BOUND_F("__instance_size__", &type_get_instancesize, &type_bound_instancesize,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,

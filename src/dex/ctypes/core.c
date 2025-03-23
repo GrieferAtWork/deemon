@@ -1153,7 +1153,7 @@ struct_iterattr(DeeTypeObject *tp_self, DeeObject *UNUSED(self),
 	if unlikely(req == (size_t)-1)
 		goto err_builder;
 	Dee_attriterchain_builder_consume(&builder, req);
-	return Dee_attriterchain_builder_pack(&builder, req);
+	return Dee_attriterchain_builder_pack(&builder);
 err_builder:
 	Dee_attriterchain_builder_fini(&builder);
 	return (size_t)-1;

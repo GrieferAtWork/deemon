@@ -78,6 +78,12 @@ __pragma_GCC_diagnostic_ignored(Wmaybe_uninitialized)
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
+
 #ifndef CONFIG_HAVE_strcmp
 #define CONFIG_HAVE_strcmp
 #undef strcmp
@@ -815,6 +821,7 @@ again_iterattr:
 	result->ei_itsz = req_bufsize;
 	result->ei_seq = self;
 	Dee_Incref(self);
+	DeeObject_Init(result, &DeeEnumAttrIterator_Type);
 	return result;
 err_r:
 	DeeObject_Free(result);
@@ -946,6 +953,7 @@ enumattriter_next(EnumAttrIter *__restrict self) {
 	struct Dee_attrdesc desc;
 	struct Dee_attrhint *hint = &self->ei_seq->ea_hint;
 	for (;;) {
+		DBG_memset(&desc, 0xcc, sizeof(desc));
 		status = Dee_attriter_next(&self->ei_iter, &desc);
 		if (status != 0) {
 			if likely(status > 0)

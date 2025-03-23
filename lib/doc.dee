@@ -3436,20 +3436,18 @@ err_unknown_attribute:
 			).rstrip();
 			return;
 		} else {
-			try {
-				if (attributeName.startswith("i:")) {
-					fixedAttributeName = attributeName[2:];
-					myAttr = Attribute(docParentOrPath.object, fixedAttributeName, "i");
-				} else if (attributeName.startswith("c:")) {
-					fixedAttributeName = attributeName[2:];
-					myAttr = Attribute(docParentOrPath.object, fixedAttributeName, "i", "");
-				} else {
-					fixedAttributeName = attributeName;
-					myAttr = Attribute(docParentOrPath.object, fixedAttributeName);
-				}
-			} catch (AttributeError) {
-				goto err_unknown_attribute;
+			if (attributeName.startswith("i:")) {
+				fixedAttributeName = attributeName[2:];
+				myAttr = Attribute.lookup(docParentOrPath.object, fixedAttributeName, "i");
+			} else if (attributeName.startswith("c:")) {
+				fixedAttributeName = attributeName[2:];
+				myAttr = Attribute.lookup(docParentOrPath.object, fixedAttributeName, "i", "");
+			} else {
+				fixedAttributeName = attributeName;
+				myAttr = Attribute.lookup(docParentOrPath.object, fixedAttributeName);
 			}
+			if (myAttr is none)
+				goto err_unknown_attribute;
 		}
 		assert operatorDoc !is bound;
 		assert myAttr is bound;

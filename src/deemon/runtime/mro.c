@@ -881,7 +881,7 @@ Dee_attriterchain_next(struct Dee_attriterchain *__restrict self,
 		if (!current)
 			return 1;
 		result = Dee_attriter_next(current, desc);
-		if (result != 0)
+		if (result <= 0)
 			return result;
 
 		/* Move on to the next iterator. */
@@ -1013,6 +1013,7 @@ Dee_attriterchain_builder_fini(struct Dee_attriterchain_builder *__restrict self
 PUBLIC NONNULL((1)) void DCALL
 Dee_attriterchain_builder_consume(struct Dee_attriterchain_builder *__restrict self,
                                   size_t n_bytes) {
+	size_t old_bufsize = Dee_attriterchain_builder_getbufsize(self);
 	size_t aligned_size = n_bytes;
 	/* Account for extra space needed for the next chain element's header */
 	aligned_size += offsetof(struct Dee_attriterchain_item, aici_iter);
@@ -1030,7 +1031,7 @@ Dee_attriterchain_builder_consume(struct Dee_attriterchain_builder *__restrict s
 		self->aicb_pnext   = &curitem->aici_next;
 		self->aicb_curiter = (struct Dee_attriter *)((byte_t *)self->aicb_curiter + aligned_size);
 	} else {
-		if unlikely(n_bytes <= Dee_attriterchain_builder_getbufsize(self)) {
+		if unlikely(n_bytes <= old_bufsize) {
 			/* Must finalize the iterator because the was written,
 			 * but now the buffer is too small for the header of
 			 * the next item. */
@@ -1038,7 +1039,6 @@ Dee_attriterchain_builder_consume(struct Dee_attriterchain_builder *__restrict s
 		}
 		if (self->aicb_pnext) {
 			/* Must finalize all iterators previously initialized */
-			struct Dee_attriterchain_item *chain;
 			*self->aicb_pnext = NULL;
 			self->aicb_pnext = NULL;
 			Dee_attriterchain_fini(self->aicb_iterchain);
@@ -1051,7 +1051,7 @@ Dee_attriterchain_builder_consume(struct Dee_attriterchain_builder *__restrict s
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct type_method const *DCALL
 locate_type_method(struct type_method const *__restrict chain, char const *name_ptr) {
-	for (;;) {
+	for (;; ++chain) {
 		ASSERTF(chain->m_name, "Failed to locate %p:%q in chain", name_ptr, name_ptr);
 		if (chain->m_name == name_ptr)
 			return chain;
@@ -1060,7 +1060,7 @@ locate_type_method(struct type_method const *__restrict chain, char const *name_
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct type_getset const *DCALL
 locate_type_getset(struct type_getset const *__restrict chain, char const *name_ptr) {
-	for (;;) {
+	for (;; ++chain) {
 		ASSERTF(chain->gs_name, "Failed to locate %p:%q in chain", name_ptr, name_ptr);
 		if (chain->gs_name == name_ptr)
 			return chain;
@@ -1069,7 +1069,7 @@ locate_type_getset(struct type_getset const *__restrict chain, char const *name_
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct type_member const *DCALL
 locate_type_member(struct type_member const *__restrict chain, char const *name_ptr) {
-	for (;;) {
+	for (;; ++chain) {
 		ASSERTF(chain->m_name, "Failed to locate %p:%q in chain", name_ptr, name_ptr);
 		if (chain->m_name == name_ptr)
 			return chain;
