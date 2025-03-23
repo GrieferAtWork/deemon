@@ -920,22 +920,57 @@ DeeSType_LValue(DeeSTypeObject *__restrict self) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DeeSTypeObject *DCALL
+DeeSType_GetAlias(DeeTypeObject *__restrict self) {
+	/* Map some builtin types to their structured counterparts. */
+	if (DeeNone_Check(self) || self == &DeeNone_Type)
+		return &DeeCVoid_Type;
+	if (self == &DeeBool_Type)
+		return &DeeCBool_Type;
+	if (self == &DeeInt_Type)
+		return &DeeCInt_Type;
+	if (self == &DeeFloat_Type)
+		return &DeeCDouble_Type;
+	return NULL;
+}
+
 INTERN WUNUSED NONNULL((1)) DeeSTypeObject *DCALL
 DeeSType_Get(DeeObject *__restrict self) {
+	DeeSTypeObject *result;
 	/* Quick check: is it a structured type. */
 	if (DeeSType_Check(self))
 		return DeeType_AsSType((DeeTypeObject *)self);
 
 	/* Map some builtin types to their structured counterparts. */
-	if (DeeNone_Check(self) ||
-	    self == (DeeObject *)&DeeNone_Type)
-		return &DeeCVoid_Type;
-	if (self == (DeeObject *)&DeeBool_Type)
-		return &DeeCBool_Type;
-	if (self == (DeeObject *)&DeeInt_Type)
-		return &DeeCInt_Type;
-	if (self == (DeeObject *)&DeeFloat_Type)
-		return &DeeCDouble_Type;
+	result = DeeSType_GetAlias((DeeTypeObject *)self);
+	if (result)
+		return result;
+
+	/* Throw a type-assertion failure error. */
+	DeeObject_TypeAssertFailed(self, &DeeSType_Type);
+	return NULL;
+}
+
+/* Same as `DeeSType_Get()', but also able to handle the
+ * case where "self" is an *instance*, rather a some type. */
+INTERN WUNUSED NONNULL((1)) DeeSTypeObject *DCALL
+DeeSType_GetTypeOf(DeeObject *__restrict self) {
+	DeeSTypeObject *result;
+	/* Quick check: is it a structured type? */
+	if (DeeSType_Check(self))
+		return DeeType_AsSType((DeeTypeObject *)self);
+
+	/* Quick check: is it a structured instance? */
+	if (DeeStruct_Check(self))
+		return DeeType_AsSType(Dee_TYPE(self));
+
+	/* Map some builtin types to their structured counterparts. */
+	result = DeeSType_GetAlias((DeeTypeObject *)self);
+	if (result)
+		return result;
+	result = DeeSType_GetAlias(Dee_TYPE(self));
+	if (result)
+		return result;
 
 	/* Throw a type-assertion failure error. */
 	DeeObject_TypeAssertFailed(self, &DeeSType_Type);

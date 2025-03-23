@@ -228,15 +228,11 @@ f_ctypes_sizeof(size_t argc, DeeObject *const *argv) {
 	DeeObject *arg;
 	size_t result;
 	_DeeArg_Unpack1(err, argc, argv, "sizeof", &arg);
-	if (DeeStruct_Check(arg)) {
-		type = DeeType_AsSType(Dee_TYPE(arg));
-	} else {
-		if (DeeBytes_Check(arg))
-			return DeeInt_NewSize(DeeBytes_SIZE(arg));
-		type = DeeSType_Get(arg);
-		if unlikely(!type)
-			goto err;
-	}
+	if (DeeBytes_Check(arg))
+		return DeeInt_NewSize(DeeBytes_SIZE(arg));
+	type = DeeSType_GetTypeOf(arg);
+	if unlikely(!type)
+		goto err;
 	if (DeeLValueType_Check(type))
 		type = DeeSType_AsLValueType(type)->lt_orig;
 	result = DeeSType_Sizeof(type);
@@ -251,13 +247,9 @@ f_ctypes_alignof(size_t argc, DeeObject *const *argv) {
 	DeeObject *arg;
 	size_t result;
 	_DeeArg_Unpack1(err, argc, argv, "alignof", &arg);
-	if (DeeStruct_Check(arg)) {
-		type = DeeType_AsSType(Dee_TYPE(arg));
-	} else {
-		type = DeeSType_Get(arg);
-		if unlikely(!type)
-			goto err;
-	}
+	type = DeeSType_GetTypeOf(arg);
+	if unlikely(!type)
+		goto err;
 	if (DeeLValueType_Check(type))
 		type = DeeSType_AsLValueType(type)->lt_orig;
 	result = DeeSType_Alignof(type);
@@ -456,6 +448,7 @@ err:
 
 PRIVATE DEFINE_CMETHOD(ctypes_sizeof, &f_ctypes_sizeof, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(ctypes_alignof, &f_ctypes_alignof, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(ctypes_typeof, &f_ctypes_typeof, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(ctypes_intfor, &f_ctypes_intfor, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(ctypes_union, &f_ctypes_union, METHOD_FCONSTCALL);
 #define ctypes_struct DeeStructType_Type
@@ -698,6 +691,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "sizeof", (DeeObject *)&ctypes_sizeof, MODSYM_FREADONLY,
 	  DOC("(ob:?GStructuredType)->?Dint\n"
 	      "(ob:?GStructured)->?Dint\n"
+	      "(ob:?DType)->?Dint\n"
+	      "(ob:?X4?N?Dbool?Dint?Dfloat)->?Dint\n"
 	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
 	      "Returns the size of a given structured type or object in bytes\n"
 	      "\n"
@@ -707,6 +702,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "alignof", (DeeObject *)&ctypes_alignof, MODSYM_FREADONLY,
 	  DOC("(ob:?GStructuredType)->?Dint\n"
 	      "(ob:?GStructured)->?Dint\n"
+	      "(ob:?DType)->?Dint\n"
+	      "(ob:?X4?N?Dbool?Dint?Dfloat)->?Dint\n"
 	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
 	      "Returns the alignment of a given structured type or object in bytes") },
 	{ "intfor", (DeeObject *)&ctypes_intfor, MODSYM_FREADONLY,

@@ -445,7 +445,13 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeLValueTypeObject *DCALL DeeSType_LValue(DeeS
  * If `self' is not one of these mappings and also not
  * a c-type, a TypeError is thrown and NULL is returned.
  * WARNING: This function does not return a reference! */
-INTDEF WUNUSED NONNULL((1)) DeeSTypeObject *DCALL DeeSType_Get(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DeeSTypeObject *DCALL
+DeeSType_Get(DeeObject *__restrict self);
+
+/* Same as `DeeSType_Get()', but also able to handle the
+ * case where "self" is an *instance*, rather a some type. */
+INTDEF WUNUSED NONNULL((1)) DeeSTypeObject *DCALL
+DeeSType_GetTypeOf(DeeObject *__restrict self);
 
 /* Check of `ob' is a structured object. */
 #define DeeStruct_Check(ob)  DeeSType_Check(Dee_TYPE(ob))
