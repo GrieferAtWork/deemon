@@ -754,29 +754,42 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-enumattr_init(EnumAttr *__restrict self,
-              size_t argc, DeeObject *const *argv) {
-	DeeObject *a, *b = NULL;
-	_DeeArg_Unpack1Or2(err, argc, argv, "enumattr", &a, &b);
-	if (b) {
-		if (DeeObject_AssertType(a, &DeeType_Type))
+enumattr_init_kw(EnumAttr *__restrict self, size_t argc,
+                 DeeObject *const *argv, DeeObject *kw) {
+	struct {
+		DeeObject *ob;
+		DeeObject *perm;
+		DeeObject *permset;
+		DeeObject *decl;
+	} args;
+	args.perm    = Dee_None;
+	args.permset = Dee_None;
+	args.decl    = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__ob_perm_permset_decl,
+	                          "o|ooo:enumattr", &args))
+		goto err;
+	if (DeeNone_Check(args.perm)) {
+		self->ea_hint.ah_perm_mask = 0;
+	} else if (DeeString_Check(args.perm)) {
+		if (string_to_attrperms(DeeString_STR(args.perm), &self->ea_hint.ah_perm_mask))
 			goto err;
-		if (DeeObject_AssertTypeOrAbstract(b, (DeeTypeObject *)a))
-			goto err;
-		self->ea_type = (DREF DeeTypeObject *)a;
-		self->ea_obj  = b;
-	} else if (DeeSuper_Check(a)) {
-		self->ea_type = DeeSuper_TYPE(a);
-		self->ea_obj  = DeeSuper_SELF(a);
 	} else {
-		self->ea_type = Dee_TYPE(a);
-		self->ea_obj  = a;
+		if (DeeObject_AsUInt16(args.perm, &self->ea_hint.ah_perm_mask))
+			goto err;
 	}
-	Dee_Incref(self->ea_type);
-	Dee_Incref(self->ea_obj);
-
-	/* TODO: Allow user-code to override this: */
-	Dee_attrhint_initall(&self->ea_hint);
+	if (DeeNone_Check(args.permset)) {
+		self->ea_hint.ah_perm_value = self->ea_hint.ah_perm_mask;
+	} else if (DeeString_Check(args.permset)) {
+		if (string_to_attrperms(DeeString_STR(args.permset), &self->ea_hint.ah_perm_value))
+			goto err;
+	} else {
+		if (DeeObject_AsUInt16(args.permset, &self->ea_hint.ah_perm_value))
+			goto err;
+	}
+	Dee_XIncref(args.decl);
+	self->ea_hint.ah_decl = args.decl;
+	Dee_Incref(args.ob);
+	self->ea_obj = args.ob;
 	return 0;
 err:
 	return -1;
@@ -784,15 +797,13 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 enumattr_fini(EnumAttr *__restrict self) {
-	Dee_Decref(self->ea_type);
-	Dee_XDecref(self->ea_obj);
+	Dee_Decref(self->ea_obj);
 	Dee_XDecref(self->ea_hint.ah_decl);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 enumattr_visit(EnumAttr *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->ea_type);
-	Dee_XVisit(self->ea_obj);
+	Dee_Visit(self->ea_obj);
 	Dee_XVisit(self->ea_hint.ah_decl);
 }
 
@@ -806,7 +817,7 @@ enumattr_iter(EnumAttr *__restrict self) {
 	if unlikely(!result)
 		goto err;
 again_iterattr:
-	req_bufsize = DeeObject_IterAttr(self->ea_type, self->ea_obj,
+	req_bufsize = DeeObject_IterAttr(Dee_TYPE(self->ea_obj), self->ea_obj,
 	                                 &result->ei_iter, cur_bufsize,
 	                                 &self->ea_hint);
 	if unlikely(req_bufsize == (size_t)-1)
@@ -860,20 +871,16 @@ PRIVATE struct type_member tpconst enumattr_class_members[] = {
 PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_enumattr),
-	/* .tp_doc      = */ DOC("(tp:?DType)\n"
-	                         "Enumerate attributes of the ?DType @tp and its bases\n"
-	                         "\n"
-
-	                         "(ob)\n"
-	                         "Same as ${enumattr(type(ob), ob)}\n"
-	                         "\n"
-
-	                         "(tp:?DType,ob)\n"
-	                         "Create a new sequence for enumerating the ?D{Attribute}s of a given object.\n"
-	                         "When @tp is given, only enumerate objects implemented by @tp or "
-	                         /**/ "one of its bases and those accessible through a superview of @ob using @tp.\n"
-	                         "Note that iterating this object may be expensive, and that conversion to "
-	                         /**/ "a different sequence before iterating multiple times may be desirable"),
+	/* .tp_doc      = */ DOC("(ob:?X3?DModule?DType?O,perm:?X2?Dint?Dstring=!P{},permset:?X2?Dint?Dstring=!Aperm,decl?:?X2?DModule?DType)\n"
+	                         "#pob{The object whose attributes to enumerate}"
+	                         "#pperm{Filter enumerated attributes based on permission flags (s.a. ?Aperm?DAttribute)}"
+	                         "#ppermset{S.a. @perm}"
+	                         "#pdecl{Filter enumerated attributes to only those declared by this object (s.a. ?Adecl?DAttribute)}"
+	                         "Create a new sequence for enumerating the ?D{Attribute}s of a given object @ob.\n"
+	                         "To enumerate the attributes of a specific type, simply do ${enumattr(ob as MyType)}\n"
+	                         "User-defined classes can implement ${operator enumattr} as a yield-function returning "
+	                         /**/ "either ?DAttribute or ?Dstring objects (the later will automatically be wrapped as "
+	                         /**/ "${Attribute(<MyClass>, <value>)})"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -884,8 +891,9 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&enumattr_init,
-				TYPE_FIXED_ALLOCATOR(EnumAttr)
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(EnumAttr),
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&enumattr_init_kw
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&enumattr_fini,

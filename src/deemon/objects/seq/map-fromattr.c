@@ -112,9 +112,13 @@ mfaki_getob(MapFromAttrIterator *__restrict self) {
 	DeeEnumAttrIteratorObject *iter = self->mfai_iter;
 	DeeEnumAttrObject *iterseq = iter->ei_seq;
 	ASSERT(iterseq->ea_obj);
+#ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	return_reference(iterseq->ea_obj);
+#else /* CONFIG_EXPERIMENTAL_ATTRITER */
 	if (iterseq->ea_type == Dee_TYPE(iterseq->ea_obj))
 		return_reference(iterseq->ea_obj);
 	return DeeSuper_New(iterseq->ea_type, iterseq->ea_obj);
+#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF MapFromAttr *DCALL

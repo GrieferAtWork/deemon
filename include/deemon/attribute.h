@@ -135,11 +135,12 @@ struct Dee_attribute_object {
 
 struct Dee_enumattr_object {
 	Dee_OBJECT_HEAD
-	DREF DeeTypeObject *ea_type; /* [1..1][const] The starting type level from which attributes should be enumerated. */
-	DREF DeeObject     *ea_obj;  /* [0..1][const] The object in association of which attributes are enumerated. */
 #ifdef CONFIG_EXPERIMENTAL_ATTRITER
+	DREF DeeObject     *ea_obj;  /* [1..1][const] The object whose attributes are being enumerated. */
 	struct Dee_attrhint ea_hint; /* [OVERRIDE(.ah_decl, [DREF])] Filter for attributes matching this hint */
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
+	DREF DeeTypeObject *ea_type; /* [1..1][const] The starting type level from which attributes should be enumerated. */
+	DREF DeeObject     *ea_obj;  /* [1..1][const] The object in association of which attributes are enumerated. */
 #ifndef CONFIG_LONGJMP_ENUMATTR
 	size_t                     ea_attrc;   /* [const] The amount of attributes found. */
 	DREF DeeAttributeObject  **ea_attrv;   /* [1..1][0..ea_attrc][const] The amount of attributes found. */

@@ -3032,7 +3032,7 @@ time_init_getarg(DeeKwArgs *__restrict kwds,
 	DeeObject *arg;
 	if (default_argi < argc)
 		return DeeObject_AsInt128(argv[default_argi], p_result);
-	arg = DeeKwArgs_GetItemNRStringHashDef(kwds, argname, hash, ITER_DONE);
+	arg = DeeKwArgs_TryGetItemNRStringHash(kwds, argname, hash);
 	if (arg == ITER_DONE)
 		return 1;
 	if (arg == NULL)
