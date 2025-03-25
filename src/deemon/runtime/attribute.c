@@ -23,27 +23,16 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/attribute.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
-#include <deemon/error.h>
-#include <deemon/module.h>
-#include <deemon/mro.h>
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/operator-hints.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
 #include <deemon/system-features.h> /* bzero(), ... */
-#include <deemon/tuple.h>
+/**/
 
-#include <stdarg.h>
-
-#include "../objects/seq/each.h"
-#include "runtime_error.h"
-
-/* Attribute access. */
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
+
+/* Attribute access. */
 
 /* For type-type, these should be accessed as members, not as class-wrappers:
  * >> import Type from deemon;

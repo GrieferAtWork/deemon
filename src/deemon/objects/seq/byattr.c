@@ -30,10 +30,10 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
-
 /**/
-#include "byattr.h"
+
 #include "../generic-proxy.h"
+#include "byattr.h"
 /**/
 
 #include <stddef.h> /* size_t, offsetof */

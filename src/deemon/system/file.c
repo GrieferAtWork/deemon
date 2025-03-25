@@ -43,15 +43,19 @@
 #include <hybrid/host.h>
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
-#include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
+/**/
+
+#include "../runtime/runtime_error.h"
+#include "../runtime/strings.h"
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintptr_t */
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
 #endif /* CONFIG_HAVE_LIMITS_H */
-
-#include "../runtime/runtime_error.h"
-#include "../runtime/strings.h"
 
 #ifndef __ARCH_PAGESIZE_MIN
 #ifdef __ARCH_PAGESIZE

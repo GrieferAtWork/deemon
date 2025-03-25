@@ -42,6 +42,19 @@
 //#define DEFINE_DeeType_FindInstanceAttr
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+#include <deemon/class.h>
+#include <deemon/mro.h>
+#include <deemon/object.h>
+#include <deemon/types.h>
+/**/
+
+#include "runtime_error.h"
+/**/
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
+
 #if (defined(DEFINE_DeeType_GetInstanceAttrStringHash) +            \
      defined(DEFINE_DeeType_GetInstanceAttrStringLenHash) +         \
      defined(DEFINE_DeeType_BoundInstanceAttrStringHash) +          \

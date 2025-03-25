@@ -31,9 +31,9 @@
 #include <deemon/error_types.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
-#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/object.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
@@ -42,11 +42,19 @@
 #include <hybrid/align.h>
 #include <hybrid/debug-alignment.h>
 #include <hybrid/unaligned.h>
+#include <hybrid/typecore.h>
 #include <hybrid/wordbits.h>
 
-#include <Windows.h>
-
 #include "../runtime/strings.h"
+/**/
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintptr_t */
+/**/
+
+#include <Windows.h>
+/**/
 
 #ifndef PATH_MAX
 #ifdef PATHMAX

@@ -310,7 +310,7 @@ DFUNDEF size_t DCALL Dee_Shutdown(void);
  *   >> By killing all existing code objects.
  * This is quite the simple task as a matter of fact:
  *   - We use `tp_visit' to recursively visit all GC-objects,
- *     where for every `code' object that we encounter, we
+ *     where for every `Code' object that we encounter, we
  *     simply do an `atomic_write' of the first instruction byte
  *     (unless the code is empty?), to set it to `ASM_RET_NONE'
  *   - `Code' objects are also GC objects, meaning that we can

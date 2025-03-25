@@ -1658,7 +1658,7 @@ struct Dee_type_gc {
 	 *     attribute error, so `x' is a bad idea
 	 *   - If we were to start by clearing `MyClass's operators, it wouldn't
 	 *     work at all because there'd no longer be a destructor to call.
-	 *   - The link from `code' to `module' is kind-of special, in that it
+	 *   - The link from `Code' to `Module' is kind-of special, in that it
 	 *     can't actually be broken (plus: preventing the destructor from
 	 *     accessing global variables would also break the member lookup,
 	 *     as this requires access to the class type `MyClass', which (in this case)

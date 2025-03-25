@@ -50,8 +50,12 @@
 #include <deemon/class.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
+/**/
 
 #include "runtime_error.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 #if (defined(DEFINE_DeeType_GetAttrStringHash) +            \
      defined(DEFINE_DeeType_GetAttrStringLenHash) +         \

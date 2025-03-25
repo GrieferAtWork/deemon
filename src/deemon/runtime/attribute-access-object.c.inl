@@ -88,14 +88,21 @@
 //#define DEFINE_DeeObject_EnumAttr
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/class.h>
+#include <deemon/error.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/system-features.h>
+#include <deemon/tuple.h>
+/**/
 
 #include "runtime_error.h"
+/**/
+
+#include <stddef.h> /* size_t */
 
 #if (defined(DEFINE_DeeObject_GetAttr) +                           \
      defined(DEFINE_DeeObject_TGetAttr) +                          \

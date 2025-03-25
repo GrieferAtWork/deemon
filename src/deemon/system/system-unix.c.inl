@@ -25,11 +25,15 @@
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/format.h>
-#include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
+/**/
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
+/**/
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>

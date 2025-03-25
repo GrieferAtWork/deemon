@@ -374,7 +374,6 @@ DECL_BEGIN
 #endif /* ... */
 
 #ifdef DeeFutex_USES_CONTROL_STRUCTURE
-#include <hybrid/sequence/list.h>
 #include <hybrid/sequence/rbtree.h>
 
 struct futex_controller;
@@ -665,7 +664,7 @@ PRIVATE Dee_atomic_lock_t /*          */ os_futex_wait_lock = DEE_ATOMIC_LOCK_IN
 		os_futex_wait_break(); \
 	}	__WHILE0
 
-INTERN NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 os_futex_wait_list_wakethread(DeeThreadObject *thread) {
 	/* Search for entries regarding `thread' */
 	for (;;) {

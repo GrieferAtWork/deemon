@@ -32,7 +32,7 @@
 //#define TRACE_EXECUTION 1
 
 #ifdef NDEBUG
-/* Always use a register for `code' outside of debug-mode. */
+/* Always use a register for `Code' outside of debug-mode. */
 #undef CODE_IS_REGISTER
 #define CODE_IS_REGISTER 1
 #endif

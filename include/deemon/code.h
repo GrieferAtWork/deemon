@@ -778,8 +778,8 @@ INTDEF DeeCodeObject DeeCode_Empty;
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DDATDEF DeeTypeObject DeeCode_Type;
-#define DeeCode_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeCode_Type) /* `code' is final */
-#define DeeCode_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeCode_Type) /* `code' is final */
+#define DeeCode_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeCode_Type) /* `Code' is final */
+#define DeeCode_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeCode_Type) /* `Code' is final */
 
 
 /* Attempts to set the assembly flag of the given code object if it wasn't set already.
