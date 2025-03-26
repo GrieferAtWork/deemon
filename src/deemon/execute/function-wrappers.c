@@ -20,6 +20,7 @@
 #ifndef GUARD_DEEMON_EXECUTE_FUNCTION_WRAPPERS_C
 #define GUARD_DEEMON_EXECUTE_FUNCTION_WRAPPERS_C 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
@@ -33,6 +34,8 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
+#include <deemon/traceback.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/futex.h>
 #include <deemon/util/lock.h>
@@ -50,6 +53,10 @@
 /**/
 #include "function-wrappers.h"
 
+/**/
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
+
 #ifdef __OPTIMIZE_SIZE__
 #define NULL_if_Os(x) NULL
 #else /* __OPTIMIZE_SIZE__ */
@@ -57,6 +64,9 @@
 #endif /* !__OPTIMIZE_SIZE__ */
 
 DECL_BEGIN
+
+#define FIELDS_ADJACENT(T, a, b) \
+	(COMPILER_OFFSETAFTER(T, a) /*CEIL_ALIGN:COMPILER_ALIGNOF(((T *)0)->b)*/ == offsetof(T, b))
 
 #ifndef CONFIG_HAVE_strcmpz
 #define CONFIG_HAVE_strcmpz
@@ -1093,9 +1103,14 @@ done_exdat:
 	return (uint16_t)-1;
 }
 
-/* Returns the ID associated with `key', or throw an error and return `(uint16_t)-1' */
+#define RID_ERR ((uint16_t)-1)
+#define RID_UNK ((uint16_t)-2)
+
+/* Returns the ID associated with `key', or:
+ * - Throw an error and return `RID_ERR'
+ * - Failed to find the ID and return `RID_UNK' */
 PRIVATE WUNUSED NONNULL((1, 2)) uint16_t DCALL
-FunctionSymbolsByName_GetRefIdByName(FunctionSymbolsByName const *self, DeeObject *key) {
+FunctionSymbolsByName_TryGetRefIdByObject(FunctionSymbolsByName const *self, DeeObject *key) {
 	uint16_t rid;
 	if (DeeString_Check(key)) {
 		rid = DDI_GetRefIdByName(self->fsbn_func->fo_code->co_ddi,
@@ -1113,9 +1128,76 @@ FunctionSymbolsByName_GetRefIdByName(FunctionSymbolsByName const *self, DeeObjec
 		goto err_no_such_key;
 	return rid;
 err_no_such_key:
-	err_unknown_key((DeeObject *)self, key);
+	return RID_UNK;
 err:
-	return (uint16_t)-1;
+	return RID_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1)) uint16_t DCALL
+FunctionSymbolsByName_TryGetRefIdByIndex(FunctionSymbolsByName const *self, size_t key) {
+	uint16_t rid;
+	if unlikely(OVERFLOW_UADD(key, self->fsbn_rid_start, &rid))
+		goto err_no_such_key;
+	if unlikely(rid >= self->fsbn_rid_end)
+		goto err_no_such_key;
+	return rid;
+err_no_such_key:
+	return RID_UNK;
+/*
+err:
+	return RID_ERR;*/
+}
+
+#define FunctionSymbolsByName_TryGetRefIdByString(self, key) \
+	FunctionSymbolsByName_TryGetRefIdByStringLen(self, key, strlen(key))
+PRIVATE WUNUSED NONNULL((1)) uint16_t DCALL
+FunctionSymbolsByName_TryGetRefIdByStringLen(FunctionSymbolsByName const *self,
+                                          char const *key, size_t keylen) {
+	uint16_t rid = DDI_GetRefIdByName(self->fsbn_func->fo_code->co_ddi, key, keylen);
+	if unlikely(rid < self->fsbn_rid_start)
+		goto err_no_such_key;
+	if unlikely(rid >= self->fsbn_rid_end)
+		goto err_no_such_key;
+	return rid;
+err_no_such_key:
+	return RID_UNK;
+/*
+err:
+	return RID_ERR;*/
+}
+
+/* Returns the ID associated with `key', or throw an error and return `RID_ERR' */
+PRIVATE WUNUSED NONNULL((1, 2)) uint16_t DCALL
+FunctionSymbolsByName_GetRefIdByObject(FunctionSymbolsByName const *self, DeeObject *key) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByObject(self, key);
+	if unlikely(rid == RID_UNK) {
+		err_unknown_key((DeeObject *)self, key);
+		rid = RID_ERR;
+	}
+	return rid;
+}
+
+PRIVATE WUNUSED NONNULL((1)) uint16_t DCALL
+FunctionSymbolsByName_GetRefIdByIndex(FunctionSymbolsByName const *self, size_t key) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByIndex(self, key);
+	if unlikely(rid == RID_UNK) {
+		err_unknown_key_int((DeeObject *)self, key);
+		rid = RID_ERR;
+	}
+	return rid;
+}
+
+#define FunctionSymbolsByName_GetRefIdByString(self, key) \
+	FunctionSymbolsByName_GetRefIdByStringLen(self, key, strlen(key))
+PRIVATE WUNUSED NONNULL((1)) uint16_t DCALL
+FunctionSymbolsByName_GetRefIdByStringLen(FunctionSymbolsByName const *self,
+                                          char const *key, size_t keylen) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByStringLen(self, key, keylen);
+	if unlikely(rid == RID_UNK) {
+		err_unknown_key_str_len((DeeObject *)self, key, keylen);
+		rid = RID_ERR;
+	}
+	return rid;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -1128,20 +1210,10 @@ funcsymbolsbyname_mh_setold_ex(FunctionSymbolsByName *self,
                                DeeObject *key, DeeObject *value) {
 	DREF DeeObject *oldvalue;
 	DeeFunctionObject *func = self->fsbn_func;
-	uint16_t rid;
-	if (DeeString_Check(key)) {
-		rid = DDI_GetRefIdByName(func->fo_code->co_ddi,
-		                         DeeString_STR(key),
-		                         DeeString_SIZE(key));
-		if unlikely(rid < self->fsbn_rid_start)
-			goto err_no_such_key;
-	} else {
-		if unlikely(DeeObject_AsUInt16(key, &rid))
-			goto err;
-		if unlikely(OVERFLOW_UADD(rid, self->fsbn_rid_start, &rid))
-			goto err_no_such_key;
-	}
-	if unlikely(rid >= self->fsbn_rid_end)
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByObject(self, key);
+	if unlikely(rid == RID_ERR)
+		goto err;
+	if unlikely(rid == RID_UNK)
 		goto err_no_such_key;
 	DeeFunction_RefLockWrite(func);
 	oldvalue = func->fo_refv[rid];
@@ -1170,8 +1242,8 @@ funcsymbolsbyname_mh_setnew_ex(FunctionSymbolsByName *self,
                                DeeObject *key, DeeObject *value) {
 	DREF DeeObject *oldvalue;
 	DeeFunctionObject *func = self->fsbn_func;
-	uint16_t rid = FunctionSymbolsByName_GetRefIdByName(self, key);
-	if unlikely(rid == (uint16_t)-1)
+	uint16_t rid = FunctionSymbolsByName_GetRefIdByObject(self, key);
+	if unlikely(rid == RID_ERR)
 		goto err;
 	DeeFunction_RefLockWrite(func);
 	oldvalue = func->fo_refv[rid];
@@ -1231,102 +1303,119 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 funcsymbolsbyname_contains(FunctionSymbolsByName *self,
                            DeeObject *key) {
-	uint16_t rid;
-	if (DeeString_Check(key)) {
-		rid = DDI_GetRefIdByName(self->fsbn_func->fo_code->co_ddi,
-		                         DeeString_STR(key),
-		                         DeeString_SIZE(key));
-		if unlikely(rid < self->fsbn_rid_start)
-			goto err_no_such_key;
-	} else {
-		if unlikely(DeeObject_AsUInt16(key, &rid))
-			goto err;
-		if unlikely(OVERFLOW_UADD(rid, self->fsbn_rid_start, &rid))
-			goto err_no_such_key;
-	}
-	if unlikely(rid >= self->fsbn_rid_end)
-		goto err_no_such_key;
-	return_true;
-err_no_such_key:
-	return_false;
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByObject(self, key);
+	if unlikely(rid == RID_ERR)
+		goto err;
+	return_bool(rid != RID_UNK);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+err_funcsymbolsbyname_rid_unbound(FunctionSymbolsByName *self, uint16_t rid) {
+	char const *name = DeeCode_GetRSymbolName((DeeObject *)self->fsbn_func->fo_code, rid);
+	return name ? err_unbound_key_str((DeeObject *)self, name)
+	            : err_unbound_key_int((DeeObject *)self, rid - self->fsbn_rid_start);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+err_funcsymbolsbyname_rid_readonly(FunctionSymbolsByName *self, uint16_t rid) {
+	char const *name = DeeCode_GetRSymbolName((DeeObject *)self->fsbn_func->fo_code, rid);
+	return name ? err_readonly_key_str((DeeObject *)self, name)
+	            : err_readonly_key_int((DeeObject *)self, rid - self->fsbn_rid_start);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+funcsymbolsbyname_getitem_common(FunctionSymbolsByName *self, uint16_t rid) {
+	DREF DeeObject *result;
+	DeeFunctionObject *func = self->fsbn_func;
+	if unlikely(rid == RID_ERR)
+		goto err;
+	DeeFunction_RefLockRead(func);
+	result = func->fo_refv[rid];
+	if unlikely(!ITER_ISOK(result))
+		goto err_unbound_unlock;
+	Dee_Incref(result);
+	DeeFunction_RefLockEndRead(func);
+	return result;
+err_unbound_unlock:
+	DeeFunction_RefLockEndRead(func);
+/*err_unbound:*/
+	err_funcsymbolsbyname_rid_unbound(self, rid);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcsymbolsbyname_getitem(FunctionSymbolsByName *self,
-                          DeeObject *key) {
-	DREF DeeObject *result;
-	DeeFunctionObject *func = self->fsbn_func;
-	uint16_t rid = FunctionSymbolsByName_GetRefIdByName(self, key);
-	if unlikely(rid == (uint16_t)-1)
-		goto err;
-	DeeFunction_RefLockRead(func);
-	result = func->fo_refv[rid];
-	if unlikely(!ITER_ISOK(result)) {
-		DeeFunction_RefLockEndRead(func);
-		err_unbound_key((DeeObject *)self, key);
-		goto err;
-	}
-	Dee_Incref(result);
-	DeeFunction_RefLockEndRead(func);
-	return result;
-err:
-	return NULL;
+funcsymbolsbyname_getitem(FunctionSymbolsByName *self, DeeObject *key) {
+	uint16_t rid = FunctionSymbolsByName_GetRefIdByObject(self, key);
+	return funcsymbolsbyname_getitem_common(self, rid);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+funcsymbolsbyname_getitem_index(FunctionSymbolsByName *self, size_t key) {
+	uint16_t rid = FunctionSymbolsByName_GetRefIdByIndex(self, key);
+	return funcsymbolsbyname_getitem_common(self, rid);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcsymbolsbyname_trygetitem(FunctionSymbolsByName *self, DeeObject *key) {
+funcsymbolsbyname_getitem_string_len_hash(FunctionSymbolsByName *self,
+                                          char const *key, size_t keylen,
+                                          Dee_hash_t UNUSED(hash)) {
+	uint16_t rid = FunctionSymbolsByName_GetRefIdByStringLen(self, key, keylen);
+	return funcsymbolsbyname_getitem_common(self, rid);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+funcsymbolsbyname_trygetitem_common(FunctionSymbolsByName *self, uint16_t rid) {
 	DREF DeeObject *result;
 	DeeFunctionObject *func = self->fsbn_func;
-	uint16_t rid;
-	if (DeeString_Check(key)) {
-		rid = DDI_GetRefIdByName(func->fo_code->co_ddi,
-		                         DeeString_STR(key),
-		                         DeeString_SIZE(key));
-		if unlikely(rid < self->fsbn_rid_start)
-			goto err_no_such_key;
-	} else {
-		if unlikely(DeeObject_AsUInt16(key, &rid))
-			goto err;
-		if unlikely(OVERFLOW_UADD(rid, self->fsbn_rid_start, &rid))
-			goto err_no_such_key;
-	}
-	if unlikely(rid >= self->fsbn_rid_end)
+	if unlikely(rid == RID_ERR)
+		goto err;
+	if unlikely(rid == RID_UNK)
 		goto err_no_such_key;
 	DeeFunction_RefLockRead(func);
 	result = func->fo_refv[rid];
-	if unlikely(!ITER_ISOK(result)) {
-		DeeFunction_RefLockEndRead(func);
-		goto err_no_such_key;
-	}
+	if unlikely(!ITER_ISOK(result))
+		goto err_no_such_key_unlock;
 	Dee_Incref(result);
 	DeeFunction_RefLockEndRead(func);
 	return result;
+err_no_such_key_unlock:
+	DeeFunction_RefLockEndRead(func);
 err_no_such_key:
 	return ITER_DONE;
 err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+funcsymbolsbyname_trygetitem(FunctionSymbolsByName *self, DeeObject *key) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByObject(self, key);
+	return funcsymbolsbyname_trygetitem_common(self, rid);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+funcsymbolsbyname_trygetitem_index(FunctionSymbolsByName *self, size_t key) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByIndex(self, key);
+	return funcsymbolsbyname_trygetitem_common(self, rid);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+funcsymbolsbyname_trygetitem_string_len_hash(FunctionSymbolsByName *self,
+                                             char const *key, size_t keylen,
+                                             Dee_hash_t UNUSED(hash)) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByStringLen(self, key, keylen);
+	return funcsymbolsbyname_trygetitem_common(self, rid);
+}
+
 #ifndef __OPTIMIZE_SIZE__
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-funcsymbolsbyname_bounditem(FunctionSymbolsByName *self, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+funcsymbolsbyname_bounditem_common(FunctionSymbolsByName *self, uint16_t rid) {
 	DeeFunctionObject *func = self->fsbn_func;
-	uint16_t rid;
-	if (DeeString_Check(key)) {
-		rid = DDI_GetRefIdByName(func->fo_code->co_ddi,
-		                         DeeString_STR(key),
-		                         DeeString_SIZE(key));
-		if unlikely(rid < self->fsbn_rid_start)
-			goto err_no_such_key;
-	} else {
-		if unlikely(DeeObject_AsUInt16(key, &rid))
-			goto err;
-		if unlikely(OVERFLOW_UADD(rid, self->fsbn_rid_start, &rid))
-			goto err_no_such_key;
-	}
-	if unlikely(rid >= self->fsbn_rid_end)
+	if unlikely(rid == RID_ERR)
+		goto err;
+	if (rid == RID_UNK)
 		goto err_no_such_key;
 	DeeFunction_RefLockRead(func);
 	if unlikely(!ITER_ISOK(func->fo_refv[rid])) {
@@ -1342,39 +1431,66 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-funcsymbolsbyname_hasitem(FunctionSymbolsByName *self, DeeObject *key) {
-	DeeFunctionObject *func = self->fsbn_func;
-	uint16_t rid;
-	if (DeeString_Check(key)) {
-		rid = DDI_GetRefIdByName(func->fo_code->co_ddi,
-		                         DeeString_STR(key),
-		                         DeeString_SIZE(key));
-		if unlikely(rid < self->fsbn_rid_start)
-			goto err_no_such_key;
-	} else {
-		if unlikely(DeeObject_AsUInt16(key, &rid))
-			goto err;
-		if unlikely(OVERFLOW_UADD(rid, self->fsbn_rid_start, &rid))
-			goto err_no_such_key;
-	}
-	if unlikely(rid >= self->fsbn_rid_end)
-		goto err_no_such_key;
+funcsymbolsbyname_bounditem(FunctionSymbolsByName *self, DeeObject *key) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByObject(self, key);
+	return funcsymbolsbyname_bounditem_common(self, rid);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+funcsymbolsbyname_bounditem_index(FunctionSymbolsByName *self, size_t key) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByIndex(self, key);
+	return funcsymbolsbyname_bounditem_common(self, rid);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+funcsymbolsbyname_bounditem_string_len_hash(FunctionSymbolsByName *self,
+                                            char const *key, size_t keylen,
+                                            Dee_hash_t UNUSED(hash)) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByStringLen(self, key, keylen);
+	return funcsymbolsbyname_bounditem_common(self, rid);
+}
+
+
+#define funcsymbolsbyname_hasitem_common(self, rid) \
+	_funcsymbolsbyname_hasitem_common(rid)
+PRIVATE ATTR_CONST WUNUSED int DCALL
+_funcsymbolsbyname_hasitem_common(uint16_t rid) {
+	if unlikely(rid == RID_ERR)
+		return -1;
+	if (rid == RID_UNK)
+		return 0;
 	return 1;
-err_no_such_key:
-	return 0;
-err:
-	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+funcsymbolsbyname_hasitem(FunctionSymbolsByName *self, DeeObject *key) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByObject(self, key);
+	return funcsymbolsbyname_hasitem_common(self, rid);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+funcsymbolsbyname_hasitem_index(FunctionSymbolsByName *self, size_t key) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByIndex(self, key);
+	return funcsymbolsbyname_hasitem_common(self, rid);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+funcsymbolsbyname_hasitem_string_len_hash(FunctionSymbolsByName *self,
+                                          char const *key, size_t keylen,
+                                          Dee_hash_t UNUSED(hash)) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByStringLen(self, key, keylen);
+	return funcsymbolsbyname_hasitem_common(self, rid);
 }
 #endif /* !__OPTIMIZE_SIZE__ */
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-funcsymbolsbyname_delitem(FunctionSymbolsByName *self,
-                          DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+funcsymbolsbyname_delitem_common(FunctionSymbolsByName *self, uint16_t rid) {
 	DREF DeeObject *oldvalue;
 	DeeFunctionObject *func = self->fsbn_func;
-	uint16_t rid = FunctionSymbolsByName_GetRefIdByName(self, key);
-	if unlikely(rid == (uint16_t)-1)
+	if unlikely(rid == RID_ERR)
 		goto err;
+	if unlikely(rid == RID_UNK)
+		return 0;
 	if unlikely(rid < func->fo_code->co_refc)
 		goto err_ro;
 	DeeFunction_RefLockWrite(func);
@@ -1388,18 +1504,38 @@ funcsymbolsbyname_delitem(FunctionSymbolsByName *self,
 	}
 	return 0;
 err_ro:
-	err_readonly_key((DeeObject *)self, key);
+	err_funcsymbolsbyname_rid_readonly(self, rid);
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-funcsymbolsbyname_setitem(FunctionSymbolsByName *self,
-                          DeeObject *key, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+funcsymbolsbyname_delitem(FunctionSymbolsByName *self,
+                          DeeObject *key) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByObject(self, key);
+	return funcsymbolsbyname_delitem_common(self, rid);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+funcsymbolsbyname_delitem_index(FunctionSymbolsByName *self, size_t key) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByIndex(self, key);
+	return funcsymbolsbyname_delitem_common(self, rid);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+funcsymbolsbyname_delitem_string_len_hash(FunctionSymbolsByName *self,
+                                          char const *key, size_t keylen,
+                                          Dee_hash_t UNUSED(hash)) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByStringLen(self, key, keylen);
+	return funcsymbolsbyname_delitem_common(self, rid);
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+funcsymbolsbyname_setitem_common(FunctionSymbolsByName *self,
+                                 uint16_t rid, DeeObject *value) {
 	DREF DeeObject *oldvalue;
 	DeeFunctionObject *func = self->fsbn_func;
-	uint16_t rid = FunctionSymbolsByName_GetRefIdByName(self, key);
-	if unlikely(rid == (uint16_t)-1)
+	if unlikely(rid == RID_ERR)
 		goto err;
 	if unlikely(rid < func->fo_code->co_refc)
 		goto err_ro;
@@ -1413,9 +1549,30 @@ funcsymbolsbyname_setitem(FunctionSymbolsByName *self,
 		Dee_Decref(oldvalue);
 	return 0;
 err_ro:
-	err_readonly_key((DeeObject *)self, key);
+	err_funcsymbolsbyname_rid_readonly(self, rid);
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+funcsymbolsbyname_setitem(FunctionSymbolsByName *self,
+                          DeeObject *key, DeeObject *value) {
+	uint16_t rid = FunctionSymbolsByName_GetRefIdByObject(self, key);
+	return funcsymbolsbyname_setitem_common(self, rid, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+funcsymbolsbyname_setitem_index(FunctionSymbolsByName *self, size_t key, DeeObject *value) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByIndex(self, key);
+	return funcsymbolsbyname_setitem_common(self, rid, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+funcsymbolsbyname_setitem_string_len_hash(FunctionSymbolsByName *self,
+                                          char const *key, size_t keylen,
+                                          Dee_hash_t UNUSED(hash), DeeObject *value) {
+	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByStringLen(self, key, keylen);
+	return funcsymbolsbyname_setitem_common(self, rid, value);
 }
 
 
@@ -1442,13 +1599,17 @@ funcsymbolsbyname_copy(FunctionSymbolsByName *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-funcsymbolsbyname_init(FunctionSymbolsByName *__restrict self,
-                       size_t argc, DeeObject *const *argv) {
+funcsymbolsbyname_init_kw(FunctionSymbolsByName *__restrict self,
+                          size_t argc, DeeObject *const *argv,
+                          DeeObject *kw) {
 	DeeCodeObject *code;
+	STATIC_ASSERT(FIELDS_ADJACENT(FunctionSymbolsByName, fsbn_func, fsbn_rid_start));
+	STATIC_ASSERT(FIELDS_ADJACENT(FunctionSymbolsByName, fsbn_rid_start, fsbn_rid_end));
 	self->fsbn_rid_start = 0;
 	self->fsbn_rid_end   = (uint16_t)-1;
-	if (DeeArg_Unpack(argc, argv, "o|" UNPu16 UNPu16 ":FunctionSymbolsByName",
-	                  &self->fsbn_func, &self->fsbn_rid_start, &self->fsbn_rid_end))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__func_ridstart_ridend,
+	                          "o|" UNPu16 UNPu16 ":_FunctionSymbolsByName",
+	                          &self->fsbn_func))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->fsbn_func, &DeeFunction_Type))
 		goto err;
@@ -1484,12 +1645,12 @@ PRIVATE struct type_seq funcsymbolsbyname_seq = {
 	/* .tp_hasitem                    = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_hasitem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_size,
-	/* .tp_getitem_index              = */ DEFIMPL(&default__getitem_index__with__getitem), // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_getitem_index,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_getitem_index,
 	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ DEFIMPL(&default__delitem_index__with__delitem), // TODO: (int (DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_delitem_index,
-	/* .tp_setitem_index              = */ DEFIMPL(&default__setitem_index__with__setitem), // TODO: (int (DCALL *)(DeeObject *, size_t, DeeObject *))&funcsymbolsbyname_setitem_index,
-	/* .tp_bounditem_index            = */ DEFIMPL(&default__bounditem_index__with__bounditem), // TODO: (int (DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_bounditem_index,
-	/* .tp_hasitem_index              = */ DEFIMPL(&default__hasitem_index__with__hasitem), // TODO: (int (DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_hasitem_index,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&funcsymbolsbyname_setitem_index,
+	/* .tp_bounditem_index            = */ NULL_if_Os((int (DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_bounditem_index),
+	/* .tp_hasitem_index              = */ NULL_if_Os((int (DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_hasitem_index),
 	/* .tp_getrange_index             = */ DEFIMPL_UNSUPPORTED(&default__getrange_index__unsupported),
 	/* .tp_delrange_index             = */ DEFIMPL_UNSUPPORTED(&default__delrange_index__unsupported),
 	/* .tp_setrange_index             = */ DEFIMPL_UNSUPPORTED(&default__setrange_index__unsupported),
@@ -1497,19 +1658,19 @@ PRIVATE struct type_seq funcsymbolsbyname_seq = {
 	/* .tp_delrange_index_n           = */ DEFIMPL_UNSUPPORTED(&default__delrange_index_n__unsupported),
 	/* .tp_setrange_index_n           = */ DEFIMPL_UNSUPPORTED(&default__setrange_index_n__unsupported),
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_trygetitem,
-	/* .tp_trygetitem_index           = */ DEFIMPL(&default__trygetitem_index__with__trygetitem), // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_trygetitem_index,
-	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
-	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem_string_len_hash),
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem_string_len_hash),
 	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
 	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
-	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem),
-	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__hasitem),
-	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__trygetitem), // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_trygetitem_string_len_hash,
-	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem), // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_getitem_string_len_hash,
-	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem), // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_delitem_string_len_hash,
-	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem), // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&funcsymbolsbyname_setitem_string_len_hash,
-	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem), // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_bounditem_string_len_hash,
-	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem), // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_hasitem_string_len_hash,
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem_string_len_hash),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__hasitem_string_len_hash),
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_delitem_string_len_hash,
+	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&funcsymbolsbyname_setitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ NULL_if_Os((int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_bounditem_string_len_hash),
+	/* .tp_hasitem_string_len_hash    = */ NULL_if_Os((int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_hasitem_string_len_hash),
 };
 
 PRIVATE struct type_member tpconst funcsymbolsbyname_class_members[] = {
@@ -1551,7 +1712,7 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 	                         /**/ "doesn't have a name for some reason, its merged RID/SID can be used "
 	                         /**/ "instead (depending on which ID-range is being referenced).\n"
 	                         "\n"
-	                         "(function:?DFunction,ridstart=!0,ridend?:?Dint)"),
+	                         "(func:?DFunction,ridstart=!0,ridend?:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1562,8 +1723,9 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)&funcsymbolsbyname_ctor,
 				/* .tp_copy_ctor = */ (dfunptr_t)&funcsymbolsbyname_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&funcsymbolsbyname_init,
-				TYPE_FIXED_ALLOCATOR(FunctionSymbolsByName)
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(FunctionSymbolsByName),
+				/* .tp_any_ctor  = */ (dfunptr_t)&funcsymbolsbyname_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_fini,
@@ -2308,11 +2470,11 @@ yfuncsymbolsbyname_mh_setold_ex(YieldFunctionSymbolsByName *self,
 	if unlikely(symid == YFUNCSYMBOL_INVALID)
 		return ITER_DONE;
 	func = self->yfsbn_yfunc->yf_func;
-	if unlikely(!yfuncsymbol_isrid(symid) ||
-	            (rid = yfuncsymbol_asrid(symid)) < func->fo_code->co_refc) {
-		err_readonly_key((DeeObject *)self, key);
-		goto err;
-	}
+	if unlikely(!yfuncsymbol_isrid(symid))
+		goto err_rokey;
+	rid = yfuncsymbol_asrid(symid);
+	if unlikely(rid < func->fo_code->co_refc)
+		goto err_rokey;
 	DeeFunction_RefLockWrite(func);
 	oldvalue = func->fo_refv[rid];
 	if (ITER_ISOK(oldvalue)) {
@@ -2324,6 +2486,8 @@ yfuncsymbolsbyname_mh_setold_ex(YieldFunctionSymbolsByName *self,
 	}
 	DeeFunction_RefLockEndWrite(func);
 	return ITER_DONE;
+err_rokey:
+	err_readonly_key((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -2338,11 +2502,11 @@ yfuncsymbolsbyname_mh_setnew_ex(YieldFunctionSymbolsByName *self,
 	if unlikely(symid == YFUNCSYMBOL_ERROR)
 		goto err;
 	func = self->yfsbn_yfunc->yf_func;
-	if unlikely(!yfuncsymbol_isrid(symid) ||
-	            (rid = yfuncsymbol_asrid(symid)) < func->fo_code->co_refc) {
-		err_readonly_key((DeeObject *)self, key);
-		goto err;
-	}
+	if unlikely(!yfuncsymbol_isrid(symid))
+		goto err_rokey;
+	rid = yfuncsymbol_asrid(symid);
+	if unlikely(rid < func->fo_code->co_refc)
+		goto err_rokey;
 	DeeFunction_RefLockWrite(func);
 	oldvalue = func->fo_refv[rid];
 	if (ITER_ISOK(oldvalue)) {
@@ -2355,6 +2519,8 @@ yfuncsymbolsbyname_mh_setnew_ex(YieldFunctionSymbolsByName *self,
 	DeeFunction_RefLockEndWrite(func);
 	DeeFutex_WakeAll(&func->fo_refv[rid]);
 	return ITER_DONE;
+err_rokey:
+	err_readonly_key((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -2478,11 +2644,11 @@ yfuncsymbolsbyname_setitem(YieldFunctionSymbolsByName *self,
 	if unlikely(symid == YFUNCSYMBOL_ERROR)
 		goto err;
 	func = self->yfsbn_yfunc->yf_func;
-	if unlikely(!yfuncsymbol_isrid(symid) ||
-	            (rid = yfuncsymbol_asrid(symid)) < func->fo_code->co_refc) {
-		err_readonly_key((DeeObject *)self, key);
-		goto err;
-	}
+	if unlikely(!yfuncsymbol_isrid(symid))
+		goto err_rokey;
+	rid = yfuncsymbol_asrid(symid);
+	if unlikely(rid < func->fo_code->co_refc)
+		goto err_rokey;
 	Dee_Incref(value);
 	DeeFunction_RefLockWrite(func);
 	oldvalue = func->fo_refv[rid];
@@ -2492,6 +2658,8 @@ yfuncsymbolsbyname_setitem(YieldFunctionSymbolsByName *self,
 	if (ITER_ISOK(oldvalue))
 		Dee_Incref(oldvalue);
 	return 0;
+err_rokey:
+	err_readonly_key((DeeObject *)self, key);
 err:
 	return -1;
 }
@@ -2506,11 +2674,11 @@ yfuncsymbolsbyname_delitem(YieldFunctionSymbolsByName *self,
 	if unlikely(symid == YFUNCSYMBOL_ERROR)
 		goto err;
 	func = self->yfsbn_yfunc->yf_func;
-	if unlikely(!yfuncsymbol_isrid(symid) ||
-	            (rid = yfuncsymbol_asrid(symid)) < func->fo_code->co_refc) {
-		err_readonly_key((DeeObject *)self, key);
-		goto err;
-	}
+	if unlikely(!yfuncsymbol_isrid(symid))
+		goto err_rokey;
+	rid = yfuncsymbol_asrid(symid);
+	if unlikely(rid < func->fo_code->co_refc)
+		goto err_rokey;
 	DeeFunction_RefLockWrite(func);
 	oldvalue = func->fo_refv[rid];
 	func->fo_refv[rid] = NULL;
@@ -2519,6 +2687,8 @@ yfuncsymbolsbyname_delitem(YieldFunctionSymbolsByName *self,
 	if (ITER_ISOK(oldvalue))
 		Dee_Incref(oldvalue);
 	return 0;
+err_rokey:
+	err_readonly_key((DeeObject *)self, key);
 err:
 	return -1;
 }
@@ -2539,14 +2709,16 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfuncsymbolsbyname_init_kw(YieldFunctionSymbolsByName *__restrict self,
                            size_t argc, DeeObject *const *argv,
                            DeeObject *kw) {
+	STATIC_ASSERT(FIELDS_ADJACENT(YieldFunctionSymbolsByName, yfsbn_yfunc, yfsbn_nargs));
+	STATIC_ASSERT(FIELDS_ADJACENT(YieldFunctionSymbolsByName, yfsbn_nargs, yfsbn_rid_start));
+	STATIC_ASSERT(FIELDS_ADJACENT(YieldFunctionSymbolsByName, yfsbn_rid_start, yfsbn_rid_end));
 	DeeCodeObject *code;
 	self->yfsbn_nargs     = (uint16_t)-1;
 	self->yfsbn_rid_start = 0;
 	self->yfsbn_rid_end   = (uint16_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__yfunc_argc_ridstart_ridend,
-	                    "o|" UNPu16 UNPu16 UNPu16,
-	                    &self->yfsbn_yfunc, &self->yfsbn_nargs,
-	                    &self->yfsbn_rid_start, &self->yfsbn_rid_end))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__yfunc_argc_ridstart_ridend,
+	                          "o|" UNPu16 UNPu16 UNPu16 ":_YieldFunctionSymbolsByName",
+	                          &self->yfsbn_yfunc))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->yfsbn_yfunc, &DeeYieldFunction_Type))
 		goto err;
@@ -2631,7 +2803,7 @@ PRIVATE struct type_method tpconst yfuncsymbolsbyname_methods[] = {
 PRIVATE struct type_method_hint tpconst yfuncsymbolsbyname_method_hints[] = {
 	TYPE_METHOD_HINT(map_setold_ex, &yfuncsymbolsbyname_mh_setold_ex),
 	TYPE_METHOD_HINT(map_setnew_ex, &yfuncsymbolsbyname_mh_setnew_ex),
-	// TODO: TYPE_METHOD_HINT(map_enumerate, &yfuncsymbolsbyname_enumerate),
+	// TODO: TYPE_METHOD_HINT(map_enumerate, &yfuncsymbolsbyname_mh_map_enumerate),
 	TYPE_METHOD_HINT_END
 };
 
@@ -5125,37 +5297,55 @@ framesymbolsbyname_init_kw(FrameSymbolsByName *__restrict self,
                            DeeObject *kw) {
 	struct code_frame const *frame;
 	DeeCodeObject *code;
-	self->frsbn_nargs     = (uint16_t)-1;
-	self->frsbn_rid_start = 0;
-	self->frsbn_rid_end   = (uint16_t)-1;
-	self->frsbn_localc    = (uint16_t)-1;
-	self->frsbn_stackc    = (uint16_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw,
-	                    kwlist__frame_argc_ridstart_ridend_localc_stackc,
-	                    "o|" UNPu16 UNPu16 UNPu16 UNPu16 UNPu16,
-	                    &self->frsbn_frame, &self->frsbn_nargs,
-	                    &self->frsbn_rid_start, &self->frsbn_rid_end,
-	                    &self->frsbn_localc, &self->frsbn_stackc))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_FrameSymbolsByName", params: "
+	DeeFrameObject *frame;
+	uint16_t        argc = (uint16_t)-1;
+	uint16_t        ridstart = 0;
+	uint16_t        ridend = (uint16_t)-1;
+	uint16_t        localc = (uint16_t)-1;
+	uint16_t        stackc = (uint16_t)-1;
+");]]]*/
+	struct {
+		DeeFrameObject *frame;
+		uint16_t argc;
+		uint16_t ridstart;
+		uint16_t ridend;
+		uint16_t localc;
+		uint16_t stackc;
+	} args;
+	args.argc = (uint16_t)-1;
+	args.ridstart = 0;
+	args.ridend = (uint16_t)-1;
+	args.localc = (uint16_t)-1;
+	args.stackc = (uint16_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__frame_argc_ridstart_ridend_localc_stackc, "o|" UNPu16 UNPu16 UNPu16 UNPu16 UNPu16 ":_FrameSymbolsByName", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->frsbn_frame, &DeeFrame_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.frame, &DeeFrame_Type))
 		goto err;
-	frame = DeeFrame_LockRead((DeeObject *)self->frsbn_frame);
+	frame = DeeFrame_LockRead((DeeObject *)args.frame);
 	if unlikely(!frame)
 		goto err;
 	self->frsbn_func = frame->cf_func;
 	Dee_Incref(self->frsbn_func);
-	if (self->frsbn_stackc > Dee_code_frame_getspaddr(frame))
-		self->frsbn_stackc = Dee_code_frame_getspaddr(frame);
-	DeeFrame_LockEndRead((DeeObject *)self->frsbn_frame);
+	if (args.stackc > Dee_code_frame_getspaddr(frame))
+		args.stackc = Dee_code_frame_getspaddr(frame);
+	DeeFrame_LockEndRead((DeeObject *)args.frame);
 	code = self->frsbn_func->fo_code;
-	if (self->frsbn_localc > code->co_localc)
-		self->frsbn_localc = code->co_localc;
-	if (self->frsbn_nargs > code->co_argc_max)
-		self->frsbn_nargs = code->co_argc_max;
-	if (self->frsbn_rid_end > code->co_refstaticc)
-		self->frsbn_rid_end = code->co_refstaticc;
-	if (self->frsbn_rid_start > self->frsbn_rid_end)
-		self->frsbn_rid_start = self->frsbn_rid_end;
+	if (args.localc > code->co_localc)
+		args.localc = code->co_localc;
+	if (args.argc > code->co_argc_max)
+		args.argc = code->co_argc_max;
+	if (args.ridend > code->co_refstaticc)
+		args.ridend = code->co_refstaticc;
+	if (args.ridstart > args.ridend)
+		args.ridstart = args.ridend;
+	self->frsbn_frame     = args.frame;
+	self->frsbn_nargs     = args.argc;
+	self->frsbn_rid_start = args.ridstart;
+	self->frsbn_rid_end   = args.ridend;
+	self->frsbn_localc    = args.localc;
+	self->frsbn_stackc    = args.stackc;
 	return 0;
 err:
 	return -1;

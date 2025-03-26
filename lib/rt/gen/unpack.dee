@@ -25,6 +25,7 @@ import . as globals;
 
 global final DTYPE_BY_CTYPE: {string: string} = {
 	"DeeObject*": "?O",
+	"DeeFrameObject*": "?DFrame",
 	"bool": "?Dbool",
 	"__BOOL": "?Dbool",
 	"int": "?Dint",
@@ -62,6 +63,7 @@ global final DTYPE_BY_CTYPE: {string: string} = {
 };
 global final CTYPE_BY_DTYPE: {string: string} = {
 	"?O": "DeeObject*",
+	"?DFrame": "DeeFrameObject*",
 	"?Dbool": "bool",
 };
 
@@ -666,8 +668,17 @@ extend_typ_until_i:
 				item.dType = DTYPE_BY_DINIT.get(item.dInit, "?O");
 			}
 		}
-		if (UNPformat is none)
-			UNPformat = UNP_BY_CTYPE[item.cTypeRaw];
+		if (UNPformat is none) {
+			local itemCTypeRaw = item.cTypeRaw;
+			UNPformat = UNP_BY_CTYPE.get(itemCTypeRaw);
+			if (UNPformat is none) {
+				if (itemCTypeRaw.endswith("Object*")) {
+					UNPformat = "o";
+				} else {
+					throw Error(f"No way to encode type {repr itemCTypeRaw} in as UNPformat");
+				}
+			}
+		}
 		item.UNPformat = UNPformat;
 		yield item;
 		if (i >= len)

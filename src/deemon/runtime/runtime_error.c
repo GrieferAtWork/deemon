@@ -362,6 +362,22 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_readonly_key_int)(DeeObject *self, size_t key) {
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Key `%" PRFuSIZ "' of instance of `%k': %k is read-only and cannot be modified",
+	                       key, Dee_TYPE(self), self);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_readonly_key_str)(DeeObject *self, char const *key) {
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Key `%q' of instance of `%k': %k is read-only and cannot be modified",
+	                       key, Dee_TYPE(self), self);
+}
+
+
+
+INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_expected_single_character_string)(DeeObject *__restrict str) {
 	size_t length;
 	ASSERT_OBJECT(str);
