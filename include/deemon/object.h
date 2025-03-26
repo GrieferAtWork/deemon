@@ -1536,8 +1536,9 @@ struct Dee_type_constructor {
 	 * >>     new_object = tp_deep_ctor(old_object); // Usually the same callback as `tp_copy_ctor'
 	 * >>     if (tp_deepload) {
 	 * >>         int error;
-	 * >>         if (!new_object) goto err;
-	 * >>         if (Dee_DeepCopyAddAssoc(old_object, new_object))
+	 * >>         if unlikely(!new_object)
+	 * >>             goto err;
+	 * >>         if unlikely(!Dee_DeepCopyAddAssoc(old_object, new_object))
 	 * >>             goto err_new;
 	 * >>         error = tp_deepload(new_object);
 	 * >>         if (error)
@@ -1545,7 +1546,7 @@ struct Dee_type_constructor {
 	 * >>         deepcopy_end();
 	 * >>     } else if (deepcopy_end()) {
 	 * >>         // This is a recursive deepcopy operation, so we must still track the new object
-	 * >>         if (Dee_DeepCopyAddAssoc(old_object, new_object))
+	 * >>         if unlikely(!Dee_DeepCopyAddAssoc(old_object, new_object))
 	 * >>             goto err_new;
 	 * >>     }
 	 * >>     return new_object;

@@ -1037,7 +1037,7 @@ instance_tdeepcopy(DeeTypeObject *tp_self,
 	ASSERT(!tp_self->tp_init.tp_deepload);
 
 	/* Add a deepcopy association for `self' replacing `other' */
-	if (Dee_DeepCopyAddAssoc(self, other))
+	if unlikely(!Dee_DeepCopyAddAssoc(self, other))
 		goto err_super;
 	result = DeeObject_ThisCall(func, self, 1, (DeeObject **)&other);
 	if unlikely(!result)

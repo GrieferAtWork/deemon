@@ -205,8 +205,11 @@ struct Dee_deep_assoc {
 /* Implementation detail required to implement recursive deepcopy.
  * To see how this function must be used, look at the documentation for `tp_deepload'
  * WARNING: THIS FUNCTION MUST NOT BE CALLED BY THE IMPLEMENTING
- *          TYPE WHEN `tp_deepload' IS BEING IMPLEMENTED! */
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+ *          TYPE WHEN `tp_deepload' IS BEING IMPLEMENTED!
+ * @return: * :        Another replacement for "old_object" already exists (return is that object)
+ * @return: ITER_DONE: The replacement link "old_object -> new_object" was registered
+ * @return: NULL:      An error was thrown */
+DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 Dee_DeepCopyAddAssoc(DeeObject *new_object,
                      DeeObject *old_object);
 
@@ -661,8 +664,6 @@ DDATDEF uint16_t DeeExec_StackLimit;
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define Dee_DeepCopyAddAssoc(new_object, old_object) \
-	__builtin_expect(Dee_DeepCopyAddAssoc(new_object, old_object), 0)
 #ifndef DeeThread_CheckInterrupt
 #define DeeThread_CheckInterrupt() __builtin_expect(DeeThread_CheckInterrupt(), 0)
 #endif /* !DeeThread_CheckInterrupt */

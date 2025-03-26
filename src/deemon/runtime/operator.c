@@ -674,7 +674,7 @@ got_deep_copy:
 		 * tp_deepload to begin with, as non-GC objects could just create all
 		 * the necessary deep copies straight from the regular tp_deep_ctor
 		 * callback) */
-		if (Dee_DeepCopyAddAssoc(result, self))
+		if unlikely(!Dee_DeepCopyAddAssoc(result, self))
 			goto err_result_endcopy;
 		if unlikely((*tp_self->tp_init.tp_deepload)(result))
 			goto err_result_endcopy;
@@ -693,9 +693,33 @@ done_endcopy:
 		 *               the association of this new entry in case it also appears
 		 *               in some different branch of the tree of remaining objects
 		 *               still to-be copied. */
-		if (deepcopy_end(thread_self)) {
-			if (Dee_DeepCopyAddAssoc(result, self))
+		if ((--thread_self->t_deepassoc.da_recursion) != 0) {
+			DeeObject *existing_replacement = Dee_DeepCopyAddAssoc(result, self);
+			if unlikely(!existing_replacement)
 				goto err_result;
+			if (existing_replacement != ITER_DONE) {
+				Dee_Incref(existing_replacement);
+				Dee_Decref_likely(result);
+				return existing_replacement;
+			}
+		} else {
+			/* Check if there is now a deepcopy assoc for "self" (one may have
+			 * been created during recursive calls within "tp_deep_ctor").
+			 * This is needed so that:
+			 * >> local x = ([],);
+			 * >> x[0].append(x);
+			 * >> local y = deepcopy x;
+			 * >> assert x[0][0].id == x;
+			 * >> assert y[0][0].id == y; // <<< this would fail otherwise
+			 */
+			DeeObject *existing_replacement = deepcopy_lookup(thread_self, self, tp_self);
+			if (existing_replacement) {
+				Dee_Incref(existing_replacement);
+				Dee_Decref_likely(result);
+				deepcopy_clear(thread_self);
+				return existing_replacement;
+			}
+			deepcopy_clear(thread_self);
 		}
 	}
 done:

@@ -912,8 +912,11 @@ deepassoc_rehash(DeeThreadObject *__restrict self) {
 /* Implementation detail required to implement recursive deepcopy.
  * To see how this function must be used, look at the documentation for `tp_deepload'
  * WARNING: THIS FUNCTION MUST NOT BE CALLED BY THE IMPLEMENTING
- *          TYPE WHEN `tp_deepload' IS BEING IMPLEMENTED! */
-PUBLIC WUNUSED NONNULL((1, 2)) int
+ *          TYPE WHEN `tp_deepload' IS BEING IMPLEMENTED!
+ * @return: * :        Another replacement for "old_object" already exists (return is that object)
+ * @return: ITER_DONE: The replacement link "old_object -> new_object" was registered
+ * @return: NULL:      An error was thrown */
+PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *
 (DCALL Dee_DeepCopyAddAssoc)(DeeObject *new_object,
                              DeeObject *old_object) {
 	size_t mask;
@@ -952,7 +955,7 @@ again:
 			/* Try to keep the table vector big at least twice as big as the element count. */
 			if (self->t_deepassoc.da_used * 2 > self->t_deepassoc.da_mask)
 				deepassoc_rehash(self);
-			return 0;
+			return ITER_DONE;
 		}
 
 		/* Check for illegal duplicate entries. */
@@ -961,7 +964,7 @@ again:
 		/* Check if this association was already made */
 		if (item->de_old == old_object &&
 		    Dee_TYPE(item->de_new) == Dee_TYPE(new_object))
-			return 0;
+			return item->de_new;
 	}
 
 	/* Rehash the table and try again. */
@@ -973,7 +976,7 @@ again:
 		goto again;
 
 	/* If that failed, we've failed... */
-	return -1;
+	return NULL;
 }
 
 /* Lookup a GC association of `old_object', who's
