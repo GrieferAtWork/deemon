@@ -930,7 +930,7 @@ function_fini(Function *__restrict self) {
 	 * doesn't automatically free the class as soon as possible, but instead
 	 * waits until GC is invoked. - And this in turn results in some really
 	 * noticeable effects if static class members were to be used, as those
-	 * only get decref'd once the class itself gets killed...
+	 * only get decref'd once the class itself gets killed, too...
 	 *
 	 * If this was implemented, the only spot where the user can create a
 	 * function with a dead type-reference would be:
@@ -1686,57 +1686,57 @@ PRIVATE struct type_getset tpconst yf_getsets[] = {
 	TYPE_GETTER_AB_F("__code__", &yf_get_code,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?Ert:Code\n"
-	                 "Alias for :Function.__code__ though ?#__func__"),
+	                 "Alias for ?A__code__?DFunction though ?#__func__"),
 	TYPE_GETTER_BOUND_F(STR___name__, &yf_get_name, &yf_bound_name,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
-	                    "Alias for :Function.__name__ though ?#__func__"),
+	                    "Alias for ?A__name__?DFunction though ?#__func__"),
 	TYPE_GETTER_AB_F(STR___doc__, &yf_get_doc,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?X2?Dstring?N\n"
-	                 "Alias for :Function.__doc__ though ?#__func__"),
+	                 "Alias for ?A__doc__?DFunction though ?#__func__"),
 	TYPE_GETTER_BOUND_F(STR___type__, &yf_get_type, &yf_bound_type,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DType\n"
 	                    "#t{UnboundAttribute}"
-	                    "Alias for :Function.__type__ though ?#__func__"),
+	                    "Alias for ?A__type__?DFunction though ?#__func__"),
 	TYPE_GETTER_BOUND_F(STR___module__, &yf_get_module, &yf_bound_module,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DModule\n"
 	                    "#t{UnboundAttribute}"
-	                    "Alias for :Function.__module__ though ?#__func__"),
+	                    "Alias for ?A__module__?DFunction though ?#__func__"),
 	TYPE_GETTER_BOUND_F("__operator__", &yf_get_operator, &yf_bound_operator,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dint\n"
 	                    "#t{UnboundAttribute}"
-	                    "Alias for :Function.__operator__ though ?#__func__"),
+	                    "Alias for ?A__operator__?DFunction though ?#__func__"),
 	TYPE_GETTER_BOUND_F("__operatorname__", &yf_get_operatorname, &yf_bound_operator,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?X2?Dstring?Dint\n"
 	                    "#t{UnboundAttribute}"
-	                    "Alias for :Function.__operatorname__ though ?#__func__"),
+	                    "Alias for ?A__operatorname__?DFunction though ?#__func__"),
 	TYPE_GETTER_BOUND_F("__property__", &yf_get_property, &yf_bound_property,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dint\n"
 	                    "#t{UnboundAttribute}"
-	                    "Alias for :Function.__property__ though ?#__func__"),
+	                    "Alias for ?A__property__?DFunction though ?#__func__"),
 	TYPE_GETTER_AB_F("__refs__", &yf_get_refs,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?S?O\n"
-	                 "Alias for :Function.__refs__ though ?#__func__"),
+	                 "Alias for ?A__refs__?DFunction though ?#__func__"),
 	TYPE_GETTER_AB_F("__statics__", &yf_get_statics,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?S?O\n"
-	                 "Alias for :Function.__statics__ though ?#__func__"),
+	                 "Alias for ?A__statics__?DFunction though ?#__func__"),
 	TYPE_GETTER_AB_F("__refsbyname__", &yf_get_refsbyname,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?M?X2?Dstring?Dint?O\n"
-	                 "Alias for :Function.__refsbyname__ though ?#__func__"),
+	                 "Alias for ?A__refsbyname__?DFunction though ?#__func__"),
 	TYPE_GETTER_AB_F("__staticsbyname__", &yf_get_staticsbyname,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?M?X2?Dstring?Dint?O\n"
-	                 "Alias for :Function.__staticsbyname__ though ?#__func__"),
+	                 "Alias for ?A__staticsbyname__?DFunction though ?#__func__"),
 	TYPE_GETTER_AB_F("__argsbyname__", &DeeYieldFunction_GetArgsByNameWrapper,
 	                 METHOD_FCONSTCALL,
 	                 "->?M?X2?Dstring?Dint?O\n"
@@ -1753,15 +1753,15 @@ PRIVATE struct type_getset tpconst yf_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?Dstring\n"
 	                    "#t{UnboundAttribute}"
-	                    "Alias for :Function.__kwds__ though ?#__func__"),
+	                    "Alias for ?A__kwds__?DFunction though ?#__func__"),
 	TYPE_GETTER_AB_F("__defaults__", &yf_get_code_defaults,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?S?O\n"
-	                 "Alias for :Function.__defaults__ though ?#__func__"),
+	                 "Alias for ?A__defaults__?DFunction though ?#__func__"),
 	TYPE_GETTER_AB_F("__constants__", &yf_get_code_constants,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?S?O\n"
-	                 "Alias for :Function.__constants__ though ?#__func__"),
+	                 "Alias for ?A__constants__?DFunction though ?#__func__"),
 	TYPE_GETTER_AB_F("__sizeof__", &yf_get_sizeof,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?Dint"),
@@ -3001,12 +3001,12 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?O\n"
 	                    "#t{UnboundAttribute}"
-	                    "Alias for :Function.__defaults__ though ?#__func__"),
+	                    "Alias for ?A__defaults__?DFunction though ?#__func__"),
 	TYPE_GETTER_BOUND_F("__constants__", &yfi_get_code_constants, &yfi_bound_code_constants,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?O\n"
 	                    "#t{UnboundAttribute}"
-	                    "Alias for :Function.__constants__ though ?#__func__"),
+	                    "Alias for ?A__constants__?DFunction though ?#__func__"),
 	TYPE_GETSET_END
 };
 

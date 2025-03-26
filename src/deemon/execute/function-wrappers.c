@@ -1673,10 +1673,22 @@ PRIVATE struct type_seq funcsymbolsbyname_seq = {
 	/* .tp_hasitem_string_len_hash    = */ NULL_if_Os((int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_hasitem_string_len_hash),
 };
 
-PRIVATE struct type_member tpconst funcsymbolsbyname_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &FunctionSymbolsByNameIterator_Type),
-	TYPE_MEMBER_CONST(STR_KeysIterator, &FunctionSymbolsByNameKeysIterator_Type),
-	TYPE_MEMBER_END
+PRIVATE struct type_method tpconst funcsymbolsbyname_methods[] = {
+	TYPE_METHOD_HINTREF(Mapping_setold_ex),
+	TYPE_METHOD_HINTREF(Mapping_setnew_ex),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst funcsymbolsbyname_method_hints[] = {
+	TYPE_METHOD_HINT(map_setold_ex, &funcsymbolsbyname_mh_setold_ex),
+	TYPE_METHOD_HINT(map_setnew_ex, &funcsymbolsbyname_mh_setnew_ex),
+	// TODO: TYPE_METHOD_HINT(map_enumerate, &funcsymbolsbyname_mh_map_enumerate),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_getset tpconst funcsymbolsbyname_getsets[] = {
+	TYPE_GETTER_AB(STR_iterkeys, &funcsymbolsbyname_mh_map_iterkeys, "->?#KeysIterator"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_member tpconst funcsymbolsbyname_members[] = {
@@ -1686,21 +1698,10 @@ PRIVATE struct type_member tpconst funcsymbolsbyname_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_method tpconst funcsymbolsbyname_methods[] = {
-	TYPE_METHOD_HINTREF(Mapping_setold_ex),
-	TYPE_METHOD_HINTREF(Mapping_setnew_ex),
-	TYPE_METHOD_END
-};
-
-PRIVATE struct type_getset tpconst funcsymbolsbyname_getsets[] = {
-	TYPE_GETTER_AB(STR_iterkeys, &funcsymbolsbyname_mh_map_iterkeys, "->?#KeysIterator"),
-	TYPE_METHOD_END
-};
-
-PRIVATE struct type_method_hint tpconst funcsymbolsbyname_method_hints[] = {
-	TYPE_METHOD_HINT(map_setold_ex, &funcsymbolsbyname_mh_setold_ex),
-	TYPE_METHOD_HINT(map_setnew_ex, &funcsymbolsbyname_mh_setnew_ex),
-	TYPE_METHOD_HINT_END
+PRIVATE struct type_member tpconst funcsymbolsbyname_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &FunctionSymbolsByNameIterator_Type),
+	TYPE_MEMBER_CONST(STR_KeysIterator, &FunctionSymbolsByNameKeysIterator_Type),
+	TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject FunctionSymbolsByName_Type = {
@@ -2371,8 +2372,8 @@ STATIC_ASSERT(yfuncsymbol_isrid(yfuncsymbol_makeref(0)));
 /* Try to find the symbol referenced by `name'
  * @return: YFUNCSYMBOL_INVALID: No such symbol "name" */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) yfuncsymbol_t DCALL
-YieldFunctionSymbolsByName_TryName2Sym(YieldFunctionSymbolsByName const *self,
-                                       char const *name, size_t len) {
+YieldFunctionSymbolsByName_TryLookupSymByStringLen(YieldFunctionSymbolsByName const *self,
+                                                   char const *name, size_t len) {
 	uint16_t i;
 	DeeCodeObject *code = self->yfsbn_yfunc->yf_func->fo_code;
 	if (code->co_keywords) {
@@ -2388,49 +2389,81 @@ YieldFunctionSymbolsByName_TryName2Sym(YieldFunctionSymbolsByName const *self,
 	return YFUNCSYMBOL_INVALID;
 }
 
-/* Try to find the symbol referenced by `name'
+/* Try to find the symbol referenced by `key'
+ * @return: YFUNCSYMBOL_INVALID: No such symbol "key"
+ * @return: YFUNCSYMBOL_ERROR:   An error was thrown. */
+PRIVATE WUNUSED NONNULL((1)) yfuncsymbol_t DCALL
+YieldFunctionSymbolsByName_TryLookupSymByIndex(YieldFunctionSymbolsByName const *self, size_t key) {
+	DeeCodeObject *code;
+	code = self->yfsbn_yfunc->yf_func->fo_code;
+	if (key < code->co_argc_max) {
+		if (key >= self->yfsbn_nargs)
+			goto badsym;
+		return yfuncsymbol_makearg(key);
+	}
+	key -= code->co_argc_max;
+	if (key >= self->yfsbn_rid_start && key < self->yfsbn_rid_end)
+		return yfuncsymbol_makeref(key);
+badsym:
+	return YFUNCSYMBOL_INVALID;
+}
+
+/* Try to find the symbol referenced by `key'
  * @return: YFUNCSYMBOL_INVALID: No such symbol "key"
  * @return: YFUNCSYMBOL_ERROR:   An error was thrown. */
 PRIVATE WUNUSED NONNULL((1, 2)) yfuncsymbol_t DCALL
-YieldFunctionSymbolsByName_TryKey2Sym(YieldFunctionSymbolsByName const *self,
-                                      DeeObject *key) {
-	uint32_t index;
-	DeeCodeObject *code;
+YieldFunctionSymbolsByName_TryLookupSymByObject(YieldFunctionSymbolsByName const *self,
+                                                DeeObject *key) {
+	size_t index;
 	if (DeeString_Check(key)) {
-		return YieldFunctionSymbolsByName_TryName2Sym(self,
-		                                              DeeString_STR(key),
-		                                              DeeString_SIZE(key));
+		return YieldFunctionSymbolsByName_TryLookupSymByStringLen(self,
+		                                                          DeeString_STR(key),
+		                                                          DeeString_SIZE(key));
 	}
-	if (DeeObject_AsUIntX(key, &index))
+	index = DeeObject_AsDirectSize(key);
+	if unlikely(index == (size_t)-1)
 		goto err;
-	code = self->yfsbn_yfunc->yf_func->fo_code;
-	if (index < code->co_argc_max) {
-		if (index >= self->yfsbn_nargs)
-			goto badsym;
-		return yfuncsymbol_makearg(index);
-	}
-	index -= code->co_argc_max;
-	if (index >= self->yfsbn_rid_start && index < self->yfsbn_rid_end)
-		return yfuncsymbol_makeref(index);
-badsym:
-	return YFUNCSYMBOL_INVALID;
+	return YieldFunctionSymbolsByName_TryLookupSymByIndex(self, index);
 err:
 	return YFUNCSYMBOL_ERROR;
 }
 
-/* Same as `YieldFunctionSymbolsByName_TryKey2Sym',
+/* Same as `YieldFunctionSymbolsByName_TryLookupSymByObject',
  * but throw an error in case of a bad key.
  * @return: YFUNCSYMBOL_ERROR: An error was thrown. */
 PRIVATE WUNUSED NONNULL((1, 2)) yfuncsymbol_t DCALL
-YieldFunctionSymbolsByName_Key2Sym(YieldFunctionSymbolsByName const *self,
-                                   DeeObject *key) {
-	yfuncsymbol_t result = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
+YieldFunctionSymbolsByName_LookupSymByObject(YieldFunctionSymbolsByName const *self,
+                                             DeeObject *key) {
+	yfuncsymbol_t result = YieldFunctionSymbolsByName_TryLookupSymByObject(self, key);
 	if unlikely(result == YFUNCSYMBOL_INVALID) {
 		err_unknown_key((DeeObject *)self, key);
 		result = YFUNCSYMBOL_ERROR;
 	}
 	return result;
 }
+
+/*
+PRIVATE WUNUSED NONNULL((1, 2)) yfuncsymbol_t DCALL
+YieldFunctionSymbolsByName_LookupSymByStringLen(YieldFunctionSymbolsByName const *self,
+                                                char const *key, size_t keylen) {
+	yfuncsymbol_t result = YieldFunctionSymbolsByName_TryLookupSymByStringLen(self, key, keylen);
+	if unlikely(result == YFUNCSYMBOL_INVALID) {
+		err_unknown_key_str_len((DeeObject *)self, key, keylen);
+		result = YFUNCSYMBOL_ERROR;
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) yfuncsymbol_t DCALL
+YieldFunctionSymbolsByName_LookupSymByIndex(YieldFunctionSymbolsByName const *self, size_t key) {
+	yfuncsymbol_t result = YieldFunctionSymbolsByName_TryLookupSymByIndex(self, key);
+	if unlikely(result == YFUNCSYMBOL_INVALID) {
+		err_unknown_key_int((DeeObject *)self, key);
+		result = YFUNCSYMBOL_ERROR;
+	}
+	return result;
+}
+*/
 
 /* Returns `NULL' if the symbol isn't bound. */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2463,7 +2496,7 @@ yfuncsymbolsbyname_mh_setold_ex(YieldFunctionSymbolsByName *self,
                                 DeeObject *key, DeeObject *value) {
 	DeeFunctionObject *func;
 	DREF DeeObject *oldvalue;
-	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
+	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryLookupSymByObject(self, key);
 	uint16_t rid;
 	if unlikely(symid == YFUNCSYMBOL_ERROR)
 		goto err;
@@ -2497,7 +2530,7 @@ yfuncsymbolsbyname_mh_setnew_ex(YieldFunctionSymbolsByName *self,
                                 DeeObject *key, DeeObject *value) {
 	DeeFunctionObject *func;
 	DREF DeeObject *oldvalue;
-	yfuncsymbol_t symid = YieldFunctionSymbolsByName_Key2Sym(self, key);
+	yfuncsymbol_t symid = YieldFunctionSymbolsByName_LookupSymByObject(self, key);
 	uint16_t rid;
 	if unlikely(symid == YFUNCSYMBOL_ERROR)
 		goto err;
@@ -2561,7 +2594,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 yfuncsymbolsbyname_contains(YieldFunctionSymbolsByName *self,
                             DeeObject *key) {
 	yfuncsymbol_t symid;
-	symid = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
+	symid = YieldFunctionSymbolsByName_TryLookupSymByObject(self, key);
 	if unlikely(symid == YFUNCSYMBOL_ERROR)
 		goto err;
 	return_bool(symid != YFUNCSYMBOL_INVALID);
@@ -2573,7 +2606,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 yfuncsymbolsbyname_getitem(YieldFunctionSymbolsByName *self,
                            DeeObject *key) {
 	DREF DeeObject *result;
-	yfuncsymbol_t symid = YieldFunctionSymbolsByName_Key2Sym(self, key);
+	yfuncsymbol_t symid = YieldFunctionSymbolsByName_LookupSymByObject(self, key);
 	if unlikely(symid == YFUNCSYMBOL_ERROR)
 		goto err;
 	result = YieldFunction_TryGetSymbol(self->yfsbn_yfunc, symid);
@@ -2586,7 +2619,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 yfuncsymbolsbyname_trygetitem(YieldFunctionSymbolsByName *self, DeeObject *key) {
-	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
+	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryLookupSymByObject(self, key);
 	if (symid != YFUNCSYMBOL_INVALID) {
 		DREF DeeObject *result;
 		if unlikely(symid == YFUNCSYMBOL_ERROR)
@@ -2603,7 +2636,7 @@ err:
 #ifndef __OPTIMIZE_SIZE__
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 yfuncsymbolsbyname_bounditem(YieldFunctionSymbolsByName *self, DeeObject *key) {
-	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
+	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryLookupSymByObject(self, key);
 	if (symid != YFUNCSYMBOL_INVALID) {
 		DREF DeeObject *result;
 		if unlikely(symid == YFUNCSYMBOL_ERROR)
@@ -2622,7 +2655,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 yfuncsymbolsbyname_hasitem(YieldFunctionSymbolsByName *self, DeeObject *key) {
-	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
+	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryLookupSymByObject(self, key);
 	if (symid != YFUNCSYMBOL_INVALID) {
 		if unlikely(symid == YFUNCSYMBOL_ERROR)
 			goto err;
@@ -2640,7 +2673,7 @@ yfuncsymbolsbyname_setitem(YieldFunctionSymbolsByName *self,
 	uint16_t rid;
 	DeeFunctionObject *func;
 	DREF DeeObject *oldvalue;
-	yfuncsymbol_t symid = YieldFunctionSymbolsByName_Key2Sym(self, key);
+	yfuncsymbol_t symid = YieldFunctionSymbolsByName_LookupSymByObject(self, key);
 	if unlikely(symid == YFUNCSYMBOL_ERROR)
 		goto err;
 	func = self->yfsbn_yfunc->yf_func;
@@ -2670,7 +2703,7 @@ yfuncsymbolsbyname_delitem(YieldFunctionSymbolsByName *self,
 	uint16_t rid;
 	DeeFunctionObject *func;
 	DREF DeeObject *oldvalue;
-	yfuncsymbol_t symid = YieldFunctionSymbolsByName_Key2Sym(self, key);
+	yfuncsymbol_t symid = YieldFunctionSymbolsByName_LookupSymByObject(self, key);
 	if unlikely(symid == YFUNCSYMBOL_ERROR)
 		goto err;
 	func = self->yfsbn_yfunc->yf_func;
@@ -2788,12 +2821,6 @@ PRIVATE struct type_seq yfuncsymbolsbyname_seq = {
 	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem), // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&yfuncsymbolsbyname_hasitem_string_len_hash,
 };
 
-PRIVATE struct type_member tpconst yfuncsymbolsbyname_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &YieldFunctionSymbolsByNameIterator_Type),
-	TYPE_MEMBER_CONST(STR_KeysIterator, &YieldFunctionSymbolsByNameKeysIterator_Type),
-	TYPE_MEMBER_END
-};
-
 PRIVATE struct type_method tpconst yfuncsymbolsbyname_methods[] = {
 	TYPE_METHOD_HINTREF(Mapping_setold_ex),
 	TYPE_METHOD_HINTREF(Mapping_setnew_ex),
@@ -2818,6 +2845,12 @@ PRIVATE struct type_member tpconst yfuncsymbolsbyname_members[] = {
 	TYPE_MEMBER_FIELD("__nargs__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByName, yfsbn_nargs)),
 	TYPE_MEMBER_FIELD("__ridstart__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByName, yfsbn_rid_start)),
 	TYPE_MEMBER_FIELD("__ridend__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByName, yfsbn_rid_end)),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst yfuncsymbolsbyname_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &YieldFunctionSymbolsByNameIterator_Type),
+	TYPE_MEMBER_CONST(STR_KeysIterator, &YieldFunctionSymbolsByNameKeysIterator_Type),
 	TYPE_MEMBER_END
 };
 
