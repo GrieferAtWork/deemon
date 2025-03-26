@@ -49,7 +49,7 @@
 #endif /* !SIZE_MAX */
 
 #undef DICT_NDEBUG
-#if defined(NDEBUG) || 0 /* TODO: Change this "0" to a "1" once dicts have become stable enough. */
+#if defined(NDEBUG) || 1
 #define DICT_NDEBUG
 #endif /* NDEBUG */
 
