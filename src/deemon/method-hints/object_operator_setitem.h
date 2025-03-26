@@ -120,6 +120,9 @@ err:
 tp_seq->tp_setitem_string_hash([[nonnull]] DeeObject *self,
                                [[nonnull]] char const *key, Dee_hash_t hash,
                                [[nonnull]] DeeObject *value)
+%{using tp_seq->tp_setitem_string_len_hash: {
+	return CALL_DEPENDENCY(tp_seq->tp_setitem_string_len_hash, self, key, strlen(key), hash, value);
+}}
 %{using tp_seq->tp_setitem: [[disliked]] {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);

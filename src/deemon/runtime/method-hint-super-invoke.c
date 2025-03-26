@@ -3109,7 +3109,8 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_delitem_string_hash[6]
 	(Dee_funptr_t)&default__map_operator_delitem_string_hash__empty,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_delitem_string_hash[2] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_delitem_string_hash[3] = {
+	MH_SUPER_MAP_TYPED_INIT(&default__delitem_string_hash__with__delitem_string_len_hash, &tdefault__delitem_string_hash__with__delitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__delitem_string_hash__with__delitem, &tdefault__delitem_string_hash__with__delitem),
 	MH_SUPER_MAP_TYPED_END
 };
@@ -3173,7 +3174,8 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_setitem_string_hash[7]
 	(Dee_funptr_t)&default__map_operator_setitem_string_hash__empty,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_setitem_string_hash[2] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_setitem_string_hash[3] = {
+	MH_SUPER_MAP_TYPED_INIT(&default__setitem_string_hash__with__setitem_string_len_hash, &tdefault__setitem_string_hash__with__setitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__setitem_string_hash__with__setitem, &tdefault__setitem_string_hash__with__setitem),
 	MH_SUPER_MAP_TYPED_END
 };

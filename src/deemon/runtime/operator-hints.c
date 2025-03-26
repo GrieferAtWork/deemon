@@ -807,7 +807,8 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_delitem_index[3] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_delitem_index, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
-PRIVATE struct oh_init_spec_impl tpconst oh_impls_delitem_string_hash[2] = {
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_delitem_string_hash[3] = {
+	OH_INIT_SPEC_IMPL_INIT(&default__delitem_string_hash__with__delitem_string_len_hash, Dee_TNO_delitem_string_len_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__delitem_string_hash__with__delitem, Dee_TNO_delitem, Dee_TNO_delitem),
 	OH_INIT_SPEC_IMPL_END
 };
@@ -850,7 +851,8 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_setitem_index[3] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_setitem_index, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
-PRIVATE struct oh_init_spec_impl tpconst oh_impls_setitem_string_hash[2] = {
+PRIVATE struct oh_init_spec_impl tpconst oh_impls_setitem_string_hash[3] = {
+	OH_INIT_SPEC_IMPL_INIT(&default__setitem_string_hash__with__setitem_string_len_hash, Dee_TNO_setitem_string_len_hash, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__setitem_string_hash__with__setitem, Dee_TNO_setitem, Dee_TNO_setitem),
 	OH_INIT_SPEC_IMPL_END
 };

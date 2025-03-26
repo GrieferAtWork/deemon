@@ -1262,11 +1262,13 @@ INTDEF WUNUSED NONNULL((1)) int DCALL default__delitem_index__with__delitem(DeeO
 #define maketyped__delitem_index(tp_delitem_index) ((tp_delitem_index) == &default__delitem_index__with__delitem ? &tdefault__delitem_index__with__delitem : &tdefault__delitem_index)
 
 /* tp_seq->tp_delitem_string_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delitem_string_hash__with__delitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delitem_string_hash__with__delitem(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__delitem_string_hash__with__delitem_string_len_hash(DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__delitem_string_hash__with__delitem(DeeObject *self, char const *key, Dee_hash_t hash);
-#define isdefault__delitem_string_hash(tp_delitem_string_hash) ((tp_delitem_string_hash) == &default__delitem_string_hash__with__delitem)
-#define maketyped__delitem_string_hash(tp_delitem_string_hash) ((tp_delitem_string_hash) == &default__delitem_string_hash__with__delitem ? &tdefault__delitem_string_hash__with__delitem : &tdefault__delitem_string_hash)
+#define isdefault__delitem_string_hash(tp_delitem_string_hash) ((tp_delitem_string_hash) == &default__delitem_string_hash__with__delitem_string_len_hash || (tp_delitem_string_hash) == &default__delitem_string_hash__with__delitem)
+#define maketyped__delitem_string_hash(tp_delitem_string_hash) ((tp_delitem_string_hash) == &default__delitem_string_hash__with__delitem_string_len_hash ? &tdefault__delitem_string_hash__with__delitem_string_len_hash : (tp_delitem_string_hash) == &default__delitem_string_hash__with__delitem ? &tdefault__delitem_string_hash__with__delitem : &tdefault__delitem_string_hash)
 
 /* tp_seq->tp_delitem_string_len_hash */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delitem_string_len_hash__with__delitem(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
@@ -1303,11 +1305,13 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__setitem_index__with__setitem(D
 #define maketyped__setitem_index(tp_setitem_index) ((tp_setitem_index) == &default__setitem_index__with__setitem ? &tdefault__setitem_index__with__setitem : &tdefault__setitem_index)
 
 /* tp_seq->tp_setitem_string_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL tdefault__setitem_string_hash__with__setitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL tdefault__setitem_string_hash__with__setitem(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL tdefault__setitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL default__setitem_string_hash__with__setitem_string_len_hash(DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL default__setitem_string_hash__with__setitem(DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value);
-#define isdefault__setitem_string_hash(tp_setitem_string_hash) ((tp_setitem_string_hash) == &default__setitem_string_hash__with__setitem)
-#define maketyped__setitem_string_hash(tp_setitem_string_hash) ((tp_setitem_string_hash) == &default__setitem_string_hash__with__setitem ? &tdefault__setitem_string_hash__with__setitem : &tdefault__setitem_string_hash)
+#define isdefault__setitem_string_hash(tp_setitem_string_hash) ((tp_setitem_string_hash) == &default__setitem_string_hash__with__setitem_string_len_hash || (tp_setitem_string_hash) == &default__setitem_string_hash__with__setitem)
+#define maketyped__setitem_string_hash(tp_setitem_string_hash) ((tp_setitem_string_hash) == &default__setitem_string_hash__with__setitem_string_len_hash ? &tdefault__setitem_string_hash__with__setitem_string_len_hash : (tp_setitem_string_hash) == &default__setitem_string_hash__with__setitem ? &tdefault__setitem_string_hash__with__setitem : &tdefault__setitem_string_hash)
 
 /* tp_seq->tp_setitem_string_len_hash */
 INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int DCALL tdefault__setitem_string_len_hash__with__setitem(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value);

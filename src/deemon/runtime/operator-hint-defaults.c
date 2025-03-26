@@ -5868,7 +5868,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__delitem__with__delitem_index__and__delitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 	size_t index_value;
 	if (DeeString_Check(index)) {
-		return (*tp_self->tp_seq->tp_delitem_string_hash)(self, DeeString_STR(index), DeeString_Hash(index));
+		return (*(tp_self->tp_seq->tp_delitem_string_hash == &default__delitem_string_hash__with__delitem_string_len_hash ? &tdefault__delitem_string_hash__with__delitem_string_len_hash : &tdefault__delitem_string_hash))(tp_self, self, DeeString_STR(index), DeeString_Hash(index));
 	}
 	if (DeeObject_AsSize(index, &index_value))
 		goto err;
@@ -5900,7 +5900,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__delitem__with__delitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 	if (DeeObject_AssertTypeExact(index, &DeeString_Type))
 		goto err;
-	return (*tp_self->tp_seq->tp_delitem_string_hash)(self, DeeString_STR(index), DeeString_Hash(index));
+	return (*(tp_self->tp_seq->tp_delitem_string_hash == &default__delitem_string_hash__with__delitem_string_len_hash ? &tdefault__delitem_string_hash__with__delitem_string_len_hash : &tdefault__delitem_string_hash))(tp_self, self, DeeString_STR(index), DeeString_Hash(index));
 err:
 	return -1;
 }
@@ -6036,6 +6036,11 @@ err:
 
 /* tp_seq->tp_delitem_string_hash */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+tdefault__delitem_string_hash__with__delitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash) {
+	return (*(tp_self->tp_seq->tp_delitem_string_len_hash == &default__delitem_string_len_hash__with__delitem ? &tdefault__delitem_string_len_hash__with__delitem : &tdefault__delitem_string_len_hash))(tp_self, self, key, strlen(key), hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__delitem_string_hash__with__delitem(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash) {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);
@@ -6051,6 +6056,15 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__delitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash) {
 	return (*tp_self->tp_seq->tp_delitem_string_hash)(self, key, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__delitem_string_hash__with__delitem_string_len_hash(DeeObject *self, char const *key, Dee_hash_t hash) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__delitem_string_hash__with__delitem_string_len_hash(Dee_TYPE(self), self, key, hash);
+#else /* __OPTIMIZE_SIZE__ */
+	return (*Dee_TYPE(self)->tp_seq->tp_delitem_string_len_hash)(self, key, strlen(key), hash);
+#endif /* __OPTIMIZE_SIZE__ */
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -6161,7 +6175,7 @@ INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 tdefault__setitem__with__setitem_index__and__setitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value) {
 	size_t index_value;
 	if (DeeString_Check(index)) {
-		return (*tp_self->tp_seq->tp_setitem_string_hash)(self, DeeString_STR(index), DeeString_Hash(index), value);
+		return (*(tp_self->tp_seq->tp_setitem_string_hash == &default__setitem_string_hash__with__setitem_string_len_hash ? &tdefault__setitem_string_hash__with__setitem_string_len_hash : &tdefault__setitem_string_hash))(tp_self, self, DeeString_STR(index), DeeString_Hash(index), value);
 	}
 	if (DeeObject_AsSize(index, &index_value))
 		goto err;
@@ -6193,7 +6207,7 @@ INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 tdefault__setitem__with__setitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value) {
 	if (DeeObject_AssertTypeExact(index, &DeeString_Type))
 		goto err;
-	return (*tp_self->tp_seq->tp_setitem_string_hash)(self, DeeString_STR(index), DeeString_Hash(index), value);
+	return (*(tp_self->tp_seq->tp_setitem_string_hash == &default__setitem_string_hash__with__setitem_string_len_hash ? &tdefault__setitem_string_hash__with__setitem_string_len_hash : &tdefault__setitem_string_hash))(tp_self, self, DeeString_STR(index), DeeString_Hash(index), value);
 err:
 	return -1;
 }
@@ -6332,6 +6346,11 @@ err:
 
 /* tp_seq->tp_setitem_string_hash */
 INTERN WUNUSED NONNULL((1, 2, 3, 5)) int DCALL
+tdefault__setitem_string_hash__with__setitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value) {
+	return (*(tp_self->tp_seq->tp_setitem_string_len_hash == &default__setitem_string_len_hash__with__setitem ? &tdefault__setitem_string_len_hash__with__setitem : &tdefault__setitem_string_len_hash))(tp_self, self, key, strlen(key), hash, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 5)) int DCALL
 tdefault__setitem_string_hash__with__setitem(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value) {
 	int result;
 	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);
@@ -6347,6 +6366,15 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3, 5)) int DCALL
 tdefault__setitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value) {
 	return (*tp_self->tp_seq->tp_setitem_string_hash)(self, key, hash, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
+default__setitem_string_hash__with__setitem_string_len_hash(DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__setitem_string_hash__with__setitem_string_len_hash(Dee_TYPE(self), self, key, hash, value);
+#else /* __OPTIMIZE_SIZE__ */
+	return (*Dee_TYPE(self)->tp_seq->tp_setitem_string_len_hash)(self, key, strlen(key), hash, value);
+#endif /* __OPTIMIZE_SIZE__ */
 }
 
 INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
