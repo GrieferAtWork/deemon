@@ -2130,7 +2130,7 @@ asm_mnemonic_lookup(struct TPPKeyword *__restrict name) {
 	if (name->k_rare) {
 		/* Check if the mnemonic has already been cached. */
 		result = (struct asm_mnemonic *)name->k_rare->kr_user;
-		if (result >= asm_mnemonics &&
+		if (result >= (struct asm_mnemonic *)asm_mnemonics &&
 		    result < (struct asm_mnemonic *)((uintptr_t)asm_mnemonics + asm_mnemonics_size))
 			goto done;
 	}
@@ -2143,8 +2143,7 @@ asm_mnemonic_lookup(struct TPPKeyword *__restrict name) {
 	/* Try to cache the mnemonic in the keyword. */
 #undef calloc
 #define calloc(n, s) Dee_Callocc(n, s)
-	if (TPPKeyword_MAKERARE(name) &&
-	    !name->k_rare->kr_user)
+	if (TPPKeyword_MAKERARE(name) && !name->k_rare->kr_user)
 		name->k_rare->kr_user = (void *)result;
 done:
 	return result;

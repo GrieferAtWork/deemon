@@ -528,19 +528,18 @@ struct ATTR_PACKED asm_mnemonic {
 /* Returns a pointer to the next mnemonic, following after `x' */
 #define ASM_MNEMONIC_NEXT(x) \
 	((struct asm_mnemonic *)((x)->am_overloads + (x)->am_num_overloads))
-#define ASM_MNEMONIC_FOREACH(x) \
-	for ((x) = asm_mnemonics;   \
-	     (x)->am_num_overloads; \
+#define ASM_MNEMONIC_FOREACH(x)                      \
+	for ((x) = (struct asm_mnemonic *)asm_mnemonics; \
+	     (x)->am_num_overloads;                      \
 	     (x) = ASM_MNEMONIC_NEXT(x))
 
 
 #ifndef GUARD_DEEMON_COMPILER_ASM_USERDB_C
 /* List of all known instruction mnemonics. */
-INTDEF struct asm_mnemonic asm_mnemonics[];
+INTDEF __BYTE_TYPE__ asm_mnemonics[];
 /* The total number of mnemonics before the sentinel is encountered. */
 INTDEF size_t const asm_mnemonics_count;
-/* The total size (in bytes) of the mnemonic
- * database, excluding the sentinel. */
+/* The total size (in bytes) of the mnemonic database, excluding the sentinel. */
 INTDEF size_t const asm_mnemonics_size;
 #endif /* !GUARD_DEEMON_COMPILER_ASM_USERDB_C */
 
