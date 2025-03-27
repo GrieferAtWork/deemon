@@ -31,6 +31,10 @@
 #include <deemon/system-features.h> /* memcpyc(), ... */
 
 #include <hybrid/minmax.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* uint8_t, uint16_t, int16_t */
 
 DECL_BEGIN
 
