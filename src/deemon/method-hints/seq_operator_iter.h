@@ -156,6 +156,18 @@ err:
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }}
+%{$with__seq_enumerate = {
+	/* TODO: Custom iterator type that uses "seq_enumerate" */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}}
+%{$with__seq_enumerate_index = {
+	/* TODO: Custom iterator type that uses "seq_enumerate_index" */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}}
 %{$with__map_iterkeys__and__map_operator_trygetitem = {
 	/* Custom iterator type:
 	 * >> local it = self.operator iterkeys();
@@ -253,6 +265,26 @@ err:
 #endif /* !DEFINED_default_foreach_with_map_enumerate_cb */
 )]
 
+%[define(DEFINE_default_foreach_with_seq_enumerate_cb =
+#ifndef DEFINED_default_foreach_with_seq_enumerate_cb
+#define DEFINED_default_foreach_with_seq_enumerate_cb
+struct default_foreach_with_seq_enumerate_data {
+	Dee_foreach_t dfwse_cb;  /* [1..1] Underlying callback */
+	void         *dfwse_arg; /* [?..?] Cookie for `dfwse_cb' */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_foreach_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
+	struct default_foreach_with_seq_enumerate_data *data;
+	data = (struct default_foreach_with_seq_enumerate_data *)arg;
+	(void)index;
+	if unlikely(!value)
+		return 0;
+	return (*data->dfwse_cb)(data->dfwse_arg, value);
+}
+#endif /* !DEFINED_default_foreach_with_seq_enumerate_cb */
+)]
+
 /* accept_any_base_class_for_method_hint -- see comment on "seq_operator_iter" */
 [[accept_any_base_class_for_method_hint]]
 [[operator(Sequence: tp_seq->tp_foreach)]]
@@ -261,6 +293,21 @@ __seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *__restrict self,
                                   [[nonnull]] Dee_foreach_t cb,
                                   void *arg)
 %{$empty = 0}
+%{$with__seq_enumerate = [[prefix(DEFINE_default_foreach_with_seq_enumerate_cb)]] {
+	struct default_foreach_with_seq_enumerate_data data;
+	data.dfwse_cb  = cb;
+	data.dfwse_arg = arg;
+	return CALL_DEPENDENCY(seq_enumerate, self, &default_foreach_with_seq_enumerate_cb, &data);
+}}
+%{$with__seq_enumerate_index = [[prefix(DEFINE_default_foreach_with_seq_enumerate_cb)]] {
+	struct default_foreach_with_seq_enumerate_data data;
+	data.dfwse_cb  = cb;
+	data.dfwse_arg = arg;
+	return CALL_DEPENDENCY(seq_enumerate_index, self,
+	                       (Dee_ssize_t (DCALL *)(void *, size_t, DeeObject *))
+	                       (Dee_funptr_t)&default_foreach_with_seq_enumerate_cb,
+	                       &data, 0, (size_t)-1);
+}}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DeeNO_getitem_index_fast_t tp_getitem_index_fast;
@@ -572,14 +619,18 @@ with_seq_operator_size:
 	if (map_operator_iter)
 		return map_operator_iter;
 
-	if (REQUIRE_NODEFAULT(map_enumerate) || REQUIRE_NODEFAULT(map_enumerate_range))
-		return &$with__map_enumerate;
 	if (REQUIRE_NODEFAULT(map_iterkeys) || REQUIRE_NODEFAULT(map_keys)) {
 		if (REQUIRE_NODEFAULT(map_operator_trygetitem))
 			return &$with__map_iterkeys__and__map_operator_trygetitem;
 		if (REQUIRE_NODEFAULT(map_operator_getitem))
 			return &$with__map_iterkeys__and__map_operator_getitem;
 	}
+	if (REQUIRE_NODEFAULT(seq_enumerate_index))
+		return &$with__seq_enumerate_index;
+	if (REQUIRE_NODEFAULT(seq_enumerate))
+		return &$with__seq_enumerate;
+	if (REQUIRE_NODEFAULT(map_enumerate) || REQUIRE_NODEFAULT(map_enumerate_range))
+		return &$with__map_enumerate;
 };
 
 
@@ -588,6 +639,10 @@ seq_operator_foreach = {
 	if (REQUIRE_NODEFAULT(seq_operator_foreach_pair) ||
 	    REQUIRE_NODEFAULT(map_operator_foreach_pair))
 		return &$with__seq_operator_foreach_pair;
+	if (REQUIRE_NODEFAULT(seq_enumerate_index))
+		return &$with__seq_enumerate_index;
+	if (REQUIRE_NODEFAULT(seq_enumerate))
+		return &$with__seq_enumerate;
 	seq_operator_iter = REQUIRE(seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &$empty;
@@ -605,6 +660,10 @@ seq_operator_foreach = {
 		return &$with__seq_operator_getitem;
 	if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate)
 		return &$with__map_enumerate;
+	if (seq_operator_iter == &default__seq_operator_iter__with__seq_enumerate_index)
+		return &$with__seq_enumerate_index;
+	if (seq_operator_iter == &default__seq_operator_iter__with__seq_enumerate)
+		return &$with__seq_enumerate;
 	if (seq_operator_iter) {
 		if (seq_operator_iter == REQUIRE_NODEFAULT(set_operator_iter)) {
 			DeeMH_set_operator_foreach_t set_operator_foreach = REQUIRE_NODEFAULT(set_operator_foreach);

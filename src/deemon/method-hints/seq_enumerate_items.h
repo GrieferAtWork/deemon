@@ -183,7 +183,8 @@ seq_makeenumeration = {
 		    seq_operator_size != &default__seq_operator_size__with__seq_operator_iter &&
 		    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach &&
 		    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach_pair &&
-		    seq_operator_size != &default__seq_operator_size__with__map_enumerate) {
+		    seq_operator_size != &default__seq_operator_size__with__map_enumerate &&
+		    seq_operator_size != &default__seq_operator_size__with__seq_enumerate_index) {
 			DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
 			if (seq_operator_getitem_index) {
 				/* Yes! We *do* also have a getitem operator!

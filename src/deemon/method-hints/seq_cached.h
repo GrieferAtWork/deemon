@@ -50,12 +50,26 @@ err:
 %{$with__seq_operator_getitem = {
 	// TODO
 	return default__seq_cached__with__seq_operator_iter(self);
+}}
+%{$with__seq_enumerate = {
+	// TODO
+	return default__seq_cached__with__seq_operator_iter(self);
+}}
+%{$with__seq_enumerate_index = {
+	// TODO
+	return default__seq_cached__with__seq_operator_iter(self);
 }} {
 	return LOCAL_GETATTR(self);
 }
 
 
 seq_cached = {
+	/* TODO:
+	 * if (REQUIRE_NODEFAULT(map_cached))
+	 *     return <deemon>Mapping.cached(this) as Sequence</deemon>;
+	 * if (REQUIRE_NODEFAULT(set_cached))
+	 *     return <deemon>Set.cached(this) as Sequence</deemon>;
+	 */
 	DeeMH_seq_enumerate_t seq_enumerate = REQUIRE(seq_enumerate);
 	if (seq_enumerate == &default__seq_enumerate__empty)
 		return &$empty;
@@ -68,10 +82,79 @@ seq_cached = {
 	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem_index ||
 	    seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem)
 		return &$with__seq_operator_getitem;
-	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_enumerate_index) {
+		DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+		if (seq_enumerate_index == &default__seq_enumerate_index__empty)
+			return &$empty;
+		if (seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_size__and__operator_getitem_index_fast ||
+		    seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_size__and__seq_operator_getitem_index ||
+		    seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+			return &$with__seq_operator_size__and__seq_operator_getitem_index;
+		if (seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_getitem_index)
+			return &$with__seq_operator_getitem;
+		if (seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_iter ||
+		    seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_foreach__and__counter)
+			goto use_seq_operator_iter;
+	} else if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter) {
+		DeeMH_seq_operator_iter_t seq_operator_iter;
+use_seq_operator_iter:
+		seq_operator_iter = REQUIRE(seq_operator_iter);
+		if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast ||
+		    seq_operator_iter == &default__seq_operator_iter__with__seq_operator_size__and__seq_operator_trygetitem_index ||
+		    seq_operator_iter == &default__seq_operator_iter__with__seq_operator_size__and__seq_operator_getitem_index)
+			return &$with__seq_operator_size__and__seq_operator_getitem_index;
+		if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_sizeob__and__seq_operator_getitem)
+			return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+		if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_getitem_index ||
+		    seq_operator_iter == &default__seq_operator_iter__with__seq_operator_getitem)
+			return &$with__seq_operator_getitem;
+		if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate ||
+		    seq_operator_iter == &default__seq_operator_iter__with__seq_enumerate_index)
+			return &$with__seq_enumerate_index;
+		if (seq_operator_iter == &default__seq_operator_iter__with__seq_enumerate)
+			return &$with__seq_enumerate;
 		return &$with__seq_operator_iter;
+	}
 	if (seq_enumerate) {
-		// TODO: If "!__seq_getitem_always_bound__", must return `$with__*seq_operator_getitem'
-		return &$with__seq_operator_iter;
+		DeeMH_seq_operator_size_t seq_operator_size;
+		DeeMH_seq_operator_getitem_t seq_operator_getitem;
+		if (DeeType_HasTraitHint(THIS_TYPE, __seq_getitem_always_bound__))
+			goto use_seq_operator_iter;
+		seq_operator_size = REQUIRE(seq_operator_size);
+		if (seq_operator_size == &default__seq_operator_size__empty)
+			return &$empty;
+		if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach ||
+		    seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach_pair ||
+		    seq_operator_size == &default__seq_operator_size__with__seq_operator_iter)
+			goto use_seq_operator_iter;
+		seq_operator_getitem = REQUIRE(seq_operator_getitem);
+		if (seq_operator_getitem == &default__seq_operator_getitem__empty)
+			return &$empty;
+		if (seq_operator_getitem == &default__seq_operator_getitem__with__seq_operator_getitem_index) {
+			DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
+			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
+				return &$empty;
+			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_foreach)
+				goto use_seq_operator_iter;
+			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_trygetitem_index)
+				return &$with__seq_operator_size__and__seq_operator_getitem_index;
+			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__map_enumerate ||
+			    seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_enumerate_index)
+				return &$with__seq_enumerate_index;
+		}
+		if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob) {
+			DeeMH_seq_operator_sizeob_t seq_operator_sizeob = REQUIRE(seq_operator_sizeob);
+			if (seq_operator_sizeob == &default__seq_operator_sizeob__empty)
+				return &$empty;
+			if (seq_operator_sizeob == &default__seq_operator_sizeob__with__seq_enumerate)
+				return &$with__seq_enumerate;
+		}
+		if (seq_operator_size == &default__seq_operator_size__with__seq_enumerate_index)
+			return &$with__seq_enumerate_index;
+		if (seq_operator_getitem == &default__seq_operator_getitem__with__seq_enumerate)
+			return &$with__seq_enumerate;
+		if (seq_operator_size && seq_operator_getitem)
+			return &$with__seq_operator_size__and__seq_operator_getitem_index;
+		return &$with__seq_enumerate;
 	}
 };

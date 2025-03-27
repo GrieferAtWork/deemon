@@ -46,48 +46,66 @@ __seq_getitem__.seq_operator_getitem([[nonnull]] DeeObject *self,
 	return CALL_DEPENDENCY(seq_operator_getitem_index, self, index_value);
 err:
 	return NULL;
+}}
+%{$with__seq_enumerate = [[prefix(DEFINE_default_map_getitem_with_map_enumerate_cb)]] {
+	struct default_map_getitem_with_map_enumerate_data data;
+	Dee_ssize_t status;
+	data.dmgiwme_key = index;
+	status = CALL_DEPENDENCY(seq_enumerate, self, &default_map_getitem_with_map_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.dmgiwme_result;
+	if unlikely(status == -3) {
+		err_unbound_index_ob(self, index);
+		goto err;
+	}
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_index_out_of_bounds_ob(self, index);
+err:
+	return NULL;
 }} {
 	return LOCAL_CALLATTR(self, 1, &index);
 }
 
 
-%[define(DEFINE_default_getitem_index_with_foreach =
-#ifndef DEFINED_default_getitem_index_with_foreach
-#define DEFINED_default_getitem_index_with_foreach
-struct default_getitem_index_with_foreach_data {
-	DREF DeeObject *dgiiwfd_result; /* [?..1][out] Item lookup result */
-	size_t          dgiiwfd_nskip;  /* Number of indices left to skip. */
+%[define(DEFINE_default_seq_getitem_index_with_foreach =
+#ifndef DEFINED_default_seq_getitem_index_with_foreach
+#define DEFINED_default_seq_getitem_index_with_foreach
+struct default_seq_getitem_index_with_foreach_data {
+	DREF DeeObject *dsgiiwfd_result; /* [?..1][out] Item lookup result */
+	size_t          dsgiiwfd_nskip;  /* Number of indices left to skip. */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_getitem_index_with_foreach_cb(void *arg, DeeObject *elem) {
-	struct default_getitem_index_with_foreach_data *data;
-	data = (struct default_getitem_index_with_foreach_data *)arg;
-	if (data->dgiiwfd_nskip == 0) {
+default_seq_getitem_index_with_foreach_cb(void *arg, DeeObject *elem) {
+	struct default_seq_getitem_index_with_foreach_data *data;
+	data = (struct default_seq_getitem_index_with_foreach_data *)arg;
+	if (data->dsgiiwfd_nskip == 0) {
 		Dee_Incref(elem);
-		data->dgiiwfd_result = elem; /* Inherit reference */
+		data->dsgiiwfd_result = elem; /* Inherit reference */
 		return -2;                   /* Stop enumeration */
 	}
-	--data->dgiiwfd_nskip;
+	--data->dsgiiwfd_nskip;
 	return 0;
 }
-#endif /* !DEFINED_default_getitem_index_with_foreach */
+#endif /* !DEFINED_default_seq_getitem_index_with_foreach */
 )]
 
 
-%[define(DEFINE_default_getitem_index_with_map_enumerate =
-#ifndef DEFINED_default_getitem_index_with_map_enumerate
-#define DEFINED_default_getitem_index_with_map_enumerate
-struct default_getitem_index_with_map_enumerate_data {
-	DREF DeeObject *dgiiwme_result; /* [0..1][out] Item lookup result */
-	size_t          dgiiwme_nskip;  /* Number of indices left to skip. */
+%[define(DEFINE_default_seq_getitem_index_with_map_enumerate =
+#ifndef DEFINED_default_seq_getitem_index_with_map_enumerate
+#define DEFINED_default_seq_getitem_index_with_map_enumerate
+struct default_seq_getitem_index_with_map_enumerate_data {
+	DREF DeeObject *dsgiiwme_result; /* [0..1][out] Item lookup result */
+	size_t          dsgiiwme_nskip;  /* Number of indices left to skip. */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_getitem_index_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
-	struct default_getitem_index_with_map_enumerate_data *data;
-	data = (struct default_getitem_index_with_map_enumerate_data *)arg;
-	if (data->dgiiwme_nskip == 0) {
+default_seq_getitem_index_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_seq_getitem_index_with_map_enumerate_data *data;
+	data = (struct default_seq_getitem_index_with_map_enumerate_data *)arg;
+	if (data->dsgiiwme_nskip == 0) {
 		if (value) {
 			DREF DeeTupleObject *pair;
 			pair = DeeTuple_NewUninitializedPair();
@@ -97,18 +115,45 @@ default_getitem_index_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject
 			pair->t_elem[0] = key;                         /* Inherit reference */
 			Dee_Incref(value);
 			pair->t_elem[1] = value;                       /* Inherit reference */
-			data->dgiiwme_result = (DREF DeeObject *)pair; /* Inherit reference */
+			data->dsgiiwme_result = (DREF DeeObject *)pair; /* Inherit reference */
 		} else {
-			data->dgiiwme_result = NULL;
+			data->dsgiiwme_result = NULL;
 		}
 		return -2; /* Stop enumeration */
 	}
-	--data->dgiiwme_nskip;
+	--data->dsgiiwme_nskip;
 	return 0;
 err:
 	return -1;
 }
-#endif /* !DEFINED_default_getitem_index_with_map_enumerate */
+#endif /* !DEFINED_default_seq_getitem_index_with_map_enumerate */
+)]
+
+
+
+%[define(DEFINE_default_seq_getitem_index_with_seq_enumerate_index =
+#ifndef DEFINED_default_seq_getitem_index_with_seq_enumerate_index
+#define DEFINED_default_seq_getitem_index_with_seq_enumerate_index
+struct default_seq_getitem_index_with_seq_enumerate_index_data {
+	DREF DeeObject *dsgiiwsei_result;    /* [0..1][out] Item lookup result */
+	size_t          dsgiiwsei_index;     /* Intended index */
+	size_t          dsgiiwsei_lastindex; /* Last encountered index */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_seq_getitem_index_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	struct default_seq_getitem_index_with_seq_enumerate_index_data *data;
+	data = (struct default_seq_getitem_index_with_seq_enumerate_index_data *)arg;
+	if (data->dsgiiwsei_index == index) {
+		data->dsgiiwsei_result = value;
+		Dee_XIncref(value);
+		return -2;
+	} else {
+		data->dsgiiwsei_lastindex = index;
+	}
+	return 0;
+}
+#endif /* !DEFINED_default_seq_getitem_index_with_seq_enumerate_index */
 )]
 
 
@@ -123,20 +168,20 @@ __seq_getitem__.seq_operator_getitem_index([[nonnull]] DeeObject *__restrict sel
 	err_index_out_of_bounds(self, index, 0);
 	return NULL;
 }}
-%{$with__seq_operator_foreach = [[prefix(DEFINE_default_getitem_index_with_foreach)]] {
-	struct default_getitem_index_with_foreach_data data;
+%{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_getitem_index_with_foreach)]] {
+	struct default_seq_getitem_index_with_foreach_data data;
 	Dee_ssize_t status;
-	data.dgiiwfd_nskip = index;
-	status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_getitem_index_with_foreach_cb, &data);
+	data.dsgiiwfd_nskip = index;
+	status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_getitem_index_with_foreach_cb, &data);
 	if unlikely(status != -2) {
 		if (status == 0)
 			goto err_bad_bounds;
 		ASSERT(status == -1);
 		goto err;
 	}
-	return data.dgiiwfd_result;
+	return data.dsgiiwfd_result;
 err_bad_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, index - data.dgiiwfd_nskip);
+	err_index_out_of_bounds((DeeObject *)self, index, index - data.dsgiiwfd_nskip);
 err:
 	return NULL;
 }}
@@ -171,26 +216,43 @@ err:
 err:
 	return NULL;
 }}
-%{$with__map_enumerate = [[prefix(DEFINE_default_getitem_index_with_map_enumerate)]] {
-	struct default_getitem_index_with_map_enumerate_data data;
+%{$with__map_enumerate = [[prefix(DEFINE_default_seq_getitem_index_with_map_enumerate)]] {
+	struct default_seq_getitem_index_with_map_enumerate_data data;
 	Dee_ssize_t status;
-	data.dgiiwme_nskip = index;
-	status = CALL_DEPENDENCY(map_enumerate, self, &default_getitem_index_with_map_enumerate_cb, &data);
+	data.dsgiiwme_nskip = index;
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_seq_getitem_index_with_map_enumerate_cb, &data);
 	if unlikely(status != -2) {
 		if (status == 0)
 			goto err_bad_bounds;
 		ASSERT(status == -1);
 		goto err;
 	}
-	if unlikely(!data.dgiiwme_result)
+	if unlikely(!data.dsgiiwme_result)
 		goto err_unbound;
-	return data.dgiiwme_result;
+	return data.dsgiiwme_result;
 err_unbound:
 	err_unbound_index(self, index);
 	goto err;
 err_bad_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, index - data.dgiiwme_nskip);
+	err_index_out_of_bounds((DeeObject *)self, index, index - data.dsgiiwme_nskip);
 err:
+	return NULL;
+}}
+%{$with__seq_enumerate_index = [[prefix(DEFINE_default_seq_getitem_index_with_seq_enumerate_index)]] {
+	Dee_ssize_t status;
+	struct default_seq_getitem_index_with_seq_enumerate_index_data data;
+	data.dsgiiwsei_index     = index;
+	data.dsgiiwsei_lastindex = (size_t)-1;
+	status = CALL_DEPENDENCY(seq_enumerate_index, self,
+	                         &default_seq_getitem_index_with_seq_enumerate_index_cb,
+	                         &data, index, (size_t)-1);
+	if likely(status == -2) {
+		if unlikely(!data.dsgiiwsei_result)
+			err_unbound_index(self, index);
+		return data.dsgiiwsei_result;
+	}
+	if likely(status == 0)
+		err_index_out_of_bounds(self, index, data.dsgiiwsei_lastindex + 1);
 	return NULL;
 }} = $with__seq_operator_getitem;
 
@@ -202,6 +264,10 @@ seq_operator_getitem = {
 	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
 	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
 		return &$empty;
+	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_enumerate_index) {
+		if (REQUIRE_NODEFAULT(seq_enumerate))
+			return &$with__seq_enumerate;
+	}
 	if (seq_operator_getitem_index)
 		return &$with__seq_operator_getitem_index;
 };
@@ -217,6 +283,9 @@ seq_operator_getitem_index = {
 		return &$with__seq_operator_getitem;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index)
 		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_enumerate ||
+	    seq_operator_foreach == &default__seq_operator_foreach__with__seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 	if (seq_operator_foreach) {
 		/* Using "seq_operator_foreach" works, but is inefficient -> try to use other operators. */
 		if (REQUIRE_NODEFAULT(seq_operator_getitem))
@@ -253,6 +322,20 @@ __seq_getitem__.seq_operator_trygetitem([[nonnull]] DeeObject *self,
 	return CALL_DEPENDENCY(seq_operator_trygetitem_index, self, index_value);
 err:
 	return NULL;
+}}
+%{$with__seq_enumerate = [[prefix(DEFINE_default_map_getitem_with_map_enumerate_cb)]] {
+	struct default_map_getitem_with_map_enumerate_data data;
+	Dee_ssize_t status;
+	data.dmgiwme_key = index;
+	status = CALL_DEPENDENCY(seq_enumerate, self, &default_map_getitem_with_map_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.dmgiwme_result;
+	ASSERT(status == -3 || status == -1 || status == 0);
+	if unlikely(status == -1)
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
 }} = $with__seq_operator_getitem;
 
 seq_operator_trygetitem = {
@@ -261,6 +344,10 @@ seq_operator_trygetitem = {
 		return &$empty;
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_operator_getitem_index)
 		return &$with__seq_operator_getitem;
+	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_enumerate_index) {
+		if (REQUIRE_NODEFAULT(seq_enumerate))
+			return &$with__seq_enumerate;
+	}
 	if (seq_operator_trygetitem_index)
 		return &$with__seq_operator_trygetitem_index;
 };
@@ -286,41 +373,61 @@ __seq_getitem__.seq_operator_trygetitem_index([[nonnull]] DeeObject *__restrict 
 	return result;
 }}
 %{$with__seq_operator_foreach =
-[[prefix(DEFINE_default_getitem_index_with_foreach)]] {
-	struct default_getitem_index_with_foreach_data data;
+[[prefix(DEFINE_default_seq_getitem_index_with_foreach)]] {
+	struct default_seq_getitem_index_with_foreach_data data;
 	Dee_ssize_t status;
-	data.dgiiwfd_nskip = index;
-	status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_getitem_index_with_foreach_cb, &data);
+	data.dsgiiwfd_nskip = index;
+	status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_getitem_index_with_foreach_cb, &data);
 	if unlikely(status != -2) {
 		if (status == 0)
 			goto err_bad_bounds;
 		ASSERT(status == -1);
 		goto err;
 	}
-	return data.dgiiwfd_result;
+	return data.dsgiiwfd_result;
 err_bad_bounds:
 	return ITER_DONE;
 err:
 	return NULL;
 }}
-%{$with__map_enumerate = [[prefix(DEFINE_default_getitem_index_with_map_enumerate)]] {
-	struct default_getitem_index_with_map_enumerate_data data;
+%{$with__map_enumerate = [[prefix(DEFINE_default_seq_getitem_index_with_map_enumerate)]] {
+	struct default_seq_getitem_index_with_map_enumerate_data data;
 	Dee_ssize_t status;
-	data.dgiiwme_nskip = index;
-	status = CALL_DEPENDENCY(map_enumerate, self, &default_getitem_index_with_map_enumerate_cb, &data);
+	data.dsgiiwme_nskip = index;
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_seq_getitem_index_with_map_enumerate_cb, &data);
 	if unlikely(status != -2) {
 		if (status == 0)
 			goto err_bad_bounds;
 		ASSERT(status == -1);
 		goto err;
 	}
-	if unlikely(!data.dgiiwme_result)
+	if unlikely(!data.dsgiiwme_result)
 		goto err_unbound;
-	return data.dgiiwme_result;
+	return data.dsgiiwme_result;
 err_unbound:
 err_bad_bounds:
 	return ITER_DONE;
 err:
+	return NULL;
+}}
+%{$with__seq_enumerate_index = [[prefix(DEFINE_default_seq_getitem_index_with_seq_enumerate_index)]] {
+	size_t end_index;
+	Dee_ssize_t status;
+	struct default_seq_getitem_index_with_seq_enumerate_index_data data;
+	data.dsgiiwsei_index     = index;
+	data.dsgiiwsei_lastindex = (size_t)-1;
+	if (OVERFLOW_UADD(index, 1, &end_index))
+		end_index = (size_t)-1;
+	status = CALL_DEPENDENCY(seq_enumerate_index, self,
+	                         &default_seq_getitem_index_with_seq_enumerate_index_cb,
+	                         &data, index, end_index);
+	if likely(status == -2) {
+		if unlikely(!data.dsgiiwsei_result)
+			return ITER_DONE;
+		return data.dsgiiwsei_result;
+	}
+	if likely(status == 0)
+		return ITER_DONE;
 	return NULL;
 }} = $with__seq_operator_getitem_index;
 
@@ -332,11 +439,34 @@ seq_operator_trygetitem_index = {
 		return &$with__seq_operator_foreach;
 	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__map_enumerate)
 		return &$with__map_enumerate;
+	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 	if (seq_operator_getitem_index)
 		return &$with__seq_operator_getitem_index;
 };
 
 
+
+
+
+%[define(DEFINE_default_bounditem_with_seq_enumerate =
+#ifndef DEFINED_default_bounditem_with_seq_enumerate
+#define DEFINED_default_bounditem_with_seq_enumerate
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_bounditem_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
+	int cmp;
+	(void)value;
+	cmp = DeeObject_TryCompareEq((DeeObject *)arg, index);
+	if unlikely(cmp == Dee_COMPARE_ERR)
+		goto err;
+	if (cmp == 0)
+		return value ? -3 : -2;
+	return 0;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_bounditem_with_seq_enumerate */
+)]
 
 
 
@@ -375,6 +505,15 @@ err:
 	if (DeeError_Catch(&DeeError_IndexError))
 		return 0;
 	return -1;
+}}
+%{$with__seq_enumerate = [[prefix(DEFINE_default_bounditem_with_seq_enumerate)]] {
+	Dee_ssize_t status = CALL_DEPENDENCY(seq_enumerate, self,
+	                                     &default_bounditem_with_seq_enumerate_cb,
+	                                     (void *)index);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -3 || status == -2)
+		return 1;
+	return (int)status; /* 0 (index doesn't exist) or -1 (error) */
 }} = $with__seq_operator_getitem;
 
 seq_operator_hasitem = {
@@ -385,9 +524,27 @@ seq_operator_hasitem = {
 		return &$with__seq_operator_getitem;
 	if (seq_operator_hasitem_index == &default__seq_operator_hasitem_index__with__seq_operator_size)
 		return &$with__seq_operator_sizeob;
+	if (seq_operator_hasitem_index == &default__seq_operator_hasitem_index__with__seq_enumerate_index) {
+		if (REQUIRE_NODEFAULT(seq_enumerate))
+			return &$with__seq_enumerate;
+	}
 	if (seq_operator_hasitem_index)
 		return &$with__seq_operator_hasitem_index;
 };
+
+
+
+%[define(DEFINE_default_bounditem_index_with_seq_enumerate_index =
+#ifndef DEFINED_default_bounditem_index_with_seq_enumerate_index
+#define DEFINED_default_bounditem_index_with_seq_enumerate_index
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_bounditem_index_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	if ((size_t)(uintptr_t)arg == index)
+		return value ? -4 : -3;
+	return -2;
+}
+#endif /* !DEFINED_default_bounditem_index_with_seq_enumerate_index */
+)]
 
 
 
@@ -415,6 +572,21 @@ err:
 	if (DeeError_Catch(&DeeError_IndexError))
 		return 0;
 	return -1;
+}}
+%{$with__seq_enumerate_index = [[prefix(DEFINE_default_bounditem_index_with_seq_enumerate_index)]] {
+	size_t end_index;
+	Dee_ssize_t status;
+	if (OVERFLOW_UADD(index, 1, &end_index))
+		end_index = (size_t)-1;
+	status = CALL_DEPENDENCY(seq_enumerate_index, self,
+	                         &default_bounditem_index_with_seq_enumerate_index_cb,
+	                         (void *)(uintptr_t)index, index, end_index);
+	ASSERT(status == -4 || status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -2)
+		return 0;
+	if (status == -4 || status == -3)
+		return 1;
+	return (int)status; /* 0 (empty; aka: index doesn't exist) or -1 (error) */
 }} = $with__seq_operator_getitem_index;
 
 seq_operator_hasitem_index = {
@@ -429,9 +601,13 @@ seq_operator_hasitem_index = {
 	if (seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach &&
 	    seq_operator_size != &default__seq_operator_size__with__seq_operator_iter)
 		return &$with__seq_operator_size;
+	if (seq_operator_size == &default__seq_operator_size__with__seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 	seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
 	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
 		return &$empty;
+	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 	if (seq_operator_getitem_index)
 		return &$with__seq_operator_getitem_index;
 };
@@ -468,6 +644,19 @@ err:
 	if (DeeError_Catch(&DeeError_IndexError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
+}}
+%{$with__seq_enumerate = [[prefix(DEFINE_default_bounditem_with_seq_enumerate)]] {
+	Dee_ssize_t status = CALL_DEPENDENCY(seq_enumerate, self,
+	                                     &default_bounditem_with_seq_enumerate_cb,
+	                                     (void *)index);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -3)
+		return Dee_BOUND_YES;
+	if (status == -2)
+		return Dee_BOUND_NO;
+	if (status == -1)
+		return Dee_BOUND_ERR;
+	return Dee_BOUND_MISSING;
 }} = $with__seq_operator_getitem;
 
 seq_operator_bounditem = {
@@ -480,6 +669,10 @@ seq_operator_bounditem = {
 		return &$empty;
 	if (seq_operator_bounditem_index == &default__seq_operator_bounditem_index__with__seq_operator_getitem_index)
 		return &$with__seq_operator_getitem;
+	if (seq_operator_bounditem_index == &default__seq_operator_bounditem_index__with__seq_enumerate_index) {
+		if (REQUIRE_NODEFAULT(seq_enumerate))
+			return &$with__seq_enumerate;
+	}
 	if (seq_operator_bounditem_index)
 		return &$with__seq_operator_bounditem_index;
 };
@@ -508,20 +701,20 @@ __seq_getitem__.seq_operator_bounditem_index([[nonnull]] DeeObject *__restrict s
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }}
-%{$with__map_enumerate = [[prefix(DEFINE_default_getitem_index_with_map_enumerate)]] {
-	struct default_getitem_index_with_map_enumerate_data data;
+%{$with__map_enumerate = [[prefix(DEFINE_default_seq_getitem_index_with_map_enumerate)]] {
+	struct default_seq_getitem_index_with_map_enumerate_data data;
 	Dee_ssize_t status;
-	data.dgiiwme_nskip = index;
-	status = CALL_DEPENDENCY(map_enumerate, self, &default_getitem_index_with_map_enumerate_cb, &data);
+	data.dsgiiwme_nskip = index;
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_seq_getitem_index_with_map_enumerate_cb, &data);
 	if unlikely(status != -2) {
 		if (status == 0)
 			goto err_bad_bounds;
 		ASSERT(status == -1);
 		goto err;
 	}
-	if unlikely(!data.dgiiwme_result)
+	if unlikely(!data.dsgiiwme_result)
 		goto err_unbound;
-	Dee_Decref(data.dgiiwme_result);
+	Dee_Decref(data.dsgiiwme_result);
 	return Dee_BOUND_YES;
 err_unbound:
 	return Dee_BOUND_NO;
@@ -529,6 +722,24 @@ err_bad_bounds:
 	return Dee_BOUND_MISSING;
 err:
 	return Dee_BOUND_ERR;
+}}
+%{$with__seq_enumerate_index = [[prefix(DEFINE_default_bounditem_index_with_seq_enumerate_index)]] {
+	size_t end_index;
+	Dee_ssize_t status;
+	if (OVERFLOW_UADD(index, 1, &end_index))
+		end_index = (size_t)-1;
+	status = CALL_DEPENDENCY(seq_enumerate_index, self,
+	                         &default_bounditem_index_with_seq_enumerate_index_cb,
+	                         (void *)(uintptr_t)index, index, end_index);
+	ASSERT(status == -4 || status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -1)
+		return Dee_BOUND_ERR;
+	if (status == -3)
+		return Dee_BOUND_NO;
+	if (status == -4)
+		return Dee_BOUND_YES;
+	ASSERT(status == -2 || status == 0);
+	return Dee_BOUND_MISSING;
 }} = $with__seq_operator_getitem_index;
 
 seq_operator_bounditem_index = {
@@ -541,6 +752,8 @@ seq_operator_bounditem_index = {
 		return &$empty;
 	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__map_enumerate)
 		return &$with__map_enumerate;
+	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 	if (seq_operator_getitem_index)
 		return &$with__seq_operator_getitem_index;
 };

@@ -761,7 +761,7 @@ Type_assert(deemon.Dict, {
 	"tp_bool":                                    "dict_bool",
 	"tp_hash":                                    "default__map_operator_hash__with__map_operator_foreach_pair",
 	"tp_compare_eq":                              "default__map_operator_compare_eq__with__map_operator_foreach_pair",
-	"tp_compare":                                 "NULL", // TODO: Should be default__compare__with__eq__and__lo
+	"tp_compare":                                 "NULL",
 	"tp_trycompare_eq":                           "default__map_operator_trycompare_eq__with__map_operator_compare_eq",
 	"tp_eq":                                      "default__map_operator_eq__with__map_operator_compare_eq",
 	"tp_ne":                                      "default__map_operator_ne__with__map_operator_compare_eq",
@@ -874,7 +874,7 @@ Type_assert(deemon.Dict, {
 	"mh_seq_boundlast":                           "dict_nonempty_as_bound",
 	"mh_seq_dellast":                             "dict_dellast",
 	"mh_seq_setlast":                             "dict_setlast",
-	"mh_seq_cached":                              "default__seq_cached__with__seq_operator_iter", // TODO: Should be "(this as Sequence)"
+	"mh_seq_cached":                              "default__seq_cached__with__seq_operator_size__and__seq_operator_getitem_index", // TODO: Should be "(this as Sequence)"
 	"mh_seq_frozen":                              "default__seq_frozen__with__map_frozen",
 	"mh_seq_any":                                 "dict_bool",
 	"mh_seq_any_with_key":                        "default__seq_any_with_key__with__seq_operator_foreach",

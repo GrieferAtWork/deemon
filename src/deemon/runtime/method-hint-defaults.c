@@ -497,6 +497,37 @@ default__seq_operator_sizeob__empty(DeeObject *__restrict UNUSED(self)) {
 	return DeeInt_NewZero();
 }
 
+#ifndef DEFINED_default_seq_operator_sizeob_with_seq_enumerate_cb
+#define DEFINED_default_seq_operator_sizeob_with_seq_enumerate_cb
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_operator_sizeob_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
+	DREF DeeObject **p_lastindex = (DREF DeeObject **)arg;
+	(void)value;
+	Dee_Incref(index);
+	Dee_Decref(*p_lastindex);
+	*p_lastindex = index;
+	return 0;
+}
+#endif /* !DEFINED_default_seq_operator_sizeob_with_seq_enumerate_cb */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_operator_sizeob__with__seq_enumerate(DeeObject *__restrict self) {
+	Dee_ssize_t status;
+	DREF DeeObject *result = DeeNone_NewRef();
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_seq_operator_sizeob_with_seq_enumerate_cb, (void *)&result);
+	if unlikely(status < 0)
+		goto err_r;
+	if (DeeNone_Check(result)) {
+		Dee_DecrefNokill(Dee_None);
+		return DeeInt_NewZero();
+	}
+	if (DeeObject_Inc(&result))
+		goto err_r;
+	return result;
+err_r:
+	Dee_Decref(result);
+	return NULL;
+}
+
 
 /* seq_operator_size */
 INTERN WUNUSED NONNULL((1)) size_t DCALL
@@ -584,6 +615,31 @@ default__seq_operator_size__with__seq_operator_iter(DeeObject *__restrict self) 
 		goto err;
 	result = DeeObject_IterAdvance(iter, (size_t)-1);
 	Dee_Decref_likely(iter);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+#ifndef DEFINED_default_seq_size_with_seq_enumerate_index_cb
+#define DEFINED_default_seq_size_with_seq_enumerate_index_cb
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_seq_size_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	(void)value;
+	*(size_t *)arg = index;
+	return 0;
+}
+#endif /* !DEFINED_default_seq_size_with_seq_enumerate_index_cb */
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+default__seq_operator_size__with__seq_enumerate_index(DeeObject *__restrict self) {
+	Dee_ssize_t status;
+	size_t result = (size_t)-1;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_size_with_seq_enumerate_index_cb, (void *)&result, 0, (size_t)-1);
+	ASSERT(status == -1 || status == 0);
+	if unlikely(status)
+		goto err;
+	++result;
+	if unlikely(result == (size_t)-1)
+		err_integer_overflow_i(sizeof(size_t) * 8, true);
 	return result;
 err:
 	return (size_t)-1;
@@ -750,6 +806,22 @@ default__seq_operator_iter__with__map_enumerate(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_operator_iter__with__seq_enumerate(DeeObject *__restrict self) {
+	/* TODO: Custom iterator type that uses "seq_enumerate" */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_operator_iter__with__seq_enumerate_index(DeeObject *__restrict self) {
+	/* TODO: Custom iterator type that uses "seq_enumerate_index" */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem(DeeObject *__restrict self) {
 	/* Custom iterator type:
 	 * >> local it = self.operator iterkeys();
@@ -867,6 +939,40 @@ default__seq_operator_foreach__with__seq_operator_iter(DeeObject *__restrict sel
 	return result;
 err:
 	return -1;
+}
+
+#ifndef DEFINED_default_foreach_with_seq_enumerate_cb
+#define DEFINED_default_foreach_with_seq_enumerate_cb
+struct default_foreach_with_seq_enumerate_data {
+	Dee_foreach_t dfwse_cb;  /* [1..1] Underlying callback */
+	void         *dfwse_arg; /* [?..?] Cookie for `dfwse_cb' */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_foreach_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
+	struct default_foreach_with_seq_enumerate_data *data;
+	data = (struct default_foreach_with_seq_enumerate_data *)arg;
+	(void)index;
+	if unlikely(!value)
+		return 0;
+	return (*data->dfwse_cb)(data->dfwse_arg, value);
+}
+#endif /* !DEFINED_default_foreach_with_seq_enumerate_cb */
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default__seq_operator_foreach__with__seq_enumerate(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
+	struct default_foreach_with_seq_enumerate_data data;
+	data.dfwse_cb  = cb;
+	data.dfwse_arg = arg;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_foreach_with_seq_enumerate_cb, &data);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default__seq_operator_foreach__with__seq_enumerate_index(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
+	struct default_foreach_with_seq_enumerate_data data;
+	data.dfwse_cb  = cb;
+	data.dfwse_arg = arg;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, (Dee_ssize_t (DCALL *)(void *, size_t, DeeObject *))
+	                       (Dee_funptr_t)&default_foreach_with_seq_enumerate_cb, &data, 0, (size_t)-1);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1218,6 +1324,53 @@ default__seq_operator_getitem__empty(DeeObject *self, DeeObject *index) {
 	return NULL;
 }
 
+#ifndef DEFINED_default_map_getitem_with_map_enumerate_cb
+#define DEFINED_default_map_getitem_with_map_enumerate_cb
+struct default_map_getitem_with_map_enumerate_data {
+	DeeObject      *dmgiwme_key;    /* [1..1] The key we're looking for. */
+	DREF DeeObject *dmgiwme_result; /* [?..1][out] Result value. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_getitem_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	int temp;
+	struct default_map_getitem_with_map_enumerate_data *data;
+	data = (struct default_map_getitem_with_map_enumerate_data *)arg;
+	temp = DeeObject_TryCompareEq(data->dmgiwme_key, key);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0) {
+		if unlikely(!value)
+			return -3;
+		Dee_Incref(value);
+		data->dmgiwme_result = value;
+		return -2;
+	}
+	return 0;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_map_getitem_with_map_enumerate_cb */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_operator_getitem__with__seq_enumerate(DeeObject *self, DeeObject *index) {
+	struct default_map_getitem_with_map_enumerate_data data;
+	Dee_ssize_t status;
+	data.dmgiwme_key = index;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_map_getitem_with_map_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.dmgiwme_result;
+	if unlikely(status == -3) {
+		err_unbound_index_ob(self, index);
+		goto err;
+	}
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_index_out_of_bounds_ob(self, index);
+err:
+	return NULL;
+}
+
 
 /* seq_operator_getitem_index */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1250,41 +1403,41 @@ default__seq_operator_getitem_index__empty(DeeObject *__restrict self, size_t in
 	return NULL;
 }
 
-#ifndef DEFINED_default_getitem_index_with_foreach
-#define DEFINED_default_getitem_index_with_foreach
-struct default_getitem_index_with_foreach_data {
-	DREF DeeObject *dgiiwfd_result; /* [?..1][out] Item lookup result */
-	size_t          dgiiwfd_nskip;  /* Number of indices left to skip. */
+#ifndef DEFINED_default_seq_getitem_index_with_foreach
+#define DEFINED_default_seq_getitem_index_with_foreach
+struct default_seq_getitem_index_with_foreach_data {
+	DREF DeeObject *dsgiiwfd_result; /* [?..1][out] Item lookup result */
+	size_t          dsgiiwfd_nskip;  /* Number of indices left to skip. */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_getitem_index_with_foreach_cb(void *arg, DeeObject *elem) {
-	struct default_getitem_index_with_foreach_data *data;
-	data = (struct default_getitem_index_with_foreach_data *)arg;
-	if (data->dgiiwfd_nskip == 0) {
+default_seq_getitem_index_with_foreach_cb(void *arg, DeeObject *elem) {
+	struct default_seq_getitem_index_with_foreach_data *data;
+	data = (struct default_seq_getitem_index_with_foreach_data *)arg;
+	if (data->dsgiiwfd_nskip == 0) {
 		Dee_Incref(elem);
-		data->dgiiwfd_result = elem; /* Inherit reference */
+		data->dsgiiwfd_result = elem; /* Inherit reference */
 		return -2;                   /* Stop enumeration */
 	}
-	--data->dgiiwfd_nskip;
+	--data->dsgiiwfd_nskip;
 	return 0;
 }
-#endif /* !DEFINED_default_getitem_index_with_foreach */
+#endif /* !DEFINED_default_seq_getitem_index_with_foreach */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_operator_getitem_index__with__seq_operator_foreach(DeeObject *__restrict self, size_t index) {
-	struct default_getitem_index_with_foreach_data data;
+	struct default_seq_getitem_index_with_foreach_data data;
 	Dee_ssize_t status;
-	data.dgiiwfd_nskip = index;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_getitem_index_with_foreach_cb, &data);
+	data.dsgiiwfd_nskip = index;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_seq_getitem_index_with_foreach_cb, &data);
 	if unlikely(status != -2) {
 		if (status == 0)
 			goto err_bad_bounds;
 		ASSERT(status == -1);
 		goto err;
 	}
-	return data.dgiiwfd_result;
+	return data.dsgiiwfd_result;
 err_bad_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, index - data.dgiiwfd_nskip);
+	err_index_out_of_bounds((DeeObject *)self, index, index - data.dsgiiwfd_nskip);
 err:
 	return NULL;
 }
@@ -1311,18 +1464,18 @@ err:
 	return NULL;
 }
 
-#ifndef DEFINED_default_getitem_index_with_map_enumerate
-#define DEFINED_default_getitem_index_with_map_enumerate
-struct default_getitem_index_with_map_enumerate_data {
-	DREF DeeObject *dgiiwme_result; /* [0..1][out] Item lookup result */
-	size_t          dgiiwme_nskip;  /* Number of indices left to skip. */
+#ifndef DEFINED_default_seq_getitem_index_with_map_enumerate
+#define DEFINED_default_seq_getitem_index_with_map_enumerate
+struct default_seq_getitem_index_with_map_enumerate_data {
+	DREF DeeObject *dsgiiwme_result; /* [0..1][out] Item lookup result */
+	size_t          dsgiiwme_nskip;  /* Number of indices left to skip. */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_getitem_index_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
-	struct default_getitem_index_with_map_enumerate_data *data;
-	data = (struct default_getitem_index_with_map_enumerate_data *)arg;
-	if (data->dgiiwme_nskip == 0) {
+default_seq_getitem_index_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_seq_getitem_index_with_map_enumerate_data *data;
+	data = (struct default_seq_getitem_index_with_map_enumerate_data *)arg;
+	if (data->dsgiiwme_nskip == 0) {
 		if (value) {
 			DREF DeeTupleObject *pair;
 			pair = DeeTuple_NewUninitializedPair();
@@ -1332,39 +1485,78 @@ default_getitem_index_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject
 			pair->t_elem[0] = key;                         /* Inherit reference */
 			Dee_Incref(value);
 			pair->t_elem[1] = value;                       /* Inherit reference */
-			data->dgiiwme_result = (DREF DeeObject *)pair; /* Inherit reference */
+			data->dsgiiwme_result = (DREF DeeObject *)pair; /* Inherit reference */
 		} else {
-			data->dgiiwme_result = NULL;
+			data->dsgiiwme_result = NULL;
 		}
 		return -2; /* Stop enumeration */
 	}
-	--data->dgiiwme_nskip;
+	--data->dsgiiwme_nskip;
 	return 0;
 err:
 	return -1;
 }
-#endif /* !DEFINED_default_getitem_index_with_map_enumerate */
+#endif /* !DEFINED_default_seq_getitem_index_with_map_enumerate */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_operator_getitem_index__with__map_enumerate(DeeObject *__restrict self, size_t index) {
-	struct default_getitem_index_with_map_enumerate_data data;
+	struct default_seq_getitem_index_with_map_enumerate_data data;
 	Dee_ssize_t status;
-	data.dgiiwme_nskip = index;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_getitem_index_with_map_enumerate_cb, &data);
+	data.dsgiiwme_nskip = index;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_seq_getitem_index_with_map_enumerate_cb, &data);
 	if unlikely(status != -2) {
 		if (status == 0)
 			goto err_bad_bounds;
 		ASSERT(status == -1);
 		goto err;
 	}
-	if unlikely(!data.dgiiwme_result)
+	if unlikely(!data.dsgiiwme_result)
 		goto err_unbound;
-	return data.dgiiwme_result;
+	return data.dsgiiwme_result;
 err_unbound:
 	err_unbound_index(self, index);
 	goto err;
 err_bad_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, index - data.dgiiwme_nskip);
+	err_index_out_of_bounds((DeeObject *)self, index, index - data.dsgiiwme_nskip);
 err:
+	return NULL;
+}
+
+#ifndef DEFINED_default_seq_getitem_index_with_seq_enumerate_index
+#define DEFINED_default_seq_getitem_index_with_seq_enumerate_index
+struct default_seq_getitem_index_with_seq_enumerate_index_data {
+	DREF DeeObject *dsgiiwsei_result;    /* [0..1][out] Item lookup result */
+	size_t          dsgiiwsei_index;     /* Intended index */
+	size_t          dsgiiwsei_lastindex; /* Last encountered index */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_seq_getitem_index_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	struct default_seq_getitem_index_with_seq_enumerate_index_data *data;
+	data = (struct default_seq_getitem_index_with_seq_enumerate_index_data *)arg;
+	if (data->dsgiiwsei_index == index) {
+		data->dsgiiwsei_result = value;
+		Dee_XIncref(value);
+		return -2;
+	} else {
+		data->dsgiiwsei_lastindex = index;
+	}
+	return 0;
+}
+#endif /* !DEFINED_default_seq_getitem_index_with_seq_enumerate_index */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_operator_getitem_index__with__seq_enumerate_index(DeeObject *__restrict self, size_t index) {
+	Dee_ssize_t status;
+	struct default_seq_getitem_index_with_seq_enumerate_index_data data;
+	data.dsgiiwsei_index     = index;
+	data.dsgiiwsei_lastindex = (size_t)-1;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_getitem_index_with_seq_enumerate_index_cb, &data, index, (size_t)-1);
+	if likely(status == -2) {
+		if unlikely(!data.dsgiiwsei_result)
+			err_unbound_index(self, index);
+		return data.dsgiiwsei_result;
+	}
+	if likely(status == 0)
+		err_index_out_of_bounds(self, index, data.dsgiiwsei_lastindex + 1);
 	return NULL;
 }
 
@@ -1396,6 +1588,22 @@ err:
 	return NULL;
 }
 
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_operator_trygetitem__with__seq_enumerate(DeeObject *self, DeeObject *index) {
+	struct default_map_getitem_with_map_enumerate_data data;
+	Dee_ssize_t status;
+	data.dmgiwme_key = index;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_map_getitem_with_map_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.dmgiwme_result;
+	ASSERT(status == -3 || status == -1 || status == 0);
+	if unlikely(status == -1)
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
 
 /* seq_operator_trygetitem_index */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1416,17 +1624,17 @@ default__seq_operator_trygetitem_index__with__seq_operator_getitem_index(DeeObje
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_operator_trygetitem_index__with__seq_operator_foreach(DeeObject *__restrict self, size_t index) {
-	struct default_getitem_index_with_foreach_data data;
+	struct default_seq_getitem_index_with_foreach_data data;
 	Dee_ssize_t status;
-	data.dgiiwfd_nskip = index;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_getitem_index_with_foreach_cb, &data);
+	data.dsgiiwfd_nskip = index;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_seq_getitem_index_with_foreach_cb, &data);
 	if unlikely(status != -2) {
 		if (status == 0)
 			goto err_bad_bounds;
 		ASSERT(status == -1);
 		goto err;
 	}
-	return data.dgiiwfd_result;
+	return data.dsgiiwfd_result;
 err_bad_bounds:
 	return ITER_DONE;
 err:
@@ -1435,23 +1643,43 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_operator_trygetitem_index__with__map_enumerate(DeeObject *__restrict self, size_t index) {
-	struct default_getitem_index_with_map_enumerate_data data;
+	struct default_seq_getitem_index_with_map_enumerate_data data;
 	Dee_ssize_t status;
-	data.dgiiwme_nskip = index;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_getitem_index_with_map_enumerate_cb, &data);
+	data.dsgiiwme_nskip = index;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_seq_getitem_index_with_map_enumerate_cb, &data);
 	if unlikely(status != -2) {
 		if (status == 0)
 			goto err_bad_bounds;
 		ASSERT(status == -1);
 		goto err;
 	}
-	if unlikely(!data.dgiiwme_result)
+	if unlikely(!data.dsgiiwme_result)
 		goto err_unbound;
-	return data.dgiiwme_result;
+	return data.dsgiiwme_result;
 err_unbound:
 err_bad_bounds:
 	return ITER_DONE;
 err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_operator_trygetitem_index__with__seq_enumerate_index(DeeObject *__restrict self, size_t index) {
+	size_t end_index;
+	Dee_ssize_t status;
+	struct default_seq_getitem_index_with_seq_enumerate_index_data data;
+	data.dsgiiwsei_index     = index;
+	data.dsgiiwsei_lastindex = (size_t)-1;
+	if (OVERFLOW_UADD(index, 1, &end_index))
+		end_index = (size_t)-1;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_getitem_index_with_seq_enumerate_index_cb, &data, index, end_index);
+	if likely(status == -2) {
+		if unlikely(!data.dsgiiwsei_result)
+			return ITER_DONE;
+		return data.dsgiiwsei_result;
+	}
+	if likely(status == 0)
+		return ITER_DONE;
 	return NULL;
 }
 
@@ -1502,6 +1730,31 @@ err:
 	return -1;
 }
 
+#ifndef DEFINED_default_bounditem_with_seq_enumerate
+#define DEFINED_default_bounditem_with_seq_enumerate
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_bounditem_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
+	int cmp;
+	(void)value;
+	cmp = DeeObject_TryCompareEq((DeeObject *)arg, index);
+	if unlikely(cmp == Dee_COMPARE_ERR)
+		goto err;
+	if (cmp == 0)
+		return value ? -3 : -2;
+	return 0;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_bounditem_with_seq_enumerate */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__seq_operator_hasitem__with__seq_enumerate(DeeObject *self, DeeObject *index) {
+	Dee_ssize_t status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_bounditem_with_seq_enumerate_cb, (void *)index);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -3 || status == -2)
+		return 1;
+	return (int)status; /* 0 (index doesn't exist) or -1 (error) */
+}
+
 
 /* seq_operator_hasitem_index */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1534,6 +1787,30 @@ default__seq_operator_hasitem_index__with__seq_operator_size(DeeObject *__restri
 	return index < seqsize ? 1 : 0;
 err:
 	return -1;
+}
+
+#ifndef DEFINED_default_bounditem_index_with_seq_enumerate_index
+#define DEFINED_default_bounditem_index_with_seq_enumerate_index
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_bounditem_index_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	if ((size_t)(uintptr_t)arg == index)
+		return value ? -4 : -3;
+	return -2;
+}
+#endif /* !DEFINED_default_bounditem_index_with_seq_enumerate_index */
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__seq_operator_hasitem_index__with__seq_enumerate_index(DeeObject *__restrict self, size_t index) {
+	size_t end_index;
+	Dee_ssize_t status;
+	if (OVERFLOW_UADD(index, 1, &end_index))
+		end_index = (size_t)-1;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_bounditem_index_with_seq_enumerate_index_cb, (void *)(uintptr_t)index, index, end_index);
+	ASSERT(status == -4 || status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -2)
+		return 0;
+	if (status == -4 || status == -3)
+		return 1;
+	return (int)status; /* 0 (empty; aka: index doesn't exist) or -1 (error) */
 }
 
 
@@ -1578,6 +1855,19 @@ default__seq_operator_bounditem__empty(DeeObject *UNUSED(self), DeeObject *UNUSE
 	return Dee_BOUND_MISSING;
 }
 
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__seq_operator_bounditem__with__seq_enumerate(DeeObject *self, DeeObject *index) {
+	Dee_ssize_t status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_bounditem_with_seq_enumerate_cb, (void *)index);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -3)
+		return Dee_BOUND_YES;
+	if (status == -2)
+		return Dee_BOUND_NO;
+	if (status == -1)
+		return Dee_BOUND_ERR;
+	return Dee_BOUND_MISSING;
+}
+
 
 /* seq_operator_bounditem_index */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1612,19 +1902,19 @@ default__seq_operator_bounditem_index__empty(DeeObject *__restrict UNUSED(self),
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bounditem_index__with__map_enumerate(DeeObject *__restrict self, size_t index) {
-	struct default_getitem_index_with_map_enumerate_data data;
+	struct default_seq_getitem_index_with_map_enumerate_data data;
 	Dee_ssize_t status;
-	data.dgiiwme_nskip = index;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_getitem_index_with_map_enumerate_cb, &data);
+	data.dsgiiwme_nskip = index;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_seq_getitem_index_with_map_enumerate_cb, &data);
 	if unlikely(status != -2) {
 		if (status == 0)
 			goto err_bad_bounds;
 		ASSERT(status == -1);
 		goto err;
 	}
-	if unlikely(!data.dgiiwme_result)
+	if unlikely(!data.dsgiiwme_result)
 		goto err_unbound;
-	Dee_Decref(data.dgiiwme_result);
+	Dee_Decref(data.dsgiiwme_result);
 	return Dee_BOUND_YES;
 err_unbound:
 	return Dee_BOUND_NO;
@@ -1632,6 +1922,24 @@ err_bad_bounds:
 	return Dee_BOUND_MISSING;
 err:
 	return Dee_BOUND_ERR;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__seq_operator_bounditem_index__with__seq_enumerate_index(DeeObject *__restrict self, size_t index) {
+	size_t end_index;
+	Dee_ssize_t status;
+	if (OVERFLOW_UADD(index, 1, &end_index))
+		end_index = (size_t)-1;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_bounditem_index_with_seq_enumerate_index_cb, (void *)(uintptr_t)index, index, end_index);
+	ASSERT(status == -4 || status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -1)
+		return Dee_BOUND_ERR;
+	if (status == -3)
+		return Dee_BOUND_NO;
+	if (status == -4)
+		return Dee_BOUND_YES;
+	ASSERT(status == -2 || status == 0);
+	return Dee_BOUND_MISSING;
 }
 
 
@@ -7124,6 +7432,18 @@ default__seq_cached__with__seq_operator_sizeob__and__seq_operator_getitem(DeeObj
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_cached__with__seq_operator_getitem(DeeObject *__restrict self) {
+	// TODO
+	return default__seq_cached__with__seq_operator_iter(self);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_cached__with__seq_enumerate(DeeObject *__restrict self) {
+	// TODO
+	return default__seq_cached__with__seq_operator_iter(self);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_cached__with__seq_enumerate_index(DeeObject *__restrict self) {
 	// TODO
 	return default__seq_cached__with__seq_operator_iter(self);
 }
@@ -17030,41 +17350,14 @@ default__map_operator_getitem__empty(DeeObject *self, DeeObject *key) {
 	return NULL;
 }
 
-#ifndef DEFINED_default_map_getitem_with_enumerate_cb
-#define DEFINED_default_map_getitem_with_enumerate_cb
-struct default_map_getitem_with_enumerate_data {
-	DeeObject      *mgied_key;    /* [1..1] The key we're looking for. */
-	DREF DeeObject *mgied_result; /* [?..1][out] Result value. */
-};
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_getitem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
-	int temp;
-	struct default_map_getitem_with_enumerate_data *data;
-	data = (struct default_map_getitem_with_enumerate_data *)arg;
-	temp = DeeObject_TryCompareEq(data->mgied_key, key);
-	if unlikely(temp == Dee_COMPARE_ERR)
-		goto err;
-	if (temp == 0) {
-		if unlikely(!value)
-			return -3;
-		Dee_Incref(value);
-		data->mgied_result = value;
-		return -2;
-	}
-	return 0;
-err:
-	return -1;
-}
-#endif /* !DEFINED_default_map_getitem_with_enumerate_cb */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_getitem__with__map_enumerate(DeeObject *self, DeeObject *key) {
-	struct default_map_getitem_with_enumerate_data data;
+	struct default_map_getitem_with_map_enumerate_data data;
 	Dee_ssize_t status;
-	data.mgied_key = key;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_map_getitem_with_enumerate_cb, &data);
+	data.dmgiwme_key = key;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_map_getitem_with_map_enumerate_cb, &data);
 	if likely(status == -2)
-		return data.mgied_result;
+		return data.dmgiwme_result;
 	if unlikely(status == -3) {
 		err_unbound_key(self, key);
 		goto err;
@@ -17154,11 +17447,11 @@ default__map_operator_trygetitem__with__map_operator_getitem(DeeObject *self, De
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_trygetitem__with__map_enumerate(DeeObject *self, DeeObject *key) {
 	Dee_ssize_t status;
-	struct default_map_getitem_with_enumerate_data data;
-	data.mgied_key = key;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_map_getitem_with_enumerate_cb, &data);
+	struct default_map_getitem_with_map_enumerate_data data;
+	data.dmgiwme_key = key;
+	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_map_getitem_with_map_enumerate_cb, &data);
 	if likely(status == -2)
-		return data.mgied_result;
+		return data.dmgiwme_result;
 	if (status == -3 || status == 0)
 		return ITER_DONE;
 	ASSERT(status == -1);

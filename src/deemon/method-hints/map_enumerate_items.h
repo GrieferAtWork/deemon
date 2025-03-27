@@ -119,11 +119,11 @@ return__with__map_operator_iter:
 		DeeMH_map_operator_iter_t map_operator_iter = REQUIRE(map_operator_iter);
 		if (map_operator_iter == &default__map_operator_iter__empty)
 			return &$empty;
-		if (map_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem)
+		if (map_operator_iter == &default__map_operator_iter__with__map_iterkeys__and__map_operator_trygetitem)
 			return &$with__map_iterkeys__and__map_operator_trygetitem;
-		if (map_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem)
+		if (map_operator_iter == &default__map_operator_iter__with__map_iterkeys__and__map_operator_getitem)
 			return &$with__map_iterkeys__and__map_operator_getitem;
-		if (map_operator_iter != &default__seq_operator_iter__with__map_enumerate)
+		if (map_operator_iter != &default__map_operator_iter__with__map_enumerate)
 			goto return__with__map_operator_iter;
 		return &$with__map_enumerate;
 	}

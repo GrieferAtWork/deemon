@@ -25,34 +25,34 @@ __map_getitem__(key)->?O {
 	return CALL_DEPENDENCY(map_operator_getitem, self, key);
 }
 
-%[define(DEFINE_default_map_getitem_with_enumerate_cb =
-#ifndef DEFINED_default_map_getitem_with_enumerate_cb
-#define DEFINED_default_map_getitem_with_enumerate_cb
-struct default_map_getitem_with_enumerate_data {
-	DeeObject      *mgied_key;    /* [1..1] The key we're looking for. */
-	DREF DeeObject *mgied_result; /* [?..1][out] Result value. */
+%[define(DEFINE_default_map_getitem_with_map_enumerate_cb =
+#ifndef DEFINED_default_map_getitem_with_map_enumerate_cb
+#define DEFINED_default_map_getitem_with_map_enumerate_cb
+struct default_map_getitem_with_map_enumerate_data {
+	DeeObject      *dmgiwme_key;    /* [1..1] The key we're looking for. */
+	DREF DeeObject *dmgiwme_result; /* [?..1][out] Result value. */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_getitem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+default_map_getitem_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int temp;
-	struct default_map_getitem_with_enumerate_data *data;
-	data = (struct default_map_getitem_with_enumerate_data *)arg;
-	temp = DeeObject_TryCompareEq(data->mgied_key, key);
+	struct default_map_getitem_with_map_enumerate_data *data;
+	data = (struct default_map_getitem_with_map_enumerate_data *)arg;
+	temp = DeeObject_TryCompareEq(data->dmgiwme_key, key);
 	if unlikely(temp == Dee_COMPARE_ERR)
 		goto err;
 	if (temp == 0) {
 		if unlikely(!value)
 			return -3;
 		Dee_Incref(value);
-		data->mgied_result = value;
+		data->dmgiwme_result = value;
 		return -2;
 	}
 	return 0;
 err:
 	return -1;
 }
-#endif /* !DEFINED_default_map_getitem_with_enumerate_cb */
+#endif /* !DEFINED_default_map_getitem_with_map_enumerate_cb */
 )]
 
 
@@ -120,13 +120,13 @@ err:
 err:
 	return NULL;
 }}
-%{$with__map_enumerate = [[prefix(DEFINE_default_map_getitem_with_enumerate_cb)]] {
-	struct default_map_getitem_with_enumerate_data data;
+%{$with__map_enumerate = [[prefix(DEFINE_default_map_getitem_with_map_enumerate_cb)]] {
+	struct default_map_getitem_with_map_enumerate_data data;
 	Dee_ssize_t status;
-	data.mgied_key = key;
-	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_getitem_with_enumerate_cb, &data);
+	data.dmgiwme_key = key;
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_getitem_with_map_enumerate_cb, &data);
 	if likely(status == -2)
-		return data.mgied_result;
+		return data.dmgiwme_result;
 	if unlikely(status == -3) {
 		err_unbound_key(self, key);
 		goto err;
@@ -228,13 +228,13 @@ err:
 		return ITER_DONE;
 	return NULL;
 }}
-%{$with__map_enumerate = [[prefix(DEFINE_default_map_getitem_with_enumerate_cb)]] {
+%{$with__map_enumerate = [[prefix(DEFINE_default_map_getitem_with_map_enumerate_cb)]] {
 	Dee_ssize_t status;
-	struct default_map_getitem_with_enumerate_data data;
-	data.mgied_key = key;
-	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_getitem_with_enumerate_cb, &data);
+	struct default_map_getitem_with_map_enumerate_data data;
+	data.dmgiwme_key = key;
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_getitem_with_map_enumerate_cb, &data);
 	if likely(status == -2)
-		return data.mgied_result;
+		return data.dmgiwme_result;
 	if (status == -3 || status == 0)
 		return ITER_DONE;
 	ASSERT(status == -1);

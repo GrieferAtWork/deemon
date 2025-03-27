@@ -27,6 +27,22 @@ __seq_size__()->?Dint {
 
 
 
+%[define(DEFINE_default_seq_operator_sizeob_with_seq_enumerate_cb =
+#ifndef DEFINED_default_seq_operator_sizeob_with_seq_enumerate_cb
+#define DEFINED_default_seq_operator_sizeob_with_seq_enumerate_cb
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_operator_sizeob_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
+	DREF DeeObject **p_lastindex = (DREF DeeObject **)arg;
+	(void)value;
+	Dee_Incref(index);
+	Dee_Decref(*p_lastindex);
+	*p_lastindex = index;
+	return 0;
+}
+#endif /* !DEFINED_default_seq_operator_sizeob_with_seq_enumerate_cb */
+)]
+
+
 [[operator([Sequence, Set, Mapping]: tp_seq->tp_sizeob)]]
 [[wunused]]
 DREF DeeObject *__seq_size__.seq_operator_sizeob([[nonnull]] DeeObject *__restrict self)
@@ -39,6 +55,25 @@ DREF DeeObject *__seq_size__.seq_operator_sizeob([[nonnull]] DeeObject *__restri
 		goto err;
 	return DeeInt_NewSize(seqsize);
 err:
+	return NULL;
+}}
+%{$with__seq_enumerate = [[prefix(DEFINE_default_seq_operator_sizeob_with_seq_enumerate_cb)]] {
+	Dee_ssize_t status;
+	DREF DeeObject *result = DeeNone_NewRef();
+	status = CALL_DEPENDENCY(seq_enumerate, self,
+	                         &default_seq_operator_sizeob_with_seq_enumerate_cb,
+	                         (void *)&result);
+	if unlikely(status < 0)
+		goto err_r;
+	if (DeeNone_Check(result)) {
+		Dee_DecrefNokill(Dee_None);
+		return DeeInt_NewZero();
+	}
+	if (DeeObject_Inc(&result))
+		goto err_r;
+	return result;
+err_r:
+	Dee_Decref(result);
 	return NULL;
 }} {
 	return LOCAL_CALLATTR(self, 0, NULL);
@@ -68,6 +103,19 @@ default_seq_size_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *valu
 	return 1;
 }
 #endif /* !DEFINED_default_seq_size_with_foreach_pair_cb */
+)]
+
+
+%[define(DEFINE_default_seq_size_with_seq_enumerate_index_cb =
+#ifndef DEFINED_default_seq_size_with_seq_enumerate_index_cb
+#define DEFINED_default_seq_size_with_seq_enumerate_index_cb
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_seq_size_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	(void)value;
+	*(size_t *)arg = index;
+	return 0;
+}
+#endif /* !DEFINED_default_seq_size_with_seq_enumerate_index_cb */
 )]
 
 
@@ -124,6 +172,22 @@ err:
 	return result;
 err:
 	return (size_t)-1;
+}}
+%{$with__seq_enumerate_index = [[prefix(DEFINE_default_seq_size_with_seq_enumerate_index_cb)]] {
+	Dee_ssize_t status;
+	size_t result = (size_t)-1;
+	status = CALL_DEPENDENCY(seq_enumerate_index, self,
+	                         &default_seq_size_with_seq_enumerate_index_cb,
+	                         (void *)&result, 0, (size_t)-1);
+	ASSERT(status == -1 || status == 0);
+	if unlikely(status)
+		goto err;
+	++result;
+	if unlikely(result == (size_t)-1)
+		err_integer_overflow_i(sizeof(size_t) * 8, true);
+	return result;
+err:
+	return (size_t)-1;
 }} = $with__seq_operator_sizeob;
 
 
@@ -135,6 +199,13 @@ seq_operator_sizeob = {
 		if (seq_operator_size == &default__seq_operator_size__with__set_operator_sizeob ||
 		    seq_operator_size == REQUIRE_NODEFAULT(set_operator_size))
 			return REQUIRE(set_operator_sizeob);
+		if (seq_operator_size == &default__seq_operator_size__with__map_operator_sizeob ||
+		    seq_operator_size == REQUIRE_NODEFAULT(map_operator_size))
+			return REQUIRE(map_operator_sizeob);
+		if (seq_operator_size == &default__seq_operator_size__with__seq_enumerate_index) {
+			if (REQUIRE_NODEFAULT(seq_enumerate))
+				return &$with__seq_enumerate;
+		}
 		return &$with__seq_operator_size;
 	}
 };
@@ -165,6 +236,9 @@ seq_operator_size = {
 	}
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__map_enumerate)
 		return &$with__map_enumerate;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_enumerate ||
+	    seq_operator_foreach == &default__seq_operator_foreach__with__seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_iter)
 		return &$with__seq_operator_iter;
 	if (seq_operator_foreach)

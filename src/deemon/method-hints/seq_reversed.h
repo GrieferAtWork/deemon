@@ -199,6 +199,7 @@ err:
 
 
 seq_reversed = {
+	/* TODO: Implement using seq_enumerate_index! */
 	DeeMH_seq_operator_size_t seq_operator_size = REQUIRE_ANY(seq_operator_size);
 	if (seq_operator_size != &default__seq_operator_size__unsupported) {
 		DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
