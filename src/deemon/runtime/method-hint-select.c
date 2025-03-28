@@ -204,7 +204,9 @@ with_seq_operator_size:
 		if ((DeeMH_map_operator_getitem_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_getitem))
 			return &default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem;
 	}
-	if ((DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_enumerate_index))
+	if ((DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_enumerate_index) ||
+	    (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_foreach) ||
+	    (DeeMH_seq_operator_foreach_pair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_foreach_pair))
 		return &default__seq_operator_iter__with__seq_enumerate_index;
 	if ((DeeMH_seq_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_enumerate))
 		return &default__seq_operator_iter__with__seq_enumerate;
@@ -216,13 +218,10 @@ with_seq_operator_size:
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_foreach_t DCALL
 mh_select_seq_operator_foreach(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_iter_t seq_operator_iter;
-	if ((DeeMH_seq_operator_foreach_pair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_foreach_pair) ||
-	    (DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_foreach_pair))
+	/*if (REQUIRE_NODEFAULT(seq_operator_foreach_pair))
+		return &$with__seq_operator_foreach_pair;*/
+	if ((DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_foreach_pair))
 		return &default__seq_operator_foreach__with__seq_operator_foreach_pair;
-	if ((DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_enumerate_index))
-		return &default__seq_operator_foreach__with__seq_enumerate_index;
-	if ((DeeMH_seq_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_enumerate))
-		return &default__seq_operator_foreach__with__seq_enumerate;
 	seq_operator_iter = (DeeMH_seq_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &default__seq_operator_foreach__empty;

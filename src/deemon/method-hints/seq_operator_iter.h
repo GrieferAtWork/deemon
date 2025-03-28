@@ -625,7 +625,9 @@ with_seq_operator_size:
 		if (REQUIRE_NODEFAULT(map_operator_getitem))
 			return &$with__map_iterkeys__and__map_operator_getitem;
 	}
-	if (REQUIRE_NODEFAULT(seq_enumerate_index))
+	if (REQUIRE_NODEFAULT(seq_enumerate_index) ||
+	    REQUIRE_NODEFAULT(seq_operator_foreach) ||
+	    REQUIRE_NODEFAULT(seq_operator_foreach_pair))
 		return &$with__seq_enumerate_index;
 	if (REQUIRE_NODEFAULT(seq_enumerate))
 		return &$with__seq_enumerate;
@@ -636,13 +638,10 @@ with_seq_operator_size:
 
 seq_operator_foreach = {
 	DeeMH_seq_operator_iter_t seq_operator_iter;
-	if (REQUIRE_NODEFAULT(seq_operator_foreach_pair) ||
-	    REQUIRE_NODEFAULT(map_operator_foreach_pair))
+	/*if (REQUIRE_NODEFAULT(seq_operator_foreach_pair))
+		return &$with__seq_operator_foreach_pair;*/
+	if (REQUIRE_NODEFAULT(map_operator_foreach_pair))
 		return &$with__seq_operator_foreach_pair;
-	if (REQUIRE_NODEFAULT(seq_enumerate_index))
-		return &$with__seq_enumerate_index;
-	if (REQUIRE_NODEFAULT(seq_enumerate))
-		return &$with__seq_enumerate;
 	seq_operator_iter = REQUIRE(seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &$empty;
