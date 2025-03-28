@@ -110,6 +110,11 @@ function captureStdout(cb: Callable): string {
 
 
 
+final class PPDirective {
+	this = default;
+	public final member directive: string;
+}
+
 final class RegexAlign {
 	this = default;
 	public final member pattern: string;
@@ -143,7 +148,7 @@ final class SubTable {
 	public final member typ: string;
 }
 
-#define InitializerSpec RegexAlign | Field | NativeOperator | SubTable | Object/*InitializerSpecs*/
+#define InitializerSpec RegexAlign | PPDirective | Field | NativeOperator | SubTable | Object/*InitializerSpecs*/
 #define InitializerSpecs {InitializerSpec...}
 
 global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
@@ -334,12 +339,12 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 		NativeOperator("tp_call_kw"),
 		NativeOperator("tp_thiscall"),
 		NativeOperator("tp_thiscall_kw"),
-		// TODO: #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+		PPDirective("#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS"),
 		NativeOperator("tp_call_tuple"),
 		NativeOperator("tp_call_tuple_kw"),
 		NativeOperator("tp_thiscall_tuple"),
 		NativeOperator("tp_thiscall_tuple_kw"),
-		// TODO: #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+		PPDirective("#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */"),
 	},
 };
 
@@ -384,7 +389,7 @@ final class SubTableImpl {
 	public property allInitializersUnsupported: bool = {
 		get(): bool {
 			for (local x: initializers) {
-				if (x != "NULL" && !x.startswith("UNSUPPORTED("))
+				if (x && x != "NULL" && !x.startswith("UNSUPPORTED("))
 					return false;
 			}
 			return true;
@@ -436,6 +441,8 @@ function _buildDefaultOperatorSubTable(subTable: SubTable, typ: Type)
 	for (local spec: specs) {
 		if (spec is Field) {
 			initializers.append("NULL");
+		} else if (spec is PPDirective) {
+			initializers.append("");
 		} else if (spec is NativeOperator) {
 			local init = _Type_getNativeOperatorName(typ, spec.operatorName);
 			if (init is none)
@@ -496,7 +503,7 @@ function textAdvance(data: string, i: int): int {
 		}
 	}	break;
 
-	case "/":
+	case "/": {
 		if (data.startswith("/*", i)) {
 			local eoc = data.find("*/", i + 2);
 			if (eoc < 0) {
@@ -510,8 +517,6 @@ function textAdvance(data: string, i: int): int {
 			++i;
 			break;
 		}
-		/* FALLTHRU */
-	case "#": {
 		local eol = data.find("\n", i);
 		if (eol < 0) {
 			i = #data;
@@ -707,6 +712,10 @@ final class InitParser {
 				print out: (formatDefImpl(spec.operatorName), ","),;
 			}
 			return true;
+		} else if (spec is PPDirective) {
+			print out:;
+			print out: spec.directive,;
+			return true;
 		} else if (spec is Sequence) {
 			local result = true;
 			print out:;
@@ -807,6 +816,11 @@ final class InitParser {
 				err(f"Failed to align to regex '{spec.pattern}'");
 			i = alignEnd;
 			skipSpace();
+		} else if (spec is PPDirective) {
+			if (!data.startswith(spec.directive, i, len))
+				err(f"Failed to align to directive '{spec.directive}'");
+			i += #spec.directive;
+			skipSpace();
 		} else if (spec is Field) {
 			local fieldStart = i;
 			i = findEndOfInitializer();
@@ -844,8 +858,11 @@ final class InitParser {
 				if (currCh == "}")
 					goto handle_end_of_seq;
 				processSpec(seqPart, indent: indent + 1);
+				if (seqPart is PPDirective)
+					goto check_for_end_of_struct;
 				if (currCh == ",") {
 					nextCh();
+check_for_end_of_struct:
 					if (currCh == "}") {
 						flushUntilHereBeforeSpace();
 						goto handle_end_of_seq_after_comma;
@@ -952,6 +969,7 @@ final class StructInitializer {
 				len: #body,
 				flushStart: 0,
 				typ: typ);
+#if 0
 		/* Don't do anything if the initializer contains preprocessor directives! */
 		local start = body.refind(r'\n\s*#').last;
 		if (start !is none) {
@@ -961,6 +979,7 @@ final class StructInitializer {
 					f"initializer contains preprocessor directive",
 					warning: true);
 		}
+#endif
 		parser.skipSpace();
 		parser.processSpec(initSpecs);
 		parser.flushRemainder();
@@ -1207,11 +1226,17 @@ function doPrintComputedOperators(impl: bool) {
 		if (impl) {
 			local specs: InitializerSpecs = STRUCT_INITIALIZERS[defTab.subTable.typ];
 			print(" = {");
-			local specsMaxNameLen = specs.each.name.length > ...;
+			local specsMaxNameLen = specs
+					.filter(e -> e !is PPDirective)
+					.each.name.length > ...;
 			for (local i, spec: specs.enumerate()) {
 				local init = defTab.initializers[i];
 				local inRelevantBlock = false;
-				print("	/* .", spec.name.ljust(specsMaxNameLen), " = */ ", init, ",");
+				if (spec is PPDirective) {
+					print(spec.directive);
+				} else {
+					print("	/* .", spec.name.ljust(specsMaxNameLen), " = */ ", init, ",");
+				}
 			}
 			print("}"),;
 		}

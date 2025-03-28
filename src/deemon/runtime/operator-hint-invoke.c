@@ -107,6 +107,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	return (*tp_thiscall_kw)(self, thisarg, argc, argv, kw);
 }
 
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_CallTuple)(DeeObject *self, DeeObject *args) {
 	__register DeeNO_call_tuple_t tp_call_tuple;
@@ -143,6 +144,7 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 	return (*tp_thiscall_tuple_kw)(self, thisarg, args, kw);
 }
 
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 PUBLIC ATTR_HOT WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_IterNext)(DeeObject *__restrict self) {
 	__register DeeNO_iter_next_t tp_iter_next;
@@ -1012,6 +1014,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 	return (*maketyped__thiscall_kw(tp_thiscall_kw))(tp_self, self, thisarg, argc, argv, kw);
 }
 
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 (DCALL DeeObject_TCallTuple)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args) {
 	__register DeeNO_call_tuple_t tp_call_tuple;
@@ -1060,6 +1063,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *
 	return (*maketyped__thiscall_tuple_kw(tp_thiscall_tuple_kw))(tp_self, self, thisarg, args, kw);
 }
 
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_TIterNext)(DeeTypeObject *tp_self, DeeObject *self) {
 	__register DeeNO_iter_next_t tp_iter_next;

@@ -44,20 +44,28 @@ INTDEF void*DCALL _default__repr__unsupported(DeeObject*);
 INTDEF Dee_ssize_t DCALL _default__printrepr__unsupported(DeeObject*, Dee_formatprinter_t, void*);
 INTDEF int DCALL _default__bool__unsupported(DeeObject*);
 INTDEF void*DCALL _default__call__unsupported(DeeObject*, void*, void*);
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 #define _default__call_tuple_kw__unsupported _default__call__unsupported
 #define _default__thiscall_tuple__unsupported _default__call__unsupported
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 INTDEF void*DCALL default__call_kw__badalloc(void*, void*, void*, void*);
 #define default__thiscall__badalloc default__call_kw__badalloc
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 #define default__thiscall_tuple_kw__badalloc default__call_kw__badalloc
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 INTDEF void*DCALL _default__call_kw__unsupported(DeeObject*, void*, void*, void*);
 #define _default__thiscall__unsupported _default__call_kw__unsupported
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 #define _default__thiscall_tuple_kw__unsupported _default__call_kw__unsupported
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 INTDEF void*DCALL default__thiscall_kw__badalloc(void*, void*, void*, void*, void*);
 INTDEF void*DCALL _default__thiscall_kw__unsupported(DeeObject*, void*, void*, void*, void*);
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 INTDEF void*DCALL default__call_tuple__badalloc(void*, void*);
 INTDEF void*DCALL _default__call_tuple__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__call_tuple_kw__badalloc(void*, void*, void*);
 #define default__thiscall_tuple__badalloc default__call_tuple_kw__badalloc
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 INTDEF void*DCALL _default__iter_next__unsupported(DeeObject*);
 #define _default__nextkey__unsupported _default__iter_next__unsupported
 #define _default__nextvalue__unsupported _default__iter_next__unsupported
@@ -256,10 +264,12 @@ INTDEF int DCALL default__setattr_string_len_hash__badalloc(void*, void*, void*,
 #define default__call_kw__unsupported                    (*(DeeNO_call_kw_t)&_default__call_kw__unsupported)
 #define default__thiscall__unsupported                   (*(DeeNO_thiscall_t)&_default__thiscall__unsupported)
 #define default__thiscall_kw__unsupported                (*(DeeNO_thiscall_kw_t)&_default__thiscall_kw__unsupported)
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 #define default__call_tuple__unsupported                 (*(DeeNO_call_tuple_t)&_default__call_tuple__unsupported)
 #define default__call_tuple_kw__unsupported              (*(DeeNO_call_tuple_kw_t)&_default__call_tuple_kw__unsupported)
 #define default__thiscall_tuple__unsupported             (*(DeeNO_thiscall_tuple_t)&_default__thiscall_tuple__unsupported)
 #define default__thiscall_tuple_kw__unsupported          (*(DeeNO_thiscall_tuple_kw_t)&_default__thiscall_tuple_kw__unsupported)
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #define default__iter_next__unsupported                  (*(DeeNO_iter_next_t)&_default__iter_next__unsupported)
 #define default__nextpair__unsupported                   (*(DeeNO_nextpair_t)&_default__nextpair__unsupported)
 #define default__nextkey__unsupported                    (*(DeeNO_nextkey_t)&_default__nextkey__unsupported)

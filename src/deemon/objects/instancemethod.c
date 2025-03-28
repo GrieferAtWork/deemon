@@ -154,21 +154,16 @@ im_call_kw(InstanceMethod *self, size_t argc,
 }
 
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-#define im_call_tuple_PTR &im_call_tuple
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 im_call_tuple(InstanceMethod *self, DeeObject *args) {
 	return DeeObject_ThisCallTuple(self->im_func, self->im_this, args);
 }
 
-#define im_call_tuple_kw_PTR &im_call_tuple_kw
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 im_call_tuple_kw(InstanceMethod *self,  DeeObject *args, DeeObject *kw) {
 	return DeeObject_ThisCallTupleKw(self->im_func, self->im_this, args, kw);
 }
-#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
-#define im_call_tuple_PTR    NULL
-#define im_call_tuple_kw_PTR NULL
-#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 PRIVATE WUNUSED NONNULL((1)) struct class_attribute *DCALL
 instancemethod_getattr(InstanceMethod *__restrict self,
@@ -306,10 +301,12 @@ PRIVATE struct type_callable im_callable = {
 	/* .tp_call_kw           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&im_call_kw,
 	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
 	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
-	/* .tp_call_tuple        = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))im_call_tuple_PTR,
-	/* .tp_call_tuple_kw     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))im_call_tuple_kw_PTR,
-	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
-	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	/* .tp_call_tuple        = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&im_call_tuple,
+	/* .tp_call_tuple_kw     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&im_call_tuple_kw,
+	/* .tp_thiscall_tuple    = */ NULL,
+	/* .tp_thiscall_tuple_kw = */ NULL,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
 
 PRIVATE struct type_getset tpconst im_getsets[] = {

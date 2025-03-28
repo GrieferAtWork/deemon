@@ -44,6 +44,36 @@ global final _printedPrefixBlocks: {string...} = HashSet();
 #endif
 
 
+
+class PPCondPrinter {
+	this = default;
+	private member ppCond = "1";
+
+	public setPPCond(cond: string = "1") {
+		if (ppCond == cond)
+			return;
+		if (ppCond != "1") {
+			local simpleCond = ppCond;
+			if (simpleCond.startswith("defined(") && simpleCond.endswith(")")) {
+				simpleCond = simpleCond[8:-1];
+			} else if (simpleCond.startswith("!defined(") && simpleCond.endswith(")")) {
+				simpleCond = f"!{simpleCond[9:-1]}";
+			}
+			print(f"#endif /* {simpleCond} */");
+		}
+		ppCond = cond;
+		if (cond != "1") {
+			if (cond.startswith("defined(") && cond.endswith(")")) {
+				print(f"#ifdef {cond[8:-1]}");
+			} else if (cond.startswith("!defined(") && cond.endswith(")")) {
+				print(f"#ifndef !{cond[8:-1]}");
+			} else {
+				print(f"#if {cond}");
+			}
+		}
+	}
+}
+
 global final USING_JOINER: string = "with__"; /* TODO: Replace with using__ */
 
 global final CTYPE_FORMAT_REPR_CODES: {string: string} = {
@@ -1203,6 +1233,7 @@ final class NativeOperator {
 	public member operatorName: string = ""; /* OPERATOR_ITER (empty string if not assigned) */
 	public member customUnsupportedImplName: string = "";
 	public member customBadAllocImplName: string = "";
+	public member ppCond: string = "1";
 
 	@@Names of public API functions: @("DeeObject_Foreach", "DeeObject_TForeach")
 	public member operatorExportNames: (string, string) | none = none;
@@ -1755,38 +1786,44 @@ function printMhInitSpecs() {
 			print("};");
 		}
 		if (native.operatorSpecs) {
-			print(f"PRIVATE struct mh_init_spec_operator tpconst mh_operators_{
-					native.name}[{#native.operatorSpecs + 1}] = \{");
-			local lines: {string...} = [];
-			for (local spec: native.operatorSpecs) {
-				File.Writer line;
-				print line: ("	MH_INIT_SPEC_OPERATOR_INIT("),;
-				local opName = NativeOperatorName(
+			local ops: {(OperatorSpec, NativeOperator)...} = (
+				for (local spec: native.operatorSpecs)
+					(spec, NATIVE_OPERATORS[NativeOperatorName(
 						table: spec.operatorTable,
-						field: spec.operatorField);
-				local op: NativeOperator | none = NATIVE_OPERATORS.get(opName);
-				local opNameStr: string = op !is none
-						? op.name.TNO_id
-						: f"Dee_TNO_MISSING({opName})";
-				print line: (opNameStr, ", "),;
+						field: spec.operatorField)])
+			).cached;
+			local lines: {string...} = [];
+			local linePpCond: {string: string} = Dict();
+			for (local spec, op: ops) {
+				local seqClass;
 				if (spec.baseClass is none || spec.acceptAnyBaseClassForMethodHint) {
-					print line: ("NULL, Dee_SEQCLASS_UNKNOWN"),;
+					seqClass = "NULL, Dee_SEQCLASS_UNKNOWN";
 				} else if (spec.baseClass == "DeeSeq_Type") {
-					print line: ("NULL, Dee_SEQCLASS_SEQ"),;
+					seqClass = "NULL, Dee_SEQCLASS_SEQ";
 				} else if (spec.baseClass == "DeeSet_Type") {
-					print line: ("NULL, Dee_SEQCLASS_SET"),;
+					seqClass = "NULL, Dee_SEQCLASS_SET";
 				} else if (spec.baseClass == "DeeMapping_Type") {
-					print line: ("NULL, Dee_SEQCLASS_MAP"),;
+					seqClass = "NULL, Dee_SEQCLASS_MAP";
 				} else {
-					print line: ("&", spec.baseClass, ", Dee_SEQCLASS_UNKNOWN"),;
+					seqClass = f"&{spec.baseClass}, Dee_SEQCLASS_UNKNOWN";
 				}
-				print line: ("),");
-				local lineString = line.string;
-				if (lineString !in lines)
-					lines.append(lineString);
+				local line = f"MH_INIT_SPEC_OPERATOR_INIT({op.name.TNO_id}, {seqClass})";
+				if (op.ppCond != "1") {
+					local oldCond = linePpCond.get(line);
+					local newCond = oldCond is none ? op.ppCond : f"{oldCond} || {op.ppCond}";
+					linePpCond[line] = newCond;
+				}
+				if (line !in lines)
+					lines.append(line);
 			}
-			for (local line: lines)
-				print line,;
+			print(f"PRIVATE struct mh_init_spec_operator tpconst mh_operators_{
+					native.name}[{linePpCond ? "" : (#ops + 1)}] = \{");
+			local ppCondPrinter = PPCondPrinter();
+			for (local line: lines) {
+				ppCondPrinter.setPPCond(linePpCond.get(line, "1"));
+				print("\t", line, ",");
+			}
+			ppCondPrinter.setPPCond();
 			print("	MH_INIT_SPEC_OPERATOR_END");
 			print("};");
 		}
@@ -1830,38 +1867,57 @@ function printMhUnsupportedArrayMembers() {
 
 function printNativeOperatorIds() {
 	RESET_PREFIX();
-	for (local none, method: NATIVE_OPERATORS)
+	local ppCondPrinter = PPCondPrinter();
+	for (local none, method: NATIVE_OPERATORS) {
+		ppCondPrinter.setPPCond(method.ppCond);
 		print("	", method.name.TNO_id, ",");
+	}
+	ppCondPrinter.setPPCond();
 }
 
 function printNativeOperatorTypes() {
 	RESET_PREFIX();
-	for (local none, method: NATIVE_OPERATORS)
+	local ppCondPrinter = PPCondPrinter();
+	for (local none, method: NATIVE_OPERATORS) {
+		ppCondPrinter.setPPCond(method.ppCond);
 		method.printNativeOperatorTypedef();
+	}
+	ppCondPrinter.setPPCond();
 }
 
 function printNativeOperatorHintDecls() {
 	RESET_PREFIX();
-	for (local none, method: NATIVE_OPERATORS)
+	local ppCondPrinter = PPCondPrinter();
+	for (local none, method: NATIVE_OPERATORS) {
+		ppCondPrinter.setPPCond(method.ppCond);
 		method.printNativeOperatorHintDecl();
+	}
+	ppCondPrinter.setPPCond();
 }
 
 function printNativeOperatorHintImpls() {
 	RESET_PREFIX();
-	for (local none, method: NATIVE_OPERATORS)
+	local ppCondPrinter = PPCondPrinter();
+	for (local none, method: NATIVE_OPERATORS) {
+		ppCondPrinter.setPPCond(method.ppCond);
 		method.printNativeOperatorHintImpl();
+	}
+	ppCondPrinter.setPPCond();
 }
 
 function printNativeOperatorPathMacros() {
 	RESET_PREFIX();
 	local longestNameLength = NATIVE_OPERATORS.values.each.name.name.length > ...;
+	local ppCondPrinter = PPCondPrinter();
 	for (local none, method: NATIVE_OPERATORS) {
+		ppCondPrinter.setPPCond(method.ppCond);
 		local name = method.name;
 		print("#define _Dee_TNO_PATH_", (name.name + "(_)").ljust(longestNameLength + 3), " ",
 			name.table is none
 				? f"PATH1(_, {name.field})"
 				: f"PATH2(_, {name.table}, {name.field})");
 	}
+	ppCondPrinter.setPPCond();
 }
 
 function printNativeOperatorHintSpecs() {
@@ -1903,8 +1959,10 @@ function printNativeOperatorHintSpecs() {
 	}
 
 
+	local ppCondPrinter = PPCondPrinter();
 	for (local name, method: NATIVE_OPERATORS) {
 		if (method.usrtypeImpls) {
+			ppCondPrinter.setPPCond(method.ppCond);
 			print(f"PRIVATE struct oh_init_spec_class tpconst oh_class_{
 					name.name}[{#method.usrtypeImpls + 1}] = \{");
 			for (local impl/*: NativeOperatorImpl*/: method.usrtypeImpls) {
@@ -1922,6 +1980,7 @@ function printNativeOperatorHintSpecs() {
 			print(f"\};");
 		}
 		if (method.impls) {
+			ppCondPrinter.setPPCond(method.ppCond);
 			print(f"PRIVATE struct oh_init_spec_impl tpconst oh_impls_{
 					name.name}[{#method.impls + 1}] = \{");
 			for (local impl/*: NativeOperatorImpl*/: method.impls) {
@@ -1950,6 +2009,7 @@ function printNativeOperatorHintSpecs() {
 		local nativeMethods: {(OperatorSpec, NativeMethod)...} | none =
 				nativeMethodsByOperatorName.get(name);
 		if (nativeMethods) {
+			ppCondPrinter.setPPCond(method.ppCond);
 			print(f"PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_{
 					name.name}[{#nativeMethods + 1}] = \{");
 			for (local operatorSpec, nativeMethod: nativeMethods) {
@@ -1981,9 +2041,11 @@ function printNativeOperatorHintSpecs() {
 			}
 		}
 	}
-	print("INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[", #NATIVE_OPERATORS, "] = {");
+	ppCondPrinter.setPPCond();
+	print("INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[] = {");
 	local longestNameLength = NATIVE_OPERATORS.keys.each.locExpr.length > ...;
 	for (local name, method /*: NativeOperator*/: NATIVE_OPERATORS) {
+		ppCondPrinter.setPPCond(method.ppCond);
 		local nativeMethods: {(OperatorSpec, NativeMethod)...} | none =
 				nativeMethodsByOperatorName.get(name);
 		print("	/* ", name.locExpr.ljust(longestNameLength), " */ OH_INIT_SPEC_INIT("),;
@@ -1995,6 +2057,7 @@ function printNativeOperatorHintSpecs() {
 		print(getInheritAsMappings(name) ? f"oh_inherit_{name.name}" : "NULL"),;
 		print("),");
 	}
+	ppCondPrinter.setPPCond();
 	print("};");
 }
 
@@ -2091,13 +2154,37 @@ final class ErrorMethodKey {
 		print;
 	}
 
-	public printIntdefDeclAndAliases(names: {string...}) {
-		if (!names)
+	public printIntdefDeclAndAliases(ppCondPrinter: PPCondPrinter, impl: bool,
+	                                 namesAndPPCond: {(string, string)...}) {
+		if (!namesAndPPCond)
 			return;
-		local primary = names.first;
-		printIntdefDecl(primary);
-		for (local alias: names[1:]) {
-			print("#define ", alias, " ", primary);
+		local primary = none;
+		local primaryPPCond = "1";
+		for (local alias, ppCond: namesAndPPCond) {
+			if (ppCond == "1") {
+				primary = alias;
+				break;
+			}
+		}
+		if (primary is none) {
+			primaryPPCond = " || ".join(Sequence
+					.distinct(namesAndPPCond.each.last)
+					.frozen
+					.filter(e -> e != "1")
+					.sorted());
+			primary = namesAndPPCond.first.first;
+		}
+		ppCondPrinter.setPPCond(primaryPPCond);
+		if (impl) {
+			printInternImpl(primary);
+		} else {
+			printIntdefDecl(primary);
+			for (local alias, ppCond: namesAndPPCond) {
+				if (alias != primary) {
+					ppCondPrinter.setPPCond(ppCond);
+					print("#define ", alias, " ", primary);
+				}
+			}
 		}
 	}
 }
@@ -2106,9 +2193,9 @@ final class ErrorMethodKey {
 function printNativeOperatorHintErrorImpls(decls: bool) {
 	RESET_PREFIX();
 	@@Mapping of required functions, to the names under which they must be provided
-	local requiredFunctions: {ErrorMethodKey: {string...}} = Dict();
-	function addKey(key: ErrorMethodKey, name: string) {
-		requiredFunctions.setdefault(key, []).append(name);
+	local requiredFunctions: {ErrorMethodKey: {(string, string)...}} = Dict();
+	function addKey(key: ErrorMethodKey, name: string, ppCond: string = "1") {
+		requiredFunctions.setdefault(key, []).append((name, ppCond));
 	}
 	function makeBodyWithMinus1Expr(key: ErrorMethodKey, expr: string): string {
 		if (key.returnType.endswith("*")) {
@@ -2153,24 +2240,26 @@ function printNativeOperatorHintErrorImpls(decls: bool) {
 			local sizeofExpr = f"sizeof({nativeOperator.name.tableStruct})";
 			local key: ErrorMethodKey = makeKey(false);
 			key.body = makeBodyWithMinus1Expr(key, f"Dee_BadAlloc({sizeofExpr})");
-			addKey(key, f"default__{nativeOperator.name.name}__badalloc");
+			addKey(key, f"default__{nativeOperator.name.name}__badalloc", nativeOperator.ppCond);
 		}
 		if (nativeOperator.operatorName && !nativeOperator.customUnsupportedImplName) {
 			/* Need a fallback for "_DeeType_GetNativeOperatorUnsupported" */
 			local key: ErrorMethodKey = makeKey(true);
 			key.body = makeBodyWithMinus1Expr(key, f"err_unimplemented_operator({
 					key.tpSelfExpr}, {nativeOperator.operatorName})");
-			addKey(key, f"_default__{nativeOperator.name.name}__unsupported");
+			addKey(key, f"_default__{nativeOperator.name.name}__unsupported", nativeOperator.ppCond);
 		}
 	}
 
 	// TODO: More functions can be re-used under "#ifdef DCALL_CALLER_CLEANUP"
+	local ppCondPrinter = PPCondPrinter();
 	if (decls) {
-		for (local key, names: requiredFunctions)
-			key.printIntdefDeclAndAliases(names);
+		for (local key, namesAndPPCond: requiredFunctions)
+			key.printIntdefDeclAndAliases(ppCondPrinter, false, namesAndPPCond);
 		local longestNameLength = NATIVE_OPERATORS.values.each.name.name.length > ...;
 		for (local none, nativeOperator /*: NativeOperator*/: NATIVE_OPERATORS) {
 			if (nativeOperator.operatorName && !nativeOperator.customUnsupportedImplName) {
+				ppCondPrinter.setPPCond(nativeOperator.ppCond);
 				print("#define default__", (nativeOperator.name.name + "__unsupported").ljust(
 					longestNameLength + #"__unsupported"),
 					" (*(DeeNO_", nativeOperator.name.name, "_t)&"
@@ -2178,17 +2267,18 @@ function printNativeOperatorHintErrorImpls(decls: bool) {
 			}
 		}
 	} else {
-		for (local key, names: requiredFunctions) {
-			if (names)
-				key.printInternImpl(names.first);
-		}
+		for (local key, namesAndPPCond: requiredFunctions)
+			key.printIntdefDeclAndAliases(ppCondPrinter, true, namesAndPPCond);
 	}
+	ppCondPrinter.setPPCond();
 }
 
 function printNativeOperatorHintBadAllocTable() {
 	RESET_PREFIX();
 	local longestNameLength = NATIVE_OPERATORS.values.each.name.name.length > ...;
+	local ppCondPrinter = PPCondPrinter();
 	for (local none, nativeOperator /*: NativeOperator*/: NATIVE_OPERATORS) {
+		ppCondPrinter.setPPCond(nativeOperator.ppCond);
 		print(f"	/* {nativeOperator.name.name.ljust(longestNameLength)} */ "),;
 		if (nativeOperator.customBadAllocImplName) {
 			print(f"(Dee_funptr_t)&{nativeOperator.customBadAllocImplName},");
@@ -2198,12 +2288,15 @@ function printNativeOperatorHintBadAllocTable() {
 			print(f"NULL,");
 		}
 	}
+	ppCondPrinter.setPPCond();
 }
 
 function printNativeOperatorHintUnsupportedTable() {
 	RESET_PREFIX();
 	local longestNameLength = NATIVE_OPERATORS.values.each.name.name.length > ...;
+	local ppCondPrinter = PPCondPrinter();
 	for (local none, nativeOperator /*: NativeOperator*/: NATIVE_OPERATORS) {
+		ppCondPrinter.setPPCond(nativeOperator.ppCond);
 		print(f"	/* {nativeOperator.name.name.ljust(longestNameLength)} */ "),;
 		if (nativeOperator.customUnsupportedImplName) {
 			if (nativeOperator.customUnsupportedImplName == "NULL") {
@@ -2217,6 +2310,7 @@ function printNativeOperatorHintUnsupportedTable() {
 			print(f"NULL,");
 		}
 	}
+	ppCondPrinter.setPPCond();
 }
 
 @@Call like @printProxyObjectMethodHintWrapper("seq_operator_bool")
@@ -2270,11 +2364,13 @@ function printProxyObjectMethodHintWrapper(hintName: string, impl: bool = false)
 
 function printNativeOperatorExportedApi() {
 	RESET_PREFIX();
+	local ppCondPrinter = PPCondPrinter();
 	for (local isTyped: {false, true}) {
 		for (local none, nativeOperator /*: NativeOperator*/: NATIVE_OPERATORS) {
 			local name = nativeOperator.operatorExportNames[isTyped];
 			if (name is none)
 				continue;
+			ppCondPrinter.setPPCond(nativeOperator.ppCond);
 			local usedOperator = isTyped ? nativeOperator.typed : nativeOperator;
 			print("PUBLIC "),;
 			if (!isTyped)
@@ -2347,6 +2443,7 @@ function printNativeOperatorExportedApi() {
 			print;
 		}
 	}
+	ppCondPrinter.setPPCond();
 }
 
 
@@ -2562,6 +2659,7 @@ function printMhSuperMap() {
 
 		/* Figure out typed-mappings */
 		local typedImpls: {string: string} = Dict();
+		local typedImplsPPCond: {string: string} = Dict();
 		if (nativeMethod.hasTypedCallAttrCacheImpl) {
 			local callCacheName = f"default__{
 					nativeMethod.name}__with_callobjectcache_{
@@ -2582,6 +2680,8 @@ function printMhSuperMap() {
 				for (local i, typelessSymbol: typelessSymbols.enumerate()) {
 					local typedSymbol = typedSymbols[i];
 					typedImpls[typelessSymbol] = typedSymbol;
+					if (nativeOperator.ppCond != "1")
+						typedImplsPPCond[typedSymbol] = nativeOperator.ppCond;
 				}
 			}
 		}
@@ -2589,9 +2689,13 @@ function printMhSuperMap() {
 		if (typedImpls) {
 			nativeMethodsWith__msm_with_type.insert(name);
 			print(f"PRIVATE struct mh_super_map_typed tpconst msm_with_type__{
-					name}[{#typedImpls + 1}] = \{");
-			for (local regularImpl, typedImpl: typedImpls)
+					name}[{typedImplsPPCond ? "" : (#typedImpls + 1)}] = \{");
+			local ppCondPrinter = PPCondPrinter();
+			for (local regularImpl, typedImpl: typedImpls) {
+				ppCondPrinter.setPPCond(typedImplsPPCond.get(typedImpl, "1"));
 				print(f"	MH_SUPER_MAP_TYPED_INIT(&{regularImpl}, &{typedImpl}),");
+			}
+			ppCondPrinter.setPPCond();
 			print(f"	MH_SUPER_MAP_TYPED_END");
 			print(f"\};");
 		}
@@ -2854,6 +2958,7 @@ final class _SpecParserAttrib {
 	public member operatorExportNames: (string, string) | none = none;
 	public member inheritAs: string | none = none;
 	public member acceptAnyBaseClassForMethodHint: bool = false;
+	public member ppCond: string = "1";
 };
 
 global final _C_TYPENAME_TOKENS = HashSet.Frozen({
@@ -3273,6 +3378,19 @@ done:
 				attrib.acceptAnyBaseClassForMethodHint = true;
 				break;
 
+			case "if": {
+				next();
+				skip("(");
+				local prefixStart = tokStart;
+				local prefixEnd = data.findmatch("(", ")", prefixStart);
+				if (prefixEnd < 0)
+					err("Missing end-of-prefix attribute body");
+				attrib.ppCond = data[prefixStart:prefixEnd].strip();
+				tokEnd = prefixEnd;
+				next();
+				skip(")");
+			}	break;
+
 			case "no_self_invocation_wrapper":
 				next();
 				attrib.noSelfInvocationWrapper = true;
@@ -3655,7 +3773,8 @@ done:
 						name: operatorName,
 						customUnsupportedImplName: attrib.customUnsupportedImplName,
 						customBadAllocImplName: attrib.customBadAllocImplName,
-						operatorExportNames: attrib.operatorExportNames);
+						operatorExportNames: attrib.operatorExportNames,
+						ppCond: attrib.ppCond);
 				if (!NATIVE_OPERATORS.setnew(operatorName, method))
 					err(f"Native operator '{operatorName.locExpr}' was already defined");
 				skip("(");
@@ -3801,7 +3920,7 @@ done:
 										RECACHE(r"\b" + argName + r"\b"), outName);
 								}
 							}
-							
+
 							bodyWriter << "{\n" << unpackBody << nativeBody[:-2];
 							if (!nativeBody.recontains(r"\berr:"))
 								bodyWriter << "\nerr:\n\treturn NULL;";

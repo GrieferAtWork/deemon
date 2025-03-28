@@ -83,6 +83,7 @@ INTERN void*DCALL _default__thiscall_kw__unsupported(DeeObject*self, void*UNUSED
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_CALL);
 	return NULL;
 }
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 INTERN void*DCALL default__call_tuple__badalloc(void*UNUSED(self), void*UNUSED(arg1)) {
 	Dee_BadAlloc(sizeof(struct type_callable));
 	return NULL;
@@ -95,6 +96,7 @@ INTERN void*DCALL default__call_tuple_kw__badalloc(void*UNUSED(self), void*UNUSE
 	Dee_BadAlloc(sizeof(struct type_callable));
 	return NULL;
 }
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 INTERN void*DCALL _default__iter_next__unsupported(DeeObject*self) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERNEXT);
 	return NULL;
@@ -448,10 +450,12 @@ _DeeType_GetNativeOperatorOOM[Dee_TNO_COUNT] = {
 	/* call_kw                    */ (Dee_funptr_t)&default__call_kw__badalloc,
 	/* thiscall                   */ (Dee_funptr_t)&default__thiscall__badalloc,
 	/* thiscall_kw                */ (Dee_funptr_t)&default__thiscall_kw__badalloc,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	/* call_tuple                 */ (Dee_funptr_t)&default__call_tuple__badalloc,
 	/* call_tuple_kw              */ (Dee_funptr_t)&default__call_tuple_kw__badalloc,
 	/* thiscall_tuple             */ (Dee_funptr_t)&default__thiscall_tuple__badalloc,
 	/* thiscall_tuple_kw          */ (Dee_funptr_t)&default__thiscall_tuple_kw__badalloc,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 	/* iter_next                  */ NULL,
 	/* nextpair                   */ (Dee_funptr_t)&default__nextpair__badalloc,
 	/* nextkey                    */ (Dee_funptr_t)&default__nextkey__badalloc,
@@ -578,10 +582,12 @@ _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT] = {
 	/* call_kw                    */ (Dee_funptr_t)&default__call_kw__unsupported,
 	/* thiscall                   */ (Dee_funptr_t)&default__thiscall__unsupported,
 	/* thiscall_kw                */ (Dee_funptr_t)&default__thiscall_kw__unsupported,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	/* call_tuple                 */ (Dee_funptr_t)&default__call_tuple__unsupported,
 	/* call_tuple_kw              */ (Dee_funptr_t)&default__call_tuple_kw__unsupported,
 	/* thiscall_tuple             */ (Dee_funptr_t)&default__thiscall_tuple__unsupported,
 	/* thiscall_tuple_kw          */ (Dee_funptr_t)&default__thiscall_tuple_kw__unsupported,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 	/* iter_next                  */ (Dee_funptr_t)&default__iter_next__unsupported,
 	/* nextpair                   */ (Dee_funptr_t)&default__nextpair__unsupported,
 	/* nextkey                    */ (Dee_funptr_t)&default__nextkey__unsupported,

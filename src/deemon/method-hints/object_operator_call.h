@@ -135,7 +135,7 @@ err:
 
 
 
-/* TODO: Only if "CONFIG_CALLTUPLE_OPTIMIZATIONS" */
+[[if(defined(CONFIG_CALLTUPLE_OPTIMIZATIONS))]]
 [[export("DeeObject_{|T}CallTuple")]]
 [[wunused]] DREF DeeObject *
 tp_callable->tp_call_tuple([[nonnull]] DeeObject *self,
@@ -144,7 +144,7 @@ tp_callable->tp_call_tuple([[nonnull]] DeeObject *self,
 	return CALL_DEPENDENCY(tp_call, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
 }} = OPERATOR_CALL;
 
-/* TODO: Only if "CONFIG_CALLTUPLE_OPTIMIZATIONS" */
+[[if(defined(CONFIG_CALLTUPLE_OPTIMIZATIONS))]]
 [[export("DeeObject_{|T}CallTupleKw")]]
 [[wunused]] DREF DeeObject *
 tp_callable->tp_call_tuple_kw([[nonnull]] DeeObject *self,
@@ -154,7 +154,7 @@ tp_callable->tp_call_tuple_kw([[nonnull]] DeeObject *self,
 	return CALL_DEPENDENCY(tp_callable->tp_call_kw, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
 }} = OPERATOR_CALL;
 
-/* TODO: Only if "CONFIG_CALLTUPLE_OPTIMIZATIONS" */
+[[if(defined(CONFIG_CALLTUPLE_OPTIMIZATIONS))]]
 [[export("DeeObject_{|T}ThisCallTuple")]]
 [[wunused]] DREF DeeObject *
 tp_callable->tp_thiscall_tuple([[nonnull]] DeeObject *self,
@@ -164,7 +164,7 @@ tp_callable->tp_thiscall_tuple([[nonnull]] DeeObject *self,
 	return CALL_DEPENDENCY(tp_callable->tp_thiscall, self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
 }} = OPERATOR_CALL;
 
-/* TODO: Only if "CONFIG_CALLTUPLE_OPTIMIZATIONS" */
+[[if(defined(CONFIG_CALLTUPLE_OPTIMIZATIONS))]]
 [[export("DeeObject_{|T}ThisCallTupleKw")]]
 [[wunused]] DREF DeeObject *
 tp_callable->tp_thiscall_tuple_kw([[nonnull]] DeeObject *self,

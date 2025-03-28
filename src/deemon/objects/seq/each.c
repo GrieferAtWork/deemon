@@ -1298,10 +1298,6 @@ PRIVATE struct type_callable se_callable = {
 	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&se_call_kw,
 	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
 	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
-	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
-	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
-	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
-	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
 };
 
 INTERN DeeTypeObject SeqEach_Type = {
@@ -2044,10 +2040,6 @@ PRIVATE struct type_callable ss_callable = {
 	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&ss_call_kw,
 	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
 	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
-	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
-	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
-	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
-	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
 };
 
 PUBLIC DeeTypeObject DeeSeqSome_Type = {
@@ -3371,10 +3363,6 @@ PRIVATE struct type_callable sew_callable = {
 	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&sew_call_kw,
 	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
 	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
-	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
-	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
-	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
-	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
 };
 
 INTERN DeeTypeObject SeqEachOperator_Type = {
@@ -3858,10 +3846,6 @@ PRIVATE struct type_callable ssw_callable = {
 	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&ssw_call_kw,
 	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
 	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
-	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
-	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
-	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
-	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
 };
 
 INTERN DeeTypeObject SeqSomeOperator_Type = {

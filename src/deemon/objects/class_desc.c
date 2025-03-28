@@ -3097,10 +3097,6 @@ PRIVATE struct type_callable instancemember_callable = {
 	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&instancemember_get,
 	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
 	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
-	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
-	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
-	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
-	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
 };
 
 PUBLIC DeeTypeObject DeeInstanceMember_Type = {

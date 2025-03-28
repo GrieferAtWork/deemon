@@ -909,6 +909,7 @@ err:
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 /* tp_callable->tp_call_tuple */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tdefault__call_tuple__with__call(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args) {
@@ -989,6 +990,7 @@ default__thiscall_tuple_kw__with__thiscall_kw(DeeObject *self, DeeObject *thisar
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 /* tp_iter_next */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__iter_next__with__ITERNEXT(DeeTypeObject *tp_self, DeeObject *self) {
