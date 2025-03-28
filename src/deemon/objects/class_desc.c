@@ -2106,36 +2106,51 @@ PRIVATE WUNUSED DREF ClassDescriptor *DCALL
 cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF ClassDescriptor *result;
 	DREF DeeObject *iterator, *elem, *data[2];
-	DeeStringObject *class_name;
-	DeeStringObject *class_doc   = (DeeStringObject *)Dee_EmptyString;
-	DeeStringObject *class_flags = (DeeStringObject *)Dee_EmptyString;
-	DeeObject *class_operators   = Dee_EmptyTuple;
-	DeeObject *class_iattr       = Dee_EmptyTuple;
-	DeeObject *class_cattr       = Dee_EmptyTuple;
-	uint16_t class_isize         = (uint16_t)-1;
-	uint16_t class_csize         = (uint16_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw,
-	                    kwlist__name_doc_flags_operators_iattr_cattr_isize_csize,
-	                    "o|ooooo" UNPu16 UNPu16 ":_ClassDescriptor",
-	                    &class_name, &class_doc,
-	                    &class_flags, &class_operators,
-	                    &class_iattr, &class_cattr,
-	                    &class_isize, &class_csize))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_ClassDescriptor", params: "
+		DeeStringObject *name;
+		DeeStringObject *doc   = (DeeStringObject *)Dee_EmptyString;
+		DeeStringObject *flags = (DeeStringObject *)Dee_EmptyString;
+		DeeObject *operators   = Dee_EmptyTuple;
+		DeeObject *iattr       = Dee_EmptyTuple;
+		DeeObject *cattr       = Dee_EmptyTuple;
+		uint16_t isize         = (uint16_t)-1;
+		uint16_t csize         = (uint16_t)-1;
+");]]]*/
+	struct {
+		DeeStringObject *name;
+		DeeStringObject *doc;
+		DeeStringObject *flags;
+		DeeObject *operators;
+		DeeObject *iattr;
+		DeeObject *cattr;
+		uint16_t isize;
+		uint16_t csize;
+	} args;
+	args.doc = (DeeStringObject *)Dee_EmptyString;
+	args.flags = (DeeStringObject *)Dee_EmptyString;
+	args.operators = Dee_EmptyTuple;
+	args.iattr = Dee_EmptyTuple;
+	args.cattr = Dee_EmptyTuple;
+	args.isize = (uint16_t)-1;
+	args.csize = (uint16_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__name_doc_flags_operators_iattr_cattr_isize_csize, "o|ooooo" UNPu16 UNPu16 ":_ClassDescriptor", &args))
 		goto err;
-	if (DeeObject_AssertType(class_name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.name, &DeeString_Type))
 		goto err;
-	if (class_doc &&
-	    DeeObject_AssertType(class_doc, &DeeString_Type))
+	if (DeeObject_AssertType(args.doc, &DeeString_Type))
 		goto err;
+	if (DeeString_IsEmpty(args.doc))
+		args.doc = NULL;
 
-	result = cd_alloc_from_iattr(class_iattr, class_isize, class_csize);
+	result = cd_alloc_from_iattr(args.iattr, args.isize, args.csize);
 	if unlikely(!result)
 		goto err;
 	result->cd_flags = TP_FNORMAL;
-	if (class_flags != (DeeStringObject *)Dee_EmptyString) {
-		if (DeeString_Check(class_flags)) {
+	if (args.flags != (DeeStringObject *)Dee_EmptyString) {
+		if (DeeString_Check(args.flags)) {
 			char *pos;
-			pos = DeeString_STR(class_flags);
+			pos = DeeString_STR(args.flags);
 			if (*pos) {
 				for (;;) {
 					char *next;
@@ -2164,7 +2179,7 @@ got_flag:
 				}
 			}
 		} else {
-			if (DeeObject_AsUInt16((DeeObject *)class_flags, &result->cd_flags))
+			if (DeeObject_AsUInt16((DeeObject *)args.flags, &result->cd_flags))
 				goto err_r_imemb;
 			if (result->cd_flags & ~(TP_FFINAL | TP_FINTERRUPT | TP_FINHERITCTOR |
 			                         CLASS_TP_FAUTOINIT | CLASS_TP_FSUPERKWDS |
@@ -2180,9 +2195,9 @@ got_flag:
 	result->cd_clsop_mask = 0;
 	result->cd_cattr_list = empty_class_attributes;
 	result->cd_cattr_mask = 0;
-	if (class_cattr != Dee_EmptyTuple) {
+	if (args.cattr != Dee_EmptyTuple) {
 		size_t used_attr = 0;
-		iterator         = DeeObject_Iter(class_cattr);
+		iterator         = DeeObject_Iter(args.cattr);
 		if unlikely(!iterator)
 			goto err_r_imemb;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -2224,11 +2239,11 @@ got_flag:
 				maxid = ent->ca_addr;
 				if ((ent->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)) == CLASS_ATTRIBUTE_FGETSET)
 					maxid += CLASS_GETSET_SET;
-				if (class_csize != (uint16_t)-1 && maxid >= class_csize) {
+				if (args.csize != (uint16_t)-1 && maxid >= args.csize) {
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Class attribute %r uses out-of-bounds class "
 					                "object table index %" PRFu16 " (>= %" PRFu16 ")",
-					                ent->ca_name, maxid, class_csize);
+					                ent->ca_name, maxid, args.csize);
 					goto err_r_imemb_iter;
 				}
 				if (result->cd_cmemb_size <= maxid)
@@ -2239,9 +2254,9 @@ got_flag:
 			goto err_r_imemb_iter;
 		Dee_Decref(iterator);
 	}
-	if (class_operators != Dee_EmptyTuple) {
+	if (args.operators != Dee_EmptyTuple) {
 		Dee_operator_t operator_count = 0;
-		iterator = DeeObject_Iter(class_operators);
+		iterator = DeeObject_Iter(args.operators);
 		if unlikely(!iterator)
 			goto err_r_imemb_cmemb;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -2269,18 +2284,18 @@ got_flag:
 			}
 			Dee_Decref(data[1]);
 			Dee_Decref(data[0]);
-			if (class_csize != (uint16_t)-1 && index >= class_csize) {
+			if (args.csize != (uint16_t)-1 && index >= args.csize) {
 				struct opinfo const *op = DeeTypeType_GetOperatorById(&DeeType_Type, name);
 				if (op) {
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Operator %s uses out-of-bounds class object "
 					                "table index %" PRFu16 " (>= %" PRFu16 ")",
-					                op->oi_sname, index, class_csize);
+					                op->oi_sname, index, args.csize);
 				} else {
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Operator 0x%.4I16x uses out-of-bounds class "
 					                "object table index %" PRFu16 " (>= %" PRFu16 ")",
-					                name, index, class_csize);
+					                name, index, args.csize);
 				}
 				goto err_r_imemb_iter;
 			}
@@ -2293,10 +2308,10 @@ got_flag:
 			goto err_r_imemb_iter;
 		Dee_Decref(iterator);
 	}
-	result->cd_name = class_name;
-	result->cd_doc  = class_doc;
-	Dee_Incref(class_name);
-	Dee_XIncref(class_doc);
+	result->cd_name = args.name;
+	result->cd_doc  = args.doc;
+	Dee_Incref(args.name);
+	Dee_XIncref(args.doc);
 	DeeObject_Init(result, &DeeClassDescriptor_Type);
 	return result;
 err_r_imemb_iter_data:
