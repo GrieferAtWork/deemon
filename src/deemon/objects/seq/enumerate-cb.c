@@ -371,7 +371,7 @@ INTERN DeeTypeObject SeqEnumerateWrapper_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject *const *))&sew_call,
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 INTERN DeeTypeObject SeqEnumerateIndexWrapper_Type = {
@@ -421,7 +421,7 @@ INTERN DeeTypeObject SeqEnumerateIndexWrapper_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject *const *))&sew_call,
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 

@@ -390,7 +390,7 @@ INTERN DeeTypeObject SetInversion_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 
@@ -788,7 +788,7 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1011,7 +1011,7 @@ INTERN DeeTypeObject SetUnion_Type = {
 	/* .tp_class_members = */ su_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 
@@ -1171,7 +1171,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 STATIC_ASSERT(offsetof(SetSymmetricDifference, ssd_a) == offsetof(SetUnion, su_a) ||
@@ -1356,7 +1356,7 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
 	/* .tp_class_members = */ ssd_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 
@@ -1524,7 +1524,7 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 STATIC_ASSERT(offsetof(SetIntersection, si_a) == offsetof(SetUnion, su_a) ||
@@ -1698,7 +1698,7 @@ INTERN DeeTypeObject SetIntersection_Type = {
 	/* .tp_class_members = */ si_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 
@@ -1795,7 +1795,7 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 STATIC_ASSERT(offsetof(SetDifference, sd_a) == offsetof(SetUnion, su_a));
@@ -1966,7 +1966,7 @@ INTERN DeeTypeObject SetDifference_Type = {
 	/* .tp_class_members = */ sd_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 

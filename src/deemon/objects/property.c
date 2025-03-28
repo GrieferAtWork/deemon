@@ -560,6 +560,12 @@ PRIVATE struct type_callable property_callable = {
 	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&property_call_kw,
 	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
 	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
+	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
+	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
+	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
 
 

@@ -45,23 +45,27 @@ DECL_BEGIN
 
 /* Reusable default operators. */
 /*[[[begin::computed-operator-impls]]]*/
-INTERN struct type_callable default__tp_callable__414DF0A8610383F3 = {
-	/* .tp_call_kw           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeObject_NewKw,
-	/* .tp_thiscall          = */ &default__thiscall__with__call,
-	/* .tp_thiscall_kw       = */ &default__thiscall_kw__with__call_kw,
-	/* .tp_call_tuple        = */ &default__call_tuple__with__call,
-	/* .tp_call_tuple_kw     = */ &default__call_tuple_kw__with__call_kw,
-	/* .tp_thiscall_tuple    = */ &default__thiscall_tuple__with__thiscall,
-	/* .tp_thiscall_tuple_kw = */ &default__thiscall_tuple_kw__with__thiscall_kw,
-};
-INTERN struct type_callable default__tp_callable__E31EBEB26CC72F83 = {
+INTERN struct type_callable default__tp_callable__83C59FA7626CABBE = {
 	/* .tp_call_kw           = */ &default__call_kw__with__call,
 	/* .tp_thiscall          = */ &default__thiscall__with__call,
 	/* .tp_thiscall_kw       = */ &default__thiscall_kw__with__call_kw,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	/* .tp_call_tuple        = */ &default__call_tuple__with__call,
 	/* .tp_call_tuple_kw     = */ &default__call_tuple_kw__with__call_kw,
 	/* .tp_thiscall_tuple    = */ &default__thiscall_tuple__with__thiscall,
 	/* .tp_thiscall_tuple_kw = */ &default__thiscall_tuple_kw__with__thiscall_kw,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+};
+INTERN struct type_callable default__tp_callable__97D8C6894F54F5E3 = {
+	/* .tp_call_kw           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeObject_NewKw,
+	/* .tp_thiscall          = */ &default__thiscall__with__call,
+	/* .tp_thiscall_kw       = */ &default__thiscall_kw__with__call_kw,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	/* .tp_call_tuple        = */ &default__call_tuple__with__call,
+	/* .tp_call_tuple_kw     = */ &default__call_tuple_kw__with__call_kw,
+	/* .tp_thiscall_tuple    = */ &default__thiscall_tuple__with__thiscall,
+	/* .tp_thiscall_tuple_kw = */ &default__thiscall_tuple_kw__with__thiscall_kw,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
 INTERN struct type_cmp default__tp_cmp__247219960F1E745D = {
 	/* .tp_hash          = */ &default__seq_operator_hash__with__seq_operator_foreach,
@@ -608,14 +612,16 @@ INTERN struct type_math default__tp_math__F6E3D7B2219AE1EB = {
 	/* .tp_inplace_pow = */ UNSUPPORTED(&default__inplace_pow__unsupported),
 };
 #ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
-INTERN struct type_callable default__tp_callable__5B2E0F4105586532 = {
+INTERN struct type_callable default__tp_callable__EC3FFC1C149A47D0 = {
 	/* .tp_call_kw           = */ UNSUPPORTED(&default__call_kw__unsupported),
 	/* .tp_thiscall          = */ UNSUPPORTED(&default__thiscall__unsupported),
 	/* .tp_thiscall_kw       = */ UNSUPPORTED(&default__thiscall_kw__unsupported),
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	/* .tp_call_tuple        = */ UNSUPPORTED(&default__call_tuple__unsupported),
 	/* .tp_call_tuple_kw     = */ UNSUPPORTED(&default__call_tuple_kw__unsupported),
 	/* .tp_thiscall_tuple    = */ UNSUPPORTED(&default__thiscall_tuple__unsupported),
 	/* .tp_thiscall_tuple_kw = */ UNSUPPORTED(&default__thiscall_tuple_kw__unsupported),
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
 INTERN struct type_cmp default__tp_cmp__8F384E6A64571883 = {
 	/* .tp_hash          = */ UNSUPPORTED(&default__hash__unsupported),

@@ -777,7 +777,7 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ attr_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(attr_operators),
@@ -967,7 +967,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	/* .tp_class_members = */ enumattr_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 
@@ -1109,7 +1109,7 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 PRIVATE NONNULL((1)) void DCALL

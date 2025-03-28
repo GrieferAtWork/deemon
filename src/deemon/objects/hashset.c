@@ -1446,7 +1446,7 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 
@@ -1884,7 +1884,7 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	/* .tp_class_members = */ hashset_class_members,
 	/* .tp_method_hints  = */ hashset_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ hashset_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(hashset_operators),

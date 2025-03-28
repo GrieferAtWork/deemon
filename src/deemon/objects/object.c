@@ -2813,7 +2813,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_class_members = */ object_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ object_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(object_operators),
@@ -4898,6 +4898,12 @@ PRIVATE struct type_callable type_callable = {
 	/* .tp_call_kw = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeObject_NewKw,
 	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
 	/* .tp_thiscall_kw       = */ DEFIMPL(&default__thiscall_kw__with__call_kw),
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	/* .tp_call_tuple        = */ DEFIMPL(&default__call_tuple__with__call),
+	/* .tp_call_tuple_kw     = */ DEFIMPL(&default__call_tuple_kw__with__call_kw),
+	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
+	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
 
 PUBLIC DeeTypeObject DeeType_Type = {

@@ -698,7 +698,7 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndex_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ rs_gii_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
@@ -748,7 +748,7 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ rs_giif_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 INTERN DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type = {
@@ -798,7 +798,7 @@ INTERN DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ rs_tgii_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 DECL_END

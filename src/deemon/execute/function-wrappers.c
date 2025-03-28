@@ -310,7 +310,7 @@ INTERN DeeTypeObject FunctionStaticsIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 
@@ -623,7 +623,7 @@ INTERN DeeTypeObject FunctionStatics_Type = {
 	/* .tp_class_members = */ funcstatics_class_members,
 	/* .tp_method_hints  = */ funcstatics_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 
@@ -979,7 +979,7 @@ INTERN DeeTypeObject FunctionSymbolsByNameIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
@@ -1029,7 +1029,7 @@ INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 
@@ -1758,7 +1758,7 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 	/* .tp_class_members = */ funcsymbolsbyname_class_members,
 	/* .tp_method_hints  = */ funcsymbolsbyname_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 
@@ -2286,7 +2286,7 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 
@@ -2337,7 +2337,7 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 
@@ -2904,7 +2904,7 @@ INTERN DeeTypeObject YieldFunctionSymbolsByName_Type = {
 	/* .tp_class_members = */ yfuncsymbolsbyname_class_members,
 	/* .tp_method_hints  = */ yfuncsymbolsbyname_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 
@@ -3171,7 +3171,7 @@ INTERN DeeTypeObject FrameArgs_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL, /* TODO: seq_enumerate_index */
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3512,7 +3512,7 @@ INTERN DeeTypeObject FrameLocals_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ framelocals_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3935,7 +3935,7 @@ INTERN DeeTypeObject FrameStack_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ framestack_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4691,7 +4691,7 @@ INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
@@ -4741,7 +4741,7 @@ INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 
@@ -5522,7 +5522,7 @@ INTERN DeeTypeObject FrameSymbolsByName_Type = {
 	/* .tp_class_members = */ framesymbolsbyname_class_members,
 	/* .tp_method_hints  = */ framesymbolsbyname_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__5B2E0F4105586532),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 

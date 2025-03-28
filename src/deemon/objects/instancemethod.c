@@ -304,8 +304,8 @@ PRIVATE struct type_callable im_callable = {
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	/* .tp_call_tuple        = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&im_call_tuple,
 	/* .tp_call_tuple_kw     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&im_call_tuple_kw,
-	/* .tp_thiscall_tuple    = */ NULL,
-	/* .tp_thiscall_tuple_kw = */ NULL,
+	/* .tp_thiscall_tuple    = */ DEFIMPL(&default__thiscall_tuple__with__thiscall),
+	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
 
