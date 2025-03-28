@@ -175,6 +175,10 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 		result = &DefaultIterator_WithGetItem_Type;
 	} else if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate) {
 		/* TODO */
+	} else if (seq_operator_iter == &default__seq_operator_iter__with__seq_enumerate) {
+		/* TODO */
+	} else if (seq_operator_iter == &default__seq_operator_iter__with__seq_enumerate_index) {
+		/* TODO */
 	} else if (seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem) {
 		result = &DefaultIterator_WithIterKeysAndTryGetItemMap_Type;
 	} else if (seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem) {

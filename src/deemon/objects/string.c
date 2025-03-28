@@ -1960,39 +1960,41 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+string_fromseq_foreach_cb(void *arg, DeeObject *item) {
+	uint32_t chr;
+	struct unicode_printer *printer;
+	printer = (struct unicode_printer *)arg;
+	if (DeeObject_AsUInt32(item, &chr))
+		goto err;
+	return (Dee_ssize_t)unicode_printer_putc(printer, chr);
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_class_fromseq(DeeObject *UNUSED(self),
                      size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
+	Dee_ssize_t status;
+	struct unicode_printer printer;
 	_DeeArg_Unpack1(err, argc, argv, "fromseq", &seq);
-	/* XXX: Fast-sequence optimizations? */
+	unicode_printer_init(&printer);
+#ifndef __OPTIMIZE_SIZE__
 	{
-		struct unicode_printer printer = UNICODE_PRINTER_INIT;
-		DREF DeeObject *iter, *elem;
-		iter = DeeObject_Iter(seq);
-		if unlikely(!iter)
-			goto err_printer;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-			uint32_t chr;
-			int temp;
-			temp = DeeObject_AsUInt32(elem, &chr);
-			Dee_Decref(elem);
-			if unlikely(temp)
-				goto err_iter;
-			if unlikely(unicode_printer_putc(&printer, chr))
-				goto err_iter;
-			if (DeeThread_CheckInterrupt())
-				goto err_iter;
+		size_t hint = DeeObject_SizeFast(seq);
+		if (hint != (size_t)-1) {
+			(void)unicode_printer_allocate(&printer, hint,
+			                               STRING_WIDTH_1BYTE);
 		}
-		if unlikely(!elem)
-			goto err_iter;
-		Dee_Decref(iter);
-		return unicode_printer_pack(&printer);
-err_iter:
-		Dee_Decref(iter);
-err_printer:
-		unicode_printer_fini(&printer);
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
+	status = DeeObject_Foreach(seq, &string_fromseq_foreach_cb, &printer);
+	if unlikely(status < 0)
+		goto err_printer;
+	return unicode_printer_pack(&printer);
+err_printer:
+	unicode_printer_fini(&printer);
 err:
 	return NULL;
 }
