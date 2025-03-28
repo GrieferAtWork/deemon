@@ -226,16 +226,14 @@ again:
 		break;
 invalid_argc:
 		/* Count the remaining arguments for the error message. */
-		do {
-			Dee_Decref(elem);
-			++argc;
-			if (DeeThread_CheckInterrupt())
+		Dee_Decref(elem);
+		++argc;
+		{
+			size_t remaining;
+			remaining = DeeObject_IterAdvance(iterator, (size_t)-1);
+			if unlikely(remaining == (size_t)-1)
 				goto err_iter;
-		} while (ITER_ISOK(elem = DeeObject_IterNext(iterator)));
-		if unlikely(!elem) {
-err_iter:
-			Dee_Decref(iterator);
-			return -1;
+			argc += remaining;
 		}
 invalid_argc2:
 		Dee_Decref(iterator);
@@ -248,8 +246,10 @@ invalid_argc2:
 				++format;
 				argc_max += count_unpack_args(&format);
 			}
-			err_invalid_argc_unpack(self, argc, argc_min, argc_max);
+			return err_invalid_argc_unpack(self, argc, argc_min, argc_max);
 		}
+err_iter:
+		Dee_Decref(iterator);
 		return -1;
 	}	break;
 
