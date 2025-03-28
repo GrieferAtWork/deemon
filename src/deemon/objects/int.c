@@ -3214,7 +3214,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 
 
 /* Convert an integer to a binary-encoded data array. */
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUTS(2, 3) NONNULL((1)) int
 (DCALL DeeInt_AsBytes)(/*Int*/ DeeObject *__restrict self,
                        void *__restrict dst, size_t length,
                        bool little_endian, bool as_signed) {
@@ -3369,7 +3369,7 @@ err:
 }
 
 /* Convert a binary-encoded data array into an integer. */
-PUBLIC WUNUSED DREF /*Int*/ DeeObject *
+PUBLIC WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 (DCALL DeeInt_FromBytes)(void const *buf, size_t length,
                          bool little_endian, bool as_signed) {
 	DREF DeeIntObject *result;

@@ -613,13 +613,13 @@ DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsDouble)(/*Int*/ Dee
 
 
 /* Convert an integer to a binary-encoded data array. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int
+DFUNDEF WUNUSED ATTR_OUTS(2, 3) NONNULL((1)) int
 (DCALL DeeInt_AsBytes)(/*Int*/ DeeObject *__restrict self,
                        void *__restrict dst, size_t length,
                        bool little_endian, bool as_signed);
 
 /* Convert a binary-encoded data array into an integer. */
-DFUNDEF WUNUSED DREF /*Int*/ DeeObject *
+DFUNDEF WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 (DCALL DeeInt_FromBytes)(void const *buf, size_t length,
                          bool little_endian, bool as_signed);
 
