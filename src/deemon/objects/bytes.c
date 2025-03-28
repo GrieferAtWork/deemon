@@ -224,6 +224,27 @@ INTERN DeeTypeObject BytesIterator_Type = {
 
 
 
+struct seq_tobytes_foreach_data {
+	byte_t *stbf_dst;       /* [0..stbf_num_bytes] Output buffer */
+	size_t  stbf_num_bytes; /* # of remaining bytes in `stbf_dst' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+seq_tobytes_foreach_cb(void *arg, DeeObject *item) {
+	struct seq_tobytes_foreach_data *data;
+	data = (struct seq_tobytes_foreach_data *)arg;
+	if likely(data->stbf_num_bytes) {
+		if (DeeObject_AsByte(item, data->stbf_dst))
+			goto err;
+		--data->stbf_num_bytes;
+	}
+	++data->stbf_dst;
+	return 0;
+err:
+	return -1;
+}
+
+
 /* Unpack the given sequence `seq' into `num_bytes', invoking the
  * `operator int' on each, converting their values into bytes, before
  * storing those bytes in the given `dst' vector.
@@ -232,16 +253,10 @@ INTERN DeeTypeObject BytesIterator_Type = {
 PUBLIC WUNUSED NONNULL((1, 3)) int
 (DCALL DeeSeq_ItemsToBytes)(byte_t *__restrict dst, size_t num_bytes,
                             DeeObject *__restrict seq) {
-	size_t i, fast_size;
-	int error;
-	DREF DeeObject *iter, *elem;
 	if (DeeNone_Check(seq)) {
 		/* Special case: `none' */
 		bzero(dst, num_bytes);
-		return 0;
-	}
-
-	if (DeeString_Check(seq)) {
+	} else if (DeeString_Check(seq)) {
 		/* Special case: `string' */
 		byte_t *data = DeeString_AsBytes(seq, false);
 		if unlikely(!data)
@@ -251,10 +266,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 			goto err;
 		}
 		memcpy(dst, data, num_bytes);
-		return 0;
-	}
-
-	if (DeeBytes_Check(seq)) {
+	} else if (DeeBytes_Check(seq)) {
 		/* Optional optimization for `Bytes' (though this one
 		 * would also function using the fallback code below). */
 		if (DeeBytes_SIZE(seq) != num_bytes) {
@@ -264,164 +276,100 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 
 		/* Use `memmove', because `seq' may be a view of `dst' */
 		memmove(dst, DeeBytes_DATA(seq), num_bytes);
-		return 0;
-	}
-
-	fast_size = DeeFastSeq_GetSize_deprecated(seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		if (fast_size != num_bytes) {
-			err_invalid_unpack_size(seq, num_bytes, fast_size);
+	} else {
+		/* Fallback: use DeeObject_Foreach() */
+		size_t req_bytes;
+		struct seq_tobytes_foreach_data data;
+		data.stbf_dst       = dst;
+		data.stbf_num_bytes = num_bytes;
+		if unlikely(DeeObject_Foreach(seq, &seq_tobytes_foreach_cb, &data))
+			goto err;
+		req_bytes = (size_t)(data.stbf_dst - dst);
+		if unlikely(req_bytes != num_bytes) {
+			err_invalid_unpack_size(seq, num_bytes, req_bytes);
 			goto err;
 		}
-
-		/* Fast-sequence optimizations. */
-		for (i = 0; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem_deprecated(seq, i);
-			if unlikely(!elem)
-				goto err;
-			error = DeeObject_AsUIntX(elem, &dst[i]);
-			Dee_Decref(elem);
-			if unlikely(error)
-				goto err;
-		}
-		return 0;
 	}
-
-	/* TODO: Use DeeObject_Foreach() */
-
-	/* Fallback: use an iterator. */
-	iter = DeeObject_Iter(seq);
-	if unlikely(!iter)
-		goto err;
-	i = 0;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		if (i >= num_bytes) {
-			err_invalid_unpack_iter_size(seq, iter, num_bytes);
-			Dee_Decref(elem);
-			goto err_iter;
-		}
-		error = DeeObject_AsUIntX(elem, &dst[i]);
-		Dee_Decref(elem);
-		if unlikely(error)
-			goto err_iter;
-		++i;
-	}
-	if unlikely(!elem)
-		goto err_iter;
-	if unlikely(i != num_bytes) {
-		err_invalid_unpack_size(seq, num_bytes, i);
-		goto err_iter;
-	}
-	Dee_Decref(iter);
 	return 0;
-err_iter:
-	Dee_Decref(iter);
 err:
 	return -1;
 }
 
 
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+bytes_fromseq_foreach_cb(void *arg, DeeObject *item) {
+	DREF Bytes *self = *(DREF Bytes **)arg;
+	ASSERT(self->b_size <= self->b_buffer.bb_size);
+	if unlikely(self->b_size >= self->b_buffer.bb_size) {
+		DREF Bytes *new_bytes;
+		size_t new_bsize = self->b_buffer.bb_size * 2;
+
+		/* Must allocate more memory. */
+		new_bytes = (DREF Bytes *)DeeObject_TryReallocc(self, offsetof(Bytes, b_data),
+		                                                new_bsize, sizeof(byte_t));
+		if unlikely(!new_bytes) {
+			new_bsize = self->b_size + 1;
+			new_bytes = (DREF Bytes *)DeeObject_Reallocc(self, offsetof(Bytes, b_data),
+			                                             new_bsize, sizeof(byte_t));
+			if unlikely(!new_bytes)
+				goto err;
+		}
+		*(DREF Bytes **)arg = self = new_bytes;
+		self->b_buffer.bb_size = new_bsize;
+	}
+	ASSERT(self->b_size < self->b_buffer.bb_size);
+	if (DeeObject_AsByte(item, &self->b_data[self->b_size]))
+		goto err;
+	++self->b_size;
+	return 0;
+err:
+	return -1;
+}
+
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_FromSequence(DeeObject *__restrict seq) {
-	DREF Bytes *result;
-	size_t i, bufsize;
-	DREF DeeObject *iter, *elem;
+	DREF Bytes *bytes;
+	size_t bsize;
 	if (DeeBytes_Check(seq))
 		return DeeBytes_NewBufferData(DeeBytes_DATA(seq), DeeBytes_SIZE(seq));
-	bufsize = DeeFastSeq_GetSize_deprecated(seq);
-	if (bufsize != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		if (bufsize == 0)
-			return DeeBytes_NewEmpty();
-		result = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data),
-		                                         bufsize, sizeof(byte_t));
-		if unlikely(!result)
-			goto err;
-
-		/* Fast-sequence optimizations. */
-		for (i = 0; i < bufsize; ++i) {
-			int error;
-			elem = DeeFastSeq_GetItem_deprecated(seq, i);
-			if unlikely(!elem)
-				goto err_r;
-			error = DeeObject_AsUIntX(elem, &result->b_data[i]);
-			Dee_Decref(elem);
-			if unlikely(error)
-				goto err_r;
-		}
-		goto done;
-	}
-
-	/* TODO: Use DeeObject_Foreach() */
 
 	/* Fallback: use an iterator. */
-	bufsize = 256;
-	result  = (DREF Bytes *)DeeObject_TryMallocc(offsetof(Bytes, b_data), bufsize, sizeof(byte_t));
-	if unlikely(!bufsize) {
-		bufsize = 1;
-		result  = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data), 1, sizeof(byte_t));
-		if unlikely(!result)
+	bsize = DeeObject_SizeFast(seq);
+	if (bsize == (size_t)-1)
+		bsize = 256;
+	bytes = (DREF Bytes *)DeeObject_TryMallocc(offsetof(Bytes, b_data), bsize, sizeof(byte_t));
+	if unlikely(!bsize) {
+		bsize = 1;
+		bytes  = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data), 1, sizeof(byte_t));
+		if unlikely(!bytes)
 			goto err;
 	}
-	iter = DeeObject_Iter(seq);
-	if unlikely(!iter)
+	bytes->b_size           = 0;
+	bytes->b_buffer.bb_size = bsize;
+	if unlikely(DeeObject_Foreach(seq, &bytes_fromseq_foreach_cb, &bytes))
 		goto err_r;
-	i = 0;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		ASSERT(i <= bufsize);
-		if (i >= bufsize) {
-			DREF Bytes *new_result;
-			size_t new_bufsize = bufsize * 2;
-
-			/* Must allocate more memory. */
-			new_result = (DREF Bytes *)DeeObject_TryReallocc(result, offsetof(Bytes, b_data),
-			                                                 new_bufsize, sizeof(byte_t));
-			if unlikely(!new_result) {
-				new_bufsize = i + 1;
-				new_result = (DREF Bytes *)DeeObject_Reallocc(result, offsetof(Bytes, b_data),
-				                                              new_bufsize, sizeof(byte_t));
-				if unlikely(!new_result)
-					goto err_r_elem;
-			}
-			result  = new_result;
-			bufsize = new_bufsize;
-		}
-		if unlikely(DeeObject_AsUIntX(elem, &result->b_data[i]))
-			goto err_r_elem;
-		Dee_Decref(elem);
-		++i;
-		if (DeeThread_CheckInterrupt())
-			goto err_r_iter;
-	}
-	if unlikely(!elem)
-		goto err_r_iter;
-	Dee_Decref(iter);
 
 	/* Free unused buffer memory. */
-	if likely(i < bufsize) {
+	ASSERT(bytes->b_size <= bytes->b_buffer.bb_size);
+	if (bytes->b_size < bytes->b_buffer.bb_size) {
 		DREF Bytes *new_result;
-		new_result = (DREF Bytes *)DeeObject_TryReallocc(result, offsetof(Bytes, b_data),
-		                                                 i, sizeof(byte_t));
+		new_result = (DREF Bytes *)DeeObject_TryReallocc(bytes, offsetof(Bytes, b_data),
+		                                                 bytes->b_size, sizeof(byte_t));
 		if likely(new_result)
-			result = new_result;
+			bytes = new_result;
+		bytes->b_buffer.bb_size = bytes->b_size;
 	}
-done:
-	result->b_base           = result->b_data;
-	result->b_size           = i;
-	result->b_orig           = (DREF DeeObject *)result;
-	result->b_flags          = Dee_BUFFER_FWRITABLE;
-	result->b_buffer.bb_base = result->b_data;
-	result->b_buffer.bb_size = i;
+	bytes->b_base  = bytes->b_data;
+	bytes->b_orig  = (DREF DeeObject *)bytes;
+	bytes->b_flags = Dee_BUFFER_FWRITABLE;
+	bytes->b_buffer.bb_base = bytes->b_data;
 #ifndef __INTELLISENSE__
-	result->b_buffer.bb_put = NULL;
+	bytes->b_buffer.bb_put = NULL;
 #endif /* !__INTELLISENSE__ */
-	DeeObject_Init(result, &DeeBytes_Type);
-	return (DREF DeeObject *)result;
-err_r_elem:
-	Dee_Decref(elem);
-err_r_iter:
-	Dee_Decref(iter);
+	DeeObject_Init(bytes, &DeeBytes_Type);
+	return (DREF DeeObject *)bytes;
 err_r:
-	DeeObject_Free(result);
+	DeeObject_Free(bytes);
 err:
 	return NULL;
 }
@@ -684,7 +632,7 @@ bytes_init(size_t argc, DeeObject *const *argv) {
 			byte_t init;
 			if (DeeObject_AsSize(ob, &start))
 				goto err;
-			if (DeeObject_AsUIntX(argv[1], &init))
+			if (DeeObject_AsByte(argv[1], &init))
 				goto err;
 			return (DREF Bytes *)DeeBytes_NewBuffer(start, init);
 		}
@@ -1283,7 +1231,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 bytes_setitem_index(Bytes *self, size_t index, DeeObject *value) {
 	byte_t val;
-	if (DeeObject_AsUIntX(value, &val))
+	if (DeeObject_AsByte(value, &val))
 		goto err;
 	if unlikely(index >= DeeBytes_SIZE(self)) {
 		err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
@@ -1544,7 +1492,7 @@ bytes_setfirst(Bytes *__restrict self, DeeObject *__restrict value) {
 		goto err_empty;
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
-	if unlikely(DeeObject_AsUIntX(value, &int_value))
+	if unlikely(DeeObject_AsByte(value, &int_value))
 		goto err;
 	DeeBytes_DATA(self)[0] = int_value;
 	return 0;
@@ -1574,7 +1522,7 @@ bytes_setlast(Bytes *__restrict self, DeeObject *__restrict value) {
 		goto err_empty;
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
-	if unlikely(DeeObject_AsUIntX(value, &int_value))
+	if unlikely(DeeObject_AsByte(value, &int_value))
 		goto err;
 	DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1] = int_value;
 	return 0;

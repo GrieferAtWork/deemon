@@ -4615,6 +4615,10 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInheritedOnSucc
 #define DeeObject_AsUIntptr(self, result)        DeeObject_AsXUInt(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, result))
 #define DeeObject_AsDirectUIntptr(self)          DeeObject_AsXDirectUInt(__SIZEOF_POINTER__, self)
 #define DeeObject_AsDirectUIntptrInherited(self) DeeObject_AsXDirectUIntInherited(__SIZEOF_POINTER__, self)
+#define DeeObject_AsSByte(self, result)          DEE_PRIVATE_OBJECT_AS_INT_1(self, Dee_REQUIRES_TYPE(__SBYTE_TYPE__ *, result))
+#define DeeObject_AsByte(self, result)           DEE_PRIVATE_OBJECT_AS_UINT_1(self, Dee_REQUIRES_TYPE(__BYTE_TYPE__ *, result))
+#define DeeObject_AsDirectByte(self)             DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_1(self)
+#define DeeObject_AsDirectByteInherited(self)    DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_1(self)
 
 
 /* Math operator invocation. */

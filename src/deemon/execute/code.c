@@ -1958,6 +1958,90 @@ err:
 	return -1;
 }
 
+struct except_handler_specs {
+	struct except_handler *exsp_v; /* [0..exsp_c|ALLOC(exsp_a)] Except handler vector */
+	uint16_t               exsp_c; /* # of initialized fields in `exsp_v' */
+	uint16_t               exsp_a; /* Allocated size of `exsp_v' */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+except_handler_specs_init_foreach_cb(void *arg, DeeObject *item) {
+	struct except_handler_specs *data;
+	struct except_handler *slot;
+	data = (struct except_handler_specs *)arg;
+	ASSERT(data->exsp_c <= data->exsp_a);
+
+	/* Ensure sufficient buffer space */
+	if (data->exsp_c >= data->exsp_a) {
+		struct except_handler *new_exspv;
+		uint16_t new_alloc = data->exsp_a * 2;
+		if (!data->exsp_a) {
+			new_alloc = 2;
+		} else if unlikely(new_alloc <= data->exsp_a) {
+			if unlikely(data->exsp_a == (uint16_t)-1) {
+				return DeeError_Throwf(&DeeError_IntegerOverflow,
+				                       "Too many exception handlers");
+			}
+			new_alloc = (uint16_t)-1;
+		}
+		new_exspv = (struct except_handler *)Dee_TryReallocc(data->exsp_v, new_alloc,
+		                                                     sizeof(struct except_handler));
+		if unlikely(!new_exspv) {
+			new_alloc = data->exsp_c + 1;
+			new_exspv = (struct except_handler *)Dee_Reallocc(data->exsp_v, new_alloc,
+			                                                  sizeof(struct except_handler));
+			if unlikely(!new_exspv)
+				goto err;
+		}
+		data->exsp_v = new_exspv;
+		data->exsp_a = new_alloc;
+	}
+	slot = &data->exsp_v[data->exsp_c];
+	if unlikely(unpack_exception_descriptor(slot, item))
+		goto err;
+	++data->exsp_c;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+except_handler_specs_init(struct except_handler_specs *__restrict self,
+                          DeeObject *except_specs) {
+	Dee_ssize_t status;
+	self->exsp_v = NULL;
+	self->exsp_c = 0;
+	self->exsp_a = 0;
+#ifndef __OPTIMIZE_SIZE__
+	{
+		size_t hint = DeeObject_SizeFast(except_specs);
+		if (hint != (size_t)-1 && hint <= 0xffff) {
+			struct except_handler *buffer;
+			buffer = (struct except_handler *)Dee_TryMallocc(hint, sizeof(struct except_handler));
+			if likely(buffer) {
+				self->exsp_v = buffer;
+				self->exsp_a = (uint16_t)hint;
+			}
+		}
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
+	status = DeeObject_Foreach(except_specs, &except_handler_specs_init_foreach_cb, self);
+	if unlikely(status)
+		goto err;
+	if (self->exsp_a > self->exsp_c) {
+		struct except_handler *new_except_v;
+		new_except_v = (struct except_handler *)Dee_TryReallocc(self->exsp_v, self->exsp_c,
+		                                                        sizeof(struct except_handler));
+		if likely(new_except_v)
+			self->exsp_v = new_except_v;
+	}
+	return 0;
+err:
+	while (self->exsp_c--)
+		Dee_XDecref(self->exsp_v[self->exsp_c].eh_mask);
+	Dee_Free(self->exsp_v);
+	return -1;
+}
 
 
 
@@ -2147,63 +2231,11 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	result->co_exceptc = 0;
 	result->co_exceptv = NULL;
 	if (!DeeNone_Check(args.except)) {
-		uint16_t except_c               = 0;
-		uint16_t except_a               = 0;
-		struct except_handler *except_v = NULL;
-		struct except_handler *new_except_v;
-		DREF DeeObject *iter, *elem;
-		iter = DeeObject_Iter(args.except);
-		if unlikely(!iter)
+		struct except_handler_specs specs;
+		if unlikely(except_handler_specs_init(&specs, args.except))
 			goto err_r_constv;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-			ASSERT(except_c <= except_a);
-			if (except_c >= except_a) {
-				uint16_t new_except_a = except_a * 2;
-				if (!except_a) {
-					new_except_a = 2;
-				} else if unlikely(new_except_a <= except_a) {
-					if unlikely(except_a == (uint16_t)-1) {
-						DeeError_Throwf(&DeeError_IntegerOverflow,
-						                "Too many exception handlers");
-err_r_except_temp_iter_elem:
-						Dee_Decref(elem);
-err_r_except_temp_iter:
-						Dee_Decref(iter);
-						while (except_c--)
-							Dee_XDecref(except_v[except_c].eh_mask);
-						Dee_Free(except_v);
-						goto err_r_constv;
-					}
-					new_except_a = (uint16_t)-1;
-				}
-				new_except_v = (struct except_handler *)Dee_TryReallocc(except_v, new_except_a,
-				                                                        sizeof(struct except_handler));
-				if unlikely(!new_except_v) {
-					new_except_a = except_c + 1;
-					new_except_v = (struct except_handler *)Dee_Reallocc(except_v, new_except_a,
-					                                                     sizeof(struct except_handler));
-					if unlikely(!new_except_v)
-						goto err_r_except_temp_iter_elem;
-				}
-				except_v = new_except_v;
-				except_a = new_except_a;
-			}
-			if unlikely(unpack_exception_descriptor(&except_v[except_c], elem))
-				goto err_r_except_temp_iter_elem;
-			Dee_Decref(elem);
-			++except_c;
-		}
-		if unlikely(!elem)
-			goto err_r_except_temp_iter;
-		Dee_Decref(iter);
-		if (except_a > except_c) {
-			new_except_v = (struct except_handler *)Dee_TryReallocc(except_v, except_c,
-			                                                        sizeof(struct except_handler));
-			if likely(new_except_v)
-				except_v = new_except_v;
-		}
-		result->co_exceptc = except_c;
-		result->co_exceptv = except_v;
+		result->co_exceptc = specs.exsp_c;
+		result->co_exceptv = specs.exsp_v; /* Inherit */
 	}
 
 	/* Load custom code flags */

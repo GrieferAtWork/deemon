@@ -1753,11 +1753,6 @@ err_r:
 
 
 INTERN WUNUSED NONNULL((1)) DREF URoDict *DCALL
-URoDict_FromIterator(DeeObject *__restrict iterator) {
-	return URoDict_FromIterator_impl(iterator, URODICT_INITIAL_MASK);
-}
-
-INTERN WUNUSED NONNULL((1)) DREF URoDict *DCALL
 URoDict_FromSequence(DeeObject *__restrict sequence) {
 	DREF URoDict *result;
 	DREF DeeObject *iterator;
@@ -1773,7 +1768,7 @@ URoDict_FromSequence(DeeObject *__restrict sequence) {
 	iterator = DeeObject_Iter(sequence);
 	if unlikely(!iterator)
 		goto err;
-	result = URoDict_FromIterator(iterator);
+	result = URoDict_FromIterator_impl(iterator, URODICT_INITIAL_MASK);
 	Dee_Decref(iterator);
 	return result;
 err:

@@ -452,32 +452,15 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ipc_nt_cmdline_add_args(struct unicode_printer *__restrict printer,
-                        DeeObject *__restrict args) {
-	DREF DeeObject *iter, *elem;
-	int result = 0;
-	iter = DeeObject_Iter(args);
-	if unlikely(!iter)
+#define ipc_nt_cmdline_add_args(printer, args) \
+	DeeObject_Foreach(args, &ipc_nt_cmdline_add_args_foreach_cb, printer)
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ipc_nt_cmdline_add_args_foreach_cb(void *__restrict arg,
+                                   DeeObject *__restrict item) {
+	struct unicode_printer *printer = (struct unicode_printer *)arg;
+	if (DeeObject_AssertTypeExact(item, &DeeString_Type))
 		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		if (DeeObject_AssertTypeExact(elem, &DeeString_Type)) {
-			result = -1;
-		} else {
-			result = ipc_nt_cmdline_add_arg(printer, (DeeStringObject *)elem);
-		}
-		Dee_Decref(elem);
-		if unlikely(result)
-			break;
-		if (DeeThread_CheckInterrupt())
-			goto err_iter;
-	}
-	if unlikely(!elem)
-		goto err_iter;
-	Dee_Decref(iter);
-	return result;
-err_iter:
-	Dee_Decref(iter);
+	return ipc_nt_cmdline_add_arg(printer, (DeeStringObject *)item);
 err:
 	return -1;
 }

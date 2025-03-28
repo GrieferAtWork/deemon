@@ -1701,42 +1701,6 @@ err_ob:
 
 
 INTERN WUNUSED NONNULL((1)) DREF URoSet *DCALL
-URoSet_FromIterator(DeeObject *__restrict iterator) {
-	DREF DeeObject *elem;
-	DREF URoSet *result;
-	result = (DREF URoSet *)DeeObject_Mallocc(offsetof(URoSet, urs_elem),
-	                                          1, sizeof(struct uset_item));
-	if unlikely(!result)
-		goto err;
-	result->urs_mask            = 0;
-	result->urs_size            = 0;
-	result->urs_elem[0].usi_key = NULL;
-
-	/* Insert all elements from the given iterator into the resulting set. */
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		DREF URoSet *new_result;
-		new_result = URoSet_DoInsertOrRehash(result, elem);
-		if unlikely(!new_result)
-			goto err_r;
-		result = new_result;
-	}
-	if unlikely(!elem)
-		goto err_r;
-	DeeObject_Init(result, &URoSet_Type);
-	return result;
-err_r:
-	{
-		STATIC_ASSERT(sizeof(DREF DeeObject *) == sizeof(struct uset_item));
-		Dee_XDecrefv((DREF DeeObject **)result->urs_elem,
-		             result->urs_mask + 1);
-	}
-	DeeObject_Free(result);
-err:
-	return NULL;
-}
-
-
-INTERN WUNUSED NONNULL((1)) DREF URoSet *DCALL
 URoSet_FromUSet(USet *__restrict self) {
 	DREF URoSet *result;
 	size_t i, mask;
