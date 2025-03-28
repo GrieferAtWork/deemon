@@ -230,7 +230,6 @@ LOCAL_rodict_getitem(RoDict *self, LOCAL_KEY_PARAMS) {
 #endif /* !... */
 	Dee_hash_t hs, perturb;
 
-	/* TODO */
 	_DeeRoDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);
 	for (;; _DeeRoDict_HashIdxAdv(self, &hs, &perturb)) {
 		struct Dee_dict_item *item;

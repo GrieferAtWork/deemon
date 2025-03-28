@@ -161,7 +161,9 @@ typedef WUNUSED_T NONNULL_T((1, 2, 5)) int (DCALL *DeeNO_setattr_string_len_hash
 /* clang-format on */
 
 
-/* Dee_TypeNativeOperator_ID */
+/* Dee_TypeNativeOperator_ID
+ * NOTE: To dynamically resolve these IDs from strings, use "TNO_BYNAME from rt.hints.operator"
+ */
 enum Dee_tno_id {
 	/* clang-format off */
 /*[[[deemon (printNativeOperatorIds from "...src.deemon.method-hints.method-hints")();]]]*/

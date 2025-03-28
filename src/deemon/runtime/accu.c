@@ -363,7 +363,7 @@ err:
 	return -1;
 }
 
-/* Add all elements of `item' into the accumulator. */
+/* Add all elements of `items' into the accumulator. */
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_accu_addall(/*struct Dee_accu*/ void *self, DeeObject *items) {
 	struct Dee_accu *me = (struct Dee_accu *)self;

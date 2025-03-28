@@ -740,15 +740,15 @@ udict_bounditem(UDict *self, DeeObject *key) {
 	return Dee_BOUND_MISSING;
 }
 
-#ifdef Dee_BOUND_MAYALIAS_HAS
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #define udict_hasitem udict_bounditem
-#else /* Dee_BOUND_MAYALIAS_HAS */
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 udict_hasitem(UDict *self, DeeObject *key) {
 	int bound = udict_bounditem(self, key);
 	return Dee_BOUND_ASHAS_NOEXCEPT(bound);
 }
-#endif /* !Dee_BOUND_MAYALIAS_HAS */
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 udict_getitem(UDict *self, DeeObject *key) {
@@ -1950,15 +1950,15 @@ urodict_bounditem(URoDict *self, DeeObject *key) {
 	return Dee_BOUND_MISSING;
 }
 
-#ifdef Dee_BOUND_MAYALIAS_HAS
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #define urodict_hasitem urodict_bounditem
-#else /* Dee_BOUND_MAYALIAS_HAS */
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 urodict_hasitem(URoDict *self, DeeObject *key) {
 	int bound = urodict_bounditem(self, key);
 	return Dee_BOUND_ASHAS_NOEXCEPT(bound);
 }
-#endif /* !Dee_BOUND_MAYALIAS_HAS */
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 urodict_trygetitem(URoDict *self, DeeObject *key) {

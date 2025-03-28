@@ -901,7 +901,7 @@ __map_getitem__.map_operator_hasitem([[nonnull]] DeeObject *self,
 %{$none = 1}
 %{$empty = 0}
 %{using map_operator_bounditem: {
-	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
+	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
 	int result = CALL_DEPENDENCY(map_operator_bounditem, self, key);
 	return Dee_BOUND_ASHAS(result);
 }} = $with__map_operator_bounditem;
@@ -909,13 +909,13 @@ __map_getitem__.map_operator_hasitem([[nonnull]] DeeObject *self,
 map_operator_hasitem = {
 	DeeMH_map_operator_bounditem_t map_operator_bounditem = REQUIRE(map_operator_bounditem);
 	if (map_operator_bounditem) {
-#ifdef Dee_BOUND_MAYALIAS_HAS
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 		return map_operator_bounditem;
-#else /* Dee_BOUND_MAYALIAS_HAS */
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 		if (map_operator_bounditem == &default__map_operator_bounditem__empty)
 			return &$empty;
 		return &$with__map_operator_bounditem;
-#endif /* !Dee_BOUND_MAYALIAS_HAS */
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 	}
 };
 
@@ -927,7 +927,7 @@ __map_getitem__.map_operator_hasitem_index([[nonnull]] DeeObject *self, size_t k
 %{$none = 1}
 %{$empty = 0}
 %{using map_operator_bounditem_index: {
-	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
+	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
 	int result = CALL_DEPENDENCY(map_operator_bounditem_index, self, key);
 	return Dee_BOUND_ASHAS(result);
 }} = $with__map_operator_bounditem_index;
@@ -935,13 +935,13 @@ __map_getitem__.map_operator_hasitem_index([[nonnull]] DeeObject *self, size_t k
 map_operator_hasitem_index = {
 	DeeMH_map_operator_bounditem_index_t map_operator_bounditem_index = REQUIRE(map_operator_bounditem_index);
 	if (map_operator_bounditem_index) {
-#ifdef Dee_BOUND_MAYALIAS_HAS
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 		return map_operator_bounditem_index;
-#else /* Dee_BOUND_MAYALIAS_HAS */
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 		if (map_operator_bounditem_index == &default__map_operator_bounditem_index__empty)
 			return &$empty;
 		return &$with__map_operator_bounditem_index;
-#endif /* !Dee_BOUND_MAYALIAS_HAS */
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 	}
 };
 
@@ -955,7 +955,7 @@ __map_getitem__.map_operator_hasitem_string_hash([[nonnull]] DeeObject *self,
 %{$none = 1}
 %{$empty = 0}
 %{using map_operator_bounditem_string_hash: {
-	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
+	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
 	int result = CALL_DEPENDENCY(map_operator_bounditem_string_hash, self, key, hash);
 	return Dee_BOUND_ASHAS(result);
 }} = $with__map_operator_bounditem_string_hash;
@@ -963,13 +963,13 @@ __map_getitem__.map_operator_hasitem_string_hash([[nonnull]] DeeObject *self,
 map_operator_hasitem_string_hash = {
 	DeeMH_map_operator_bounditem_string_hash_t map_operator_bounditem_string_hash = REQUIRE(map_operator_bounditem_string_hash);
 	if (map_operator_bounditem_string_hash) {
-#ifdef Dee_BOUND_MAYALIAS_HAS
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 		return map_operator_bounditem_string_hash;
-#else /* Dee_BOUND_MAYALIAS_HAS */
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 		if (map_operator_bounditem_string_hash == &default__map_operator_bounditem_string_hash__empty)
 			return &$empty;
 		return &$with__map_operator_bounditem_string_hash;
-#endif /* !Dee_BOUND_MAYALIAS_HAS */
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 	}
 };
 
@@ -983,7 +983,7 @@ __map_getitem__.map_operator_hasitem_string_len_hash([[nonnull]] DeeObject *self
 %{$none = 1}
 %{$empty = 0}
 %{using map_operator_bounditem_string_len_hash: {
-	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
+	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
 	int result = CALL_DEPENDENCY(map_operator_bounditem_string_len_hash, self, key, keylen, hash);
 	return Dee_BOUND_ASHAS(result);
 }} = $with__map_operator_bounditem_string_len_hash;
@@ -991,12 +991,12 @@ __map_getitem__.map_operator_hasitem_string_len_hash([[nonnull]] DeeObject *self
 map_operator_hasitem_string_len_hash = {
 	DeeMH_map_operator_bounditem_string_len_hash_t map_operator_bounditem_string_len_hash = REQUIRE(map_operator_bounditem_string_len_hash);
 	if (map_operator_bounditem_string_len_hash) {
-#ifdef Dee_BOUND_MAYALIAS_HAS
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 		return map_operator_bounditem_string_len_hash;
-#else /* Dee_BOUND_MAYALIAS_HAS */
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 		if (map_operator_bounditem_string_len_hash == &default__map_operator_bounditem_string_len_hash__empty)
 			return &$empty;
 		return &$with__map_operator_bounditem_string_len_hash;
-#endif /* !Dee_BOUND_MAYALIAS_HAS */
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 	}
 };

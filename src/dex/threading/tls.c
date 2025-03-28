@@ -641,15 +641,12 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(TLS *__restrict self) {
 
 #endif /* CONFIG_NO_THREADS */
 
-#ifdef Dee_BOUND_PRESENT_MAYALIAS_BOOL
-#define tls_bound tls_bool
-#else /* Dee_BOUND_PRESENT_MAYALIAS_BOOL */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_bound(TLS *__restrict self) {
 	int ok = tls_bool(self);
+	ASSERT(ok == 0 || ok == 1);
 	return Dee_BOUND_FROMBOOL(ok);
 }
-#endif /* !Dee_BOUND_PRESENT_MAYALIAS_BOOL */
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 tls_printrepr(TLS *__restrict self, Dee_formatprinter_t printer, void *arg) {

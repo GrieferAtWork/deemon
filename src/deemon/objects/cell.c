@@ -323,20 +323,16 @@ cell_printrepr(DeeCellObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_bool(DeeCellObject *__restrict self) {
-	return DeeCell_IsBound(self);
+	return DeeCell_IsBound(self) ? 1 : 0;
 }
 
-#ifdef Dee_BOUND_PRESENT_MAYALIAS_BOOL
-#define cell_value_bound cell_bool
-#else /* Dee_BOUND_PRESENT_MAYALIAS_BOOL */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_value_bound(DeeCellObject *__restrict self) {
-	int ok = cell_bool(self);
-	return Dee_BOUND_FROMBOOL(ok);
+	bool isbound = DeeCell_IsBound(self);
+	return Dee_BOUND_FROMBOOL(isbound);
 }
-#endif /* !Dee_BOUND_PRESENT_MAYALIAS_BOOL */
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 cell_hash(DeeCellObject *__restrict self) {
 	return DeeCell_GetHash(self);
 }
@@ -363,7 +359,7 @@ cell_trycompare_eq(DeeCellObject *self, DeeCellObject *other) {
 }
 
 PRIVATE struct type_cmp cell_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&cell_hash,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&cell_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_compare,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_compare,
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_trycompare_eq,

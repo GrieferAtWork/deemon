@@ -37,7 +37,8 @@
 #include "../runtime/strings.h"
 /**/
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t, offsetof */
 
 DECL_BEGIN
 
@@ -215,15 +216,11 @@ ob_weakref_bool(WeakRef *__restrict self) {
 	return Dee_weakref_bound(&self->wr_ref);
 }
 
-#ifdef Dee_BOUND_PRESENT_MAYALIAS_BOOL
-#define ob_weakref_bound ob_weakref_bool
-#else /* Dee_BOUND_PRESENT_MAYALIAS_BOOL */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ob_weakref_bound(WeakRef *__restrict self) {
-	int ok = ob_weakref_bool(self);
-	return Dee_BOUND_FROMBOOL(ok);
+	bool bound = Dee_weakref_bound(&self->wr_ref);
+	return Dee_BOUND_FROMBOOL(bound);
 }
-#endif /* !Dee_BOUND_PRESENT_MAYALIAS_BOOL */
 
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL

@@ -1353,12 +1353,12 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL dict_bounditem_index(Dict *self, size_t i
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_bounditem_string_hash(Dict *self, char const *key, Dee_hash_t hash);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_bounditem_string_len_hash(Dict *self, char const *key, size_t keylen, Dee_hash_t hash);
 
-#ifdef Dee_BOUND_MAYALIAS_HAS
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #define dict_hasitem                 dict_bounditem
 #define dict_hasitem_index           dict_bounditem_index
 #define dict_hasitem_string_hash     dict_bounditem_string_hash
 #define dict_hasitem_string_len_hash dict_bounditem_string_len_hash
-#else /* Dee_BOUND_MAYALIAS_HAS */
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_hasitem(Dict *self, DeeObject *key);
 PRIVATE WUNUSED NONNULL((1)) int DCALL dict_hasitem_index(Dict *self, size_t index);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_hasitem_string_hash(Dict *self, char const *key, Dee_hash_t hash);
@@ -1388,7 +1388,7 @@ dict_hasitem_string_len_hash(Dict *self, char const *key, size_t keylen, Dee_has
 	return Dee_BOUND_ASHAS(bound);
 }
 #endif /* __OPTIMIZE_SIZE__ */
-#endif /* !Dee_BOUND_MAYALIAS_HAS */
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL dict_setitem(Dict *self, DeeObject *key, DeeObject *value);
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL dict_setitem_index(Dict *self, size_t index, DeeObject *value);
@@ -1464,7 +1464,7 @@ DECL_END
 #define DEFINE_dict_bounditem_string_len_hash
 #include "dict-getitem-impl.c.inl"
 
-#ifndef Dee_BOUND_MAYALIAS_HAS
+#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #define DEFINE_dict_hasitem
 #include "dict-getitem-impl.c.inl"
 #define DEFINE_dict_hasitem_index
@@ -1473,7 +1473,7 @@ DECL_END
 #include "dict-getitem-impl.c.inl"
 #define DEFINE_dict_hasitem_string_len_hash
 #include "dict-getitem-impl.c.inl"
-#endif /* !Dee_BOUND_MAYALIAS_HAS */
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 #endif /* !__OPTIMIZE_SIZE__ */
 
 #define DEFINE_dict_setitem

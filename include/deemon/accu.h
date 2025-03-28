@@ -107,7 +107,7 @@ Dee_accu_pack(struct Dee_accu *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_accu_add(/*struct Dee_accu*/ void *self, DeeObject *item);
 
-/* Add all elements of `item' into the accumulator. */
+/* Add all elements of `items' into the accumulator. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_accu_addall(/*struct Dee_accu*/ void *self, DeeObject *items);
 

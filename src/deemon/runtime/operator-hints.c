@@ -51,6 +51,14 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+STATIC_ASSERT_MSG(Dee_BOUND_ERR < 0, "Required for hasitem=bounditem aliasing");
+STATIC_ASSERT_MSG(Dee_BOUND_MISSING == 0, "Required for hasitem=bounditem aliasing");
+STATIC_ASSERT_MSG(Dee_BOUND_YES > 0, "Required for hasitem=bounditem aliasing");
+STATIC_ASSERT_MSG(Dee_BOUND_NO > 0, "Required for hasitem=bounditem aliasing");
+#endif /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+
+
 struct oh_init_spec_class {
 	Dee_funptr_t   ohisc_usertyp; /* [1..1] `usertyp__*' implementation. */
 	Dee_operator_t ohisc_dep1;    /* Operator used by `ohis_class', or `OPERATOR_USERCOUNT' if not applicable */;
@@ -1821,7 +1829,7 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 		if (n_actions > 0) {
 			/* If all currently present dependencies from "actions" have been inherited
 			 * from a singular type, then "id" also has to be inherited from that type
-			 * and cannot be load here (meaning: we have to return "NULL")
+			 * and cannot be loaded here (meaning: we have to return "NULL")
 			 *
 			 * Without this, we would get sub-optimal inheritance like:
 			 * >> @[nobuiltin] class MyCell: Cell { this = super; }

@@ -866,12 +866,10 @@ filter_bool(Filter *self) {
 	return 1;
 }
 
-#define filter_boundlast filter_boundfirst
-#ifdef Dee_BOUND_PRESENT_MAYALIAS_BOOL
-#define filter_boundfirst filter_bool
-#else /* Dee_BOUND_PRESENT_MAYALIAS_BOOL */
+#define filter_boundlast  filter_nonempty_asbound
+#define filter_boundfirst filter_nonempty_asbound
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-filter_boundfirst(Filter *__restrict self) {
+filter_nonempty_asbound(Filter *__restrict self) {
 	int ok = filter_bool(self);
 	if unlikely(ok < 0)
 		goto err;
@@ -879,7 +877,6 @@ filter_boundfirst(Filter *__restrict self) {
 err:
 	return Dee_BOUND_ERR;
 }
-#endif /* !Dee_BOUND_PRESENT_MAYALIAS_BOOL */
 
 
 PRIVATE struct type_getset tpconst filter_getsets[] = {

@@ -1907,31 +1907,14 @@ struct Dee_type_cmp {
 #define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) ((is_present) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
 #endif /* Dee_BOUND_MISSING != 0 || Dee_BOUND_YES != 1 */
 
-/* When defined, "hasattr" function pointer may be implemented as an alias of "boundattr" */
-#undef Dee_BOUND_MAYALIAS_HAS
-#if Dee_BOUND_ERR < 0 && Dee_BOUND_MISSING == 0 && Dee_BOUND_YES > 0 && Dee_BOUND_NO > 0
-#define Dee_BOUND_MAYALIAS_HAS
-#endif /* ... */
-
-/* When defined, boolean-style is-bound function pointer may be implemented as an
- * alias of "boundattr", so-long as "boundattr" can never return "Dee_BOUND_MISSING" */
-#undef Dee_BOUND_PRESENT_MAYALIAS_BOOL
-#if Dee_BOUND_ERR < 0 && Dee_BOUND_NO == 0 && Dee_BOUND_YES > 0
-#define Dee_BOUND_PRESENT_MAYALIAS_BOOL
-#endif /* ... */
-
 /* Convert a Dee_BOUND_* value into the equivalent return value of hasattr/hasitem */
-#ifdef Dee_BOUND_MAYALIAS_HAS
-#define Dee_BOUND_ASHAS(bound_status) (bound_status)
-#else /* ... */
-#define Dee_BOUND_ASHAS(bound_status) \
-	(Dee_BOUND_ISERR(bound_status) ? -1 : !Dee_BOUND_ISMISSING(bound_status))
-#endif /* !... */
-#if Dee_BOUND_MISSING == 0 && Dee_BOUND_YES > 0 && Dee_BOUND_NO > 0
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#define Dee_BOUND_ASHAS(bound_status)          (bound_status)
 #define Dee_BOUND_ASHAS_NOEXCEPT(bound_status) (bound_status)
-#else /* ... */
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+#define Dee_BOUND_ASHAS(bound_status)          (Dee_BOUND_ISERR(bound_status) ? -1 : !Dee_BOUND_ISMISSING(bound_status))
 #define Dee_BOUND_ASHAS_NOEXCEPT(bound_status) (!Dee_BOUND_ISMISSING(bound_status))
-#endif /* !... */
+#endif /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 /* Considers has_value == true as bound */
 #define Dee_BOUND_FROMHAS_BOUND(has_value) \

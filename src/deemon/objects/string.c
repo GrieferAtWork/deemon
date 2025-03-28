@@ -546,14 +546,11 @@ string_bool(String *__restrict self) {
 	return !DeeString_IsEmpty(self);
 }
 
-#ifdef Dee_BOUND_PRESENT_MAYALIAS_BOOL
-#define string_bool_asbound string_bool
-#else /* Dee_BOUND_PRESENT_MAYALIAS_BOOL */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-string_bool_asbound(String *__restrict self) {
-	return Dee_BOUND_FROMBOOL(!DeeString_IsEmpty(self));
+string_nonempty_asbound(String *__restrict self) {
+	bool nonempty = !DeeString_IsEmpty(self);
+	return Dee_BOUND_FROMBOOL(nonempty);
 }
-#endif /* !Dee_BOUND_PRESENT_MAYALIAS_BOOL */
 
 INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 DeeString_Hash(DeeObject *__restrict self) {
@@ -2347,12 +2344,12 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	              METHOD_FNOREFESCAPE, /* Not CONSTCALL, because can change to true */
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this ?. has been compiled as a regex pattern in the past"),
-	TYPE_GETTER_BOUND_F(STR_first, &string_getfirst, &string_bool_asbound,
+	TYPE_GETTER_BOUND_F(STR_first, &string_getfirst, &string_nonempty_asbound,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?.\n"
 	                    "#tUnboundAttribute{@this ?. is empty}"
 	                    "Returns the first character of @this ?."),
-	TYPE_GETTER_BOUND_F(STR_last, &string_getlast, &string_bool_asbound,
+	TYPE_GETTER_BOUND_F(STR_last, &string_getlast, &string_nonempty_asbound,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?.\n"
 	                    "#tUnboundAttribute{@this ?. is empty}"

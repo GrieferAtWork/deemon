@@ -1002,17 +1002,17 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL rodict_getitemnr_string_len_has
 PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL rodict_trygetitemnr_string_len_hash(RoDict *self, char const *key, size_t keylen, Dee_hash_t hash);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL rodict_bounditem_string_len_hash(RoDict *self, char const *key, size_t keylen, Dee_hash_t hash);
 
-#ifdef Dee_BOUND_MAYALIAS_HAS
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #define rodict_hasitem                 rodict_bounditem
 #define rodict_hasitem_index           rodict_bounditem_index
 #define rodict_hasitem_string_hash     rodict_bounditem_string_hash
 #define rodict_hasitem_string_len_hash rodict_bounditem_string_len_hash
-#else /* Dee_BOUND_MAYALIAS_HAS */
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL rodict_hasitem(RoDict *self, DeeObject *key);
 PRIVATE WUNUSED NONNULL((1)) int DCALL rodict_hasitem_index(RoDict *self, size_t key);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL rodict_hasitem_string_hash(RoDict *self, char const *key, Dee_hash_t hash);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL rodict_hasitem_string_len_hash(RoDict *self, char const *key, size_t keylen, Dee_hash_t hash);
-#endif /* !Dee_BOUND_MAYALIAS_HAS */
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 #ifdef __OPTIMIZE_SIZE__
 #define SUBSTITUDE_rodict_getitemnr
@@ -1022,30 +1022,34 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL rodict_hasitem_string_len_hash(RoDict 
 #define SUBSTITUDE_rodict_getitem
 #define SUBSTITUDE_rodict_trygetitem
 #define SUBSTITUDE_rodict_bounditem
-#define SUBSTITUDE_rodict_hasitem
 #define SUBSTITUDE_rodict_getitem_index
 #define SUBSTITUDE_rodict_bounditem_index
-#define SUBSTITUDE_rodict_hasitem_index
 #define SUBSTITUDE_rodict_getitem_string_hash
 #define SUBSTITUDE_rodict_trygetitem_string_hash
 #define SUBSTITUDE_rodict_bounditem_string_hash
-#define SUBSTITUDE_rodict_hasitem_string_hash
 #define SUBSTITUDE_rodict_getitem_string_len_hash
 #define SUBSTITUDE_rodict_trygetitem_string_len_hash
 #define SUBSTITUDE_rodict_bounditem_string_len_hash
+#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#define SUBSTITUDE_rodict_hasitem
+#define SUBSTITUDE_rodict_hasitem_index
+#define SUBSTITUDE_rodict_hasitem_string_hash
 #define SUBSTITUDE_rodict_hasitem_string_len_hash
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 #else /* __OPTIMIZE_SIZE__ */
 /* Event without -Os, substitute these operators, just because
  * the dedicated variant wouldn't really be noticeably faster. */
 #define SUBSTITUDE_rodict_contains
 #define SUBSTITUDE_rodict_bounditem
-#define SUBSTITUDE_rodict_hasitem
 /*#define SUBSTITUDE_rodict_bounditem_index*/ /* Would need unnecessary incref() */
-/*#define SUBSTITUDE_rodict_hasitem_index*/   /* Would need unnecessary incref() */
 #define SUBSTITUDE_rodict_bounditem_string_hash
-#define SUBSTITUDE_rodict_hasitem_string_hash
 #define SUBSTITUDE_rodict_bounditem_string_len_hash
+#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#define SUBSTITUDE_rodict_hasitem
+/*#define SUBSTITUDE_rodict_hasitem_index*/   /* Would need unnecessary incref() */
+#define SUBSTITUDE_rodict_hasitem_string_hash
 #define SUBSTITUDE_rodict_hasitem_string_len_hash
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 #endif /* !__OPTIMIZE_SIZE__ */
 
 #ifndef __INTELLISENSE__
@@ -1094,11 +1098,6 @@ DECL_END
 #include "rodict-getitem.c.inl"
 #endif /* !SUBSTITUDE_rodict_bounditem */
 
-#ifndef SUBSTITUDE_rodict_hasitem
-#define DEFINE_rodict_hasitem
-#include "rodict-getitem.c.inl"
-#endif /* !SUBSTITUDE_rodict_hasitem */
-
 #ifndef SUBSTITUDE_rodict_getitem_index
 #define DEFINE_rodict_getitem_index
 #include "rodict-getitem.c.inl"
@@ -1108,11 +1107,6 @@ DECL_END
 #define DEFINE_rodict_bounditem_index
 #include "rodict-getitem.c.inl"
 #endif /* !SUBSTITUDE_rodict_bounditem_index */
-
-#ifndef SUBSTITUDE_rodict_hasitem_index
-#define DEFINE_rodict_hasitem_index
-#include "rodict-getitem.c.inl"
-#endif /* !SUBSTITUDE_rodict_hasitem_index */
 
 #ifndef SUBSTITUDE_rodict_getitem_string_hash
 #define DEFINE_rodict_getitem_string_hash
@@ -1129,11 +1123,6 @@ DECL_END
 #include "rodict-getitem.c.inl"
 #endif /* !SUBSTITUDE_rodict_bounditem_string_hash */
 
-#ifndef SUBSTITUDE_rodict_hasitem_string_hash
-#define DEFINE_rodict_hasitem_string_hash
-#include "rodict-getitem.c.inl"
-#endif /* !SUBSTITUDE_rodict_hasitem_string_hash */
-
 #ifndef SUBSTITUDE_rodict_getitem_string_len_hash
 #define DEFINE_rodict_getitem_string_len_hash
 #include "rodict-getitem.c.inl"
@@ -1149,10 +1138,27 @@ DECL_END
 #include "rodict-getitem.c.inl"
 #endif /* !SUBSTITUDE_rodict_bounditem_string_len_hash */
 
+#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#ifndef SUBSTITUDE_rodict_hasitem
+#define DEFINE_rodict_hasitem
+#include "rodict-getitem.c.inl"
+#endif /* !SUBSTITUDE_rodict_hasitem */
+
+#ifndef SUBSTITUDE_rodict_hasitem_index
+#define DEFINE_rodict_hasitem_index
+#include "rodict-getitem.c.inl"
+#endif /* !SUBSTITUDE_rodict_hasitem_index */
+
+#ifndef SUBSTITUDE_rodict_hasitem_string_hash
+#define DEFINE_rodict_hasitem_string_hash
+#include "rodict-getitem.c.inl"
+#endif /* !SUBSTITUDE_rodict_hasitem_string_hash */
+
 #ifndef SUBSTITUDE_rodict_hasitem_string_len_hash
 #define DEFINE_rodict_hasitem_string_len_hash
 #include "rodict-getitem.c.inl"
 #endif /* !SUBSTITUDE_rodict_hasitem_string_len_hash */
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
@@ -1236,14 +1242,6 @@ err:
 }
 #endif /* SUBSTITUDE_rodict_bounditem */
 
-#ifdef SUBSTITUDE_rodict_hasitem
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-rodict_hasitem(RoDict *self, DeeObject *key) {
-	int bound = rodict_bounditem(self, key);
-	return Dee_BOUND_ASHAS(bound);
-}
-#endif /* SUBSTITUDE_rodict_hasitem */
-
 #ifdef SUBSTITUDE_rodict_getitem_index
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_getitem_index(RoDict *self, size_t key) {
@@ -1268,14 +1266,6 @@ rodict_bounditem_index(RoDict *self, size_t key) {
 	return Dee_BOUND_YES;
 }
 #endif /* SUBSTITUDE_rodict_bounditem_index */
-
-#ifdef SUBSTITUDE_rodict_hasitem_index
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rodict_hasitem_index(RoDict *self, size_t key) {
-	int bound = rodict_bounditem_index(self, key);
-	return Dee_BOUND_ASHAS(bound);
-}
-#endif /* SUBSTITUDE_rodict_hasitem_index */
 
 #ifdef SUBSTITUDE_rodict_getitem_string_hash
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1308,14 +1298,6 @@ err:
 }
 #endif /* SUBSTITUDE_rodict_bounditem_string_hash */
 
-#ifdef SUBSTITUDE_rodict_hasitem_string_hash
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-rodict_hasitem_string_hash(RoDict *self, char const *key, Dee_hash_t hash) {
-	int bound = rodict_bounditem_string_hash(self, key, hash);
-	return Dee_BOUND_ASHAS(bound);
-}
-#endif /* SUBSTITUDE_rodict_hasitem_string_hash */
-
 #ifdef SUBSTITUDE_rodict_getitem_string_len_hash
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rodict_getitem_string_len_hash(RoDict *self, char const *key, size_t keylen, Dee_hash_t hash) {
@@ -1347,6 +1329,31 @@ err:
 }
 #endif /* SUBSTITUDE_rodict_bounditem_string_len_hash */
 
+#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#ifdef SUBSTITUDE_rodict_hasitem
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rodict_hasitem(RoDict *self, DeeObject *key) {
+	int bound = rodict_bounditem(self, key);
+	return Dee_BOUND_ASHAS(bound);
+}
+#endif /* SUBSTITUDE_rodict_hasitem */
+
+#ifdef SUBSTITUDE_rodict_hasitem_index
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+rodict_hasitem_index(RoDict *self, size_t key) {
+	int bound = rodict_bounditem_index(self, key);
+	return Dee_BOUND_ASHAS(bound);
+}
+#endif /* SUBSTITUDE_rodict_hasitem_index */
+
+#ifdef SUBSTITUDE_rodict_hasitem_string_hash
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rodict_hasitem_string_hash(RoDict *self, char const *key, Dee_hash_t hash) {
+	int bound = rodict_bounditem_string_hash(self, key, hash);
+	return Dee_BOUND_ASHAS(bound);
+}
+#endif /* SUBSTITUDE_rodict_hasitem_string_hash */
+
 #ifdef SUBSTITUDE_rodict_hasitem_string_len_hash
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rodict_hasitem_string_len_hash(RoDict *self, char const *key, size_t keylen, Dee_hash_t hash) {
@@ -1354,6 +1361,7 @@ rodict_hasitem_string_len_hash(RoDict *self, char const *key, size_t keylen, Dee
 	return Dee_BOUND_ASHAS(bound);
 }
 #endif /* SUBSTITUDE_rodict_hasitem_string_len_hash */
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
