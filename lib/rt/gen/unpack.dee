@@ -26,6 +26,9 @@ import . as globals;
 global final DTYPE_BY_CTYPE: {string: string} = {
 	"DeeObject*": "?O",
 	"DeeFrameObject*": "?DFrame",
+	"DeeModuleObject*": "?DModule",
+	"DeeDDIObject*": "?Ert:DDI",
+	"DeeStringObject*": "?Dstring",
 	"bool": "?Dbool",
 	"__BOOL": "?Dbool",
 	"int": "?Dint",
@@ -64,6 +67,9 @@ global final DTYPE_BY_CTYPE: {string: string} = {
 global final CTYPE_BY_DTYPE: {string: string} = {
 	"?O": "DeeObject*",
 	"?DFrame": "DeeFrameObject*",
+	"?DModule": "DeeModuleObject*",
+	"?Ert:DDI": "DeeDDIObject*",
+	"?Dstring": "DeeStringObject*",
 	"?Dbool": "bool",
 };
 
@@ -86,7 +92,11 @@ global final CINIT_BY_DINIT: {string: string | {string: string}} = {
 	"!0": { "": "0", "DeeObject*": "DeeInt_Zero" },
 	"!1": { "": "1", "DeeObject*": "DeeInt_One" },
 	"!-1": { "": "-1", "DeeObject*": "DeeInt_MinusOne" },
-	"!P{}": { "char const*": "\"\"", "DeeObject*": "Dee_EmptyString" },
+	"!P{}": {
+		"char const*": "\"\"",
+		"DeeObject*": "Dee_EmptyString",
+		"DeeStringObject*": "(DeeStringObject *)Dee_EmptyString"
+	},
 	"!A!Dint!PSIZE_MAX": "(size_t)-1",
 	"!T0": "Dee_EmptyTuple",
 };

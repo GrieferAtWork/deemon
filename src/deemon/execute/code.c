@@ -2049,6 +2049,25 @@ PRIVATE WUNUSED DREF DeeCodeObject *DCALL
 code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer text_buf;
 	DREF DeeCodeObject *result;
+	/* (text:?DBytes=!N,module:?DModule=!N,constants:?S?O=!N,
+	 *  except:?S?X2?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType=!N,
+	 *  nlocal=!0,nstack=!0,nref=!0,nstatic=!0,argc=!0,keywords:?S?Dstring=!N,defaults:?S?O=!N,
+	 *  flags:?X2?Dstring?Dint=!P{lenient},ddi:?Ert:Ddi=!N) */
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_Code", params: "
+		DeeObject *text = Dee_None;
+		DeeModuleObject *module = (DeeModuleObject *)Dee_None;
+		DeeObject *constants = Dee_None;
+		DeeObject *except = Dee_None;
+		uint16_t nlocal = 0;
+		uint16_t nstack = 0;
+		uint16_t nref = 0;
+		uint16_t nstatic = 0;
+		uint16_t argc = 0;
+		DeeObject *keywords = Dee_None;
+		DeeObject *defaults = Dee_None;
+		DeeObject *flags = Dee_None;
+		DeeDDIObject *ddi = (DeeDDIObject *)Dee_None;
+");]]]*/
 	struct {
 		DeeObject *text;
 		DeeModuleObject *module;
@@ -2058,48 +2077,28 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		uint16_t nstack;
 		uint16_t nref;
 		uint16_t nstatic;
-		uint16_t coargc;
+		uint16_t argc;
 		DeeObject *keywords;
 		DeeObject *defaults;
 		DeeObject *flags;
 		DeeDDIObject *ddi;
 	} args;
-	args.text      = Dee_None;
-	args.module    = (DeeModuleObject *)Dee_None;
+	args.text = Dee_None;
+	args.module = (DeeModuleObject *)Dee_None;
 	args.constants = Dee_None;
-	args.except    = Dee_None;
-	args.nlocal    = 0;
-	args.nstack    = 0;
-	args.nref      = 0;
-	args.nstatic   = 0;
-	args.coargc    = 0;
-	args.keywords  = Dee_None;
-	args.defaults  = Dee_None;
-	args.flags     = Dee_None;
-	args.ddi       = (DeeDDIObject *)Dee_None;
-	/* (text:?DBytes=!N,module:?DModule=!N,constants:?S?O=!N,
-	 *  except:?S?X2?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType=!N,
-	 *  nlocal=!0,nstack=!0,nref=!0,nstatic=!0,argc=!0,keywords:?S?Dstring=!N,defaults:?S?O=!N,
-	 *  flags:?X2?Dstring?Dint=!P{lenient},ddi:?Ert:Ddi=!N) */
-	if (DeeArg_UnpackStructKw(argc, argv, kw,
-	                          kwlist__text_module_constants_except_nlocal_nstack_nref_nstatic_argc_keywords_defaults_flags_ddi,
-	                          "|"
-	                          "o"    /* text */
-	                          "o"    /* module */
-	                          "o"    /* constants */
-	                          "o"    /* except */
-	                          "I16u" /* nlocal */
-	                          "I16u" /* nstack */
-	                          "I16u" /* nref */
-	                          "I16u" /* nstatic */
-	                          "I16u" /* argc */
-	                          "o"    /* keywords */
-	                          "o"    /* defaults */
-	                          "o"    /* flags */
-	                          "o"    /* ddi */
-	                          ":_Code",
-	                          &args))
+	args.except = Dee_None;
+	args.nlocal = 0;
+	args.nstack = 0;
+	args.nref = 0;
+	args.nstatic = 0;
+	args.argc = 0;
+	args.keywords = Dee_None;
+	args.defaults = Dee_None;
+	args.flags = Dee_None;
+	args.ddi = (DeeDDIObject *)Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__text_module_constants_except_nlocal_nstack_nref_nstatic_argc_keywords_defaults_flags_ddi, "|oooo" UNPu16 UNPu16 UNPu16 UNPu16 UNPu16 "oooo:_Code", &args))
 		goto err;
+/*[[[end]]]*/
 	if (DeeNone_Check(args.flags))
 		args.flags = Dee_EmptyString;
 	if (DeeObject_GetBuf(args.text, &text_buf, Dee_BUFFER_FREADONLY))
@@ -2131,7 +2130,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	if (!DeeNone_Check(args.keywords)) {
 		DREF DeeStringObject **keyword_vec;
 		uint16_t i;
-		if (!args.coargc) {
+		if (!args.argc) {
 			/* Automatically determine the argument count. */
 			size_t keyword_count;
 			keyword_vec = (DREF DeeStringObject **)DeeSeq_AsHeapVector(args.keywords,
@@ -2144,27 +2143,27 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 				                keyword_count);
 				goto err_r;
 			}
-			args.coargc = (uint16_t)keyword_count;
+			args.argc = (uint16_t)keyword_count;
 		} else {
-			keyword_vec = (DREF DeeStringObject **)Dee_Mallocc(args.coargc,
+			keyword_vec = (DREF DeeStringObject **)Dee_Mallocc(args.argc,
 			                                                   sizeof(DREF DeeStringObject *));
 			if unlikely(!keyword_vec)
 				goto err_r;
-			if unlikely(DeeSeq_Unpack(args.keywords, args.coargc, (DeeObject **)keyword_vec)) {
+			if unlikely(DeeSeq_Unpack(args.keywords, args.argc, (DeeObject **)keyword_vec)) {
 				Dee_Free(keyword_vec);
 				goto err_r;
 			}
 		}
 		result->co_keywords = keyword_vec; /* Inherit */
 		/* Ensure that all elements are strings. */
-		for (i = 0; i < args.coargc; ++i) {
+		for (i = 0; i < args.argc; ++i) {
 			if (DeeObject_AssertTypeExact(keyword_vec[i], &DeeString_Type))
 				goto err_r_keywords;
 		}
 	}
 
-	result->co_argc_min = args.coargc;
-	result->co_argc_max = args.coargc;
+	result->co_argc_min = args.argc;
+	result->co_argc_max = args.argc;
 	result->co_defaultv = NULL;
 	/* Load default arguments */
 	if (!DeeNone_Check(args.defaults)) {
@@ -2173,11 +2172,11 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		default_c = DeeObject_Size(args.defaults);
 		if unlikely(default_c == (size_t)-1)
 			goto err_r_keywords;
-		if unlikely(default_c > args.coargc) {
+		if unlikely(default_c > args.argc) {
 			DeeError_Throwf(&DeeError_IntegerOverflow,
 			                "Too many default arguments (%" PRFuSIZ ") for "
 			                "code only taking %" PRFu16 " arguments at most",
-			                default_c, args.coargc);
+			                default_c, args.argc);
 			goto err_r_keywords;
 		}
 		default_vec = (DREF DeeObject **)Dee_Mallocc(default_c, sizeof(DREF DeeObject *));
@@ -2189,7 +2188,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			goto err_r_keywords;
 		}
 		result->co_defaultv = default_vec;
-		result->co_argc_min = (uint16_t)(args.coargc - (uint16_t)default_c);
+		result->co_argc_min = (uint16_t)(args.argc - (uint16_t)default_c);
 	}
 	result->co_constc = 0;
 	result->co_constv = NULL;
@@ -2529,13 +2528,13 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	                         "Return a singleton, stub code object that always returns ?N\n"
 	                         "\n"
 	                         "("
-	                         /**/ "text:?DBytes=!N,module:?DModule=!N,constants:?S?O=!N,"
+	                         /**/ "text:?X2?DBytes?N=!N,module:?X2?DModule?N=!N,constants:?S?O=!N,"
 	                         /**/ "except:?S?X3?T4?Dint?Dint?Dint?Dint"
 	                         /**/ /*       */ "?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint"
 	                         /**/ /*       */ "?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType"
 	                         /**/ /*       */ "=!N,"
 	                         /**/ "nlocal=!0,nstack=!0,nref=!0,nstatic=!0,argc=!0,keywords:?S?Dstring=!N,"
-	                         /**/ "defaults:?S?O=!N,flags:?X2?Dstring?Dint=!P{},ddi:?Ert:Ddi=!N"
+	                         /**/ "defaults:?S?O=!N,flags:?X2?Dstring?Dint=!P{},ddi:?X2?Ert:Ddi?N=!N"
 	                         ")\n"
 	                         "#tIntegerOverflow{One of the specified arguments exceeds its associated implementation limit (the "
 	                         /*                  */ "usual limit is $0xffff for most arguments, and $0xffffffff for the length of @text)}"
