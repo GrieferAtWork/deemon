@@ -1260,7 +1260,6 @@ EXPORTS
 	_DeeTuple_DecrefSymbolic@4=DeeTuple_DecrefSymbolic@4
 	_DeeTuple_ExtendInherited@12=DeeTuple_ExtendInherited@12
 	_DeeTuple_FreeUninitialized@4=DeeTuple_FreeUninitialized@4
-	_DeeTuple_FromIterator@4=DeeTuple_FromIterator@4
 	_DeeTuple_FromList@4=DeeTuple_FromList@4
 	_DeeTuple_FromSequence@4=DeeTuple_FromSequence@4
 	_DeeTuple_NewUninitialized@4=DeeTuple_NewUninitialized@4

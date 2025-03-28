@@ -128,7 +128,6 @@ DeeTuple_FreeUninitialized(DREF DeeTupleObject *__restrict self);
 /* Create a new tuple object from a sequence or iterator. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromList(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromSequence(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromIterator(DeeObject *__restrict self); /* TODO: Deprecated */
 
 /* Return a new tuple object containing the types of each object of the given tuple. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_Types(DeeObject *__restrict self);
