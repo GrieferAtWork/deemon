@@ -1614,9 +1614,35 @@ function print_TMH_BYNAME() {
 function print_TNO_BYNAME() {
 	RESET_PREFIX();
 	local id = 0;
+	local delta = "";
+	local ppCond = "1";
+	local ppCondCount = 0;
 	for (local none, method: NATIVE_OPERATORS) {
-		print("	", repr method.name.name, ": ", id, ",");
+		if (method.ppCond != ppCond) {
+			if (method.ppCond == "1") {
+				local desc = ppCond
+						.replace(" ", "")
+						.replace("(", "_")
+						.replace(")", "_")
+						.replace("&&", "_and_")
+						.replace("|", "_or_")
+						.replace("!", "n");
+				if (desc.startswith("n")) {
+					desc = desc[1:];
+				} else {
+					desc = "n" + desc;
+				}
+				delta += f" - if__{desc}__then__{ppCondCount}";
+			}
+			ppCond = method.ppCond;
+			ppCondCount = 0;
+		}
+		print("	", repr method.name.name, ": ", id, delta, ","),;
+		if (method.ppCond != "1")
+			print(" /* #if ", method.ppCond, " */"),;
+		print;
 		++id;
+		++ppCondCount;
 	}
 }
 
@@ -2915,10 +2941,13 @@ function print_TNO_ASSIGN_MAXLEN() {
 function printGetOperatorOfTnoInit() {
 	RESET_PREFIX();
 	local longestNameLength = NATIVE_OPERATORS.keys.each.TNO_id.length > ...;
+	local ppCondPrinter = PPCondPrinter();
 	for (local name, nativeOperator: NATIVE_OPERATORS) {
+		ppCondPrinter.setPPCond(nativeOperator.ppCond);
 		print(f"	/* {f"[{name.TNO_id}]".ljust(longestNameLength + 2)} = */ ",
 			nativeOperator.operatorName ?: "OPERATOR_USERCOUNT", ",");
 	}
+	ppCondPrinter.setPPCond();
 }
 
 

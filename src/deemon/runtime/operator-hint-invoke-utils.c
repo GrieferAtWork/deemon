@@ -24,8 +24,9 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/tuple.h>
 #include <deemon/operator-hints.h>
+#include <deemon/super.h> /* DeeObject_TCall, ... */
+#include <deemon/tuple.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/int128.h>
@@ -485,6 +486,26 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 (DCALL DeeObject_ThisCallTupleKwInherited)(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args, DeeObject *kw) {
 	return DeeObject_ThisCallKwInherited(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_TCallTuple)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args) {
+	return DeeObject_TCall(tp_self, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_TCallTupleKw)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *args, DeeObject *kw) {
+	return DeeObject_TCallKw(tp_self, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *
+(DCALL DeeObject_TThisCallTuple)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args) {
+	return DeeObject_TThisCall(tp_self, self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *
+(DCALL DeeObject_TThisCallTupleKw)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw) {
+	return DeeObject_TThisCallKw(tp_self, self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
 }
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 

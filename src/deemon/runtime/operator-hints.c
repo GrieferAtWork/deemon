@@ -2452,10 +2452,12 @@ INTERN Dee_operator_t const _DeeType_GetOperatorOfTno[Dee_TNO_COUNT] = {
 	/* [Dee_TNO_call_kw]                    = */ OPERATOR_CALL,
 	/* [Dee_TNO_thiscall]                   = */ OPERATOR_CALL,
 	/* [Dee_TNO_thiscall_kw]                = */ OPERATOR_CALL,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	/* [Dee_TNO_call_tuple]                 = */ OPERATOR_CALL,
 	/* [Dee_TNO_call_tuple_kw]              = */ OPERATOR_CALL,
 	/* [Dee_TNO_thiscall_tuple]             = */ OPERATOR_CALL,
 	/* [Dee_TNO_thiscall_tuple_kw]          = */ OPERATOR_CALL,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 	/* [Dee_TNO_iter_next]                  = */ OPERATOR_ITERNEXT,
 	/* [Dee_TNO_nextpair]                   = */ OPERATOR_ITERNEXT,
 	/* [Dee_TNO_nextkey]                    = */ OPERATOR_ITERNEXT,

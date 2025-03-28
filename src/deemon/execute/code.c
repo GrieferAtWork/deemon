@@ -729,8 +729,10 @@ function_optimize(DeeFunctionObject *__restrict self, size_t argc,
 	                    &for_tuple, &for_kwds, &allow_async))
 		goto err;
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
-	if (for_tuple)
-		return DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true'");
+	if (for_tuple) {
+		DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true'");
+		goto err;
+	}
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	{
@@ -767,8 +769,10 @@ code_optimize(DeeCodeObject *__restrict self, size_t argc,
 	                    &for_tuple, &for_kwds, &allow_async))
 		goto err;
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
-	if (for_tuple)
-		return DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true'");
+	if (for_tuple) {
+		DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true'");
+		goto err;
+	}
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	{
