@@ -1311,14 +1311,14 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE NONNULL((1)) int DCALL
 err_funcsymbolsbyname_rid_unbound(FunctionSymbolsByName *self, uint16_t rid) {
 	char const *name = DeeCode_GetRSymbolName((DeeObject *)self->fsbn_func->fo_code, rid);
 	return name ? err_unbound_key_str((DeeObject *)self, name)
 	            : err_unbound_key_int((DeeObject *)self, rid - self->fsbn_rid_start);
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE NONNULL((1)) int DCALL
 err_funcsymbolsbyname_rid_readonly(FunctionSymbolsByName *self, uint16_t rid) {
 	char const *name = DeeCode_GetRSymbolName((DeeObject *)self->fsbn_func->fo_code, rid);
 	return name ? err_readonly_key_str((DeeObject *)self, name)
