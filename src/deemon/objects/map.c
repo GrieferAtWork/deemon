@@ -53,6 +53,10 @@
 #include "seq/map-fromattr.h"
 #include "seq/map-fromkeys.h"
 #include "seq/unique-iterator.h"
+/**/
+
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 
 DECL_BEGIN
 
@@ -363,65 +367,71 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	TYPE_METHOD_END
 };
 
+struct map_printrepr_foreach_data {
+	Dee_formatprinter_t mprf_printer; /* [1..1] Wrapped printer callback */
+	void               *mprf_arg;     /* [?..?] Cookie for `mprf_printer' */
+	bool                mprf_isfirst; /* True if this is the first item */
+};
 
-DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-map_printrepr(DeeObject *__restrict self,
-              dformatprinter printer, void *arg) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+map_printrepr_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
 	Dee_ssize_t temp, result;
-	DREF DeeObject *iterator;
-	DREF DeeObject *elem;
-	bool is_first = true;
-	result = DeeFormat_PRINT(printer, arg, "{ ");
-	if unlikely(result < 0)
-		goto done;
-	iterator = DeeObject_Iter(self); /* TODO: Use DeeObject_ForeachPair */
-	if unlikely(!iterator)
-		goto err_m1;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		DREF DeeObject *elem_key_and_value[2];
-		if (DeeSeq_Unpack(elem, 2, elem_key_and_value))
-			goto err_m1_iterator_elem;
-		Dee_Decref(elem);
-		temp = DeeFormat_Printf(printer, arg, "%s%r: %r",
-		                        is_first ? "" : ", ",
-		                        elem_key_and_value[0],
-		                        elem_key_and_value[1]);
-		Dee_Decref(elem_key_and_value[1]);
-		Dee_Decref(elem_key_and_value[0]);
-		if unlikely(temp < 0)
-			goto err_iterator;
-		result += temp;
-		is_first = false;
-		if (DeeThread_CheckInterrupt())
-			goto err_m1_iterator;
-	}
-	Dee_Decref(iterator);
-	if unlikely(!elem)
-		goto err_m1;
-	if (is_first) {
-		temp = DeeFormat_PRINT(printer, arg, "}");
+	struct map_printrepr_foreach_data *data;
+	data = (struct map_printrepr_foreach_data *)arg;
+	if (data->mprf_isfirst) {
+		data->mprf_isfirst = false;
+		result = 0;
 	} else {
-		temp = DeeFormat_PRINT(printer, arg, " }");
+		result = DeeFormat_PRINT(data->mprf_printer, data->mprf_arg, ", ");
+		if unlikely(result < 0)
+			goto done;
 	}
+#ifdef __OPTIMIZE_SIZE__
+	temp = DeeFormat_Printf(data->mprf_printer, data->mprf_arg, "%r: %r", key, value);
+#else /* __OPTIMIZE_SIZE__ */
+	temp = DeeObject_PrintRepr(key, data->mprf_printer, data->mprf_arg);
 	if unlikely(temp < 0)
-		goto err;
+		goto err_temp;
+	result += temp;
+	temp = DeeFormat_PRINT(data->mprf_printer, data->mprf_arg, ": ");
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+	temp = DeeObject_PrintRepr(value, data->mprf_printer, data->mprf_arg);
+#endif /* !__OPTIMIZE_SIZE__ */
+	if unlikely(temp < 0)
+		goto err_temp;
 	result += temp;
 done:
 	return result;
-err_m1_iterator_elem:
-	temp = -1;
-/*err_iterator_elem:*/
-	Dee_Decref(elem);
-err_iterator:
-	Dee_Decref(iterator);
-err:
+err_temp:
 	return temp;
-err_m1_iterator:
-	temp = -1;
-	goto err_iterator;
-err_m1:
-	temp = -1;
-	goto err;
+}
+
+
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+map_printrepr(DeeObject *__restrict self,
+              Dee_formatprinter_t printer, void *arg) {
+	struct map_printrepr_foreach_data data;
+	Dee_ssize_t temp, result;
+	result = DeeFormat_PRINT(printer, arg, "{ ");
+	if unlikely(result < 0)
+		goto done;
+	data.mprf_printer = printer;
+	data.mprf_arg     = arg;
+	data.mprf_isfirst = true;
+	temp = DeeObject_ForeachPair(self, &map_printrepr_foreach_cb, &data);
+	if unlikely(temp < 0)
+		goto err_temp;
+	temp = data.mprf_isfirst ? DeeFormat_PRINT(printer, arg, "}")
+	                         : DeeFormat_PRINT(printer, arg, " }");
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+done:
+	return result;
+err_temp:
+	return temp;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -825,7 +835,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ &default__seq_operator_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&map_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&map_printrepr,
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
