@@ -207,9 +207,13 @@ gen86_addrname(void const *addr) {
 	CASE(DeeObject_BoolInherited, 4);
 	CASE(DeeObject_IterNext, 4);
 	CASE(DeeObject_Call, 12);
+	CASE(DeeObject_CallInherited, 12);
 	CASE(DeeObject_CallKw, 16);
+	CASE(DeeObject_CallKwInherited, 16);
 	CASE(DeeObject_CallTuple, 8);
+	CASE(DeeObject_CallTupleInherited, 8);
 	CASE(DeeObject_CallTupleKw, 12);
+	CASE(DeeObject_CallTupleKwInherited, 12);
 	CASE(DeeObject_CallAttr, 16);
 	CASE(DeeObject_CallAttrKw, 20);
 	CASE(DeeObject_CallAttrTuple, 12);

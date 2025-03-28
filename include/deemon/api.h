@@ -468,9 +468,9 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
  * >> ...
  * >>
  * >> PUBLIC void DCALL function_a(size_t argc, void **argv) {
- * >>      size_t i;
- * >>      for (i = 0; i < argc; ++i)
- * >>          printf("argv[%lu] = %p\n", (unsigned long)i, argv[i]);
+ * >>     size_t i;
+ * >>     for (i = 0; i < argc; ++i)
+ * >>         printf("argv[%lu] = %p\n", (unsigned long)i, argv[i]);
  * >> }
  * >>
  * >> #ifdef CONFIG_VA_LIST_IS_STACK_POINTER
@@ -484,20 +484,20 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
  * >> #endif // __NO_DEFINE_ALIAS
  * >> #else // CONFIG_VA_LIST_IS_STACK_POINTER
  * >> PUBLIC void DCALL function_b(size_t argc, va_list args) {
- * >>      size_t i;
- * >>      void **argv;
- * >>      argv = (void **)Dee_Allocac(argc, sizeof(void *));
- * >>      for (i = 0; i < argc; ++i)
- * >>          argv[i] = va_arg(args, void *);
- * >>      function_a(argc, argv);
+ * >>     size_t i;
+ * >>     void **argv;
+ * >>     argv = (void **)Dee_Allocac(argc, sizeof(void *));
+ * >>     for (i = 0; i < argc; ++i)
+ * >>         argv[i] = va_arg(args, void *);
+ * >>     function_a(argc, argv);
  * >> }
  * >> #endif // !CONFIG_VA_LIST_IS_STACK_POINTER
  * >>
  * >> void function_c(size_t argc, ...) {
- * >>      va_list args;
- * >>      va_start(args, argc);
- * >>      function_b(argc, args);
- * >>      va_end(args, argc);
+ * >>     va_list args;
+ * >>     va_start(args, argc);
+ * >>     function_b(argc, args);
+ * >>     va_end(args, argc);
  * >> }
  * Using this internally, we can greatly optimize calls to functions
  * like `DeeObject_CallPack()' by not needing to pack everything together

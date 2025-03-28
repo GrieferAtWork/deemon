@@ -2263,6 +2263,74 @@ err:
 #endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
 
 
+
+/* Same as the other functions above, but *always* inherits references to "self" (iow: the function being called) */
+PUBLIC WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_CallInherited(/*inherit(always)*/ DREF DeeObject *self,
+                        size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result = DeeObject_Call(self, argc, argv);
+	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
+	return result;
+}
+
+PUBLIC WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_CallKwInherited(/*inherit(always)*/ DREF DeeObject *self,
+                          size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result = DeeObject_CallKw(self, argc, argv, kw);
+	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
+	return result;
+}
+
+PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_ThisCallInherited(/*inherit(always)*/ DREF DeeObject *self,
+                            DeeObject *thisarg, size_t argc,
+                            DeeObject *const *argv) {
+	DREF DeeObject *result = DeeObject_ThisCall(self, thisarg, argc, argv);
+	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
+	return result;
+}
+
+PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_ThisCallKwInherited(/*inherit(always)*/ DREF DeeObject *self,
+                              DeeObject *thisarg, size_t argc,
+                              DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result = DeeObject_ThisCallKw(self, thisarg, argc, argv, kw);
+	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
+	return result;
+}
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_CallTupleInherited)(/*inherit(always)*/ DREF DeeObject *self, /*Tuple*/ DeeObject *args) {
+	DREF DeeObject *result = DeeObject_CallTuple(self, args);
+	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
+	return result;
+}
+
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_CallTupleKwInherited)(/*inherit(always)*/ DREF DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw) {
+	DREF DeeObject *result = DeeObject_CallTupleKw(self, args, kw);
+	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
+	return result;
+}
+
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_ThisCallTupleInherited)(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args) {
+	DREF DeeObject *result = DeeObject_ThisCallTuple(self, thisarg, args);
+	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
+	return result;
+}
+
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_ThisCallTupleKwInherited)(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args, DeeObject *kw) {
+	DREF DeeObject *result = DeeObject_ThisCallTupleKw(self, thisarg, args, kw);
+	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
+	return result;
+}
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_RUNTIME_OPERATOR_HINT_INVOKE_C */

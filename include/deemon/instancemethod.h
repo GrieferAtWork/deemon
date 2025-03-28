@@ -63,6 +63,9 @@ DDATDEF DeeTypeObject DeeInstanceMethod_Type;
  * as an object, rather than being called directly. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMethod_New(DeeObject *func, DeeObject *this_arg);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeInstanceMethod_NewInherited(/*inherit(always)*/ DREF DeeObject *func,
+                               /*inherit(always)*/ DREF DeeObject *this_arg);
 
 DECL_END
 

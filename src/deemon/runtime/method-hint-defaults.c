@@ -160,26 +160,24 @@ err_map_unsupportedf(DeeObject *self, char const *method_format, ...) {
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mhcache_call(DeeTypeObject *tp_self, Dee_mhc_slot_t addr,
              size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result, *cb;
-	cb = DeeClass_GetMember(tp_self, addr);
+	DREF DeeObject *cb = DeeClass_GetMember(tp_self, addr);
 	if unlikely(!cb)
-		return NULL;
-	result = DeeObject_Call(cb, argc, argv);
-	Dee_Decref_unlikely(cb);
-	return result;
+		goto err;
+	return DeeObject_CallInherited(cb, argc, argv);
+err:
+	return NULL;
 }
 
 
 LOCAL WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 mhcache_thiscall(DeeTypeObject *tp_self, Dee_mhc_slot_t addr,
                  DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result, *cb;
-	cb = DeeClass_GetMember(tp_self, addr);
+	DREF DeeObject *cb = DeeClass_GetMember(tp_self, addr);
 	if unlikely(!cb)
-		return NULL;
-	result = DeeObject_ThisCall(cb, self, argc, argv);
-	Dee_Decref_unlikely(cb);
-	return result;
+		goto err;
+	return DeeObject_ThisCallInherited(cb, self, argc, argv);
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED NONNULL((1, 3, 4)) DREF DeeObject *
@@ -191,9 +189,8 @@ mhcache_thiscallf(DeeTypeObject *tp_self, Dee_mhc_slot_t addr,
 	if unlikely(!cb)
 		return NULL;
 	va_start(args, format);
-	result = DeeObject_VThisCallf(cb, self, format, args);
+	result = DeeObject_VThisCallInheritedf(cb, self, format, args);
 	va_end(args);
-	Dee_Decref_unlikely(cb);
 	return result;
 }
 
@@ -241,13 +238,13 @@ LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mhcache_thiscall_result(DeeTypeObject *tp_self, Dee_mhc_slot_t addr,
                         size_t argc1, DeeObject *const *argv1,
                         size_t argc2, DeeObject *const *argv2) {
-	DREF DeeObject *result1, *result2;
-	result1 = mhcache_call(tp_self, addr, argc1, argv1);
-	if unlikely(!result1)
-		return NULL;
-	result2 = DeeObject_Call(result1, argc2, argv2);
-	Dee_Decref_unlikely(result1);
-	return result2;
+	DREF DeeObject *inner_cb;
+	inner_cb = mhcache_call(tp_self, addr, argc1, argv1);
+	if unlikely(!inner_cb)
+		goto err;
+	return DeeObject_CallInherited(inner_cb, argc2, argv2);
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED NONNULL((1, 5)) DREF DeeObject *
@@ -255,26 +252,23 @@ mhcache_thiscall_resultf(DeeTypeObject *tp_self, Dee_mhc_slot_t addr,
                          size_t argc1, DeeObject *const *argv1,
                          char const *format, ...) {
 	va_list args;
-	DREF DeeObject *result1, *result2;
-	result1 = mhcache_call(tp_self, addr, argc1, argv1);
-	if unlikely(!result1)
+	DREF DeeObject *inner_cb, *result;
+	inner_cb = mhcache_call(tp_self, addr, argc1, argv1);
+	if unlikely(!inner_cb)
 		return NULL;
 	va_start(format, args);
-	result2 = DeeObject_VCallf(result1, format, args);
+	result = DeeObject_VCallInheritedf(inner_cb, format, args);
 	va_end(args);
-	Dee_Decref_unlikely(result1);
-	return result2;
+	return result;
 }
 
 LOCAL WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 mhcache_instancemethod(DeeTypeObject *tp_self, Dee_mhc_slot_t addr, DeeObject *self) {
-	DREF DeeObject *result, *cb;
-	cb = DeeClass_GetMember(tp_self, addr);
+	DREF DeeObject *cb = DeeClass_GetMember(tp_self, addr);
 	if unlikely(!cb)
 		return NULL;
-	result = DeeInstanceMethod_New(cb, self);
-	Dee_Decref_unlikely(cb);
-	return result;
+	Dee_Incref(self);
+	return DeeInstanceMethod_NewInherited(cb, self);
 }
 #endif
 

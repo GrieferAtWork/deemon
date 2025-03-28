@@ -68,25 +68,21 @@ DECL_BEGIN
 #else /* __OPTIMIZE_SIZE__ */
 #define return_DeeClass_CallOperator(tp_self, self, operator, argc, argv) \
 	do {                                                                  \
-		DREF DeeObject *_func, *_result;                                  \
+		DREF DeeObject *_func;                                            \
 		_func = DeeClass_GetOperator(tp_self, operator);                  \
 		if unlikely(!_func)                                               \
 			goto err;                                                     \
-		_result = DeeObject_ThisCall(_func, self, argc, argv);            \
-		Dee_Decref_unlikely(_func);                                       \
-		return _result;                                                   \
+		return DeeObject_ThisCallInherited(_func, self, argc, argv);      \
 	err:                                                                  \
 		return NULL;                                                      \
 	}	__WHILE0
 #define return_DeeClass_CallOperator2(err, tp_self, self, operator, argc, argv) \
 	do {                                                                        \
-		DREF DeeObject *_func, *_result;                                        \
+		DREF DeeObject *_func;                                                  \
 		_func = DeeClass_GetOperator(tp_self, operator);                        \
 		if unlikely(!_func)                                                     \
 			goto err;                                                           \
-		_result = DeeObject_ThisCall(_func, self, argc, argv);                  \
-		Dee_Decref_unlikely(_func);                                             \
-		return _result;                                                         \
+		return DeeObject_ThisCallInherited(_func, self, argc, argv);            \
 	}	__WHILE0
 #define store_DeeClass_CallOperator(err, result, tp_self, self, operator, argc, argv) \
 	do {                                                                              \
@@ -94,8 +90,7 @@ DECL_BEGIN
 		_func = DeeClass_GetOperator(tp_self, operator);                              \
 		if unlikely(!_func)                                                           \
 			goto err;                                                                 \
-		(result) = DeeObject_ThisCall(_func, self, argc, argv);                       \
-		Dee_Decref_unlikely(_func);                                                   \
+		(result) = DeeObject_ThisCallInherited(_func, self, argc, argv);              \
 		if unlikely(!(result))                                                        \
 			goto err;                                                                 \
 	}	__WHILE0
@@ -705,13 +700,11 @@ default__call__with__call_kw(DeeObject *self, size_t argc, DeeObject *const *arg
 /* tp_callable->tp_call_kw */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__call_kw__with__CALL(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF DeeObject *func, *result;
+	DREF DeeObject *func;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_CALL);
 	if unlikely(!func)
 		goto err;
-	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
-	Dee_Decref_unlikely(func);
-	return result;
+	return DeeObject_ThisCallKwInherited(func, self, argc, argv, kw);
 err:
 	return NULL;
 }
@@ -748,13 +741,11 @@ usrtype__call_kw__with__CALL(DeeObject *self, size_t argc, DeeObject *const *arg
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__call_kw__with__CALL(Dee_TYPE(self), self, argc, argv, kw);
 #else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *func, *result;
+	DREF DeeObject *func;
 	func = DeeClass_GetOperator(Dee_TYPE(self), OPERATOR_CALL);
 	if unlikely(!func)
 		goto err;
-	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
-	Dee_Decref_unlikely(func);
-	return result;
+	return DeeObject_ThisCallKwInherited(func, self, argc, argv, kw);
 err:
 	return NULL;
 #endif /* __OPTIMIZE_SIZE__ */
@@ -1009,8 +1000,7 @@ tusrtype__iter_next__with__ITERNEXT(DeeTypeObject *tp_self, DeeObject *self) {
 	func = DeeClass_GetOperator(tp_self, OPERATOR_ITERNEXT);
 	if unlikely(!func)
 		goto err;
-	result = DeeObject_ThisCall(func, self, 0, NULL);
-	Dee_Decref(func);
+	result = DeeObject_ThisCallInherited(func, self, 0, NULL);
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely(!result) {
 		if (!DeeError_Catch(&DeeError_StopIteration))
@@ -1064,8 +1054,7 @@ usrtype__iter_next__with__ITERNEXT(DeeObject *__restrict self) {
 	func = DeeClass_GetOperator(Dee_TYPE(self), OPERATOR_ITERNEXT);
 	if unlikely(!func)
 		goto err;
-	result = DeeObject_ThisCall(func, self, 0, NULL);
-	Dee_Decref(func);
+	result = DeeObject_ThisCallInherited(func, self, 0, NULL);
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely(!result) {
 		if (!DeeError_Catch(&DeeError_StopIteration))
@@ -2003,8 +1992,7 @@ tusrtype__hash__with__HASH(DeeTypeObject *tp_self, DeeObject *self) {
 	func = DeeClass_TryGetOperator(tp_self, OPERATOR_HASH);
 	if unlikely(!func)
 		goto fallback;
-	result = DeeObject_ThisCall(func, self, 0, NULL);
-	Dee_Decref(func);
+	result = DeeObject_ThisCallInherited(func, self, 0, NULL);
 	if unlikely(!result)
 		goto fallback_handled;
 	temp = DeeObject_AsUIntptr(result, &result_value);
@@ -2057,8 +2045,7 @@ usrtype__hash__with__HASH(DeeObject *__restrict self) {
 	func = DeeClass_TryGetOperator(Dee_TYPE(self), OPERATOR_HASH);
 	if unlikely(!func)
 		goto fallback;
-	result = DeeObject_ThisCall(func, self, 0, NULL);
-	Dee_Decref(func);
+	result = DeeObject_ThisCallInherited(func, self, 0, NULL);
 	if unlikely(!result)
 		goto fallback_handled;
 	temp = DeeObject_AsUIntptr(result, &result_value);

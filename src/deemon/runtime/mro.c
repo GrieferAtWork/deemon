@@ -668,7 +668,7 @@ again:
 			goto err;
 		tp_attr = self->ad_info.ai_value.v_custom;
 		if (tp_attr->tp_getattr) {
-			DREF DeeObject *callable, *result;
+			DREF DeeObject *callable;
 			if (self->ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
 				if (tp_attr->tp_callattr_kw)
 					return (*tp_attr->tp_callattr_kw)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self), argc, argv, kw);
@@ -699,22 +699,18 @@ again:
 			}
 			if unlikely(!callable)
 				goto err;
-			result = DeeObject_CallKw(callable, argc, argv, kw);
-			Dee_Decref(callable);
-			return result;
+			return DeeObject_CallKwInherited(callable, argc, argv, kw);
 		}
 	}	break;
 
 	case Dee_ATTRINFO_MODSYM:
 	case Dee_ATTRINFO_GETSET:
 	case Dee_ATTRINFO_MEMBER: {
-		DREF DeeObject *callable, *result;
+		DREF DeeObject *callable;
 		callable = Dee_attrdesc_callget(self, thisarg);
 		if unlikely(!callable)
 			goto err;
-		result = DeeObject_CallKw(callable, argc, argv, kw);
-		Dee_Decref_unlikely(callable);
-		return result;
+		return DeeObject_CallKwInherited(callable, argc, argv, kw);
 	}	break;
 
 	case Dee_ATTRINFO_METHOD:

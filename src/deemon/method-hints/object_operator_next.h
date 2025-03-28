@@ -36,8 +36,7 @@ tp_iter_next([[nonnull]] DeeObject *__restrict self)
 	func = DeeClass_GetOperator(THIS_TYPE, OPERATOR_ITERNEXT);
 	if unlikely(!func)
 		goto err;
-	result = DeeObject_ThisCall(func, self, 0, NULL);
-	Dee_Decref(func);
+	result = DeeObject_ThisCallInherited(func, self, 0, NULL);
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely(!result) {
 		if (!DeeError_Catch(&DeeError_StopIteration))

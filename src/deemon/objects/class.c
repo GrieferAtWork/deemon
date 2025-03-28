@@ -639,13 +639,11 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, Dee_operato
 PUBLIC WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeClass_CallOperator(DeeTypeObject const *__restrict tp_self, DeeObject *self,
                       Dee_operator_t name, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *func, *result;
+	DREF DeeObject *func;
 	func = DeeClass_GetOperator(tp_self, name);
 	if unlikely(!func)
 		goto err;
-	result = DeeObject_ThisCall(func, self, argc, argv);
-	Dee_Decref_unlikely(func);
-	return result;
+	return DeeObject_ThisCallInherited(func, self, argc, argv);
 err:
 	return NULL;
 }
@@ -664,13 +662,10 @@ DeeClass_CallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
 PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
 DeeClass_VCallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
                         Dee_operator_t name, char const *format, va_list args) {
-	DREF DeeObject *func, *result;
-	func = DeeClass_GetOperator(tp_self, name);
+	DREF DeeObject *func = DeeClass_GetOperator(tp_self, name);
 	if unlikely(!func)
 		goto err;
-	result = DeeObject_VThisCallf(func, self, format, args);
-	Dee_Decref_unlikely(func);
-	return result;
+	return DeeObject_VThisCallInheritedf(func, self, format, args);
 err:
 	return NULL;
 }
@@ -764,8 +759,7 @@ instance_destructor(DeeObject *__restrict self) {
 	} else {
 		Dee_refcnt_t new_refcnt;
 		atomic_inc(&self->ob_refcnt);
-		result = DeeObject_ThisCall(callback, self, 0, NULL);
-		Dee_Decref(callback);
+		result = DeeObject_ThisCallInherited(callback, self, 0, NULL);
 
 		/* Check if `self' got revived. - If it did we let the caller
 		 * inherit a reference to it to prevent a race condition. */
@@ -1756,8 +1750,7 @@ instance_super_tinitkw(DeeTypeObject *tp_self,
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_CallKw(func, argc, argv, kw);
-	Dee_Decref(func);
+	args = DeeObject_CallKwInherited(func, argc, argv, kw);
 	if unlikely(!args)
 		goto err;
 
@@ -1832,8 +1825,7 @@ instance_kwsuper_tinitkw(DeeTypeObject *tp_self,
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_CallKw(func, argc, argv, kw);
-	Dee_Decref(func);
+	args = DeeObject_CallKwInherited(func, argc, argv, kw);
 	if unlikely(!args)
 		goto err;
 
@@ -2152,8 +2144,7 @@ instance_builtin_super_tinitkw(DeeTypeObject *tp_self,
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_CallKw(func, argc, argv, kw);
-	Dee_Decref(func);
+	args = DeeObject_CallKwInherited(func, argc, argv, kw);
 	if unlikely(!args)
 		goto err;
 
@@ -2205,8 +2196,7 @@ instance_builtin_kwsuper_tinitkw(DeeTypeObject *tp_self,
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_CallKw(func, argc, argv, kw);
-	Dee_Decref(func);
+	args = DeeObject_CallKwInherited(func, argc, argv, kw);
 	if unlikely(!args)
 		goto err;
 

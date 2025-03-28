@@ -4313,37 +4313,32 @@ target_callcmember_this_r:
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
 	jz     .except
-	pushl  %eax           /* BACKUP(callback) */
-	ADJUST_CFA_OFFSET(4)
-	subl   $12, %esp      /* Reserve memory for a call to `DeeObject_ThisCall()' + backup for `argc' */
+	subl   $12, %esp      /* Reserve memory for a call to `DeeObject_ThisCallInherited()' + backup for `argc' */
 	ADJUST_CFA_OFFSET(12)
-	pushl  FRAME_THIS     /* DeeObject_ThisCall:this_arg */
+	pushl  FRAME_THIS     /* DeeObject_ThisCallInherited:this_arg */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %eax           /* DeeObject_ThisCall:self */
+	pushl  %eax           /* DeeObject_ThisCallInherited:self */
 	ADJUST_CFA_OFFSET(4)
 	xorl   %eax, %eax     /* In case of `target16_callcmember_this_r', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
 	lodsb                 /* EAX = argc */
-	movl   %eax, 8(%esp)  /* DeeObject_ThisCall:argc */
+	movl   %eax, 8(%esp)  /* DeeObject_ThisCallInherited:argc */
 	movl   %eax, 16(%esp) /* argc_backup = argc; */
 	leal   (,%eax,4), %ecx
 	movl   SP, %edx
 	subl   %ecx, %edx     /* EDX = SP - argc */
-	movl   %edx, 12(%esp) /* DeeObject_ThisCall:argv */
-	call   fSYM(DeeObject_ThisCall,16)
+	movl   %edx, 12(%esp) /* DeeObject_ThisCallInherited:argv */
+	call   fSYM(DeeObject_ThisCallInherited,16)
 	ADJUST_CFA_OFFSET(-16)
 	popl   %ecx           /* ECX = argc_backup */
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz     .except_decref_pop
+	jz     .except
 	/* Pop all function arguments */
 	testl  %ecx, %ecx
 	jz     1f
 2:	sp_popref %edx, 1, 1, 0
 	loop   2b
 1:	sp_push %eax          /* Save the result of the callback onto the stack. */
-	popl   %eax           /* callback */
-	ADJUST_CFA_OFFSET(-4)
-	decref %eax
 	jmp    .disp
 
 

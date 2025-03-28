@@ -2503,8 +2503,7 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 
 	/* Invoke the thread's main() callback. */
 	if likely(thread_main) {
-		result = DeeObject_CallTuple(thread_main, thread_args);
-		Dee_Decref(thread_main);
+		result = DeeObject_CallTupleInherited(thread_main, thread_args);
 	} else {
 		/* If no thread-main callback has been assigned, invoke the `run()' member function. */
 		result = DeeObject_CallAttrTuple((DeeObject *)&self->ot_thread,

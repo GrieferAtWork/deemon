@@ -2512,8 +2512,7 @@ do_callcmember_this_r:
 #endif /* !EXEC_SAFE */
 			if unlikely(!callback)
 				HANDLE_EXCEPT();
-			result = DeeObject_ThisCall(callback, THIS, argc, sp - argc);
-			Dee_Decref(callback);
+			result = DeeObject_ThisCallInherited(callback, THIS, argc, sp - argc);
 			if unlikely(!result)
 				HANDLE_EXCEPT();
 			while (argc--)

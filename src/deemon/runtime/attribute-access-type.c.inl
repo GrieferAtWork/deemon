@@ -695,22 +695,19 @@ err:
 #ifdef LOCAL_IS_CALL_LIKE
 invoke_retval:
 	if (retval) {
-		DREF DeeObject *real_retval;
 #ifdef LOCAL_IS_CALL
-		real_retval = DeeObject_Call(retval, argc, argv);
+		return DeeObject_CallInherited(retval, argc, argv);
 #elif defined(LOCAL_IS_CALL_KW)
-		real_retval = DeeObject_CallKw(retval, argc, argv, kw);
+		return DeeObject_CallKwInherited(retval, argc, argv, kw);
 #elif defined(LOCAL_IS_CALL_TUPLE)
-		real_retval = DeeObject_CallTuple(retval, args);
+		return DeeObject_CallTupleInherited(retval, args);
 #elif defined(LOCAL_IS_CALL_TUPLE_KW)
-		real_retval = DeeObject_CallTupleKw(retval, args, kw);
+		return DeeObject_CallTupleKwInherited(retval, args, kw);
 #elif defined(LOCAL_IS_VCALLF)
-		real_retval = DeeObject_VCallf(retval, format, args);
+		return DeeObject_VCallInheritedf(retval, format, args);
 #else /* ... */
 #error "Invalid configuration"
 #endif /* !... */
-		Dee_Decref(retval);
-		retval = real_retval;
 	}
 #endif /* LOCAL_IS_CALL_LIKE */
 #if !defined(LOCAL_IS_ENUM) && !defined(LOCAL_IS_ITER)

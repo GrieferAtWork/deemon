@@ -307,16 +307,14 @@ again:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_exec(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF DeeObject *result, *exec;
+	DREF DeeObject *exec;
 	jit_access_lock_read();
 	exec = jit_exec;
 	if likely(ITER_ISOK(exec)) {
 		Dee_Incref(exec);
 		jit_access_lock_endread();
 do_exec:
-		result = DeeObject_CallKw(exec, argc, argv, kw);
-		Dee_Decref(exec);
-		return result;
+		return DeeObject_CallKwInherited(exec, argc, argv, kw);
 	}
 	jit_access_lock_endread();
 	if unlikely(exec == ITER_DONE)

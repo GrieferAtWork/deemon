@@ -747,9 +747,13 @@ EXPORTS
 	_DeeObject_CallAttrStringLenHashKw@28=DeeObject_CallAttrStringLenHashKw@28
 	_DeeObject_CallAttrTuple@12=DeeObject_CallAttrTuple@12
 	_DeeObject_CallAttrTupleKw@16=DeeObject_CallAttrTupleKw@16
+	_DeeObject_CallInherited@12=DeeObject_CallInherited@12
 	_DeeObject_CallKw@16=DeeObject_CallKw@16
+	_DeeObject_CallKwInherited@16=DeeObject_CallKwInherited@16
 	_DeeObject_CallTuple@8=DeeObject_CallTuple@8
+	_DeeObject_CallTupleInherited@8=DeeObject_CallTupleInherited@8
 	_DeeObject_CallTupleKw@12=DeeObject_CallTupleKw@12
+	_DeeObject_CallTupleKwInherited@12=DeeObject_CallTupleKwInherited@12
 	_DeeObject_Class@4=DeeObject_Class@4
 	_DeeObject_Clear@4=DeeObject_Clear@4
 	_DeeObject_CmpEq@8=DeeObject_CmpEq@8
@@ -1077,9 +1081,13 @@ EXPORTS
 	_DeeObject_TVisit@16=DeeObject_TVisit@16
 	_DeeObject_TXor@12=DeeObject_TXor@12
 	_DeeObject_ThisCall@16=DeeObject_ThisCall@16
+	_DeeObject_ThisCallInherited@16=DeeObject_ThisCallInherited@16
 	_DeeObject_ThisCallKw@20=DeeObject_ThisCallKw@20
+	_DeeObject_ThisCallKwInherited@20=DeeObject_ThisCallKwInherited@20
 	_DeeObject_ThisCallTuple@12=DeeObject_ThisCallTuple@12
+	_DeeObject_ThisCallTupleInherited@12=DeeObject_ThisCallTupleInherited@12
 	_DeeObject_ThisCallTupleKw@16=DeeObject_ThisCallTupleKw@16
+	_DeeObject_ThisCallTupleKwInherited@16=DeeObject_ThisCallTupleKwInherited@16
 	_DeeObject_TryCompareEq@8=DeeObject_TryCompareEq@8
 	_DeeObject_TryCompareKeyEq@12=DeeObject_TryCompareKeyEq@12
 	_DeeObject_TryGetItem@8=DeeObject_TryGetItem@8
@@ -1097,6 +1105,7 @@ EXPORTS
 	_DeeObject_VCallAttrStringPack@16=DeeObject_VCallAttrStringPack@16
 	_DeeObject_VCallAttrStringf@16=DeeObject_VCallAttrStringf@16
 	_DeeObject_VCallAttrf@16=DeeObject_VCallAttrf@16
+	_DeeObject_VCallInheritedf@12=DeeObject_VCallInheritedf@12
 	_DeeObject_VCallPack@12=DeeObject_VCallPack@12
 	_DeeObject_VCallf@12=DeeObject_VCallf@12
 	_DeeObject_VNewPack@12=DeeObject_VNewPack@12
@@ -1104,6 +1113,7 @@ EXPORTS
 	_DeeObject_VPTInvokeOperatorf@20=DeeObject_VPTInvokeOperatorf@20
 	_DeeObject_VTGenericCallAttrStringHashf@24=DeeObject_VTGenericCallAttrStringHashf@24
 	_DeeObject_VTInvokeOperatorf@20=DeeObject_VTInvokeOperatorf@20
+	_DeeObject_VThisCallInheritedf@16=DeeObject_VThisCallInheritedf@16
 	_DeeObject_VThisCallf@16=DeeObject_VThisCallf@16
 	_DeeObject_Visit@12=DeeObject_Visit@12
 	_DeeObject_XHashv@8=DeeObject_XHashv@8

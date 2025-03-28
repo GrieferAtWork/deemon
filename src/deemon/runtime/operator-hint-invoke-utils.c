@@ -446,6 +446,48 @@ err:
 }
 
 
+#ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_CallTuple)(DeeObject *self, /*Tuple*/ DeeObject *args) {
+	return DeeObject_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+}
+
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_CallTupleKw)(DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw) {
+	return DeeObject_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
+}
+
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_ThisCallTuple)(DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args) {
+	return DeeObject_ThisCall(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+}
+
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_ThisCallTupleKw)(DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args, DeeObject *kw) {
+	return DeeObject_ThisCallKw(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
+}
+
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_CallTupleInherited)(/*inherit(always)*/ DREF DeeObject *self, /*Tuple*/ DeeObject *args) {
+	return DeeObject_CallInherited(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+}
+
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_CallTupleKwInherited)(/*inherit(always)*/ DREF DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw) {
+	return DeeObject_CallKwInherited(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
+}
+
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_ThisCallTupleInherited)(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args) {
+	return DeeObject_ThisCallInherited(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+}
+
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_ThisCallTupleKwInherited)(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args, DeeObject *kw) {
+	return DeeObject_ThisCallKwInherited(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
+}
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_VCallf(DeeObject *self, char const *__restrict format, va_list args) {
@@ -507,6 +549,44 @@ DeeObject_ThisCallf(DeeObject *self, DeeObject *this_arg,
 	va_start(args, format);
 	result = DeeObject_VThisCallf(self, this_arg, format, args);
 	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeObject_CallInheritedf(/*inherit(always)*/ DREF DeeObject *self,
+                         char const *__restrict format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeObject_VCallInheritedf(self, format, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+DeeObject_ThisCallInheritedf(/*inherit(always)*/ DREF DeeObject *self,
+                             DeeObject *thisarg, char const *__restrict format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeObject_VThisCallInheritedf(self, thisarg, format, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_VCallInheritedf(/*inherit(always)*/ DREF DeeObject *self,
+                          char const *__restrict format, va_list args) {
+	DREF DeeObject *result = DeeObject_VCallf(self, format, args);
+	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObject_VThisCallInheritedf(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg,
+                              char const *__restrict format, va_list args) {
+	DREF DeeObject *result = DeeObject_VThisCallf(self, thisarg, format, args);
+	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
 	return result;
 }
 

@@ -42,13 +42,11 @@ tp_callable->tp_call_kw([[nonnull]] DeeObject *self,
                         size_t argc, DeeObject *const *argv,
                         DeeObject *kw)
 %{class using OPERATOR_CALL: {
-	DREF DeeObject *func, *result;
+	DREF DeeObject *func;
 	func = DeeClass_GetOperator(THIS_TYPE, OPERATOR_CALL);
 	if unlikely(!func)
 		goto err;
-	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
-	Dee_Decref_unlikely(func);
-	return result;
+	return DeeObject_ThisCallKwInherited(func, self, argc, argv, kw);
 err:
 	return NULL;
 }}

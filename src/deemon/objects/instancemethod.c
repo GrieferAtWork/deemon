@@ -73,6 +73,26 @@ err:
 	return NULL;
 }
 
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeInstanceMethod_NewInherited(/*inherit(always)*/ DREF DeeObject *func,
+                               /*inherit(always)*/ DREF DeeObject *this_arg) {
+	DREF InstanceMethod *result;
+	ASSERT_OBJECT(func);
+	ASSERT_OBJECT(this_arg);
+	result = DeeObject_MALLOC(InstanceMethod);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(result, &DeeInstanceMethod_Type);
+	result->im_func = func;     /* Inherit reference */
+	result->im_this = this_arg; /* Inherit reference */
+	return (DREF DeeObject *)result;
+err:
+	Dee_Decref_unlikely(func);     /* *_unlikely because functions usually live until the module dies */
+	Dee_Decref_unlikely(this_arg); /* *_unlikely because the instance is probably referenced elsewhere */
+	return NULL;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 im_ctor(InstanceMethod *__restrict self) {
 	/* Initialize a stub instance-method. */
@@ -353,8 +373,8 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	                         "\n"
 
 	                         "call(args!,kwds!!)->\n"
-	                         "Invoke the $func used to construct @this "
-	                         /**/ "InstanceMethod as ${func(thisarg, args..., **kwds)}"),
+	                         "Invoke the $func used to construct @this ?. "
+	                         /**/ "as ${func(thisarg, args..., **kwds)}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

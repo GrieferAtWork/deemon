@@ -29,6 +29,7 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
 #include <deemon/none.h>
@@ -230,17 +231,13 @@ JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, Dee_operator_t opnam
 	if unlikely(!operators_module)
 		goto err;
 	if (symbol_name) {
-		dhash_t hash = Dee_HashStr(symbol_name);
+		Dee_hash_t hash = Dee_HashStr(symbol_name);
 		result = DeeObject_GetAttrStringHash((DeeObject *)operators_module, symbol_name, hash);
 	} else {
 		/* Fallback: Invoke `operator(id)' to generate the default callback. */
-		result = DeeObject_GetAttrStringHash((DeeObject *)operators_module, "operator", Dee_HashStr__operator);
-		if likely(result) {
-			DREF DeeObject *callback_result;
-			callback_result = DeeObject_Callf(result, "I16u", opname);
-			Dee_Decref(result);
-			result = callback_result;
-		}
+		result = DeeObject_CallAttrStringHashf((DeeObject *)operators_module,
+		                                       "operator", Dee_HashStr__operator,
+		                                       PCKu16, opname);
 	}
 	Dee_Decref(operators_module);
 	return result;

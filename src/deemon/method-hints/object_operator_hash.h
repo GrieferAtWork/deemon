@@ -35,8 +35,7 @@ tp_cmp->tp_hash([[nonnull]] DeeObject *__restrict self)
 	func = DeeClass_TryGetOperator(THIS_TYPE, OPERATOR_HASH);
 	if unlikely(!func)
 		goto fallback;
-	result = DeeObject_ThisCall(func, self, 0, NULL);
-	Dee_Decref(func);
+	result = DeeObject_ThisCallInherited(func, self, 0, NULL);
 	if unlikely(!result)
 		goto fallback_handled;
 	temp = DeeObject_AsUIntptr(result, &result_value);

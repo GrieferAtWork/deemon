@@ -511,9 +511,8 @@ err_missing_rparen:
 #endif /* JIT_EVAL */
 		}
 #ifdef JIT_EVAL
-		result = DeeObject_CallTuple(lhs, merge);
+		result = DeeObject_CallTupleInherited(lhs, merge);
 		Dee_Decref(merge);
-		Dee_Decref(lhs);
 #else /* JIT_EVAL */
 		result = 0;
 #endif /* JIT_EVAL */
@@ -2009,11 +2008,11 @@ err_result_copy:
 				opfun = JIT_GetOperatorFunction(typetype, (Dee_operator_t)opno);
 				if unlikely(!opfun)
 					goto err_r;
-				rhs = DeeInstanceMethod_New(opfun, lhs);
-				Dee_Decref(opfun);
+				Dee_Incref(lhs);
+				rhs = DeeInstanceMethod_NewInherited(opfun, lhs);
 				if unlikely(!rhs)
 					goto err_r_invoke;
-				Dee_Decref(lhs);
+				Dee_DecrefNokill(lhs); /* Nokill because referenced by "rhs" */
 				lhs = rhs;
 #else /* JIT_EVAL */
 				if unlikely(JITLexer_SkipOperatorName(self))

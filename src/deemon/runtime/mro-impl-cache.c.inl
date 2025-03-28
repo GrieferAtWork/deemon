@@ -632,8 +632,10 @@ DECL_BEGIN
 #endif /* !LOCAL_HAS_argv */
 
 #if defined(LOCAL_HAS_args) && defined(LOCAL_kw)
-#define LOCAL_invoke_object_thisarg(ob, thisarg) DeeObject_ThisCallTupleKw(ob, thisarg, args, LOCAL_kw)
-#define LOCAL_invoke_object(ob)                  DeeObject_CallTupleKw(ob, args, LOCAL_kw)
+#define LOCAL_invoke_object_thisarg(ob, thisarg)           DeeObject_ThisCallTupleKw(ob, thisarg, args, LOCAL_kw)
+#define LOCAL_invoke_object_thisarg_inherited(ob, thisarg) DeeObject_ThisCallTupleKwInherited(ob, thisarg, args, LOCAL_kw)
+#define LOCAL_invoke_object(ob)                            DeeObject_CallTupleKw(ob, args, LOCAL_kw)
+#define LOCAL_invoke_object_inherited(ob)                  DeeObject_CallTupleKwInherited(ob, args, LOCAL_kw)
 #define LOCAL_invoke_attribute(desc, self, thisarg, attr) \
 	DeeInstance_CallAttributeTupleKw(desc, self, thisarg, attr, args, LOCAL_kw)
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
@@ -641,8 +643,10 @@ DECL_BEGIN
 #define LOCAL_unpack_one_for_getter(p_thisarg) \
 	DeeArg_UnpackKw(LOCAL_argc, LOCAL_argv, LOCAL_kw, kwlist__thisarg, "o:get", p_thisarg)
 #elif defined(LOCAL_HAS_args)
-#define LOCAL_invoke_object_thisarg(ob, thisarg) DeeObject_ThisCallTuple(ob, thisarg, args)
-#define LOCAL_invoke_object(ob)                  DeeObject_CallTuple(ob, args)
+#define LOCAL_invoke_object_thisarg(ob, thisarg)           DeeObject_ThisCallTuple(ob, thisarg, args)
+#define LOCAL_invoke_object_thisarg_inherited(ob, thisarg) DeeObject_ThisCallTupleInherited(ob, thisarg, args)
+#define LOCAL_invoke_object(ob)                            DeeObject_CallTuple(ob, args)
+#define LOCAL_invoke_object_inherited(ob)                  DeeObject_CallTupleInherited(ob, args)
 #define LOCAL_invoke_attribute(desc, self, thisarg, attr) \
 	DeeInstance_CallAttributeTuple(desc, self, thisarg, attr, args)
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
@@ -650,8 +654,10 @@ DECL_BEGIN
 #define LOCAL_unpack_one_for_getter(p_thisarg) \
 	DeeArg_Unpack(LOCAL_argc, LOCAL_argv, "o:get", p_thisarg)
 #elif defined(LOCAL_argc) && defined(LOCAL_kw)
-#define LOCAL_invoke_object_thisarg(ob, thisarg) DeeObject_ThisCallKw(ob, thisarg, LOCAL_argc, LOCAL_argv, LOCAL_kw)
-#define LOCAL_invoke_object(ob)                  DeeObject_CallKw(ob, LOCAL_argc, LOCAL_argv, LOCAL_kw)
+#define LOCAL_invoke_object_thisarg(ob, thisarg)           DeeObject_ThisCallKwInherited(ob, thisarg, LOCAL_argc, LOCAL_argv, LOCAL_kw)
+#define LOCAL_invoke_object_thisarg_inherited(ob, thisarg) DeeObject_ThisCallKw(ob, thisarg, LOCAL_argc, LOCAL_argv, LOCAL_kw)
+#define LOCAL_invoke_object(ob)                            DeeObject_CallKw(ob, LOCAL_argc, LOCAL_argv, LOCAL_kw)
+#define LOCAL_invoke_object_inherited(ob)                  DeeObject_CallKwInherited(ob, LOCAL_argc, LOCAL_argv, LOCAL_kw)
 #define LOCAL_invoke_attribute(desc, self, thisarg, attr) \
 	DeeInstance_CallAttributeKw(desc, self, thisarg, attr, LOCAL_argc, LOCAL_argv, LOCAL_kw)
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
@@ -659,8 +665,10 @@ DECL_BEGIN
 #define LOCAL_unpack_one_for_getter(p_thisarg) \
 	DeeArg_UnpackKw(LOCAL_argc, LOCAL_argv, LOCAL_kw, kwlist__thisarg, "o:get", p_thisarg)
 #elif defined(LOCAL_argc)
-#define LOCAL_invoke_object_thisarg(ob, thisarg) DeeObject_ThisCall(ob, thisarg, LOCAL_argc, LOCAL_argv)
-#define LOCAL_invoke_object(ob)                  DeeObject_Call(ob, LOCAL_argc, LOCAL_argv)
+#define LOCAL_invoke_object_thisarg(ob, thisarg)           DeeObject_ThisCall(ob, thisarg, LOCAL_argc, LOCAL_argv)
+#define LOCAL_invoke_object_thisarg_inherited(ob, thisarg) DeeObject_ThisCallInherited(ob, thisarg, LOCAL_argc, LOCAL_argv)
+#define LOCAL_invoke_object(ob)                            DeeObject_Call(ob, LOCAL_argc, LOCAL_argv)
+#define LOCAL_invoke_object_inherited(ob)                  DeeObject_CallInherited(ob, LOCAL_argc, LOCAL_argv)
 #define LOCAL_invoke_attribute(desc, self, thisarg, attr) \
 	DeeInstance_CallAttribute(desc, self, thisarg, attr, LOCAL_argc, LOCAL_argv)
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
@@ -668,8 +676,10 @@ DECL_BEGIN
 #define LOCAL_unpack_one_for_getter(p_thisarg) \
 	DeeArg_Unpack(LOCAL_argc, LOCAL_argv, "o:get", p_thisarg)
 #elif defined(LOCAL_HAS_format)
-#define LOCAL_invoke_object_thisarg(ob, thisarg) DeeObject_VThisCallf(ob, thisarg, format, args)
-#define LOCAL_invoke_object(ob)                  DeeObject_VCallf(ob, format, args)
+#define LOCAL_invoke_object_thisarg(ob, thisarg)           DeeObject_VThisCallf(ob, thisarg, format, args)
+#define LOCAL_invoke_object_thisarg_inherited(ob, thisarg) DeeObject_VThisCallInheritedf(ob, thisarg, format, args)
+#define LOCAL_invoke_object(ob)                            DeeObject_VCallf(ob, format, args)
+#define LOCAL_invoke_object_inherited(ob)                  DeeObject_VCallInheritedf(ob, format, args)
 #define LOCAL_invoke_attribute(desc, self, thisarg, attr) \
 	DeeInstance_VCallAttributef(desc, self, thisarg, attr, format, args)
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
@@ -1300,16 +1310,22 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
 #ifdef LOCAL_HAS_self
+#ifndef LOCAL_invoke_object_inherited
 				DREF DeeObject *result;
+#endif /* !LOCAL_invoke_object_inherited */
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 				callback = (*getter)(LOCAL_self);
 check_and_invoke_callback:
 				if unlikely(!callback)
 					goto err;
 #define NEED_err
+#ifdef LOCAL_invoke_object_inherited
+				return LOCAL_invoke_object_inherited(callback);
+#else /* LOCAL_invoke_object_inherited */
 				result = LOCAL_invoke_object(callback);
 				Dee_Decref(callback);
 				return result;
+#endif /* !LOCAL_invoke_object_inherited */
 #else /* LOCAL_HAS_self */
 				DREF DeeObject *result;
 				/*maybe:DREF*/ DeeObject *thisarg;
@@ -2183,7 +2199,9 @@ err:
 #undef LOCAL_invoke_dobjmethod
 #undef LOCAL_invoke_type_member_get
 #undef LOCAL_invoke_object_thisarg
+#undef LOCAL_invoke_object_thisarg_inherited
 #undef LOCAL_invoke_object
+#undef LOCAL_invoke_object_inherited
 #undef LOCAL_invoke_attribute
 #undef LOCAL_invoke_instance_attribute
 #undef LOCAL_unpack_one_for_getter

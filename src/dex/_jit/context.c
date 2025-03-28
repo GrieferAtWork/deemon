@@ -189,10 +189,9 @@ fast_DeeInstance_GetAttribute(struct instance_desc *__restrict self,
 		if unlikely(!getter)
 			goto illegal;
 		/* Invoke the getter. */
-		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
-		         ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
-		         : DeeObject_Call(getter, 0, NULL);
-		Dee_Decref(getter);
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+			return DeeObject_ThisCallInherited(getter, this_arg, 0, NULL);
+		return DeeObject_CallInherited(getter, 0, NULL);
 	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 		/* Construct a thiscall function. */
 		DREF DeeObject *callback;
@@ -202,8 +201,8 @@ fast_DeeInstance_GetAttribute(struct instance_desc *__restrict self,
 		Dee_instance_desc_lock_endread(self);
 		if unlikely(!callback)
 			goto unbound;
-		result = DeeInstanceMethod_New(callback, this_arg);
-		Dee_Decref(callback);
+		Dee_Incref(this_arg);
+		return DeeInstanceMethod_NewInherited(callback, this_arg);
 	} else {
 		/* Simply return the attribute as-is. */
 		Dee_instance_desc_lock_read(self);
@@ -243,9 +242,8 @@ fast_DeeInstance_BoundAttribute(struct instance_desc *__restrict self,
 			goto unbound;
 		/* Invoke the getter. */
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
-		         ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
-		         : DeeObject_Call(getter, 0, NULL);
-		Dee_Decref(getter);
+		         ? DeeObject_ThisCallInherited(getter, this_arg, 0, NULL)
+		         : DeeObject_CallInherited(getter, 0, NULL);
 		if likely(result) {
 			Dee_Decref(result);
 			return 1;
@@ -282,12 +280,11 @@ fast_DeeInstance_DelAttribute(struct instance_desc *__restrict self,
 			goto illegal;
 		/* Invoke the getter. */
 		temp = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
-		       ? DeeObject_ThisCall(delfun, this_arg, 0, NULL)
-		       : DeeObject_Call(delfun, 0, NULL);
-		Dee_Decref(delfun);
+		       ? DeeObject_ThisCallInherited(delfun, this_arg, 0, NULL)
+		       : DeeObject_CallInherited(delfun, 0, NULL);
 		if unlikely(!temp)
 			goto err;
-		Dee_Decref(temp);
+		Dee_Decref_unlikely(temp); /* *_unlikely because it's probably "none" */
 	} else {
 		DREF DeeObject *old_value;
 		/* Simply unbind the field in the attr table. */
@@ -327,12 +324,11 @@ fast_DeeInstance_SetAttribute(struct instance_desc *__restrict self,
 			goto illegal;
 		/* Invoke the getter. */
 		temp = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
-		       ? DeeObject_ThisCall(setter, this_arg, 1, (DeeObject **)&value)
-		       : DeeObject_Call(setter, 1, (DeeObject **)&value);
-		Dee_Decref(setter);
+		       ? DeeObject_ThisCallInherited(setter, this_arg, 1, (DeeObject **)&value)
+		       : DeeObject_CallInherited(setter, 1, (DeeObject **)&value);
 		if unlikely(!temp)
 			goto err;
-		Dee_Decref(temp);
+		Dee_Decref_unlikely(temp); /* *_unlikely because it's probably "none" */
 	} else {
 		DREF DeeObject *old_value;
 		/* Simply override the field in the attr table. */

@@ -4491,11 +4491,32 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallTupleKw)(De
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_ThisCallTuple)(DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_ThisCallTupleKw)(DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args, DeeObject *kw);
 #if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
-#define DeeObject_CallTuple(self, args)                     DeeObject_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeObject_CallTupleKw(self, args, kw)               DeeObject_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#define DeeObject_CallTuple(self, args)                    DeeObject_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_CallTupleKw(self, args, kw)              DeeObject_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #define DeeObject_ThisCallTuple(self, thisarg, args)       DeeObject_ThisCall(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_ThisCallTupleKw(self, thisarg, args, kw) DeeObject_ThisCallKw(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
+
+/* Same as the other functions above, but *always* inherits references to "self" (iow: the function being called) */
+DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL DeeObject_CallInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL DeeObject_CallKwInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_ThisCallInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_ThisCallKwInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DeeObject_CallInheritedf(/*inherit(always)*/ DREF DeeObject *self, char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DeeObject_ThisCallInheritedf(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_VCallInheritedf(/*inherit(always)*/ DREF DeeObject *self, char const *__restrict format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_VThisCallInheritedf(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, char const *__restrict format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallTupleInherited)(/*inherit(always)*/ DREF DeeObject *self, /*Tuple*/ DeeObject *args);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallTupleKwInherited)(/*inherit(always)*/ DREF DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_ThisCallTupleInherited)(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_ThisCallTupleKwInherited)(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args, DeeObject *kw);
+#if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
+#define DeeObject_CallTupleInherited(/*inherit(always)*/ self, args)                    DeeObject_CallInherited(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_CallTupleKwInherited(/*inherit(always)*/ self, args, kw)              DeeObject_CallKwInherited(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#define DeeObject_ThisCallTupleInherited(/*inherit(always)*/ self, thisarg, args)       DeeObject_ThisCallInherited(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_ThisCallTupleKwInherited(/*inherit(always)*/ self, thisarg, args, kw) DeeObject_ThisCallKwInherited(self, thisarg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
+
 
 /* Generate and return the hash of a given object. */
 DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hash)(DeeObject *__restrict self);
