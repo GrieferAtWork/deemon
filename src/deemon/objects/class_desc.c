@@ -2168,10 +2168,63 @@ err:
 	return -1;
 }
 
+
+struct cd_init_kw__operator_foreach_data {
+	ClassDescriptor *cdikopf_result;
+	Dee_operator_t   cdikopf_opcount;
+	uint16_t         cdikopf_csize;
+};
+
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+cd_init_kw__operator_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct cd_init_kw__operator_foreach_data *data;
+	Dee_operator_t name, index;
+	data = (struct cd_init_kw__operator_foreach_data *)arg;
+	if (DeeString_Check(key)) {
+		struct opinfo const *info;
+		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(key), (size_t)-1);
+		if (info == NULL) {
+			/* TODO: In this case, must store the operator via its name
+			 *       (so the name-query can happen in `DeeClass_New()') */
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Unknown operator %r",
+			                key);
+			goto err;
+		}
+		name = info->oi_id;
+	} else {
+		if (DeeObject_AsUInt16(key, &name))
+			goto err;
+	}
+	if (DeeObject_AsUInt16(value, &index))
+		goto err;
+	if (data->cdikopf_csize != (uint16_t)-1 && index >= data->cdikopf_csize) {
+		struct opinfo const *op = DeeTypeType_GetOperatorById(&DeeType_Type, name);
+		if (op) {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Operator %s uses out-of-bounds class object "
+			                "table index %" PRFu16 " (>= %" PRFu16 ")",
+			                op->oi_sname, index, data->cdikopf_csize);
+		} else {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Operator 0x%.4I16x uses out-of-bounds class "
+			                "object table index %" PRFu16 " (>= %" PRFu16 ")",
+			                name, index, data->cdikopf_csize);
+		}
+		goto err;
+	}
+	if (data->cdikopf_result->cd_cmemb_size <= index)
+		data->cdikopf_result->cd_cmemb_size = index + 1;
+	if (cd_add_operator(data->cdikopf_result, name, index, &data->cdikopf_opcount))
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED DREF ClassDescriptor *DCALL
 cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF ClassDescriptor *result;
-	DREF DeeObject *iterator, *elem, *key_and_value[2];
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_ClassDescriptor", params: "
 		DeeStringObject *name;
 		DeeStringObject *doc   = (DeeStringObject *)Dee_EmptyString;
@@ -2270,58 +2323,12 @@ got_flag:
 			goto err_r_imemb;
 	}
 	if (args.operators != Dee_EmptyTuple) {
-		Dee_operator_t operator_count = 0;
-		iterator = DeeObject_Iter(args.operators);
-		if unlikely(!iterator)
+		struct cd_init_kw__operator_foreach_data data;
+		data.cdikopf_result  = result;
+		data.cdikopf_opcount = 0;
+		data.cdikopf_csize   = args.csize;
+		if (DeeObject_ForeachPair(args.operators, &cd_init_kw__operator_foreach_cb, &data))
 			goto err_r_imemb_cmemb;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-			Dee_operator_t name, index;
-			if (DeeSeq_Unpack(elem, 2, key_and_value))
-				goto err_r_imemb_iter_elem;
-			Dee_Decref(elem);
-			if (DeeObject_AsUInt16(key_and_value[1], &index))
-				goto err_r_imemb_iter_data;
-			if (DeeString_Check(key_and_value[0])) {
-				struct opinfo const *info;
-				info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(key_and_value[0]), (size_t)-1);
-				if (info == NULL) {
-					/* TODO: In this case, must store the operator via its name
-					 *       (so the name-query can happen in `DeeClass_New()') */
-					DeeError_Throwf(&DeeError_ValueError,
-					                "Unknown operator %r",
-					                key_and_value[0]);
-					goto err_r_imemb_iter_data;
-				}
-				name = info->oi_id;
-			} else {
-				if (DeeObject_AsUInt16(key_and_value[0], &name))
-					goto err_r_imemb_iter_data;
-			}
-			Dee_Decref(key_and_value[1]);
-			Dee_Decref(key_and_value[0]);
-			if (args.csize != (uint16_t)-1 && index >= args.csize) {
-				struct opinfo const *op = DeeTypeType_GetOperatorById(&DeeType_Type, name);
-				if (op) {
-					DeeError_Throwf(&DeeError_ValueError,
-					                "Operator %s uses out-of-bounds class object "
-					                "table index %" PRFu16 " (>= %" PRFu16 ")",
-					                op->oi_sname, index, args.csize);
-				} else {
-					DeeError_Throwf(&DeeError_ValueError,
-					                "Operator 0x%.4I16x uses out-of-bounds class "
-					                "object table index %" PRFu16 " (>= %" PRFu16 ")",
-					                name, index, args.csize);
-				}
-				goto err_r_imemb_iter;
-			}
-			if (result->cd_cmemb_size <= index)
-				result->cd_cmemb_size = index + 1;
-			if (cd_add_operator(result, name, index, &operator_count))
-				goto err_r_imemb_iter;
-		}
-		if (!elem)
-			goto err_r_imemb_iter;
-		Dee_Decref(iterator);
 	}
 	result->cd_name = args.name;
 	result->cd_doc  = args.doc;
@@ -2329,14 +2336,6 @@ got_flag:
 	Dee_XIncref(args.doc);
 	DeeObject_Init(result, &DeeClassDescriptor_Type);
 	return result;
-err_r_imemb_iter_data:
-	Dee_Decref(key_and_value[1]);
-	Dee_Decref(key_and_value[0]);
-	goto err_r_imemb_iter;
-err_r_imemb_iter_elem:
-	Dee_Decref(elem);
-err_r_imemb_iter:
-	Dee_Decref(iterator);
 err_r_imemb_cmemb:
 	if (result->cd_clsop_list != empty_class_operators)
 		Dee_Free(result->cd_clsop_list);
