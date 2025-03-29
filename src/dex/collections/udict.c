@@ -1754,11 +1754,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF URoDict *DCALL
 urodict_deepcopy(URoDict *__restrict self) {
 	DREF URoDict *result;
 	size_t i;
-	int temp;
 	result = (DREF URoDict *)URoDict_NewWithHint(self->urd_size);
 	if unlikely(!result)
 		goto done;
 	for (i = 0; i <= self->urd_mask; ++i) {
+		Dee_ssize_t temp;
 		DREF DeeObject *key_copy, *value_copy;
 		/* Deep-copy the key & value */
 		if (!self->urd_elem[i].di_key)
