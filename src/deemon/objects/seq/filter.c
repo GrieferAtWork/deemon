@@ -234,7 +234,7 @@ filter_iter(Filter *__restrict self) {
 	result = DeeObject_MALLOC(FilterIterator);
 	if unlikely(!result)
 		goto done;
-	result->fi_iter = DeeObject_Iter(self->f_seq);
+	result->fi_iter = DeeObject_InvokeMethodHint(seq_operator_iter, self->f_seq);
 	if unlikely(!result->fi_iter)
 		goto err_r;
 	result->fi_func = self->f_fun;

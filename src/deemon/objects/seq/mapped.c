@@ -244,7 +244,7 @@ mapped_iter(SeqMapped *__restrict self) {
 		goto err;
 
 	/* Create the underlying iterator. */
-	result->smi_iter = DeeObject_Iter(self->sm_seq);
+	result->smi_iter = DeeObject_InvokeMethodHint(seq_operator_iter, self->sm_seq);
 	if unlikely(!result->smi_iter)
 		goto err_r;
 
@@ -273,7 +273,7 @@ PRIVATE struct type_member tpconst mapped_class_members[] = {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_getitem(SeqMapped *self, DeeObject *index) {
 	DREF DeeObject *orig, *result;
-	orig = DeeObject_GetItem(self->sm_seq, index);
+	orig = DeeObject_InvokeMethodHint(seq_operator_getitem, self->sm_seq, index);
 	if unlikely(!orig)
 		goto err;
 	result = DeeObject_Call(self->sm_mapper, 1, &orig);
@@ -286,7 +286,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 mapped_getrange(SeqMapped *self, DeeObject *start, DeeObject *end) {
 	DREF DeeObject *orig, *result;
-	orig = DeeObject_GetRange(self->sm_seq, start, end);
+	orig = DeeObject_InvokeMethodHint(seq_operator_getrange, self->sm_seq, start, end);
 	if unlikely(!orig)
 		goto err;
 	result = DeeSeq_Map(orig, self->sm_mapper);
@@ -300,7 +300,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_getitem_index(SeqMapped *__restrict self, size_t index) {
 	DREF DeeObject *inner[1], *result;
-	inner[0] = DeeObject_GetItemIndex(self->sm_seq, index);
+	inner[0] = DeeObject_InvokeMethodHint(seq_operator_getitem_index, self->sm_seq, index);
 	if unlikely(!inner[0])
 		goto err;
 	result = DeeObject_Call(self->sm_mapper, 1, inner);
@@ -337,7 +337,7 @@ mapped_foreach(SeqMapped *self, Dee_foreach_t proc, void *arg) {
 	data.tfd_fun  = self->sm_mapper;
 	data.tfd_proc = proc;
 	data.tfd_arg  = arg;
-	return DeeObject_Foreach(self->sm_seq, &mapped_foreach_cb, &data);
+	return DeeObject_InvokeMethodHint(seq_operator_foreach, self->sm_seq, &mapped_foreach_cb, &data);
 }
 
 struct mapped_mh_seq_enumerate_data {
@@ -408,7 +408,7 @@ mapped_mh_seq_enumerate_index(SeqMapped *self, Dee_seq_enumerate_index_t proc,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_getrange_index(SeqMapped *self, Dee_ssize_t start, Dee_ssize_t end) {
 	DREF DeeObject *orig, *result;
-	orig = DeeObject_GetRangeIndex(self->sm_seq, start, end);
+	orig = DeeObject_InvokeMethodHint(seq_operator_getrange_index, self->sm_seq, start, end);
 	if unlikely(!orig)
 		goto err;
 	result = DeeSeq_Map(orig, self->sm_mapper);
@@ -421,7 +421,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_getrange_index_n(SeqMapped *self, Dee_ssize_t start) {
 	DREF DeeObject *orig, *result;
-	orig = DeeObject_GetRangeIndexN(self->sm_seq, start);
+	orig = DeeObject_InvokeMethodHint(seq_operator_getrange_index_n, self->sm_seq, start);
 	if unlikely(!orig)
 		goto err;
 	result = DeeSeq_Map(orig, self->sm_mapper);
@@ -434,7 +434,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_trygetitem(SeqMapped *self, DeeObject *index) {
 	DREF DeeObject *result;
-	result = DeeObject_TryGetItem(self->sm_seq, index);
+	result = DeeObject_InvokeMethodHint(seq_operator_trygetitem, self->sm_seq, index);
 	if (ITER_ISOK(result)) {
 		DREF DeeObject *new_result;
 		new_result = DeeObject_Call(self->sm_mapper, 1, &result);
@@ -447,34 +447,8 @@ mapped_trygetitem(SeqMapped *self, DeeObject *index) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_trygetitem_index(SeqMapped *self, size_t index) {
 	DREF DeeObject *result;
-	result = DeeObject_TryGetItemIndex(self->sm_seq, index);
+	result = DeeObject_InvokeMethodHint(seq_operator_trygetitem_index, self->sm_seq, index);
 	if (ITER_ISOK(result)) {
-		DREF DeeObject *new_result;
-		new_result = DeeObject_Call(self->sm_mapper, 1, &result);
-		Dee_Decref(result);
-		result = new_result;
-	}
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-mapped_trygetitem_string_hash(SeqMapped *self, char const *key, Dee_hash_t hash) {
-	DREF DeeObject *result;
-	result = DeeObject_TryGetItemStringHash(self->sm_seq, key, hash);
-	if (ITER_ISOK(result)) {
-		DREF DeeObject *new_result;
-		new_result = DeeObject_Call(self->sm_mapper, 1, &result);
-		Dee_Decref(result);
-		result = new_result;
-	}
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-mapped_getitem_string_hash(SeqMapped *self, char const *key, Dee_hash_t hash) {
-	DREF DeeObject *result;
-	result = DeeObject_GetItemStringHash(self->sm_seq, key, hash);
-	if (result) {
 		DREF DeeObject *new_result;
 		new_result = DeeObject_Call(self->sm_mapper, 1, &result);
 		Dee_Decref(result);
@@ -513,8 +487,8 @@ PRIVATE struct type_seq mapped_seq = {
 	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mapped_trygetitem,
 	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&mapped_trygetitem_index,
-	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&mapped_trygetitem_string_hash,
-	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&mapped_getitem_string_hash,
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
 	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
 	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
 	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__getitem_string_hash),
