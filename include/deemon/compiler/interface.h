@@ -176,7 +176,8 @@ get_ast_multiple_typing(DeeTypeObject *__restrict typing);
 struct catch_expr;
 struct base_scope_object;
 
-/* Unpack and validate a sequence `{(string, ast, ast)...} handlers' */
+/* Unpack and validate a sequence `{(string, ast, ast)...} handlers'.
+ * @return: NULL: Error (*p_catch_c != 0), or no catch handlers (*p_catch_c == 0) */
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct catch_expr *DCALL
 unpack_catch_expressions(DeeObject *__restrict handlers,
                          size_t *__restrict p_catch_c,

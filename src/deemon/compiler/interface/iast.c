@@ -870,7 +870,7 @@ ast_settryhandlers(Ast *__restrict self,
 		struct catch_expr *old_handv;
 		size_t old_handc, i;
 		new_handv = unpack_catch_expressions(value, &new_handc, me->a_scope->s_base);
-		if unlikely(!new_handv) {
+		if unlikely(!new_handv && new_handc) {
 			result = -1;
 		} else {
 			old_handv = me->a_try.t_catchv;

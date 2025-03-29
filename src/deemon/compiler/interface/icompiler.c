@@ -787,71 +787,78 @@ err:
 }
 
 
-/* Unpack and validate a sequence `{(string, ast, ast)...} handlers' */
+struct unpack_catch_expressions_foreach_data {
+	DeeBaseScopeObject *ucef_bscope; /* [1..1][const] Base scope */
+	struct catch_expr  *ucef_v;      /* [0..ucef_c|ALLOC(ucef_a)] Output buffer */
+	size_t              ucef_c;      /* Used count */
+	size_t              ucef_a;      /* Allocated count */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+unpack_catch_expressions_foreach_cb(void *arg, DeeObject *item) {
+	struct unpack_catch_expressions_foreach_data *data;
+	data = (struct unpack_catch_expressions_foreach_data *)arg;
+	ASSERT(data->ucef_c <= data->ucef_a);
+	if (data->ucef_c >= data->ucef_a) {
+		size_t new_alloc = data->ucef_a * 2;
+		struct catch_expr *new_vectr;
+		if unlikely(!new_alloc)
+			new_alloc = 2;
+		new_vectr = (struct catch_expr *)Dee_TryReallocc(data->ucef_v, new_alloc,
+		                                                 sizeof(struct catch_expr));
+		if unlikely(!new_vectr) {
+			new_alloc = data->ucef_c + 1;
+			new_vectr = (struct catch_expr *)Dee_Reallocc(data->ucef_v, new_alloc,
+			                                                sizeof(struct catch_expr));
+			if unlikely(!new_vectr)
+				goto err;
+		}
+		data->ucef_v = new_vectr;
+		data->ucef_a = new_alloc;
+	}
+	if unlikely(unpack_catch_expression(item, &data->ucef_v[data->ucef_c],
+	                                    data->ucef_bscope))
+		goto err;
+	++data->ucef_c;
+	return 0;
+err:
+	return -1;
+}
+
+/* Unpack and validate a sequence `{(string, ast, ast)...} handlers'.
+ * @return: NULL: Error (*p_catch_c != 0), or no catch handlers (*p_catch_c == 0) */
 INTERN WUNUSED NONNULL((1, 2, 3)) struct catch_expr *DCALL
 unpack_catch_expressions(DeeObject *__restrict handlers,
                          size_t *__restrict p_catch_c,
                          DeeBaseScopeObject *__restrict base_scope) {
-	struct catch_expr *catch_v;
-	size_t catch_c, catch_a;
-	DREF DeeObject *iterator, *elem;
-
-	/* TODO: use DeeObject_Foreach() */
-
-	/* Use an iterator. */
-	catch_v = NULL;
-	catch_c = catch_a = 0;
-	iterator = DeeObject_Iter(handlers);
-	if unlikely(!iterator)
-		goto done;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		ASSERT(catch_c <= catch_a);
-		if (catch_c >= catch_a) {
-			size_t new_catch_a = catch_a * 2;
-			struct catch_expr *new_catch_v;
-			if unlikely(!new_catch_a)
-				new_catch_a = 2;
-			new_catch_v = (struct catch_expr *)Dee_TryReallocc(catch_v, new_catch_a,
-			                                                   sizeof(struct catch_expr));
-			if unlikely(!new_catch_v) {
-				new_catch_a = catch_c + 1;
-				new_catch_v = (struct catch_expr *)Dee_Reallocc(catch_v, new_catch_a,
-				                                                sizeof(struct catch_expr));
-				if unlikely(!new_catch_v)
-					goto err_catch_elem;
-			}
-			catch_v = new_catch_v;
-			catch_a = new_catch_a;
-		}
-		if unlikely(unpack_catch_expression(elem, &catch_v[catch_c], base_scope))
-			goto err_catch_elem;
-		++catch_c;
-	}
-	Dee_Decref(iterator);
-	if unlikely(!elem)
+	struct unpack_catch_expressions_foreach_data data;
+	data.ucef_bscope = base_scope;
+	data.ucef_c = 0;
+	data.ucef_a = 0;
+	data.ucef_v = NULL;
+	if (DeeObject_Foreach(handlers, &unpack_catch_expressions_foreach_cb, &data))
 		goto err_catch;
 
 	/* Release unused memory. */
-	if (catch_c != catch_a) {
-		struct catch_expr *new_catch_v;
-		new_catch_v = (struct catch_expr *)Dee_TryReallocc(catch_v, catch_c,
-		                                                   sizeof(struct catch_expr));
-		if likely(new_catch_v)
-			catch_v = new_catch_v;
+	ASSERT(data.ucef_c <= data.ucef_a);
+	if (data.ucef_c < data.ucef_a) {
+		struct catch_expr *new_vectr;
+		new_vectr = (struct catch_expr *)Dee_TryReallocc(data.ucef_v, data.ucef_c,
+		                                                 sizeof(struct catch_expr));
+		if likely(new_vectr)
+			data.ucef_v = new_vectr;
 	}
 done:
-	*p_catch_c = catch_c;
-	return catch_v;
-err_catch_elem:
-	Dee_Decref(elem);
-	Dee_Decref(iterator);
+	*p_catch_c = data.ucef_c;
+	return data.ucef_v;
 err_catch:
-	while (catch_c--) {
-		ast_xdecref(catch_v[catch_c].ce_mask);
-		ast_decref(catch_v[catch_c].ce_code);
+	while (data.ucef_c--) {
+		ast_xdecref(data.ucef_v[data.ucef_c].ce_mask);
+		ast_decref(data.ucef_v[data.ucef_c].ce_code);
 	}
-	Dee_Free(catch_v);
-	catch_v = NULL;
+	Dee_Free(data.ucef_v);
+	data.ucef_v = NULL;
+	data.ucef_c = 1; /* Error indicator */
 	goto done;
 }
 
@@ -890,7 +897,7 @@ ast_maketry(DeeCompilerObject *self, size_t argc,
 	result_ast->a_try.t_catchv = unpack_catch_expressions(handlers,
 	                                                      &result_ast->a_try.t_catchc,
 	                                                      ast_scope->s_base);
-	if unlikely(!result_ast->a_try.t_catchv) {
+	if unlikely(!result_ast->a_try.t_catchv && result_ast->a_try.t_catchc) {
 		Dee_DecrefNokill(ast_scope);
 		Dee_DecrefNokill(&DeeAst_Type);
 		ast_free(result_ast);
