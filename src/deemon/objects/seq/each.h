@@ -129,21 +129,41 @@ typedef struct {
 /* When defined, `SeqEachOperator_Type' (and types related to
  * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS') define the
  * following operators in compliance with "Sequence":
- * - operator size()
- * - operator getitem()
- * - operator getrange()
  * - operator contains()
  * - operator hash()
  * - operator <=> ()
- * - operator iterkeys()
  *
  * When not defined, those operators produce more SeqEach
  * wrappers, just like `SeqEach_Type' does (iow: this config
  * does not affect the first .each-step, which always allows
  * use of *any* operator)
  */
-#undef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-#define CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
+#undef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_COMPARE
+#if 1
+#define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_COMPARE
+#endif
+
+/* When defined, `SeqEachOperator_Type' (and types related to
+ * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS') define the
+ * following operators in compliance with "Sequence":
+ * - operator size()
+ * - operator getitem()
+ * - operator getrange()
+ */
+#undef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_GETITEM
+#if 1
+#define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_GETITEM
+#endif
+
+/* When defined, `SeqEachOperator_Type' (and types related to
+ * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS') define the
+ * following operators in compliance with "Sequence":
+ * - operator contains()
+ */
+#undef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_CONTAINS
+#if 1
+#define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_CONTAINS
+#endif
 
 
 

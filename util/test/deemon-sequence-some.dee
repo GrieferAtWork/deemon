@@ -67,7 +67,7 @@ assert !({ {}, {42}, {42, 43} }.some.length == 3);
  * wrappers, we have to write "x.__eq__(y)" instead of
  * "x == y"
  *
- * s.a. `CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE' */
+ * s.a. `CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_COMPARE' */
 assert !({ {}, {42}, {42, 43} }.each.length.__eq__(0));
 assert !({ {}, {42}, {42, 43} }.each.length.__ne__(0));
 assert !({ {}, {42}, {42, 43} }.each.length.__eq__(1));
