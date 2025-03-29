@@ -1575,8 +1575,10 @@ INTERN DeeTypeObject URoDictIterator_Type = {
 STATIC_ASSERT(offsetof(URoDict, urd_size) == offsetof(UDict, ud_used));
 #define urodict_bool udict_bool
 
-#define URODICT_ALLOC(mask)  ((DREF URoDict *)DeeObject_Calloc(SIZEOF_URODICT(mask)))
-#define SIZEOF_URODICT(mask) _Dee_MallococBufsize(offsetof(URoDict, urd_elem), (mask) + 1, sizeof(struct udict_item))
+#define SIZEOF_URODICT(mask)      _Dee_MallococBufsize(offsetof(URoDict, urd_elem), (mask) + 1, sizeof(struct udict_item))
+#define SIZEOF_URODICT_SAFE(mask) _Dee_MallococBufsizeSafe(offsetof(URoDict, urd_elem), (mask) + 1, sizeof(struct udict_item))
+#define URODICT_ALLOC(mask)       ((DREF URoDict *)DeeObject_Calloc(SIZEOF_URODICT_SAFE(mask)))
+#define URODICT_TRYALLOC(mask)    ((DREF URoDict *)DeeObject_TryCalloc(SIZEOF_URODICT_SAFE(mask)))
 #define URODICT_INITIAL_MASK 0x03
 
 INTERN WUNUSED DREF URoDict *DCALL URoDict_New(void) {
@@ -1632,115 +1634,98 @@ urodict_rehash(DREF URoDict *__restrict self,
 		/* Copy the old item into the new slot. */
 		memcpy(item, &self->urd_elem[i], sizeof(struct udict_item));
 	}
+	result->urd_size = self->urd_size;
+	result->urd_mask = new_mask;
 	DeeObject_Free(self);
 done:
 	return result;
 }
 
-PRIVATE void DCALL
-urodict_insert(DREF URoDict *__restrict self, size_t mask,
-               size_t *__restrict p_elemcount,
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+urodict_insert(DREF URoDict *__restrict self,
                /*inherit(always)*/ DREF DeeObject *__restrict key,
                /*inherit(always)*/ DREF DeeObject *__restrict value) {
 	size_t i, perturb, hash;
 	struct udict_item *item;
 	hash    = UHASH(key);
-	perturb = i = hash & mask;
+	perturb = i = hash & self->urd_mask;
 	for (;; URoDict_HashNx(i, perturb)) {
-		item = &self->urd_elem[i & mask];
+		item = &self->urd_elem[i & self->urd_mask];
 		if (!item->di_key)
 			break;
 		if (!USAME(item->di_key, key))
 			continue;
 
 		/* It _is_ the same key! (override it...) */
-		--*p_elemcount;
+		--self->urd_size;
 		Dee_Decref(item->di_key);
 		Dee_Decref(item->di_value);
 		break;
 	}
 
 	/* Fill in the item. */
-	++*p_elemcount;
+	++self->urd_size;
 	item->di_key   = key;   /* Inherit reference. */
 	item->di_value = value; /* Inherit reference. */
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-URoDict_Insert(DREF URoDict **__restrict p_self,
-               DeeObject *key, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+URoDict_Insert(/*URoDict **p_self*/ void *arg, DeeObject *key, DeeObject *value) {
+	URoDict **p_self = (URoDict **)arg;
 	URoDict *self = *p_self;
 	if unlikely(self->urd_size * 2 > self->urd_mask) {
-		size_t old_size = self->urd_size;
 		size_t new_mask = (self->urd_mask << 1) | 1;
 		self = urodict_rehash(self, self->urd_mask, new_mask);
 		if unlikely(!self)
 			goto err;
-		self->urd_mask = new_mask;
-		self->urd_size = old_size; /* `urd_size' is not saved by `rehash()' */
 	}
 
 	/* Insert the new key/value-pair into the Dict. */
 	Dee_Incref(key);
 	Dee_Incref(value);
-	urodict_insert(self, self->urd_mask, &self->urd_size, key, value);
+	urodict_insert(self, key, value);
 	return 0;
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF URoDict *DCALL
-URoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
-	DREF URoDict *result, *new_result;
-	DREF DeeObject *elem;
-	size_t elem_count = 0;
+URoDict_FromSequence_fallback(DeeObject *__restrict self) {
+	DREF URoDict *result;
+	size_t initial_mask = URODICT_INITIAL_MASK;
+	size_t sizehint = DeeObject_SizeFast(self);
+	if (sizehint != (size_t)-1) {
+		initial_mask = 1;
+		sizehint <<= 1;
+		while (initial_mask < sizehint)
+			initial_mask = (initial_mask << 1) | 1;
+	}
 
 	/* Construct a read-only Dict from an iterator. */
-	result = URODICT_ALLOC(mask);
-	if unlikely(!result)
-		goto done;
-	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
-		int error;
-		DREF DeeObject *key_and_value[2];
-		error = DeeSeq_Unpack(elem, 2, key_and_value);
-		Dee_Decref(elem);
-		if unlikely(error)
-			goto err_r;
-
-		/* Check if we must re-hash the resulting Dict. */
-		if (elem_count * 2 > mask) {
-			size_t new_mask = (mask << 1) | 1;
-			new_result      = urodict_rehash(result, mask, new_mask);
-			if unlikely(!new_result) {
-				Dee_Decref(key_and_value[1]);
-				Dee_Decref(key_and_value[0]);
-				goto err_r;
-			}
-			result = new_result;
-			mask   = new_mask;
-		}
-
-		/* Insert the key-value pair into the resulting Dict. */
-		urodict_insert(result, mask, &elem_count, key_and_value[0], key_and_value[1]);
-		if (DeeThread_CheckInterrupt())
-			goto err_r;
+	result = URODICT_TRYALLOC(initial_mask);
+	if unlikely(!result) {
+		initial_mask = 1;
+		result = URODICT_ALLOC(initial_mask);
+		if unlikely(!result)
+			goto err;
 	}
-	if unlikely(!elem)
+	result->urd_mask = initial_mask;
+	if (DeeObject_ForeachPair(self, &URoDict_Insert, &result))
 		goto err_r;
-	/* Fill in control members and setup the resulting object. */
-	result->urd_size = elem_count;
-	result->urd_mask = mask;
 	DeeObject_Init(result, &URoDict_Type);
-done:
 	return result;
+	{
+		size_t i;
 err_r:
-	for (elem_count = 0; elem_count <= mask; ++elem_count) {
-		if (!result->urd_elem[elem_count].di_key)
-			continue;
-		Dee_Decref(result->urd_elem[elem_count].di_key);
-		Dee_Decref(result->urd_elem[elem_count].di_value);
+		for (i = 0; i <= result->urd_mask; ++i) {
+			if (!result->urd_elem[i].di_key)
+				continue;
+			Dee_Decref(result->urd_elem[i].di_key);
+			Dee_Decref(result->urd_elem[i].di_value);
+		}
 	}
 	DeeObject_Free(result);
+err:
 	return NULL;
 }
 
@@ -1748,8 +1733,6 @@ err_r:
 
 INTERN WUNUSED NONNULL((1)) DREF URoDict *DCALL
 URoDict_FromSequence(DeeObject *__restrict sequence) {
-	DREF URoDict *result;
-	DREF DeeObject *iterator;
 	DeeTypeObject *seqtype = Dee_TYPE(sequence);
 	if (seqtype == &URoDict_Type)
 		return_reference_((DREF URoDict *)sequence);
@@ -1758,15 +1741,7 @@ URoDict_FromSequence(DeeObject *__restrict sequence) {
 	/* TODO: Optimizations for `DeeRoDict_Type' */
 	/* TODO: Optimizations for `UDict_Type' */
 
-	/* TODO: Use DeeObject_ForeachPair() */
-	iterator = DeeObject_Iter(sequence);
-	if unlikely(!iterator)
-		goto err;
-	result = URoDict_FromIterator_impl(iterator, URODICT_INITIAL_MASK);
-	Dee_Decref(iterator);
-	return result;
-err:
-	return NULL;
+	return URoDict_FromSequence_fallback(sequence);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF URoDict *DCALL
