@@ -109,27 +109,37 @@ typedef struct {
 #undef CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
-/* Define to get dedicated `operator repr' for `Sequence.each[...]'
+
+
+
+
+/************************************************************************/
+/************************************************************************/
+/* SeqEach operator behavior integration                                */
+/************************************************************************/
+/************************************************************************/
+
+/* Leave undefined to get dedicated `operator repr' for `Sequence.each[...]'
+ *
  * This actually degrades usability, since it prevents default repr
  * (which includes the effective value of all elements) for these
  * wrappers (which is actually rather helpful to have):
+ *
  * >> local s = { "foo", "bar", "foobar" };
- * >> #ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
- * >> print repr s.each.upper(); // { "foo", "bar", "foobar" }.each.upper()
- * >> #else // CONFIG_HAVE_SEQEACH_OPERATOR_REPR
+ * >> #ifdef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR
  * >> print repr s.each.upper(); // { "FOO", "BAR", "FOOBAR" }
- * >> #endif // !CONFIG_HAVE_SEQEACH_OPERATOR_REPR
+ * >> #else // CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR
+ * >> print repr s.each.upper(); // { "foo", "bar", "foobar" }.each.upper()
+ * >> #endif // !CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR
  */
-#undef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
-#if 0
-#define CONFIG_HAVE_SEQEACH_OPERATOR_REPR
+#undef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR
+#if 1
+#define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR
 #endif
-
 
 /* When defined, `SeqEachOperator_Type' (and types related to
  * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS') define the
  * following operators in compliance with "Sequence":
- * - operator contains()
  * - operator hash()
  * - operator <=> ()
  *
@@ -141,6 +151,16 @@ typedef struct {
 #undef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_COMPARE
 #if 1
 #define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_COMPARE
+#endif
+
+/* When defined, `SeqEachOperator_Type' (and types related to
+ * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS') define the
+ * following operators in compliance with "Sequence":
+ * - operator iter()
+ */
+#undef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_ITER
+#if 1
+#define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_ITER
 #endif
 
 /* When defined, `SeqEachOperator_Type' (and types related to
@@ -164,6 +184,10 @@ typedef struct {
 #if 1
 #define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_CONTAINS
 #endif
+
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
 
 
 

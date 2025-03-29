@@ -223,7 +223,7 @@ PRIVATE struct type_math sew_math = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqEachIterator *DCALL
-LOCAL_seX(iter)(LOCAL_SeqEach *__restrict self) {
+LOCAL_seX(mh_seq_operator_iter)(LOCAL_SeqEach *__restrict self) {
 	DREF SeqEachIterator *result;
 	result = DeeObject_MALLOC(SeqEachIterator);
 	if unlikely(!result)
@@ -892,9 +892,17 @@ LOCAL_seX(operator_hasitem_string_len_hash)(LOCAL_SeqEach *self, char const *key
 #define LOCAL_seX_operator_contains_PTR &sew_contains
 #endif /* !CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_CONTAINS */
 
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_ITER
+#define LOCAL_seX_operator_iter_PTR    &LOCAL_seX(mh_seq_operator_iter)
+#define LOCAL_seX_operator_foreach_PTR &LOCAL_seX(foreach)
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_ITER */
+#define LOCAL_seX_operator_iter_PTR    &sew_iter
+#define LOCAL_seX_operator_foreach_PTR &default__foreach__with__iter
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_ITER */
+
 
 PRIVATE struct type_seq LOCAL_seX(seq) = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&LOCAL_seX(iter),
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&LOCAL_seX(mh_seq_operator_iter),
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))LOCAL_seX_operator_sizeob_PTR,
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))LOCAL_seX_operator_contains_PTR,
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))LOCAL_seX_operator_getitem_PTR,
@@ -903,7 +911,7 @@ PRIVATE struct type_seq LOCAL_seX(seq) = {
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))LOCAL_seX_operator_getrange_PTR,
 	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&LOCAL_seX(delrange),
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&LOCAL_seX(setrange),
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&LOCAL_seX(foreach),
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))LOCAL_seX_operator_foreach_PTR,
 	/* .tp_foreach_pair               = */ &default__foreach_pair__with__foreach,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))LOCAL_seX_operator_bounditem_PTR,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))LOCAL_seX_operator_hasitem_PTR,
@@ -940,7 +948,7 @@ PRIVATE struct type_seq LOCAL_seX(seq) = {
 PRIVATE struct type_method_hint LOCAL_seX(method_hints)[] = {
 	TYPE_METHOD_HINT(seq_enumerate, &LOCAL_seX(mh_seq_enumerate)),
 	TYPE_METHOD_HINT(seq_enumerate_index, &LOCAL_seX(mh_seq_enumerate_index)),
-	TYPE_METHOD_HINT(seq_operator_iter, &LOCAL_seX(iter)),
+	TYPE_METHOD_HINT(seq_operator_iter, &LOCAL_seX(mh_seq_operator_iter)),
 	TYPE_METHOD_HINT(seq_operator_foreach, &LOCAL_seX(foreach)),
 	TYPE_METHOD_HINT(seq_operator_getitem, &LOCAL_seX(mh_seq_operator_getitem)),
 	TYPE_METHOD_HINT(seq_operator_getitem_index, &LOCAL_seX(mh_seq_operator_getitem_index)),
@@ -964,6 +972,8 @@ PRIVATE struct type_method_hint LOCAL_seX(method_hints)[] = {
 	TYPE_METHOD_HINT_END
 };
 
+#undef LOCAL_seX_operator_iter_PTR
+#undef LOCAL_seX_operator_foreach_PTR
 #undef LOCAL_seX_operator_sizeob_PTR
 #undef LOCAL_seX_operator_contains_PTR
 #undef LOCAL_seX_operator_getitem_PTR
@@ -1025,7 +1035,7 @@ LOCAL_seX(visit)(LOCAL_SeqEach *__restrict self, dvisit_t proc, void *arg) {
 #endif /* DEFINE_SeqEachCallAttr || DEFINE_SeqEachCallAttrKw */
 }
 
-#ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
+#ifndef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 LOCAL_seX(printrepr)(LOCAL_SeqEach *__restrict self,
                      Dee_formatprinter_t printer, void *arg) {
@@ -1078,7 +1088,7 @@ LOCAL_seX(printrepr)(LOCAL_SeqEach *__restrict self,
 #error "Unsupported each-fastpass mode"
 #endif /* !... */
 }
-#endif /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR */
 
 
 #ifdef DEFINE_SeqEachGetAttr
@@ -1278,6 +1288,12 @@ PRIVATE struct type_callable LOCAL_seX(callable) = {
 };
 #endif /* DEFINE_SeqEachGetAttr */
 
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR
+#define LOCAL_seX_operator_printrepr_PTR &default_seq_printrepr
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR */
+#define LOCAL_seX_operator_printrepr_PTR &seo_printrepr
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR */
+
 INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_" LOCAL_SeqEach_Type_NAME,
@@ -1326,11 +1342,7 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&LOCAL_seX(bool),
 		/* .tp_print     = */ NULL,
-#ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&LOCAL_seX(printrepr),
-#else /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
-		/* .tp_printrepr = */ &default_seq_printrepr,
-#endif /* !CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))LOCAL_seX_operator_printrepr_PTR,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&LOCAL_seX(visit),
 	/* .tp_gc            = */ NULL,
@@ -1357,6 +1369,8 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 	/* .tp_callable      = */ &sew_callable,
 #endif /* !DEFINE_SeqEachGetAttr */
 };
+
+#undef LOCAL_seX_operator_printrepr_PTR
 
 
 

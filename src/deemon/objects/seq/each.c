@@ -2282,7 +2282,7 @@ err:
 	return -1;
 }
 
-#ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
+#ifndef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 seo_printrepr(SeqEachOperator *__restrict self,
               Dee_formatprinter_t printer, void *arg) {
@@ -2296,7 +2296,7 @@ seo_printrepr(SeqEachOperator *__restrict self,
 	                                   NULL, 0,
 	                                   each_suffix, each_suffix ? 5 : 0);
 }
-#endif /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR */
 
 PRIVATE NONNULL((1)) void DCALL
 seo_fini(SeqEachOperator *__restrict self) {
@@ -2390,6 +2390,10 @@ DEFINE_SEW_TRINARY(sew_getrange, OPERATOR_GETRANGE)
 #ifndef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_CONTAINS
 DEFINE_SEW_BINARY(sew_contains, OPERATOR_CONTAINS)
 #endif /* !CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_CONTAINS */
+
+#ifndef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_ITER
+DEFINE_SEW_UNARY(sew_iter, OPERATOR_ITER)
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_ITER */
 
 
 struct seo_inplace_foreach_data {
@@ -3092,7 +3096,7 @@ PRIVATE struct type_attr seo_attr = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqEachIterator *DCALL
-seo_iter(SeqEachOperator *__restrict self) {
+seo_mh_seq_operator_iter(SeqEachOperator *__restrict self) {
 	DREF SeqEachIterator *result;
 	result = DeeObject_MALLOC(SeqEachIterator);
 	if unlikely(!result)
@@ -3327,9 +3331,17 @@ seo_operator_hasitem_string_len_hash(SeqEachOperator *self, char const *key, siz
 #define seo_operator_contains_PTR &sew_contains
 #endif /* !CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_CONTAINS */
 
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_ITER
+#define seo_operator_iter_PTR    &seo_mh_seq_operator_iter
+#define seo_operator_foreach_PTR &seo_foreach
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_ITER */
+#define seo_operator_iter_PTR    &sew_iter
+#define seo_operator_foreach_PTR &default__foreach__with__iter
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_ITER */
+
 
 PRIVATE struct type_seq seo_seq = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seo_iter,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))seo_operator_iter_PTR,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))seo_operator_sizeob_PTR,
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))seo_operator_contains_PTR,
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))seo_operator_getitem_PTR,
@@ -3338,7 +3350,7 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))seo_operator_getrange_PTR,
 	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_delrange,
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&seo_setrange,
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&seo_foreach,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))seo_operator_foreach_PTR,
 	/* .tp_foreach_pair               = */ &default__foreach_pair__with__foreach,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))seo_operator_bounditem_PTR,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))seo_operator_hasitem_PTR,
@@ -3386,7 +3398,7 @@ PRIVATE struct type_method tpconst sew_methods[] = {
 PRIVATE struct type_method_hint tpconst seo_method_hints[] = {
 	TYPE_METHOD_HINT(seq_enumerate, &seo_mh_seq_enumerate),
 	TYPE_METHOD_HINT(seq_enumerate_index, &seo_mh_seq_enumerate_index),
-	TYPE_METHOD_HINT(seq_operator_iter, &seo_iter),
+	TYPE_METHOD_HINT(seq_operator_iter, &seo_mh_seq_operator_iter),
 	TYPE_METHOD_HINT(seq_operator_foreach, &seo_foreach),
 	TYPE_METHOD_HINT(seq_operator_getitem, &seo_mh_seq_operator_getitem),
 	TYPE_METHOD_HINT(seq_operator_getitem_index, &seo_mh_seq_operator_getitem_index),
@@ -3419,11 +3431,11 @@ PRIVATE struct type_member tpconst seo_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-#ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
-#define SeqEachOperator__tp_printrepr seo_printrepr
-#else /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
-#define SeqEachOperator__tp_printrepr default_seq_printrepr
-#endif /* !CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR
+#define seo_operator_printrepr_PTR &default_seq_printrepr
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR */
+#define seo_operator_printrepr_PTR &seo_printrepr
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR */
 
 
 PRIVATE struct type_callable sew_callable = {
@@ -3466,7 +3478,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&seo_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&SeqEachOperator__tp_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))seo_operator_printrepr_PTR,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seo_visit,
 	/* .tp_gc            = */ NULL,
