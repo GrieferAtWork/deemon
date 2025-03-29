@@ -362,11 +362,11 @@ typedef union {
 	Dee_int128_t i;
 } Xint128_t;
 
-PRIVATE WUNUSED NONNULL((1, 3)) dssize_t DCALL
-print_int128(dformatprinter printer, void *arg,
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+print_int128(Dee_formatprinter_t printer, void *arg,
              Xint128_t *value, size_t precision,
              unsigned int flags, unsigned int numsys) {
-	dssize_t result = 0, temp;
+	Dee_ssize_t result = 0, temp;
 	char const *dec;
 	bool is_neg;
 	char *iter, buffer[131]; /* 128-bit binary, w/prefix + sign */
@@ -463,10 +463,10 @@ err:
  *       the format string is _always_ fully processed.
  * @return: * :  The sum of all return values from calls to `*printer'
  * @return: < 0: The first negative return value of a call to `*printer' */
-PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_VPrintf(dformatprinter printer, void *arg,
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg,
                   char const *__restrict format, va_list args) {
-	dssize_t result = 0, temp;
+	Dee_ssize_t result = 0, temp;
 	char const *flush_start;
 	char ch;
 	size_t width, precision;
@@ -1066,10 +1066,10 @@ err_finish:
 }
 
 
-PUBLIC WUNUSED NONNULL((1, 3)) dssize_t
-DeeFormat_Printf(dformatprinter printer, void *arg,
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_ssize_t
+DeeFormat_Printf(Dee_formatprinter_t printer, void *arg,
                  char const *__restrict format, ...) {
-	dssize_t result;
+	Dee_ssize_t result;
 	va_list args;
 	va_start(args, format);
 	result = DeeFormat_VPrintf(printer, arg, format, args);
@@ -1090,10 +1090,10 @@ DeeFormat_Printf(dformatprinter printer, void *arg,
  * - ASCII+iscntrl --> \r, \n, \b, ...
  * - ASCII         --> \177
  * - other         --> \uABCD, \U1234ABCD */
-PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_Quote(dformatprinter printer, void *arg,
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeFormat_Quote(Dee_formatprinter_t printer, void *arg,
                 /*utf-8*/ char const *__restrict text, size_t textlen) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	char const *flush_start, *end;
 	flush_start = text;
 	end         = text + textlen;
@@ -1178,9 +1178,9 @@ err:
  * - ASCII+[0-7]   --> \0, \1, ... \7
  * - other         --> \xAB */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
-DeeFormat_QuoteBytes(/*ascii*/ dformatprinter printer, void *arg,
+DeeFormat_QuoteBytes(/*ascii*/ Dee_formatprinter_t printer, void *arg,
                      /*bytes*/ void const *__restrict data, size_t num_bytes) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	byte_t const *text, *flush_start, *end;
 	text        = (unsigned char const *)data;
 	flush_start = text;
@@ -1242,10 +1242,10 @@ err:
 
 
 /* Format-quote 8-bit, 16-bit, and 32-bit unicode text: */
-PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_Quote8(/*ascii*/ dformatprinter printer, void *arg,
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeFormat_Quote8(/*ascii*/ Dee_formatprinter_t printer, void *arg,
                  /*latin-1*/ uint8_t const *__restrict text, size_t textlen) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	uint8_t const *flush_start, *end;
 	flush_start = text;
 	end         = text + textlen;
@@ -1309,10 +1309,10 @@ err:
 	return temp;
 }
 
-PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_Quote16(/*ascii*/ dformatprinter printer, void *arg,
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeFormat_Quote16(/*ascii*/ Dee_formatprinter_t printer, void *arg,
                   /*utf-16-without-surrogates*/ uint16_t const *__restrict text, size_t textlen) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	uint16_t const *end = text + textlen;
 	while (text < end) {
 		char escapeseq[COMPILER_STRLEN("\\uFFFF")], *esc;
@@ -1375,10 +1375,10 @@ err:
 	return temp;
 }
 
-PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_Quote32(/*ascii*/ dformatprinter printer, void *arg,
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeFormat_Quote32(/*ascii*/ Dee_formatprinter_t printer, void *arg,
                   /*utf-32*/ uint32_t const *__restrict text, size_t textlen) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	uint32_t const *end = text + textlen;
 	while (text < end) {
 		char escapeseq[COMPILER_STRLEN("\\UFFFFFFFF")], *esc;
@@ -1454,11 +1454,11 @@ err:
 
 
 /* Repeat the given `ch' a total of `count' times. */
-PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
-DeeFormat_Repeat(/*ascii*/ dformatprinter printer, void *arg,
+PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+DeeFormat_Repeat(/*ascii*/ Dee_formatprinter_t printer, void *arg,
                  /*ascii*/ char ch, size_t count) {
 	char buffer[128];
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	if (COMPILER_LENOF(buffer) >= count) {
 		memset(buffer, ch, count);
 		return (*printer)(arg, buffer, count);
@@ -1473,14 +1473,14 @@ DeeFormat_Repeat(/*ascii*/ dformatprinter printer, void *arg,
 		if unlikely(!buf)
 			return -1;
 		memset(buf, ch, count);
-		return (dssize_t)count;
+		return (Dee_ssize_t)count;
 	} else if (printer == &bytes_printer_print) {
 		unsigned char *buf;
 		buf = bytes_printer_alloc((struct bytes_printer *)arg, count);
 		if unlikely(!buf)
 			return -1;
 		memset(buf, ch, count);
-		return (dssize_t)count;
+		return (Dee_ssize_t)count;
 	}
 
 	result = 0;
@@ -1503,12 +1503,12 @@ err:
 
 /* Repeat `str...+=length' such that a total of `total_characters'
  * characters (not bytes, but characters) are printed. */
-DFUNDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_RepeatUtf8(/*utf-8*/ dformatprinter printer, void *arg,
+DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeFormat_RepeatUtf8(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
                      /*utf-8*/ char const *__restrict str,
                      size_t length, size_t total_characters) {
 	size_t utf8_length, i;
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	ASSERT(length != 0);
 	/* Optimization for single-ascii-character repetitions.
 	 * NOTE: Because the input should be UTF-8, str[0] should
@@ -1541,10 +1541,8 @@ DeeFormat_RepeatUtf8(/*utf-8*/ dformatprinter printer, void *arg,
 		/* Print the remainder as a portion of the given repetition-string. */
 		i = 0;
 		while (i < length && total_characters--) {
-			uint8_t len;
-			len = unicode_utf8seqlen[(uint8_t)str[i]];
-			if unlikely(!len)
-				len = 1;
+			uint8_t chr = (uint8_t)str[i];
+			uint8_t len = unicode_utf8seqlen_safe[chr];
 			i += len;
 		}
 		temp = (*printer)(arg, str, i);
@@ -1560,11 +1558,11 @@ err:
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DPRINTER_CC
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DPRINTER_CC
 sprintf_callback(char **__restrict pbuffer,
                  char const *__restrict data, size_t datalen) {
 	*pbuffer = (char *)mempcpyc(*pbuffer, data, datalen, sizeof(char));
-	return (dssize_t)datalen;
+	return (Dee_ssize_t)datalen;
 }
 
 struct snprintf_data {
@@ -1572,7 +1570,7 @@ struct snprintf_data {
 	size_t siz;
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DPRINTER_CC
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DPRINTER_CC
 snprintf_callback(struct snprintf_data *__restrict arg,
                   char const *__restrict data, size_t datalen) {
 	if (arg->siz) {
@@ -1582,13 +1580,13 @@ snprintf_callback(struct snprintf_data *__restrict arg,
 		arg->siz -= copy_size;
 	}
 	arg->buf += datalen;
-	return (dssize_t)datalen;
+	return (Dee_ssize_t)datalen;
 }
 
 PUBLIC NONNULL((1, 2)) char *DCALL
 Dee_vsprintf(char *__restrict buffer,
              char const *__restrict format, va_list args) {
-	if unlikely(DeeFormat_VPrintf((dformatprinter)&sprintf_callback,
+	if unlikely(DeeFormat_VPrintf((Dee_formatprinter_t)&sprintf_callback,
 	                              (void *)&buffer, format, args) < 0)
 		goto err;
 	*buffer = '\0';
@@ -1603,7 +1601,7 @@ Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
 	struct snprintf_data data;
 	data.buf = buffer;
 	data.siz = bufsize;
-	if unlikely(DeeFormat_VPrintf((dformatprinter)&snprintf_callback,
+	if unlikely(DeeFormat_VPrintf((Dee_formatprinter_t)&snprintf_callback,
 	                              &data, format, args) < 0)
 		goto err;
 	if (data.siz)
@@ -1663,7 +1661,7 @@ kwds_find_entry(DeeKwdsObject *__restrict self, size_t index) {
 }
 
 struct print_keyword_argument_type_data {
-	dformatprinter pkatd_printer;
+	Dee_formatprinter_t pkatd_printer;
 	void          *pkatd_arg;
 	size_t         pkatd_argc;
 };
@@ -1704,12 +1702,12 @@ err:
  * If given, also include keyword names & types from `kw'
  * >> foo(10, 1.0, "bar", enabled: true);
  * Printed: "int, float, string, enabled: bool" */
-PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) dssize_t
-(DCALL DeeFormat_PrintArgumentTypesKw)(dformatprinter printer, void *arg,
+PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) Dee_ssize_t
+(DCALL DeeFormat_PrintArgumentTypesKw)(Dee_formatprinter_t printer, void *arg,
                                        size_t argc, DeeObject *const *argv,
                                        DeeObject *kw) {
 	size_t i;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	if (kw && DeeKwds_Check(kw)) {
 		size_t kwargc = DeeKwds_SIZE(kw);
 		struct kwds_entry *entry;

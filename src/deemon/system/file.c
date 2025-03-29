@@ -1362,12 +1362,8 @@ nt_write_utf8_to_console(SystemFile *__restrict self,
 	size_t result;
 	end = (iter = buffer) + bufsize;
 	while (iter < end) {
-		uint8_t len, ch = *iter;
-		if (ch <= 0xc0) {
-			++iter;
-			continue;
-		}
-		len = unicode_utf8seqlen[ch];
+		uint8_t chr = *iter;
+		uint8_t len = unicode_utf8seqlen_safe[chr];
 		ASSERT(len != 0);
 		if (len > (size_t)(end - iter))
 			break;

@@ -59,6 +59,7 @@ struct Dee_string_object;
 
 #ifdef DEE_SOURCE
 #undef unicode_utf8seqlen
+#undef unicode_utf8seqlen_safe
 #undef unicode_readutf8_n
 #undef unicode_readutf8
 #undef unicode_readutf8_rev
@@ -90,6 +91,7 @@ struct Dee_string_object;
 #undef UNICODE_UTF8_CURLEN
 #undef UNICODE_UTF8_DEFLEN
 #define unicode_utf8seqlen           Dee_unicode_utf8seqlen
+#define unicode_utf8seqlen_safe      Dee_unicode_utf8seqlen_safe
 #define unicode_readutf8_n           Dee_unicode_readutf8_n
 #define unicode_readutf8             Dee_unicode_readutf8
 #define unicode_readutf8_rev         Dee_unicode_readutf8_rev
@@ -129,6 +131,10 @@ struct Dee_string_object;
 
 /* UTF-8 helper API */
 DDATDEF uint8_t const Dee_unicode_utf8seqlen[256];
+
+/* Same as `Dee_unicode_utf8seqlen', but illegal
+ * bytes are encoded as "1" instead of "0" */
+DDATDEF uint8_t const Dee_unicode_utf8seqlen_safe[256];
 #ifdef __INTELLISENSE__
 extern "C++" {
 WUNUSED ATTR_INOUT(1) uint32_t DCALL Dee_unicode_readutf8(unsigned char const **__restrict ptext);
@@ -172,12 +178,12 @@ DFUNDEF ATTR_INOUT(1) uint32_t (DCALL Dee_unicode_readutf8_rev_n)(char const **_
 #define Dee_unicode_readutf8_n(ptext, text_end)       (Dee_unicode_readutf8_n)((char const **)(ptext), (char const *)(text_end))
 #define Dee_unicode_readutf8_rev(ptext)               (Dee_unicode_readutf8_rev_n)((char const **)(ptext), (char const *)0)
 #define Dee_unicode_readutf8_rev_n(ptext, text_start) (Dee_unicode_readutf8_rev_n)((char const **)(ptext), (char const *)(text_start))
-#define Dee_unicode_skiputf8(text)                    ((char *)(text) + Dee_unicode_utf8seqlen[(uint8_t)(*(text))])
+#define Dee_unicode_skiputf8(text)                    ((char *)(text) + Dee_unicode_utf8seqlen_safe[(uint8_t)(*(text))])
 #define Dee_unicode_skiputf8_c(text, count)           (Dee_unicode_skiputf8_c)((char const *)(text), count)
 LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
 (DCALL Dee_unicode_skiputf8_c)(char const *__restrict text, size_t count) {
 	while (count--)
-		text += Dee_unicode_utf8seqlen[(uint8_t)*text];
+		text += Dee_unicode_utf8seqlen_safe[(uint8_t)*text];
 	return (char *)text;
 }
 #endif /* !__INTELLISENSE__ */
