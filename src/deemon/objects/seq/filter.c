@@ -895,6 +895,10 @@ PRIVATE struct type_method_hint tpconst filter_method_hints[] = {
 	TYPE_METHOD_HINT(seq_trygetfirst, &filter_trygetfirst),
 	TYPE_METHOD_HINT(seq_trygetlast, &filter_trygetlast),
 	TYPE_METHOD_HINT(seq_enumerate_index, &filter_mh_seq_enumerate_index),
+
+	/* TODO: any() -> Sequence.any(__seq__, e -> __filter__(e) && e) */
+	/* TODO: all() -> Sequence.all(__seq__, e -> !__filter__(e) || e) */
+	/* TODO: parity() -> Sequence.parity(__seq__, e -> __filter__(e) && e) */
 	TYPE_METHOD_HINT_END
 };
 

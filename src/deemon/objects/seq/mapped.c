@@ -30,6 +30,7 @@
 #include <deemon/seq.h>
 /**/
 
+#include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "mapped.h"
@@ -544,14 +545,72 @@ STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj2));
 #define mapped_init generic_proxy2__init
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mapped_mh_seq_any(SeqMapped *__restrict self) {
+	return DeeObject_InvokeMethodHint(seq_any_with_key, self->sm_seq, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mapped_mh_seq_any_with_range(SeqMapped *__restrict self, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_any_with_range_and_key, self->sm_seq,
+	                                  start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mapped_mh_seq_all(SeqMapped *__restrict self) {
+	return DeeObject_InvokeMethodHint(seq_all_with_key, self->sm_seq, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mapped_mh_seq_all_with_range(SeqMapped *__restrict self, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_all_with_range_and_key, self->sm_seq,
+	                                  start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mapped_mh_seq_parity(SeqMapped *__restrict self) {
+	return DeeObject_InvokeMethodHint(seq_parity_with_key, self->sm_seq, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mapped_mh_seq_parity_with_range(SeqMapped *__restrict self, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_parity_with_range_and_key, self->sm_seq,
+	                                  start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mapped_mh_seq_sort(SeqMapped *__restrict self, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_sort_with_key, self->sm_seq,
+	                                  start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_mh_seq_sorted(SeqMapped *__restrict self, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_sorted_with_key, self->sm_seq,
+	                                  start, end, self->sm_mapper);
+}
+
 PRIVATE struct type_method tpconst mapped_methods[] = {
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_HINTREF(Sequence_any),
+	TYPE_METHOD_HINTREF(Sequence_all),
+	TYPE_METHOD_HINTREF(Sequence_parity),
+	TYPE_METHOD_HINTREF(Sequence_sort),
+	TYPE_METHOD_HINTREF(Sequence_sorted),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst mapped_method_hints[] = {
 	TYPE_METHOD_HINT(seq_enumerate, &mapped_mh_seq_enumerate),
 	TYPE_METHOD_HINT(seq_enumerate_index, &mapped_mh_seq_enumerate_index),
+	TYPE_METHOD_HINT(seq_any, &mapped_mh_seq_any),
+	TYPE_METHOD_HINT(seq_any_with_range, &mapped_mh_seq_any_with_range),
+	TYPE_METHOD_HINT(seq_all, &mapped_mh_seq_all),
+	TYPE_METHOD_HINT(seq_all_with_range, &mapped_mh_seq_all_with_range),
+	TYPE_METHOD_HINT(seq_parity, &mapped_mh_seq_parity),
+	TYPE_METHOD_HINT(seq_parity_with_range, &mapped_mh_seq_parity_with_range),
+	TYPE_METHOD_HINT(seq_sort, &mapped_mh_seq_sort),
+	TYPE_METHOD_HINT(seq_sorted, &mapped_mh_seq_sorted),
 	TYPE_METHOD_HINT_END
 };
 

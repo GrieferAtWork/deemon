@@ -2178,6 +2178,32 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 }
 
 
+/* Check if "self" has explicit definitions of some method hint related to "id" */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool
+(DCALL DeeType_HasRelatedMethodHint)(DeeTypeObject *__restrict self,
+                                     enum Dee_tmh_id id) {
+	unsigned int iter;
+	struct mh_init_spec const *base = &mh_init_specs[id];
+	/* XXX: This assumes that related method hints are always together.
+	 *      This is always the case right now, but doesn't get asserted
+	 *      anywhere! (add this as an assertion to "method-hints.dee") */
+	for (iter = (unsigned int)id; iter--;) {
+		struct mh_init_spec const *specs = &mh_init_specs[iter];
+		if (specs->mis_attr_prim != base->mis_attr_prim)
+			break;
+		if (DeeType_GetExplicitMethodHint(self, (enum Dee_tmh_id)iter))
+			return true;
+	}
+	for (iter = (unsigned int)id; (++iter) < (unsigned int)Dee_TMH_COUNT;) {
+		struct mh_init_spec const *specs = &mh_init_specs[iter];
+		if (specs->mis_attr_prim != base->mis_attr_prim)
+			break;
+		if (DeeType_GetExplicitMethodHint(self, (enum Dee_tmh_id)iter))
+			return true;
+	}
+	return false;
+}
+
 
 
 #undef SEARCH_IN_TYPE_FOR_ATTRIBUTES
@@ -2214,6 +2240,11 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 			result = DeeType_GetExplicitOrImplicitMethodHint((DeeTypeObject *)info->ai_decl, id);
 			if (result)
 				return result;
+			/* If the type has an explicit definition for a related method hints,
+			 * return "NULL" here, so the caller can check how the hint should be
+			 * implemented redundantly. */
+			if (DeeType_HasRelatedMethodHint((DeeTypeObject *)info->ai_decl, id))
+				return NULL;
 			result = withattr;
 		}
 		break;
@@ -2261,6 +2292,12 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 				if likely(result)
 					return result;
 			}
+
+			/* If the type has an explicit definition for a related method hints,
+			 * return "NULL" here, so the caller can check how the hint should be
+			 * implemented redundantly. */
+			if (DeeType_HasRelatedMethodHint((DeeTypeObject *)info->ai_decl, id))
+				return NULL;
 			result = withattr;
 		}
 		break;

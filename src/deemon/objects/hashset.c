@@ -1687,6 +1687,33 @@ hashset_mh_pop(HashSet *self) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+hashset_mh_pop_with_default(HashSet *self, DeeObject *def) {
+	size_t i;
+	DREF DeeObject *result;
+	DeeHashSet_LockWrite(self);
+	for (i = 0; i <= self->hs_mask; ++i) {
+		struct hashset_item *item = &self->hs_elem[i];
+		if ((result = item->hsi_key) == NULL)
+			continue; /* Unused slot. */
+		if (result == dummy)
+			continue; /* Deleted slot. */
+		item->hsi_key = dummy;
+		Dee_Incref(dummy);
+		ASSERT(self->hs_used);
+		if (--self->hs_used <= self->hs_size / 2)
+			hashset_rehash(self, -1);
+		ASSERT((self->hs_elem == empty_hashset_items) == (self->hs_mask == 0));
+		ASSERT((self->hs_elem == empty_hashset_items) == (self->hs_used == 0));
+		ASSERT((self->hs_elem == empty_hashset_items) == (self->hs_size == 0));
+		DeeHashSet_LockEndWrite(self);
+		return result;
+	}
+	DeeHashSet_LockEndWrite(self);
+	/* HashSet is already empty. */
+	return_reference_(def);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashset_mh_clear(HashSet *self) {
 	hashset_clear(self);
@@ -1738,6 +1765,7 @@ PRIVATE struct type_method_hint tpconst hashset_method_hints[] = {
 	TYPE_METHOD_HINT_F(set_remove, &DeeHashSet_Remove, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(set_unify, &DeeHashSet_Unify, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(set_pop, &hashset_mh_pop, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_pop_with_default, &hashset_mh_pop_with_default, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_clear, &hashset_mh_clear, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_END
 };

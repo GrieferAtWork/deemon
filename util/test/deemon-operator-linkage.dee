@@ -681,7 +681,7 @@ Type_assert(deemon.HashSet, {
 	"mh_set_remove":                              "DeeHashSet_Remove",
 	"mh_set_removeall":                           "default__set_removeall__with__set_remove",
 	"mh_set_pop":                                 "hashset_mh_pop",
-	"mh_set_pop_with_default":                    "default__set_pop_with_default__with_callattr_pop",
+	"mh_set_pop_with_default":                    "hashset_mh_pop_with_default",
 	"mh_map_operator_iter":                       "default__map_operator_iter__with__seq_operator_iter",
 	"mh_map_operator_foreach_pair":               "default__map_operator_foreach_pair__with__seq_operator_foreach_pair",
 	"mh_map_operator_sizeob":                     "default__map_operator_sizeob__with__map_operator_size",
@@ -1627,6 +1627,25 @@ Type_assert(rt.MapFromAttr, {
 	"mh_map_popitem":                             "default__map_popitem__with__seq_trygetfirst__and__map_operator_delitem",
 });
 
+Type_assert(rt.SeqMapped, {
+	"mh_seq_any":                       "mapped_mh_seq_any",
+	"mh_seq_any_with_key":              "default__seq_any_with_key__with__seq_operator_foreach",
+	"mh_seq_any_with_range":            "mapped_mh_seq_any_with_range",
+	"mh_seq_any_with_range_and_key":    "default__seq_any_with_range_and_key__with__seq_enumerate_index",
+	"mh_seq_all":                       "mapped_mh_seq_all",
+	"mh_seq_all_with_key":              "default__seq_all_with_key__with__seq_operator_foreach",
+	"mh_seq_all_with_range":            "mapped_mh_seq_all_with_range",
+	"mh_seq_all_with_range_and_key":    "default__seq_all_with_range_and_key__with__seq_enumerate_index",
+	"mh_seq_parity":                    "mapped_mh_seq_parity",
+	"mh_seq_parity_with_key":           "default__seq_parity_with_key__with__seq_operator_foreach",
+	"mh_seq_parity_with_range":         "mapped_mh_seq_parity_with_range",
+	"mh_seq_parity_with_range_and_key": "default__seq_parity_with_range_and_key__with__seq_enumerate_index",
+	"mh_seq_sort":                      "mapped_mh_seq_sort",
+	"mh_seq_sort_with_key":             "default__seq_sort_with_key__unsupported",
+	"mh_seq_sorted":                    "mapped_mh_seq_sorted",
+	"mh_seq_sorted_with_key":           "default__seq_sorted_with_key__with__seq_operator_size__and__seq_operator_trygetitem_index",
+});
+
 #endif  /* !__MAIN__ */
 
 #ifdef __MAIN__
@@ -1655,7 +1674,7 @@ function dumpType(typ: Type) {
 
 
 class SetList: Set, List {}
-dumpType(rt.MapFromAttr);
+dumpType(rt.SeqMapped);
 
 #endif /* __MAIN__ */
 
