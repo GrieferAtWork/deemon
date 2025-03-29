@@ -32,7 +32,7 @@ DECL_BEGIN
  * Base class for callable wrapper types, such as ObjMethod, CMethod,
  * InstanceMethod or just a plain old function. There is no particular
  * reason why this exists, other than to allow user-code to query
- * for a type for that particular set of objects type simply writing
+ * for a type for that particular set of objects by simply writing
  * `x is Callable from deemon' */
 DDATDEF DeeTypeObject DeeCallable_Type;
 #define DeeCallable_Check(ob) DeeObject_Implements(ob, &DeeCallable_Type)

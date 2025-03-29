@@ -1771,6 +1771,7 @@ urodict_deepcopy(URoDict *__restrict self) {
 			Dee_Decref(key_copy);
 			goto err;
 		}
+
 		/* Insert the copied key & value into the new Dict. */
 		temp = URoDict_Insert(&result, key_copy, value_copy);
 		Dee_Decref(value_copy);
