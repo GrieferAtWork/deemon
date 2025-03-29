@@ -137,6 +137,10 @@ printProxyObjectMethodHintWrapper("seq_operator_setrange_index_n");
 printProxyObjectMethodHintWrapper("seq_operator_contains");
 printProxyObjectMethodHintWrapper("seq_clear");
 printProxyObjectMethodHintWrapper("seq_contains");
+printProxyObjectMethodHintWrapper("seq_boundfirst");
+printProxyObjectMethodHintWrapper("seq_delfirst");
+printProxyObjectMethodHintWrapper("seq_boundlast");
+printProxyObjectMethodHintWrapper("seq_dellast");
 printProxyObjectMethodHintWrapper("set_operator_iter");
 printProxyObjectMethodHintWrapper("set_operator_size");
 printProxyObjectMethodHintWrapper("set_operator_sizeob");
@@ -183,6 +187,10 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL generic_proxy__seq_operator_setrange_in
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__seq_operator_contains(ProxyObject *self, DeeObject *item); /* DeeObject_InvokeMethodHint(seq_operator_contains, self->po_obj, item) */
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_clear(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_clear, self->po_obj) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__seq_contains(ProxyObject *self, DeeObject *item); /* DeeObject_InvokeMethodHint(seq_contains, self->po_obj, item) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_boundfirst(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_boundfirst, self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_delfirst(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_delfirst, self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_boundlast(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_boundlast, self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_dellast(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_dellast, self->po_obj) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__set_operator_iter(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(set_operator_iter, self->po_obj) */
 INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy__set_operator_size(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(set_operator_size, self->po_obj) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__set_operator_sizeob(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(set_operator_sizeob, self->po_obj) */

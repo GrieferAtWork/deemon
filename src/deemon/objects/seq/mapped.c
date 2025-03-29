@@ -545,6 +545,66 @@ STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj2));
 #define mapped_init generic_proxy2__init
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_getfirst(SeqMapped *__restrict self) {
+	DREF DeeObject *result, *mapped;
+	result = DeeObject_InvokeMethodHint(seq_getfirst, self->sm_seq);
+	if unlikely(!result)
+		goto err;
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_getlast(SeqMapped *__restrict self) {
+	DREF DeeObject *result, *mapped;
+	result = DeeObject_InvokeMethodHint(seq_getlast, self->sm_seq);
+	if unlikely(!result)
+		goto err;
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_trygetfirst(SeqMapped *__restrict self) {
+	DREF DeeObject *result, *mapped;
+	result = DeeObject_InvokeMethodHint(seq_trygetfirst, self->sm_seq);
+	if unlikely(!ITER_ISOK(result))
+		return result;
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_trygetlast(SeqMapped *__restrict self) {
+	DREF DeeObject *result, *mapped;
+	result = DeeObject_InvokeMethodHint(seq_trygetlast, self->sm_seq);
+	if unlikely(!ITER_ISOK(result))
+		return result;
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+}
+
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_boundfirst generic_proxy__seq_boundfirst
+#define mapped_delfirst   generic_proxy__seq_delfirst
+#define mapped_boundlast  generic_proxy__seq_boundlast
+#define mapped_dellast    generic_proxy__seq_dellast
+
+PRIVATE struct type_getset tpconst mapped_getsets[] = {
+	TYPE_GETSET_BOUND_NODOC(STR_first, &mapped_getfirst, &mapped_delfirst, NULL, &mapped_boundfirst),
+	TYPE_GETSET_BOUND_NODOC(STR_last, &mapped_getlast, &mapped_dellast, NULL, &mapped_boundlast),
+	TYPE_GETSET_END
+};
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapped_mh_seq_any(SeqMapped *__restrict self) {
 	return DeeObject_InvokeMethodHint(seq_any_with_key, self->sm_seq, self->sm_mapper);
@@ -603,6 +663,8 @@ PRIVATE struct type_method tpconst mapped_methods[] = {
 PRIVATE struct type_method_hint tpconst mapped_method_hints[] = {
 	TYPE_METHOD_HINT(seq_enumerate, &mapped_mh_seq_enumerate),
 	TYPE_METHOD_HINT(seq_enumerate_index, &mapped_mh_seq_enumerate_index),
+	TYPE_METHOD_HINT(seq_trygetfirst, &mapped_trygetfirst),
+	TYPE_METHOD_HINT(seq_trygetlast, &mapped_trygetlast),
 	TYPE_METHOD_HINT(seq_any, &mapped_mh_seq_any),
 	TYPE_METHOD_HINT(seq_any_with_range, &mapped_mh_seq_any_with_range),
 	TYPE_METHOD_HINT(seq_all, &mapped_mh_seq_all),
@@ -654,7 +716,7 @@ INTERN DeeTypeObject SeqMapped_Type = {
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ mapped_methods,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ mapped_getsets,
 	/* .tp_members       = */ mapped_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

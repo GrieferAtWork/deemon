@@ -387,6 +387,26 @@ generic_proxy__seq_contains(ProxyObject *self, DeeObject *item){
 	return DeeObject_InvokeMethodHint(seq_contains, self->po_obj, item);
 }
 
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__seq_boundfirst(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(seq_boundfirst, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__seq_delfirst(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(seq_delfirst, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__seq_boundlast(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(seq_boundlast, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__seq_dellast(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(seq_dellast, self->po_obj);
+}
+
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_proxy__set_operator_iter(ProxyObject *__restrict self){
 	return DeeObject_InvokeMethodHint(set_operator_iter, self->po_obj);
