@@ -3075,13 +3075,47 @@ err:
 	return -1;
 }
 
+struct instance_autoload_foreach_data {
+	DeeTypeObject        *ialf_tp_self;
+	struct class_desc    *ialf_desc;
+	struct instance_desc *ialf_instance;
+	uint16_t              ialf_next_table_index;
+};
+
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+instance_autoload_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct class_attribute *at;
+	struct instance_autoload_foreach_data *data;
+	data = (struct instance_autoload_foreach_data *)arg;
+	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
+		goto err;
+	at = DeeClassDesc_QueryInstanceAttribute(data->ialf_desc, key);
+	if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
+		err_unknown_attribute_string(data->ialf_tp_self,
+		                             DeeString_STR(key),
+		                             ATTR_ACCESS_SET);
+		goto err;
+	}
+	if unlikely(at->ca_addr < data->ialf_next_table_index) {
+		/* Member had already been initialized via a positional argument! */
+		err_keywords_shadows_positional(DeeString_STR(key));
+		goto err;
+	}
+	if unlikely(DeeInstance_SetBasicAttribute(data->ialf_desc,
+	                                          data->ialf_instance,
+	                                          at, value))
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_autoload_members_kw(DeeTypeObject *tp_self,
                              struct class_desc *__restrict desc,
                              struct instance_desc *__restrict instance,
                              size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	uint16_t next_table_index;
-	DREF DeeObject *iterator, *elem, *data[2];
 	if (!kw)
 		return instance_autoload_members(tp_self, desc, instance, argc, argv);
 	next_table_index = 0;
@@ -3128,6 +3162,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 		}
 	} else {
 		size_t i;
+		struct instance_autoload_foreach_data data;
 		/* Load positional arguments into the first positional_argc instance members. */
 		for (i = 0; i < argc; ++i) {
 			struct class_attribute *at;
@@ -3139,46 +3174,14 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 			if unlikely(DeeInstance_SetBasicAttribute(desc, instance, at, argv[i]))
 				goto err;
 		}
-		iterator = DeeObject_Iter((DeeObject *)kw);
-		if unlikely(!iterator)
+		data.ialf_tp_self          = tp_self;
+		data.ialf_desc             = desc;
+		data.ialf_instance         = instance;
+		data.ialf_next_table_index = next_table_index;
+		if (DeeObject_ForeachPair(kw, &instance_autoload_foreach_pair_cb, &data))
 			goto err;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-			struct class_attribute *at;
-			if unlikely(DeeSeq_Unpack(elem, 2, data))
-				goto err_iter_elem;
-			Dee_Decref(elem);
-			if (DeeObject_AssertTypeExact(data[0], &DeeString_Type))
-				goto err_iter_data;
-			at = DeeClassDesc_QueryInstanceAttribute(desc, data[0]);
-			if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
-				err_unknown_attribute_string(tp_self,
-				                      DeeString_STR(data[0]),
-				                      ATTR_ACCESS_SET);
-				goto err_iter_data;
-			}
-			if unlikely(at->ca_addr < next_table_index) {
-				/* Member had already been initialized via a positional argument! */
-				err_keywords_shadows_positional(DeeString_STR(data[0]));
-				goto err_iter_data;
-			}
-			if unlikely(DeeInstance_SetBasicAttribute(desc, instance, at, data[1]))
-				goto err_iter_data;
-			Dee_Decref(data[1]);
-			Dee_Decref(data[0]);
-		}
-		if unlikely(!elem)
-			goto err_iter;
-		Dee_Decref(iterator);
 	}
 	return 0;
-err_iter_data:
-	Dee_Decref(data[1]);
-	Dee_Decref(data[0]);
-	goto err_iter;
-err_iter_elem:
-	Dee_Decref(elem);
-err_iter:
-	Dee_Decref(iterator);
 err:
 	return -1;
 }
