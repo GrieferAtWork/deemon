@@ -2846,60 +2846,42 @@ err:
 }
 
 /* Copy triples from `iter' into `self' */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rbtree_insert_iterator(RBTree *self, DeeObject *iter) {
-	DREF DeeObject *elem;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		int temp;
-		size_t count;
-		DREF DeeObject *items[3];
-		count = DeeObject_InvokeMethodHint(seq_unpack_ex, elem, 2, 3, items);
-		Dee_Decref(elem);
-		if unlikely(count == (size_t)-1)
-			goto err;
-		ASSERT(count == 2 || count == 3);
-		if (count == 2) {
-			/* In this case, the first item is expected to be a range-object without a step. */
-			DREF DeeObject *range;
-			int unpack_err;
-			items[2] = items[1];
-			range    = items[0];
-			unpack_err = unpack_range(range, items);
-			Dee_Decref(range);
-			if unlikely(unpack_err) {
-				Dee_Decref(items[2]);
-				goto err;
-			}
-		}
-
-		/* At this point, `items' is {minkey,maxkey,value}
-		 * Use these values to fill in a range. */
-		temp = rbtree_setrange(self, items[0], items[1], items[2]);
-		Dee_Decrefv_unlikely(items, 3);
-		if unlikely(temp)
-			goto err;
-	}
-	if unlikely(!elem)
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+rbtree_insert_foreach_cb(void *arg, DeeObject *item) {
+	int temp;
+	size_t count;
+	DREF DeeObject *items[3];
+	RBTree *self = (RBTree *)arg;
+	count = DeeObject_InvokeMethodHint(seq_unpack_ex, item, 2, 3, items);
+	if unlikely(count == (size_t)-1)
 		goto err;
-	return 0;
+	ASSERT(count == 2 || count == 3);
+	if (count == 2) {
+		/* In this case, the first item is expected to be a range-object without a step. */
+		DREF DeeObject *range;
+		int unpack_err;
+		items[2] = items[1];
+		range    = items[0];
+		unpack_err = unpack_range(range, items);
+		Dee_Decref(range);
+		if unlikely(unpack_err) {
+			Dee_Decref(items[2]);
+			goto err;
+		}
+	}
+
+	/* At this point, `items' is {minkey, maxkey, value}
+	 * Use these values to fill in a range. */
+	temp = rbtree_setrange(self, items[0], items[1], items[2]);
+	Dee_Decrefv_unlikely(items, 3);
+	return (Dee_ssize_t)temp;
 err:
 	return -1;
 }
 
 /* Copy triples from `seq' into `self' */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rbtree_insert_sequence(RBTree *self, DeeObject *seq) {
-	int result;
-	DREF DeeObject *iter;
-	iter = DeeObject_Iter(seq);
-	if unlikely(!iter)
-		goto err;
-	result = rbtree_insert_iterator(self, iter);
-	Dee_Decref(iter);
-	return result;
-err:
-	return -1;
-}
+#define rbtree_insert_sequence(self, seq) \
+	DeeObject_Foreach(seq, &rbtree_insert_foreach_cb, self)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_update(RBTree *self, size_t argc, DeeObject *const *argv) {
