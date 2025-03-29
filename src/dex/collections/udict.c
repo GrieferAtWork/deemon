@@ -350,41 +350,35 @@ err:
 	return -1;
 }
 
+#if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
+#define udict_setitem_as_foreach_PTR ((Dee_foreach_pair_t)(Dee_funptr_t)&udict_setitem)
+#else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
+#define udict_setitem_as_foreach_PTR (&udict_setitem_as_foreach)
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+udict_setitem_as_foreach(void *arg, DeeObject *key, DeeObject *value) {
+	return udict_setitem((UDict *)arg, key, value);
+}
+#endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-udict_init_iterator(UDict *self, DeeObject *iterator) {
+udict_init_sequence(UDict *__restrict self,
+                    DeeObject *__restrict sequence) {
+	/* TODO: Optimizations for `DeeDict_Type' */
+	/* TODO: Optimizations for `DeeRoDict_Type' */
+	/* TODO: Optimizations for `URoDict_Type' */
+
 	self->ud_mask = 0;
 	self->ud_size = 0;
 	self->ud_used = 0;
 	self->ud_elem = (struct udict_item *)empty_dict_items;
 	Dee_atomic_rwlock_init(&self->ud_lock);
 	weakref_support_init(self);
-	if unlikely(udict_insert_iterator(self, iterator)) {
-		udict_fini(self);
-		goto err;
-	}
+	if (DeeObject_ForeachPair(sequence, udict_setitem_as_foreach_PTR, self))
+		goto err_self;
 	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-udict_init_sequence(UDict *__restrict self,
-                    DeeObject *__restrict sequence) {
-	int error;
-	DREF DeeObject *iterator;
-
-	/* TODO: Optimizations for `DeeDict_Type' */
-	/* TODO: Optimizations for `DeeRoDict_Type' */
-	/* TODO: Optimizations for `URoDict_Type' */
-
-	/* TODO: Use DeeObject_ForeachPair() */
-	iterator = DeeObject_Iter(sequence);
-	if unlikely(!iterator)
-		goto err;
-	error = udict_init_iterator(self, iterator);
-	Dee_Decref(iterator);
-	return error;
-err:
+err_self:
+	udict_fini(self);
+/*err:*/
 	return -1;
 }
 
