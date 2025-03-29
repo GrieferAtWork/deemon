@@ -41,7 +41,7 @@ typedef struct {
 	size_t               rv_length;   /* [const] The number of items in this vector. */
 	DREF DeeObject     **rv_vector;   /* [0..1][lock(*rv_plock)][0..rv_length][lock(*rv_plock)][const]
 	                                   * The vector of objects that is being referenced.
-	                                   * NOTE: Elements of this vector must not be changed. */
+	                                   * NOTE: Elements of this vector may only be changed when `RefVector_IsWritable()'. */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t *rv_plock;    /* [0..1][const] An optional lock that must be held when accessing the list.
 	                                   * Also: when non-NULL, items of the vector can be modified. */

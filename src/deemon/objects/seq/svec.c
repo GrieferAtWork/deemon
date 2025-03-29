@@ -442,9 +442,9 @@ rvec_delrange_index_n(RefVector *__restrict self, Dee_ssize_t i_begin) {
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-PRIVATE NONNULL((1, 3)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 rvec_setitem_index_fast(RefVector *self, size_t index,
-                      /*inherit(always)*/ DREF DeeObject *value) {
+                        /*inherit(always)*/ DREF DeeObject *value) {
 	DREF DeeObject *oldobj;
 	ASSERT(index < self->rv_length);
 	ASSERT(RefVector_IsWritable(self));
@@ -455,64 +455,55 @@ rvec_setitem_index_fast(RefVector *self, size_t index,
 	Dee_XDecref(oldobj);
 }
 
-PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-rvec_setrange_index(RefVector *self, Dee_ssize_t i_begin,
-                    Dee_ssize_t i_end, DeeObject *values) {
-	struct Dee_seq_range range;
-	size_t range_size;
-	size_t i, fast_length;
-	DREF DeeObject *elem;
-	if (!RefVector_IsWritable(self))
-		return err_readonly_rvec();
-	DeeSeqRange_Clamp(&range, i_begin, i_end, self->rv_length);
-	range_size = range.sr_end - range.sr_start;
-	fast_length = DeeFastSeq_GetSize_deprecated(values);
-	if (fast_length != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		if (fast_length != range_size)
-			return err_invalid_unpack_size(values, range_size, fast_length);
-		for (i = range.sr_start; i < range.sr_end; ++i) {
-			elem = DeeFastSeq_GetItem_deprecated(values, i - range.sr_start);
-			if unlikely(!elem)
-				goto err;
-			rvec_setitem_index_fast(self, i, elem); /* Inherit reference. */
-		}
-	} else {
-		DREF DeeObject *iterator;
-		iterator = DeeObject_Iter(values); /* TODO: Use DeeObject_Foreach() */
-		if unlikely(!iterator)
-			goto err;
-		for (i = range.sr_start; i < range.sr_end; ++i) {
-			elem = DeeObject_IterNext(iterator);
-			if unlikely(!ITER_ISOK(elem)) {
-				if unlikely(elem == ITER_DONE) {
-					err_invalid_unpack_size(values, range_size,
-					                        i - range.sr_start);
-				}
-err_iterator:
-				Dee_Decref(iterator);
-				goto err;
-			}
-			rvec_setitem_index_fast(self, i, elem); /* Inherit reference. */
-		}
-		/* Make sure that the given iterator ends here! */
-		elem = DeeObject_IterNext(iterator);
-		if unlikely(elem != ITER_DONE) {
-			if (elem) {
-				err_invalid_unpack_iter_size(values, iterator, range_size);
-				Dee_Decref(elem);
-			}
-			goto err_iterator;
-		}
-		Dee_Decref(iterator);
+struct rvec_setrange_enumerate_data {
+	RefVector           *rvsre_self;  /* [1..1] Output ref-vector */
+	struct Dee_seq_range rvsre_range; /* Range of indicates of "self" to assign */
+	size_t               rvsre_rsize; /* [== rvsre_range.sr_end - rvsre_range.sr_start] */
+	size_t               rvsre_mxidx; /* Last encountered index */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+rvec_setrange_enumerate_cb(void *arg, size_t index, DeeObject *item) {
+	struct rvec_setrange_enumerate_data *data;
+	data = (struct rvec_setrange_enumerate_data *)arg;
+	data->rvsre_mxidx = index;
+	if unlikely(index < data->rvsre_rsize) {
+		Dee_XIncref(item); /* Inherited by `rvec_setitem_index_fast()' */
+		rvec_setitem_index_fast(data->rvsre_self,
+		                        data->rvsre_range.sr_start + index,
+		                        item);
 	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+rvec_setrange_index(RefVector *self, Dee_ssize_t start,
+                    Dee_ssize_t end, DeeObject *values) {
+	size_t fsize;
+	struct rvec_setrange_enumerate_data data;
+	if unlikely(!RefVector_IsWritable(self))
+		return err_readonly_rvec();
+	DeeSeqRange_Clamp(&data.rvsre_range, start, end, self->rv_length);
+	data.rvsre_rsize = data.rvsre_range.sr_end - data.rvsre_range.sr_start;
+	fsize = DeeObject_SizeFast(values);
+	if unlikely(fsize != (size_t)-1 && fsize != data.rvsre_rsize)
+		return err_invalid_unpack_size(values, data.rvsre_rsize, fsize);
+	data.rvsre_self  = self;
+	data.rvsre_mxidx = (size_t)-1;
+	if unlikely(DeeObject_InvokeMethodHint(seq_enumerate_index, values,
+	                                       &rvec_setrange_enumerate_cb,
+	                                       &data, 0, fsize))
+		goto err;
+	++data.rvsre_mxidx;
+	if unlikely(data.rvsre_mxidx != data.rvsre_rsize)
+		return err_invalid_unpack_size(values, data.rvsre_rsize, data.rvsre_mxidx);
 	return 0;
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-rvec_setrange_index_n(RefVector *self, Dee_ssize_t start,
-                      DeeObject *values) {
+rvec_setrange_index_n(RefVector *self, Dee_ssize_t start, DeeObject *values) {
 	return rvec_setrange_index(self, start, SSIZE_MAX, values);
 }
 
