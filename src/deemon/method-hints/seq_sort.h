@@ -22,15 +22,71 @@
 /* deemon.Sequence.sort()                                               */
 /************************************************************************/
 [[kw, alias(Sequence.sort)]]
-__seq_sort__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N) {
-	if unlikely(!DeeNone_Check(key)
-	            ? CALL_DEPENDENCY(seq_sort_with_key, self, start, end, key)
-	            : CALL_DEPENDENCY(seq_sort, self, start, end))
+[[docstring("(key:?DCallable=!N)->?Dbool\n"
+            "(start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool")]]
+__seq_sort__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N) {{
+	int error;
+#ifdef __OPTIMIZE_SIZE__
+	if (!kw && argc == 1) {
+		result = CALL_DEPENDENCY(seq_sort_with_key, self, argv[0]);
+		goto check_result;
+	}
+#else /* __OPTIMIZE_SIZE__ */
+	if (!kw) {
+		size_t start, end;
+		switch (argc) {
+		case 0:
+			error = CALL_DEPENDENCY(seq_sort, self, 0, (size_t)-1);
+			goto check_error;
+		case 1:
+			error = CALL_DEPENDENCY(seq_sort_with_key, self, 0, (size_t)-1, argv[0]);
+			goto check_error;
+		case 2:
+		case 3:
+			if (DeeObject_AsSize(argv[0], &start))
+				goto err;
+			if (DeeObject_AsSize(argv[1], &end))
+				goto err;
+			if (argc == 2) {
+				error = CALL_DEPENDENCY(seq_sort, self, start, end);
+			} else {
+				error = CALL_DEPENDENCY(seq_sort_with_key, self, start, end, argv[2]);
+			}
+			goto check_error;
+		default:
+			err_invalid_argc("__seq_sort__", argc, 0, 3);
+			goto err;
+		}
+		__builtin_unreachable();
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_sort__", params: "
+	size_t start = 0, size_t end = (size_t)-1, key:?DCsortable=!N
+");]]]*/
+	struct {
+		size_t start;
+		size_t end;
+		DeeObject *key;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	args.key = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_sort__", &args))
+		goto err;
+/*[[[end]]]*/
+	if (DeeNone_Check(args.key)) {
+		error = CALL_DEPENDENCY(seq_sort, self, args.start, args.end);
+	} else {
+		error = CALL_DEPENDENCY(seq_sort_with_key, self, args.start, args.end, args.key);
+	}
+check_error:
+	if unlikely(error)
 		goto err;
 	return_none;
 err:
 	return NULL;
-}
+}}
 
 
 

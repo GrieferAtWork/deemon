@@ -1056,7 +1056,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_unpackub__(DeeObject *__r
 
 #define DeeMA___seq_any___flags Dee_TYPE_METHOD_FKWDS
 #define DeeMA___seq_any___name  _DeeMA_ATTRSTR(__seq_any__)
-#define DeeMA___seq_any___doc   "(start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"
+#define DeeMA___seq_any___doc   "(key:?DCallable=!N)->?Dbool\n(start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_any_flags DeeMA___seq_any___flags
 #define DeeMA_Sequence_any_name  _DeeMA_ATTRSTR(any)
@@ -1065,7 +1065,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_any__(DeeObject *__restri
 
 #define DeeMA___seq_all___flags Dee_TYPE_METHOD_FKWDS
 #define DeeMA___seq_all___name  _DeeMA_ATTRSTR(__seq_all__)
-#define DeeMA___seq_all___doc   "(start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"
+#define DeeMA___seq_all___doc   "(key:?DCallable=!N)->?Dbool\n(start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_all_flags DeeMA___seq_all___flags
 #define DeeMA_Sequence_all_name  _DeeMA_ATTRSTR(all)
@@ -1074,7 +1074,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_all__(DeeObject *__restri
 
 #define DeeMA___seq_parity___flags Dee_TYPE_METHOD_FKWDS
 #define DeeMA___seq_parity___name  _DeeMA_ATTRSTR(__seq_parity__)
-#define DeeMA___seq_parity___doc   "(start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"
+#define DeeMA___seq_parity___doc   "(key:?DCallable=!N)->?Dbool\n(start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_parity_flags DeeMA___seq_parity___flags
 #define DeeMA_Sequence_parity_name  _DeeMA_ATTRSTR(parity)
@@ -1356,7 +1356,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_reversed__(DeeObject *__r
 
 #define DeeMA___seq_sort___flags Dee_TYPE_METHOD_FKWDS
 #define DeeMA___seq_sort___name  _DeeMA_ATTRSTR(__seq_sort__)
-#define DeeMA___seq_sort___doc   "(start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)"
+#define DeeMA___seq_sort___doc   "(key:?DCallable=!N)->?Dbool\n(start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_sort__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_sort_flags DeeMA___seq_sort___flags
 #define DeeMA_Sequence_sort_name  _DeeMA_ATTRSTR(sort)

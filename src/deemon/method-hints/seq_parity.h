@@ -22,23 +22,75 @@
 /* deemon.Sequence.parity()                                                */
 /************************************************************************/
 [[kw, alias(Sequence.parity)]]
-__seq_parity__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?Dbool {
+[[docstring("(key:?DCallable=!N)->?Dbool\n"
+            "(start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool")]]
+__seq_parity__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?Dbool {{
 	int result;
-	if (start == 0 && end == (size_t)-1) {
-		result = !DeeNone_Check(key)
-		         ? CALL_DEPENDENCY(seq_parity_with_key, self, key)
+#ifdef __OPTIMIZE_SIZE__
+	if (!kw && argc == 1) {
+		result = CALL_DEPENDENCY(seq_parity_with_key, self, argv[0]);
+		goto check_result;
+	}
+#else /* __OPTIMIZE_SIZE__ */
+	if (!kw) {
+		size_t start, end;
+		switch (argc) {
+		case 0:
+			result = CALL_DEPENDENCY(seq_parity, self);
+			goto check_result;
+		case 1:
+			result = CALL_DEPENDENCY(seq_parity_with_key, self, argv[0]);
+			goto check_result;
+		case 2:
+		case 3:
+			if (DeeObject_AsSize(argv[0], &start))
+				goto err;
+			if (DeeObject_AsSize(argv[1], &end))
+				goto err;
+			if (argc == 2) {
+				result = CALL_DEPENDENCY(seq_parity_with_range, self, start, end);
+			} else {
+				result = CALL_DEPENDENCY(seq_parity_with_range_and_key, self, start, end, argv[2]);
+			}
+			goto check_result;
+		default:
+			err_invalid_argc("__seq_parity__", argc, 0, 3);
+			goto err;
+		}
+		__builtin_unreachable();
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_parity__", params: "
+	size_t start = 0, size_t end = (size_t)-1, key:?DCparityable=!N
+");]]]*/
+	struct {
+		size_t start;
+		size_t end;
+		DeeObject *key;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	args.key = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_parity__", &args))
+		goto err;
+/*[[[end]]]*/
+	if (args.start == 0 && args.end == (size_t)-1) {
+		result = !DeeNone_Check(args.key)
+		         ? CALL_DEPENDENCY(seq_parity_with_key, self, args.key)
 		         : CALL_DEPENDENCY(seq_parity, self);
 	} else {
-		result = !DeeNone_Check(key)
-		         ? CALL_DEPENDENCY(seq_parity_with_range_and_key, self, start, end, key)
-		         : CALL_DEPENDENCY(seq_parity_with_range, self, start, end);
+		result = !DeeNone_Check(args.key)
+		         ? CALL_DEPENDENCY(seq_parity_with_range_and_key, self, args.start, args.end, args.key)
+		         : CALL_DEPENDENCY(seq_parity_with_range, self, args.start, args.end);
 	}
+check_result:
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);
 err:
 	return NULL;
-}
+}}
 
 %[define(DEFINE_seq_parity_foreach_cb =
 #ifndef DEFINED_seq_parity_foreach_cb

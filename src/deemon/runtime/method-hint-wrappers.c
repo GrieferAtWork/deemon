@@ -502,6 +502,45 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	int result;
+#ifdef __OPTIMIZE_SIZE__
+	if (!kw && argc == 1) {
+		result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_any_with_key))(self, argv[0]);
+		goto check_result;
+	}
+#else /* __OPTIMIZE_SIZE__ */
+	if (!kw) {
+		size_t start, end;
+		switch (argc) {
+		case 0:
+			result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_any))(self);
+			goto check_result;
+		case 1:
+			result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_any_with_key))(self, argv[0]);
+			goto check_result;
+		case 2:
+		case 3:
+			if (DeeObject_AsSize(argv[0], &start))
+				goto err;
+			if (DeeObject_AsSize(argv[1], &end))
+				goto err;
+			if (argc == 2) {
+				result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_any_with_range))(self, start, end);
+			} else {
+				result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_any_with_range_and_key))(self, start, end, argv[2]);
+			}
+			goto check_result;
+		default:
+			err_invalid_argc("__seq_any__", argc, 0, 3);
+			goto err;
+		}
+		__builtin_unreachable();
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_any__", params: "
+	size_t start = 0, size_t end = (size_t)-1, key:?DCanyable=!N
+");]]]*/
 	struct {
 		size_t start;
 		size_t end;
@@ -512,8 +551,7 @@ DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	args.key = Dee_None;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_any__", &args))
 		goto err;
-{
-	int result;
+/*[[[end]]]*/
 	if (args.start == 0 && args.end == (size_t)-1) {
 		result = !DeeNone_Check(args.key)
 		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_any_with_key))(self, args.key)
@@ -523,15 +561,55 @@ DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_any_with_range_and_key))(self, args.start, args.end, args.key)
 		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_any_with_range))(self, args.start, args.end);
 	}
+check_result:
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);
 err:
 	return NULL;
-}}
+}
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	int result;
+#ifdef __OPTIMIZE_SIZE__
+	if (!kw && argc == 1) {
+		result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_all_with_key))(self, argv[0]);
+		goto check_result;
+	}
+#else /* __OPTIMIZE_SIZE__ */
+	if (!kw) {
+		size_t start, end;
+		switch (argc) {
+		case 0:
+			result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_all))(self);
+			goto check_result;
+		case 1:
+			result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_all_with_key))(self, argv[0]);
+			goto check_result;
+		case 2:
+		case 3:
+			if (DeeObject_AsSize(argv[0], &start))
+				goto err;
+			if (DeeObject_AsSize(argv[1], &end))
+				goto err;
+			if (argc == 2) {
+				result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_all_with_range))(self, start, end);
+			} else {
+				result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_all_with_range_and_key))(self, start, end, argv[2]);
+			}
+			goto check_result;
+		default:
+			err_invalid_argc("__seq_all__", argc, 0, 3);
+			goto err;
+		}
+		__builtin_unreachable();
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_all__", params: "
+	size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
+");]]]*/
 	struct {
 		size_t start;
 		size_t end;
@@ -542,8 +620,7 @@ DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	args.key = Dee_None;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_all__", &args))
 		goto err;
-{
-	int result;
+/*[[[end]]]*/
 	if (args.start == 0 && args.end == (size_t)-1) {
 		result = !DeeNone_Check(args.key)
 		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_all_with_key))(self, args.key)
@@ -553,15 +630,55 @@ DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_all_with_range_and_key))(self, args.start, args.end, args.key)
 		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_all_with_range))(self, args.start, args.end);
 	}
+check_result:
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);
 err:
 	return NULL;
-}}
+}
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	int result;
+#ifdef __OPTIMIZE_SIZE__
+	if (!kw && argc == 1) {
+		result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_parity_with_key))(self, argv[0]);
+		goto check_result;
+	}
+#else /* __OPTIMIZE_SIZE__ */
+	if (!kw) {
+		size_t start, end;
+		switch (argc) {
+		case 0:
+			result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_parity))(self);
+			goto check_result;
+		case 1:
+			result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_parity_with_key))(self, argv[0]);
+			goto check_result;
+		case 2:
+		case 3:
+			if (DeeObject_AsSize(argv[0], &start))
+				goto err;
+			if (DeeObject_AsSize(argv[1], &end))
+				goto err;
+			if (argc == 2) {
+				result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_parity_with_range))(self, start, end);
+			} else {
+				result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_parity_with_range_and_key))(self, start, end, argv[2]);
+			}
+			goto check_result;
+		default:
+			err_invalid_argc("__seq_parity__", argc, 0, 3);
+			goto err;
+		}
+		__builtin_unreachable();
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_parity__", params: "
+	size_t start = 0, size_t end = (size_t)-1, key:?DCparityable=!N
+");]]]*/
 	struct {
 		size_t start;
 		size_t end;
@@ -572,8 +689,7 @@ DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	args.key = Dee_None;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_parity__", &args))
 		goto err;
-{
-	int result;
+/*[[[end]]]*/
 	if (args.start == 0 && args.end == (size_t)-1) {
 		result = !DeeNone_Check(args.key)
 		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_parity_with_key))(self, args.key)
@@ -583,12 +699,13 @@ DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_parity_with_range_and_key))(self, args.start, args.end, args.key)
 		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_parity_with_range))(self, args.start, args.end);
 	}
+check_result:
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);
 err:
 	return NULL;
-}}
+}
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_reduce__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -1227,6 +1344,45 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_sort__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	int error;
+#ifdef __OPTIMIZE_SIZE__
+	if (!kw && argc == 1) {
+		result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort_with_key))(self, argv[0]);
+		goto check_result;
+	}
+#else /* __OPTIMIZE_SIZE__ */
+	if (!kw) {
+		size_t start, end;
+		switch (argc) {
+		case 0:
+			error = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort))(self, 0, (size_t)-1);
+			goto check_error;
+		case 1:
+			error = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort_with_key))(self, 0, (size_t)-1, argv[0]);
+			goto check_error;
+		case 2:
+		case 3:
+			if (DeeObject_AsSize(argv[0], &start))
+				goto err;
+			if (DeeObject_AsSize(argv[1], &end))
+				goto err;
+			if (argc == 2) {
+				error = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort))(self, start, end);
+			} else {
+				error = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort_with_key))(self, start, end, argv[2]);
+			}
+			goto check_error;
+		default:
+			err_invalid_argc("__seq_sort__", argc, 0, 3);
+			goto err;
+		}
+		__builtin_unreachable();
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_sort__", params: "
+	size_t start = 0, size_t end = (size_t)-1, key:?DCsortable=!N
+");]]]*/
 	struct {
 		size_t start;
 		size_t end;
@@ -1237,18 +1393,53 @@ DeeMA___seq_sort__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	args.key = Dee_None;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_sort__", &args))
 		goto err;
-{
-	if unlikely(!DeeNone_Check(args.key)
-	            ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort_with_key))(self, args.start, args.end, args.key)
-	            : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort))(self, args.start, args.end))
+/*[[[end]]]*/
+	if (DeeNone_Check(args.key)) {
+		error = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort))(self, args.start, args.end);
+	} else {
+		error = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort_with_key))(self, args.start, args.end, args.key);
+	}
+check_error:
+	if unlikely(error)
 		goto err;
 	return_none;
 err:
 	return NULL;
-}}
+}
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_sorted__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+#ifdef __OPTIMIZE_SIZE__
+	if (!kw && argc == 1)
+		return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted_with_key))(self, argv[0]);
+#else /* __OPTIMIZE_SIZE__ */
+	if (!kw) {
+		size_t start, end;
+		switch (argc) {
+		case 0:
+			return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted))(self, 0, (size_t)-1);
+		case 1:
+			return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted_with_key))(self, 0, (size_t)-1, argv[0]);
+		case 2:
+		case 3:
+			if (DeeObject_AsSize(argv[0], &start))
+				goto err;
+			if (DeeObject_AsSize(argv[1], &end))
+				goto err;
+			if (argc == 2)
+				return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted))(self, start, end);
+			return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted_with_key))(self, start, end, argv[2]);
+		default:
+			err_invalid_argc("__seq_sorted__", argc, 0, 3);
+			goto err;
+		}
+		__builtin_unreachable();
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_sorted__", params: "
+	size_t start = 0, size_t end = (size_t)-1, key:?DCsortedable=!N
+");]]]*/
 	struct {
 		size_t start;
 		size_t end;
@@ -1259,13 +1450,13 @@ DeeMA___seq_sorted__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	args.key = Dee_None;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_sorted__", &args))
 		goto err;
-{
-	return !DeeNone_Check(args.key)
-	       ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted_with_key))(self, args.start, args.end, args.key)
-	       : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted))(self, args.start, args.end);
+/*[[[end]]]*/
+	if (DeeNone_Check(args.key))
+		return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted))(self, args.start, args.end);
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted_with_key))(self, args.start, args.end, args.key);
 err:
 	return NULL;
-}}
+}
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_bfind__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
