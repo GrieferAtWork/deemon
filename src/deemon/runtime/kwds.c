@@ -406,9 +406,10 @@ err:
 /* Append a new entry for `name'.
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
-INTERN WUNUSED NONNULL((1, 2)) int
-(DCALL DeeKwds_Append)(DREF DeeObject **__restrict p_self,
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
+(DCALL DeeKwds_Append)(/*DREF DeeObject **p_self */ void *arg,
                        DeeObject *__restrict name) {
+	DREF DeeObject **p_self = (DREF DeeObject **)arg;
 	Dee_hash_t i, perturb, hash;
 	struct kwds_entry *entry;
 	DREF Kwds *self = (DREF Kwds *)*p_self;
@@ -476,30 +477,13 @@ PRIVATE WUNUSED DREF Kwds *DCALL
 kwds_init(size_t argc, DeeObject *const *argv) {
 	DREF Kwds *result;
 	DeeObject *init;
-	DREF DeeObject *iter, *elem;
 	_DeeArg_Unpack1(err, argc, argv, "Kwds", &init);
 	result = kwds_ctor();
 	if unlikely(!result)
 		goto err;
-	/* TODO: Use `DeeObject_Foreach()' */
-	iter = DeeObject_Iter(init);
-	if unlikely(!iter)
+	if unlikely(DeeObject_Foreach(init, &DeeKwds_Append, &result))
 		goto err_r;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
-			goto err_r_iter_elem;
-		if (DeeKwds_Append((DeeObject **)&result, elem))
-			goto err_r_iter_elem;
-		Dee_Decref_likely(elem);
-	}
-	if unlikely(!elem)
-		goto err_r_iter;
-	Dee_Decref_likely(iter);
 	return result;
-err_r_iter_elem:
-	Dee_Decref_likely(elem);
-err_r_iter:
-	Dee_Decref_likely(iter);
 err_r:
 	Dee_Decref_likely(result);
 err:

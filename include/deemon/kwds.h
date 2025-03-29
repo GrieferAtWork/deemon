@@ -250,8 +250,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int
 #define DeeKwds_AppendStringHash(p_self, name, hash)    DeeKwds_AppendStringLenHash(p_self, name, strlen(name), hash)
 #define DeeKwds_AppendString(p_self, name)              DeeKwds_AppendStringHash(p_self, name, Dee_HashStr(name))
 
-INTDEF WUNUSED NONNULL((1, 2)) int
-(DCALL DeeKwds_Append)(DREF DeeObject **__restrict p_self,
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* Dee_foreach_t-compatible! */
+(DCALL DeeKwds_Append)(/*DREF DeeObject **p_self */ void *arg,
                        DeeObject *__restrict name);
 
 /* Return the keyword-entry associated with `keyword_index'
