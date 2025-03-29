@@ -391,67 +391,6 @@ DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self);
 
 
 
-/* Check if `self' is a fast-sequence object, and return its (current)
- * length if it is, or return `DEE_FASTSEQ_NOTFAST_DEPRECATED' if it isn't.
- * A fast-sequence object is a vector-based object implemented by the
- * deemon C-core, meaning that its size can quickly be determined,
- * and items can quickly be accessed, given their index.
- * The following types function as fast-sequence-compatible:
- *  - Tuple
- *  - List
- *  - _SharedVector      (Created by a `ASM_CALL_SEQ' instruction -- `call top, [#X]')
- *  - _SeqSubRange       (Only if the sub-ranged sequence is a fast-sequence)
- *  - _SeqSubRangeN      (*ditto*)
- *  - _SeqTransformation (Only if the sequence being transformed is a fast-sequence)
- *  - _SeqIntRange
- *  - string
- *  - Bytes
- * Sub-classes of these types are not fast-sequence-compatible. */
-DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
-DeeFastSeq_GetSize_deprecated(DeeObject *__restrict self); /* Deprecated */
-#define DEE_FASTSEQ_NOTFAST_DEPRECATED ((size_t)-1)
-
-/* Returns the `index'th item of `self'.
- * The caller is responsible that `index < DeeFastSeq_GetSize_deprecated(self)' when
- * `self' is an immutable sequence (anything other than `List' and `_SharedVector').
- * WARNING: This function may _ONLY_ be used if `DeeFastSeq_GetSize_deprecated(self)'
- *          returned something other than `DEE_FASTSEQ_NOTFAST_DEPRECATED'. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFastSeq_GetItem_deprecated(DeeObject *__restrict self, size_t index); /* Deprecated */
-
-
-
-
-
-/* New fast-sequence interface */
-typedef struct {
-	DeeObject *fsq_self; /* [1..1] The sequence being enumerated. */
-	size_t     fsq_size; /* The # of items in `fsq_self' */
-	/* [1..1] Callback to get the index'th element of "fsq_self".
-	 * NOTE: The caller must ensure that `index < fsq_size'
-	 * HINT: This is the relevant "tp_getitem_index_fast" operator.
-	 * @return: * :   A reference to the index'th element of "fsq_self".
-	 * @return: NULL: The index'th element of "fsq_self" isn't bound (no error was thrown) */
-	DREF DeeObject *(DCALL *fsq_getitem_index_fast)(DeeObject *__restrict self, size_t index);
-} DeeFastSeq;
-
-#define DeeFastSeq_GetSize(self)        ((self)->fsq_size)
-
-/* Return the index'th element of "self".
- * @return: * :   A reference to the index'th element of "self".
- * @return: NULL: The index'th element of "self" isn't bound (no error was thrown) */
-#define DeeFastSeq_GetItem(self, index) ((*(self)->fsq_getitem_index_fast)((self)->fsq_self, index))
-
-/* Try to load index-based fast sequence controls for "seq".
- * @return: true:  Success. You may use other `DeeFastSeq_*' to access sequence elements.
- * @return: false: Failure. Given `seq' does not implement `tp_getitem_index_fast' */
-#ifndef __OPTIMIZE_SIZE__
-#define DeeFastSeq_Init(self, seq) (((self)->fsq_size = DeeFastSeq_Init_impl(self, seq)) != (size_t)-1)
-#endif /* !__OPTIMIZE_SIZE__ */
-DFUNDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeFastSeq_Init)(DeeFastSeq *__restrict self, DeeObject *__restrict seq);
-DFUNDEF WUNUSED NONNULL((1, 2)) size_t (DCALL DeeFastSeq_Init_impl)(DeeFastSeq *__restrict self, DeeObject *__restrict seq);
-
-
 
 /* Allocate a suitable heap-vector for all the elements of a given sequence,
  * before returning that vector (then populated by [1..1] references), which
