@@ -1901,131 +1901,134 @@ err:
 }
 
 
+struct cd_alloc_from_iattr_foreach_data {
+	ClassDescriptor *cdafiaf_result;
+	size_t           cdafiaf_iused;
+	size_t           cdafiaf_imask;
+	uint16_t         cdafiaf_imemb_size;
+	uint16_t         cdafiaf_cmemb_size;
+};
+
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+cd_alloc_from_iattr_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct class_attribute *ent;
+	Dee_hash_t hash, j, perturb;
+	struct cd_alloc_from_iattr_foreach_data *data;
+	data = (struct cd_alloc_from_iattr_foreach_data *)arg;
+	if (DeeObject_AssertType(key, &DeeString_Type))
+		goto err;
+	if (data->cdafiaf_iused >= (data->cdafiaf_imask / 3) * 2) {
+		ClassDescriptor *new_result;
+		size_t i, new_mask;
+		new_mask   = (data->cdafiaf_imask << 1) | 1;
+		new_result = (ClassDescriptor *)DeeObject_Callocc(offsetof(ClassDescriptor, cd_iattr_list),
+		                                                  new_mask + 1, sizeof(struct class_attribute));
+		if unlikely(!new_result)
+			goto err;
+		/* Rehash the already existing instance attribute table. */
+		for (i = 0; i <= data->cdafiaf_imask; ++i) {
+			if (!data->cdafiaf_result->cd_iattr_list[i].ca_name)
+				continue;
+			j = perturb = data->cdafiaf_result->cd_iattr_list[i].ca_hash & new_mask;
+			for (;; DeeClassDescriptor_IATTRNEXT(j, perturb)) {
+				ent = &new_result->cd_iattr_list[j & new_mask];
+				if (ent->ca_name)
+					continue;
+				*ent = data->cdafiaf_result->cd_iattr_list[i];
+				break;
+			}
+		}
+		new_result->cd_imemb_size = data->cdafiaf_result->cd_imemb_size;
+		new_result->cd_cmemb_size = data->cdafiaf_result->cd_cmemb_size;
+		DeeObject_Free(data->cdafiaf_result);
+		data->cdafiaf_result = new_result;
+		data->cdafiaf_imask  = new_mask;
+	}
+	hash = DeeString_Hash(key);
+	j = perturb = hash & data->cdafiaf_imask;
+	for (;; DeeClassDescriptor_IATTRNEXT(j, perturb)) {
+		ent = &data->cdafiaf_result->cd_iattr_list[j & data->cdafiaf_imask];
+		if (!ent->ca_name)
+			break;
+		if (ent->ca_hash != hash)
+			continue;
+		if (!DeeString_EqualsSTR(ent->ca_name, key))
+			continue;
+		/* Duplicate attribute. */
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Duplicate instance attribute %r",
+		                key);
+		goto err;
+	}
+	ent->ca_name = (DREF struct string_object *)key;
+	ent->ca_hash = hash;
+	if (class_attribute_init(ent, value, false))
+		goto err_ent;
+	Dee_Incref(key);
+	++data->cdafiaf_iused;
+	{
+		uint16_t maxid = ent->ca_addr;
+		if ((ent->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)) == CLASS_ATTRIBUTE_FGETSET)
+			maxid += CLASS_GETSET_SET;
+		if (ent->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+			if (data->cdafiaf_cmemb_size != (uint16_t)-1 && maxid >= data->cdafiaf_cmemb_size) {
+				DeeError_Throwf(&DeeError_ValueError,
+				                "Instance attribute %r uses out-of-bounds class "
+				                "object table index %" PRFu16 " (>= %" PRFu16 ")",
+				                ent->ca_name, maxid, data->cdafiaf_cmemb_size);
+				goto err;
+			}
+			if (data->cdafiaf_result->cd_cmemb_size <= maxid)
+				data->cdafiaf_result->cd_cmemb_size = maxid + 1;
+		} else {
+			if (data->cdafiaf_imemb_size != (uint16_t)-1 && maxid >= data->cdafiaf_imemb_size) {
+				DeeError_Throwf(&DeeError_ValueError,
+				                "Instance attribute %r uses out-of-bounds object "
+				                "table index %" PRFu16 " (>= %" PRFu16 ")",
+				                ent->ca_name, maxid, data->cdafiaf_imemb_size);
+				goto err;
+			}
+			if (data->cdafiaf_result->cd_imemb_size <= maxid)
+				data->cdafiaf_result->cd_imemb_size = maxid + 1;
+		}
+	}
+	return 0;
+err_ent:
+	ent->ca_name = NULL;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) ClassDescriptor *DCALL
 cd_alloc_from_iattr(DeeObject *__restrict iattr,
                     uint16_t imemb_size,
                     uint16_t cmemb_size) {
-	size_t iattr_used = 0, imask = 7;
-	DREF DeeObject *iterator, *elem;
-	DREF DeeObject *data[2];
-	ClassDescriptor *result;
-	iterator = DeeObject_Iter(iattr);
-	if unlikely(!iterator)
+	struct cd_alloc_from_iattr_foreach_data data;
+	data.cdafiaf_imask = 7;
+	data.cdafiaf_iused = 0;
+	data.cdafiaf_imemb_size = imemb_size;
+	data.cdafiaf_cmemb_size = cmemb_size;
+	data.cdafiaf_result = (ClassDescriptor *)DeeObject_Callocc(offsetof(ClassDescriptor, cd_iattr_list),
+	                                                           data.cdafiaf_imask + 1,
+	                                                           sizeof(struct class_attribute));
+	if unlikely(!data.cdafiaf_result)
 		goto err;
-	result = (ClassDescriptor *)DeeObject_Callocc(offsetof(ClassDescriptor, cd_iattr_list),
-	                                              8, sizeof(struct class_attribute));
-	if unlikely(!result)
-		goto err_iter;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		struct class_attribute *ent;
-		Dee_hash_t hash, j, perturb;
-		if (iattr_used >= (imask / 3) * 2) {
-			ClassDescriptor *new_result;
-			size_t i, new_mask;
-			new_mask   = (imask << 1) | 1;
-			new_result = (ClassDescriptor *)DeeObject_Callocc(offsetof(ClassDescriptor, cd_iattr_list),
-			                                                  new_mask + 1, sizeof(struct class_attribute));
-			if unlikely(!new_result)
-				goto err_iter_r_elem;
-			/* Rehash the already existing instance attribute table. */
-			for (i = 0; i <= imask; ++i) {
-				if (!result->cd_iattr_list[i].ca_name)
-					continue;
-				j = perturb = result->cd_iattr_list[i].ca_hash & new_mask;
-				for (;; DeeClassDescriptor_IATTRNEXT(j, perturb)) {
-					ent = &new_result->cd_iattr_list[j & new_mask];
-					if (ent->ca_name)
-						continue;
-					*ent = result->cd_iattr_list[i];
-					break;
-				}
-			}
-			new_result->cd_imemb_size = result->cd_imemb_size;
-			new_result->cd_cmemb_size = result->cd_cmemb_size;
-			DeeObject_Free(result);
-			result = new_result;
-			imask  = new_mask;
-		}
-		if (DeeSeq_Unpack(elem, 2, data))
-			goto err_iter_r_elem;
-		Dee_Decref(elem);
-		if (DeeObject_AssertType(data[0], &DeeString_Type))
-			goto err_iter_r_data;
-		hash = DeeString_Hash(data[0]);
-		j = perturb = hash & imask;
-		for (;; DeeClassDescriptor_IATTRNEXT(j, perturb)) {
-			ent = &result->cd_iattr_list[j & imask];
-			if (!ent->ca_name)
-				break;
-			if (ent->ca_hash != hash)
-				continue;
-			if (!DeeString_EqualsSTR(ent->ca_name, data[0]))
-				continue;
-			/* Duplicate attribute. */
-			DeeError_Throwf(&DeeError_ValueError,
-			                "Duplicate instance attribute %r",
-			                data[0]);
-			goto err_iter_r_data;
-		}
-		ent->ca_name = (DREF struct string_object *)data[0]; /* Inherit reference (on success). */
-		ent->ca_hash = hash;
-		if (class_attribute_init(ent, data[1], false))
-			goto err_iter_r_data;
-		++iattr_used;
-		Dee_Decref(data[1]);
-		{
-			uint16_t maxid;
-			maxid = ent->ca_addr;
-			if ((ent->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)) == CLASS_ATTRIBUTE_FGETSET)
-				maxid += CLASS_GETSET_SET;
-			if (ent->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
-				if (cmemb_size != (uint16_t)-1 && maxid >= cmemb_size) {
-					DeeError_Throwf(&DeeError_ValueError,
-					                "Instance attribute %r uses out-of-bounds class "
-					                "object table index %" PRFu16 " (>= %" PRFu16 ")",
-					                ent->ca_name, maxid, cmemb_size);
-					goto err_iter_r;
-				}
-				if (result->cd_cmemb_size <= maxid)
-					result->cd_cmemb_size = maxid + 1;
-			} else {
-				if (imemb_size != (uint16_t)-1 && maxid >= imemb_size) {
-					DeeError_Throwf(&DeeError_ValueError,
-					                "Instance attribute %r uses out-of-bounds object "
-					                "table index %" PRFu16 " (>= %" PRFu16 ")",
-					                ent->ca_name, maxid, imemb_size);
-					goto err_iter_r;
-				}
-				if (result->cd_imemb_size <= maxid)
-					result->cd_imemb_size = maxid + 1;
-			}
-		}
-	}
-	if (!elem)
-		goto err_iter_r;
-	result->cd_iattr_mask = imask;
-	if (imemb_size != (uint16_t)-1)
-		result->cd_imemb_size = imemb_size;
-	if (cmemb_size != (uint16_t)-1)
-		result->cd_cmemb_size = cmemb_size;
-	Dee_Decref(iterator);
-	return result;
-err_iter_r_data:
-	Dee_Decref(data[1]);
-	Dee_Decref(data[0]);
-	goto err_iter_r;
-err_iter_r_elem:
-	Dee_Decref(elem);
-err_iter_r:
+	if (DeeObject_ForeachPair(iattr, &cd_alloc_from_iattr_foreach_cb, &data))
+		goto err_r;
+	data.cdafiaf_result->cd_iattr_mask = data.cdafiaf_imask;
+	if (data.cdafiaf_imemb_size != (uint16_t)-1)
+		data.cdafiaf_result->cd_imemb_size = data.cdafiaf_imemb_size;
+	if (data.cdafiaf_cmemb_size != (uint16_t)-1)
+		data.cdafiaf_result->cd_cmemb_size = data.cdafiaf_cmemb_size;
+	return data.cdafiaf_result;
+err_r:
 	do {
-		if (result->cd_iattr_list[imask].ca_name) {
-			Dee_XDecref(result->cd_iattr_list[imask].ca_doc);
-			Dee_Decref(result->cd_iattr_list[imask].ca_name);
+		if (data.cdafiaf_result->cd_iattr_list[data.cdafiaf_imask].ca_name) {
+			Dee_XDecref(data.cdafiaf_result->cd_iattr_list[data.cdafiaf_imask].ca_doc);
+			Dee_Decref(data.cdafiaf_result->cd_iattr_list[data.cdafiaf_imask].ca_name);
 		}
-	} while (imask--);
-	DeeObject_Free(result);
-err_iter:
-	Dee_Decref(iterator);
+	} while (data.cdafiaf_imask--);
+	DeeObject_Free(data.cdafiaf_result);
 err:
 	return NULL;
 }
