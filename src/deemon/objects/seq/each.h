@@ -171,7 +171,7 @@ typedef struct {
  * - operator getrange()
  */
 #undef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_GETITEM
-#if 1
+#if 0
 #define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_GETITEM
 #endif
 
