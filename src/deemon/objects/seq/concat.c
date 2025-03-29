@@ -234,9 +234,9 @@ PRIVATE struct type_cmp catiterator_cmp = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 catiterator_next(CatIterator *__restrict self) {
 	DREF DeeObject *iter, *result;
-again_locked:
-	CatIterator_LockRead(self);
 again:
+	CatIterator_LockRead(self);
+again_locked:
 	iter = self->cti_curr;
 	Dee_Incref(iter);
 	CatIterator_LockEndRead(self);
@@ -252,7 +252,7 @@ do_iter:
 		/* Check if the iterator has changed. */
 		if (self->cti_curr != iter) {
 			CatIterator_LockDowngrade(self);
-			goto again;
+			goto again_locked;
 		}
 
 		/* Load the next sequence. */
@@ -278,7 +278,7 @@ do_iter:
 		if (self->cti_pseq != p_next - 1) {
 			CatIterator_LockEndWrite(self);
 			Dee_Decref(iter);
-			goto again_locked;
+			goto again;
 		}
 
 		/* Update the current sequence pointer. */
