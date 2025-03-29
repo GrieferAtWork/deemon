@@ -911,8 +911,8 @@ DeeString_DecodeBackslashEscaped(struct Dee_unicode_printer *__restrict printer,
  * interpreted as part of the unicode character-range U+0080...U+00FF. */
 #undef DeeString_New
 #undef DeeDbgString_New
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_New)(/*unsigned*/ char const *__restrict str);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New)(/*unsigned*/ char const *__restrict str, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_New)(/*unsigned latin-1*/ char const *__restrict str);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New)(/*unsigned latin-1*/ char const *__restrict str, char const *file, int line);
 #define DeeString_NewWithHash(str, hash)                ((void)(hash), DeeString_New(str))                /* XXX: Take advantage of this? */
 #define DeeDbgString_NewWithHash(str, hash, file, line) ((void)(hash), DeeDbgString_New(str, file, line)) /* XXX: Take advantage of this? */
 #ifdef NDEBUG
@@ -2727,7 +2727,7 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_ascii_printer_putc)(struct Dee_ascii
  *       >> ascii_printer_allocstr("foobar\0"); // Table is now `foobar\0'
  *       >> ascii_printer_allocstr("foo\0");    // Table is now `foobar\0foo\0'
  *       >> ascii_printer_allocstr("bar\0");    // Table is still `foobar\0foo\0' - `bar\0' points into `foobar\0'
- * @return: * :   A pointer to a volitile memory location within the already printed string
+ * @return: * :   A pointer to a volatile memory location within the already printed string
  *                (the caller should calculate the offset to `ASCII_PRINTER_STR(self)'
  *                to ensure consistency if the function is called multiple times)
  * @return: NULL: An error occurred. */

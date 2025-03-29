@@ -71,6 +71,7 @@ DECL_BEGIN
 typedef DeeStringObject String;
 
 #ifndef CONFIG_HAVE_memmem
+#define CONFIG_HAVE_memmem
 #define memmem dee_memmem
 DeeSystem_DEFINE_memmem(dee_memmem)
 #endif /* !CONFIG_HAVE_memmem */
@@ -273,7 +274,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
  *       >> ascii_printer_allocstr("foobar\0"); // Table is now `foobar\0'
  *       >> ascii_printer_allocstr("foo\0");    // Table is now `foobar\0foo\0'
  *       >> ascii_printer_allocstr("bar\0");    // Table is still `foobar\0foo\0' - `bar\0' points into `foobar\0'
- * @return: * :   A pointer to a volitile memory location within the already printed string
+ * @return: * :   A pointer to a volatile memory location within the already printed string
  *                (the caller should calculate the offset to `ASCII_PRINTER_STR(self)'
  *                to ensure consistency if the function is called multiple times)
  * @return: NULL: An error occurred. */
@@ -481,11 +482,11 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
  * interpreted as part of the unicode character-range U+0080...U+00FF. */
 #ifdef NDEBUG
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL DeeString_New)(/*unsigned*/ char const *__restrict str) {
+(DCALL DeeString_New)(/*unsigned latin-1*/ char const *__restrict str) {
 	return DeeString_NewSized(str, strlen(str));
 }
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL DeeDbgString_New)(/*unsigned*/ char const *__restrict str,
+(DCALL DeeDbgString_New)(/*unsigned latin-1*/ char const *__restrict str,
                          char const *file, int line) {
 	(void)file;
 	(void)line;
@@ -493,11 +494,11 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 }
 #else /* NDEBUG */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL DeeString_New)(/*unsigned*/ char const *__restrict str) {
+(DCALL DeeString_New)(/*unsigned latin-1*/ char const *__restrict str) {
 	return DeeDbgString_New(str, NULL, 0);
 }
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL DeeDbgString_New)(/*unsigned*/ char const *__restrict str,
+(DCALL DeeDbgString_New)(/*unsigned latin-1*/ char const *__restrict str,
                          char const *file, int line) {
 	return DeeDbgString_NewSized(str, strlen(str), file, line);
 }
@@ -650,10 +651,12 @@ compare_string_bytes(String *__restrict lhs,
 	    lhs->s_data->u_width == STRING_WIDTH_1BYTE) {
 		uint8_t const *lhs_str;
 		int result;
+
 		/* Compare against single-byte string. */
 		lhs_str = (uint8_t const *)lhs->s_str;
 		lhs_len = lhs->s_len;
 		rhs_len = DeeBytes_SIZE(rhs);
+
 		/* Most simple case: compare ascii/single-byte strings. */
 		result = memcmp(lhs_str, DeeBytes_DATA(rhs), MIN(lhs_len, rhs_len));
 		if (result != 0)
@@ -661,6 +664,7 @@ compare_string_bytes(String *__restrict lhs,
 	} else {
 		byte_t const *rhs_str;
 		struct string_utf *lhs_utf;
+
 		/* Compare against single-byte string. */
 		rhs_str = DeeBytes_DATA(rhs);
 		rhs_len = DeeBytes_SIZE(rhs);
@@ -718,8 +722,7 @@ DeeSystem_DEFINE_memcmpl(dee_memcmpl)
 #endif /* !CONFIG_HAVE_memcmpl */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-compare_strings(String *__restrict lhs,
-                String *__restrict rhs) {
+compare_strings(String *lhs, String *rhs) {
 	size_t lhs_len;
 	size_t rhs_len;
 	if (!lhs->s_data ||
@@ -2279,7 +2282,7 @@ PRIVATE struct type_method_hint tpconst string_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_operator_gr, &default__seq_operator_gr__with__seq_operator_compare, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_ge, &default__seq_operator_ge__with__seq_operator_compare, METHOD_FNOREFESCAPE),
 
-	/* Optimized  */
+	/* Optimized */
 	TYPE_METHOD_HINT(seq_sum, &string_mh_seq_sum),
 	TYPE_METHOD_HINT(seq_sum_with_range, &string_mh_seq_sum_with_range),
 

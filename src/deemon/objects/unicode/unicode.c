@@ -670,9 +670,9 @@ set_utf8_and_return_1byte:
 			if (*iter2 >= 0x80)
 				++result_length;
 		}
-		result = (uint8_t *)Dee_Malloc(sizeof(size_t) +
-		                               (result_length + 1) *
-		                               sizeof(uint8_t));
+		result = (uint8_t *)Dee_Mallococ(sizeof(size_t),
+		                                 result_length + 1,
+		                                 sizeof(uint8_t));
 		if unlikely(!result)
 			goto err;
 		*(size_t *)result = result_length;
@@ -847,8 +847,9 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 	}
 
 	/* Try to construct the single-byte variant. */
-	result = (uint8_t *)Dee_Malloc(sizeof(size_t) +
-	                               (length + 1) * sizeof(uint8_t));
+	result = (uint8_t *)Dee_Mallococ(sizeof(size_t),
+	                                 length + 1,
+	                                 sizeof(uint8_t));
 	if unlikely(!result)
 		goto err;
 	*(size_t *)result = length;
