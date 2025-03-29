@@ -24,13 +24,17 @@ import * from errors;
 #if __DEEMON_VARIANT__ == "gatw"
 import rt;
 
-function assertRtTypeName(gName: string, tName: string = none) {
-	if (tName is none)
-		tName = "_" + gName;
+function assertRtTypeName(gName: string, tNames: {string...} | string | none = none) {
+	if (tNames is none)
+		tNames = "_" + gName;
 	local t = rt.operator . (gName);
 	assert t is Type;
 	local actualName = Type.__name__(t);
-	assert tName == actualName, f"rt.{gName}.__name__ == '{actualName}'";
+	if (tNames is string) {
+		assert tNames == actualName, f"rt.{gName}.__name__ == '{actualName}'";
+	} else {
+		assert actualName in tNames, f"rt.{gName}.__name__ == '{actualName}'";
+	}
 }
 
 assertRtTypeName("SeqCombinations");
@@ -71,18 +75,18 @@ assertRtTypeName("SeqFlatIterator");
 assertRtTypeName("SeqEach");
 assertRtTypeName("SeqEachOperator");
 assertRtTypeName("SeqEachOperatorIterator");
-assertRtTypeName("SeqEachGetAttr");
-assertRtTypeName("SeqEachGetAttrIterator");
-assertRtTypeName("SeqEachCallAttr");
-assertRtTypeName("SeqEachCallAttrIterator");
-assertRtTypeName("SeqEachCallAttrKw");
-assertRtTypeName("SeqEachCallAttrKwIterator");
+assertRtTypeName("SeqEachGetAttr_np", { "_SeqEachGetAttr", "_SeqEachOperator" });
+assertRtTypeName("SeqEachGetAttrIterator_np", { "_SeqEachGetAttrIterator", "_SeqEachOperatorIterator" });
+assertRtTypeName("SeqEachCallAttr_np", { "_SeqEachCallAttr", "_SeqEachOperator" });
+assertRtTypeName("SeqEachCallAttrIterator_np", { "_SeqEachCallAttrIterator", "_SeqEachOperatorIterator" });
+assertRtTypeName("SeqEachCallAttrKw_np", { "_SeqEachCallAttrKw", "_SeqEachOperator" });
+assertRtTypeName("SeqEachCallAttrKwIterator_np", { "_SeqEachCallAttrKwIterator", "_SeqEachOperatorIterator" });
 
 assertRtTypeName("SeqSome");
 assertRtTypeName("SeqSomeOperator");
-assertRtTypeName("SeqSomeGetAttr");
-assertRtTypeName("SeqSomeCallAttr");
-assertRtTypeName("SeqSomeCallAttrKw");
+assertRtTypeName("SeqSomeGetAttr_np", { "_SeqSomeGetAttr", "_SeqSomeOperator" });
+assertRtTypeName("SeqSomeCallAttr_np", { "_SeqSomeCallAttr", "_SeqSomeOperator" });
+assertRtTypeName("SeqSomeCallAttrKw_np", { "_SeqSomeCallAttrKw", "_SeqSomeOperator" });
 
 assertRtTypeName("SeqEnumWithSeqOperatorSizeAndGetItemIndexFast");
 assertRtTypeName("SeqEnumWithIntFilterAndSeqOperatorSizeAndGetItemIndexFast");

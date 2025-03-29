@@ -1297,18 +1297,29 @@ PRIVATE struct type_callable LOCAL_seX(callable) = {
 INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_" LOCAL_SeqEach_Type_NAME,
+#ifdef CONFIG_NO_DOC
+	/* .tp_doc      = */ NULL,
+#else /* CONFIG_NO_DOC */
+	/* .tp_doc      = */ "When deemon was compiled with #CCONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS "
+	                     /**/ "(default when #C__OPTIMIZE_SIZE__ was enabled), this type won't exist, "
+	                     /**/ "and ?Ert:" LOCAL_SeqEach_Type_NAME "_np will evaluate to "
+	                     /**/ "?Ert:SeqEachOperator (hence the #C{*_np} suffix in ?Mrt)\n"
+	                     "\n"
+	                     "()\n"
 #ifdef DEFINE_SeqEachGetAttr
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,attr:?Dstring)"),
+	/* .tp_doc      = */ "(seq:?DSequence,attr:?Dstring)\n"
+	                     "Optimized implementation of ${<seq>.each.<attr>}"
 #elif defined(DEFINE_SeqEachCallAttr)
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,attr:?Dstring,args=!T0)"),
+	/* .tp_doc      = */ "(seq:?DSequence,attr:?Dstring,args=!T0)\n"
+	                     "Optimized implementation of ${<seq>.each.<attr>(<args>...)}"
 #elif defined(DEFINE_SeqEachCallAttrKw)
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,attr:?Dstring,args=!T0,kw:?M?Dstring?O=!T0)"),
+	/* .tp_doc      = */ "(seq:?DSequence,attr:?Dstring,args=!T0,kw:?M?Dstring?O=!T0)\n"
+	                     "Optimized implementation of ${<seq>.each.<attr>(<args>..., **<kw>)}"
 #else /* ... */
 #error "Unsupported mode"
 #endif /* !... */
+	                     "",
+#endif /* !CONFIG_NO_DOC */
 	/* .tp_flags    = */ LOCAL_SeqEach_Type_FLAGS,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1431,7 +1442,12 @@ LOCAL_seXi(next)(SeqEachIterator *__restrict self) {
 INTERN DeeTypeObject LOCAL_SeqEachIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_" LOCAL_SeqEach_Type_NAME "Iterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:" LOCAL_SeqEach_Type_NAME ")"),
+	/* .tp_doc      = */ DOC("When deemon was compiled with #CCONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS "
+	                         /**/ "(default when #C__OPTIMIZE_SIZE__ was enabled), this type won't exist, "
+	                         /**/ "and ?Ert:" LOCAL_SeqEach_Type_NAME "Iterator_np will evaluate to "
+	                         /**/ "?Ert:SeqEachOperatorIterator (hence the #C{*_np} suffix in ?Mrt)\n"
+	                         "\n"
+	                         "(seq?:?Ert:" LOCAL_SeqEach_Type_NAME ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1778,18 +1794,31 @@ PRIVATE struct type_callable LOCAL_ssX(callable) = {
 INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_" LOCAL_SeqSome_Type_NAME,
+#ifdef CONFIG_NO_DOC
+	/* .tp_doc      = */ NULL,
+#else /* CONFIG_NO_DOC */
+	/* .tp_doc      = */ "When deemon was compiled with #CCONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS "
+	                     /**/ "(default when #C__OPTIMIZE_SIZE__ was enabled), this type won't exist, "
+	                     /**/ "and ?Ert:" LOCAL_SeqSome_Type_NAME "_np will evaluate to "
+	                     /**/ "?Ert:SeqEachOperator (hence the #C{*_np} suffix in ?Mrt)\n"
+	                     "\n"
 #ifdef DEFINE_SeqEachGetAttr
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,attr:?Dstring)"),
+	                     "()\n"
+	                     "(seq:?DSequence,attr:?Dstring)\n"
+	                     "Optimized implementation of ${<seq>.some.<attr>}"
 #elif defined(DEFINE_SeqEachCallAttr)
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,attr:?Dstring,args=!T0)"),
+	                     "()\n"
+	                     "(seq:?DSequence,attr:?Dstring,args=!T0)\n"
+	                     "Optimized implementation of ${<seq>.some.<attr>(<args>...)}"
 #elif defined(DEFINE_SeqEachCallAttrKw)
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,attr:?Dstring,args=!T0,kw:?M?Dstring?O=!T0)"),
+	                     "()\n"
+	                     "(seq:?DSequence,attr:?Dstring,args=!T0,kw:?M?Dstring?O=!T0)\n"
+	                     "Optimized implementation of ${<seq>.some.<attr>(<args>..., **<kw>)}"
 #else /* ... */
 #error "Unsupported mode"
 #endif /* !... */
+	                     "",
+#endif /* !CONFIG_NO_DOC */
 	/* .tp_flags    = */ LOCAL_SeqEach_Type_FLAGS & ~TP_FMOVEANY,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

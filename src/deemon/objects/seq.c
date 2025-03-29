@@ -3403,7 +3403,7 @@ PRIVATE char const seq_doc[] =
 /**/ "?#{op:iter}, ?#{op:size}" /*                                                  */ "|${"
 /**/ /**/ "start, end = util.clamprange(start, end, Sequence.__size__(this))...;\n"
 /**/ /**/ "local it = Sequence.__iter__(this);\n"
-/**/ /**/ "Iteartor.advance(it, start);\n"
+/**/ /**/ "Iterator.advance(it, start);\n"
 /**/ /**/ "for (none: [start:end]) {\n"
 /**/ /**/ "	foreach (local x: it) {\n"
 /**/ /**/ "		yield x;\n"

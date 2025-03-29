@@ -3402,16 +3402,16 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqFlatIterator, &librt_get_SeqFlatIterator_f, 
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEach, &librt_get_SeqEach_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEachOperator, &librt_get_SeqEachOperator_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEachOperatorIterator, &librt_get_SeqEachOperatorIterator_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqEachGetAttr, &librt_get_SeqEachGetAttr_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqEachGetAttrIterator, &librt_get_SeqEachGetAttrIterator_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttr, &librt_get_SeqEachCallAttr_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrIterator, &librt_get_SeqEachCallAttrIterator_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrKw, &librt_get_SeqEachCallAttrKw_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrKwIterator, &librt_get_SeqEachCallAttrKwIterator_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachGetAttr_np, &librt_get_SeqEachGetAttr_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachGetAttrIterator_np, &librt_get_SeqEachGetAttrIterator_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttr_np, &librt_get_SeqEachCallAttr_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrIterator_np, &librt_get_SeqEachCallAttrIterator_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrKw_np, &librt_get_SeqEachCallAttrKw_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrKwIterator_np, &librt_get_SeqEachCallAttrKwIterator_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSomeOperator, &librt_get_SeqSomeOperator_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqSomeGetAttr, &librt_get_SeqSomeGetAttr_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqSomeCallAttr, &librt_get_SeqSomeCallAttr_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqSomeCallAttrKw, &librt_get_SeqSomeCallAttrKw_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqSomeGetAttr_np, &librt_get_SeqSomeGetAttr_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqSomeCallAttr_np, &librt_get_SeqSomeCallAttr_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqSomeCallAttrKw_np, &librt_get_SeqSomeCallAttrKw_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEnumWithSeqOperatorSizeAndGetItemIndexFast, &librt_get_SeqEnumWithSeqOperatorSizeAndGetItemIndexFast_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEnumWithIntFilterAndSeqOperatorSizeAndGetItemIndexFast, &librt_get_SeqEnumWithIntFilterAndSeqOperatorSizeAndGetItemIndexFast_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEnumWithSeqOperatorSizeAndSeqOperatorTryGetItemIndex, &librt_get_SeqEnumWithSeqOperatorSizeAndSeqOperatorTryGetItemIndex_Type_f, METHOD_FCONSTCALL);
@@ -3799,19 +3799,19 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqEach", (DeeObject *)&librt_get_SeqEach, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* SeqEach_Type */
 	{ "SeqEachOperator", (DeeObject *)&librt_get_SeqEachOperator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqEachOperator_Type */
 	{ "SeqEachOperatorIterator", (DeeObject *)&librt_get_SeqEachOperatorIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* SeqEachOperatorIterator_Type */
-	{ "SeqEachGetAttr", (DeeObject *)&librt_get_SeqEachGetAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* SeqEachGetAttr_Type */
-	{ "SeqEachGetAttrIterator", (DeeObject *)&librt_get_SeqEachGetAttrIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* SeqEachGetAttrIterator_Type */
-	{ "SeqEachCallAttr", (DeeObject *)&librt_get_SeqEachCallAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqEachCallAttr_Type */
-	{ "SeqEachCallAttrIterator", (DeeObject *)&librt_get_SeqEachCallAttrIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* SeqEachCallAttrIterator_Type */
-	{ "SeqEachCallAttrKw", (DeeObject *)&librt_get_SeqEachCallAttrKw, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqEachCallAttrKw_Type */
-	{ "SeqEachCallAttrKwIterator", (DeeObject *)&librt_get_SeqEachCallAttrKwIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* SeqEachCallAttrKwIterator_Type */
+	{ "SeqEachGetAttr_np", (DeeObject *)&librt_get_SeqEachGetAttr_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqEachGetAttr_Type */
+	{ "SeqEachGetAttrIterator_np", (DeeObject *)&librt_get_SeqEachGetAttrIterator_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* SeqEachGetAttrIterator_Type */
+	{ "SeqEachCallAttr_np", (DeeObject *)&librt_get_SeqEachCallAttr_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqEachCallAttr_Type */
+	{ "SeqEachCallAttrIterator_np", (DeeObject *)&librt_get_SeqEachCallAttrIterator_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* SeqEachCallAttrIterator_Type */
+	{ "SeqEachCallAttrKw_np", (DeeObject *)&librt_get_SeqEachCallAttrKw_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SeqEachCallAttrKw_Type */
+	{ "SeqEachCallAttrKwIterator_np", (DeeObject *)&librt_get_SeqEachCallAttrKwIterator_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* SeqEachCallAttrKwIterator_Type */
 
 	/* Seq-some wrapper types. */
 	{ "SeqSome", (DeeObject *)&DeeSeqSome_Type, MODSYM_FREADONLY },
 	{ "SeqSomeOperator", (DeeObject *)&librt_get_SeqSomeOperator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqSomeOperator_Type */
-	{ "SeqSomeGetAttr", (DeeObject *)&librt_get_SeqSomeGetAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* SeqSomeGetAttr_Type */
-	{ "SeqSomeCallAttr", (DeeObject *)&librt_get_SeqSomeCallAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqSomeCallAttr_Type */
-	{ "SeqSomeCallAttrKw", (DeeObject *)&librt_get_SeqSomeCallAttrKw, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqSomeCallAttrKw_Type */
+	{ "SeqSomeGetAttr_np", (DeeObject *)&librt_get_SeqSomeGetAttr_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqSomeGetAttr_Type */
+	{ "SeqSomeCallAttr_np", (DeeObject *)&librt_get_SeqSomeCallAttr_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqSomeCallAttr_Type */
+	{ "SeqSomeCallAttrKw_np", (DeeObject *)&librt_get_SeqSomeCallAttrKw_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SeqSomeCallAttrKw_Type */
 
 	/* Default enumeration types */
 	{ "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast", (DeeObject *)&librt_get_SeqEnumWithSeqOperatorSizeAndGetItemIndexFast, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* DefaultEnumeration__with__seq_operator_size__and__getitem_index_fast */

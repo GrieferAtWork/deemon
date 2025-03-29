@@ -3383,7 +3383,7 @@ load_type_input:
 				return;
 			}
 			docParentOrPath = Doc(head);
-			attributeName     = tail;
+			attributeName   = tail;
 		}
 		if (docParentOrPath !is Doc)
 			docParentOrPath = Doc(docParentOrPath);
