@@ -1011,6 +1011,14 @@ PRIVATE struct type_member tpconst LOCAL_seX(class_members)[] = {
 	TYPE_MEMBER_END
 };
 
+#ifdef DEFINE_SeqEachGetAttr
+STATIC_ASSERT(offsetof(LOCAL_SeqEach, se_seq) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(LOCAL_SeqEach, se_seq) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(LOCAL_SeqEach, sg_attr) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(LOCAL_SeqEach, sg_attr) == offsetof(ProxyObject2, po_obj2));
+#define sea_fini  generic_proxy2__fini
+#define sea_visit generic_proxy2__visit
+#else /* DEFINE_SeqEachGetAttr */
 PRIVATE NONNULL((1)) void DCALL
 LOCAL_seX(fini)(LOCAL_SeqEach *__restrict self) {
 	Dee_Decref(self->se_seq);
@@ -1034,6 +1042,7 @@ LOCAL_seX(visit)(LOCAL_SeqEach *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visitv(self->sg_argv, self->sg_argc);
 #endif /* DEFINE_SeqEachCallAttr || DEFINE_SeqEachCallAttrKw */
 }
+#endif /* !DEFINE_SeqEachGetAttr */
 
 #ifndef CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1099,6 +1108,13 @@ LOCAL_seX(ctor)(LOCAL_SeqEach *__restrict self) {
 	return 0;
 }
 
+#if 1
+STATIC_ASSERT(offsetof(LOCAL_SeqEach, se_seq) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(LOCAL_SeqEach, se_seq) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(LOCAL_SeqEach, sg_attr) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(LOCAL_SeqEach, sg_attr) == offsetof(ProxyObject2, po_obj2));
+#define sea_copy generic_proxy2__copy_alias12
+#else
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_seX(copy)(LOCAL_SeqEach *__restrict self,
                 LOCAL_SeqEach *__restrict other) {
@@ -1108,19 +1124,7 @@ LOCAL_seX(copy)(LOCAL_SeqEach *__restrict self,
 	Dee_Incref(self->sg_attr);
 	return 0;
 }
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-LOCAL_seX(deep)(LOCAL_SeqEach *__restrict self,
-                LOCAL_SeqEach *__restrict other) {
-	self->se_seq = DeeObject_DeepCopy(other->se_seq);
-	if unlikely(!self->se_seq)
-		goto err;
-	self->sg_attr = other->sg_attr;
-	Dee_Incref(self->sg_attr);
-	return 0;
-err:
-	return -1;
-}
+#endif
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seX(init)(LOCAL_SeqEach *__restrict self,
@@ -1130,6 +1134,19 @@ LOCAL_seX(init)(LOCAL_SeqEach *__restrict self,
 	if (DeeObject_AssertTypeExact(self->sg_attr, &DeeString_Type))
 		goto err;
 	Dee_Incref(self->se_seq);
+	Dee_Incref(self->sg_attr);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_seX(deep)(LOCAL_SeqEach *__restrict self,
+                LOCAL_SeqEach *__restrict other) {
+	self->se_seq = DeeObject_DeepCopy(other->se_seq);
+	if unlikely(!self->se_seq)
+		goto err;
+	self->sg_attr = other->sg_attr;
 	Dee_Incref(self->sg_attr);
 	return 0;
 err:
@@ -1261,7 +1278,6 @@ LOCAL_seX(init)(size_t argc, DeeObject *const *argv) {
 err:
 	return NULL;
 }
-
 #else /* ... */
 #error "Unsupported mode"
 #endif /* !... */

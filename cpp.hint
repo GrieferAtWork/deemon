@@ -1608,6 +1608,19 @@
 #define DEFINE_BINARY_LVALUE_OPERATOR(T,e,n,...) static T n(DeeLValueTypeObject*tp_self,union pointer*self,DeeObject*other){}
 #define DEFINE_TRINARY_LVALUE_OPERATOR(T,e,n,...) static T n(DeeLValueTypeObject*tp_self,union pointer*self,DeeObject*a,DeeObject*b){}
 
+#define DEFINE_SEQ_SOME_UNARY(n,...) static SeqEachOperator*n(SeqEachBase*self){}
+#define DEFINE_SEQ_SOME_BINARY(n,...) static SeqEachOperator*n(SeqEachBase*self,DeeObject*other){}
+#define DEFINE_SEQ_SOME_TRINARY(n,...) static SeqEachOperator*n(SeqEachBase*self,DeeObject*a,DeeObject*b){}
+#define DEFINE_SSW_UNARY(n,...) static SeqEachOperator*n(DeeObject*self){}
+#define DEFINE_SSW_BINARY(n,...) static SeqEachOperator*n(DeeObject*self,DeeObject*other){}
+#define DEFINE_SSW_TRINARY(n,...) static SeqEachOperator*n(DeeObject*self,DeeObject*a,DeeObject*b){}
+
+#define LOCAL_ssX(x) ssX_##x
+#define LOCAL_seX(x) seX_##x
+#define LOCAL_seXi(x) seXi_##x
+#define DEFINE_SEA_BINARY_INPLACE(n,...) static int n(LOCAL_SeqEach**p_self,DeeObject*other){}
+
+
 #define memstate_foreach(...) for(;;)
 #define memstate_foreach_end
 #define _memval_foreach_obj(...) for(;;)
