@@ -2104,11 +2104,74 @@ err:
 	return -1;
 }
 
+struct cd_init_kw__cattr_foreach_data {
+	ClassDescriptor *cdikcaf_result;
+	size_t           cdikcaf_used_attr;
+	uint16_t         cdikcaf_csize;
+};
+
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+cd_init_kw__cattr_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct cd_init_kw__cattr_foreach_data *data;
+	ClassDescriptor *result;
+	struct class_attribute *ent;
+	Dee_hash_t hash, i, perturb;
+	data   = (struct cd_init_kw__cattr_foreach_data *)arg;
+	result = data->cdikcaf_result;
+	if (DeeObject_AssertType(key, &DeeString_Type))
+		goto err;
+	if (data->cdikcaf_used_attr >= (result->cd_cattr_mask / 3) * 2) {
+		/* Rehash the class attribute table. */
+		if (cd_rehash_cattr(result))
+			goto err;
+	}
+	hash = DeeString_Hash(key);
+	i = perturb = hash & result->cd_cattr_mask;
+	for (;; DeeClassDescriptor_CATTRNEXT(i, perturb)) {
+		ent = &result->cd_cattr_list[i & result->cd_cattr_mask];
+		if (!ent->ca_name)
+			break;
+		if (ent->ca_hash != hash)
+			continue;
+		if (!DeeString_EqualsSTR(ent->ca_name, key))
+			continue;
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Duplicate class attribute %r",
+		                key);
+		goto err;
+	}
+	ent->ca_name = (DREF struct string_object *)key;
+	ent->ca_hash = hash;
+	if (class_attribute_init(ent, value, true))
+		goto err_ent;
+	Dee_Incref(key);
+	++data->cdikcaf_used_attr;
+	{
+		uint16_t maxid;
+		maxid = ent->ca_addr;
+		if ((ent->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)) == CLASS_ATTRIBUTE_FGETSET)
+			maxid += CLASS_GETSET_SET;
+		if (data->cdikcaf_csize != (uint16_t)-1 && maxid >= data->cdikcaf_csize) {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Class attribute %r uses out-of-bounds class "
+			                "object table index %" PRFu16 " (>= %" PRFu16 ")",
+			                ent->ca_name, maxid, data->cdikcaf_csize);
+			goto err;
+		}
+		if (result->cd_cmemb_size <= maxid)
+			result->cd_cmemb_size = maxid + 1;
+	}
+	return 0;
+err_ent:
+	ent->ca_name = NULL;
+err:
+	return -1;
+}
 
 PRIVATE WUNUSED DREF ClassDescriptor *DCALL
 cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF ClassDescriptor *result;
-	DREF DeeObject *iterator, *elem, *data[2];
+	DREF DeeObject *iterator, *elem, *key_and_value[2];
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_ClassDescriptor", params: "
 		DeeStringObject *name;
 		DeeStringObject *doc   = (DeeStringObject *)Dee_EmptyString;
@@ -2199,63 +2262,12 @@ got_flag:
 	result->cd_cattr_list = empty_class_attributes;
 	result->cd_cattr_mask = 0;
 	if (args.cattr != Dee_EmptyTuple) {
-		size_t used_attr = 0;
-		iterator         = DeeObject_Iter(args.cattr);
-		if unlikely(!iterator)
+		struct cd_init_kw__cattr_foreach_data data;
+		data.cdikcaf_result    = result;
+		data.cdikcaf_used_attr = 0;
+		data.cdikcaf_csize     = args.csize;
+		if (DeeObject_ForeachPair(args.cattr, &cd_init_kw__cattr_foreach_cb, &data))
 			goto err_r_imemb;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-			struct class_attribute *ent;
-			Dee_hash_t hash, i, perturb;
-			if (DeeSeq_Unpack(elem, 2, data))
-				goto err_r_imemb_iter_elem;
-			Dee_Decref(elem);
-			if (DeeObject_AssertType(data[0], &DeeString_Type))
-				goto err_r_imemb_iter_data;
-			if (used_attr >= (result->cd_cattr_mask / 3) * 2) {
-				/* Rehash the class attribute table. */
-				if (cd_rehash_cattr(result))
-					goto err_r_imemb_iter_data;
-			}
-			hash = DeeString_Hash(data[0]);
-			i = perturb = hash & result->cd_cattr_mask;
-			for (;; DeeClassDescriptor_CATTRNEXT(i, perturb)) {
-				ent = &result->cd_cattr_list[i & result->cd_cattr_mask];
-				if (!ent->ca_name)
-					break;
-				if (ent->ca_hash != hash)
-					continue;
-				if (!DeeString_EqualsSTR(ent->ca_name, data[0]))
-					continue;
-				DeeError_Throwf(&DeeError_ValueError,
-				                "Duplicate class attribute %r",
-				                data[0]);
-				goto err_r_imemb_iter_data;
-			}
-			ent->ca_name = (DREF struct string_object *)data[0]; /* Inherit reference (on success) */
-			ent->ca_hash = hash;
-			if (class_attribute_init(ent, data[1], true))
-				goto err_r_imemb_iter_data;
-			++used_attr;
-			Dee_Decref(data[1]);
-			{
-				uint16_t maxid;
-				maxid = ent->ca_addr;
-				if ((ent->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)) == CLASS_ATTRIBUTE_FGETSET)
-					maxid += CLASS_GETSET_SET;
-				if (args.csize != (uint16_t)-1 && maxid >= args.csize) {
-					DeeError_Throwf(&DeeError_ValueError,
-					                "Class attribute %r uses out-of-bounds class "
-					                "object table index %" PRFu16 " (>= %" PRFu16 ")",
-					                ent->ca_name, maxid, args.csize);
-					goto err_r_imemb_iter;
-				}
-				if (result->cd_cmemb_size <= maxid)
-					result->cd_cmemb_size = maxid + 1;
-			}
-		}
-		if (!elem)
-			goto err_r_imemb_iter;
-		Dee_Decref(iterator);
 	}
 	if (args.operators != Dee_EmptyTuple) {
 		Dee_operator_t operator_count = 0;
@@ -2264,29 +2276,29 @@ got_flag:
 			goto err_r_imemb_cmemb;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 			Dee_operator_t name, index;
-			if (DeeSeq_Unpack(elem, 2, data))
+			if (DeeSeq_Unpack(elem, 2, key_and_value))
 				goto err_r_imemb_iter_elem;
 			Dee_Decref(elem);
-			if (DeeObject_AsUInt16(data[1], &index))
+			if (DeeObject_AsUInt16(key_and_value[1], &index))
 				goto err_r_imemb_iter_data;
-			if (DeeString_Check(data[0])) {
+			if (DeeString_Check(key_and_value[0])) {
 				struct opinfo const *info;
-				info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(data[0]), (size_t)-1);
+				info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(key_and_value[0]), (size_t)-1);
 				if (info == NULL) {
 					/* TODO: In this case, must store the operator via its name
 					 *       (so the name-query can happen in `DeeClass_New()') */
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Unknown operator %r",
-					                data[0]);
+					                key_and_value[0]);
 					goto err_r_imemb_iter_data;
 				}
 				name = info->oi_id;
 			} else {
-				if (DeeObject_AsUInt16(data[0], &name))
+				if (DeeObject_AsUInt16(key_and_value[0], &name))
 					goto err_r_imemb_iter_data;
 			}
-			Dee_Decref(data[1]);
-			Dee_Decref(data[0]);
+			Dee_Decref(key_and_value[1]);
+			Dee_Decref(key_and_value[0]);
 			if (args.csize != (uint16_t)-1 && index >= args.csize) {
 				struct opinfo const *op = DeeTypeType_GetOperatorById(&DeeType_Type, name);
 				if (op) {
@@ -2318,8 +2330,8 @@ got_flag:
 	DeeObject_Init(result, &DeeClassDescriptor_Type);
 	return result;
 err_r_imemb_iter_data:
-	Dee_Decref(data[1]);
-	Dee_Decref(data[0]);
+	Dee_Decref(key_and_value[1]);
+	Dee_Decref(key_and_value[0]);
 	goto err_r_imemb_iter;
 err_r_imemb_iter_elem:
 	Dee_Decref(elem);
