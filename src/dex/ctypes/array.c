@@ -32,6 +32,7 @@
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -398,81 +399,65 @@ err:
 	return -1;
 }
 
+struct array_setrange_enumerate_data {
+	DeeSTypeObject      *asre_etype;  /* [1..1][const] Array element type */
+	size_t               asre_esize;  /* [const] Size of "asre_etype" */
+	struct Dee_seq_range asre_range;  /* Range to assign values to */
+	byte_t              *asre_rbase;  /* [const] Array range base pointer */
+	size_t               asre_rsize;  /* [== asre_range.sr_end - asre_range.sr_start] */
+	size_t               asre_maxidx; /* Last-encountered index */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+array_setrange_enumerate_cb(void *arg, size_t index, DeeObject *value) {
+	struct array_setrange_enumerate_data *data;
+	data = (struct array_setrange_enumerate_data *)arg;
+	data->asre_maxidx = index;
+	if likely(index < data->asre_rsize) {
+		byte_t *item_ptr;
+		if (value == NULL)
+			value = Dee_None;
+		item_ptr = data->asre_rbase + index * data->asre_esize;
+		/* Assign this item to the array element. */
+		return DeeStruct_Assign(data->asre_etype, item_ptr, value);
+	}
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1, 3, 4, 5)) int DCALL
 array_setrange(DeeArrayTypeObject *tp_self, void *base,
-               DeeObject *begin_ob, DeeObject *end_ob, DeeObject *value) {
-	Dee_ssize_t i_begin, i_end;
-	struct Dee_seq_range range;
-	size_t range_size;
-	DREF DeeObject *iter, *elem;
+               DeeObject *startob, DeeObject *endob, DeeObject *value) {
+	struct array_setrange_enumerate_data data;
 
 	/* When `none' is passed, simply clear out affected memory. */
 	if (DeeNone_Check(value))
-		return array_delrange(tp_self, base, begin_ob, end_ob);
-	i_end = (Dee_ssize_t)tp_self->at_count;
-	if (DeeObject_AsSSize(begin_ob, &i_begin))
+		return array_delrange(tp_self, base, startob, endob);
+	if (DeeObject_AsSSize(startob, &data.asre_range.sr_istart))
 		goto err;
-	if (!DeeNone_Check(end_ob)) {
-		if (DeeObject_AsSSize(end_ob, &i_end))
+	data.asre_range.sr_end = tp_self->at_count;
+	if (!DeeNone_Check(endob)) {
+		if (DeeObject_AsSSize(endob, &data.asre_range.sr_iend))
 			goto err;
 	}
-	DeeSeqRange_Clamp(&range, i_begin, i_end, tp_self->at_count);
-	range_size = range.sr_end - range.sr_start;
-	iter = DeeObject_Iter(value);
-	if unlikely(!iter)
+	_DeeSeqRange_Clamp(&data.asre_range, tp_self->at_count);
+	data.asre_etype  = tp_self->at_orig;
+	data.asre_esize  = DeeSType_Sizeof(data.asre_etype);
+	data.asre_rbase  = (byte_t *)base + data.asre_range.sr_start * data.asre_esize;
+	data.asre_rsize  = data.asre_range.sr_end - data.asre_range.sr_start;
+	data.asre_maxidx = (size_t)-1;
+	if (DeeObject_InvokeMethodHint(seq_enumerate_index, value,
+	                               &array_setrange_enumerate_cb,
+	                               &data, 0, (size_t)-1))
 		goto err;
-	if unlikely(range_size <= 0) {
-		/* Empty range. */
-	} else {
-		size_t item_size;
-		union pointer array_iter, array_end;
-		item_size      = DeeSType_Sizeof(tp_self->at_orig);
-		array_iter.ptr = (byte_t *)base + range.sr_start * item_size;
-		array_end.ptr  = (byte_t *)base + range.sr_end * item_size;
-		while (array_iter.ptr < array_end.ptr) {
-			int error;
-			elem = DeeObject_IterNext(iter);
-			if unlikely(!ITER_ISOK(elem)) {
-				if (elem) { /* Unexpected end of sequence. */
-					size_t given_count;
-					given_count = array_iter.uint - ((uintptr_t)base + range.sr_start * item_size);
-					if (item_size)
-						given_count /= item_size;
-					DeeError_Throwf(&DeeError_UnpackError,
-					                "Expected %" PRFuSIZ " object%s when only %" PRFuSIZ " w%s given",
-					                tp_self->at_count, tp_self->at_count == 1 ? "" : "s",
-					                given_count, given_count == 1 ? "as" : "ere");
-				}
-				goto err_iter;
-			}
-
-			/* Assign this item to the array element. */
-			error = DeeStruct_Assign(tp_self->at_orig, array_iter.ptr, elem);
-			Dee_Decref(elem);
-			if unlikely(error)
-				goto err_iter;
-
-			/* Advance the iterator. */
-			array_iter.uint += item_size;
-		}
+	++data.asre_maxidx;
+	if unlikely(data.asre_maxidx != data.asre_rsize) {
+		DeeError_Throwf(&DeeError_UnpackError,
+		                "Expected %" PRFuSIZ " object%s when only %" PRFuSIZ " w%s given",
+		                data.asre_rsize, data.asre_rsize == 1 ? "" : "s",
+		                data.asre_maxidx, data.asre_maxidx == 1 ? "as" : "ere");
+		goto err;
 	}
-
-	/* Ensure that the given sequence ends here. */
-	elem = DeeObject_IterNext(iter);
-	if unlikely(elem != ITER_DONE) {
-		if (elem != NULL) {
-			Dee_Decref(elem);
-			DeeError_Throwf(&DeeError_UnpackError,
-			                "Expected %" PRFuSIZ " object%s when at least %" PRFuSIZ " w%s given",
-			                tp_self->at_count, tp_self->at_count == 1 ? "" : "s",
-			                tp_self->at_count + 1, tp_self->at_count == 0 ? "as" : "ere");
-		}
-		goto err_iter;
-	}
-	Dee_Decref(iter);
 	return 0;
-err_iter:
-	Dee_Decref(iter);
 err:
 	return -1;
 }
