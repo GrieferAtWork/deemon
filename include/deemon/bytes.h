@@ -141,6 +141,7 @@ DeeBytes_NewBuffer(size_t num_bytes, __BYTE_TYPE__ init);
 
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeBytes_NewBufferUninitialized(size_t num_bytes);
+#define DeeBytes_Destroy(self) Dee_DecrefDokill(self)
 
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);

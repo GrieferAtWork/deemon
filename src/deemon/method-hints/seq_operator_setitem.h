@@ -52,7 +52,7 @@ err:
 	result = LOCAL_CALLATTR(self, 2, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -85,7 +85,7 @@ err:
 	result = LOCAL_CALLATTRF(self, PCKuSIZ "o", index, value);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;

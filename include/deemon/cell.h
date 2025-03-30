@@ -81,8 +81,8 @@ DeeCell_New(DeeObject *__restrict item);
  *       empty, whereas `DeeCell_TryGet()' will do the same, but never throw any error. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCell_TryGet(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCell_Get(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeCell_Del(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeCell_Set(DeeObject *self, DeeObject *value);
+DFUNDEF NONNULL((1)) int DCALL DeeCell_Del(DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) int DCALL DeeCell_Set(DeeObject *self, DeeObject *value);
 
 /* Exchange the Cell's value.
  * NOTE: `DeeCell_XchIfNotNull()' will only set the new value when the old was non-NULL. */

@@ -103,7 +103,7 @@ ob_weakref_invoke_callback(struct weakref *__restrict self) {
 		result = DeeObject_Call(me->wr_del, 1, (DeeObject **)&me);
 		Dee_Decref(me);
 		if likely(result) {
-			Dee_Decref(result);
+			Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
 		} else {
 			DeeError_Print("Unhandled exception in WeakRef callback",
 			               ERROR_PRINT_DOHANDLE);

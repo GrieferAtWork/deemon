@@ -1863,23 +1863,8 @@ PUBLIC WUNUSED NONNULL((1)) Dee_pos_t DCALL
 DeeFile_GetSize(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_size, 0, NULL);
-	if likely(result) {
-		Dee_pos_t resval;
-		int error;
-		error = DeeObject_AsUInt64(result, &resval);
-		Dee_Decref(result);
-		if unlikely(error)
-			goto err;
-
-		/* Ensure that the file isn't too large. */
-		if unlikely(resval == (Dee_pos_t)-1) {
-			DeeError_Throwf(&DeeError_ValueError,
-			                "Failed %k is too large (%" PRFu64 " is bigger than 2^63 bytes)",
-			                self, resval);
-			goto err;
-		}
-		return resval;
-	}
+	if likely(result)
+		return (Dee_pos_t)DeeObject_AsDirectUInt64Inherited(result);
 
 	/* Failed to call the size() member function. */
 	if (DeeFileType_CheckExact(Dee_TYPE(self)) &&
@@ -1888,7 +1873,6 @@ DeeFile_GetSize(DeeObject *__restrict self) {
 		err_unimplemented_operator(Dee_TYPE(self),
 		                           FILE_OPERATOR_SEEK);
 	}
-err:
 	return (Dee_pos_t)-1;
 }
 

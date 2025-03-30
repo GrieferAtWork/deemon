@@ -4390,7 +4390,7 @@ int_tobytes(DeeIntObject *self, size_t argc,
 		goto err_r;
 	return result;
 err_r:
-	Dee_Decref(result);
+	DeeBytes_Destroy(result);
 err:
 	return NULL;
 }

@@ -1348,7 +1348,8 @@ Dee_membercache_table_new(struct Dee_membercache_table const *old_table,
  * @return:  2: Slot is being initialized by a different thread (not added)
  * @return:  1: Slot already exists in cache (not added)
  * @return:  0: Success
- * @return: -1: No more free slots (caller must allocate a new member-cache table) */
+ * @return: -1: No more free slots (caller must allocate a new member-cache
+ *              table, or try with `allow_bad_hash_ratios = true') */
 PRIVATE NONNULL((1, 2)) int DCALL
 Dee_membercache_table_addslot(struct Dee_membercache_table *__restrict self,
                               struct Dee_membercache_slot const *__restrict item,

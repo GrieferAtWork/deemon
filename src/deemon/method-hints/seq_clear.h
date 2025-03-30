@@ -58,7 +58,7 @@ __seq_clear__.seq_clear([[nonnull]] DeeObject *__restrict self)
 	result = LOCAL_CALLATTR(self, 0, NULL);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;

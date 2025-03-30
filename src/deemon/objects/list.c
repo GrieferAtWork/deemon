@@ -3837,15 +3837,14 @@ PRIVATE struct type_gc tpconst list_gc = {
 
 INTERN WUNUSED NONNULL((1, 2)) DREF List *DCALL
 list_add(List *me, DeeObject *other) {
-	DREF List *result;
-	result = DeeList_Copy(me);
+	DREF List *result = DeeList_Copy(me);
 	if unlikely(!result)
 		goto err;
 	if unlikely(DeeList_AppendSequence((DeeObject *)result, other))
 		goto err_r;
 	return result;
 err_r:
-	Dee_Decref(result);
+	DeeList_Destroy(result);
 err:
 	return NULL;
 }

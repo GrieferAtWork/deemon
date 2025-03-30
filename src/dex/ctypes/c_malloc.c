@@ -110,7 +110,7 @@ capi_realloc(size_t argc, DeeObject *const *argv) {
 	((struct pointer_object *)result)->p_ptr.ptr = ptr.ptr;
 	return result;
 err_r:
-	Dee_Decref(result);
+	Dee_DecrefDokill(result);
 err:
 	return NULL;
 }
@@ -187,7 +187,7 @@ capi_tryrealloc(size_t argc, DeeObject *const *argv) {
 	return result;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 err_r:
-	Dee_Decref(result);
+	Dee_DecrefDokill(result);
 #endif /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
 err:
 	return NULL;

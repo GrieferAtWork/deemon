@@ -30,6 +30,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/thread.h>
 
 #include <hybrid/limitcore.h>
 /**/
@@ -114,12 +115,15 @@ again:
 		goto err_r;
 	if (!pred_bool) {
 		Dee_Decref(result);
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 done:
 	return result;
 err_r:
 	Dee_Decref(result);
+err:
 	return NULL;
 }
 

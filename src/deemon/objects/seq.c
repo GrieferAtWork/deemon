@@ -830,7 +830,7 @@ err_bad_args:
 	err_invalid_argc("enumerate", argc, 0, 3);
 	goto err;
 err_r:
-	Dee_Decref(result);
+	Dee_Decref_likely(result);
 err:
 	return NULL;
 }

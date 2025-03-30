@@ -254,7 +254,7 @@ DeeCell_CmpXch(DeeObject *self,
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1)) int DCALL
+PUBLIC NONNULL((1)) int DCALL
 DeeCell_Del(DeeObject *__restrict self) {
 	DeeCellObject *me = (DeeCellObject *)self;
 	DREF DeeObject *old_value;
@@ -271,7 +271,7 @@ DeeCell_Del(DeeObject *__restrict self) {
 	return 0;
 }
 
-PUBLIC WUNUSED NONNULL((1)) int DCALL
+PUBLIC NONNULL((1)) int DCALL
 DeeCell_Set(DeeObject *self, DeeObject *value) {
 	DeeCellObject *me = (DeeCellObject *)self;
 	DREF DeeObject *old_value;

@@ -24,9 +24,9 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/thread.h>
 /**/
 
 #include "../../runtime/strings.h"
@@ -125,10 +125,14 @@ again:
 	/* Check if the hash matches. */
 	if (DeeObject_Hash(result) != self->fi_hash) {
 		Dee_Decref(result);
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 done:
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -148,12 +152,15 @@ again:
 	/* Check if the hash matches. */
 	if (key_hash != self->fi_hash) {
 		Dee_Decref(result);
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 done:
 	return result;
 err_r:
 	Dee_Decref(result);
+err:
 	return NULL;
 }
 

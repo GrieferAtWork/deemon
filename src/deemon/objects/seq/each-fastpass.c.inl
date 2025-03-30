@@ -255,7 +255,7 @@ LOCAL_seX(transform)(LOCAL_SeqEach *self, DeeObject *elem) {
 }
 
 LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-LOCAL_seX(transform_inherit)(LOCAL_SeqEach *self, /*inherit(always)*/ DREF DeeObject *elem) {
+LOCAL_seX(transform_inherited)(LOCAL_SeqEach *self, /*inherit(always)*/ DREF DeeObject *elem) {
 	DREF DeeObject *result;
 	result = LOCAL_seX(transform)(self, elem);
 	Dee_Decref(elem);
@@ -687,7 +687,7 @@ LOCAL_seX(mh_seq_operator_getitem)(LOCAL_SeqEach *self, DeeObject *index) {
 	DREF DeeObject *result = DeeObject_InvokeMethodHint(seq_operator_getitem,
 	                                                    self->se_seq, index);
 	if likely(result)
-		result = LOCAL_seX(transform_inherit)(self, result);
+		result = LOCAL_seX(transform_inherited)(self, result);
 	return result;
 }
 
@@ -696,7 +696,7 @@ LOCAL_seX(mh_seq_operator_getitem_index)(LOCAL_SeqEach *self, size_t index) {
 	DREF DeeObject *result = DeeObject_InvokeMethodHint(seq_operator_getitem_index,
 	                                                    self->se_seq, index);
 	if likely(result)
-		result = LOCAL_seX(transform_inherit)(self, result);
+		result = LOCAL_seX(transform_inherited)(self, result);
 	return result;
 }
 
@@ -705,7 +705,7 @@ LOCAL_seX(mh_seq_operator_trygetitem)(LOCAL_SeqEach *self, DeeObject *index) {
 	DREF DeeObject *result = DeeObject_InvokeMethodHint(seq_operator_trygetitem,
 	                                                    self->se_seq, index);
 	if likely(ITER_ISOK(result))
-		result = LOCAL_seX(transform_inherit)(self, result);
+		result = LOCAL_seX(transform_inherited)(self, result);
 	return result;
 }
 
@@ -714,7 +714,7 @@ LOCAL_seX(mh_seq_operator_trygetitem_index)(LOCAL_SeqEach *self, size_t index) {
 	DREF DeeObject *result = DeeObject_InvokeMethodHint(seq_operator_trygetitem_index,
 	                                                    self->se_seq, index);
 	if likely(ITER_ISOK(result))
-		result = LOCAL_seX(transform_inherit)(self, result);
+		result = LOCAL_seX(transform_inherited)(self, result);
 	return result;
 }
 
@@ -1444,12 +1444,8 @@ PRIVATE struct type_member tpconst LOCAL_seXi(members)[] = {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 LOCAL_seXi(next)(SeqEachIterator *__restrict self) {
 	DREF DeeObject *result = DeeObject_IterNext(self->ei_iter);
-	if likely(ITER_ISOK(result)) {
-		DREF DeeObject *new_result;
-		new_result = LOCAL_seX(transform)((LOCAL_SeqEach *)self->ei_each, result);
-		Dee_Decref(result);
-		result = new_result;
-	}
+	if likely(ITER_ISOK(result))
+		result = LOCAL_seX(transform_inherited)((LOCAL_SeqEach *)self->ei_each, result);
 	return result;
 }
 

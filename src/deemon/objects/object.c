@@ -2415,7 +2415,7 @@ object_incpost(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err_r;
 	return result;
 err_r:
-	Dee_Decref(result);
+	Dee_Decref_likely(result);
 err:
 	return NULL;
 }
@@ -2438,7 +2438,7 @@ object_decpost(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err_r;
 	return result;
 err_r:
-	Dee_Decref(result);
+	Dee_Decref_likely(result);
 err:
 	return NULL;
 }

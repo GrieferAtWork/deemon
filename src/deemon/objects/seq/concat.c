@@ -285,7 +285,7 @@ do_iter:
 		self->cti_pseq = p_next;
 
 		/* Store our new iterator, replacing the previous one. */
-		result       = self->cti_curr;
+		result = self->cti_curr;
 		self->cti_curr = iter;
 		Dee_Incref(iter); /* The reference now stored in `self->cti_curr' */
 		CatIterator_LockEndWrite(self);

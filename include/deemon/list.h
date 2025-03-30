@@ -83,6 +83,7 @@ struct Dee_list_object {
 #define DeeList_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeList_Type)
 
 DDATDEF DeeTypeObject DeeList_Type;
+#define DeeList_Destroy(self) Dee_DecrefDokill(self)
 
 /* Create a new list object from a vector. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL
