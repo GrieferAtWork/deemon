@@ -2255,8 +2255,7 @@ again_check_for_interrupts:
 			if unlikely(!keyboard_interrupt)
 				goto err;
 			DeeObject_Init(keyboard_interrupt, &DeeError_KeyboardInterrupt);
-			DeeError_Throw((DeeObject *)keyboard_interrupt);
-			Dee_Decref(keyboard_interrupt);
+			DeeError_ThrowInherited((DeeObject *)keyboard_interrupt);
 			goto err;
 		}
 	}
@@ -4319,8 +4318,7 @@ thread_exit(DeeObject *UNUSED(self),
 	error->te_result = result;
 	Dee_Incref(result);
 	DeeObject_Init(error, &DeeError_ThreadExit);
-	DeeError_Throw((DeeObject *)error);
-	Dee_Decref_unlikely(error);
+	DeeError_ThrowInherited((DeeObject *)error);
 err:
 	return NULL;
 }

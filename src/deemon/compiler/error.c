@@ -391,8 +391,7 @@ handle_master:
 		 *      `master' variable. */
 
 		/* With the master fully initialized, throw it. */
-		DeeError_Throw((DeeObject *)master);
-		Dee_Decref(master);
+		DeeError_ThrowInherited((DeeObject *)master);
 		goto err;
 	}
 	if (must_fail) {
@@ -406,10 +405,8 @@ handle_master:
 		/* Nothing went wrong?
 		 * Whatever... Let's just throw an anonymous compiler error... */
 		error = DeeObject_NewDefault(&DeeError_CompilerError);
-		if likely(error) {
-			DeeError_Throw(error);
-			Dee_Decref(error);
-		}
+		if likely(error)
+			DeeError_ThrowInherited(error);
 		goto err;
 	}
 	return 0;

@@ -175,6 +175,7 @@ EXPORTS
 	_DeeError_Handled@4=DeeError_Handled@4
 	_DeeError_Print@8=DeeError_Print@8
 	_DeeError_Throw@4=DeeError_Throw@4
+	_DeeError_ThrowInherited@4=DeeError_ThrowInherited@4
 	_DeeError_VThrowf@12=DeeError_VThrowf@12
 	_DeeExec_CompileFunctionMemory@36=DeeExec_CompileFunctionMemory@36
 	_DeeExec_CompileFunctionMemoryString@44=DeeExec_CompileFunctionMemoryString@44
@@ -334,6 +335,7 @@ EXPORTS
 	_DeeHashSet_Unify@8=DeeHashSet_Unify@8
 	_DeeInstanceMember_New@8=DeeInstanceMember_New@8
 	_DeeInstanceMethod_New@8=DeeInstanceMethod_New@8
+	_DeeInstanceMethod_NewInherited@8=DeeInstanceMethod_NewInherited@8
 	_DeeInstance_BoundAttribute@16=DeeInstance_BoundAttribute@16
 	_DeeInstance_BoundMember@12=DeeInstance_BoundMember@12
 	_DeeInstance_BoundMemberSafe@12=DeeInstance_BoundMemberSafe@12

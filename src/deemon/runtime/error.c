@@ -139,6 +139,12 @@ handle_print_error:
  * @return: -1: Always returns `-1' */
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeError_Throw)(DeeObject *__restrict error) {
+	Dee_Incref(error);
+	return DeeError_ThrowInherited(error);
+}
+
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeError_ThrowInherited)(/*inherit(always)*/ DREF DeeObject *__restrict error) {
 	struct except_frame *frame;
 	DeeThreadObject *ts = DeeThread_Self();
 	ASSERT_OBJECT(error);
@@ -151,23 +157,24 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		frame = except_frame_alloc();
 	}
 	if unlikely(!frame)
-		goto done;
+		goto err;
 	frame->ef_prev  = ts->t_except;
 	frame->ef_error = error;
 	frame->ef_trace = (DREF DeeTracebackObject *)ITER_DONE;
 	ts->t_except    = frame;
-	Dee_Incref(error);
 	++ts->t_exceptsz;
 	Dee_DPRINTF("[RT] Throw exception: %r (%" PRFu16 ")\n", error, ts->t_exceptsz);
-done:
+	return -1;
+err:
+	Dee_Decref(error);
 	return -1;
 }
+
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeError_VThrowf)(DeeTypeObject *__restrict tp,
                          char const *__restrict format,
                          va_list args) {
-	int result;
 	DREF DeeObject *argv[1], *error_ob;
 
 	/* Create the message string. */
@@ -184,9 +191,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 		goto err;
 
 	/* Throw the new error object. */
-	result = DeeError_Throw(error_ob);
-	Dee_Decref(error_ob);
-	return result;
+	return DeeError_ThrowInherited(error_ob);
 err:
 	return -1;
 }

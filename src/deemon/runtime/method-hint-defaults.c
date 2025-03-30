@@ -117,8 +117,7 @@ err_api_vunsupportedf(char const *api, DeeObject *self, char const *method_forma
 	Dee_Decref_unlikely(message);
 	if unlikely(!error)
 		goto err;
-	result = DeeError_Throw(error);
-	Dee_Decref_unlikely(error);
+	result = DeeError_ThrowInherited(error);
 	return result;
 err_printer:
 	unicode_printer_fini(&printer);

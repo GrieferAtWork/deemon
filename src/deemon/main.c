@@ -802,10 +802,8 @@ PRIVATE struct cmd_option const cmdline_options[] = {
 PRIVATE int DCALL exit_ok(void) {
 	DREF DeeObject *err;
 	err = DeeObject_NewDefault(&DeeError_AppExit);
-	if likely(err) {
-		DeeError_Throw(err);
-		Dee_Decref(err);
-	}
+	if likely(err)
+		DeeError_ThrowInherited(err);
 	return -1;
 }
 

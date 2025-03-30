@@ -50,7 +50,6 @@ DECL_BEGIN
  * @return: -1: Always returns -1. */
 PUBLIC ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes) {
 	DeeNoMemoryErrorObject *nomem_error;
-	int result;
 	nomem_error = DeeObject_TRYMALLOC(DeeNoMemoryErrorObject);
 	if (!nomem_error) {
 		/* If we can't even allocate the no-memory
@@ -62,9 +61,7 @@ PUBLIC ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes) {
 	nomem_error->e_inner      = NULL;
 	nomem_error->nm_allocsize = req_bytes;
 	/* Throw the no-memory error. */
-	result = DeeError_Throw((DeeObject *)nomem_error);
-	Dee_Decref(nomem_error);
-	return result;
+	return DeeError_ThrowInherited((DeeObject *)nomem_error);
 }
 
 INTERN ATTR_COLD int (DCALL err_no_active_exception)(void) {
@@ -119,7 +116,6 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3, 4)) int
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unimplemented_constructor_kw)(DeeTypeObject *tp, size_t argc,
                                          DeeObject *const *argv, DeeObject *kw) {
-	int result;
 	DREF DeeObject *error_args[1], *error_ob;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	char const *name               = tp->tp_name;
@@ -145,9 +141,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	if unlikely(!error_ob)
 		goto err;
 	/* Throw the new error object. */
-	result = DeeError_Throw(error_ob);
-	Dee_Decref(error_ob);
-	return result;
+	return DeeError_ThrowInherited(error_ob);
 err_printer:
 	unicode_printer_fini(&printer);
 err:

@@ -1905,8 +1905,7 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 		error->se_errno     = DeeNTSystem_TranslateErrno(dwError);
 		error->se_lasterror = dwError;
 		DeeObject_Init(error, tp);
-		result = DeeError_Throw((DeeObject *)error);
-		Dee_Decref(error);
+		result = DeeError_ThrowInherited((DeeObject *)error);
 	} else {
 		/* Unlikely to happen: Just throw a regular, old error. */
 		result = DeeError_VThrowf(tp, format, args);

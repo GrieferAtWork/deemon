@@ -437,8 +437,7 @@ f_rt_assert(size_t argc, DeeObject *const *argv) {
 		goto err;
 
 	/* Throw the assertion error. */
-	DeeError_Throw(assertion_error);
-	Dee_Decref(assertion_error);
+	DeeError_ThrowInherited(assertion_error);
 err:
 	return NULL;
 }

@@ -104,8 +104,7 @@ got_tp:
 		error->se_lasterror = DeeNTSystem_TranslateNtError(errno_value);
 #endif /* CONFIG_HOST_WINDOWS */
 		DeeObject_Init(error, tp);
-		result = DeeError_Throw((DeeObject *)error);
-		Dee_Decref(error);
+		result = DeeError_ThrowInherited((DeeObject *)error);
 	} else {
 		/* Unlikely to happen: Just throw a regular, old error. */
 		result = DeeError_VThrowf(tp, format, args);

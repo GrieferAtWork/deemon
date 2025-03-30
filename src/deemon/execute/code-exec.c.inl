@@ -1352,8 +1352,8 @@ next_instr:
 		}
 
 		TARGET(ASM_THROW, -1, +0) {
-			DeeError_Throw(TOP);
-			POPREF();
+			DeeError_ThrowInherited(TOP);
+			POP();
 			HANDLE_EXCEPT();
 		}
 
@@ -6625,8 +6625,7 @@ do_prefix_push_local:
 					value = get_prefix_object();
 					if unlikely(!value)
 						HANDLE_EXCEPT();
-					DeeError_Throw(value);
-					Dee_Decref(value);
+					DeeError_ThrowInherited(value);
 					HANDLE_EXCEPT();
 				}
 

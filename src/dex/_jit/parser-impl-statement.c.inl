@@ -366,8 +366,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
 #ifdef JIT_EVAL
 					ASSERT(self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET);
 					/* Throw the given object. */
-					DeeError_Throw(result);
-					Dee_Clear(result);
+					DeeError_ThrowInherited(result);
+					result = NULL;
 #endif /* JIT_EVAL */
 				}
 				goto done;

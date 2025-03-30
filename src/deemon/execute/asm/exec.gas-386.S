@@ -1423,9 +1423,9 @@ target_yieldall:
 target_throw:
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeError_Throw,4)
+	call   fSYM(DeeError_ThrowInherited,4)
 	ADJUST_CFA_OFFSET(-4)
-	sp_popref %eax
+	subl   $4, SP /* Reference was inherited by `DeeError_ThrowInherited()' */
 	jmp    .except
 
 
@@ -8238,15 +8238,10 @@ prefix_target_yieldall:
 
 prefix_target_throw:
 	call   get_prefix_object
-	pushl  %edx /* backup */
-	ADJUST_CFA_OFFSET(4)
 	pushl  %edx /* error */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeError_Throw,4)
+	call   fSYM(DeeError_ThrowInherited,4)
 	ADJUST_CFA_OFFSET(-4)
-	popl   %edx /* restore */
-	ADJUST_CFA_OFFSET(-4)
-	decref %edx
 	jmp    .except
 
 
