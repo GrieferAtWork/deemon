@@ -158,7 +158,7 @@ stype_ffitype(DeeSTypeObject *__restrict self) {
 		return self->st_ffitype;
 	/* TODO: Lazily allocate struct descriptors. */
 
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 

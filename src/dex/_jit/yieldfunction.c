@@ -1403,7 +1403,7 @@ err_obj_scope:
 #if 0 /* TODO */
 			if (name == ENCODE_INT32('s', 'w', 'i', 't') &&
 			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('c', 'h')) {
-				DERROR_NOTIMPLEMENTED();
+				DeeError_NOTIMPLEMENTED();
 				goto err;
 			}
 #endif

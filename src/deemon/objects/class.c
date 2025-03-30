@@ -3626,7 +3626,7 @@ instance_iterattr(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	(void)bufsize;
 	(void)hint;
 	/* TODO */
-	return (size_t)DERROR_NOTIMPLEMENTED();
+	return (size_t)DeeError_NOTIMPLEMENTED();
 }
 #else /* CONFIG_EXPERIMENTAL_ATTRITER */
 INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
@@ -3639,7 +3639,7 @@ instance_enumattr(DeeTypeObject *tp_self,
 	(void)proc;
 	(void)arg;
 	/* TODO */
-	return DERROR_NOTIMPLEMENTED();
+	return DeeError_NOTIMPLEMENTED();
 }
 #endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 

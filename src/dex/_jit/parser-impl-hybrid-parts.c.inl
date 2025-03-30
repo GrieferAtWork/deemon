@@ -449,7 +449,7 @@ H_FUNC(Del)(JITLexer *__restrict self, JIT_ARGS) {
 	(void)is_statement;
 #endif /* !JIT_HYBRID */
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return ERROR;
 }
 
@@ -716,7 +716,7 @@ done_for:
 	} else {
 #ifdef JIT_EVAL
 		/* TODO */
-		DERROR_NOTIMPLEMENTED();
+		DeeError_NOTIMPLEMENTED();
 		result = ERROR;
 #else /* JIT_EVAL */
 		if (JITLexer_SkipPair(self, '(', ')'))
@@ -860,7 +860,7 @@ err_iter:
 	} else {
 #ifdef JIT_EVAL
 		/* TODO */
-		DERROR_NOTIMPLEMENTED();
+		DeeError_NOTIMPLEMENTED();
 		result = ERROR;
 #else /* JIT_EVAL */
 		if (JITLexer_SkipPair(self, '(', ')'))
@@ -992,7 +992,7 @@ done_loop:
 	} else {
 #ifdef JIT_EVAL
 		/* TODO */
-		DERROR_NOTIMPLEMENTED();
+		DeeError_NOTIMPLEMENTED();
 		result = ERROR;
 #else /* JIT_EVAL */
 		if (JITLexer_SkipPair(self, '(', ')'))
@@ -1144,7 +1144,7 @@ do_skip_while_suffix:
 	} else {
 #ifdef JIT_EVAL
 		/* TODO */
-		DERROR_NOTIMPLEMENTED();
+		DeeError_NOTIMPLEMENTED();
 		result = ERROR;
 #else /* JIT_EVAL */
 		if (JITLexer_SkipGeneratorExpression(self, JITLEXER_EVAL_FNORMAL))
@@ -1237,7 +1237,7 @@ H_FUNC(Assert)(JITLexer *__restrict self, JIT_ARGS) {
 #else /* JIT_HYBRID */
 	(void)is_statement;
 #endif /* !JIT_HYBRID */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return ERROR;
 }
 

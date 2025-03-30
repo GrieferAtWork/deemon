@@ -227,7 +227,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_iter(DeeCompilerScopeObject *__restrict self) {
 	(void)self; /* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 

@@ -402,7 +402,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 			if (name == ENCODE_INT32('p', 'r', 'i', 'n') &&
 			    UNALIGNED_GET8(tok_begin + 4) == 't') {
 				/* TODO */
-				DERROR_NOTIMPLEMENTED();
+				DeeError_NOTIMPLEMENTED();
 				goto err;
 			}
 			if (name == ENCODE_INT32('b', 'r', 'e', 'a') &&
@@ -478,7 +478,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 			if (name == ENCODE_INT32('s', 'w', 'i', 't') &&
 			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('c', 'h')) {
 				/* TODO */
-				DERROR_NOTIMPLEMENTED();
+				DeeError_NOTIMPLEMENTED();
 				goto err;
 			}
 			break;

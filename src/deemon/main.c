@@ -2492,7 +2492,7 @@ do_set_ddi_name:
 				                                  dformat_code_tail);
 				if (!comment_end) {
 					/* TODO: Scan immediately following comment tokens for the end of the format-block. */
-					DERROR_NOTIMPLEMENTED();
+					DeeError_NOTIMPLEMENTED();
 					goto err_stream;
 				}
 			}
@@ -2507,7 +2507,7 @@ do_set_ddi_name:
 			                                  dformat_code_tail);
 			if (!comment_end) {
 				/* TODO: Scan immediately following comment tokens for the end of the format-block. */
-				DERROR_NOTIMPLEMENTED();
+				DeeError_NOTIMPLEMENTED();
 				goto err_stream;
 			}
 		}

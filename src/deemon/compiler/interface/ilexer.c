@@ -2564,7 +2564,7 @@ INTERN DeeTypeObject DeeCompilerLexer_Type = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_keywords_iter(DeeCompilerWrapperObject *__restrict self) {
 	(void)self; /* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 

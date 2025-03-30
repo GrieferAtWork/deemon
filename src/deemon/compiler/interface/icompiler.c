@@ -1972,7 +1972,7 @@ ast_makeclass(DeeCompilerObject *self, size_t argc,
 	(void)argc;
 	(void)argv;
 	(void)kw;
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1983,7 +1983,7 @@ ast_makelabel(DeeCompilerObject *self, size_t argc,
 	(void)argc;
 	(void)argv;
 	(void)kw;
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1994,7 +1994,7 @@ ast_makegoto(DeeCompilerObject *self, size_t argc,
 	(void)argc;
 	(void)argv;
 	(void)kw;
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -2005,7 +2005,7 @@ ast_makeswitch(DeeCompilerObject *self, size_t argc,
 	(void)argc;
 	(void)argv;
 	(void)kw;
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -2016,7 +2016,7 @@ ast_makeassembly(DeeCompilerObject *self, size_t argc,
 	(void)argc;
 	(void)argv;
 	(void)kw;
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 

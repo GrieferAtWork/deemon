@@ -226,7 +226,7 @@ nt_GetProcessAttribute(HANDLE *__restrict lphProcess,
 	(void)lphProcess;
 	(void)dwProcessId;
 	(void)dwAttributeId;
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 

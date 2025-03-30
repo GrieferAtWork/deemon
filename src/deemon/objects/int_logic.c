@@ -1871,7 +1871,7 @@ int_pow(DeeIntObject *a, DeeObject *b_ob) {
 #if 0
 		return (*DeeFloat_Type.tp_math->tp_pow)(a, b);
 #else
-		DERROR_NOTIMPLEMENTED();
+		DeeError_NOTIMPLEMENTED();
 		goto err;
 #endif
 	}

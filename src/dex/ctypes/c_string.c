@@ -1775,7 +1775,7 @@ capi_strspn(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1784,7 +1784,7 @@ capi_strcspn(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1793,7 +1793,7 @@ capi_strpbrk(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1802,7 +1802,7 @@ capi_strrev(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1811,7 +1811,7 @@ capi_strnrev(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1820,7 +1820,7 @@ capi_strlwr(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1829,7 +1829,7 @@ capi_strupr(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1838,7 +1838,7 @@ capi_strnlwr(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1847,7 +1847,7 @@ capi_strnupr(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1856,7 +1856,7 @@ capi_strset(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1865,7 +1865,7 @@ capi_strnset(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1874,7 +1874,7 @@ capi_strfry(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1883,7 +1883,7 @@ capi_memfrob(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1892,7 +1892,7 @@ capi_strsep(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1901,7 +1901,7 @@ capi_stresep(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1910,7 +1910,7 @@ capi_strtok(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1919,7 +1919,7 @@ capi_strtok_r(size_t argc, DeeObject *const *argv) {
 	(void)argc;
 	(void)argv;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 

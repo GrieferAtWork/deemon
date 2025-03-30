@@ -2323,7 +2323,7 @@ err_function_lvalue:
 		case JIT_KEYWORD:
 			if (JITLexer_ISTOK(self, "pack")) {
 				/* TODO */
-				DERROR_NOTIMPLEMENTED();
+				DeeError_NOTIMPLEMENTED();
 				goto err_r;
 			}
 			goto done;

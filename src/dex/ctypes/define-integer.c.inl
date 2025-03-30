@@ -1111,7 +1111,7 @@ F(int_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	(void)self;
 	(void)some_object;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
@@ -1121,7 +1121,7 @@ F(int_inplace_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	(void)self;
 	(void)some_object;
 	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
 	return -1;
 }
 
