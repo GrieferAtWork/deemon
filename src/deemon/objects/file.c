@@ -1677,13 +1677,7 @@ PRIVATE WUNUSED int DCALL
 file_std_isbound(unsigned int id) {
 	DeeObject *result;
 	ASSERT(id < DEE_STDCNT);
-#ifdef __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC
-	result = atomic_read(&dee_std[id]);
-#else /* __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC */
-	dee_std_lock_read();
-	result = dee_std[id];
-	dee_std_lock_endread();
-#endif /* !__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC */
+	result = atomic_read_with_atomic_rwlock(&dee_std[id], &dee_std_lock);
 	return Dee_BOUND_FROMBOOL(result != NULL);
 }
 

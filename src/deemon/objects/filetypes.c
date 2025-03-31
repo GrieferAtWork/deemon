@@ -522,7 +522,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_sync(Reader *__restrict self) {
-	if unlikely(!atomic_read(&self->r_owner)) {
+	if unlikely(!atomic_read_with_atomic_rwlock(&self->r_owner, &self->r_lock)) {
 		return err_file_closed();
 	}
 	return 0;
@@ -1140,7 +1140,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_size(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 	_DeeArg_Unpack0(err, argc, argv, "size");
-	result = atomic_read(&self->w_printer.up_length);
+	result = atomic_read_with_atomic_rwlock(&self->w_printer.up_length,
+	                                        &self->w_lock);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1899,7 +1900,7 @@ done:
 PUBLIC NONNULL((1)) size_t DCALL
 DeeFile_ClosePrinter(/*inherit(always)*/ DREF /*FilePrinter*/ DeeObject *__restrict self) {
 	DREF Printer *me = (DREF Printer *)self;
-	size_t result    = atomic_read(&me->fp_result);
+	size_t result    = atomic_read(&me->fp_result); /* TODO: _with_shared_rwlock */
 	ASSERT_OBJECT_TYPE_EXACT((DeeObject *)me, (DeeTypeObject *)&DeeFilePrinter_Type);
 	if (!Dee_DecrefIfOne(me)) {
 		DeeFilePrinter_LockWriteNoInt(me);

@@ -1644,7 +1644,7 @@ PRIVATE struct type_seq hashset_seq = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashset_bool(HashSet *__restrict self) {
-	return atomic_read(&self->hs_used) != 0;
+	return DeeHashSet_SIZE_ATOMIC(self) != 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

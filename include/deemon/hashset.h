@@ -36,9 +36,6 @@
 #endif /* !__INTELLISENSE__ */
 /**/
 
-#include <hybrid/host.h> /* __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC */
-/**/
-
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
 
@@ -233,20 +230,8 @@ DDATDEF struct Dee_hashset_item const DeeHashSet_EmptyItems[1];
 
 /* Return the # of bound key within "self". */
 #define DeeHashSet_SIZE(self) ((self)->_DeeHashSet_SIZEFIELD)
-#ifdef __INTELLISENSE__
-#define DeeHashSet_SIZE_ATOMIC(self) DeeHashSet_SIZE(self)
-#elif defined(__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC) || defined(CONFIG_NO_THREADS)
-#define DeeHashSet_SIZE_ATOMIC(self) Dee_atomic_read(&(self)->_DeeHashSet_SIZEFIELD)
-#else /* __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC || CONFIG_NO_THREADS */
-LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t
-(DeeHashSet_SIZE_ATOMIC)(DeeHashSetObject *__restrict self) {
-	size_t result;
-	DeeHashSet_LockRead(self);
-	result = self->_DeeHashSet_SIZEFIELD;
-	DeeHashSet_LockEndRead(self);
-	return result;
-}
-#endif /* !__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC && !CONFIG_NO_THREADS */
+#define DeeHashSet_SIZE_ATOMIC(self) \
+	Dee_atomic_read_with_atomic_rwlock(&(self)->_DeeHashSet_SIZEFIELD, &(self)->hs_lock)
 
 
 /* The main `HashSet' container class. */

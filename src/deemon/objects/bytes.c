@@ -70,7 +70,7 @@ typedef DeeBytesObject Bytes;
 typedef struct {
 	OBJECT_HEAD
 	DREF Bytes   *bi_bytes; /* [1..1][const] The Bytes object being iterated. */
-	DWEAK byte_t *bi_iter;  /* [1..1][in(bi_bytes->b_base)] Pointer to the next byte to-be iterated. */
+	DWEAK byte_t *bi_iter;  /* [1..1][in(bi_bytes->b_base)][lock(ATOMIC)] Pointer to the next byte to-be iterated. */
 	byte_t       *bi_end;   /* [1..1][const][== bi_bytes->b_base + bi_bytes->b_size]
 	                         * Pointer to one byte past the end of the Bytes object being iterated. */
 } BytesIterator;

@@ -48,6 +48,7 @@ typedef char Dee_atomic_lock_t;
 #define Dee_atomic_lock_waitfor(self)         (void)0
 #define Dee_atomic_lock_release(self)         (void)0
 #define _Dee_atomic_lock_release_NDEBUG(self) (void)0
+#define Dee_atomic_read_with_atomic_lock(p, self) (*(p))
 
 typedef char Dee_atomic_rwlock_t;
 #define DEE_ATOMIC_RWLOCK_MAX_READERS              1
@@ -87,6 +88,7 @@ typedef char Dee_atomic_rwlock_t;
 #define _Dee_atomic_rwlock_end_NDEBUG(self)        (void)0
 #define _Dee_atomic_rwlock_endread_ex_NDEBUG(self) 1
 #define _Dee_atomic_rwlock_end_ex_NDEBUG(self)     1
+#define Dee_atomic_read_with_atomic_rwlock(p, self) (*(p))
 
 typedef char Dee_shared_lock_t;
 #define DEE_SHARED_LOCK_INIT                                     0
@@ -229,6 +231,8 @@ typedef struct atomic_lock Dee_atomic_lock_t;
 #define Dee_atomic_lock_waitfor         atomic_lock_waitfor
 #define Dee_atomic_lock_release         atomic_lock_release
 #define _Dee_atomic_lock_release_NDEBUG _atomic_lock_release_NDEBUG
+#define Dee_atomic_read_with_atomic_lock(p, self) \
+	__hybrid_atomic_load_with_atomic_lock(p, __ATOMIC_ACQUIRE, self)
 
 /* Simply implement atomic R/W-locks using the hybrid-API */
 typedef struct atomic_rwlock Dee_atomic_rwlock_t;
@@ -269,6 +273,9 @@ typedef struct atomic_rwlock Dee_atomic_rwlock_t;
 #define _Dee_atomic_rwlock_end_NDEBUG        _atomic_rwlock_end_NDEBUG
 #define _Dee_atomic_rwlock_endread_ex_NDEBUG _atomic_rwlock_endread_ex_NDEBUG
 #define _Dee_atomic_rwlock_end_ex_NDEBUG     _atomic_rwlock_end_ex_NDEBUG
+#define Dee_atomic_read_with_atomic_rwlock(p, self) \
+	__hybrid_atomic_load_with_atomic_rwlock(p, __ATOMIC_ACQUIRE, self)
+
 
 /************************************************************************/
 /* Shared lock (scheduler-level blocking lock)                          */
@@ -670,6 +677,14 @@ DECL_END
 		unlock_c;                                      \
 	}	__WHILE1
 #endif /* !CONFIG_NO_THREADS */
+
+#ifdef DEE_SOURCE
+#undef atomic_read_with_atomic_lock
+#undef atomic_read_with_atomic_rwlock
+#define atomic_read_with_atomic_lock(p, self)   Dee_atomic_read_with_atomic_lock(p, self)
+#define atomic_read_with_atomic_rwlock(p, self) Dee_atomic_read_with_atomic_rwlock(p, self)
+#endif /* DEE_SOURCE */
+
 
 /* Helpers to (safely) acquire multiple atomic [rw]locks at the same time. */
 #define Dee_atomic_lock_acquire_2(a, b)                                                                     \

@@ -53,7 +53,7 @@ DECL_BEGIN
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(GCSet, gsi_set);  /* [1..1][const] The set being iterated. */
-	DWEAK size_t                gsi_index; /* Index of the next set element to-be iterated. */
+	DWEAK size_t                gsi_index; /* [lock(ATOMIC)] Index of the next set element to-be iterated. */
 } GCSetIterator;
 #define READ_INDEX(x) atomic_read(&(x)->gsi_index)
 

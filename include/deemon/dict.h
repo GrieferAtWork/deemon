@@ -30,7 +30,6 @@
 #endif /* !__INTELLISENSE__ */
 /**/
 
-#include <hybrid/host.h> /* __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC */
 #include <hybrid/typecore.h>
 /**/
 
@@ -341,22 +340,8 @@ DeeDict_NewKeyValuesInherited(size_t num_items,
 
 /* Return the # of bound key within "self". */
 #define DeeDict_SIZE(self) ((self)->d_vused)
-#ifdef __INTELLISENSE__
-#define DeeDict_SIZE_ATOMIC(self) DeeDict_SIZE(self)
-#elif defined(__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC) || defined(CONFIG_NO_THREADS)
-#define DeeDict_SIZE_ATOMIC(self) Dee_atomic_read(&(self)->d_vused)
-#else /* __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC || CONFIG_NO_THREADS */
-LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t
-(DeeDict_SIZE_ATOMIC)(DeeDictObject *__restrict self) {
-	size_t result;
-	DeeDict_LockRead(self);
-	result = self->d_vused;
-	DeeDict_LockEndRead(self);
-	return result;
-}
-#endif /* !__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC && !CONFIG_NO_THREADS */
-
-
+#define DeeDict_SIZE_ATOMIC(self) \
+	Dee_atomic_read_with_atomic_rwlock(&(self)->d_vused, &(self)->d_lock)
 
 DDATDEF DeeObject DeeDict_Dummy; /* DEPRECATED (no longer used by the dict impl) */
 

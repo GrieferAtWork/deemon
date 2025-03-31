@@ -100,7 +100,7 @@ typedef struct {
 	/* A mapping-like {(string | int, int)...} object used for mapping
 	 * operator names to their respective class instance table slots. */
 	PROXY_OBJECT_HEAD_EX(ClassDescriptor, co_desc) /* [1..1][const] The referenced class descriptor. */
-	DWEAK struct class_operator          *co_iter; /* [1..1] Current iterator position. */
+	DWEAK struct class_operator          *co_iter; /* [1..1][lock(ATOMIC)] Current iterator position. */
 	struct class_operator                *co_end;  /* [1..1][const] Iterator end position. */
 } ClassOperatorTableIterator;
 #define COTI_GETITER(x) atomic_read(&(x)->co_iter)
@@ -2538,9 +2538,12 @@ err_index:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ot_bounditem_index(ObjectTable *__restrict self, size_t index) {
+	DeeObject *value;
 	if unlikely(index >= self->ot_size)
 		return Dee_BOUND_MISSING;
-	return Dee_BOUND_FROMBOOL(atomic_read(&self->ot_desc->id_vtab[index]));
+	value = atomic_read_with_atomic_rwlock(&self->ot_desc->id_vtab[index],
+	                                       &self->ot_desc->id_lock);
+	return Dee_BOUND_FROMBOOL(value);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
@@ -4650,6 +4653,7 @@ DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
                            DeeObject *__restrict this_arg,
                            struct class_attribute const *__restrict attr) {
 	DREF DeeObject *result;
+	DREF DeeObject *value;
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
@@ -4675,7 +4679,9 @@ DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
 		return Dee_BOUND_ERR;
 	} else {
 		/* Simply return the attribute as-is. */
-		return atomic_read(&self->id_vtab[attr->ca_addr]) != NULL;
+		value = atomic_read_with_atomic_rwlock(&self->id_vtab[attr->ca_addr],
+		                                       &self->id_lock);
+		return value != NULL;
 	}
 unbound:
 	return Dee_BOUND_NO;
@@ -5328,6 +5334,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInstance_BoundMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
                                 /*Instance*/ DeeObject *__restrict self,
                                 uint16_t addr) {
+	DeeObject *value;
 	struct class_desc *desc;
 	struct instance_desc *inst;
 	ASSERT_OBJECT_TYPE(tp_self, &DeeType_Type);
@@ -5335,8 +5342,10 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 	ASSERT_OBJECT_TYPE_A(self, tp_self);
 	desc = DeeClass_DESC(tp_self);
 	ASSERT(addr < desc->cd_desc->cd_imemb_size);
-	inst = DeeInstance_DESC(desc, self);
-	return atomic_read(&inst->id_vtab[addr]) != NULL;
+	inst  = DeeInstance_DESC(desc, self);
+	value = atomic_read_with_atomic_rwlock(&inst->id_vtab[addr],
+	                                       &inst->id_lock);
+	return value != NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int

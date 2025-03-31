@@ -360,9 +360,13 @@ rvec_setitem_index(RefVector *self, size_t index,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_bounditem_index(RefVector *self, size_t index) {
+	DeeObject *value;
 	if unlikely(index >= self->rv_length)
 		return Dee_BOUND_MISSING;
-	return Dee_BOUND_FROMBOOL(atomic_read(&self->rv_vector[index]));
+	value = RefVector_IsWritable(self)
+	        ? atomic_read_with_atomic_rwlock(&self->rv_vector[index], self->rv_plock)
+	        : self->rv_vector[index];
+	return Dee_BOUND_FROMBOOL(value != NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
