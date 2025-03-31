@@ -432,6 +432,8 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5, 6)) int
 #define DEE_PRIVATE_UNPd4         DEE_UNPd32
 #define DEE_PRIVATE_UNPu8         DEE_UNPu64
 #define DEE_PRIVATE_UNPd8         DEE_UNPd64
+#define DEE_PRIVATE_UNPu16        DEE_UNPu128
+#define DEE_PRIVATE_UNPd16        DEE_UNPd128
 #define DEE_PRIVATE_UNPuN(sizeof) DEE_PRIVATE_UNPu##sizeof
 #define DEE_PRIVATE_UNPdN(sizeof) DEE_PRIVATE_UNPd##sizeof
 #define DEE_UNPuN(sizeof)         DEE_PRIVATE_UNPuN(sizeof)
