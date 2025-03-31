@@ -317,156 +317,156 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5, 6)) int
 
 
 /* Optimized format sequences for `Dee_Unpackf()' and `DeeArg_Unpack[Kw]()' */
-#define DEE_UNPu8   "I8u"
-#define DEE_UNPd8   "I8d"
-#define DEE_UNPu16  "I16u"
-#define DEE_UNPd16  "I16d"
-#define DEE_UNPu32  "I32u"
-#define DEE_UNPd32  "I32d"
-#define DEE_UNPu64  "I64u"
-#define DEE_UNPd64  "I64d"
-#define DEE_UNPu128 "I128u"
-#define DEE_UNPd128 "I128d"
+#define Dee_UNPu8   "I8u"
+#define Dee_UNPd8   "I8d"
+#define Dee_UNPu16  "I16u"
+#define Dee_UNPd16  "I16d"
+#define Dee_UNPu32  "I32u"
+#define Dee_UNPd32  "I32d"
+#define Dee_UNPu64  "I64u"
+#define Dee_UNPd64  "I64d"
+#define Dee_UNPu128 "I128u"
+#define Dee_UNPd128 "I128d"
 #ifdef __SIZEOF_LONG_LONG__
 #if __SIZEOF_LONG_LONG__ == 8
-#undef DEE_UNPu64
-#undef DEE_UNPd64
-#define DEE_UNPu64 "llu"
-#define DEE_UNPd64 "lld"
+#undef Dee_UNPu64
+#undef Dee_UNPd64
+#define Dee_UNPu64 "llu"
+#define Dee_UNPd64 "lld"
 #elif __SIZEOF_LONG_LONG__ == 4
-#undef DEE_UNPu32
-#undef DEE_UNPd32
-#define DEE_UNPu32 "llu"
-#define DEE_UNPd32 "lld"
+#undef Dee_UNPu32
+#undef Dee_UNPd32
+#define Dee_UNPu32 "llu"
+#define Dee_UNPd32 "lld"
 #elif __SIZEOF_LONG_LONG__ == 2
-#undef DEE_UNPu16
-#undef DEE_UNPd16
-#define DEE_UNPu16 "llu"
-#define DEE_UNPd16 "lld"
+#undef Dee_UNPu16
+#undef Dee_UNPd16
+#define Dee_UNPu16 "llu"
+#define Dee_UNPd16 "lld"
 #endif /* __SIZEOF_LONG_LONG__ == ... */
 #endif /* __SIZEOF_LONG_LONG__ */
 #if __SIZEOF_CHAR__ == 8
-#undef DEE_UNPu64
-#undef DEE_UNPd64
-#define DEE_UNPu64 "hhu"
-#define DEE_UNPd64 "hhd"
+#undef Dee_UNPu64
+#undef Dee_UNPd64
+#define Dee_UNPu64 "hhu"
+#define Dee_UNPd64 "hhd"
 #elif __SIZEOF_CHAR__ == 4
-#undef DEE_UNPu32
-#undef DEE_UNPd32
-#define DEE_UNPu32 "hhu"
-#define DEE_UNPd32 "hhd"
+#undef Dee_UNPu32
+#undef Dee_UNPd32
+#define Dee_UNPu32 "hhu"
+#define Dee_UNPd32 "hhd"
 #elif __SIZEOF_CHAR__ == 2
-#undef DEE_UNPu16
-#undef DEE_UNPd16
-#define DEE_UNPu16 "hhu"
-#define DEE_UNPd16 "hhd"
+#undef Dee_UNPu16
+#undef Dee_UNPd16
+#define Dee_UNPu16 "hhu"
+#define Dee_UNPd16 "hhd"
 #endif /* __SIZEOF_CHAR__ == ... */
 #if __SIZEOF_LONG__ == 8
-#undef DEE_UNPu64
-#undef DEE_UNPd64
-#define DEE_UNPu64 "lu"
-#define DEE_UNPd64 "ld"
+#undef Dee_UNPu64
+#undef Dee_UNPd64
+#define Dee_UNPu64 "lu"
+#define Dee_UNPd64 "ld"
 #elif __SIZEOF_LONG__ == 4
-#undef DEE_UNPu32
-#undef DEE_UNPd32
-#define DEE_UNPu32 "lu"
-#define DEE_UNPd32 "ld"
+#undef Dee_UNPu32
+#undef Dee_UNPd32
+#define Dee_UNPu32 "lu"
+#define Dee_UNPd32 "ld"
 #elif __SIZEOF_LONG__ == 2
-#undef DEE_UNPu16
-#undef DEE_UNPd16
-#define DEE_UNPu16 "lu"
-#define DEE_UNPd16 "ld"
+#undef Dee_UNPu16
+#undef Dee_UNPd16
+#define Dee_UNPu16 "lu"
+#define Dee_UNPd16 "ld"
 #elif __SIZEOF_LONG__ == 1
-#undef DEE_UNPu8
-#undef DEE_UNPd8
-#define DEE_UNPu8 "lu"
-#define DEE_UNPd8 "ld"
+#undef Dee_UNPu8
+#undef Dee_UNPd8
+#define Dee_UNPu8 "lu"
+#define Dee_UNPd8 "ld"
 #endif /* __SIZEOF_LONG__ == ... */
 #if __SIZEOF_SHORT__ == 8
-#undef DEE_UNPu64
-#undef DEE_UNPd64
-#define DEE_UNPu64 "hu"
-#define DEE_UNPd64 "hd"
+#undef Dee_UNPu64
+#undef Dee_UNPd64
+#define Dee_UNPu64 "hu"
+#define Dee_UNPd64 "hd"
 #elif __SIZEOF_SHORT__ == 4
-#undef DEE_UNPu32
-#undef DEE_UNPd32
-#define DEE_UNPu32 "hu"
-#define DEE_UNPd32 "hd"
+#undef Dee_UNPu32
+#undef Dee_UNPd32
+#define Dee_UNPu32 "hu"
+#define Dee_UNPd32 "hd"
 #elif __SIZEOF_SHORT__ == 2
-#undef DEE_UNPu16
-#undef DEE_UNPd16
-#define DEE_UNPu16 "hu"
-#define DEE_UNPd16 "hd"
+#undef Dee_UNPu16
+#undef Dee_UNPd16
+#define Dee_UNPu16 "hu"
+#define Dee_UNPd16 "hd"
 #elif __SIZEOF_SHORT__ == 1
-#undef DEE_UNPu8
-#undef DEE_UNPd8
-#define DEE_UNPu8 "hu"
-#define DEE_UNPd8 "hd"
+#undef Dee_UNPu8
+#undef Dee_UNPd8
+#define Dee_UNPu8 "hu"
+#define Dee_UNPd8 "hd"
 #endif /* __SIZEOF_SHORT__ == ... */
 #if __SIZEOF_INT__ == 8
-#undef DEE_UNPu64
-#undef DEE_UNPd64
-#define DEE_UNPu64 "u"
-#define DEE_UNPd64 "d"
+#undef Dee_UNPu64
+#undef Dee_UNPd64
+#define Dee_UNPu64 "u"
+#define Dee_UNPd64 "d"
 #elif __SIZEOF_INT__ == 4
-#undef DEE_UNPu32
-#undef DEE_UNPd32
-#define DEE_UNPu32 "u"
-#define DEE_UNPd32 "d"
+#undef Dee_UNPu32
+#undef Dee_UNPd32
+#define Dee_UNPu32 "u"
+#define Dee_UNPd32 "d"
 #elif __SIZEOF_INT__ == 2
-#undef DEE_UNPu16
-#undef DEE_UNPd16
-#define DEE_UNPu16 "u"
-#define DEE_UNPd16 "d"
+#undef Dee_UNPu16
+#undef Dee_UNPd16
+#define Dee_UNPu16 "u"
+#define Dee_UNPd16 "d"
 #elif __SIZEOF_INT__ == 1
-#undef DEE_UNPu8
-#undef DEE_UNPd8
-#define DEE_UNPu8 "u"
-#define DEE_UNPd8 "d"
+#undef Dee_UNPu8
+#undef Dee_UNPd8
+#define Dee_UNPu8 "u"
+#define Dee_UNPd8 "d"
 #endif /* __SIZEOF_INT__ == ... */
-#define DEE_PRIVATE_UNPu1         DEE_UNPu8
-#define DEE_PRIVATE_UNPd1         DEE_UNPd8
-#define DEE_PRIVATE_UNPu2         DEE_UNPu16
-#define DEE_PRIVATE_UNPd2         DEE_UNPd16
-#define DEE_PRIVATE_UNPu4         DEE_UNPu32
-#define DEE_PRIVATE_UNPd4         DEE_UNPd32
-#define DEE_PRIVATE_UNPu8         DEE_UNPu64
-#define DEE_PRIVATE_UNPd8         DEE_UNPd64
-#define DEE_PRIVATE_UNPu16        DEE_UNPu128
-#define DEE_PRIVATE_UNPd16        DEE_UNPd128
+#define DEE_PRIVATE_UNPu1         Dee_UNPu8
+#define DEE_PRIVATE_UNPd1         Dee_UNPd8
+#define DEE_PRIVATE_UNPu2         Dee_UNPu16
+#define DEE_PRIVATE_UNPd2         Dee_UNPd16
+#define DEE_PRIVATE_UNPu4         Dee_UNPu32
+#define DEE_PRIVATE_UNPd4         Dee_UNPd32
+#define DEE_PRIVATE_UNPu8         Dee_UNPu64
+#define DEE_PRIVATE_UNPd8         Dee_UNPd64
+#define DEE_PRIVATE_UNPu16        Dee_UNPu128
+#define DEE_PRIVATE_UNPd16        Dee_UNPd128
 #define DEE_PRIVATE_UNPuN(sizeof) DEE_PRIVATE_UNPu##sizeof
 #define DEE_PRIVATE_UNPdN(sizeof) DEE_PRIVATE_UNPd##sizeof
-#define DEE_UNPuN(sizeof)         DEE_PRIVATE_UNPuN(sizeof)
-#define DEE_UNPdN(sizeof)         DEE_PRIVATE_UNPdN(sizeof)
+#define Dee_UNPuN(sizeof)         DEE_PRIVATE_UNPuN(sizeof)
+#define Dee_UNPdN(sizeof)         DEE_PRIVATE_UNPdN(sizeof)
 
 /* Helpful aliases */
-#define DEE_UNPdSIZ DEE_UNPdN(__SIZEOF_SIZE_T__)
-#define DEE_UNPuSIZ DEE_UNPuN(__SIZEOF_SIZE_T__)
-#define DEE_UNPdPTR DEE_UNPdN(__SIZEOF_POINTER__)
-#define DEE_UNPuPTR DEE_UNPuN(__SIZEOF_POINTER__)
-#define DEE_UNPdB   DEE_UNPd8
-#define DEE_UNPuB   DEE_UNPu8
+#define Dee_UNPdSIZ Dee_UNPdN(__SIZEOF_SIZE_T__)
+#define Dee_UNPuSIZ Dee_UNPuN(__SIZEOF_SIZE_T__)
+#define Dee_UNPdPTR Dee_UNPdN(__SIZEOF_POINTER__)
+#define Dee_UNPuPTR Dee_UNPuN(__SIZEOF_POINTER__)
+#define Dee_UNPdB   Dee_UNPd8
+#define Dee_UNPuB   Dee_UNPu8
 
 /* Unescaped names. */
 #ifdef DEE_SOURCE
-#define UNPdB   DEE_UNPdB
-#define UNPuB   DEE_UNPuB
-#define UNPd8   DEE_UNPd8
-#define UNPu8   DEE_UNPu8
-#define UNPd16  DEE_UNPd16
-#define UNPu16  DEE_UNPu16
-#define UNPd32  DEE_UNPd32
-#define UNPu32  DEE_UNPu32
-#define UNPd64  DEE_UNPd64
-#define UNPu64  DEE_UNPu64
-#define UNPd128 DEE_UNPd128
-#define UNPu128 DEE_UNPu128
-#define UNPdN   DEE_UNPdN
-#define UNPuN   DEE_UNPuN
-#define UNPdSIZ DEE_UNPdSIZ
-#define UNPuSIZ DEE_UNPuSIZ
-#define UNPdPTR DEE_UNPdPTR
-#define UNPuPTR DEE_UNPuPTR
+#define UNPdB   Dee_UNPdB
+#define UNPuB   Dee_UNPuB
+#define UNPd8   Dee_UNPd8
+#define UNPu8   Dee_UNPu8
+#define UNPd16  Dee_UNPd16
+#define UNPu16  Dee_UNPu16
+#define UNPd32  Dee_UNPd32
+#define UNPu32  Dee_UNPu32
+#define UNPd64  Dee_UNPd64
+#define UNPu64  Dee_UNPu64
+#define UNPd128 Dee_UNPd128
+#define UNPu128 Dee_UNPu128
+#define UNPdN   Dee_UNPdN
+#define UNPuN   Dee_UNPuN
+#define UNPdSIZ Dee_UNPdSIZ
+#define UNPuSIZ Dee_UNPuSIZ
+#define UNPdPTR Dee_UNPdPTR
+#define UNPuPTR Dee_UNPuPTR
 #endif /* DEE_SOURCE */
 
 DECL_END
