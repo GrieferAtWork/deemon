@@ -23,6 +23,7 @@
 #include "api.h"
 /**/
 
+#include "string.h" /* DeeUni_IsSpace */
 #include "types.h"
 /**/
 
@@ -452,38 +453,37 @@ DFUNDEF NONNULL((1)) void
 
 
 /* Helper macro to enumerate the character of a given string `self' */
-#define DeeString_Foreach(self, ibegin, iend, iter, end, ...) \
+#define DeeString_Foreach(self, ibegin, iend, ch, ...)        \
 	do {                                                      \
-		void *_str_  = DeeString_WSTR(self);                  \
-		size_t _len_ = WSTR_LENGTH(_str_);                    \
+		union Dee_charptr_const _str_;                        \
+		size_t _len_;                                         \
+		_str_.ptr = DeeString_WSTR(self);                     \
+		_len_ = WSTR_LENGTH(_str_.ptr);                       \
 		if (_len_ > (iend))                                   \
 			_len_ = (iend);                                   \
 		if ((ibegin) < _len_) {                               \
 			Dee_SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {  \
 			                                                  \
-			Dee_CASE_WIDTH_1BYTE: {                           \
-				uint8_t *iter, *end;                          \
-				iter = (uint8_t *)_str_;                      \
-				end  = (uint8_t *)_str_ + _len_;              \
-				for (; iter < end; ++iter)                    \
+			Dee_CASE_WIDTH_1BYTE:                             \
+				for (; _len_; --_len_, ++_str_.cp8) {         \
+					uint8_t ch = *_str_.cp8;                  \
 					do __VA_ARGS__ __WHILE0;                  \
-			}	break;                                        \
+				}                                             \
+				break;                                        \
 			                                                  \
-			Dee_CASE_WIDTH_2BYTE: {                           \
-				uint16_t *iter, *end;                         \
-				iter = (uint16_t *)_str_;                     \
-				end  = (uint16_t *)_str_ + _len_;             \
-				for (; iter < end; ++iter)                    \
+			Dee_CASE_WIDTH_2BYTE:                             \
+				for (; _len_; --_len_, ++_str_.cp16) {        \
+					uint16_t ch = *_str_.cp16;                \
 					do __VA_ARGS__ __WHILE0;                  \
-			}	break;                                        \
+				}                                             \
+				break;                                        \
 			                                                  \
-			Dee_CASE_WIDTH_4BYTE: {                           \
-				uint32_t *iter, *end;                         \
-				iter = (uint32_t *)_str_;                     \
-				end  = (uint32_t *)_str_ + _len_;             \
-				for (; iter < end; ++iter)                    \
+			Dee_CASE_WIDTH_4BYTE:                             \
+				for (; _len_; --_len_, ++_str_.cp32) {        \
+					uint32_t ch = *_str_.cp32;                \
 					do __VA_ARGS__ __WHILE0;                  \
-			}	break;                                        \
+				}                                             \
+				break;                                        \
 			                                                  \
 			}                                                 \
 		}                                                     \

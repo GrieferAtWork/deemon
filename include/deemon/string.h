@@ -239,8 +239,8 @@ typedef wchar_t Dee_wchar_t;
 typedef __WCHAR_TYPE__ Dee_wchar_t;
 #endif /* !__native_wchar_t_defined */
 #ifdef DEE_SOURCE
-typedef Dee_wchar_t dwchar_t;
-#define Dee_charptr dcharptr
+#define Dee_charptr       dcharptr
+#define Dee_charptr_const dcharptr_const
 #endif /* DEE_SOURCE */
 
 #ifndef DEE_CHARPTR_DEFINED
@@ -252,6 +252,14 @@ union Dee_charptr {
 	uint32_t    *cp32;
 	char        *cp_char;
 	Dee_wchar_t *cp_wchar;
+};
+union Dee_charptr_const {
+	void        const *ptr;
+	uint8_t     const *cp8;
+	uint16_t    const *cp16;
+	uint32_t    const *cp32;
+	char        const *cp_char;
+	Dee_wchar_t const *cp_wchar;
 };
 #endif /* !DEE_CHARPTR_DEFINED */
 
@@ -328,6 +336,7 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 
 /* Return the result of `x * Dee_STRING_SIZEOF_WIDTH(width)' */
 #define Dee_STRING_MUL_SIZEOF_WIDTH(x, width) ((size_t)(x) << (width))
+#define Dee_STRING_DIV_SIZEOF_WIDTH(x, width) ((size_t)(x) >> (width))
 
 #ifndef __NO_builtin_expect
 #define Dee_SWITCH_SIZEOF_WIDTH(x) switch (__builtin_expect(x, Dee_STRING_WIDTH_1BYTE))
@@ -439,7 +448,7 @@ struct Dee_string_utf {
 #define Dee_string_utf_alloc()                     DeeObject_MALLOC(struct Dee_string_utf)
 #define Dee_string_utf_tryalloc()                  DeeObject_TRYMALLOC(struct Dee_string_utf)
 #define Dee_string_utf_free(ptr)                   DeeObject_FFree(ptr, sizeof(struct Dee_string_utf))
-#define Dee_string_utf_untrack(ptr)                DeeObject_UntrackAlloc(ptr)
+#define Dee_string_utf_untrack(ptr)                (struct Dee_string_utf *)DeeObject_UntrackAlloc(ptr)
 #define DeeDbg_string_utf_alloc(file, line)        DeeDbgObject_MALLOC(struct Dee_string_utf, file, line)
 #define DeeDbg_string_utf_tryalloc(file, line)     DeeDbgObject_TRYMALLOC(struct Dee_string_utf, file, line)
 #define DeeDbg_string_utf_free(ptr, file, line)    DeeDbgObject_FFree(ptr, sizeof(struct Dee_string_utf), file, line)
@@ -448,7 +457,7 @@ struct Dee_string_utf {
 #define Dee_string_utf_alloc()                     ((struct Dee_string_utf *)Dee_Malloc(sizeof(struct Dee_string_utf)))
 #define Dee_string_utf_tryalloc()                  ((struct Dee_string_utf *)Dee_TryMalloc(sizeof(struct Dee_string_utf)))
 #define Dee_string_utf_free(ptr)                   Dee_Free(ptr)
-#define Dee_string_utf_untrack(ptr)                Dee_UntrackAlloc(utf)
+#define Dee_string_utf_untrack(ptr)                (struct Dee_string_utf *)Dee_UntrackAlloc(utf)
 #define DeeDbg_string_utf_alloc(file, line)        ((struct Dee_string_utf *)DeeDbg_Malloc(sizeof(struct Dee_string_utf), file, line))
 #define DeeDbg_string_utf_tryalloc(file, line)     ((struct Dee_string_utf *)DeeDbg_TryMalloc(sizeof(struct Dee_string_utf), file, line))
 #define DeeDbg_string_utf_free(ptr, file, line)    DeeDbg_Free(ptr, file, line)
@@ -564,15 +573,15 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
  *        found in `x->s_data->u_data[Dee_STRING_WIDTH_4BYTE]', while `DeeString_SIZE()'
  *        refers to the number of bytes used by the multi-byte string.
  */
-#define DeeString_STR(x)  (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_str)
-#define DeeString_SIZE(x) (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_len)
-#define DeeString_END(x)  (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_str + ((DeeStringObject *)(x))->s_len)
+#define DeeString_STR(x)  ((DeeStringObject const *)Dee_REQUIRES_OBJECT(x))->s_str
+#define DeeString_SIZE(x) ((DeeStringObject const *)Dee_REQUIRES_OBJECT(x))->s_len
+#define DeeString_END(x)  (((DeeStringObject const *)Dee_REQUIRES_OBJECT(x))->s_str + ((DeeStringObject const *)(x))->s_len)
 
 
-#define DeeString_STR8(x)  (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_data ? (uint8_t *)((DeeStringObject *)(x))->s_data->u_data[Dee_STRING_WIDTH_1BYTE] : (uint8_t *)((DeeStringObject *)(x))->s_str)
-#define DeeString_STR16(x) ((uint16_t *)((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_data->u_data[Dee_STRING_WIDTH_2BYTE])
-#define DeeString_STR32(x) ((uint32_t *)((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_data->u_data[Dee_STRING_WIDTH_4BYTE])
-#define DeeString_LEN8(x)  (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_data ? Dee_WSTR_LENGTH(((DeeStringObject *)(x))->s_data->u_data[Dee_STRING_WIDTH_1BYTE]) : ((DeeStringObject *)(x))->s_len)
+#define DeeString_STR8(x)  (((DeeStringObject const *)Dee_REQUIRES_OBJECT(x))->s_data ? (uint8_t const *)((DeeStringObject const *)(x))->s_data->u_data[Dee_STRING_WIDTH_1BYTE] : (uint8_t const *)((DeeStringObject const *)(x))->s_str)
+#define DeeString_STR16(x) ((uint16_t const *)((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_data->u_data[Dee_STRING_WIDTH_2BYTE])
+#define DeeString_STR32(x) ((uint32_t const *)((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_data->u_data[Dee_STRING_WIDTH_4BYTE])
+#define DeeString_LEN8(x)  (((DeeStringObject const *)Dee_REQUIRES_OBJECT(x))->s_data ? Dee_WSTR_LENGTH(((DeeStringObject *)(x))->s_data->u_data[Dee_STRING_WIDTH_1BYTE]) : ((DeeStringObject const *)(x))->s_len)
 #define DeeString_LEN16(x) Dee_WSTR_LENGTH(DeeString_STR16(x))
 #define DeeString_LEN32(x) Dee_WSTR_LENGTH(DeeString_STR32(x))
 
@@ -582,9 +591,9 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
  *       working within the ASCII-range:
  *    >> DREF DeeObject *partition_after(DeeObject *__restrict str, char ch) {
  *    >>     DREF DeeObject *result;
- *    >>     char *pos;
- *    >>     pos = (char *)memchr(DeeString_STR(str), ch,
- *    >>                          DeeString_SIZE(str));
+ *    >>     char const *pos;
+ *    >>     pos = (char const *)memchr(DeeString_STR(str), ch,
+ *    >>                                DeeString_SIZE(str));
  *    >>     if (!pos)
  *    >>         return_none;
  *    >>     // Return the sub-string after `ch'
@@ -685,32 +694,29 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 #define DeeString_WEND(x) _DeeString_WEnd((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
 #define DeeString_WSIZ(x) _DeeString_WSiz((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
 
-LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t *DCALL
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t const *DCALL
 _DeeString_WStr(DeeStringObject *__restrict self) {
 	struct Dee_string_utf *utf;
 	if ((utf = self->s_data) != NULL)
 		return utf->u_data[utf->u_width];
-	return (size_t *)self->s_str;
+	return (size_t const *)self->s_str;
 }
 
-LOCAL ATTR_PURE WUNUSED NONNULL((1)) void *DCALL
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) void const *DCALL
 _DeeString_WEnd(DeeStringObject *__restrict self) {
 	struct Dee_string_utf *utf;
 	if ((utf = self->s_data) != NULL) {
 		Dee_SWITCH_SIZEOF_WIDTH(utf->u_width) {
 		Dee_CASE_WIDTH_1BYTE: {
-			uint8_t *result;
-			result = (uint8_t *)utf->u_data[Dee_STRING_WIDTH_1BYTE];
+			uint8_t const *result = (uint8_t const *)utf->u_data[Dee_STRING_WIDTH_1BYTE];
 			return result + Dee_WSTR_LENGTH(result);
 		}
 		Dee_CASE_WIDTH_2BYTE: {
-			uint16_t *result;
-			result = (uint16_t *)utf->u_data[Dee_STRING_WIDTH_2BYTE];
+			uint16_t const *result = (uint16_t const *)utf->u_data[Dee_STRING_WIDTH_2BYTE];
 			return result + Dee_WSTR_LENGTH(result);
 		}
 		Dee_CASE_WIDTH_4BYTE: {
-			uint32_t *result;
-			result = (uint32_t *)utf->u_data[Dee_STRING_WIDTH_4BYTE];
+			uint32_t const *result = (uint32_t const *)utf->u_data[Dee_STRING_WIDTH_4BYTE];
 			return result + Dee_WSTR_LENGTH(result);
 		}
 		}
@@ -756,51 +762,51 @@ PUBLIC NONNULL((1)) void DCALL DeeString_FreeWidth(DeeObject *__restrict self);
  * @return: * :   The Bytes-data of the given string `self' (encoded as a width-string)
  *                NOTE: The length of this block also matches `DeeString_WLEN(self)'
  * @return: NULL: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1)) /*latin-1*/ uint8_t *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*latin-1*/ __BYTE_TYPE__ const *DCALL
 DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid);
 #define DeeString_AsLatin1(self, allow_invalid) DeeString_AsBytes(self, allow_invalid)
 
 /* Quickly access the 1, 2 or 4-byte variants of a given string, allowing
  * for the assumption that all characters of the string are guarantied to
  * fit the requested amount of bytes. */
-DFUNDEF WUNUSED NONNULL((1)) uint16_t *(DCALL DeeString_As2Byte)(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) uint32_t *(DCALL DeeString_As4Byte)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) uint16_t const *(DCALL DeeString_As2Byte)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) uint32_t const *(DCALL DeeString_As4Byte)(DeeObject *__restrict self);
 #ifdef __INTELLISENSE__
-ATTR_RETNONNULL WUNUSED NONNULL((1)) uint8_t *(DeeString_As1Byte)(DeeObject *__restrict self);
+ATTR_RETNONNULL WUNUSED NONNULL((1)) uint8_t const *(DeeString_As1Byte)(DeeObject *__restrict self);
 #endif /* __INTELLISENSE__ */
 
 #ifdef __INTELLISENSE__
-ATTR_RETNONNULL WUNUSED NONNULL((1)) uint8_t *(DeeString_Get1Byte)(DeeObject *__restrict self);
-ATTR_RETNONNULL WUNUSED NONNULL((1)) uint16_t *(DeeString_Get2Byte)(DeeObject *__restrict self);
-ATTR_RETNONNULL WUNUSED NONNULL((1)) uint32_t *(DeeString_Get4Byte)(DeeObject *__restrict self);
+ATTR_RETNONNULL WUNUSED NONNULL((1)) uint8_t const *(DeeString_Get1Byte)(DeeObject *__restrict self);
+ATTR_RETNONNULL WUNUSED NONNULL((1)) uint16_t const *(DeeString_Get2Byte)(DeeObject *__restrict self);
+ATTR_RETNONNULL WUNUSED NONNULL((1)) uint32_t const *(DeeString_Get4Byte)(DeeObject *__restrict self);
 #else /* __INTELLISENSE__ */
 #define DeeString_Get1Byte(self) DeeString_As1Byte(self)
 #define DeeString_Get2Byte(self)                                                  \
 	(ASSERTF(((DeeStringObject *)(self))->s_data &&                               \
 	         ((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_2BYTE], \
 	         "The 2-byte variant hasn't been allocated"),                         \
-	 (uint16_t *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_2BYTE])
+	 (uint16_t const *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_2BYTE])
 #define DeeString_Get4Byte(self)                                                  \
 	(ASSERTF(((DeeStringObject *)(self))->s_data &&                               \
 	         ((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_4BYTE], \
 	         "The 4-byte variant hasn't been allocated"),                         \
-	 (uint32_t *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_4BYTE])
+	 (uint32_t const *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_4BYTE])
 #define DeeString_As1Byte(self)                                                      \
 	(ASSERTF(!((DeeStringObject *)(self))->s_data ||                                 \
 	         ((DeeStringObject *)(self))->s_data->u_width == Dee_STRING_WIDTH_1BYTE, \
 	         "The string is too wide to view its 1-byte variant"),                   \
-	 (uint8_t *)DeeString_STR(self))
-#define DeeString_As2Byte(self)                                                        \
-	(((DeeStringObject *)(self))->s_data &&                                            \
-	 (ASSERTF(((DeeStringObject *)(self))->s_data->u_width <= Dee_STRING_WIDTH_2BYTE,  \
-	          "The string is too wide to view its 2-byte variant"),                    \
-	  ((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_2BYTE])             \
-	 ? (uint16_t *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_2BYTE] \
+	 (uint8_t const *)DeeString_STR(self))
+#define DeeString_As2Byte(self)                                                              \
+	(((DeeStringObject *)(self))->s_data &&                                                  \
+	 (ASSERTF(((DeeStringObject *)(self))->s_data->u_width <= Dee_STRING_WIDTH_2BYTE,        \
+	          "The string is too wide to view its 2-byte variant"),                          \
+	  ((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_2BYTE])                   \
+	 ? (uint16_t const *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_2BYTE] \
 	 : (DeeString_As2Byte)(self))
-#define DeeString_As4Byte(self)                                                        \
-	(((DeeStringObject *)(self))->s_data &&                                            \
-	 ((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_4BYTE]               \
-	 ? (uint32_t *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_4BYTE] \
+#define DeeString_As4Byte(self)                                                              \
+	(((DeeStringObject *)(self))->s_data &&                                                  \
+	 ((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_4BYTE]                     \
+	 ? (uint32_t const *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_4BYTE] \
 	 : (DeeString_As4Byte)(self))
 #endif /* !__INTELLISENSE__ */
 
@@ -811,31 +817,31 @@ ATTR_RETNONNULL WUNUSED NONNULL((1)) uint32_t *(DeeString_Get4Byte)(DeeObject *_
  * using `Dee_WSTR_LENGTH(return)'.
  * @return: * :   A pointer to the UTF-8 variant-string of `self'
  * @return: NULL: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char const *DCALL
 DeeString_AsUtf8(DeeObject *__restrict self);
 
 /* Same as `DeeString_AsUtf8()', but returns NULL without throwing an error. */
-DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char const *DCALL
 DeeString_TryAsUtf8(DeeObject *__restrict self);
 
 /* Returns the UTF-16 variant of the given string (as a width-string). */
-DFUNDEF WUNUSED NONNULL((1)) uint16_t *DCALL
+DFUNDEF WUNUSED NONNULL((1)) uint16_t const *DCALL
 DeeString_AsUtf16(DeeObject *__restrict self, unsigned int error_mode);
 
 /* Returns the UTF-32 variant of the given string (as a width-string). */
 #ifdef __INTELLISENSE__
-uint32_t *DeeString_AsUtf32(DeeObject *__restrict self);
+uint32_t const *DeeString_AsUtf32(DeeObject *__restrict self);
 #else /* __INTELLISENSE__ */
 #define DeeString_AsUtf32(self) DeeString_As4Byte(self)
 #endif /* !__INTELLISENSE__ */
 
 /* Returns the Wide-string variant of the given string (as a width-string). */
 #ifdef __INTELLISENSE__
-Dee_wchar_t *DeeString_AsWide(DeeObject *__restrict self);
+Dee_wchar_t const *DeeString_AsWide(DeeObject *__restrict self);
 #elif __SIZEOF_WCHAR_T__ == 2
-#define DeeString_AsWide(self) ((Dee_wchar_t *)DeeString_AsUtf16(self, Dee_STRING_ERROR_FREPLAC))
+#define DeeString_AsWide(self) ((Dee_wchar_t const *)DeeString_AsUtf16(self, Dee_STRING_ERROR_FREPLAC))
 #else /* __SIZEOF_WCHAR_T__ == 2 */
-#define DeeString_AsWide(self) ((Dee_wchar_t *)DeeString_AsUtf32(self))
+#define DeeString_AsWide(self) ((Dee_wchar_t const *)DeeString_AsUtf32(self))
 #endif /* __SIZEOF_WCHAR_T__ != 2 */
 
 
@@ -856,6 +862,7 @@ DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeDbgString_NewBuffer)(size_t num_bytes,
 #else /* !NDEBUG */
 #define DeeString_NewBuffer(num_bytes) DeeDbgString_NewBuffer(num_bytes, __FILE__, __LINE__)
 #endif /* !NDEBUG */
+#define DeeString_GetBuffer(self) ((DeeStringObject *)Dee_REQUIRES_OBJECT(self))->s_str
 
 /* Resize a single-byte string to have a length of `num_bytes' bytes.
  * You may pass `NULL' for `self', or a reference to `Dee_EmptyString'
@@ -2369,7 +2376,7 @@ struct Dee_unitraits {
 };
 
 /* Unicode character traits database access. */
-DFUNDEF ATTR_CONST ATTR_RETNONNULL WUNUSED struct Dee_unitraits *
+DFUNDEF ATTR_CONST ATTR_RETNONNULL WUNUSED struct Dee_unitraits const *
 (DCALL DeeUni_Descriptor)(uint32_t ch);
 
 /* Max number of characters which may be generated
@@ -2417,7 +2424,7 @@ LOCAL WUNUSED ATTR_CONST uint8_t DCALL _DeeAscii_SwapCase(uint8_t ch) {
 }
 
 LOCAL WUNUSED ATTR_CONST uint32_t DCALL _DeeUni_SwapCase(uint32_t ch) {
-	struct Dee_unitraits *record = DeeUni_Descriptor(ch);
+	struct Dee_unitraits const *record = DeeUni_Descriptor(ch);
 	return (uint32_t)(ch + ((record->ut_flags & Dee_UNICODE_ISUPPER)
 	                        ? record->ut_lower
 	                        : record->ut_upper));
@@ -2935,8 +2942,8 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 /* Initialize a unicode printer from a given `string'
  * The caller must ensure that `!DeeObject_IsShared(string) || string == Dee_EmptyString' */
 DFUNDEF NONNULL((1, 2)) void DCALL
-Dee_unicode_printer_init_string(/*inherit(always)*/ struct Dee_unicode_printer *__restrict self,
-                                DREF DeeObject *__restrict string);
+Dee_unicode_printer_init_string(struct Dee_unicode_printer *__restrict self,
+                                /*inherit(always)*/ DREF DeeObject *__restrict string);
 
 
 /* _Always_ inherit all string data (even upon error) saved in

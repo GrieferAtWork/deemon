@@ -431,15 +431,15 @@ has_length:
 
 	{
 		size_t string_length;
-		char *string;
+		char const *string;
 	case '$':
 		ASSERTF(*format == 's', "Invalid format: `%s' (`%s')", format, *p_format);
 		++format;
 		string_length = va_arg(p_args->vl_ap, size_t);
-		string        = va_arg(p_args->vl_ap, char *);
+		string        = va_arg(p_args->vl_ap, char const *);
 		goto do_string;
 	case 's':
-		string        = va_arg(p_args->vl_ap, char *);
+		string        = va_arg(p_args->vl_ap, char const *);
 		string_length = strlen(string);
 		goto do_string;
 	case '.':
@@ -455,7 +455,7 @@ has_length:
 		{
 			string_length = va_arg(p_args->vl_ap, size_t);
 do_strnlen:
-			string        = va_arg(p_args->vl_ap, char *);
+			string        = va_arg(p_args->vl_ap, char const *);
 			string_length = strnlen(string, string_length);
 		} else {
 			ASSERTF(*format >= '0' && *format <= '9',
@@ -585,11 +585,11 @@ Dee_VPackf(char const *__restrict format, va_list args) {
  *                  | 'LD' // long double
  *     ;
  *     ref_bool   ::= ref_intlen 'b';
- *     ref_str    ::= [ '.<int>'  // str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), <int>));
- *                    | '.*'      // max = va_arg(unsigned int); str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), max));
- *                    | '.?'      // max = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), max));
- *                    | '$'       // len = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str, len);
- *                    ] 's';      // DeeString_New(va_arg(char *));
+ *     ref_str    ::= [ '.<int>'  // str = va_arg(char const *); DeeString_NewSized(str, MIN(strlen(str), <int>));
+ *                    | '.*'      // max = va_arg(unsigned int); str = va_arg(char const *); DeeString_NewSized(str, MIN(strlen(str), max));
+ *                    | '.?'      // max = va_arg(size_t); str = va_arg(char const *); DeeString_NewSized(str, MIN(strlen(str), max));
+ *                    | '$'       // len = va_arg(size_t); str = va_arg(char const *); DeeString_NewSized(str, len);
+ *                    ] 's';      // DeeString_New(va_arg(char const *));
  *
  * Example:
  * >> Dee_Packf("(d<d>Os)", 10, 20, DeeInt_NewInt(42), "foobar");

@@ -828,8 +828,8 @@ libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
 				}
 				PRINT(".ddi ");
 				if (last_print_ddi.dr_name != ddi.rs_regs.dr_name) {
-					char *name = DeeCode_GetDDIString((DeeObject *)code,
-					                                  ddi.rs_regs.dr_name);
+					char const *name = DeeCode_GetDDIString((DeeObject *)code,
+					                                        ddi.rs_regs.dr_name);
 					if (name) {
 						printf("@name(%q)", name);
 					} else {

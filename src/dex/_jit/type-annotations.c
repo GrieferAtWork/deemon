@@ -127,8 +127,8 @@ do_handle_lparen:
 					goto do_handle_lparen;
 				for (;;) {
 					unsigned int saved_jl_tok;
-					/*utf-8*/ unsigned char *saved_jl_tokstart;
-					/*utf-8*/ unsigned char *saved_jl_tokend;
+					/*utf-8*/ unsigned char const *saved_jl_tokstart;
+					/*utf-8*/ unsigned char const *saved_jl_tokend;
 					saved_jl_tok      = self->jl_tok;
 					saved_jl_tokstart = self->jl_tokstart;
 					saved_jl_tokend   = self->jl_tokend;

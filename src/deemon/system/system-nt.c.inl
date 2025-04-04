@@ -360,12 +360,12 @@ DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {
 			result = DeeString_ResizeBuffer(filename, 4 + filename_size);
 			if unlikely(!result)
 				goto err_filename;
-			memmoveupc(DeeString_STR(result) + 4,
-			           DeeString_STR(result),
+			memmoveupc(DeeString_GetBuffer(result) + 4,
+			           DeeString_GetBuffer(result),
 			           filename_size,
 			           sizeof(char));
 			/* Set the prefix. */
-			UNALIGNED_SET32(DeeString_STR(result),
+			UNALIGNED_SET32(DeeString_GetBuffer(result),
 			                ENCODE_INT32('\\', '\\', '.', '\\'));
 			return result;
 		} else {

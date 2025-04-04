@@ -1805,12 +1805,12 @@ class_attribute_init(struct class_attribute *__restrict self,
 	if (DeeObject_AsUInt16(LOCAL_addr, &self->ca_addr))
 		goto err_addr_flags_doc;
 	if (DeeString_Check(LOCAL_flags)) {
-		char *pos;
+		char const *pos;
 		self->ca_flag = 0;
 		pos = DeeString_STR(LOCAL_flags);
 		if (*pos) {
 			for (;;) {
-				char *next;
+				char const *next;
 				size_t flag_len;
 				next     = strchr(pos, ',');
 				flag_len = next ? (size_t)(next - pos) : strlen(pos);
@@ -2268,11 +2268,10 @@ cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	result->cd_flags = TP_FNORMAL;
 	if (args.flags != (DeeStringObject *)Dee_EmptyString) {
 		if (DeeString_Check(args.flags)) {
-			char *pos;
-			pos = DeeString_STR(args.flags);
+			char const *pos = DeeString_STR(args.flags);
 			if (*pos) {
 				for (;;) {
-					char *next;
+					char const *next;
 					size_t flag_len;
 					next     = strchr(pos, ',');
 					flag_len = next ? (size_t)(next - pos) : strlen(pos);

@@ -382,7 +382,7 @@ PRIVATE DEFINE_STRING_EX(str_DEFAULT_SHELL_C, "-c", 0x609d4fb4, 0xfea31f2416d3d4
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ipc_nt_cmdline_add_arg(struct unicode_printer *__restrict printer,
                        DeeStringObject *__restrict arg) {
-	char *begin, *iter, *end, *flush_start;
+	char const *begin, *iter, *end, *flush_start;
 	bool must_quote = false;
 	size_t start_length;
 	if (!UNICODE_PRINTER_ISEMPTY(printer) && unicode_printer_putc(printer, ' '))
@@ -396,7 +396,7 @@ ipc_nt_cmdline_add_arg(struct unicode_printer *__restrict printer,
 	end         = begin + WSTR_LENGTH(begin);
 	for (; iter < end; ++iter) {
 		if (*iter == '\"') {
-			char *quote_start = iter;
+			char const *quote_start = iter;
 			while (iter > begin && iter[-1] == '\\')
 				--iter;
 			if (unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
@@ -502,7 +502,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
-	char *iter, *end;
+	char const *iter, *end;
 	struct unicode_printer printer;
 	DREF DeeObject *arg;
 	DREF DeeTupleObject *result;
@@ -528,7 +528,7 @@ ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 	while (iter < end) {
 		bool is_quoting = false;
 		unsigned int num_slashes;
-		char *flush_start;
+		char const *flush_start;
 
 		/* Skip leading whitespace. */
 		while (*iter == ' ' || *iter == '\t')
@@ -539,7 +539,7 @@ ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 		flush_start = iter;
 		while (iter < end &&
 		       (is_quoting || (*iter != ' ' && *iter != '\t'))) {
-			char *part_start = iter;
+			char const *part_start = iter;
 			num_slashes      = 0;
 			while (*iter == '\\')
 				++iter, ++num_slashes;
@@ -743,12 +743,12 @@ is_executable_file(DeeStringObject *__restrict filename) {
 #ifdef is_executable_file_USE_waccess
 	{
 		int error;
-		dwchar_t const *filename_wide;
+		Dee_wchar_t const *filename_wide;
 		filename_wide = DeeString_AsWide((DeeObject *)filename);
 		if unlikely(!filename_wide)
 			goto err;
 #define NEED_err
-		error = waccess(filename_wide, is_executable_file_USED_X_OK);
+		error = waccess((wchar_t *)filename_wide, is_executable_file_USED_X_OK);
 		if (error == 0)
 			return 1;
 	}
@@ -2398,7 +2398,7 @@ ipc_unix_spawn_in_child(struct unix_spawn_args const *__restrict self) {
 		if (envp == NULL)
 			envp = environ;
 		DBG_ipc_unix_spawn_in_child_ACTION("fexecve(%d, ...)\n", self->usa_exefd);
-		fexecve(self->usa_exefd, self->usa_argv, self->usa_envp);
+		fexecve(self->usa_exefd, self->usa_argv, envp);
 	} else
 #endif /* HAVE_ipc_unix_spawn_exe_fd */
 	{
@@ -3173,7 +3173,7 @@ process_created_ok:
 #endif /* HAVE_ipc_unix_spawn_exe_fd */
 			if unlikely(!exe_str)
 				goto err_argv_envp_stdfd_files_pwd_posix;
-			spawn_args.usa_exe = DeeString_As_ipc_unix_exec_char_t((DeeObject *)exe_str);
+			spawn_args.usa_exe = (ipc_unix_exec_char_t *)DeeString_As_ipc_unix_exec_char_t((DeeObject *)exe_str);
 			if unlikely(!spawn_args.usa_exe) {
 				Dee_Decref(exe_str);
 				goto err_argv_envp_stdfd_files_pwd_posix;

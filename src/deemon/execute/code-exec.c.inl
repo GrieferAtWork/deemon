@@ -1353,7 +1353,7 @@ next_instr:
 
 		TARGET(ASM_THROW, -1, +0) {
 			DeeError_ThrowInherited(TOP);
-			POP();
+			(void)POP();
 			HANDLE_EXCEPT();
 		}
 

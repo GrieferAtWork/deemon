@@ -209,7 +209,7 @@ for (local f: functions) {
 #define posix_chown_USE_wchown
 #undef wchown
 #define wchown dee_wchown
-PRIVATE int DCALL dee_wchown(wchar_t const *filename, uid_t uid, gid_t gid) {
+PRIVATE int DCALL dee_wchown(wchar_t *filename, uid_t uid, gid_t gid) {
 	int result;
 	result = wopen(filename, O_RDWR);
 	if (result != -1) {
@@ -227,7 +227,7 @@ PRIVATE int DCALL dee_wchown(wchar_t const *filename, uid_t uid, gid_t gid) {
 #define posix_chown_USE_chown
 #undef chown
 #define chown dee_chown
-PRIVATE int DCALL dee_chown(wchar_t const *filename, uid_t uid, gid_t gid) {
+PRIVATE int DCALL dee_chown(char *filename, uid_t uid, gid_t gid) {
 	int result;
 	result = open(filename, O_RDWR);
 	if (result != -1) {
@@ -245,7 +245,7 @@ PRIVATE int DCALL dee_chown(wchar_t const *filename, uid_t uid, gid_t gid) {
 #define posix_lchown_USE_wlchown
 #undef wlchown
 #define wlchown dee_wlchown
-PRIVATE int DCALL dee_wlchown(wchar_t const *filename, uid_t uid, gid_t gid) {
+PRIVATE int DCALL dee_wlchown(wchar_t *filename, uid_t uid, gid_t gid) {
 	int result;
 	result = wopen(filename, O_RDWR | O_NOFOLLOW);
 	if (result != -1) {
@@ -263,7 +263,7 @@ PRIVATE int DCALL dee_wlchown(wchar_t const *filename, uid_t uid, gid_t gid) {
 #define posix_lchown_USE_lchown
 #undef lchown
 #define lchown dee_lchown
-PRIVATE int DCALL dee_lchown(wchar_t const *filename, uid_t uid, gid_t gid) {
+PRIVATE int DCALL dee_lchown(char *filename, uid_t uid, gid_t gid) {
 	int result;
 	result = open(filename, O_RDWR | O_NOFOLLOW);
 	if (result != -1) {
@@ -341,7 +341,7 @@ err:
 	char const *utf8_path;
 #endif /* posix_chown_USE_chown */
 #ifdef posix_chown_USE_wchown
-	dwchar_t const *wide_path;
+	Dee_wchar_t const *wide_path;
 #endif /* posix_chown_USE_wchown */
 
 	/* Decode arguments. */
@@ -369,10 +369,10 @@ err:
 EINTR_ENOMEM_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_chown_USE_wchown
-	error = wchown(wide_path, used_uid, used_gid);
+	error = wchown((wchar_t *)wide_path, used_uid, used_gid);
 #endif /* posix_chown_USE_wchown */
 #ifdef posix_chown_USE_chown
-	error = chown(utf8_path, used_uid, used_gid);
+	error = chown((char *)utf8_path, used_uid, used_gid);
 #endif /* posix_chown_USE_chown */
 	DBG_ALIGNMENT_ENABLE();
 
@@ -485,7 +485,7 @@ err:
 	char const *utf8_path;
 #endif /* posix_lchown_USE_lchown */
 #ifdef posix_lchown_USE_wlchown
-	dwchar_t const *wide_path;
+	Dee_wchar_t const *wide_path;
 #endif /* posix_lchown_USE_wlchown */
 
 	/* Decode arguments. */
@@ -513,10 +513,10 @@ err:
 EINTR_ENOMEM_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_lchown_USE_wlchown
-	error = wlchown(wide_path, used_uid, used_gid);
+	error = wlchown((wchar_t *)wide_path, used_uid, used_gid);
 #endif /* posix_lchown_USE_wlchown */
 #ifdef posix_lchown_USE_lchown
-	error = lchown(utf8_path, used_uid, used_gid);
+	error = lchown((char *)utf8_path, used_uid, used_gid);
 #endif /* posix_lchown_USE_lchown */
 	DBG_ALIGNMENT_ENABLE();
 
@@ -751,7 +751,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4))DREF DeeObject *DCALL posix_fchownat_f_i
 #define NEED_posix_chown_unix_parsegid
 EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_DISABLE();
-		error = fchownat(os_dfd, utf8_path, used_uid, used_gid, atflags);
+		error = fchownat(os_dfd, (char *)utf8_path, used_uid, used_gid, atflags);
 		if (error >= 0) {
 			DBG_ALIGNMENT_ENABLE();
 			return DeeInt_NewUInt((unsigned int)error);

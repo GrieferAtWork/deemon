@@ -909,7 +909,7 @@ DeeCode_HandleBreakpoint(struct code_frame *__restrict frame) {
 
 
 
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeCode_GetASymbolName(DeeObject const *__restrict self, uint16_t aid) {
 	/* Argument */
 	DeeCodeObject const *me = (DeeCodeObject const *)self;
@@ -919,7 +919,7 @@ DeeCode_GetASymbolName(DeeObject const *__restrict self, uint16_t aid) {
 	return NULL;
 }
 
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid) {
 	/* Reference symbol name */
 	DeeDDIObject const *ddi;
@@ -987,7 +987,7 @@ return_strtab_offset:
 	return DeeString_STR(ddi->d_strtab) + offset;
 }
 
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id) {
 	/* DDI String */
 	DeeDDIObject const *ddi;

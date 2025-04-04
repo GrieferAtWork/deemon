@@ -95,7 +95,7 @@ sock_getmsgflagsof(DeeObject *__restrict name,
                    int *__restrict p_result) {
 	if (DeeString_Check(name)) {
 		int result = 0;
-		char *iter = DeeString_STR(name);
+		char const *iter = DeeString_STR(name);
 		while (*iter) {
 			size_t part_length;
 			struct msg_desc const *desc;
@@ -112,7 +112,7 @@ sock_getmsgflagsof(DeeObject *__restrict name,
 			}
 			/* Search for the end of this flag. */
 			{
-				char *temp = strchr(iter, '|');
+				char const *temp = strchr(iter, '|');
 				if (!temp)
 					temp = strchr(iter, ',');
 				if (!temp)
@@ -1333,7 +1333,7 @@ SockAddr_FromString(SockAddr *__restrict self,
 
 
 #ifdef AF_BLUETOOTH
-PRIVATE int DCALL priv_stobdaddr(char *name, bdaddr_t *bdaddr) {
+PRIVATE int DCALL priv_stobdaddr(char const *name, bdaddr_t *bdaddr) {
 	unsigned int b0, b1, b2, b3, b4, b5;
 	char ch;
 	int n;

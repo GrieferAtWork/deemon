@@ -254,7 +254,7 @@ scope_contains(DeeCompilerScopeObject *self,
 		                      ((DeeCompilerSymbolObject *)elem)->ci_value != NULL &&
 		                      ((DeeCompilerSymbolObject *)elem)->ci_value->s_scope == self->ci_value));
 	} else if (DeeString_Check(elem)) {
-		char *utf8 = DeeString_AsUtf8(elem);
+		char const *utf8 = DeeString_AsUtf8(elem);
 		if unlikely(!utf8) {
 			result = NULL;
 			goto done;
@@ -275,7 +275,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 scope_getitem(DeeCompilerScopeObject *self, DeeObject *elem) {
 	DREF DeeObject *result;
 	struct symbol *sym;
-	char *utf8;
+	char const *utf8;
 	if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
 		goto err;
 	utf8 = DeeString_AsUtf8(elem);
@@ -301,7 +301,7 @@ scope_delitem(DeeCompilerScopeObject *__restrict self,
               DeeObject *__restrict elem) {
 	int result;
 	struct symbol *sym;
-	char *utf8;
+	char const *utf8;
 	if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
 		goto err;
 	utf8 = DeeString_AsUtf8(elem);
@@ -368,7 +368,7 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 	struct TPPKeyword *kwd;
 	DeeObject *name, *loc = NULL;
 	bool requirenew = true;
-	char *name_utf8;
+	char const *name_utf8;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_requirenew_loc,

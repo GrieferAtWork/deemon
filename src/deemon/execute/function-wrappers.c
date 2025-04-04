@@ -4205,7 +4205,7 @@ FrameSymbolsByName_GetCLidName(FrameSymbolsByName *self, canonical_lid_t clid) {
 			struct ddi_xregs *iter;
 			DDI_STATE_DO(iter, &dds) {
 				if ((uint16_t)clid < iter->dx_lcnamc) {
-					char *local_name;
+					char const *local_name;
 					if ((local_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_lcnamv[clid])) != NULL) {
 						DREF DeeObject *result;
 						result = DeeString_New(local_name);
@@ -4228,7 +4228,7 @@ FrameSymbolsByName_GetCLidName(FrameSymbolsByName *self, canonical_lid_t clid) {
 				if (sp_count > iter->dx_spnama)
 					sp_count = iter->dx_spnama;
 				if ((uint16_t)clid < sp_count) {
-					char *stack_name;
+					char const *stack_name;
 					if ((stack_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_spnamv[clid])) != NULL) {
 						DREF DeeObject *result;
 						result = DeeString_New(stack_name);

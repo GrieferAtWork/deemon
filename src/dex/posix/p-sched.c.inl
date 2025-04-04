@@ -163,7 +163,7 @@ EINTR_LABEL(again)
 	cpid = vfork();
 	if (cpid == 0) {
 #ifdef posix_system_USE_fork_AND_wexec
-#define FORKEXEC_CHART dwchar_t
+#define FORKEXEC_CHART wchar_t
 #define FORKEXEC_EXEC  wexecv
 #else /* posix_system_USE_fork_AND_wexec */
 #define FORKEXEC_CHART char

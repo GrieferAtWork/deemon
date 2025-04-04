@@ -204,7 +204,7 @@ for (local f: functions) {
 #define posix_truncate_USE_wtruncate64
 #undef wtruncate64
 #define wtruncate64 dee_wtruncate64
-PRIVATE int DCALL dee_wtruncate64(wchar_t const *filename, uint64_t size) {
+PRIVATE int DCALL dee_wtruncate64(wchar_t *filename, uint64_t size) {
 	int result;
 	result = wopen(filename, O_RDWR);
 	if (result != -1) {
@@ -222,7 +222,7 @@ PRIVATE int DCALL dee_wtruncate64(wchar_t const *filename, uint64_t size) {
 #define posix_truncate_USE_wtruncate
 #undef wtruncate
 #define wtruncate dee_wtruncate
-PRIVATE int DCALL dee_wtruncate(wchar_t const *filename, __ULONGPTR_TYPE__ size) {
+PRIVATE int DCALL dee_wtruncate(wchar_t *filename, __ULONGPTR_TYPE__ size) {
 	int result;
 	result = wopen(filename, O_RDWR);
 	if (result != -1) {
@@ -240,7 +240,7 @@ PRIVATE int DCALL dee_wtruncate(wchar_t const *filename, __ULONGPTR_TYPE__ size)
 #define posix_truncate_USE_truncate64
 #undef truncate64
 #define truncate64 dee_truncate64
-PRIVATE int DCALL dee_truncate64(wchar_t const *filename, uint64_t size) {
+PRIVATE int DCALL dee_truncate64(char *filename, uint64_t size) {
 	int result;
 	result = open(filename, O_RDWR);
 	if (result != -1) {
@@ -258,7 +258,7 @@ PRIVATE int DCALL dee_truncate64(wchar_t const *filename, uint64_t size) {
 #define posix_truncate_USE_truncate
 #undef truncate
 #define truncate dee_truncate
-PRIVATE int DCALL dee_truncate(wchar_t const *filename, __ULONGPTR_TYPE__ size) {
+PRIVATE int DCALL dee_truncate(char *filename, __ULONGPTR_TYPE__ size) {
 	int result;
 	result = open(filename, O_RDWR);
 	if (result != -1) {
@@ -315,7 +315,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_truncate_f_impl(De
 	char const *utf8_path;
 #endif /* posix_truncate_USE_UTF8 */
 #ifdef posix_truncate_USE_WIDE
-	dwchar_t const *wide_path;
+	Dee_wchar_t const *wide_path;
 #endif /* posix_truncate_USE_WIDE */
 #ifdef posix_truncate_USE_pos_t
 	posix_truncate_USE_pos_t used_length;
@@ -341,16 +341,16 @@ FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_truncate_f_impl(De
 EINTR_ENOMEM_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_truncate_USE_wtruncate64
-	error = wtruncate64(wide_path, used_length);
+	error = wtruncate64((wchar_t *)wide_path, used_length);
 #endif /* posix_truncate_USE_wtruncate64 */
 #ifdef posix_truncate_USE_wtruncate
-	error = wtruncate(wide_path, used_length);
+	error = wtruncate((wchar_t *)wide_path, used_length);
 #endif /* posix_truncate_USE_wtruncate */
 #ifdef posix_truncate_USE_truncate64
-	error = truncate64(utf8_path, used_length);
+	error = truncate64((char *)utf8_path, used_length);
 #endif /* posix_truncate_USE_truncate64 */
 #ifdef posix_truncate_USE_truncate
-	error = truncate(utf8_path, used_length);
+	error = truncate((char *)utf8_path, used_length);
 #endif /* posix_truncate_USE_truncate */
 	DBG_ALIGNMENT_ENABLE();
 

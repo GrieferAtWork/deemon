@@ -711,8 +711,8 @@ INTERN WUNUSED NONNULL((1)) int
 	 * all dec data, so we don't have to concern ourselves
 	 * with deletion of the output file is generation fails. */
 	if ((dec_filename = config_filename) == NULL) {
-		char *dec_filestr  = DeeString_STR(module->mo_path);
-		size_t dec_filelen = DeeString_SIZE(module->mo_path);
+		char const *dec_filestr = DeeString_STR(module->mo_path);
+		size_t dec_filelen      = DeeString_SIZE(module->mo_path);
 		/* Generate the filename of the DEC file to-be created. */
 		for (;;) {
 			if (!dec_filelen)
@@ -732,7 +732,7 @@ INTERN WUNUSED NONNULL((1)) int
 			char const *dec_filestart;
 			dec_filestart = DeeSystem_BaseName(dec_filestr, dec_filelen);
 			pathlen = (size_t)(dec_filestart - dec_filestr);
-			dst     = DeeString_STR(dec_filename);
+			dst     = DeeString_GetBuffer(dec_filename);
 			dst     = (char *)mempcpyc(dst, dec_filestr, pathlen, sizeof(char));
 			*dst++  = '.';
 			pathlen = (size_t)((dec_filestr + dec_filelen) - dec_filestart);

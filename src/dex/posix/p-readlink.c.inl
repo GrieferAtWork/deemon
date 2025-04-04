@@ -172,13 +172,15 @@ err:
      defined(posix_readlink_USE_readlink) ||  \
      defined(posix_readlink_USE_freadlinkat))
 #ifdef posix_readlink_USE_wreadlink
-	dwchar_t *wide_file, *buffer, *new_buffer;
+	Dee_wchar_t const *wide_file;
+	Dee_wchar_t *buffer, *new_buffer;
 #else /* posix_readlink_USE_wreadlink */
-	char *utf8_file, *buffer, *new_buffer;
+	char const *utf8_file;
+	char *buffer, *new_buffer;
 #endif /* !posix_readlink_USE_wreadlink */
 	int error;
 	size_t bufsize, new_size;
-	dssize_t req_size;
+	Dee_ssize_t req_size;
 	if (DeeObject_AssertTypeExact(file, &DeeString_Type))
 		goto err;
 #ifdef posix_readlink_USE_wreadlink
@@ -206,11 +208,11 @@ err:
 EINTR_LABEL(again)
 		DBG_ALIGNMENT_DISABLE();
 #ifdef posix_readlink_USE_freadlinkat
-		req_size = freadlinkat(AT_FDCWD, utf8_file, buffer, bufsize + 1, AT_READLINK_REQSIZE);
+		req_size = freadlinkat(AT_FDCWD, (char *)utf8_file, buffer, bufsize + 1, AT_READLINK_REQSIZE);
 #elif defined(posix_readlink_USE_wreadlink)
-		req_size = wreadlink(wide_file, buffer, bufsize + 1);
+		req_size = wreadlink((wchar_t *)wide_file, (wchar_t *)buffer, bufsize + 1);
 #else /* ... */
-		req_size = readlink(utf8_file, buffer, bufsize + 1);
+		req_size = readlink((char *)utf8_file, buffer, bufsize + 1);
 #endif /* !... */
 		if unlikely(req_size < 0) {
 			error = DeeSystem_GetErrno();
@@ -405,10 +407,10 @@ FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_readlinkat_f_impl(
 #endif /* posix_readlinkat_USE_readlinkat */
 	    1) {
 		int os_dfd = DeeUnixSystem_GetFD(dfd);
-		char *utf8_file;
+		char const *utf8_file;
 		char *buffer, *new_buffer;
 		size_t bufsize, new_size;
-		dssize_t req_size;
+		Dee_ssize_t req_size;
 		if unlikely(os_dfd == -1)
 			goto err;
 		utf8_file = DeeString_AsUtf8(file);
@@ -426,9 +428,9 @@ EINTR_LABEL(again)
 		for (;;) {
 			DBG_ALIGNMENT_DISABLE();
 #ifdef posix_readlinkat_USE_freadlinkat
-			req_size = freadlinkat(os_dfd, utf8_file, buffer, bufsize + 1, AT_READLINK_REQSIZE | atflags);
+			req_size = freadlinkat(os_dfd, (char *)utf8_file, buffer, bufsize + 1, AT_READLINK_REQSIZE | atflags);
 #else /* ... */
-			req_size = readlinkat(os_dfd, utf8_file, buffer, bufsize + 1);
+			req_size = readlinkat(os_dfd, (char *)utf8_file, buffer, bufsize + 1);
 #endif /* !... */
 			if unlikely(req_size < 0) {
 				EINTR_HANDLE(DeeSystem_GetErrno(), again, err_buffer);

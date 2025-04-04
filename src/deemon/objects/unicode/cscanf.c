@@ -32,6 +32,8 @@
 #include <deemon/stringutils.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
+
+#include <hybrid/typecore.h>
 /**/
 
 #include "../../runtime/strings.h"
@@ -40,6 +42,9 @@
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -53,14 +58,14 @@ typedef struct {
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(StringScanner, si_scanner) /* [1..1][const] The underlying scanner. */
-	char                               *si_datend;  /* [1..1][const] End address of the input data (dereferences to a NUL-character). */
-	char                               *si_fmtend;  /* [1..1][const] End address of the format string (dereferences to a NUL-character). */
+	char const                         *si_datend;  /* [1..1][const] End address of the input data (dereferences to a NUL-character). */
+	char const                         *si_fmtend;  /* [1..1][const] End address of the format string (dereferences to a NUL-character). */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_lock_t                   si_lock;    /* Lock for modifying the data and format pointers.
 	                                                 * NOTE: Not required to be held when reading those pointers! */
 #endif /* !CONFIG_NO_THREADS */
-	char                               *si_datiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current data pointer (UTF-8). */
-	char                               *si_fmtiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current format pointer (UTF-8). */
+	char const                         *si_datiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current data pointer (UTF-8). */
+	char const                         *si_fmtiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current format pointer (UTF-8). */
 } StringScanIterator;
 
 #define StringScanIterator_LockAvailable(self)  Dee_atomic_lock_available(&(self)->si_lock)
@@ -78,7 +83,7 @@ INTDEF DeeTypeObject StringScan_Type;
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
-match_contains(char *sel_start, char *sel_end, uint32_t ch) {
+match_contains(char const *sel_start, char const *sel_end, uint32_t ch) {
 	while (sel_start < sel_end) {
 		uint32_t sel_ch = unicode_readutf8_n(&sel_start, sel_end);
 		/* Deal with character escaping. */
@@ -108,10 +113,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ssi_next(StringScanIterator *__restrict self) {
 	DREF DeeObject *result;
 	uint32_t ch32;
-	char *data, *format, ch;
-	char *format_end, *data_end;
+	char ch;
+	char const *data, *format;
+	char const *format_end, *data_end;
+	char const *orig_data, *orig_format;
 	int is_bytes = -1;
-	char *orig_data, *orig_format;
 again:
 	orig_data   = atomic_read(&self->si_datiter);
 	orig_format = atomic_read(&self->si_fmtiter);
@@ -129,7 +135,7 @@ next_format:
 	case '%': {
 		bool ignore_data;
 		size_t width;
-		char *spec_data_start;
+		char const *spec_data_start;
 		unsigned int radix;
 		unsigned int scan_radix;
 		/* The heart of it all: Scan a format output argument. */
@@ -168,10 +174,16 @@ next_spec:
 			/* Double-`%' -> match source data against a single `%'-character */
 			goto match_ch;
 
-		case 'o': radix = 8; goto do_integer_scan;
-		case 'd': radix = 10; goto do_integer_scan;
+		case 'o':
+			radix = 8;
+			goto do_integer_scan;
+		case 'd':
+			radix = 10;
+			goto do_integer_scan;
 		case 'x':
-		case 'p': radix = 16; goto do_integer_scan;
+		case 'p':
+			radix = 16;
+			goto do_integer_scan;
 
 		case 'i':
 		case 'u':
@@ -186,7 +198,7 @@ do_integer_scan:
 
 			if (radix == 0 && data < data_end && width) {
 				uint32_t radix_ch32;
-				char *prev_data;
+				char const *prev_data;
 				prev_data  = data;
 				radix_ch32 = is_bytes ? (uint32_t)(uint8_t)*data++
 				                      : unicode_readutf8_n(&data, data_end);
@@ -210,7 +222,7 @@ do_integer_scan:
 			}
 			while (data < data_end && width) {
 				uint32_t data_ch32;
-				char *prev_data;
+				char const *prev_data;
 				uint8_t digit;
 				if (scan_radix > 10) {
 					char data_ch = *data;
@@ -265,8 +277,9 @@ do_integer_scan:
 			} else {
 				while (data < data_end && width) {
 					uint32_t data_ch;
-					char *prev_data = data;
-					data_ch         = unicode_readutf8_n(&data, data_end);
+					char const *prev_data;
+					prev_data = data;
+					data_ch   = unicode_readutf8_n(&data, data_end);
 					if (!DeeUni_IsSpace(data_ch)) {
 						data = prev_data;
 						break;
@@ -306,7 +319,7 @@ do_integer_scan:
 
 		case '[': {
 			bool inverse_selection;
-			char *sel_begin;
+			char const *sel_begin;
 			inverse_selection = false;
 			if (format >= format_end)
 				goto out_formatend;
@@ -341,7 +354,7 @@ do_integer_scan:
 				}
 			} else {
 				while (data < data_end && width) {
-					char *prev_data  = data;
+					char const *prev_data = data;
 					uint32_t data_ch = unicode_readutf8_n(&data, data_end);
 					if (!(match_contains(sel_begin, format, data_ch) ^ inverse_selection)) {
 						data = prev_data;
@@ -361,7 +374,7 @@ do_integer_scan:
 yield_string_from_spec_data_start_until_data:
 			if (is_bytes) {
 				result = DeeBytes_NewSubView(self->si_scanner->ss_data,
-				                             spec_data_start,
+				                             (byte_t *)spec_data_start,
 				                             (size_t)(data - spec_data_start));
 			} else {
 				result = DeeString_NewUtf8(spec_data_start,
@@ -378,7 +391,7 @@ yield_string_from_spec_data_start_until_data:
 				result = DeeInt_NewSize((size_t)((uint8_t *)data - DeeBytes_DATA(self->si_scanner->ss_data)));
 			} else {
 				size_t total_consumption;
-				char *iter = DeeString_AsUtf8(self->si_scanner->ss_data);
+				char const *iter = DeeString_AsUtf8(self->si_scanner->ss_data);
 				if unlikely(!iter)
 					goto err;
 				total_consumption = 0;
@@ -415,7 +428,7 @@ yield_string_from_spec_data_start_until_data:
 				++data;
 		} else {
 			while (data < data_end) {
-				char *prev_data  = data;
+				char const *prev_data = data;
 				uint32_t data_ch = unicode_readutf8_n(&data, data_end);
 				if (!DeeUni_IsSpace(data_ch)) {
 					data = prev_data;
@@ -447,7 +460,7 @@ yield_string_from_spec_data_start_until_data:
 				++data;
 		} else if (*data == '\n') {
 		} else {
-			/*char *prev_data;*/
+			/*char const *prev_data;*/
 			uint32_t data_ch;
 			if (is_bytes < 0)
 				is_bytes = DeeBytes_Check(self->si_scanner->ss_data);
@@ -455,7 +468,8 @@ yield_string_from_spec_data_start_until_data:
 				goto out_missmatch;
 			/*prev_data = data;*/
 			data_ch = unicode_readutf8_n(&data, data_end);
-			if (!DeeUni_IsLF(data_ch)) { /*data = prev_data;*/
+			if (!DeeUni_IsLF(data_ch)) {
+				/*data = prev_data;*/
 				goto out_missmatch;
 			}
 		}
@@ -538,8 +552,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ssi_compare(StringScanIterator *self, StringScanIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &StringScanIterator_Type))
 		goto err;
-	Dee_return_compareT(char *, GET_FORMAT_POINTER(self),
-	                    /*   */ GET_FORMAT_POINTER(other));
+	Dee_return_compareT(char const *, GET_FORMAT_POINTER(self),
+	                    /*         */ GET_FORMAT_POINTER(other));
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -657,7 +671,7 @@ ss_iter(StringScanner *__restrict self) {
 		result->si_datend = result->si_datiter + WSTR_LENGTH(result->si_datiter);
 	} else {
 		ASSERT(DeeBytes_Check(self->ss_data));
-		result->si_datiter = (char *)DeeBytes_DATA(self->ss_data);
+		result->si_datiter = (char const *)DeeBytes_DATA(self->ss_data);
 		result->si_datend  = result->si_datiter + DeeBytes_SIZE(self->ss_data);
 	}
 	if (DeeString_Check(self->ss_format)) {
@@ -667,7 +681,7 @@ ss_iter(StringScanner *__restrict self) {
 		result->si_fmtend = result->si_fmtiter + WSTR_LENGTH(result->si_fmtiter);
 	} else {
 		ASSERT(DeeBytes_Check(self->ss_format));
-		result->si_fmtiter = (char *)DeeBytes_DATA(self->ss_format);
+		result->si_fmtiter = (char const *)DeeBytes_DATA(self->ss_format);
 		result->si_fmtend  = result->si_fmtiter + DeeBytes_SIZE(self->ss_format);
 	}
 	Dee_atomic_lock_init(&result->si_lock);

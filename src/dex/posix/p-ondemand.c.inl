@@ -2075,9 +2075,9 @@ err_unix_remove(int errno_value, DeeObject *__restrict path) {
 		 * but also if the filesystem does not support unlinking files. */
 #ifdef posix_stat_USED_STRUCT_STAT
 		if (DeeString_Check(path)) {
-			struct posix_stat_USED_STRUCT_STAT st;
+			posix_stat_USED_STRUCT_STAT st;
 			posix_stat_TCHAR *tpath;
-			tpath = posix_stat_DeeString_AsTChar(path);
+			tpath = (posix_stat_TCHAR *)posix_stat_DeeString_AsTChar(path);
 			if unlikely(!tpath)
 				return -1;
 			DBG_ALIGNMENT_DISABLE();
@@ -2147,9 +2147,9 @@ err_unix_unlink(int errno_value, DeeObject *__restrict path) {
 		 * but also if the filesystem does not support unlinking files. */
 #ifdef posix_stat_USED_STRUCT_STAT
 		if (DeeString_Check(path)) {
-			struct posix_stat_USED_STRUCT_STAT st;
+			posix_stat_USED_STRUCT_STAT st;
 			posix_stat_TCHAR *tpath;
-			tpath = posix_stat_DeeString_AsTChar(path);
+			tpath = (posix_stat_TCHAR *)posix_stat_DeeString_AsTChar(path);
 			if unlikely(!tpath)
 				return -1;
 			DBG_ALIGNMENT_DISABLE();
@@ -2263,9 +2263,9 @@ err_unix_rmdir(int errno_value, DeeObject *__restrict path) {
 		 * unsupported-api error. */
 #ifdef posix_stat_USED_STRUCT_STAT
 		if (DeeString_Check(path)) {
-			struct posix_stat_USED_STRUCT_STAT st;
+			posix_stat_USED_STRUCT_STAT st;
 			posix_stat_TCHAR *tpath;
-			tpath = posix_stat_DeeString_AsTChar(path);
+			tpath = (posix_stat_TCHAR *)posix_stat_DeeString_AsTChar(path);
 			if unlikely(!tpath)
 				return -1;
 			DBG_ALIGNMENT_DISABLE();
@@ -2424,9 +2424,9 @@ err_unix_rename(int errno_value, DeeObject *existing_path, DeeObject *new_path) 
 		/* The same deal concerning the sticky bit. */
 #ifdef posix_stat_USED_STRUCT_STAT
 		if (DeeString_Check(existing_path)) {
-			struct posix_stat_USED_STRUCT_STAT oldst;
+			posix_stat_USED_STRUCT_STAT oldst;
 			posix_stat_TCHAR *toldpath;
-			toldpath = posix_stat_DeeString_AsTChar(existing_path);
+			toldpath = (posix_stat_TCHAR *)posix_stat_DeeString_AsTChar(existing_path);
 			if unlikely(!toldpath)
 				return -1;
 			DBG_ALIGNMENT_DISABLE();
@@ -2446,10 +2446,10 @@ err_unix_rename(int errno_value, DeeObject *existing_path, DeeObject *new_path) 
 		}
 		if (DeeString_Check(new_path)) {
 			int stat_error;
-			struct posix_stat_USED_STRUCT_STAT newst;
+			posix_stat_USED_STRUCT_STAT newst;
 			posix_stat_TCHAR *tnewpath, *tnewpath_copy;
 			size_t tnewpath_size, tnewpath_lastsep;
-			tnewpath = posix_stat_DeeString_AsTChar(new_path);
+			tnewpath = (posix_stat_TCHAR *)posix_stat_DeeString_AsTChar(new_path);
 			if unlikely(!tnewpath)
 				return -1;
 			tnewpath_lastsep = 1;
@@ -5232,7 +5232,7 @@ got_dfd_path:
 #ifndef DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
 	if (DeeSystem_IsSep(DeeString_STR(path)[0])) {
 		/* Must skip leading slashes in `path' */
-		char *utf8_path = DeeString_AsUtf8(path);
+		char const *utf8_path = DeeString_AsUtf8(path);
 		if unlikely(!utf8_path)
 			goto err_printer;
 		while (DeeSystem_IsSep(*utf8_path))

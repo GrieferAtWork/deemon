@@ -134,10 +134,10 @@ posix_path_driveof_f(DeeStringObject *__restrict path) {
 			continue; /* Found the drive character. */
 		++iter;
 		drive_length = (size_t)(iter - pathstr);
-		result       = (DREF DeeStringObject *)DeeString_NewBuffer(drive_length + 1);
+		result = (DREF DeeStringObject *)DeeString_NewBuffer(drive_length + 1);
 		if unlikely(!result)
 			goto err;
-		dst = DeeString_STR(result);
+		dst = DeeString_GetBuffer(result);
 		dst = (char *)mempcpyc(dst, pathstr, drive_length, sizeof(char));
 		/* Always follow up with a slash. */
 #ifdef DeeSystem_ALTSEP
@@ -425,7 +425,7 @@ posix_path_walklink_f(DeeStringObject *link, DeeStringObject *linkname) {
 		result = (DREF DeeStringObject *)DeeString_NewBuffer(name_len + link_len);
 		if unlikely(!result)
 			goto err;
-		dst = DeeString_STR(result);
+		dst = DeeString_GetBuffer(result);
 		dst = (char *)mempcpyc(dst, name_base, name_len, sizeof(char));
 		memcpyc(dst, link_base, link_len, sizeof(char));
 	}
@@ -523,7 +523,7 @@ return_unmodified:
 			result = (DREF DeeStringObject *)DeeString_NewBuffer(pwd_drive_len + pth_len);
 			if unlikely(!result)
 				goto err_pwd;
-			dst = DeeString_STR(result);
+			dst = DeeString_GetBuffer(result);
 			dst = (char *)mempcpyc(dst, pwd_begin, pwd_drive_len, sizeof(char));
 			memcpyc(dst, pth_begin, pth_len, sizeof(char));
 			result = (DREF DeeStringObject *)DeeString_SetUtf8((DeeObject *)result, STRING_ERROR_FIGNORE);
@@ -609,7 +609,7 @@ done_merge_paths:
 			result = (DREF DeeStringObject *)DeeString_NewBuffer(pwd_length + 1 + pth_length);
 			if unlikely(!result)
 				goto err_pwd;
-			dst = DeeString_STR(result);
+			dst = DeeString_GetBuffer(result);
 			dst = (char *)mempcpyc(dst, pwd_begin, pwd_length, sizeof(char));
 			*dst++ = DeeSystem_SEP;
 			memcpyc(dst, pth_begin, pth_length, sizeof(char));
@@ -976,7 +976,7 @@ return_single_dot:
 	                                                     pth_length);
 	if unlikely(!result)
 		goto err_pwd;
-	dst = DeeString_STR(result);
+	dst = DeeString_GetBuffer(result);
 	while (uprefs) {
 		size_t part = MIN(uprefs, (size_t)MAX_UPREF_COPY);
 		dst = (char *)mempcpyc(dst, (void *)aligned_upref_buffer,
@@ -1001,8 +1001,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 posix_path_normalpath_f(DeeStringObject *__restrict path) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	/*utf-8*/ char *iter, *begin, *end, *iter_next;
-	/*utf-8*/ char *flush_start, *flush_end;
+	/*utf-8*/ char const *iter, *begin, *end, *iter_next;
+	/*utf-8*/ char const *flush_start, *flush_end;
 	uint32_t ch;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	begin = DeeString_AsUtf8((DeeObject *)path);
@@ -1072,10 +1072,10 @@ next:
 				goto done_flush;
 			} else if (flush_end[-3] == DeeSystem_SEP) {
 				/* Parent-directory-reference. */
-				char *new_end;
+				char const *new_end;
 				ASSERT((flush_end - 3) >= flush_start);
-				new_end = (char *)memrchr(flush_start, DeeSystem_SEP,
-				                          (size_t)((flush_end - 3) - flush_start));
+				new_end = (char const *)memrchr(flush_start, DeeSystem_SEP,
+				                                (size_t)((flush_end - 3) - flush_start));
 				if (!new_end)
 					goto done_flush;
 				flush_end = new_end + 1; /* Include the previous sep in this flush. */

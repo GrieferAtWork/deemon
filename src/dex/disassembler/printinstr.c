@@ -131,7 +131,7 @@ PRIVATE dssize_t DCALL
 libdisasm_printstatic(dformatprinter printer, void *arg, uint16_t sid,
                       DeeCodeObject *code, unsigned int flags) {
 	if (code) {
-		char *name;
+		char const *name;
 		if ((name = DeeCode_GetRSymbolName((DeeObject *)code, sid)) != NULL)
 			return DeeFormat_Printf(printer, arg, "static " PREFIX_VARNAME "%s", name);
 		if (sid >= code->co_constc) {
@@ -164,7 +164,7 @@ libdisasm_printlocal(dformatprinter printer, void *arg,
 			struct ddi_xregs *iter;
 			DDI_STATE_DO(iter, ddi) {
 				if (lid < iter->dx_lcnamc) {
-					char *name;
+					char const *name;
 					if ((name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_lcnamv[lid])) != NULL)
 						return DeeFormat_Printf(printer, arg, "local " PREFIX_VARNAME "%s", name);
 				}
@@ -191,7 +191,7 @@ libdisasm_printstack(dformatprinter printer, void *arg,
 			struct ddi_xregs *iter;
 			DDI_STATE_DO(iter, ddi) {
 				if (soff < MIN(iter->dx_base.dr_usp, iter->dx_spnama)) {
-					char *name;
+					char const *name;
 					if ((name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_spnamv[soff])) != NULL)
 						return DeeFormat_Printf(printer, arg, "stack " PREFIX_VARNAME "%s", name);
 				}
@@ -233,7 +233,7 @@ print_generic:
 			struct ddi_xregs *iter;
 			DDI_STATE_DO(iter, ddi) {
 				if (soff < MIN(iter->dx_base.dr_usp, iter->dx_spnama)) {
-					char *name;
+					char const *name;
 					if ((name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_spnamv[soff])) != NULL) {
 						if (!(flags & PCODE_FALTCOMMENT))
 							return DeeFormat_Printf(printer, arg, "stack " PREFIX_VARNAME "%s", name);
@@ -346,7 +346,7 @@ libdisasm_printref(dformatprinter printer, void *arg,
                    uint16_t rid, DeeCodeObject *code,
                    unsigned int flags) {
 	if (code) {
-		char *name;
+		char const *name;
 		if ((name = DeeCode_GetRSymbolName((DeeObject *)code, rid)) != NULL)
 			return DeeFormat_Printf(printer, arg, "ref " PREFIX_VARNAME "%s", name);
 		if (rid >= code->co_refc) {
@@ -403,7 +403,7 @@ libdisasm_printmembername(dformatprinter printer, void *arg,
                           bool is_cmember) {
 	(void)flags;
 	if (code) {
-		char *class_name;
+		char const *class_name;
 		class_name = DeeCode_GetRSymbolName((DeeObject *)code, rid);
 		if (class_name) {
 			DeeModuleObject *mod = code->co_module;
@@ -449,7 +449,7 @@ do_search_desc:
 									class_name = DeeString_STR(desc->cd_name);
 								} else if (DeeType_Check(class_type) &&
 								           ((DeeTypeObject *)class_type)->tp_name) {
-									class_name = (char *)((DeeTypeObject *)class_type)->tp_name;
+									class_name = ((DeeTypeObject *)class_type)->tp_name;
 								}
 								if (is_cmember) {
 									for (i = 0; i <= desc->cd_cattr_mask; ++i) {
@@ -518,8 +518,8 @@ libdisasm_printarg(dformatprinter printer, void *arg,
                    uint16_t aid, DeeCodeObject *code,
                    unsigned int flags) {
 	if (code) {
-		char *name = DeeCode_GetASymbolName((DeeObject *)code, aid);
-		if (name)
+		char const *name;
+		if ((name = DeeCode_GetASymbolName((DeeObject *)code, aid)) != NULL)
 			return DeeFormat_Printf(printer, arg, "arg " PREFIX_VARNAME "%s", name);
 		if (aid >= code->co_argc_max && !(flags & PCODE_FNOBADCOMMENT))
 			return DeeFormat_Printf(printer, arg, "arg %u /* invalid aid */", (unsigned int)aid);

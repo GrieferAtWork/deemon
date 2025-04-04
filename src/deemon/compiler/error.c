@@ -58,10 +58,10 @@ INTERN struct parser_errors current_parser_errors;
 INTDEF char const *TPPCALL find_most_likely_warning(char const *__restrict name);
 INTDEF char const *TPPCALL find_most_likely_extension(char const *__restrict name);
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 print_symbol_declaration(struct unicode_printer *__restrict printer,
-                         struct symbol *__restrict sym) {
-	dssize_t temp, result;
+                         struct symbol const *__restrict sym) {
+	Dee_ssize_t temp, result;
 	if (!sym->s_decl.l_file)
 		return 0;
 	result = unicode_printer_printf(printer,
@@ -85,11 +85,11 @@ err:
 
 
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 print_warning_message(struct unicode_printer *__restrict _printer,
                       int _wnum, va_list _args) {
 	static char const nth[4][3] = { "st", "nd", "rd", "th" };
-	dssize_t _warnf_temp, _warnf_result = 0;
+	Dee_ssize_t _warnf_temp, _warnf_result = 0;
 	struct TPPString *_temp_string = NULL;
 #ifndef __INTELLISENSE__
 #define WARNF(...)                                                                     \

@@ -98,7 +98,7 @@ float_init(Float *__restrict self,
 
 	/* Special case for when a string is given. */
 	if (DeeString_Check(arg)) {
-		char *str     = DeeString_STR(arg);
+		char const *str = DeeString_STR(arg);
 		self->f_value = Dee_Strtod(str, (char **)&str);
 		if (str != DeeString_END(arg)) {
 			/* There is more here than just a floating point number. */

@@ -205,7 +205,7 @@ for (local f: functions) {
 #define posix_chmod_USE_wchmod
 #undef wchmod
 #define wchmod dee_wchmod
-PRIVATE int DCALL dee_wchmod(wchar_t const *filename, int mode) {
+PRIVATE int DCALL dee_wchmod(wchar_t *filename, int mode) {
 	int result;
 	result = wopen(filename, O_RDWR);
 	if (result != -1) {
@@ -223,7 +223,7 @@ PRIVATE int DCALL dee_wchmod(wchar_t const *filename, int mode) {
 #define posix_chmod_USE_chmod
 #undef chmod
 #define chmod dee_chmod
-PRIVATE int DCALL dee_chmod(wchar_t const *filename, int mode) {
+PRIVATE int DCALL dee_chmod(char *filename, int mode) {
 	int result;
 	result = open(filename, O_RDWR);
 	if (result != -1) {
@@ -241,7 +241,7 @@ PRIVATE int DCALL dee_chmod(wchar_t const *filename, int mode) {
 #define posix_lchmod_USE_wlchmod
 #undef wlchmod
 #define wlchmod dee_wlchmod
-PRIVATE int DCALL dee_wlchmod(wchar_t const *filename, int mode) {
+PRIVATE int DCALL dee_wlchmod(wchar_t *filename, int mode) {
 	int result;
 	result = wopen(filename, O_RDWR | O_NOFOLLOW);
 	if (result != -1) {
@@ -259,7 +259,7 @@ PRIVATE int DCALL dee_wlchmod(wchar_t const *filename, int mode) {
 #define posix_lchmod_USE_lchmod
 #undef lchmod
 #define lchmod dee_lchmod
-PRIVATE int DCALL dee_lchmod(wchar_t const *filename, int mode) {
+PRIVATE int DCALL dee_lchmod(char *filename, int mode) {
 	int result;
 	result = open(filename, O_RDWR | O_NOFOLLOW);
 	if (result != -1) {
@@ -333,7 +333,7 @@ err:
 	char const *utf8_path;
 #endif /* posix_chmod_USE_chmod */
 #ifdef posix_chmod_USE_wchmod
-	dwchar_t const *wide_path;
+	Dee_wchar_t const *wide_path;
 #endif /* posix_chmod_USE_wchmod */
 
 	/* Decode arguments. */
@@ -359,10 +359,10 @@ err:
 EINTR_ENOMEM_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_chmod_USE_wchmod
-	error = wchmod(wide_path, used_mode);
+	error = wchmod((wchar_t *)wide_path, used_mode);
 #endif /* posix_chmod_USE_wchmod */
 #ifdef posix_chmod_USE_chmod
-	error = chmod(utf8_path, used_mode);
+	error = chmod((char *)utf8_path, used_mode);
 #endif /* posix_chmod_USE_chmod */
 	DBG_ALIGNMENT_ENABLE();
 
@@ -421,7 +421,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_lchmod_f_impl(DeeO
 	char const *utf8_path;
 #endif /* posix_lchmod_USE_lchmod */
 #ifdef posix_lchmod_USE_wlchmod
-	dwchar_t const *wide_path;
+	Dee_wchar_t const *wide_path;
 #endif /* posix_lchmod_USE_wlchmod */
 
 	/* Decode arguments. */
@@ -447,10 +447,10 @@ FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_lchmod_f_impl(DeeO
 EINTR_ENOMEM_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_lchmod_USE_wlchmod
-	error = wlchmod(wide_path, used_mode);
+	error = wlchmod((wchar_t *)wide_path, used_mode);
 #endif /* posix_lchmod_USE_wlchmod */
 #ifdef posix_lchmod_USE_lchmod
-	error = lchmod(utf8_path, used_mode);
+	error = lchmod((char *)utf8_path, used_mode);
 #endif /* posix_lchmod_USE_lchmod */
 	DBG_ALIGNMENT_ENABLE();
 
@@ -618,7 +618,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3))DREF DeeObject *DCALL posix_fchmodat_f_impl
 			goto err;
 EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_DISABLE();
-		error = fchmodat(os_dfd, utf8_path, used_mode, atflags);
+		error = fchmodat(os_dfd, (char *)utf8_path, used_mode, atflags);
 		if (error >= 0) {
 			DBG_ALIGNMENT_ENABLE();
 			return DeeInt_NewUInt((unsigned int)error);

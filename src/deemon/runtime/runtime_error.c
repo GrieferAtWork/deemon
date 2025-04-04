@@ -738,7 +738,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 		struct ddi_xregs *iter;
 		DDI_STATE_DO(iter, &state) {
 			if (local_index < iter->dx_lcnamc) {
-				char *local_name;
+				char const *local_name;
 				if (!code_name)
 					code_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_name);
 				if ((local_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_lcnamv[local_index])) != NULL) {
@@ -829,7 +829,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 		struct ddi_xregs *iter;
 		DDI_STATE_DO(iter, &state) {
 			if (local_index < iter->dx_lcnamc) {
-				char *local_name;
+				char const *local_name;
 				if (!code_name)
 					code_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_name);
 				if ((local_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_lcnamv[local_index])) != NULL) {

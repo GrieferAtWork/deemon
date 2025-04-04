@@ -26,7 +26,7 @@
 /**/
 
 #include <deemon/system-features.h>
-#include <deemon/system.h>
+#include <deemon/system.h> /* DEE_SYSTEM_FS_DRIVES */
 
 #include <hybrid/debug-alignment.h>
 
@@ -211,13 +211,15 @@ err:
      defined(posix_readlink_USE_wreadlink) ||   \
      defined(posix_readlink_USE_readlink))
 #ifdef posix_readlink_USE_wreadlink
-	dwchar_t *wide_file, *buffer, *new_buffer;
+	Dee_wchar_t const *wide_file;
+	Dee_wchar_t *buffer, *new_buffer;
 #else /* posix_readlink_USE_wreadlink */
-	char *utf8_file, *buffer, *new_buffer;
+	char const *utf8_file;
+	char *buffer, *new_buffer;
 #endif /* !posix_readlink_USE_wreadlink */
 	int error;
 	size_t bufsize, new_size;
-	dssize_t req_size;
+	Dee_ssize_t req_size;
 	if (DeeObject_AssertTypeExact(file, &DeeString_Type))
 		goto err;
 #ifdef posix_readlink_USE_wreadlink
@@ -245,11 +247,11 @@ err:
 EINTR_LABEL(again)
 		DBG_ALIGNMENT_DISABLE();
 #ifdef posix_readlink_USE_freadlinkat
-		req_size = freadlinkat(AT_FDCWD, utf8_file, buffer, bufsize + 1, AT_READLINK_REQSIZE);
+		req_size = freadlinkat(AT_FDCWD, (char *)utf8_file, buffer, bufsize + 1, AT_READLINK_REQSIZE);
 #elif defined(posix_readlink_USE_wreadlink)
-		req_size = wreadlink(wide_file, buffer, bufsize + 1);
+		req_size = wreadlink((wchar_t *)wide_file, (wchar_t *)buffer, bufsize + 1);
 #else /* ... */
-		req_size = readlink(utf8_file, buffer, bufsize + 1);
+		req_size = readlink((char *)utf8_file, buffer, bufsize + 1);
 #endif /* !... */
 		if likely(req_size < 0) {
 			error = DeeSystem_GetErrno();
@@ -346,7 +348,7 @@ posix_print_resolved_path(struct unicode_printer *__restrict printer,
 #define LOCAL_ignore_ENOENT true
 #endif /* !posix_realpath_USE_posix_readlink && !posix_realpath_USE_posix_readlink */
                           ) {
-	char *path_utf8;
+	char const *path_utf8;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	if unlikely(!max_link)
 		goto err_too_many_links;
@@ -360,7 +362,7 @@ posix_print_resolved_path(struct unicode_printer *__restrict printer,
 		unicode_printer_clear(printer);
 #ifdef DEE_SYSTEM_FS_DRIVES
 		{
-			char *drive_end = path_utf8;
+			char const *drive_end = path_utf8;
 			if (drive_end[1] == ':') {
 				drive_end += 2;
 				if (DeeSystem_IsSep(*drive_end))
@@ -387,7 +389,7 @@ posix_print_resolved_path(struct unicode_printer *__restrict printer,
 #ifdef DEE_SYSTEM_FS_DRIVES
 	if (DeeSystem_IsSep(*path_utf8)) {
 		/* Special case: drive-relative path (truncate the printer and dump leading slashes) */
-		char *leading_seps_end;
+		char const *leading_seps_end;
 		leading_seps_end = path_utf8;
 		do {
 			++leading_seps_end;
@@ -400,7 +402,7 @@ posix_print_resolved_path(struct unicode_printer *__restrict printer,
 #endif /* DEE_SYSTEM_FS_DRIVES */
 
 	while (*path_utf8) {
-		char *segment_end = path_utf8;
+		char const *segment_end = path_utf8;
 		size_t segment_len;
 		size_t segment_start_offset;
 		DREF DeeObject *segment_link;
@@ -647,7 +649,8 @@ FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_lrealpath_f_impl(DeeO
 /*[[[end]]]*/
 {
 #ifdef posix_lrealpath_USE_lrealpath
-	char *utf8_path, *buffer, *new_buffer;
+	char const *utf8_path;
+	char *buffer, *new_buffer;
 	int error;
 	size_t bufsize, new_size;
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -662,7 +665,7 @@ FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_lrealpath_f_impl(DeeO
 	for (;;) {
 EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_DISABLE();
-		if (lrealpath(utf8_path, buffer, bufsize + 1)) {
+		if (lrealpath((char *)utf8_path, buffer, bufsize + 1)) {
 			DBG_ALIGNMENT_ENABLE();
 			break;
 		}
@@ -946,7 +949,8 @@ FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_realpath_f_impl(DeeOb
 /*[[[end]]]*/
 {
 #ifdef posix_realpath_USE_realpath3
-	char *utf8_path, *buffer, *new_buffer;
+	char const *utf8_path;
+	char *buffer, *new_buffer;
 	int error;
 	size_t bufsize, new_size;
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -961,7 +965,7 @@ FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_realpath_f_impl(DeeOb
 	for (;;) {
 EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_DISABLE();
-		if (realpath3(utf8_path, buffer, bufsize + 1)) {
+		if (realpath3((char *)utf8_path, buffer, bufsize + 1)) {
 			DBG_ALIGNMENT_ENABLE();
 			break;
 		}
@@ -1018,7 +1022,8 @@ err:
 
 #ifdef posix_realpath_USE_canonicalize_file_name
 	DREF DeeObject *result;
-	char *utf8_path, *buffer;
+	char const *utf8_path;
+	char *buffer;
 	int error;
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
@@ -1027,7 +1032,7 @@ err:
 		goto err;
 EINTR_ENOMEM_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-	buffer = canonicalize_file_name(utf8_path);
+	buffer = canonicalize_file_name((char *)utf8_path);
 	if (!buffer) {
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
@@ -1217,7 +1222,7 @@ again:
 EINTR_ENOMEM_LABEL(again)
 #endif /* !ERANGE */
 		DBG_ALIGNMENT_DISABLE();
-		if (realpathat(os_dfd, utf8_path, buffer, bufsize + 1, atflags)) {
+		if (realpathat(os_dfd, (char *)utf8_path, buffer, bufsize + 1, atflags)) {
 			/* Release unused data. */
 			new_size = strnlen(buffer, bufsize);
 			buffer = (char *)DeeString_Truncate1ByteBuffer((uint8_t *)buffer, (size_t)new_size);

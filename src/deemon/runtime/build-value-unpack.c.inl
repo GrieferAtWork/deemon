@@ -263,7 +263,7 @@ err_iter:
 		break;
 
 	case 'S': { /* Store a fixed-width string. */
-		void *str;
+		void const *str;
 		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
 			goto err;
 		if likely(format[0] == 's') {
@@ -284,11 +284,11 @@ err_iter:
 		}
 		if unlikely(!str)
 			goto err;
-		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__, str);
+		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void const *, __ALIGNOF_POINTER__, str);
 	}	break;
 
 	case 'U': { /* Store a unicode string. */
-		void *str;
+		void const *str;
 		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
 			goto err;
 		if likely(format[0] == 's') {
@@ -309,17 +309,17 @@ err_iter:
 		}
 		if unlikely(!str)
 			goto err;
-		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__, str);
+		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void const *, __ALIGNOF_POINTER__, str);
 	}	break;
 
 	case 's': /* Store a string. */
 		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
 			goto err;
-		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, char *, __ALIGNOF_POINTER__, DeeString_STR(self));
+		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, char const *, __ALIGNOF_POINTER__, DeeString_STR(self));
 		break;
 
 	case '$': { /* Store a string, including its length. */
-		void *str;
+		void const *str;
 		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
 			goto err;
 		if (*format == 'U') {
@@ -374,7 +374,7 @@ err_iter:
 			str = DeeString_STR(self);
 		}
 		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, size_t, __ALIGNOF_SIZE_T__, WSTR_LENGTH(str));
-		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__, str);
+		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void const *, __ALIGNOF_POINTER__, str);
 	}	break;
 
 #ifdef __LONGDOUBLE
@@ -429,14 +429,14 @@ err_iter:
 		goto do_integer_format;
 	case 'l':
 		if (*format == 's') {
-			void *str;
+			void const *str;
 			/* Wide-character string. */
 			if (DeeObject_AssertTypeExact(self, &DeeString_Type))
 				goto err;
 			str = DeeString_AsWide(self);
 			if unlikely(!str)
 				goto err;
-			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__, str);
+			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void const *, __ALIGNOF_POINTER__, str);
 			break;
 		}
 		ATTR_FALLTHROUGH
@@ -1150,7 +1150,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
  *                  | ref_int              //
  *                  | ref_float            //
  *                  | ref_bool             //
- *                  | ref_str              // `char **'
+ *                  | ref_str              // `char const **'
  *                  | '(' [objects...] ')' // Enumerate elements of a sequence
  *     ;
  *     objects    ::= [(object   // Parse some object from the sequence.
@@ -1160,10 +1160,10 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
  *     ref_object ::= 'o'; // `va_arg(DeeObject **)'
  *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u' and `x' read unsigned integers
  *     ref_str    ::= ['$']      // `va_arg(size_t *)' (Store the length of the string)
- *                  | 'l' 's'    // `va_arg(wchar_t **)'
- *                  | 'U16' 's'  // `va_arg(uint16_t **)'
- *                  | 'U32' 's'  // `va_arg(uint32_t **)'
- *                  | 's'        // `va_arg(char **)'
+ *                  | 'l' 's'    // `va_arg(wchar_t const **)'
+ *                  | 'U16' 's'  // `va_arg(uint16_t const **)'
+ *                  | 'U32' 's'  // `va_arg(uint32_t const **)'
+ *                  | 's'        // `va_arg(char const **)'
  *                  ;
  *     ref_intlen ::= 'I' ['8' | '16' | '32' | '64'] // Fixed-length / sizeof(size_t)
  *                  | 'hh' // `va_arg(char *)'

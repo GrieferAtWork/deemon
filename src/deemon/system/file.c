@@ -654,7 +654,7 @@ err:
 #ifdef DEESYSTEM_FILE_USE_UNIX
 	DREF SystemFile *result;
 	int fd, used_oflags;
-	char *utf8_filename;
+	char const *utf8_filename;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 #if O_RDONLY == OPEN_FRDONLY && O_WRONLY == OPEN_FWRONLY && O_RDWR == OPEN_FRDWR
 	used_oflags = oflags & (SHARED_FLAGS | O_RDONLY | O_WRONLY | O_RDWR);
@@ -836,7 +836,7 @@ err:
 	/* Stdio implementation */
 #ifdef DEESYSTEM_FILE_USE_STDIO
 #if defined(CONFIG_HAVE_fopen) || defined(CONFIG_HAVE_fopen64)
-	char *utf8_filename;
+	char const *utf8_filename;
 	char modbuf[16], *iter = modbuf;
 	DREF SystemFile *result;
 	FILE *fp;
@@ -1458,8 +1458,8 @@ again:
 		goto again;
 	}
 	num_written = nt_write_utf8_to_console(self,
-	                                    (unsigned char *)buffer,
-	                                    bufsize);
+	                                       (unsigned char *)buffer,
+	                                       bufsize);
 	if unlikely(num_written == (size_t)-1)
 		goto err;
 	ASSERT(num_written <= bufsize);
@@ -2180,7 +2180,7 @@ err:
 #elif defined(CONFIG_HAVE_truncate) || defined(CONFIG_HAVE_truncate64)
 	/* Use truncate() */
 	DREF DeeObject *filename;
-	char *utf8_filename;
+	char const *utf8_filename;
 	filename = DeeSystemFile_Filename((DeeObject *)self);
 	if unlikely(!filename)
 		goto err;

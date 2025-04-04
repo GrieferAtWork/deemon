@@ -298,7 +298,7 @@ sseg_size(StringSegments *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sseg_contains(StringSegments *self, DeeStringObject *other) {
 	DeeStringObject *str;
-	union dcharptr my_str, my_end, ot_str;
+	union dcharptr_const my_str, my_end, ot_str;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
 	str = self->s_str;

@@ -158,6 +158,13 @@ DeeBytes_TruncateBuffer(/*inherit(always)*/ DREF DeeObject *__restrict self, siz
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeBytes_NewView(DeeObject *owner, void *base,
                  size_t num_bytes, unsigned int flags);
+#ifdef __INTELLISENSE__
+WUNUSED ATTR_IN(2, 3) NONNULL((1)) DREF DeeObject *DCALL
+DeeBytes_NewViewRo(DeeObject *owner, void const *base, size_t num_bytes);
+#else /* __INTELLISENSE__ */
+#define DeeBytes_NewViewRo(owner, base, num_bytes) \
+	DeeBytes_NewView(owner, (void *)(base), num_bytes, Dee_BUFFER_FREADONLY)
+#endif /* !__INTELLISENSE__ */
 
 #ifdef __INTELLISENSE__
 #define DeeBytes_NewSubView(self, base, num_bytes)                                           \

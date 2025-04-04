@@ -34,7 +34,7 @@ DECL_BEGIN
 
 #ifdef CONFIG_HAVE_UNICODE_H
 
-PUBLIC WUNUSED ATTR_RETNONNULL ATTR_CONST struct unitraits *
+PUBLIC WUNUSED ATTR_RETNONNULL ATTR_CONST struct unitraits const *
 (DCALL DeeUni_Descriptor)(uint32_t ch) {
 	return (struct unitraits *)__unicode_descriptor(ch);
 }
@@ -142,11 +142,11 @@ STATIC_ASSERT_MSG(UNICODE_FOLD_MAXLEN <= Dee_UNICODE_FOLDED_MAX,
 
 PRIVATE struct unitraits const default_traits = { 0x0, 0, 0xff, 0, 0, 0 };
 
-PUBLIC ATTR_CONST ATTR_RETNONNULL WUNUSED struct unitraits *
+PUBLIC ATTR_CONST ATTR_RETNONNULL WUNUSED struct unitraits const *
 (DCALL DeeUni_Descriptor)(uint32_t ch) {
 	if likely(ch < UNICODE_COUNT)
-		return (struct unitraits *)&UNICODE_DESCRIPTOR(ch);
-	return (struct unitraits *)&default_traits;
+		return &UNICODE_DESCRIPTOR(ch);
+	return &default_traits;
 }
 
 PUBLIC ATTR_CONST WUNUSED uint8_t

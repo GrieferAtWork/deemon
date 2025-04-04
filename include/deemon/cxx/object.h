@@ -239,7 +239,7 @@ LOCAL __ULONGLONG throw_if_minusone(__ULONGLONG x) {
 
 class Exception: public std::exception {
 public:
-	virtual const char *what() const DEE_CXX_NOTHROW {
+	virtual char const *what() const DEE_CXX_NOTHROW {
 		DeeObject *current = DeeError_Current();
 		if (!current)
 			return "No exception";

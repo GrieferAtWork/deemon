@@ -900,14 +900,15 @@ DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(dee_fuzzy_casecomparel, uint32_t)
 
 #define DEFINE_VERSION_COMPARE_FUNCTION(name, T, transform, IF_TRANSFORM)               \
 	PRIVATE int DCALL                                                                   \
-	name(T *__restrict a, size_t a_size,                                                \
-	     T *__restrict b, size_t b_size) {                                              \
-		T ca, cb, *a_start = a;                                                         \
+	name(T const *a, size_t a_size,                                                     \
+	     T const *b, size_t b_size) {                                                   \
+		T ca, cb;                                                                       \
+		T const *a_start = a;                                                           \
 		while (a_size && b_size) {                                                      \
 			if ((ca = *a) != (cb = *b)                                                  \
 			    IF_TRANSFORM(&&((ca = (T)transform(ca)) != (cb = (T)transform(cb))))) { \
-				struct unitraits *arec;                                                 \
-				struct unitraits *brec;                                                 \
+				struct unitraits const *arec;                                           \
+				struct unitraits const *brec;                                           \
 				uintptr_t vala, valb;                                                   \
 				/* Unwind common digits. */                                             \
 				while (a > a_start) {                                                   \
@@ -980,10 +981,10 @@ DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpl, uint32_t, DeeUni_ToLower, D
 
 /* Returns a pointer into `scan_str', or NULL if no match was found. */
 #define DEFINE_FIND_MATCH_FUNCTION(name, T, memmem, MEMEQ)           \
-	PRIVATE T *DCALL                                                 \
-	name(T *__restrict scan_str, size_t scan_size,                   \
-	     T *__restrict open_str, size_t open_size,                   \
-	     T *__restrict clos_str, size_t clos_size) {                 \
+	PRIVATE T const *DCALL                                           \
+	name(T const *scan_str, size_t scan_size,                        \
+	     T const *open_str, size_t open_size,                        \
+	     T const *clos_str, size_t clos_size) {                      \
 		size_t recursion = 0;                                        \
 		if unlikely(!clos_size)                                      \
 			return NULL;                                             \
@@ -1013,10 +1014,10 @@ DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpl, uint32_t, DeeUni_ToLower, D
 		return scan_str;                                             \
 	}
 #define DEFINE_CASEFIND_MATCH_FUNCTION(name, T, memcasemem, MEMCASESTARTSWITH)           \
-	PRIVATE T *DCALL                                                                     \
-	name(T *__restrict scan_str, size_t scan_size,                                       \
-	     T *__restrict open_str, size_t open_size,                                       \
-	     T *__restrict clos_str, size_t clos_size,                                       \
+	PRIVATE T const *DCALL                                                               \
+	name(T const *scan_str, size_t scan_size,                                            \
+	     T const *open_str, size_t open_size,                                            \
+	     T const *clos_str, size_t clos_size,                                            \
 	     size_t *p_match_length) {                                                       \
 		size_t recursion = 0;                                                            \
 		if unlikely(!clos_size)                                                          \
@@ -1074,10 +1075,10 @@ DEFINE_CASEFIND_MATCH_FUNCTION(dee_find_casematchl, uint32_t, memcasememl, MEMCA
 #undef DEFINE_FIND_MATCH_FUNCTION
 
 #define DEFINE_RFIND_MATCH_FUNCTION(name, T, memrmem, MEMEQ)          \
-	PRIVATE T *DCALL                                                  \
-	name(T *__restrict scan_str, size_t scan_size,                    \
-	     T *__restrict open_str, size_t open_size,                    \
-	     T *__restrict clos_str, size_t clos_size) {                  \
+	PRIVATE T const *DCALL                                            \
+	name(T const *scan_str, size_t scan_size,                         \
+	     T const *open_str, size_t open_size,                         \
+	     T const *clos_str, size_t clos_size) {                       \
 		size_t recursion = 0;                                         \
 		if unlikely(!open_size)                                       \
 			return NULL;                                              \
@@ -1108,10 +1109,10 @@ DEFINE_CASEFIND_MATCH_FUNCTION(dee_find_casematchl, uint32_t, memcasememl, MEMCA
 		return scan_str;                                              \
 	}
 #define DEFINE_CASERFIND_MATCH_FUNCTION(name, T, memcasermem, MEMCASEENDSWITH)            \
-	PRIVATE T *DCALL                                                                      \
-	name(T *__restrict scan_str, size_t scan_size,                                        \
-	     T *__restrict open_str, size_t open_size,                                        \
-	     T *__restrict clos_str, size_t clos_size,                                        \
+	PRIVATE T const *DCALL                                                                \
+	name(T const *scan_str, size_t scan_size,                                             \
+	     T const *open_str, size_t open_size,                                             \
+	     T const *clos_str, size_t clos_size,                                             \
 	     size_t *p_match_length) {                                                        \
 		size_t recursion = 0;                                                             \
 		if unlikely(!open_size)                                                           \

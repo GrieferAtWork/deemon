@@ -168,8 +168,8 @@ jy_iter(JITYieldFunction *__restrict self) {
 	result->ji_bstat.js_kind = JIT_STATE_KIND_SCOPE;
 	result->ji_bstat.js_flag = JIT_STATE_FLAG_BLOCK;
 	JITLexer_Start(&result->ji_lex,
-	               (unsigned char *)jf->jf_source_start,
-	               (unsigned char *)jf->jf_source_end);
+	               (unsigned char const *)jf->jf_source_start,
+	               (unsigned char const *)jf->jf_source_end);
 	DeeObject_Init(result, &JITYieldFunctionIterator_Type);
 	return (DREF JITYieldFunctionIterator *)DeeGC_Track((DeeObject *)result);
 err_r_loc_bad_argc:
@@ -427,7 +427,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 	struct jit_state *st;
-	unsigned char *old_pos;
+	unsigned char const *old_pos;
 	st = self->ji_state;
 	ASSERT(st != &self->ji_bstat);
 	switch (st->js_kind) {
@@ -1000,8 +1000,8 @@ parse_again_same_statement:
 		char const *tok_begin;
 		size_t tok_length;
 		uint32_t name;
-		tok_begin  = (char *)self->ji_lex.jl_tokstart;
-		tok_length = (size_t)((char *)self->ji_lex.jl_tokend - tok_begin);
+		tok_begin  = (char const *)self->ji_lex.jl_tokstart;
+		tok_length = (size_t)((char const *)self->ji_lex.jl_tokend - tok_begin);
 		switch (tok_length) {
 
 		case 2:
@@ -1201,8 +1201,8 @@ err_iter_scope_lvalue:
 					st->js_foreach.f_iter = iter;        /* Inherit reference */
 					st->js_foreach.f_loop = self->ji_lex.jl_tokstart;
 				} else {
-					unsigned char *cond_start;
-					unsigned char *next_start;
+					unsigned char const *cond_start;
+					unsigned char const *next_start;
 					/* Regular for statement. */
 					/* Start by getting rid of the initializer value (we no longer need that one). */
 					if (result == JIT_LVALUE) {
@@ -1350,7 +1350,7 @@ err_obj_scope:
 			if (name == ENCODE_INT32('w', 'h', 'i', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'e') {
 				struct jit_state *st;
-				unsigned char *cond_start;
+				unsigned char const *cond_start;
 				DREF DeeObject *value;
 				int temp;
 				JITLexer_Yield(&self->ji_lex);
@@ -1657,7 +1657,7 @@ service_exception_handlers:
 							if ((!typemask || JIT_IsCatchable(current, typemask)) &&
 							    (allow_interrupts || !DeeObject_IsInterrupt(current))) {
 								uint16_t old_except_sz;
-								unsigned char *handler_start;
+								unsigned char const *handler_start;
 								Dee_XDecref(typemask);
 								/* Save the current exception as a local variable. */
 								if (symbol_size) {

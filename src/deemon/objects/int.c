@@ -1597,7 +1597,7 @@ parse_ch:
 			} else if ((unsigned char)ch >= 0x80) {
 				/* Unicode character? */
 				uint32_t uni;
-				struct unitraits *traits;
+				struct unitraits const *traits;
 				uni    = unicode_readutf8_n(&start, end);
 				traits = DeeUni_Descriptor(uni);
 				if (traits->ut_flags & (UNICODE_ISNUMERIC | UNICODE_ISHEX)) {
@@ -1795,7 +1795,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 		while (iter > start) {
 			uint32_t ch;
 			digit dig;
-			struct unitraits *traits;
+			struct unitraits const *traits;
 			ch     = unicode_readutf8_rev_n(&iter, start);
 			traits = DeeUni_Descriptor(ch);
 			if (traits->ut_flags & (UNICODE_ISNUMERIC | Dee_UNICODE_ISHEX)) {
@@ -1962,7 +1962,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 			} else if ((unsigned char)ch >= 0x80) {
 				/* Unicode character? */
 				uint32_t uni;
-				struct unitraits *traits;
+				struct unitraits const *traits;
 				++iter;
 				uni    = unicode_readutf8_rev_n(&iter, end);
 				traits = DeeUni_Descriptor(uni);
@@ -2125,7 +2125,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 	while (iter < end) {
 		uint32_t ch;
 		uint8_t dig;
-		struct unitraits *traits;
+		struct unitraits const *traits;
 		ch  = unicode_readutf8_n(&iter, end);
 		traits = DeeUni_Descriptor(ch);
 		if (traits->ut_flags & (UNICODE_ISNUMERIC | UNICODE_ISHEX)) {
@@ -2367,7 +2367,7 @@ err:
 		num_leading_zeroes = precision - intlen;
 		if (flags & DEEINT_PRINT_FSEPS) {
 			size_t first_sep_in_int, first_sep_in_pad;
-			first_sep_in_int = (size_t)((char *)memend(iter, '_', (size_t)((buf + bufsize) - iter)) - iter);
+			first_sep_in_int = (size_t)((char const *)memend(iter, '_', (size_t)((buf + bufsize) - iter)) - iter);
 			ASSERT(first_sep_in_int >= 1 && first_sep_in_int <= DECIMAL_THOUSANDS_GROUPINGS);
 			first_sep_in_pad = (num_leading_zeroes - (DECIMAL_THOUSANDS_GROUPINGS -
 			                                          first_sep_in_int)) %
@@ -2455,8 +2455,7 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 		return DeeInt_PrintDecimal((DeeIntObject *)self, radix_and_flags,
 		                           precision, printer, arg);
 
-		/* Power-of-2 radices. */
-	case 2: {
+	{
 		twodigits number;
 		digit *src;
 		uint8_t num_bits, dig_bits, dig_mask, dig;
@@ -2465,6 +2464,9 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 		Dee_ssize_t result;
 		DeeIntObject *me;
 		char const *digit_chars;
+
+		/* Power-of-2 radices. */
+	case 2:
 		dig_bits = 1;
 		dig_mask = 0x1;
 		goto do_print;

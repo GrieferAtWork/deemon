@@ -133,7 +133,8 @@ PRIVATE ATTR_COLD int DCALL nt_err_getcwd(DWORD dwError) {
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	char *iter, *begin, *end, *flush_start, *flush_end, ch;
+	char const *iter, *begin, *end, *flush_start, *flush_end;
+	char ch;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 	begin = DeeString_AsUtf8(filename);
 	if unlikely(!begin)
@@ -295,9 +296,9 @@ next:
 				goto done_flush;
 			} else if (flush_end[-3] == DeeSystem_SEP && flush_end - 3 >= flush_start) {
 				/* Parent-directory-reference. */
-				char *new_end;
-				new_end = (char *)memrchr(flush_start, DeeSystem_SEP,
-				                          (size_t)((flush_end - 3) - flush_start));
+				char const *new_end;
+				new_end = (char const *)memrchr(flush_start, DeeSystem_SEP,
+				                                (size_t)((flush_end - 3) - flush_start));
 				if (!new_end)
 					goto done_flush;
 				flush_end = new_end + 1; /* Include the previous sep in this flush. */
@@ -471,7 +472,7 @@ err:
 #else /* DeeSystem_PrintPwd_USE_wgetcwd */
 #define IFELSE_WCHAR(wc, c) c
 #endif /* !DeeSystem_PrintPwd_USE_wgetcwd */
-	IFELSE_WCHAR(dwchar_t, char) *buffer, *new_buffer;
+	IFELSE_WCHAR(Dee_wchar_t, char) *buffer, *new_buffer;
 	size_t bufsize = PATH_MAX, buflen;
 	buffer = IFELSE_WCHAR(unicode_printer_alloc_wchar(printer, bufsize),
 	                      unicode_printer_alloc_utf8(printer, bufsize));
@@ -638,7 +639,7 @@ PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED ATTR_INS(1, 2) char const *
 	return result;
 #else /* DeeSystem_ALTSEP && (DeeSystem_ALTSEP != DeeSystem_SEP) */
 	char const *result;
-	result = (char *)((byte_t *)memrend(path, DeeSystem_SEP, pathlen) + 1);
+	result = (char const *)((byte_t *)memrend(path, DeeSystem_SEP, pathlen) + 1);
 	return result;
 #endif /* !DeeSystem_ALTSEP || (DeeSystem_ALTSEP == DeeSystem_SEP) */
 }
@@ -744,7 +745,7 @@ err:
 
 #if defined(DeeSystem_DlOpen_USE_dlopen)
 	void *result;
-	char *utf8_filename;
+	char const *utf8_filename;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 	utf8_filename = DeeString_AsUtf8(filename);
 	if unlikely(!utf8_filename)
@@ -1267,7 +1268,7 @@ err:
 #if (defined(DeeSystem_Unlink_USE_wunlink) || defined(DeeSystem_Unlink_USE_wremove) || \
      defined(DeeSystem_Unlink_USE_unlink) || defined(DeeSystem_Unlink_USE_remove))
 #if defined(DeeSystem_Unlink_USE_wunlink) || defined(DeeSystem_Unlink_USE_wremove)
-	dwchar_t *wname;
+	Dee_wchar_t const *wname;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 	wname = DeeString_AsWide(filename);
 	if unlikely(!wname) {

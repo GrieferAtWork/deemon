@@ -447,11 +447,11 @@ DeeCode_FindDDI(DeeObject *__restrict self,
                 unsigned int flags);
 
 /* Return the name for a specific assembly symbol which may be found in code. */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeCode_GetASymbolName(DeeObject const *__restrict self, uint16_t aid); /* Argument */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid); /* Reference */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
 
 #define DeeCode_NAME(x)                                       \

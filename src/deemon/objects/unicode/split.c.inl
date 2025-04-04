@@ -29,13 +29,18 @@
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/typecore.h>
+
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "string_functions.h"
 /**/
 
 #include <stddef.h> /* size_t, offsetof */
-#include <stdint.h> /* uint8_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -53,70 +58,72 @@ typedef struct {
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(StringSplit, s_split) /* [1..1][const] The split descriptor object. */
-	uint8_t                          *s_next;  /* [0..1][atomic] Pointer to the starting address of the next split
+	union dcharptr_const              s_next;  /* [0..1][atomic] Pointer to the starting address of the next split
 	                                            *                (points into the s_enc-specific string of `s_split->s_str')
 	                                            *                When the iterator is exhausted, this pointer is set to `NULL'. */
-	uint8_t                          *s_begin; /* [1..1][const] The starting address of the width string of `s_split->s_str'. */
-	uint8_t                          *s_end;   /* [1..1][const] The end address of the width string of `s_split->s_str'. */
-	uint8_t                          *s_sep;   /* [1..1][const] The starting address of the `s_enc'-encoded string of `s_split->s_sep'. */
+	union dcharptr_const              s_begin; /* [1..1][const] The starting address of the width string of `s_split->s_str'. */
+	union dcharptr_const              s_end;   /* [1..1][const] The end address of the width string of `s_split->s_str'. */
+	union dcharptr_const              s_sep;   /* [1..1][const] The starting address of the `s_enc'-encoded string of `s_split->s_sep'. */
 	size_t                            s_sepsz; /* [1..1][const][== WSTR_LENGTH(s_sep)] The length of separator string. */
 	int                               s_width; /* [const] The width of `s_split->s_str' */
 } StringSplitIterator;
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 splititer_next(StringSplitIterator *__restrict self) {
-	uint8_t *result_start, *result_end;
-	uint8_t *next_ptr;
+	union dcharptr_const result_start, result_end, next_ptr;
 	size_t result_len;
 	do {
-		result_start = atomic_read(&self->s_next);
-		if (!result_start)
+		result_start.ptr = atomic_read(&self->s_next.ptr);
+		if (!result_start.ptr)
 			return ITER_DONE;
 		SWITCH_SIZEOF_WIDTH(self->s_width) {
 
 		CASE_WIDTH_1BYTE:
-			result_end = (uint8_t *)memmemb((uint8_t *)result_start,
-			                                (uint8_t *)self->s_end - (uint8_t *)result_start,
-			                                (uint8_t *)self->s_sep, self->s_sepsz);
-			if (!result_end) {
-				result_end = self->s_end;
-				next_ptr   = NULL;
+			result_end.cp8 = memmemb(result_start.cp8,
+			                         self->s_end.cp8 - result_start.cp8,
+			                         self->s_sep.cp8, self->s_sepsz);
+			if (!result_end.cp8) {
+				result_end.cp8 = self->s_end.cp8;
+				next_ptr.cp8   = NULL;
 			} else {
-				next_ptr = result_end + self->s_sepsz * 1;
+				next_ptr.cp8 = result_end.cp8 + self->s_sepsz * 1;
 			}
-			result_len = (size_t)((uint8_t *)result_end - (uint8_t *)result_start);
+			result_len = (size_t)(result_end.cp8 -
+			                      result_start.cp8);
 			break;
 
 		CASE_WIDTH_2BYTE:
-			result_end = (uint8_t *)memmemw((uint16_t *)result_start,
-			                                (uint16_t *)self->s_end - (uint16_t *)result_start,
-			                                (uint16_t *)self->s_sep, self->s_sepsz);
-			if (!result_end) {
-				result_end = self->s_end;
-				next_ptr   = NULL;
+			result_end.cp16 = memmemw(result_start.cp16,
+			                          self->s_end.cp16 - result_start.cp16,
+			                          self->s_sep.cp16, self->s_sepsz);
+			if (!result_end.cp16) {
+				result_end.cp16 = self->s_end.cp16;
+				next_ptr.cp16   = NULL;
 			} else {
-				next_ptr = result_end + self->s_sepsz * 2;
+				next_ptr.cp16 = result_end.cp16 + self->s_sepsz;
 			}
-			result_len = (size_t)((uint16_t *)result_end - (uint16_t *)result_start);
+			result_len = (size_t)(result_end.cp16 -
+			                      result_start.cp16);
 			break;
 
 		CASE_WIDTH_4BYTE:
-			result_end = (uint8_t *)memmeml((uint32_t *)result_start,
-			                                (uint32_t *)self->s_end - (uint32_t *)result_start,
-			                                (uint32_t *)self->s_sep, self->s_sepsz);
-			if (!result_end) {
-				result_end = self->s_end;
-				next_ptr   = NULL;
+			result_end.cp32 = memmeml(result_start.cp32,
+			                          self->s_end.cp32 - result_start.cp32,
+			                          self->s_sep.cp32, self->s_sepsz);
+			if (!result_end.cp32) {
+				result_end.cp32 = self->s_end.cp32;
+				next_ptr.cp32   = NULL;
 			} else {
-				next_ptr = result_end + self->s_sepsz * 4;
+				next_ptr.cp32 = result_end.cp32 + self->s_sepsz;
 			}
-			result_len = (size_t)((uint32_t *)result_end - (uint32_t *)result_start);
+			result_len = (size_t)(result_end.cp32 -
+			                      result_start.cp32);
 			break;
 		}
-	} while (!atomic_cmpxch_weak(&self->s_next, result_start, next_ptr));
+	} while (!atomic_cmpxch_weak(&self->s_next.ptr, result_start.ptr, next_ptr.ptr));
 
 	/* Return the part-string. */
-	return DeeString_NewWithWidth(result_start,
+	return DeeString_NewWithWidth(result_start.ptr,
 	                              result_len,
 	                              self->s_width);
 }
@@ -124,61 +131,63 @@ splititer_next(StringSplitIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 casesplititer_next(StringSplitIterator *__restrict self) {
 	/* Literally the same as the non-case version, but use `memcasemem(b|w|l)' instead. */
-	uint8_t *result_start, *result_end;
-	uint8_t *next_ptr;
+	union dcharptr_const result_start, result_end, next_ptr;
 	size_t result_len, match_length;
 	do {
-		result_start = atomic_read(&self->s_next);
-		if (!result_start)
+		result_start.ptr = atomic_read(&self->s_next.ptr);
+		if (!result_start.ptr)
 			return ITER_DONE;
 		SWITCH_SIZEOF_WIDTH(self->s_width) {
 
 		CASE_WIDTH_1BYTE:
-			result_end = (uint8_t *)memcasememb((uint8_t *)result_start,
-			                                    (uint8_t *)self->s_end - (uint8_t *)result_start,
-			                                    (uint8_t *)self->s_sep, self->s_sepsz,
-			                                    &match_length);
-			if (!result_end) {
-				result_end = self->s_end;
-				next_ptr   = NULL;
+			result_end.cp8 = memcasememb(result_start.cp8,
+			                             self->s_end.cp8 - result_start.cp8,
+			                             self->s_sep.cp8, self->s_sepsz,
+			                             &match_length);
+			if (!result_end.cp8) {
+				result_end.cp8 = self->s_end.cp8;
+				next_ptr.cp8   = NULL;
 			} else {
-				next_ptr = result_end + match_length * 1;
+				next_ptr.cp8 = result_end.cp8 + match_length;
 			}
-			result_len = (size_t)((uint8_t *)result_end - (uint8_t *)result_start);
+			result_len = (size_t)(result_end.cp8 -
+			                      result_start.cp8);
 			break;
 
 		CASE_WIDTH_2BYTE:
-			result_end = (uint8_t *)memcasememw((uint16_t *)result_start,
-			                                    (uint16_t *)self->s_end - (uint16_t *)result_start,
-			                                    (uint16_t *)self->s_sep, self->s_sepsz,
-			                                    &match_length);
-			if (!result_end) {
-				result_end = self->s_end;
-				next_ptr   = NULL;
+			result_end.cp16 = memcasememw(result_start.cp16,
+			                              self->s_end.cp16 - result_start.cp16,
+			                              self->s_sep.cp16, self->s_sepsz,
+			                              &match_length);
+			if (!result_end.cp16) {
+				result_end.cp16 = self->s_end.cp16;
+				next_ptr.cp16   = NULL;
 			} else {
-				next_ptr = result_end + match_length * 2;
+				next_ptr.cp16 = result_end.cp16 + match_length;
 			}
-			result_len = (size_t)((uint16_t *)result_end - (uint16_t *)result_start);
+			result_len = (size_t)(result_end.cp16 -
+			                      result_start.cp16);
 			break;
 
 		CASE_WIDTH_4BYTE:
-			result_end = (uint8_t *)memcasememl((uint32_t *)result_start,
-			                                    (uint32_t *)self->s_end - (uint32_t *)result_start,
-			                                    (uint32_t *)self->s_sep, self->s_sepsz,
-			                                    &match_length);
-			if (!result_end) {
-				result_end = self->s_end;
-				next_ptr   = NULL;
+			result_end.cp32 = memcasememl(result_start.cp32,
+			                              self->s_end.cp32 - result_start.cp32,
+			                              self->s_sep.cp32, self->s_sepsz,
+			                              &match_length);
+			if (!result_end.cp32) {
+				result_end.cp32 = self->s_end.cp32;
+				next_ptr.cp32   = NULL;
 			} else {
-				next_ptr = result_end + match_length * 4;
+				next_ptr.cp32 = result_end.cp32 + match_length;
 			}
-			result_len = (size_t)((uint32_t *)result_end - (uint32_t *)result_start);
+			result_len = (size_t)(result_end.cp32 -
+			                      result_start.cp32);
 			break;
 		}
-	} while (!atomic_cmpxch_weak(&self->s_next, result_start, next_ptr));
+	} while (!atomic_cmpxch_weak(&self->s_next.ptr, result_start.ptr, next_ptr.ptr));
 
 	/* Return the part-string. */
-	return DeeString_NewWithWidth(result_start,
+	return DeeString_NewWithWidth(result_start.ptr,
 	                              result_len,
 	                              self->s_width);
 }
@@ -188,7 +197,7 @@ STATIC_ASSERT(offsetof(StringSplitIterator, s_split) == offsetof(ProxyObject, po
 #define splititer_fini  generic_proxy__fini
 #define splititer_visit generic_proxy__visit
 
-#define GET_SPLIT_NEXT(x) atomic_read(&(x)->s_next)
+#define GET_SPLIT_NEXT(x) atomic_read(&(x)->s_next.ptr)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 splititer_bool(StringSplitIterator *__restrict self) {
@@ -202,16 +211,16 @@ splititer_hash(StringSplitIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 splititer_compare(StringSplitIterator *self, StringSplitIterator *other) {
-	uint8_t *x, *y;
+	union dcharptr_const lhs, rhs;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	x = GET_SPLIT_NEXT(self);
-	y = GET_SPLIT_NEXT(other);
-	if (!x)
-		x = (uint8_t *)(uintptr_t)-1;
-	if (!y)
-		y = (uint8_t *)(uintptr_t)-1;
-	Dee_return_compare(x, y);
+	lhs.ptr = GET_SPLIT_NEXT(self);
+	rhs.ptr = GET_SPLIT_NEXT(other);
+	if (lhs.ptr == NULL)
+		lhs.ptr = (void *)-1l;
+	if (rhs.ptr == NULL)
+		rhs.ptr = (void *)-1l;
+	Dee_return_compare(lhs.cp_char, rhs.cp_char);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -243,35 +252,35 @@ splititer_setup(StringSplitIterator *__restrict self,
 	SWITCH_SIZEOF_WIDTH(self->s_width) {
 
 	CASE_WIDTH_1BYTE:
-		self->s_begin = DeeString_As1Byte((DeeObject *)split->s_str);
-		self->s_end   = self->s_begin + WSTR_LENGTH(self->s_begin);
-		self->s_sep   = DeeString_As1Byte((DeeObject *)split->s_sep);
+		self->s_begin.cp8 = DeeString_As1Byte((DeeObject *)split->s_str);
+		self->s_end.cp8   = self->s_begin.cp8 + WSTR_LENGTH(self->s_begin.cp8);
+		self->s_sep.cp8   = DeeString_As1Byte((DeeObject *)split->s_sep);
 		break;
 
 	CASE_WIDTH_2BYTE:
-		self->s_begin = (uint8_t *)DeeString_As2Byte((DeeObject *)split->s_str);
-		if unlikely(!self->s_begin)
+		self->s_begin.cp16 = DeeString_As2Byte((DeeObject *)split->s_str);
+		if unlikely(!self->s_begin.cp16)
 			goto err;
-		self->s_end = self->s_begin + WSTR_LENGTH(self->s_begin) * 2;
-		self->s_sep = (uint8_t *)DeeString_As2Byte((DeeObject *)split->s_sep);
-		if unlikely(!self->s_sep)
+		self->s_end.cp16 = self->s_begin.cp16 + WSTR_LENGTH(self->s_begin.cp16);
+		self->s_sep.cp16 = DeeString_As2Byte((DeeObject *)split->s_sep);
+		if unlikely(!self->s_sep.cp16)
 			goto err;
 		break;
 
 	CASE_WIDTH_4BYTE:
-		self->s_begin = (uint8_t *)DeeString_As4Byte((DeeObject *)split->s_str);
-		if unlikely(!self->s_begin)
+		self->s_begin.cp32 = DeeString_As4Byte((DeeObject *)split->s_str);
+		if unlikely(!self->s_begin.cp32)
 			goto err;
-		self->s_end = self->s_begin + WSTR_LENGTH(self->s_begin) * 4;
-		self->s_sep = (uint8_t *)DeeString_As4Byte((DeeObject *)split->s_sep);
-		if unlikely(!self->s_sep)
+		self->s_end.cp32 = self->s_begin.cp32 + WSTR_LENGTH(self->s_begin.cp32);
+		self->s_sep.cp32 = DeeString_As4Byte((DeeObject *)split->s_sep);
+		if unlikely(!self->s_sep.cp32)
 			goto err;
 		break;
 	}
-	self->s_next = self->s_begin;
-	if (self->s_next == self->s_end)
-		self->s_next = NULL;
-	self->s_sepsz = WSTR_LENGTH(self->s_sep);
+	self->s_next.ptr = self->s_begin.ptr;
+	if (self->s_next.ptr == self->s_end.ptr)
+		self->s_next.ptr = NULL;
+	self->s_sepsz = WSTR_LENGTH(self->s_sep.ptr);
 	self->s_split = split;
 	Dee_Incref(split);
 	return 0;
@@ -298,13 +307,13 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 splititer_copy(StringSplitIterator *__restrict self,
                StringSplitIterator *__restrict other) {
-	self->s_split = other->s_split;
-	self->s_next  = GET_SPLIT_NEXT(other);
-	self->s_begin = other->s_begin;
-	self->s_end   = other->s_end;
-	self->s_sep   = other->s_sep;
-	self->s_sepsz = other->s_sepsz;
-	self->s_width = other->s_width;
+	self->s_split     = other->s_split;
+	self->s_next.ptr  = GET_SPLIT_NEXT(other);
+	self->s_begin.ptr = other->s_begin.ptr;
+	self->s_end.ptr   = other->s_end.ptr;
+	self->s_sep.ptr   = other->s_sep.ptr;
+	self->s_sepsz     = other->s_sepsz;
+	self->s_width     = other->s_width;
 	Dee_Incref(self->s_split);
 	return 0;
 }
@@ -455,35 +464,35 @@ split_doiter(StringSplit *__restrict self,
 	SWITCH_SIZEOF_WIDTH(result->s_width) {
 
 	CASE_WIDTH_1BYTE:
-		result->s_begin = DeeString_As1Byte((DeeObject *)self->s_str);
-		result->s_end   = result->s_begin + WSTR_LENGTH(result->s_begin);
-		result->s_sep   = DeeString_As1Byte((DeeObject *)self->s_sep);
+		result->s_begin.cp8 = DeeString_As1Byte((DeeObject *)self->s_str);
+		result->s_end.cp8   = result->s_begin.cp8 + WSTR_LENGTH(result->s_begin.cp8);
+		result->s_sep.cp8   = DeeString_As1Byte((DeeObject *)self->s_sep);
 		break;
 
 	CASE_WIDTH_2BYTE:
-		result->s_begin = (uint8_t *)DeeString_As2Byte((DeeObject *)self->s_str);
-		if unlikely(!result->s_begin)
+		result->s_begin.cp16 = DeeString_As2Byte((DeeObject *)self->s_str);
+		if unlikely(!result->s_begin.cp16)
 			goto err_r;
-		result->s_end = result->s_begin + WSTR_LENGTH(result->s_begin) * 2;
-		result->s_sep = (uint8_t *)DeeString_As2Byte((DeeObject *)self->s_sep);
-		if unlikely(!result->s_sep)
+		result->s_end.cp16 = result->s_begin.cp16 + WSTR_LENGTH(result->s_begin.cp16);
+		result->s_sep.cp16 = DeeString_As2Byte((DeeObject *)self->s_sep);
+		if unlikely(!result->s_sep.cp16)
 			goto err_r;
 		break;
 
 	CASE_WIDTH_4BYTE:
-		result->s_begin = (uint8_t *)DeeString_As4Byte((DeeObject *)self->s_str);
-		if unlikely(!result->s_begin)
+		result->s_begin.cp32 = DeeString_As4Byte((DeeObject *)self->s_str);
+		if unlikely(!result->s_begin.cp32)
 			goto err_r;
-		result->s_end = result->s_begin + WSTR_LENGTH(result->s_begin) * 4;
-		result->s_sep = (uint8_t *)DeeString_As4Byte((DeeObject *)self->s_sep);
-		if unlikely(!result->s_sep)
+		result->s_end.cp32 = result->s_begin.cp32 + WSTR_LENGTH(result->s_begin.cp32);
+		result->s_sep.cp32 = DeeString_As4Byte((DeeObject *)self->s_sep);
+		if unlikely(!result->s_sep.cp32)
 			goto err_r;
 		break;
 	}
-	result->s_next = result->s_begin;
-	if (result->s_next == result->s_end)
-		result->s_next = NULL;
-	result->s_sepsz = WSTR_LENGTH(result->s_sep);
+	result->s_next.ptr = result->s_begin.ptr;
+	if (result->s_next.ptr == result->s_end.ptr)
+		result->s_next.ptr = NULL;
+	result->s_sepsz = WSTR_LENGTH(result->s_sep.ptr);
 	/* Finalize the split iterator and return it. */
 	Dee_Incref(self);
 	result->s_split = self;
@@ -791,17 +800,17 @@ typedef struct {
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(LineSplit, ls_split) /* [1..1][const] The split descriptor object. */
-	uint8_t                        *ls_next;  /* [0..1][atomic] Pointer to the starting address of the next split
+	union dcharptr_const            ls_next;  /* [0..1][atomic] Pointer to the starting address of the next split
 	                                           *                (points into the s_enc-specific string of `ls_split->ls_str')
 	                                           *                When the iterator is exhausted, this pointer is set to NULL. */
-	uint8_t                        *ls_begin; /* [1..1][const] The starting address of the width string of `ls_split->ls_str'. */
-	uint8_t                        *ls_end;   /* [1..1][const] The end address of the width string of `ls_split->ls_str'. */
+	union dcharptr_const            ls_begin; /* [1..1][const] The starting address of the width string of `ls_split->ls_str'. */
+	union dcharptr_const            ls_end;   /* [1..1][const] The end address of the width string of `ls_split->ls_str'. */
 	int                             ls_width; /* [const] The width of `ls_split->ls_str' */
 	bool                            ls_keep;  /* [const] True if line-ends should be kept in resulting strings. */
 } LineSplitIterator;
 
-LOCAL uint8_t *DCALL
-find_lfb(uint8_t *__restrict start, size_t size) {
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) uint8_t const *DCALL
+find_lfb(uint8_t const *__restrict start, size_t size) {
 	for (;; --size, ++start) {
 		if (!size)
 			return NULL;
@@ -811,8 +820,8 @@ find_lfb(uint8_t *__restrict start, size_t size) {
 	return start;
 }
 
-LOCAL uint16_t *DCALL
-find_lfw(uint16_t *__restrict start, size_t size) {
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) uint16_t const *DCALL
+find_lfw(uint16_t const *__restrict start, size_t size) {
 	for (;; --size, ++start) {
 		if (!size)
 			return NULL;
@@ -822,8 +831,8 @@ find_lfw(uint16_t *__restrict start, size_t size) {
 	return start;
 }
 
-LOCAL uint32_t *DCALL
-find_lfl(uint32_t *__restrict start, size_t size) {
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) uint32_t const *DCALL
+find_lfl(uint32_t const *__restrict start, size_t size) {
 	for (;; --size, ++start) {
 		if (!size)
 			return NULL;
@@ -836,71 +845,69 @@ find_lfl(uint32_t *__restrict start, size_t size) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lineiter_next(LineSplitIterator *__restrict self) {
-	uint8_t *result_start, *result_end;
-	uint8_t *next_ptr;
+	union dcharptr_const result_start, result_end, next_ptr;
 	size_t result_len;
 	do {
-		result_start = atomic_read(&self->ls_next);
-		if (!result_start)
+		result_start.ptr = atomic_read(&self->ls_next.ptr);
+		if (!result_start.ptr)
 			return ITER_DONE;
 		SWITCH_SIZEOF_WIDTH(self->ls_width) {
 
 		CASE_WIDTH_1BYTE:
-			result_end = (uint8_t *)find_lfb((uint8_t *)result_start,
-			                                 (uint8_t *)self->ls_end - (uint8_t *)result_start);
-			if (!result_end) {
-				result_end = self->ls_end;
-				next_ptr   = NULL;
+			result_end.cp8 = find_lfb(result_start.cp8, self->ls_end.cp8 - result_start.cp8);
+			if (!result_end.cp8) {
+				result_end.cp8 = self->ls_end.cp8;
+				next_ptr.cp8   = NULL;
 			} else {
-				next_ptr = result_end + 1;
-				if (*(uint8_t *)result_end == UNICODE_CR &&
-				    *(uint8_t *)next_ptr == UNICODE_LF)
-					next_ptr += 1;
+				next_ptr.cp8 = result_end.cp8 + 1;
+				if (*result_end.cp8 == UNICODE_CR && *next_ptr.cp8 == UNICODE_LF)
+					++next_ptr.cp8;
 			}
-			result_len = (size_t)((uint8_t *)result_end -
-			                      (uint8_t *)result_start);
+			result_len = (size_t)(result_end.cp8 -
+			                      result_start.cp8);
 			break;
 
 		CASE_WIDTH_2BYTE:
-			result_end = (uint8_t *)find_lfw((uint16_t *)result_start,
-			                                 (uint16_t *)self->ls_end - (uint16_t *)result_start);
-			if (!result_end) {
-				result_end = self->ls_end;
-				next_ptr   = NULL;
+			result_end.cp16 = find_lfw(result_start.cp16,
+			                           self->ls_end.cp16 - result_start.cp16);
+			if (!result_end.cp16) {
+				result_end.cp16 = self->ls_end.cp16;
+				next_ptr.cp16   = NULL;
 			} else {
-				next_ptr = result_end + 2;
-				if (*(uint16_t *)result_end == UNICODE_CR &&
-				    *(uint16_t *)next_ptr == UNICODE_LF)
-					next_ptr += 2;
+				next_ptr.cp16 = result_end.cp16 + 1;
+				if (*result_end.cp16 == UNICODE_CR && *next_ptr.cp16 == UNICODE_LF)
+					++next_ptr.cp16;
 			}
-			result_len = (size_t)((uint16_t *)result_end -
-			                      (uint16_t *)result_start);
+			result_len = (size_t)(result_end.cp16 -
+			                      result_start.cp16);
 			break;
 
 		CASE_WIDTH_4BYTE:
-			result_end = (uint8_t *)find_lfl((uint32_t *)result_start,
-			                                 (uint32_t *)self->ls_end - (uint32_t *)result_start);
-			if (!result_end) {
-				result_end = self->ls_end;
-				next_ptr   = NULL;
+			result_end.cp32 = find_lfl(result_start.cp32,
+			                           self->ls_end.cp32 - result_start.cp32);
+			if (!result_end.cp32) {
+				result_end.cp32 = self->ls_end.cp32;
+				next_ptr.cp32   = NULL;
 			} else {
-				next_ptr = result_end + 4;
-				if (*(uint32_t *)result_end == UNICODE_CR &&
-				    *(uint32_t *)next_ptr == UNICODE_LF)
-					next_ptr += 4;
+				next_ptr.cp32 = result_end.cp32 + 1;
+				if (*result_end.cp32 == UNICODE_CR && *next_ptr.cp32 == UNICODE_LF)
+					++next_ptr.cp32;
 			}
-			result_len = (size_t)((uint32_t *)result_end -
-			                      (uint32_t *)result_start);
+			result_len = (size_t)(result_end.cp32 -
+			                      result_start.cp32);
 			break;
 		}
-	} while (!atomic_cmpxch_weak(&self->ls_next, result_start, next_ptr));
+	} while (!atomic_cmpxch_weak(&self->ls_next.cp32, result_start.cp32, next_ptr.cp32));
 
 	/* Add the linefeed itself if we're supposed to include it. */
-	if (self->ls_keep && next_ptr)
-		result_len += (size_t)(next_ptr - result_end) / STRING_SIZEOF_WIDTH(self->ls_width);
+	if (self->ls_keep && next_ptr.ptr) {
+		size_t len = (size_t)((byte_t const *)next_ptr.ptr -
+		                      (byte_t const *)result_end.ptr);
+		result_len += Dee_STRING_DIV_SIZEOF_WIDTH(len, self->ls_width);
+	}
 
 	/* Return the part-string. */
-	return DeeString_NewWithWidth(result_start,
+	return DeeString_NewWithWidth(result_start.ptr,
 	                              result_len,
 	                              self->ls_width);
 }
@@ -913,12 +920,12 @@ STATIC_ASSERT(offsetof(StringSplitIterator, s_next) == offsetof(LineSplitIterato
 PRIVATE NONNULL((1, 2)) void DCALL
 lineiter_setup(LineSplitIterator *__restrict self,
                LineSplit *__restrict split) {
-	self->ls_width = DeeString_WIDTH(split->ls_str);
-	self->ls_begin = (uint8_t *)DeeString_WSTR(split->ls_str);
-	self->ls_next  = self->ls_begin;
-	self->ls_end   = (uint8_t *)DeeString_WEND(split->ls_str);
-	if (self->ls_next == self->ls_end)
-		self->ls_next = NULL;
+	self->ls_width     = DeeString_WIDTH(split->ls_str);
+	self->ls_begin.ptr = DeeString_WSTR(split->ls_str);
+	self->ls_next.ptr  = self->ls_begin.ptr;
+	self->ls_end.ptr   = DeeString_WEND(split->ls_str);
+	if (self->ls_next.ptr == self->ls_end.ptr)
+		self->ls_next.ptr = NULL;
 	self->ls_keep = split->ls_keep;
 	Dee_Incref(split);
 	self->ls_split = split;
@@ -940,12 +947,12 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lineiter_copy(LineSplitIterator *__restrict self,
               LineSplitIterator *__restrict other) {
-	self->ls_split = other->ls_split;
-	self->ls_next  = atomic_read(&other->ls_next);
-	self->ls_begin = other->ls_begin;
-	self->ls_end   = other->ls_end;
-	self->ls_width = other->ls_width;
-	self->ls_keep  = other->ls_keep;
+	self->ls_split     = other->ls_split;
+	self->ls_next.ptr  = atomic_read(&other->ls_next.ptr);
+	self->ls_begin.ptr = other->ls_begin.ptr;
+	self->ls_end.ptr   = other->ls_end.ptr;
+	self->ls_width     = other->ls_width;
+	self->ls_keep      = other->ls_keep;
 	Dee_Incref(self->ls_split);
 	return 0;
 }
@@ -1028,12 +1035,12 @@ linesplit_iter(LineSplit *__restrict self) {
 	result = DeeObject_MALLOC(LineSplitIterator);
 	if unlikely(!result)
 		goto done;
-	result->ls_width = DeeString_WIDTH(self->ls_str);
-	result->ls_begin = (uint8_t *)DeeString_WSTR(self->ls_str);
-	result->ls_next  = result->ls_begin;
-	result->ls_end   = (uint8_t *)DeeString_WEND(self->ls_str);
-	if (result->ls_next == result->ls_end)
-		result->ls_next = NULL;
+	result->ls_width     = DeeString_WIDTH(self->ls_str);
+	result->ls_begin.ptr = DeeString_WSTR(self->ls_str);
+	result->ls_next.ptr  = result->ls_begin.ptr;
+	result->ls_end.ptr   = DeeString_WEND(self->ls_str);
+	if (result->ls_next.ptr == result->ls_end.ptr)
+		result->ls_next.ptr = NULL;
 	result->ls_keep = self->ls_keep;
 	Dee_Incref(self);
 	result->ls_split = self;

@@ -253,7 +253,7 @@ without_module:
 	 * we can do is to check what kind of DDI information is provided by
 	 * the function's code. */
 	{
-		char *name = DeeCode_NAME(code);
+		char const *name = DeeCode_NAME(code);
 		if (name) {
 			/* Well... At least we got the name. - That's something. */
 			info->fi_name = (DREF DeeStringObject *)DeeString_New(name);
@@ -1038,7 +1038,7 @@ function_visit(Function *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 function_print(Function *__restrict self,
                dformatprinter printer, void *arg) {
-	char *name = DeeCode_NAME(self->fo_code);
+	char const *name = DeeCode_NAME(self->fo_code);
 	dssize_t temp, result;
 	uint16_t i;
 	if (name != NULL)
@@ -1066,7 +1066,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 function_printrepr(Function *__restrict self,
                    dformatprinter printer, void *arg) {
-	char *name = DeeCode_NAME(self->fo_code);
+	char const *name = DeeCode_NAME(self->fo_code);
 	if (name != NULL)
 		return DeeFormat_PrintStr(printer, arg, name);
 	/* TODO: Print representation as java-style lambda: "(a, b, c) -> ..."
@@ -2153,7 +2153,7 @@ again:
 	if (other->yi_frame.cf_func) {
 		code = other->yi_frame.cf_func->fo_code;
 		if (!(code->co_flags & CODE_FCOPYABLE)) {
-			char *function_name;
+			char const *function_name;
 			Dee_Incref(code);
 			function_name = DeeCode_NAME(code);
 			DeeYieldFunctionIterator_LockEndRead(other);

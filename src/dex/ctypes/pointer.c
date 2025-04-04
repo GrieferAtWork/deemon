@@ -181,31 +181,31 @@ pointer_init(DeePointerTypeObject *tp_self,
 	/* Special handling for strings (which can be cast to `char *') */
 	if (DeeString_Check(arg)) {
 		if (tp_self->pt_orig == &DeeCChar_Type) {
-			value.ptr = DeeString_AsUtf8(arg);
+			value.pcvoid = DeeString_AsUtf8(arg);
 			if unlikely(!value.ptr)
 				goto err;
 			goto done;
 		}
 		if (tp_self->pt_orig == &DeeCWChar_Type) {
-			value.ptr = DeeString_AsWide(arg);
+			value.pcvoid = DeeString_AsWide(arg);
 			if unlikely(!value.ptr)
 				goto err;
 			goto done;
 		}
 		if (tp_self->pt_orig == &DeeCChar16_Type) {
-			value.ptr = DeeString_AsUtf16(arg, STRING_ERROR_FREPLAC);
+			value.pcvoid = DeeString_AsUtf16(arg, STRING_ERROR_FREPLAC);
 			if unlikely(!value.ptr)
 				goto err;
 			goto done;
 		}
 		if (tp_self->pt_orig == &DeeCChar32_Type) {
-			value.ptr = DeeString_AsUtf32(arg);
+			value.pcvoid = DeeString_AsUtf32(arg);
 			if unlikely(!value.ptr)
 				goto err;
 			goto done;
 		}
 		/* Default case: interpret the UTF-8/byte representation. */
-		value.pchar = DeeString_STR(arg);
+		value.pcchar = DeeString_STR(arg);
 		goto done;
 	}
 	if (DeeBytes_Check(arg)) {

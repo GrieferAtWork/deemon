@@ -91,10 +91,10 @@ local converter_map: {string: (string, string, string) | string} = {
 	"c:wchar_t[]"  : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
 		"\t\tgoto err;\n"
-		"\t{obj}_str = (dwchar_t const *)DeeString_AsWide((DeeObject *){obj});\n"
+		"\t{obj}_str = (Dee_wchar_t const *)DeeString_AsWide((DeeObject *){obj});\n"
 		"\tif unlikely(!{obj}_str)\n"
 		"\t\tgoto err;\n",
-		("dwchar_t const *", "{}_str")),
+		("Dee_wchar_t const *", "{}_str")),
 	"c:ptr"        : ("o", "?Aptr?Ectypes:void", "DeeObject *",
 		"\tif (DeeCTypes_GetPointer({obj}, &{obj}_ptr))\n"
 		"\t\tgoto err;\n",

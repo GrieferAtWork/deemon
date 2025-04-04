@@ -55,16 +55,16 @@ typedef struct {
 	PROXY_OBJECT_HEAD2_EX(Bytes,     bf_bytes,  /* [1..1][const] The bytes that is being searched. */
 	                      DeeObject, bf_other); /* [1..1][const] The needle object. */
 	Needle                           bf_needle; /* [const] The needle being searched for. */
-	byte_t                          *bf_start;  /* [1..1][const] Starting pointer. */
-	byte_t                          *bf_end;    /* [1..1][const] End pointer. */
+	byte_t const                    *bf_start;  /* [1..1][const] Starting pointer. */
+	byte_t const                    *bf_end;    /* [1..1][const] End pointer. */
 } BytesFind;
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(BytesFind, bfi_find)       /* [1..1][const] The underlying find-controller. */
-	byte_t                         *bfi_start;      /* [1..1][const] Starting pointer. */
-	DWEAK byte_t                   *bfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
-	byte_t                         *bfi_end;        /* [1..1][const] End pointer. */
-	byte_t                         *bfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
+	byte_t const                   *bfi_start;      /* [1..1][const] Starting pointer. */
+	DWEAK byte_t const             *bfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
+	byte_t const                   *bfi_end;        /* [1..1][const] End pointer. */
+	byte_t const                   *bfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
 	size_t                          bfi_needle_len; /* [const] Length of the needle being searched. */
 } BytesFindIterator;
 
@@ -167,7 +167,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bfi_next(BytesFindIterator *__restrict self) {
-	byte_t *ptr, *new_ptr;
+	byte_t const *ptr, *new_ptr;
 again:
 	ptr     = atomic_read(&self->bfi_ptr);
 	new_ptr = (byte_t *)memmemb(ptr, (size_t)(self->bfi_end - ptr),
@@ -183,7 +183,7 @@ again:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bcfi_next(BytesFindIterator *__restrict self) {
-	byte_t *ptr, *new_ptr;
+	byte_t const *ptr, *new_ptr;
 again:
 	ptr     = atomic_read(&self->bfi_ptr);
 	new_ptr = (byte_t *)memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
@@ -208,7 +208,7 @@ STATIC_ASSERT(offsetof(BytesFindIterator, bfi_find) == offsetof(ProxyObject, po_
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_bool(BytesFindIterator *__restrict self) {
-	byte_t *ptr;
+	byte_t const *ptr;
 	ptr = atomic_read(&self->bfi_ptr);
 	ptr = memmemb(ptr, (size_t)(self->bfi_end - ptr),
 	              self->bfi_needle_ptr,
@@ -218,7 +218,7 @@ bfi_bool(BytesFindIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bcfi_bool(BytesFindIterator *__restrict self) {
-	byte_t *ptr;
+	byte_t const *ptr;
 	ptr = atomic_read(&self->bfi_ptr);
 	ptr = (byte_t *)memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
 	                                self->bfi_needle_ptr,
@@ -250,8 +250,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bfi_compare(BytesFindIterator *self, BytesFindIterator *other) {
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	Dee_return_compareT(byte_t *, READ_PTR(self),
-	                    /*     */ READ_PTR(other));
+	Dee_return_compareT(byte_t const *, READ_PTR(self),
+	                    /*           */ READ_PTR(other));
 err:
 	return Dee_COMPARE_ERR;
 }

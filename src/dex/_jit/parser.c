@@ -80,7 +80,7 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 
 	case '!': {
 		bool result;
-		unsigned char *orig_tok_start;
+		unsigned char const *orig_tok_start;
 		orig_tok_start = self->jl_tokstart;
 		/* Check if this ! is eventually followed by `is' or `in'
 		 * If this is the case, then this can't be the start of an
@@ -104,7 +104,7 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 
 	case JIT_KEYWORD: {
 		/* Black-list a couple of keywords that cannot appear in expressions */
-		char *tokptr;
+		char const *tokptr;
 		size_t toklen;
 		tokptr = JITLexer_TokPtr(self);
 		toklen = JITLexer_TokLen(self);
@@ -930,13 +930,13 @@ err_trace:
 INTERN WUNUSED NONNULL((1)) int DFCALL
 JITLexer_EvalModuleName(JITLexer *__restrict self,
                         struct unicode_printer *printer,
-                        /*utf-8*/ unsigned char **p_name_start,
-                        /*utf-8*/ unsigned char **p_name_end) {
+                        /*utf-8*/ unsigned char const **p_name_start,
+                        /*utf-8*/ unsigned char const **p_name_end) {
 	int error;
 	/* Optimization for simple/inline module names, such that we
 	 * don't have to actually copy the module name at this point! */
 	if (TOKEN_IS_DOT(self) || self->jl_tok == JIT_KEYWORD) {
-		unsigned char *start, *end;
+		unsigned char const *start, *end;
 		start = self->jl_tokstart;
 		end   = self->jl_tokend;
 		while (end < self->jl_end) {
@@ -945,7 +945,7 @@ JITLexer_EvalModuleName(JITLexer *__restrict self,
 				continue;
 			if (ch > 0x7f) {
 				uint32_t ch32;
-				unsigned char *temp;
+				unsigned char const *temp;
 				--end;
 				temp = end;
 				ch32 = unicode_readutf8_n(&end, self->jl_end);
@@ -990,7 +990,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 JITLexer_EvalModuleNameIntoPrinter(JITLexer *__restrict self,
                                    struct unicode_printer *__restrict printer) {
 	int result;
-	unsigned char *name_start, *name_end;
+	unsigned char const *name_start, *name_end;
 	result = JITLexer_EvalModuleName(self, printer, &name_start, &name_end);
 	if (result > 0) {
 		result = 0;
@@ -1011,7 +1011,7 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 	int error;
 	DREF /*Module*/ DeeObject *result;
 	struct unicode_printer printer;
-	unsigned char *name_start, *name_end;
+	unsigned char const *name_start, *name_end;
 	DeeObject *import_function;
 	unicode_printer_init(&printer);
 	error = JITLexer_EvalModuleName(self, &printer, &name_start, &name_end);
@@ -1233,7 +1233,7 @@ INTERN WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipPair(JITLexer *__restrict self,
                   unsigned int pair_open,
                   unsigned int pair_close) {
-	unsigned char *start   = self->jl_tokstart;
+	unsigned char const *start = self->jl_tokstart;
 	unsigned int recursion = 1;
 	for (;;) {
 		if (!self->jl_tok)
@@ -1343,8 +1343,8 @@ JITLexer_ParseCatchMask(JITLexer *__restrict self,
 		}
 	} else {
 		if (self->jl_tok == JIT_KEYWORD) {
-			unsigned char *start = self->jl_tokstart;
-			unsigned char *end   = self->jl_tokend;
+			unsigned char const *start = self->jl_tokstart;
+			unsigned char const *end   = self->jl_tokend;
 			JITLexer_Yield(self);
 			if (self->jl_tok == TOK_DOTS) {
 				/* `catch (e...)' (catch all into `e') */

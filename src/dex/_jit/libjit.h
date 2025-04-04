@@ -517,18 +517,18 @@ JITLValueList_UnpackAssign(JITLValueList *__restrict self,
 
 
 struct jit_small_lexer {
-	unsigned int             jl_tok;      /* Token ID (One of `TOK_*' from <tpp.h>, or `JIT_KEYWORD' for an arbitrary keyword) */
-	/*utf-8*/ unsigned char *jl_tokstart; /* [1..1] Token starting pointer. */
-	/*utf-8*/ unsigned char *jl_tokend;   /* [1..1] Token end pointer. */
-	/*utf-8*/ unsigned char *jl_end;      /* [1..1] Input end pointer. */
+	unsigned int                   jl_tok;      /* Token ID (One of `TOK_*' from <tpp.h>, or `JIT_KEYWORD' for an arbitrary keyword) */
+	/*utf-8*/ unsigned char const *jl_tokstart; /* [1..1] Token starting pointer. */
+	/*utf-8*/ unsigned char const *jl_tokend;   /* [1..1] Token end pointer. */
+	/*utf-8*/ unsigned char const *jl_end;      /* [1..1] Input end pointer. */
 };
 
 struct jit_lexer {
-	unsigned int               jl_tok;       /* Token ID (One of `TOK_*' from <tpp.h>, or `JIT_KEYWORD' for an arbitrary keyword) */
-	/*utf-8*/ unsigned char   *jl_tokstart;  /* [1..1] Token starting pointer. */
-	/*utf-8*/ unsigned char   *jl_tokend;    /* [1..1] Token end pointer. */
-	/*utf-8*/ unsigned char   *jl_end;       /* [1..1] Input end pointer. */
-	/*utf-8*/ unsigned char   *jl_errpos;    /* [0..1] Lexer error position. */
+	unsigned int                   jl_tok;       /* Token ID (One of `TOK_*' from <tpp.h>, or `JIT_KEYWORD' for an arbitrary keyword) */
+	/*utf-8*/ unsigned char const *jl_tokstart;  /* [1..1] Token starting pointer. */
+	/*utf-8*/ unsigned char const *jl_tokend;    /* [1..1] Token end pointer. */
+	/*utf-8*/ unsigned char const *jl_end;       /* [1..1] Input end pointer. */
+	/*utf-8*/ unsigned char const *jl_errpos;    /* [0..1] Lexer error position. */
 	union {
 		struct {
 			JITFunctionObject *jl_function;  /* [1..1] The function who's text is being scanned. */
@@ -570,7 +570,7 @@ struct jit_lexer {
 	;
 };
 
-#define JITLexer_TokPtr(self) ((char *)(self)->jl_tokstart)
+#define JITLexer_TokPtr(self) ((char const *)(self)->jl_tokstart)
 #define JITLexer_TokLen(self) (size_t)((self)->jl_tokend - (self)->jl_tokstart)
 
 
@@ -606,7 +606,7 @@ INTDEF void DFCALL JITLexer_Yield(JITLexer *__restrict self);
 #ifdef __INTELLISENSE__
 INTDEF void DFCALL
 JITLexer_ErrorTrace(JITLexer *__restrict self,
-                    unsigned char *__restrict pos);
+                    unsigned char const *__restrict pos);
 #else /* __INTELLISENSE__ */
 #define JITLexer_ErrorTrace(self, pos) (void)((self)->jl_errpos = (pos))
 #endif /* !__INTELLISENSE__ */
@@ -1057,8 +1057,8 @@ INTDEF int DCALL JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode, ui
 INTDEF WUNUSED NONNULL((1)) int DFCALL
 JITLexer_EvalModuleName(JITLexer *__restrict self,
                         struct unicode_printer *printer,
-                        /*utf-8*/ unsigned char **p_name_start,
-                        /*utf-8*/ unsigned char **p_name_end);
+                        /*utf-8*/ unsigned char const **p_name_start,
+                        /*utf-8*/ unsigned char const **p_name_end);
 #define JITLexer_SkipModuleName(self) \
 	(JITLexer_EvalModuleName(self, NULL, NULL, NULL) < 0 ? -1 : 0)
 #define JITLexer_SkipModuleNameIntoPrinter(self) \
@@ -1537,37 +1537,37 @@ struct jit_state {
 #endif /* __SIZEOF_POINTER__ > 4 */
 	union {
 		struct {
-			unsigned char *f_loop;  /* [1..1] Pointer to the statement's loop-statement. */
-			unsigned char *f_cond;  /* [0..1] Pointer to the statement's cond-expression.
-			                         * NOTE: This pointer is lazily initialized! */
-		}             js_dowhile;   /* JIT_STATE_KIND_DOWHILE */
+			unsigned char const *f_loop;  /* [1..1] Pointer to the statement's loop-statement. */
+			unsigned char const *f_cond;  /* [0..1] Pointer to the statement's cond-expression.
+			                               * NOTE: This pointer is lazily initialized! */
+		}             js_dowhile;         /* JIT_STATE_KIND_DOWHILE */
 		struct {
-			unsigned char *f_cond;  /* [0..1] Pointer to the for statement's cond-expression. */
-			unsigned char *f_next;  /* [0..1] Pointer to the for statement's next-expression. */
-			unsigned char *f_loop;  /* [1..1] Pointer to the for statement's loop-statement. */
-		}             js_for;       /* JIT_STATE_KIND_FOR */
+			unsigned char const *f_cond;  /* [0..1] Pointer to the for statement's cond-expression. */
+			unsigned char const *f_next;  /* [0..1] Pointer to the for statement's next-expression. */
+			unsigned char const *f_loop;  /* [1..1] Pointer to the for statement's loop-statement. */
+		}             js_for;             /* JIT_STATE_KIND_FOR */
 		struct {
-			unsigned char *f_cond;  /* [1..1] Pointer to the for statement's cond-expression. */
-			unsigned char *f_loop;  /* [1..1] Pointer to the for statement's loop-statement. */
-		}             js_while;     /* JIT_STATE_KIND_WHILE */
+			unsigned char const *f_cond;  /* [1..1] Pointer to the for statement's cond-expression. */
+			unsigned char const *f_loop;  /* [1..1] Pointer to the for statement's loop-statement. */
+		}             js_while;           /* JIT_STATE_KIND_WHILE */
 		struct {
-			DREF DeeObject *f_iter; /* [1..1] The iterator object. */
-			JITLValue       f_elem; /* The iterator target expression lvalue (this is
-			                         * where the elements enumerated from `f_iter' go). */
-			unsigned char  *f_loop; /* [1..1] Pointer to the foreach statement's loop-statement. */
-		}             js_foreach;   /* JIT_STATE_KIND_FOREACH */
+			DREF DeeObject      *f_iter;  /* [1..1] The iterator object. */
+			JITLValue            f_elem;  /* The iterator target expression lvalue (this is
+			                               * where the elements enumerated from `f_iter' go). */
+			unsigned char const *f_loop;  /* [1..1] Pointer to the foreach statement's loop-statement. */
+		}             js_foreach;         /* JIT_STATE_KIND_FOREACH */
 		struct {
-			DREF DeeObject *f_iter; /* [1..1] The iterator object. */
-			JITLValueList   f_elem; /* The iterator target expression lvalues (this is
-			                         * where the elements enumerated from `f_iter' go). */
-			unsigned char  *f_loop; /* [1..1] Pointer to the foreach statement's loop-statement. */
-		}             js_foreach2;  /* JIT_STATE_KIND_FOREACH */
+			DREF DeeObject      *f_iter;  /* [1..1] The iterator object. */
+			JITLValueList        f_elem;  /* The iterator target expression lvalues (this is
+			                               * where the elements enumerated from `f_iter' go). */
+			unsigned char const *f_loop;  /* [1..1] Pointer to the foreach statement's loop-statement. */
+		}             js_foreach2;        /* JIT_STATE_KIND_FOREACH */
 		struct {
-			DREF DeeObject *w_obj;  /* [1..1] The with-object on which `operator leave()' is invoked when the scope is left. */
-		}             js_with;      /* JIT_STATE_KIND_WITH */
+			DREF DeeObject *w_obj;        /* [1..1] The with-object on which `operator leave()' is invoked when the scope is left. */
+		}             js_with;            /* JIT_STATE_KIND_WITH */
 		struct {
-			unsigned char *t_guard; /* [1..1] Pointer to the start of the guarded statement block. */
-		}             js_try;       /* JIT_STATE_KIND_TRY */
+			unsigned char const *t_guard; /* [1..1] Pointer to the start of the guarded statement block. */
+		}             js_try;             /* JIT_STATE_KIND_TRY */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion

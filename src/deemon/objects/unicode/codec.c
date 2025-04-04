@@ -32,6 +32,7 @@
 
 #include <hybrid/byteorder.h>
 #include <hybrid/unaligned.h>
+#include <hybrid/typecore.h>
 #include <hybrid/wordbits.h>
 /**/
 
@@ -41,6 +42,9 @@
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint8_t */
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -53,7 +57,7 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCodec_NormalizeName(DeeObject *__restrict name) {
-	char *iter, *end, *str;
+	char const *iter, *end, *str;
 	size_t length;
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
@@ -69,7 +73,7 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 			result = DeeString_NewBuffer(length);
 			if unlikely(!result)
 				goto err;
-			dst = (char *)mempcpyc(DeeString_STR(result), str,
+			dst = (char *)mempcpyc(DeeString_GetBuffer(result), str,
 			                       (size_t)(iter - str), sizeof(char));
 			for (; iter < end; ++iter) {
 				if (*iter == '_') {
@@ -80,24 +84,24 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 					*dst++ = *iter;
 				}
 			}
-			ASSERT(dst == DeeString_STR(result) + DeeString_SIZE(result));
+			ASSERT(dst == DeeString_GetBuffer(result) + DeeString_SIZE(result));
 			if (length >= 4 &&
-			    UNALIGNED_GET32(DeeString_STR(result)) == ENCODE_INT32('i', 's', 'o', '-')) {
-				--DeeString_SIZE(result);
-				memmovedownc(DeeString_STR(result) + 3,
-				             DeeString_STR(result) + 4,
+			    UNALIGNED_GET32(DeeString_GetBuffer(result)) == ENCODE_INT32('i', 's', 'o', '-')) {
+				--((DeeStringObject *)result)->s_len;
+				memmovedownc(DeeString_GetBuffer(result) + 3,
+				             DeeString_GetBuffer(result) + 4,
 				             length - 4,
 				             sizeof(char));
-				DeeString_STR(result)[length - 2] = '\0';
+				DeeString_GetBuffer(result)[length - 2] = '\0';
 			} else if (length >= 3 &&
-			           UNALIGNED_GET16(DeeString_STR(result)) == ENCODE_INT16('c', 'p') &&
-			           DeeString_STR(result)[2] == '-') {
-				--DeeString_SIZE(result);
-				memmovedownc(DeeString_STR(result) + 2,
-				             DeeString_STR(result) + 3,
+			           UNALIGNED_GET16(DeeString_GetBuffer(result)) == ENCODE_INT16('c', 'p') &&
+			           DeeString_GetBuffer(result)[2] == '-') {
+				--((DeeStringObject *)result)->s_len;
+				memmovedownc(DeeString_GetBuffer(result) + 2,
+				             DeeString_GetBuffer(result) + 3,
 				             length - 3,
 				             sizeof(char));
-				DeeString_STR(result)[length - 2] = '\0';
+				DeeString_GetBuffer(result)[length - 2] = '\0';
 			}
 			return result;
 		}
@@ -106,9 +110,9 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 		result = DeeString_NewBuffer(length - 1);
 		if unlikely(!result)
 			goto err;
-		UNALIGNED_SET16(DeeString_STR(result), ENCODE_INT16('i', 's'));
-		DeeString_STR(result)[3] = 'o';
-		memcpyc(DeeString_STR(result) + 3,
+		UNALIGNED_SET16(DeeString_GetBuffer(result), ENCODE_INT16('i', 's'));
+		DeeString_GetBuffer(result)[3] = 'o';
+		memcpyc(DeeString_GetBuffer(result) + 3,
 		        str + 4,
 		        length - 4,
 		        sizeof(char));
@@ -119,8 +123,8 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 		result = DeeString_NewBuffer(length - 1);
 		if unlikely(!result)
 			goto err;
-		UNALIGNED_SET16(DeeString_STR(result), ENCODE_INT16('c', 'p'));
-		memcpyc(DeeString_STR(result) + 2,
+		UNALIGNED_SET16(DeeString_GetBuffer(result), ENCODE_INT16('c', 'p'));
+		memcpyc(DeeString_GetBuffer(result) + 2,
 		        str + 3,
 		        length - 3,
 		        sizeof(char));
@@ -159,7 +163,7 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
 	DREF DeeObject *result;
 	size_t i, j, size;
 	if (DeeBytes_Check(self)) {
-		uint8_t *data;
+		byte_t *data;
 		if (error_mode == STRING_ERROR_FIGNORE)
 			goto return_self;
 		data = DeeBytes_DATA(self);
@@ -192,7 +196,7 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
 
 		CASE_WIDTH_1BYTE: {
 			uint8_t *dest;
-			uint8_t *data;
+			uint8_t const *data;
 			data = DeeString_Get1Byte(self);
 			size = WSTR_LENGTH(data);
 			for (i = 0; i < size; ++i) {
@@ -218,7 +222,7 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
 		}	break;
 
 		CASE_WIDTH_2BYTE: {
-			uint16_t *data;
+			uint16_t const *data;
 			uint8_t *dest;
 			data = DeeString_Get2Byte(self);
 			size = WSTR_LENGTH(data);
@@ -246,7 +250,7 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
 		}	break;
 
 		CASE_WIDTH_4BYTE: {
-			uint32_t *data;
+			uint32_t const *data;
 			data = DeeString_Get4Byte(self);
 			size = WSTR_LENGTH(data);
 			for (i = 0; i < size; ++i) {
@@ -260,12 +264,12 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
 				if unlikely(!result)
 					goto err;
 				for (j = 0; j < i; ++j)
-					DeeString_STR(result)[j] = (uint8_t)data[j];
+					DeeString_GetBuffer(result)[j] = (uint8_t)data[j];
 				for (; i < size; ++i) {
 					uint32_t ch = data[i];
 					if (ch > 0x7f)
 						ch = '?';
-					DeeString_STR(result)[i] = (char)(uint8_t)ch;
+					DeeString_GetBuffer(result)[i] = (char)(uint8_t)ch;
 				}
 				return result;
 			}
@@ -295,7 +299,7 @@ convert_latin1(DeeObject *__restrict self, unsigned int error_mode, bool is_deco
 			goto return_self;
 
 		CASE_WIDTH_2BYTE: {
-			uint16_t *data;
+			uint16_t const *data;
 			data = DeeString_Get2Byte(self);
 			size = WSTR_LENGTH(data);
 			for (i = 0; i < size; ++i) {
@@ -309,12 +313,12 @@ convert_latin1(DeeObject *__restrict self, unsigned int error_mode, bool is_deco
 				if unlikely(!result)
 					goto err;
 				for (j = 0; j < i; ++j)
-					DeeString_STR(result)[j] = (uint8_t)data[j];
+					DeeString_GetBuffer(result)[j] = (uint8_t)data[j];
 				for (; i < size; ++i) {
 					uint16_t ch = data[i];
 					if (ch > 0xff)
 						ch = '?';
-					DeeString_STR(result)[i] = (char)(uint8_t)ch;
+					DeeString_GetBuffer(result)[i] = (char)(uint8_t)ch;
 				}
 				return result;
 			}
@@ -322,7 +326,7 @@ convert_latin1(DeeObject *__restrict self, unsigned int error_mode, bool is_deco
 		}	break;
 
 		CASE_WIDTH_4BYTE: {
-			uint32_t *data;
+			uint32_t const *data;
 			data = DeeString_Get4Byte(self);
 			size = WSTR_LENGTH(data);
 			for (i = 0; i < size; ++i) {
@@ -336,12 +340,12 @@ convert_latin1(DeeObject *__restrict self, unsigned int error_mode, bool is_deco
 				if unlikely(!result)
 					goto err;
 				for (j = 0; j < i; ++j)
-					DeeString_STR(result)[j] = (uint8_t)data[j];
+					DeeString_GetBuffer(result)[j] = (uint8_t)data[j];
 				for (; i < size; ++i) {
 					uint32_t ch = data[i];
 					if (ch > 0xff)
 						ch = '?';
-					DeeString_STR(result)[i] = (char)(uint8_t)ch;
+					DeeString_GetBuffer(result)[i] = (char)(uint8_t)ch;
 				}
 				return result;
 			}
@@ -394,22 +398,23 @@ encode_c_escape(DeeObject *__restrict self) {
 		                             (uint8_t const *)DeeBytes_DATA(self),
 		                             DeeBytes_SIZE(self));
 	} else if (DeeString_Check(self)) {
-		void *str = DeeString_WSTR(self);
+		union dcharptr_const str;
+		str.ptr = DeeString_WSTR(self);
 		SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 		CASE_WIDTH_1BYTE:
 			error = DeeFormat_Quote8(&ascii_printer_print, &printer,
-			                         (uint8_t const *)str, WSTR_LENGTH(str));
+			                         str.cp8, WSTR_LENGTH(str.cp8));
 			break;
 
 		CASE_WIDTH_2BYTE:
 			error = DeeFormat_Quote16(&ascii_printer_print, &printer,
-			                          (uint16_t const *)str, WSTR_LENGTH(str));
+			                          str.cp16, WSTR_LENGTH(str.cp16));
 			break;
 
 		CASE_WIDTH_4BYTE:
 			error = DeeFormat_Quote32(&ascii_printer_print, &printer,
-			                          (uint32_t const *)str, WSTR_LENGTH(str));
+			                          str.cp32, WSTR_LENGTH(str.cp32));
 			break;
 		}
 	} else {
@@ -430,7 +435,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 decode_utf16(DeeObject *__restrict self,
              unsigned int error_mode,
              bool little_endian) {
-	uint8_t *data;
+	byte_t const *data;
 	size_t size;
 	if (DeeBytes_Check(self)) {
 		data = DeeBytes_DATA(self);
@@ -464,7 +469,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 decode_utf32(DeeObject *__restrict self,
              unsigned int error_mode,
              bool little_endian) {
-	uint8_t *data;
+	byte_t const *data;
 	size_t size;
 	if (DeeBytes_Check(self)) {
 		data = DeeBytes_DATA(self);
@@ -499,7 +504,7 @@ encode_utf16(DeeObject *__restrict self,
              unsigned int error_mode) {
 	if (DeeBytes_Check(self)) {
 		DREF DeeObject *result;
-		uint8_t *data;
+		byte_t const *data;
 		size_t size;
 		uint16_t *dst;
 		data   = DeeBytes_DATA(self);
@@ -513,15 +518,11 @@ encode_utf16(DeeObject *__restrict self,
 		return result;
 	}
 	if (DeeString_Check(self)) {
-		uint16_t *data;
-		data = DeeString_AsUtf16(self, error_mode);
+		uint16_t const *data = DeeString_AsUtf16(self, error_mode);
 		if unlikely(!data)
 			goto err;
 		/* Return a bytes-view for the UTF-16 variant of the given string. */
-		return DeeBytes_NewView(self,
-		                        data,
-		                        WSTR_LENGTH(data) * 2,
-		                        Dee_BUFFER_FREADONLY);
+		return DeeBytes_NewViewRo(self, data, WSTR_LENGTH(data) * 2);
 	}
 	err_expected_string_or_bytes(self);
 err:
@@ -532,7 +533,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 encode_utf32(DeeObject *__restrict self) {
 	if (DeeBytes_Check(self)) {
 		DREF DeeObject *result;
-		uint8_t *data;
+		byte_t const *data;
 		size_t size;
 		uint32_t *dst;
 		data   = DeeBytes_DATA(self);
@@ -546,14 +547,11 @@ encode_utf32(DeeObject *__restrict self) {
 		return result;
 	}
 	if (DeeString_Check(self)) {
-		uint32_t *data = DeeString_AsUtf32(self);
+		uint32_t const *data = DeeString_AsUtf32(self);
 		if unlikely(!data)
 			goto err;
 		/* Return a bytes-view for the UTF-32 variant of the given string. */
-		return DeeBytes_NewView(self,
-		                        data,
-		                        WSTR_LENGTH(data) * 4,
-		                        Dee_BUFFER_FREADONLY);
+		return DeeBytes_NewViewRo(self, data, WSTR_LENGTH(data) * 4);
 	}
 	err_expected_string_or_bytes(self);
 err:
@@ -565,7 +563,7 @@ encode_utf16_alt(DeeObject *__restrict self,
                  unsigned int error_mode) {
 	if (DeeBytes_Check(self)) {
 		DREF DeeObject *result;
-		uint8_t *data;
+		byte_t const *data;
 		size_t size;
 		uint16_t *dst;
 		data   = DeeBytes_DATA(self);
@@ -580,7 +578,7 @@ encode_utf16_alt(DeeObject *__restrict self,
 	}
 	if (DeeString_Check(self)) {
 		DREF DeeObject *result;
-		uint16_t *data;
+		uint16_t const *data;
 		size_t size;
 		uint16_t *dst;
 		data = DeeString_AsUtf16(self, error_mode);
@@ -604,7 +602,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 encode_utf32_alt(DeeObject *__restrict self) {
 	if (DeeBytes_Check(self)) {
 		DREF DeeObject *result;
-		uint8_t *data;
+		byte_t const *data;
 		size_t size;
 		uint32_t *dst;
 		data   = DeeBytes_DATA(self);
@@ -619,7 +617,7 @@ encode_utf32_alt(DeeObject *__restrict self) {
 	}
 	if (DeeString_Check(self)) {
 		DREF DeeObject *result;
-		uint32_t *data;
+		uint32_t const *data;
 		size_t size;
 		uint32_t *dst;
 		data = DeeString_AsUtf32(self);
@@ -643,7 +641,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 decode_utf8(DeeObject *__restrict self,
             unsigned int error_mode) {
-	uint8_t *data;
+	byte_t const *data;
 	size_t size;
 	if (DeeBytes_Check(self)) {
 		data = DeeBytes_DATA(self);
@@ -666,9 +664,9 @@ encode_utf8(DeeObject *__restrict self) {
 	if (DeeBytes_Check(self)) {
 		/* LATIN-1 to UTF-8 */
 		DREF DeeObject *result;
-		uint8_t *data;
+		uint8_t const *data;
 		size_t size;
-		uint8_t *dst;
+		byte_t *dst;
 		data   = DeeBytes_DATA(self);
 		size   = DeeBytes_SIZE(self);
 		result = DeeBytes_NewBufferUninitialized(size * 2);
@@ -690,14 +688,11 @@ encode_utf8(DeeObject *__restrict self) {
 		return DeeBytes_TruncateBuffer(result, size);
 	}
 	if (DeeString_Check(self)) {
-		char *data = DeeString_AsUtf8(self);
+		char const *data = DeeString_AsUtf8(self);
 		if unlikely(!data)
 			goto err;
 		/* Return a bytes-view for the UTF-8 variant of the given string. */
-		return DeeBytes_NewView(self,
-		                        data,
-		                        WSTR_LENGTH(data),
-		                        Dee_BUFFER_FREADONLY);
+		return DeeBytes_NewViewRo(self, data, WSTR_LENGTH(data));
 	}
 	err_expected_string_or_bytes(self);
 err:

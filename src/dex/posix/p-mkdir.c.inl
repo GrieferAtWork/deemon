@@ -159,15 +159,15 @@ err:
 #if defined(posix_mkdir_USE_wmkdir) || defined(posix_mkdir_USE_mkdir)
 	int error;
 #ifdef posix_mkdir_USE_wmkdir
-	dwchar_t *wide_path;
+	Dee_wchar_t const *wide_path;
 #endif /* posix_mkdir_USE_wmkdir */
 #ifdef posix_mkdir_USE_mkdir
-	char *utf8_path;
+	char const *utf8_path;
 #endif /* posix_mkdir_USE_mkdir */
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
 #ifdef posix_mkdir_USE_wmkdir
-	wide_path = (dwchar_t *)DeeString_AsWide(path);
+	wide_path = DeeString_AsWide(path);
 	if unlikely(!wide_path)
 		goto err;
 #endif /* posix_mkdir_USE_wmkdir */
@@ -183,7 +183,7 @@ EINTR_ENOMEM_LABEL(again)
 	error = wmkdir((wchar_t *)wide_path, mode);
 #endif /* posix_mkdir_USE_wmkdir */
 #ifdef posix_mkdir_USE_mkdir
-	error = mkdir(utf8_path, mode);
+	error = mkdir((char *)utf8_path, mode);
 #endif /* posix_mkdir_USE_mkdir */
 	DBG_ALIGNMENT_ENABLE();
 
@@ -254,17 +254,17 @@ FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_fmkdirat_f_impl(De
 #endif /* posix_fmkdirat_USE_wmkdirat || posix_fmkdirat_USE_mkdirat */
 	    1) {
 #if defined(posix_fmkdirat_USE_wfmkdirat) || defined(posix_fmkdirat_USE_wmkdirat)
-		dwchar_t *wide_path;
+		Dee_wchar_t const *wide_path;
 #endif /* posix_fmkdirat_USE_wfmkdirat || posix_fmkdirat_USE_wmkdirat */
 #if defined(posix_fmkdirat_USE_fmkdirat) || defined(posix_fmkdirat_USE_mkdirat)
-		char *utf8_path;
+		char const *utf8_path;
 #endif /* posix_fmkdirat_USE_fmkdirat || posix_fmkdirat_USE_mkdirat */
 		int error;
 		int os_dfd = DeeUnixSystem_GetFD(dfd);
 		if unlikely(os_dfd == -1)
 			goto err;
 #if defined(posix_fmkdirat_USE_wfmkdirat) || defined(posix_fmkdirat_USE_wmkdirat)
-		wide_path = (dwchar_t *)DeeString_AsWide(path);
+		wide_path = DeeString_AsWide(path);
 		if unlikely(!wide_path)
 			goto err;
 #endif /* posix_fmkdirat_USE_wfmkdirat || posix_fmkdirat_USE_wmkdirat */
@@ -276,13 +276,13 @@ FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_fmkdirat_f_impl(De
 EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_DISABLE();
 #if defined(posix_fmkdirat_USE_wfmkdirat)
-		error = wfmkdirat(os_dfd, wide_path, mode, atflags);
+		error = wfmkdirat(os_dfd, (wchar_t *)wide_path, mode, atflags);
 #elif defined(posix_fmkdirat_USE_wmkdirat)
-		error = wmkdirat(os_dfd, wide_path, mode);
+		error = wmkdirat(os_dfd, (wchar_t *)wide_path, mode);
 #elif defined(posix_fmkdirat_USE_fmkdirat)
-		error = fmkdirat(os_dfd, utf8_path, mode, atflags);
+		error = fmkdirat(os_dfd, (char *)utf8_path, mode, atflags);
 #elif defined(posix_fmkdirat_USE_mkdirat)
-		error = mkdirat(os_dfd, utf8_path, mode);
+		error = mkdirat(os_dfd, (char *)utf8_path, mode);
 #endif /* ... */
 		if likely(error == 0) {
 			DBG_ALIGNMENT_ENABLE();

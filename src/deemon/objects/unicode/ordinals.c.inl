@@ -46,7 +46,7 @@ typedef struct {
 	 * integers representing the unicode character codes for each character. */
 	PROXY_OBJECT_HEAD_EX(DeeStringObject, so_str)   /* [1..1][const] The string who's character ordinals are being viewed. */
 	unsigned int                          so_width; /* [const][== DeeString_WIDTH(so_str)] The string's character width. */
-	union dcharptr                        so_ptr;   /* [const][== DeeString_WSTR(so_str)] The effective character array. */
+	union dcharptr_const                  so_ptr;   /* [const][== DeeString_WSTR(so_str)] The effective character array. */
 } StringOrdinals;
 
 INTDEF DeeTypeObject StringOrdinals_Type;

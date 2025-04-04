@@ -715,7 +715,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		/* Copy the library path. */
 #ifdef ALTSEP
 		{
-			char *iter, *end;
+			char const *iter, *end;
 			end = (iter = DeeString_STR(path)) + DeeString_SIZE(path);
 			for (; iter < end; ++iter, ++dst) {
 				char ch = *iter;

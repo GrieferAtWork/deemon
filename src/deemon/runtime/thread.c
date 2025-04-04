@@ -2461,7 +2461,7 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 		/* If DDI provides, set the name of the function that's to-be executed. */
 		DeeFunctionObject *exec_function;
 		DeeCodeObject *exec_code;
-		char *exec_name;
+		char const *exec_name;
 		exec_function = (DeeFunctionObject *)thread_main;
 		exec_code     = exec_function->fo_code;
 		exec_name     = DeeCode_NAME(exec_code);
@@ -3710,7 +3710,7 @@ thread_print_impl(DeeThreadObject *__restrict self,
 			/* If DDI provides, set the name of the function that's to-be executed. */
 			DeeFunctionObject *exec_function;
 			DeeCodeObject *exec_code;
-			char *exec_name;
+			char const *exec_name;
 			exec_function = (DeeFunctionObject *)thread_main;
 			exec_code     = exec_function->fo_code;
 			exec_name     = DeeCode_NAME(exec_code);

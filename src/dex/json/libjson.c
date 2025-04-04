@@ -761,13 +761,13 @@ jseq_or_map_init_parser(DeeJsonSequenceObject *__restrict self,
 			 * for processing UTF-8 data) */
 			if (utf->u_utf8) {
 				start = utf->u_utf8;
-				end   = (char *)start + WSTR_LENGTH(start);
+				end   = (char const *)start + WSTR_LENGTH(start);
 			} else {
 				size_t length;
 				start  = utf->u_data[utf->u_width];
 				length = WSTR_LENGTH(start);
 				length = Dee_STRING_MUL_SIZEOF_WIDTH(length, utf->u_width);
-				end    = (byte_t *)start + length;
+				end    = (byte_t const *)start + length;
 			}
 		} else {
 			char const *utf8 = DeeString_AsUtf8((DeeObject *)input);
@@ -3574,13 +3574,13 @@ f_libjson_parse(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			 * for processing UTF-8 data) */
 			if (utf->u_utf8) {
 				start = utf->u_utf8;
-				end   = (char *)start + WSTR_LENGTH(start);
+				end   = (char const *)start + WSTR_LENGTH(start);
 			} else {
 				size_t length;
 				start  = utf->u_data[utf->u_width];
 				length = WSTR_LENGTH(start);
 				length = Dee_STRING_MUL_SIZEOF_WIDTH(length, utf->u_width);
-				end    = (byte_t *)start + length;
+				end    = (byte_t const *)start + length;
 			}
 		} else {
 			char const *utf8 = DeeString_AsUtf8((DeeObject *)input);

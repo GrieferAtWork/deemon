@@ -199,14 +199,14 @@ builtin_exec_fallback(size_t argc,
 		usersize = WSTR_LENGTH(usertext);
 		Dee_Incref(expr);
 	} else if (DeeBytes_Check(expr)) {
-		usertext = (char *)DeeBytes_DATA(expr);
+		usertext = (char const *)DeeBytes_DATA(expr);
 		usersize = DeeBytes_SIZE(expr);
 		Dee_Incref(expr);
 	} else {
 		expr = DeeFile_ReadBytes(expr, (size_t)-1, true);
 		if unlikely(!expr)
 			goto err;
-		usertext = (char *)DeeBytes_DATA(expr);
+		usertext = (char const *)DeeBytes_DATA(expr);
 		usersize = DeeBytes_SIZE(expr);
 	}
 	result = DeeExec_RunMemory(usertext,
@@ -525,7 +525,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 f_rt_badcall(size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *ts;
 	size_t argc_cur, argc_min = 0, argc_max;
-	char *function_name = NULL;
+	char const *function_name = NULL;
 	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":__badcall", &argc_max))
 		goto done;
 	ts       = DeeThread_Self();
@@ -533,9 +533,9 @@ f_rt_badcall(size_t argc, DeeObject *const *argv) {
 	if likely(ts->t_execsz) {
 		struct code_frame *frame = ts->t_exec;
 		DeeCodeObject *code      = frame->cf_func->fo_code;
-		argc_cur                 = frame->cf_argc;
-		argc_min                 = code->co_argc_min;
-		function_name            = DeeCode_NAME(code);
+		argc_cur      = frame->cf_argc;
+		argc_min      = code->co_argc_min;
+		function_name = DeeCode_NAME(code);
 	}
 	/* Throw the invalid-argument-count error. */
 	err_invalid_argc(function_name,

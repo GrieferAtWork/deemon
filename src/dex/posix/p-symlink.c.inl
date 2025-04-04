@@ -160,20 +160,20 @@ err:
 #if defined(posix_symlink_USE_wsymlink) || defined(posix_symlink_USE_symlink)
 	int error;
 #ifdef posix_symlink_USE_wsymlink
-	dwchar_t *wide_text, *wide_path;
+	Dee_wchar_t const *wide_text, *wide_path;
 #endif /* posix_symlink_USE_wsymlink */
 #ifdef posix_symlink_USE_symlink
-	char *utf8_text, *utf8_path;
+	char const *utf8_text, *utf8_path;
 #endif /* posix_symlink_USE_symlink */
 	if (DeeObject_AssertTypeExact(text, &DeeString_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
 #ifdef posix_symlink_USE_wsymlink
-	wide_text = (dwchar_t *)DeeString_AsWide(text);
+	wide_text = DeeString_AsWide(text);
 	if unlikely(!wide_text)
 		goto err;
-	wide_path = (dwchar_t *)DeeString_AsWide(path);
+	wide_path = DeeString_AsWide(path);
 	if unlikely(!wide_path)
 		goto err;
 #endif /* posix_symlink_USE_wsymlink */
@@ -192,7 +192,7 @@ EINTR_ENOMEM_LABEL(again)
 	error = wsymlink((wchar_t *)wide_text, (wchar_t *)wide_path);
 #endif /* posix_symlink_USE_wsymlink */
 #ifdef posix_symlink_USE_symlink
-	error = symlink(utf8_text, utf8_path);
+	error = symlink((char *)utf8_text, (char *)utf8_path);
 #endif /* posix_symlink_USE_symlink */
 	DBG_ALIGNMENT_ENABLE();
 
@@ -262,20 +262,20 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3))DREF DeeObject *DCALL posix__fsymlinkat_f_i
 #endif /* posix_fsymlinkat_USE_wsymlinkat || posix_fsymlinkat_USE_symlinkat */
 	    1) {
 #if defined(posix_fsymlinkat_USE_wfsymlinkat) || defined(posix_fsymlinkat_USE_wsymlinkat)
-		dwchar_t *wide_text, *wide_path;
+		Dee_wchar_t const *wide_text, *wide_path;
 #endif /* posix_fsymlinkat_USE_wfsymlinkat || posix_fsymlinkat_USE_wsymlinkat */
 #if defined(posix_fsymlinkat_USE_fsymlinkat) || defined(posix_fsymlinkat_USE_symlinkat)
-		char *utf8_text, *utf8_path;
+		char const *utf8_text, *utf8_path;
 #endif /* posix_fsymlinkat_USE_fsymlinkat || posix_fsymlinkat_USE_symlinkat */
 		int error;
 		int os_dfd = DeeUnixSystem_GetFD(dfd);
 		if unlikely(os_dfd == -1)
 			goto err;
 #if defined(posix_fsymlinkat_USE_wfsymlinkat) || defined(posix_fsymlinkat_USE_wsymlinkat)
-		wide_text = (dwchar_t *)DeeString_AsWide(text);
+		wide_text = DeeString_AsWide(text);
 		if unlikely(!wide_text)
 			goto err;
-		wide_path = (dwchar_t *)DeeString_AsWide(path);
+		wide_path = DeeString_AsWide(path);
 		if unlikely(!wide_path)
 			goto err;
 #endif /* posix_fsymlinkat_USE_wfsymlinkat || posix_fsymlinkat_USE_wsymlinkat */
@@ -290,13 +290,13 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3))DREF DeeObject *DCALL posix__fsymlinkat_f_i
 EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_DISABLE();
 #if defined(posix_fsymlinkat_USE_wfsymlinkat)
-		error = wfsymlinkat(wide_text, os_dfd, wide_path, atflags);
+		error = wfsymlinkat((wchar_t *)wide_text, os_dfd, (wchar_t *)wide_path, atflags);
 #elif defined(posix_fsymlinkat_USE_wsymlinkat)
-		error = wsymlinkat(wide_text, os_dfd, wide_path);
+		error = wsymlinkat((wchar_t *)wide_text, os_dfd, (wchar_t *)wide_path);
 #elif defined(posix_fsymlinkat_USE_fsymlinkat)
-		error = fsymlinkat(utf8_text, os_dfd, utf8_path, atflags);
+		error = fsymlinkat((char *)utf8_text, os_dfd, (char *)utf8_path, atflags);
 #elif defined(posix_fsymlinkat_USE_symlinkat)
-		error = symlinkat(utf8_text, os_dfd, utf8_path);
+		error = symlinkat((char *)utf8_text, os_dfd, (char *)utf8_path);
 #endif /* ... */
 		if likely(error == 0) {
 			DBG_ALIGNMENT_ENABLE();
@@ -414,9 +414,8 @@ posix_nt_symlink_normalize_text(DeeObject *__restrict text) {
 	if unlikely(!utf8_text)
 		goto err;
 	unicode_printer_init(&printer);
-	flush_start = utf8_text;
-	iter        = utf8_text;
-	end         = utf8_text + WSTR_LENGTH(utf8_text);
+	iter = flush_start = utf8_text;
+	end  = utf8_text + WSTR_LENGTH(utf8_text);
 	while (iter < end) {
 		char ch = *iter;
 		if (ch == '/') {

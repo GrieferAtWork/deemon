@@ -990,7 +990,7 @@ EINTR_LABEL(again)
 		if unlikely(!utf8)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-		dir = opendir(utf8);
+		dir = opendir((char *)utf8);
 	}
 	if unlikely(dir == NULL) {
 		int error = DeeSystem_GetErrno();
@@ -1115,7 +1115,7 @@ err:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	if (self->odi_skipdots) {
-		char *name = self->odi_ent->d_name;
+		char const *name = self->odi_ent->d_name;
 		if (name[0] == '.' && (name[1] == 0 || (name[1] == '.' && name[2] == 0)))
 			goto again; /* Skip this one... */
 	}

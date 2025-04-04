@@ -213,9 +213,9 @@ err:
 #if defined(posix_rename_USE_wrename) || defined(posix_rename_USE_rename)
 	int error;
 #ifdef posix_rename_USE_wrename
-	dwchar_t *wide_oldpath, *wide_newpath;
+	Dee_wchar_t const *wide_oldpath, *wide_newpath;
 #else /* posix_rename_USE_wrename */
-	char *utf8_oldpath, *utf8_newpath;
+	char const *utf8_oldpath, *utf8_newpath;
 #endif /* !posix_rename_USE_wrename */
 	if (DeeObject_AssertTypeExact(oldpath, &DeeString_Type))
 		goto err;
@@ -239,9 +239,9 @@ err:
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_rename_USE_wrename
-	error = wrename(wide_oldpath, wide_newpath);
+	error = wrename((wchar_t *)wide_oldpath, (wchar_t *)wide_newpath);
 #else /* posix_rename_USE_wrename */
-	error = rename(utf8_oldpath, utf8_newpath);
+	error = rename((char *)utf8_oldpath, (char *)utf8_newpath);
 #endif /* !posix_rename_USE_wrename */
 	DBG_ALIGNMENT_ENABLE();
 	if likely(error == 0)
@@ -354,7 +354,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4))DREF DeeObject *DCALL posix_renameat_f_i
 #endif /* !posix_renameat_USE_renameat2 */
 	    ) {
 		int os_olddirfd, os_newdirfd;
-		char *utf8_oldpath, *utf8_newpath;
+		char const *utf8_oldpath, *utf8_newpath;
 		os_olddirfd = DeeUnixSystem_GetFD(olddirfd);
 		if unlikely(os_olddirfd == -1)
 			goto err;
@@ -368,9 +368,9 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4))DREF DeeObject *DCALL posix_renameat_f_i
 		if unlikely(!utf8_newpath)
 			goto err;
 #ifdef posix_renameat_USE_renameat2
-		if (renameat2(os_olddirfd, utf8_oldpath, os_newdirfd, utf8_newpath, atflags) == 0)
+		if (renameat2(os_olddirfd, (char *)utf8_oldpath, os_newdirfd, (char *)utf8_newpath, atflags) == 0)
 #else /* posix_renameat_USE_renameat2 */
-		if (renameat(os_olddirfd, utf8_oldpath, os_newdirfd, utf8_newpath) == 0)
+		if (renameat(os_olddirfd, (char *)utf8_oldpath, os_newdirfd, (char *)utf8_newpath) == 0)
 #endif /* !posix_renameat_USE_renameat2 */
 		{
 			return_none;
@@ -503,7 +503,7 @@ err:
 	{
 		int errno_value;
 		int os_olddirfd, os_newdirfd;
-		char *utf8_oldpath, *utf8_newpath;
+		char const *utf8_oldpath, *utf8_newpath;
 		DREF DeeObject *abs_oldpath;
 		DREF DeeObject *abs_newpath;
 		os_olddirfd = DeeUnixSystem_GetFD(olddirfd);
@@ -522,9 +522,9 @@ err:
 		/* Name the call to `renameat2()' */
 EINTR_ENOMEM_LABEL(again_renameat2)
 #if defined(AT_RENAME_NOREPLACE) || defined(AT_RENAME_EXCHANGE) || defined(AT_RENAME_WHITEOUT)
-		if (renameat2(os_olddirfd, utf8_oldpath, os_newdirfd, utf8_newpath, flags | atflags) == 0)
+		if (renameat2(os_olddirfd, (char *)utf8_oldpath, os_newdirfd, (char *)utf8_newpath, flags | atflags) == 0)
 #else /* AT_RENAME_NOREPLACE || AT_RENAME_EXCHANGE || AT_RENAME_WHITEOUT */
-		if (renameat2(os_olddirfd, utf8_oldpath, os_newdirfd, utf8_newpath, flags) == 0)
+		if (renameat2(os_olddirfd, (char *)utf8_oldpath, os_newdirfd, (char *)utf8_newpath, flags) == 0)
 #endif /* !AT_RENAME_NOREPLACE && !AT_RENAME_EXCHANGE && !AT_RENAME_WHITEOUT */
 		{
 			return_none;
@@ -679,7 +679,7 @@ err:
 #if defined(posix_link_USE_wlink) || defined(posix_link_USE_link)
 	int error;
 #ifdef posix_link_USE_wlink
-	dwchar_t *wide_oldpath, *wide_newpath;
+	Dee_wchar_t const *wide_oldpath, *wide_newpath;
 	wide_oldpath = DeeString_AsWide(oldpath);
 	if unlikely(!wide_oldpath)
 		goto err;
@@ -687,7 +687,7 @@ err:
 	if unlikely(!wide_newpath)
 		goto err;
 #else /* posix_link_USE_wlink */
-	char *utf8_oldpath, *utf8_newpath;
+	char const *utf8_oldpath, *utf8_newpath;
 	utf8_oldpath = DeeString_AsUtf8(oldpath);
 	if unlikely(!utf8_oldpath)
 		goto err;
@@ -698,9 +698,9 @@ err:
 EINTR_ENOMEM_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_link_USE_wlink
-	error = wlink(wide_oldpath, wide_newpath);
+	error = wlink((wchar_t *)wide_oldpath, (wchar_t *)wide_newpath);
 #else /* posix_link_USE_wlink */
-	error = link(utf8_oldpath, utf8_newpath);
+	error = link((char *)utf8_oldpath, (char *)utf8_newpath);
 #endif /* !posix_link_USE_wlink */
 	DBG_ALIGNMENT_ENABLE();
 	if likely(error == 0)
@@ -755,14 +755,14 @@ FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_flink_f_impl(DeeOb
 #ifdef posix_flink_USE_linkat
 	if (!DeeString_Check(oldfd)) {
 		int os_oldfd;
-		char *utf8_newpath;
+		char const *utf8_newpath;
 		os_oldfd = DeeUnixSystem_GetFD(oldfd);
 		if unlikely(os_oldfd == -1)
 			goto err;
 		utf8_newpath = DeeString_AsUtf8(newpath);
 		if unlikely(!utf8_newpath)
 			goto err;
-		if (linkat(os_oldfd, "", AT_FDCWD, utf8_newpath, AT_EMPTY_PATH) == 0)
+		if (linkat(os_oldfd, (char *)"", AT_FDCWD, (char *)utf8_newpath, AT_EMPTY_PATH) == 0)
 			return_none;
 		/* Fallthru to fallback path below */
 	}
@@ -826,7 +826,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4))DREF DeeObject *DCALL posix_linkat_f_imp
 	    (!DeeString_Check(newdirfd) && DeeString_Check(newpath))) {
 		int error;
 		int os_olddirfd, os_newdirfd;
-		char *utf8_oldpath, *utf8_newpath;
+		char const *utf8_oldpath, *utf8_newpath;
 		os_olddirfd = DeeUnixSystem_GetFD(olddirfd);
 		if unlikely(os_olddirfd == -1)
 			goto err;
@@ -841,7 +841,9 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4))DREF DeeObject *DCALL posix_linkat_f_imp
 			goto err;
 EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_DISABLE();
-		error = linkat(os_olddirfd, utf8_oldpath, os_newdirfd, utf8_newpath, atflags);
+		error = linkat(os_olddirfd, (char *)utf8_oldpath,
+		               os_newdirfd, (char *)utf8_newpath,
+		               atflags);
 		DBG_ALIGNMENT_ENABLE();
 		if likely(error == 0)
 			return_none;

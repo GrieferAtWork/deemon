@@ -3092,15 +3092,15 @@ struct Dee_type_getset {
 
 /* Member type codes. */
 #define Dee_STRUCT_NONE        0x0001 /* Ignore offset and always return `none' (Useful for forward/backward no-op compatibility) */
-#define Dee_STRUCT_OBJECT      0x8003 /* `[0..1] DREF DeeObject *' (raise `Error.AttributeError' if `NULL') */
+#define Dee_STRUCT_OBJECT      0x8003 /* `[0..1] DREF DeeObject *const' (raise `Error.AttributeError' if `NULL') */
 #define Dee_STRUCT_WOBJECT     0x0007 /* `[0..1] struct Dee_weakref' (raise `Error.AttributeError' if locking fails) */
-#define Dee_STRUCT_OBJECT_OPT  0x800b /* `[0..1] DREF DeeObject *' (return `none' if NULL) */
+#define Dee_STRUCT_OBJECT_OPT  0x800b /* `[0..1] DREF DeeObject *const' (return `none' if NULL) */
 #define Dee_STRUCT_WOBJECT_OPT 0x000f /* `[0..1] struct Dee_weakref' (return `none' if locking fails) */
-#define Dee_STRUCT_CSTR        0x8021 /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; raise `Error.AttributeError' if `NULL') */
-#define Dee_STRUCT_CSTR_OPT    0x8023 /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; return `none' when `NULL') */
-#define Dee_STRUCT_CSTR_EMPTY  0x8025 /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */
-#define Dee_STRUCT_STRING      0x8027 /* `char[*]' (utf-8) (Accessible as `DeeStringObject') */
-#define Dee_STRUCT_CHAR        0x0029 /* `unsigned char' (latin-1) (Accessible as `DeeStringObject') */
+#define Dee_STRUCT_CSTR        0x8021 /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; raise `Error.AttributeError' if `NULL') */
+#define Dee_STRUCT_CSTR_OPT    0x8023 /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return `none' when `NULL') */
+#define Dee_STRUCT_CSTR_EMPTY  0x8025 /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */
+#define Dee_STRUCT_STRING      0x8027 /* `char const[*]' (utf-8) (Accessible as `DeeStringObject') */
+#define Dee_STRUCT_CHAR        0x0029 /* `unsigned char const' (latin-1) (Accessible as `DeeStringObject') */
 #define Dee_STRUCT_BOOL8       0x0041 /* `uint8_t' (Accessible as `DeeBoolObject') */
 #define Dee_STRUCT_BOOL16      0x0043 /* `uint16_t' (Accessible as `DeeBoolObject') */
 #define Dee_STRUCT_BOOL32      0x0045 /* `uint32_t' (Accessible as `DeeBoolObject') */
@@ -3149,15 +3149,15 @@ struct Dee_type_getset {
 
 #ifdef DEE_SOURCE
 #define STRUCT_NONE        Dee_STRUCT_NONE        /* Ignore offset and always return `none' (Useful for forward/backward no-op compatibility) */
-#define STRUCT_OBJECT      Dee_STRUCT_OBJECT      /* `[0..1] DREF DeeObject *' (raise `Error.AttributeError' if `NULL') */
+#define STRUCT_OBJECT      Dee_STRUCT_OBJECT      /* `[0..1] DREF DeeObject *const' (raise `Error.AttributeError' if `NULL') */
 #define STRUCT_WOBJECT     Dee_STRUCT_WOBJECT     /* `[0..1] struct Dee_weakref' (raise `Error.AttributeError' if locking fails) */
-#define STRUCT_OBJECT_OPT  Dee_STRUCT_OBJECT_OPT  /* `[0..1] DREF DeeObject *' (return `none' if NULL) */
+#define STRUCT_OBJECT_OPT  Dee_STRUCT_OBJECT_OPT  /* `[0..1] DREF DeeObject *const' (return `none' if NULL) */
 #define STRUCT_WOBJECT_OPT Dee_STRUCT_WOBJECT_OPT /* `[0..1] struct Dee_weakref' (return `none' if locking fails) */
-#define STRUCT_CSTR        Dee_STRUCT_CSTR        /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; raise `Error.AttributeError' if `NULL') */
-#define STRUCT_CSTR_OPT    Dee_STRUCT_CSTR_OPT    /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; return `none' when `NULL') */
-#define STRUCT_CSTR_EMPTY  Dee_STRUCT_CSTR_EMPTY  /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */
-#define STRUCT_STRING      Dee_STRUCT_STRING      /* `char[*]' (utf-8) (Accessible as `DeeStringObject') */
-#define STRUCT_CHAR        Dee_STRUCT_CHAR        /* `unsigned char' (latin-1) (Accessible as `DeeStringObject') */
+#define STRUCT_CSTR        Dee_STRUCT_CSTR        /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; raise `Error.AttributeError' if `NULL') */
+#define STRUCT_CSTR_OPT    Dee_STRUCT_CSTR_OPT    /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return `none' when `NULL') */
+#define STRUCT_CSTR_EMPTY  Dee_STRUCT_CSTR_EMPTY  /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */
+#define STRUCT_STRING      Dee_STRUCT_STRING      /* `char const[*]' (utf-8) (Accessible as `DeeStringObject') */
+#define STRUCT_CHAR        Dee_STRUCT_CHAR        /* `unsigned char const' (latin-1) (Accessible as `DeeStringObject') */
 #define STRUCT_BOOL8       Dee_STRUCT_BOOL8       /* `uint8_t' (Accessible as `DeeBoolObject') */
 #define STRUCT_BOOL16      Dee_STRUCT_BOOL16      /* `uint16_t' (Accessible as `DeeBoolObject') */
 #define STRUCT_BOOL32      Dee_STRUCT_BOOL32      /* `uint32_t' (Accessible as `DeeBoolObject') */

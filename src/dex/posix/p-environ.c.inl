@@ -264,7 +264,7 @@ DeeSystem_DEFINE_wcslen(dee_wcslen)
 #define HAVE_system_wenviron_is_dee_heap_allocated
 PRIVATE bool system_wenviron_is_dee_heap_allocated = false;
 PRIVATE bool DCALL try_set_system_wenviron_is_dee_heap_allocated(void) {
-	dwchar_t **new_wenviron;
+	Dee_wchar_t **new_wenviron;
 	size_t i, count;
 	if (system_wenviron_is_dee_heap_allocated)
 		return true;
@@ -273,22 +273,22 @@ PRIVATE bool DCALL try_set_system_wenviron_is_dee_heap_allocated(void) {
 		while (wenviron[count])
 			++count;
 	}
-	new_wenviron = (dwchar_t **)Dee_TryMallocc(count + 1, sizeof(dwchar_t *));
+	new_wenviron = (Dee_wchar_t **)Dee_TryMallocc(count + 1, sizeof(Dee_wchar_t *));
 	if unlikely(!new_wenviron)
 		goto err_new_wenviron;
 	for (i = 0; i < count; ++i) {
-		dwchar_t *old_str, *new_str;
+		Dee_wchar_t *old_str, *new_str;
 		size_t old_len;
-		old_str = wenviron[i];
-		old_len = wcslen(old_str);
-		new_str = (dwchar_t *)Dee_TryMallocc(old_len + 1, sizeof(dwchar_t));
+		old_str = (Dee_wchar_t *)wenviron[i];
+		old_len = wcslen((wchar_t *)old_str);
+		new_str = (Dee_wchar_t *)Dee_TryMallocc(old_len + 1, sizeof(Dee_wchar_t));
 		if unlikely(!new_str)
 			goto err_new_wenviron_i;
-		new_str = (dwchar_t *)memcpyc(new_str, old_str, old_len, sizeof(dwchar_t));
+		new_str = (Dee_wchar_t *)memcpyc(new_str, old_str, old_len, sizeof(Dee_wchar_t));
 		new_wenviron[i] = new_str;
 	}
 	new_wenviron[count] = NULL;
-	wenviron = new_wenviron;
+	wenviron = (wchar_t **)new_wenviron;
 	system_wenviron_is_dee_heap_allocated = true;
 	return true;
 err_new_wenviron_i:
@@ -350,12 +350,12 @@ err:
 DECL_BEGIN
 #undef wcschr
 #define wcschr dee_wcschr
-LOCAL WUNUSED NONNULL((1)) dwchar_t *
-dee_wcschr(dwchar_t const *haystack, dwchar_t needle) {
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_wchar_t *
+dee_wcschr(Dee_wchar_t const *haystack, Dee_wchar_t needle) {
 	for (;; ++haystack) {
-		dwchar_t ch = *haystack;
+		Dee_wchar_t ch = *haystack;
 		if (ch == needle)
-			return (dwchar_t *)haystack;
+			return (Dee_wchar_t *)haystack;
 		if (!ch)
 			break;
 	}
@@ -378,7 +378,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 posix_environ_hasenv(DeeStringObject *__restrict name) {
 #ifdef posix_getenv_USE_GetEnvironmentVariableW
 	bool result;
-	LPWSTR wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
+	LPCWSTR wname = (LPCWSTR)DeeString_AsWide((DeeObject *)name);
 	if unlikely(!wname)
 		return -1;
 	environ_lock_read();
@@ -391,12 +391,12 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 
 #ifdef posix_getenv_USE_wgetenv
 	bool result;
-	dwchar_t *wname = DeeString_AsWide((DeeObject *)name);
+	Dee_wchar_t const *wname = DeeString_AsWide((DeeObject *)name);
 	if unlikely(!wname)
 		return -1;
 	environ_lock_read();
 	DBG_ALIGNMENT_DISABLE();
-	result = wgetenv(wname) != NULL;
+	result = wgetenv((wchar_t *)wname) != NULL;
 	DBG_ALIGNMENT_ENABLE();
 	environ_lock_endread();
 	return result ? 1 : 0;
@@ -404,12 +404,12 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 
 #ifdef posix_getenv_USE_getenv
 	bool result;
-	char *utf8 = DeeString_AsUtf8((DeeObject *)name);
+	char const *utf8 = DeeString_AsUtf8((DeeObject *)name);
 	if unlikely(!utf8)
 		return -1;
 	environ_lock_read();
 	DBG_ALIGNMENT_DISABLE();
-	result = getenv(utf8) != NULL;
+	result = getenv((char *)utf8) != NULL;
 	DBG_ALIGNMENT_ENABLE();
 	environ_lock_endread();
 	return result ? 1 : 0;
@@ -417,18 +417,19 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 
 #ifdef posix_getenv_USE_wenviron
 	int result;
-	dwchar_t *wenvstr, *wname;
+	Dee_wchar_t const *wenvstr;
+	Dee_wchar_t const *wname;
 	size_t i, wname_len;
 	wname = DeeString_AsWide((DeeObject *)name);
 	if unlikely(!wname)
 		return -1;
-	wname_len = wcslen(wname);
+	wname_len = wcslen((wchar_t *)wname);
 	result = 0;
 	environ_lock_read();
 	if (wenviron) {
-		for (i = 0; (wenvstr = wenviron[i]) != NULL; ++i) {
-			if (bcmpc(wenvstr, wname, wname_len, sizeof(dwchar_t)) == 0 &&
-				wenvstr[wname_len] == (dwchar_t)'=') {
+		for (i = 0; (wenvstr = (Dee_wchar_t const *)wenviron[i]) != NULL; ++i) {
+			if (bcmpc(wenvstr, wname, wname_len, sizeof(Dee_wchar_t)) == 0 &&
+				wenvstr[wname_len] == (Dee_wchar_t)'=') {
 				result = 1;
 				break;
 			}
@@ -440,7 +441,7 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 
 #ifdef posix_getenv_USE_environ
 	int result;
-	char *envstr, *utf8_name;
+	char const *envstr, *utf8_name;
 	size_t i, utf8_name_len;
 	utf8_name = DeeString_AsUtf8((DeeObject *)name);
 	if unlikely(!utf8_name)
@@ -449,7 +450,7 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 	result = 0;
 	environ_lock_read();
 	if (environ) {
-		for (i = 0; (envstr = environ[i]) != NULL; ++i) {
+		for (i = 0; (envstr = (char *)environ[i]) != NULL; ++i) {
 			if (bcmpc(envstr, utf8_name, wname_len, sizeof(char)) == 0 &&
 				envstr[wname_len] == '=') {
 				result = 1;
@@ -517,29 +518,30 @@ err:
 
 #if (defined(posix_getenv_USE_wgetenv) || defined(posix_getenv_USE_wenviron))
 	size_t reqlen;
-	dwchar_t *wenvstr, *new_buffer, *buffer = NULL;
-	dwchar_t *wname = DeeString_AsWide((DeeObject *)name);
+	Dee_wchar_t *new_buffer, *buffer = NULL;
+	Dee_wchar_t const *wenvstr;
+	Dee_wchar_t const *wname = DeeString_AsWide((DeeObject *)name);
 #ifdef posix_getenv_USE_wenviron
 	size_t wname_len;
 #endif /* posix_getenv_USE_wenviron */
 	if unlikely(!wname)
 		goto err;
 #ifdef posix_getenv_USE_environ
-	wname_len = wcslen(wname);
+	wname_len = wcslen((wchar_t *)wname);
 #endif /* posix_getenv_USE_environ */
 again:
 	environ_lock_read();
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_getenv_USE_wgetenv
-	wenvstr = (dwchar_t *)wgetenv(wname);
+	wenvstr = (Dee_wchar_t const *)wgetenv((wchar_t *)wname);
 #endif /* posix_getenv_USE_wgetenv */
 #ifdef posix_getenv_USE_wenviron
 	wenvstr = NULL;
 	if (wenviron) {
 		size_t i;
-		for (i = 0; (wenvstr = wenviron[i]) != NULL; ++i) {
+		for (i = 0; (wenvstr = (Dee_wchar_t *)wenviron[i]) != NULL; ++i) {
 			if (bcmpc(wenvstr, wname, wname_len, sizeof(char)) == 0 &&
-			    wenvstr[wname_len] == (dwchar_t)'=')
+			    wenvstr[wname_len] == (Dee_wchar_t)'=')
 				break;
 		}
 	}
@@ -550,7 +552,7 @@ again:
 		DeeString_FreeWideBuffer(buffer);
 		return ITER_DONE;
 	}
-	reqlen     = wcslen(wenvstr);
+	reqlen     = wcslen((wchar_t *)wenvstr);
 	new_buffer = DeeString_TryResizeWideBuffer(buffer, reqlen);
 	if unlikely(!new_buffer) {
 		DBG_ALIGNMENT_ENABLE();
@@ -561,7 +563,7 @@ again:
 		buffer = new_buffer;
 		goto again;
 	}
-	buffer = (dwchar_t *)memcpyc(new_buffer, wenvstr, reqlen, sizeof(dwchar_t));
+	buffer = (Dee_wchar_t *)memcpyc(new_buffer, wenvstr, reqlen, sizeof(Dee_wchar_t));
 	DBG_ALIGNMENT_ENABLE();
 	environ_lock_endread();
 	buffer = DeeString_TruncateWideBuffer(buffer, reqlen);
@@ -574,8 +576,8 @@ err:
 
 #if (defined(posix_getenv_USE_getenv) || defined(posix_getenv_USE_environ))
 	size_t reqlen;
-	char *envstr, *new_buffer, *buffer = NULL;
-	char *utf8_name = DeeString_AsUtf8((DeeObject *)name);
+	char *new_buffer, *buffer = NULL;
+	char const *envstr, *utf8_name = DeeString_AsUtf8((DeeObject *)name);
 #ifdef posix_getenv_USE_environ
 	size_t utf8_name_len;
 #endif /* posix_getenv_USE_environ */
@@ -588,13 +590,13 @@ again:
 	environ_lock_read();
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_getenv_USE_getenv
-	envstr = (char *)getenv(utf8_name);
+	envstr = (char const *)getenv((char *)utf8_name);
 #endif /* posix_getenv_USE_getenv */
 #ifdef posix_getenv_USE_environ
 	envstr = NULL;
 	if (environ) {
 		size_t i;
-		for (i = 0; (envstr = environ[i]) != NULL; ++i) {
+		for (i = 0; (envstr = (char *)environ[i]) != NULL; ++i) {
 			if (bcmpc(envstr, utf8_name, utf8_name_len, sizeof(char)) == 0 &&
 			    envstr[utf8_name_len] == (char)'=')
 				break;
@@ -680,7 +682,7 @@ err:
 #endif /* posix_setenv_USE_SetEnvironmentVariableW */
 
 #ifdef posix_setenv_USE_wsetenv
-	dwchar_t *wname, *wvalue;
+	Dee_wchar_t const *wname, *wvalue;
 	wname = DeeString_AsWide((DeeObject *)name);
 	if unlikely(!wname)
 		goto err;
@@ -690,7 +692,7 @@ err:
 again_setenv:
 	environ_lock_write();
 	DBG_ALIGNMENT_DISABLE();
-	if (wsetenv(wname, wvalue, replace ? 1 : 0) != 0) {
+	if (wsetenv((wchar_t *)wname, (wchar_t *)wvalue, replace ? 1 : 0) != 0) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
@@ -714,7 +716,7 @@ err:
 #endif /* posix_setenv_USE_wsetenv */
 
 #ifdef posix_setenv_USE_setenv
-	char *utf8_name, *utf8_value;
+	char const *utf8_name, *utf8_value;
 	utf8_name = DeeString_AsUtf8((DeeObject *)name);
 	if unlikely(!utf8_name)
 		goto err;
@@ -724,7 +726,7 @@ err:
 again_setenv:
 	environ_lock_write();
 	DBG_ALIGNMENT_DISABLE();
-	if (setenv(utf8_name, utf8_value, replace ? 1 : 0) != 0) {
+	if (setenv((char *)utf8_name, (char *)utf8_value, replace ? 1 : 0) != 0) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
@@ -749,7 +751,7 @@ err:
 
 #ifdef posix_setenv_USE_wputenv_s
 	int error;
-	dwchar_t *wname, *wvalue;
+	Dee_wchar_t const *wname, *wvalue;
 	wname = DeeString_AsWide((DeeObject *)name);
 	if unlikely(!wname)
 		goto err;
@@ -761,29 +763,31 @@ again_setenv:
 	DBG_ALIGNMENT_DISABLE();
 	if (!replace) {
 #ifdef CONFIG_HAVE_wgetenv
-		if (wgetenv(wname) != NULL) {
+		if (wgetenv((wchar_t *)wname) != NULL) {
 			/* Variable already exists, and we're not supposed to replace it. */
 			DBG_ALIGNMENT_ENABLE();
 			environ_lock_endwrite();
 			return 0;
 		}
 #else /* CONFIG_HAVE_wgetenv */
-		dwchar_t *wenvstr;
+		Dee_wchar_t const *wenvstr;
 		size_t i, wname_len;
-		wname_len = wcslen(wname);
+		wname_len = wcslen((wchar_t *)wname);
 		environ_lock_write();
-		for (i = 0; (wenvstr = wenviron[i]) != NULL; ++i) {
-			if (bcmpc(wenvstr, wname, wname_len, sizeof(dwchar_t)) == 0 &&
-			    wenvstr[wname_len] == (dwchar_t)'=') {
-				/* Variable already exists, and we're not supposed to replace it. */
-				DBG_ALIGNMENT_ENABLE();
-				environ_lock_endwrite();
-				return 0;
+		if (wenviron) {
+			for (i = 0; (wenvstr = (Dee_wchar_t *)wenviron[i]) != NULL; ++i) {
+				if (bcmpc(wenvstr, wname, wname_len, sizeof(Dee_wchar_t)) == 0 &&
+				    wenvstr[wname_len] == (Dee_wchar_t)'=') {
+					/* Variable already exists, and we're not supposed to replace it. */
+					DBG_ALIGNMENT_ENABLE();
+					environ_lock_endwrite();
+					return 0;
+				}
 			}
 		}
 #endif /* !CONFIG_HAVE_wgetenv */
 	}
-	if ((error = wputenv_s(wname, wvalue)) != 0) {
+	if ((error = wputenv_s((wchar_t *)wname, (wchar_t *)wvalue)) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
 		DeeSystem_IF_E1(error, ENOMEM, {
@@ -807,7 +811,7 @@ err:
 
 #ifdef posix_setenv_USE_putenv_s
 	int error;
-	char *utf8_name, *utf8_value;
+	char const *utf8_name, *utf8_value;
 	utf8_name = DeeString_AsUtf8((DeeObject *)name);
 	if unlikely(!utf8_name)
 		goto err;
@@ -819,29 +823,31 @@ again_setenv:
 	DBG_ALIGNMENT_DISABLE();
 	if (!replace) {
 #ifdef CONFIG_HAVE_getenv
-		if (getenv(utf8_name) != NULL) {
+		if (getenv((char *)utf8_name) != NULL) {
 			/* Variable already exists, and we're not supposed to replace it. */
 			DBG_ALIGNMENT_ENABLE();
 			environ_lock_endwrite();
 			return 0;
 		}
 #else /* CONFIG_HAVE_getenv */
-		char *utf8_envstr;
+		char const *utf8_envstr;
 		size_t i, utf8_name_len;
 		utf8_name_len = strlen(utf8_name);
 		environ_lock_write();
-		for (i = 0; (utf8_envstr = environ[i]) != NULL; ++i) {
-			if (bcmpc(utf8_envstr, utf8_name, utf8_name_len, sizeof(char)) == 0 &&
-			    utf8_envstr[utf8_name_len] == '=') {
-				/* Variable already exists, and we're not supposed to replace it. */
-				DBG_ALIGNMENT_ENABLE();
-				environ_lock_endwrite();
-				return 0;
+		if (environ) {
+			for (i = 0; (utf8_envstr = environ[i]) != NULL; ++i) {
+				if (bcmpc(utf8_envstr, utf8_name, utf8_name_len, sizeof(char)) == 0 &&
+				    utf8_envstr[utf8_name_len] == '=') {
+					/* Variable already exists, and we're not supposed to replace it. */
+					DBG_ALIGNMENT_ENABLE();
+					environ_lock_endwrite();
+					return 0;
+				}
 			}
 		}
 #endif /* !CONFIG_HAVE_getenv */
 	}
-	if ((error = putenv_s(utf8_name, utf8_value)) != 0) {
+	if ((error = putenv_s((char *)utf8_name, (char *)utf8_value)) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
 		DeeSystem_IF_E1(error, ENOMEM, {
@@ -865,7 +871,8 @@ err:
 
 #ifdef posix_setenv_USE_wenviron
 	size_t i;
-	dwchar_t *wide_name, *wide_value, *wide_envline, *wide_oldline;
+	Dee_wchar_t const *wide_name, *wide_value;
+	Dee_wchar_t *wide_envline, *wide_oldline;
 	size_t wide_name_len, wide_value_len;
 	wide_name = DeeString_AsWide((DeeObject *)name);
 	if unlikely(!wide_name)
@@ -873,30 +880,30 @@ err:
 	wide_value = DeeString_AsWide((DeeObject *)value);
 	if unlikely(!wide_value)
 		goto err;
-	wide_name_len  = wcslen(wide_name);
-	wide_value_len = wcslen(wide_value);
-	wide_envline   = (dwchar_t *)Dee_Mallocc(wide_name_len + 1 + wide_value_len + 1, sizeof(dwchar_t));
+	wide_name_len  = wcslen((wchar_t *)wide_name);
+	wide_value_len = wcslen((wchar_t *)wide_value);
+	wide_envline   = (Dee_wchar_t *)Dee_Mallocc(wide_name_len + 1 + wide_value_len + 1, sizeof(Dee_wchar_t));
 	if unlikely(!wide_envline)
 		goto err;
 	{
-		dwchar_t *iter;
+		Dee_wchar_t *iter;
 		iter = wide_envline;
-		iter = (dwchar_t *)mempcpyc(iter, wide_name, wide_name_len, sizeof(dwchar_t));
-		*iter++ = (dwchar_t)'=';
-		iter = (dwchar_t *)mempcpyc(iter, wide_value, wide_value_len, sizeof(dwchar_t));
-		*iter = (dwchar_t)'\0';
+		iter = (Dee_wchar_t *)mempcpyc(iter, wide_name, wide_name_len, sizeof(Dee_wchar_t));
+		*iter++ = (Dee_wchar_t)'=';
+		iter = (Dee_wchar_t *)mempcpyc(iter, wide_value, wide_value_len, sizeof(Dee_wchar_t));
+		*iter = (Dee_wchar_t)'\0';
 	}
 again_insert_env:
 	environ_lock_write();
 	if (wenviron) {
-		for (i = 0; (wide_oldline = wenviron[i]) != NULL; ++i) {
-			if (bcmpc(wide_oldline, wide_name, wide_name_len, sizeof(dwchar_t)) == 0 &&
-			    wide_oldline[wide_name_len] == (dwchar_t)'=') {
+		for (i = 0; (wide_oldline = (Dee_wchar_t *)wenviron[i]) != NULL; ++i) {
+			if (bcmpc(wide_oldline, wide_name, wide_name_len, sizeof(Dee_wchar_t)) == 0 &&
+			    wide_oldline[wide_name_len] == (Dee_wchar_t)'=') {
 				if (replace) {
 					if (!try_set_system_wenviron_is_dee_heap_allocated())
 						goto unlock_and_try_collect_memory;
-					wide_oldline = wenviron[i];
-					wenviron[i]   = wide_envline;
+					wide_oldline = (Dee_wchar_t *)wenviron[i];
+					wenviron[i]  = (wchar_t *)wide_envline;
 				} else {
 					wide_oldline = NULL;
 				}
@@ -918,16 +925,16 @@ again_insert_env:
 		goto unlock_and_try_collect_memory;
 	/* Append a new line to `wenviron' */
 	{
-		dwchar_t **new_wenviron;
+		Dee_wchar_t **new_wenviron;
 		size_t old_wenviron_count;
 		for (old_wenviron_count = 0; wenviron[old_wenviron_count]; ++old_wenviron_count)
 			;
-		new_wenviron = (dwchar_t **)Dee_TryReallocc(wenviron, old_wenviron_count + 2, sizeof(dwchar_t *));
+		new_wenviron = (Dee_wchar_t **)Dee_TryReallocc(wenviron, old_wenviron_count + 2, sizeof(Dee_wchar_t *));
 		if unlikely(!new_wenviron)
 			goto unlock_and_try_collect_memory;
 		new_wenviron[old_wenviron_count + 0] = wide_envline;
 		new_wenviron[old_wenviron_count + 1] = NULL;
-		wenviron = new_wenviron;
+		wenviron = (wchar_t **)new_wenviron;
 	}
 	environ_changed();
 	environ_lock_endwrite();
@@ -945,7 +952,8 @@ err:
 
 #ifdef posix_setenv_USE_environ
 	size_t i;
-	char *utf8_name, *utf8_value, *utf8_envline, *utf8_oldline;
+	char const *utf8_name, *utf8_value;
+	char *utf8_envline, *utf8_oldline;
 	size_t utf8_name_len, utf8_value_len;
 	utf8_name = DeeString_AsUtf8((DeeObject *)name);
 	if unlikely(!utf8_name)
@@ -1059,13 +1067,13 @@ err:
 #endif /* posix_unsetenv_USE_SetEnvironmentVariableW */
 
 #ifdef posix_unsetenv_USE_wunsetenv
-	dwchar_t *wname;
+	Dee_wchar_t const *wname;
 	wname = DeeString_AsWide((DeeObject *)name);
 	if unlikely(!wname)
 		goto err;
 	environ_lock_write();
 	DBG_ALIGNMENT_DISABLE();
-	if (wunsetenv(wname) != 0) {
+	if (wunsetenv((wchar_t *)wname) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
 		return 1;
@@ -1079,13 +1087,13 @@ err:
 #endif /* posix_unsetenv_USE_wunsetenv */
 
 #ifdef posix_unsetenv_USE_unsetenv
-	char *utf8_name;
+	char const *utf8_name;
 	utf8_name = DeeString_AsUtf8((DeeObject *)name);
 	if unlikely(!utf8_name)
 		goto err;
 	environ_lock_write();
 	DBG_ALIGNMENT_DISABLE();
-	if (unsetenv(utf8_name) != 0) {
+	if (unsetenv((char *)utf8_name) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
 		return 1;
@@ -1099,13 +1107,14 @@ err:
 #endif /* posix_unsetenv_USE_unsetenv */
 
 #ifdef posix_unsetenv_USE_wputenv
-	dwchar_t *wname;
+	Dee_wchar_t const *wname;
 	wname = DeeString_AsWide((DeeObject *)name);
 	if unlikely(!wname)
 		goto err;
 	environ_lock_write();
 	DBG_ALIGNMENT_DISABLE();
-	if (wcschr(wname, (dwchar_t)'=') || wputenv(wname) != 0) {
+	if (wcschr((wchar_t *)wname, (wchar_t)'=') ||
+	    wputenv((wchar_t *)wname) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
 		return 1;
@@ -1119,13 +1128,13 @@ err:
 #endif /* posix_unsetenv_USE_wputenv */
 
 #ifdef posix_unsetenv_USE_putenv
-	char *utf8_name;
+	char const *utf8_name;
 	utf8_name = DeeString_AsUtf8((DeeObject *)name);
 	if unlikely(!utf8_name)
 		goto err;
 	environ_lock_write();
 	DBG_ALIGNMENT_DISABLE();
-	if (strchr(utf8_name, '=') || putenv(utf8_name) != 0) {
+	if (strchr(utf8_name, '=') || putenv((char *)utf8_name) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
 		return 1;
@@ -1140,32 +1149,33 @@ err:
 
 #ifdef posix_unsetenv_USE_wenviron
 	size_t i;
-	dwchar_t *wide_name, *wide_oldline;
+	Dee_wchar_t const *wide_name;
+	Dee_wchar_t *wide_oldline;
 	size_t wide_name_len;
 	wide_name = DeeString_AsWide((DeeObject *)name);
 	if unlikely(!wide_name)
 		goto err;
-	wide_name_len = wcslen(wide_name);
+	wide_name_len = wcslen((wchar_t *)wide_name);
 again_search_env:
 	environ_lock_write();
 	if (wenviron) {
-		for (i = 0; (wide_oldline = wenviron[i]) != NULL; ++i) {
-			if (bcmpc(wide_oldline, wide_name, wide_name_len, sizeof(dwchar_t)) == 0 &&
+		for (i = 0; (wide_oldline = (Dee_wchar_t *)wenviron[i]) != NULL; ++i) {
+			if (bcmpc(wide_oldline, wide_name, wide_name_len, sizeof(Dee_wchar_t)) == 0 &&
 			    wide_oldline[wide_name_len] == '=') {
-				dwchar_t **new_wenviron;
+				Dee_wchar_t **new_wenviron;
 				size_t wenviron_after;
 				if (!try_set_system_wenviron_is_dee_heap_allocated())
 					goto unlock_and_try_collect_memory;
 				for (wenviron_after = 0; wenviron[i + 1 + wenviron_after]; ++wenviron_after)
 					;
-				wide_oldline = wenviron[i];
+				wide_oldline = (Dee_wchar_t *)wenviron[i];
 				memmovedownc(&wenviron[i], &wenviron[i + 1],
-				             wenviron_after, sizeof(dwchar_t *));
+				             wenviron_after, sizeof(Dee_wchar_t *));
 				i += wenviron_after;
 				wenviron[i] = NULL;
-				new_wenviron = (dwchar_t **)Dee_TryReallocc(wenviron, i + 1, sizeof(dwchar_t *));
+				new_wenviron = (Dee_wchar_t **)Dee_TryReallocc(wenviron, i + 1, sizeof(Dee_wchar_t *));
 				if likely(new_wenviron)
-					wenviron = new_wenviron;
+					wenviron = (wchar_t **)new_wenviron;
 				DBG_ALIGNMENT_ENABLE();
 				environ_changed();
 				environ_lock_endwrite();
@@ -1186,7 +1196,8 @@ err:
 
 #ifdef posix_unsetenv_USE_environ
 	size_t i;
-	char *utf8_name, *utf8_oldline;
+	char const *utf8_name;
+	char *utf8_oldline;
 	size_t utf8_name_len;
 	utf8_name = DeeString_AsUtf8((DeeObject *)name);
 	if unlikely(!utf8_name)
@@ -1299,19 +1310,19 @@ posix_environ_clearenv(void) {
 #endif /* posix_clearenv_USE_wunsetenv */
 
 #if defined(posix_clearenv_USE_wunsetenv) || defined(posix_clearenv_USE_wputenv)
-	dwchar_t *namebuf = NULL;
+	Dee_wchar_t *namebuf = NULL;
 	size_t namebuflen = 0;
 again:
 	environ_lock_write();
 	while (wenviron && *wenviron) {
 		size_t namelen;
-		dwchar_t *envline = *wenviron;
-		for (namelen = 0; envline[namelen] && envline[namelen] != (dwchar_t)'='; ++namelen)
+		Dee_wchar_t const *envline = (Dee_wchar_t const *)*wenviron;
+		for (namelen = 0; envline[namelen] && envline[namelen] != (Dee_wchar_t)'='; ++namelen)
 			;
 		++namelen; /* Trailing NUL */
 		if (namelen > namebuflen) {
-			dwchar_t *new_namebuf;
-			new_namebuf = (dwchar_t *)Dee_TryReallocc(namebuf, namelen, sizeof(dwchar_t));
+			Dee_wchar_t *new_namebuf;
+			new_namebuf = (Dee_wchar_t *)Dee_TryReallocc(namebuf, namelen, sizeof(Dee_wchar_t));
 			if unlikely(!new_namebuf) {
 				environ_lock_endwrite();
 				if (Dee_CollectMemory(1))
@@ -1319,7 +1330,7 @@ again:
 				return -1;
 			}
 		}
-		*(dwchar_t *)mempcpyc(namebuf, envline, namelen, sizeof(dwchar_t)) = (dwchar_t)'\0';
+		*(Dee_wchar_t *)mempcpyc(namebuf, envline, namelen, sizeof(Dee_wchar_t)) = (Dee_wchar_t)'\0';
 #ifdef posix_clearenv_USE_unsetenv
 		if (wunsetenv(namebuf))
 #else /* posix_clearenv_USE_unsetenv */
@@ -1348,7 +1359,7 @@ again:
 	environ_lock_write();
 	while (environ && *environ) {
 		size_t namelen;
-		char *envline = *environ;
+		char const *envline = *environ;
 		for (namelen = 0; envline[namelen] && envline[namelen] != '='; ++namelen)
 			;
 		++namelen; /* Trailing NUL */
@@ -1427,14 +1438,14 @@ again_alloc_empty:
 #ifdef posix_clearenv_USE_wenviron_setempty
 	if (wenviron && *wenviron) {
 #ifdef HAVE_system_wenviron_is_dee_heap_allocated
-		dwchar_t **old_wenviron;
+		Dee_wchar_t **old_wenviron;
 #endif /* HAVE_system_wenviron_is_dee_heap_allocated */
-		dwchar_t **new_wenviron;
+		Dee_wchar_t **new_wenviron;
 again_alloc_empty:
 #ifdef HAVE_system_wenviron_is_dee_heap_allocated
-		new_wenviron = (dwchar_t **)Dee_TryCallocc(1, sizeof(dwchar_t *));
+		new_wenviron = (Dee_wchar_t **)Dee_TryCallocc(1, sizeof(Dee_wchar_t *));
 #else /* HAVE_system_wenviron_is_dee_heap_allocated */
-		new_wenviron = (dwchar_t **)calloc(1, sizeof(dwchar_t *));
+		new_wenviron = (Dee_wchar_t **)calloc(1, sizeof(Dee_wchar_t *));
 #endif /* !HAVE_system_wenviron_is_dee_heap_allocated */
 		if unlikely(!new_wenviron) {
 			if (Dee_TryCollectMemory(1))
@@ -1443,9 +1454,9 @@ again_alloc_empty:
 		}
 		environ_lock_write();
 #ifdef HAVE_system_wenviron_is_dee_heap_allocated
-		old_wenviron = wenviron;
+		old_wenviron = (Dee_wchar_t **)wenviron;
 #endif /* HAVE_system_wenviron_is_dee_heap_allocated */
-		wenviron = new_wenviron;
+		wenviron = (wchar_t **)new_wenviron;
 #ifdef HAVE_system_wenviron_is_dee_heap_allocated
 		if (!system_wenviron_is_dee_heap_allocated)
 			old_wenviron = NULL;
@@ -1456,7 +1467,7 @@ again_alloc_empty:
 #ifdef HAVE_system_wenviron_is_dee_heap_allocated
 		if (old_wenviron) {
 			size_t i;
-			char *envstr;
+			Dee_wchar_t *envstr;
 			for (i = 0; (envstr = old_wenviron[i]) != NULL; ++i)
 				Dee_Free(envstr);
 			Dee_Free(old_wenviron);
@@ -1485,8 +1496,8 @@ posix_environ_getcount(void) {
 	size_t result = 0;
 	LPWCH strings = GetEnvironmentStringsW();
 	if (strings != NULL) {
-		dwchar_t *iter;
-		for (iter = strings; *iter != (dwchar_t)'\0';
+		Dee_wchar_t *iter;
+		for (iter = strings; *iter != (Dee_wchar_t)'\0';
 		     iter = wcsend(iter) + 1)
 			++result;
 		FreeEnvironmentStringsW(strings);
@@ -1532,8 +1543,8 @@ typedef struct environ_iterator_object EnvironIterator;
 struct environ_iterator_object {
 	OBJECT_HEAD
 #ifdef posix_enumenv_USE_GetEnvironmentStringsW
-	dwchar_t  *ei_environment_iter;    /* [1..1][lock(ATOMIC)] Pointer to next environment string to yield */
-	LPWCH      ei_environment_strings; /* [1..1][owned] Environment strings */
+	Dee_wchar_t  *ei_environment_iter;    /* [1..1][lock(ATOMIC)] Pointer to next environment string to yield */
+	LPWCH         ei_environment_strings; /* [1..1][owned] Environment strings */
 	DREF EnvironIterator *ei_owner;    /* [0..1][const] Owning iterator (for `operator copy') */
 #define ENVIRON_ITERATOR_tchar                  WCHAR
 #define ENVIRON_ITERATOR_strchr                 wcschr
@@ -1560,10 +1571,10 @@ struct environ_iterator_object {
 #endif /* posix_enumenv_USE_environ */
 
 #ifdef posix_enumenv_USE_wenviron
-	size_t     ei_index;           /* [lock(ATOMIC)] Index of next string to yield from `ei_environ' */
-	dwchar_t **ei_environ;         /* [0..1][lock(dee_environ_lock)][0..n][const] Environ table */
-	size_t     ei_environ_version; /* [const] Environ version loaded into `ei_environ' */
-#define ENVIRON_ITERATOR_tchar                  dwchar_t
+	size_t        ei_index;           /* [lock(ATOMIC)] Index of next string to yield from `ei_environ' */
+	Dee_wchar_t **ei_environ;         /* [0..1][lock(dee_environ_lock)][0..n][const] Environ table */
+	size_t        ei_environ_version; /* [const] Environ version loaded into `ei_environ' */
+#define ENVIRON_ITERATOR_tchar                  Dee_wchar_t
 #define ENVIRON_ITERATOR_strchr                 wcschr
 #define ENVIRON_ITERATOR_strlen                 wcslen
 #define ENVIRON_ITERATOR_strend                 wcsend
@@ -1604,7 +1615,7 @@ again_GetEnvironmentStringsW:
 	self->ei_environ = environ;
 #endif /* posix_enumenv_USE_environ */
 #ifdef posix_enumenv_USE_wenviron
-	self->ei_environ = wenviron;
+	self->ei_environ = (Dee_wchar_t **)wenviron;
 #endif /* posix_enumenv_USE_wenviron */
 	if (!self->ei_environ) {
 		static ENVIRON_ITERATOR_tchar *const empty_environ[] = { NULL };
@@ -2396,7 +2407,7 @@ FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_putenv_f_impl(DeeObje
 /*[[[end]]]*/
 {
 	int error;
-	char *eq, *utf8_envline;
+	char const *eq, *utf8_envline;
 	if (DeeObject_AssertTypeExact(envline, &DeeString_Type))
 		goto err;
 	utf8_envline = DeeString_AsUtf8(envline);

@@ -471,7 +471,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	result = DeeDbgString_NewBuffer(length, file, line);
 #endif /* !NDEBUG */
 	if likely(result) {
-		memcpyc(DeeString_STR(result), str,
+		memcpyc(DeeString_GetBuffer(result), str,
 		        length, sizeof(char));
 	}
 	return result;
@@ -567,13 +567,13 @@ DeeString_Hash(DeeObject *__restrict self) {
 			break;
 
 		CASE_WIDTH_2BYTE: {
-			uint16_t *str;
+			uint16_t const *str;
 			str    = DeeString_Get2Byte(self);
 			result = Dee_Hash2Byte(str, WSTR_LENGTH(str));
 		}	break;
 
 		CASE_WIDTH_4BYTE: {
-			uint32_t *str;
+			uint32_t const *str;
 			str    = DeeString_Get4Byte(self);
 			result = Dee_Hash4Byte(str, WSTR_LENGTH(str));
 		}	break;
@@ -596,13 +596,13 @@ DeeString_HashCase(DeeObject *__restrict self) {
 		break;
 
 	CASE_WIDTH_2BYTE: {
-		uint16_t *str;
+		uint16_t const *str;
 		str    = DeeString_Get2Byte(self);
 		result = Dee_HashCase2Byte(str, WSTR_LENGTH(str));
 	}	break;
 
 	CASE_WIDTH_4BYTE: {
-		uint32_t *str;
+		uint32_t const *str;
 		str    = DeeString_Get4Byte(self);
 		result = Dee_HashCase4Byte(str, WSTR_LENGTH(str));
 	}	break;
@@ -955,7 +955,7 @@ string_trycompare_eq(String *lhs, DeeObject *rhs) {
 
 
 struct string_compare_seq_data {
-	size_t               *scsd_wstr;  /* [1..1] The LHS width-string */
+	size_t const         *scsd_wstr;  /* [1..1] The LHS width-string */
 	size_t                scsd_index; /* Index to next character */
 	__UINTPTR_HALF_TYPE__ scsd_width; /* String switch (one of `Dee_STRING_WIDTH_*BYTE') */
 };
@@ -1088,8 +1088,8 @@ string_mh_seq_trycompare_eq(String *lhs, DeeObject *rhs) {
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(String, si_string); /* [1..1][const] The string that is being iterated. */
-	union dcharptr               si_iter;    /* [1..1][weak] The current iterator position. */
-	union dcharptr               si_end;     /* [1..1][const] The string end pointer. */
+	union dcharptr_const         si_iter;    /* [1..1][weak] The current iterator position. */
+	union dcharptr_const         si_end;     /* [1..1][const] The string end pointer. */
 	unsigned int                 si_width;   /* [const] The stirng width used during iteration (One of `STRING_WIDTH_*'). */
 } StringIterator;
 #define READ_ITER_PTR(x) atomic_read(&(x)->si_iter.ptr)
@@ -1101,7 +1101,7 @@ STATIC_ASSERT(offsetof(StringIterator, si_string) == offsetof(ProxyObject, po_ob
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringiter_next(StringIterator *__restrict self) {
 	DREF DeeObject *result;
-	union dcharptr pos, new_pos;
+	union dcharptr_const pos, new_pos;
 
 	/* Consume one character (atomically) */
 	do {
@@ -1191,8 +1191,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 stringiter_compare(StringIterator *self, StringIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &StringIterator_Type))
 		goto err;
-	Dee_return_compareT(void *, READ_ITER_PTR(self),
-	                    /*   */ READ_ITER_PTR(other));
+	Dee_return_compareT(void const *, READ_ITER_PTR(self),
+	                    /*         */ READ_ITER_PTR(other));
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -1209,7 +1209,7 @@ stringiter_nii_hasprev(StringIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 stringiter_nii_getindex(StringIterator *__restrict self) {
-	union dcharptr pos;
+	union dcharptr_const pos;
 	pos.ptr = READ_ITER_PTR(self);
 	return (size_t)(pos.cp8 - (byte_t const *)DeeString_WSTR(self->si_string)) /
 	       STRING_SIZEOF_WIDTH(self->si_width);
@@ -1233,7 +1233,7 @@ stringiter_nii_rewind(StringIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_prev(StringIterator *__restrict self) {
-	union dcharptr pos, new_pos;
+	union dcharptr_const pos, new_pos;
 	do {
 		pos.ptr = atomic_read(&self->si_iter.ptr);
 		if (pos.ptr <= (void *)DeeString_WSTR(self->si_string))
@@ -1245,7 +1245,7 @@ stringiter_nii_prev(StringIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_next(StringIterator *__restrict self) {
-	union dcharptr pos, new_pos;
+	union dcharptr_const pos, new_pos;
 
 	/* Consume one character (atomically) */
 	do {
@@ -1260,7 +1260,7 @@ stringiter_nii_next(StringIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringiter_nii_peek(StringIterator *__restrict self) {
 	DREF DeeObject *result;
-	union dcharptr pos;
+	union dcharptr_const pos;
 	pos.ptr = self->si_iter.ptr;
 	if (pos.ptr >= self->si_end.ptr)
 		return ITER_DONE;
@@ -1407,7 +1407,7 @@ string_size(String *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_getitem_index(String *__restrict self, size_t index) {
 	int width = DeeString_WIDTH(self);
-	union dcharptr str;
+	union dcharptr_const str;
 	size_t len;
 	str.ptr = DeeString_WSTR(self);
 	len     = WSTR_LENGTH(str.ptr);
@@ -1433,7 +1433,7 @@ err_oob:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_trygetitem_index(String *__restrict self, size_t index) {
 	int width = DeeString_WIDTH(self);
-	union dcharptr str;
+	union dcharptr_const str;
 	size_t len;
 	str.ptr = DeeString_WSTR(self);
 	len     = WSTR_LENGTH(str.ptr);
@@ -1460,14 +1460,14 @@ string_getrange_index(String *__restrict self,
                       Dee_ssize_t begin, Dee_ssize_t end) {
 	struct Dee_seq_range range;
 	size_t range_size;
-	void *str  = DeeString_WSTR(self);
+	void const *str = DeeString_WSTR(self);
 	int width  = DeeString_WIDTH(self);
 	size_t len = WSTR_LENGTH(str);
 	DeeSeqRange_Clamp(&range, begin, end, len);
 	range_size = range.sr_end - range.sr_start;
 	if unlikely(range_size <= 0)
 		return DeeString_NewEmpty();
-	return DeeString_NewWithWidth((byte_t *)str +
+	return DeeString_NewWithWidth((byte_t const *)str +
 	                              (range.sr_start * STRING_SIZEOF_WIDTH(width)),
 	                              range_size, width);
 }
@@ -1478,14 +1478,14 @@ string_getrange_index_n(String *__restrict self, Dee_ssize_t begin) {
 	return string_getrange_index(self, begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
 	size_t range_size, start;
-	void *str  = DeeString_WSTR(self);
+	void const *str = DeeString_WSTR(self);
 	int width  = DeeString_WIDTH(self);
 	size_t len = WSTR_LENGTH(str);
 	start = DeeSeqRange_Clamp_n(begin, len);
 	range_size = len - start;
 	if unlikely(range_size <= 0)
 		return DeeString_NewEmpty();
-	return DeeString_NewWithWidth((byte_t *)str +
+	return DeeString_NewWithWidth((byte_t const *)str +
 	                              (start * STRING_SIZEOF_WIDTH(width)),
 	                              range_size, width);
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -1507,7 +1507,7 @@ PRIVATE struct type_cmp string_cmp = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 string_foreach(String *self, Dee_foreach_t proc, void *arg) {
-	union dcharptr ptr, end;
+	union dcharptr_const ptr, end;
 	Dee_ssize_t temp, result = 0;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -1575,7 +1575,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 string_foreach_reverse(String *self, Dee_foreach_t proc, void *arg) {
-	union dcharptr ptr, end;
+	union dcharptr_const ptr, end;
 	Dee_ssize_t temp, result = 0;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -1644,7 +1644,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 string_mh_seq_enumerate_index(String *self, Dee_seq_enumerate_index_t cb,
                               void *arg, size_t start, size_t end) {
-	union dcharptr ptr;
+	union dcharptr_const ptr;
 	Dee_ssize_t temp, result = 0;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -1719,7 +1719,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 string_mh_seq_enumerate_index_reverse(String *self, Dee_seq_enumerate_index_t cb,
                                       void *arg, size_t start, size_t end) {
-	union dcharptr ptr;
+	union dcharptr_const ptr;
 	Dee_ssize_t temp, result = 0;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -1791,7 +1791,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 string_asvector(String *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t result;
-	union dcharptr ptr, end;
+	union dcharptr_const ptr, end;
 	DREF DeeObject **dst_iter = dst;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -1859,7 +1859,7 @@ err_dst_iter:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_getitem(String *self, DeeObject *index) {
 	int width = DeeString_WIDTH(self);
-	union dcharptr str;
+	union dcharptr_const str;
 	size_t i, len;
 	str.ptr = DeeString_WSTR(self);
 	len     = WSTR_LENGTH(str.ptr);
@@ -2043,7 +2043,7 @@ string_hasregex(String *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_getfirst(String *__restrict self) {
-	void *str = DeeString_WSTR(self);
+	void const *str = DeeString_WSTR(self);
 	int width = DeeString_WIDTH(self);
 	if unlikely(!WSTR_LENGTH(str))
 		goto err_empty;
@@ -2055,7 +2055,7 @@ err_empty:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_getlast(String *__restrict self) {
-	void *str     = DeeString_WSTR(self);
+	void const *str = DeeString_WSTR(self);
 	int width     = DeeString_WIDTH(self);
 	size_t length = WSTR_LENGTH(str);
 	if unlikely(!length)
@@ -2068,7 +2068,7 @@ err_empty:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_trygetfirst(String *__restrict self) {
-	void *str = DeeString_WSTR(self);
+	void const *str = DeeString_WSTR(self);
 	int width = DeeString_WIDTH(self);
 	if unlikely(!WSTR_LENGTH(str))
 		goto err_empty;
@@ -2079,7 +2079,7 @@ err_empty:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_trygetlast(String *__restrict self) {
-	void *str     = DeeString_WSTR(self);
+	void const *str = DeeString_WSTR(self);
 	int width     = DeeString_WIDTH(self);
 	size_t length = WSTR_LENGTH(str);
 	if unlikely(!length)
@@ -2126,10 +2126,9 @@ string_sizeof(String *__restrict self) {
 #ifdef CONFIG_HAVE_STRING_AUDITING_INTERNALS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_audit_str_bytes(String *__restrict self) {
-	return DeeBytes_NewView((DeeObject *)self,
-	                        DeeString_STR(self),
-	                        DeeString_SIZE(self) * sizeof(char),
-	                        Dee_BUFFER_FREADONLY);
+	return DeeBytes_NewViewRo((DeeObject *)self,
+	                          DeeString_STR(self),
+	                          DeeString_SIZE(self) * sizeof(char));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2151,57 +2150,52 @@ string_audit_str_width(String *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_audit_wstr_bytes(String *__restrict self) {
-	return DeeBytes_NewView((DeeObject *)self,
-	                        DeeString_WSTR(self),
-	                        DeeString_WSIZ(self),
-	                        Dee_BUFFER_FREADONLY);
+	return DeeBytes_NewViewRo((DeeObject *)self,
+	                          DeeString_WSTR(self),
+	                          DeeString_WSIZ(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_audit_utf8_bytes(String *__restrict self) {
-	char *utf8 = DeeString_AsUtf8((DeeObject *)self);
+	char const *utf8 = DeeString_AsUtf8((DeeObject *)self);
 	if unlikely(!utf8)
 		goto err;
-	return DeeBytes_NewView((DeeObject *)self,
-	                        utf8, WSTR_LENGTH(utf8),
-	                        Dee_BUFFER_FREADONLY);
+	return DeeBytes_NewViewRo((DeeObject *)self, utf8,
+	                          WSTR_LENGTH(utf8));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_audit_utf16_bytes(String *__restrict self) {
-	uint16_t *utf16 = DeeString_AsUtf16((DeeObject *)self, STRING_ERROR_FSTRICT);
+	uint16_t const *utf16 = DeeString_AsUtf16((DeeObject *)self, STRING_ERROR_FSTRICT);
 	if unlikely(!utf16)
 		goto err;
-	return DeeBytes_NewView((DeeObject *)self,
-	                        utf16, WSTR_LENGTH(utf16) << 1,
-	                        Dee_BUFFER_FREADONLY);
+	return DeeBytes_NewViewRo((DeeObject *)self, utf16,
+	                          WSTR_LENGTH(utf16) << 1);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_audit_utf32_bytes(String *__restrict self) {
-	uint32_t *utf32 = DeeString_AsUtf32((DeeObject *)self);
+	uint32_t const *utf32 = DeeString_AsUtf32((DeeObject *)self);
 	if unlikely(!utf32)
 		goto err;
-	return DeeBytes_NewView((DeeObject *)self,
-	                        utf32, WSTR_LENGTH(utf32) << 2,
-	                        Dee_BUFFER_FREADONLY);
+	return DeeBytes_NewViewRo((DeeObject *)self, utf32,
+	                          WSTR_LENGTH(utf32) << 2);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_audit_1byte_bytes(String *__restrict self) {
-	uint8_t *b1;
+	uint8_t const *b1;
 	if (self->s_data && self->s_data->u_width != Dee_STRING_WIDTH_1BYTE)
 		goto err_too_large;
 	b1 = DeeString_As1Byte((DeeObject *)self);
-	return DeeBytes_NewView((DeeObject *)self,
-	                        b1, WSTR_LENGTH(b1),
-	                        Dee_BUFFER_FREADONLY);
+	return DeeBytes_NewViewRo((DeeObject *)self, b1,
+	                          WSTR_LENGTH(b1));
 err_too_large:
 	DeeError_Throwf(&DeeError_UnicodeEncodeError,
 	                "String %r contains ordinals greater than U+00FF",
@@ -2211,13 +2205,12 @@ err_too_large:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_audit_2byte_bytes(String *__restrict self) {
-	uint16_t *b2;
+	uint16_t const *b2;
 	if (self->s_data && self->s_data->u_width > Dee_STRING_WIDTH_2BYTE)
 		goto err_too_large;
 	b2 = DeeString_As2Byte((DeeObject *)self);
-	return DeeBytes_NewView((DeeObject *)self,
-	                        b2, WSTR_LENGTH(b2) << 1,
-	                        Dee_BUFFER_FREADONLY);
+	return DeeBytes_NewViewRo((DeeObject *)self, b2,
+	                          WSTR_LENGTH(b2) << 1);
 err_too_large:
 	DeeError_Throwf(&DeeError_UnicodeEncodeError,
 	                "String %r contains ordinals greater than U+FFFF",
@@ -2410,7 +2403,7 @@ string_getbuf(String *__restrict self,
               DeeBuffer *__restrict info,
               unsigned int flags) {
 	(void)flags;
-	info->bb_base = DeeString_AsBytes((DeeObject *)self, false);
+	info->bb_base = (void *)DeeString_AsBytes((DeeObject *)self, false);
 	if unlikely(!info->bb_base)
 		goto err;
 	info->bb_size = WSTR_LENGTH(info->bb_base);

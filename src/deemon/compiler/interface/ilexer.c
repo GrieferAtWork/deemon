@@ -2216,7 +2216,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
-	char *name_utf8;
+	char const *name_utf8;
 	DeeObject *name;
 	bool create = true;
 	struct TPPKeyword *kwd;
@@ -2256,7 +2256,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
-	char *name_utf8;
+	char const *name_utf8;
 	DeeObject *name;
 	bool create = true;
 	struct TPPKeyword *kwd;
@@ -2318,7 +2318,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_undef(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name;
 	int error;
-	char *utf8_name;
+	char const *utf8_name;
 	uint16_t old_exceptsz;
 	_DeeArg_Unpack1(err, argc, argv, "undef", &name);
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
@@ -2343,7 +2343,7 @@ lexer_define(DeeCompilerWrapperObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name, *value;
 	int error;
-	char *utf8_name, *utf8_value;
+	char const *utf8_name, *utf8_value;
 	bool builtin = false;
 	uint16_t old_exceptsz;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_value_builtin,
@@ -2378,7 +2378,7 @@ lexer_addassert(DeeCompilerWrapperObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name, *value;
 	int error;
-	char *utf8_name, *utf8_value;
+	char const *utf8_name, *utf8_value;
 	uint16_t old_exceptsz;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__predicate_answer, "oo:addassert", &name, &value))
 		goto err;
@@ -2410,7 +2410,7 @@ lexer_delassert(DeeCompilerWrapperObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name, *value = NULL;
 	int error;
-	char *utf8_name, *utf8_value = NULL;
+	char const *utf8_name, *utf8_value = NULL;
 	uint16_t old_exceptsz;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__predicate_answer, "o|o:delassert", &name, &value))
 		goto err;
@@ -2780,7 +2780,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_syspaths_insert(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	DeeObject *path;
-	char *utf8, *copy;
+	char *copy;
+	char const *utf8;
 	_DeeArg_Unpack1(err, argc, argv, "insert", &path);
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
@@ -2807,7 +2808,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_syspaths_remove(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	DeeObject *path;
-	char *utf8, *copy;
+	char const *utf8;
+	char *copy;
 	_DeeArg_Unpack1(err, argc, argv, "remove", &path);
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
@@ -3659,7 +3661,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setfilename(DeeCompilerItemObject *__restrict self,
                  DeeObject *__restrict value) {
 	struct TPPFile *file;
-	char *utf8;
+	char const *utf8;
 	int result = -1;
 	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto done;

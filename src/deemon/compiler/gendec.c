@@ -77,7 +77,7 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decgen_imports(DeeModuleObject *__restrict self) {
 	DeeModuleObject *const *iter, *const *end;
-	char *module_pathstr, *module_pathend;
+	char const *module_pathstr, *module_pathend;
 	if (!self->mo_importc)
 		goto done;
 	dec_curr = SC_IMPORTS;
@@ -105,9 +105,9 @@ import_module_by_name:
 			if unlikely(!data)
 				goto err;
 		} else {
-			char *self_pathstr, *other_pathstr;
-			char *self_pathend, *other_pathend;
-			char *self_pathpart, *other_pathpart;
+			char const *self_pathstr, *other_pathstr;
+			char const *self_pathend, *other_pathend;
+			char const *self_pathpart, *other_pathpart;
 			size_t num_dots;
 			uint8_t *buffer;
 			bool is_dec_file;
@@ -533,7 +533,7 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 	if (dec_putptr(straddr))
 		goto err; /* Dec_ClassDescriptor::cd_nam */
 	if (self->cd_doc) {
-		char *doc_str = DeeString_AsUtf8((DeeObject *)self->cd_doc);
+		char const *doc_str = DeeString_AsUtf8((DeeObject *)self->cd_doc);
 		if unlikely(!doc_str)
 			goto err;
 		if (WSTR_LENGTH(doc_str) == 0)
@@ -629,7 +629,7 @@ empty_doc:
 		if (dec_putptr(straddr))
 			goto err; /* Dec_ClassAttribute::ca_nam */
 		if (attr->ca_doc) {
-			char *doc_str = DeeString_AsUtf8((DeeObject *)attr->ca_doc);
+			char const *doc_str = DeeString_AsUtf8((DeeObject *)attr->ca_doc);
 			if unlikely(!doc_str)
 				goto err;
 			if (WSTR_LENGTH(doc_str) == 0)
@@ -685,7 +685,7 @@ empty_cattr_doc:
 		if (dec_putptr(straddr))
 			goto err; /* Dec_ClassAttribute::ca_nam */
 		if (attr->ca_doc) {
-			char *doc_str = DeeString_AsUtf8((DeeObject *)attr->ca_doc);
+			char const *doc_str = DeeString_AsUtf8((DeeObject *)attr->ca_doc);
 			if unlikely(!doc_str)
 				goto err;
 			if (WSTR_LENGTH(doc_str) == 0)
@@ -869,7 +869,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 		uint8_t *strptr;
 		uint32_t straddr;
 		struct dec_section *oldsec;
-		char *utf8_data;
+		char const *utf8_data;
 		if (dec_putb(DTYPE_STRING))
 			goto err;
 		utf8_data = DeeString_AsUtf8(self);
@@ -1282,7 +1282,7 @@ dec_do_putddi_strtab(DeeDDIObject *__restrict self,
 	struct dec_section *ddi_sec;
 	uint32_t straddr;
 	uint32_t i;
-	char *str;
+	char const *str;
 	uint8_t *strptr;
 	if (length >= (uint16_t)-1) {
 		if (dec_putw(0xffff))

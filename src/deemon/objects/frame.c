@@ -529,7 +529,7 @@ frame_getlocation(Frame *__restrict self) {
 		goto err_state;
 	i = 0;
 	DDI_STATE_DO(iter, &state) {
-		char *path, *file;
+		char const *path, *file;
 		file = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file);
 		if unlikely(!file) {
 			fileob = DeeNone_NewRef();
@@ -589,7 +589,7 @@ frame_getfile(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
 	struct ddi_state state;
-	char *path, *file;
+	char const *path, *file;
 	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
 	if unlikely(!code)
 		goto err;
@@ -656,7 +656,7 @@ frame_getname(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
 	struct ddi_state state;
-	char *name;
+	char const *name;
 	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
 	if unlikely(!code)
 		goto err;

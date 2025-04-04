@@ -2632,7 +2632,9 @@ __NAMESPACE_INT_END
  * >> }
  */
 #undef __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC
-#if 1
+#if 1 /* TODO: >> warning: cast to pointer from integer of different size [-Wint-to-pointer-cast] */
+#define __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC 16
+#elif 1
 #define __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC __SIZEOF_BUSINT__
 #else
 #define __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC 0

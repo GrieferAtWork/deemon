@@ -312,7 +312,7 @@ PRIVATE WUNUSED NONNULL((1)) struct DeeRegexCode *DCALL
 re_compile(DeeObject *__restrict self, unsigned int compile_flags) {
 	re_errno_t comp_error;
 	struct re_compiler comp;
-	char *utf8;
+	char const *utf8;
 again:
 	utf8 = DeeString_AsUtf8(self);
 	if unlikely(!utf8)

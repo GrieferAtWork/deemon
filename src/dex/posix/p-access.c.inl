@@ -175,10 +175,10 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_access_USE_waccess
 #define ACCESS_PRINTF_FILENAME "%lq"
-	result = waccess(filename, how);
+	result = waccess((wchar_t *)filename, how);
 #else /* posix_access_USE_waccess */
 #define ACCESS_PRINTF_FILENAME "%q"
-	result = access(filename, how);
+	result = access((char *)filename, how);
 #endif /* !posix_access_USE_waccess */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
@@ -253,7 +253,7 @@ FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_euidaccess_f_impl(cha
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-	result = euidaccess(filename, how);
+	result = euidaccess((char *)filename, how);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
@@ -323,7 +323,7 @@ FORCELOCAL WUNUSED NONNULL((2))DREF DeeObject *DCALL posix_faccessat_f_impl(int 
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-	result = faccessat(dfd, filename, how, atflags);
+	result = faccessat(dfd, (char *)filename, how, atflags);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
@@ -360,7 +360,7 @@ err:
 		goto err;
 #ifdef AT_EACCESS
 	if (atflags & AT_EACCESS) {
-		char *ufullname;
+		char const *ufullname;
 		ufullname = DeeString_AsUtf8(fullname);
 		if unlikely(!ufullname) {
 			result = NULL;
@@ -371,11 +371,9 @@ err:
 #endif /* AT_EACCESS */
 	{
 #ifdef posix_access_USE_waccess
-		dwchar_t *str_fullname;
-		str_fullname = DeeString_AsWide(fullname);
+		Dee_wchar_t const *str_fullname = DeeString_AsWide(fullname);
 #else /* posix_access_USE_waccess */
-		char *str_fullname;
-		str_fullname = DeeString_AsUtf8(fullname);
+		char const *str_fullname = DeeString_AsUtf8(fullname);
 #endif /* !posix_access_USE_waccess */
 		if unlikely(!str_fullname) {
 			result = NULL;

@@ -138,29 +138,29 @@ null_pointer:
 	/* Special handling for strings (which can be cast to `char *') */
 	if (DeeString_Check(self)) {
 		if (pointer_base == &DeeCVoid_Type) {
-			result->ptr = DeeString_STR(self);
+			result->pcvoid = DeeString_STR(self);
 			return 0;
 		}
 		if (pointer_base == &DeeCChar_Type) {
-			result->ptr = DeeString_AsUtf8(self);
+			result->pcvoid = DeeString_AsUtf8(self);
 			if unlikely(!result->ptr)
 				goto err;
 			return 0;
 		}
 		if (pointer_base == &DeeCWChar_Type) {
-			result->ptr = DeeString_AsWide(self);
+			result->pcvoid = DeeString_AsWide(self);
 			if unlikely(!result->ptr)
 				goto err;
 			return 0;
 		}
 		if (pointer_base == &DeeCChar16_Type) {
-			result->ptr = DeeString_AsUtf16(self, STRING_ERROR_FREPLAC);
+			result->pcvoid = DeeString_AsUtf16(self, STRING_ERROR_FREPLAC);
 			if unlikely(!result->ptr)
 				goto err;
 			return 0;
 		}
 		if (pointer_base == &DeeCChar32_Type) {
-			result->ptr = DeeString_AsUtf32(self);
+			result->pcvoid = DeeString_AsUtf32(self);
 			if unlikely(!result->ptr)
 				goto err;
 			return 0;

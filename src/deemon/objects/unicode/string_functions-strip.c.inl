@@ -283,13 +283,13 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 {
 #ifdef LOCAL_IS_LINES
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	union dcharptr flush_start, newend;
+	union dcharptr_const flush_start, newend;
 #endif /* LOCAL_IS_LINES */
 #ifdef LOCAL_IS_MASKED
-	union dcharptr mskstr;
+	union dcharptr_const mskstr;
 	size_t msklen;
 #endif /* LOCAL_IS_MASKED */
-	union dcharptr mystr, newstr;
+	union dcharptr_const mystr, newstr;
 	size_t mylen, newlen;
 
 #ifdef LOCAL_IS_MASKED
@@ -397,7 +397,7 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_RSTRIP
 			/* rstrip (at the end of lines) */
 			{
-				union dcharptr flush_end;
+				union dcharptr_const flush_end;
 				flush_end.cp8 = newstr.cp8;
 				while (LOCAL_MEMENDSWITHB(flush_start.cp8, (size_t)(flush_end.cp8 - flush_start.cp8))) {
 					flush_end.cp8 -= LOCAL_matchlen;
@@ -419,7 +419,7 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_LSTRIP
 			/* lstrip (at the start of lines) */
 			{
-				union dcharptr new_flush_start;
+				union dcharptr_const new_flush_start;
 				new_flush_start.cp8 = newstr.cp8;
 				while (LOCAL_MEMSTARTSWITHB(new_flush_start.cp8, (size_t)(newend.cp8 - new_flush_start.cp8))) {
 					new_flush_start.cp8 += LOCAL_matchlen;
@@ -497,7 +497,7 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_RSTRIP
 			/* rstrip (at the end of lines) */
 			{
-				union dcharptr flush_end;
+				union dcharptr_const flush_end;
 				flush_end.cp16 = newstr.cp16;
 				while (LOCAL_MEMENDSWITHW(flush_start.cp16, (size_t)(flush_end.cp16 - flush_start.cp16))) {
 					flush_end.cp16 -= LOCAL_matchlen;
@@ -519,7 +519,7 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_LSTRIP
 			/* lstrip (at the start of lines) */
 			{
-				union dcharptr new_flush_start;
+				union dcharptr_const new_flush_start;
 				new_flush_start.cp16 = newstr.cp16;
 				while (LOCAL_MEMSTARTSWITHW(new_flush_start.cp16, (size_t)(newend.cp16 - new_flush_start.cp16))) {
 					new_flush_start.cp16 += LOCAL_matchlen;
@@ -547,7 +547,7 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 		if (newlen == mylen)
 			goto return_self_noprinter;
 		if (DeeString_WIDTH(self) == STRING_WIDTH_1BYTE) {
-			uint8_t *base = DeeString_Get1Byte((DeeObject *)self);
+			uint8_t const *base = DeeString_Get1Byte((DeeObject *)self);
 			return (DREF String *)DeeString_New1Byte(base + (newstr.cp16 - mystr.cp16), newlen);
 		}
 		return (DREF String *)DeeString_New2Byte(newstr.cp16, newlen);
@@ -601,7 +601,7 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_RSTRIP
 			/* rstrip (at the end of lines) */
 			{
-				union dcharptr flush_end;
+				union dcharptr_const flush_end;
 				flush_end.cp32 = newstr.cp32;
 				while (LOCAL_MEMENDSWITHL(flush_start.cp32, (size_t)(flush_end.cp32 - flush_start.cp32))) {
 					flush_end.cp32 -= LOCAL_matchlen;
@@ -623,7 +623,7 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_LSTRIP
 			/* lstrip (at the start of lines) */
 			{
-				union dcharptr new_flush_start;
+				union dcharptr_const new_flush_start;
 				new_flush_start.cp32 = newstr.cp32;
 				while (LOCAL_MEMSTARTSWITHL(new_flush_start.cp32, (size_t)(newend.cp32 - new_flush_start.cp32))) {
 					new_flush_start.cp32 += LOCAL_matchlen;
@@ -651,11 +651,11 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 		if (newlen == mylen)
 			goto return_self_noprinter;
 		if (DeeString_WIDTH(self) == STRING_WIDTH_1BYTE) {
-			uint8_t *base = DeeString_Get1Byte((DeeObject *)self);
+			uint8_t const *base = DeeString_Get1Byte((DeeObject *)self);
 			return (DREF String *)DeeString_New1Byte(base + (newstr.cp32 - mystr.cp32), newlen);
 		}
 		if (DeeString_WIDTH(self) == STRING_WIDTH_2BYTE) {
-			uint16_t *base = DeeString_Get2Byte((DeeObject *)self);
+			uint16_t const *base = DeeString_Get2Byte((DeeObject *)self);
 			return (DREF String *)DeeString_New2Byte(base + (newstr.cp32 - mystr.cp32), newlen);
 		}
 		return (DREF String *)DeeString_New4Byte(newstr.cp32, newlen);

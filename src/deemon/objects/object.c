@@ -2304,7 +2304,7 @@ object_format_generic(DeeObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_format_method(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *format_str;
-	char *format_utf8;
+	char const *format_utf8;
 	_DeeArg_Unpack1(err, argc, argv, "__format__", &format_str);
 	if (DeeObject_AssertTypeExact(format_str, &DeeString_Type))
 		goto err;

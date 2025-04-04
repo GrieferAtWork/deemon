@@ -469,12 +469,12 @@ EINTR_LABEL(again)
 
 #ifdef posix_open_USE_wopen
 	{
-		dwchar_t const *wide_filename;
+		Dee_wchar_t const *wide_filename;
 		wide_filename = DeeString_AsWide(filename);
 		if unlikely(!wide_filename)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-		resfd = wopen(wide_filename, (int)oflags, (int)mode);
+		resfd = wopen((wchar_t *)wide_filename, (int)oflags, (int)mode);
 	}
 #endif /* posix_open_USE_wopen */
 
@@ -485,7 +485,7 @@ EINTR_LABEL(again)
 		if unlikely(!utf8_filename)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-		resfd = open(utf8_filename, (int)oflags, (int)mode);
+		resfd = open((char *)utf8_filename, (int)oflags, (int)mode);
 	}
 #endif /* posix_open_USE_open */
 
@@ -591,12 +591,12 @@ EINTR_LABEL(again)
 
 #ifdef posix_creat_USE_wcreat
 	{
-		dwchar_t const *wide_filename;
+		Dee_wchar_t const *wide_filename;
 		wide_filename = DeeString_AsWide(filename);
 		if unlikely(!wide_filename)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-		result = wcreat(wide_filename, (int)mode);
+		result = wcreat((wchar_t *)wide_filename, (int)mode);
 	}
 #endif /* posix_creat_USE_wcreat */
 
@@ -607,7 +607,7 @@ EINTR_LABEL(again)
 		if unlikely(!utf8_filename)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-		result = creat(utf8_filename, (int)mode);
+		result = creat((char *)utf8_filename, (int)mode);
 	}
 #endif /* posix_creat_USE_creat */
 
@@ -720,7 +720,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix__openat_f_impl(Dee
 		int result;
 		int os_dfd;
 #ifdef posix_openat_USE_wopenat
-		dwchar_t const *wide_filename;
+		Dee_wchar_t const *wide_filename;
 #endif /* posix_openat_USE_wopenat */
 #ifdef posix_openat_USE_openat
 		char const *utf8_filename;
@@ -744,10 +744,10 @@ FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix__openat_f_impl(Dee
 EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_DISABLE();
 #ifdef posix_openat_USE_wopenat
-		result = wopenat(os_dfd, wide_filename, (int)oflags, (int)mode);
+		result = wopenat(os_dfd, (wchar_t *)wide_filename, (int)oflags, (int)mode);
 #endif /* posix_openat_USE_wopenat */
 #ifdef posix_openat_USE_openat
-		result = openat(os_dfd, utf8_filename, (int)oflags, (int)mode);
+		result = openat(os_dfd, (char *)utf8_filename, (int)oflags, (int)mode);
 #endif /* posix_openat_USE_openat */
 		if (result >= 0) {
 			DBG_ALIGNMENT_ENABLE();

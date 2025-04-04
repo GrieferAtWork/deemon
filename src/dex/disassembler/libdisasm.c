@@ -67,12 +67,12 @@ PRIVATE struct disasm_flag const disasm_flags[] = {
 };
 
 PRIVATE int DCALL
-parse_asm_flags(char *__restrict str,
+parse_asm_flags(char const *__restrict str,
                 unsigned int *__restrict p_result) {
 	unsigned int i;
 	for (;;) {
-		char *flag_start = str;
-		char *flag_end   = strchr(str, ',');
+		char const *flag_start = str;
+		char const *flag_end   = strchr(str, ',');
 		if (!flag_end)
 			flag_end = strend(str);
 		if (flag_start < flag_end) {

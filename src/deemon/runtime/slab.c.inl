@@ -364,7 +364,7 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 	size_t total;
 	unsigned int i;
 	size_t sizes[Dee_SLAB_COUNT];
-	char *config;
+	char const *config;
 	memcpy(sizes, default_slab_sizes,
 	       sizeof(default_slab_sizes));
 	config = getenv("DEEMON_SLABS"); /* FIXME: system-features check for CONFIG_HAVE_getenv */

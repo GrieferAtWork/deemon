@@ -258,7 +258,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		bzero(dst, num_bytes);
 	} else if (DeeString_Check(seq)) {
 		/* Special case: `string' */
-		byte_t *data = DeeString_AsBytes(seq, false);
+		byte_t const *data = DeeString_AsBytes(seq, false);
 		if unlikely(!data)
 			goto err;
 		if (WSTR_LENGTH(data) != num_bytes) {
@@ -637,7 +637,7 @@ bytes_init(size_t argc, DeeObject *const *argv) {
 			return (DREF Bytes *)DeeBytes_NewBuffer(start, init);
 		}
 		if (DeeString_Check(argv[1])) {
-			char *str = DeeString_STR(argv[1]);
+			char const *str = DeeString_STR(argv[1]);
 			if (WSTR_LENGTH(str) != 1)
 				goto err_invalid_mode;
 			if (str[0] == 'r') {
@@ -785,7 +785,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_str(Bytes *__restrict self) {
-	return DeeString_NewSized((char *)DeeBytes_DATA(self),
+	return DeeString_NewSized((char const *)DeeBytes_DATA(self),
 	                          DeeBytes_SIZE(self));
 }
 
@@ -1633,7 +1633,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 	DeeObject *hex_str;
 	DREF Bytes *result;
 	byte_t *dst;
-	union dcharptr iter, end;
+	union dcharptr_const iter, end;
 	size_t length;
 	_DeeArg_Unpack1(err, argc, argv, "fromhex", &hex_str);
 	if (DeeObject_AssertTypeExact(hex_str, &DeeString_Type))

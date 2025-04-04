@@ -106,10 +106,10 @@ next_expr:
 	} else if (JITLexer_ISKWD(self, "function")) {
 		/* Declare a new function */
 #ifdef JIT_EVAL
-		unsigned char *name_start;
-		unsigned char *name_end;
-		unsigned char *param_start;
-		unsigned char *param_end;
+		unsigned char const *name_start;
+		unsigned char const *name_end;
+		unsigned char const *param_start;
+		unsigned char const *param_end;
 		unsigned int recursion;
 		name_start = name_end = NULL;
 		var_symbol.js_kind    = JIT_SYMBOL_NONE;
@@ -171,8 +171,8 @@ err_var_symbol:
 		}
 		if (self->jl_tok == TOK_ARROW) {
 #ifdef JIT_EVAL
-			unsigned char *source_start;
-			unsigned char *source_end;
+			unsigned char const *source_start;
+			unsigned char const *source_end;
 			JITLexer_Yield(self);
 			source_start = self->jl_tokstart;
 			if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FSECONDARY))
@@ -187,7 +187,7 @@ err_var_symbol:
 				ch   = unicode_readutf8_rev_n(&next, source_start);
 				if (!DeeUni_IsSpace(ch))
 					break;
-				source_end = (unsigned char *)next;
+				source_end = (unsigned char const *)next;
 			}
 			current = JITFunction_New((char const *)name_start,
 			                          (char const *)name_end,
@@ -208,8 +208,8 @@ err_var_symbol:
 		} else if (self->jl_tok == '{') {
 #ifdef JIT_EVAL
 			/* Lambda function. */
-			unsigned char *source_start;
-			unsigned char *source_end;
+			unsigned char const *source_start;
+			unsigned char const *source_end;
 			unsigned int brace_recursion = 1;
 			JITLexer_Yield(self);
 			source_end = source_start = self->jl_tokstart;

@@ -97,10 +97,10 @@ DECL_BEGIN
 #elif defined(posix_stat_USE_wstat64)
 #define posix_stat_USES_WCHAR
 #define posix_stat_USES_STAT64
-#define posix_stat_USED_STRUCT_STAT stat64
-#define posix_stat_USED_stat        wstat64
+#define posix_stat_USED_STRUCT_STAT struct stat64
+#define posix_stat_USED_stat(f, s)  wstat64((wchar_t *)(f), s)
 #ifdef CONFIG_HAVE_wlstat64
-#define posix_stat_USED_lstat wlstat64
+#define posix_stat_USED_lstat(f, s) wlstat64((wchar_t *)(f), s)
 #define posix_stat_HAVE_lstat
 #endif /* CONFIG_HAVE_wlstat64 */
 #ifdef CONFIG_HAVE_fstat64
@@ -112,10 +112,10 @@ DECL_BEGIN
 #elif defined(posix_stat_USE_wstat)
 #define posix_stat_USES_WCHAR
 #define posix_stat_USES_STAT32
-#define posix_stat_USED_STRUCT_STAT stat
-#define posix_stat_USED_stat        wstat
+#define posix_stat_USED_STRUCT_STAT struct stat
+#define posix_stat_USED_stat(f, s)  wstat((wchar_t *)(f), s)
 #ifdef CONFIG_HAVE_wlstat
-#define posix_stat_USED_lstat wlstat
+#define posix_stat_USED_lstat(f, s) wlstat((wchar_t *)(f), s)
 #define posix_stat_HAVE_lstat
 #endif /* CONFIG_HAVE_wlstat */
 #ifdef CONFIG_HAVE_fstat
@@ -125,11 +125,11 @@ DECL_BEGIN
 #define posix_stat_USED_fstatat wfstatat
 #endif /* CONFIG_HAVE_wfstatat */
 #elif defined(posix_stat_USE_stat64)
-#define posix_stat_USED_STRUCT_STAT stat64
-#define posix_stat_USED_stat        stat64
+#define posix_stat_USED_STRUCT_STAT struct stat64
+#define posix_stat_USED_stat(f, s)  stat64((char *)(f), s)
 #define posix_stat_USES_STAT64
 #ifdef CONFIG_HAVE_lstat64
-#define posix_stat_USED_lstat lstat64
+#define posix_stat_USED_lstat(f, s) lstat64((char *)(f), s)
 #define posix_stat_HAVE_lstat
 #endif /* CONFIG_HAVE_lstat64 */
 #ifdef CONFIG_HAVE_fstat64
@@ -139,11 +139,11 @@ DECL_BEGIN
 #define posix_stat_USED_fstatat fstatat64
 #endif /* CONFIG_HAVE_fstatat64 */
 #elif defined(posix_stat_USE_stat)
-#define posix_stat_USED_STRUCT_STAT stat
-#define posix_stat_USED_stat        stat
+#define posix_stat_USED_STRUCT_STAT struct stat
+#define posix_stat_USED_stat(f, s)  stat((char *)(f), s)
 #define posix_stat_USES_STAT32
 #ifdef CONFIG_HAVE_lstat
-#define posix_stat_USED_lstat lstat
+#define posix_stat_USED_lstat(f, s) lstat((char *)(f), s)
 #define posix_stat_HAVE_lstat
 #endif /* CONFIG_HAVE_lstat */
 #ifdef CONFIG_HAVE_fstat
@@ -158,7 +158,7 @@ DECL_BEGIN
 
 #ifdef posix_stat_USED_STRUCT_STAT
 #ifdef posix_stat_USES_WCHAR
-#define posix_stat_TCHAR             dwchar_t
+#define posix_stat_TCHAR             Dee_wchar_t
 #define posix_stat_DeeString_AsTChar DeeString_AsWide
 #else /* posix_stat_USES_WCHAR */
 #define posix_stat_TCHAR             char
@@ -535,7 +535,7 @@ struct dee_stat {
 #endif /* posix_stat_USE_WINDOWS */
 
 #ifdef posix_stat_USED_STRUCT_STAT
-	struct posix_stat_USED_STRUCT_STAT st_info; /* Unix stat information */
+	posix_stat_USED_STRUCT_STAT st_info; /* Unix stat information */
 #endif /* posix_stat_USED_STRUCT_STAT */
 
 #ifdef posix_stat_USE_fopen
@@ -754,7 +754,7 @@ again:
 		int error;
 #ifdef posix_stat_USED_fstatat
 		if (dfd) {
-			posix_stat_TCHAR *str_path;
+			posix_stat_TCHAR const *str_path;
 			int os_dfd;
 			os_dfd = DeeUnixSystem_GetFD(dfd);
 			if (os_dfd == -1) {
@@ -763,8 +763,8 @@ again:
 					DREF DeeObject *abs_path;
 #define NEED_posix_dfd_makepath
 					abs_path = posix_dfd_makepath(dfd, path_or_file,
-					                             atflags & ~(DEE_STAT_F_TRY |
-					                                         DEE_STAT_F_LSTAT));
+					                              atflags & ~(DEE_STAT_F_TRY |
+					                                          DEE_STAT_F_LSTAT));
 					if unlikely(!abs_path)
 						goto err;
 					error = dee_stat_init(self, NULL, abs_path, atflags);
@@ -784,7 +784,7 @@ again:
 #endif /* !posix_stat_USED_fstatat */
 		{
 			if (DeeString_Check(path_or_file)) {
-				posix_stat_TCHAR *str_path;
+				posix_stat_TCHAR const *str_path;
 				str_path = posix_stat_DeeString_AsTChar(path_or_file);
 				if unlikely(!str_path)
 					goto err;
@@ -809,7 +809,7 @@ again:
 					Dee_sprintf(buf, "/proc/self/fd/%d", file_fd);
 #ifdef posix_stat_USES_WCHAR
 					{ 
-						dwchar_t wbuf[COMPILER_LENOF(buf)];
+						Dee_wchar_t wbuf[COMPILER_LENOF(buf)];
 						size_t i;
 						for (i = 0; i < COMPILER_LENOF(buf); ++i)
 							wbuf[i] = buf[i];
@@ -865,15 +865,15 @@ again:
 #ifdef posix_stat_USE_fopen
 	(void)atflags;
 	{
-		char *utf8_filename;
+		char const *utf8_filename;
 		utf8_filename = DeeString_AsUtf8(path_or_file);
 		if unlikely(!utf8_filename)
 			goto err;
 #define NEED_err
 #ifdef CONFIG_HAVE_fopen64
-		self->st_file = fopen64(utf8_filename, "r");
+		self->st_file = fopen64((char *)utf8_filename, "r");
 #else /* CONFIG_HAVE_fopen64 */
-		self->st_file = fopen(utf8_filename, "r");
+		self->st_file = fopen((char *)utf8_filename, "r");
 #endif /* !CONFIG_HAVE_fopen64 */
 		if unlikely(!self->st_file) {
 			if (atflags & DEE_STAT_F_TRY)
@@ -2148,7 +2148,7 @@ DeeSystem_GetFilenameOfHandleOrFdObject(DeeObject *__restrict handle_or_fd) {
 #ifndef posix_stat_USE_WINDOWS
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 stat_is_unix_hidden_filename(DeeObject *__restrict path) {
-	char *path_str, *path_end;
+	char const *path_str, *path_end;
 	path_str = DeeString_STR(path);
 	path_end = path_str + WSTR_LENGTH(path_str);
 	while (path_end > path_str && !DeeSystem_IsSep(path_end[-1]))
@@ -2273,7 +2273,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 stat_is_nt_exe_filename(DeeObject *__restrict path) {
 	DREF DeeObject *pathext_ob;
 	int result;
-	char *ext_begin, *ext_end, *pathext, *path_str;
+	char const *ext_begin, *ext_end, *pathext, *path_str;
 	size_t ext_size;
 	path_str = DeeString_AsUtf8(path);
 	if unlikely(!path_str)
@@ -2305,7 +2305,7 @@ stat_is_nt_exe_filename(DeeObject *__restrict path) {
 
 	result = 0;
 	while (*pathext) {
-		char *next = strchr(pathext, ';');
+		char const *next = strchr(pathext, ';');
 		if (!next)
 			next = strend(pathext);
 		/* Check if this is the extension we've been looking for. */

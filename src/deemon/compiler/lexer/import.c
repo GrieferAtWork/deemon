@@ -312,17 +312,17 @@ struct import_item {
 /* Return `bar' for a module name `.foo.bar', etc. */
 PRIVATE struct TPPKeyword *DCALL
 get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) {
-	char *utf8_repr, *symbol_start;
+	char const *utf8_repr, *symbol_start;
 	size_t symbol_length;
 	utf8_repr = DeeString_AsUtf8((DeeObject *)module_name);
 	if unlikely(!utf8_repr)
 		goto err;
-	symbol_start  = (char *)memrend(utf8_repr, '.', WSTR_LENGTH(utf8_repr)) + 1;
+	symbol_start  = (char const *)memrend(utf8_repr, '.', WSTR_LENGTH(utf8_repr)) + 1;
 	symbol_length = (size_t)((utf8_repr + WSTR_LENGTH(utf8_repr)) - symbol_start);
 
 	/* Make sure that the symbol name is valid. */
 	{
-		char *iter, *end;
+		char const *iter, *end;
 		end = (iter = symbol_start) + symbol_length;
 		if unlikely(!symbol_length)
 			goto bad_symbol_name;

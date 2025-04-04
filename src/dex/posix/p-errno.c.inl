@@ -569,7 +569,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum)
 
 #ifdef posix_strerror_USE_strerror
 	{
-		char *text;
+		char const *text;
 		text = strerror(errnum);
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);

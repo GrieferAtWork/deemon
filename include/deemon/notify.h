@@ -113,7 +113,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Dee_GetEnv(DeeObject *__restr
 			if (value == ITER_DONE) {                                              \
 				name##_value = (default);                                          \
 			} else {                                                               \
-				char *strval;                                                      \
+				char const *strval;                                                \
 				if unlikely(!value)                                                \
 					goto err;                                                      \
 				if unlikely(DeeObject_AssertTypeExact(value, &DeeString_Type))     \

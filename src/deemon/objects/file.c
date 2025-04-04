@@ -1273,7 +1273,7 @@ file_class_open(DeeObject *UNUSED(self),
 		if (DeeObject_AsInt(oflags_ob, &oflags))
 			goto err;
 	} else {
-		char *iter;
+		char const *iter;
 		iter   = DeeString_STR(oflags_ob);
 		flags  = OPEN_EXFLAG_FNORMAL;
 		oflags = 0;
@@ -1281,7 +1281,7 @@ file_class_open(DeeObject *UNUSED(self),
 			bool open_binary;
 			unsigned int i;
 			size_t optlen;
-			char *next = strchr(iter, ',');
+			char const *next = strchr(iter, ',');
 			if (!next)
 				next = iter + strlen(iter);
 			optlen = (size_t)(next - iter);

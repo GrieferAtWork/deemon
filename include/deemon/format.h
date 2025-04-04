@@ -340,11 +340,11 @@ struct va_list_struct {
  *                  | 'LD' // long double
  *     ;
  *     ref_bool   ::= ref_intlen 'b';
- *     ref_str    ::= [ '.<int>'  // str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), <int>));
- *                    | '.*'      // max = va_arg(unsigned int); str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), max));
- *                    | '.?'      // max = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), max));
- *                    | '$'       // len = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str, len);
- *                    ] 's';      // DeeString_New(va_arg(char *));
+ *     ref_str    ::= [ '.<int>'  // str = va_arg(char const *); DeeString_NewSized(str, MIN(strlen(str), <int>));
+ *                    | '.*'      // max = va_arg(unsigned int); str = va_arg(char const *); DeeString_NewSized(str, MIN(strlen(str), max));
+ *                    | '.?'      // max = va_arg(size_t); str = va_arg(char const *); DeeString_NewSized(str, MIN(strlen(str), max));
+ *                    | '$'       // len = va_arg(size_t); str = va_arg(char const *); DeeString_NewSized(str, len);
+ *                    ] 's';      // DeeString_New(va_arg(char const *));
  *
  * Example:
  * >> Dee_Packf("(d<d>Os)", 10, 20, DeeInt_NewInt(42), "foobar");
@@ -492,7 +492,7 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
  *                  | ref_int         //
  *                  | ref_float       //
  *                  | ref_bool        //
- *                  | ref_str         // `char **'
+ *                  | ref_str         // `char const **'
  *                  | '(' objects ')' // Enumerate elements of a sequence
  *     ;
  *     objects    ::= [(object   // Parse some object from the sequence.
@@ -503,14 +503,14 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
  *     ref_object ::= 'o'; // `va_arg(DeeObject **)'
  *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u' and `x' read unsigned integers
  *     ref_str    ::= ['$']      // va_arg(size_t *)   (Store WSTR_LENGTH of the following string)
- *                  | 'ls'       // *va_arg(wchar_t **)  = DeeString_AsWide()
- *                  | 'Us'       // *va_arg(uint8_t **)  = DeeString_AsUtf8()
- *                  | 'U16s'     // *va_arg(uint16_t **) = DeeString_AsUtf16()
- *                  | 'U32s'     // *va_arg(uint32_t **) = DeeString_AsUtf32()
- *                  | 'Ss'       // *va_arg(uint8_t **)  = DeeString_As1Byte()
- *                  | 'S16s'     // *va_arg(uint16_t **) = DeeString_As2Byte()
- *                  | 'S32s'     // *va_arg(uint32_t **) = DeeString_As4Byte()
- *                  | 's'        // *va_arg(char **)     = DeeString_STR()
+ *                  | 'ls'       // *va_arg(wchar_t const **)  = DeeString_AsWide()
+ *                  | 'Us'       // *va_arg(uint8_t const **)  = DeeString_AsUtf8()
+ *                  | 'U16s'     // *va_arg(uint16_t const **) = DeeString_AsUtf16()
+ *                  | 'U32s'     // *va_arg(uint32_t const **) = DeeString_AsUtf32()
+ *                  | 'Ss'       // *va_arg(uint8_t const **)  = DeeString_As1Byte()
+ *                  | 'S16s'     // *va_arg(uint16_t const **) = DeeString_As2Byte()
+ *                  | 'S32s'     // *va_arg(uint32_t const **) = DeeString_As4Byte()
+ *                  | 's'        // *va_arg(char const **)     = DeeString_STR()
  *     ;
  *     ref_intlen ::= 'I' ['8' | '16' | '32' | '64'] // Fixed-length / sizeof(size_t)
  *                  | 'hh' // `va_arg(char *)'

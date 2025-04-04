@@ -60,17 +60,17 @@ INTDEF DeeTypeObject BytesLineSplit_Type;
 typedef struct {
 	PROXY_OBJECT_HEAD2_EX(Bytes,     bs_bytes,     /* [1..1][const] The Bytes object being split. */
 	                      DeeObject, bs_sep_owner) /* [0..1][const] The owner of the split sequence. */
-	byte_t                          *bs_sep_ptr;   /* [const] Pointer to the effective separation sequence. */
+	byte_t const                    *bs_sep_ptr;   /* [const] Pointer to the effective separation sequence. */
 	size_t                           bs_sep_len;   /* [const] Length of the separation sequence (in bytes). */
 	byte_t                           bs_sep_buf[sizeof(void *)]; /* A small inline-buffer used for single-byte splits. */
 } BytesSplit;
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(BytesSplit, bsi_split)    /* [1..1][const] The underlying split controller. */
-	DWEAK byte_t                    *bsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
-	byte_t                          *bsi_end;      /* [1..1][== DeeBytes_TERM(bsi_split->bs_bytes)] Pointer to the end of input data. */
+	DWEAK byte_t const              *bsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
+	byte_t const                    *bsi_end;      /* [1..1][== DeeBytes_TERM(bsi_split->bs_bytes)] Pointer to the end of input data. */
 	Bytes                           *bsi_bytes;    /* [1..1][const][== bsi_split->bs_bytes] The Bytes object being split. */
-	byte_t                          *bsi_sep_ptr;  /* [const][== bsi_split->bs_sep_ptr] Pointer to the effective separation sequence. */
+	byte_t const                    *bsi_sep_ptr;  /* [const][== bsi_split->bs_sep_ptr] Pointer to the effective separation sequence. */
 	size_t                           bsi_sep_len;  /* [const][== bsi_split->bs_sep_len] Length of the separation sequence (in bytes). */
 } BytesSplitIterator;
 
@@ -132,7 +132,7 @@ bsi_copy(BytesSplitIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bsi_deepcopy(BytesSplitIterator *__restrict self,
              BytesSplitIterator *__restrict other) {
-	byte_t *iterpos;
+	byte_t const *iterpos;
 	self->bsi_split = (DREF BytesSplit *)DeeObject_DeepCopy((DeeObject *)other->bsi_split);
 	if unlikely(!self->bsi_split)
 		goto err;
@@ -168,16 +168,16 @@ bsi_hash(BytesSplitIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bsi_compare(BytesSplitIterator *self, BytesSplitIterator *other) {
-	byte_t *x, *y;
+	byte_t const *lhs, *rhs;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	x = READ_BSI_ITER(self);
-	y = READ_BSI_ITER(other);
-	if (!x)
-		x = (byte_t *)(uintptr_t)-1;
-	if (!y)
-		y = (byte_t *)(uintptr_t)-1;
-	Dee_return_compare(x, y);
+	lhs = READ_BSI_ITER(self);
+	rhs = READ_BSI_ITER(other);
+	if (!lhs)
+		lhs = (byte_t const *)(void const *)-1l;
+	if (!rhs)
+		rhs = (byte_t const *)(void const *)-1l;
+	Dee_return_compare(lhs, rhs);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -199,7 +199,7 @@ PRIVATE struct type_cmp bsi_cmp = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsi_next(BytesSplitIterator *__restrict self) {
-	byte_t *start, *end;
+	byte_t const *start, *end;
 	for (;;) {
 		start = atomic_read(&self->bsi_iter);
 		if (!start)
@@ -212,20 +212,22 @@ bsi_next(BytesSplitIterator *__restrict self) {
 			if (!atomic_cmpxch_weak_or_write(&self->bsi_iter, start, NULL))
 				continue;
 			return DeeBytes_NewView(self->bsi_bytes->b_orig,
-			                        start, (size_t)(self->bsi_end - start),
+			                        (void *)start,
+			                        (size_t)(self->bsi_end - start),
 			                        self->bsi_bytes->b_flags);
 		}
 		if (atomic_cmpxch_weak_or_write(&self->bsi_iter, start, end + self->bsi_sep_len))
 			break;
 	}
 	return DeeBytes_NewView(self->bsi_bytes->b_orig,
-	                        start, (size_t)(end - start),
+	                        (void *)start,
+	                        (size_t)(end - start),
 	                        self->bsi_bytes->b_flags);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsci_next(BytesSplitIterator *__restrict self) {
-	byte_t *start, *end;
+	byte_t const *start, *end;
 	for (;;) {
 		start = atomic_read(&self->bsi_iter);
 		if (!start)
@@ -238,14 +240,16 @@ bsci_next(BytesSplitIterator *__restrict self) {
 			if (!atomic_cmpxch_weak_or_write(&self->bsi_iter, start, NULL))
 				continue;
 			return DeeBytes_NewView(self->bsi_bytes->b_orig,
-			                        start, (size_t)(self->bsi_end - start),
+			                        (void *)start,
+			                        (size_t)(self->bsi_end - start),
 			                        self->bsi_bytes->b_flags);
 		}
 		if (atomic_cmpxch_weak_or_write(&self->bsi_iter, start, end + self->bsi_sep_len))
 			break;
 	}
 	return DeeBytes_NewView(self->bsi_bytes->b_orig,
-	                        start, (size_t)(end - start),
+	                        (void *)start,
+	                        (size_t)(end - start),
 	                        self->bsi_bytes->b_flags);
 }
 
@@ -605,8 +609,9 @@ PRIVATE struct type_seq bcs_seq = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bs_getsep(BytesSplit *__restrict self) {
-	return DeeBytes_NewView(self->bs_sep_owner ? self->bs_sep_owner : (DeeObject *)self,
-	                        self->bs_sep_ptr, self->bs_sep_len, Dee_BUFFER_FREADONLY);
+	return DeeBytes_NewViewRo(self->bs_sep_owner ? self->bs_sep_owner
+	                                             : (DeeObject *)self,
+	                          self->bs_sep_ptr, self->bs_sep_len);
 }
 
 PRIVATE struct type_getset tpconst bs_getsets[] = {

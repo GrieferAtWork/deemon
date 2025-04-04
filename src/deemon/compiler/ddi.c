@@ -434,21 +434,21 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 					uint8_t bind_buffer[64], *bind_text = bind_buffer;
 					struct ddi_binding *binding = &vec[i];
 					size_t bind_size;
-					char *symbol_name;
+					char *symbol_name_str;
 					int32_t symbol_name_id;
 					if (binding->db_class == DDI_BINDING_CLASS_LOCAL) {
 						/* Local-binding */
 						ASSERT(binding->db_index < current_assembler.a_localc);
 						if (binding->db_name) {
-							symbol_name = ascii_printer_allocstr(&strtab,
-							                                     binding->db_name->k_name,
-							                                     binding->db_name->k_size + 1);
-							if unlikely(!symbol_name)
+							symbol_name_str = ascii_printer_allocstr(&strtab,
+							                                         binding->db_name->k_name,
+							                                         binding->db_name->k_size + 1);
+							if unlikely(!symbol_name_str)
 								goto err_result_printer;
 							/* Allocate an entry for the symbol name. */
 							symbol_name_id = find_or_alloc_offset((uint32_t **)&result->d_strings,
 							                                      &result->d_nstring,
-							                                      (uint32_t)(symbol_name -
+							                                      (uint32_t)(symbol_name_str -
 							                                                 strtab.ap_string->s_str),
 							                                      UINT32_MAX);
 							if unlikely(symbol_name_id < 0)
@@ -463,15 +463,15 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 					} else {
 						/* Stack-binding */
 						if (binding->db_name) {
-							symbol_name = ascii_printer_allocstr(&strtab,
+							symbol_name_str = ascii_printer_allocstr(&strtab,
 							                                     binding->db_name->k_name,
 							                                     binding->db_name->k_size + 1);
-							if unlikely(!symbol_name)
+							if unlikely(!symbol_name_str)
 								goto err_result_printer;
 							/* Allocate an entry for the symbol name. */
 							symbol_name_id = find_or_alloc_offset((uint32_t **)&result->d_strings,
 							                                      &result->d_nstring,
-							                                      (uint32_t)(symbol_name -
+							                                      (uint32_t)(symbol_name_str -
 							                                                 strtab.ap_string->s_str),
 							                                      UINT32_MAX);
 							if unlikely(symbol_name_id < 0)
@@ -625,36 +625,36 @@ do_realloc:
 			goto err_xwriter; /* `dx_size' */
 		/* Generate debug information for references and static variables. */
 		for (i = 0; i < current_assembler.a_refc; ++i) {
-			char *name;
+			char *namebuf;
 			sym = current_assembler.a_refv[i].sr_sym;
 			if (sym->s_name->k_size == 0)
 				continue; /* Anonymous reference. */
-			name = ascii_printer_allocstr(&strtab,
-			                              sym->s_name->k_name,
-			                              sym->s_name->k_size + 1);
-			if unlikely(!name)
+			namebuf = ascii_printer_allocstr(&strtab,
+			                                 sym->s_name->k_name,
+			                                 sym->s_name->k_size + 1);
+			if unlikely(!namebuf)
 				goto err_xwriter;
 			if unlikely(xddi_putsymbol(&writer, DDI_EXDAT_O_RNAM, i,
-			                           (uint32_t)(name - strtab.ap_string->s_str)))
+			                           (uint32_t)(namebuf - strtab.ap_string->s_str)))
 				goto err_xwriter;
 		}
 		if (current_assembler.a_staticc != 0) {
 			offset = current_assembler.a_refc;
 			/* Generate information about the names of static variables. */
 			for (i = 0; i < current_assembler.a_staticc; ++i) {
-				char *name;
+				char *namebuf;
 				sym = current_assembler.a_staticv[i].ss_sym;
 				if (!sym)
 					continue; /* Anonymous symbol (asm-level). */
 				if (sym->s_name->k_size == 0)
 					continue; /* Anonymous symbol (ast-level). */
-				name = ascii_printer_allocstr(&strtab,
+				namebuf = ascii_printer_allocstr(&strtab,
 				                              sym->s_name->k_name,
 				                              sym->s_name->k_size + 1);
-				if unlikely(!name)
+				if unlikely(!namebuf)
 					goto err_xwriter;
 				if unlikely(xddi_putsymbol(&writer, DDI_EXDAT_O_RNAM, offset + i,
-				                           (uint32_t)(name - strtab.ap_string->s_str)))
+				                           (uint32_t)(namebuf - strtab.ap_string->s_str)))
 					goto err_xwriter;
 			}
 		}

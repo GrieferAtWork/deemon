@@ -294,7 +294,7 @@ nextfmt:
 	case 's':
 	case 'k':
 	case 'r':
-		(void)va_arg(args, char *);
+		(void)va_arg(args, char const *);
 		goto next;
 
 	case 'f':
@@ -807,9 +807,9 @@ nextfmt:
 
 	case 'q':
 	case 's': {
-		char *string;
+		char const *string;
 		size_t string_length;
-		string = va_arg(args, char *);
+		string = va_arg(args, char const *);
 		if (!(flags & F_HASPREC))
 			precision = (size_t)-1;
 #if __SIZEOF_WCHAR_T__ != __SIZEOF_LONG__
@@ -820,7 +820,7 @@ nextfmt:
 
 		default: /* UTF-8 */
 			if (!string)
-				string = (char *)null8;
+				string = (char const *)null8;
 			if (flags & F_FIXBUF) {
 				string_length = precision;
 			} else {
@@ -847,7 +847,7 @@ nextfmt:
 
 		case LENGTH_IXSIZEOF(LENGTH_I8): /* 1-byte */
 			if (!string)
-				string = (char *)null8;
+				string = (char const *)null8;
 			if (flags & F_FIXBUF) {
 				string_length = precision;
 			} else {
@@ -874,7 +874,7 @@ nextfmt:
 
 		case LENGTH_IXSIZEOF(LENGTH_I16): /* 2-byte */
 			if (!string)
-				string = (char *)null16;
+				string = (char const *)null16;
 			if (flags & F_FIXBUF) {
 				string_length = precision;
 			} else {
@@ -901,7 +901,7 @@ nextfmt:
 
 		case LENGTH_IXSIZEOF(LENGTH_I32): /* 4-byte */
 			if (!string)
-				string = (char *)null32;
+				string = (char const *)null32;
 			if (flags & F_FIXBUF) {
 				string_length = precision;
 			} else {
@@ -1468,15 +1468,13 @@ DeeFormat_Repeat(/*ascii*/ Dee_formatprinter_t printer, void *arg,
 	if (printer == &unicode_printer_print) {
 		return unicode_printer_repeatascii((struct unicode_printer *)arg, ch, count);
 	} else if (printer == &ascii_printer_print) {
-		char *buf;
-		buf = ascii_printer_alloc((struct ascii_printer *)arg, count);
+		char *buf = ascii_printer_alloc((struct ascii_printer *)arg, count);
 		if unlikely(!buf)
 			return -1;
 		memset(buf, ch, count);
 		return (Dee_ssize_t)count;
 	} else if (printer == &bytes_printer_print) {
-		unsigned char *buf;
-		buf = bytes_printer_alloc((struct bytes_printer *)arg, count);
+		unsigned char *buf = bytes_printer_alloc((struct bytes_printer *)arg, count);
 		if unlikely(!buf)
 			return -1;
 		memset(buf, ch, count);

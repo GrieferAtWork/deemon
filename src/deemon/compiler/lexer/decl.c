@@ -605,7 +605,7 @@ print_undefined_symbol_name:
 		break;
 
 	case DAST_ATTR: {
-		char *attrname;
+		char const *attrname;
 		attrname = DeeString_AsUtf8((DeeObject *)self->da_attr.a_name);
 		if unlikely(!attrname)
 			goto err;

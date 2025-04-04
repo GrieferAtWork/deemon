@@ -189,7 +189,7 @@ print_self_raw:
 	}	break;
 
 	case ALIGN_ZFILL: {
-		char *my_str;
+		char const *my_str;
 		size_t num_signs;
 		if (alignment_width <= self_len)
 			goto print_self_raw;
@@ -319,7 +319,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 DeeObject_PrintFormat(DeeObject *__restrict self,
                       dformatprinter printer, void *arg,
                       DeeObject *__restrict format_str) {
-	char *utf8_format;
+	char const *utf8_format;
 	utf8_format = DeeString_AsUtf8(format_str);
 	if unlikely(!utf8_format)
 		goto err;

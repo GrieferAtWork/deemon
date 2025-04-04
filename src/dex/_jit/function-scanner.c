@@ -228,7 +228,7 @@ JITLexer_ScanCatchMask(JITLexer *__restrict self) {
 INTERN void DFCALL
 JITLexer_QuickSkipModuleName(JITLexer *__restrict self) {
 	if (self->jl_tok == '.' || self->jl_tok == JIT_KEYWORD) {
-		unsigned char *start, *end;
+		unsigned char const *start, *end;
 		start = self->jl_tokstart;
 		end   = self->jl_tokend;
 		while (end < self->jl_end) {
@@ -237,7 +237,7 @@ JITLexer_QuickSkipModuleName(JITLexer *__restrict self) {
 				continue;
 			if (ch > 0x7f) {
 				uint32_t ch32;
-				unsigned char *temp;
+				unsigned char const *temp;
 				--end;
 				temp = end;
 				ch32 = unicode_readutf8_n(&end, self->jl_end);
@@ -443,7 +443,7 @@ do_yield_suffix:
 
 		/* Check for java-style lambdas */
 		{
-			unsigned char *saved;
+			unsigned char const *saved;
 			saved = self->jl_tokstart;
 			JITLexer_SkipParamList(self);
 			if (self->jl_tok == TOK_ARROW) {
@@ -476,7 +476,7 @@ do_handle_java_lambda:
 
 		/* Normal paren-expression. */
 		for (;;) {
-			unsigned char *start = self->jl_tokstart;
+			unsigned char const *start = self->jl_tokstart;
 			JITLexer_ScanExpression(self, true);
 			if (!self->jl_tok)
 				break;
@@ -532,7 +532,7 @@ do_parse_function:
 			break; /* Empty list */
 		}
 		for (;;) {
-			unsigned char *start;
+			unsigned char const *start;
 			start = self->jl_tokstart;
 			JITLexer_ScanExpression(self, true);
 			if (self->jl_tok == ']') {
@@ -555,7 +555,7 @@ do_parse_function:
 		/* Sequence expression. */
 		JITLexer_Yield(self);
 		for (;;) {
-			unsigned char *start;
+			unsigned char const *start;
 			start = self->jl_tokstart;
 			JITLexer_ScanExpression(self, true);
 			if (self->jl_tok == '}') {
@@ -573,8 +573,8 @@ do_parse_function:
 		char const *tok_begin;
 		size_t tok_length;
 		uint32_t name;
-		tok_begin  = (char *)self->jl_tokstart;
-		tok_length = (size_t)((char *)self->jl_tokend - tok_begin);
+		tok_begin  = (char const *)self->jl_tokstart;
+		tok_length = (size_t)((char const *)self->jl_tokend - tok_begin);
 		switch (tok_length) {
 
 		case 2:
@@ -751,7 +751,7 @@ do_reference_this_and_class:
 		default: break;
 		}
 		{
-			char *sname;
+			char const *sname;
 			size_t ssize;
 			sname = JITLexer_TokPtr(self);
 			ssize = JITLexer_TokLen(self);
@@ -900,7 +900,7 @@ again:
 	case '{':
 		JITLexer_Yield(self);
 		for (;;) {
-			unsigned char *start;
+			unsigned char const *start;
 			start = self->jl_tokstart;
 			JITLexer_ScanStatement(self);
 			if (!self->jl_tok)
@@ -921,8 +921,8 @@ again:
 		char const *tok_begin;
 		size_t tok_length;
 		uint32_t name;
-		tok_begin  = (char *)self->jl_tokstart;
-		tok_length = (size_t)((char *)self->jl_tokend - tok_begin);
+		tok_begin  = (char const *)self->jl_tokstart;
+		tok_length = (size_t)((char const *)self->jl_tokend - tok_begin);
 		switch (tok_length) {
 
 		case 2:

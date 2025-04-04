@@ -1337,8 +1337,8 @@ feature("struct_stat_st_uid", "defined(CONFIG_HAVE_stat)", test: "struct stat st
 feature("struct_stat_st_gid", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_gid = 0; return st.st_gid;");
 feature("struct_stat_st_rdev", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_rdev = 0; return st.st_rdev;");
 feature("struct_stat_st_size", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_size = 0; return st.st_size;");
-feature("struct_stat_st_blksize", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_blksize = 0; return st.st_blksize;");
-feature("struct_stat_st_blocks", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_blocks = 0; return st.st_blocks;");
+feature("struct_stat_st_blksize", "defined(CONFIG_HAVE_stat) && !defined(_MSC_VER)", test: "struct stat st; st.st_blksize = 0; return st.st_blksize;");
+feature("struct_stat_st_blocks", "defined(CONFIG_HAVE_stat) && !defined(_MSC_VER)", test: "struct stat st; st.st_blocks = 0; return st.st_blocks;");
 feature("struct_stat_st_atime", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_atime = 0; return st.st_atime;");
 feature("struct_stat_st_atim", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && defined(__USE_XOPEN2K8)))", test: "struct stat st; st.st_atim.tv_sec = 0; st.st_atim.tv_nsec = 0; return st.st_atim.tv_sec + st.st_atim.tv_nsec;");
 feature("struct_stat_st_atimespec", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat st; st.st_atimespec.tv_sec = 0; st.st_atimespec.tv_nsec = 0; return st.st_atimespec.tv_sec + st.st_atimespec.tv_nsec;");
@@ -9856,14 +9856,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_NO_struct_stat_st_blksize
 #undef CONFIG_HAVE_struct_stat_st_blksize
 #elif !defined(CONFIG_HAVE_struct_stat_st_blksize) && \
-      (defined(CONFIG_HAVE_stat))
+      (defined(CONFIG_HAVE_stat) && !defined(_MSC_VER))
 #define CONFIG_HAVE_struct_stat_st_blksize
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_blocks
 #undef CONFIG_HAVE_struct_stat_st_blocks
 #elif !defined(CONFIG_HAVE_struct_stat_st_blocks) && \
-      (defined(CONFIG_HAVE_stat))
+      (defined(CONFIG_HAVE_stat) && !defined(_MSC_VER))
 #define CONFIG_HAVE_struct_stat_st_blocks
 #endif
 

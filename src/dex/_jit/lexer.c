@@ -35,7 +35,8 @@ INTERN void DFCALL
 JITLexer_Yield(JITLexer *__restrict self) {
 	uniflag_t flags;
 	uint32_t ch32;
-	unsigned char ch, *iter;
+	unsigned char ch;
+	unsigned char const *iter;
 	iter = self->jl_tokend;
 raw_again:
 	self->jl_tokstart = iter;
@@ -60,7 +61,7 @@ raw_again:
 		/* Scan an integer or floating point token. */
 		self->jl_tok = TOK_INT;
 		while (iter < self->jl_end) {
-			unsigned char *start;
+			unsigned char const *start;
 			ch = *iter++;
 			if unlikely(ch > 0x7f) {
 				/* UTF-8 sequence. */
@@ -381,7 +382,7 @@ handle_decimal_power_suffix:
 	case '\'':
 	case '\"':
 		if unlikely(iter >= self->jl_end) {
-			self->jl_tokstart = (unsigned char *)"\"\"";
+			self->jl_tokstart = (unsigned char const *)"\"\"";
 			self->jl_tokend   = self->jl_tokstart + 2;
 		} else {
 			do {
@@ -402,7 +403,7 @@ handle_decimal_power_suffix:
 				/* Raw string literal. */
 				++iter;
 				if unlikely(iter >= self->jl_end) {
-					self->jl_tokstart = (unsigned char *)"r\"\"";
+					self->jl_tokstart = (unsigned char const *)"r\"\"";
 					self->jl_tokend   = self->jl_tokstart + 3;
 				} else {
 					while (iter < self->jl_end && *iter++ != ch)
@@ -502,7 +503,7 @@ scan_keyword:
 				ch = *iter++;
 				if unlikely(ch > 0x7f) {
 					/* UTF-8 sequence. */
-					unsigned char *start;
+					unsigned char const *start;
 					--iter;
 					start = iter;
 					ch32 = unicode_readutf8_n(&iter, self->jl_end);

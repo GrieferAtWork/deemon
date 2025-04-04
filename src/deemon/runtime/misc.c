@@ -1992,7 +1992,7 @@ PUBLIC int _Dee_dprint_enabled = 0;
 #else /* Dee_DPRINT_IS_NOOP */
 PUBLIC int _Dee_dprint_enabled = 2;
 PRIVATE void DCALL determine_is_dprint_enabled(void) {
-	char *env;
+	char const *env;
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HOST_WINDOWS
 	if (!IsDebuggerPresent()) {
@@ -2131,7 +2131,7 @@ extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 PRIVATE void assert_attach_debugger_loop(void) {
 	if (!IsDebuggerPresent()) {
 #if 0
-		char *env = getenv("DEEMON_SILENT");
+		char const *env = getenv("DEEMON_SILENT");
 		if (!env || !*env)
 #endif
 		{

@@ -91,11 +91,11 @@ PRIVATE DEFINE_STRING_EX(str_lpnullrp, "(null)", 0xdd7bf393, 0x1c8ee691eeb242a5)
 /*[[[end]]]*/
 PRIVATE char const dquote[] = { '"' };
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 print_repr_precision(DeeObject *__restrict self, size_t length,
-                     dformatprinter printer,
+                     Dee_formatprinter_t printer,
                      void *arg, unsigned int flags) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	if (!(flags & F_PREFIX)) {
 		result = (*printer)(arg, dquote, 1);
 		if unlikely(result < 0)
@@ -106,20 +106,21 @@ print_repr_precision(DeeObject *__restrict self, size_t length,
 		                            DeeBytes_DATA(self),
 		                            DeeBytes_SIZE(self));
 	} else {
-		void *str = DeeString_WSTR(self);
-		ASSERT(length <= WSTR_LENGTH(str));
+		union dcharptr_const str;
+		str.ptr = DeeString_WSTR(self);
+		ASSERT(length <= WSTR_LENGTH(str.ptr));
 		SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 	
 		CASE_WIDTH_1BYTE:
-			temp = DeeFormat_Quote8(printer, arg, (uint8_t *)str, length);
+			temp = DeeFormat_Quote8(printer, arg, str.cp8, length);
 			break;
 	
 		CASE_WIDTH_2BYTE:
-			temp = DeeFormat_Quote16(printer, arg, (uint16_t *)str, length);
+			temp = DeeFormat_Quote16(printer, arg, str.cp16, length);
 			break;
 	
 		CASE_WIDTH_4BYTE:
-			temp = DeeFormat_Quote32(printer, arg, (uint32_t *)str, length);
+			temp = DeeFormat_Quote32(printer, arg, str.cp32, length);
 			break;
 		}
 	}
@@ -141,14 +142,14 @@ err:
 
 /* Format a given `format' string subject to printf-style formatting rules.
  * NOTE: This is the function called by `operator %' for strings. */
-INTERN dssize_t DCALL
-DeeString_CFormat(dformatprinter printer,
-                  dformatprinter format_printer, void *arg,
+INTERN WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
+DeeString_CFormat(Dee_formatprinter_t printer,
+                  Dee_formatprinter_t format_printer, void *arg,
                   /*utf-8*/ char const *__restrict format, size_t format_len,
                   size_t argc, DeeObject *const *argv) {
-	char *iter, *end, *flush_start;
+	char const *iter, *end, *flush_start;
 	DeeObject *in_arg;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 #define print(p, s)                                     \
 	do {                                                \
 		if unlikely((temp = (*printer)(arg, p, s)) < 0) \
@@ -185,7 +186,7 @@ DeeString_CFormat(dformatprinter printer,
 	while (iter < end) {
 		size_t width, precision;
 		uint16_t flags;
-		char *format_start;
+		char const *format_start;
 		char ch = *iter++;
 		if (ch != '%')
 			continue;

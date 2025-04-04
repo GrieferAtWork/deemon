@@ -834,8 +834,7 @@ handle_null_ob:
 	CASE(STRUCT_CSTR):
 	CASE(STRUCT_CSTR_OPT):
 	CASE(STRUCT_CSTR_EMPTY): {
-		char const *cstr;
-		cstr = FIELD(char *);
+		char const *cstr = FIELD(char const *);
 		if unlikely(!cstr) {
 			switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 

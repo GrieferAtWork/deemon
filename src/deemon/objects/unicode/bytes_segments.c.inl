@@ -56,8 +56,8 @@ DECL_BEGIN
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeBytesObject, b_str) /* [1..1][const] The Bytes object that is being segmented. */
 	size_t                               b_siz; /* [!0][const] The size of a single segment. */
-	DWEAK byte_t                        *b_ptr; /* [1..1][in(DeeBytes_WSTR(b_str))] Pointer to the start of the next segment. */
-	byte_t                              *b_end; /* [1..1][== DeeBytes_WEND(b_str)] End pointer. */
+	DWEAK byte_t const                  *b_ptr; /* [1..1][in(DeeBytes_WSTR(b_str))] Pointer to the start of the next segment. */
+	byte_t const                        *b_end; /* [1..1][== DeeBytes_WEND(b_str)] End pointer. */
 } BytesSegmentsIterator;
 #define READ_PTR(x) atomic_read(&(x)->b_ptr)
 
@@ -113,7 +113,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsegiter_next(BytesSegmentsIterator *__restrict self) {
 	size_t part_size;
-	byte_t *new_ptr, *ptr;
+	byte_t const *new_ptr, *ptr;
 	do {
 		ptr = atomic_read(&self->b_ptr);
 		if (ptr >= self->b_end)
@@ -125,7 +125,7 @@ bsegiter_next(BytesSegmentsIterator *__restrict self) {
 		part_size = (size_t)(self->b_end - ptr);
 		ASSERT(part_size < self->b_siz);
 	}
-	return DeeBytes_NewSubView(self->b_str, ptr, part_size);
+	return DeeBytes_NewSubView(self->b_str, (void *)ptr, part_size);
 }
 
 STATIC_ASSERT(offsetof(BytesSegmentsIterator, b_str) == offsetof(ProxyObject, po_obj));
@@ -264,7 +264,7 @@ bseg_size(BytesSegments *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bseg_contains(BytesSegments *self, DeeObject *other) {
-	byte_t *other_data, *iter, *end;
+	byte_t const *other_data, *iter, *end;
 	DeeBytesObject *str;
 	size_t other_size;
 	if (DeeBytes_Check(other)) {

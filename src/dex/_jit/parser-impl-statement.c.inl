@@ -278,8 +278,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
 		char const *tok_begin;
 		size_t tok_length;
 		uint32_t name;
-		tok_begin  = (char *)self->jl_tokstart;
-		tok_length = (size_t)((char *)self->jl_tokend - tok_begin);
+		tok_begin  = (char const *)self->jl_tokstart;
+		tok_length = (size_t)((char const *)self->jl_tokend - tok_begin);
 		switch (tok_length) {
 
 		case 2:
@@ -504,8 +504,8 @@ do_asm:
 				/* Skip assembly modifiers. */
 				is_asm_goto = false;
 				while (self->jl_tok == JIT_KEYWORD) {
-					unsigned char *kwd_start = self->jl_tokstart;
-					unsigned char *kwd_end   = self->jl_tokend;
+					unsigned char const *kwd_start = self->jl_tokstart;
+					unsigned char const *kwd_end   = self->jl_tokend;
 					while (kwd_start < kwd_end && *kwd_start == '_')
 						++kwd_start;
 					while (kwd_end > kwd_start && kwd_end[-1] == '_')
@@ -576,8 +576,8 @@ again_eval_asm_string:
 					if (self->jl_tok == JIT_RAWSTRING)
 						goto again_eval_asm_rawstring;
 				} else if (self->jl_tok == JIT_RAWSTRING) {
-					unsigned char *str_start;
-					unsigned char *str_end;
+					unsigned char const *str_start;
+					unsigned char const *str_end;
 again_eval_asm_rawstring:
 					str_start = self->jl_tokstart + 2;
 					str_end   = self->jl_tokend - 1;
@@ -735,17 +735,17 @@ get_module_symbol_name(JITLexer *__restrict self,
                        struct jit_import_item *__restrict result,
                        bool is_module) {
 	DeeStringObject *module_name = result->ii_import_name;
-	char *utf8_repr, *symbol_start;
+	char const *utf8_repr, *symbol_start;
 	size_t symbol_length;
 	utf8_repr = DeeString_AsUtf8((DeeObject *)module_name);
 	if unlikely(!utf8_repr)
 		goto err;
-	symbol_start  = (char *)memrend(utf8_repr, '.', WSTR_LENGTH(utf8_repr)) + 1;
+	symbol_start  = (char const *)memrend(utf8_repr, '.', WSTR_LENGTH(utf8_repr)) + 1;
 	symbol_length = (size_t)((utf8_repr + WSTR_LENGTH(utf8_repr)) - symbol_start);
 
 	/* Make sure that the symbol name is valid. */
 	{
-		char *iter, *end;
+		char const *iter, *end;
 		end = (iter = symbol_start) + symbol_length;
 		if unlikely(!symbol_length)
 			goto bad_symbol_name;

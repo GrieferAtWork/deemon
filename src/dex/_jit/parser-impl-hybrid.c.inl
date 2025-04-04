@@ -116,8 +116,9 @@ parse_remainder_before_rbrace_popscope_wrap:
 		if (self->jl_tok == '}')
 			goto parse_remainder_before_rbrace_popscope_wrap;
 		{
-			unsigned char *token_start = self->jl_tokstart;
-			result                     = CALL_SECONDARY(Operand, result);
+			unsigned char const *token_start;
+			token_start = self->jl_tokstart;
+			result = CALL_SECONDARY(Operand, result);
 			if (ISERR(result))
 				goto err;
 			if (token_start != self->jl_tokstart)
@@ -129,8 +130,8 @@ parse_remainder_before_rbrace_popscope_wrap:
 		char const *tok_begin;
 		size_t tok_length;
 		uint32_t name;
-		tok_begin  = (char *)self->jl_tokstart;
-		tok_length = (size_t)((char *)self->jl_tokend - tok_begin);
+		tok_begin  = (char const *)self->jl_tokstart;
+		tok_length = (size_t)((char const *)self->jl_tokend - tok_begin);
 		switch (tok_length) {
 
 		case 2:
@@ -437,7 +438,7 @@ FUNC(HybridAtBrace)(JITLexer *__restrict self,
 	if (was_expression != AST_PARSE_WASEXPR_NO) {
 		/* Try to parse a suffix expression.
 		 * If there was one, then we know that it actually was an expression. */
-		unsigned char *token_start;
+		unsigned char const *token_start;
 		token_start = self->jl_tokstart;
 		result      = CALL_SECONDARY(Operand, result);
 		if (token_start != self->jl_tokstart)
@@ -474,7 +475,7 @@ parse_unary_suffix_if_notexpr:
 		if (was_expression != AST_PARSE_WASEXPR_NO) {
 			/* Try to parse a suffix expression.
 			 * If there was one, then we know that it actually was an expression. */
-			unsigned char *token_start;
+			unsigned char const *token_start;
 			token_start = self->jl_tokstart;
 			result      = CALL_SECONDARY(Operand, result);
 			if (token_start != self->jl_tokstart)
@@ -503,8 +504,8 @@ is_a_statement:
 		char const *tok_begin;
 		size_t tok_length;
 		uint32_t name;
-		tok_begin  = (char *)self->jl_tokstart;
-		tok_length = (size_t)((char *)self->jl_tokend - tok_begin);
+		tok_begin  = (char const *)self->jl_tokstart;
+		tok_length = (size_t)((char const *)self->jl_tokend - tok_begin);
 		switch (tok_length) {
 
 		case 2:

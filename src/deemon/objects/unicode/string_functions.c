@@ -40,6 +40,7 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
+#include <hybrid/typecore.h>
 /**/
 
 #include "../../runtime/kwlist.h"
@@ -58,6 +59,9 @@
 #define SIZE_MAX __SIZE_MAX__
 #endif /* !SIZE_MAX */
 #endif /* !SIZE_MAX */
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -223,7 +227,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 DeeString_ExpandTabs(String *__restrict self, size_t tab_width) {
-	union dcharptr iter, end, flush_start;
+	union dcharptr_const iter, end, flush_start;
 	size_t line_inset              = 0;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
@@ -341,7 +345,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL
 DeeString_UnifyLines(String *self, String *replacement) {
-	union dcharptr iter, end, flush_start;
+	union dcharptr_const iter, end, flush_start;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -434,7 +438,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 DeeString_UnifyLinesLf(String *__restrict self) {
-	union dcharptr iter, end, flush_start;
+	union dcharptr_const iter, end, flush_start;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -579,8 +583,8 @@ DeeString_TestTrait(String *__restrict self,
                     size_t start_index,
                     size_t end_index,
                     uniflag_t flags) {
-	DeeString_Foreach(self, start_index, end_index, iter, end, {
-		if (!(DeeUni_Flags(*iter) & flags))
+	DeeString_Foreach(self, start_index, end_index, ch, {
+		if (!(DeeUni_Flags(ch) & flags))
 			return false;
 	});
 	return true;
@@ -591,8 +595,8 @@ DeeString_TestAnyTrait(String *__restrict self,
                        size_t start_index,
                        size_t end_index,
                        uniflag_t flags) {
-	DeeString_Foreach(self, start_index, end_index, iter, end, {
-		if (DeeUni_Flags(*iter) & flags)
+	DeeString_Foreach(self, start_index, end_index, ch, {
+		if (DeeUni_Flags(ch) & flags)
 			return true;
 	});
 	return false;
@@ -605,8 +609,8 @@ DeeString_IsAscii(String *__restrict self,
 	struct string_utf *utf = self->s_data;
 	if (utf && utf->u_flags & STRING_UTF_FASCII)
 		return true;
-	DeeString_Foreach(self, start_index, end_index, iter, end, {
-		if (*iter > 0x7f)
+	DeeString_Foreach(self, start_index, end_index, ch, {
+		if (ch > 0x7f)
 			return false;
 	});
 	/* Remember if the whole string is ASCII. */
@@ -620,8 +624,8 @@ PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeString_IsAnyAscii(String *__restrict self,
                      size_t start_index,
                      size_t end_index) {
-	DeeString_Foreach(self, start_index, end_index, iter, end, {
-		if (*iter <= 0x7f)
+	DeeString_Foreach(self, start_index, end_index, ch, {
+		if (ch <= 0x7f)
 			return true;
 	});
 	return false;
@@ -633,8 +637,8 @@ DeeString_IsTitle(String *__restrict self,
                   size_t start_index,
                   size_t end_index) {
 	bool was_space = false;
-	DeeString_Foreach(self, start_index, end_index, iter, end, {
-		uniflag_t f = DeeUni_Flags(*iter);
+	DeeString_Foreach(self, start_index, end_index, ch, {
+		uniflag_t f = DeeUni_Flags(ch);
 		if (f & UNICODE_ISSPACE) {
 			was_space = true;
 		} else if (was_space) {
@@ -657,8 +661,8 @@ DeeString_IsSymbol(String *__restrict self,
                    size_t start_index,
                    size_t end_index) {
 	uniflag_t flags = UNICODE_ISSYMSTRT;
-	DeeString_Foreach(self, start_index, end_index, iter, end, {
-		if (!(DeeUni_Flags(*iter) & flags))
+	DeeString_Foreach(self, start_index, end_index, ch, {
+		if (!(DeeUni_Flags(ch) & flags))
 			return false;
 		flags = UNICODE_ISSYMCONT;
 	});
@@ -677,7 +681,7 @@ DeeString_Indent(String *self, String *filler) {
 		return_reference_(filler);
 	{
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
-		union dcharptr flush_start, iter, end;
+		union dcharptr_const flush_start, iter, end;
 		/* Start by inserting the initial, unconditional indentation at the start. */
 		if (unicode_printer_printstring(&printer, (DeeObject *)filler) < 0)
 			goto err;
@@ -796,7 +800,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 mask_containsb(String *__restrict self, uint8_t ch) {
-	union dcharptr str;
+	union dcharptr_const str;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
@@ -815,7 +819,7 @@ mask_containsb(String *__restrict self, uint8_t ch) {
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 mask_containsw(String *__restrict self, uint16_t ch) {
-	union dcharptr str;
+	union dcharptr_const str;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
@@ -836,7 +840,7 @@ mask_containsw(String *__restrict self, uint16_t ch) {
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 mask_containsl(String *__restrict self, uint32_t ch) {
-	union dcharptr str;
+	union dcharptr_const str;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
@@ -863,7 +867,7 @@ DeeString_Dedent(String *__restrict self,
                  size_t max_chars,
                  String *__restrict mask) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	union dcharptr flush_start, iter, end;
+	union dcharptr_const flush_start, iter, end;
 	size_t i;
 	/* Simple case: Nothing should be removed. */
 	if unlikely(!max_chars)
@@ -965,7 +969,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 DeeString_DedentSpc(String *__restrict self,
                     size_t max_chars) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	union dcharptr flush_start, iter, end;
+	union dcharptr_const flush_start, iter, end;
 	size_t i;
 	/* Simple case: Nothing should be removed. */
 	if unlikely(!max_chars)
@@ -1218,7 +1222,7 @@ string_replace(String *__restrict self, size_t argc,
 		goto retself;
 	{
 		struct unicode_printer p = UNICODE_PRINTER_INIT;
-		union dcharptr ptr, mystr, begin, end, findstr;
+		union dcharptr_const ptr, mystr, begin, end, findstr;
 		size_t findlen;
 		SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
 		                                        DeeString_WIDTH(find))) {
@@ -1344,7 +1348,7 @@ string_casereplace(String *__restrict self, size_t argc,
 		goto retself;
 	{
 		struct unicode_printer p = UNICODE_PRINTER_INIT;
-		union dcharptr ptr, mystr, begin, end, findstr;
+		union dcharptr_const ptr, mystr, begin, end, findstr;
 		size_t findlen, match_length;
 		SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
 		                                        DeeString_WIDTH(find))) {
@@ -1484,7 +1488,7 @@ string_bytes(String *self, size_t argc,
              DeeObject *const *argv) {
 	bool allow_invalid = false;
 	size_t mylen, start = 0, end = (size_t)-1;
-	uint8_t *my_bytes;
+	byte_t const *my_bytes;
 	if (argc == 1) {
 		int temp = DeeObject_Bool(argv[0]);
 		if unlikely(temp < 0)
@@ -1499,8 +1503,7 @@ string_bytes(String *self, size_t argc,
 		goto err;
 	mylen = WSTR_LENGTH(my_bytes);
 	CLAMP_SUBSTR(&start, &end, &mylen, empty_substr);
-	return DeeBytes_NewView((DeeObject *)self, my_bytes + start,
-	                        mylen, Dee_BUFFER_FREADONLY);
+	return DeeBytes_NewViewRo((DeeObject *)self, my_bytes + start, mylen);
 empty_substr:
 	return DeeBytes_NewEmpty();
 err:
@@ -1599,7 +1602,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_asdigit(String *self, size_t argc, DeeObject *const *argv) {
 	uint32_t ch;
 	DeeObject *defl = NULL;
-	struct unitraits *trt;
+	struct unitraits const *trt;
 	if (argc == 0) {
 		if unlikely(DeeString_WLEN(self) != 1)
 			goto err_not_single_char;
@@ -1638,7 +1641,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_asxdigit(String *self, size_t argc, DeeObject *const *argv) {
 	uint32_t ch;
 	DeeObject *defl = NULL;
-	struct unitraits *trt;
+	struct unitraits const *trt;
 	if (argc == 0) {
 		if unlikely(DeeString_WLEN(self) != 1)
 			goto err_not_single_char;
@@ -1677,7 +1680,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_asnumeric(String *self, size_t argc, DeeObject *const *argv) {
 	uint32_t ch;
 	DeeObject *defl = NULL;
-	struct unitraits *trt;
+	struct unitraits const *trt;
 	double floatval;
 	if (argc == 0) {
 		if unlikely(DeeString_WLEN(self) != 1)
@@ -1800,7 +1803,7 @@ string_casefold(String *self, size_t argc,
 		goto err;
 	{
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
-		union dcharptr my_iter, my_flush_start, my_end;
+		union dcharptr_const my_iter, my_flush_start, my_end;
 		uint32_t buf[UNICODE_FOLDED_MAX];
 		size_t foldlen;
 		SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
@@ -1928,7 +1931,7 @@ string_find(String *self, size_t argc,
 	String *needle;
 	size_t start = 0, end = (size_t)-1;
 	size_t result;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	size_t mylen;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":find",
@@ -1996,7 +1999,7 @@ string_rfind(String *self, size_t argc,
 	String *needle;
 	size_t start = 0, end = (size_t)-1;
 	size_t result;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	size_t mylen;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":rfind",
@@ -2064,7 +2067,7 @@ string_index(String *self, size_t argc,
 	String *needle;
 	size_t start = 0, end = (size_t)-1;
 	size_t result;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	size_t mylen;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":index",
@@ -2133,7 +2136,7 @@ string_rindex(String *self, size_t argc,
 	String *needle;
 	size_t start = 0, end = (size_t)-1;
 	size_t result;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	size_t mylen;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":rindex",
@@ -2238,7 +2241,7 @@ struct string_findany_data {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 string_findany_cb(void *arg, DeeObject *elem) {
 	struct string_findany_data *data = (struct string_findany_data *)arg;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	size_t search_size;
 	if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
 		goto err;
@@ -2373,7 +2376,7 @@ struct string_casefindany_data {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 string_casefindany_cb(void *arg, DeeObject *elem) {
 	struct string_casefindany_data *data = (struct string_casefindany_data *)arg;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	size_t search_size, match_length;
 	if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
 		goto err;
@@ -2517,7 +2520,7 @@ struct string_rfindany_data {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 string_rfindany_cb(void *arg, DeeObject *elem) {
 	struct string_rfindany_data *data = (struct string_rfindany_data *)arg;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
 		goto err;
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(data->srfad_self),
@@ -2641,7 +2644,7 @@ struct string_caserfindany_data {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 string_caserfindany_cb(void *arg, DeeObject *elem) {
 	struct string_caserfindany_data *data = (struct string_caserfindany_data *)arg;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	size_t match_length;
 	if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
 		goto err;
@@ -2812,7 +2815,7 @@ string_casefind(String *self, size_t argc,
 	String *needle;
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":casefind",
 	                    &needle, &start, &end))
@@ -2882,7 +2885,7 @@ string_caserfind(String *self, size_t argc,
 	String *needle;
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":caserfind",
 	                    &needle, &start, &end))
@@ -2952,7 +2955,7 @@ string_caseindex(String *self, size_t argc,
 	String *needle;
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":caseindex",
 	                    &needle, &start, &end))
@@ -3023,7 +3026,7 @@ string_caserindex(String *self, size_t argc,
 	String *needle;
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
-	union dcharptr ptr, lhs, rhs;
+	union dcharptr_const ptr, lhs, rhs;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":caserindex",
 	                    &needle, &start, &end))
@@ -3092,7 +3095,7 @@ INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 string_getsubstr(String *__restrict self,
                  size_t start, size_t end) {
 	DREF String *result;
-	union dcharptr str;
+	union dcharptr_const str;
 	size_t len;
 	str.ptr = DeeString_WSTR(self);
 	len     = WSTR_LENGTH(str.ptr);
@@ -3136,7 +3139,7 @@ string_startswith(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
 	size_t begin = 0, end = (size_t)-1;
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":startswith",
@@ -3221,7 +3224,7 @@ string_endswith(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
 	size_t begin = 0, end = (size_t)-1;
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":endswith",
@@ -3313,7 +3316,7 @@ string_casestartswith(String *self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
 	size_t begin = 0, end = (size_t)-1;
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":casestartswith",
@@ -3376,7 +3379,7 @@ string_caseendswith(String *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
 	size_t begin = 0, end = (size_t)-1;
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":caseendswith",
@@ -3444,7 +3447,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_decode(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *codec;
-	char *errors            = NULL;
+	char const *errors      = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__codec_errors, "o|s:decode", &codec, &errors))
 		goto err;
@@ -3466,7 +3469,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_encode(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *codec;
-	char *errors            = NULL;
+	char const *errors      = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__codec_errors, "o|s:encode", &codec, &errors))
 		goto err;
@@ -3534,7 +3537,8 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 	size_t fill_front, fill_back;
 	String *filler_ob = NULL;
 	DREF String *result;
-	union dcharptr dst, buf, my_str, fl_str;
+	union dcharptr dst, buf;
+	union dcharptr_const my_str, fl_str;
 	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:center", &result_length, &filler_ob))
 		goto err;
 	my_len = DeeString_WLEN(self);
@@ -3558,7 +3562,7 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 			result = (DREF String *)DeeString_NewBuffer(result_length);
 			if unlikely(!result)
 				goto err;
-			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
+			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
 			dst.cp8 = mempfilb(dst.cp8, fill_front, fl_str.cp8, fl_len);
 			dst.cp8 = mempcpyb(dst.cp8, my_str.cp8, my_len);
 			mempfilb(dst.cp8, fill_back, fl_str.cp8, fl_len);
@@ -3610,7 +3614,7 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 			result     = (DREF String *)DeeString_NewBuffer(result_length);
 			if unlikely(!result)
 				goto err;
-			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
+			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
 			dst.cp8 = mempsetb(dst.cp8, UNICODE_SPACE, fill_front);
 			dst.cp8 = mempcpyb(dst.cp8, my_str.cp8, my_len);
 			memsetb(dst.cp8, UNICODE_SPACE, fill_back);
@@ -3651,7 +3655,8 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 	size_t result_length, my_len, fl_len, fill_back;
 	String *filler_ob = NULL;
 	DREF String *result;
-	union dcharptr dst, buf, my_str, fl_str;
+	union dcharptr dst, buf;
+	union dcharptr_const my_str, fl_str;
 	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:ljust", &result_length, &filler_ob))
 		goto err;
 	my_len = DeeString_WLEN(self);
@@ -3673,7 +3678,7 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 			result = (DREF String *)DeeString_NewBuffer(result_length);
 			if unlikely(!result)
 				goto err;
-			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
+			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
 			dst.cp8 = mempcpyb(dst.cp8, my_str.cp8, my_len);
 			mempfilb(dst.cp8, fill_back, fl_str.cp8, fl_len);
 			break;
@@ -3722,7 +3727,7 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 			result     = (DREF String *)DeeString_NewBuffer(result_length);
 			if unlikely(!result)
 				goto err;
-			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
+			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
 			dst.cp8 = mempcpyb(dst.cp8, my_str.cp8, my_len);
 			memsetb(dst.cp8, UNICODE_SPACE, fill_back);
 			break;
@@ -3760,7 +3765,8 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 	size_t result_length, my_len, fl_len, fill_front;
 	String *filler_ob = NULL;
 	DREF String *result;
-	union dcharptr dst, buf, my_str, fl_str;
+	union dcharptr dst, buf;
+	union dcharptr_const my_str, fl_str;
 	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:rjust", &result_length, &filler_ob))
 		goto err;
 	my_len = DeeString_WLEN(self);
@@ -3782,7 +3788,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 			result = (DREF String *)DeeString_NewBuffer(result_length);
 			if unlikely(!result)
 				goto err;
-			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
+			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
 			dst.cp8 = mempfilb(dst.cp8, fill_front, fl_str.cp8, fl_len);
 			memcpyb(dst.cp8, my_str.cp8, my_len);
 			break;
@@ -3831,7 +3837,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 			result     = (DREF String *)DeeString_NewBuffer(result_length);
 			if unlikely(!result)
 				goto err;
-			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
+			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
 			dst.cp8 = mempsetb(dst.cp8, UNICODE_SPACE, fill_front);
 			memcpyb(dst.cp8, my_str.cp8, my_len);
 			break;
@@ -3870,7 +3876,7 @@ string_count(String *self, size_t argc,
 	String *needle;
 	size_t result = 0;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr lhs, lep, rhs;
+	union dcharptr_const lhs, lep, rhs;
 	size_t mylen;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":count",
@@ -3943,7 +3949,7 @@ string_casecount(String *self, size_t argc,
 	String *needle;
 	size_t result = 0;
 	size_t start = 0, end = (size_t)-1, match_length;
-	union dcharptr lhs, lep, rhs;
+	union dcharptr_const lhs, lep, rhs;
 	size_t mylen;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":casecount",
@@ -4018,7 +4024,7 @@ string_contains_f(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr lhs, rhs;
+	union dcharptr_const lhs, rhs;
 	size_t mylen;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":contains",
@@ -4079,7 +4085,7 @@ string_casecontains_f(String *self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr lhs, rhs;
+	union dcharptr_const lhs, rhs;
 	size_t mylen;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":casecontains",
@@ -4140,7 +4146,8 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 	size_t result_length, my_len, fl_len, fill_front;
 	String *filler_ob = NULL;
 	DREF String *result;
-	union dcharptr dst, buf, my_str, fl_str;
+	union dcharptr dst, buf;
+	union dcharptr_const my_str, fl_str;
 	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:zfill", &result_length, &filler_ob))
 		goto err;
 	my_len = DeeString_WLEN(self);
@@ -4162,7 +4169,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 			result = (DREF String *)DeeString_NewBuffer(result_length);
 			if unlikely(!result)
 				goto err;
-			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
+			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
 			while (my_len && DeeUni_IsSign(my_str.cp8[0])) {
 				*dst.cp8++ = *my_str.cp8++;
 				--my_len;
@@ -4223,7 +4230,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 			result     = (DREF String *)DeeString_NewBuffer(result_length);
 			if unlikely(!result)
 				goto err;
-			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
+			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
 			while (my_len && DeeUni_IsSign(my_str.cp8[0])) {
 				*dst.cp8++ = *my_str.cp8++;
 				--my_len;
@@ -4343,7 +4350,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
 partition_pack_notfoundb(String *__restrict self,
-                         uint8_t *lhs,
+                         uint8_t const *lhs,
                          size_t lhs_length) {
 	DREF String *lhs_string;
 	DREF DeeTupleObject *result;
@@ -4372,7 +4379,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
 partition_pack_notfoundw(String *__restrict self,
-                         uint16_t *lhs,
+                         uint16_t const *lhs,
                          size_t lhs_length) {
 	DREF String *lhs_string;
 	DREF DeeTupleObject *result;
@@ -4401,7 +4408,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
 partition_pack_notfoundl(String *__restrict self,
-                         uint32_t *lhs,
+                         uint32_t const *lhs,
                          size_t lhs_length) {
 	DREF String *lhs_string;
 	DREF DeeTupleObject *result;
@@ -4430,15 +4437,15 @@ err:
 
 PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 partition_packb(String *__restrict other,
-                uint8_t *lhs, size_t lhs_length,
-                uint8_t *ptr, size_t ptr_length) {
+                uint8_t const *lhs, size_t lhs_length,
+                uint8_t const *ptr, size_t ptr_length) {
 	DREF String *prestr, *poststr;
 	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
 	if (ptr == lhs) {
-		uint8_t *post_ptr = ptr + ptr_length;
+		uint8_t const *post_ptr = ptr + ptr_length;
 		poststr = (DREF String *)DeeString_New1Byte(post_ptr,
 		                                            lhs_length - ptr_length);
 		if unlikely(!poststr)
@@ -4453,8 +4460,8 @@ partition_packb(String *__restrict other,
 		poststr = (DREF String *)Dee_EmptyString;
 		Dee_Incref(poststr);
 	} else {
-		uint8_t *post_ptr = ptr + ptr_length;
-		prestr            = (DREF String *)DeeString_New1Byte(lhs, ptr - lhs);
+		uint8_t const *post_ptr = ptr + ptr_length;
+		prestr = (DREF String *)DeeString_New1Byte(lhs, ptr - lhs);
 		if unlikely(!prestr)
 			goto err_r;
 		poststr = (DREF String *)DeeString_New1Byte(post_ptr, (lhs + lhs_length) - post_ptr);
@@ -4476,15 +4483,15 @@ err:
 
 PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 partition_packw(String *__restrict other,
-                uint16_t *lhs, size_t lhs_length,
-                uint16_t *ptr, size_t ptr_length) {
+                uint16_t const *lhs, size_t lhs_length,
+                uint16_t const *ptr, size_t ptr_length) {
 	DREF String *prestr, *poststr;
 	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
 	if (ptr == lhs) {
-		uint16_t *post_ptr = ptr + ptr_length;
+		uint16_t const *post_ptr = ptr + ptr_length;
 		poststr = (DREF String *)DeeString_New2Byte(post_ptr,
 		                                            lhs_length - ptr_length);
 		if unlikely(!poststr)
@@ -4499,8 +4506,8 @@ partition_packw(String *__restrict other,
 		poststr = (DREF String *)Dee_EmptyString;
 		Dee_Incref(poststr);
 	} else {
-		uint16_t *post_ptr = ptr + ptr_length;
-		prestr             = (DREF String *)DeeString_New2Byte(lhs, ptr - lhs);
+		uint16_t const *post_ptr = ptr + ptr_length;
+		prestr = (DREF String *)DeeString_New2Byte(lhs, ptr - lhs);
 		if unlikely(!prestr)
 			goto err_r;
 		poststr = (DREF String *)DeeString_New2Byte(post_ptr, (lhs + lhs_length) - post_ptr);
@@ -4522,15 +4529,15 @@ err:
 
 PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 partition_packl(String *__restrict other,
-                uint32_t *lhs, size_t lhs_length,
-                uint32_t *ptr, size_t ptr_length) {
+                uint32_t const *lhs, size_t lhs_length,
+                uint32_t const *ptr, size_t ptr_length) {
 	DREF String *prestr, *poststr;
 	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
 	if (ptr == lhs) {
-		uint32_t *post_ptr = ptr + ptr_length;
+		uint32_t const *post_ptr = ptr + ptr_length;
 		poststr = (DREF String *)DeeString_New4Byte(post_ptr,
 		                                            lhs_length - ptr_length);
 		if unlikely(!poststr)
@@ -4545,8 +4552,8 @@ partition_packl(String *__restrict other,
 		poststr = (DREF String *)Dee_EmptyString;
 		Dee_Incref(poststr);
 	} else {
-		uint32_t *post_ptr = ptr + ptr_length;
-		prestr             = (DREF String *)DeeString_New4Byte(lhs, ptr - lhs);
+		uint32_t const *post_ptr = ptr + ptr_length;
+		prestr = (DREF String *)DeeString_New4Byte(lhs, ptr - lhs);
 		if unlikely(!prestr)
 			goto err_r;
 		poststr = (DREF String *)DeeString_New4Byte(post_ptr, (lhs + lhs_length) - post_ptr);
@@ -4567,9 +4574,9 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeTupleObject *DCALL
-partition_packb_fold(uint8_t *__restrict lhs, size_t lhs_length,
-                     uint8_t *__restrict mtc, size_t mtc_length,
-                     uint8_t *__restrict rhs, size_t rhs_length) {
+partition_packb_fold(uint8_t const *__restrict lhs, size_t lhs_length,
+                     uint8_t const *__restrict mtc, size_t mtc_length,
+                     uint8_t const *__restrict rhs, size_t rhs_length) {
 	DREF String *temp;
 	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
@@ -4599,9 +4606,9 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeTupleObject *DCALL
-partition_packw_fold(uint16_t *__restrict lhs, size_t lhs_length,
-                     uint16_t *__restrict mtc, size_t mtc_length,
-                     uint16_t *__restrict rhs, size_t rhs_length) {
+partition_packw_fold(uint16_t const *__restrict lhs, size_t lhs_length,
+                     uint16_t const *__restrict mtc, size_t mtc_length,
+                     uint16_t const *__restrict rhs, size_t rhs_length) {
 	DREF String *temp;
 	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
@@ -4631,9 +4638,9 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeTupleObject *DCALL
-partition_packl_fold(uint32_t *__restrict lhs, size_t lhs_length,
-                     uint32_t *__restrict mtc, size_t mtc_length,
-                     uint32_t *__restrict rhs, size_t rhs_length) {
+partition_packl_fold(uint32_t const *__restrict lhs, size_t lhs_length,
+                     uint32_t const *__restrict mtc, size_t mtc_length,
+                     uint32_t const *__restrict rhs, size_t rhs_length) {
 	DREF String *temp;
 	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
@@ -4666,7 +4673,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_partition(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
-	union dcharptr lhs, rhs, ptr;
+	union dcharptr_const lhs, rhs, ptr;
 	size_t mylen, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":partition",
@@ -4747,7 +4754,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_rpartition(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
-	union dcharptr lhs, rhs, ptr;
+	union dcharptr_const lhs, rhs, ptr;
 	size_t mylen, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":rpartition",
@@ -4828,7 +4835,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_casepartition(String *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
-	union dcharptr lhs, rhs, ptr;
+	union dcharptr_const lhs, rhs, ptr;
 	size_t mylen, start = 0, end = (size_t)-1, match_length;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":casepartition",
@@ -4915,7 +4922,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_caserpartition(String *self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
-	union dcharptr lhs, rhs, ptr;
+	union dcharptr_const lhs, rhs, ptr;
 	size_t mylen, start = 0, end = (size_t)-1, match_length;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
 	                    "o|" UNPdSIZ UNPdSIZ ":caserpartition",
@@ -6014,7 +6021,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 	int result;
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "vercompare"))
@@ -6112,7 +6119,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	int32_t result;
 	struct compare_args args;
@@ -6211,7 +6218,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	dssize_t result;
 	struct compare_args args;
@@ -6312,7 +6319,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	dssize_t result;
 	struct compare_args args;
@@ -6413,7 +6420,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_common(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len, result = 0;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "common"))
@@ -6538,7 +6545,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rcommon(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len, result = 0;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "rcommon"))
@@ -6669,7 +6676,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len, result = 0;
 	struct compare_args args;
 	union {
@@ -6793,7 +6800,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len, result = 0;
 	struct compare_args args;
 	union {
@@ -6918,7 +6925,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	int64_t result;
 	struct compare_args args;
@@ -7017,7 +7024,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	bool result;
 	struct compare_args args;
@@ -7116,7 +7123,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	int result;
 	struct compare_args args;
@@ -7223,7 +7230,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr my_str, ot_str;
+	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
 	int result;
 	struct compare_args args;
@@ -7422,7 +7429,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_findmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, ptr;
+	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":findmatch", &s_open, &s_clos, &start, &end))
@@ -7515,7 +7522,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_indexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, ptr;
+	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":indexmatch", &s_open, &s_clos, &start, &end))
@@ -7610,7 +7617,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, ptr;
+	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":casefindmatch", &s_open, &s_clos, &start, &end))
@@ -7706,7 +7713,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caseindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, ptr;
+	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caseindexmatch", &s_open, &s_clos, &start, &end))
@@ -7804,7 +7811,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, ptr;
+	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":rfindmatch", &s_open, &s_clos, &start, &end))
@@ -7897,7 +7904,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, ptr;
+	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":rindexmatch", &s_open, &s_clos, &start, &end))
@@ -7992,7 +7999,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, ptr;
+	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caserfindmatch", &s_open, &s_clos, &start, &end))
@@ -8088,7 +8095,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, ptr;
+	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caserindexmatch", &s_open, &s_clos, &start, &end))
@@ -8187,7 +8194,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_partitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
+	union dcharptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":partitionmatch", &s_open, &s_clos, &start, &end))
@@ -8342,7 +8349,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
+	union dcharptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":rpartitionmatch", &s_open, &s_clos, &start, &end))
@@ -8498,7 +8505,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casepartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
+	union dcharptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len, match_length;
 	DREF DeeTupleObject *result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":casepartitionmatch", &s_open, &s_clos, &start, &end))
@@ -8659,7 +8666,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
+	union dcharptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
 	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caserpartitionmatch", &s_open, &s_clos, &start, &end))
@@ -9956,7 +9963,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_forcecopy(String *self, size_t argc, DeeObject *const *argv) {
-	union dcharptr wstr;
+	union dcharptr_const wstr;
 	size_t wlen;
 	_DeeArg_Unpack0(err, argc, argv, "__forcecopy__");
 	wstr.ptr = DeeString_WSTR(self);
@@ -11776,22 +11783,24 @@ string_mul(String *self, DeeObject *other) {
 
 	CASE_WIDTH_1BYTE: {
 		DREF String *result;
-		uint8_t *dst, *src;
+		uint8_t *dst;
+		uint8_t const *src;
 		my_length = DeeString_SIZE(self);
 		if (OVERFLOW_UMUL(my_length, repeat, &total_length))
 			goto err_overflow;
 		result = (DREF String *)DeeString_NewBuffer(total_length);
 		if unlikely(!result)
 			goto err;
-		src = (uint8_t *)DeeString_STR(self);
 		dst = (uint8_t *)DeeString_STR(result);
+		src = (uint8_t const *)DeeString_STR(self);
 		while (repeat--)
 			dst = mempcpyb(dst, src, my_length);
 		return result;
 	}	break;
 
 	CASE_WIDTH_2BYTE: {
-		uint16_t *dst, *src, *str;
+		uint16_t *dst, *str;
+		uint16_t const *src;
 		src       = DeeString_Get2Byte((DeeObject *)self);
 		my_length = WSTR_LENGTH(src);
 		if (OVERFLOW_UMUL(my_length, repeat, &total_length))
@@ -11805,7 +11814,8 @@ string_mul(String *self, DeeObject *other) {
 	}	break;
 
 	CASE_WIDTH_4BYTE: {
-		uint32_t *dst, *src, *str;
+		uint32_t *dst, *str;
+		uint32_t const *src;
 		src       = DeeString_Get4Byte((DeeObject *)self);
 		my_length = WSTR_LENGTH(src);
 		if (OVERFLOW_UMUL(my_length, repeat, &total_length))
@@ -11837,7 +11847,7 @@ string_mod(String *__restrict self, DeeObject *__restrict args) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	DeeObject *const *argv;
 	size_t argc;
-	char *format_str;
+	char const *format_str;
 	/* C-style string formating */
 	if (DeeTuple_Check(args)) {
 		argv = DeeTuple_ELEM(args);
@@ -11890,7 +11900,7 @@ INTERN struct type_math string_math = {
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 string_eq_bytes(String *__restrict self,
                 DeeBytesObject *__restrict other) {
-	union dcharptr my_str;
+	union dcharptr_const my_str;
 	uint8_t *bytes_data;
 	size_t bytes_size;
 	bytes_data = DeeBytes_DATA(other);
@@ -11981,7 +11991,7 @@ nope:
 /* INTERN, because also used in `/src/deemon/objects/string.c' */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_contains(String *self, DeeObject *some_object) {
-	union dcharptr str, other, ptr;
+	union dcharptr_const str, other, ptr;
 	if (DeeBytes_Check(some_object)) {
 		size_t other_len = DeeBytes_SIZE(some_object);
 		other.cp8        = DeeBytes_DATA(some_object);
@@ -12048,7 +12058,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 Dee_unicode_printer_memchr(struct unicode_printer *__restrict self,
                            uint32_t chr, size_t start, size_t length) {
-	union dcharptr ptr, str;
+	union dcharptr_const ptr, str;
 	size_t result;
 	str.ptr = self->up_buffer;
 	ASSERT(start + length <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0));
@@ -12089,7 +12099,7 @@ not_found:
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 Dee_unicode_printer_memrchr(struct unicode_printer *__restrict self,
                             uint32_t chr, size_t start, size_t length) {
-	union dcharptr ptr, str;
+	union dcharptr_const ptr, str;
 	size_t result;
 	str.ptr = self->up_buffer;
 	ASSERT(start + length <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0));
@@ -12127,8 +12137,9 @@ not_found:
 	return (size_t)-1;
 }
 
-PUBLIC void (DCALL Dee_unicode_printer_memmove)(struct unicode_printer *__restrict self,
-                                                size_t dst, size_t src, size_t length) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_unicode_printer_memmove)(struct unicode_printer *__restrict self,
+                                    size_t dst, size_t src, size_t length) {
 	union dcharptr str;
 	str.ptr = self->up_buffer;
 	ASSERT(dst + length <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0));
@@ -12154,7 +12165,7 @@ PUBLIC void (DCALL Dee_unicode_printer_memmove)(struct unicode_printer *__restri
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL Dee_unicode_printer_memcmp8)(struct unicode_printer const *__restrict self,
                                     uint8_t const *rhs, size_t lhs_start, size_t num_chars) {
-	union dcharptr str;
+	union dcharptr_const str;
 	str.ptr = self->up_buffer;
 	ASSERT(lhs_start + num_chars >= lhs_start);
 	ASSERT(lhs_start + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
@@ -12192,7 +12203,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL Dee_unicode_printer_memcmp16)(struct unicode_printer const *__restrict self,
                                      uint16_t const *rhs, size_t lhs_start, size_t num_chars) {
-	union dcharptr str;
+	union dcharptr_const str;
 	str.ptr = self->up_buffer;
 	ASSERT(lhs_start + num_chars >= lhs_start);
 	ASSERT(lhs_start + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
@@ -12230,7 +12241,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL Dee_unicode_printer_memcmp32)(struct unicode_printer const *__restrict self,
                                      uint32_t const *rhs, size_t lhs_start, size_t num_chars) {
-	union dcharptr str;
+	union dcharptr_const str;
 	str.ptr = self->up_buffer;
 	ASSERT(lhs_start + num_chars >= lhs_start);
 	ASSERT(lhs_start + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);

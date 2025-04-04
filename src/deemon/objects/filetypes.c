@@ -892,11 +892,11 @@ writer_init(Writer *__restrict self, size_t argc, DeeObject *const *argv) {
 	self->w_printer.up_flags = (uint8_t)DeeString_WIDTH(init_string);
 	if (self->w_printer.up_flags == STRING_WIDTH_1BYTE) {
 		self->w_string            = NULL;
-		self->w_printer.up_buffer = DeeString_STR(init_string);
+		self->w_printer.up_buffer = (void *)DeeString_STR(init_string);
 		self->w_printer.up_length = DeeString_SIZE(init_string);
 	} else {
 		self->w_string            = init_string;
-		self->w_printer.up_buffer = DeeString_WSTR(init_string);
+		self->w_printer.up_buffer = (void *)DeeString_WSTR(init_string);
 		self->w_printer.up_length = WSTR_LENGTH(self->w_printer.up_buffer);
 	}
 	Dee_Incref(init_string);
@@ -1009,11 +1009,11 @@ again:
 			me->w_printer.up_flags = (uint8_t)DeeString_WIDTH(result);
 			if (me->w_printer.up_flags == STRING_WIDTH_1BYTE) {
 				me->w_string            = NULL;
-				me->w_printer.up_buffer = DeeString_STR(result);
+				me->w_printer.up_buffer = (void *)DeeString_STR(result);
 				me->w_printer.up_length = DeeString_SIZE(result);
 			} else {
 				me->w_string            = result;
-				me->w_printer.up_buffer = DeeString_WSTR(result);
+				me->w_printer.up_buffer = (void *)DeeString_WSTR(result);
 				me->w_printer.up_length = WSTR_LENGTH(me->w_printer.up_buffer);
 			}
 			DeeFileWriter_LockDowngrade(me);
@@ -1076,11 +1076,11 @@ writer_setstring(Writer *__restrict self,
 	self->w_printer.up_flags = (uint8_t)DeeString_WIDTH(value);
 	if (self->w_printer.up_flags == STRING_WIDTH_1BYTE) {
 		self->w_string            = NULL;
-		self->w_printer.up_buffer = DeeString_STR(value);
+		self->w_printer.up_buffer = (void *)DeeString_STR(value);
 		self->w_printer.up_length = DeeString_SIZE(value);
 	} else {
 		self->w_string            = value;
-		self->w_printer.up_buffer = DeeString_WSTR(value);
+		self->w_printer.up_buffer = (void *)DeeString_WSTR(value);
 		self->w_printer.up_length = WSTR_LENGTH(self->w_printer.up_buffer);
 	}
 	DeeFileWriter_LockEndWrite(self);

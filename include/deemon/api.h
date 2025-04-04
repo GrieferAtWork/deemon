@@ -783,10 +783,10 @@ DECL_END
 #define Dee_DOC_REF(name)    INTDEF char const name[]
 #define Dee_DOC_GET(name)    name
 #else /* !CONFIG_NO_DOC */
-#define Dee_DOC(x)           ((char *)NULL)
+#define Dee_DOC(x)           ((char const *)NULL)
 #define Dee_DOC_DEF(name, x) /* nothing */
 #define Dee_DOC_REF(name)    /* nothing */
-#define Dee_DOC_GET(name)    ((char *)NULL)
+#define Dee_DOC_GET(name)    ((char const *)NULL)
 #endif /* CONFIG_NO_DOC */
 
 #ifdef DEE_SOURCE

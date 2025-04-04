@@ -25,6 +25,7 @@
 #include "libposix.h"
 /**/
 
+#include <deemon/system.h> /* DEE_SYSTEM_FS_DRIVES */
 #include <hybrid/debug-alignment.h>
 /**/
 
@@ -57,7 +58,7 @@ DECL_BEGIN
 #define posix_gethostname_USE_nt_GetComputerName
 #elif defined(CONFIG_HAVE_gethostname)
 #define posix_gethostname_USE_gethostname
-#elif !defined(DEESYSTEM_FILE_USE_STUB)
+#elif !defined(DEESYSTEM_FILE_USE_STUB) && !defined(DEE_SYSTEM_FS_DRIVES)
 #define posix_gethostname_USE_read_etc_hostname
 #else /* ... */
 #define posix_gethostname_USE_STUB
@@ -414,7 +415,7 @@ err:
 	char const *utf8_path;
 #endif /* posix_chdir_USE_chdir */
 #ifdef posix_chdir_USE_wchdir
-	dwchar_t const *wide_path;
+	Dee_wchar_t const *wide_path;
 #endif /* ..posix_chdir_USE_wchdir */
 
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -432,9 +433,9 @@ err:
 
 EINTR_ENOMEM_LABEL(again)
 #ifdef posix_chdir_USE_chdir
-	if unlikely(chdir(utf8_path) != 0)
+	if unlikely(chdir((char *)utf8_path) != 0)
 #elif defined(posix_chdir_USE_wchdir)
-	if unlikely(wchdir((wchar_t const *)wide_path) != 0)
+	if unlikely(wchdir((wchar_t *)wide_path) != 0)
 #endif /* ... */
 	{
 		int error = DeeSystem_GetErrno();
@@ -564,14 +565,14 @@ FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_fchdirat_f_impl(De
 #ifdef posix_fchdirat_USE_fchdirat
 	if (!DeeString_Check(dfd) && DeeString_Check(path)) {
 		int os_dfd = DeeUnixSystem_GetFD(dfd);
-		char *utf8_path;
+		char const *utf8_path;
 		if unlikely(os_dfd == -1)
 			goto err;
 		utf8_path = DeeString_AsUtf8(path);
 		if unlikely(!utf8_path)
 			goto err;
 EINTR_LABEL(again)
-		if (fchdirat(os_dfd, utf8_path, atflags) == 0) {
+		if (fchdirat(os_dfd, (char *)utf8_path, atflags) == 0) {
 			if (DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD))
 				goto err;
 			return_none;

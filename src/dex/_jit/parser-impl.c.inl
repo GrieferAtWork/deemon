@@ -209,13 +209,14 @@ again_eval_expression:
 		JITLexer_Yield(self);
 		if (self->jl_tok == JIT_KEYWORD) {
 			first_label_name = (char const *)self->jl_tokstart;
-			first_label_size = (size_t)(self->jl_tokend - (unsigned char *)first_label_name);
+			first_label_size = (size_t)(self->jl_tokend -
+			                            (unsigned char const *)first_label_name);
 			JITLexer_Yield(self);
 			if (self->jl_tok == ':') {
 				JITLexer_Yield(self);
 				goto again_eval_expression;
 			}
-			JITLexer_YieldAt(self, (unsigned char *)first_label_name);
+			JITLexer_YieldAt(self, (unsigned char const *)first_label_name);
 		}
 	}
 #else /* JIT_EVAL */
@@ -225,7 +226,7 @@ again_skip_expression:
 	if (self->jl_tok == ',') {
 		JITLexer_Yield(self);
 		if (self->jl_tok == JIT_KEYWORD) {
-			unsigned char *start = self->jl_tokstart;
+			unsigned char const *start = self->jl_tokstart;
 			JITLexer_Yield(self);
 			if (self->jl_tok == ':') {
 				JITLexer_Yield(self);
@@ -269,8 +270,8 @@ JITLexer_SkipArgumentList(JITLexer *__restrict self)
 		if unlikely(!*p_kwds)
 			goto err_r;
 	} else if (self->jl_tok == JIT_KEYWORD) {
-		unsigned char *name = self->jl_tokstart;
-		size_t size         = (size_t)(self->jl_tokend - name);
+		unsigned char const *name = self->jl_tokstart;
+		size_t size               = (size_t)(self->jl_tokend - name);
 		JITLexer_Yield(self);
 		if unlikely(self->jl_tok != ':') {
 			JITLexer_YieldAt(self, name);
@@ -295,7 +296,7 @@ JITLexer_SkipArgumentList(JITLexer *__restrict self)
 	} else {
 skip_keyword_label:
 		if (self->jl_tok == JIT_KEYWORD) {
-			unsigned char *start = self->jl_tokstart;
+			unsigned char const *start = self->jl_tokstart;
 			JITLexer_Yield(self);
 			if unlikely(self->jl_tok != ':') {
 				JITLexer_YieldAt(self, start);
@@ -338,7 +339,7 @@ DEFINE_PRIMARY(YieldAndParseUnaryKeywordOperand) {
 DEFINE_SECONDARY(CastOperand) {
 	RETURN_TYPE result;
 	RETURN_TYPE merge;
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	(void)flags;
 	IF_EVAL(pos = self->jl_tokstart;)
 	switch (self->jl_tok) {
@@ -433,7 +434,7 @@ not_a_cast:
 #endif /* !JIT_EVAL */
 			break;
 		} else if (self->jl_tok == JIT_KEYWORD) {
-			unsigned char *label_name = self->jl_tokstart;
+			unsigned char const *label_name = self->jl_tokstart;
 #ifdef JIT_EVAL
 			size_t label_size = (size_t)(self->jl_tokend - label_name);
 #endif /* JIT_EVAL */
@@ -482,7 +483,7 @@ err_missing_rparen:
 			 * >> int(float)(get_value());
 			 */
 #ifdef JIT_EVAL
-			unsigned char *cast_start = self->jl_tokstart;
+			unsigned char const *cast_start = self->jl_tokstart;
 			Dee_Incref(DeeTuple_GET(merge, 0));
 			result = JITLexer_EvalCastOperand(self,
 			                                  DeeTuple_GET(merge, 0),
@@ -620,7 +621,7 @@ err:
 
 DEFINE_PRIMARY(UnaryHead) {
 	RETURN_TYPE result;
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	uint16_t out_mode;
 	(void)flags;
 	IF_EVAL(pos = self->jl_tokstart;)
@@ -877,9 +878,9 @@ done_y1:
 		{
 			/* Check for java-style lambda. */
 			unsigned int             saved_jl_tok;
-			/*utf-8*/ unsigned char *saved_jl_tokstart;
-			/*utf-8*/ unsigned char *saved_jl_tokend;
-			IF_EVAL(unsigned char *param_end);
+			/*utf-8*/ unsigned char const *saved_jl_tokstart;
+			/*utf-8*/ unsigned char const *saved_jl_tokend;
+			IF_EVAL(unsigned char const *param_end);
 			IF_EVAL(unsigned int recursion);
 			saved_jl_tok      = self->jl_tok;
 			saved_jl_tokstart = self->jl_tokstart;
@@ -921,8 +922,8 @@ done_y1:
 					goto not_a_java_lambda;
 			}
 			if (self->jl_tok == TOK_ARROW) {
-				IF_EVAL(unsigned char *source_start);
-				IF_EVAL(unsigned char *source_end);
+				IF_EVAL(unsigned char const *source_start);
+				IF_EVAL(unsigned char const *source_end);
 				IF_EVAL(unsigned int is_expression);
 
 				/* Yup! it's a java-lambda alright! */
@@ -947,7 +948,7 @@ done_y1:
 					ch   = unicode_readutf8_rev_n(&next, source_start);
 					if (!DeeUni_IsSpace(ch))
 						break;
-					source_end = (unsigned char *)next;
+					source_end = (unsigned char const *)next;
 				}
 				if (is_expression == AST_PARSE_WASEXPR_NO) {
 					/* Get rid of the surrounding '{' and '}'
@@ -1018,8 +1019,8 @@ not_a_java_lambda:
 			JITLexer_Yield(self);
 			if (self->jl_tok == '(') {
 #ifdef JIT_EVAL
-				unsigned char *param_start;
-				unsigned char *param_end;
+				unsigned char const *param_start;
+				unsigned char const *param_end;
 				unsigned int recursion;
 #endif /* JIT_EVAL */
 				JITLexer_Yield(self);
@@ -1047,8 +1048,8 @@ not_a_java_lambda:
 				if (self->jl_tok == TOK_ARROW) {
 #ifdef JIT_EVAL
 					/* Lambda function. */
-					unsigned char *source_start;
-					unsigned char *source_end;
+					unsigned char const *source_start;
+					unsigned char const *source_end;
 					JITLexer_Yield(self);
 					source_start = self->jl_tokstart;
 					if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FSECONDARY))
@@ -1062,7 +1063,7 @@ not_a_java_lambda:
 						ch   = unicode_readutf8_rev_n(&next, source_start);
 						if (!DeeUni_IsSpace(ch))
 							break;
-						source_end = (unsigned char *)next;
+						source_end = (unsigned char const *)next;
 					}
 					result = JITFunction_New(NULL,
 					                         NULL,
@@ -1082,8 +1083,8 @@ not_a_java_lambda:
 				} else if (self->jl_tok == '{') {
 #ifdef JIT_EVAL
 					/* Lambda function. */
-					unsigned char *source_start;
-					unsigned char *source_end;
+					unsigned char const *source_start;
+					unsigned char const *source_end;
 					unsigned int brace_recursion = 1;
 					JITLexer_Yield(self);
 					source_end = source_start = self->jl_tokstart;
@@ -1125,8 +1126,8 @@ not_a_java_lambda:
 			if (self->jl_tok == ':') {
 				/* If the current token is ':', try to skip over the return type
 				 * annotation and check if the next token thereafter is '->' or '{'. */
-				/*utf-8*/ unsigned char *saved_jl_tokstart;
-				/*utf-8*/ unsigned char *saved_jl_tokend;
+				/*utf-8*/ unsigned char const *saved_jl_tokstart;
+				/*utf-8*/ unsigned char const *saved_jl_tokend;
 				saved_jl_tokstart = self->jl_tokstart;
 				saved_jl_tokend   = self->jl_tokend;
 				JITLexer_Yield(self);
@@ -1146,8 +1147,8 @@ not_a_java_lambda:
 			if (self->jl_tok == TOK_ARROW) {
 #ifdef JIT_EVAL
 				/* Lambda function. */
-				unsigned char *source_start;
-				unsigned char *source_end;
+				unsigned char const *source_start;
+				unsigned char const *source_end;
 				JITLexer_Yield(self);
 				source_start = self->jl_tokstart;
 				if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FSECONDARY))
@@ -1161,7 +1162,7 @@ not_a_java_lambda:
 					ch   = unicode_readutf8_rev_n(&next, source_start);
 					if (!DeeUni_IsSpace(ch))
 						break;
-					source_end = (unsigned char *)next;
+					source_end = (unsigned char const *)next;
 				}
 				result = JITFunction_New(NULL,
 				                         NULL,
@@ -1185,8 +1186,8 @@ skip_arrow_lambda:
 			if (self->jl_tok == '{') {
 #ifdef JIT_EVAL
 				/* Lambda function. */
-				unsigned char *source_start;
-				unsigned char *source_end;
+				unsigned char const *source_start;
+				unsigned char const *source_end;
 				unsigned int recursion = 1;
 				JITLexer_Yield(self);
 				source_end = source_start = self->jl_tokstart;
@@ -1395,8 +1396,8 @@ skip_rbrck_and_done:
 		char const *tok_begin;
 		size_t tok_length;
 		uint32_t name;
-		tok_begin  = (char *)self->jl_tokstart;
-		tok_length = (size_t)((char *)self->jl_tokend - tok_begin);
+		tok_begin  = (char const *)self->jl_tokstart;
+		tok_length = (size_t)((char const *)self->jl_tokend - tok_begin);
 		switch (tok_length) {
 
 		case 1:
@@ -1802,13 +1803,13 @@ err_oo_class_reinit_lvalue:
 		}
 		/* Fallback: identifier lookup / <x from y> expression. */
 		{
-			IF_EVAL(char *symbol_name  = JITLexer_TokPtr(self));
+			IF_EVAL(char const *symbol_name  = JITLexer_TokPtr(self));
 			IF_EVAL(size_t symbol_size = JITLexer_TokLen(self));
 			JITLexer_Yield(self);
 			if (self->jl_tok == TOK_ARROW) {
 				/* Single-argument java-style lambda. */
-				IF_EVAL(unsigned char *source_start);
-				IF_EVAL(unsigned char *source_end);
+				IF_EVAL(unsigned char const *source_start);
+				IF_EVAL(unsigned char const *source_end);
 				IF_EVAL(unsigned int is_expression);
 				JITLexer_Yield(self);
 				IF_EVAL(source_start = self->jl_tokstart);
@@ -1831,7 +1832,7 @@ err_oo_class_reinit_lvalue:
 					ch   = unicode_readutf8_rev_n(&next, source_start);
 					if (!DeeUni_IsSpace(ch))
 						break;
-					source_end = (unsigned char *)next;
+					source_end = (unsigned char const *)next;
 				}
 				if (is_expression == AST_PARSE_WASEXPR_NO) {
 					/* Get rid of the surrounding '{' and '}'
@@ -1931,7 +1932,7 @@ err:
 
 DEFINE_SECONDARY(UnaryOperand) {
 	RETURN_TYPE rhs;
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	ASSERT(TOKEN_IS_UNARY(self));
 	(void)flags;
 #ifdef JIT_EVAL
@@ -2041,7 +2042,7 @@ err_result_copy:
 #endif /* JIT_EVAL */
 			} else {
 #ifdef JIT_EVAL
-				char *attr_name;
+				char const *attr_name;
 				size_t attr_size;
 				/* Generic attribute lookup. */
 				attr_name = JITLexer_TokPtr(self);
@@ -2567,7 +2568,7 @@ done:
 DEFINE_SECONDARY(ProdOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	IF_EVAL(unsigned int cmd = self->jl_tok;)
 	ASSERT(TOKEN_IS_PROD(self));
 	LOAD_LVALUE(lhs, err);
@@ -2626,7 +2627,7 @@ err:
 DEFINE_SECONDARY(SumOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	unsigned int cmd = self->jl_tok;
 	ASSERT(TOKEN_IS_SUM(self));
 	LOAD_LVALUE(lhs, err);
@@ -2686,7 +2687,7 @@ err:
 DEFINE_SECONDARY(ShiftOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	IF_EVAL(unsigned int cmd = self->jl_tok;)
 	ASSERT(TOKEN_IS_SHIFT(self));
 	LOAD_LVALUE(lhs, err);
@@ -2734,7 +2735,7 @@ err:
 DEFINE_SECONDARY(CmpOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	unsigned int cmd = self->jl_tok;
 	ASSERT(TOKEN_IS_CMP(self));
 	LOAD_LVALUE(lhs, err);
@@ -2802,7 +2803,7 @@ err:
 DEFINE_SECONDARY(CmpEQOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	IF_EVAL(unsigned int cmd = self->jl_tok;)
 	ASSERT(TOKEN_IS_CMPEQ(self));
 	for (;;) {
@@ -3002,7 +3003,7 @@ err:
 DEFINE_SECONDARY(AndOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	ASSERT(TOKEN_IS_AND(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
@@ -3040,7 +3041,7 @@ err:
 DEFINE_SECONDARY(XorOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	ASSERT(TOKEN_IS_XOR(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
@@ -3078,7 +3079,7 @@ err:
 DEFINE_SECONDARY(OrOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	ASSERT(TOKEN_IS_OR(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
@@ -3116,7 +3117,7 @@ err:
 DEFINE_SECONDARY(AsOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	ASSERT(TOKEN_IS_AS(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
@@ -3155,7 +3156,7 @@ DEFINE_SECONDARY(LandOperand) {
 #ifndef JIT_EVAL
 	RETURN_TYPE rhs;
 #endif /* !JIT_EVAL */
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	ASSERT(TOKEN_IS_LAND(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
@@ -3227,7 +3228,7 @@ DEFINE_SECONDARY(LorOperand) {
 #ifndef JIT_EVAL
 	RETURN_TYPE rhs;
 #endif /* !JIT_EVAL */
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	ASSERT(TOKEN_IS_LOR(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
@@ -3296,7 +3297,7 @@ err:
 }
 
 DEFINE_SECONDARY(CondOperand) {
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	/* >>  x ? y : z // >> x ? y : z
 	 * >>  x ?: z    // >> x ? x : z
 	 * >> (x ? y : ) // >> x ? y : x
@@ -3435,7 +3436,7 @@ PRIVATE Dee_operator_t const inplace_fops[] = {
 DEFINE_SECONDARY(AssignOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(int error;)
-	IF_EVAL(unsigned char *pos;)
+	IF_EVAL(unsigned char const *pos;)
 	IF_EVAL(unsigned int cmd = self->jl_tok;)
 	ASSERT(TOKEN_IS_ASSIGN(self));
 	for (;;) {

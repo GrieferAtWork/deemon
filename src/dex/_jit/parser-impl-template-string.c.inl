@@ -36,8 +36,9 @@ INTERN WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipTemplateString(JITLexer *__restrict self)
 #endif /* !JIT_EVAL */
 {
-	unsigned char *text_iter, quote;
-	IF_EVAL(unsigned char *flush_start);
+	unsigned char quote;
+	unsigned char const *text_iter;
+	IF_EVAL(unsigned char const *flush_start);
 	IF_EVAL(struct unicode_printer printer = UNICODE_PRINTER_INIT);
 parse_current_token_as_template_string:
 	ASSERT(self->jl_tok == JIT_KEYWORD);
@@ -95,7 +96,7 @@ parse_current_token_as_template_string:
 				goto err;
 			LOAD_LVALUE(expr, err);
 			if (self->jl_tok == '!' || self->jl_tok == ':') {
-				unsigned char *spec;
+				unsigned char const *spec;
 				spec = self->jl_tokstart;
 #ifdef JIT_EVAL
 				/* Mirror what is done in `/src/deemon/objects/unicode/format.c:format_impl' */
@@ -118,12 +119,12 @@ err_expr:
 					}
 					++spec;
 				} else {
-					unsigned char *args_start;
+					unsigned char const *args_start;
 					ASSERT(*spec == ':');
 					args_start = ++spec;
 					/* TODO: This needs to support recursive '{' + '}' pairs! */
 					/* TODO: This needs to support \-escape sequences! */
-					spec = (unsigned char *)memchr(spec, '}', (size_t)(self->jl_end - spec));
+					spec = (unsigned char const *)memchr(spec, '}', (size_t)(self->jl_end - spec));
 					if unlikely(!spec)
 						goto err_expr_unmatched_lbrace;
 					if (DeeObject_PrintFormatString(expr, &unicode_printer_print, &printer,
@@ -139,7 +140,7 @@ err_expr_unmatched_lbrace:
 				}
 #else /* JIT_EVAL */
 				/* TODO: This needs to support recursive '{' + '}' pairs! */
-				spec = (unsigned char *)memchr(spec, '}', (size_t)(self->jl_end - spec));
+				spec = (unsigned char const *)memchr(spec, '}', (size_t)(self->jl_end - spec));
 				if unlikely(!spec) {
 					self->jl_tokstart = text_iter - 1;
 					syn_template_string_unmatched_lbrace(self);
@@ -237,7 +238,7 @@ parse_hex_integer:
 				while (count < max_digits) {
 					uint32_t ch32;
 					uint8_t val;
-					unsigned char *old_iter;
+					unsigned char const *old_iter;
 					old_iter = text_iter;
 					ch32     = unicode_readutf8_n(&text_iter, self->jl_end);
 					if (!DeeUni_AsDigit(ch32, 16, &val)) {
@@ -273,7 +274,7 @@ parse_oct_integer:
 					while (count < 3) {
 						uint32_t ch32;
 						uint8_t digit;
-						unsigned char *old_iter;
+						unsigned char const *old_iter;
 						old_iter = text_iter;
 						ch32     = unicode_readutf8_n(&text_iter, self->jl_end);
 						if (!DeeUni_AsDigit(ch32, 8, &digit)) {

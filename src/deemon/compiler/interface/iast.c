@@ -4959,7 +4959,7 @@ print_ast_repr(struct ast *__restrict self,
 		break;
 
 	case AST_MULTIPLE: {
-		char *typing;
+		char const *typing;
 		size_t i;
 		typing = NULL;
 		if (self->a_flag == AST_FMULTIPLE_TUPLE) {

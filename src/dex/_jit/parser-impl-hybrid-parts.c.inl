@@ -69,7 +69,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(!(self->jl_context->jc_flags & JITCONTEXT_FSYNERR));
 	JITLexer_Yield(self);
 	{
-		unsigned char *start;
+		unsigned char const *start;
 		start  = self->jl_tokstart;
 		result = EVAL_PRIMARY(self, &was_expression);
 		if (ISERR(result)) {
@@ -113,7 +113,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 			DREF DeeObject *finally_value;
 			DREF DeeObject *old_return_expr;
 			JITLValue old_lvalue;
-			unsigned char *start;
+			unsigned char const *start;
 			JITLexer_Yield(self);
 
 
@@ -192,7 +192,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 				uint16_t old_except;
 				DeeObject *current;
 				DeeThreadObject *ts = DeeThread_Self();
-				unsigned char *start;
+				unsigned char const *start;
 				old_except = ts->t_exceptsz;
 				current    = DeeError_Current();
 				ASSERT(current != NULL);
@@ -487,7 +487,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 			/* TODO: Multiple targets (`for (local x, y, z: triples)') */
 			JITLValue iterator_storage;
 			DREF DeeObject *seq, *iterator, *elem;
-			unsigned char *block_start;
+			unsigned char const *block_start;
 			bool is_first_loop = true;
 			/* For-each loop. */
 			if (init == JIT_LVALUE) {
@@ -570,9 +570,9 @@ err_seq:
 					goto err_scope;
 			}
 		} else {
-			unsigned char *cond_start;
-			unsigned char *next_start;
-			unsigned char *block_start;
+			unsigned char const *cond_start;
+			unsigned char const *next_start;
+			unsigned char const *block_start;
 			/* Regular for-loop */
 			if (init == JIT_LVALUE) {
 				JITLValue_Fini(&self->jl_lvalue);
@@ -639,7 +639,7 @@ err_missing_rparen_after_for:
 			block_start = self->jl_tokstart;
 			/* The actual for-loop */
 			for (;;) {
-				unsigned char *block_end;
+				unsigned char const *block_end;
 				result = JITLexer_EvalStatement(self);
 				if unlikely(!result) {
 					/* Handle special loop signal codes. */
@@ -779,7 +779,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 		/* TODO: Multiple targets (`foreach (local x, y, z: triples)') */
 		JITLValue iterator_storage;
 		DREF DeeObject *iterator, *elem;
-		unsigned char *block_start;
+		unsigned char const *block_start;
 		bool is_first_loop = true;
 		/* For-each loop. */
 		if (init == JIT_LVALUE) {
@@ -900,9 +900,9 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 	if (is_statement) {
 #ifdef JIT_EVAL
 		int temp;
-		unsigned char *cond_start;
-		unsigned char *block_start;
-		unsigned char *block_end;
+		unsigned char const *cond_start;
+		unsigned char const *block_start;
+		unsigned char const *block_end;
 		JITContext_PushScope(self->jl_context);
 		/* Parse the loop condition for the first time. */
 		cond_start = self->jl_tokstart;
@@ -1026,7 +1026,7 @@ H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 	if (is_statement) {
 #ifdef JIT_EVAL
 		int temp;
-		unsigned char *block_start;
+		unsigned char const *block_start;
 		block_start = self->jl_tokstart;
 
 		/* Parse the block for the first time. */

@@ -68,7 +68,7 @@ libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		usersize = WSTR_LENGTH(usertext);
 		Dee_Incref(lexer.jl_text);
 	} else if (DeeBytes_Check(lexer.jl_text)) {
-		usertext = (char *)DeeBytes_DATA(lexer.jl_text);
+		usertext = (char const *)DeeBytes_DATA(lexer.jl_text);
 		usersize = DeeBytes_SIZE(lexer.jl_text);
 		Dee_Incref(lexer.jl_text);
 	} else {
@@ -81,7 +81,7 @@ libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 				goto err_expr;
 			usersize = WSTR_LENGTH(usertext);
 		} else {
-			usertext = (char *)DeeBytes_DATA(lexer.jl_text);
+			usertext = (char const *)DeeBytes_DATA(lexer.jl_text);
 			usersize = DeeBytes_SIZE(lexer.jl_text);
 		}
 	}
@@ -96,8 +96,8 @@ libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	lexer.jl_errpos           = NULL;
 	JITLValue_Init(&lexer.jl_lvalue);
 	JITLexer_Start(&lexer,
-	               (unsigned char *)usertext,
-	               (unsigned char *)usertext + usersize);
+	               (unsigned char const *)usertext,
+	               (unsigned char const *)usertext + usersize);
 	{
 		unsigned int was;
 		result = JITLexer_EvalHybrid(&lexer, &was);

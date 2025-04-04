@@ -457,28 +457,59 @@ template<class __T> inline __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) 
 #define __HYBRID_ATOMIC_RECAST(p, y) (y)
 #endif /* !... */
 #endif /* !__HYBRID_ATOMIC_RECAST */
+
 #ifdef __hybrid_atomic_load128_with_atomic_rwlock
+#ifdef __NO_builtin_choose_expr
 #define __hybrid_atomic_load_with_atomic_rwlock(p, order, self) \
-	__HYBRID_ATOMIC_RECAST(p, sizeof(*(p)) == 1 ? __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self) : \
-	                          sizeof(*(p)) == 2 ? __hybrid_atomic_load16_with_atomic_rwlock((__UINT16_TYPE__ const *)(p), order, self) : \
-	                          sizeof(*(p)) == 4 ? __hybrid_atomic_load32_with_atomic_rwlock((__UINT32_TYPE__ const *)(p), order, self) : \
-	                          sizeof(*(p)) == 8 ? __hybrid_atomic_load64_with_atomic_rwlock((__UINT64_TYPE__ const *)(p), order, self) : \
+	__HYBRID_ATOMIC_RECAST(p, sizeof(*(p)) <= 1 ? __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self) : \
+	                          sizeof(*(p)) <= 2 ? __hybrid_atomic_load16_with_atomic_rwlock((__UINT16_TYPE__ const *)(p), order, self) : \
+	                          sizeof(*(p)) <= 4 ? __hybrid_atomic_load32_with_atomic_rwlock((__UINT32_TYPE__ const *)(p), order, self) : \
+	                          sizeof(*(p)) <= 8 ? __hybrid_atomic_load64_with_atomic_rwlock((__UINT64_TYPE__ const *)(p), order, self) : \
 	                                              __hybrid_atomic_load128_with_atomic_rwlock((__UINT128_TYPE__ const *)(p), order, self))
+#else /* __NO_builtin_choose_expr */
+#define __hybrid_atomic_load_with_atomic_rwlock(p, order, self) \
+	__HYBRID_ATOMIC_RECAST(p, __builtin_choose_expr(sizeof(*(p)) <= 1, __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self), \
+	                          __builtin_choose_expr(sizeof(*(p)) <= 2, __hybrid_atomic_load16_with_atomic_rwlock((__UINT16_TYPE__ const *)(p), order, self), \
+	                          __builtin_choose_expr(sizeof(*(p)) <= 4, __hybrid_atomic_load32_with_atomic_rwlock((__UINT32_TYPE__ const *)(p), order, self), \
+	                          __builtin_choose_expr(sizeof(*(p)) <= 8, __hybrid_atomic_load64_with_atomic_rwlock((__UINT64_TYPE__ const *)(p), order, self), \
+	                                                                   __hybrid_atomic_load128_with_atomic_rwlock((__UINT128_TYPE__ const *)(p), order, self))))))
+#endif /* !__NO_builtin_choose_expr */
 #elif defined(__hybrid_atomic_load64_with_atomic_rwlock)
+#ifdef __NO_builtin_choose_expr
 #define __hybrid_atomic_load_with_atomic_rwlock(p, order, self) \
-	__HYBRID_ATOMIC_RECAST(p, sizeof(*(p)) == 1 ? __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self) : \
-	                          sizeof(*(p)) == 2 ? __hybrid_atomic_load16_with_atomic_rwlock((__UINT16_TYPE__ const *)(p), order, self) : \
-	                          sizeof(*(p)) == 4 ? __hybrid_atomic_load32_with_atomic_rwlock((__UINT32_TYPE__ const *)(p), order, self) : \
+	__HYBRID_ATOMIC_RECAST(p, sizeof(*(p)) <= 1 ? __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self) : \
+	                          sizeof(*(p)) <= 2 ? __hybrid_atomic_load16_with_atomic_rwlock((__UINT16_TYPE__ const *)(p), order, self) : \
+	                          sizeof(*(p)) <= 4 ? __hybrid_atomic_load32_with_atomic_rwlock((__UINT32_TYPE__ const *)(p), order, self) : \
 	                                              __hybrid_atomic_load64_with_atomic_rwlock((__UINT64_TYPE__ const *)(p), order, self))
+#else /* __NO_builtin_choose_expr */
+#define __hybrid_atomic_load_with_atomic_rwlock(p, order, self) \
+	__HYBRID_ATOMIC_RECAST(p, __builtin_choose_expr(sizeof(*(p)) <= 1, __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self), \
+	                          __builtin_choose_expr(sizeof(*(p)) <= 2, __hybrid_atomic_load16_with_atomic_rwlock((__UINT16_TYPE__ const *)(p), order, self), \
+	                          __builtin_choose_expr(sizeof(*(p)) <= 4, __hybrid_atomic_load32_with_atomic_rwlock((__UINT32_TYPE__ const *)(p), order, self), \
+	                                                                   __hybrid_atomic_load64_with_atomic_rwlock((__UINT64_TYPE__ const *)(p), order, self)))))
+#endif /* !__NO_builtin_choose_expr */
 #elif defined(__hybrid_atomic_load32_with_atomic_rwlock)
+#ifdef __NO_builtin_choose_expr
 #define __hybrid_atomic_load_with_atomic_rwlock(p, order, self) \
-	__HYBRID_ATOMIC_RECAST(p, sizeof(*(p)) == 1 ? __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self) : \
-	                          sizeof(*(p)) == 2 ? __hybrid_atomic_load16_with_atomic_rwlock((__UINT16_TYPE__ const *)(p), order, self) : \
+	__HYBRID_ATOMIC_RECAST(p, sizeof(*(p)) <= 1 ? __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self) : \
+	                          sizeof(*(p)) <= 2 ? __hybrid_atomic_load16_with_atomic_rwlock((__UINT16_TYPE__ const *)(p), order, self) : \
 	                                              __hybrid_atomic_load32_with_atomic_rwlock((__UINT32_TYPE__ const *)(p), order, self))
-#elif defined(__hybrid_atomic_load16_with_atomic_rwlock)
+#else /* __NO_builtin_choose_expr */
 #define __hybrid_atomic_load_with_atomic_rwlock(p, order, self) \
-	__HYBRID_ATOMIC_RECAST(p, sizeof(*(p)) == 1 ? __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self) : \
+	__HYBRID_ATOMIC_RECAST(p, __builtin_choose_expr(sizeof(*(p)) <= 1, __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self), \
+	                          __builtin_choose_expr(sizeof(*(p)) <= 2, __hybrid_atomic_load16_with_atomic_rwlock((__UINT16_TYPE__ const *)(p), order, self), \
+	                                                                   __hybrid_atomic_load32_with_atomic_rwlock((__UINT32_TYPE__ const *)(p), order, self))))
+#endif /* !__NO_builtin_choose_expr */
+#elif defined(__hybrid_atomic_load16_with_atomic_rwlock)
+#ifdef __NO_builtin_choose_expr
+#define __hybrid_atomic_load_with_atomic_rwlock(p, order, self) \
+	__HYBRID_ATOMIC_RECAST(p, sizeof(*(p)) <= 1 ? __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self) : \
 	                                              __hybrid_atomic_load16_with_atomic_rwlock((__UINT16_TYPE__ const *)(p), order, self))
+#else /* __NO_builtin_choose_expr */
+#define __hybrid_atomic_load_with_atomic_rwlock(p, order, self) \
+	__HYBRID_ATOMIC_RECAST(p, __builtin_choose_expr(sizeof(*(p)) <= 1, __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self), \
+	                                                                   __hybrid_atomic_load16_with_atomic_rwlock((__UINT16_TYPE__ const *)(p), order, self)))
+#endif /* !__NO_builtin_choose_expr */
 #else /* ... */
 #define __hybrid_atomic_load_with_atomic_rwlock(p, order, self) \
 	__HYBRID_ATOMIC_RECAST(p, __hybrid_atomic_load8_with_atomic_rwlock((__UINT8_TYPE__ const *)(p), order, self))

@@ -1065,7 +1065,8 @@ LOCAL_seX(printrepr)(LOCAL_SeqEach *__restrict self,
 #endif /* !DEFINE_SeqEachCallAttrKw */
 		Dee_ssize_t result = -1;
 		size_t full_suffix_len;
-		char *full_suffix, *attr_utf8, *p;
+		char *full_suffix, *p;
+		char const *attr_utf8;
 		attr_utf8 = DeeString_AsUtf8((DeeObject *)self->sg_attr);
 		if unlikely(!attr_utf8)
 			return -1;
@@ -1538,7 +1539,8 @@ LOCAL_ssX(printrepr)(LOCAL_SeqEach *__restrict self,
 #endif /* !DEFINE_SeqEachCallAttrKw */
 		Dee_ssize_t result = -1;
 		size_t full_suffix_len;
-		char *full_suffix, *attr_utf8, *p;
+		char *full_suffix, *p;
+		char const *attr_utf8;
 		attr_utf8 = DeeString_AsUtf8((DeeObject *)self->sg_attr);
 		if unlikely(!attr_utf8)
 			return -1;

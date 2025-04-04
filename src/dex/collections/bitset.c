@@ -3429,7 +3429,7 @@ bsv_init(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	if (argc >= 2) {
 		ob = argv[0];
 		if (DeeString_Check(argv[1])) {
-			char *str = DeeString_STR(argv[1]);
+			char const *str = DeeString_STR(argv[1]);
 			if (WSTR_LENGTH(str) != 1)
 				goto err_invalid_mode;
 			if (str[0] == 'r') {

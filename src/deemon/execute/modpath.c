@@ -832,15 +832,15 @@ got_result_modulepath:
 	if (ITER_ISOK(module_global_name)) {
 		module_name_ob = (DREF DeeStringObject *)module_global_name;
 	} else {
-		char *name_end, *name_start;
-		char *name;
+		char const *name_end, *name_start;
+		char const *name;
 		size_t size;
 		name = DeeString_AsUtf8(source_pathname);
 		if unlikely(!name)
 			goto err_modulepath_inputstream;
 		size      = WSTR_LENGTH(name);
 		name_end  = name + size;
-		name_start = (char *)DeeSystem_BaseName(name, size);
+		name_start = DeeSystem_BaseName(name, size);
 
 		/* Get rid of a file extension in the module name. */
 		while (name_end > name_start && name_end[-1] != '.')
@@ -1020,12 +1020,12 @@ DeeModule_OpenSourceStream(DeeObject *source_stream,
 	/* Create a new module. */
 	if (!module_name) {
 		if (source_pathname) {
-			char *name  = DeeString_STR(source_pathname);
+			char const *name = DeeString_STR(source_pathname);
 			size_t size = DeeString_SIZE(source_pathname);
-			char *name_end, *name_start;
+			char const *name_end, *name_start;
 			DREF DeeObject *name_object;
 			name_end   = name + size;
-			name_start = (char *)DeeSystem_BaseName(name, size);
+			name_start = DeeSystem_BaseName(name, size);
 
 			/* Get rid of a file extension in the module name. */
 			while (name_end > name_start && name_end[-1] != '.')
@@ -1359,7 +1359,8 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	DREF DeeStringObject *module_name_ob;
 	DREF DeeStringObject *module_path_ob;
 	DREF DeeModuleObject *result;
-	char *buf, *dst, *module_name_start;
+	char *buf, *dst;
+	char const *module_name_start;
 	size_t i, len;
 	dhash_t hash;
 	Dee_DPRINTF("[RT] Searching for %s%k in %$q as %$q\n",
@@ -1413,14 +1414,14 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	if (dst > buf && dst[-1] != SEP)
 		*dst++ = SEP;
 	/* Step #1: Check for a cached variant of a user-script. */
-	module_name_start = (char *)module_name;
+	module_name_start = module_name;
 	for (i = 0; i < module_namesize; ++i) {
 		char ch = module_name[i];
 		if (ch == '.') {
-			if unlikely(module_name_start == (char *)module_name + i)
+			if unlikely(module_name_start == module_name + i)
 				goto err_bad_module_name; /* Don't allow multiple consecutive dots here! */
 			ch                = SEP;
-			module_name_start = (char *)module_name + i + 1;
+			module_name_start = module_name + i + 1;
 		} else if (!IS_VALID_MODULE_CHARACTER(ch)) {
 err_bad_module_name:
 			err_invalid_module_name_s(module_name, module_namesize);
@@ -1445,7 +1446,7 @@ again_search_fs_modules:
 	modules_lock_read();
 	if (modules_a) {
 		LIST_FOREACH (result, &modules_v[hash % modules_a], mo_link) {
-			char *utf8_path;
+			char const *utf8_path;
 			if (fs_hashmodpath(result) != hash)
 				continue;
 			utf8_path = DeeString_TryAsUtf8((DeeObject *)result->mo_path);
@@ -2094,7 +2095,7 @@ DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module
 	if unlikely(!DeeSystem_IsAbsN(module_path, module_pathsize)) {
 		/* Must make the given module path absolute. */
 		DREF DeeStringObject *abs_path; /*utf-8*/
-		char *abs_utf8;
+		char const *abs_utf8;
 		DREF DeeModuleObject *result;
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		if (DeeSystem_PrintPwd(&printer, true) < 0)
@@ -2538,7 +2539,7 @@ DeeModule_OpenRelative(DeeObject *__restrict module_name,
                        size_t module_pathsize,
                        struct compiler_options *options,
                        bool throw_error) {
-	/*utf-8*/ char *module_name_str;
+	/*utf-8*/ char const *module_name_str;
 	module_name_str = DeeString_AsUtf8(module_name);
 	if unlikely(!module_name_str)
 		goto err;
@@ -2580,7 +2581,7 @@ DeeModule_ImportRel(/*Module*/ DeeObject *__restrict basemodule,
                     /*String*/ DeeObject *__restrict module_name) {
 	DREF DeeObject *result;
 	DeeStringObject *path;
-	char *begin, *end;
+	char const *begin, *end;
 	ASSERT_OBJECT_TYPE(basemodule, &DeeModule_Type);
 	/* Load the path of the currently executing code (for relative imports). */
 	path = ((DeeModuleObject *)basemodule)->mo_path;
@@ -2619,7 +2620,7 @@ DeeModule_ImportRelString(/*Module*/ DeeObject *__restrict basemodule,
                           size_t module_namesize) {
 	DREF DeeObject *result;
 	DeeStringObject *path;
-	char *begin, *end;
+	char const *begin, *end;
 	ASSERT_OBJECT_TYPE(basemodule, &DeeModule_Type);
 
 	/* Load the path of the currently executing code (for relative imports). */
@@ -2827,11 +2828,11 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	/* Create a new module. */
 	if (!module_name) {
 		if (source_pathname) {
-			char *name  = DeeString_STR(source_pathname);
+			char const *name = DeeString_STR(source_pathname);
 			size_t size = DeeString_SIZE(source_pathname);
-			char *name_end, *name_start;
+			char const *name_end, *name_start;
 			name_end   = name + size;
-			name_start = (char *)DeeSystem_BaseName(name, size);
+			name_start = DeeSystem_BaseName(name, size);
 
 			/* Get rid of a file extension in the module name. */
 			while (name_end > name_start && name_end[-1] != '.')
@@ -3200,7 +3201,7 @@ PRIVATE DEFINE_STRING(default_deemon_home, CONFIG_DEEMON_HOME);
 
 PRIVATE WUNUSED DREF /*String*/ DeeStringObject *DCALL get_default_home(void) {
 #ifndef CONFIG_NO_DEEMON_HOME_ENVIRON
-	char *env;
+	char const *env;
 #ifndef CONFIG_DEEMON_HOME_ENVIRON
 #define CONFIG_DEEMON_HOME_ENVIRON "DEEMON_HOME"
 #endif /* !CONFIG_DEEMON_HOME_ENVIRON */
@@ -3468,7 +3469,7 @@ PRIVATE void DCALL do_init_module_path(void) {
 	int error;
 #ifndef CONFIG_NO_DEEMON_PATH_ENVIRON
 	{
-		char *path;
+		char const *path;
 		DREF DeeObject *path_part;
 #ifndef CONFIG_DEEMON_PATH_ENVIRON
 #define CONFIG_DEEMON_PATH_ENVIRON "DEEMON_PATH"
@@ -3479,7 +3480,7 @@ PRIVATE void DCALL do_init_module_path(void) {
 		if (path) {
 			while (*path) {
 				/* Split the module path. */
-				char *next_path = strchr(path, DeeSystem_DELIM);
+				char const *next_path = strchr(path, DeeSystem_DELIM);
 				if (next_path) {
 					path_part = DeeString_NewUtf8(path,
 					                              (size_t)(next_path - path),

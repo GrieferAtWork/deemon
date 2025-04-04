@@ -605,7 +605,7 @@ copyfile_progress_copy(DeeCopyFileProgressObject *__restrict self,
 PRIVATE DEFINE_KWLIST(copyfile_progress_init_kwlist, {
 	K(srcfile), K(dstfile), K(copied), K(total), KEND });
 
-PRIVATE NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 copyfile_progress_init_kw(DeeCopyFileProgressObject *__restrict self,
                           size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	self->cfp_copied  = 0;
@@ -741,8 +741,6 @@ INTERN DeeTypeObject DeeCopyFileProgress_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
-
-
 
 DECL_END
 

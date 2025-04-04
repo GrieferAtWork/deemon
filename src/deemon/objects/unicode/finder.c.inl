@@ -49,10 +49,10 @@ typedef struct {
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(StringFind, sfi_find)       /* [1..1][const] The underlying find-controller. */
-	union dcharptr                   sfi_start;      /* [1..1][const] Starting pointer. */
-	DWEAK union dcharptr             sfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
-	union dcharptr                   sfi_end;        /* [1..1][const] End pointer. */
-	union dcharptr                   sfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
+	union dcharptr_const             sfi_start;      /* [1..1][const] Starting pointer. */
+	DWEAK union dcharptr_const       sfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
+	union dcharptr_const             sfi_end;        /* [1..1][const] End pointer. */
+	union dcharptr_const             sfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
 	size_t                           sfi_needle_len; /* [const] Length of the needle being searched. */
 	unsigned int                     sfi_width;      /* [const] The common width of the searched, and needle string. */
 } StringFindIterator;
@@ -213,7 +213,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sfi_next(StringFindIterator *__restrict self) {
-	union dcharptr ptr, new_ptr;
+	union dcharptr_const ptr, new_ptr;
 again:
 	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
@@ -256,7 +256,7 @@ again:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 scfi_nextpair(StringFindIterator *__restrict self, DREF DeeObject *pair[2]) {
-	union dcharptr ptr, new_ptr;
+	union dcharptr_const ptr, new_ptr;
 	size_t match_length, result;
 again:
 	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
@@ -326,7 +326,7 @@ STATIC_ASSERT(offsetof(StringFindIterator, sfi_find) == offsetof(ProxyObject, po
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_bool(StringFindIterator *__restrict self) {
-	union dcharptr ptr;
+	union dcharptr_const ptr;
 	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
 
@@ -353,7 +353,7 @@ sfi_bool(StringFindIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 scfi_bool(StringFindIterator *__restrict self) {
-	union dcharptr ptr;
+	union dcharptr_const ptr;
 	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
 
@@ -402,8 +402,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sfi_compare(StringFindIterator *self, StringFindIterator *other) {
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	Dee_return_compareT(void *, READ_PTR(self),
-	                    /*   */ READ_PTR(other));
+	Dee_return_compareT(void const *, READ_PTR(self),
+	                    /*         */ READ_PTR(other));
 err:
 	return Dee_COMPARE_ERR;
 }

@@ -1784,7 +1784,7 @@ module_import_with_frame_base(DeeObject *__restrict module_name) {
 	struct code_frame *frame = DeeThread_Self()->t_exec;
 	if (frame) {
 		DeeStringObject *path;
-		char *begin, *end;
+		char const *begin, *end;
 
 		/* Load the path of the currently executing code (for relative imports). */
 		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func, &DeeFunction_Type);

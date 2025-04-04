@@ -226,7 +226,7 @@ attr_getperm(Attr *__restrict self) {
 	result = DeeString_NewBuffer(num_flags);
 	if unlikely(!result)
 		goto done;
-	dst  = DeeString_STR(result);
+	dst  = DeeString_GetBuffer(result);
 	mask = self->a_desc.ad_perm & ATTR_PERMMASK;
 	num_flags = 0;
 	while (mask) {
@@ -1317,7 +1317,7 @@ attr_getflags(Attr *__restrict self) {
 	result = DeeString_NewBuffer(num_flags);
 	if unlikely(!result)
 		goto done;
-	dst       = DeeString_STR(result);
+	dst       = DeeString_GetBuffer(result);
 	mask      = self->a_info.a_perm & 0x1ff;
 	num_flags = 0;
 	while (mask) {

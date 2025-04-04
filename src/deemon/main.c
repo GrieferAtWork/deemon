@@ -2257,7 +2257,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	 *       some temporary-file-folder... */
 
 	{
-		char *result_start, *result_end;
+		char const *result_start, *result_end;
 		size_t new_text_size;
 		result_start = DeeString_STR(script_result);
 		result_end   = result_start + DeeString_SIZE(script_result);

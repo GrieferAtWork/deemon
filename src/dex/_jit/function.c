@@ -304,8 +304,8 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 
 		/* Analyze & parse the parameter list. */
 		JITLexer_Start(&lex,
-		               (unsigned char *)params_start,
-		               (unsigned char *)params_end);
+		               (unsigned char const *)params_start,
+		               (unsigned char const *)params_end);
 		while (lex.jl_tok) {
 			/* Special case: unnamed varargs. */
 			struct jit_object_entry *argent;
@@ -499,8 +499,8 @@ err_no_keyword_for_argument:
 	 * interpreted as identifiers. - Any matching identifier should
 	 * then be copied into our function's reference table. */
 	JITLexer_Start(&lex,
-	               (unsigned char *)source_start,
-	               (unsigned char *)source_end);
+	               (unsigned char const *)source_start,
+	               (unsigned char const *)source_end);
 	lex.jl_scandata.jl_function = result;
 	lex.jl_scandata.jl_parobtab = context->jc_locals.otp_tab;
 	lex.jl_scandata.jl_flags    = JIT_SCANDATA_FNORMAL;
@@ -508,7 +508,7 @@ err_no_keyword_for_argument:
 	/* Scan the source code of the function for yield statements, as
 	 * well as references to symbols found outside of the function. */
 	while (lex.jl_tok) {
-		unsigned char *stmt_start;
+		unsigned char const *stmt_start;
 		stmt_start = lex.jl_tokstart;
 		if (result->jf_flags & JIT_FUNCTION_FRETEXPR) {
 			JITLexer_ScanExpression(&lex, true);
@@ -807,8 +807,8 @@ done_args:
 	context.jc_except         = ts->t_exceptsz;
 	context.jc_flags          = JITCONTEXT_FNORMAL;
 	JITLexer_Start(&lexer,
-	               (unsigned char *)self->jf_source_start,
-	               (unsigned char *)self->jf_source_end);
+	               (unsigned char const *)self->jf_source_start,
+	               (unsigned char const *)self->jf_source_end);
 	if (self->jf_flags & JIT_FUNCTION_FRETEXPR) {
 		result = JITLexer_EvalExpression(&lexer, JITLEXER_EVAL_FNORMAL);
 		if (result == JIT_LVALUE) {
@@ -969,7 +969,7 @@ jf_compare_eq(JITFunction *a, JITFunction *b) {
 		goto nope;
 	if (bcmpc(a->jf_source_start, b->jf_source_start,
 	          (size_t)(a->jf_source_end - a->jf_source_start),
-	          sizeof(char)) != 0)
+	          sizeof(char)) != 0) /* TODO: Compare tokens (thus excluding comments/whitespace) */
 		goto nope;
 	if (a->jf_flags != b->jf_flags)
 		goto nope;
