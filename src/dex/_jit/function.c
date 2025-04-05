@@ -947,6 +947,51 @@ nope:
 	return 1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+jit_compare_tokens(unsigned char const *lhs_start, unsigned char const *lhs_end,
+                   unsigned char const *rhs_start, unsigned char const *rhs_end) {
+	JITSmallLexer lhs, rhs;
+	JITLexer_Start((JITLexer *)&lhs, lhs_start, lhs_end);
+	JITLexer_Start((JITLexer *)&rhs, rhs_start, rhs_end);
+	while (lhs.jl_tok != TOK_EOF && rhs.jl_tok != TOK_EOF) {
+		if (lhs.jl_tok > rhs.jl_tok)
+			return 1;
+		if (lhs.jl_tok < rhs.jl_tok)
+			return -1;
+		switch (lhs.jl_tok) {
+
+		case JIT_KEYWORD:
+		case JIT_STRING:
+		case JIT_RAWSTRING:
+		case TOK_INT:
+#ifdef CONFIG_HAVE_FPU
+		case TOK_FLOAT:
+#endif /* CONFIG_HAVE_FPU */
+		{
+			size_t lhs_len = JITLexer_TokLen(&lhs);
+			size_t rhs_len = JITLexer_TokLen(&rhs);
+			size_t common = lhs_len < rhs_len ? lhs_len : rhs_len;
+			int cmp = memcmp(JITLexer_TokPtr(&lhs),
+			                 JITLexer_TokPtr(&rhs),
+			                 common);
+			if (cmp != 0)
+				return cmp;
+			if (lhs_len != rhs_len)
+				return lhs_len < rhs_len ? -1 : 1;
+		}	break;
+
+		default: break;
+		}
+		JITLexer_Yield((JITLexer *)&lhs);
+		JITLexer_Yield((JITLexer *)&rhs);
+	}
+	if (lhs.jl_tok != TOK_EOF)
+		return 1;
+	if (rhs.jl_tok != TOK_EOF)
+		return -1;
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 jf_compare_eq(JITFunction *a, JITFunction *b) {
 	int temp;
@@ -967,9 +1012,8 @@ jf_compare_eq(JITFunction *a, JITFunction *b) {
 	if ((a->jf_source_end - a->jf_source_start) !=
 	    (b->jf_source_end - b->jf_source_start))
 		goto nope;
-	if (bcmpc(a->jf_source_start, b->jf_source_start,
-	          (size_t)(a->jf_source_end - a->jf_source_start),
-	          sizeof(char)) != 0) /* TODO: Compare tokens (thus excluding comments/whitespace) */
+	if (jit_compare_tokens(a->jf_source_start, a->jf_source_end,
+	                       b->jf_source_start, b->jf_source_end) != 0)
 		goto nope;
 	if (a->jf_flags != b->jf_flags)
 		goto nope;
