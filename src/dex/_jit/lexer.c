@@ -24,14 +24,17 @@
 #include "libjit.h"
 /**/
 
-#include <deemon/module.h>
-#include <deemon/object.h>
+#include <deemon/api.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h>
+/**/
+
+#include <stdint.h> /* uint32_t */
 
 DECL_BEGIN
 
-INTERN void DFCALL
+INTERN NONNULL((1)) void DFCALL
 JITLexer_Yield(JITLexer *__restrict self) {
 	uniflag_t flags;
 	uint32_t ch32;

@@ -24,15 +24,17 @@
 #include "libjit.h"
 /**/
 
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/class.h>
-#include <deemon/compiler/lexer.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/module.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/stringutils.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
@@ -40,6 +42,10 @@
 
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t, uint32_t */
 
 DECL_BEGIN
 
@@ -56,7 +62,7 @@ INTERN_CONST char const rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_M
 /* Check if the current token may refer to the start of an expression.
  * The currently selected token is not altered/is restored before this function returns.
  * NOTE: This function may also be used with `JITSmallLexer' */
-INTERN bool DFCALL
+INTERN WUNUSED NONNULL((1)) bool DFCALL
 JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 	switch (self->jl_tok) {
 
@@ -1322,7 +1328,7 @@ err_r:
  *             ^            ^
  * >> }
  */
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DFCALL
+INTERN WUNUSED ATTR_OUT(2) ATTR_OUT(3) ATTR_OUT(4) NONNULL((1)) int DFCALL
 JITLexer_ParseCatchMask(JITLexer *__restrict self,
                         DREF DeeObject **__restrict p_typemask,
                         char const **__restrict p_symbol_name,

@@ -26,24 +26,18 @@
 
 #include <deemon/alloc.h>
 #include <deemon/class.h>
-#include <deemon/compiler/lexer.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/instancemethod.h>
-#include <deemon/int.h>
 #include <deemon/kwds.h>
-#include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
-
-#include <hybrid/unaligned.h>
 
 DECL_BEGIN
 
-INTERN void DFCALL
+INTERN NONNULL((1)) void DFCALL
 JITLValue_Fini(JITLValue *__restrict self) {
 	switch (self->lv_kind) {
 
@@ -67,7 +61,7 @@ JITLValue_Fini(JITLValue *__restrict self) {
 	}
 }
 
-INTERN void DFCALL
+INTERN NONNULL((1, 2)) void DFCALL
 JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, void *arg) {
 	switch (self->lv_kind) {
 
@@ -92,7 +86,7 @@ JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE bool DFCALL
+PRIVATE WUNUSED NONNULL((1)) bool DFCALL
 update_symbol_objent(JITSymbol *__restrict self) {
 	struct jit_object_table *tab;
 	struct jit_object_entry *ent;
@@ -108,34 +102,35 @@ update_symbol_objent(JITSymbol *__restrict self) {
 	if (ent->oe_namelen != self->js_objent.jo_namelen)
 		goto do_reload;
 	return true;
-do_reload: {
-	dhash_t i, perturb, hash;
-	hash = Dee_HashUtf8(self->js_objent.jo_namestr,
-	                    self->js_objent.jo_namelen);
-	i = perturb = hash & tab->ot_mask;
-	for (;; JITObjectTable_NEXT(i, perturb)) {
-		ent = &tab->ot_list[i & tab->ot_mask];
-		if unlikely(!ent->oe_namestr)
-			goto err_unloaded;
-		if (ent->oe_namestr == (char *)ITER_DONE)
-			continue;
-		if (ent->oe_namehsh != hash)
-			continue;
-		if (ent->oe_namelen != self->js_objent.jo_namelen)
-			continue;
-		if (ent->oe_namestr == (char *)self->js_objent.jo_namestr)
-			break; /* Exact same string */
-		if (bcmpc(ent->oe_namestr, self->js_objent.jo_namestr,
-		          self->js_objent.jo_namelen, sizeof(char)) != 0)
-			continue;
-		/* Found it! */
-		break;
+	{
+		Dee_hash_t i, perturb, hash;
+do_reload:
+		hash = Dee_HashUtf8(self->js_objent.jo_namestr,
+		                    self->js_objent.jo_namelen);
+		i = perturb = hash & tab->ot_mask;
+		for (;; JITObjectTable_NEXT(i, perturb)) {
+			ent = &tab->ot_list[i & tab->ot_mask];
+			if unlikely(!ent->oe_namestr)
+				goto err_unloaded;
+			if (ent->oe_namestr == (char *)ITER_DONE)
+				continue;
+			if (ent->oe_namehsh != hash)
+				continue;
+			if (ent->oe_namelen != self->js_objent.jo_namelen)
+				continue;
+			if (ent->oe_namestr == (char *)self->js_objent.jo_namestr)
+				break; /* Exact same string */
+			if (bcmpc(ent->oe_namestr, self->js_objent.jo_namestr,
+			          self->js_objent.jo_namelen, sizeof(char)) != 0)
+				continue;
+			/* Found it! */
+			break;
+		}
+		/* Update cached values. */
+		self->js_objent.jo_ent     = ent;
+		self->js_objent.jo_namestr = (char const *)ent->oe_namestr;
+		self->js_objent.jo_namelen = ent->oe_namelen;
 	}
-	/* Update cached values. */
-	self->js_objent.jo_ent     = ent;
-	self->js_objent.jo_namestr = (char const *)ent->oe_namestr;
-	self->js_objent.jo_namelen = ent->oe_namelen;
-}
 	return true;
 err_unloaded:
 	DeeError_Throwf(&DeeError_SymbolError,
@@ -988,7 +983,7 @@ done:
  * @param: mode: Set of `LOOKUP_SYM_*'
  * @return: 0:  The specified symbol was found, and `result' was filled
  * @return: -1: An error occurred. */
-INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+INTERN WUNUSED ATTR_INS(3, 4) NONNULL((1, 2)) int DFCALL
 JITContext_Lookup(JITContext *__restrict self,
                   JITSymbol *__restrict result,
                   /*utf-8*/ char const *name,
@@ -997,7 +992,7 @@ JITContext_Lookup(JITContext *__restrict self,
 	struct Dee_module_symbol *star_import_symbol;
 	JITObjectTable *tab;
 	struct jit_object_entry *ent;
-	dhash_t hash = Dee_HashUtf8(name, namelen);
+	Dee_hash_t hash = Dee_HashUtf8(name, namelen);
 	switch (mode & LOOKUP_SYM_VMASK) {
 
 	case LOOKUP_SYM_VLOCAL:
@@ -1174,7 +1169,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+INTERN WUNUSED ATTR_INS(3, 4) NONNULL((1, 2)) int DFCALL
 JITContext_LookupNth(JITContext *__restrict self,
                      JITSymbol *__restrict result,
                      /*utf-8*/ char const *name,
@@ -1310,7 +1305,7 @@ JITContext_DoImportSymbol(JITContext *__restrict self,
                           DeeObject *__restrict source_module) {
 	JITObjectTable *tab;
 	struct jit_object_entry *ent;
-	dhash_t symbol_hash;
+	Dee_hash_t symbol_hash;
 	tab = JITContext_GetRWLocals(self);
 	if unlikely(!tab)
 		goto err;
@@ -1323,7 +1318,7 @@ JITContext_DoImportSymbol(JITContext *__restrict self,
 		struct Dee_module_symbol *modsym;
 		char const *source_name;
 		size_t source_size;
-		dhash_t source_hash;
+		Dee_hash_t source_hash;
 		if (spec->ii_import_name) {
 			source_name = DeeString_AsUtf8((DeeObject *)spec->ii_import_name);
 			if unlikely(!source_name)

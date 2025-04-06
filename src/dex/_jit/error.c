@@ -24,13 +24,21 @@
 #include "libjit.h"
 /**/
 
+#include <deemon/api.h>
+#include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/object.h>
+#include <deemon/string.h>
+#include <deemon/system-features.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 
 /* RT Exception handlers. */
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD ATTR_INS(1, 2) int DCALL
 err_invalid_argc_len(char const *function_name, size_t function_size,
                      size_t argc_cur, size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
@@ -51,7 +59,7 @@ INTERN ATTR_COLD int DCALL err_no_active_exception(void) {
 	return DeeError_Throwf(&DeeError_RuntimeError, "No active exception");
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unknown_global(DeeObject *__restrict key) {
 	ASSERT_OBJECT(key);
 	return DeeError_Throwf(&DeeError_KeyError,
@@ -59,14 +67,14 @@ err_unknown_global(DeeObject *__restrict key) {
 	                       key);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD ATTR_INS(1, 2) int DCALL
 err_unknown_global_str_len(char const *__restrict key, size_t keylen) {
 	return DeeError_Throwf(&DeeError_KeyError,
 	                       "Unknown global `%$s'",
 	                       keylen, key);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_invalid_unpack_size(DeeObject *__restrict unpack_object,
                         size_t need_size, size_t real_size) {
 	ASSERT_OBJECT(unpack_object);
@@ -77,9 +85,9 @@ err_invalid_unpack_size(DeeObject *__restrict unpack_object,
 	                       real_size == 1 ? "as" : "ere");
 }
 
-INTERN ATTR_COLD int DCALL
-err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object,
-                             DeeObject *__restrict unpack_iterator,
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_invalid_unpack_iter_size(DeeObject *unpack_object,
+                             DeeObject *unpack_iterator,
                              size_t need_size) {
 	ASSERT_OBJECT(unpack_object);
 	ASSERT_OBJECT(unpack_iterator);
@@ -99,7 +107,7 @@ err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object,
 
 
 /* Syntax Exception handlers. */
-LOCAL NONNULL((1)) void DFCALL
+PRIVATE NONNULL((1)) void DFCALL
 syn_trace_here(JITLexer *__restrict self) {
 	JITLexer_ErrorTrace(self, self->jl_tokstart);
 	self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
@@ -905,7 +913,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 
 INTERN ATTR_COLD int
 (DFCALL err_cannot_import_relative)(char const *module_name,
-                                   size_t module_namelen) {
+                                    size_t module_namelen) {
 	return DeeError_Throwf(&DeeError_CompilerError,
 	                       "Cannot import relative module %$q",
 	                       module_namelen, module_name);

@@ -25,7 +25,7 @@
 /**/
 
 #include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -35,10 +35,14 @@
 #include <deemon/seq.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/thread.h>
+#include <deemon/util/rlock.h>
 
-#include <hybrid/byteorder.h>
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* uint32_t */
 
 DECL_BEGIN
 
@@ -54,7 +58,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getrefs(JITFunction *__rest
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getrefsbyname(JITFunction *__restrict self);
 
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 jit_state_fini(struct jit_state *__restrict self) {
 	switch (self->js_kind) {
 

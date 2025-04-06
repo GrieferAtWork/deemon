@@ -24,15 +24,24 @@
 #include "libjit.h"
 /**/
 
+#include <deemon/api.h>
+#include <deemon/class.h>
+#include <deemon/module.h>
+#include <deemon/object.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
+/**/
+
+#include <stddef.h> /* size_t, offsetof */
+#include <stdint.h> /* uint32_t */
 
 DECL_BEGIN
 
-INTDEF NONNULL((1, 2)) void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 JITLexer_ReferenceKeyword(JITLexer *__restrict self,
                           char const *__restrict name,
                           size_t size) {
@@ -44,8 +53,8 @@ JITLexer_ReferenceKeyword(JITLexer *__restrict self,
 	if (JITObjectTable_Lookup(&self->jl_scandata.jl_function->jf_args, name, size, hash) ||
 	    JITObjectTable_Lookup(&self->jl_scandata.jl_function->jf_refs, name, size, hash))
 		return; /* Keyword is an argument, or has already been referenced. */
-	iter = self->jl_scandata.jl_parobtab;
-	for (; iter; iter = iter->ot_prev.otp_tab) {
+	for (iter = self->jl_scandata.jl_parobtab;
+	     iter; iter = iter->ot_prev.otp_tab) {
 		struct jit_object_entry *ent, *destent;
 		ent = JITObjectTable_Lookup(iter, name, size, hash);
 		if (!ent) {
@@ -184,7 +193,7 @@ err:
 }
 
 
-INTERN void DFCALL
+PRIVATE NONNULL((1)) void DFCALL
 JITLexer_ScanForHead(JITLexer *__restrict self) {
 	bool has_paren;
 	if (JITLexer_ISKWD(self, "pack"))
@@ -206,7 +215,7 @@ JITLexer_ScanForHead(JITLexer *__restrict self) {
 		JITLexer_Yield(self);
 }
 
-INTERN void DFCALL
+PRIVATE NONNULL((1)) void DFCALL
 JITLexer_ScanCatchMask(JITLexer *__restrict self) {
 	bool hasparen;
 	if (JITLexer_ISKWD(self, "pack"))
@@ -225,7 +234,7 @@ JITLexer_ScanCatchMask(JITLexer *__restrict self) {
 		JITLexer_Yield(self);
 }
 
-INTERN void DFCALL
+PRIVATE NONNULL((1)) void DFCALL
 JITLexer_QuickSkipModuleName(JITLexer *__restrict self) {
 	if (self->jl_tok == '.' || self->jl_tok == JIT_KEYWORD) {
 		unsigned char const *start, *end;
@@ -293,7 +302,7 @@ do_print:
 }
 
 
-INTERN void DFCALL
+PRIVATE NONNULL((1)) void DFCALL
 JITLexer_QuickSkipOperatorName(JITLexer *__restrict self) {
 	switch (self->jl_tok) {
 

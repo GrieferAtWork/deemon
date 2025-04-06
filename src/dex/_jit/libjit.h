@@ -23,13 +23,17 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/class.h>
-#include <deemon/dex.h>
-#include <deemon/map.h>
+#include <deemon/module.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero(), bcmpc(), ... */
 #include <deemon/util/rlock.h>
 
 #include <hybrid/typecore.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -305,7 +309,7 @@ struct jit_symbol {
 		struct {
 			/*utf-8*/ char const      *jg_namestr; /* [0..jg_namelen] The global symbol name. */
 			size_t                     jg_namelen; /* Length of the global symbol name. */
-			dhash_t                    jg_namehsh; /* Hash for the global symbol name. */
+			Dee_hash_t                 jg_namehsh; /* Hash for the global symbol name. */
 		} js_globalstr; /* JIT_SYMBOL_GLOBALSTR */
 
 		struct {
@@ -323,7 +327,7 @@ struct jit_symbol {
 			DREF DeeObject            *ja_base;    /* [1..1] Expression base object */
 			/*utf-8*/ char const      *ja_name;    /* [0..ja_size] Attribute name. */
 			size_t                     ja_size;    /* Length of the attribute name. */
-			dhash_t                    ja_hash;    /* Hash of the attribute name. */
+			Dee_hash_t                 ja_hash;    /* Hash of the attribute name. */
 		} js_attrstr; /* JIT_SYMBOL_ATTRSTR */
 
 	}
@@ -340,7 +344,7 @@ struct jit_symbol {
 };
 
 #ifdef __INTELLISENSE__
-INTDEF void DFCALL JITSymbol_Fini(JITSymbol *__restrict self);
+NONNULL((1)) void DFCALL JITSymbol_Fini(JITSymbol *__restrict self);
 #else /* __INTELLISENSE__ */
 #define JITSymbol_Fini(self) JITLValue_Fini((JITLValue *)(self))
 #endif /* !__INTELLISENSE__ */
@@ -395,7 +399,7 @@ struct jit_lvalue {
 		struct {
 			/*utf-8*/ char const      *lg_namestr; /* [0..jg_namelen] The global symbol name. */
 			size_t                     lg_namelen; /* Length of the global symbol name. */
-			dhash_t                    lg_namehsh; /* Hash of the global symbol name. */
+			Dee_hash_t                 lg_namehsh; /* Hash of the global symbol name. */
 		} lv_globalstr; /* JIT_LVALUE_GLOBALSTR */
 
 		struct {
@@ -413,7 +417,7 @@ struct jit_lvalue {
 			DREF DeeObject            *la_base;    /* [1..1] Expression base object */
 			/*utf-8*/ char const      *la_name;    /* [0..la_size] Attribute name. */
 			size_t                     la_size;    /* Length of the attribute name. */
-			dhash_t                    la_hash;    /* Hash of the attribute name. */
+			Dee_hash_t                 la_hash;    /* Hash of the attribute name. */
 		} lv_attrstr; /* JIT_LVALUE_ATTRSTR */
 
 		struct {
@@ -448,8 +452,10 @@ struct jit_lvalue {
 #define JITLValue_Init(self)     ((self)->lv_kind = JIT_LVALUE_NONE)
 
 /* Finalize a given L-Value object. */
-INTDEF void DFCALL JITLValue_Fini(JITLValue *__restrict self);
-INTDEF void DFCALL JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1)) void DFCALL
+JITLValue_Fini(JITLValue *__restrict self);
+INTDEF NONNULL((1, 2)) void DFCALL
+JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, void *arg);
 
 /* Interact with an L-Value
  * NOTE: For all of these, the caller must ensure that `self->lv_kind != JIT_LVALUE_NONE' */
@@ -577,7 +583,8 @@ struct jit_lexer {
 /* Similar to `JITLexer_GetLValue()', but also finalize
  * the stored L-value, and set it to describe nothing.
  * NOTE: The stored L-value is _always_ reset! */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL JITLexer_PackLValue(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+JITLexer_PackLValue(JITLexer *__restrict self);
 
 
 /* Check if the current token is a keyword `x' */
@@ -598,13 +605,13 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL JITLexer_PackLValue(JITLexer *
 
 /* Starting at `token->jl_tokend', scan for the next input token
  * NOTE: This function may also be used with `JITSmallLexer' */
-INTDEF void DFCALL JITLexer_Yield(JITLexer *__restrict self);
+INTDEF NONNULL((1)) void DFCALL JITLexer_Yield(JITLexer *__restrict self);
 #define JITLexer_YieldAt(self, pos) ((self)->jl_tokend = (pos), JITLexer_Yield(self))
 
 /* Remember the fact that an exception was thrown
  * when code at `pos' was being executed. */
 #ifdef __INTELLISENSE__
-INTDEF void DFCALL
+NONNULL((1, 2)) void DFCALL
 JITLexer_ErrorTrace(JITLexer *__restrict self,
                     unsigned char const *__restrict pos);
 #else /* __INTELLISENSE__ */
@@ -629,7 +636,7 @@ struct jit_object_entry {
 	                                            * NOTE: `NULL' indicates an unused/sentinel entry;
 	                                            *       `ITER_DONE' indicates a deleted entry. */
 	size_t                      oe_namelen;    /* Length of the object name. */
-	dhash_t                     oe_namehsh;    /* Hash of the object name. */
+	Dee_hash_t                  oe_namehsh;    /* Hash of the object name. */
 	uintptr_t                   oe_type;       /* Object type (one of `JIT_OBJECT_ENTRY_TYPE_*') */
 	union {
 		DREF DeeObject         *oe_value;      /* [0..1][JIT_OBJECT_ENTRY_TYPE_LOCAL]
@@ -661,7 +668,7 @@ struct jit_object_entry {
 			DREF DeeObject            *eas_base;    /* [1..1] Expression base object */
 			/*utf-8*/ char const      *eas_name;    /* [0..ja_size] Attribute name. */
 			size_t                     eas_size;    /* Length of the attribute name. */
-			dhash_t                    eas_hash;    /* Hash of the attribute name. */
+			Dee_hash_t                 eas_hash;    /* Hash of the attribute name. */
 		} oe_extern_attrstr;                        /* JIT_OBJECT_ENTRY_EXTERN_ATTRSTR */
 	};
 };
@@ -734,36 +741,36 @@ JITObjectTable_Copy(JITObjectTable *__restrict dst,
  * @return: 1:  An entry already existed for the given name when `override_existing' was `false'.
  * @return: 0:  Successfully created a new entry.
  * @return: -1: An error occurred (failed to increase the hash size of `self') */
-INTDEF int DCALL
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) int DCALL
 JITObjectTable_Update(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
-                      size_t namelen, dhash_t namehsh,
-                      DeeObject *value,
+                      size_t namelen, Dee_hash_t namehsh,
+                      /*[0..1]*/ DeeObject *value,
                       bool override_existing);
 
 /* Delete an existing entry for an object with the given name
  * @return: true:  Successfully deleted the entry, after potentially unbinding an associated object.
  * @return: false: The object table didn't include an entry matching the given name. */
-INTDEF bool DCALL
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) bool DCALL
 JITObjectTable_Delete(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
-                      size_t namelen, dhash_t namehsh);
+                      size_t namelen, Dee_hash_t namehsh);
 
 /* Lookup a given object within `self'
  * @return: * :   The entry associated with the given name.
  * @return: NULL: Could not find an object matching the specified name. (no error was thrown) */
-INTDEF WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct jit_object_entry *DCALL
 JITObjectTable_Lookup(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
-                      size_t namelen, dhash_t namehsh);
+                      size_t namelen, Dee_hash_t namehsh);
 
 /* Lookup or create an entry for a given name within `self'
  * @return: * :   The entry associated with the given name.
  * @return: NULL: Failed to create a new entry. (an error _WAS_ thrown) */
-INTDEF WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct jit_object_entry *DCALL
 JITObjectTable_Create(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
-                      size_t namelen, dhash_t namehsh);
+                      size_t namelen, Dee_hash_t namehsh);
 
 /* Add a *-import module or object to `self' (if not already persent)
  * @return: 0 : Success
@@ -789,10 +796,10 @@ JITObjectTable_AddImportStar(JITObjectTable *__restrict self,
  * @return: * :        The module/object defining `namestr'
  * @return: ITER_DONE: The *-imported module defines `namestr'
  * @return: NULL:      An error was thrown. */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL
 JITObjectTable_FindImportStar(JITObjectTable *__restrict self,
                               /*utf-8*/ char const *namestr,
-                              size_t namelen, dhash_t namehsh,
+                              size_t namelen, Dee_hash_t namehsh,
                               struct Dee_module_symbol **p_mod_symbol);
 
 
@@ -863,12 +870,11 @@ INTDEF NONNULL((1)) void DCALL _JITContext_PopLocals(JITContext *__restrict self
  * either for reading (in which case `NULL' is indicative of an empty scope),
  * or for writing (in which case `NULL' indicates an error) */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1)) JITObjectTable *DCALL JITContext_GetROLocals(JITContext *__restrict self);
-INTDEF WUNUSED NONNULL((1)) JITObjectTable *DCALL JITContext_GetRWLocals(JITContext *__restrict self);
+WUNUSED NONNULL((1)) JITObjectTable *DCALL JITContext_GetROLocals(JITContext *__restrict self);
 #else /* __INTELLISENSE__ */
 #define JITContext_GetROLocals(self) ((self)->jc_locals.otp_tab)
-INTDEF WUNUSED NONNULL((1)) JITObjectTable *DCALL JITContext_GetRWLocals(JITContext *__restrict self);
 #endif /* !__INTELLISENSE__ */
+INTDEF WUNUSED NONNULL((1)) JITObjectTable *DCALL JITContext_GetRWLocals(JITContext *__restrict self);
 
 
 
@@ -876,12 +882,12 @@ INTDEF WUNUSED NONNULL((1)) JITObjectTable *DCALL JITContext_GetRWLocals(JITCont
  * @param: mode: Set of `LOOKUP_SYM_*'
  * @return: 0:  The specified symbol was found, and `result' was filled
  * @return: -1: An error occurred. */
-INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+INTDEF WUNUSED ATTR_INS(3, 4) NONNULL((1, 2)) int DFCALL
 JITContext_Lookup(JITContext *__restrict self,
                   JITSymbol *__restrict result,
                   /*utf-8*/ char const *name,
                   size_t namelen, unsigned int mode);
-INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+INTDEF WUNUSED ATTR_INS(3, 4) NONNULL((1, 2)) int DFCALL
 JITContext_LookupNth(JITContext *__restrict self,
                      JITSymbol *__restrict result,
                      /*utf-8*/ char const *name,
@@ -930,7 +936,8 @@ JITLexer_SkipOperatorName(JITLexer *__restrict self);
 /* Check if the current token may refer to the start of an expression.
  * The currently selected token is not altered/is restored before this function returns.
  * NOTE: This function may also be used with `JITSmallLexer' */
-INTDEF bool DFCALL JITLexer_MaybeExpressionBegin(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) bool DFCALL
+JITLexer_MaybeExpressionBegin(JITLexer *__restrict self);
 
 
 /* Return the operator function for `opname', as exported from the `operators' module. */
@@ -944,49 +951,52 @@ JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, Dee_operator_t opnam
 #define JITLEXER_EVAL_FDISALLOWCAST 0x0040 /* Disallow cast expressions. */
 #define JITLEXER_EVAL_FPRIMARY      (JITLEXER_EVAL_FALLOWISBOUND | JITLEXER_EVAL_FALLOWINPLACE)
 
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalUnaryHead(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalUnary(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalProd(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalSum(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalShift(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalCmp(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalCmpEQ(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalAnd(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalXor(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalOr(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalAs(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalLand(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalLor(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalCond(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalAssign(JITLexer *__restrict self, unsigned int flags); /* NOTE: Also handled inplace operators. */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalUnaryHead(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalUnary(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalProd(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalSum(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalShift(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalCmp(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalCmpEQ(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalAnd(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalXor(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalOr(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalAs(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalLand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalLor(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalCond(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalAssign(JITLexer *__restrict self, unsigned int flags); /* NOTE: Also handled inplace operators. */
 
 /* With the current token one of the unary operator symbols, consume
  * it and parse the second operand before returning the combination */
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalUnaryOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalProdOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalSumOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalShiftOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalCmpOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalCmpEQOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalAndOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalXorOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalOrOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalAsOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalLandOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalLorOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalCondOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalAssignOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalUnaryOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalProdOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalSumOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalShiftOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalCmpOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalCmpEQOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalAndOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalXorOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalOrOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalAsOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalLandOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalLorOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalCondOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalAssignOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
 
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalCommaTupleOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF int DFCALL JITLexer_SkipCommaTupleOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalCommaListOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF int DFCALL JITLexer_SkipCommaListOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalCommaDictOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF int DFCALL JITLexer_SkipCommaDictOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalCommaTupleOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipCommaTupleOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalCommaListOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipCommaListOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL JITLexer_EvalCommaDictOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipCommaDictOperand(JITLexer *__restrict self, unsigned int flags);
 
 /* Evaluate/skip an argument list, including keyword labels */
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalArgumentList(JITLexer *__restrict self, DREF DeeObject **__restrict p_kwds);
-INTDEF int DFCALL JITLexer_SkipArgumentList(JITLexer *__restrict self);
+INTDEF WUNUSED ATTR_OUT(2) NONNULL((1)) DREF DeeObject *DFCALL
+JITLexer_EvalArgumentList(JITLexer *__restrict self,
+                          DREF DeeObject **__restrict p_kwds);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+JITLexer_SkipArgumentList(JITLexer *__restrict self);
 
 /* Evaluate a keyword label list and return a valid mapping for keywords to values.
  * >> foo(10, 20, x: 30, y: 40);
@@ -994,23 +1004,25 @@ INTDEF int DFCALL JITLexer_SkipArgumentList(JITLexer *__restrict self);
  *                ^
  *                +--- first_label_name == "x: 30, y...."
  *                     first_label_size == 1 */
-INTDEF WUNUSED DREF DeeObject *DFCALL
+INTDEF WUNUSED ATTR_OUTS(2, 3) NONNULL((1)) DREF DeeObject *DFCALL
 JITLexer_EvalKeywordLabelList(JITLexer *__restrict self,
                               char const *__restrict first_label_name,
                               size_t first_label_size);
-INTDEF int DFCALL
+INTDEF WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipKeywordLabelList(JITLexer *__restrict self);
 
 
 /* NOTE: This function might not necessarily return a module when a custom import override was defined.
  *       If that is the case, the caller must instead access the attributes of the returned object! */
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalModule(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
+JITLexer_EvalModule(JITLexer *__restrict self);
 #define JITLexer_SkipModule(self) JITLexer_SkipModuleName(self)
 
 /* Evaluate an import expression, starting on the token after "import".
  * >> import("foo");
  *          ^      ^ */
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalImportExpression(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
+JITLexer_EvalImportExpression(JITLexer *__restrict self);
 
 
 /* Parse a comma-separated list of expressions,
@@ -1026,8 +1038,12 @@ INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalImportExpression(JITLexer *__
  *                     When `NULL', evaluate to the last comma-expression.
  * @param: p_out_mode: When non-NULL, instead of parsing a `;' when required,
  *                     set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
-INTDEF WUNUSED DREF DeeObject *DCALL JITLexer_EvalComma(JITLexer *__restrict self, uint16_t mode, DeeTypeObject *seq_type, uint16_t *p_out_mode);
-INTDEF int DCALL JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode, uint16_t *p_out_mode);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+JITLexer_EvalComma(JITLexer *__restrict self, uint16_t mode,
+                   DeeTypeObject *seq_type, uint16_t *p_out_mode);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
+                   uint16_t *p_out_mode);
 
 #define AST_COMMA_NORMAL        0x0000
 #define AST_COMMA_FORCEMULTIPLE 0x0001 /* Always pack objects according to `flags' */
@@ -1188,7 +1204,7 @@ JITLexer_SkipTypeAnnotation(JITLexer *__restrict self, bool throw_errors);
  *                    You may use `JIT_IsCatchable()' to determine if the object can
  *                    be caught using this mask.
  */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DFCALL
+INTDEF WUNUSED ATTR_OUT(2) ATTR_OUT(3) ATTR_OUT(4) NONNULL((1)) int DFCALL
 JITLexer_ParseCatchMask(JITLexer *__restrict self,
                         DREF DeeObject **__restrict p_typemask,
                         char const **__restrict p_symbol_name,
@@ -1205,62 +1221,66 @@ JIT_IsCatchable(DeeObject *thrown_object,
                 DeeObject *typemask);
 
 /* Hybrid parsing functions. */
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalStatementOrBraces(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipStatementOrBraces(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
+JITLexer_EvalStatementOrBraces(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+JITLexer_SkipStatementOrBraces(JITLexer *__restrict self, unsigned int *p_was_expression);
 
 /* Starting immediately after a `{' token, parse the items of the brace
  * initializer / expression, before returning ontop of the `}' token. */
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalBraceItems(JITLexer *__restrict self);
-INTDEF int DFCALL JITLexer_SkipBraceItems(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
+JITLexer_EvalBraceItems(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+JITLexer_SkipBraceItems(JITLexer *__restrict self);
 
 /* Parse a statement/expression or automatically parse either.
  * @param: kind:            One of `AST_PARSE_WASEXPR_*'
  * @param: p_was_expression: [OUT] One of `AST_PARSE_WASEXPR_*' */
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalTry(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalTryHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipTry(JITLexer *__restrict self, bool is_statement);
-INTDEF int DFCALL JITLexer_SkipTryHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalDel(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalDelHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipDel(JITLexer *__restrict self, bool is_statement);
-INTDEF int DFCALL JITLexer_SkipDelHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalIf(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalIfHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipIf(JITLexer *__restrict self, bool is_statement);
-INTDEF int DFCALL JITLexer_SkipIfHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalFor(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalForHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipFor(JITLexer *__restrict self, bool is_statement);
-INTDEF int DFCALL JITLexer_SkipForHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalForeach(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalForeachHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipForeach(JITLexer *__restrict self, bool is_statement);
-INTDEF int DFCALL JITLexer_SkipForeachHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalWhile(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalWhileHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipWhile(JITLexer *__restrict self, bool is_statement);
-INTDEF int DFCALL JITLexer_SkipWhileHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalDo(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalDoHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipDo(JITLexer *__restrict self, bool is_statement);
-INTDEF int DFCALL JITLexer_SkipDoHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalWith(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalWithHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipWith(JITLexer *__restrict self, bool is_statement);
-INTDEF int DFCALL JITLexer_SkipWithHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalAssert(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalAssertHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipAssert(JITLexer *__restrict self, bool is_statement);
-INTDEF int DFCALL JITLexer_SkipAssertHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalTry(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalTryHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipTry(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipTryHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalDel(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalDelHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipDel(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipDelHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalIf(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalIfHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipIf(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipIfHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalFor(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalForHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipFor(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipForHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalForeach(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalForeachHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipForeach(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipForeachHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalWhile(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalWhileHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipWhile(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipWhileHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalDo(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalDoHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipDo(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipDoHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalWith(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalWithHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipWith(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipWithHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalAssert(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalAssertHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipAssert(JITLexer *__restrict self, bool is_statement);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipAssertHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 
 /* NOTE: Unlike other statements, the Import-statement parsers expect the
  *       lexer to point *after* the leading `import' or `from' keyword */
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalImportHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipImportHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalImport(JITLexer *__restrict self);
-INTDEF int DFCALL JITLexer_SkipImport(JITLexer *__restrict self);
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalFromImport(JITLexer *__restrict self);
-INTDEF int DFCALL JITLexer_SkipFromImport(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalImportHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipImportHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalImport(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipImport(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalFromImport(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipFromImport(JITLexer *__restrict self);
 
 struct jit_import_item {
 	char const           *ii_symbol_name; /* [1..1] The name by which the item should be imported. */
@@ -1305,23 +1325,28 @@ JITLexer_SkipImportItem(JITLexer *__restrict self,
  *   - A keyword                 (the class name)
  *   - '{'                       (Start of the class body)
  * @param: tp_flags: Set of `0 | TP_FFINAL' */
-INTDEF WUNUSED DREF DeeTypeObject *DFCALL JITLexer_EvalClass(JITLexer *__restrict self, uint16_t tp_flags);
-INTDEF int DFCALL JITLexer_SkipClass(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeTypeObject *DFCALL
+JITLexer_EvalClass(JITLexer *__restrict self, uint16_t tp_flags);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+JITLexer_SkipClass(JITLexer *__restrict self);
 
 
 /* @param: p_was_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
-INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
-INTDEF int DFCALL JITLexer_SkipHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
+JITLexer_EvalHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+JITLexer_SkipHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 
 /* Same as `JITLexer_SkipHybrid()', but the current token is `{', and a trailing `;' should _NOT_ be consumed */
-INTDEF int DFCALL JITLexer_SkipHybridAtBrace(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+JITLexer_SkipHybridAtBrace(JITLexer *__restrict self, unsigned int *p_was_expression);
 
 #define AST_PARSE_WASEXPR_NO     0 /* It's a statement. */
 #define AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
 #define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
 
 
-LOCAL WUNUSED DREF DeeObject *DFCALL
+LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 JITLexer_EvalHybridSecondary(JITLexer *__restrict self,
                              unsigned int *p_was_expression) {
 	DREF DeeObject *result;
@@ -1348,7 +1373,7 @@ JITLexer_EvalHybridSecondary(JITLexer *__restrict self,
 	return result;
 }
 
-LOCAL int DFCALL
+LOCAL WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipHybridSecondary(JITLexer *__restrict self,
                              unsigned int *p_was_expression) {
 	int result;
@@ -1380,7 +1405,7 @@ JITLexer_SkipHybridSecondary(JITLexer *__restrict self,
  * automatically unwinds L-value expressions. */
 #define JITLexer_SkipRValue(self) \
 	JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL)
-LOCAL WUNUSED DREF DeeObject *DFCALL
+LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 JITLexer_EvalRValue(JITLexer *__restrict self) {
 	DREF DeeObject *result;
 	result = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
@@ -1393,7 +1418,7 @@ JITLexer_EvalRValue(JITLexer *__restrict self) {
 
 #define JITLexer_SkipRValueDecl(self) \
 	JITLexer_SkipComma(self, AST_COMMA_NORMAL | AST_COMMA_ALLOWVARDECLS, NULL)
-LOCAL WUNUSED DREF DeeObject *DFCALL
+LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 JITLexer_EvalRValueDecl(JITLexer *__restrict self) {
 	DREF DeeObject *result;
 	result = JITLexer_EvalComma(self,
@@ -1482,10 +1507,6 @@ JITFunction_CreateArgument(JITFunctionObject *__restrict self,
  * to symbols from surrounding scopes, or the use of `yield'. */
 INTDEF NONNULL((1)) void DFCALL JITLexer_ScanExpression(JITLexer *__restrict self, bool allow_casts);
 INTDEF NONNULL((1)) void DFCALL JITLexer_ScanStatement(JITLexer *__restrict self);
-INTDEF NONNULL((1, 2)) void DCALL
-JITLexer_ReferenceKeyword(JITLexer *__restrict self,
-                          char const *__restrict name,
-                          size_t size);
 
 /* Assume that the given source text start/ends with `{' and `}'.
  * This function trims those characters, before also trimming any
@@ -1582,7 +1603,7 @@ struct jit_state {
 	;
 };
 
-INTDEF void DCALL jit_state_fini(struct jit_state *__restrict self);
+INTDEF NONNULL((1)) void DCALL jit_state_fini(struct jit_state *__restrict self);
 #define jit_state_alloc()       DeeSlab_MALLOC(struct jit_state)
 #define jit_state_free(self)    DeeSlab_FREE(self)
 #define jit_state_destroy(self) (jit_state_fini(self), jit_state_free(self))
@@ -1629,11 +1650,11 @@ INTDEF DeeTypeObject JITYieldFunctionIterator_Type;
 
 /* RT Exception handlers. */
 INTDEF ATTR_COLD int DCALL err_no_active_exception(void);
-INTDEF ATTR_COLD int DCALL err_invalid_argc_len(char const *function_name, size_t function_size, size_t argc_cur, size_t argc_min, size_t argc_max);
-INTDEF ATTR_COLD int DCALL err_unknown_global(DeeObject *__restrict key);
-INTDEF ATTR_COLD int DCALL err_unknown_global_str_len(char const *__restrict key, size_t keylen);
-INTDEF ATTR_COLD int DCALL err_invalid_unpack_size(DeeObject *__restrict unpack_object, size_t need_size, size_t real_size);
-INTDEF ATTR_COLD int DCALL err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object, DeeObject *__restrict unpack_iterator, size_t need_size);
+INTDEF ATTR_COLD ATTR_INS(1, 2) int DCALL err_invalid_argc_len(char const *function_name, size_t function_size, size_t argc_cur, size_t argc_min, size_t argc_max);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_global(DeeObject *__restrict key);
+INTDEF ATTR_COLD ATTR_INS(1, 2) int DCALL err_unknown_global_str_len(char const *__restrict key, size_t keylen);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_unpack_size(DeeObject *__restrict unpack_object, size_t need_size, size_t real_size);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_invalid_unpack_iter_size(DeeObject *unpack_object, DeeObject *unpack_iterator, size_t need_size);
 
 /* Syntax Exception handlers. */
 INTDEF ATTR_COLD NONNULL((1)) int DFCALL syn_if_expected_lparen_after_if(JITLexer *__restrict self);

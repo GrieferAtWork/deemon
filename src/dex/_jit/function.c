@@ -25,7 +25,6 @@
 /**/
 
 #include <deemon/alloc.h>
-#include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/dict.h>
@@ -109,9 +108,9 @@ INTERN WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
 JITFunction_CreateArgument(JITFunction *__restrict self,
                            /*utf-8*/ char const *namestr,
                            size_t namelen) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	struct jit_object_entry *result_entry;
-	dhash_t namehsh = Dee_HashUtf8(namestr, namelen);
+	Dee_hash_t namehsh = Dee_HashUtf8(namestr, namelen);
 again:
 	result_entry = NULL;
 	perturb = i = namehsh & self->jf_args.ot_mask;
@@ -1009,11 +1008,10 @@ jf_compare_eq(JITFunction *a, JITFunction *b) {
 		goto nope;
 	if (a->jf_argc_max != b->jf_argc_max)
 		goto nope;
-	if ((a->jf_source_end - a->jf_source_start) !=
-	    (b->jf_source_end - b->jf_source_start))
-		goto nope;
-	if (jit_compare_tokens(a->jf_source_start, a->jf_source_end,
-	                       b->jf_source_start, b->jf_source_end) != 0)
+	if (jit_compare_tokens((unsigned char const *)a->jf_source_start,
+	                       (unsigned char const *)a->jf_source_end,
+	                       (unsigned char const *)b->jf_source_start,
+	                       (unsigned char const *)b->jf_source_end) != 0)
 		goto nope;
 	if (a->jf_flags != b->jf_flags)
 		goto nope;
@@ -1070,7 +1068,7 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 jf_hash(JITFunction *__restrict self) {
 	(void)self;
 	/* TODO */
@@ -1078,7 +1076,7 @@ jf_hash(JITFunction *__restrict self) {
 }
 
 PRIVATE struct type_cmp jf_cmp = {
-	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&jf_hash,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&jf_hash,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&jf_compare_eq,
 };
 
@@ -1202,9 +1200,11 @@ jf_getrefsbyname(JITFunction *__restrict self) {
 				goto err_r;
 			iter = namestr;
 			iter = (char *)mempcpy(iter, refname, refsize * sizeof(char));
-			iter = (char *)mempcpy(iter, "[.", 2 * sizeof(char));
+			*iter++ = '[';
+			*iter++ = '.';
 			iter = (char *)mempcpy(iter, attname, attsize * sizeof(char));
-			*iter = ']';
+			*iter++ = ']';
+			ASSERT(iter == (namestr + namelen));
 
 			/* Insert into the dict. */
 			error = DeeDict_SetItemStringLen((DeeObject *)result,

@@ -25,10 +25,10 @@
 /**/
 
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
+#include <deemon/system-features.h>
 
 DECL_BEGIN
 
@@ -107,7 +107,7 @@ JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg) 
 }
 
 
-INTERN NONNULL((1)) bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 JITObjectTable_TryRehash(JITObjectTable *__restrict self,
                          size_t new_mask) {
 	size_t i, j, perturb;
@@ -157,13 +157,13 @@ JITObjectTable_TryRehash(JITObjectTable *__restrict self,
  * @return: 1:  An entry already existed for the given name when `override_existing' was `false'.
  * @return: 0:  Successfully created a new entry.
  * @return: -1: An error occurred (failed to increase the hash size of `self') */
-INTERN int DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) int DCALL
 JITObjectTable_Update(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
-                      size_t namelen, dhash_t namehsh,
-                      DeeObject *value,
+                      size_t namelen, Dee_hash_t namehsh,
+                      /*[0..1]*/ DeeObject *value,
                       bool override_existing) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	struct jit_object_entry *result_entry;
 again:
 	result_entry = NULL;
@@ -235,11 +235,11 @@ err:
 /* Delete an existing entry for an object with the given name
  * @return: true:  Successfully deleted the entry, after potentially unbinding an associated object.
  * @return: false: The object table didn't include an entry matching the given name. */
-INTERN bool DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) bool DCALL
 JITObjectTable_Delete(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
-                      size_t namelen, dhash_t namehsh) {
-	dhash_t i, perturb;
+                      size_t namelen, Dee_hash_t namehsh) {
+	Dee_hash_t i, perturb;
 	perturb = i = namehsh & self->ot_mask;
 	for (;; JITObjectTable_NEXT(i, perturb)) {
 		struct jit_object_entry *entry;
@@ -271,11 +271,11 @@ JITObjectTable_Delete(JITObjectTable *__restrict self,
 /* Lookup a given object within `self'
  * @return: * :   The entry associated with the given name.
  * @return: NULL: Could not find an object matching the specified name. (no error was thrown) */
-INTERN WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct jit_object_entry *DCALL
 JITObjectTable_Lookup(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
-                      size_t namelen, dhash_t namehsh) {
-	dhash_t i, perturb;
+                      size_t namelen, Dee_hash_t namehsh) {
+	Dee_hash_t i, perturb;
 	perturb = i = namehsh & self->ot_mask;
 	for (;; JITObjectTable_NEXT(i, perturb)) {
 		struct jit_object_entry *entry;
@@ -293,11 +293,11 @@ JITObjectTable_Lookup(JITObjectTable *__restrict self,
 /* Lookup or create an entry for a given name within `self'
  * @return: * :   The entry associated with the given name.
  * @return: NULL: Failed to create a new entry. (an error _WAS_ thrown) */
-INTERN WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct jit_object_entry *DCALL
 JITObjectTable_Create(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
-                      size_t namelen, dhash_t namehsh) {
-	dhash_t i, perturb;
+                      size_t namelen, Dee_hash_t namehsh) {
+	Dee_hash_t i, perturb;
 	struct jit_object_entry *result_entry;
 again:
 	result_entry = NULL;
@@ -399,10 +399,10 @@ err:
  * @return: * :        The module/object defining `namestr'
  * @return: ITER_DONE: The *-imported module defines `namestr'
  * @return: NULL:      An error was thrown. */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL
 JITObjectTable_FindImportStar(JITObjectTable *__restrict self,
                               /*utf-8*/ char const *namestr,
-                              size_t namelen, dhash_t namehsh,
+                              size_t namelen, Dee_hash_t namehsh,
                               struct Dee_module_symbol **p_mod_symbol) {
 	size_t i = self->ot_star_importc;
 	while (i) {
