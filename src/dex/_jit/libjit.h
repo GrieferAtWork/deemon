@@ -1493,16 +1493,6 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 #define JIT_FUNCTION_FTHISCALL 0x8000 /* Special flag for `JITFunction_New()': Inject a hidden argument
                                        * at the start of the parameter-list with the name "this". */
 
-/* Add a new symbol entry for an argument to `self->jf_args'
- * This is similar to using `JITObjectTable_Create()', however
- * when re-hashing, this function will also update indices contained
- * within the `self->jf_argv' vector, as well as the `self->jf_selfarg',
- * `self->jf_varargs' and `self->jf_varkwds' fields. */
-INTDEF WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
-JITFunction_CreateArgument(JITFunctionObject *__restrict self,
-                           /*utf-8*/ char const *namestr,
-                           size_t namelen);
-
 /* Analyze the contents of an expression/statement for possible references
  * to symbols from surrounding scopes, or the use of `yield'. */
 INTDEF NONNULL((1)) void DFCALL JITLexer_ScanExpression(JITLexer *__restrict self, bool allow_casts);

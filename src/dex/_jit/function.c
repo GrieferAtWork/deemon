@@ -25,16 +25,22 @@
 /**/
 
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -104,7 +110,7 @@ JITFunction_TryRehashArguments(JITFunction *__restrict self,
  * when re-hashing, this function will also update indices contained
  * within the `self->jf_argv' vector, as well as the `self->jf_selfarg',
  * `self->jf_varargs' and `self->jf_varkwds' fields. */
-INTERN WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
 JITFunction_CreateArgument(JITFunction *__restrict self,
                            /*utf-8*/ char const *namestr,
                            size_t namelen) {

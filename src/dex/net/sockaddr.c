@@ -116,7 +116,7 @@ sock_getmsgflagsof(DeeObject *__restrict name,
 				if (!temp)
 					temp = strchr(iter, ',');
 				if (!temp)
-					temp = iter + strlen(iter);
+					temp = strend(iter);
 				part_length = (size_t)(temp - iter);
 			}
 			if (part_length < COMPILER_LENOF(sock_msg_names[0].md_name)) {

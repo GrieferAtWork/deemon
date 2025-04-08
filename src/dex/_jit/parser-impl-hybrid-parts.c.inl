@@ -22,8 +22,18 @@
 //#define JIT_HYBRID 1
 #endif
 
-#include <deemon/alloc.h>
+#include "libjit.h"
+/**/
+
+#include <deemon/api.h>
+#include <deemon/error.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/thread.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 #ifdef JIT_HYBRID
 #define JIT_ARGS       unsigned int *p_was_expression

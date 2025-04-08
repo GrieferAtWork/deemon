@@ -1283,7 +1283,7 @@ file_class_open(DeeObject *UNUSED(self),
 			size_t optlen;
 			char const *next = strchr(iter, ',');
 			if (!next)
-				next = iter + strlen(iter);
+				next = strend(iter);
 			optlen = (size_t)(next - iter);
 			if (optlen < COMPILER_LENOF(open_options[0].name)) {
 				for (i = 0; i < COMPILER_LENOF(open_options); ++i) {

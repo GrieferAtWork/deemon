@@ -414,7 +414,7 @@ JITObjectTable_FindImportStar(JITObjectTable *__restrict self,
 		if (DeeModule_Check(module_or_object)) {
 			struct Dee_module_symbol *symbol;
 			symbol = DeeModule_GetSymbolStringLenHash((DeeModuleObject *)module_or_object,
-			                                      namestr, namelen, namehsh);
+			                                          namestr, namelen, namehsh);
 			if (symbol) {
 				/* Found it! */
 				if (p_mod_symbol)
@@ -428,7 +428,7 @@ JITObjectTable_FindImportStar(JITObjectTable *__restrict self,
 			                                         namestr, namelen, namehsh);
 			if (hasattr != 0) {
 				if unlikely(hasattr < 0)
-					return NULL; /* Error */
+					goto err; /* Error */
 				if (p_mod_symbol)
 					*p_mod_symbol = NULL;
 				return_reference_(module_or_object);
@@ -436,6 +436,8 @@ JITObjectTable_FindImportStar(JITObjectTable *__restrict self,
 		}
 	}
 	return ITER_DONE;
+err:
+	return NULL;
 }
 
 DECL_END

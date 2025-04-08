@@ -469,7 +469,7 @@ DeeKwArgs_GetItemNRStringLenHashDef(DeeKwArgs *__restrict self, char const *__re
  * `DeeKwds_Check()'. If you're certain that `kw != NULL && !DeeKwds_Check(kw)',
  * you can also use the set of `DeeKw_GetItemNR*' functions below.
  *
- * IMPORTANT: These functions to *NOT* return references! */
+ * IMPORTANT: These functions do *NOT* return references! */
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_GetKwNR(size_t argc, DeeObject *const *argv, DeeObject *kw, /*string*/ DeeObject *__restrict name);
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_GetKwNRStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw, char const *__restrict name, Dee_hash_t hash);
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_GetKwNRStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw, char const *__restrict name, size_t namelen, Dee_hash_t hash);
@@ -490,7 +490,7 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_TryGetKwNRSt
  * can extract objects from keyword arguments, without the caller needing to store
  * those references somewhere to decref them later.
  *
- * When calling (e.g.) `DeeObject_CallKw()', you have to make that the object you
+ * When calling (e.g.) `DeeObject_CallKw()', you have to be sure that the object you
  * pass as "kw" is either NULL, or fulfills `DeeObject_IsKw(kw)'. On the other side,
  * if you're given an object through "kw", you can be certain that it fulfills the
  * requirement of `DeeObject_IsKw(kw)'. If you are uncertain if some given object
@@ -514,7 +514,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKw_ForceWrap(DeeObject *__
 /* Lookup keyword arguments. These functions may be used to extract keyword arguments
  * when the caller knows that `kw != NULL && DeeObject_IsKw(kw) && !DeeKwds_Check(kw)'.
  *
- * IMPORTANT: These functions to *NOT* return references! */
+ * IMPORTANT: These functions do *NOT* return references! */
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKw_GetItemNR(DeeObject *__restrict kw, /*string*/ DeeObject *__restrict name);
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKw_GetItemNRStringHash(DeeObject *__restrict kw, char const *__restrict name, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKw_GetItemNRStringLenHash(DeeObject *kw, char const *__restrict name, size_t namelen, Dee_hash_t hash);

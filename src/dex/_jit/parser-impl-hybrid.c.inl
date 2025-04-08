@@ -21,6 +21,22 @@
 #include "parser-impl.c.inl"
 #endif /* __INTELLISENSE__ */
 
+#include "libjit.h"
+/**/
+
+#include <deemon/api.h>
+#include <deemon/list.h>
+#include <deemon/object.h>
+#include <deemon/seq.h>
+#include <deemon/tuple.h>
+
+#include <hybrid/unaligned.h>
+#include <hybrid/wordbits.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t */
+
 DECL_BEGIN
 
 INTERN RETURN_TYPE DFCALL

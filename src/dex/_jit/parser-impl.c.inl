@@ -19,8 +19,8 @@
  */
 #ifdef __INTELLISENSE__
 #include "parser.c"
-#define JIT_SKIP 1
-//#define JIT_EVAL 1
+//#define JIT_SKIP 1
+#define JIT_EVAL 1
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/bool.h>
@@ -44,6 +44,10 @@
 
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 #if !defined(JIT_SKIP) && !defined(JIT_EVAL)
 #error "Must either #define JIT_SKIP or JIT_EVAL before #including this file"

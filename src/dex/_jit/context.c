@@ -25,15 +25,21 @@
 /**/
 
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/class.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/instancemethod.h>
 #include <deemon/kwds.h>
+#include <deemon/module.h>
+#include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/util/atomic.h>
 #include <deemon/util/objectlist.h>
+/**/
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

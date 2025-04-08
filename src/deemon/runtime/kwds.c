@@ -2048,7 +2048,7 @@ DeeKw_ForceWrap(DeeObject *__restrict kwds) {
 /* Lookup keyword arguments. These functions may be used to extract keyword arguments
  * when the caller knows that `kw != NULL && DeeObject_IsKw(kw) && !DeeKwds_Check(kw)'.
  *
- * IMPORTANT: These functions to *NOT* return references! */
+ * IMPORTANT: These functions do *NOT* return references! */
 PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeKw_GetItemNR(DeeObject *__restrict kw,
                 /*string*/ DeeObject *__restrict name) {

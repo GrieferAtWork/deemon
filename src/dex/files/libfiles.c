@@ -31,7 +31,14 @@ DECL_BEGIN
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "Joined", (DeeObject *)&Joined_Type },
-	//{ "decoder", (DeeObject *)&Decoder_Type }, /* TODO */
+	//{ "Decoder", (DeeObject *)&Decoder_Type }, /* TODO */
+	//{ "Printer", (DeeObject *)&Printer_Type }, /* TODO*/
+	/* ^ Used to easily construct a file that invokes a given callback for its write-callback:
+	 * >> local fp = files.Printer((data: Bytes) -> {
+	 * >>     print "Now printing:", repr data;
+	 * >> });
+	 * >> print fp: "Hello!";
+	 */
 	{ NULL }
 };
 

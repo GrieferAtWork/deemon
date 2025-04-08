@@ -21,7 +21,17 @@
 #include "parser-impl.c.inl"
 #endif /* __INTELLISENSE__ */
 
+#include "libjit.h"
+/**/
+
+#include <deemon/api.h>
+#include <deemon/object.h>
+#include <deemon/error.h>
 #include <deemon/util/objectlist.h>
+/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
