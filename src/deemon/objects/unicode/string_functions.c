@@ -51,14 +51,7 @@
 /**/
 
 #include <stddef.h> /* size_t, offsetof */
-#include <stdint.h> /* SIZE_MAX */
-
-#ifndef SIZE_MAX
-#include <hybrid/limitcore.h>
-#ifndef SIZE_MAX
-#define SIZE_MAX __SIZE_MAX__
-#endif /* !SIZE_MAX */
-#endif /* !SIZE_MAX */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -1209,27 +1202,36 @@ err:
 
 PRIVATE WUNUSED DREF String *DCALL
 string_replace(String *__restrict self, size_t argc,
-               DeeObject *const *argv, DeeObject *Kw) {
-	String *find, *replace;
-	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, Kw, kwlist__find_replace_max, "oo|" UNPuSIZ ":replace", &find, &replace, &max_count))
+               DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("replace", params: "
+	DeeStringObject *find, DeeStringObject *replace, size_t max = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_replace_params "find:?.,replace:?.,max=!-1"
+	struct {
+		DeeStringObject *find;
+		DeeStringObject *replace;
+		size_t _max;
+	} args;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":replace", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(find, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.find, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	if (DeeObject_AssertTypeExact(replace, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.replace, &DeeString_Type))
 		goto err;
-	if unlikely(!max_count)
+	if unlikely(!args._max)
 		goto retself;
 	{
 		struct unicode_printer p = UNICODE_PRINTER_INIT;
 		union dcharptr_const ptr, mystr, begin, end, findstr;
 		size_t findlen;
 		SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-		                                        DeeString_WIDTH(find))) {
+		                                        DeeString_WIDTH(args.find))) {
 
 		CASE_WIDTH_1BYTE:
 			mystr.cp8   = DeeString_As1Byte((DeeObject *)self);
-			findstr.cp8 = DeeString_As1Byte((DeeObject *)find);
+			findstr.cp8 = DeeString_As1Byte((DeeObject *)args.find);
 			findlen     = WSTR_LENGTH(findstr.cp8);
 			/* Handle special cases. */
 			if unlikely(findlen > WSTR_LENGTH(mystr.cp8))
@@ -1243,9 +1245,9 @@ string_replace(String *__restrict self, size_t argc,
 				/* Found one */
 				if unlikely(unicode_printer_print8(&p, begin.cp8, (size_t)(ptr.cp8 - begin.cp8)) < 0)
 					goto err_printer;
-				if unlikely(unicode_printer_printstring(&p, (DeeObject *)replace) < 0)
+				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--max_count)
+				if unlikely(!--args._max)
 					break;
 				begin.cp8 = ptr.cp8 + findlen;
 			}
@@ -1263,7 +1265,7 @@ string_replace(String *__restrict self, size_t argc,
 			mystr.cp16 = DeeString_As2Byte((DeeObject *)self);
 			if unlikely(!mystr.cp16)
 				goto err_printer;
-			findstr.cp16 = DeeString_As2Byte((DeeObject *)find);
+			findstr.cp16 = DeeString_As2Byte((DeeObject *)args.find);
 			if unlikely(!findstr.cp16)
 				goto err_printer;
 			findlen = WSTR_LENGTH(findstr.cp16);
@@ -1277,9 +1279,9 @@ string_replace(String *__restrict self, size_t argc,
 			                           findstr.cp16, findlen)) != NULL) {
 				if unlikely(unicode_printer_print16(&p, begin.cp16, (size_t)(ptr.cp16 - begin.cp16)) < 0)
 					goto err_printer;
-				if unlikely(unicode_printer_printstring(&p, (DeeObject *)replace) < 0)
+				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--max_count)
+				if unlikely(!--args._max)
 					break;
 				begin.cp16 = ptr.cp16 + findlen;
 			}
@@ -1293,7 +1295,7 @@ string_replace(String *__restrict self, size_t argc,
 			mystr.cp32 = DeeString_As4Byte((DeeObject *)self);
 			if unlikely(!mystr.cp32)
 				goto err_printer;
-			findstr.cp32 = DeeString_As4Byte((DeeObject *)find);
+			findstr.cp32 = DeeString_As4Byte((DeeObject *)args.find);
 			if unlikely(!findstr.cp32)
 				goto err_printer;
 			findlen = WSTR_LENGTH(findstr.cp32);
@@ -1307,9 +1309,9 @@ string_replace(String *__restrict self, size_t argc,
 			                           findstr.cp32, findlen)) != NULL) {
 				if unlikely(unicode_printer_print32(&p, begin.cp32, (size_t)(ptr.cp32 - begin.cp32)) < 0)
 					goto err_printer;
-				if unlikely(unicode_printer_printstring(&p, (DeeObject *)replace) < 0)
+				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--max_count)
+				if unlikely(!--args._max)
 					break;
 				begin.cp32 = ptr.cp32 + findlen;
 			}
@@ -1328,7 +1330,7 @@ err:
 retrepl_if_self:
 	if (!DeeString_IsEmpty(self))
 		goto retself;
-	return_reference_(replace);
+	return_reference_(args.replace);
 retself:
 	return_reference_(self);
 }
@@ -1336,26 +1338,35 @@ retself:
 PRIVATE WUNUSED DREF String *DCALL
 string_casereplace(String *__restrict self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	String *find, *replace;
-	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPuSIZ ":casereplace", &find, &replace, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casereplace", params: "
+	DeeStringObject *find, DeeStringObject *replace, size_t max = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casereplace_params "find:?.,replace:?.,max=!-1"
+	struct {
+		DeeStringObject *find;
+		DeeStringObject *replace;
+		size_t _max;
+	} args;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":casereplace", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(find, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.find, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	if (DeeObject_AssertTypeExact(replace, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.replace, &DeeString_Type))
 		goto err;
-	if unlikely(!max_count)
+	if unlikely(!args._max)
 		goto retself;
 	{
 		struct unicode_printer p = UNICODE_PRINTER_INIT;
 		union dcharptr_const ptr, mystr, begin, end, findstr;
 		size_t findlen, match_length;
 		SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-		                                        DeeString_WIDTH(find))) {
+		                                        DeeString_WIDTH(args.find))) {
 
 		CASE_WIDTH_1BYTE:
 			mystr.cp8   = DeeString_As1Byte((DeeObject *)self);
-			findstr.cp8 = DeeString_As1Byte((DeeObject *)find);
+			findstr.cp8 = DeeString_As1Byte((DeeObject *)args.find);
 			findlen     = WSTR_LENGTH(findstr.cp8);
 			/* Handle special cases. */
 			if unlikely(findlen > WSTR_LENGTH(mystr.cp8))
@@ -1370,9 +1381,9 @@ string_casereplace(String *__restrict self, size_t argc,
 				/* Found one */
 				if unlikely(unicode_printer_print8(&p, begin.cp8, (size_t)(ptr.cp8 - begin.cp8)) < 0)
 					goto err_printer;
-				if unlikely(unicode_printer_printstring(&p, (DeeObject *)replace) < 0)
+				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--max_count)
+				if unlikely(!--args._max)
 					break;
 				begin.cp8 = ptr.cp8 + match_length;
 			}
@@ -1390,7 +1401,7 @@ string_casereplace(String *__restrict self, size_t argc,
 			mystr.cp16 = DeeString_As2Byte((DeeObject *)self);
 			if unlikely(!mystr.cp16)
 				goto err_printer;
-			findstr.cp16 = DeeString_As2Byte((DeeObject *)find);
+			findstr.cp16 = DeeString_As2Byte((DeeObject *)args.find);
 			if unlikely(!findstr.cp16)
 				goto err_printer;
 			findlen = WSTR_LENGTH(findstr.cp16);
@@ -1405,9 +1416,9 @@ string_casereplace(String *__restrict self, size_t argc,
 			                                   &match_length)) != NULL) {
 				if unlikely(unicode_printer_print16(&p, begin.cp16, (size_t)(ptr.cp16 - begin.cp16)) < 0)
 					goto err_printer;
-				if unlikely(unicode_printer_printstring(&p, (DeeObject *)replace) < 0)
+				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--max_count)
+				if unlikely(!--args._max)
 					break;
 				begin.cp16 = ptr.cp16 + match_length;
 			}
@@ -1421,7 +1432,7 @@ string_casereplace(String *__restrict self, size_t argc,
 			mystr.cp32 = DeeString_As4Byte((DeeObject *)self);
 			if unlikely(!mystr.cp32)
 				goto err_printer;
-			findstr.cp32 = DeeString_As4Byte((DeeObject *)find);
+			findstr.cp32 = DeeString_As4Byte((DeeObject *)args.find);
 			if unlikely(!findstr.cp32)
 				goto err_printer;
 			findlen = WSTR_LENGTH(findstr.cp32);
@@ -1436,9 +1447,9 @@ string_casereplace(String *__restrict self, size_t argc,
 			                                   &match_length)) != NULL) {
 				if unlikely(unicode_printer_print32(&p, begin.cp32, (size_t)(ptr.cp32 - begin.cp32)) < 0)
 					goto err_printer;
-				if unlikely(unicode_printer_printstring(&p, (DeeObject *)replace) < 0)
+				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--max_count)
+				if unlikely(!--args._max)
 					break;
 				begin.cp32 = ptr.cp32 + match_length;
 			}
@@ -1457,7 +1468,7 @@ err:
 retrepl_if_self:
 	if (!DeeString_IsEmpty(self))
 		goto retself;
-	return_reference_(replace);
+	return_reference_(args.replace);
 retself:
 	return_reference_(self);
 }
@@ -1495,7 +1506,8 @@ string_bytes(String *self, size_t argc,
 			goto err;
 		allow_invalid = !!temp;
 	} else {
-		if (DeeArg_Unpack(argc, argv, "|" UNPdSIZ UNPdSIZ "b:Bytes", &start, &end, &allow_invalid))
+		if (DeeArg_Unpack(argc, argv, "|" UNPuSIZ UNPxSIZ "b:Bytes",
+		                  &start, &end, &allow_invalid))
 			goto err;
 	}
 	my_bytes = DeeString_AsBytes((DeeObject *)self, allow_invalid);
@@ -1530,7 +1542,7 @@ err:
 			return_bool(test_ch);                                      \
 		} else {                                                       \
 			if (DeeArg_Unpack(argc, argv,                              \
-			                  "|" UNPdSIZ UNPdSIZ ":" #name,           \
+			                  "|" UNPuSIZ UNPxSIZ ":" #name,           \
 			                  &start, &end))                           \
 				goto err;                                              \
 			return_bool(function(self, start, end));                   \
@@ -1543,7 +1555,7 @@ err:
 	string_##name(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) { \
 		size_t start = 0, end = (size_t)-1;                                           \
 		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,                        \
-		                    "|" UNPdSIZ UNPdSIZ ":" #name,                            \
+		                    "|" UNPuSIZ UNPxSIZ ":" #name,                            \
 		                    &start, &end))                                            \
 			goto err;                                                                 \
 		return_bool(function(self, start, end));                                      \
@@ -1731,12 +1743,20 @@ INTDEF WUNUSED NONNULL((1)) DREF String *DCALL DeeString_Swapcase(String *__rest
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lower(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":lower",
-	                    &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lower", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_lower_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":lower", &args))
 		goto err;
-	return DeeString_ToLower(self, start, end);
+/*[[[end]]]*/
+	return DeeString_ToLower(self, args.start, args.end);
 err:
 	return NULL;
 }
@@ -1744,12 +1764,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_upper(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":upper",
-	                    &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("upper", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_upper_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":upper", &args))
 		goto err;
-	return DeeString_ToUpper(self, start, end);
+/*[[[end]]]*/
+	return DeeString_ToUpper(self, args.start, args.end);
 err:
 	return NULL;
 }
@@ -1757,12 +1785,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_title(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":title",
-	                    &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("title", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_title_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":title", &args))
 		goto err;
-	return DeeString_ToTitle(self, start, end);
+/*[[[end]]]*/
+	return DeeString_ToTitle(self, args.start, args.end);
 err:
 	return NULL;
 }
@@ -1770,12 +1806,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_capitalize(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":capitalize",
-	                    &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("capitalize", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_capitalize_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":capitalize", &args))
 		goto err;
-	return DeeString_Capitalize(self, start, end);
+/*[[[end]]]*/
+	return DeeString_Capitalize(self, args.start, args.end);
 err:
 	return NULL;
 }
@@ -1783,12 +1827,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_swapcase(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":swapcase",
-	                    &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("swapcase", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_swapcase_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":swapcase", &args))
 		goto err;
-	return DeeString_Swapcase(self, start, end);
+/*[[[end]]]*/
+	return DeeString_Swapcase(self, args.start, args.end);
 err:
 	return NULL;
 }
@@ -1796,11 +1848,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casefold(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":casefold",
-	                    &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefold", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casefold_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":casefold", &args))
 		goto err;
+/*[[[end]]]*/
 	{
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		union dcharptr_const my_iter, my_flush_start, my_end;
@@ -1810,12 +1870,12 @@ string_casefold(String *self, size_t argc,
 
 		CASE_WIDTH_1BYTE:
 			my_iter.cp8 = DeeString_Get1Byte((DeeObject *)self);
-			if (end > WSTR_LENGTH(my_iter.cp8))
-				end = WSTR_LENGTH(my_iter.cp8);
-			if unlikely(start >= end)
+			if (args.end > WSTR_LENGTH(my_iter.cp8))
+				args.end = WSTR_LENGTH(my_iter.cp8);
+			if unlikely(args.start >= args.end)
 				goto return_empty;
-			my_end.cp8 = my_iter.cp8 + end;
-			my_iter.cp8 += start;
+			my_end.cp8 = my_iter.cp8 + args.end;
+			my_iter.cp8 += args.start;
 			my_flush_start.cp8 = my_iter.cp8;
 			unicode_printer_allocate(&printer, (size_t)(my_end.cp8 - my_iter.cp8),
 			                         STRING_WIDTH_1BYTE);
@@ -1844,12 +1904,12 @@ string_casefold(String *self, size_t argc,
 
 		CASE_WIDTH_2BYTE:
 			my_iter.cp16 = DeeString_Get2Byte((DeeObject *)self);
-			if (end > WSTR_LENGTH(my_iter.cp16))
-				end = WSTR_LENGTH(my_iter.cp16);
-			if unlikely(start >= end)
+			if (args.end > WSTR_LENGTH(my_iter.cp16))
+				args.end = WSTR_LENGTH(my_iter.cp16);
+			if unlikely(args.start >= args.end)
 				goto return_empty;
-			my_end.cp16 = my_iter.cp16 + end;
-			my_iter.cp16 += start;
+			my_end.cp16 = my_iter.cp16 + args.end;
+			my_iter.cp16 += args.start;
 			my_flush_start.cp16 = my_iter.cp16;
 			unicode_printer_allocate(&printer, (size_t)(my_end.cp16 - my_iter.cp16),
 			                         STRING_WIDTH_2BYTE);
@@ -1878,12 +1938,12 @@ string_casefold(String *self, size_t argc,
 
 		CASE_WIDTH_4BYTE:
 			my_iter.cp32 = DeeString_Get4Byte((DeeObject *)self);
-			if (end > WSTR_LENGTH(my_iter.cp32))
-				end = WSTR_LENGTH(my_iter.cp32);
-			if unlikely(start >= end)
+			if (args.end > WSTR_LENGTH(my_iter.cp32))
+				args.end = WSTR_LENGTH(my_iter.cp32);
+			if unlikely(args.start >= args.end)
 				goto return_empty;
-			my_end.cp32 = my_iter.cp32 + end;
-			my_iter.cp32 += start;
+			my_end.cp32 = my_iter.cp32 + args.end;
+			my_iter.cp32 += args.start;
 			my_flush_start.cp32 = my_iter.cp32;
 			unicode_printer_allocate(&printer, (size_t)(my_end.cp32 - my_iter.cp32),
 			                         STRING_WIDTH_4BYTE);
@@ -1928,26 +1988,34 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_find(String *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
 	size_t result;
 	union dcharptr_const ptr, lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":find",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("find", params: "
+	DeeObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_find_params "needle,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":find", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
 		mylen = DeeString_WLEN(self);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		ptr.cp8 = memmemb(lhs.cp8 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
+		ptr.cp8 = memmemb(lhs.cp8 + args.start, mylen,
 		                  rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		if (!ptr.cp8)
 			goto not_found;
@@ -1959,11 +2027,11 @@ string_find(String *self, size_t argc,
 		if unlikely(!lhs.cp16)
 			goto err;
 		mylen = DeeString_WLEN(self);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		ptr.cp16 = memmemw(lhs.cp16 + start, mylen,
+		ptr.cp16 = memmemw(lhs.cp16 + args.start, mylen,
 		                   rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		if (!ptr.cp16)
 			goto not_found;
@@ -1975,11 +2043,11 @@ string_find(String *self, size_t argc,
 		if unlikely(!lhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		ptr.cp32 = memmeml(lhs.cp32 + start, mylen,
+		ptr.cp32 = memmeml(lhs.cp32 + args.start, mylen,
 		                   rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		if (!ptr.cp32)
 			goto not_found;
@@ -1996,26 +2064,34 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rfind(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
 	size_t result;
 	union dcharptr_const ptr, lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":rfind",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfind", params: "
+	DeeObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_rfind_params "needle,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rfind", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
 		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		ptr.cp8 = memrmemb(lhs.cp8 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
+		ptr.cp8 = memrmemb(lhs.cp8 + args.start, mylen,
 		                   rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		if (!ptr.cp8)
 			goto not_found;
@@ -2027,11 +2103,11 @@ string_rfind(String *self, size_t argc,
 		if unlikely(!lhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		ptr.cp16 = memrmemw(lhs.cp16 + start, mylen,
+		ptr.cp16 = memrmemw(lhs.cp16 + args.start, mylen,
 		                    rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		if (!ptr.cp16)
 			goto not_found;
@@ -2043,11 +2119,11 @@ string_rfind(String *self, size_t argc,
 		if unlikely(!lhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		ptr.cp32 = memrmeml(lhs.cp32 + start, mylen,
+		ptr.cp32 = memrmeml(lhs.cp32 + args.start, mylen,
 		                    rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		if (!ptr.cp32)
 			goto not_found;
@@ -2064,26 +2140,34 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_index(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
 	size_t result;
 	union dcharptr_const ptr, lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":index",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("index", params: "
+	DeeObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_index_params "needle,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":index", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
 		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		ptr.cp8 = memmemb(lhs.cp8 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
+		ptr.cp8 = memmemb(lhs.cp8 + args.start, mylen,
 		                  rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		if unlikely(!ptr.cp8)
 			goto not_found;
@@ -2095,11 +2179,11 @@ string_index(String *self, size_t argc,
 		if unlikely(!lhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		ptr.cp16 = memmemw(lhs.cp16 + start, mylen,
+		ptr.cp16 = memmemw(lhs.cp16 + args.start, mylen,
 		                   rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		if unlikely(!ptr.cp16)
 			goto not_found;
@@ -2111,11 +2195,11 @@ string_index(String *self, size_t argc,
 		if unlikely(!lhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		ptr.cp32 = memmeml(lhs.cp32 + start, mylen,
+		ptr.cp32 = memmeml(lhs.cp32 + args.start, mylen,
 		                   rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		if unlikely(!ptr.cp32)
 			goto not_found;
@@ -2125,7 +2209,7 @@ string_index(String *self, size_t argc,
 	return DeeInt_NewSize(result);
 not_found:
 	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)needle);
+	                    (DeeObject *)args.needle);
 err:
 	return NULL;
 }
@@ -2133,26 +2217,34 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rindex(String *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
 	size_t result;
 	union dcharptr_const ptr, lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":rindex",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindex", params: "
+	DeeObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_rindex_params "needle,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rindex", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
 		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		ptr.cp8 = memrmemb(lhs.cp8 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
+		ptr.cp8 = memrmemb(lhs.cp8 + args.start, mylen,
 		                   rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		if unlikely(!ptr.cp8)
 			goto not_found;
@@ -2164,11 +2256,11 @@ string_rindex(String *self, size_t argc,
 		if unlikely(!lhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		ptr.cp16 = memrmemw(lhs.cp16 + start, mylen,
+		ptr.cp16 = memrmemw(lhs.cp16 + args.start, mylen,
 		                    rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		if unlikely(!ptr.cp16)
 			goto not_found;
@@ -2180,11 +2272,11 @@ string_rindex(String *self, size_t argc,
 		if unlikely(!lhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		ptr.cp32 = memrmeml(lhs.cp32 + start, mylen,
+		ptr.cp32 = memrmeml(lhs.cp32 + args.start, mylen,
 		                    rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		if unlikely(!ptr.cp32)
 			goto not_found;
@@ -2194,7 +2286,7 @@ string_rindex(String *self, size_t argc,
 	return DeeInt_NewSize(result);
 not_found:
 	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)needle);
+	                    (DeeObject *)args.needle);
 err:
 	return NULL;
 }
@@ -2318,19 +2410,27 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_findany(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	struct string_findany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":findany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_findany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":findany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.sfad_self = self;
 	data.sfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&start, &end, &data.sfad_size, not_found);
-	data.sfad_base   = start;
+	CLAMP_SUBSTR(&args.start, &args.end, &data.sfad_size, not_found);
+	data.sfad_base   = args.start;
 	data.sfad_result = data.sfad_size;
-	if unlikely(DeeObject_Foreach(needles, &string_findany_cb, &data) == -1)
+	if unlikely(DeeObject_Foreach(args.needles, &string_findany_cb, &data) == -1)
 		goto err;
 	if (data.sfad_result < data.sfad_size)
 		return DeeInt_NewSize(data.sfad_base + data.sfad_result);
@@ -2343,24 +2443,32 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_indexany(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	struct string_findany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":indexany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("indexany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_indexany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":indexany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.sfad_self = self;
 	data.sfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&start, &end, &data.sfad_size, not_found);
-	data.sfad_base   = start;
+	CLAMP_SUBSTR(&args.start, &args.end, &data.sfad_size, not_found);
+	data.sfad_base   = args.start;
 	data.sfad_result = data.sfad_size;
-	if unlikely(DeeObject_Foreach(needles, &string_findany_cb, &data) == -1)
+	if unlikely(DeeObject_Foreach(args.needles, &string_findany_cb, &data) == -1)
 		goto err;
 	if (data.sfad_result < data.sfad_size)
 		return DeeInt_NewSize(data.sfad_base + data.sfad_result);
 not_found:
-	err_index_not_found((DeeObject *)self, needles);
+	err_index_not_found((DeeObject *)self, args.needles);
 err:
 	return NULL;
 }
@@ -2459,19 +2567,27 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefindany(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	struct string_casefindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":casefindany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casefindany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":casefindany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.scfad_self = self;
 	data.scfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&start, &end, &data.scfad_size, not_found);
-	data.scfad_base   = start;
+	CLAMP_SUBSTR(&args.start, &args.end, &data.scfad_size, not_found);
+	data.scfad_base   = args.start;
 	data.scfad_result = data.scfad_size;
-	if unlikely(DeeObject_Foreach(needles, &string_casefindany_cb, &data) == -1)
+	if unlikely(DeeObject_Foreach(args.needles, &string_casefindany_cb, &data) == -1)
 		goto err;
 	if (data.scfad_result < data.scfad_size) {
 		size_t index = data.scfad_base + data.scfad_result;
@@ -2486,26 +2602,34 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caseindexany(String *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	struct string_casefindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":caseindexany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindexany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caseindexany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caseindexany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.scfad_self = self;
 	data.scfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&start, &end, &data.scfad_size, not_found);
-	data.scfad_base   = start;
+	CLAMP_SUBSTR(&args.start, &args.end, &data.scfad_size, not_found);
+	data.scfad_base   = args.start;
 	data.scfad_result = data.scfad_size;
-	if unlikely(DeeObject_Foreach(needles, &string_casefindany_cb, &data) == -1)
+	if unlikely(DeeObject_Foreach(args.needles, &string_casefindany_cb, &data) == -1)
 		goto err;
 	if (data.scfad_result < data.scfad_size) {
 		size_t index = data.scfad_base + data.scfad_result;
 		return DeeTuple_NewII(index, index + data.scfad_reslen);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self, needles);
+	err_index_not_found((DeeObject *)self, args.needles);
 err:
 	return NULL;
 }
@@ -2589,20 +2713,28 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rfindany(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	struct string_rfindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":rfindany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfindany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_rfindany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":rfindany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.srfad_self = self;
 	data.srfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&start, &end, &data.srfad_size, not_found);
-	data.srfad_base = start;
-	if unlikely(DeeObject_Foreach(needles, &string_rfindany_cb, &data) == -1)
+	CLAMP_SUBSTR(&args.start, &args.end, &data.srfad_size, not_found);
+	data.srfad_base = args.start;
+	if unlikely(DeeObject_Foreach(args.needles, &string_rfindany_cb, &data) == -1)
 		goto err;
-	if (data.srfad_base > start)
+	if (data.srfad_base > args.start)
 		return DeeInt_NewSize(data.srfad_base - 1);
 not_found:
 	return_none;
@@ -2613,23 +2745,31 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rindexany(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	struct string_rfindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":rindexany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindexany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_rindexany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":rindexany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.srfad_self = self;
 	data.srfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&start, &end, &data.srfad_size, not_found);
-	data.srfad_base = start;
-	if unlikely(DeeObject_Foreach(needles, &string_rfindany_cb, &data) == -1)
+	CLAMP_SUBSTR(&args.start, &args.end, &data.srfad_size, not_found);
+	data.srfad_base = args.start;
+	if unlikely(DeeObject_Foreach(args.needles, &string_rfindany_cb, &data) == -1)
 		goto err;
-	if (data.srfad_base > start)
+	if (data.srfad_base > args.start)
 		return DeeInt_NewSize(data.srfad_base - 1);
 not_found:
-	err_index_not_found((DeeObject *)self, needles);
+	err_index_not_found((DeeObject *)self, args.needles);
 err:
 	return NULL;
 }
@@ -2720,20 +2860,28 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserfindany(String *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	struct string_caserfindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":caserfindany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfindany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caserfindany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caserfindany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.scrfad_self = self;
 	data.scrfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&start, &end, &data.scrfad_size, not_found);
-	data.scrfad_base = start;
-	if unlikely(DeeObject_Foreach(needles, &string_caserfindany_cb, &data) == -1)
+	CLAMP_SUBSTR(&args.start, &args.end, &data.scrfad_size, not_found);
+	data.scrfad_base = args.start;
+	if unlikely(DeeObject_Foreach(args.needles, &string_caserfindany_cb, &data) == -1)
 		goto err;
-	if (data.scrfad_base > start) {
+	if (data.scrfad_base > args.start) {
 		size_t index = data.scrfad_base - 1;
 		return DeeTuple_NewII(index, index + data.scrfad_reslen);
 	}
@@ -2746,25 +2894,33 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserindexany(String *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	struct string_caserfindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":caserindexany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindexany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caserindexany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caserindexany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.scrfad_self = self;
 	data.scrfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&start, &end, &data.scrfad_size, not_found);
-	data.scrfad_base = start;
-	if unlikely(DeeObject_Foreach(needles, &string_caserfindany_cb, &data) == -1)
+	CLAMP_SUBSTR(&args.start, &args.end, &data.scrfad_size, not_found);
+	data.scrfad_base = args.start;
+	if unlikely(DeeObject_Foreach(args.needles, &string_caserfindany_cb, &data) == -1)
 		goto err;
-	if (data.scrfad_base > start) {
+	if (data.scrfad_base > args.start) {
 		size_t index = data.scrfad_base - 1;
 		return DeeTuple_NewII(index, index + data.scrfad_reslen);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self, needles);
+	err_index_not_found((DeeObject *)self, args.needles);
 err:
 	return NULL;
 }
@@ -2780,15 +2936,23 @@ DeeString_CaseFindAll(String *self, String *other,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_findall(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":findall",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findall", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_findall_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":findall", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_FindAll(self, needle, start, end);
+	return DeeString_FindAll(self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -2796,15 +2960,23 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefindall(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":casefindall",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindall", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casefindall_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casefindall", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_CaseFindAll(self, needle, start, end);
+	return DeeString_CaseFindAll(self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -2812,25 +2984,33 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefind(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
 	union dcharptr_const ptr, lhs, rhs;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":casefind",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefind", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casefind_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casefind", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp8 = dee_memcasememb(lhs.cp8 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp8 = dee_memcasememb(lhs.cp8 + args.start, mylen,
 		                          rhs.cp8, WSTR_LENGTH(rhs.cp8),
 		                          &match_length);
 		if (!ptr.cp8)
@@ -2842,12 +3022,12 @@ string_casefind(String *self, size_t argc,
 		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
 		if unlikely(!lhs.cp16)
 			goto err;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp16 = dee_memcasememw(lhs.cp16 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp16 = dee_memcasememw(lhs.cp16 + args.start, mylen,
 		                           rhs.cp16, WSTR_LENGTH(rhs.cp16),
 		                           &match_length);
 		if (!ptr.cp16)
@@ -2859,12 +3039,12 @@ string_casefind(String *self, size_t argc,
 		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
 		if unlikely(!lhs.cp32)
 			goto err;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp32 = dee_memcasememl(lhs.cp32 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp32 = dee_memcasememl(lhs.cp32 + args.start, mylen,
 		                           rhs.cp32, WSTR_LENGTH(rhs.cp32),
 		                           &match_length);
 		if (!ptr.cp32)
@@ -2882,25 +3062,33 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserfind(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
 	union dcharptr_const ptr, lhs, rhs;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":caserfind",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfind", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caserfind_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserfind", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp8 = dee_memcasermemb(lhs.cp8 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp8 = dee_memcasermemb(lhs.cp8 + args.start, mylen,
 		                           rhs.cp8, WSTR_LENGTH(rhs.cp8),
 		                           &match_length);
 		if (!ptr.cp8)
@@ -2912,12 +3100,12 @@ string_caserfind(String *self, size_t argc,
 		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
 		if unlikely(!lhs.cp16)
 			goto err;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp16 = dee_memcasermemw(lhs.cp16 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp16 = dee_memcasermemw(lhs.cp16 + args.start, mylen,
 		                            rhs.cp16, WSTR_LENGTH(rhs.cp16),
 		                            &match_length);
 		if (!ptr.cp16)
@@ -2929,12 +3117,12 @@ string_caserfind(String *self, size_t argc,
 		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
 		if unlikely(!lhs.cp32)
 			goto err;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp32 = dee_memcasermeml(lhs.cp32 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp32 = dee_memcasermeml(lhs.cp32 + args.start, mylen,
 		                            rhs.cp32, WSTR_LENGTH(rhs.cp32),
 		                            &match_length);
 		if (!ptr.cp32)
@@ -2952,25 +3140,33 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caseindex(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
 	union dcharptr_const ptr, lhs, rhs;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":caseindex",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindex", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caseindex_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caseindex", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp8 = dee_memcasememb(lhs.cp8 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp8 = dee_memcasememb(lhs.cp8 + args.start, mylen,
 		                          rhs.cp8, WSTR_LENGTH(rhs.cp8),
 		                          &match_length);
 		if unlikely(!ptr.cp8)
@@ -2982,12 +3178,12 @@ string_caseindex(String *self, size_t argc,
 		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
 		if unlikely(!lhs.cp16)
 			goto err;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp16 = dee_memcasememw(lhs.cp16 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp16 = dee_memcasememw(lhs.cp16 + args.start, mylen,
 		                           rhs.cp16, WSTR_LENGTH(rhs.cp16),
 		                           &match_length);
 		if unlikely(!ptr.cp16)
@@ -2999,12 +3195,12 @@ string_caseindex(String *self, size_t argc,
 		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
 		if unlikely(!lhs.cp32)
 			goto err;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp32 = dee_memcasememl(lhs.cp32 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp32 = dee_memcasememl(lhs.cp32 + args.start, mylen,
 		                           rhs.cp32, WSTR_LENGTH(rhs.cp32),
 		                           &match_length);
 		if unlikely(!ptr.cp32)
@@ -3015,7 +3211,7 @@ string_caseindex(String *self, size_t argc,
 	return DeeTuple_NewII(result, result + match_length);
 not_found:
 	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)needle);
+	                    (DeeObject *)args.needle);
 err:
 	return NULL;
 }
@@ -3023,25 +3219,33 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserindex(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
 	union dcharptr_const ptr, lhs, rhs;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":caserindex",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindex", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caserindex_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserindex", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp8 = dee_memcasermemb(lhs.cp8 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp8 = dee_memcasermemb(lhs.cp8 + args.start, mylen,
 		                           rhs.cp8, WSTR_LENGTH(rhs.cp8),
 		                           &match_length);
 		if unlikely(!ptr.cp8)
@@ -3053,12 +3257,12 @@ string_caserindex(String *self, size_t argc,
 		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
 		if unlikely(!lhs.cp16)
 			goto err;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp16 = dee_memcasermemw(lhs.cp16 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp16 = dee_memcasermemw(lhs.cp16 + args.start, mylen,
 		                            rhs.cp16, WSTR_LENGTH(rhs.cp16),
 		                            &match_length);
 		if unlikely(!ptr.cp16)
@@ -3070,12 +3274,12 @@ string_caserindex(String *self, size_t argc,
 		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
 		if unlikely(!lhs.cp32)
 			goto err;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp32 = dee_memcasermeml(lhs.cp32 + start, mylen,
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		ptr.cp32 = dee_memcasermeml(lhs.cp32 + args.start, mylen,
 		                            rhs.cp32, WSTR_LENGTH(rhs.cp32),
 		                            &match_length);
 		if unlikely(!ptr.cp32)
@@ -3086,7 +3290,7 @@ string_caserindex(String *self, size_t argc,
 	return DeeTuple_NewII(result, result + match_length);
 not_found:
 	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)needle);
+	                    (DeeObject *)args.needle);
 err:
 	return NULL;
 }
@@ -3121,12 +3325,20 @@ string_getsubstr(String *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_substr(String *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":substr",
-	                    &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("substr", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_substr_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":substr", &args))
 		goto err;
-	return string_getsubstr(self, start, end);
+/*[[[end]]]*/
+	return string_getsubstr(self, args.start, args.end);
 err:
 	return NULL;
 }
@@ -3137,26 +3349,34 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_startswith(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t begin = 0, end = (size_t)-1;
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":startswith",
-	                    &needle, &begin, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("startswith", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_startswith_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":startswith", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 #ifdef CONFIG_STRING_STARTSWITH_ENDSWITH_SPECIALCASE_OPTIMIZATIONS
-	if (begin == 0 && end >= DeeString_WLEN(self) &&
+	if (args.start == 0 && args.end >= DeeString_WLEN(self) &&
 	    /* NOTE: This checks that `DeeString_STR()' being either LATIN-1, or
 	     *       UTF-8 is the same for both our own, and the `other' string. */
-	    (DeeString_STR_ISUTF8(self) == DeeString_STR_ISUTF8(needle))) {
+	    (DeeString_STR_ISUTF8(self) == DeeString_STR_ISUTF8(args.needle))) {
 		/* Special case: Since we don't have to count characters, we can simply
 		 *               match the UTF-8 representations against each other. */
-		if (DeeString_SIZE(needle) > DeeString_SIZE(self) ||
-		    !MEMEQB(DeeString_STR(self), DeeString_STR(needle),
-		            DeeString_SIZE(needle)))
+		if (DeeString_SIZE(args.needle) > DeeString_SIZE(self) ||
+		    !MEMEQB(DeeString_STR(self), DeeString_STR(args.needle),
+		            DeeString_SIZE(args.needle)))
 			goto nope;
 		return_true;
 	}
@@ -3164,53 +3384,53 @@ string_startswith(String *self, size_t argc,
 	/* Must decode the other string in order to match its contents
 	 * against data from our string at a specific offset. */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		my_str.cp8 = DeeString_As1Byte((DeeObject *)self);
-		ot_str.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
+		my_len -= args.start;
 		if (ot_len > my_len)
 			goto nope;
-		return_bool(MEMEQB(my_str.cp8 + begin, ot_str.cp8, ot_len));
+		return_bool(MEMEQB(my_str.cp8 + args.start, ot_str.cp8, ot_len));
 
 	CASE_WIDTH_2BYTE:
 		my_str.cp16 = DeeString_As2Byte((DeeObject *)self);
 		if unlikely(!my_str.cp16)
 			goto err;
-		ot_str.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		ot_str.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		my_len      = WSTR_LENGTH(my_str.cp16);
 		ot_len      = WSTR_LENGTH(ot_str.cp16);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
+		my_len -= args.start;
 		if (ot_len > my_len)
 			goto nope;
-		return_bool(MEMEQW(my_str.cp16 + begin, ot_str.cp16, ot_len));
+		return_bool(MEMEQW(my_str.cp16 + args.start, ot_str.cp16, ot_len));
 
 	CASE_WIDTH_4BYTE:
 		my_str.cp32 = DeeString_As4Byte((DeeObject *)self);
 		if unlikely(!my_str.cp32)
 			goto err;
-		ot_str.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		ot_str.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		my_len      = WSTR_LENGTH(my_str.cp32);
 		ot_len      = WSTR_LENGTH(ot_str.cp32);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
+		my_len -= args.start;
 		if (ot_len > my_len)
 			goto nope;
-		return_bool(MEMEQL(my_str.cp32 + begin, ot_str.cp32, ot_len));
+		return_bool(MEMEQL(my_str.cp32 + args.start, ot_str.cp32, ot_len));
 	}
 	return_bool(ot_len == 0);
 nope:
@@ -3222,27 +3442,35 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_endswith(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t begin = 0, end = (size_t)-1;
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":endswith",
-	                    &needle, &begin, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("endswith", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_endswith_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":endswith", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 #ifdef CONFIG_STRING_STARTSWITH_ENDSWITH_SPECIALCASE_OPTIMIZATIONS
-	if (begin == 0 && end >= DeeString_WLEN(self) &&
+	if (args.start == 0 && args.end >= DeeString_WLEN(self) &&
 	    /* NOTE: This checks that `DeeString_STR()' being either LATIN-1, or
 	     *       UTF-8 is the same for both our own, and the `other' string. */
-	    (DeeString_STR_ISUTF8(self) == DeeString_STR_ISUTF8(needle))) {
+	    (DeeString_STR_ISUTF8(self) == DeeString_STR_ISUTF8(args.needle))) {
 		/* Special case: Since we don't have to count characters, we can simply
 		 *               match the UTF-8 representations against each other. */
-		if (DeeString_SIZE(needle) > DeeString_SIZE(self) ||
+		if (DeeString_SIZE(args.needle) > DeeString_SIZE(self) ||
 		    !MEMEQB(DeeString_STR(self) +
-		            (DeeString_SIZE(self) - DeeString_SIZE(needle)),
-		            DeeString_STR(needle), DeeString_SIZE(needle)))
+		            (DeeString_SIZE(self) - DeeString_SIZE(args.needle)),
+		            DeeString_STR(args.needle), DeeString_SIZE(args.needle)))
 			goto nope;
 		return_true;
 	}
@@ -3250,59 +3478,59 @@ string_endswith(String *self, size_t argc,
 	/* Must decode the other string in order to match its contents
 	 * against data from our string at a specific offset. */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		my_str.cp8 = DeeString_As1Byte((DeeObject *)self);
-		ot_str.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
+		my_len -= args.start;
 		if (ot_len > my_len)
 			goto nope;
-		begin += my_len;
-		begin -= ot_len;
-		return_bool(MEMEQB(my_str.cp8 + begin, ot_str.cp8, ot_len));
+		args.start += my_len;
+		args.start -= ot_len;
+		return_bool(MEMEQB(my_str.cp8 + args.start, ot_str.cp8, ot_len));
 
 	CASE_WIDTH_2BYTE:
 		my_str.cp16 = DeeString_As2Byte((DeeObject *)self);
 		if unlikely(!my_str.cp16)
 			goto err;
-		ot_str.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		ot_str.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		my_len      = WSTR_LENGTH(my_str.cp16);
 		ot_len      = WSTR_LENGTH(ot_str.cp16);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
+		my_len -= args.start;
 		if (ot_len > my_len)
 			goto nope;
-		begin += my_len;
-		begin -= ot_len;
-		return_bool(MEMEQW(my_str.cp16 + begin, ot_str.cp16, ot_len));
+		args.start += my_len;
+		args.start -= ot_len;
+		return_bool(MEMEQW(my_str.cp16 + args.start, ot_str.cp16, ot_len));
 
 	CASE_WIDTH_4BYTE:
 		my_str.cp32 = DeeString_As4Byte((DeeObject *)self);
 		if unlikely(!my_str.cp32)
 			goto err;
-		ot_str.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		ot_str.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		my_len      = WSTR_LENGTH(my_str.cp32);
 		ot_len      = WSTR_LENGTH(ot_str.cp32);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
+		my_len -= args.start;
 		if (ot_len > my_len)
 			goto nope;
-		begin += my_len;
-		begin -= ot_len;
-		return_bool(MEMEQL(my_str.cp32 + begin, ot_str.cp32, ot_len));
+		args.start += my_len;
+		args.start -= ot_len;
+		return_bool(MEMEQL(my_str.cp32 + args.start, ot_str.cp32, ot_len));
 	}
 	return_bool(ot_len == 0);
 nope:
@@ -3314,60 +3542,68 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casestartswith(String *self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t begin = 0, end = (size_t)-1;
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":casestartswith",
-	                    &needle, &begin, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casestartswith", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casestartswith_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casestartswith", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	/* Must decode the other string in order to match its contents
 	 * against data from our string at a specific offset. */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		my_str.cp8 = DeeString_As1Byte((DeeObject *)self);
-		ot_str.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
-		return_bool(dee_memcasestartswithb(my_str.cp8 + begin, my_len, ot_str.cp8, ot_len));
+		my_len -= args.start;
+		return_bool(dee_memcasestartswithb(my_str.cp8 + args.start, my_len, ot_str.cp8, ot_len));
 
 	CASE_WIDTH_2BYTE:
 		my_str.cp16 = DeeString_As2Byte((DeeObject *)self);
 		if unlikely(!my_str.cp16)
 			goto err;
-		ot_str.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		ot_str.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		my_len      = WSTR_LENGTH(my_str.cp16);
 		ot_len      = WSTR_LENGTH(ot_str.cp16);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
-		return_bool(dee_memcasestartswithw(my_str.cp16 + begin, my_len, ot_str.cp16, ot_len));
+		my_len -= args.start;
+		return_bool(dee_memcasestartswithw(my_str.cp16 + args.start, my_len, ot_str.cp16, ot_len));
 
 	CASE_WIDTH_4BYTE:
 		my_str.cp32 = DeeString_As4Byte((DeeObject *)self);
 		if unlikely(!my_str.cp32)
 			goto err;
-		ot_str.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		ot_str.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		my_len      = WSTR_LENGTH(my_str.cp32);
 		ot_len      = WSTR_LENGTH(ot_str.cp32);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
-		return_bool(dee_memcasestartswithl(my_str.cp32 + begin, my_len, ot_str.cp32, ot_len));
+		my_len -= args.start;
+		return_bool(dee_memcasestartswithl(my_str.cp32 + args.start, my_len, ot_str.cp32, ot_len));
 	}
 	return_bool(ot_len == 0);
 err:
@@ -3377,60 +3613,68 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caseendswith(String *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t begin = 0, end = (size_t)-1;
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":caseendswith",
-	                    &needle, &begin, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseendswith", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caseendswith_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caseendswith", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	/* Must decode the other string in order to match its contents
 	 * against data from our string at a specific offset. */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		my_str.cp8 = DeeString_As1Byte((DeeObject *)self);
-		ot_str.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
-		return_bool(dee_memcaseendswithb(my_str.cp8 + begin, my_len, ot_str.cp8, ot_len));
+		my_len -= args.start;
+		return_bool(dee_memcaseendswithb(my_str.cp8 + args.start, my_len, ot_str.cp8, ot_len));
 
 	CASE_WIDTH_2BYTE:
 		my_str.cp16 = DeeString_As2Byte((DeeObject *)self);
 		if unlikely(!my_str.cp16)
 			goto err;
-		ot_str.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		ot_str.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		my_len      = WSTR_LENGTH(my_str.cp16);
 		ot_len      = WSTR_LENGTH(ot_str.cp16);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
-		return_bool(dee_memcaseendswithw(my_str.cp16 + begin, my_len, ot_str.cp16, ot_len));
+		my_len -= args.start;
+		return_bool(dee_memcaseendswithw(my_str.cp16 + args.start, my_len, ot_str.cp16, ot_len));
 
 	CASE_WIDTH_4BYTE:
 		my_str.cp32 = DeeString_As4Byte((DeeObject *)self);
 		if unlikely(!my_str.cp32)
 			goto err;
-		ot_str.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		ot_str.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		my_len      = WSTR_LENGTH(my_str.cp32);
 		ot_len      = WSTR_LENGTH(ot_str.cp32);
-		if (my_len > end)
-			my_len = end;
-		if (my_len <= begin)
+		if (my_len > args.end)
+			my_len = args.end;
+		if (my_len <= args.start)
 			break;
-		my_len -= begin;
-		return_bool(dee_memcaseendswithl(my_str.cp32 + begin, my_len, ot_str.cp32, ot_len));
+		my_len -= args.start;
+		return_bool(dee_memcaseendswithl(my_str.cp32 + args.start, my_len, ot_str.cp32, ot_len));
 	}
 	return_bool(ot_len == 0);
 err:
@@ -3533,33 +3777,42 @@ PRIVATE ATTR_COLD int DCALL err_empty_filler(void) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_center(String *self, size_t argc, DeeObject *const *argv) {
-	size_t result_length, my_len, fl_len;
+	size_t my_len, fl_len;
 	size_t fill_front, fill_back;
-	String *filler_ob = NULL;
 	DREF String *result;
 	union dcharptr dst, buf;
 	union dcharptr_const my_str, fl_str;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:center", &result_length, &filler_ob))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("center", params: "
+	size_t width, DeeStringObject *filler = NULL
+", docStringPrefix: "string");]]]*/
+#define string_center_params "width:?Dint,filler?:?."
+	struct {
+		size_t width;
+		DeeStringObject *filler;
+	} args;
+	args.filler = NULL;
+	if (DeeArg_UnpackStruct(argc, argv,  UNPuSIZ "|o:center", &args))
 		goto err;
+/*[[[end]]]*/
 	my_len = DeeString_WLEN(self);
-	if (result_length <= my_len)
+	if (args.width <= my_len)
 		return_reference_(self);
-	fill_front = (result_length - my_len);
+	fill_front = (args.width - my_len);
 	fill_back  = fill_front / 2;
 	fill_front -= fill_back;
-	if (filler_ob) {
-		if (DeeObject_AssertTypeExact(filler_ob, &DeeString_Type))
+	if (args.filler) {
+		if (DeeObject_AssertTypeExact(args.filler, &DeeString_Type))
 			goto err;
 		SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-		                                        DeeString_WIDTH(filler_ob))) {
+		                                        DeeString_WIDTH(args.filler))) {
 
 		CASE_WIDTH_1BYTE:
 			my_str.cp8 = DeeString_As1Byte((DeeObject *)self);
-			fl_str.cp8 = DeeString_As1Byte((DeeObject *)filler_ob);
+			fl_str.cp8 = DeeString_As1Byte((DeeObject *)args.filler);
 			fl_len     = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			result = (DREF String *)DeeString_NewBuffer(result_length);
+			result = (DREF String *)DeeString_NewBuffer(args.width);
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
@@ -3572,13 +3825,13 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 			my_str.cp16 = DeeString_As2Byte((DeeObject *)self);
 			if unlikely(!my_str.cp16)
 				goto err;
-			fl_str.cp16 = DeeString_As2Byte((DeeObject *)filler_ob);
+			fl_str.cp16 = DeeString_As2Byte((DeeObject *)args.filler);
 			if unlikely(!fl_str.cp16)
 				goto err;
 			fl_len = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
+			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(args.width);
 			if unlikely(!buf.cp16)
 				goto err;
 			dst.cp16 = mempfilw(dst.cp16, fill_front, fl_str.cp16, fl_len);
@@ -3591,13 +3844,13 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 			my_str.cp32 = DeeString_As4Byte((DeeObject *)self);
 			if unlikely(!my_str.cp32)
 				goto err;
-			fl_str.cp32 = DeeString_As4Byte((DeeObject *)filler_ob);
+			fl_str.cp32 = DeeString_As4Byte((DeeObject *)args.filler);
 			if unlikely(!fl_str.cp32)
 				goto err;
 			fl_len = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
+			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(args.width);
 			if unlikely(!buf.cp32)
 				goto err;
 			dst.cp32 = mempfill(dst.cp32, fill_front, fl_str.cp32, fl_len);
@@ -3611,7 +3864,7 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_1BYTE:
 			my_str.cp8 = DeeString_Get1Byte((DeeObject *)self);
-			result     = (DREF String *)DeeString_NewBuffer(result_length);
+			result     = (DREF String *)DeeString_NewBuffer(args.width);
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
@@ -3622,7 +3875,7 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_2BYTE:
 			my_str.cp16 = DeeString_Get2Byte((DeeObject *)self);
-			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
+			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(args.width);
 			if unlikely(!buf.cp16)
 				goto err;
 			dst.cp16 = mempsetw(dst.cp16, UNICODE_SPACE, fill_front);
@@ -3633,7 +3886,7 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_4BYTE:
 			my_str.cp32 = DeeString_Get4Byte((DeeObject *)self);
-			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
+			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(args.width);
 			if unlikely(!buf.cp32)
 				goto err;
 			dst.cp32 = mempsetl(dst.cp32, UNICODE_SPACE, fill_front);
@@ -3652,30 +3905,39 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_ljust(String *self, size_t argc, DeeObject *const *argv) {
-	size_t result_length, my_len, fl_len, fill_back;
-	String *filler_ob = NULL;
+	size_t my_len, fl_len, fill_back;
 	DREF String *result;
 	union dcharptr dst, buf;
 	union dcharptr_const my_str, fl_str;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:ljust", &result_length, &filler_ob))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ljust", params: "
+	size_t width, DeeStringObject *filler = NULL
+", docStringPrefix: "string");]]]*/
+#define string_ljust_params "width:?Dint,filler?:?."
+	struct {
+		size_t width;
+		DeeStringObject *filler;
+	} args;
+	args.filler = NULL;
+	if (DeeArg_UnpackStruct(argc, argv,  UNPuSIZ "|o:ljust", &args))
 		goto err;
+/*[[[end]]]*/
 	my_len = DeeString_WLEN(self);
-	if (result_length <= my_len)
+	if (args.width <= my_len)
 		return_reference_(self);
-	fill_back = (result_length - my_len);
-	if (filler_ob) {
-		if (DeeObject_AssertTypeExact(filler_ob, &DeeString_Type))
+	fill_back = (args.width - my_len);
+	if (args.filler) {
+		if (DeeObject_AssertTypeExact(args.filler, &DeeString_Type))
 			goto err;
 		SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-		                                        DeeString_WIDTH(filler_ob))) {
+		                                        DeeString_WIDTH(args.filler))) {
 
 		CASE_WIDTH_1BYTE:
 			my_str.cp8 = DeeString_As1Byte((DeeObject *)self);
-			fl_str.cp8 = DeeString_As1Byte((DeeObject *)filler_ob);
+			fl_str.cp8 = DeeString_As1Byte((DeeObject *)args.filler);
 			fl_len     = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			result = (DREF String *)DeeString_NewBuffer(result_length);
+			result = (DREF String *)DeeString_NewBuffer(args.width);
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
@@ -3687,13 +3949,13 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 			my_str.cp16 = DeeString_As2Byte((DeeObject *)self);
 			if unlikely(!my_str.cp16)
 				goto err;
-			fl_str.cp16 = DeeString_As2Byte((DeeObject *)filler_ob);
+			fl_str.cp16 = DeeString_As2Byte((DeeObject *)args.filler);
 			if unlikely(!fl_str.cp16)
 				goto err;
 			fl_len = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
+			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(args.width);
 			if unlikely(!buf.cp16)
 				goto err;
 			dst.cp16 = mempcpyw(dst.cp16, my_str.cp16, my_len);
@@ -3705,13 +3967,13 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 			my_str.cp32 = DeeString_As4Byte((DeeObject *)self);
 			if unlikely(!my_str.cp32)
 				goto err;
-			fl_str.cp32 = DeeString_As4Byte((DeeObject *)filler_ob);
+			fl_str.cp32 = DeeString_As4Byte((DeeObject *)args.filler);
 			if unlikely(!fl_str.cp32)
 				goto err;
 			fl_len = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
+			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(args.width);
 			if unlikely(!buf.cp32)
 				goto err;
 			dst.cp32 = mempcpyl(dst.cp32, my_str.cp32, my_len);
@@ -3724,7 +3986,7 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_1BYTE:
 			my_str.cp8 = DeeString_Get1Byte((DeeObject *)self);
-			result     = (DREF String *)DeeString_NewBuffer(result_length);
+			result     = (DREF String *)DeeString_NewBuffer(args.width);
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
@@ -3734,7 +3996,7 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_2BYTE:
 			my_str.cp16 = DeeString_Get2Byte((DeeObject *)self);
-			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
+			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(args.width);
 			if unlikely(!buf.cp16)
 				goto err;
 			dst.cp16 = mempcpyw(dst.cp16, my_str.cp16, my_len);
@@ -3744,7 +4006,7 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_4BYTE:
 			my_str.cp32 = DeeString_Get4Byte((DeeObject *)self);
-			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
+			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(args.width);
 			if unlikely(!buf.cp32)
 				goto err;
 			dst.cp32 = mempcpyl(dst.cp32, my_str.cp32, my_len);
@@ -3762,30 +4024,39 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rjust(String *self, size_t argc, DeeObject *const *argv) {
-	size_t result_length, my_len, fl_len, fill_front;
-	String *filler_ob = NULL;
+	size_t my_len, fl_len, fill_front;
 	DREF String *result;
 	union dcharptr dst, buf;
 	union dcharptr_const my_str, fl_str;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:rjust", &result_length, &filler_ob))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rjust", params: "
+	size_t width, DeeStringObject *filler = NULL
+", docStringPrefix: "string");]]]*/
+#define string_rjust_params "width:?Dint,filler?:?."
+	struct {
+		size_t width;
+		DeeStringObject *filler;
+	} args;
+	args.filler = NULL;
+	if (DeeArg_UnpackStruct(argc, argv,  UNPuSIZ "|o:rjust", &args))
 		goto err;
+/*[[[end]]]*/
 	my_len = DeeString_WLEN(self);
-	if (result_length <= my_len)
+	if (args.width <= my_len)
 		return_reference_(self);
-	fill_front = (result_length - my_len);
-	if (filler_ob) {
-		if (DeeObject_AssertTypeExact(filler_ob, &DeeString_Type))
+	fill_front = (args.width - my_len);
+	if (args.filler) {
+		if (DeeObject_AssertTypeExact(args.filler, &DeeString_Type))
 			goto err;
 		SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-		                                        DeeString_WIDTH(filler_ob))) {
+		                                        DeeString_WIDTH(args.filler))) {
 
 		CASE_WIDTH_1BYTE:
 			my_str.cp8 = DeeString_As1Byte((DeeObject *)self);
-			fl_str.cp8 = DeeString_As1Byte((DeeObject *)filler_ob);
+			fl_str.cp8 = DeeString_As1Byte((DeeObject *)args.filler);
 			fl_len     = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			result = (DREF String *)DeeString_NewBuffer(result_length);
+			result = (DREF String *)DeeString_NewBuffer(args.width);
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
@@ -3797,13 +4068,13 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 			my_str.cp16 = DeeString_As2Byte((DeeObject *)self);
 			if unlikely(!my_str.cp16)
 				goto err;
-			fl_str.cp16 = DeeString_As2Byte((DeeObject *)filler_ob);
+			fl_str.cp16 = DeeString_As2Byte((DeeObject *)args.filler);
 			if unlikely(!fl_str.cp16)
 				goto err;
 			fl_len = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
+			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(args.width);
 			if unlikely(!buf.cp16)
 				goto err;
 			dst.cp16 = mempfilw(dst.cp16, fill_front, fl_str.cp16, fl_len);
@@ -3815,13 +4086,13 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 			my_str.cp32 = DeeString_As4Byte((DeeObject *)self);
 			if unlikely(!my_str.cp32)
 				goto err;
-			fl_str.cp32 = DeeString_As4Byte((DeeObject *)filler_ob);
+			fl_str.cp32 = DeeString_As4Byte((DeeObject *)args.filler);
 			if unlikely(!fl_str.cp32)
 				goto err;
 			fl_len = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
+			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(args.width);
 			if unlikely(!buf.cp32)
 				goto err;
 			dst.cp32 = mempfill(dst.cp32, fill_front, fl_str.cp32, fl_len);
@@ -3834,7 +4105,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_1BYTE:
 			my_str.cp8 = DeeString_Get1Byte((DeeObject *)self);
-			result     = (DREF String *)DeeString_NewBuffer(result_length);
+			result     = (DREF String *)DeeString_NewBuffer(args.width);
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
@@ -3844,7 +4115,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_2BYTE:
 			my_str.cp16 = DeeString_Get2Byte((DeeObject *)self);
-			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
+			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(args.width);
 			if unlikely(!buf.cp16)
 				goto err;
 			dst.cp16 = mempsetw(dst.cp16, UNICODE_SPACE, fill_front);
@@ -3854,7 +4125,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_4BYTE:
 			my_str.cp32 = DeeString_Get4Byte((DeeObject *)self);
-			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
+			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(args.width);
 			if unlikely(!buf.cp32)
 				goto err;
 			dst.cp32 = mempsetl(dst.cp32, UNICODE_SPACE, fill_front);
@@ -3873,27 +4144,35 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_count(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
 	size_t result = 0;
-	size_t start = 0, end = (size_t)-1;
 	union dcharptr_const lhs, lep, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":count",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("count", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_count_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":count", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
 		mylen   = DeeString_SIZE(self);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		lhs.cp8 += start;
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		lhs.cp8 += args.start;
 		lep.cp8 = lhs.cp8 + mylen;
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		while ((lhs.cp8 = memmemb(lhs.cp8, (size_t)(lep.cp8 - lhs.cp8),
 		                          rhs.cp8, WSTR_LENGTH(rhs.cp8))) != NULL) {
 			lhs.cp8 += WSTR_LENGTH(rhs.cp8);
@@ -3906,10 +4185,10 @@ string_count(String *self, size_t argc,
 		if unlikely(!lhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.cp16);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		lhs.cp16 += start;
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		lhs.cp16 += args.start;
 		lep.cp16 = lhs.cp16 + mylen;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
 		while ((lhs.cp16 = memmemw(lhs.cp16, (size_t)(lep.cp16 - lhs.cp16),
@@ -3924,10 +4203,10 @@ string_count(String *self, size_t argc,
 		if unlikely(!lhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.cp32);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		lhs.cp32 += start;
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		lhs.cp32 += args.start;
 		lep.cp32 = lhs.cp32 + mylen;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
 		while ((lhs.cp32 = memmeml(lhs.cp32, (size_t)(lep.cp32 - lhs.cp32),
@@ -3946,27 +4225,36 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casecount(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
 	size_t result = 0;
-	size_t start = 0, end = (size_t)-1, match_length;
+	size_t match_length;
 	union dcharptr_const lhs, lep, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":casecount",
-	                    &needle, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecount", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casecount_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casecount", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
 		mylen   = DeeString_SIZE(self);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		lhs.cp8 += start;
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		lhs.cp8 += args.start;
 		lep.cp8 = lhs.cp8 + mylen;
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		while ((lhs.cp8 = dee_memcasememb(lhs.cp8, (size_t)(lep.cp8 - lhs.cp8),
 		                                  rhs.cp8, WSTR_LENGTH(rhs.cp8),
 		                                  &match_length)) != NULL) {
@@ -3980,10 +4268,10 @@ string_casecount(String *self, size_t argc,
 		if unlikely(!lhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.cp16);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		lhs.cp16 += start;
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		lhs.cp16 += args.start;
 		lep.cp16 = lhs.cp16 + mylen;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
 		while ((lhs.cp16 = dee_memcasememw(lhs.cp16, (size_t)(lep.cp16 - lhs.cp16),
@@ -3999,10 +4287,10 @@ string_casecount(String *self, size_t argc,
 		if unlikely(!lhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.cp32);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		lhs.cp32 += start;
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+		lhs.cp32 += args.start;
 		lep.cp32 = lhs.cp32 + mylen;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
 		while ((lhs.cp32 = dee_memcasememl(lhs.cp32, (size_t)(lep.cp32 - lhs.cp32),
@@ -4019,19 +4307,11 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_contains_f(String *self, size_t argc,
-                  DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_contains_f_impl(String *self, String *needle,
+                       size_t start, size_t end) {
 	union dcharptr_const lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":contains",
-	                    &needle, &start, &end))
-		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
-		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
 	                                        DeeString_WIDTH(needle))) {
 
@@ -4073,26 +4353,46 @@ string_contains_f(String *self, size_t argc,
 			goto not_found;
 		break;
 	}
-	return_true;
+	return 1;
 not_found:
-	return_false;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_contains_f(String *self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
+	int result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("contains", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_contains_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":contains", &args))
+		goto err;
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
+		goto err; /* TODO: Support for SeqSome */
+	result = string_contains_f_impl(self, args.needle, args.start, args.end);
+	if unlikely(result < 0)
+		goto err;
+	return_bool01(result);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casecontains_f(String *self, size_t argc,
-                      DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t start = 0, end = (size_t)-1;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_casecontains_impl_f(String *self, String *needle,
+                           size_t start, size_t end) {
 	union dcharptr_const lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":casecontains",
-	                    &needle, &start, &end))
-		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
-		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
 	                                        DeeString_WIDTH(needle))) {
 
@@ -4134,39 +4434,76 @@ string_casecontains_f(String *self, size_t argc,
 			goto not_found;
 		break;
 	}
-	return_true;
+	return 1;
 not_found:
-	return_false;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_casecontains_f(String *self, size_t argc,
+                      DeeObject *const *argv, DeeObject *kw) {
+	int result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecontains", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casecontains_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casecontains", &args))
+		goto err;
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
+		goto err; /* TODO: Support for SeqSome */
+	result = string_casecontains_impl_f(self, args.needle, args.start, args.end);
+	if unlikely(result < 0)
+		goto err;
+	return_bool01(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_zfill(String *self, size_t argc, DeeObject *const *argv) {
-	size_t result_length, my_len, fl_len, fill_front;
-	String *filler_ob = NULL;
+	size_t my_len, fl_len, fill_front;
 	DREF String *result;
 	union dcharptr dst, buf;
 	union dcharptr_const my_str, fl_str;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:zfill", &result_length, &filler_ob))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("zfill", params: "
+	size_t width, DeeStringObject *filler = NULL
+", docStringPrefix: "string");]]]*/
+#define string_zfill_params "width:?Dint,filler?:?."
+	struct {
+		size_t width;
+		DeeStringObject *filler;
+	} args;
+	args.filler = NULL;
+	if (DeeArg_UnpackStruct(argc, argv,  UNPuSIZ "|o:zfill", &args))
 		goto err;
+/*[[[end]]]*/
 	my_len = DeeString_WLEN(self);
-	if (result_length <= my_len)
+	if (args.width <= my_len)
 		return_reference_(self);
-	fill_front = (result_length - my_len);
-	if (filler_ob) {
-		if (DeeObject_AssertTypeExact(filler_ob, &DeeString_Type))
+	fill_front = (args.width - my_len);
+	if (args.filler) {
+		if (DeeObject_AssertTypeExact(args.filler, &DeeString_Type))
 			goto err;
 		SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-		                                        DeeString_WIDTH(filler_ob))) {
+		                                        DeeString_WIDTH(args.filler))) {
 
 		CASE_WIDTH_1BYTE:
 			my_str.cp8 = DeeString_As1Byte((DeeObject *)self);
-			fl_str.cp8 = DeeString_As1Byte((DeeObject *)filler_ob);
+			fl_str.cp8 = DeeString_As1Byte((DeeObject *)args.filler);
 			fl_len     = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			result = (DREF String *)DeeString_NewBuffer(result_length);
+			result = (DREF String *)DeeString_NewBuffer(args.width);
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
@@ -4182,13 +4519,13 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 			my_str.cp16 = DeeString_As2Byte((DeeObject *)self);
 			if unlikely(!my_str.cp16)
 				goto err;
-			fl_str.cp16 = DeeString_As2Byte((DeeObject *)filler_ob);
+			fl_str.cp16 = DeeString_As2Byte((DeeObject *)args.filler);
 			if unlikely(!fl_str.cp16)
 				goto err;
 			fl_len = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
+			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(args.width);
 			if unlikely(!buf.cp16)
 				goto err;
 			while (my_len && DeeUni_IsSign(my_str.cp16[0])) {
@@ -4204,13 +4541,13 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 			my_str.cp32 = DeeString_As4Byte((DeeObject *)self);
 			if unlikely(!my_str.cp32)
 				goto err;
-			fl_str.cp32 = DeeString_As4Byte((DeeObject *)filler_ob);
+			fl_str.cp32 = DeeString_As4Byte((DeeObject *)args.filler);
 			if unlikely(!fl_str.cp32)
 				goto err;
 			fl_len = WSTR_LENGTH(fl_str.cp8);
 			if unlikely(!fl_len)
 				goto empty_filler;
-			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
+			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(args.width);
 			if unlikely(!buf.cp32)
 				goto err;
 			while (my_len && DeeUni_IsSign(my_str.cp32[0])) {
@@ -4227,7 +4564,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_1BYTE:
 			my_str.cp8 = DeeString_Get1Byte((DeeObject *)self);
-			result     = (DREF String *)DeeString_NewBuffer(result_length);
+			result     = (DREF String *)DeeString_NewBuffer(args.width);
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = (uint8_t *)DeeString_As1Byte((DeeObject *)result);
@@ -4241,7 +4578,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_2BYTE:
 			my_str.cp16 = DeeString_Get2Byte((DeeObject *)self);
-			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
+			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(args.width);
 			if unlikely(!buf.cp16)
 				goto err;
 			while (my_len && DeeUni_IsSign(my_str.cp16[0])) {
@@ -4255,7 +4592,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 
 		CASE_WIDTH_4BYTE:
 			my_str.cp32 = DeeString_Get4Byte((DeeObject *)self);
-			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
+			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(args.width);
 			if unlikely(!buf.cp32)
 				goto err;
 			while (my_len && DeeUni_IsSign(my_str.cp32[0])) {
@@ -4279,7 +4616,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_reversed(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	size_t begin = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPdSIZ UNPdSIZ ":reversed", &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":reversed", &begin, &end))
 		goto err;
 	return DeeString_Reversed(self, begin, end);
 err:
@@ -4672,29 +5009,38 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_partition(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
 	union dcharptr_const lhs, rhs, ptr;
-	size_t mylen, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":partition",
-	                    &needle, &start, &end))
+	size_t mylen;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("partition", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_partition_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":partition", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundb_zero);
-		lhs.cp8 += start;
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundb_zero);
+		lhs.cp8 += args.start;
 		ptr.cp8 = memmemb(lhs.cp8, mylen,
 		                  rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		if (!ptr.cp8)
 			goto not_foundb;
-		return partition_packb(needle,
+		return partition_packb(args.needle,
 		                       lhs.cp8, mylen,
 		                       ptr.cp8, WSTR_LENGTH(rhs.cp8));
 not_foundb_zero:
@@ -4707,16 +5053,16 @@ not_foundb:
 		if unlikely(!lhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundw_zero);
-		lhs.cp16 += start;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundw_zero);
+		lhs.cp16 += args.start;
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
 		ptr.cp16 = memmemw(lhs.cp16, mylen,
 		                   rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		if (!ptr.cp16)
 			goto not_foundw;
-		return partition_packw(needle,
+		return partition_packw(args.needle,
 		                       lhs.cp16, mylen,
 		                       ptr.cp16, WSTR_LENGTH(rhs.cp16));
 not_foundw_zero:
@@ -4729,16 +5075,16 @@ not_foundw:
 		if unlikely(!lhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundl_zero);
-		lhs.cp32 += start;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundl_zero);
+		lhs.cp32 += args.start;
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
 		ptr.cp32 = memmeml(lhs.cp32, mylen,
 		                   rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		if (!ptr.cp32)
 			goto not_foundl;
-		return partition_packl(needle,
+		return partition_packl(args.needle,
 		                       lhs.cp32, mylen,
 		                       ptr.cp32, WSTR_LENGTH(rhs.cp32));
 not_foundl_zero:
@@ -4753,29 +5099,38 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_rpartition(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
 	union dcharptr_const lhs, rhs, ptr;
-	size_t mylen, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":rpartition",
-	                    &needle, &start, &end))
+	size_t mylen;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rpartition", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_rpartition_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rpartition", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
 		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundb_zero);
-		lhs.cp8 += start;
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundb_zero);
+		lhs.cp8 += args.start;
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		ptr.cp8 = memrmemb(lhs.cp8, mylen,
 		                   rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		if (!ptr.cp8)
 			goto not_foundb;
-		return partition_packb(needle,
+		return partition_packb(args.needle,
 		                       lhs.cp8, mylen,
 		                       ptr.cp8, WSTR_LENGTH(rhs.cp8));
 not_foundb_zero:
@@ -4788,16 +5143,16 @@ not_foundb:
 		if unlikely(!lhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundw_zero);
-		lhs.cp16 += start;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundw_zero);
+		lhs.cp16 += args.start;
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
 		ptr.cp16 = memrmemw(lhs.cp16, mylen,
 		                    rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		if (!ptr.cp16)
 			goto not_foundw;
-		return partition_packw(needle,
+		return partition_packw(args.needle,
 		                       lhs.cp16, mylen,
 		                       ptr.cp16, WSTR_LENGTH(rhs.cp16));
 not_foundw_zero:
@@ -4810,16 +5165,16 @@ not_foundw:
 		if unlikely(!lhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundl_zero);
-		lhs.cp32 += start;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundl_zero);
+		lhs.cp32 += args.start;
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
 		ptr.cp32 = memrmeml(lhs.cp32, mylen,
 		                    rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		if (!ptr.cp32)
 			goto not_foundl;
-		return partition_packl(needle,
+		return partition_packl(args.needle,
 		                       lhs.cp32, mylen,
 		                       ptr.cp32, WSTR_LENGTH(rhs.cp32));
 not_foundl_zero:
@@ -4834,24 +5189,33 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_casepartition(String *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
 	union dcharptr_const lhs, rhs, ptr;
-	size_t mylen, start = 0, end = (size_t)-1, match_length;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":casepartition",
-	                    &needle, &start, &end))
+	size_t mylen, match_length;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casepartition", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casepartition_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casepartition", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
 		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundb_zero);
-		lhs.cp8 += start;
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundb_zero);
+		lhs.cp8 += args.start;
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		ptr.cp8 = dee_memcasememb(lhs.cp8, mylen,
 		                          rhs.cp8, WSTR_LENGTH(rhs.cp8),
 		                          &match_length);
@@ -4871,9 +5235,9 @@ not_foundb:
 		if unlikely(!lhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundw_zero);
-		lhs.cp16 += start;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundw_zero);
+		lhs.cp16 += args.start;
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
 		ptr.cp16 = dee_memcasememw(lhs.cp16, mylen,
@@ -4895,9 +5259,9 @@ not_foundw:
 		if unlikely(!lhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundl_zero);
-		lhs.cp32 += start;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundl_zero);
+		lhs.cp32 += args.start;
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
 		ptr.cp32 = dee_memcasememl(lhs.cp32, mylen,
@@ -4921,24 +5285,33 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_caserpartition(String *self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
 	union dcharptr_const lhs, rhs, ptr;
-	size_t mylen, start = 0, end = (size_t)-1, match_length;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPdSIZ UNPdSIZ ":caserpartition",
-	                    &needle, &start, &end))
+	size_t mylen, match_length;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserpartition", params: "
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caserpartition_params "needle:?.,start=!0,end=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserpartition", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(needle))) {
+	                                        DeeString_WIDTH(args.needle))) {
 
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
 		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundb_zero);
-		lhs.cp8 += start;
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundb_zero);
+		lhs.cp8 += args.start;
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		ptr.cp8 = dee_memcasermemb(lhs.cp8, mylen,
 		                           rhs.cp8, WSTR_LENGTH(rhs.cp8),
 		                           &match_length);
@@ -4958,9 +5331,9 @@ not_foundb:
 		if unlikely(!lhs.cp16)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundw_zero);
-		lhs.cp16 += start;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundw_zero);
+		lhs.cp16 += args.start;
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
 		ptr.cp16 = dee_memcasermemw(lhs.cp16, mylen,
@@ -4982,9 +5355,9 @@ not_foundw:
 		if unlikely(!lhs.cp32)
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&start, &end, &mylen, not_foundl_zero);
-		lhs.cp32 += start;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_foundl_zero);
+		lhs.cp32 += args.start;
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
 		ptr.cp32 = dee_memcasermeml(lhs.cp32, mylen,
@@ -5022,7 +5395,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lstrip(String *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	String *mask = NULL;
-	size_t max_count = SIZE_MAX;
+	size_t max_count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
 	                    "|o" UNPuSIZ ":lstrip", &mask, &max_count))
 		goto err;
@@ -5039,7 +5412,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rstrip(String *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	String *mask = NULL;
-	size_t max_count = SIZE_MAX;
+	size_t max_count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
 	                    "|o" UNPuSIZ ":rstrip", &mask, &max_count))
 		goto err;
@@ -5069,7 +5442,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselstrip(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	String *mask = NULL;
-	size_t max_count = SIZE_MAX;
+	size_t max_count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
 	                    "|o" UNPuSIZ ":caselstrip", &mask, &max_count))
 		goto err;
@@ -5086,7 +5459,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caserstrip(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	String *mask = NULL;
-	size_t max_count = SIZE_MAX;
+	size_t max_count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
 	                    "|o" UNPuSIZ ":caserstrip", &mask, &max_count))
 		goto err;
@@ -5114,7 +5487,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lsstrip(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
-	size_t max_count = SIZE_MAX;
+	size_t max_count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
 	                    "o|" UNPuSIZ ":lsstrip", &needle, &max_count))
 		goto err;
@@ -5129,7 +5502,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rsstrip(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
-	size_t max_count = SIZE_MAX;
+	size_t max_count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
 	                    "o|" UNPuSIZ ":rsstrip", &needle, &max_count))
 		goto err;
@@ -5155,7 +5528,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselsstrip(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
-	size_t max_count = SIZE_MAX;
+	size_t max_count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
 	                    "o|" UNPuSIZ ":caselsstrip", &needle, &max_count))
 		goto err;
@@ -5170,7 +5543,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casersstrip(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	String *needle;
-	size_t max_count = SIZE_MAX;
+	size_t max_count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
 	                    "o|" UNPuSIZ ":casersstrip", &needle, &max_count))
 		goto err;
@@ -7412,7 +7785,7 @@ string_findmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":findmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":findmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -7505,7 +7878,7 @@ string_indexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":indexmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":indexmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -7600,7 +7973,7 @@ string_casefindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":casefindmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":casefindmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -7696,7 +8069,7 @@ string_caseindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caseindexmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caseindexmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -7794,7 +8167,7 @@ string_rfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":rfindmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":rfindmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -7887,7 +8260,7 @@ string_rindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":rindexmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":rindexmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -7982,7 +8355,7 @@ string_caserfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caserfindmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caserfindmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -8078,7 +8451,7 @@ string_caserindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caserindexmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caserindexmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -8177,7 +8550,7 @@ string_partitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":partitionmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":partitionmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -8332,7 +8705,7 @@ string_rpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":rpartitionmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":rpartitionmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -8488,7 +8861,7 @@ string_casepartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len, match_length;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":casepartitionmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":casepartitionmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -8649,7 +9022,7 @@ string_caserpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caserpartitionmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caserpartitionmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -8858,7 +9231,7 @@ string_bytecnt2charcnt_v(String const *self, char const *utf8,
 	}
 }
 
-#define GENERIC_REGEX_GETARGS_FMT(name) "o|" UNPdSIZ UNPdSIZ "o:" name
+#define GENERIC_REGEX_GETARGS_FMT(name) "o|" UNPuSIZ UNPxSIZ "o:" name
 PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
 generic_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
                       DeeObject *kw, char const *__restrict fmt,
@@ -8900,7 +9273,7 @@ struct DeeRegexExecWithRange {
 	size_t              rewr_range; /* Max # of search attempts to perform (in bytes) */
 };
 
-#define SEARCH_REGEX_GETARGS_FMT(name) "o|" UNPdSIZ UNPdSIZ UNPdSIZ "o:" name
+#define SEARCH_REGEX_GETARGS_FMT(name) "o|" UNPuSIZ UNPxSIZ UNPxSIZ "o:" name
 PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
 search_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
                      DeeObject *kw, char const *__restrict fmt,
@@ -10262,7 +10635,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_KWMETHOD_F(name, &func,                                              \
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | \
 	                METHOD_FNOREFESCAPE,                                      \
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n" doc)
+	                "(start=!0,end=!-1)->?Dbool\n" doc)
 #define DEFINE_ANY_STRING_TRAIT(name, func, is_xxx) \
 	DEFINE_ANY_STRING_TRAIT_EX(name, func, "Returns ?t if any character in ${this.substr(start, end)} " is_xxx)
 	DEFINE_ANY_STRING_TRAIT("isanycntrl", string_isanycntrl, "is a control character"),
@@ -10337,28 +10710,28 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* String conversion */
 	TYPE_KWMETHOD_F("lower", &string_lower,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	                "(" string_lower_params ")->?.\n"
 	                "Returns @this ?. converted to lower-case"),
 	TYPE_KWMETHOD_F("upper", &string_upper,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	                "(" string_upper_params ")->?.\n"
 	                "Returns @this ?. converted to upper-case"),
 	TYPE_KWMETHOD_F("title", &string_title,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	                "(" string_title_params ")->?.\n"
 	                "Returns @this ?. converted to title-casing"),
 	TYPE_KWMETHOD_F("capitalize", &string_capitalize,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	                "(" string_capitalize_params ")->?.\n"
 	                "Returns @this ?. with each word capitalized"),
 	TYPE_KWMETHOD_F("swapcase", &string_swapcase,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	                "(" string_swapcase_params ")->?.\n"
 	                "Returns @this ?. with the casing of each "
 	                /**/ "character that has two different casings swapped"),
 	TYPE_KWMETHOD_F("casefold", &string_casefold,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	                "(" string_casefold_params ")->?.\n"
 	                "Returns @this ?. with its casing folded.\n"
 
 	                "The equivalent of the string returned by this function is what is "
@@ -10382,74 +10755,74 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Case-sensitive query functions */
 	TYPE_KWMETHOD_F(STR_replace, &string_replace,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(find:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	                "(" string_replace_params ")->?.\n"
 	                "Find up to @max occurrences of @find and replace each with @replace, then return the resulting ?."),
 	TYPE_KWMETHOD_F("find", &string_find,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(" string_find_params ")->?Dint\n"
 	                "Find the first instance of @needle within ${this.substr(start, end)}, "
 	                "and return its starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F("rfind", &string_rfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(" string_rfind_params ")->?Dint\n"
 	                "Find the last instance of @needle within ${this.substr(start, end)}, "
 	                "and return its starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F(STR_index, &string_index,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(" string_index_params ")->?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Find the first instance of @needle within ${this.substr(start, end)}, "
 	                "and return its starting index"),
 	TYPE_KWMETHOD_F("rindex", &string_rindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(" string_rindex_params ")->?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Find the last instance of @needle within ${this.substr(start, end)}, "
 	                "and return its starting index"),
 	TYPE_KWMETHOD_F("findany", &string_findany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(" string_findany_params ")->?X2?Dint?N\n"
 	                "Find the first instance of any of the given @needles within ${this.substr(start, end)}, "
 	                "and return its starting index, or ?N if no such position exists"),
 	TYPE_KWMETHOD_F("rfindany", &string_rfindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(" string_rfindany_params ")->?X2?Dint?N\n"
 	                "Find the last instance of any of the given @needles within ${this.substr(start, end)}, "
 	                "and return its starting index, or ?N if no such position exists"),
 	TYPE_KWMETHOD_F("indexany", &string_indexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(" string_indexany_params ")->?Dint\n"
 	                "#tIndexError{No instance of @needles can be found within ${this.substr(start, end)}}"
 	                "Find the first instance of any of the given @needles within ${this.substr(start, end)}, "
 	                "and return its starting index"),
 	TYPE_KWMETHOD_F("rindexany", &string_rindexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(" string_rindexany_params ")->?Dint\n"
 	                "#tIndexError{No instance of @needles can be found within ${this.substr(start, end)}}"
 	                "Find the last instance of any of the given @needles within ${this.substr(start, end)}, "
 	                "and return its starting index"),
 	TYPE_KWMETHOD_F("findall", &string_findall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?Dint\n"
+	                "(" string_findall_params ")->?S?Dint\n"
 	                "Find all instances of @needle within ${this.substr(start, end)}, "
 	                "and return their starting indices as a sequence"),
 	TYPE_KWMETHOD_F("count", &string_count,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(" string_count_params ")->?Dint\n"
 	                "Count the number of instances of @needle that exist within ${this.substr(start, end)}, "
 	                /**/ "and return now many were found"),
 	TYPE_KWMETHOD_F("contains", &string_contains_f,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(" string_contains_params ")->?Dbool\n"
 	                "Check if @needle can be found within ${this.substr(start, end)}, "
 	                /**/ "and return a boolean indicative of that"),
 	TYPE_KWMETHOD_F("substr", &string_substr,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	                "(start=!0,end=!-1)->?.\n"
 	                "Similar to ${this[start:end]}, however only integer-convertible objects may "
 	                /**/ "be passed (passing ?N will invoke ${(int)none}, which results in $0), and "
-	                /**/ "passing negative values for either @start or @end will cause ?ASIZE_MAX?Dint to "
-	                /**/ "be used for that argument:\n"
+	                /**/ "passing negative values for either @start or @end will cause ?ASIZE_MAX?Dint "
+	                /**/ "to be used for that argument:\n"
 	                "${"
 	                /**/ "s = \"foo bar foobar\";\n"
 	                /**/ "print repr s.substr(0, 1);    /* \"f\" */\n"
@@ -10555,37 +10928,37 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "than bytes apart of its $mask character."),
 	TYPE_KWMETHOD_F("startswith", &string_startswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(" string_startswith_params ")->?Dbool\n"
 	                "Return ?t if the sub-string ${this.substr(start, end)} starts with @needle"),
 	TYPE_KWMETHOD_F("endswith", &string_endswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(" string_endswith_params ")->?Dbool\n"
 	                "Return ?t if the sub-string ${this.substr(start, end)} ends with @needle"),
 	TYPE_KWMETHOD_F("partition", &string_partition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
+	                "(" string_partition_params ")->?T3?.?.?.\n"
 	                "Search for the first instance of @needle within ${this.substr(start, end)} and "
 	                /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	                "If @needle could not be found, ${(this, \"\", \"\")} is returned"),
 	TYPE_KWMETHOD_F("rpartition", &string_rpartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
+	                "(" string_rpartition_params ")->?T3?.?.?.\n"
 	                "Search for the last instance of @needle within ${this.substr(start, end)} and "
 	                /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	                "If @needle could not be found, ${(this, \"\", \"\")} is returned"),
 	TYPE_METHOD_F("compare", &string_compare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	              "Compare the sub-string ${left = this.substr(my_start, my_end)} with "
 	              "${right = other.substr(other_start, other_end)}, returning ${< 0} if "
 	              "${left < right}, ${> 0} if ${left > right}, and ${== 0} if they are equal"),
 	TYPE_METHOD_F("vercompare", &string_vercompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	              "Performs a version-string comparison. This is similar to ?#compare, but rather than "
 	              /**/ "performing a strict lexicographical comparison, the numbers found in the strings "
 	              /**/ "being compared are compared as a whole, solving the common problem seen in applications "
@@ -10597,9 +10970,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "for which you may follow the link for further details"),
 	TYPE_METHOD_F("wildcompare", &string_wildcompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	              "Perform a wild-character-enabled comparising of the sub-string ${left = this.substr(my_start, my_end)} "
 	              /**/ "with ${right = pattern.substr(pattern_start, pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
 	              /**/ "if ${left > right}, or ${== 0} if they are equal\n"
@@ -10608,9 +10981,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "any number of characters"),
 	TYPE_METHOD_F("fuzzycompare", &string_fuzzycompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	              "Perform a fuzzy string comparison between ${this.substr(my_start, my_end)} and "
 	              /**/ "${other.substr(other_start, other_end)}\n"
 	              "The return value is a similarty-factor that can be used to score how close the "
@@ -10624,73 +10997,73 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "Note that there is another version ?#casefuzzycompare that also ignores casing"),
 	TYPE_METHOD_F("wmatch", &string_wmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
-	              "(my_start:?Dint,pattern:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	              "(pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
+	              "(my_start:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
 	              "Same as ?#wildcompare, returning ?t where ?#wildcompare would return $0, "
 	              /**/ "and ?f in all pattern cases"),
 
 	/* Case-insensitive query functions */
 	TYPE_KWMETHOD_F("casereplace", &string_casereplace,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(find:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(" string_casereplace_params ")->?Dint\n"
 	                "Same as ?#replace, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casefind", &string_casefind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
+	                "(" string_casefind_params ")->?X2?T2?Dint?Dint?N\n"
 	                "Same as ?#find, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)\n"
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caserfind", &string_caserfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
+	                "(" string_caserfind_params ")->?X2?T2?Dint?Dint?N\n"
 	                "Same as ?#rfind, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)\n"
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caseindex", &string_caseindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
+	                "(" string_caseindex_params ")->?T2?Dint?Dint\n"
 	                "Same as ?#index, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("caserindex", &string_caserindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
+	                "(" string_caserindex_params ")->?T2?Dint?Dint\n"
 	                "Same as ?#rindex, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casefindany", &string_casefindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
+	                "(" string_casefindany_params ")->?X2?T2?Dint?Dint?N\n"
 	                "Same as ?#findany, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)\n"
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caserfindany", &string_caserfindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
+	                "(" string_caserfindany_params ")->?X2?T2?Dint?Dint?N\n"
 	                "Same as ?#rfindany, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)\n"
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caseindexany", &string_caseindexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
+	                "(" string_caseindexany_params ")->?T2?Dint?Dint\n"
 	                "Same as ?#indexany, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("caserindexany", &string_caserindexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
+	                "(" string_caserindexany_params ")->?T2?Dint?Dint\n"
 	                "Same as ?#rindexany, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casefindall", &string_casefindall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?T2?Dint?Dint\n"
+	                "(" string_casefindall_params ")->?S?T2?Dint?Dint\n"
 	                "Same as ?#findall, however perform a case-folded search and return the star and end "
 	                /**/ "indices of matches (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casecount", &string_casecount,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(" string_casecount_params ")->?Dint\n"
 	                "Same as ?#count, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casecontains", &string_casecontains_f,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(" string_casecontains_params ")->?Dbool\n"
 	                "Same as ?#contains, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casestrip", &string_casestrip,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
@@ -10742,49 +11115,49 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "Same as ?#rsstriplines, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casestartswith", &string_casestartswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(" string_casestartswith_params ")->?Dbool\n"
 	                "Same as ?#startswith, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("caseendswith", &string_caseendswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(" string_caseendswith_params ")->?Dbool\n"
 	                "Same as ?#endswith, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casepartition", &string_casepartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
+	                "(" string_casepartition_params ")->?T3?.?.?.\n"
 	                "Same as ?#partition, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("caserpartition", &string_caserpartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
+	                "(" string_caserpartition_params ")->?T3?.?.?.\n"
 	                "Same as ?#rpartition, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casecompare", &string_casecompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	              "Same as ?#compare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casevercompare", &string_casevercompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	              "Same as ?#vercompare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casewildcompare", &string_casewildcompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	              "Same as ?#wildcompare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casefuzzycompare", &string_casefuzzycompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	              "Same as ?#fuzzycompare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casewmatch", &string_casewmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
-	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	              "(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
+	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
 	              "Same as ?#wmatch, however compare strings with their casing folded (s.a. ?#casefold)"),
 
 	/* String alignment functions. */
@@ -10810,7 +11183,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "to pad the resulting ?. to a length of @width characters"),
 	TYPE_KWMETHOD_F("reversed", &string_reversed,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	                "(start=!0,end=!-1)->?.\n"
 	                "Return the sub-string ${this.substr(start, end)} with its character order reversed"),
 	TYPE_METHOD_F("expandtabs", &string_expandtabs,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
@@ -10867,34 +11240,34 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Common-character search functions. */
 	TYPE_METHOD_F("common", &string_common,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	              "Returns the number of common leading characters shared between @this and @other, "
 	              /**/ "or in other words: the lowest index $i for which ${this[i] != other[i]} is true"),
 	TYPE_METHOD_F("rcommon", &string_rcommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	              "Returns the number of common trailing characters shared between @this and @other"),
 	TYPE_METHOD_F("casecommon", &string_casecommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	              "Same as ?#common, however perform a case-folded search"),
 	TYPE_METHOD_F("casercommon", &string_casercommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	              "Same as ?#rcommon, however perform a case-folded search"),
 
 	/* Find match character sequences */
 	TYPE_METHOD_F("findmatch", &string_findmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
 	              "Similar to ?#find, but do a recursive search for the "
 	              /**/ "first @close that doesn't have a match @{open}:\n"
 	              "${"
@@ -10909,27 +11282,27 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "strings, are allowed to be of any length"),
 	TYPE_METHOD_F("indexmatch", &string_indexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
 	              "#tIndexError{No instance of @close without a matching @open "
 	              /*             */ "exists within ${this.substr(start, end)}}"
 	              "Same as ?#findmatch, but throw an :IndexError instead of "
 	              /**/ "returning ${-1} if no @close without a matching @open exists"),
 	TYPE_METHOD_F("casefindmatch", &string_casefindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	              "Same as ?#findmatch, however perform a case-folded search and "
 	              /**/ "return the start and end indices of the match\n"
 	              "If no match if found, ?N is returned"),
 	TYPE_METHOD_F("caseindexmatch", &string_caseindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
 	              "#tIndexError{No instance of @close without a matching @open "
 	              /*             */ "exists within ${this.substr(start, end)}}"
 	              "Same as ?#indexmatch, however perform a case-folded search and "
 	              /**/ "return the start and end indices of the match"),
 	TYPE_METHOD_F("rfindmatch", &string_rfindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
 	              "Similar to ?#findmatch, but operate in a mirrored fashion, "
 	              /**/ "searching for the last instance of @open that has no match "
 	              /**/ "@close within ${this.substr(start, end)}:\n"
@@ -10943,20 +11316,20 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "If no @open without a matching @close exists, ${-1} is returned"),
 	TYPE_METHOD_F("rindexmatch", &string_rindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
 	              "#tIndexError{No instance of @open without a matching @close "
 	              /*             */ "exists within ${this.substr(start, end)}}"
 	              "Same as ?#rfindmatch, but throw an :IndexError instead of "
 	              /**/ "returning ${-1} if no @open without a matching @close exists"),
 	TYPE_METHOD_F("caserfindmatch", &string_caserfindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	              "Same as ?#rfindmatch, however perform a case-folded search and "
 	              /**/ "return the start and end indices of the match\n"
 	              "If no match if found, ?N is returned"),
 	TYPE_METHOD_F("caserindexmatch", &string_caserindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
 	              "#tIndexError{No instance of @open without a matching @close exists "
 	              /**/ "within ${this.substr(start, end)}}"
 	              "Same as ?#rindexmatch, however perform a case-folded search and return "
@@ -10965,7 +11338,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Using the find-match functionality, also provide a partitioning version */
 	TYPE_METHOD_F("partitionmatch", &string_partitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "A hybrid between ?#find, ?#findmatch and ?#partition that returns the strings surrounding "
 	              "the matched string portion, the first being the substring prior to the match, "
 	              "the second being the matched ?. itself (including the @open and @close strings), "
@@ -10991,7 +11364,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}"),
 	TYPE_METHOD_F("rpartitionmatch", &string_rpartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "A hybrid between ?#rfind, ?#rfindmatch and ?#rpartition that returns the strings surrounding "
 	              /**/ "the matched string portion, the first being the substring prior to the match, "
 	              /**/ "the second being the matched ?. itself (including the @open and @close strings), "
@@ -11017,11 +11390,11 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}"),
 	TYPE_METHOD_F("casepartitionmatch", &string_casepartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "Same as #partitionmatch, however perform a case-folded search"),
 	TYPE_METHOD_F("caserpartitionmatch", &string_caserpartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
+	              "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "Same as #rpartitionmatch, however perform a case-folded search"),
 
 	TYPE_METHOD_F("segments", &string_segments,
@@ -11046,7 +11419,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Regex functions. */
 	TYPE_KWMETHOD_F("rematch", &string_rematch,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?Dint?N\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?Dint?N\n"
 	                "#tValueError{The given @pattern is malformed}"
 	                "#r{The number of leading characters in ${this.substr(start, end)} "
 	                /*    */ "matched by @pattern, or ?N if @pattern doesn't match}"
@@ -11172,7 +11545,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("rematches", &string_rematches,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11180,7 +11553,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "This function behaves identical to ${this.rematch(...) == ?#this}"),
 	TYPE_KWMETHOD_F("refind", &string_refind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11189,7 +11562,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Note that using ?N in an expand expression will expand to the all ?N-values"),
 	TYPE_KWMETHOD_F("rerfind", &string_rerfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11198,7 +11571,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "or ?N if no match exists (s.a. #refind)"),
 	TYPE_KWMETHOD_F("reindex", &string_reindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11207,7 +11580,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#refind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD_F("rerindex", &string_rerindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11216,7 +11589,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#rerfind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD_F("relocate", &string_relocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11227,7 +11600,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "This function has nothing to do with relocations! - it's pronounced R.E. locate"),
 	TYPE_KWMETHOD_F("rerlocate", &string_rerlocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11237,7 +11610,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "given regular expression, or ?N if not found"),
 	TYPE_KWMETHOD_F("repartition", &string_repartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?T3?.?.?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11255,7 +11628,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}}"),
 	TYPE_KWMETHOD_F("rerpartition", &string_rerpartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?T3?.?.?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11273,7 +11646,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}}"),
 	TYPE_KWMETHOD_F("rereplace", &string_rereplace,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
+	                "(pattern:?.,replace:?.,max=!-1,rules=!P{})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11290,7 +11663,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("refindall", &string_refindall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?T2?Dint?Dint\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11299,7 +11672,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Note that the matches returned are ordered ascendingly"),
 	TYPE_KWMETHOD_F("relocateall", &string_relocateall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?.\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11310,7 +11683,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "This function has nothing to do with relocations! - it's pronounced R.E. locate all"),
 	TYPE_KWMETHOD_F("resplit", &string_resplit,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?.\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11329,7 +11702,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "as a sequence"),
 	TYPE_KWMETHOD_F("restartswith", &string_restartswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11341,7 +11714,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("reendswith", &string_reendswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11354,28 +11727,28 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("restrip", &string_restrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all leading and trailing matches for @pattern from @this ?. and return the result (s.a. ?#strip)"),
 	TYPE_KWMETHOD_F("relstrip", &string_relstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all leading matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
 	TYPE_KWMETHOD_F("rerstrip", &string_rerstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all trailing matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
 	TYPE_KWMETHOD_F("recount", &string_recount,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dint\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11384,7 +11757,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Instances where @pattern matches epsilon are not counted"),
 	TYPE_KWMETHOD_F("recontains", &string_recontains,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11392,7 +11765,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}"),
 	TYPE_KWMETHOD_F("rescanf", &string_rescanf,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?.?N\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11404,7 +11777,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Regex functions that return the start-/end-offsets of all groups (rather than only the whole match) */
 	TYPE_KWMETHOD_F("regmatch", &string_regmatch,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#rematch, but rather than only return the number of characters that were "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11428,7 +11801,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "all of the matched groups, you should use ?#regfind instead."),
 	TYPE_KWMETHOD_F("regfind", &string_regfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#refind, but rather than only return the character-range "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11436,7 +11809,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regrfind", &string_regrfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#rerfind, but rather than only return the character-range "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11444,7 +11817,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regfindall", &string_regfindall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#refindall, but rather than only return the character-ranges "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return.each[0]}), as well as the "
@@ -11452,7 +11825,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regindex", &string_regindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11461,7 +11834,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#regfind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD_F("regrindex", &string_regrindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11471,7 +11844,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 
 	TYPE_KWMETHOD_F("reglocate", &string_reglocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?.?N\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11482,7 +11855,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Behaves the same as ${this.rescanf(f\".*({pattern})\", ...)}"),
 	TYPE_KWMETHOD_F("regrlocate", &string_regrlocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?.?N\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11492,7 +11865,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "groups, and an empty sequence if @pattern isn't matched at all)"),
 	TYPE_KWMETHOD_F("reglocateall", &string_reglocateall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?S?X2?.?N\n"
+	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?S?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11510,24 +11883,24 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Deprecated functions. */
 	TYPE_KWMETHOD_F("reverse", &string_reversed,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	                "(start=!0,end=!-1)->?.\n"
 	                "Deprecated alias for ?#reversed"),
 
 	/* Override specific sequence functions whilst retaining original behavior.
 	 * s.a. "string_method_hints" */
 	TYPE_METHOD_HINTREF_DOC(Sequence_any,
-	                        "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	                        "(start=!0,end=!-1,key:?DCallable=!N)->?Dbool\n"
 	                        "When @key isn't given, always true if the effective index-range is "
 	                        /**/ "non-empty (since elements of ${string as Sequence} as always "
 	                        /**/ "1-characters strings, which are non-empty and thus !t). "
 	                        /**/ "S.a. ?Aany?DSequence"),
 	TYPE_METHOD_HINTREF_DOC(Sequence_all,
-	                        "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	                        "(start=!0,end=!-1,key:?DCallable=!N)->?Dbool\n"
 	                        "When @key isn't given, always return true (because elements of "
 	                        /**/ "${string as Sequence} as always 1-characters strings, which "
 	                        /**/ "are non-empty and thus !t). S.a. ?Aall?DSequence"),
 	TYPE_METHOD_HINTREF_DOC(Sequence_sum,
-	                        "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?.?N\n"
+	                        "(start=!0,end=!-1)->?X2?.?N\n"
 	                        "Same as ?#substr, but return ?N if instead of $\"\" (an empty string). "
 	                        /**/ "S.a. ?Asum?DSequence"),
 

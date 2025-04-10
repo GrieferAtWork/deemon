@@ -1887,7 +1887,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	/* Method hint API functions. */
 	TYPE_KWMETHOD(DeeMA_Sequence_startswith_name, &DeeMA_Sequence_startswith,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Returns ?t / ?f indicative of @this Sequence's first element matching :item\n"
@@ -1896,7 +1896,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_endswith_name, &DeeMA_Sequence_endswith,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Returns ?t / ?f indicative of @this Sequence's last element matching :item\n"
@@ -1905,14 +1905,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_find_name, &DeeMA_Sequence_find,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Search for the first element matching @item and return its index. "
 	              /**/ "If no such element exists, return ${-1} instead"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_rfind_name, &DeeMA_Sequence_rfind,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Search for the last element matching @item and return its index. "
@@ -1981,28 +1981,28 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "than $0, add ${##this} prior to index selection"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_remove_name, &DeeMA_Sequence_remove,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find the first instance of @item and remove it, returning ?t if an "
 	              /**/ "element got removed, or ?f if @item could not be found"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_rremove_name, &DeeMA_Sequence_rremove,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find the last instance of @item and remove it, returning ?t if an "
 	              /**/ "element got removed, or ?f if @item could not be found"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_removeall_name, &DeeMA_Sequence_removeall,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,max=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find all instance of @item and remove them, returning the number of "
 	              /**/ "instances found (and consequently removed)"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_removeif_name, &DeeMA_Sequence_removeif,
-	              "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(should:?DCallable,start=!0,end=!A!Dint!PSIZE_MAX,max=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Remove all elements within the given sub-range, for which ${should(item)} "
@@ -2015,34 +2015,34 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "items, using @filler to initialize newly added entries"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_fill_name, &DeeMA_Sequence_fill,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)\n"
+	              "(start=!0,end=!A!Dint!PSIZE_MAX,filler=!N)\n"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Assign @filler to all elements within the given sub-range"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_reverse_name, &DeeMA_Sequence_reverse,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
+	              "(start=!0,end=!A!Dint!PSIZE_MAX)\n"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Reverse the order of all elements within the given range"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_reversed_name, &DeeMA_Sequence_reversed,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?DSequence\n"
+	              "(start=!0,end=!A!Dint!PSIZE_MAX)->?DSequence\n"
 	              "Return a Sequence that contains the elements of @this Sequence in reverse order\n"
 	              "The point at which @this Sequence is enumerated is implementation-defined"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_sort_name, &DeeMA_Sequence_sort,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)\n"
+	              "(start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Sort the elements within the given range"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_sorted_name, &DeeMA_Sequence_sorted,
-	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?DSequence\n"
+	              "(start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?DSequence\n"
 	              "Return a Sequence that contains all elements from @this Sequence, "
 	              /**/ "but sorted in ascending order, or in accordance to @key\n"
 	              "The point at which @this Sequence is enumerated is implementation-defined"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_bfind_name, &DeeMA_Sequence_bfind,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Do a binary search (requiring @this to be sorted via @key) for @item\n"
@@ -2051,14 +2051,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "When no elements of @this match, ?N is returned."
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_bposition_name, &DeeMA_Sequence_bposition,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Same as ?#bfind, but return (an) index where @item should be inserted, rather "
 	              /**/ "than ?N when @this doesn't contain any matching object"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_brange_name, &DeeMA_Sequence_brange,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Similar to ?#bfind, but return a tuple ${[begin,end)} of integers representing "
@@ -2114,7 +2114,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "Search for the first element matching @item and return its index"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(STR_rindex, &seq_rindex,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              DOC_throws_ValueError_if_not_found
@@ -2275,7 +2275,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	/* TODO: unboundas(item)->?S?O
 	 * Return a view of @this sequence that replaces every unbound element with "item" */
 
-	/* TODO: findall: "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"
+	/* TODO: findall: "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"
 	 * > Find not just the first, but all indices of @item */
 	/* TODO: findallseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable = none): {int...} */
 
@@ -2349,7 +2349,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	/* Binary search API */
 	TYPE_KWMETHOD("bcontains", &seq_bcontains,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Wrapper around ?#bfind that returns indicative of @item being bound:\n"
@@ -2358,7 +2358,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "return index !is none;"
 	              "}"),
 	TYPE_KWMETHOD("bindex", &seq_bindex,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "#tValueError{The Sequence does not contain an item matching @item}"
@@ -2370,7 +2370,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "return index;"
 	              "}"),
 	TYPE_KWMETHOD("blocateall", &seq_blocateall,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?O\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?O\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Return the sub-range from @this of elements matching @item, as returned by ?#brange\n"
@@ -2388,7 +2388,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	print l;\n"
 	              "}"),
 	TYPE_KWMETHOD("binsert", &seq_binsert,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
+	              "(item,start=!0,end=!A!Dint!PSIZE_MAX)\n"
 	              "Helper wrapper for ?#insert and ?#bposition that automatically determines "
 	              /**/ "the index where a given @item should be inserted to ensure that @this sequence "
 	              /**/ "remains sorted according to @key. Note that this function makes virtual calls as "

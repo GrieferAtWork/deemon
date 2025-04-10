@@ -501,7 +501,7 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
  *                    )...]
  *     ;
  *     ref_object ::= 'o'; // `va_arg(DeeObject **)'
- *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u' and `x' read unsigned integers
+ *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u' and `x' read unsigned integers ("x" uses *M1)
  *     ref_str    ::= ['$']      // va_arg(size_t *)   (Store WSTR_LENGTH of the following string)
  *                  | 'ls'       // *va_arg(wchar_t const **)  = DeeString_AsWide()
  *                  | 'Us'       // *va_arg(uint8_t const **)  = DeeString_AsUtf8()

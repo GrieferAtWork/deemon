@@ -112,7 +112,7 @@ global final DINIT_BY_CINIT: {string: string} = Dict.Frozen(() -> {
 	}
 }());
 
-global final UNP_BY_CTYPE: {string: string} = {
+global final UNP_BY_CTYPE: {string: (string | (string, string))} = {
 	"DeeObject*": 'o',
 	"bool": 'b',
 	"__BOOL": 'b',
@@ -122,35 +122,35 @@ global final UNP_BY_CTYPE: {string: string} = {
 	"long double": 'LD',
 	"__LONGDOUBLE": 'LD',
 	"signed char": '" UNPdN(__SIZEOF_CHAR__) "',
-	"unsigned char": '" UNPuN(__SIZEOF_CHAR__) "',
+	"unsigned char": ('" UNPuN(__SIZEOF_CHAR__) "', '" UNPxN(__SIZEOF_CHAR__) "'),
 	"short": '" UNPdN(__SIZEOF_SHORT__) "',
 	"signed short": '" UNPdN(__SIZEOF_SHORT__) "',
-	"unsigned short": '" UNPuN(__SIZEOF_SHORT__) "',
+	"unsigned short": ('" UNPuN(__SIZEOF_SHORT__) "', '" UNPxN(__SIZEOF_SHORT__) "'),
 	"int": 'd',
 	"signed int": 'd',
-	"unsigned int": 'u',
+	"unsigned int": ('x', 'u'),
 	"long": '" UNPdN(__SIZEOF_LONG__) "',
 	"signed long": '" UNPdN(__SIZEOF_LONG__) "',
-	"unsigned long": '" UNPuN(__SIZEOF_LONG__) "',
+	"unsigned long": ('" UNPuN(__SIZEOF_LONG__) "', '" UNPxN(__SIZEOF_LONG__) "'),
 	"long long": '" UNPdN(__SIZEOF_LONG_LONG__) "',
 	"signed long long": '" UNPdN(__SIZEOF_LONG_LONG__) "',
-	"unsigned long long": '" UNPuN(__SIZEOF_LONG_LONG__) "',
+	"unsigned long long": ('" UNPuN(__SIZEOF_LONG_LONG__) "', '" UNPxN(__SIZEOF_LONG_LONG__) "'),
 	"__LONGLONG": '" UNPdN(__SIZEOF_LONG_LONG__) "',
-	"__ULONGLONG": '" UNPuN(__SIZEOF_LONG_LONG__) "',
+	"__ULONGLONG": ('" UNPuN(__SIZEOF_LONG_LONG__) "', '" UNPxN(__SIZEOF_LONG_LONG__) "'),
 	"intptr_t": '" UNPdPTR "',
-	"uintptr_t": '" UNPuPTR "',
-	"size_t": '" UNPuSIZ "',
+	"uintptr_t": ('" UNPuPTR "', '" UNPxPTR "'),
+	"size_t": ('" UNPuSIZ "', '" UNPxSIZ "'),
 	"Dee_ssize_t": '" UNPdSIZ "',
 	"int8_t": '" UNPd8 "',
-	"uint8_t": '" UNPu8 "',
+	"uint8_t": ('" UNPu8 "', '" UNPx8 "'),
 	"int16_t": '" UNPd16 "',
-	"uint16_t": '" UNPu16 "',
+	"uint16_t": ('" UNPu16 "', '" UNPx16 "'),
 	"int32_t": '" UNPd32 "',
-	"uint32_t": '" UNPu32 "',
+	"uint32_t": ('" UNPu32 "', '" UNPx32 "'),
 	"int64_t": '" UNPd64 "',
-	"uint64_t": '" UNPu64 "',
+	"uint64_t": ('" UNPu64 "', '" UNPx64 "'),
 	"Dee_int128_t": '" UNPd128 "',
-	"Dee_uint128_t": '" UNPu128 "',
+	"Dee_uint128_t": ('" UNPu128 "', '" UNPx128 "'),
 };
 
 global final C_TYPE_QUALIFIERS: {string...} = HashSet.Frozen({
@@ -181,6 +181,10 @@ global final C_KEYWORDS: {string...} = HashSet.Frozen({
 	"for",
 	"while",
 	"do",
+
+	/* Now keywords, but use aliases to prevent conflict with common macros */
+	"min",
+	"max",
 });
 
 
@@ -579,6 +583,7 @@ extend_typ_until_i:
 			cType = CTYPE_BY_DTYPE.get(dType, "DeeObject*");
 		local decode: UnpackParamDecoder | none = none;
 		local UNPformat: string | none = none;
+		local acceptMinusOne = false;
 		if (!dType.startswith("?")) {
 			/* Custom argument decoder (e.g. "unix:fd") */
 			decode = UNPACK_PARAM_DECODERS[removeUnusedSpaces(dType)];
@@ -622,6 +627,8 @@ extend_typ_until_i:
 			if (initExpr.startswith("!")) {
 				item.dInit = initExpr;
 			} else {
+				if ("-1" in initExpr)
+					acceptMinusOne = true;
 				item.cInit = initExpr;
 			}
 			while (i < len && params.isspace(i))
@@ -653,6 +660,8 @@ extend_typ_until_i:
 					}
 					local dInit = DINIT_BY_CINIT.get(cInitExpr);
 					if (dInit !is none) {
+						if (dInit == "!A!Dint!PSIZE_MAX" && acceptMinusOne)
+							dInit = "!-1";
 						item.dInit = dInit;
 						break;
 					}
@@ -689,6 +698,8 @@ extend_typ_until_i:
 				}
 			}
 		}
+		if (UNPformat !is string)
+			UNPformat = UNPformat[acceptMinusOne];
 		item.UNPformat = UNPformat;
 		yield item;
 		if (i >= len)
@@ -730,6 +741,23 @@ function getUnpackFormat(params: string | {UnpackParam...} = (),
 
 
 
+
+local function printDocStringWithPrefix(prefix: string, name: string, params: {UnpackParam...}) {
+	local docstring = ",".join(params.each.docParam);
+	switch (prefix) {
+	case "string":
+		docstring = docstring.replace("?Dstring", "?.");
+		break;
+	case "bytes":
+		docstring = docstring.replace("?DBytes", "?.");
+		break;
+	default: break;
+	}
+	print("#define ", prefix, "_", name, "_params ", repr docstring);
+}
+
+
+
 @@Usage:
 @@> print_DeeArg_UnpackKw("__seq_find__", params: """
 @@>        DeeObject *item,
@@ -745,6 +773,7 @@ function getUnpackFormat(params: string | {UnpackParam...} = (),
 @@@param args   Name of the C-struct where decoded arguments are stored
 @@@param err    Name of the label to jump to on error
 @@@param defineKwList When true, define the keyword argument list locally
+@@@param docStringPrefix When non-empty, define the doc-string locally with this prefix
 function print_DeeArg_UnpackKw(name: string = "",
                                argc: string = "argc",
                                argv: string = "argv",
@@ -752,7 +781,8 @@ function print_DeeArg_UnpackKw(name: string = "",
                                params: string | {UnpackParam...} = (),
                                args: string = "args",
                                err: string = "err",
-                               defineKwList: bool = false) {
+                               defineKwList: bool = false,
+                               docStringPrefix: string = "") {
 	if (params is string)
 		params = parseParamSpec(params).cached;
 	local kwlistName = f"kwlist__{"_".join(params.each.name)}";
@@ -763,6 +793,8 @@ function print_DeeArg_UnpackKw(name: string = "",
 				f"KEX({repr param.name}, {param.nameHashes}), "
 		) + ...) ?? ""}KEND \});");
 	}
+	if (docStringPrefix)
+		printDocStringWithPrefix(docStringPrefix, name, params);
 	if (params) {
 		print("	struct {");
 		for (local param: params) {
@@ -814,10 +846,13 @@ function print_DeeArg_Unpack(name: string = "",
                              argv: string = "argv",
                              params: string | {UnpackParam...} = (),
                              args: string = "args",
-                             err: string = "err") {
+                             err: string = "err",
+                             docStringPrefix: string = "") {
 	if (params is string)
 		params = parseParamSpec(params).cached;
 	local nameRepr = name ? repr name : "NULL";
+	if (docStringPrefix)
+		printDocStringWithPrefix(docStringPrefix, name, params);
 	if (params) {
 		print("	struct {");
 		for (local param: params) {

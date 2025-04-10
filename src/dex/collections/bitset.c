@@ -927,7 +927,7 @@ bs_popcount(Bitset *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":popcount",
+	                    "|" UNPuSIZ UNPxSIZ ":popcount",
 	                    &start, &end))
 		goto err;
 	if (end > self->bs_nbits)
@@ -945,7 +945,7 @@ bs_any(Bitset *__restrict self, size_t argc,
        DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":any",
+	                    "|" UNPuSIZ UNPxSIZ ":any",
 	                    &start, &end))
 		goto err;
 	if (end > self->bs_nbits)
@@ -962,7 +962,7 @@ bs_all(Bitset *__restrict self, size_t argc,
        DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":all",
+	                    "|" UNPuSIZ UNPxSIZ ":all",
 	                    &start, &end))
 		goto err;
 	if (end > self->bs_nbits)
@@ -980,7 +980,7 @@ bs_ffs(Bitset *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":ffs",
+	                    "|" UNPuSIZ UNPxSIZ ":ffs",
 	                    &start, &end))
 		goto err;
 	if (end > self->bs_nbits)
@@ -1001,7 +1001,7 @@ bs_ffc(Bitset *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":ffc",
+	                    "|" UNPuSIZ UNPxSIZ ":ffc",
 	                    &start, &end))
 		goto err;
 	if (end > self->bs_nbits)
@@ -1022,7 +1022,7 @@ bs_fls(Bitset *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":fls",
+	                    "|" UNPuSIZ UNPxSIZ ":fls",
 	                    &start, &end))
 		goto err;
 	if (end > self->bs_nbits)
@@ -1043,7 +1043,7 @@ bs_flc(Bitset *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":flc",
+	                    "|" UNPuSIZ UNPxSIZ ":flc",
 	                    &start, &end))
 		goto err;
 	if (end > self->bs_nbits)
@@ -1064,7 +1064,7 @@ bs_clz(Bitset *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":clz",
+	                    "|" UNPuSIZ UNPxSIZ ":clz",
 	                    &start, &end))
 		goto err;
 	if (end > self->bs_nbits)
@@ -1085,7 +1085,7 @@ bs_ctz(Bitset *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":ctz",
+	                    "|" UNPuSIZ UNPxSIZ ":ctz",
 	                    &start, &end))
 		goto err;
 	if (end > self->bs_nbits)
@@ -1106,7 +1106,7 @@ bs_clo(Bitset *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":clo",
+	                    "|" UNPuSIZ UNPxSIZ ":clo",
 	                    &start, &end))
 		goto err;
 	if (end > self->bs_nbits)
@@ -1127,7 +1127,7 @@ bs_cto(Bitset *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":cto",
+	                    "|" UNPuSIZ UNPxSIZ ":cto",
 	                    &start, &end))
 		goto err;
 	if (end > self->bs_nbits)
@@ -1697,71 +1697,71 @@ PRIVATE struct type_method tpconst bs_methods[] = {
 	              /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 
 	TYPE_KWMETHOD_F("popcount", &bs_popcount, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "Return the # of 1-bits in #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("any", &bs_any, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "Returns !t if there any bits in #C{[start,end)} are on. Same as ${this.popcount(start, end) > 0}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("all", &bs_all, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "Returns !t if all bits in #C{[start,end)} are on. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("ffs", &bs_ffs, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindFirstSet: find the index of the lowest 1-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("ffc", &bs_ffc, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindFirstClear: find the index of the lowest 0-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("fls", &bs_fls, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindLastSet: find the index of the greatest 1-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("flc", &bs_flc, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindLastClear: find the index of the greatest 0-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("clz", &bs_clz, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountLeadingZeroes: Return number of consecutive 0-bits that exist, starting at the high end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("ctz", &bs_ctz, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountTrailingZeroes: Return number of consecutive 0-bits that exist, starting at the low end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("clo", &bs_clo, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountLeadingOnes: Return number of consecutive 1-bits that exist, starting at the high end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("cto", &bs_cto, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountTrailingOnes: Return number of consecutive 1-bits that exist, starting at the low end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
@@ -2271,71 +2271,71 @@ PRIVATE struct type_buffer robs_buffer = {
 
 PRIVATE struct type_method tpconst robs_methods[] = {
 	TYPE_KWMETHOD_F("popcount", &robs_popcount, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "Return the # of 1-bits in #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("any", &robs_any, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "Returns !t if there any bits in #C{[start,end)} are on. Same as ${this.popcount(start, end) > 0}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("all", &robs_all, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "Returns !t if all bits in #C{[start,end)} are on. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("ffs", &robs_ffs, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindFirstSet: find the index of the lowest 1-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("ffc", &robs_ffc, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindFirstClear: find the index of the lowest 0-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("fls", &robs_fls, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindLastSet: find the index of the greatest 1-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("flc", &robs_flc, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindLastClear: find the index of the greatest 0-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("clz", &robs_clz, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountLeadingZeroes: Return number of consecutive 0-bits that exist, starting at the high end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("ctz", &robs_ctz, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountTrailingZeroes: Return number of consecutive 0-bits that exist, starting at the low end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("clo", &robs_clo, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountLeadingOnes: Return number of consecutive 1-bits that exist, starting at the high end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("cto", &robs_cto, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountTrailingOnes: Return number of consecutive 1-bits that exist, starting at the low end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
@@ -3055,7 +3055,7 @@ bsv_popcount(BitsetView *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":popcount",
+	                    "|" UNPuSIZ UNPxSIZ ":popcount",
 	                    &start, &end))
 		goto err;
 	if (end > BitsetView_GetNBits(self))
@@ -3075,7 +3075,7 @@ bsv_any(BitsetView *__restrict self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":any",
+	                    "|" UNPuSIZ UNPxSIZ ":any",
 	                    &start, &end))
 		goto err;
 	if (end > BitsetView_GetNBits(self))
@@ -3094,7 +3094,7 @@ bsv_all(BitsetView *__restrict self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":all",
+	                    "|" UNPuSIZ UNPxSIZ ":all",
 	                    &start, &end))
 		goto err;
 	if (end > BitsetView_GetNBits(self))
@@ -3114,7 +3114,7 @@ bsv_ffs(BitsetView *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":ffs",
+	                    "|" UNPuSIZ UNPxSIZ ":ffs",
 	                    &start, &end))
 		goto err;
 	if (end > BitsetView_GetNBits(self))
@@ -3137,7 +3137,7 @@ bsv_ffc(BitsetView *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":ffc",
+	                    "|" UNPuSIZ UNPxSIZ ":ffc",
 	                    &start, &end))
 		goto err;
 	if (end > BitsetView_GetNBits(self))
@@ -3160,7 +3160,7 @@ bsv_fls(BitsetView *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":fls",
+	                    "|" UNPuSIZ UNPxSIZ ":fls",
 	                    &start, &end))
 		goto err;
 	if (end > BitsetView_GetNBits(self))
@@ -3183,7 +3183,7 @@ bsv_flc(BitsetView *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":flc",
+	                    "|" UNPuSIZ UNPxSIZ ":flc",
 	                    &start, &end))
 		goto err;
 	if (end > BitsetView_GetNBits(self))
@@ -3206,7 +3206,7 @@ bsv_clz(BitsetView *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":clz",
+	                    "|" UNPuSIZ UNPxSIZ ":clz",
 	                    &start, &end))
 		goto err;
 	if (end > BitsetView_GetNBits(self))
@@ -3229,7 +3229,7 @@ bsv_ctz(BitsetView *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":ctz",
+	                    "|" UNPuSIZ UNPxSIZ ":ctz",
 	                    &start, &end))
 		goto err;
 	if (end > BitsetView_GetNBits(self))
@@ -3252,7 +3252,7 @@ bsv_clo(BitsetView *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":clo",
+	                    "|" UNPuSIZ UNPxSIZ ":clo",
 	                    &start, &end))
 		goto err;
 	if (end > BitsetView_GetNBits(self))
@@ -3275,7 +3275,7 @@ bsv_cto(BitsetView *__restrict self, size_t argc,
 	size_t result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
-	                    "|" UNPdSIZ UNPdSIZ ":cto",
+	                    "|" UNPuSIZ UNPxSIZ ":cto",
 	                    &start, &end))
 		goto err;
 	if (end > BitsetView_GetNBits(self))
@@ -3961,71 +3961,71 @@ PRIVATE struct type_method tpconst bsv_methods[] = {
 	              /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 
 	TYPE_KWMETHOD_F("popcount", &bsv_popcount, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "Return the # of 1-bits in #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("any", &bsv_any, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "Returns !t if there any bits in #C{[start,end)} are on. Same as ${this.popcount(start, end) > 0}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("all", &bsv_all, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "Returns !t if all bits in #C{[start,end)} are on. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("ffs", &bsv_ffs, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindFirstSet: find the index of the lowest 1-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("ffc", &bsv_ffc, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindFirstClear: find the index of the lowest 0-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("fls", &bsv_fls, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindLastSet: find the index of the greatest 1-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("flc", &bsv_flc, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "FindLastClear: find the index of the greatest 0-bit that within #C{[start,end)}. "
 	                /**/ "If no such bit exists, return ?N instead. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("clz", &bsv_clz, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountLeadingZeroes: Return number of consecutive 0-bits that exist, starting at the high end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("ctz", &bsv_ctz, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountTrailingZeroes: Return number of consecutive 0-bits that exist, starting at the low end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("clo", &bsv_clo, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountLeadingOnes: Return number of consecutive 1-bits that exist, starting at the high end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
 	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("cto", &bsv_cto, METHOD_FNOREFESCAPE,
-	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIntegerOverflow{@start or @end is negative or too large}"
 	                "CountTrailingOnes: Return number of consecutive 1-bits that exist, starting at the low end of #C{[start,end)}. "
 	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
@@ -4094,8 +4094,8 @@ INTERN DeeTypeObject BitsetView_Type = {
 	                         "Construct an empty ?.\n"
 	                         "\n"
 
-	                         "(ob:?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
-	                         "(ob:?O,mode=!Pr,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
+	                         "(ob:?O,start=!0,end=!A!Dint!PSIZE_MAX)\n"
+	                         "(ob:?O,mode=!Pr,start=!0,end=!A!Dint!PSIZE_MAX)\n"
 	                         "#pmode{Either $\"r\" or $\"w\", specifying the read/write-mode to use}"
 	                         "#tNotImplemented{The given @ob does not implement the buffer protocol}"
 	                         "Create a ?. object to view the bit-range ${[start,end)} of @ob. "

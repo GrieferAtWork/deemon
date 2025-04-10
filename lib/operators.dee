@@ -118,9 +118,9 @@ varying function setattr(self, name: string, value): none -> self.operator .= (n
 varying function enumattr(self): {Attribute...} -> self.operator enumattr();
 varying function enter(self): none -> self.operator enter();
 varying function leave(self): none -> self.operator leave();
-@[optional.gatw.doc("(self:?DFile,maxBytes:?Dint=!A!Dint!PSIZE_MAX)->?Dstring")]
+@[optional.gatw.doc("(self:?DFile,maxBytes=!A!Dint!PSIZE_MAX)->?Dstring")]
 varying function read(self, ...) -> self.operator read(...);
-@[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint")]
+@[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,start=!0,end=!A!Dint!PSIZE_MAX)->?Dint")]
 varying function write(self, ...) -> self.operator write(...);
 varying function seek(self: File, off: int from deemon, whence: int from deemon): int from deemon -> self.operator seek(off, whence);
 varying function sync(self: File): none -> self.operator sync();

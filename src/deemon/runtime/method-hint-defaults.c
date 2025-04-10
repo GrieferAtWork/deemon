@@ -1948,7 +1948,7 @@ default__seq_operator_delitem__with_callattr___seq_delitem__(DeeObject *self, De
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_delitem__, 1, &index);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -1963,7 +1963,7 @@ default__seq_operator_delitem__with_callobjectcache___seq_delitem__(DeeObject *s
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_delitem__, self, 1, &index);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -2003,7 +2003,7 @@ default__seq_operator_delitem_index__with_callattr___seq_delitem__(DeeObject *__
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_delitem__, PCKuSIZ, index);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -2018,7 +2018,7 @@ default__seq_operator_delitem_index__with_callobjectcache___seq_delitem__(DeeObj
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_delitem__, self, PCKuSIZ, index);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -2070,7 +2070,7 @@ default__seq_operator_setitem__with_callattr___seq_setitem__(DeeObject *self, De
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_setitem__, 2, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -2088,7 +2088,7 @@ default__seq_operator_setitem__with_callobjectcache___seq_setitem__(DeeObject *s
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_setitem__, self, 2, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -2128,7 +2128,7 @@ default__seq_operator_setitem_index__with_callattr___seq_setitem__(DeeObject *se
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_setitem__, PCKuSIZ "o", index, value);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -2143,7 +2143,7 @@ default__seq_operator_setitem_index__with_callobjectcache___seq_setitem__(DeeObj
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_setitem__, self, PCKuSIZ "o", index, value);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -2653,7 +2653,7 @@ default__seq_operator_delrange__with_callattr___seq_delrange__(DeeObject *self, 
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_delrange__, 2, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -2671,7 +2671,7 @@ default__seq_operator_delrange__with_callobjectcache___seq_delrange__(DeeObject 
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_delrange__, self, 2, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -2831,7 +2831,7 @@ default__seq_operator_setrange__with_callattr___seq_setrange__(DeeObject *self, 
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_setrange__, 3, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -2850,7 +2850,7 @@ default__seq_operator_setrange__with_callobjectcache___seq_setrange__(DeeObject 
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_setrange__, self, 3, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -3022,7 +3022,7 @@ default__seq_operator_assign__with_callattr___seq_assign__(DeeObject *self, DeeO
 	DREF DeeObject *result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_assign__, 1, &items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -3036,7 +3036,7 @@ default__seq_operator_assign__with_callobjectcache___seq_assign__(DeeObject *sel
 	DREF DeeObject *result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_assign__, self, 1, &items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -11825,7 +11825,7 @@ default__seq_erase__with_callattr_erase(DeeObject *__restrict self, size_t index
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_erase, PCKuSIZ PCKuSIZ, index, count);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -11837,7 +11837,7 @@ default__seq_erase__with_callattr___seq_erase__(DeeObject *__restrict self, size
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_erase__, PCKuSIZ PCKuSIZ, index, count);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -11852,7 +11852,7 @@ default__seq_erase__with_callobjectcache___seq_erase__(DeeObject *__restrict sel
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_erase__, self, PCKuSIZ PCKuSIZ, index, count);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -11904,7 +11904,7 @@ default__seq_insert__with_callattr_insert(DeeObject *self, size_t index, DeeObje
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_insert, PCKuSIZ "o", index, item);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -11916,7 +11916,7 @@ default__seq_insert__with_callattr___seq_insert__(DeeObject *self, size_t index,
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_insert__, PCKuSIZ "o", index, item);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -11931,7 +11931,7 @@ default__seq_insert__with_callobjectcache___seq_insert__(DeeObject *self, size_t
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_insert__, self, PCKuSIZ "o", index, item);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -11966,7 +11966,7 @@ default__seq_insertall__with_callattr_insertall(DeeObject *self, size_t index, D
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_insertall, PCKuSIZ "o", index, items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -11978,7 +11978,7 @@ default__seq_insertall__with_callattr___seq_insertall__(DeeObject *self, size_t 
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_insertall__, PCKuSIZ "o", index, items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -11993,7 +11993,7 @@ default__seq_insertall__with_callobjectcache___seq_insertall__(DeeObject *self, 
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_insertall__, self, PCKuSIZ "o", index, items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12106,7 +12106,7 @@ default__seq_append__with_callattr_append(DeeObject *self, DeeObject *item) {
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_append, 1, &item);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12118,7 +12118,7 @@ default__seq_append__with_callattr_pushback(DeeObject *self, DeeObject *item) {
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_pushback, 1, &item);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12130,7 +12130,7 @@ default__seq_append__with_callattr___seq_append__(DeeObject *self, DeeObject *it
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_append__, 1, &item);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12145,7 +12145,7 @@ default__seq_append__with_callobjectcache___seq_append__(DeeObject *self, DeeObj
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_append__, self, 1, &item);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12180,7 +12180,7 @@ default__seq_extend__with_callattr_extend(DeeObject *self, DeeObject *items) {
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_extend, 1, &items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12192,7 +12192,7 @@ default__seq_extend__with_callattr___seq_extend__(DeeObject *self, DeeObject *it
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_extend__, 1, &items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12207,7 +12207,7 @@ default__seq_extend__with_callobjectcache___seq_extend__(DeeObject *self, DeeObj
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_extend__, self, 1, &items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12309,7 +12309,7 @@ default__seq_clear__with_callattr_clear(DeeObject *__restrict self) {
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_clear, 0, NULL);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12321,7 +12321,7 @@ default__seq_clear__with_callattr___seq_clear__(DeeObject *__restrict self) {
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_clear__, 0, NULL);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -12336,7 +12336,7 @@ default__seq_clear__with_callobjectcache___seq_clear__(DeeObject *__restrict sel
 	result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_clear__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -21339,7 +21339,7 @@ tdefault__seq_operator_delitem__with_callobjectcache___seq_delitem__(DeeTypeObje
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_delitem__, self, 1, &index);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -21352,7 +21352,7 @@ tdefault__seq_operator_delitem_index__with_callobjectcache___seq_delitem__(DeeTy
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_delitem__, self, PCKuSIZ, index);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -21368,7 +21368,7 @@ tdefault__seq_operator_setitem__with_callobjectcache___seq_setitem__(DeeTypeObje
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_setitem__, self, 2, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -21381,7 +21381,7 @@ tdefault__seq_operator_setitem_index__with_callobjectcache___seq_setitem__(DeeTy
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_setitem__, self, PCKuSIZ "o", index, value);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -21406,7 +21406,7 @@ tdefault__seq_operator_delrange__with_callobjectcache___seq_delrange__(DeeTypeOb
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_delrange__, self, 2, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -21423,7 +21423,7 @@ tdefault__seq_operator_setrange__with_callobjectcache___seq_setrange__(DeeTypeOb
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_setrange__, self, 3, args);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -21435,7 +21435,7 @@ tdefault__seq_operator_assign__with_callobjectcache___seq_assign__(DeeTypeObject
 	DREF DeeObject *result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_assign__, self, 1, &items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22351,7 +22351,7 @@ tdefault__seq_erase__with_callobjectcache___seq_erase__(DeeTypeObject *tp_self, 
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_erase__, self, PCKuSIZ PCKuSIZ, index, count);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22364,7 +22364,7 @@ tdefault__seq_insert__with_callobjectcache___seq_insert__(DeeTypeObject *tp_self
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_insert__, self, PCKuSIZ "o", index, item);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22377,7 +22377,7 @@ tdefault__seq_insertall__with_callobjectcache___seq_insertall__(DeeTypeObject *t
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_insertall__, self, PCKuSIZ "o", index, items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22403,7 +22403,7 @@ tdefault__seq_append__with_callobjectcache___seq_append__(DeeTypeObject *tp_self
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_append__, self, 1, &item);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22416,7 +22416,7 @@ tdefault__seq_extend__with_callobjectcache___seq_extend__(DeeTypeObject *tp_self
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_extend__, self, 1, &items);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;
@@ -22435,7 +22435,7 @@ tdefault__seq_clear__with_callobjectcache___seq_clear__(DeeTypeObject *tp_self, 
 	result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_clear__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
-	Dee_Decref(result);
+	Dee_Decref_probably_none(result);
 	return 0;
 err:
 	return -1;

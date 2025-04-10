@@ -678,7 +678,7 @@ reader_init_kw(Reader *__restrict self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1, pos = 0;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__data_start_end_pos,
-	                    "o|" UNPdSIZ UNPdSIZ UNPdSIZ ":_FileReader",
+	                    "o|" UNPuSIZ UNPxSIZ UNPxSIZ ":_FileReader",
 	                    &self->r_owner, &start, &end, &pos))
 		goto err;
 	if (DeeObject_GetBuf(self->r_owner, &self->r_buffer, Dee_BUFFER_FREADONLY))
@@ -740,7 +740,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "_FileReader",
 		/* .tp_doc      = */ DOC("()\n"
-		                         "(data:?DBytes,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,pos=!0)\n"
+		                         "(data:?DBytes,start=!0,end=!A!Dint!PSIZE_MAX,pos=!0)\n"
 		                         "Create a file stream for reading data of the given @data as a buffer, "
 		                         /**/ "starting at its byte-offset @start and ending at @end\n"
 		                         "Note that the given indices @start and @end refer to byte "
@@ -1936,7 +1936,7 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 	bool mapshared   = false;
 	unsigned int mapflags;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__fd_minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared,
-	                    "o|" UNPdSIZ UNPdSIZ UNPuN(Dee_SIZEOF_POS_T) UNPdSIZ "bbb" ":mapfile",
+	                    "o|" UNPuSIZ UNPxSIZ UNPuN(Dee_SIZEOF_POS_T) UNPxSIZ "bbb" ":mapfile",
 	                    &fd, &minbytes, &maxbytes, &offset, &nulbytes, &readall, &mustmmap, &mapshared))
 		goto err;
 	mapflags = 0;
@@ -2056,8 +2056,8 @@ PUBLIC DeeTypeObject DeeMapFile_Type = {
 	/* .tp_name     = */ "_MapFile",
 	/* .tp_doc      = */ DOC("("
 	                         /**/ "fd:" FDTYP_mapfile_init_kw ","
-	                         /**/ "maxbytes:?Dint=!A!Dint!PSIZE_MAX,"
-	                         /**/ "offset:?Dint=!A!Dint!PSIZE_MAX,"
+	                         /**/ "maxbytes=!A!Dint!PSIZE_MAX,"
+	                         /**/ "offset=!A!Dint!PSIZE_MAX,"
 	                         /**/ "nulbytes=!0,"
 	                         /**/ "readall=!f,"
 	                         /**/ "mustmmap=!f,"

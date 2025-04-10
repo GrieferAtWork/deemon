@@ -1854,8 +1854,8 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "Construct an empty ?. object\n"
 	                         "\n"
 
-	                         "(ob:?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
-	                         "(ob:?O,mode=!Pr,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
+	                         "(ob:?O,start=!0,end=!A!Dint!PSIZE_MAX)\n"
+	                         "(ob:?O,mode=!Pr,start=!0,end=!A!Dint!PSIZE_MAX)\n"
 	                         "#tNotImplemented{The given @ob does not implement the buffer protocol}"
 	                         "Construct a ?. object for viewing the memory of @ob, either as read-only "
 	                         /**/ "when @mode is set to $\"r\" or omitted, or as read-write when set to "

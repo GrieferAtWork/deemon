@@ -928,7 +928,7 @@ DeeCodec_Encode(DeeObject *self, DeeObject *name,
                 unsigned int error_mode) {
 	DREF DeeObject *result, *libcodecs;
 	char const *name_str;
-	ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
+	ASSERT(error_mode < COMPILER_LENOF(error_module_names));
 	name = DeeCodec_NormalizeName(name);
 	if unlikely(!name)
 		goto err;

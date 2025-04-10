@@ -999,7 +999,7 @@ final class MethodHint: WeakRefAble {
 	public member name: string; /* "__seq_any__" */
 	public member declNameAliases: {string...} = []; /* Some more aliases for "name" (for backwards compat) */
 	public member attr: string; /* "__seq_any__" */
-	public member doc: string;  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
+	public member doc: string;  /* "(start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
 	public member aliases: {MethodHintAlias...};
 	public member call2native: NativeMethod | none; /* Implementation for "DeeMH___seq_any__" (or "none" for getsets) */
 	public member kw: bool = false; /* True if `call2nativeImpl' has a "kw" argument */

@@ -252,12 +252,12 @@ err:
 
 #define POSIX_READ_DEF                                                         \
 	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,                        \
-	  DOC("(fd:?X2?Dint?DFile,count:?Dint:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint:?Dint=!A!Dint!PSIZE_MAX)->?Dint") },
+	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n" \
+		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!A!Dint!PSIZE_MAX)->?Dint") },
 #define POSIX_READ_DEF_DOC(doc)                                                \
 	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,                        \
-	  DOC("(fd:?X2?Dint?DFile,count:?Dint:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n" doc) },
+	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n" \
+		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n" doc) },
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_read_USE_STUB
 	int fd_fd;

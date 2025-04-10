@@ -549,7 +549,7 @@ sf_init(StringFind *__restrict self,
         size_t argc, DeeObject *const *argv) {
 	self->sf_start = 0;
 	self->sf_end   = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":_StringFind",
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":_StringFind",
 	                  &self->sf_str, &self->sf_needle,
 	                  &self->sf_start, &self->sf_end))
 		goto err;
@@ -603,10 +603,29 @@ err_r:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_contains_f_impl(String *self, String *needle,
+                       size_t start, size_t end);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_casecontains_impl_f(String *self, String *needle,
+                           size_t start, size_t end);
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sf_bool(StringFind *__restrict self) {
+	return string_contains_f_impl(self->sf_str, self->sf_needle,
+	                              self->sf_start, self->sf_end);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+scf_bool(StringFind *__restrict self) {
+	return string_casecontains_impl_f(self->sf_str, self->sf_needle,
+	                                  self->sf_start, self->sf_end);
+}
+
 
 PRIVATE struct type_seq sf_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sf_iter,
-	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size), /* TODO: string.count() */
+	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
 	/* .tp_contains = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains), /* TODO: string.substr() == needle */
 	/* .tp_getitem                    = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
 	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
@@ -618,7 +637,7 @@ PRIVATE struct type_seq sf_seq = {
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
-	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter),
+	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter), /* TODO: string.count() */
 	/* .tp_size_fast                  = */ NULL,
 	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
 	/* .tp_getitem_index_fast         = */ NULL,
@@ -650,7 +669,7 @@ PRIVATE struct type_seq sf_seq = {
 
 PRIVATE struct type_seq scf_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scf_iter,
-	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size), /* TODO: string.casecount() */
+	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
 	/* .tp_contains = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains), /* TODO: string.substr(...).casecompare(needle) == 0 */
 	/* .tp_getitem                    = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
 	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
@@ -662,7 +681,7 @@ PRIVATE struct type_seq scf_seq = {
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
-	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter),
+	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter), /* TODO: string.casecount() */
 	/* .tp_size_fast                  = */ NULL,
 	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
 	/* .tp_getitem_index_fast         = */ NULL,
@@ -714,7 +733,7 @@ PRIVATE struct type_member tpconst scf_class_members[] = {
 INTERN DeeTypeObject StringFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringFind",
-	/* .tp_doc      = */ DOC("(s:?Dstring,needle:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)"),
+	/* .tp_doc      = */ DOC("(s:?Dstring,needle:?Dstring,start=!0,end=!-1)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -736,7 +755,7 @@ INTERN DeeTypeObject StringFind_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ NULL  /* TODO: string.contains() */,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sf_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
@@ -764,7 +783,7 @@ INTERN DeeTypeObject StringFind_Type = {
 INTERN DeeTypeObject StringCaseFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringCaseFind",
-	/* .tp_doc      = */ DOC("(s:?Dstring,needle:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)"),
+	/* .tp_doc      = */ DOC("(s:?Dstring,needle:?Dstring,start=!0,end=!-1)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -786,7 +805,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ NULL  /* TODO: string.casecontains() */,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&scf_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},

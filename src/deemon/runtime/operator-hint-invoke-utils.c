@@ -393,18 +393,27 @@ done:
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsUInt8)(DeeObject *__restrict self,
                           uint8_t *__restrict result) {
-	uint32_t val32;
-	int error = DeeObject_AsUInt32(self, &val32);
-	if unlikely(error < 0)
-		goto done;
-	if (val32 > UINT8_MAX) {
-		if (Dee_TYPE(self)->tp_flags & TP_FTRUNCATE)
-			goto return_value;
-		return err_integer_overflow(self, 8, true);
+	int32_t val32;
+	int error = DeeObject_Get32Bit(self, &val32);
+	if (error == INT_SIGNED) {
+		if (val32 < 0 && !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			return err_integer_overflow(self, 8, false);
+#if INT_SIGNED != 0
+		error = 0;
+#endif /* INT_SIGNED != 0 */
+	} else {
+#if INT_SIGNED != 0
+		ASSERT(error <= 0);
+#else /* INT_SIGNED != 0 */
+		if likely(error > 0)
+			error = 0;
+#endif /* INT_SIGNED == 0 */
 	}
-return_value:
-	*result = (uint8_t)val32;
-done:
+	if unlikely((uint32_t)val32 > UINT8_MAX) {
+		if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE) && error == 0)
+			return err_integer_overflow(self, 8, true);
+	}
+	*result = (uint8_t)(uint32_t)val32;
 	return error;
 }
 
@@ -430,22 +439,153 @@ err:
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsUInt16)(DeeObject *__restrict self,
                            uint16_t *__restrict result) {
-	uint32_t val32;
-	int error = DeeObject_AsUInt32(self, &val32);
-	if unlikely(error < 0)
-		goto err;
-	if (val32 > UINT16_MAX) {
-		if (Dee_TYPE(self)->tp_flags & TP_FTRUNCATE)
-			goto return_value;
-		return err_integer_overflow(self, 16, true);
+	int32_t val32;
+	int error = DeeObject_Get32Bit(self, &val32);
+	if (error == INT_SIGNED) {
+		if (val32 < 0 && !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			return err_integer_overflow(self, 16, false);
+#if INT_SIGNED != 0
+		error = 0;
+#endif /* INT_SIGNED != 0 */
+	} else {
+#if INT_SIGNED != 0
+		ASSERT(error <= 0);
+#else /* INT_SIGNED != 0 */
+		if likely(error > 0)
+			error = 0;
+#endif /* INT_SIGNED == 0 */
 	}
-return_value:
-	*result = (uint16_t)val32;
-	return 0;
-err:
-	return -1;
+	if unlikely((uint32_t)val32 > UINT16_MAX) {
+		if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE) && error == 0)
+			return err_integer_overflow(self, 16, true);
+	}
+	*result = (uint16_t)(uint32_t)val32;
+	return error;
 }
 
+
+
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeObject_AsUInt8M1)(DeeObject *__restrict self,
+                            uint8_t *__restrict result) {
+	int32_t val32;
+	int error = DeeObject_Get32Bit(self, &val32);
+	if (error == INT_SIGNED) {
+		if (val32 < -1 && !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			return err_integer_overflow(self, 8, false);
+#if INT_SIGNED != 0
+		error = 0;
+#endif /* INT_SIGNED != 0 */
+	} else {
+#if INT_SIGNED != 0
+		ASSERT(error <= 0);
+#else /* INT_SIGNED != 0 */
+		if likely(error > 0)
+			error = 0;
+#endif /* INT_SIGNED == 0 */
+	}
+	if unlikely((uint32_t)val32 > UINT8_MAX) {
+		if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE) && error == 0)
+			return err_integer_overflow(self, 8, true);
+	}
+	*result = (uint8_t)(uint32_t)val32;
+	return error;
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeObject_AsUInt16M1)(DeeObject *__restrict self,
+                             uint16_t *__restrict result) {
+	int32_t val32;
+	int error = DeeObject_Get32Bit(self, &val32);
+	if (error == INT_SIGNED) {
+		if (val32 < -1 && !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			return err_integer_overflow(self, 16, false);
+#if INT_SIGNED != 0
+		error = 0;
+#endif /* INT_SIGNED != 0 */
+	} else {
+#if INT_SIGNED != 0
+		ASSERT(error <= 0);
+#else /* INT_SIGNED != 0 */
+		if likely(error > 0)
+			error = 0;
+#endif /* INT_SIGNED == 0 */
+	}
+	if unlikely((uint32_t)val32 > UINT16_MAX) {
+		if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE) && error == 0)
+			return err_integer_overflow(self, 16, true);
+	}
+	*result = (uint16_t)(uint32_t)val32;
+	return error;
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeObject_AsUInt32M1)(DeeObject *__restrict self,
+                             uint32_t *__restrict result) {
+	int error = DeeObject_Get32Bit(self, (int32_t *)result);
+	if (error == INT_SIGNED) {
+		if ((int32_t)*result < -1 &&
+		    !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			return err_integer_overflow(self, 32, false);
+#if INT_SIGNED != 0
+		return 0;
+#endif /* INT_SIGNED != 0 */
+	} else {
+#if INT_SIGNED != 0
+		ASSERT(error <= 0);
+#else /* INT_SIGNED != 0 */
+		if likely(error > 0)
+			error = 0;
+#endif /* INT_SIGNED == 0 */
+	}
+	return error;
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeObject_AsUInt64M1)(DeeObject *__restrict self,
+                             uint64_t *__restrict result) {
+	int error = DeeObject_Get64Bit(self, (int64_t *)result);
+	if (error == INT_SIGNED) {
+		if ((int64_t)*result < -1 &&
+		    !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			return err_integer_overflow(self, 64, false);
+#if INT_SIGNED != 0
+		return 0;
+#endif /* INT_SIGNED != 0 */
+	} else {
+#if INT_SIGNED != 0
+		ASSERT(error <= 0);
+#else /* INT_SIGNED != 0 */
+		if likely(error > 0)
+			error = 0;
+#endif /* INT_SIGNED == 0 */
+	}
+	return error;
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeObject_AsUInt128M1)(DeeObject *__restrict self,
+                              Dee_uint128_t *__restrict result) {
+	int error = DeeObject_Get128Bit(self, (Dee_int128_t *)result);
+	if (error == INT_SIGNED) {
+		if (__hybrid_int128_isneg(*(Dee_int128_t const *)result) &&
+		    !__hybrid_int128_isminusone(*(Dee_int128_t const *)result) &&
+		    !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			return err_integer_overflow(self, 128, false);
+#if INT_SIGNED != 0
+		return 0;
+#endif /* INT_SIGNED != 0 */
+	} else {
+#if INT_SIGNED != 0
+		ASSERT(error <= 0);
+#else /* INT_SIGNED != 0 */
+		if likely(error > 0)
+			error = 0;
+#endif /* INT_SIGNED == 0 */
+	}
+	return error;
+}
 
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *

@@ -203,11 +203,11 @@ function assertBitsetOkReadonly(b: Bitset | BitsetView | Bitset.Frozen) {
 		(7, nbits - 1),
 		(8, nbits - 1),
 		(9, nbits - 1),
-		(0, nbits - 9),
-		(1, nbits - 9),
-		(7, nbits - 9),
-		(8, nbits - 9),
-		(9, nbits - 9),
+		(0, {nbits - 9, -1} > ...),
+		(1, {nbits - 9, -1} > ...),
+		(7, {nbits - 9, -1} > ...),
+		(8, {nbits - 9, -1} > ...),
+		(9, {nbits - 9, -1} > ...),
 	}) {
 		assert knownGood_ffs(b, start, end) == b.ffs(start, end), f"{repr b}.ffs({start}, {end}) [nbits: {nbits}]";
 		assert knownGood_ffc(b, start, end) == b.ffc(start, end), f"{repr b}.ffc({start}, {end}) [nbits: {nbits}]";

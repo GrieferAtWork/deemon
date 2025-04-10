@@ -1877,7 +1877,7 @@ file_read(DeeObject *self, size_t argc,
 	size_t maxbytes = (size_t)-1;
 	bool readall    = false;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__maxbytes_readall,
-	                    "|" UNPdSIZ "b:read", &maxbytes, &readall))
+	                    "|" UNPxSIZ "b:read", &maxbytes, &readall))
 		goto err;
 	return DeeFile_ReadBytes(self, maxbytes, readall);
 err:
@@ -1937,7 +1937,7 @@ file_pread(DeeObject *self, size_t argc,
 	size_t maxbytes = (size_t)-1;
 	bool readall      = false;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__pos_maxbytes_readall,
-	                    UNPuN(Dee_SIZEOF_POS_T) "|" UNPdSIZ "b:pread",
+	                    UNPuN(Dee_SIZEOF_POS_T) "|" UNPxSIZ "b:pread",
 	                    &file_pos, &maxbytes, &readall))
 		goto err;
 	return DeeFile_PReadBytes(self, maxbytes, file_pos, readall);
@@ -2242,7 +2242,7 @@ file_readline(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (argc == 1 && DeeBool_Check(argv[0])) {
 		args.keeplf = DeeBool_IsTrue(argv[0]);
 	} else {
-		if (DeeArg_UnpackStruct(argc, argv, "|" UNPdSIZ "b:readline", &args))
+		if (DeeArg_UnpackStruct(argc, argv, "|" UNPxSIZ "b:readline", &args))
 			goto err;
 	}
 	result = DeeFile_ReadLine(self, args.maxbytes, args.keeplf);
@@ -2257,7 +2257,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readall(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	size_t maxbytes = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, "|" UNPdSIZ ":readall", &maxbytes))
+	if (DeeArg_UnpackStruct(argc, argv, "|" UNPxSIZ ":readall", &maxbytes))
 		goto err;
 	return DeeFile_ReadBytes(self, maxbytes, true);
 err:
@@ -2272,7 +2272,7 @@ file_readallat(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		size_t maxbytes;
 	} args;
 	args.maxbytes = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuN(Dee_SIZEOF_POS_T) "|" UNPdSIZ ":readallat", &args))
+	if (DeeArg_UnpackStruct(argc, argv, UNPuN(Dee_SIZEOF_POS_T) "|" UNPxSIZ ":readallat", &args))
 		goto err;
 	return DeeFile_PReadBytes(self, args.maxbytes, args.file_pos, true);
 err:
@@ -2285,16 +2285,16 @@ file_mmap(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DREF DeeMapFileObject *mapob;
-	size_t minbytes = (size_t)0;
-	size_t maxbytes = (size_t)-1;
-	Dee_pos_t offset   = (Dee_pos_t)-1;
-	size_t nulbytes = 0;
-	bool readall    = false;
-	bool mustmmap   = false;
-	bool mapshared  = false;
 	unsigned int mapflags;
+	size_t minbytes  = (size_t)0;
+	size_t maxbytes  = (size_t)-1;
+	Dee_pos_t offset = (Dee_pos_t)-1;
+	size_t nulbytes  = 0;
+	bool readall     = false;
+	bool mustmmap    = false;
+	bool mapshared   = false;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared,
-	                    "|" UNPdSIZ UNPdSIZ UNPuN(Dee_SIZEOF_POS_T) UNPdSIZ "bbb:mapfile",
+	                    "|" UNPuSIZ UNPxSIZ UNPuN(Dee_SIZEOF_POS_T) UNPxSIZ "bbb:mapfile",
 	                    &minbytes, &maxbytes, &offset, &nulbytes, &readall, &mustmmap, &mapshared))
 		goto err;
 	mapflags = 0;
@@ -2332,7 +2332,7 @@ err:
 
 PRIVATE struct type_method tpconst file_methods[] = {
 	TYPE_KWMETHOD("read", &file_read,
-	              "(maxbytes:?Dint=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
+	              "(maxbytes=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
 	              "Read and return at most @maxbytes of data from the file stream. "
 	              /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
 	              /**/ "read-callback returns $0, rather than until it returns something other than "
@@ -2350,7 +2350,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	              /**/ "returns $0 or until all data has been written, rather than invoke "
 	              /**/ "the write-callback only a single time."),
 	TYPE_KWMETHOD("pread", &file_pread,
-	              "(pos:?Dint,maxbytes:?Dint=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
+	              "(pos:?Dint,maxbytes=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
 	              "Similar to ?#read, but read data from a given file-offset "
 	              /**/ "@pos, rather than from the current file position"),
 	TYPE_KWMETHOD("preadinto", &file_preadinto,
@@ -2428,14 +2428,14 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	            "Returns the size (in bytes) of the file stream."),
 	TYPE_METHOD("readline", &file_readline,
 	            "(keeplf:?Dbool)->?X2?DBytes?N\n"
-	            "(maxbytes:?Dint=!A!Dint!PSIZE_MAX,keeplf=!t)->?X2?DBytes?N\n"
+	            "(maxbytes=!A!Dint!PSIZE_MAX,keeplf=!t)->?X2?DBytes?N\n"
 	            "Read one line from the file stream, but read at most @maxbytes bytes.\n"
 	            "When @keeplf is ?f, strip the trailing linefeed from the returned ?DBytes object.\n"
 	            "Once EOF is reached, return ?N instead."),
 
 	/* mmap support */
 	TYPE_KWMETHOD("mmap", &file_mmap,
-	              "(minbytes=!0,maxbytes:?Dint=!A!Dint!PSIZE_MAX,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytes\n"
+	              "(minbytes=!0,maxbytes=!A!Dint!PSIZE_MAX,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytes\n"
 	              "#pminbytes{The min number of bytes (excluding @nulbytes) that should be mapped "
 	              /*      */ "starting at @offset. If the file is smaller than this, or indicates EOF before "
 	              /*      */ "this number of bytes has been reached, nul bytes are mapped for its remainder.}"
@@ -2460,16 +2460,16 @@ PRIVATE struct type_method tpconst file_methods[] = {
 
 	/* Deprecated functions. */
 	TYPE_METHOD("readall", &file_readall,
-	            "(maxbytes:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n"
+	            "(maxbytes=!A!Dint!PSIZE_MAX)->?DBytes\n"
 	            "Deprecated alias for ${this.read(maxbytes, true)}"),
 	TYPE_KWMETHOD("readat", &file_pread,
-	              "(pos:?Dint,maxbytes:?Dint=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
+	              "(pos:?Dint,maxbytes=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
 	              "Deprecated alias for ?#pread"),
 	TYPE_KWMETHOD("writeat", &file_pwrite,
 	              "(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
 	              "Deprecated alias for ?#pwrite"),
 	TYPE_METHOD("readallat", &file_readallat,
-	            "(pos:?Dint,maxbytes:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n"
+	            "(pos:?Dint,maxbytes=!A!Dint!PSIZE_MAX)->?DBytes\n"
 	            "Deprecated alias for ${this.pread(pos, maxbytes, true)}"),
 	TYPE_KWMETHOD("setpos", &file_seek,
 	              "(pos:?Dint)->?Dint\n"

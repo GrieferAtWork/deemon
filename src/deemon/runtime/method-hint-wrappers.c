@@ -357,7 +357,7 @@ DeeMA___seq_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, "o|" UNPuSIZ UNPuSIZ ":__seq_enumerate__", &args))
+	if (DeeArg_UnpackStruct(argc, argv, "o|" UNPuSIZ UNPxSIZ ":__seq_enumerate__", &args))
 		goto err;
 {
 	Dee_ssize_t foreach_status;
@@ -718,7 +718,7 @@ DeeMA___seq_reduce__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.init = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__combine_start_end_init, "o|" UNPuSIZ UNPuSIZ "o:__seq_reduce__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__combine_start_end_init, "o|" UNPuSIZ UNPxSIZ "o:__seq_reduce__", &args))
 		goto err;
 {
 	if (args.start == 0 && args.end == (size_t)-1) {
@@ -743,7 +743,7 @@ DeeMA___seq_min__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_min__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_min__", &args))
 		goto err;
 {
 	DREF DeeObject *result;
@@ -771,7 +771,7 @@ DeeMA___seq_max__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_max__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_max__", &args))
 		goto err;
 {
 	DREF DeeObject *result;
@@ -797,7 +797,7 @@ DeeMA___seq_sum__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPuSIZ ":__seq_sum__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":__seq_sum__", &args))
 		goto err;
 {
 	DREF DeeObject *result;
@@ -822,7 +822,7 @@ DeeMA___seq_count__(DeeObject *__restrict self, size_t argc, DeeObject *const *a
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPuSIZ "o:__seq_count__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:__seq_count__", &args))
 		goto err;
 {
 	size_t result;
@@ -857,7 +857,7 @@ DeeMA___seq_contains__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPuSIZ "o:__seq_contains__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:__seq_contains__", &args))
 		goto err;
 {
 	int result;
@@ -892,7 +892,7 @@ DeeMA___seq_locate__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.def = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__match_start_end_def, "o|" UNPuSIZ UNPuSIZ "o:__seq_locate__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__match_start_end_def, "o|" UNPuSIZ UNPxSIZ "o:__seq_locate__", &args))
 		goto err;
 {
 	if (args.start == 0 && args.end == (size_t)-1)
@@ -913,7 +913,7 @@ DeeMA___seq_rlocate__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.def = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__match_start_end_def, "o|" UNPuSIZ UNPuSIZ "o:__seq_rlocate__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__match_start_end_def, "o|" UNPuSIZ UNPxSIZ "o:__seq_rlocate__", &args))
 		goto err;
 {
 	if (args.start == 0 && args.end == (size_t)-1)
@@ -934,7 +934,7 @@ DeeMA___seq_startswith__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPuSIZ "o:__seq_startswith__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:__seq_startswith__", &args))
 		goto err;
 {
 	int result;
@@ -969,7 +969,7 @@ DeeMA___seq_endswith__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPuSIZ "o:__seq_endswith__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:__seq_endswith__", &args))
 		goto err;
 {
 	int result;
@@ -1004,7 +1004,7 @@ DeeMA___seq_find__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPuSIZ "o:__seq_find__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:__seq_find__", &args))
 		goto err;
 {
 	size_t result = !DeeNone_Check(args.key)
@@ -1030,7 +1030,7 @@ DeeMA___seq_rfind__(DeeObject *__restrict self, size_t argc, DeeObject *const *a
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPuSIZ "o:__seq_rfind__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:__seq_rfind__", &args))
 		goto err;
 {
 	size_t result = !DeeNone_Check(args.key)
@@ -1186,7 +1186,7 @@ DeeMA___seq_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPuSIZ "o:__seq_remove__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:__seq_remove__", &args))
 		goto err;
 {
 	int result = !DeeNone_Check(args.key)
@@ -1210,7 +1210,7 @@ DeeMA___seq_rremove__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPuSIZ "o:__seq_rremove__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:__seq_rremove__", &args))
 		goto err;
 {
 	int result = !DeeNone_Check(args.key)
@@ -1236,7 +1236,7 @@ DeeMA___seq_removeall__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	args.end = (size_t)-1;
 	args.max = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_max_key, "o|" UNPuSIZ UNPuSIZ UNPuSIZ "o:__seq_removeall__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_max_key, "o|" UNPuSIZ UNPxSIZ UNPxSIZ "o:__seq_removeall__", &args))
 		goto err;
 {
 	size_t result = !DeeNone_Check(args.key)
@@ -1260,7 +1260,7 @@ DeeMA___seq_removeif__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.max = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__should_start_end_max, "o|" UNPuSIZ UNPuSIZ UNPuSIZ ":__seq_removeif__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__should_start_end_max, "o|" UNPuSIZ UNPxSIZ UNPxSIZ ":__seq_removeif__", &args))
 		goto err;
 {
 	size_t result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeif))(self, args.should, args.start, args.end, args.max);
@@ -1298,7 +1298,7 @@ DeeMA___seq_fill__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.filler = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_filler, "|" UNPuSIZ UNPuSIZ "o:__seq_fill__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_filler, "|" UNPuSIZ UNPxSIZ "o:__seq_fill__", &args))
 		goto err;
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_fill))(self, args.start, args.end, args.filler))
@@ -1316,7 +1316,7 @@ DeeMA___seq_reverse__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPuSIZ ":__seq_reverse__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":__seq_reverse__", &args))
 		goto err;
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_reverse))(self, args.start, args.end))
@@ -1334,7 +1334,7 @@ DeeMA___seq_reversed__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPuSIZ ":__seq_reversed__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":__seq_reversed__", &args))
 		goto err;
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_reversed))(self, args.start, args.end);
@@ -1469,7 +1469,7 @@ DeeMA___seq_bfind__(DeeObject *__restrict self, size_t argc, DeeObject *const *a
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPuSIZ "o:__seq_bfind__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:__seq_bfind__", &args))
 		goto err;
 {
 	size_t result = !DeeNone_Check(args.key)
@@ -1495,7 +1495,7 @@ DeeMA___seq_bposition__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPuSIZ "o:__seq_bposition__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:__seq_bposition__", &args))
 		goto err;
 {
 	size_t result = !DeeNone_Check(args.key)
@@ -1519,7 +1519,7 @@ DeeMA___seq_brange__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPuSIZ "o:__seq_brange__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:__seq_brange__", &args))
 		goto err;
 {
 	size_t result_range[2];

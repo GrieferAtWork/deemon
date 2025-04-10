@@ -512,7 +512,7 @@ do_integer_format:
 				break;
 			default: __builtin_unreachable();
 			}
-		} else if (format[-1] == 'u' || format[-1] == 'x') {
+		} else if (format[-1] == 'u') {
 parse_unsigned_int:
 			switch (length) { /* unsigned int */
 			case LEN_INT_IB1:
@@ -529,6 +529,25 @@ parse_unsigned_int:
 				break;
 			case LEN_INT_IB16:
 				temp = DeeObject_AsUInt128(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, Dee_uint128_t, __ALIGNOF_INT128__));
+				break;
+			default: __builtin_unreachable();
+			}
+		} else if (format[-1] == 'x') {
+			switch (length) { /* unsigned int */
+			case LEN_INT_IB1:
+				temp = DeeObject_AsUInt8M1(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint8_t, __ALIGNOF_INT8__));
+				break;
+			case LEN_INT_IB2:
+				temp = DeeObject_AsUInt16M1(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint16_t, __ALIGNOF_INT16__));
+				break;
+			case LEN_INT_IB4:
+				temp = DeeObject_AsUInt32M1(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint32_t, __ALIGNOF_INT32__));
+				break;
+			case LEN_INT_IB8:
+				temp = DeeObject_AsUInt64M1(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint64_t, __ALIGNOF_INT64__));
+				break;
+			case LEN_INT_IB16:
+				temp = DeeObject_AsUInt128M1(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, Dee_uint128_t, __ALIGNOF_INT128__));
 				break;
 			default: __builtin_unreachable();
 			}
@@ -1158,7 +1177,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
  *                    | '|'      // Any following objects are optional (va_arg() is still invoked, but non-present elements are skipped)
  *                      )...];
  *     ref_object ::= 'o'; // `va_arg(DeeObject **)'
- *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u' and `x' read unsigned integers
+ *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u' and `x' read unsigned integers ("x" uses *M1)
  *     ref_str    ::= ['$']      // `va_arg(size_t *)' (Store the length of the string)
  *                  | 'l' 's'    // `va_arg(wchar_t const **)'
  *                  | 'U16' 's'  // `va_arg(uint16_t const **)'

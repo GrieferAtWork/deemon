@@ -4534,6 +4534,13 @@ DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt64)(DeeObjec
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self, Dee_uint128_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsDouble)(DeeObject *__restrict self, double *__restrict result);
 
+/* Same as the functions above, but these also accept `-1' as an alias for `UINTn_MAX' */
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt8M1)(DeeObject *__restrict self, uint8_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt16M1)(DeeObject *__restrict self, uint16_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt32M1)(DeeObject *__restrict self, uint32_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt64M1)(DeeObject *__restrict self, uint64_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt128M1)(DeeObject *__restrict self, Dee_uint128_t *__restrict result);
+
 /* All of these return (T)-1 on error. When the object's actual value is `(T)-1', throw `IntegerOverflow' */
 DFUNDEF WUNUSED NONNULL((1)) uint8_t (DCALL DeeObject_AsDirectUInt8)(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) uint16_t (DCALL DeeObject_AsDirectUInt16)(DeeObject *__restrict self);
@@ -4549,18 +4556,24 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInheritedOnSuccess)(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
 
-#define DEE_PRIVATE_OBJECT_AS_INT_1(self, result)   DeeObject_AsInt8(self, (int8_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT_2(self, result)   DeeObject_AsInt16(self, (int16_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT_4(self, result)   DeeObject_AsInt32(self, (int32_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT_8(self, result)   DeeObject_AsInt64(self, (int64_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT_16(self, result)  DeeObject_AsInt128(self, (Dee_int128_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT(size)             DEE_PRIVATE_OBJECT_AS_INT_##size
-#define DEE_PRIVATE_OBJECT_AS_UINT_1(self, result)  DeeObject_AsUInt8(self, (uint8_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT_2(self, result)  DeeObject_AsUInt16(self, (uint16_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT_4(self, result)  DeeObject_AsUInt32(self, (uint32_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT_8(self, result)  DeeObject_AsUInt64(self, (uint64_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT_16(self, result) DeeObject_AsUInt128(self, (Dee_uint128_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT(size)            DEE_PRIVATE_OBJECT_AS_UINT_##size
+#define DEE_PRIVATE_OBJECT_AS_INT_1(self, result)     DeeObject_AsInt8(self, (int8_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_INT_2(self, result)     DeeObject_AsInt16(self, (int16_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_INT_4(self, result)     DeeObject_AsInt32(self, (int32_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_INT_8(self, result)     DeeObject_AsInt64(self, (int64_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_INT_16(self, result)    DeeObject_AsInt128(self, (Dee_int128_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_INT(size)               DEE_PRIVATE_OBJECT_AS_INT_##size
+#define DEE_PRIVATE_OBJECT_AS_UINT_1(self, result)    DeeObject_AsUInt8(self, (uint8_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINT_2(self, result)    DeeObject_AsUInt16(self, (uint16_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINT_4(self, result)    DeeObject_AsUInt32(self, (uint32_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINT_8(self, result)    DeeObject_AsUInt64(self, (uint64_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINT_16(self, result)   DeeObject_AsUInt128(self, (Dee_uint128_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINT(size)              DEE_PRIVATE_OBJECT_AS_UINT_##size
+#define DEE_PRIVATE_OBJECT_AS_UINTM1_1(self, result)  DeeObject_AsUInt8M1(self, (uint8_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINTM1_2(self, result)  DeeObject_AsUInt16M1(self, (uint16_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINTM1_4(self, result)  DeeObject_AsUInt32M1(self, (uint32_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINTM1_8(self, result)  DeeObject_AsUInt64M1(self, (uint64_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINTM1_16(self, result) DeeObject_AsUInt128M1(self, (Dee_uint128_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINTM1(size)            DEE_PRIVATE_OBJECT_AS_UINTM1_##size
 
 #define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_1(self) DeeObject_AsDirectUInt8(self)
 #define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_2(self) DeeObject_AsDirectUInt16(self)
@@ -4577,6 +4590,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInheritedOnSucc
 /* Helper macros for converting objects to integers */
 #define DeeObject_AsXInt(size, self, result)         DEE_PRIVATE_OBJECT_AS_INT(size)(self, result)
 #define DeeObject_AsXUInt(size, self, result)        DEE_PRIVATE_OBJECT_AS_UINT(size)(self, result)
+#define DeeObject_AsXUIntM1(size, self, result)      DEE_PRIVATE_OBJECT_AS_UINTM1(size)(self, result)
 #define DeeObject_AsXDirectUInt(size, self)          DEE_PRIVATE_OBJECT_AS_DIRECT_UINT(size)(self)
 #define DeeObject_AsXDirectUIntInherited(size, self) DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED(size)(self)
 #ifdef __CHAR_UNSIGNED__
@@ -4586,37 +4600,45 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInheritedOnSucc
 #endif /* !__CHAR_UNSIGNED__ */
 #define DeeObject_AsSChar(self, result)          DeeObject_AsXInt(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(signed char *, result))
 #define DeeObject_AsUChar(self, result)          DeeObject_AsXUInt(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(unsigned char *, result))
+#define DeeObject_AsUCharM1(self, result)        DeeObject_AsXUIntM1(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(unsigned char *, result))
 #define DeeObject_AsDirectUChar(self)            DeeObject_AsXDirectUInt(__SIZEOF_CHAR__, self)
 #define DeeObject_AsDirectUCharInherited(self)   DeeObject_AsXDirectUIntInherited(__SIZEOF_CHAR__, self)
 #define DeeObject_AsShort(self, result)          DeeObject_AsXInt(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(short *, result))
 #define DeeObject_AsUShort(self, result)         DeeObject_AsXUInt(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(unsigned short *, result))
+#define DeeObject_AsUShortM1(self, result)       DeeObject_AsXUIntM1(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(unsigned short *, result))
 #define DeeObject_AsDirectUShort(self)           DeeObject_AsXDirectUInt(__SIZEOF_SHORT__, self)
 #define DeeObject_AsDirectUShortInherited(self)  DeeObject_AsXDirectUIntInherited(__SIZEOF_SHORT__, self)
 #define DeeObject_AsInt(self, result)            DeeObject_AsXInt(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(int *, result))
 #define DeeObject_AsUInt(self, result)           DeeObject_AsXUInt(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(unsigned int *, result))
+#define DeeObject_AsUIntM1(self, result)         DeeObject_AsXUIntM1(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(unsigned int *, result))
 #define DeeObject_AsDirectUInt(self)             DeeObject_AsXDirectUInt(__SIZEOF_INT__, self)
 #define DeeObject_AsDirectUIntInherited(self)    DeeObject_AsXDirectUIntInherited(__SIZEOF_INT__, self)
 #define DeeObject_AsLong(self, result)           DeeObject_AsXInt(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(long *, result))
 #define DeeObject_AsULong(self, result)          DeeObject_AsXUInt(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(unsigned long *, result))
+#define DeeObject_AsULongM1(self, result)        DeeObject_AsXUIntM1(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(unsigned long *, result))
 #define DeeObject_AsDirectULong(self)            DeeObject_AsXDirectUInt(__SIZEOF_LONG__, self)
 #define DeeObject_AsDirectULongInherited(self)   DeeObject_AsXDirectUIntInherited(__SIZEOF_LONG__, self)
 #ifdef __COMPILER_HAVE_LONGLONG
 #define DeeObject_AsLLong(self, result)          DeeObject_AsXInt(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__LONGLONG *, result))
 #define DeeObject_AsULLong(self, result)         DeeObject_AsXUInt(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__ULONGLONG *, result))
+#define DeeObject_AsULLongM1(self, result)       DeeObject_AsXUIntM1(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__ULONGLONG *, result))
 #define DeeObject_AsDirectULLong(self)           DeeObject_AsXDirectUInt(__SIZEOF_LONG_LONG__, self)
 #define DeeObject_AsDirectULLongInherited(self)  DeeObject_AsXDirectUIntInherited(__SIZEOF_LONG_LONG__, self)
 #endif /* __COMPILER_HAVE_LONGLONG */
 #define DeeObject_AsSize(self, result)           DeeObject_AsXUInt(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(size_t *, result))
+#define DeeObject_AsSizeM1(self, result)         DeeObject_AsXUIntM1(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(size_t *, result))
 #define DeeObject_AsDirectSize(self)             DeeObject_AsXDirectUInt(__SIZEOF_SIZE_T__, self)
 #define DeeObject_AsDirectSizeInherited(self)    DeeObject_AsXDirectUIntInherited(__SIZEOF_SIZE_T__, self)
 #define DeeObject_AsSSize(self, result)          DeeObject_AsXInt(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(Dee_ssize_t *, result))
 #define DeeObject_AsPtrdiff(self, result)        DeeObject_AsXInt(__SIZEOF_PTRDIFF_T__, self, Dee_REQUIRES_TYPE(ptrdiff_t *, result))
 #define DeeObject_AsIntptr(self, result)         DeeObject_AsXInt(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(intptr_t *, result))
 #define DeeObject_AsUIntptr(self, result)        DeeObject_AsXUInt(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, result))
+#define DeeObject_AsUIntptrM1(self, result)      DeeObject_AsXUIntM1(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, result))
 #define DeeObject_AsDirectUIntptr(self)          DeeObject_AsXDirectUInt(__SIZEOF_POINTER__, self)
 #define DeeObject_AsDirectUIntptrInherited(self) DeeObject_AsXDirectUIntInherited(__SIZEOF_POINTER__, self)
 #define DeeObject_AsSByte(self, result)          DEE_PRIVATE_OBJECT_AS_INT_1(self, Dee_REQUIRES_TYPE(__SBYTE_TYPE__ *, result))
 #define DeeObject_AsByte(self, result)           DEE_PRIVATE_OBJECT_AS_UINT_1(self, Dee_REQUIRES_TYPE(__BYTE_TYPE__ *, result))
+#define DeeObject_AsByteM1(self, result)         DEE_PRIVATE_OBJECT_AS_UINTM1_1(self, Dee_REQUIRES_TYPE(__BYTE_TYPE__ *, result))
 #define DeeObject_AsDirectByte(self)             DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_1(self)
 #define DeeObject_AsDirectByteInherited(self)    DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_1(self)
 
