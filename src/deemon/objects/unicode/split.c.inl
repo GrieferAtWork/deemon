@@ -140,10 +140,10 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 		SWITCH_SIZEOF_WIDTH(self->s_width) {
 
 		CASE_WIDTH_1BYTE:
-			result_end.cp8 = memcasememb(result_start.cp8,
-			                             self->s_end.cp8 - result_start.cp8,
-			                             self->s_sep.cp8, self->s_sepsz,
-			                             &match_length);
+			result_end.cp8 = dee_memcasememb(result_start.cp8,
+			                                 self->s_end.cp8 - result_start.cp8,
+			                                 self->s_sep.cp8, self->s_sepsz,
+			                                 &match_length);
 			if (!result_end.cp8) {
 				result_end.cp8 = self->s_end.cp8;
 				next_ptr.cp8   = NULL;
@@ -155,10 +155,10 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 			break;
 
 		CASE_WIDTH_2BYTE:
-			result_end.cp16 = memcasememw(result_start.cp16,
-			                              self->s_end.cp16 - result_start.cp16,
-			                              self->s_sep.cp16, self->s_sepsz,
-			                              &match_length);
+			result_end.cp16 = dee_memcasememw(result_start.cp16,
+			                                  self->s_end.cp16 - result_start.cp16,
+			                                  self->s_sep.cp16, self->s_sepsz,
+			                                  &match_length);
 			if (!result_end.cp16) {
 				result_end.cp16 = self->s_end.cp16;
 				next_ptr.cp16   = NULL;
@@ -170,10 +170,10 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 			break;
 
 		CASE_WIDTH_4BYTE:
-			result_end.cp32 = memcasememl(result_start.cp32,
-			                              self->s_end.cp32 - result_start.cp32,
-			                              self->s_sep.cp32, self->s_sepsz,
-			                              &match_length);
+			result_end.cp32 = dee_memcasememl(result_start.cp32,
+			                                  self->s_end.cp32 - result_start.cp32,
+			                                  self->s_sep.cp32, self->s_sepsz,
+			                                  &match_length);
 			if (!result_end.cp32) {
 				result_end.cp32 = self->s_end.cp32;
 				next_ptr.cp32   = NULL;

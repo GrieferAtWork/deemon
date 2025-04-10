@@ -1070,10 +1070,11 @@ func("bcmpq", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", te
 //       we don't include these configure options as part of the autoconf testing (which
 //       we do by wrapping `func' with parenthesis so that `./configure' can't identify it
 //       as a configure test)
-(func)("memmem", "defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
-(func)("memrmem", "defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
-(func)("memcasemem", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
-(func)("memcasermem", "defined(__memcasermem_defined) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+// TODO: Re-write this part once "CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0" becomes mandatory
+(func)("memmem", "(defined(__USE_GNU) || defined(__USE_BSD)) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
+(func)("memrmem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
+(func)("memcasemem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
+(func)("memcasermem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
 
 (func)("memmemw", "0", check_defined: false);
 (func)("memmeml", "0", check_defined: false);
@@ -8042,28 +8043,29 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_NO_memmem
 #undef CONFIG_HAVE_memmem
 #elif !defined(CONFIG_HAVE_memmem) && \
-      (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+      ((defined(__USE_GNU) || defined(__USE_BSD)) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || \
+       defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
 #define CONFIG_HAVE_memmem
 #endif
 
 #ifdef CONFIG_NO_memrmem
 #undef CONFIG_HAVE_memrmem
 #elif !defined(CONFIG_HAVE_memrmem) && \
-      (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+      (defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
 #define CONFIG_HAVE_memrmem
 #endif
 
 #ifdef CONFIG_NO_memcasemem
 #undef CONFIG_HAVE_memcasemem
 #elif !defined(CONFIG_HAVE_memcasemem) && \
-      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+      (defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
 #define CONFIG_HAVE_memcasemem
 #endif
 
 #ifdef CONFIG_NO_memcasermem
 #undef CONFIG_HAVE_memcasermem
 #elif !defined(CONFIG_HAVE_memcasermem) && \
-      (defined(__memcasermem_defined) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+      (defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
 #define CONFIG_HAVE_memcasermem
 #endif
 
@@ -12681,13 +12683,20 @@ _DeeSystem_DEFINE_memcmpT(uint8_t, dee_memcmp)
 DECL_END
 #endif /* !CONFIG_HAVE_memcmp */
 
+#ifdef CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
+#define _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL(haystack) haystack
+#else /* CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
+#define _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL(haystack) NULL
+#endif /* !CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
+
 #define _DeeSystem_DEFINE_memmemT(rT, T, memchr, memeq, name)                          \
 	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) rT *                         \
-	name(void const *__restrict haystack, size_t haystack_length,                      \
-	     void const *__restrict needle, size_t needle_length) {                        \
-		T *candidate;                                                                  \
-		T marker;                                                                      \
-		if unlikely(!needle_length || needle_length > haystack_length)                 \
+	name(void const *haystack, size_t haystack_length,                                 \
+	     void const *needle, size_t needle_length) {                                   \
+		T *candidate, marker;                                                          \
+		if unlikely(!needle_length)                                                    \
+			return _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL((rT *)haystack);                 \
+		if unlikely(needle_length > haystack_length)                                   \
 			return NULL;                                                               \
 		haystack_length -= (needle_length - 1), marker = *(T *)needle;                 \
 		while ((candidate = (T *)memchr(haystack, marker, haystack_length)) != NULL) { \
@@ -12700,22 +12709,24 @@ DECL_END
 		return NULL;                                                                   \
 	}
 
-#define _DeeSystem_DEFINE_memrmemT(rT, T, memrchr, memeq, name)                    \
-	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) rT *                     \
-	name(void const *__restrict haystack, size_t haystack_length,                  \
-	     void const *__restrict needle, size_t needle_length) {                    \
-		void const *candidate;                                                     \
-		T marker;                                                                  \
-		if unlikely(!needle_length || needle_length > haystack_length)             \
-			return NULL;                                                           \
-		haystack_length -= needle_length - 1;                                      \
-		marker = *(T *)needle;                                                     \
-		while ((candidate = memrchr(haystack, marker, haystack_length)) != NULL) { \
-			if (memeq(candidate, needle, needle_length))                           \
-				return (rT *)candidate;                                            \
-			haystack_length = (size_t)((T *)candidate - (T *)haystack);            \
-		}                                                                          \
-		return NULL;                                                               \
+#define _DeeSystem_DEFINE_memrmemT(rT, T, memrchr, memeq, name)                          \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) rT *                           \
+	name(void const *haystack, size_t haystack_length,                                   \
+	     void const *needle, size_t needle_length) {                                     \
+		void const *candidate;                                                           \
+		T marker;                                                                        \
+		if unlikely(!needle_length)                                                      \
+			return _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL((rT *)haystack + haystack_length); \
+		if unlikely(needle_length > haystack_length)                                     \
+			return NULL;                                                                 \
+		haystack_length -= needle_length - 1;                                            \
+		marker = *(T *)needle;                                                           \
+		while ((candidate = memrchr(haystack, marker, haystack_length)) != NULL) {       \
+			if (memeq(candidate, needle, needle_length))                                 \
+				return (rT *)candidate;                                                  \
+			haystack_length = (size_t)((T *)candidate - (T *)haystack);                  \
+		}                                                                                \
+		return NULL;                                                                     \
 	}
 
 #define DeeSystem_DEFINE_memmem(name) _DeeSystem_DEFINE_memmemT(void, uint8_t, memchr, 0 == bcmp, name)
@@ -12908,23 +12919,38 @@ DECL_END
 		return (int)av - (int)bv;                       \
 	}
 
-#define DeeSystem_DEFINE_memcasemem(name)                                               \
+
+#define DeeSystem_DEFINE__memlowerchr(name)                 \
+	LOCAL ATTR_PURE WUNUSED void *                          \
+	name(void const *__restrict p, uint8_t c, size_t n) {   \
+		while (n--) {                                       \
+			if ((uint8_t)tolower(*(uint8_t const *)p) == c) \
+				return (void *)p;                           \
+			p = (uint8_t const *)p + 1;                     \
+		}                                                   \
+		return NULL;                                        \
+	}
+#define DeeSystem_DEFINE_memcasemem(name)                \
+	DeeSystem_DEFINE__memlowerchr(_##name##_memlowerchr) \
+	_DeeSystem_DEFINE_memcasemem(name, _##name##_memlowerchr)
+#define _DeeSystem_DEFINE_memcasemem(name, memlowerchr)                                 \
 	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) void *                        \
-	name(void const *__restrict haystack, size_t haystack_len,                          \
-	     void const *__restrict needle, size_t needle_len) {                            \
+	name(void const *haystack, size_t haystack_len,                                     \
+	     void const *needle, size_t needle_len) {                                       \
 		void const *candidate;                                                          \
-		uint8_t marker1, marker2;                                                       \
-		if unlikely(!needle_len || needle_len > haystack_len)                           \
+		uint8_t marker;                                                                 \
+		if unlikely(!needle_len)                                                        \
+			return _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL((void *)haystack);                \
+		if unlikely(needle_len > haystack_len)                                          \
 			return NULL;                                                                \
-		haystack_len -= needle_len;                                                     \
-		marker1 = (uint8_t)tolower(*(uint8_t *)needle);                                 \
-		marker2 = (uint8_t)toupper(*(uint8_t *)needle);                                 \
-		while ((candidate = memchr(haystack, marker1, haystack_len)) != NULL ||         \
-		       (candidate = memchr(haystack, marker2, haystack_len)) != NULL) {         \
+		haystack_len -= needle_len - 1;                                                 \
+		marker = (uint8_t)tolower(*(uint8_t const *)needle);                            \
+		while ((candidate = memlowerchr(haystack, marker, haystack_len)) != NULL) {     \
 			if (memcasecmp(candidate, needle, needle_len) == 0)                         \
 				return (void *)candidate;                                               \
+			candidate    = (void const *)((uintptr_t)candidate + 1);                    \
 			haystack_len = ((uintptr_t)haystack + haystack_len) - (uintptr_t)candidate; \
-			haystack     = (void const *)((uintptr_t)candidate + 1);                    \
+			haystack     = candidate;                                                   \
 		}                                                                               \
 		return NULL;                                                                    \
 	}
@@ -12989,33 +13015,40 @@ DECL_END
 		return (size_t)((uintptr_t)rawmemxrchr(p, byte) - (uintptr_t)p); \
 	}
 
-#define DeeSystem_DEFINE_memcasermem(name)                                                     \
-	LOCAL ATTR_PURE WUNUSED void *                                                             \
-	_##name##_memlowerrchr(void const *__restrict p, uint8_t c, size_t n) {                    \
-		uint8_t *iter = (uint8_t *)p + n;                                                      \
-		while (iter-- != (uint8_t *)p) {                                                       \
-			if ((uint8_t)tolower(*iter) == c)                                                  \
-				return iter;                                                                   \
-		}                                                                                      \
-		return NULL;                                                                           \
-	}                                                                                          \
-	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) void *                               \
-	name(void const *__restrict haystack, size_t haystack_len,                                 \
-	     void const *__restrict needle, size_t needle_len) {                                   \
-		void const *candidate;                                                                 \
-		uint8_t marker;                                                                        \
-		if unlikely(!needle_len || needle_len > haystack_len)                                  \
-			return NULL;                                                                       \
-		haystack_len -= needle_len;                                                            \
-		marker = (uint8_t)tolower(*(uint8_t *)needle);                                         \
-		while ((candidate = _##name##_memlowerrchr(haystack, marker, haystack_len)) != NULL) { \
-			if (memcasecmp(candidate, needle, needle_len) == 0)                                \
-				return (void *)candidate;                                                      \
-			if unlikely(candidate == haystack)                                                 \
-				break;                                                                         \
-			haystack_len = (((uintptr_t)candidate) - 1) - (uintptr_t)haystack;                 \
-		}                                                                                      \
-		return NULL;                                                                           \
+#define DeeSystem_DEFINE__memlowerrchr(name)              \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) void *         \
+	name(void const *__restrict p, uint8_t c, size_t n) { \
+		uint8_t *iter = (uint8_t *)p + n;                 \
+		while (iter-- != (uint8_t *)p) {                  \
+			if ((uint8_t)tolower(*iter) == c)             \
+				return iter;                              \
+		}                                                 \
+		return NULL;                                      \
+	}                                                     \
+
+#define DeeSystem_DEFINE_memcasermem(name)                 \
+	DeeSystem_DEFINE__memlowerrchr(_##name##_memlowerrchr) \
+	_DeeSystem_DEFINE_memcasermem(name, _##name##_memlowerrchr)
+#define _DeeSystem_DEFINE_memcasermem(name, memlowerrchr)                            \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) void *                     \
+	name(void const *haystack, size_t haystack_len,                                  \
+	     void const *needle, size_t needle_len) {                                    \
+		void const *candidate;                                                       \
+		uint8_t marker;                                                              \
+		if unlikely(!needle_len)                                                     \
+			return _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL((void *)((uintptr_t)haystack + haystack_len)); \
+		if unlikely(needle_len > haystack_len)                                       \
+			return NULL;                                                             \
+		haystack_len -= needle_len - 1;                                              \
+		marker = (uint8_t)tolower(*(uint8_t *)needle);                               \
+		while ((candidate = memlowerrchr(haystack, marker, haystack_len)) != NULL) { \
+			if (memcasecmp(candidate, needle, needle_len) == 0)                      \
+				return (void *)candidate;                                            \
+			if unlikely(candidate == haystack)                                       \
+				break;                                                               \
+			haystack_len = (((uintptr_t)candidate) - 1) - (uintptr_t)haystack;       \
+		}                                                                            \
+		return NULL;                                                                 \
 	}
 
 #define DeeSystem_DEFINE_qsort(name)                                                \

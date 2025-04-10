@@ -1213,14 +1213,18 @@
 #define DeeSystem_DEFINE_rawmemxchr(n) static void*n(void const*restrict p,int c){}
 #define DeeSystem_DEFINE_rawmemxlen(n) static size_t n(void const*p,int byte){}
 #define DeeSystem_DEFINE_memcasecmp(n) static int n(void const*a,void const*b,size_t n){}
-#define DeeSystem_DEFINE_memcasemem(n) static void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
+#define DeeSystem_DEFINE__memlowerchr(n) static void*n(void const*p,uint8_t c,size_t n){}
+#define DeeSystem_DEFINE_memcasemem(n) DeeSystem_DEFINE__memlowerchr(_##n##_memlowerchr) _DeeSystem_DEFINE_memcasemem(n)
+#define _DeeSystem_DEFINE_memcasemem(n,...) static void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
 #define DeeSystem_DEFINE_memrev(n) static void*n(void*restrict buf,size_t n){}
 #define DeeSystem_DEFINE_memxrchr(n) static void*n(void const*restrict p,int c,size_t n){}
 #define DeeSystem_DEFINE_memxrend(n) static void*n(void const*p,int byte,size_t num_bytes){}
 #define DeeSystem_DEFINE_memxrlen(n) static size_t n(void const*p,int byte,size_t num_bytes){}
 #define DeeSystem_DEFINE_rawmemxrchr(n) static void*n(void const*restrict p,int c){}
 #define DeeSystem_DEFINE_rawmemxrlen(n) static size_t n(void const*p,int byte){}
-#define DeeSystem_DEFINE_memcasermem(n) static void*_##n##_memlowerrchr(void const*restrict p,uint8_t c,size_t n){} void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
+#define DeeSystem_DEFINE__memlowerrchr(n) static void*n(void const*restrict p,uint8_t c,size_t n){}
+#define DeeSystem_DEFINE_memcasermem(n) DeeSystem_DEFINE__memlowerrchr(_##n##_memlowerrchr) _DeeSystem_DEFINE_memcasermem(n)
+#define _DeeSystem_DEFINE_memcasermem(n,...) void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
 #define DeeSystem_DEFINE_qsort(n) static void _##n##_swapmemory(uint8_t*a,uint8_t*b,size_t num_bytes);void n(void*base,size_t count,size_t size,int (*compare)(void const*a,void const*b)){}
 #define _DeeSystem_DEFINE_memsetT(T,n) static void*n(void*restrict p,T c,size_t n){}
 #define DeeSystem_DEFINE_memsetw(n) _DeeSystem_DEFINE_memsetT(uint16_t,n)
@@ -1491,26 +1495,6 @@
 #define DEFINE_SEW_TRINARY(n,...) SeqEachOperator*n(DeeObject*self,DeeObject*a,DeeObject*b){}
 #define DEFINE_SEO_UNARY_INPLACE(n,...) int n(SeqEachOperator**p_self){}
 #define DEFINE_SEO_BINARY_INPLACE(n,...) int n(SeqEachOperator**p_self,DeeObject*other){}
-#define DEFINE_FOLD_COMPARE(n,T) size_t n(T const*data,size_t datalen,uint32_t fold[UNICODE_FOLDED_MAX],size_t fold_len);
-#define DEFINE_MEMCASECHR(n,rname,T,dee_foldcmp) \
-	T*n(T const*haystack,T needle,size_t haystack_length){}\
-	T*rname(T const*haystack,T needle,size_t haystack_length){}
-#define DEFINE_UNICODE_ISOLDREADER_API(n,T)\
-	struct n {\
-		T const*uf_dataptr;\
-		size_t uf_datalen;\
-		uint32_t uf_buf[UNICODE_FOLDED_MAX];\
-		uint8_t uf_len;\
-		uint8_t uf_idx;\
-	};\
-	uint32_t n##_getc(struct n*self){}\
-	uint32_t n##_getc_back(struct n*self){}
-#define DEFINE_MEMCASEEQ(n,T) bool n(T const*a,size_t a_size,T const*b,size_t b_size){}
-#define DEFINE_MEMCASESTARTSWITH(n,T) size_t n(T const*a,size_t a_size,T const*b,size_t b_size){}
-#define DEFINE_MEMCASEENDSWITH(n,T) size_t n(T const*a,size_t a_size,T const*b,size_t b_size){}
-#define DEFINE_MEMCASEMEM(n,rname,T,...) \
-	T*n(T const*haystack,size_t haystack_length,T const*needle,size_t needle_length,size_t*p_match_length){}\
-	T*rname(T const*haystack,size_t haystack_length,T const*needle,size_t needle_length,size_t*p_match_length){}
 #define DEFINE_FUZZY_COMPARE_FUNCTION(n,T,...) dssize_t n(T const*a,size_t alen,T const*b,size_t blen){}
 #define DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(n,T) dssize_t n(T const*a,size_t alen,T const*b,size_t blen){}
 #define DEFINE_VERSION_COMPARE_FUNCTION(n,T,Ts,...) Ts n(T const*a,size_t a_size,T const*b,size_t b_size){}

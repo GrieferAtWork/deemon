@@ -446,7 +446,19 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #else
 #define CONFIG_NO_EXPERIMENTAL_ATTRITER
 #endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_ITERATTR */
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_ATTRITER */
+
+/* Experimental feature switch:
+ * - enabled:  >> "foo".find("") == 0
+ * - disabled: >> "foo".find("") == -1 */
+#if (!defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))
+#if 0 /* TODO: Adjust user-code to work with this */
+#define CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
+#else
+#define CONFIG_NO_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
 /************************************************************************/
 
 

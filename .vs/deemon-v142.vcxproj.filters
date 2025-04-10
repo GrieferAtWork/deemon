@@ -1320,13 +1320,13 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\split.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\string_functions-bwl.c.inl">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\string_functions-strip.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\string_functions.h">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\wildcompare.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-generic.c.inl">

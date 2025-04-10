@@ -74,7 +74,7 @@ LOCAL WUNUSED NONNULL((1, 2)) bool dee_memcaseeq(uint8_t const *a, uint8_t const
 #endif /* !CONFIG_HAVE_memcasecmp */
 
 #ifdef CONFIG_HAVE_strcasecmp
-#define STRCASEEQ(a, b)    (strcasecmp(a, b) == 0)
+#define STRCASEEQ(a, b) (strcasecmp(a, b) == 0)
 #else /* CONFIG_HAVE_strcasecmp */
 #define STRCASEEQ(a, b) dee_strcaseeq((char *)(a), (char *)(b))
 LOCAL WUNUSED NONNULL((1, 2)) bool dee_strcaseeq(char *a, char *b) {

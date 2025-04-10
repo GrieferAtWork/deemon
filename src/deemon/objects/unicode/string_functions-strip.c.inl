@@ -305,12 +305,12 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_NOCASE
 		size_t matchlen;
 #define LOCAL_matchlen matchlen
-#define LOCAL_MEMSTARTSWITHB(haystack_base, haystack_len) ((matchlen = MEMCASESTARTSWITHB(haystack_base, haystack_len, mskstr.cp8, msklen)) != 0)
-#define LOCAL_MEMSTARTSWITHW(haystack_base, haystack_len) ((matchlen = MEMCASESTARTSWITHW(haystack_base, haystack_len, mskstr.cp16, msklen)) != 0)
-#define LOCAL_MEMSTARTSWITHL(haystack_base, haystack_len) ((matchlen = MEMCASESTARTSWITHL(haystack_base, haystack_len, mskstr.cp32, msklen)) != 0)
-#define LOCAL_MEMENDSWITHB(haystack_base, haystack_len)   ((matchlen = MEMCASEENDSWITHB(haystack_base, haystack_len, mskstr.cp8, msklen)) != 0)
-#define LOCAL_MEMENDSWITHW(haystack_base, haystack_len)   ((matchlen = MEMCASEENDSWITHW(haystack_base, haystack_len, mskstr.cp16, msklen)) != 0)
-#define LOCAL_MEMENDSWITHL(haystack_base, haystack_len)   ((matchlen = MEMCASEENDSWITHL(haystack_base, haystack_len, mskstr.cp32, msklen)) != 0)
+#define LOCAL_MEMSTARTSWITHB(haystack_base, haystack_len) ((matchlen = dee_memcasestartswithb(haystack_base, haystack_len, mskstr.cp8, msklen)) != 0)
+#define LOCAL_MEMSTARTSWITHW(haystack_base, haystack_len) ((matchlen = dee_memcasestartswithw(haystack_base, haystack_len, mskstr.cp16, msklen)) != 0)
+#define LOCAL_MEMSTARTSWITHL(haystack_base, haystack_len) ((matchlen = dee_memcasestartswithl(haystack_base, haystack_len, mskstr.cp32, msklen)) != 0)
+#define LOCAL_MEMENDSWITHB(haystack_base, haystack_len)   ((matchlen = dee_memcaseendswithb(haystack_base, haystack_len, mskstr.cp8, msklen)) != 0)
+#define LOCAL_MEMENDSWITHW(haystack_base, haystack_len)   ((matchlen = dee_memcaseendswithw(haystack_base, haystack_len, mskstr.cp16, msklen)) != 0)
+#define LOCAL_MEMENDSWITHL(haystack_base, haystack_len)   ((matchlen = dee_memcaseendswithl(haystack_base, haystack_len, mskstr.cp32, msklen)) != 0)
 #else /* LOCAL_IS_NOCASE */
 #define LOCAL_MEMSTARTSWITHB(haystack_base, haystack_len) ((haystack_len) >= msklen && MEMEQB(haystack_base, mskstr.cp8, msklen))
 #define LOCAL_MEMSTARTSWITHW(haystack_base, haystack_len) ((haystack_len) >= msklen && MEMEQW(haystack_base, mskstr.cp16, msklen))
@@ -323,9 +323,9 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #else /* LOCAL_IS_SSTRIP */
 #ifdef LOCAL_IS_MASKED
 #ifdef LOCAL_IS_NOCASE
-#define LOCAL_isspace_b(ch) memcasechrb(mskstr.cp8, ch, msklen)
-#define LOCAL_isspace_w(ch) memcasechrw(mskstr.cp16, ch, msklen)
-#define LOCAL_isspace_l(ch) memcasechrl(mskstr.cp32, ch, msklen)
+#define LOCAL_isspace_b(ch) dee_memcasechrb(mskstr.cp8, ch, msklen)
+#define LOCAL_isspace_w(ch) dee_memcasechrw(mskstr.cp16, ch, msklen)
+#define LOCAL_isspace_l(ch) dee_memcasechrl(mskstr.cp32, ch, msklen)
 #else /* LOCAL_IS_NOCASE */
 #define LOCAL_isspace_b(ch) memchrb(mskstr.cp8, ch, msklen)
 #define LOCAL_isspace_w(ch) memchrw(mskstr.cp16, ch, msklen)

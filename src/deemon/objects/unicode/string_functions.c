@@ -1364,9 +1364,9 @@ string_casereplace(String *__restrict self, size_t argc,
 				goto retrepl_if_self;
 			begin.cp8 = mystr.cp8;
 			end.cp8   = begin.cp8 + WSTR_LENGTH(mystr.cp8);
-			while ((ptr.cp8 = memcasememb(begin.cp8, end.cp8 - begin.cp8,
-			                              findstr.cp8, findlen,
-			                              &match_length)) != NULL) {
+			while ((ptr.cp8 = dee_memcasememb(begin.cp8, end.cp8 - begin.cp8,
+			                                  findstr.cp8, findlen,
+			                                  &match_length)) != NULL) {
 				/* Found one */
 				if unlikely(unicode_printer_print8(&p, begin.cp8, (size_t)(ptr.cp8 - begin.cp8)) < 0)
 					goto err_printer;
@@ -1400,9 +1400,9 @@ string_casereplace(String *__restrict self, size_t argc,
 				goto retrepl_if_self;
 			begin.cp16 = mystr.cp16;
 			end.cp16   = begin.cp16 + WSTR_LENGTH(mystr.cp16);
-			while ((ptr.cp16 = memcasememw(begin.cp16, end.cp16 - begin.cp16,
-			                               findstr.cp16, findlen,
-			                               &match_length)) != NULL) {
+			while ((ptr.cp16 = dee_memcasememw(begin.cp16, end.cp16 - begin.cp16,
+			                                   findstr.cp16, findlen,
+			                                   &match_length)) != NULL) {
 				if unlikely(unicode_printer_print16(&p, begin.cp16, (size_t)(ptr.cp16 - begin.cp16)) < 0)
 					goto err_printer;
 				if unlikely(unicode_printer_printstring(&p, (DeeObject *)replace) < 0)
@@ -1431,9 +1431,9 @@ string_casereplace(String *__restrict self, size_t argc,
 				goto retrepl_if_self;
 			begin.cp32 = mystr.cp32;
 			end.cp32   = begin.cp32 + WSTR_LENGTH(mystr.cp32);
-			while ((ptr.cp32 = memcasememl(begin.cp32, end.cp32 - begin.cp32,
-			                               findstr.cp32, findlen,
-			                               &match_length)) != NULL) {
+			while ((ptr.cp32 = dee_memcasememl(begin.cp32, end.cp32 - begin.cp32,
+			                                   findstr.cp32, findlen,
+			                                   &match_length)) != NULL) {
 				if unlikely(unicode_printer_print32(&p, begin.cp32, (size_t)(ptr.cp32 - begin.cp32)) < 0)
 					goto err_printer;
 				if unlikely(unicode_printer_printstring(&p, (DeeObject *)replace) < 0)
@@ -2390,9 +2390,9 @@ string_casefindany_cb(void *arg, DeeObject *elem) {
 		search_size = data->scfad_result + WSTR_LENGTH(rhs.cp8) - 1;
 		if (search_size > data->scfad_size)
 			search_size = data->scfad_size;
-		ptr.cp8 = memcasememb(lhs.cp8, search_size,
-		                      rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                      &match_length);
+		ptr.cp8 = dee_memcasememb(lhs.cp8, search_size,
+		                          rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                          &match_length);
 		if (ptr.cp8 != NULL) {
 			size_t hit = (size_t)(ptr.cp8 - lhs.cp8);
 			ASSERT(hit < data->scfad_result);
@@ -2414,9 +2414,9 @@ string_casefindany_cb(void *arg, DeeObject *elem) {
 		search_size = data->scfad_result + WSTR_LENGTH(rhs.cp16) - 1;
 		if (search_size > data->scfad_size)
 			search_size = data->scfad_size;
-		ptr.cp16 = memcasememw(lhs.cp16, search_size,
-		                       rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                       &match_length);
+		ptr.cp16 = dee_memcasememw(lhs.cp16, search_size,
+		                           rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                           &match_length);
 		if (ptr.cp16 != NULL) {
 			size_t hit = (size_t)(ptr.cp16 - lhs.cp16);
 			ASSERT(hit < data->scfad_result);
@@ -2438,9 +2438,9 @@ string_casefindany_cb(void *arg, DeeObject *elem) {
 		search_size = data->scfad_result + WSTR_LENGTH(rhs.cp32) - 1;
 		if (search_size > data->scfad_size)
 			search_size = data->scfad_size;
-		ptr.cp32 = memcasememl(lhs.cp32, search_size,
-		                       rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                       &match_length);
+		ptr.cp32 = dee_memcasememl(lhs.cp32, search_size,
+		                           rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                           &match_length);
 		if (ptr.cp32 != NULL) {
 			size_t hit = (size_t)(ptr.cp32 - lhs.cp32);
 			ASSERT(hit < data->scfad_result);
@@ -2655,9 +2655,9 @@ string_caserfindany_cb(void *arg, DeeObject *elem) {
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)data->scrfad_self);
 		lhs.cp8 += data->scrfad_base;
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)elem);
-		ptr.cp8 = memcasermemb(lhs.cp8, data->scrfad_size,
-		                       rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                       &match_length);
+		ptr.cp8 = dee_memcasermemb(lhs.cp8, data->scrfad_size,
+		                           rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                           &match_length);
 		if (ptr.cp8 != NULL) {
 			size_t hit = (size_t)(ptr.cp8 - lhs.cp8) + 1;
 			ASSERT(hit <= data->scrfad_size);
@@ -2677,9 +2677,9 @@ string_caserfindany_cb(void *arg, DeeObject *elem) {
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)elem);
 		if unlikely(!rhs.cp16)
 			goto err;
-		ptr.cp16 = memcasermemw(lhs.cp16, data->scrfad_size,
-		                        rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                        &match_length);
+		ptr.cp16 = dee_memcasermemw(lhs.cp16, data->scrfad_size,
+		                            rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                            &match_length);
 		if (ptr.cp16 != NULL) {
 			size_t hit = (size_t)(ptr.cp16 - lhs.cp16) + 1;
 			ASSERT(hit <= data->scrfad_size);
@@ -2699,9 +2699,9 @@ string_caserfindany_cb(void *arg, DeeObject *elem) {
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)elem);
 		if unlikely(!rhs.cp32)
 			goto err;
-		ptr.cp32 = memcasermeml(lhs.cp32, data->scrfad_size,
-		                        rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                        &match_length);
+		ptr.cp32 = dee_memcasermeml(lhs.cp32, data->scrfad_size,
+		                            rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                            &match_length);
 		if (ptr.cp32 != NULL) {
 			size_t hit = (size_t)(ptr.cp32 - lhs.cp32) + 1;
 			ASSERT(hit <= data->scrfad_size);
@@ -2830,9 +2830,9 @@ string_casefind(String *self, size_t argc,
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
 		mylen   = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp8 = memcasememb(lhs.cp8 + start, mylen,
-		                      rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                      &match_length);
+		ptr.cp8 = dee_memcasememb(lhs.cp8 + start, mylen,
+		                          rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                          &match_length);
 		if (!ptr.cp8)
 			goto not_found;
 		result = ptr.cp8 - lhs.cp8;
@@ -2847,9 +2847,9 @@ string_casefind(String *self, size_t argc,
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp16 = memcasememw(lhs.cp16 + start, mylen,
-		                       rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                       &match_length);
+		ptr.cp16 = dee_memcasememw(lhs.cp16 + start, mylen,
+		                           rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                           &match_length);
 		if (!ptr.cp16)
 			goto not_found;
 		result = ptr.cp16 - lhs.cp16;
@@ -2864,9 +2864,9 @@ string_casefind(String *self, size_t argc,
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp32 = memcasememl(lhs.cp32 + start, mylen,
-		                       rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                       &match_length);
+		ptr.cp32 = dee_memcasememl(lhs.cp32 + start, mylen,
+		                           rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                           &match_length);
 		if (!ptr.cp32)
 			goto not_found;
 		result = ptr.cp32 - lhs.cp32;
@@ -2900,9 +2900,9 @@ string_caserfind(String *self, size_t argc,
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
 		mylen   = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp8 = memcasermemb(lhs.cp8 + start, mylen,
-		                       rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                       &match_length);
+		ptr.cp8 = dee_memcasermemb(lhs.cp8 + start, mylen,
+		                           rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                           &match_length);
 		if (!ptr.cp8)
 			goto not_found;
 		result = ptr.cp8 - lhs.cp8;
@@ -2917,9 +2917,9 @@ string_caserfind(String *self, size_t argc,
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp16 = memcasermemw(lhs.cp16 + start, mylen,
-		                        rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                        &match_length);
+		ptr.cp16 = dee_memcasermemw(lhs.cp16 + start, mylen,
+		                            rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                            &match_length);
 		if (!ptr.cp16)
 			goto not_found;
 		result = ptr.cp16 - lhs.cp16;
@@ -2934,9 +2934,9 @@ string_caserfind(String *self, size_t argc,
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp32 = memcasermeml(lhs.cp32 + start, mylen,
-		                        rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                        &match_length);
+		ptr.cp32 = dee_memcasermeml(lhs.cp32 + start, mylen,
+		                            rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                            &match_length);
 		if (!ptr.cp32)
 			goto not_found;
 		result = ptr.cp32 - lhs.cp32;
@@ -2970,9 +2970,9 @@ string_caseindex(String *self, size_t argc,
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
 		mylen   = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp8 = memcasememb(lhs.cp8 + start, mylen,
-		                      rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                      &match_length);
+		ptr.cp8 = dee_memcasememb(lhs.cp8 + start, mylen,
+		                          rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                          &match_length);
 		if unlikely(!ptr.cp8)
 			goto not_found;
 		result = ptr.cp8 - lhs.cp8;
@@ -2987,9 +2987,9 @@ string_caseindex(String *self, size_t argc,
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp16 = memcasememw(lhs.cp16 + start, mylen,
-		                       rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                       &match_length);
+		ptr.cp16 = dee_memcasememw(lhs.cp16 + start, mylen,
+		                           rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                           &match_length);
 		if unlikely(!ptr.cp16)
 			goto not_found;
 		result = ptr.cp16 - lhs.cp16;
@@ -3004,9 +3004,9 @@ string_caseindex(String *self, size_t argc,
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp32 = memcasememl(lhs.cp32 + start, mylen,
-		                       rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                       &match_length);
+		ptr.cp32 = dee_memcasememl(lhs.cp32 + start, mylen,
+		                           rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                           &match_length);
 		if unlikely(!ptr.cp32)
 			goto not_found;
 		result = ptr.cp32 - lhs.cp32;
@@ -3041,9 +3041,9 @@ string_caserindex(String *self, size_t argc,
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
 		mylen   = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp8 = memcasermemb(lhs.cp8 + start, mylen,
-		                       rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                       &match_length);
+		ptr.cp8 = dee_memcasermemb(lhs.cp8 + start, mylen,
+		                           rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                           &match_length);
 		if unlikely(!ptr.cp8)
 			goto not_found;
 		result = ptr.cp8 - lhs.cp8;
@@ -3058,9 +3058,9 @@ string_caserindex(String *self, size_t argc,
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp16 = memcasermemw(lhs.cp16 + start, mylen,
-		                        rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                        &match_length);
+		ptr.cp16 = dee_memcasermemw(lhs.cp16 + start, mylen,
+		                            rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                            &match_length);
 		if unlikely(!ptr.cp16)
 			goto not_found;
 		result = ptr.cp16 - lhs.cp16;
@@ -3075,9 +3075,9 @@ string_caserindex(String *self, size_t argc,
 			goto err;
 		mylen = WSTR_LENGTH(lhs.ptr);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-		ptr.cp32 = memcasermeml(lhs.cp32 + start, mylen,
-		                        rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                        &match_length);
+		ptr.cp32 = dee_memcasermeml(lhs.cp32 + start, mylen,
+		                            rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                            &match_length);
 		if unlikely(!ptr.cp32)
 			goto not_found;
 		result = ptr.cp32 - lhs.cp32;
@@ -3339,7 +3339,7 @@ string_casestartswith(String *self, size_t argc,
 		if (my_len <= begin)
 			break;
 		my_len -= begin;
-		return_bool(MEMCASESTARTSWITHB(my_str.cp8 + begin, my_len, ot_str.cp8, ot_len));
+		return_bool(dee_memcasestartswithb(my_str.cp8 + begin, my_len, ot_str.cp8, ot_len));
 
 	CASE_WIDTH_2BYTE:
 		my_str.cp16 = DeeString_As2Byte((DeeObject *)self);
@@ -3353,7 +3353,7 @@ string_casestartswith(String *self, size_t argc,
 		if (my_len <= begin)
 			break;
 		my_len -= begin;
-		return_bool(MEMCASESTARTSWITHW(my_str.cp16 + begin, my_len, ot_str.cp16, ot_len));
+		return_bool(dee_memcasestartswithw(my_str.cp16 + begin, my_len, ot_str.cp16, ot_len));
 
 	CASE_WIDTH_4BYTE:
 		my_str.cp32 = DeeString_As4Byte((DeeObject *)self);
@@ -3367,7 +3367,7 @@ string_casestartswith(String *self, size_t argc,
 		if (my_len <= begin)
 			break;
 		my_len -= begin;
-		return_bool(MEMCASESTARTSWITHL(my_str.cp32 + begin, my_len, ot_str.cp32, ot_len));
+		return_bool(dee_memcasestartswithl(my_str.cp32 + begin, my_len, ot_str.cp32, ot_len));
 	}
 	return_bool(ot_len == 0);
 err:
@@ -3402,7 +3402,7 @@ string_caseendswith(String *self, size_t argc,
 		if (my_len <= begin)
 			break;
 		my_len -= begin;
-		return_bool(MEMCASEENDSWITHB(my_str.cp8 + begin, my_len, ot_str.cp8, ot_len));
+		return_bool(dee_memcaseendswithb(my_str.cp8 + begin, my_len, ot_str.cp8, ot_len));
 
 	CASE_WIDTH_2BYTE:
 		my_str.cp16 = DeeString_As2Byte((DeeObject *)self);
@@ -3416,7 +3416,7 @@ string_caseendswith(String *self, size_t argc,
 		if (my_len <= begin)
 			break;
 		my_len -= begin;
-		return_bool(MEMCASEENDSWITHW(my_str.cp16 + begin, my_len, ot_str.cp16, ot_len));
+		return_bool(dee_memcaseendswithw(my_str.cp16 + begin, my_len, ot_str.cp16, ot_len));
 
 	CASE_WIDTH_4BYTE:
 		my_str.cp32 = DeeString_As4Byte((DeeObject *)self);
@@ -3430,7 +3430,7 @@ string_caseendswith(String *self, size_t argc,
 		if (my_len <= begin)
 			break;
 		my_len -= begin;
-		return_bool(MEMCASEENDSWITHL(my_str.cp32 + begin, my_len, ot_str.cp32, ot_len));
+		return_bool(dee_memcaseendswithl(my_str.cp32 + begin, my_len, ot_str.cp32, ot_len));
 	}
 	return_bool(ot_len == 0);
 err:
@@ -3967,9 +3967,9 @@ string_casecount(String *self, size_t argc,
 		lhs.cp8 += start;
 		lep.cp8 = lhs.cp8 + mylen;
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		while ((lhs.cp8 = memcasememb(lhs.cp8, (size_t)(lep.cp8 - lhs.cp8),
-		                              rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                              &match_length)) != NULL) {
+		while ((lhs.cp8 = dee_memcasememb(lhs.cp8, (size_t)(lep.cp8 - lhs.cp8),
+		                                  rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                                  &match_length)) != NULL) {
 			lhs.cp8 += match_length;
 			++result;
 		}
@@ -3986,9 +3986,9 @@ string_casecount(String *self, size_t argc,
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		while ((lhs.cp16 = memcasememw(lhs.cp16, (size_t)(lep.cp16 - lhs.cp16),
-		                               rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                               &match_length)) != NULL) {
+		while ((lhs.cp16 = dee_memcasememw(lhs.cp16, (size_t)(lep.cp16 - lhs.cp16),
+		                                   rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                                   &match_length)) != NULL) {
 			lhs.cp16 += match_length;
 			++result;
 		}
@@ -4005,9 +4005,9 @@ string_casecount(String *self, size_t argc,
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		while ((lhs.cp32 = memcasememl(lhs.cp32, (size_t)(lep.cp32 - lhs.cp32),
-		                               rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                               &match_length)) != NULL) {
+		while ((lhs.cp32 = dee_memcasememl(lhs.cp32, (size_t)(lep.cp32 - lhs.cp32),
+		                                   rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                                   &match_length)) != NULL) {
 			lhs.cp32 += match_length;
 			++result;
 		}
@@ -4101,8 +4101,8 @@ string_casecontains_f(String *self, size_t argc,
 		mylen   = DeeString_SIZE(self);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		if (!memcasememb(lhs.cp8 + start, mylen,
-		                 rhs.cp8, WSTR_LENGTH(rhs.cp8), NULL))
+		if (!dee_memcasememb(lhs.cp8 + start, mylen,
+		                     rhs.cp8, WSTR_LENGTH(rhs.cp8), NULL))
 			goto not_found;
 		break;
 
@@ -4115,8 +4115,8 @@ string_casecontains_f(String *self, size_t argc,
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		if (!memcasememw(lhs.cp16 + start, mylen,
-		                 rhs.cp16, WSTR_LENGTH(rhs.cp16), NULL))
+		if (!dee_memcasememw(lhs.cp16 + start, mylen,
+		                     rhs.cp16, WSTR_LENGTH(rhs.cp16), NULL))
 			goto not_found;
 		break;
 
@@ -4129,8 +4129,8 @@ string_casecontains_f(String *self, size_t argc,
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		if (!memcasememl(lhs.cp32 + start, mylen,
-		                 rhs.cp32, WSTR_LENGTH(rhs.cp32), NULL))
+		if (!dee_memcasememl(lhs.cp32 + start, mylen,
+		                     rhs.cp32, WSTR_LENGTH(rhs.cp32), NULL))
 			goto not_found;
 		break;
 	}
@@ -4852,9 +4852,9 @@ string_casepartition(String *self, size_t argc,
 		CLAMP_SUBSTR(&start, &end, &mylen, not_foundb_zero);
 		lhs.cp8 += start;
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		ptr.cp8 = memcasememb(lhs.cp8, mylen,
-		                      rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                      &match_length);
+		ptr.cp8 = dee_memcasememb(lhs.cp8, mylen,
+		                          rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                          &match_length);
 		if (!ptr.cp8)
 			goto not_foundb;
 		return partition_packb_fold(lhs.cp8, (size_t)(ptr.cp8 - lhs.cp8),
@@ -4876,9 +4876,9 @@ not_foundb:
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		ptr.cp16 = memcasememw(lhs.cp16, mylen,
-		                       rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                       &match_length);
+		ptr.cp16 = dee_memcasememw(lhs.cp16, mylen,
+		                           rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                           &match_length);
 		if (!ptr.cp16)
 			goto not_foundw;
 		return partition_packw_fold(lhs.cp16, (size_t)(ptr.cp16 - lhs.cp16),
@@ -4900,9 +4900,9 @@ not_foundw:
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		ptr.cp32 = memcasememl(lhs.cp32, mylen,
-		                       rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                       &match_length);
+		ptr.cp32 = dee_memcasememl(lhs.cp32, mylen,
+		                           rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                           &match_length);
 		if (!ptr.cp32)
 			goto not_foundl;
 		return partition_packl_fold(lhs.cp32, (size_t)(ptr.cp32 - lhs.cp32),
@@ -4939,9 +4939,9 @@ string_caserpartition(String *self, size_t argc,
 		CLAMP_SUBSTR(&start, &end, &mylen, not_foundb_zero);
 		lhs.cp8 += start;
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		ptr.cp8 = memcasermemb(lhs.cp8, mylen,
-		                       rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                       &match_length);
+		ptr.cp8 = dee_memcasermemb(lhs.cp8, mylen,
+		                           rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                           &match_length);
 		if (!ptr.cp8)
 			goto not_foundb;
 		return partition_packb_fold(lhs.cp8, (size_t)(ptr.cp8 - lhs.cp8),
@@ -4963,9 +4963,9 @@ not_foundb:
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		ptr.cp16 = memcasermemw(lhs.cp16, mylen,
-		                        rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                        &match_length);
+		ptr.cp16 = dee_memcasermemw(lhs.cp16, mylen,
+		                            rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                            &match_length);
 		if (!ptr.cp16)
 			goto not_foundw;
 		return partition_packw_fold(lhs.cp16, (size_t)(ptr.cp16 - lhs.cp16),
@@ -4987,9 +4987,9 @@ not_foundw:
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		ptr.cp32 = memcasermeml(lhs.cp32, mylen,
-		                        rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                        &match_length);
+		ptr.cp32 = dee_memcasermeml(lhs.cp32, mylen,
+		                            rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                            &match_length);
 		if (!ptr.cp32)
 			goto not_foundl;
 		return partition_packl_fold(lhs.cp32, (size_t)(ptr.cp32 - lhs.cp32),
@@ -5426,9 +5426,9 @@ err:
 
 
 /* NOTE: Allowed to returns *OUTSIDE* of [-1,1] */
-PRIVATE int DCALL
-compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
-                   String *__restrict rhs, size_t rhs_start, size_t rhs_end) {
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 3)) int DCALL
+compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
+                   String *rhs, size_t rhs_start, size_t rhs_end) {
 	size_t lhs_len;
 	size_t rhs_len;
 	if (!lhs->s_data ||
@@ -5720,31 +5720,27 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 }
 
 /* NOTE: Always returns within [-1,1] */
-PRIVATE int DCALL
-casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
-                       String *__restrict rhs, size_t rhs_start, size_t rhs_end) {
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 3)) int DCALL
+casecompare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
+                       String *rhs, size_t rhs_start, size_t rhs_end) {
 	size_t lhs_len;
 	size_t rhs_len;
-	union {
-		struct unicode_foldreaderb b;
-		struct unicode_foldreaderw w;
-		struct unicode_foldreaderl l;
-	} lhs_reader, rhs_reader;
-#define DO_COMPARE(lhs_bwl, lhs_str, lhs_len, rhs_bwl, rhs_str, rhs_len)      \
-	{                                                                         \
-		unicode_foldreader_init(lhs_reader.lhs_bwl, lhs_str, lhs_len);        \
-		unicode_foldreader_init(rhs_reader.rhs_bwl, rhs_str, rhs_len);        \
-		for (;;) {                                                            \
-			uint32_t ch_lhs, ch_rhs;                                          \
-			if (unicode_foldreader_empty(lhs_reader.lhs_bwl))                 \
-				return unicode_foldreader_empty(rhs_reader.rhs_bwl) ? 0 : -1; \
-			if (unicode_foldreader_empty(rhs_reader.rhs_bwl))                 \
-				return 1;                                                     \
-			ch_lhs = unicode_foldreader_getc(lhs_reader.lhs_bwl);             \
-			ch_rhs = unicode_foldreader_getc(rhs_reader.rhs_bwl);             \
-			if (ch_lhs != ch_rhs)                                             \
-				return ch_lhs < ch_rhs ? -1 : 1;                              \
-		}                                                                     \
+	struct unicode_foldreader lhs_reader, rhs_reader;
+#define DO_COMPARE(lhs_bwl, lhs_str, lhs_len, rhs_bwl, rhs_str, rhs_len) \
+	{                                                                    \
+		unicode_foldreader_init##lhs_bwl(&lhs_reader, lhs_str, lhs_len); \
+		unicode_foldreader_init##rhs_bwl(&rhs_reader, rhs_str, rhs_len); \
+		for (;;) {                                                       \
+			uint32_t ch_lhs, ch_rhs;                                     \
+			if (unicode_foldreader_empty(&lhs_reader))                   \
+				return unicode_foldreader_empty(&rhs_reader) ? 0 : -1;   \
+			if (unicode_foldreader_empty(&rhs_reader))                   \
+				return 1;                                                \
+			ch_lhs = unicode_foldreader_getc##lhs_bwl(&lhs_reader);      \
+			ch_rhs = unicode_foldreader_getc##rhs_bwl(&rhs_reader);      \
+			if (ch_lhs != ch_rhs)                                        \
+				return ch_lhs < ch_rhs ? -1 : 1;                         \
+		}                                                                \
 	}
 
 	if (!lhs->s_data ||
@@ -6050,8 +6046,8 @@ string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = strverscmpb(my_str.cp8, my_len,
-		                     ot_str.cp8, ot_len);
+		result = dee_strverscmpb(my_str.cp8, my_len,
+		                         ot_str.cp8, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -6079,8 +6075,8 @@ string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = strverscmpw(my_str.cp16, my_len,
-		                     ot_str.cp16, ot_len);
+		result = dee_strverscmpw(my_str.cp16, my_len,
+		                         ot_str.cp16, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -6108,8 +6104,8 @@ string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = strverscmpl(my_str.cp32, my_len,
-		                     ot_str.cp32, ot_len);
+		result = dee_strverscmpl(my_str.cp32, my_len,
+		                         ot_str.cp32, ot_len);
 		break;
 	}
 	return_reference(DeeInt_FromSign(result));
@@ -6149,8 +6145,8 @@ string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = strcaseverscmpb(my_str.cp8, my_len,
-		                         ot_str.cp8, ot_len);
+		result = dee_strcaseverscmpb(my_str.cp8, my_len,
+		                             ot_str.cp8, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -6178,8 +6174,8 @@ string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = strcaseverscmpw(my_str.cp16, my_len,
-		                         ot_str.cp16, ot_len);
+		result = dee_strcaseverscmpw(my_str.cp16, my_len,
+		                             ot_str.cp16, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -6207,8 +6203,8 @@ string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = strcaseverscmpl(my_str.cp32, my_len,
-		                         ot_str.cp32, ot_len);
+		result = dee_strcaseverscmpl(my_str.cp32, my_len,
+		                             ot_str.cp32, ot_len);
 		break;
 	}
 	return DeeInt_NewInt32(result);
@@ -6248,8 +6244,8 @@ string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = fuzzy_compareb(my_str.cp8, my_len,
-		                        ot_str.cp8, ot_len);
+		result = dee_fuzzy_compareb(my_str.cp8, my_len,
+		                            ot_str.cp8, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -6277,8 +6273,8 @@ string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = fuzzy_comparew(my_str.cp16, my_len,
-		                        ot_str.cp16, ot_len);
+		result = dee_fuzzy_comparew(my_str.cp16, my_len,
+		                            ot_str.cp16, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -6306,8 +6302,8 @@ string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = fuzzy_comparel(my_str.cp32, my_len,
-		                        ot_str.cp32, ot_len);
+		result = dee_fuzzy_comparel(my_str.cp32, my_len,
+		                            ot_str.cp32, ot_len);
 		break;
 	}
 	if unlikely(result == (dssize_t)-1)
@@ -6349,8 +6345,8 @@ string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = fuzzy_casecompareb(my_str.cp8, my_len,
-		                            ot_str.cp8, ot_len);
+		result = dee_fuzzy_casecompareb(my_str.cp8, my_len,
+		                                ot_str.cp8, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -6378,8 +6374,8 @@ string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = fuzzy_casecomparew(my_str.cp16, my_len,
-		                            ot_str.cp16, ot_len);
+		result = dee_fuzzy_casecomparew(my_str.cp16, my_len,
+		                                ot_str.cp16, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -6407,8 +6403,8 @@ string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = fuzzy_casecomparel(my_str.cp32, my_len,
-		                            ot_str.cp32, ot_len);
+		result = dee_fuzzy_casecomparel(my_str.cp32, my_len,
+		                                ot_str.cp32, ot_len);
 		break;
 	}
 	if unlikely(result == (dssize_t)-1)
@@ -6679,11 +6675,7 @@ string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len, result = 0;
 	struct compare_args args;
-	union {
-		struct unicode_foldreaderb b;
-		struct unicode_foldreaderw w;
-		struct unicode_foldreaderl l;
-	} my_reader, ot_reader;
+	struct unicode_foldreader my_reader, ot_reader;
 	if (get_compare_args(&args, argc, argv, "casecommon"))
 		goto err;
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
@@ -6710,12 +6702,12 @@ string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.b, my_str.cp8, my_len);
-		unicode_foldreader_init(ot_reader.b, ot_str.cp8, ot_len);
-		while (!unicode_foldreader_empty(my_reader.b) &&
-		       !unicode_foldreader_empty(ot_reader.b)) {
-			if (unicode_foldreader_getc(my_reader.b) !=
-			    unicode_foldreader_getc(ot_reader.b))
+		unicode_foldreader_initb(&my_reader, my_str.cp8, my_len);
+		unicode_foldreader_initb(&ot_reader, ot_str.cp8, ot_len);
+		while (!unicode_foldreader_empty(&my_reader) &&
+		       !unicode_foldreader_empty(&ot_reader)) {
+			if (unicode_foldreader_getcb(&my_reader) !=
+			    unicode_foldreader_getcb(&ot_reader))
 				break;
 			++result;
 		}
@@ -6746,12 +6738,12 @@ string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.w, my_str.cp16, my_len);
-		unicode_foldreader_init(ot_reader.w, ot_str.cp16, ot_len);
-		while (!unicode_foldreader_empty(my_reader.w) &&
-		       !unicode_foldreader_empty(ot_reader.w)) {
-			if (unicode_foldreader_getc(my_reader.w) !=
-			    unicode_foldreader_getc(ot_reader.w))
+		unicode_foldreader_initw(&my_reader, my_str.cp16, my_len);
+		unicode_foldreader_initw(&ot_reader, ot_str.cp16, ot_len);
+		while (!unicode_foldreader_empty(&my_reader) &&
+		       !unicode_foldreader_empty(&ot_reader)) {
+			if (unicode_foldreader_getcw(&my_reader) !=
+			    unicode_foldreader_getcw(&ot_reader))
 				break;
 			++result;
 		}
@@ -6782,12 +6774,12 @@ string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.l, my_str.cp32, my_len);
-		unicode_foldreader_init(ot_reader.l, ot_str.cp32, ot_len);
-		while (!unicode_foldreader_empty(my_reader.l) &&
-		       !unicode_foldreader_empty(ot_reader.l)) {
-			if (unicode_foldreader_getc(my_reader.l) !=
-			    unicode_foldreader_getc(ot_reader.l))
+		unicode_foldreader_initl(&my_reader, my_str.cp32, my_len);
+		unicode_foldreader_initl(&ot_reader, ot_str.cp32, ot_len);
+		while (!unicode_foldreader_empty(&my_reader) &&
+		       !unicode_foldreader_empty(&ot_reader)) {
+			if (unicode_foldreader_getcl(&my_reader) !=
+			    unicode_foldreader_getcl(&ot_reader))
 				break;
 			++result;
 		}
@@ -6803,11 +6795,7 @@ string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len, result = 0;
 	struct compare_args args;
-	union {
-		struct unicode_foldreaderb b;
-		struct unicode_foldreaderw w;
-		struct unicode_foldreaderl l;
-	} my_reader, ot_reader;
+	struct unicode_foldreader my_reader, ot_reader;
 	if (get_compare_args(&args, argc, argv, "rcommon"))
 		goto err;
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
@@ -6834,12 +6822,12 @@ string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.b, my_str.cp8, my_len);
-		unicode_foldreader_init(ot_reader.b, ot_str.cp8, ot_len);
-		while (!unicode_foldreader_empty(my_reader.b) &&
-		       !unicode_foldreader_empty(ot_reader.b)) {
-			if (unicode_foldreader_getc_back(my_reader.b) !=
-			    unicode_foldreader_getc_back(ot_reader.b))
+		unicode_foldreader_initb(&my_reader, my_str.cp8, my_len);
+		unicode_foldreader_initb(&ot_reader, ot_str.cp8, ot_len);
+		while (!unicode_foldreader_empty(&my_reader) &&
+		       !unicode_foldreader_empty(&ot_reader)) {
+			if (unicode_foldreader_rgetcb(&my_reader) !=
+			    unicode_foldreader_rgetcb(&ot_reader))
 				break;
 			++result;
 		}
@@ -6870,12 +6858,12 @@ string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.w, my_str.cp16, my_len);
-		unicode_foldreader_init(ot_reader.w, ot_str.cp16, ot_len);
-		while (!unicode_foldreader_empty(my_reader.w) &&
-		       !unicode_foldreader_empty(ot_reader.w)) {
-			if (unicode_foldreader_getc_back(my_reader.w) !=
-			    unicode_foldreader_getc_back(ot_reader.w))
+		unicode_foldreader_initw(&my_reader, my_str.cp16, my_len);
+		unicode_foldreader_initw(&ot_reader, ot_str.cp16, ot_len);
+		while (!unicode_foldreader_empty(&my_reader) &&
+		       !unicode_foldreader_empty(&ot_reader)) {
+			if (unicode_foldreader_rgetcw(&my_reader) !=
+			    unicode_foldreader_rgetcw(&ot_reader))
 				break;
 			++result;
 		}
@@ -6906,12 +6894,12 @@ string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.l, my_str.cp32, my_len);
-		unicode_foldreader_init(ot_reader.l, ot_str.cp32, ot_len);
-		while (!unicode_foldreader_empty(my_reader.l) &&
-		       !unicode_foldreader_empty(ot_reader.l)) {
-			if (unicode_foldreader_getc_back(my_reader.l) !=
-			    unicode_foldreader_getc_back(ot_reader.l))
+		unicode_foldreader_initl(&my_reader, my_str.cp32, my_len);
+		unicode_foldreader_initl(&ot_reader, ot_str.cp32, ot_len);
+		while (!unicode_foldreader_empty(&my_reader) &&
+		       !unicode_foldreader_empty(&ot_reader)) {
+			if (unicode_foldreader_rgetcl(&my_reader) !=
+			    unicode_foldreader_rgetcl(&ot_reader))
 				break;
 			++result;
 		}
@@ -6955,8 +6943,8 @@ string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = wildcompareb(my_str.cp8, my_len,
-		                      ot_str.cp8, ot_len);
+		result = dee_wildcompareb(my_str.cp8, my_len,
+		                          ot_str.cp8, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -6984,8 +6972,8 @@ string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = wildcomparew(my_str.cp16, my_len,
-		                      ot_str.cp16, ot_len);
+		result = dee_wildcomparew(my_str.cp16, my_len,
+		                          ot_str.cp16, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -7013,8 +7001,8 @@ string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = wildcomparel(my_str.cp32, my_len,
-		                      ot_str.cp32, ot_len);
+		result = dee_wildcomparel(my_str.cp32, my_len,
+		                          ot_str.cp32, ot_len);
 		break;
 	}
 	return DeeInt_NewInt64(result);
@@ -7054,8 +7042,8 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = wildcompareb(my_str.cp8, my_len,
-		                      ot_str.cp8, ot_len) == 0;
+		result = dee_wildcompareb(my_str.cp8, my_len,
+		                          ot_str.cp8, ot_len) == 0;
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -7083,8 +7071,8 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = wildcomparew(my_str.cp16, my_len,
-		                      ot_str.cp16, ot_len) == 0;
+		result = dee_wildcomparew(my_str.cp16, my_len,
+		                          ot_str.cp16, ot_len) == 0;
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -7112,8 +7100,8 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = wildcomparel(my_str.cp32, my_len,
-		                      ot_str.cp32, ot_len) == 0;
+		result = dee_wildcomparel(my_str.cp32, my_len,
+		                          ot_str.cp32, ot_len) == 0;
 		break;
 	}
 	return_bool(result);
@@ -7127,11 +7115,7 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 	size_t my_len, ot_len;
 	int result;
 	struct compare_args args;
-	union {
-		struct unicode_foldreaderb b;
-		struct unicode_foldreaderw w;
-		struct unicode_foldreaderl l;
-	} my_reader, ot_reader;
+	struct unicode_foldreader my_reader, ot_reader;
 	if (get_compare_args(&args, argc, argv, "casewildcompare"))
 		goto err;
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
@@ -7158,9 +7142,9 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.b, my_str.cp8, my_len);
-		unicode_foldreader_init(ot_reader.b, ot_str.cp8, ot_len);
-		result = wildcasecompareb(&my_reader.b, &ot_reader.b);
+		unicode_foldreader_initb(&my_reader, my_str.cp8, my_len);
+		unicode_foldreader_initb(&ot_reader, ot_str.cp8, ot_len);
+		result = dee_wildcasecompareb(&my_reader, &ot_reader);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -7188,9 +7172,9 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.w, my_str.cp16, my_len);
-		unicode_foldreader_init(ot_reader.w, ot_str.cp16, ot_len);
-		result = wildcasecomparew(&my_reader.w, &ot_reader.w);
+		unicode_foldreader_initw(&my_reader, my_str.cp16, my_len);
+		unicode_foldreader_initw(&ot_reader, ot_str.cp16, ot_len);
+		result = dee_wildcasecomparew(&my_reader, &ot_reader);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -7218,9 +7202,9 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.l, my_str.cp32, my_len);
-		unicode_foldreader_init(ot_reader.l, ot_str.cp32, ot_len);
-		result = wildcasecomparel(&my_reader.l, &ot_reader.l);
+		unicode_foldreader_initl(&my_reader, my_str.cp32, my_len);
+		unicode_foldreader_initl(&ot_reader, ot_str.cp32, ot_len);
+		result = dee_wildcasecomparel(&my_reader, &ot_reader);
 		break;
 	}
 	return DeeInt_NewInt64(result);
@@ -7234,11 +7218,7 @@ string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 	size_t my_len, ot_len;
 	int result;
 	struct compare_args args;
-	union {
-		struct unicode_foldreaderb b;
-		struct unicode_foldreaderw w;
-		struct unicode_foldreaderl l;
-	} my_reader, ot_reader;
+	struct unicode_foldreader my_reader, ot_reader;
 	if (get_compare_args(&args, argc, argv, "casewmatch"))
 		goto err;
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
@@ -7265,9 +7245,9 @@ string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.b, my_str.cp8, my_len);
-		unicode_foldreader_init(ot_reader.b, ot_str.cp8, ot_len);
-		result = wildcasecompareb(&my_reader.b, &ot_reader.b);
+		unicode_foldreader_initb(&my_reader, my_str.cp8, my_len);
+		unicode_foldreader_initb(&ot_reader, ot_str.cp8, ot_len);
+		result = dee_wildcasecompareb(&my_reader, &ot_reader);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -7295,9 +7275,9 @@ string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.w, my_str.cp16, my_len);
-		unicode_foldreader_init(ot_reader.w, ot_str.cp16, ot_len);
-		result = wildcasecomparew(&my_reader.w, &ot_reader.w);
+		unicode_foldreader_initw(&my_reader, my_str.cp16, my_len);
+		unicode_foldreader_initw(&ot_reader, ot_str.cp16, ot_len);
+		result = dee_wildcasecomparew(&my_reader, &ot_reader);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -7325,9 +7305,9 @@ string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		unicode_foldreader_init(my_reader.l, my_str.cp32, my_len);
-		unicode_foldreader_init(ot_reader.l, ot_str.cp32, ot_len);
-		result = wildcasecomparel(&my_reader.l, &ot_reader.l);
+		unicode_foldreader_initl(&my_reader, my_str.cp32, my_len);
+		unicode_foldreader_initl(&ot_reader, ot_str.cp32, ot_len);
+		result = dee_wildcasecomparel(&my_reader, &ot_reader);
 		break;
 	}
 	return_bool(result == 0);
@@ -7453,9 +7433,9 @@ string_findmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8 = find_matchb(scan_str.cp8 + start, scan_len,
-		                      open_str.cp8, open_len,
-		                      clos_str.cp8, clos_len);
+		ptr.cp8 = dee_find_matchb(scan_str.cp8 + start, scan_len,
+		                          open_str.cp8, open_len,
+		                          clos_str.cp8, clos_len);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -7478,9 +7458,9 @@ string_findmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp16 = find_matchw(scan_str.cp16 + start, scan_len,
-		                       open_str.cp16, open_len,
-		                       clos_str.cp16, clos_len);
+		ptr.cp16 = dee_find_matchw(scan_str.cp16 + start, scan_len,
+		                           open_str.cp16, open_len,
+		                           clos_str.cp16, clos_len);
 		if unlikely(!ptr.cp16)
 			goto err_not_found;
 		result = (size_t)(ptr.cp16 - scan_str.cp16);
@@ -7503,9 +7483,9 @@ string_findmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp32 = find_matchl(scan_str.cp32 + start, scan_len,
-		                       open_str.cp32, open_len,
-		                       clos_str.cp32, clos_len);
+		ptr.cp32 = dee_find_matchl(scan_str.cp32 + start, scan_len,
+		                           open_str.cp32, open_len,
+		                           clos_str.cp32, clos_len);
 		if unlikely(!ptr.cp32)
 			goto err_not_found;
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
@@ -7546,9 +7526,9 @@ string_indexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8 = find_matchb(scan_str.cp8 + start, scan_len,
-		                      open_str.cp8, open_len,
-		                      clos_str.cp8, clos_len);
+		ptr.cp8 = dee_find_matchb(scan_str.cp8 + start, scan_len,
+		                          open_str.cp8, open_len,
+		                          clos_str.cp8, clos_len);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -7571,9 +7551,9 @@ string_indexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp16 = find_matchw(scan_str.cp16 + start, scan_len,
-		                       open_str.cp16, open_len,
-		                       clos_str.cp16, clos_len);
+		ptr.cp16 = dee_find_matchw(scan_str.cp16 + start, scan_len,
+		                           open_str.cp16, open_len,
+		                           clos_str.cp16, clos_len);
 		if unlikely(!ptr.cp16)
 			goto err_not_found;
 		result = (size_t)(ptr.cp16 - scan_str.cp16);
@@ -7596,9 +7576,9 @@ string_indexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp32 = find_matchl(scan_str.cp32 + start, scan_len,
-		                       open_str.cp32, open_len,
-		                       clos_str.cp32, clos_len);
+		ptr.cp32 = dee_find_matchl(scan_str.cp32 + start, scan_len,
+		                           open_str.cp32, open_len,
+		                           clos_str.cp32, clos_len);
 		if unlikely(!ptr.cp32)
 			goto err_not_found;
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
@@ -7641,10 +7621,10 @@ string_casefindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8 = find_casematchb(scan_str.cp8 + start, scan_len,
-		                          open_str.cp8, open_len,
-		                          clos_str.cp8, clos_len,
-		                          &match_length);
+		ptr.cp8 = dee_find_casematchb(scan_str.cp8 + start, scan_len,
+		                              open_str.cp8, open_len,
+		                              clos_str.cp8, clos_len,
+		                              &match_length);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -7667,10 +7647,10 @@ string_casefindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp16 = find_casematchw(scan_str.cp16 + start, scan_len,
-		                           open_str.cp16, open_len,
-		                           clos_str.cp16, clos_len,
-		                           &match_length);
+		ptr.cp16 = dee_find_casematchw(scan_str.cp16 + start, scan_len,
+		                               open_str.cp16, open_len,
+		                               clos_str.cp16, clos_len,
+		                               &match_length);
 		if unlikely(!ptr.cp16)
 			goto err_not_found;
 		result = (size_t)(ptr.cp16 - scan_str.cp16);
@@ -7693,10 +7673,10 @@ string_casefindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp32 = find_casematchl(scan_str.cp32 + start, scan_len,
-		                           open_str.cp32, open_len,
-		                           clos_str.cp32, clos_len,
-		                           &match_length);
+		ptr.cp32 = dee_find_casematchl(scan_str.cp32 + start, scan_len,
+		                               open_str.cp32, open_len,
+		                               clos_str.cp32, clos_len,
+		                               &match_length);
 		if unlikely(!ptr.cp32)
 			goto err_not_found;
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
@@ -7737,10 +7717,10 @@ string_caseindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8 = find_casematchb(scan_str.cp8 + start, scan_len,
-		                          open_str.cp8, open_len,
-		                          clos_str.cp8, clos_len,
-		                          &match_length);
+		ptr.cp8 = dee_find_casematchb(scan_str.cp8 + start, scan_len,
+		                              open_str.cp8, open_len,
+		                              clos_str.cp8, clos_len,
+		                              &match_length);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -7763,10 +7743,10 @@ string_caseindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp16 = find_casematchw(scan_str.cp16 + start, scan_len,
-		                           open_str.cp16, open_len,
-		                           clos_str.cp16, clos_len,
-		                           &match_length);
+		ptr.cp16 = dee_find_casematchw(scan_str.cp16 + start, scan_len,
+		                               open_str.cp16, open_len,
+		                               clos_str.cp16, clos_len,
+		                               &match_length);
 		if unlikely(!ptr.cp16)
 			goto err_not_found;
 		result = (size_t)(ptr.cp16 - scan_str.cp16);
@@ -7789,10 +7769,10 @@ string_caseindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp32 = find_casematchl(scan_str.cp32 + start, scan_len,
-		                           open_str.cp32, open_len,
-		                           clos_str.cp32, clos_len,
-		                           &match_length);
+		ptr.cp32 = dee_find_casematchl(scan_str.cp32 + start, scan_len,
+		                               open_str.cp32, open_len,
+		                               clos_str.cp32, clos_len,
+		                               &match_length);
 		if unlikely(!ptr.cp32)
 			goto err_not_found;
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
@@ -7835,9 +7815,9 @@ string_rfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8 = rfind_matchb(scan_str.cp8 + start, scan_len,
-		                       open_str.cp8, open_len,
-		                       clos_str.cp8, clos_len);
+		ptr.cp8 = dee_rfind_matchb(scan_str.cp8 + start, scan_len,
+		                           open_str.cp8, open_len,
+		                           clos_str.cp8, clos_len);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -7860,9 +7840,9 @@ string_rfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp16 = rfind_matchw(scan_str.cp16 + start, scan_len,
-		                        open_str.cp16, open_len,
-		                        clos_str.cp16, clos_len);
+		ptr.cp16 = dee_rfind_matchw(scan_str.cp16 + start, scan_len,
+		                            open_str.cp16, open_len,
+		                            clos_str.cp16, clos_len);
 		if unlikely(!ptr.cp16)
 			goto err_not_found;
 		result = (size_t)(ptr.cp16 - scan_str.cp16);
@@ -7885,9 +7865,9 @@ string_rfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp32 = rfind_matchl(scan_str.cp32 + start, scan_len,
-		                        open_str.cp32, open_len,
-		                        clos_str.cp32, clos_len);
+		ptr.cp32 = dee_rfind_matchl(scan_str.cp32 + start, scan_len,
+		                            open_str.cp32, open_len,
+		                            clos_str.cp32, clos_len);
 		if unlikely(!ptr.cp32)
 			goto err_not_found;
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
@@ -7928,9 +7908,9 @@ string_rindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8 = rfind_matchb(scan_str.cp8 + start, scan_len,
-		                       open_str.cp8, open_len,
-		                       clos_str.cp8, clos_len);
+		ptr.cp8 = dee_rfind_matchb(scan_str.cp8 + start, scan_len,
+		                           open_str.cp8, open_len,
+		                           clos_str.cp8, clos_len);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -7953,9 +7933,9 @@ string_rindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp16 = rfind_matchw(scan_str.cp16 + start, scan_len,
-		                        open_str.cp16, open_len,
-		                        clos_str.cp16, clos_len);
+		ptr.cp16 = dee_rfind_matchw(scan_str.cp16 + start, scan_len,
+		                            open_str.cp16, open_len,
+		                            clos_str.cp16, clos_len);
 		if unlikely(!ptr.cp16)
 			goto err_not_found;
 		result = (size_t)(ptr.cp16 - scan_str.cp16);
@@ -7978,9 +7958,9 @@ string_rindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp32 = rfind_matchl(scan_str.cp32 + start, scan_len,
-		                        open_str.cp32, open_len,
-		                        clos_str.cp32, clos_len);
+		ptr.cp32 = dee_rfind_matchl(scan_str.cp32 + start, scan_len,
+		                            open_str.cp32, open_len,
+		                            clos_str.cp32, clos_len);
 		if unlikely(!ptr.cp32)
 			goto err_not_found;
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
@@ -8023,10 +8003,10 @@ string_caserfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8 = rfind_casematchb(scan_str.cp8 + start, scan_len,
-		                           open_str.cp8, open_len,
-		                           clos_str.cp8, clos_len,
-		                           &match_length);
+		ptr.cp8 = dee_rfind_casematchb(scan_str.cp8 + start, scan_len,
+		                               open_str.cp8, open_len,
+		                               clos_str.cp8, clos_len,
+		                               &match_length);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -8049,10 +8029,10 @@ string_caserfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp16 = rfind_casematchw(scan_str.cp16 + start, scan_len,
-		                            open_str.cp16, open_len,
-		                            clos_str.cp16, clos_len,
-		                            &match_length);
+		ptr.cp16 = dee_rfind_casematchw(scan_str.cp16 + start, scan_len,
+		                                open_str.cp16, open_len,
+		                                clos_str.cp16, clos_len,
+		                                &match_length);
 		if unlikely(!ptr.cp16)
 			goto err_not_found;
 		result = (size_t)(ptr.cp16 - scan_str.cp16);
@@ -8075,10 +8055,10 @@ string_caserfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp32 = rfind_casematchl(scan_str.cp32 + start, scan_len,
-		                            open_str.cp32, open_len,
-		                            clos_str.cp32, clos_len,
-		                            &match_length);
+		ptr.cp32 = dee_rfind_casematchl(scan_str.cp32 + start, scan_len,
+		                                open_str.cp32, open_len,
+		                                clos_str.cp32, clos_len,
+		                                &match_length);
 		if unlikely(!ptr.cp32)
 			goto err_not_found;
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
@@ -8119,10 +8099,10 @@ string_caserindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8 = rfind_casematchb(scan_str.cp8 + start, scan_len,
-		                           open_str.cp8, open_len,
-		                           clos_str.cp8, clos_len,
-		                           &match_length);
+		ptr.cp8 = dee_rfind_casematchb(scan_str.cp8 + start, scan_len,
+		                               open_str.cp8, open_len,
+		                               clos_str.cp8, clos_len,
+		                               &match_length);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -8145,10 +8125,10 @@ string_caserindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp16 = rfind_casematchw(scan_str.cp16 + start, scan_len,
-		                            open_str.cp16, open_len,
-		                            clos_str.cp16, clos_len,
-		                            &match_length);
+		ptr.cp16 = dee_rfind_casematchw(scan_str.cp16 + start, scan_len,
+		                                open_str.cp16, open_len,
+		                                clos_str.cp16, clos_len,
+		                                &match_length);
 		if unlikely(!ptr.cp16)
 			goto err_not_found;
 		result = (size_t)(ptr.cp16 - scan_str.cp16);
@@ -8171,10 +8151,10 @@ string_caserindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp32 = rfind_casematchl(scan_str.cp32 + start, scan_len,
-		                            open_str.cp32, open_len,
-		                            clos_str.cp32, clos_len,
-		                            &match_length);
+		ptr.cp32 = dee_rfind_casematchl(scan_str.cp32 + start, scan_len,
+		                                open_str.cp32, open_len,
+		                                clos_str.cp32, clos_len,
+		                                &match_length);
 		if unlikely(!ptr.cp32)
 			goto err_not_found;
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
@@ -8234,10 +8214,10 @@ string_partitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		                          open_str.cp8, open_len);
 		if unlikely(!match_start.cp8)
 			goto match_not_found;
-		match_end.cp8 = find_matchb(match_start.cp8 + open_len,
-		                            scan_len - (match_start.cp8 - (scan_str.cp8 + start)),
-		                            open_str.cp8, open_len,
-		                            clos_str.cp8, clos_len);
+		match_end.cp8 = dee_find_matchb(match_start.cp8 + open_len,
+		                                scan_len - (match_start.cp8 - (scan_str.cp8 + start)),
+		                                open_str.cp8, open_len,
+		                                clos_str.cp8, clos_len);
 		if unlikely(!match_end.cp8)
 			goto match_not_found;
 		SET_STRING(DeeString_New1Byte(scan_str.cp8,
@@ -8271,10 +8251,10 @@ string_partitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		                           open_str.cp16, open_len);
 		if unlikely(!match_start.cp16)
 			goto match_not_found;
-		match_end.cp16 = find_matchw(match_start.cp16 + open_len,
-		                             scan_len - (match_start.cp16 - (scan_str.cp16 + start)),
-		                             open_str.cp16, open_len,
-		                             clos_str.cp16, clos_len);
+		match_end.cp16 = dee_find_matchw(match_start.cp16 + open_len,
+		                                 scan_len - (match_start.cp16 - (scan_str.cp16 + start)),
+		                                 open_str.cp16, open_len,
+		                                 clos_str.cp16, clos_len);
 		if unlikely(!match_end.cp16)
 			goto match_not_found;
 		SET_STRING(DeeString_New2Byte(scan_str.cp16,
@@ -8308,10 +8288,10 @@ string_partitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		                           open_str.cp32, open_len);
 		if unlikely(!match_start.cp32)
 			goto match_not_found;
-		match_end.cp32 = find_matchl(match_start.cp32 + open_len,
-		                             scan_len - (match_start.cp32 - (scan_str.cp32 + start)),
-		                             open_str.cp32, open_len,
-		                             clos_str.cp32, clos_len);
+		match_end.cp32 = dee_find_matchl(match_start.cp32 + open_len,
+		                                 scan_len - (match_start.cp32 - (scan_str.cp32 + start)),
+		                                 open_str.cp32, open_len,
+		                                 clos_str.cp32, clos_len);
 		if unlikely(!match_end.cp32)
 			goto match_not_found;
 		SET_STRING(DeeString_New4Byte(scan_str.cp32,
@@ -8389,10 +8369,10 @@ string_rpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		                         clos_str.cp8, clos_len);
 		if unlikely(!match_end.cp8)
 			goto match_not_found;
-		match_start.cp8 = rfind_matchb(scan_str.cp8 + start,
-		                               (size_t)(match_end.cp8 - (scan_str.cp8 + start)),
-		                               open_str.cp8, open_len,
-		                               clos_str.cp8, clos_len);
+		match_start.cp8 = dee_rfind_matchb(scan_str.cp8 + start,
+		                                   (size_t)(match_end.cp8 - (scan_str.cp8 + start)),
+		                                   open_str.cp8, open_len,
+		                                   clos_str.cp8, clos_len);
 		if unlikely(!match_start.cp8)
 			goto match_not_found;
 		SET_STRING(DeeString_New1Byte(scan_str.cp8,
@@ -8426,10 +8406,10 @@ string_rpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		                          clos_str.cp16, clos_len);
 		if unlikely(!match_end.cp16)
 			goto match_not_found;
-		match_start.cp16 = rfind_matchw(scan_str.cp16 + start,
-		                                (size_t)(match_end.cp16 - (scan_str.cp16 + start)),
-		                                open_str.cp16, open_len,
-		                                clos_str.cp16, clos_len);
+		match_start.cp16 = dee_rfind_matchw(scan_str.cp16 + start,
+		                                    (size_t)(match_end.cp16 - (scan_str.cp16 + start)),
+		                                    open_str.cp16, open_len,
+		                                    clos_str.cp16, clos_len);
 		if unlikely(!match_start.cp16)
 			goto match_not_found;
 		SET_STRING(DeeString_New2Byte(scan_str.cp16,
@@ -8463,10 +8443,10 @@ string_rpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		                          clos_str.cp32, clos_len);
 		if unlikely(!match_end.cp32)
 			goto match_not_found;
-		match_start.cp32 = rfind_matchl(scan_str.cp32 + start,
-		                                (size_t)(match_end.cp32 - (scan_str.cp32 + start)),
-		                                open_str.cp32, open_len,
-		                                clos_str.cp32, clos_len);
+		match_start.cp32 = dee_rfind_matchl(scan_str.cp32 + start,
+		                                    (size_t)(match_end.cp32 - (scan_str.cp32 + start)),
+		                                    open_str.cp32, open_len,
+		                                    clos_str.cp32, clos_len);
 		if unlikely(!match_start.cp32)
 			goto match_not_found;
 		SET_STRING(DeeString_New4Byte(scan_str.cp32,
@@ -8541,16 +8521,16 @@ string_casepartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto match_not_found; /* Empty search area. */
 		scan_len        = end - start;
-		match_start.cp8 = memcasememb(scan_str.cp8 + start, scan_len,
-		                              open_str.cp8, open_len,
-		                              &match_length);
+		match_start.cp8 = dee_memcasememb(scan_str.cp8 + start, scan_len,
+		                                  open_str.cp8, open_len,
+		                                  &match_length);
 		if unlikely(!match_start.cp8)
 			goto match_not_found;
-		match_end.cp8 = find_casematchb(match_start.cp8 + match_length,
-		                                scan_len - (match_start.cp8 - (scan_str.cp8 + start)),
-		                                open_str.cp8, open_len,
-		                                clos_str.cp8, clos_len,
-		                                &match_length);
+		match_end.cp8 = dee_find_casematchb(match_start.cp8 + match_length,
+		                                    scan_len - (match_start.cp8 - (scan_str.cp8 + start)),
+		                                    open_str.cp8, open_len,
+		                                    clos_str.cp8, clos_len,
+		                                    &match_length);
 		if unlikely(!match_end.cp8)
 			goto match_not_found;
 		SET_STRING(DeeString_New1Byte(scan_str.cp8,
@@ -8580,16 +8560,16 @@ string_casepartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto match_not_found; /* Empty search area. */
 		scan_len         = end - start;
-		match_start.cp16 = memcasememw(scan_str.cp16 + start, scan_len,
-		                               open_str.cp16, open_len,
-		                               &match_length);
+		match_start.cp16 = dee_memcasememw(scan_str.cp16 + start, scan_len,
+		                                   open_str.cp16, open_len,
+		                                   &match_length);
 		if unlikely(!match_start.cp16)
 			goto match_not_found;
-		match_end.cp16 = find_casematchw(match_start.cp16 + match_length,
-		                                 scan_len - (match_start.cp16 - (scan_str.cp16 + start)),
-		                                 open_str.cp16, open_len,
-		                                 clos_str.cp16, clos_len,
-		                                 &match_length);
+		match_end.cp16 = dee_find_casematchw(match_start.cp16 + match_length,
+		                                     scan_len - (match_start.cp16 - (scan_str.cp16 + start)),
+		                                     open_str.cp16, open_len,
+		                                     clos_str.cp16, clos_len,
+		                                     &match_length);
 		if unlikely(!match_end.cp16)
 			goto match_not_found;
 		SET_STRING(DeeString_New2Byte(scan_str.cp16,
@@ -8619,16 +8599,16 @@ string_casepartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto match_not_found; /* Empty search area. */
 		scan_len         = end - start;
-		match_start.cp32 = memcasememl(scan_str.cp32 + start, scan_len,
-		                               open_str.cp32, open_len,
-		                               &match_length);
+		match_start.cp32 = dee_memcasememl(scan_str.cp32 + start, scan_len,
+		                                   open_str.cp32, open_len,
+		                                   &match_length);
 		if unlikely(!match_start.cp32)
 			goto match_not_found;
-		match_end.cp32 = find_casematchl(match_start.cp32 + match_length,
-		                                 scan_len - (match_start.cp32 - (scan_str.cp32 + start)),
-		                                 open_str.cp32, open_len,
-		                                 clos_str.cp32, clos_len,
-		                                 &match_length);
+		match_end.cp32 = dee_find_casematchl(match_start.cp32 + match_length,
+		                                     scan_len - (match_start.cp32 - (scan_str.cp32 + start)),
+		                                     open_str.cp32, open_len,
+		                                     clos_str.cp32, clos_len,
+		                                     &match_length);
 		if unlikely(!match_end.cp32)
 			goto match_not_found;
 		SET_STRING(DeeString_New4Byte(scan_str.cp32,
@@ -8702,14 +8682,14 @@ string_caserpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto match_not_found; /* Empty search area. */
 		scan_len      = end - start;
-		match_end.cp8 = memcasermemb(scan_str.cp8 + start, scan_len,
-		                             clos_str.cp8, clos_len, NULL);
+		match_end.cp8 = dee_memcasermemb(scan_str.cp8 + start, scan_len,
+		                                 clos_str.cp8, clos_len, NULL);
 		if unlikely(!match_end.cp8)
 			goto match_not_found;
-		match_start.cp8 = rfind_casematchb(scan_str.cp8 + start,
-		                                   (size_t)(match_end.cp8 - (scan_str.cp8 + start)),
-		                                   open_str.cp8, open_len,
-		                                   clos_str.cp8, clos_len, NULL);
+		match_start.cp8 = dee_rfind_casematchb(scan_str.cp8 + start,
+		                                       (size_t)(match_end.cp8 - (scan_str.cp8 + start)),
+		                                       open_str.cp8, open_len,
+		                                       clos_str.cp8, clos_len, NULL);
 		if unlikely(!match_start.cp8)
 			goto match_not_found;
 		SET_STRING(DeeString_New1Byte(scan_str.cp8,
@@ -8739,14 +8719,14 @@ string_caserpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto match_not_found; /* Empty search area. */
 		scan_len       = end - start;
-		match_end.cp16 = memcasermemw(scan_str.cp16 + start, scan_len,
-		                              clos_str.cp16, clos_len, NULL);
+		match_end.cp16 = dee_memcasermemw(scan_str.cp16 + start, scan_len,
+		                                  clos_str.cp16, clos_len, NULL);
 		if unlikely(!match_end.cp16)
 			goto match_not_found;
-		match_start.cp16 = rfind_casematchw(scan_str.cp16 + start,
-		                                    (size_t)(match_end.cp16 - (scan_str.cp16 + start)),
-		                                    open_str.cp16, open_len,
-		                                    clos_str.cp16, clos_len, NULL);
+		match_start.cp16 = dee_rfind_casematchw(scan_str.cp16 + start,
+		                                        (size_t)(match_end.cp16 - (scan_str.cp16 + start)),
+		                                        open_str.cp16, open_len,
+		                                        clos_str.cp16, clos_len, NULL);
 		if unlikely(!match_start.cp16)
 			goto match_not_found;
 		SET_STRING(DeeString_New2Byte(scan_str.cp16,
@@ -8776,14 +8756,14 @@ string_caserpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(end <= start)
 			goto match_not_found; /* Empty search area. */
 		scan_len       = end - start;
-		match_end.cp32 = memcasermeml(scan_str.cp32 + start, scan_len,
-		                              clos_str.cp32, clos_len, NULL);
+		match_end.cp32 = dee_memcasermeml(scan_str.cp32 + start, scan_len,
+		                                  clos_str.cp32, clos_len, NULL);
 		if unlikely(!match_end.cp32)
 			goto match_not_found;
-		match_start.cp32 = rfind_casematchl(scan_str.cp32 + start,
-		                                    (size_t)(match_end.cp32 - (scan_str.cp32 + start)),
-		                                    open_str.cp32, open_len,
-		                                    clos_str.cp32, clos_len, NULL);
+		match_start.cp32 = dee_rfind_casematchl(scan_str.cp32 + start,
+		                                        (size_t)(match_end.cp32 - (scan_str.cp32 + start)),
+		                                        open_str.cp32, open_len,
+		                                        clos_str.cp32, clos_len, NULL);
 		if unlikely(!match_start.cp32)
 			goto match_not_found;
 		SET_STRING(DeeString_New4Byte(scan_str.cp32,
