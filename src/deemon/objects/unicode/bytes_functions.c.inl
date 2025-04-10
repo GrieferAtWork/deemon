@@ -126,9 +126,9 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_contains(Bytes *self, DeeObject *find_ob) {
+bytes_contains(Bytes *self, DeeObject *needle_ob) {
 	Needle needle;
-	if (get_needle(&needle, find_ob))
+	if (get_needle(&needle, needle_ob))
 		goto err;
 	return_bool(memmemb(DeeBytes_DATA(self),
 	                    DeeBytes_SIZE(self),
@@ -142,19 +142,28 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_find(Bytes *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
-	DeeObject *find_ob;
+	size_t mylen;
 	Needle needle;
 	byte_t *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":find",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("find", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_find_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":find", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
 	mylen = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-	result = (byte_t *)memmemb(DeeBytes_DATA(self) + start, mylen,
+	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+	result = (byte_t *)memmemb(DeeBytes_DATA(self) + args.start, mylen,
 	                           needle.n_data, needle.n_size);
 	if (result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
@@ -167,24 +176,33 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_index(Bytes *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
-	DeeObject *find_ob;
+	size_t mylen;
 	Needle needle;
 	byte_t *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":index",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("index", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_index_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":index", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
 	mylen = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-	result = (byte_t *)memmemb(DeeBytes_DATA(self) + start, mylen,
+	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+	result = (byte_t *)memmemb(DeeBytes_DATA(self) + args.start, mylen,
 	                           needle.n_data, needle.n_size);
 	if likely(result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 not_found:
-	err_index_not_found((DeeObject *)self, find_ob);
+	err_index_not_found((DeeObject *)self, args.needle);
 err:
 	return NULL;
 }
@@ -192,19 +210,28 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casefind(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
-	DeeObject *find_ob;
+	size_t mylen;
 	Needle needle;
 	byte_t *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":casefind",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefind", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_casefind_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casefind", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
 	mylen = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-	result = (byte_t *)memasciicasemem(DeeBytes_DATA(self) + start, mylen,
+	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+	result = (byte_t *)memasciicasemem(DeeBytes_DATA(self) + args.start, mylen,
 	                                   needle.n_data, needle.n_size);
 	if (result) {
 		size_t index = (size_t)(result - DeeBytes_DATA(self));
@@ -219,26 +246,35 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caseindex(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
-	DeeObject *find_ob;
+	size_t mylen;
 	Needle needle;
 	byte_t *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":caseindex",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindex", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caseindex_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caseindex", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
 	mylen = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-	result = (byte_t *)memasciicasemem(DeeBytes_DATA(self) + start, mylen,
+	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+	result = (byte_t *)memasciicasemem(DeeBytes_DATA(self) + args.start, mylen,
 	                                   needle.n_data, needle.n_size);
 	if likely(result) {
 		size_t index = (size_t)(result - DeeBytes_DATA(self));
 		return DeeTuple_NewII(index, index + needle.n_size);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self, find_ob);
+	err_index_not_found((DeeObject *)self, args.needle);
 err:
 	return NULL;
 }
@@ -246,19 +282,28 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rfind(Bytes *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
-	DeeObject *find_ob;
+	size_t mylen;
 	Needle needle;
 	byte_t *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":rfind",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfind", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_rfind_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rfind", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
 	mylen = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-	result = (byte_t *)memrmemb(DeeBytes_DATA(self) + start, mylen,
+	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+	result = (byte_t *)memrmemb(DeeBytes_DATA(self) + args.start, mylen,
 	                            needle.n_data, needle.n_size);
 	if (result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
@@ -271,24 +316,33 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rindex(Bytes *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
-	DeeObject *find_ob;
+	size_t mylen;
 	Needle needle;
 	byte_t *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":rindex",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindex", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_rindex_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rindex", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
 	mylen = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-	result = (byte_t *)memrmemb(DeeBytes_DATA(self) + start, mylen,
+	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+	result = (byte_t *)memrmemb(DeeBytes_DATA(self) + args.start, mylen,
 	                            needle.n_data, needle.n_size);
 	if likely(result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 not_found:
-	err_index_not_found((DeeObject *)self, find_ob);
+	err_index_not_found((DeeObject *)self, args.needle);
 err:
 	return NULL;
 }
@@ -296,19 +350,28 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caserfind(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
-	DeeObject *find_ob;
+	size_t mylen;
 	Needle needle;
 	byte_t *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":caserfind",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfind", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caserfind_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserfind", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
 	mylen = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-	result = (byte_t *)memasciicasermem(DeeBytes_DATA(self) + start, mylen,
+	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+	result = (byte_t *)memasciicasermem(DeeBytes_DATA(self) + args.start, mylen,
 	                                    needle.n_data, needle.n_size);
 	if (result) {
 		size_t index = (size_t)(result - DeeBytes_DATA(self));
@@ -323,26 +386,35 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caserindex(Bytes *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
-	DeeObject *find_ob;
+	size_t mylen;
 	Needle needle;
 	byte_t *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":caserindex",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindex", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caserindex_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserindex", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
 	mylen = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
-	result = (byte_t *)memasciicasermem(DeeBytes_DATA(self) + start, mylen,
+	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
+	result = (byte_t *)memasciicasermem(DeeBytes_DATA(self) + args.start, mylen,
 	                                    needle.n_data, needle.n_size);
 	if likely(result) {
 		size_t index = (size_t)(result - DeeBytes_DATA(self));
 		return DeeTuple_NewII(index, index + needle.n_size);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self, find_ob);
+	err_index_not_found((DeeObject *)self, args.needle);
 err:
 	return NULL;
 }
@@ -382,21 +454,29 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_findany(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	struct bytes_findany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":findany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findany", params: "
+	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_findany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":findany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.bfad_size = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &data.bfad_size, not_found);
-	data.bfad_base   = DeeBytes_DATA(self) + start;
+	CLAMP_SUBSTR(&args.start, &args.end, &data.bfad_size, not_found);
+	data.bfad_base   = DeeBytes_DATA(self) + args.start;
 	data.bfad_result = data.bfad_size;
-	if unlikely(DeeObject_Foreach(needles, &bytes_findany_cb, &data) == -1)
+	if unlikely(DeeObject_Foreach(args.needles, &bytes_findany_cb, &data) == -1)
 		goto err;
 	if (data.bfad_result < data.bfad_size)
-		return DeeInt_NewSize(start + data.bfad_result);
+		return DeeInt_NewSize(args.start + data.bfad_result);
 not_found:
 	return_none;
 err:
@@ -407,22 +487,30 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_indexany(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	struct bytes_findany_data data;
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":indexany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("indexany", params: "
+	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_indexany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":indexany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.bfad_size = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &data.bfad_size, not_found);
-	data.bfad_base   = DeeBytes_DATA(self) + start;
+	CLAMP_SUBSTR(&args.start, &args.end, &data.bfad_size, not_found);
+	data.bfad_base   = DeeBytes_DATA(self) + args.start;
 	data.bfad_result = data.bfad_size;
-	if unlikely(DeeObject_Foreach(needles, &bytes_findany_cb, &data) == -1)
+	if unlikely(DeeObject_Foreach(args.needles, &bytes_findany_cb, &data) == -1)
 		goto err;
 	if (data.bfad_result < data.bfad_size)
-		return DeeInt_NewSize(start + data.bfad_result);
+		return DeeInt_NewSize(args.start + data.bfad_result);
 not_found:
-	err_index_not_found((DeeObject *)self, needles);
+	err_index_not_found((DeeObject *)self, args.needles);
 err:
 	return NULL;
 }
@@ -461,23 +549,31 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casefindany(Bytes *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	struct bytes_casefindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":casefindany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindany", params: "
+	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_casefindany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":casefindany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.bcfad_size = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &data.bcfad_size, not_found);
-	data.bcfad_base   = DeeBytes_DATA(self) + start;
+	CLAMP_SUBSTR(&args.start, &args.end, &data.bcfad_size, not_found);
+	data.bcfad_base   = DeeBytes_DATA(self) + args.start;
 	data.bcfad_result = data.bcfad_size;
 	data.bcfad_reslen = 0;
-	if unlikely(DeeObject_Foreach(needles, &bytes_casefindany_cb, &data) == -1)
+	if unlikely(DeeObject_Foreach(args.needles, &bytes_casefindany_cb, &data) == -1)
 		goto err;
 	if (data.bcfad_result < data.bcfad_size) {
-		return DeeTuple_NewII(start + data.bcfad_result,
-		                      start + data.bcfad_result + data.bcfad_reslen);
+		return DeeTuple_NewII(args.start + data.bcfad_result,
+		                      args.start + data.bcfad_result + data.bcfad_reslen);
 	}
 not_found:
 	return_none;
@@ -488,26 +584,34 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caseindexany(Bytes *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	struct bytes_casefindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":caseindexany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindexany", params: "
+	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caseindexany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caseindexany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.bcfad_size = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &data.bcfad_size, not_found);
-	data.bcfad_base   = DeeBytes_DATA(self) + start;
+	CLAMP_SUBSTR(&args.start, &args.end, &data.bcfad_size, not_found);
+	data.bcfad_base   = DeeBytes_DATA(self) + args.start;
 	data.bcfad_result = data.bcfad_size;
 	data.bcfad_reslen = 0;
-	if unlikely(DeeObject_Foreach(needles, &bytes_casefindany_cb, &data) == -1)
+	if unlikely(DeeObject_Foreach(args.needles, &bytes_casefindany_cb, &data) == -1)
 		goto err;
 	if (data.bcfad_result < data.bcfad_size) {
-		return DeeTuple_NewII(start + data.bcfad_result,
-		                      start + data.bcfad_result + data.bcfad_reslen);
+		return DeeTuple_NewII(args.start + data.bcfad_result,
+		                      args.start + data.bcfad_result + data.bcfad_reslen);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self, needles);
+	err_index_not_found((DeeObject *)self, args.needles);
 err:
 	return NULL;
 }
@@ -542,21 +646,29 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rfindany(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	byte_t *orig_base;
 	struct bytes_rfindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":rfindany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfindany", params: "
+	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_rfindany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":rfindany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.brfad_size = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &data.brfad_size, not_found);
-	data.brfad_base = orig_base = DeeBytes_DATA(self) + start;
-	if unlikely(DeeObject_Foreach(needles, &bytes_rfindany_cb, &data) == -1)
+	CLAMP_SUBSTR(&args.start, &args.end, &data.brfad_size, not_found);
+	data.brfad_base = orig_base = DeeBytes_DATA(self) + args.start;
+	if unlikely(DeeObject_Foreach(args.needles, &bytes_rfindany_cb, &data) == -1)
 		goto err;
 	if (data.brfad_base > orig_base)
-		return DeeInt_NewSize(start + ((data.brfad_base - 1) - orig_base));
+		return DeeInt_NewSize(args.start + ((data.brfad_base - 1) - orig_base));
 not_found:
 	return_none;
 err:
@@ -566,23 +678,31 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rindexany(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	byte_t *orig_base;
 	struct bytes_rfindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":rindexany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindexany", params: "
+	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_rindexany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":rindexany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.brfad_size = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &data.brfad_size, not_found);
-	data.brfad_base = orig_base = DeeBytes_DATA(self) + start;
-	if unlikely(DeeObject_Foreach(needles, &bytes_rfindany_cb, &data) == -1)
+	CLAMP_SUBSTR(&args.start, &args.end, &data.brfad_size, not_found);
+	data.brfad_base = orig_base = DeeBytes_DATA(self) + args.start;
+	if unlikely(DeeObject_Foreach(args.needles, &bytes_rfindany_cb, &data) == -1)
 		goto err;
 	if (data.brfad_base > orig_base)
-		return DeeInt_NewSize(start + ((data.brfad_base - 1) - orig_base));
+		return DeeInt_NewSize(args.start + ((data.brfad_base - 1) - orig_base));
 not_found:
-	err_index_not_found((DeeObject *)self, needles);
+	err_index_not_found((DeeObject *)self, args.needles);
 err:
 	return NULL;
 }
@@ -618,21 +738,29 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caserfindany(Bytes *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	byte_t *orig_base;
 	struct bytes_caserfindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":caserfindany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfindany", params: "
+	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caserfindany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caserfindany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.bcrfad_size = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &data.bcrfad_size, not_found);
-	data.bcrfad_base = orig_base = DeeBytes_DATA(self) + start;
-	if unlikely(DeeObject_Foreach(needles, &bytes_caserfindany_cb, &data) == -1)
+	CLAMP_SUBSTR(&args.start, &args.end, &data.bcrfad_size, not_found);
+	data.bcrfad_base = orig_base = DeeBytes_DATA(self) + args.start;
+	if unlikely(DeeObject_Foreach(args.needles, &bytes_caserfindany_cb, &data) == -1)
 		goto err;
 	if (data.bcrfad_base > orig_base) {
-		size_t index = start + ((data.bcrfad_base - 1) - orig_base);
+		size_t index = args.start + ((data.bcrfad_base - 1) - orig_base);
 		return DeeTuple_NewII(index, index + data.bcrfad_reslen);
 	}
 not_found:
@@ -645,25 +773,33 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caserindexany(Bytes *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *needles;
 	byte_t *orig_base;
 	struct bytes_caserfindany_data data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":caserindexany",
-	                    &needles, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindexany", params: "
+	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caserindexany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caserindexany", &args))
 		goto err;
+/*[[[end]]]*/
 	data.bcrfad_size = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&start, &end, &data.bcrfad_size, not_found);
-	data.bcrfad_base = orig_base = DeeBytes_DATA(self) + start;
-	if unlikely(DeeObject_Foreach(needles, &bytes_caserfindany_cb, &data) == -1)
+	CLAMP_SUBSTR(&args.start, &args.end, &data.bcrfad_size, not_found);
+	data.bcrfad_base = orig_base = DeeBytes_DATA(self) + args.start;
+	if unlikely(DeeObject_Foreach(args.needles, &bytes_caserfindany_cb, &data) == -1)
 		goto err;
 	if (data.bcrfad_base > orig_base) {
-		size_t index = start + ((data.bcrfad_base - 1) - orig_base);
+		size_t index = args.start + ((data.bcrfad_base - 1) - orig_base);
 		return DeeTuple_NewII(index, index + data.bcrfad_reslen);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self, needles);
+	err_index_not_found((DeeObject *)self, args.needles);
 err:
 	return NULL;
 }
@@ -672,30 +808,38 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_count(Bytes *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob;
 	Needle needle;
 	size_t result;
-	size_t start = 0, end = (size_t)-1;
 	byte_t *iter;
 	size_t size;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":count",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("count", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_count_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":count", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
 	iter = DeeBytes_DATA(self);
 	size = DeeBytes_SIZE(self);
-	if (end > size)
-		end = size;
+	if (args.end > size)
+		args.end = size;
 	result = 0;
-	if (start < end && needle.n_size) {
-		end -= start;
-		iter += start;
-		while (end >= needle.n_size) {
+	if (args.start < args.end && needle.n_size) {
+		args.end -= args.start;
+		iter += args.start;
+		while (args.end >= needle.n_size) {
 			if (MEMEQB(iter, needle.n_data, needle.n_size))
 				++result;
-			--end;
+			--args.end;
 			++iter;
 		}
 	}
@@ -707,30 +851,38 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casecount(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob;
 	Needle needle;
 	size_t result;
-	size_t start = 0, end = (size_t)-1;
 	byte_t *iter;
 	size_t size;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":casecount",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecount", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_casecount_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casecount", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
 	iter = DeeBytes_DATA(self);
 	size = DeeBytes_SIZE(self);
-	if (end > size)
-		end = size;
+	if (args.end > size)
+		args.end = size;
 	result = 0;
-	if (start < end && needle.n_size) {
-		end -= start;
-		iter += start;
-		while (end >= needle.n_size) {
+	if (args.start < args.end && needle.n_size) {
+		args.end -= args.start;
+		iter += args.start;
+		while (args.end >= needle.n_size) {
 			if (memcasecmp(iter, needle.n_data, needle.n_size) == 0)
 				++result;
-			--end;
+			--args.end;
 			++iter;
 		}
 	}
@@ -742,21 +894,29 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_contains_f(Bytes *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob;
 	Needle needle;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":contains",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("contains", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_contains_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":contains", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return_false;
-	return_bool(memmemb(DeeBytes_DATA(self) + start,
-	                    end - start,
+	return_bool(memmemb(DeeBytes_DATA(self) + args.start,
+	                    args.end - args.start,
 	                    needle.n_data,
 	                    needle.n_size) != NULL);
 err:
@@ -766,21 +926,29 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casecontains_f(Bytes *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob;
 	Needle needle;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end,
-	                    "o|" UNPuSIZ UNPxSIZ ":casecontains",
-	                    &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecontains", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_casecontains_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casecontains", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return_false;
-	return_bool(memasciicasemem(DeeBytes_DATA(self) + start,
-	                            end - start,
+	return_bool(memasciicasemem(DeeBytes_DATA(self) + args.start,
+	                            args.end - args.start,
 	                            needle.n_data,
 	                            needle.n_size) != NULL);
 err:
@@ -795,7 +963,7 @@ bytes_format(Bytes *self, size_t argc, DeeObject *const *argv) {
 	_DeeArg_Unpack1(err, argc, argv, "format", &args);
 	bytes_printer_init(&printer);
 	if unlikely(DeeString_FormatPrinter((char const *)DeeBytes_DATA(self), DeeBytes_SIZE(self), args,
-	                                    (dformatprinter)&bytes_printer_append, &bytes_printer_print,
+	                                    (Dee_formatprinter_t)&bytes_printer_append, &bytes_printer_print,
 	                                    &printer) < 0)
 			goto err_printer;
 	return bytes_printer_pack(&printer);
@@ -825,10 +993,20 @@ bytes_getsubstr(Bytes *__restrict self,
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_substr(Bytes *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":substr", &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("substr", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_substr_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":substr", &args))
 		goto err;
-	return bytes_getsubstr(self, start, end);
+/*[[[end]]]*/
+	return bytes_getsubstr(self, args.start, args.end);
 err:
 	return NULL;
 }
@@ -878,23 +1056,33 @@ bytes_reversed(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	DREF Bytes *result;
 	byte_t *data, *dst;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":reversed", &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reversed", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_reversed_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":reversed", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (end <= start)
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.end <= args.start)
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
-	end -= start;
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
+	args.end -= args.start;
+	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(args.end);
 	if unlikely(!result)
 		goto done;
 	data = DeeBytes_DATA(self);
 	dst  = DeeBytes_DATA(result);
 	do {
-		--end;
-		*dst++ = data[end];
-	} while (end);
+		--args.end;
+		*dst++ = data[args.end];
+	} while (args.end);
 done:
 	return result;
 err:
@@ -905,19 +1093,29 @@ PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_reverse(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	byte_t *data, *dst;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":reverse", &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reverse", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_reverse_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":reverse", &args))
 		goto err;
+/*[[[end]]]*/
 	if unlikely(!DeeBytes_WRITABLE(self)) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.end <= args.start)
 		goto done;
-	data = DeeBytes_DATA(self) + start;
-	dst  = DeeBytes_DATA(self) + end;
+	data = DeeBytes_DATA(self) + args.start;
+	dst  = DeeBytes_DATA(self) + args.end;
 	while (data < dst) {
 		byte_t temp;
 		temp    = *data;
@@ -957,26 +1155,35 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_hex(Bytes *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1, i;
 	char *dst;
 	DREF DeeStringObject *result;
 	byte_t *data;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPuSIZ UNPxSIZ ":hex",
-	                    &start, &end))
+	size_t i;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("hex", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_hex_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":hex", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return DeeString_NewEmpty();
-	end -= start;
+	args.end -= args.start;
 	data = DeeBytes_DATA(self);
-	data += start;
-	result = (DREF DeeStringObject *)DeeString_NewBuffer(end * 2);
+	data += args.start;
+	result = (DREF DeeStringObject *)DeeString_NewBuffer(args.end * 2);
 	if unlikely(!result)
 		goto err;
 	dst = DeeString_GetBuffer(result);
-	for (i = 0; i < end; ++i) {
+	for (i = 0; i < args.end; ++i) {
 		byte_t byte = data[i];
 #ifndef CONFIG_NO_THREADS
 		COMPILER_READ_BARRIER();
@@ -1220,7 +1427,7 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                           \
 	bytes_##name(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) { \
 		size_t start = 0, end = (size_t)-1;                                         \
-		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,                          \
+		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,                      \
 		                    "|" UNPuSIZ UNPxSIZ ":" #name, &start, &end))           \
 			goto err;                                                               \
 		return_bool(function(self, start, end));                                    \
@@ -1346,20 +1553,31 @@ err:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_lower(Bytes *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	size_t i, start = 0, end = (size_t)-1;
+	size_t i;
 	DREF Bytes *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":lower", &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lower", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_lower_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":lower", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
-	end -= start;
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
+	args.end -= args.start;
+	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(args.end);
 	if unlikely(!result)
 		goto done;
-	for (i = 0; i < end; ++i)
-		DeeBytes_DATA(result)[i] = (byte_t)DeeUni_ToLower(DeeBytes_DATA(self)[start + i]);
+	for (i = 0; i < args.end; ++i)
+		DeeBytes_DATA(result)[i] = (byte_t)DeeUni_ToLower(DeeBytes_DATA(self)[args.start + i]);
 done:
 	return result;
 err:
@@ -1369,20 +1587,31 @@ err:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_upper(Bytes *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	size_t i, start = 0, end = (size_t)-1;
+	size_t i;
 	DREF Bytes *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":upper", &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("upper", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_upper_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":upper", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
-	end -= start;
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
+	args.end -= args.start;
+	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(args.end);
 	if unlikely(!result)
 		goto done;
-	for (i = 0; i < end; ++i)
-		DeeBytes_DATA(result)[i] = (byte_t)DeeUni_ToUpper(DeeBytes_DATA(self)[start + i]);
+	for (i = 0; i < args.end; ++i)
+		DeeBytes_DATA(result)[i] = (byte_t)DeeUni_ToUpper(DeeBytes_DATA(self)[args.start + i]);
 done:
 	return result;
 err:
@@ -1393,20 +1622,31 @@ PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_title(Bytes *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	uintptr_t kind = UNICODE_CONVERT_TITLE;
-	size_t i, start = 0, end = (size_t)-1;
+	size_t i;
 	DREF Bytes *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":title", &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("title", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_title_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":title", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
-	end -= start;
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
+	args.end -= args.start;
+	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(args.end);
 	if unlikely(!result)
 		goto done;
-	for (i = 0; i < end; ++i) {
-		byte_t ch                = DeeBytes_DATA(self)[start + i];
+	for (i = 0; i < args.end; ++i) {
+		byte_t ch                = DeeBytes_DATA(self)[args.start + i];
 		DeeBytes_DATA(result)[i] = kind == UNICODE_CONVERT_TITLE
 		                           ? (byte_t)DeeUni_ToTitle(ch)
 		                           : (byte_t)DeeUni_ToLower(ch);
@@ -1421,21 +1661,32 @@ err:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_capitalize(Bytes *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	size_t i, start = 0, end = (size_t)-1;
+	size_t i;
 	DREF Bytes *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":capitalize", &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("capitalize", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_capitalize_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":capitalize", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
-	end -= start;
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
+	args.end -= args.start;
+	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(args.end);
 	if unlikely(!result)
 		goto done;
-	DeeBytes_DATA(result)[0] = (byte_t)DeeUni_ToUpper(DeeBytes_DATA(self)[start]);
-	for (i = 1; i < end; ++i)
-		DeeBytes_DATA(result)[i] = (byte_t)DeeUni_ToLower(DeeBytes_DATA(self)[start + i]);
+	DeeBytes_DATA(result)[0] = (byte_t)DeeUni_ToUpper(DeeBytes_DATA(self)[args.start]);
+	for (i = 1; i < args.end; ++i)
+		DeeBytes_DATA(result)[i] = (byte_t)DeeUni_ToLower(DeeBytes_DATA(self)[args.start + i]);
 done:
 	return result;
 err:
@@ -1445,20 +1696,31 @@ err:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_swapcase(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	size_t i, start = 0, end = (size_t)-1;
+	size_t i;
 	DREF Bytes *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":swapcase", &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("swapcase", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_swapcase_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":swapcase", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
-	end -= start;
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
+	args.end -= args.start;
+	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(args.end);
 	if unlikely(!result)
 		goto done;
-	for (i = 0; i < end; ++i)
-		DeeBytes_DATA(result)[i] = (byte_t)DeeUni_SwapCase(DeeBytes_DATA(self)[start + i]);
+	for (i = 0; i < args.end; ++i)
+		DeeBytes_DATA(result)[i] = (byte_t)DeeUni_SwapCase(DeeBytes_DATA(self)[args.start + i]);
 done:
 	return result;
 err:
@@ -1470,16 +1732,27 @@ err:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_tolower(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	size_t i, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":tolower", &start, &end))
+	size_t i;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("tolower", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_tolower_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":tolower", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(!DeeBytes_WRITABLE(self) && args.start < args.end) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
-	for (i = start; i < end; ++i)
+	for (i = args.start; i < args.end; ++i)
 		DeeBytes_DATA(self)[i] = (byte_t)DeeUni_ToLower(DeeBytes_DATA(self)[i]);
 	return_reference_(self);
 err:
@@ -1489,16 +1762,27 @@ err:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_toupper(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	size_t i, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":toupper", &start, &end))
+	size_t i;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("toupper", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_toupper_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":toupper", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(!DeeBytes_WRITABLE(self) && args.start < args.end) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
-	for (i = start; i < end; ++i)
+	for (i = args.start; i < args.end; ++i)
 		DeeBytes_DATA(self)[i] = (byte_t)DeeUni_ToUpper(DeeBytes_DATA(self)[i]);
 	return_reference_(self);
 err:
@@ -1509,16 +1793,27 @@ PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_totitle(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	uintptr_t kind = UNICODE_CONVERT_TITLE;
-	size_t i, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":totitle", &start, &end))
+	size_t i;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("totitle", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_totitle_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":totitle", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(!DeeBytes_WRITABLE(self) && args.start < args.end) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
-	for (i = start; i < end; ++i) {
+	for (i = args.start; i < args.end; ++i) {
 		byte_t ch              = DeeBytes_DATA(self)[i];
 		DeeBytes_DATA(self)[i] = kind == UNICODE_CONVERT_TITLE
 		                         ? (byte_t)DeeUni_ToTitle(ch)
@@ -1533,20 +1828,30 @@ err:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_tocapitalize(Bytes *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":tocapitalize", &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("tocapitalize", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_tocapitalize_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":tocapitalize", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start < end) {
-		size_t i = start;
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start < args.end) {
+		size_t i = args.start;
 		if unlikely(!DeeBytes_WRITABLE(self)) {
 			err_bytes_not_writable((DeeObject *)self);
 			goto err;
 		}
 		DeeBytes_DATA(self)[i] = (byte_t)DeeUni_ToUpper(DeeBytes_DATA(self)[i]);
 		++i;
-		for (; i < end; ++i)
+		for (; i < args.end; ++i)
 			DeeBytes_DATA(self)[i] = (byte_t)DeeUni_ToLower(DeeBytes_DATA(self)[i]);
 	}
 	return_reference_(self);
@@ -1557,16 +1862,27 @@ err:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_toswapcase(Bytes *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	size_t i, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":toswapcase", &start, &end))
+	size_t i;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("toswapcase", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_toswapcase_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":toswapcase", &args))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
+/*[[[end]]]*/
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(!DeeBytes_WRITABLE(self) && args.start < args.end) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
-	for (i = start; i < end; ++i)
+	for (i = args.start; i < args.end; ++i)
 		DeeBytes_DATA(self)[i] = (byte_t)DeeUni_SwapCase(DeeBytes_DATA(self)[i]);
 	return_reference_(self);
 err:
@@ -1577,17 +1893,26 @@ PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_replace(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	byte_t *begin, *end, *block_begin;
-	DeeObject *find_ob, *replace_ob;
-	size_t max_count = (size_t)-1;
 	Needle find_needle, replace_needle;
 	struct bytes_printer printer;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__find_replace_max,
-	                    "oo|" UNPuSIZ ":replace",
-	                    &find_ob, &replace_ob, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("replace", params: "
+	find: ?X3?DBytes?Dstring?Dint;
+	replace: ?X3?DBytes?Dstring?Dint;
+	size_t max = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_replace_params "find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1"
+	struct {
+		DeeObject *find;
+		DeeObject *replace;
+		size_t _max;
+	} args;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":replace", &args))
 		goto err;
-	if (get_needle(&find_needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&find_needle, args.find))
 		goto err;
-	if (get_needle(&replace_needle, replace_ob))
+	if (get_needle(&replace_needle, args.replace))
 		goto err;
 	/* Handle special cases. */
 	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
@@ -1601,7 +1926,7 @@ bytes_replace(Bytes *self, size_t argc,
 	begin       = DeeBytes_DATA(self);
 	end         = begin + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	block_begin = begin;
-	if likely(max_count) {
+	if likely(args._max) {
 		while (begin < end) {
 			if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
 				/* Found one */
@@ -1613,7 +1938,7 @@ bytes_replace(Bytes *self, size_t argc,
 				block_begin = begin;
 				if (begin >= end)
 					break;
-				if unlikely(!--max_count)
+				if unlikely(!--args._max)
 					break;
 				continue;
 			}
@@ -1645,17 +1970,26 @@ PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_casereplace(Bytes *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	byte_t *begin, *end, *block_begin;
-	DeeObject *find_ob, *replace_ob;
-	size_t max_count = (size_t)-1;
 	Needle find_needle, replace_needle;
 	struct bytes_printer printer;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__find_replace_max,
-	                    "oo|" UNPuSIZ ":casereplace",
-	                    &find_ob, &replace_ob, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casereplace", params: "
+	find: ?X3?DBytes?Dstring?Dint;
+	replace: ?X3?DBytes?Dstring?Dint;
+	size_t max = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_casereplace_params "find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1"
+	struct {
+		DeeObject *find;
+		DeeObject *replace;
+		size_t _max;
+	} args;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":casereplace", &args))
 		goto err;
-	if (get_needle(&find_needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&find_needle, args.find))
 		goto err;
-	if (get_needle(&replace_needle, replace_ob))
+	if (get_needle(&replace_needle, args.replace))
 		goto err;
 	/* Handle special cases. */
 	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
@@ -1669,7 +2003,7 @@ bytes_casereplace(Bytes *self, size_t argc,
 	begin       = DeeBytes_DATA(self);
 	end         = begin + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	block_begin = begin;
-	if likely(max_count) {
+	if likely(args._max) {
 		while (begin < end) {
 			if (memcasecmp(begin, find_needle.n_data, find_needle.n_size) == 0) {
 				/* Found one */
@@ -1681,7 +2015,7 @@ bytes_casereplace(Bytes *self, size_t argc,
 				block_begin = begin;
 				if (begin >= end)
 					break;
-				if unlikely(!--max_count)
+				if unlikely(!--args._max)
 					break;
 				continue;
 			}
@@ -1713,17 +2047,26 @@ return_self:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_toreplace(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob, *replace_ob;
-	size_t max_count = (size_t)-1;
 	Needle find_needle, replace_needle;
 	byte_t *begin, *end;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__find_replace_max,
-	                    "oo|" UNPuSIZ ":toreplace",
-	                    &find_ob, &replace_ob, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("toreplace", params: "
+	find: ?X3?DBytes?Dstring?Dint;
+	replace: ?X3?DBytes?Dstring?Dint;
+	size_t max = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_toreplace_params "find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1"
+	struct {
+		DeeObject *find;
+		DeeObject *replace;
+		size_t _max;
+	} args;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":toreplace", &args))
 		goto err;
-	if (get_needle(&find_needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&find_needle, args.find))
 		goto err;
-	if (get_needle(&replace_needle, replace_ob))
+	if (get_needle(&replace_needle, args.replace))
 		goto err;
 	if unlikely(find_needle.n_size != replace_needle.n_size) {
 		DeeError_Throwf(&DeeError_ValueError,
@@ -1743,7 +2086,7 @@ bytes_toreplace(Bytes *self, size_t argc,
 		goto done;
 
 	end = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
-	if likely(max_count) {
+	if likely(args._max) {
 		while (begin < end) {
 			if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
 				/* Found one */
@@ -1751,7 +2094,7 @@ bytes_toreplace(Bytes *self, size_t argc,
 				begin += find_needle.n_size;
 				if (begin >= end)
 					break;
-				if unlikely(!--max_count)
+				if unlikely(!--args._max)
 					break;
 				continue;
 			}
@@ -1767,17 +2110,26 @@ err:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_tocasereplace(Bytes *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob, *replace_ob;
-	size_t max_count = (size_t)-1;
 	Needle find_needle, replace_needle;
 	byte_t *begin, *end;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__find_replace_max,
-	                    "oo|" UNPuSIZ ":tocasereplace",
-	                    &find_ob, &replace_ob, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("tocasereplace", params: "
+	find: ?X3?DBytes?Dstring?Dint;
+	replace: ?X3?DBytes?Dstring?Dint;
+	size_t max = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_tocasereplace_params "find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1"
+	struct {
+		DeeObject *find;
+		DeeObject *replace;
+		size_t _max;
+	} args;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":tocasereplace", &args))
 		goto err;
-	if (get_needle(&find_needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&find_needle, args.find))
 		goto err;
-	if (get_needle(&replace_needle, replace_ob))
+	if (get_needle(&replace_needle, args.replace))
 		goto err;
 	if unlikely(find_needle.n_size != replace_needle.n_size) {
 		DeeError_Throwf(&DeeError_ValueError,
@@ -1797,7 +2149,7 @@ bytes_tocasereplace(Bytes *self, size_t argc,
 		goto done;
 
 	end = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
-	if likely(max_count) {
+	if likely(args._max) {
 		while (begin < end) {
 			if (memcasecmp(begin, find_needle.n_data, find_needle.n_size) == 0) {
 				/* Found one */
@@ -1805,7 +2157,7 @@ bytes_tocasereplace(Bytes *self, size_t argc,
 				begin += find_needle.n_size;
 				if (begin >= end)
 					break;
-				if unlikely(!--max_count)
+				if unlikely(!--args._max)
 					break;
 				continue;
 			}
@@ -1841,11 +2193,21 @@ INTDEF WUNUSED DREF DeeObject *DCALL DeeBytes_CaseFindAll(Bytes *self, DeeObject
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_findall(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *arg;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":findall", &arg, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findall", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_findall_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":findall", &args))
 		goto err;
-	return DeeBytes_FindAll(self, arg, start, end);
+/*[[[end]]]*/
+	return DeeBytes_FindAll(self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -1853,11 +2215,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casefindall(Bytes *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *arg;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casefindall", &arg, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindall", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_casefindall_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casefindall", &args))
 		goto err;
-	return DeeBytes_CaseFindAll(self, arg, start, end);
+/*[[[end]]]*/
+	return DeeBytes_CaseFindAll(self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -1945,17 +2317,27 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_startswith(Bytes *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	Needle needle;
-	DeeObject *arg;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":startswith", &arg, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("startswith", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_startswith_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":startswith", &args))
 		goto err;
-	if (get_needle(&needle, arg))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start > end || (end - start) < needle.n_size)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start > args.end || (args.end - args.start) < needle.n_size)
 		return_false;
-	return_bool(MEMEQB(DeeBytes_DATA(self) + start,
+	return_bool(MEMEQB(DeeBytes_DATA(self) + args.start,
 	                   needle.n_data, needle.n_size));
 err:
 	return NULL;
@@ -1965,17 +2347,27 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casestartswith(Bytes *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	Needle needle;
-	DeeObject *arg;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casestartswith", &arg, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casestartswith", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_casestartswith_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casestartswith", &args))
 		goto err;
-	if (get_needle(&needle, arg))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start > end || (end - start) < needle.n_size)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start > args.end || (args.end - args.start) < needle.n_size)
 		return_false;
-	return_bool(memasciicaseeq(DeeBytes_DATA(self) + start,
+	return_bool(memasciicaseeq(DeeBytes_DATA(self) + args.start,
 	                           needle.n_data, needle.n_size));
 err:
 	return NULL;
@@ -1985,18 +2377,28 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_endswith(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	Needle needle;
-	DeeObject *arg;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":endswith", &arg, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("endswith", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_endswith_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":endswith", &args))
 		goto err;
-	if (get_needle(&needle, arg))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start > end || (end - start) < needle.n_size)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start > args.end || (args.end - args.start) < needle.n_size)
 		return_false;
 	return_bool(MEMEQB(DeeBytes_DATA(self) +
-	                   (end - needle.n_size),
+	                   (args.end - needle.n_size),
 	                   needle.n_data, needle.n_size));
 err:
 	return NULL;
@@ -2006,18 +2408,28 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caseendswith(Bytes *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	Needle needle;
-	DeeObject *arg;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caseendswith", &arg, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseendswith", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caseendswith_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caseendswith", &args))
 		goto err;
-	if (get_needle(&needle, arg))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start > end || (end - start) < needle.n_size)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start > args.end || (args.end - args.start) < needle.n_size)
 		return_false;
 	return_bool(memasciicaseeq(DeeBytes_DATA(self) +
-	                           (end - needle.n_size),
+	                           (args.end - needle.n_size),
 	                           needle.n_data, needle.n_size));
 err:
 	return NULL;
@@ -2071,25 +2483,35 @@ PRIVATE DEFINE_TUPLE(empty_bytes_partition, 3, {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 bytes_partition(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob;
 	Needle needle;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":partition", &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("partition", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_partition_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":partition", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return empty_bytes_partition__newref();
-	end -= start;
+	args.end -= args.start;
 	return bytes_pack_partition(self,
-	                            memmemb(DeeBytes_DATA(self) + start,
-	                                    end,
+	                            memmemb(DeeBytes_DATA(self) + args.start,
+	                                    args.end,
 	                                    needle.n_data,
 	                                    needle.n_size),
-	                            DeeBytes_DATA(self) + start,
-	                            end,
+	                            DeeBytes_DATA(self) + args.start,
+	                            args.end,
 	                            needle.n_size);
 err:
 	return NULL;
@@ -2098,25 +2520,35 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 bytes_casepartition(Bytes *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob;
 	Needle needle;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casepartition", &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casepartition", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_casepartition_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casepartition", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return empty_bytes_partition__newref();
-	end -= start;
+	args.end -= args.start;
 	return bytes_pack_partition(self,
-	                            memasciicasemem(DeeBytes_DATA(self) + start,
-	                                            end,
+	                            memasciicasemem(DeeBytes_DATA(self) + args.start,
+	                                            args.end,
 	                                            needle.n_data,
 	                                            needle.n_size),
-	                            DeeBytes_DATA(self) + start,
-	                            end,
+	                            DeeBytes_DATA(self) + args.start,
+	                            args.end,
 	                            needle.n_size);
 err:
 	return NULL;
@@ -2125,25 +2557,35 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 bytes_rpartition(Bytes *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob;
 	Needle needle;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rpartition", &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rpartition", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_rpartition_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rpartition", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return empty_bytes_partition__newref();
-	end -= start;
+	args.end -= args.start;
 	return bytes_pack_partition(self,
-	                            memrmemb(DeeBytes_DATA(self) + start,
-	                                     end,
+	                            memrmemb(DeeBytes_DATA(self) + args.start,
+	                                     args.end,
 	                                     needle.n_data,
 	                                     needle.n_size),
-	                            DeeBytes_DATA(self) + start,
-	                            end,
+	                            DeeBytes_DATA(self) + args.start,
+	                            args.end,
 	                            needle.n_size);
 err:
 	return NULL;
@@ -2152,25 +2594,35 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 bytes_caserpartition(Bytes *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob;
 	Needle needle;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserpartition", &find_ob, &start, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserpartition", params: "
+	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caserpartition_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserpartition", &args))
 		goto err;
-	if (get_needle(&needle, find_ob))
+/*[[[end]]]*/
+	if (get_needle(&needle, args.needle))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (args.start >= args.end)
 		return empty_bytes_partition__newref();
-	end -= start;
+	args.end -= args.start;
 	return bytes_pack_partition(self,
-	                            memasciicasermem(DeeBytes_DATA(self) + start,
-	                                             end,
+	                            memasciicasermem(DeeBytes_DATA(self) + args.start,
+	                                             args.end,
 	                                             needle.n_data,
 	                                             needle.n_size),
-	                            DeeBytes_DATA(self) + start,
-	                            end,
+	                            DeeBytes_DATA(self) + args.start,
+	                            args.end,
 	                            needle.n_size);
 err:
 	return NULL;
@@ -2739,13 +3191,22 @@ PRIVATE ATTR_COLD int DCALL err_empty_filler(void) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	size_t width;
-	DeeObject *filler_ob = NULL;
 	Needle filler;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:center", &width, &filler_ob))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("center", params: "
+	size_t width;
+	DeeObject *filler: ?X3?DBytes?Dstring?Dint = NULL = !P{ };
+", docStringPrefix: "bytes");]]]*/
+#define bytes_center_params "width:?Dint,filler:?X3?.?Dstring?Dint=!P{ }"
+	struct {
+		size_t width;
+		DeeObject *filler;
+	} args;
+	args.filler = NULL;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:center", &args))
 		goto err;
-	if (filler_ob) {
-		if (get_needle(&filler, filler_ob))
+/*[[[end]]]*/
+	if (args.filler) {
+		if (get_needle(&filler, args.filler))
 			goto err;
 		if unlikely(!filler.n_size)
 			goto empty_filler;
@@ -2754,15 +3215,15 @@ bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 		filler.n_size    = 1;
 		filler._n_buf[0] = UNICODE_SPACE;
 	}
-	if (width <= DeeBytes_SIZE(self)) {
+	if (args.width <= DeeBytes_SIZE(self)) {
 		result = (DREF DeeObject *)self;
 		Dee_Incref(result);
 	} else {
 		size_t fill_front, fill_back;
-		result = DeeBytes_NewBufferUninitialized(width);
+		result = DeeBytes_NewBufferUninitialized(args.width);
 		if unlikely(!result)
 			goto err;
-		fill_front = (width - DeeBytes_SIZE(self));
+		fill_front = (args.width - DeeBytes_SIZE(self));
 		fill_back  = fill_front / 2;
 		fill_front -= fill_back;
 		mempfilb(DeeBytes_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
@@ -2781,13 +3242,22 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	size_t width;
-	DeeObject *filler_ob = NULL;
 	Needle filler;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:ljust", &width, &filler_ob))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ljust", params: "
+	size_t width;
+	DeeObject *filler: ?X3?DBytes?Dstring?Dint = NULL = !P{ };
+", docStringPrefix: "bytes");]]]*/
+#define bytes_ljust_params "width:?Dint,filler:?X3?.?Dstring?Dint=!P{ }"
+	struct {
+		size_t width;
+		DeeObject *filler;
+	} args;
+	args.filler = NULL;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:ljust", &args))
 		goto err;
-	if (filler_ob) {
-		if (get_needle(&filler, filler_ob))
+/*[[[end]]]*/
+	if (args.filler) {
+		if (get_needle(&filler, args.filler))
 			goto err;
 		if unlikely(!filler.n_size)
 			goto empty_filler;
@@ -2796,15 +3266,15 @@ bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		filler.n_size    = 1;
 		filler._n_buf[0] = UNICODE_SPACE;
 	}
-	if (width <= DeeBytes_SIZE(self)) {
+	if (args.width <= DeeBytes_SIZE(self)) {
 		result = (DREF DeeObject *)self;
 		Dee_Incref(result);
 	} else {
 		size_t fill_back;
-		result = DeeBytes_NewBufferUninitialized(width);
+		result = DeeBytes_NewBufferUninitialized(args.width);
 		if unlikely(!result)
 			goto err;
-		fill_back = (width - DeeBytes_SIZE(self));
+		fill_back = (args.width - DeeBytes_SIZE(self));
 		memcpyb(DeeBytes_DATA(result) + 0,
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
 		mempfilb(DeeBytes_DATA(result) + DeeBytes_SIZE(self),
@@ -2820,13 +3290,22 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	size_t width;
-	DeeObject *filler_ob = NULL;
 	Needle filler;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:rjust", &width, &filler_ob))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rjust", params: "
+	size_t width;
+	DeeObject *filler: ?X3?DBytes?Dstring?Dint = NULL = !P{ };
+", docStringPrefix: "bytes");]]]*/
+#define bytes_rjust_params "width:?Dint,filler:?X3?.?Dstring?Dint=!P{ }"
+	struct {
+		size_t width;
+		DeeObject *filler;
+	} args;
+	args.filler = NULL;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:rjust", &args))
 		goto err;
-	if (filler_ob) {
-		if (get_needle(&filler, filler_ob))
+/*[[[end]]]*/
+	if (args.filler) {
+		if (get_needle(&filler, args.filler))
 			goto err;
 		if unlikely(!filler.n_size)
 			goto empty_filler;
@@ -2835,15 +3314,15 @@ bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		filler.n_size    = 1;
 		filler._n_buf[0] = UNICODE_SPACE;
 	}
-	if (width <= DeeBytes_SIZE(self)) {
+	if (args.width <= DeeBytes_SIZE(self)) {
 		result = (DREF DeeObject *)self;
 		Dee_Incref(result);
 	} else {
 		size_t fill_front;
-		result = DeeBytes_NewBufferUninitialized(width);
+		result = DeeBytes_NewBufferUninitialized(args.width);
 		if unlikely(!result)
 			goto err;
-		fill_front = (width - DeeBytes_SIZE(self));
+		fill_front = (args.width - DeeBytes_SIZE(self));
 		mempfilb(DeeBytes_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
 		memcpyb(DeeBytes_DATA(result) + fill_front,
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
@@ -2858,13 +3337,22 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	size_t width;
-	DeeObject *filler_ob = NULL;
 	Needle filler;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:zfill", &width, &filler_ob))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("zfill", params: "
+	size_t width;
+	DeeObject *filler: ?X3?DBytes?Dstring?Dint = NULL = !P{ };
+", docStringPrefix: "bytes");]]]*/
+#define bytes_zfill_params "width:?Dint,filler:?X3?.?Dstring?Dint=!P{ }"
+	struct {
+		size_t width;
+		DeeObject *filler;
+	} args;
+	args.filler = NULL;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:zfill", &args))
 		goto err;
-	if (filler_ob) {
-		if (get_needle(&filler, filler_ob))
+/*[[[end]]]*/
+	if (args.filler) {
+		if (get_needle(&filler, args.filler))
 			goto err;
 		if unlikely(!filler.n_size)
 			goto empty_filler;
@@ -2873,19 +3361,19 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 		filler.n_size    = 1;
 		filler._n_buf[0] = UNICODE_ZERO;
 	}
-	if (width <= DeeBytes_SIZE(self)) {
+	if (args.width <= DeeBytes_SIZE(self)) {
 		result = (DREF DeeObject *)self;
 		Dee_Incref(result);
 	} else {
 		size_t fill_front, src_len;
 		byte_t *dst, *src;
-		result = DeeBytes_NewBufferUninitialized(width);
+		result = DeeBytes_NewBufferUninitialized(args.width);
 		if unlikely(!result)
 			goto err;
 		dst        = DeeBytes_DATA(result);
 		src        = DeeBytes_DATA(self);
 		src_len    = DeeBytes_SIZE(self);
-		fill_front = (width - src_len);
+		fill_front = (args.width - src_len);
 		while (src_len && DeeUni_IsSign(src[0])) {
 			*dst++ = *src++;
 			--src_len;
@@ -3259,25 +3747,38 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_findmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t const *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":findmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("findmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_findmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":findmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto err_not_found; /* Empty search area. */
-	scan_len = end - start;
+	scan_len = args.end - args.start;
 	scan_str = DeeBytes_DATA(self);
-	ptr = dee_find_matchb(scan_str + start, scan_len,
+	ptr = dee_find_matchb(scan_str + args.start, scan_len,
 	                      s_open.n_data, s_open.n_size,
 	                      s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
@@ -3291,25 +3792,38 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t const *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":rfindmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rfindmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_rfindmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":rfindmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto err_not_found; /* Empty search area. */
-	scan_len = end - start;
+	scan_len = args.end - args.start;
 	scan_str = DeeBytes_DATA(self);
-	ptr = dee_rfind_matchb(scan_str + start, scan_len,
+	ptr = dee_rfind_matchb(scan_str + args.start, scan_len,
 	                       s_open.n_data, s_open.n_size,
 	                       s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
@@ -3323,89 +3837,128 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_indexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t const *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":indexmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indexmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_indexmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":indexmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto err_not_found; /* Empty search area. */
-	scan_len = end - start;
+	scan_len = args.end - args.start;
 	scan_str = DeeBytes_DATA(self);
-	ptr = dee_find_matchb(scan_str + start, scan_len,
+	ptr = dee_find_matchb(scan_str + args.start, scan_len,
 	                      s_open.n_data, s_open.n_size,
 	                      s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 err_not_found:
-	err_index_not_found((DeeObject *)self, s_clos_ob);
+	err_index_not_found((DeeObject *)self, args.close);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t const *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":rindexmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rindexmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_rindexmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":rindexmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto err_not_found; /* Empty search area. */
-	scan_len = end - start;
+	scan_len = args.end - args.start;
 	scan_str = DeeBytes_DATA(self);
-	ptr = dee_rfind_matchb(scan_str + start, scan_len,
+	ptr = dee_rfind_matchb(scan_str + args.start, scan_len,
 	                       s_open.n_data, s_open.n_size,
 	                       s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 err_not_found:
-	err_index_not_found((DeeObject *)self, s_open_ob);
+	err_index_not_found((DeeObject *)self, args.open);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casefindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t const *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":casefindmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casefindmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_casefindmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":casefindmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto err_not_found; /* Empty search area. */
-	scan_len = end - start;
+	scan_len = args.end - args.start;
 	scan_str = DeeBytes_DATA(self);
-	ptr = dee_find_casematch_ascii(scan_str + start, scan_len,
+	ptr = dee_find_casematch_ascii(scan_str + args.start, scan_len,
 	                               s_open.n_data, s_open.n_size,
 	                               s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
@@ -3419,25 +3972,38 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caserfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t const *ptr, *scan_str;
 	size_t scan_len, result;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caserfindmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserfindmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caserfindmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caserfindmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto err_not_found; /* Empty search area. */
-	scan_len = end - start;
+	scan_len = args.end - args.start;
 	scan_str = DeeBytes_DATA(self);
-	ptr = dee_rfind_casematch_ascii(scan_str + start, scan_len,
+	ptr = dee_rfind_casematch_ascii(scan_str + args.start, scan_len,
 	                                s_open.n_data, s_open.n_size,
 	                                s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
@@ -3452,25 +4018,38 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caseindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t const *ptr, *scan_str;
 	size_t scan_len, result;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caseindexmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caseindexmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caseindexmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caseindexmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto err_not_found; /* Empty search area. */
-	scan_len = end - start;
+	scan_len = args.end - args.start;
 	scan_str = DeeBytes_DATA(self);
-	ptr = dee_find_casematch_ascii(scan_str + start, scan_len,
+	ptr = dee_find_casematch_ascii(scan_str + args.start, scan_len,
 	                               s_open.n_data, s_open.n_size,
 	                               s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
@@ -3478,32 +4057,45 @@ bytes_caseindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	result = (size_t)(ptr - scan_str);
 	return DeeTuple_NewII(result, result + s_clos.n_size);
 err_not_found:
-	err_index_not_found((DeeObject *)self, s_clos_ob);
+	err_index_not_found((DeeObject *)self, args.close);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caserindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t const *ptr, *scan_str;
 	size_t scan_len, result;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caserindexmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserindexmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caserindexmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caserindexmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto err_not_found; /* Empty search area. */
-	scan_len = end - start;
+	scan_len = args.end - args.start;
 	scan_str = DeeBytes_DATA(self);
-	ptr = dee_rfind_casematch_ascii(scan_str + start, scan_len,
+	ptr = dee_rfind_casematch_ascii(scan_str + args.start, scan_len,
 	                                s_open.n_data, s_open.n_size,
 	                                s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
@@ -3511,7 +4103,7 @@ bytes_caserindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	result = (size_t)(ptr - scan_str);
 	return DeeTuple_NewII(result, result + s_open.n_size);
 err_not_found:
-	err_index_not_found((DeeObject *)self, s_open_ob);
+	err_index_not_found((DeeObject *)self, args.open);
 err:
 	return NULL;
 }
@@ -3519,17 +4111,30 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_partitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeTupleObject *result;
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":partitionmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("partitionmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_partitionmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":partitionmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
 #define SET_BYTES(a, b, c)                                       \
 	do {                                                         \
@@ -3544,17 +4149,17 @@ bytes_partitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 	scan_str = DeeBytes_DATA(self);
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto match_not_found; /* Empty search area. */
-	scan_len    = end - start;
-	match_start = memmemb(scan_str + start, scan_len,
+	scan_len    = args.end - args.start;
+	match_start = memmemb(scan_str + args.start, scan_len,
 	                      s_open.n_data, s_open.n_size);
 	if unlikely(!match_start)
 		goto match_not_found;
 	match_end = (byte_t *)dee_find_matchb(match_start + s_open.n_size,
-	                                      scan_len - (match_start - (scan_str + start)),
+	                                      scan_len - (match_start - (scan_str + args.start)),
 	                                      s_open.n_data, s_open.n_size,
 	                                      s_clos.n_data, s_clos.n_size);
 	if unlikely(!match_end)
@@ -3565,13 +4170,13 @@ bytes_partitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                              (match_end + s_clos.n_size) -
 	                              match_start),
 	          DeeBytes_NewSubView(self, match_end + s_clos.n_size,
-	                              (size_t)(scan_str + end) -
+	                              (size_t)(scan_str + args.end) -
 	                              (size_t)(match_end + s_clos.n_size)));
 #undef SET_BYTES
 done:
 	return (DREF DeeObject *)result;
 match_not_found:
-	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, start, end);
+	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, args.start, args.end);
 	if unlikely(!result->t_elem[0])
 		goto err_r_0;
 	result->t_elem[1] = Dee_EmptyBytes;
@@ -3591,17 +4196,30 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeTupleObject *result;
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":rpartitionmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rpartitionmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_rpartitionmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":rpartitionmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
 #define SET_BYTES(a, b, c)                                       \
 	do {                                                         \
@@ -3616,17 +4234,17 @@ bytes_rpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 	scan_str = DeeBytes_DATA(self);
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto match_not_found; /* Empty search area. */
-	scan_len  = end - start;
-	match_end = memrmemb(scan_str + start, scan_len,
+	scan_len  = args.end - args.start;
+	match_end = memrmemb(scan_str + args.start, scan_len,
 	                     s_clos.n_data, s_clos.n_size);
 	if unlikely(!match_end)
 		goto match_not_found;
-	match_start = (byte_t *)dee_rfind_matchb(scan_str + start,
-	                                         (size_t)(match_end - (scan_str + start)),
+	match_start = (byte_t *)dee_rfind_matchb(scan_str + args.start,
+	                                         (size_t)(match_end - (scan_str + args.start)),
 	                                         s_open.n_data, s_open.n_size,
 	                                         s_clos.n_data, s_clos.n_size);
 	if unlikely(!match_start)
@@ -3637,13 +4255,13 @@ bytes_rpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                              (size_t)((match_end + s_clos.n_size) -
 	                                       match_start)),
 	          DeeBytes_NewSubView(self, match_end + s_clos.n_size,
-	                              (size_t)(scan_str + end) -
+	                              (size_t)(scan_str + args.end) -
 	                              (size_t)(match_end + s_clos.n_size)));
 #undef SET_BYTES
 done:
 	return (DREF DeeObject *)result;
 match_not_found:
-	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, start, end);
+	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, args.start, args.end);
 	if unlikely(!result->t_elem[0])
 		goto err_r_0;
 	result->t_elem[1] = Dee_EmptyString;
@@ -3663,17 +4281,30 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casepartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeTupleObject *result;
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":casepartitionmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casepartitionmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_casepartitionmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":casepartitionmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
 #define SET_BYTES(a, b, c)                                       \
 	do {                                                         \
@@ -3688,17 +4319,17 @@ bytes_casepartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 	scan_str = DeeBytes_DATA(self);
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto match_not_found; /* Empty search area. */
-	scan_len    = end - start;
-	match_start = memasciicasemem(scan_str + start, scan_len,
+	scan_len    = args.end - args.start;
+	match_start = memasciicasemem(scan_str + args.start, scan_len,
 	                              s_open.n_data, s_open.n_size);
 	if unlikely(!match_start)
 		goto match_not_found;
 	match_end = (byte_t *)dee_find_casematch_ascii(match_start + s_open.n_size,
-	                                               scan_len - (match_start - (scan_str + start)),
+	                                               scan_len - (match_start - (scan_str + args.start)),
 	                                               s_open.n_data, s_open.n_size,
 	                                               s_clos.n_data, s_clos.n_size);
 	if unlikely(!match_end)
@@ -3709,13 +4340,13 @@ bytes_casepartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                              (match_end + s_clos.n_size) -
 	                              match_start),
 	          DeeBytes_NewSubView(self, match_end + s_clos.n_size,
-	                              (size_t)(scan_str + end) -
+	                              (size_t)(scan_str + args.end) -
 	                              (size_t)(match_end + s_clos.n_size)));
 #undef SET_BYTES
 done:
 	return (DREF DeeObject *)result;
 match_not_found:
-	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, start, end);
+	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, args.start, args.end);
 	if unlikely(!result->t_elem[0])
 		goto err_r_0;
 	result->t_elem[1] = Dee_EmptyBytes;
@@ -3735,17 +4366,30 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caserpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeTupleObject *result;
-	DeeObject *s_open_ob, *s_clos_ob;
-	size_t start = 0, end = (size_t)-1;
 	byte_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caserpartitionmatch",
-	                  &s_open_ob, &s_clos_ob, &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserpartitionmatch", params: "
+	DeeObject *open: ?X3?.?Dstring?Dint;
+	DeeObject *close: ?X3?.?Dstring?Dint;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+", docStringPrefix: "bytes");]]]*/
+#define bytes_caserpartitionmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeObject *open;
+		DeeObject *close;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":caserpartitionmatch", &args))
 		goto err;
-	if (get_needle(&s_open, s_open_ob))
+/*[[[end]]]*/
+	if (get_needle(&s_open, args.open))
 		goto err;
-	if (get_needle(&s_clos, s_clos_ob))
+	if (get_needle(&s_clos, args.close))
 		goto err;
 #define SET_BYTES(a, b, c)                                       \
 	do {                                                         \
@@ -3760,17 +4404,17 @@ bytes_caserpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 	scan_str = DeeBytes_DATA(self);
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if unlikely(end <= start)
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if unlikely(args.end <= args.start)
 		goto match_not_found; /* Empty search area. */
-	scan_len  = end - start;
-	match_end = memasciicasermem(scan_str + start, scan_len,
+	scan_len  = args.end - args.start;
+	match_end = memasciicasermem(scan_str + args.start, scan_len,
 	                             s_clos.n_data, s_clos.n_size);
 	if unlikely(!match_end)
 		goto match_not_found;
-	match_start = (byte_t *)dee_rfind_casematch_ascii(scan_str + start,
-	                                                  (size_t)(match_end - (scan_str + start)),
+	match_start = (byte_t *)dee_rfind_casematch_ascii(scan_str + args.start,
+	                                                  (size_t)(match_end - (scan_str + args.start)),
 	                                                  s_open.n_data, s_open.n_size,
 	                                                  s_clos.n_data, s_clos.n_size);
 	if unlikely(!match_start)
@@ -3781,13 +4425,13 @@ bytes_caserpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                              (size_t)((match_end + s_clos.n_size) -
 	                                       match_start)),
 	          DeeBytes_NewSubView(self, match_end + s_clos.n_size,
-	                              (size_t)(scan_str + end) -
+	                              (size_t)(scan_str + args.end) -
 	                              (size_t)(match_end + s_clos.n_size)));
 #undef SET_BYTES
 done:
 	return (DREF DeeObject *)result;
 match_not_found:
-	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, start, end);
+	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, args.start, args.end);
 	if unlikely(!result->t_elem[0])
 		goto err_r_0;
 	result->t_elem[1] = Dee_EmptyString;
@@ -5226,12 +5870,12 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	/* Case-sensitive query functions */
 	TYPE_KWMETHOD_F(STR_replace, &bytes_replace,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1)->?.\n"
+	                "(" bytes_replace_params ")->?.\n"
 	                "#tValueError{The given @find or @replace is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @find or @replace is an integer lower than $0, or greater than $0xff}"
 	                "Find up to @max occurrences of @find and replace each with @replace, then return the resulting data as a writable ?. object"),
 	TYPE_KWMETHOD("toreplace", &bytes_toreplace,
-	              "(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1)->?.\n"
+	              "(" bytes_toreplace_params ")->?.\n"
 	              "#tValueError{The given @find or @replace is a string containing characters ${> 0xff}}"
 	              "#tIntegerOverflow{The given @find or @replace is an integer lower than $0, or greater than $0xff}"
 	              "#tValueError{The number of bytes specified by @find and @replace are not identical}"
@@ -5466,12 +6110,12 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	/* Case-insensitive query functions */
 	TYPE_KWMETHOD_F("casereplace", &bytes_casereplace,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1)->?.\n"
+	                "(" bytes_casereplace_params ")->?.\n"
 	                "#tValueError{The given @find or @replace is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @find or @replace is an integer lower than $0, or greater than $0xff}"
 	                "Same as ?#replace, however ascii-casing is ignored during character comparisons"),
 	TYPE_KWMETHOD("tocasereplace", &bytes_tocasereplace,
-	              "(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1)->?.\n"
+	              "(" bytes_tocasereplace_params ")->?.\n"
 	              "#tValueError{The given @find or @replace is a string containing characters ${> 0xff}}"
 	              "#tIntegerOverflow{The given @find or @replace is an integer lower than $0, or greater than $0xff}"
 	              "#tValueError{The number of bytes specified by @find and @replace are not identical}"
@@ -5644,17 +6288,17 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	/* Bytes alignment functions. */
 	TYPE_METHOD_F("center", &bytes_center,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	              "(width:?Dint,filler:?X3?.?Dstring?Dint=!PTYPE_METHOD(})->?.\n"
+	              "(width:?Dint,filler:?X3?.?Dstring?Dint=!P{ })->?.\n"
 	              "Use a writable copy of @this ?. object as result, then evenly "
 	              /**/ "insert @filler at the front and back to pad its length to @width bytes"),
 	TYPE_METHOD_F("ljust", &bytes_ljust,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	              "(width:?Dint,filler=!PTYPE_METHOD(})->?.\n"
+	              "(width:?Dint,filler=!P{ })->?.\n"
 	              "Use a writable copy of @this ?. object as result, then "
 	              /**/ "insert @filler at the back to pad its length to @width bytes"),
 	TYPE_METHOD_F("rjust", &bytes_rjust,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	              "(width:?Dint,filler=!PTYPE_METHOD(})->?.\n"
+	              "(width:?Dint,filler=!P{ })->?.\n"
 	              "Use a writable copy of @this ?. object as result, then "
 	              /**/ "insert @filler at the front to pad its length to @width bytes"),
 	TYPE_METHOD_F("zfill", &bytes_zfill,
@@ -5767,31 +6411,31 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	/* Find match character sequences */
 	TYPE_METHOD_F("findmatch", &bytes_findmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "(" bytes_findmatch_params ")->?Dint\n"
 	              "Similar to ?#find, but do a recursive search for the "
 	              /**/ "first @close that doesn't have a match @{open}\n"
 	              "For more information, see :string.findmatch"),
 	TYPE_METHOD_F("indexmatch", &bytes_indexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "(" bytes_indexmatch_params ")->?Dint\n"
 	              "#tIndexError{No instance of @close without a matching @open exists within ${this.substr(start, end)}}"
 	              "Same as ?#findmatch, but throw an :IndexError instead of "
 	              /**/ "returning ${-1} if no @close without a matching @open exists"),
 	TYPE_METHOD_F("casefindmatch", &bytes_casefindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	              "(" bytes_casefindmatch_params ")->?X2?T2?Dint?Dint?N\n"
 	              "Same as ?#findmatch, however casing is ignored during character comparisons\n"
 	              "Upon success, the second returned integer is equal to ${return[0] + ?#close}\n"
 	              "If no match if found, ?N is returned"),
 	TYPE_METHOD_F("caseindexmatch", &bytes_caseindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	              "(" bytes_caseindexmatch_params ")->?T2?Dint?Dint\n"
 	              "#tIndexError{No instance of @close without a matching @open exists within ${this.substr(start, end)}}"
 	              "Same as ?#indexmatch, however casing is ignored during character comparisons\n"
 	              "Upon success, the second returned integer is equal to ${return[0] + ?#close}"),
 	TYPE_METHOD_F("rfindmatch", &bytes_rfindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "(" bytes_rfindmatch_params ")->?Dint\n"
 	              "Similar to ?#findmatch, but operate in a mirrored fashion, searching for the "
 	              /**/ "last instance of @open that has no match @close within ${this.substr(start, end)}:\n"
 	              "${"
@@ -5804,18 +6448,18 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "If no @open without a matching @close exists, ${-1} is returned"),
 	TYPE_METHOD_F("rindexmatch", &bytes_rindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "(" bytes_rindexmatch_params ")->?Dint\n"
 	              "#tIndexError{No instance of @open without a matching @close exists within ${this.substr(start, end)}}"
 	              "Same as ?#rfindmatch, but throw an :IndexError instead of returning ${-1} if no @open without a matching @close exists"),
 	TYPE_METHOD_F("caserfindmatch", &bytes_caserfindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	              "(" bytes_caserfindmatch_params ")->?X2?T2?Dint?Dint?N\n"
 	              "Same as ?#rfindmatch, however ascii-casing is ignored during character comparisons\n"
 	              "Upon success, the second returned integer is equal to ${return[0] + ?#open}\n"
 	              "If no match if found, ?N is returned"),
 	TYPE_METHOD_F("caserindexmatch", &bytes_caserindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	              "(" bytes_caserindexmatch_params ")->?T2?Dint?Dint\n"
 	              "#tIndexError{No instance of @open without a matching @close exists within ${this.substr(start, end)}}"
 	              "Same as ?#rindexmatch, however ascii-casing is ignored during character comparisons\n"
 	              "Upon success, the second returned integer is equal to ${return[0] + ?#open}"),
@@ -5823,7 +6467,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	/* Using the find-match functionality, also provide a partitioning version */
 	TYPE_METHOD_F("partitionmatch", &bytes_partitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(" bytes_partitionmatch_params ")->?T3?.?.?.\n"
 	              "A hybrid between ?#find, ?#findmatch and ?#partition that returns the strings surrounding "
 	              /**/ "the matched string portion, the first being the substring prior to the match, "
 	              /**/ "the second being the matched string itself (including the @open and @close strings), "
@@ -5831,7 +6475,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "For more information see ?Apartitionmatch?Dstring"),
 	TYPE_METHOD_F("rpartitionmatch", &bytes_rpartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(" bytes_rpartitionmatch_params ")->?T3?.?.?.\n"
 	              "A hybrid between ?#rfind, ?#rfindmatch and ?#rpartition that returns the strings surrounding "
 	              /**/ "the matched string portion, the first being the substring prior to the match, "
 	              /**/ "the second being the matched string itself (including the @open and @close strings), "
@@ -5839,11 +6483,11 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "For more information see ?Arpartitionmatch?Dstring"),
 	TYPE_METHOD_F("casepartitionmatch", &bytes_casepartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(" bytes_casepartitionmatch_params ")->?T3?.?.?.\n"
 	              "Same as ?#partitionmatch, however casing is ignored during character comparisons"),
 	TYPE_METHOD_F("caserpartitionmatch", &bytes_caserpartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(" bytes_caserpartitionmatch_params ")->?T3?.?.?.\n"
 	              "Same as ?#rpartitionmatch, however casing is ignored during character comparisons"),
 
 	TYPE_METHOD_F("segments", &bytes_segments,
