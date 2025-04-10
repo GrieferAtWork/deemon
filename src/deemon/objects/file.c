@@ -1874,12 +1874,21 @@ DeeFile_GetSize(DeeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_read(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("read", params: "
 	size_t maxbytes = (size_t)-1;
 	bool readall    = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__maxbytes_readall,
-	                    "|" UNPxSIZ "b:read", &maxbytes, &readall))
+", docStringPrefix: "file");]]]*/
+#define file_read_params "maxbytes=!-1,readall=!f"
+	struct {
+		size_t maxbytes;
+		bool readall;
+	} args;
+	args.maxbytes = (size_t)-1;
+	args.readall = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__maxbytes_readall, "|" UNPxSIZ "b:read", &args))
 		goto err;
-	return DeeFile_ReadBytes(self, maxbytes, readall);
+/*[[[end]]]*/
+	return DeeFile_ReadBytes(self, args.maxbytes, args.readall);
 err:
 	return NULL;
 }
@@ -1889,17 +1898,25 @@ file_readinto(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	size_t result;
-	DeeObject *dst;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("readinto", params: "
+	dst: obj:buffer;
 	bool readall = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__dst_readall,
-	                    "o|b:readinto", &dst, &readall))
+", docStringPrefix: "file");]]]*/
+#define file_readinto_params "dst:?DBytes,readall=!f"
+	struct {
+		DeeObject *dst;
+		bool readall;
+	} args;
+	args.readall = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dst_readall, "o|b:readinto", &args))
 		goto err;
-	if (DeeObject_GetBuf(dst, &buffer, Dee_BUFFER_FWRITABLE))
+/*[[[end]]]*/
+	if (DeeObject_GetBuf(args.dst, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err;
-	result = readall
+	result = args.readall
 	         ? DeeFile_ReadAll(self, buffer.bb_base, buffer.bb_size)
 	         : DeeFile_Read(self, buffer.bb_base, buffer.bb_size);
-	DeeObject_PutBuf(dst, &buffer, Dee_BUFFER_FWRITABLE);
+	DeeObject_PutBuf(args.dst, &buffer, Dee_BUFFER_FWRITABLE);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -1911,18 +1928,26 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_write(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
-	DeeObject *data;
-	bool writeall = true;
 	size_t result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__data_writeall,
-	                    "o|b:write", &data, &writeall))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("write", params: "
+	data: obj:buffer;
+	bool writeall = true;
+", docStringPrefix: "file");]]]*/
+#define file_write_params "data:?DBytes,writeall=!t"
+	struct {
+		DeeObject *data;
+		bool writeall;
+	} args;
+	args.writeall = true;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__data_writeall, "o|b:write", &args))
 		goto err;
-	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FREADONLY))
+/*[[[end]]]*/
+	if (DeeObject_GetBuf(args.data, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
-	result = writeall
+	result = args.writeall
 	         ? DeeFile_WriteAll(self, buffer.bb_base, buffer.bb_size)
 	         : DeeFile_Write(self, buffer.bb_base, buffer.bb_size);
-	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FREADONLY);
+	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FREADONLY);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -1933,14 +1958,23 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pread(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
-	Dee_pos_t file_pos;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("pread", params: "
+	Dee_pos_t pos;
 	size_t maxbytes = (size_t)-1;
 	bool readall      = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__pos_maxbytes_readall,
-	                    UNPuN(Dee_SIZEOF_POS_T) "|" UNPxSIZ "b:pread",
-	                    &file_pos, &maxbytes, &readall))
+", docStringPrefix: "file");]]]*/
+#define file_pread_params "pos:?Dint,maxbytes=!-1,readall=!f"
+	struct {
+		Dee_pos_t pos;
+		size_t maxbytes;
+		bool readall;
+	} args;
+	args.maxbytes = (size_t)-1;
+	args.readall = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__pos_maxbytes_readall, UNPuN(Dee_SIZEOF_POS_T) "|" UNPxSIZ "b:pread", &args))
 		goto err;
-	return DeeFile_PReadBytes(self, maxbytes, file_pos, readall);
+/*[[[end]]]*/
+	return DeeFile_PReadBytes(self, args.maxbytes, args.pos, args.readall);
 err:
 	return NULL;
 }
@@ -1950,18 +1984,26 @@ file_preadinto(DeeObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	size_t result;
-	DeeObject *dst;
-	Dee_pos_t file_pos;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("preadinto", params: "
+	dst: obj:buffer;
+	Dee_pos_t pos;
 	bool readall = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__dst_pos_readall,
-	                    "o" UNPuN(Dee_SIZEOF_POS_T) "|b:preadinto",
-	                    &dst, &file_pos, &readall))
+", docStringPrefix: "file");]]]*/
+#define file_preadinto_params "dst:?DBytes,pos:?Dint,readall=!f"
+	struct {
+		DeeObject *dst;
+		Dee_pos_t pos;
+		bool readall;
+	} args;
+	args.readall = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dst_pos_readall, "o" UNPuN(Dee_SIZEOF_POS_T) "|b:preadinto", &args))
 		goto err;
-	if (DeeObject_GetBuf(dst, &buffer, Dee_BUFFER_FWRITABLE))
+/*[[[end]]]*/
+	if (DeeObject_GetBuf(args.dst, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err;
-	result = readall ? DeeFile_PReadAll(self, buffer.bb_base, buffer.bb_size, file_pos)
-	                 : DeeFile_PRead(self, buffer.bb_base, buffer.bb_size, file_pos);
-	DeeObject_PutBuf(dst, &buffer, Dee_BUFFER_FWRITABLE);
+	result = args.readall ? DeeFile_PReadAll(self, buffer.bb_base, buffer.bb_size, args.pos)
+	                      : DeeFile_PRead(self, buffer.bb_base, buffer.bb_size, args.pos);
+	DeeObject_PutBuf(args.dst, &buffer, Dee_BUFFER_FWRITABLE);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -1973,19 +2015,27 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pwrite(DeeObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
-	DeeObject *data;
-	Dee_pos_t file_pos;
-	bool writeall = true;
 	size_t result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__data_pos_writeall,
-	                    "o" UNPuN(Dee_SIZEOF_POS_T) "|b:pwrite",
-	                    &data, &file_pos, &writeall))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("pwrite", params: "
+	data: obj:buffer;
+	Dee_pos_t pos;
+	bool writeall = true;
+", docStringPrefix: "file");]]]*/
+#define file_pwrite_params "data:?DBytes,pos:?Dint,writeall=!t"
+	struct {
+		DeeObject *data;
+		Dee_pos_t pos;
+		bool writeall;
+	} args;
+	args.writeall = true;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__data_pos_writeall, "o" UNPuN(Dee_SIZEOF_POS_T) "|b:pwrite", &args))
 		goto err;
-	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FREADONLY))
+/*[[[end]]]*/
+	if (DeeObject_GetBuf(args.data, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
-	result = writeall ? DeeFile_PWriteAll(self, buffer.bb_base, buffer.bb_size, file_pos)
-	                  : DeeFile_PWrite(self, buffer.bb_base, buffer.bb_size, file_pos);
-	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FREADONLY);
+	result = args.writeall ? DeeFile_PWriteAll(self, buffer.bb_base, buffer.bb_size, args.pos)
+	                       : DeeFile_PWrite(self, buffer.bb_base, buffer.bb_size, args.pos);
+	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FREADONLY);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -2008,18 +2058,24 @@ PRIVATE struct whence_name whence_names[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_seek(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *whence_ob = NULL;
-	Dee_off_t seek_off;
 	Dee_pos_t result;
 	int whence = SEEK_SET;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__off_whence,
-	                    UNPdN(Dee_SIZEOF_OFF_T) "|o:seek",
-	                    &seek_off, &whence_ob))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("seek", params: "
+	Dee_off_t off;
+	DeeObject *whence = NULL;
+");]]]*/
+	struct {
+		Dee_off_t off;
+		DeeObject *whence;
+	} args;
+	args.whence = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__off_whence, UNPdN(Dee_SIZEOF_OFF_T) "|o:seek", &args))
 		goto err;
-	if (whence_ob) {
-		if (DeeString_Check(whence_ob)) {
-			char const *name = DeeString_STR(whence_ob);
-			size_t length    = DeeString_SIZE(whence_ob);
+/*[[[end]]]*/
+	if (args.whence) {
+		if (DeeString_Check(args.whence)) {
+			char const *name = DeeString_STR(args.whence);
+			size_t length    = DeeString_SIZE(args.whence);
 			if (length >= 5 && MEMCASEEQ(name, "SEEK_", 5 * sizeof(char))) {
 				name += 5;
 				length -= 5;
@@ -2040,16 +2096,16 @@ file_seek(DeeObject *self, size_t argc,
 			}
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Unknown whence mode %r for seek",
-			                whence_ob);
+			                args.whence);
 			goto err;
 		}
 
 		/* Fallback: Convert the whence-object to an integer. */
-		if (DeeObject_AsInt(whence_ob, &whence))
+		if (DeeObject_AsInt(args.whence, &whence))
 			goto err;
 	}
 got_whence:
-	result = DeeFile_Seek(self, seek_off, whence);
+	result = DeeFile_Seek(self, args.off, whence);
 	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
 	return DeeInt_NewUInt64(result);
@@ -2060,7 +2116,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_tell(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	Dee_pos_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tell", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "tell");
+/*[[[end]]]*/
 	result = DeeFile_Tell(self);
 	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
@@ -2071,7 +2129,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_rewind(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rewind", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "rewind");
+/*[[[end]]]*/
 	if (DeeFile_Rewind(self) == (Dee_pos_t)-1)
 		goto err;
 	return_none;
@@ -2102,7 +2162,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_sync(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sync", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "sync");
+/*[[[end]]]*/
 	if (DeeFile_Sync(self))
 		goto err;
 	return_none;
@@ -2112,7 +2174,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_close(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("close", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "close");
+/*[[[end]]]*/
 	if (DeeFile_Close(self))
 		goto err;
 	return_none;
@@ -2123,7 +2187,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getc", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "getc");
+/*[[[end]]]*/
 	result = DeeFile_Getc(self);
 	if unlikely(result == GETC_ERR)
 		goto err;
@@ -2139,9 +2205,17 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_ungetc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
-	if (DeeArg_UnpackStruct(argc, argv, "d:ungetc", &result))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ungetc", params: "
+	int ch;
+", docStringPrefix: "file");]]]*/
+#define file_ungetc_params "ch:?Dint"
+	struct {
+		int ch;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "d:ungetc", &args))
 		goto err;
-	result = DeeFile_Ungetc(self, result);
+/*[[[end]]]*/
+	result = DeeFile_Ungetc(self, args.ch);
 	if unlikely(result == GETC_ERR)
 		goto err;
 	return_bool(result != GETC_EOF);
@@ -2152,10 +2226,17 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_putc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("putc", params: "
 	byte_t byte;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuB ":putc", &byte))
+", docStringPrefix: "file");]]]*/
+#define file_putc_params "byte:?Dint"
+	struct {
+		byte_t byte;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuB ":putc", &args))
 		goto err;
-	result = DeeFile_Putc(self, (int)(unsigned int)byte);
+/*[[[end]]]*/
+	result = DeeFile_Putc(self, (int)(unsigned int)args.byte);
 	if unlikely(result == GETC_ERR)
 		goto err;
 	return_bool(result != GETC_EOF);
@@ -2166,7 +2247,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	uint32_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getutf8", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "getutf8");
+/*[[[end]]]*/
 	result = DeeFile_GetUtf8(self);
 	if unlikely(result == (uint32_t)GETC_ERR)
 		goto err;
@@ -2180,10 +2263,17 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_ungetutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ungetutf8", params: "
 	uint32_t ch;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu32 ":ungetutf8", &ch))
+", docStringPrefix: "file");]]]*/
+#define file_ungetutf8_params "ch:?Dint"
+	struct {
+		uint32_t ch;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPu32 ":ungetutf8", &args))
 		goto err;
-	result = DeeFile_UngetUtf8(self, ch);
+/*[[[end]]]*/
+	result = DeeFile_UngetUtf8(self, args.ch);
 	if unlikely(result == GETC_ERR)
 		goto err;
 	return_bool(result != GETC_EOF);
@@ -2214,7 +2304,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	Dee_pos_t old_pos, result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("size", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "size");
+/*[[[end]]]*/
 	old_pos = DeeFile_Seek(self, 0, SEEK_CUR);
 	if unlikely(old_pos == (Dee_pos_t)-1)
 		goto err;
@@ -2256,25 +2348,39 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readall(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("readall", params: "
 	size_t maxbytes = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, "|" UNPxSIZ ":readall", &maxbytes))
+", docStringPrefix: "file");]]]*/
+#define file_readall_params "maxbytes=!-1"
+	struct {
+		size_t maxbytes;
+	} args;
+	args.maxbytes = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "|" UNPxSIZ ":readall", &args))
 		goto err;
-	return DeeFile_ReadBytes(self, maxbytes, true);
+/*[[[end]]]*/
+	return DeeFile_ReadBytes(self, args.maxbytes, true);
 err:
 	return NULL;
 }
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_readallat(DeeObject *self, size_t argc, DeeObject *const *argv) {
+file_preadall(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("preadall", params: "
+	Dee_pos_t pos;
+	size_t maxbytes = (size_t)-1;
+", docStringPrefix: "file");]]]*/
+#define file_preadall_params "pos:?Dint,maxbytes=!-1"
 	struct {
-		Dee_pos_t file_pos;
+		Dee_pos_t pos;
 		size_t maxbytes;
 	} args;
 	args.maxbytes = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuN(Dee_SIZEOF_POS_T) "|" UNPxSIZ ":readallat", &args))
+	if (DeeArg_UnpackStruct(argc, argv, UNPuN(Dee_SIZEOF_POS_T) "|" UNPxSIZ ":preadall", &args))
 		goto err;
-	return DeeFile_PReadBytes(self, args.maxbytes, args.file_pos, true);
+/*[[[end]]]*/
+	return DeeFile_PReadBytes(self, args.maxbytes, args.pos, true);
 err:
 	return NULL;
 }
@@ -2286,36 +2392,54 @@ file_mmap(DeeObject *self, size_t argc,
 	DREF DeeObject *result;
 	DREF DeeMapFileObject *mapob;
 	unsigned int mapflags;
-	size_t minbytes  = (size_t)0;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("mapfile", params: "
+	size_t minbytes  = 0;
 	size_t maxbytes  = (size_t)-1;
 	Dee_pos_t offset = (Dee_pos_t)-1;
 	size_t nulbytes  = 0;
 	bool readall     = false;
 	bool mustmmap    = false;
 	bool mapshared   = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared,
-	                    "|" UNPuSIZ UNPxSIZ UNPuN(Dee_SIZEOF_POS_T) UNPxSIZ "bbb:mapfile",
-	                    &minbytes, &maxbytes, &offset, &nulbytes, &readall, &mustmmap, &mapshared))
+", docStringPrefix: "file");]]]*/
+#define file_mapfile_params "minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f"
+	struct {
+		size_t minbytes;
+		size_t maxbytes;
+		Dee_pos_t offset;
+		size_t nulbytes;
+		bool readall;
+		bool mustmmap;
+		bool mapshared;
+	} args;
+	args.minbytes = 0;
+	args.maxbytes = (size_t)-1;
+	args.offset = (Dee_pos_t)-1;
+	args.nulbytes = 0;
+	args.readall = false;
+	args.mustmmap = false;
+	args.mapshared = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared, "|" UNPuSIZ UNPxSIZ UNPxN(Dee_SIZEOF_POS_T) UNPuSIZ "bbb:mapfile", &args))
 		goto err;
+/*[[[end]]]*/
 	mapflags = 0;
 
 	/* Package flags */
-	if (readall)
+	if (args.readall)
 		mapflags |= DEE_MAPFILE_F_READALL;
-	if (mustmmap)
+	if (args.mustmmap)
 		mapflags |= DEE_MAPFILE_F_MUSTMMAP;
-	if (mapshared)
+	if (args.mapshared)
 		mapflags |= DEE_MAPFILE_F_MUSTMMAP | DEE_MAPFILE_F_MAPSHARED;
 	mapob = DeeObject_MALLOC(DREF DeeMapFileObject);
 	if unlikely(!mapob)
 		goto err;
 
 	/* Create the actual file mapping */
-	if unlikely(DeeMapFile_InitFile(&mapob->mf_map, self, offset,
-	                                minbytes, maxbytes, nulbytes,
+	if unlikely(DeeMapFile_InitFile(&mapob->mf_map, self, args.offset,
+	                                args.minbytes, args.maxbytes, args.nulbytes,
 	                                mapflags))
 		goto err_r;
-	mapob->mf_rsize = DeeMapFile_GetSize(&mapob->mf_map) + nulbytes;
+	mapob->mf_rsize = DeeMapFile_GetSize(&mapob->mf_map) + args.nulbytes;
 	DeeObject_Init(mapob, &DeeMapFile_Type);
 	result = DeeBytes_NewView((DeeObject *)mapob,
 	                          (void *)DeeMapFile_GetBase(&mapob->mf_map),
@@ -2332,33 +2456,39 @@ err:
 
 PRIVATE struct type_method tpconst file_methods[] = {
 	TYPE_KWMETHOD("read", &file_read,
-	              "(maxbytes=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
+	              "(" file_read_params ")->?DBytes\n"
 	              "Read and return at most @maxbytes of data from the file stream. "
 	              /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
 	              /**/ "read-callback returns $0, rather than until it returns something other than "
 	              /**/ "the internal buffer size used when reading data."),
+	TYPE_METHOD("readall", &file_readall,
+	            "(" file_readall_params ")->?DBytes\n"
+	            "Alias for ${this.read(maxbytes, true)}"),
 	TYPE_KWMETHOD("readinto", &file_readinto,
-	              "(dst:?DBytes,readall=!f)->?Dint\n"
+	              "(" file_readinto_params ")->?Dint\n"
 	              "Read data into the given buffer @dst and return the number of bytes read. "
 	              /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
 	              /**/ "read-callback returns $0, rather than until it returns something other than "
 	              /**/ "the requested read size."),
 	TYPE_KWMETHOD("write", &file_write,
-	              "(data:?DBytes,writeall=!t)->?Dint\n"
+	              "(" file_write_params ")->?Dint\n"
 	              "Write @data to the file stream and return the actual number of bytes written. "
 	              /**/ "When @writeall is ?t, keep writing data until the write-callback "
 	              /**/ "returns $0 or until all data has been written, rather than invoke "
 	              /**/ "the write-callback only a single time."),
 	TYPE_KWMETHOD("pread", &file_pread,
-	              "(pos:?Dint,maxbytes=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
+	              "(" file_pread_params ")->?DBytes\n"
 	              "Similar to ?#read, but read data from a given file-offset "
 	              /**/ "@pos, rather than from the current file position"),
+	TYPE_METHOD("preadall", &file_preadall,
+	            "(" file_preadall_params ")->?DBytes\n"
+	            "Alias for ${this.pread(pos, maxbytes, true)}"),
 	TYPE_KWMETHOD("preadinto", &file_preadinto,
-	              "(dst:?DBytes,pos:?Dint,readall=!f)->?DBytes\n"
+	              "(" file_preadinto_params ")->?DBytes\n"
 	              "Similar to ?#readinto, but read data from a given file-offset "
 	              /**/ "@pos, rather than from the current file position"),
 	TYPE_KWMETHOD("pwrite", &file_pwrite,
-	              "(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
+	              "(" file_pwrite_params ")->?Dint\n"
 	              "Similar to ?#write, but write data to a given file-offset "
 	              /**/ "@pos, rather than at the current file position"),
 	TYPE_KWMETHOD("seek", &file_seek,
@@ -2399,12 +2529,12 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	            "Read and return a single character (byte) from then file, "
 	            /**/ "or return ${-1} if the file's end has been reached."),
 	TYPE_METHOD("ungetc", &file_ungetc,
-	            "(ch:?Dint)->?Dbool\n"
+	            "(" file_ungetc_params ")->?Dbool\n"
 	            "Unget a given character @ch to be re-read the next time ?#getc or ?#read is called. "
 	            /**/ "If the file's start has already been reached, ?f is returned and the character "
 	            /**/ "will not be re-read from this file."),
 	TYPE_METHOD("putc", &file_putc,
-	            "(byte:?Dint)->?Dbool\n"
+	            "(" file_putc_params ")->?Dbool\n"
 	            "Append a single @byte at the end of @this File, returning ?t on "
 	            /**/ "success, or ?f if the file has entered an end-of-file state."),
 
@@ -2414,7 +2544,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	            "Read and return a single unicode character (utf-8) from then "
 	            /**/ "file, or return $\"\" if the file's end has been reached."),
 	TYPE_METHOD("ungetutf8", &file_ungetutf8,
-	            "(ch:?Dstring)->?Dbool\n"
+	            "(" file_ungetutf8_params ")->?Dbool\n"
 	            "Unget a given unicode character @ch (as utf-8) to be re-read the next time ?#getuni "
 	            /**/ "or ?#read is called. If the file's start has already been reached, ?f is returned "
 	            /**/ "and the character will not be re-read from this file."),
@@ -2435,7 +2565,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 
 	/* mmap support */
 	TYPE_KWMETHOD("mmap", &file_mmap,
-	              "(minbytes=!0,maxbytes=!A!Dint!PSIZE_MAX,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytes\n"
+	              "(" file_mapfile_params ")->?DBytes\n"
 	              "#pminbytes{The min number of bytes (excluding @nulbytes) that should be mapped "
 	              /*      */ "starting at @offset. If the file is smaller than this, or indicates EOF before "
 	              /*      */ "this number of bytes has been reached, nul bytes are mapped for its remainder.}"
@@ -2459,18 +2589,16 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	              /**/ "this function to succeed, as opposed to something like #read when given $maxbytes)"),
 
 	/* Deprecated functions. */
-	TYPE_METHOD("readall", &file_readall,
-	            "(maxbytes=!A!Dint!PSIZE_MAX)->?DBytes\n"
-	            "Deprecated alias for ${this.read(maxbytes, true)}"),
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_KWMETHOD("readat", &file_pread,
-	              "(pos:?Dint,maxbytes=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
+	              "(" file_pread_params ")->?DBytes\n"
 	              "Deprecated alias for ?#pread"),
 	TYPE_KWMETHOD("writeat", &file_pwrite,
-	              "(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
+	              "(" file_pwrite_params ")->?Dint\n"
 	              "Deprecated alias for ?#pwrite"),
-	TYPE_METHOD("readallat", &file_readallat,
-	            "(pos:?Dint,maxbytes=!A!Dint!PSIZE_MAX)->?DBytes\n"
-	            "Deprecated alias for ${this.pread(pos, maxbytes, true)}"),
+	TYPE_METHOD("readallat", &file_preadall,
+	            "(" file_preadall_params ")->?DBytes\n"
+	            "Deprecated alias for ?#preadall"),
 	TYPE_KWMETHOD("setpos", &file_seek,
 	              "(pos:?Dint)->?Dint\n"
 	              "Deprecated alias for ?#seek"),
@@ -2480,6 +2608,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	TYPE_KWMETHOD("puts", &file_write,
 	              "(data:?DBytes)->?Dint\n"
 	              "Deprecated alias for ?#write"),
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 	TYPE_METHOD_END
 };
