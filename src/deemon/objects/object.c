@@ -2998,7 +2998,7 @@ type_baseof(DeeTypeObject *self, size_t argc,
 		goto err;
 	if (!DeeType_Check((DeeObject *)other))
 		return_false;
-	Dee_return_reference((DeeObject *)&Dee_FalseTrue[DeeType_Extends(other, self)]);
+	return_bool01(DeeType_Extends(other, self));
 err:
 	return NULL;
 }
@@ -3009,7 +3009,7 @@ type_extends(DeeTypeObject *self, size_t argc,
 	DeeTypeObject *other;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__other, "o:extends", &other))
 		goto err;
-	Dee_return_reference((DeeObject *)&Dee_FalseTrue[DeeType_Extends(self, other)]);
+	return_bool01(DeeType_Extends(self, other));
 err:
 	return NULL;
 }
@@ -3020,7 +3020,7 @@ type_implements(DeeTypeObject *self, size_t argc,
 	DeeTypeObject *other;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__other, "o:implements", &other))
 		goto err;
-	Dee_return_reference((DeeObject *)&Dee_FalseTrue[DeeType_Implements(self, other)]);
+	return_bool01(DeeType_Implements(self, other));
 err:
 	return NULL;
 }

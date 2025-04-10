@@ -3365,7 +3365,7 @@ done_decr:
 #endif
 	return 0;
 err_overflow:
-	err_integer_overflow((DeeObject *)me, length * __CHAR_BIT__, true);
+	err_integer_overflow((DeeObject *)me, length * CHAR_BIT, true);
 err:
 	return -1;
 }
@@ -3997,7 +3997,7 @@ int_hash(DeeIntObject *__restrict self) {
 	}
 	do {
 		--i;
-		x = (x << DIGIT_BITS) | (x >> ((Dee_SIZEOF_HASH_T * __CHAR_BIT__) - DIGIT_BITS));
+		x = (x << DIGIT_BITS) | (x >> ((Dee_SIZEOF_HASH_T * CHAR_BIT) - DIGIT_BITS));
 		x += self->ob_digit[(size_t)i];
 	} while ((size_t)i);
 	return x * sign;
@@ -4570,7 +4570,7 @@ err:
 			goto err;                                                     \
 		diff = int_compareint(self, y);                                   \
 		Dee_Decref(y);                                                    \
-		return_bool(diff cmp 0);                                         \
+		return_bool(diff cmp 0);                                          \
 	err:                                                                  \
 		return NULL;                                                      \
 	}
