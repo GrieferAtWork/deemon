@@ -5778,7 +5778,7 @@ default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange
 	size_t start_index, end_index;
 	if (DeeObject_AsSize(start, &start_index))
 		goto err;
-	if (DeeObject_AsSize(end, &end_index))
+	if (DeeObject_AsSizeM1(end, &end_index))
 		goto err;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_makeenumeration_with_intrange))(self, start_index, end_index);
 err:

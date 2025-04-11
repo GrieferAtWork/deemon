@@ -88,7 +88,7 @@ __seq_enumerate_items__.seq_makeenumeration_with_range([[nonnull]] DeeObject *se
 	size_t start_index, end_index;
 	if (DeeObject_AsSize(start, &start_index))
 		goto err;
-	if (DeeObject_AsSize(end, &end_index))
+	if (DeeObject_AsSizeM1(end, &end_index))
 		goto err;
 	return CALL_DEPENDENCY(seq_makeenumeration_with_intrange, self, start_index, end_index);
 err:

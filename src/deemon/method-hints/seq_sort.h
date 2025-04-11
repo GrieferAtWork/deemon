@@ -45,7 +45,7 @@ __seq_sort__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N) {{
 		case 3:
 			if (DeeObject_AsSize(argv[0], &start))
 				goto err;
-			if (DeeObject_AsSize(argv[1], &end))
+			if (DeeObject_AsSizeM1(argv[1], &end))
 				goto err;
 			if (argc == 2) {
 				error = CALL_DEPENDENCY(seq_sort, self, start, end);

@@ -817,7 +817,7 @@ bs_flip(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t start, end;
 		if (DeeObject_AsSize(argv[0], &start))
 			goto err;
-		if (DeeObject_AsSize(argv[1], &end))
+		if (DeeObject_AsSizeM1(argv[1], &end))
 			goto err;
 		if (end > self->bs_nbits)
 			end = self->bs_nbits;
@@ -859,7 +859,7 @@ bs_set(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t start, end;
 		if (DeeObject_AsSize(argv[0], &start))
 			goto err;
-		if (DeeObject_AsSize(argv[1], &end))
+		if (DeeObject_AsSizeM1(argv[1], &end))
 			goto err;
 		if (end > self->bs_nbits)
 			end = self->bs_nbits;
@@ -901,7 +901,7 @@ bs_clear(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t start, end;
 		if (DeeObject_AsSize(argv[0], &start))
 			goto err;
-		if (DeeObject_AsSize(argv[1], &end))
+		if (DeeObject_AsSizeM1(argv[1], &end))
 			goto err;
 		if (end > self->bs_nbits)
 			end = self->bs_nbits;
@@ -2924,7 +2924,7 @@ bsv_flip(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t start, end, nbits;
 		if (DeeObject_AsSize(argv[0], &start))
 			goto err;
-		if (DeeObject_AsSize(argv[1], &end))
+		if (DeeObject_AsSizeM1(argv[1], &end))
 			goto err;
 		nbits = BitsetView_GetNBits(self);
 		if (end > nbits)
@@ -2975,7 +2975,7 @@ bsv_set(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t start, end, nbits;
 		if (DeeObject_AsSize(argv[0], &start))
 			goto err;
-		if (DeeObject_AsSize(argv[1], &end))
+		if (DeeObject_AsSizeM1(argv[1], &end))
 			goto err;
 		nbits = BitsetView_GetNBits(self);
 		if (end > nbits)
@@ -3026,7 +3026,7 @@ bsv_clear(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t start, end, nbits;
 		if (DeeObject_AsSize(argv[0], &start))
 			goto err;
-		if (DeeObject_AsSize(argv[1], &end))
+		if (DeeObject_AsSizeM1(argv[1], &end))
 			goto err;
 		nbits = BitsetView_GetNBits(self);
 		if (end > nbits)

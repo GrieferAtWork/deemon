@@ -522,7 +522,7 @@ DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		case 3:
 			if (DeeObject_AsSize(argv[0], &start))
 				goto err;
-			if (DeeObject_AsSize(argv[1], &end))
+			if (DeeObject_AsSizeM1(argv[1], &end))
 				goto err;
 			if (argc == 2) {
 				result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_any_with_range))(self, start, end);
@@ -591,7 +591,7 @@ DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		case 3:
 			if (DeeObject_AsSize(argv[0], &start))
 				goto err;
-			if (DeeObject_AsSize(argv[1], &end))
+			if (DeeObject_AsSizeM1(argv[1], &end))
 				goto err;
 			if (argc == 2) {
 				result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_all_with_range))(self, start, end);
@@ -660,7 +660,7 @@ DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 		case 3:
 			if (DeeObject_AsSize(argv[0], &start))
 				goto err;
-			if (DeeObject_AsSize(argv[1], &end))
+			if (DeeObject_AsSizeM1(argv[1], &end))
 				goto err;
 			if (argc == 2) {
 				result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_parity_with_range))(self, start, end);
@@ -1052,7 +1052,7 @@ DeeMA___seq_erase__(DeeObject *__restrict self, size_t argc, DeeObject *const *a
 		size_t count;
 	} args;
 	args.count = 1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__index_count,  UNPuSIZ "|" UNPuSIZ ":__seq_erase__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__index_count, UNPuSIZ "|" UNPuSIZ ":__seq_erase__", &args))
 		goto err;
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_erase))(self, args.index, args.count))
@@ -1068,7 +1068,7 @@ DeeMA___seq_insert__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 		size_t index;
 		DeeObject *item;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__index_item,  UNPuSIZ "o:__seq_insert__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__index_item, UNPuSIZ "o:__seq_insert__", &args))
 		goto err;
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_insert))(self, args.index, args.item))
@@ -1084,7 +1084,7 @@ DeeMA___seq_insertall__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 		size_t index;
 		DeeObject *items;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__index_items,  UNPuSIZ "o:__seq_insertall__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__index_items, UNPuSIZ "o:__seq_insertall__", &args))
 		goto err;
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_insertall))(self, args.index, args.items))
@@ -1142,7 +1142,7 @@ DeeMA___seq_xchitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 		size_t index;
 		DeeObject *item;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__index_item,  UNPuSIZ "o:__seq_xchitem__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__index_item, UNPuSIZ "o:__seq_xchitem__", &args))
 		goto err;
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_xchitem_index))(self, args.index, args.item);
@@ -1229,19 +1229,19 @@ DeeMA___seq_removeall__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 		DeeObject *item;
 		size_t start;
 		size_t end;
-		size_t max;
+		size_t _max;
 		DeeObject *key;
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	args.max = (size_t)-1;
+	args._max = (size_t)-1;
 	args.key = Dee_None;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_max_key, "o|" UNPuSIZ UNPxSIZ UNPxSIZ "o:__seq_removeall__", &args))
 		goto err;
 {
 	size_t result = !DeeNone_Check(args.key)
-	                ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeall_with_key))(self, args.item, args.start, args.end, args.max, args.key)
-	                : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeall))(self, args.item, args.start, args.end, args.max);
+	                ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeall_with_key))(self, args.item, args.start, args.end, args._max, args.key)
+	                : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeall))(self, args.item, args.start, args.end, args._max);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -1255,15 +1255,15 @@ DeeMA___seq_removeif__(DeeObject *__restrict self, size_t argc, DeeObject *const
 		DeeObject *should;
 		size_t start;
 		size_t end;
-		size_t max;
+		size_t _max;
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	args.max = (size_t)-1;
+	args._max = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__should_start_end_max, "o|" UNPuSIZ UNPxSIZ UNPxSIZ ":__seq_removeif__", &args))
 		goto err;
 {
-	size_t result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeif))(self, args.should, args.start, args.end, args.max);
+	size_t result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeif))(self, args.should, args.start, args.end, args._max);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -1278,7 +1278,7 @@ DeeMA___seq_resize__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 		DeeObject *filler;
 	} args;
 	args.filler = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__size_filler,  UNPuSIZ "|o:__seq_resize__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__size_filler, UNPuSIZ "|o:__seq_resize__", &args))
 		goto err;
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_resize))(self, args.size, args.filler))
@@ -1364,7 +1364,7 @@ DeeMA___seq_sort__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 		case 3:
 			if (DeeObject_AsSize(argv[0], &start))
 				goto err;
-			if (DeeObject_AsSize(argv[1], &end))
+			if (DeeObject_AsSizeM1(argv[1], &end))
 				goto err;
 			if (argc == 2) {
 				error = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort))(self, start, end);
@@ -1424,7 +1424,7 @@ DeeMA___seq_sorted__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 		case 3:
 			if (DeeObject_AsSize(argv[0], &start))
 				goto err;
-			if (DeeObject_AsSize(argv[1], &end))
+			if (DeeObject_AsSizeM1(argv[1], &end))
 				goto err;
 			if (argc == 2)
 				return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted))(self, start, end);
