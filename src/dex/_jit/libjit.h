@@ -1004,7 +1004,7 @@ JITLexer_SkipArgumentList(JITLexer *__restrict self);
  *                ^
  *                +--- first_label_name == "x: 30, y...."
  *                     first_label_size == 1 */
-INTDEF WUNUSED ATTR_OUTS(2, 3) NONNULL((1)) DREF DeeObject *DFCALL
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DFCALL
 JITLexer_EvalKeywordLabelList(JITLexer *__restrict self,
                               char const *__restrict first_label_name,
                               size_t first_label_size);

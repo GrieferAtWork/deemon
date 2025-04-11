@@ -6030,7 +6030,7 @@ err:
 
 
 /* NOTE: Allowed to returns *OUTSIDE* of [-1,1] */
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 4)) int DCALL
 compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
                    String *rhs, size_t rhs_start, size_t rhs_end) {
 	size_t lhs_len;
@@ -6324,7 +6324,7 @@ compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 }
 
 /* NOTE: Always returns within [-1,1] */
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 4)) int DCALL
 casecompare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
                        String *rhs, size_t rhs_start, size_t rhs_end) {
 	size_t lhs_len;
