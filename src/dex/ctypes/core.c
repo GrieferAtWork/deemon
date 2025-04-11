@@ -1273,7 +1273,7 @@ PRIVATE struct type_attr struct_attr = {
 	/* .tp_getattr  = */ &struct_getattr,
 	/* .tp_delattr  = */ &struct_delattr,
 	/* .tp_setattr  = */ &struct_setattr,
-	/* .tp_enumattr = */ &struct_iterattr,
+	/* .tp_iterattr = */ &struct_iterattr,
 	/* TODO: Also define all of the string-based accessors! */
 };
 

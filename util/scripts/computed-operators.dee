@@ -306,7 +306,7 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 		NativeOperator("tp_getattr"),
 		NativeOperator("tp_delattr"),
 		NativeOperator("tp_setattr"),
-		Field("tp_enumattr"), // NativeOperator("tp_enumattr"),
+		Field("tp_iterattr"), // NativeOperator("tp_iterattr"),
 		Field("tp_findattr"), // NativeOperator("tp_findattr"),
 		NativeOperator("tp_hasattr"),
 		NativeOperator("tp_boundattr"),
