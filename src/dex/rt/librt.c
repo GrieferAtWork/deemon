@@ -4097,7 +4097,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "KwCMethod", (DeeObject *)&DeeKwCMethod_Type, MODSYM_FREADONLY,
 	  DOC("C-variant of ?GFunction (with keyword support)") },
 	{ "ObjMethod", (DeeObject *)&DeeObjMethod_Type, MODSYM_FREADONLY,
-	  DOC("C-variant of ?GInstanceMethod (e.g. ${\"FOO\".lower'})") },
+	  DOC("C-variant of ?GInstanceMethod (e.g. ${\"FOO\".lower})") },
 	{ "KwObjMethod", (DeeObject *)&DeeKwObjMethod_Type, MODSYM_FREADONLY,
 	  DOC("C-variant of ?GInstanceMethod (with keyword support)") },
 	{ "ClassMethod", (DeeObject *)&DeeClsMethod_Type, MODSYM_FREADONLY,
