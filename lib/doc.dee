@@ -115,8 +115,8 @@ local function encodeType(tp: Type): string {
 @@that path into the form of @"?A<ATTR>?A<ATTR>?E<MODULE>:<ITEM>"
 local function encodeTypeFromPath(path: string): string {
 	local a, none, b = path.strip("/").rpartition("/")...;
-	if (!b)
-		return "?M" + encodeName(a);
+	if (!a)
+		return "?M" + encodeName(b);
 	if ("/" !in a) {
 		return f"?E{
 			encodeName(a)
