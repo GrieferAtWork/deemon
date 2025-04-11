@@ -456,6 +456,34 @@ err_r:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+bf_size(BytesFind *__restrict self) {
+	return memcnt(self->bf_start, (size_t)(self->bf_end - self->bf_start),
+	              self->bf_needle.n_data, self->bf_needle.n_size);
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+bcf_size(BytesFind *__restrict self) {
+	return memcasecnt(self->bf_start, (size_t)(self->bf_end - self->bf_start),
+	                  self->bf_needle.n_data, self->bf_needle.n_size);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+bf_bool(BytesFind *__restrict self) {
+	return memmem(self->bf_start, (size_t)(self->bf_end - self->bf_start),
+	              self->bf_needle.n_data, self->bf_needle.n_size)
+	       ? 1
+	       : 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+bcf_bool(BytesFind *__restrict self) {
+	return memcasemem(self->bf_start, (size_t)(self->bf_end - self->bf_start),
+	                  self->bf_needle.n_data, self->bf_needle.n_size)
+	       ? 1
+	       : 0;
+}
+
 PRIVATE struct type_seq bf_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bf_iter,
 	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
@@ -470,7 +498,7 @@ PRIVATE struct type_seq bf_seq = {
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
-	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter), /* TODO: Bytes.count() */
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&bf_size,
 	/* .tp_size_fast                  = */ NULL,
 	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
 	/* .tp_getitem_index_fast         = */ NULL,
@@ -514,7 +542,7 @@ PRIVATE struct type_seq bcf_seq = {
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
-	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter), /* TODO: Bytes.casecount() */
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&bcf_size,
 	/* .tp_size_fast                  = */ NULL,
 	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
 	/* .tp_getitem_index_fast         = */ NULL,
@@ -566,7 +594,13 @@ PRIVATE struct type_member tpconst bcf_class_members[] = {
 INTERN DeeTypeObject BytesFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesFind",
-	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end=!A!Dint!PSIZE_MAX)"),
+	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end=!-1)\n"
+	                         "\n"
+	                         "size->\n"
+	                         "Same as ${this.__str__.count(this.__needle__, this.__start__, this.__end__)}\n"
+	                         "\n"
+	                         "bool->\n"
+	                         "Same as ${this.__str__.contains(this.__needle__, this.__start__, this.__end__)}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -588,7 +622,7 @@ INTERN DeeTypeObject BytesFind_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ NULL  /* TODO: Bytes.contains() */,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bf_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
@@ -616,7 +650,13 @@ INTERN DeeTypeObject BytesFind_Type = {
 INTERN DeeTypeObject BytesCaseFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesCaseFind",
-	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end=!A!Dint!PSIZE_MAX)"),
+	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end=!-1)\n"
+	                         "\n"
+	                         "size->\n"
+	                         "Same as ${this.__str__.casecount(this.__needle__, this.__start__, this.__end__)}\n"
+	                         "\n"
+	                         "bool->\n"
+	                         "Same as ${this.__str__.casecontains(this.__needle__, this.__start__, this.__end__)}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -638,7 +678,7 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ NULL  /* TODO: Bytes.casecontains() */,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bcf_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
