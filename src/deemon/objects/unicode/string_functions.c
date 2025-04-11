@@ -4777,6 +4777,93 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
+rpartition_pack_notfoundb(String *__restrict self,
+                          uint8_t const *lhs,
+                          size_t lhs_length) {
+	DREF String *lhs_string;
+	DREF DeeTupleObject *result;
+	result = DeeTuple_NewUninitialized(3);
+	if unlikely(!result)
+		goto err;
+	if (lhs == DeeString_Get1Byte((DeeObject *)self) &&
+	    WSTR_LENGTH(lhs) == lhs_length) {
+		lhs_string = self;
+		Dee_Incref(self);
+	} else {
+		lhs_string = (DREF String *)DeeString_New1Byte(lhs, lhs_length);
+		if unlikely(!lhs_string)
+			goto err_r;
+	}
+	Dee_Incref_n(Dee_EmptyString, 2);
+	DeeTuple_SET(result, 0, Dee_EmptyString);
+	DeeTuple_SET(result, 1, Dee_EmptyString);
+	DeeTuple_SET(result, 2, lhs_string);
+	return result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
+rpartition_pack_notfoundw(String *__restrict self,
+                          uint16_t const *lhs,
+                          size_t lhs_length) {
+	DREF String *lhs_string;
+	DREF DeeTupleObject *result;
+	result = DeeTuple_NewUninitialized(3);
+	if unlikely(!result)
+		goto err;
+	if (lhs == DeeString_Get2Byte((DeeObject *)self) &&
+	    WSTR_LENGTH(lhs) == lhs_length) {
+		lhs_string = self;
+		Dee_Incref(self);
+	} else {
+		lhs_string = (DREF String *)DeeString_New2Byte(lhs, lhs_length);
+		if unlikely(!lhs_string)
+			goto err_r;
+	}
+	Dee_Incref_n(Dee_EmptyString, 2);
+	DeeTuple_SET(result, 0, Dee_EmptyString);
+	DeeTuple_SET(result, 1, Dee_EmptyString);
+	DeeTuple_SET(result, 2, lhs_string);
+	return result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
+rpartition_pack_notfoundl(String *__restrict self,
+                          uint32_t const *lhs,
+                          size_t lhs_length) {
+	DREF String *lhs_string;
+	DREF DeeTupleObject *result;
+	result = DeeTuple_NewUninitialized(3);
+	if unlikely(!result)
+		goto err;
+	if (lhs == DeeString_Get4Byte((DeeObject *)self) &&
+	    WSTR_LENGTH(lhs) == lhs_length) {
+		lhs_string = self;
+		Dee_Incref(self);
+	} else {
+		lhs_string = (DREF String *)DeeString_New4Byte(lhs, lhs_length);
+		if unlikely(!lhs_string)
+			goto err_r;
+	}
+	Dee_Incref_n(Dee_EmptyString, 2);
+	DeeTuple_SET(result, 0, Dee_EmptyString);
+	DeeTuple_SET(result, 1, Dee_EmptyString);
+	DeeTuple_SET(result, 2, lhs_string);
+	return result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 partition_packb(String *__restrict other,
                 uint8_t const *lhs, size_t lhs_length,
@@ -5141,7 +5228,7 @@ string_rpartition(String *self, size_t argc,
 not_foundb_zero:
 		mylen = 0;
 not_foundb:
-		return partition_pack_notfoundb(self, lhs.cp8, mylen);
+		return rpartition_pack_notfoundb(self, lhs.cp8, mylen);
 
 	CASE_WIDTH_2BYTE:
 		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
@@ -5163,7 +5250,7 @@ not_foundb:
 not_foundw_zero:
 		mylen = 0;
 not_foundw:
-		return partition_pack_notfoundw(self, lhs.cp16, mylen);
+		return rpartition_pack_notfoundw(self, lhs.cp16, mylen);
 
 	CASE_WIDTH_4BYTE:
 		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
@@ -5185,7 +5272,7 @@ not_foundw:
 not_foundl_zero:
 		mylen = 0;
 not_foundl:
-		return partition_pack_notfoundl(self, lhs.cp32, mylen);
+		return rpartition_pack_notfoundl(self, lhs.cp32, mylen);
 	}
 err:
 	return NULL;
@@ -5329,7 +5416,7 @@ string_caserpartition(String *self, size_t argc,
 not_foundb_zero:
 		mylen = 0;
 not_foundb:
-		return partition_pack_notfoundb(self, lhs.cp8, mylen);
+		return rpartition_pack_notfoundb(self, lhs.cp8, mylen);
 
 	CASE_WIDTH_2BYTE:
 		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
@@ -5353,7 +5440,7 @@ not_foundb:
 not_foundw_zero:
 		mylen = 0;
 not_foundw:
-		return partition_pack_notfoundw(self, lhs.cp16, mylen);
+		return rpartition_pack_notfoundw(self, lhs.cp16, mylen);
 
 	CASE_WIDTH_4BYTE:
 		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
@@ -5377,7 +5464,7 @@ not_foundw:
 not_foundl_zero:
 		mylen = 0;
 not_foundl:
-		return partition_pack_notfoundl(self, lhs.cp32, mylen);
+		return rpartition_pack_notfoundl(self, lhs.cp32, mylen);
 	}
 err:
 	return NULL;
@@ -9219,11 +9306,11 @@ string_rpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 done:
 	return (DREF DeeObject *)result;
 match_not_found:
-	result->t_elem[0] = (DREF DeeObject *)string_getsubstr(self, args.start, args.end);
-	if unlikely(!result->t_elem[0])
+	result->t_elem[2] = (DREF DeeObject *)string_getsubstr(self, args.start, args.end);
+	if unlikely(!result->t_elem[2])
 		goto err_r_0;
+	result->t_elem[0] = Dee_EmptyString;
 	result->t_elem[1] = Dee_EmptyString;
-	result->t_elem[2] = Dee_EmptyString;
 	Dee_Incref_n(Dee_EmptyString, 2);
 	goto done;
 err_r_2:
@@ -9564,11 +9651,11 @@ string_caserpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 done:
 	return (DREF DeeObject *)result;
 match_not_found:
-	result->t_elem[0] = (DREF DeeObject *)string_getsubstr(self, args.start, args.end);
-	if unlikely(!result->t_elem[0])
+	result->t_elem[2] = (DREF DeeObject *)string_getsubstr(self, args.start, args.end);
+	if unlikely(!result->t_elem[2])
 		goto err_r_0;
+	result->t_elem[0] = Dee_EmptyString;
 	result->t_elem[1] = Dee_EmptyString;
-	result->t_elem[2] = Dee_EmptyString;
 	Dee_Incref_n(Dee_EmptyString, 2);
 	goto done;
 err_r_2:
@@ -10169,25 +10256,31 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_pack_utf8_partition_not_found(char const *__restrict utf8_base,
-                                     size_t startoff, size_t endoff) {
+                                     size_t startoff, size_t endoff,
+                                     bool is_rpartition) {
 	DREF DeeTupleObject *result;
+	DREF DeeObject *str0;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto done;
 	if (startoff < endoff) {
-		DREF DeeObject *str0;
 		str0 = DeeString_NewUtf8(utf8_base + startoff,
 		                         endoff - startoff,
 		                         STRING_ERROR_FSTRICT);
 		if unlikely(!str0)
 			goto err_r;
-		result->t_elem[0] = str0;
 	} else {
-		result->t_elem[0] = DeeString_NewEmpty();
+		str0 = DeeString_NewEmpty();
 	}
 	Dee_Incref_n(&DeeString_Empty, 2);
 	result->t_elem[1] = (DeeObject *)&DeeString_Empty;
-	result->t_elem[2] = (DeeObject *)&DeeString_Empty;
+	if (is_rpartition) {
+		result->t_elem[0] = (DeeObject *)&DeeString_Empty;
+		result->t_elem[2] = str0;
+	} else {
+		result->t_elem[0] = str0;
+		result->t_elem[2] = (DeeObject *)&DeeString_Empty;
+	}
 	return result;
 done:
 	return result;
@@ -10243,7 +10336,8 @@ string_repartition(String *self, size_t argc, DeeObject *const *argv, DeeObject 
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		return string_pack_utf8_partition_not_found((char const *)exec.rewr_exec.rx_inbase,
 		                                            exec.rewr_exec.rx_startoff,
-		                                            exec.rewr_exec.rx_endoff);
+		                                            exec.rewr_exec.rx_endoff,
+		                                            false);
 	}
 	result -= exec.rewr_exec.rx_startoff;
 	exec.rewr_exec.rx_endoff -= exec.rewr_exec.rx_startoff;
@@ -10269,7 +10363,8 @@ string_rerpartition(String *self, size_t argc, DeeObject *const *argv, DeeObject
 	if (result == DEE_RE_STATUS_NOMATCH) {
 		return string_pack_utf8_partition_not_found((char const *)exec.rewr_exec.rx_inbase,
 		                                            exec.rewr_exec.rx_startoff,
-		                                            exec.rewr_exec.rx_endoff);
+		                                            exec.rewr_exec.rx_endoff,
+		                                            true);
 	}
 	result -= exec.rewr_exec.rx_startoff;
 	exec.rewr_exec.rx_endoff -= exec.rewr_exec.rx_startoff;
@@ -11356,7 +11451,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "(" string_rpartition_params ")->?T3?.?.?.\n"
 	                "Search for the last instance of @needle within ${this.substr(start, end)} and "
 	                /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
-	                "If @needle could not be found, ${(this, \"\", \"\")} is returned"),
+	                "If @needle could not be found, ${(\"\", \"\", this)} is returned"),
 	TYPE_METHOD_F("compare", &string_compare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	              "" get_compare_decl("other", "->?Dint") "\n"
@@ -11757,7 +11852,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "/* { \"{ } foo \", \"{ x, y, { 13, 19, 42, { } }, w }\", \" -- tail\" } */\n"
 	              /**/ "print repr s.rpartitionmatch(\"{\", \"}\");"
 	              "}\n"
-	              "If no matching @open + @close pair could be found, ${(this[start:end], \"\", \"\")} is returned\n"
+	              "If no matching @open + @close pair could be found, ${(\"\", \"\", this[start:end])} is returned\n"
 	              "${"
 	              /**/ "function rpartitionmatch(open: string, close: string, start: int = 0, end: int = -1) {\n"
 	              /**/ "	local i;\n"
@@ -12020,7 +12115,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "function rerpartition(pattern: string, start: int, end: int, rules: string) {\n"
 	                "	local start, end = this.rerfind(pattern, start, end, rules)...;\n"
 	                "	if (start is none)\n"
-	                "		return (this, \"\", \"\");\n"
+	                "		return (\"\", \"\", this);\n"
 	                "	return (\n"
 	                "		this.substr(0, start),\n"
 	                "		this.substr(start, end), \n"

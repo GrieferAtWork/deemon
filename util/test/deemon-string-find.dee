@@ -107,22 +107,22 @@ function t(x, w) {
 	assertCount("d", 1);
 	assertCount("bc", 1);
 	assertCount("cb", 0);
-	assert x.partition(w(""))[0] === x;
-	assert x.partition(w(""))[1] == "";
-	assert x.partition(w(""))[2] == "";
-	assert x.rpartition(w(""))[0] === x;
-	assert x.rpartition(w(""))[1] == "";
-	assert x.rpartition(w(""))[2] == "";
-	assert x.casepartition(w(""))[0] === x;
-	assert x.casepartition(w(""))[1] == "";
-	assert x.casepartition(w(""))[2] == "";
-	assert x.caserpartition(w(""))[0] === x;
-	assert x.caserpartition(w(""))[1] == "";
-	assert x.caserpartition(w(""))[2] == "";
-	assert x.split(w("")) == { x };
-	assert x.casesplit(w("")) == { x };
-	assert x.findall(w("")) == { };
-	assert x.casefindall(w("")) == { };
+	assert x.partition(w("xxx"))[0] === x;
+	assert x.partition(w("xxx"))[1] == "";
+	assert x.partition(w("xxx"))[2] == "";
+	assert x.rpartition(w("xxx"))[0] == "";
+	assert x.rpartition(w("xxx"))[1] == "";
+	assert x.rpartition(w("xxx"))[2] === x;
+	assert x.casepartition(w("xxx"))[0] === x;
+	assert x.casepartition(w("xxx"))[1] == "";
+	assert x.casepartition(w("xxx"))[2] == "";
+	assert x.caserpartition(w("xxx"))[0] == "";
+	assert x.caserpartition(w("xxx"))[1] == "";
+	assert x.caserpartition(w("xxx"))[2] === x;
+	assert x.split(w("xxx")) == { x };
+	assert x.casesplit(w("xxx")) == { x };
+	assert x.findall(w("xxx")) == { };
+	assert x.casefindall(w("xxx")) == { };
 }
 
 t("abcd", x -> x);

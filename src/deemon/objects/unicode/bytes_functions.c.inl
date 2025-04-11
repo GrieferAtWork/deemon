@@ -2464,32 +2464,43 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeTupleObject *DCALL
+LOCAL WUNUSED NONNULL((1, 3)) DREF DeeTupleObject *DCALL
 bytes_pack_partition(Bytes *self, byte_t *find_ptr,
                      byte_t *start_ptr, size_t search_size,
-                     size_t needle_len) {
+                     size_t needle_len, bool is_rpartition) {
 	DREF DeeTupleObject *result;
-	DREF DeeObject *temp;
-	if (!find_ptr)
-		return (DREF DeeTupleObject *)DeeTuple_Pack(3, self, Dee_EmptyBytes, Dee_EmptyBytes);
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto done;
-	temp = DeeBytes_NewSubView(self, start_ptr,
-	                           (size_t)(find_ptr - start_ptr));
-	if unlikely(!temp)
-		goto err_r_0;
-	DeeTuple_SET(result, 0, temp); /* Inherit reference. */
-	temp = DeeBytes_NewSubView(self, find_ptr, needle_len);
-	if unlikely(!temp)
-		goto err_r_1;
-	DeeTuple_SET(result, 1, temp); /* Inherit reference. */
-	find_ptr += needle_len;
-	temp = DeeBytes_NewSubView(self, find_ptr,
-	                           (start_ptr + search_size) - find_ptr);
-	if unlikely(!temp)
-		goto err_r_2;
-	DeeTuple_SET(result, 2, temp); /* Inherit reference. */
+	if (!find_ptr) {
+		Dee_Incref(self);
+		Dee_Incref_n(Dee_EmptyBytes, 2);
+		DeeTuple_SET(result, 1, Dee_EmptyBytes); /* Inherit reference. */
+		if (is_rpartition) {
+			DeeTuple_SET(result, 0, Dee_EmptyBytes); /* Inherit reference. */
+			DeeTuple_SET(result, 2, self);           /* Inherit reference. */
+		} else {
+			DeeTuple_SET(result, 0, self);           /* Inherit reference. */
+			DeeTuple_SET(result, 2, Dee_EmptyBytes); /* Inherit reference. */
+		}
+	} else {
+		DREF DeeObject *temp;
+		temp = DeeBytes_NewSubView(self, start_ptr,
+		                           (size_t)(find_ptr - start_ptr));
+		if unlikely(!temp)
+			goto err_r_0;
+		DeeTuple_SET(result, 0, temp); /* Inherit reference. */
+		temp = DeeBytes_NewSubView(self, find_ptr, needle_len);
+		if unlikely(!temp)
+			goto err_r_1;
+		DeeTuple_SET(result, 1, temp); /* Inherit reference. */
+		find_ptr += needle_len;
+		temp = DeeBytes_NewSubView(self, find_ptr,
+		                           (start_ptr + search_size) - find_ptr);
+		if unlikely(!temp)
+			goto err_r_2;
+		DeeTuple_SET(result, 2, temp); /* Inherit reference. */
+	}
 done:
 	return result;
 err_r_2:
@@ -2541,7 +2552,8 @@ bytes_partition(Bytes *self, size_t argc,
 	                                    needle.n_size),
 	                            DeeBytes_DATA(self) + args.start,
 	                            args.end,
-	                            needle.n_size);
+	                            needle.n_size,
+	                            false);
 err:
 	return NULL;
 }
@@ -2578,7 +2590,8 @@ bytes_casepartition(Bytes *self, size_t argc,
 	                                            needle.n_size),
 	                            DeeBytes_DATA(self) + args.start,
 	                            args.end,
-	                            needle.n_size);
+	                            needle.n_size,
+	                            false);
 err:
 	return NULL;
 }
@@ -2615,7 +2628,8 @@ bytes_rpartition(Bytes *self, size_t argc,
 	                                     needle.n_size),
 	                            DeeBytes_DATA(self) + args.start,
 	                            args.end,
-	                            needle.n_size);
+	                            needle.n_size,
+	                            true);
 err:
 	return NULL;
 }
@@ -2652,7 +2666,8 @@ bytes_caserpartition(Bytes *self, size_t argc,
 	                                             needle.n_size),
 	                            DeeBytes_DATA(self) + args.start,
 	                            args.end,
-	                            needle.n_size);
+	                            needle.n_size,
+	                            true);
 err:
 	return NULL;
 }
@@ -4328,12 +4343,12 @@ bytes_rpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 done:
 	return (DREF DeeObject *)result;
 match_not_found:
-	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, args.start, args.end);
-	if unlikely(!result->t_elem[0])
+	result->t_elem[2] = (DREF DeeObject *)bytes_getsubstr(self, args.start, args.end);
+	if unlikely(!result->t_elem[2])
 		goto err_r_0;
-	result->t_elem[1] = Dee_EmptyString;
-	result->t_elem[2] = Dee_EmptyString;
 	Dee_Incref_n(Dee_EmptyString, 2);
+	result->t_elem[0] = Dee_EmptyString;
+	result->t_elem[2] = Dee_EmptyString;
 	goto done;
 err_r_2:
 	Dee_Decref_likely(result->t_elem[1]);
@@ -4416,9 +4431,9 @@ match_not_found:
 	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, args.start, args.end);
 	if unlikely(!result->t_elem[0])
 		goto err_r_0;
+	Dee_Incref_n(Dee_EmptyBytes, 2);
 	result->t_elem[1] = Dee_EmptyBytes;
 	result->t_elem[2] = Dee_EmptyBytes;
-	Dee_Incref_n(Dee_EmptyBytes, 2);
 	goto done;
 err_r_2:
 	Dee_Decref_likely(result->t_elem[1]);
@@ -4498,12 +4513,12 @@ bytes_caserpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 done:
 	return (DREF DeeObject *)result;
 match_not_found:
-	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, args.start, args.end);
-	if unlikely(!result->t_elem[0])
+	result->t_elem[2] = (DREF DeeObject *)bytes_getsubstr(self, args.start, args.end);
+	if unlikely(!result->t_elem[2])
 		goto err_r_0;
-	result->t_elem[1] = Dee_EmptyString;
-	result->t_elem[2] = Dee_EmptyString;
 	Dee_Incref_n(Dee_EmptyString, 2);
+	result->t_elem[0] = Dee_EmptyString;
+	result->t_elem[1] = Dee_EmptyString;
 	goto done;
 err_r_2:
 	Dee_Decref_likely(result->t_elem[1]);
@@ -5104,25 +5119,31 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
 bytes_pack_partition_not_found(Bytes *__restrict self,
                                char const *__restrict bytes_base,
-                               size_t startoff, size_t endoff) {
+                               size_t startoff, size_t endoff,
+                               bool is_rpartition) {
 	DREF DeeTupleObject *result;
+	DREF DeeObject *str0;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto done;
 	if (startoff < endoff) {
-		DREF DeeObject *str0;
 		str0 = DeeBytes_NewSubView(self,
 		                           (void *)(bytes_base + startoff),
 		                           endoff - startoff);
 		if unlikely(!str0)
 			goto err_r;
-		result->t_elem[0] = str0;
 	} else {
-		result->t_elem[0] = DeeString_NewEmpty();
+		str0 = DeeString_NewEmpty();
 	}
-	Dee_Incref_n(&DeeString_Empty, 2);
 	result->t_elem[1] = (DeeObject *)&DeeString_Empty;
-	result->t_elem[2] = (DeeObject *)&DeeString_Empty;
+	Dee_Incref_n(&DeeString_Empty, 2);
+	if (is_rpartition) {
+		result->t_elem[0] = (DeeObject *)&DeeString_Empty;
+		result->t_elem[2] = str0;
+	} else {
+		result->t_elem[0] = str0;
+		result->t_elem[2] = (DeeObject *)&DeeString_Empty;
+	}
 	return result;
 done:
 	return result;
@@ -5184,7 +5205,8 @@ bytes_repartition(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *k
 		return bytes_pack_partition_not_found(self,
 		                                      (char const *)exec.rewr_exec.rx_inbase,
 		                                      exec.rewr_exec.rx_startoff,
-		                                      exec.rewr_exec.rx_endoff);
+		                                      exec.rewr_exec.rx_endoff,
+		                                      false);
 	}
 	result -= exec.rewr_exec.rx_startoff;
 	exec.rewr_exec.rx_endoff -= exec.rewr_exec.rx_startoff;
@@ -5214,7 +5236,8 @@ bytes_rerpartition(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *
 		return bytes_pack_partition_not_found(self,
 		                                      (char const *)exec.rewr_exec.rx_inbase,
 		                                      exec.rewr_exec.rx_startoff,
-		                                      exec.rewr_exec.rx_endoff);
+		                                      exec.rewr_exec.rx_endoff,
+		                                      true);
 	}
 	result -= exec.rewr_exec.rx_startoff;
 	exec.rewr_exec.rx_endoff -= exec.rewr_exec.rx_startoff;
@@ -6136,7 +6159,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "(" bytes_rpartition_params ")->?T3?.?.?.\n"
 	                "Search for the last instance of @needle within ${this.substr(start, end)} and "
 	                "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
-	                "If @needle could not be found, ${(this, \"\".bytes(), \"\".bytes())} is returned"),
+	                "If @needle could not be found, ${(\"\".bytes(), \"\".bytes(), this)} is returned"),
 	TYPE_METHOD_F("compare", &bytes_compare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	              "" get_bcompare_decl("other", "->?Dint") "\n"
@@ -6670,7 +6693,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "function rerpartition(pattern: string, start: int, end: int, rules: string) {\n"
 	                "	local start, end = this.rerfind(pattern, start, end, rules)...;\n"
 	                "	if (start is none)\n"
-	                "		return (this, \"\".bytes(), \"\".bytes());\n"
+	                "		return (\"\".bytes(), \"\".bytes(), this);\n"
 	                "	return (\n"
 	                "		this.substr(0, start),\n"
 	                "		this.substr(start, end), \n"
