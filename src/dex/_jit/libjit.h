@@ -601,6 +601,10 @@ JITLexer_PackLValue(JITLexer *__restrict self);
 	((self)->jl_tokend = (start),        \
 	 (self)->jl_end    = (end),          \
 	 JITLexer_Yield(self))
+#define JITSmallLexer_Start(self, start, end) \
+	((self)->jl_tokend = (start),             \
+	 (self)->jl_end    = (end),               \
+	 JITLexer_Yield((JITLexer *)(self)))
 
 
 /* Starting at `token->jl_tokend', scan for the next input token

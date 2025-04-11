@@ -107,7 +107,7 @@ JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg) 
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) bool DCALL
+PRIVATE NONNULL((1)) bool DCALL
 JITObjectTable_TryRehash(JITObjectTable *__restrict self,
                          size_t new_mask) {
 	size_t i, j, perturb;

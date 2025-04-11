@@ -956,8 +956,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 jit_compare_tokens(unsigned char const *lhs_start, unsigned char const *lhs_end,
                    unsigned char const *rhs_start, unsigned char const *rhs_end) {
 	JITSmallLexer lhs, rhs;
-	JITLexer_Start((JITLexer *)&lhs, lhs_start, lhs_end);
-	JITLexer_Start((JITLexer *)&rhs, rhs_start, rhs_end);
+	JITSmallLexer_Start(&lhs, lhs_start, lhs_end);
+	JITSmallLexer_Start(&rhs, rhs_start, rhs_end);
 	while (lhs.jl_tok != TOK_EOF && rhs.jl_tok != TOK_EOF) {
 		if (lhs.jl_tok > rhs.jl_tok)
 			return 1;
