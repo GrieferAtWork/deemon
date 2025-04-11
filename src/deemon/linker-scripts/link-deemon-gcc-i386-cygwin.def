@@ -710,10 +710,15 @@ EXPORTS
 	_DeeObject_AsInt64@8=DeeObject_AsInt64@8
 	_DeeObject_AsInt8@8=DeeObject_AsInt8@8
 	_DeeObject_AsUInt128@8=DeeObject_AsUInt128@8
+	_DeeObject_AsUInt128M1@8=DeeObject_AsUInt128M1@8
 	_DeeObject_AsUInt16@8=DeeObject_AsUInt16@8
+	_DeeObject_AsUInt16M1@8=DeeObject_AsUInt16M1@8
 	_DeeObject_AsUInt32@8=DeeObject_AsUInt32@8
+	_DeeObject_AsUInt32M1@8=DeeObject_AsUInt32M1@8
 	_DeeObject_AsUInt64@8=DeeObject_AsUInt64@8
+	_DeeObject_AsUInt64M1@8=DeeObject_AsUInt64M1@8
 	_DeeObject_AsUInt8@8=DeeObject_AsUInt8@8
+	_DeeObject_AsUInt8M1@8=DeeObject_AsUInt8M1@8
 	_DeeObject_AssertImplements@8=DeeObject_AssertImplements@8
 	_DeeObject_AssertType@8=DeeObject_AssertType@8
 	_DeeObject_AssertTypeExact@8=DeeObject_AssertTypeExact@8
