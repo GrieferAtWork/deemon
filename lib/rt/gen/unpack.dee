@@ -74,7 +74,7 @@ global final CTYPE_BY_DTYPE: {string: string} = {
 	"?DFrame": "DeeFrameObject*",
 	"?DModule": "DeeModuleObject*",
 	"?Ert:DDI": "DeeDDIObject*",
-	"?Dstring": "DeeStringObject*",
+//	"?Dstring": "DeeStringObject*",
 	"?Dbool": "bool",
 };
 
@@ -82,13 +82,17 @@ global final DTYPE_BY_DINIT: {string: string} = {
 	"!t": "?Dbool",
 	"!f": "?Dbool",
 	"!N": "?N",
-	"!0": "?Dint",
-	"!1": "?Dint",
-	"!-1": "?Dint",
 	"!A!Dint!PSIZE_MAX": "?Dint",
 	"!T0": "?DTuple",
-	"!P{}": "?Dstring",
 };
+
+function getDTypeByDInit(dInit: string, def = none): string | none {
+	if (dInit.startswith("!P"))
+		return "?Dstring";
+	if (dInit.rematch(r"!-?\d+"))
+		return "?Dint";
+	return DTYPE_BY_DINIT.get(dInit, def);
+}
 
 global final CINIT_BY_DINIT: {string: string | {string: string}} = {
 	"!N": "Dee_None",
@@ -116,6 +120,12 @@ global final DINIT_BY_CINIT: {string: string} = Dict.Frozen(() -> {
 		}
 	}
 }());
+
+function getDInitByCInit(cInit: string, def = none): string | none {
+	if (cInit.rematch(r"-?\d+"))
+		return f"!{cInit}";
+	return DINIT_BY_CINIT.get(cInit, def);
+}
 
 global final UNP_BY_CTYPE: {string: (string | (string, string))} = {
 	"DeeObject*": 'o',
@@ -491,7 +501,7 @@ final class UnpackParam {
 			local result = name;
 			if (isOptional && dInit is none)
 				result = f"{result}?";
-			if (dType != "?O" && (dInit is none || DTYPE_BY_DINIT.get(dInit) != dType))
+			if (dType != "?O" && (dInit is none || getDTypeByDInit(dInit) != dType))
 				result = f"{result}:{dType}";
 			if (dInit !is none)
 				result = f"{result}={dInit}";
@@ -668,7 +678,7 @@ extend_typ_until_i:
 						item.dInit = none;
 						break;
 					}
-					local dInit = DINIT_BY_CINIT.get(cInitExpr);
+					local dInit = getDInitByCInit(cInitExpr);
 					if (dInit !is none) {
 						if (dInit == "!A!Dint!PSIZE_MAX" && acceptMinusOne)
 							dInit = "!-1";
@@ -694,7 +704,7 @@ extend_typ_until_i:
 			if (item.dInit is none) {
 				item.dType = "?O";
 			} else {
-				item.dType = DTYPE_BY_DINIT.get(item.dInit, "?O");
+				item.dType = getDTypeByDInit(item.dInit, "?O");
 			}
 		}
 		if (UNPformat is none) {

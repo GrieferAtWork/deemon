@@ -3735,31 +3735,45 @@ DeeString_Segments(String *__restrict self, size_t substring_length);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_segments(String *self, size_t argc, DeeObject *const *argv) {
-	size_t substring_length;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":segments", &substring_length))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("segments", params: "
+	size_t substring_length
+", docStringPrefix: "string");]]]*/
+#define string_segments_params "substring_length:?Dint"
+	struct {
+		size_t substring_length;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":segments", &args))
 		goto err;
-	if unlikely(!substring_length) {
-		err_invalid_segment_size(substring_length);
+/*[[[end]]]*/
+	if unlikely(!args.substring_length) {
+		err_invalid_segment_size(args.substring_length);
 		goto err;
 	}
-	return DeeString_Segments(self, substring_length);
+	return DeeString_Segments(self, args.substring_length);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_distribute(String *self, size_t argc, DeeObject *const *argv) {
-	size_t substring_count;
 	size_t substring_length;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":distribute", &substring_count))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("distribute", params: "
+	size_t substring_count
+", docStringPrefix: "string");]]]*/
+#define string_distribute_params "substring_count:?Dint"
+	struct {
+		size_t substring_count;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":distribute", &args))
 		goto err;
-	if unlikely(!substring_count) {
-		err_invalid_distribution_count(substring_count);
+/*[[[end]]]*/
+	if unlikely(!args.substring_count) {
+		err_invalid_distribution_count(args.substring_count);
 		goto err;
 	}
 	substring_length = DeeString_WLEN(self);
-	substring_length += substring_count - 1;
-	substring_length /= substring_count;
+	substring_length += args.substring_count - 1;
+	substring_length /= args.substring_count;
 	if unlikely(!substring_length)
 		return DeeSeq_NewEmpty();
 	return DeeString_Segments(self, substring_length);
@@ -3783,9 +3797,9 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr dst, buf;
 	union dcharptr_const my_str, fl_str;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("center", params: "
-	size_t width, DeeStringObject *filler = NULL
+	size_t width, DeeStringObject *filler = NULL = !P{ }
 ", docStringPrefix: "string");]]]*/
-#define string_center_params "width:?Dint,filler?:?."
+#define string_center_params "width:?Dint,filler=!P{ }"
 	struct {
 		size_t width;
 		DeeStringObject *filler;
@@ -3910,9 +3924,9 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr dst, buf;
 	union dcharptr_const my_str, fl_str;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ljust", params: "
-	size_t width, DeeStringObject *filler = NULL
+	size_t width, DeeStringObject *filler = NULL = !P{ }
 ", docStringPrefix: "string");]]]*/
-#define string_ljust_params "width:?Dint,filler?:?."
+#define string_ljust_params "width:?Dint,filler=!P{ }"
 	struct {
 		size_t width;
 		DeeStringObject *filler;
@@ -4029,9 +4043,9 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr dst, buf;
 	union dcharptr_const my_str, fl_str;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rjust", params: "
-	size_t width, DeeStringObject *filler = NULL
+	size_t width, DeeStringObject *filler = NULL = !P{ }
 ", docStringPrefix: "string");]]]*/
-#define string_rjust_params "width:?Dint,filler?:?."
+#define string_rjust_params "width:?Dint,filler=!P{ }"
 	struct {
 		size_t width;
 		DeeStringObject *filler;
@@ -4476,9 +4490,9 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr dst, buf;
 	union dcharptr_const my_str, fl_str;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("zfill", params: "
-	size_t width, DeeStringObject *filler = NULL
+	size_t width, DeeStringObject *filler = NULL = !P{0}
 ", docStringPrefix: "string");]]]*/
-#define string_zfill_params "width:?Dint,filler?:?."
+#define string_zfill_params "width:?Dint,filler=!P{0}"
 	struct {
 		size_t width;
 		DeeStringObject *filler;
@@ -4615,20 +4629,38 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_reversed(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	size_t begin = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":reversed", &begin, &end))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reversed", params: "
+	size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_reversed_params "start=!0,end=!-1"
+	struct {
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":reversed", &args))
 		goto err;
-	return DeeString_Reversed(self, begin, end);
+/*[[[end]]]*/
+	return DeeString_Reversed(self, args.start, args.end);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_expandtabs(String *self, size_t argc, DeeObject *const *argv) {
-	size_t tab_width = 8;
-	if (DeeArg_Unpack(argc, argv, "|" UNPuSIZ ":expandtabs", &tab_width))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("expandtabs", params: "
+	size_t tabwidth = 8
+", docStringPrefix: "string");]]]*/
+#define string_expandtabs_params "tabwidth=!8"
+	struct {
+		size_t tabwidth;
+	} args;
+	args.tabwidth = 8;
+	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ ":expandtabs", &args))
 		goto err;
-	return DeeString_ExpandTabs(self, tab_width);
+/*[[[end]]]*/
+	return DeeString_ExpandTabs(self, args.tabwidth);
 err:
 	return NULL;
 }
@@ -4657,13 +4689,20 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_join(String *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
 	struct string_join_data data;
-	_DeeArg_Unpack1(err, argc, argv, "join", &seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("join", params: "
+	seq: ?S?O
+", docStringPrefix: "string");]]]*/
+#define string_join_params "seq:?S?O"
+	struct {
+		DeeObject *seq;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "join", &args.seq);
+/*[[[end]]]*/
 	unicode_printer_init(&data.sjd_out);
 	data.sjd_sep   = self;
 	data.sjd_first = true;
-	if unlikely(DeeObject_Foreach(seq, &string_join_cb, &data) < 0)
+	if unlikely(DeeObject_Foreach(args.seq, &string_join_cb, &data) < 0)
 		goto err_printer;
 	return (DREF String *)unicode_printer_pack(&data.sjd_out);
 err_printer:
@@ -4674,13 +4713,21 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_unifylines(String *self, size_t argc, DeeObject *const *argv) {
-	String *replacement = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "unifylines", &replacement);
-	if likely(!replacement)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unifylines", params: "
+	DeeStringObject *replacement = NULL = !P{\n}
+", docStringPrefix: "string");]]]*/
+#define string_unifylines_params "replacement=!P{\n}"
+	struct {
+		DeeStringObject *replacement;
+	} args;
+	args.replacement = NULL;
+	_DeeArg_Unpack0Or1(err, argc, argv, "unifylines", &args.replacement);
+/*[[[end]]]*/
+	if likely(!args.replacement)
 		return DeeString_UnifyLinesLf(self);
-	if (DeeObject_AssertTypeExact(replacement, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.replacement, &DeeString_Type))
 		goto err;
-	return DeeString_UnifyLines(self, replacement);
+	return DeeString_UnifyLines(self, args.replacement);
 err:
 	return NULL;
 }
@@ -5380,13 +5427,21 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_strip(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "strip", &mask);
-	if (!mask)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strip", params: "
+	DeeStringObject *mask = NULL
+", docStringPrefix: "string");]]]*/
+#define string_strip_params "mask?:?."
+	struct {
+		DeeStringObject *mask;
+	} args;
+	args.mask = NULL;
+	_DeeArg_Unpack0Or1(err, argc, argv, "strip", &args.mask);
+/*[[[end]]]*/
+	if (!args.mask)
 		return DeeString_StripSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_StripMask(self, mask);
+	return DeeString_StripMask(self, args.mask);
 err:
 	return NULL;
 }
@@ -5394,16 +5449,24 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lstrip(String *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	String *mask = NULL;
-	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
-	                    "|o" UNPuSIZ ":lstrip", &mask, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lstrip", params: "
+	DeeStringObject *mask = NULL, size_t max = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_lstrip_params "mask?:?.,max=!-1"
+	struct {
+		DeeStringObject *mask;
+		size_t _max;
+	} args;
+	args.mask = NULL;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__mask_max, "|o" UNPxSIZ ":lstrip", &args))
 		goto err;
-	if (!mask)
-		return DeeString_LStripSpc(self, max_count);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+/*[[[end]]]*/
+	if (!args.mask)
+		return DeeString_LStripSpc(self, args._max);
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_LStripMask(self, mask, max_count);
+	return DeeString_LStripMask(self, args.mask, args._max);
 err:
 	return NULL;
 }
@@ -5411,29 +5474,45 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rstrip(String *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	String *mask = NULL;
-	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
-	                    "|o" UNPuSIZ ":rstrip", &mask, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rstrip", params: "
+	DeeStringObject *mask = NULL, size_t max = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_rstrip_params "mask?:?.,max=!-1"
+	struct {
+		DeeStringObject *mask;
+		size_t _max;
+	} args;
+	args.mask = NULL;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__mask_max, "|o" UNPxSIZ ":rstrip", &args))
 		goto err;
-	if (!mask)
-		return DeeString_RStripSpc(self, max_count);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+/*[[[end]]]*/
+	if (!args.mask)
+		return DeeString_RStripSpc(self, args._max);
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_RStripMask(self, mask, max_count);
+	return DeeString_RStripMask(self, args.mask, args._max);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casestrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "casestrip", &mask);
-	if (!mask)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casestrip", params: "
+	DeeStringObject *mask = NULL
+", docStringPrefix: "string");]]]*/
+#define string_casestrip_params "mask?:?."
+	struct {
+		DeeStringObject *mask;
+	} args;
+	args.mask = NULL;
+	_DeeArg_Unpack0Or1(err, argc, argv, "casestrip", &args.mask);
+/*[[[end]]]*/
+	if (!args.mask)
 		return DeeString_StripSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_CaseStripMask(self, mask);
+	return DeeString_CaseStripMask(self, args.mask);
 err:
 	return NULL;
 }
@@ -5441,16 +5520,24 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselstrip(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	String *mask = NULL;
-	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
-	                    "|o" UNPuSIZ ":caselstrip", &mask, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caselstrip", params: "
+	DeeStringObject *mask = NULL, size_t max = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caselstrip_params "mask?:?.,max=!-1"
+	struct {
+		DeeStringObject *mask;
+		size_t _max;
+	} args;
+	args.mask = NULL;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__mask_max, "|o" UNPxSIZ ":caselstrip", &args))
 		goto err;
-	if (!mask)
-		return DeeString_LStripSpc(self, max_count);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+/*[[[end]]]*/
+	if (!args.mask)
+		return DeeString_LStripSpc(self, args._max);
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_CaseLStripMask(self, mask, max_count);
+	return DeeString_CaseLStripMask(self, args.mask, args._max);
 err:
 	return NULL;
 }
@@ -5458,27 +5545,42 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caserstrip(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	String *mask = NULL;
-	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
-	                    "|o" UNPuSIZ ":caserstrip", &mask, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserstrip", params: "
+	DeeStringObject *mask = NULL, size_t max = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caserstrip_params "mask?:?.,max=!-1"
+	struct {
+		DeeStringObject *mask;
+		size_t _max;
+	} args;
+	args.mask = NULL;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__mask_max, "|o" UNPxSIZ ":caserstrip", &args))
 		goto err;
-	if (!mask)
-		return DeeString_RStripSpc(self, max_count);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+/*[[[end]]]*/
+	if (!args.mask)
+		return DeeString_RStripSpc(self, args._max);
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_CaseRStripMask(self, mask, max_count);
+	return DeeString_CaseRStripMask(self, args.mask, args._max);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_sstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *needle;
-	_DeeArg_Unpack1(err, argc, argv, "sstrip", &needle);
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sstrip", params: "
+	DeeStringObject *needle
+", docStringPrefix: "string");]]]*/
+#define string_sstrip_params "needle:?."
+	struct {
+		DeeStringObject *needle;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "sstrip", &args.needle);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_SStrip(self, needle);
+	return DeeString_SStrip(self, args.needle);
 err:
 	return NULL;
 }
@@ -5486,14 +5588,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lsstrip(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
-	                    "o|" UNPuSIZ ":lsstrip", &needle, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lsstrip", params: "
+	DeeStringObject *needle, size_t max = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_lsstrip_params "needle:?.,max=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t _max;
+	} args;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_max, "o|" UNPxSIZ ":lsstrip", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_LSStrip(self, needle, max_count);
+	return DeeString_LSStrip(self, args.needle, args._max);
 err:
 	return NULL;
 }
@@ -5501,25 +5610,39 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rsstrip(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
-	                    "o|" UNPuSIZ ":rsstrip", &needle, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rsstrip", params: "
+	DeeStringObject *needle, size_t max = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_rsstrip_params "needle:?.,max=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t _max;
+	} args;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_max, "o|" UNPxSIZ ":rsstrip", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_RSStrip(self, needle, max_count);
+	return DeeString_RSStrip(self, args.needle, args._max);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casesstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *needle;
-	_DeeArg_Unpack1(err, argc, argv, "casesstrip", &needle);
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casesstrip", params: "
+	DeeStringObject *needle
+", docStringPrefix: "string");]]]*/
+#define string_casesstrip_params "needle:?."
+	struct {
+		DeeStringObject *needle;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "casesstrip", &args.needle);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_CaseSStrip(self, needle);
+	return DeeString_CaseSStrip(self, args.needle);
 err:
 	return NULL;
 }
@@ -5527,14 +5650,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselsstrip(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
-	                    "o|" UNPuSIZ ":caselsstrip", &needle, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caselsstrip", params: "
+	DeeStringObject *needle, size_t max = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caselsstrip_params "needle:?.,max=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t _max;
+	} args;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_max, "o|" UNPxSIZ ":caselsstrip", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_CaseLSStrip(self, needle, max_count);
+	return DeeString_CaseLSStrip(self, args.needle, args._max);
 err:
 	return NULL;
 }
@@ -5542,158 +5672,255 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casersstrip(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	String *needle;
-	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mask_max,
-	                    "o|" UNPuSIZ ":casersstrip", &needle, &max_count))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casersstrip", params: "
+	DeeStringObject *needle, size_t max = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casersstrip_params "needle:?.,max=!-1"
+	struct {
+		DeeStringObject *needle;
+		size_t _max;
+	} args;
+	args._max = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_max, "o|" UNPxSIZ ":casersstrip", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_CaseRSStrip(self, needle, max_count);
+	return DeeString_CaseRSStrip(self, args.needle, args._max);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_striplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "striplines", &mask);
-	if (!mask)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("striplines", params: "
+	DeeStringObject *mask = NULL
+", docStringPrefix: "string");]]]*/
+#define string_striplines_params "mask?:?."
+	struct {
+		DeeStringObject *mask;
+	} args;
+	args.mask = NULL;
+	_DeeArg_Unpack0Or1(err, argc, argv, "striplines", &args.mask);
+/*[[[end]]]*/
+	if (!args.mask)
 		return DeeString_StripLinesSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_StripLinesMask(self, mask);
+	return DeeString_StripLinesMask(self, args.mask);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lstriplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "lstriplines", &mask);
-	if (!mask)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("lstriplines", params: "
+	DeeStringObject *mask = NULL
+", docStringPrefix: "string");]]]*/
+#define string_lstriplines_params "mask?:?."
+	struct {
+		DeeStringObject *mask;
+	} args;
+	args.mask = NULL;
+	_DeeArg_Unpack0Or1(err, argc, argv, "lstriplines", &args.mask);
+/*[[[end]]]*/
+	if (!args.mask)
 		return DeeString_LStripLinesSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_LStripLinesMask(self, mask);
+	return DeeString_LStripLinesMask(self, args.mask);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rstriplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "rstriplines", &mask);
-	if (!mask)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rstriplines", params: "
+	DeeStringObject *mask = NULL
+", docStringPrefix: "string");]]]*/
+#define string_rstriplines_params "mask?:?."
+	struct {
+		DeeStringObject *mask;
+	} args;
+	args.mask = NULL;
+	_DeeArg_Unpack0Or1(err, argc, argv, "rstriplines", &args.mask);
+/*[[[end]]]*/
+	if (!args.mask)
 		return DeeString_RStripLinesSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_RStripLinesMask(self, mask);
+	return DeeString_RStripLinesMask(self, args.mask);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casestriplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "casestriplines", &mask);
-	if (!mask)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casestriplines", params: "
+	DeeStringObject *mask = NULL
+", docStringPrefix: "string");]]]*/
+#define string_casestriplines_params "mask?:?."
+	struct {
+		DeeStringObject *mask;
+	} args;
+	args.mask = NULL;
+	_DeeArg_Unpack0Or1(err, argc, argv, "casestriplines", &args.mask);
+/*[[[end]]]*/
+	if (!args.mask)
 		return DeeString_StripLinesSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_CaseStripLinesMask(self, mask);
+	return DeeString_CaseStripLinesMask(self, args.mask);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselstriplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "caselstriplines", &mask);
-	if (!mask)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caselstriplines", params: "
+	DeeStringObject *mask = NULL
+", docStringPrefix: "string");]]]*/
+#define string_caselstriplines_params "mask?:?."
+	struct {
+		DeeStringObject *mask;
+	} args;
+	args.mask = NULL;
+	_DeeArg_Unpack0Or1(err, argc, argv, "caselstriplines", &args.mask);
+/*[[[end]]]*/
+	if (!args.mask)
 		return DeeString_LStripLinesSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_CaseLStripLinesMask(self, mask);
+	return DeeString_CaseLStripLinesMask(self, args.mask);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caserstriplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "caserstriplines", &mask);
-	if (!mask)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserstriplines", params: "
+	DeeStringObject *mask = NULL
+", docStringPrefix: "string");]]]*/
+#define string_caserstriplines_params "mask?:?."
+	struct {
+		DeeStringObject *mask;
+	} args;
+	args.mask = NULL;
+	_DeeArg_Unpack0Or1(err, argc, argv, "caserstriplines", &args.mask);
+/*[[[end]]]*/
+	if (!args.mask)
 		return DeeString_RStripLinesSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_CaseRStripLinesMask(self, mask);
+	return DeeString_CaseRStripLinesMask(self, args.mask);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_sstriplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *needle;
-	_DeeArg_Unpack1(err, argc, argv, "sstriplines", &needle);
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sstriplines", params: "
+	DeeStringObject *needle
+", docStringPrefix: "string");]]]*/
+#define string_sstriplines_params "needle:?."
+	struct {
+		DeeStringObject *needle;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "sstriplines", &args.needle);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_SStripLines(self, needle);
+	return DeeString_SStripLines(self, args.needle);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lsstriplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *needle;
-	_DeeArg_Unpack1(err, argc, argv, "lsstriplines", &needle);
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("lsstriplines", params: "
+	DeeStringObject *needle
+", docStringPrefix: "string");]]]*/
+#define string_lsstriplines_params "needle:?."
+	struct {
+		DeeStringObject *needle;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "lsstriplines", &args.needle);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_LSStripLines(self, needle);
+	return DeeString_LSStripLines(self, args.needle);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rsstriplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *needle;
-	_DeeArg_Unpack1(err, argc, argv, "rsstriplines", &needle);
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rsstriplines", params: "
+	DeeStringObject *needle
+", docStringPrefix: "string");]]]*/
+#define string_rsstriplines_params "needle:?."
+	struct {
+		DeeStringObject *needle;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "rsstriplines", &args.needle);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_RSStripLines(self, needle);
+	return DeeString_RSStripLines(self, args.needle);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casesstriplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *needle;
-	_DeeArg_Unpack1(err, argc, argv, "casesstriplines", &needle);
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casesstriplines", params: "
+	DeeStringObject *needle
+", docStringPrefix: "string");]]]*/
+#define string_casesstriplines_params "needle:?."
+	struct {
+		DeeStringObject *needle;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "casesstriplines", &args.needle);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_CaseSStripLines(self, needle);
+	return DeeString_CaseSStripLines(self, args.needle);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselsstriplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *needle;
-	_DeeArg_Unpack1(err, argc, argv, "caselsstriplines", &needle);
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caselsstriplines", params: "
+	DeeStringObject *needle
+", docStringPrefix: "string");]]]*/
+#define string_caselsstriplines_params "needle:?."
+	struct {
+		DeeStringObject *needle;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "caselsstriplines", &args.needle);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_CaseLSStripLines(self, needle);
+	return DeeString_CaseLSStripLines(self, args.needle);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casersstriplines(String *self, size_t argc, DeeObject *const *argv) {
-	String *needle;
-	_DeeArg_Unpack1(err, argc, argv, "casersstriplines", &needle);
-	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casersstriplines", params: "
+	DeeStringObject *needle
+", docStringPrefix: "string");]]]*/
+#define string_casersstriplines_params "needle:?."
+	struct {
+		DeeStringObject *needle;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "casersstriplines", &args.needle);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_CaseRSStripLines(self, needle);
+	return DeeString_CaseRSStripLines(self, args.needle);
 err:
 	return NULL;
 }
@@ -5706,7 +5933,11 @@ struct compare_args {
 	size_t  ot_end;
 };
 
-PRIVATE int DCALL
+#define get_compare_decl(rhs_name, return_decl)                                                    \
+	"(" rhs_name ":?.," rhs_name "_start=!0," rhs_name "_end=!-1)" return_decl "\n"                \
+	"(my_start:?Dint," rhs_name ":?.," rhs_name "_start=!0," rhs_name "_end=!-1)" return_decl "\n" \
+	"(my_start:?Dint,my_end:?Dint," rhs_name ":?.," rhs_name "_start=!0," rhs_name "_end=!-1)" return_decl
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 get_compare_args(struct compare_args *__restrict args,
                  size_t argc, DeeObject *const *argv,
                  char const *__restrict funname) {
@@ -7693,22 +7924,36 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeString_CaseSplit(String 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_split(String *self, size_t argc, DeeObject *const *argv) {
-	String *other;
-	_DeeArg_Unpack1(err, argc, argv, "split", &other);
-	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
-		goto err;
-	return DeeString_Split(self, other);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("split", params: "
+	DeeStringObject *sep
+", docStringPrefix: "string");]]]*/
+#define string_split_params "sep:?."
+	struct {
+		DeeStringObject *sep;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "split", &args.sep);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.sep, &DeeString_Type))
+		goto err; /* TODO: Support for SeqSome */
+	return DeeString_Split(self, args.sep);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casesplit(String *self, size_t argc, DeeObject *const *argv) {
-	String *other;
-	_DeeArg_Unpack1(err, argc, argv, "casesplit", &other);
-	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
-		goto err;
-	return DeeString_CaseSplit(self, other);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casesplit", params: "
+	DeeStringObject *sep
+", docStringPrefix: "string");]]]*/
+#define string_casesplit_params "sep:?."
+	struct {
+		DeeStringObject *sep;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "casesplit", &args.sep);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.sep, &DeeString_Type))
+		goto err; /* TODO: Support for SeqSome */
+	return DeeString_CaseSplit(self, args.sep);
 err:
 	return NULL;
 }
@@ -7718,36 +7963,62 @@ DeeString_SplitLines(DeeObject *__restrict self, bool keepends);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_splitlines(String *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("splitlines", params: "
 	bool keepends = false;
-	if (DeeArg_Unpack(argc, argv, "|b:splitlines", &keepends))
+", docStringPrefix: "string");]]]*/
+#define string_splitlines_params "keepends=!f"
+	struct {
+		bool keepends;
+	} args;
+	args.keepends = false;
+	if (DeeArg_UnpackStruct(argc, argv, "|b:splitlines", &args))
 		goto err;
-	return DeeString_SplitLines((DeeObject *)self, keepends);
+/*[[[end]]]*/
+	return DeeString_SplitLines((DeeObject *)self, args.keepends);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_indent(String *self, size_t argc, DeeObject *const *argv) {
-	String *filler = &str_tab;
-	_DeeArg_Unpack0Or1(err, argc, argv, "indent", &filler);
-	if (DeeObject_AssertTypeExact(filler, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indent", params: "
+	DeeStringObject *filler = &str_tab = !P{\t}
+", docStringPrefix: "string");]]]*/
+#define string_indent_params "filler=!P{\t}"
+	struct {
+		DeeStringObject *filler;
+	} args;
+	args.filler = &str_tab;
+	_DeeArg_Unpack0Or1(err, argc, argv, "indent", &args.filler);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.filler, &DeeString_Type))
 		goto err;
-	return DeeString_Indent(self, filler);
+	return DeeString_Indent(self, args.filler);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_dedent(String *self, size_t argc, DeeObject *const *argv) {
-	size_t max_chars = 1;
-	String *mask  = NULL;
-	if (DeeArg_Unpack(argc, argv, "|" UNPuSIZ "o:dedent", &max_chars, &mask))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("dedent", params: "
+	size_t max = 1;
+	DeeStringObject *mask = NULL;
+", docStringPrefix: "string");]]]*/
+#define string_dedent_params "max=!1,mask?:?."
+	struct {
+		size_t _max;
+		DeeStringObject *mask;
+	} args;
+	args._max = 1;
+	args.mask = NULL;
+	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ "o:dedent", &args))
 		goto err;
-	if (!mask)
-		return DeeString_DedentSpc(self, max_chars);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+/*[[[end]]]*/
+	if (!args.mask)
+		return DeeString_DedentSpc(self, args._max);
+	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_Dedent(self, max_chars, mask);
+	return DeeString_Dedent(self, args._max, args.mask);
 err:
 	return NULL;
 }
@@ -7755,9 +8026,16 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 string_format(String *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *args;
-	_DeeArg_Unpack1(err, argc, argv, "format", &args);
-	return (DREF String *)DeeString_Format((DeeObject *)self, args);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("format", params: "
+	args:?S?O
+", docStringPrefix: "string");]]]*/
+#define string_format_params "args:?S?O"
+	struct {
+		DeeObject *args;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "format", &args.args);
+/*[[[end]]]*/
+	return (DREF String *)DeeString_Format((DeeObject *)self, args.args);
 err:
 	return NULL;
 }
@@ -7767,11 +8045,18 @@ DeeString_Scanf(DeeObject *self, DeeObject *format);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_scanf(String *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *format;
-	_DeeArg_Unpack1(err, argc, argv, "scanf", &format);
-	if (DeeObject_AssertTypeExact(format, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("scanf", params: "
+	DeeStringObject *format
+", docStringPrefix: "string");]]]*/
+#define string_scanf_params "format:?."
+	struct {
+		DeeStringObject *format;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "scanf", &args.format);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.format, &DeeString_Type))
 		goto err;
-	return DeeString_Scanf((DeeObject *)self, format);
+	return DeeString_Scanf((DeeObject *)self, (DeeObject *)args.format);
 err:
 	return NULL;
 }
@@ -10591,7 +10876,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_METHOD_F(STR_format, &string_format,
 	              /* TODO: CONSTEXPR based on what appears in the template string of "thisarg", and how it uses each argument */
 	              METHOD_FNOREFESCAPE,
-	              "(args:?S?O)->?.\n"
+	              "(" string_format_params ")->?.\n"
 	              "Format @this ?. using @args:\n"
 
 	              "This kind of formating is the most powerful variant of string "
@@ -10688,7 +10973,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "$\"{:=42:foo}\"|Will append ${selected_object.operator str().zfill(42, \"foo\")} to the resulting ?. (s.a. ?#zfill)"
 	              "}"),
 	TYPE_METHOD_F("scanf", &string_scanf, METHOD_FCONSTCALL,
-	              "(format:?.)->?S?O\n"
+	              "(" string_scanf_params ")->?S?O\n"
 	              "#tValueError{The given @format is malformed}"
 	              "#tValueError{Conversion to an integer failed}"
 
@@ -11007,22 +11292,22 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "as well as many others"),
 	TYPE_METHOD_F("strip", &string_strip,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(mask?:?.)->?.\n"
+	              "(" string_strip_params ")->?.\n"
 	              "Strip all leading and trailing whitespace-characters, or "
 	              /**/ "characters apart of @mask, and return the resulting ?."),
 	TYPE_KWMETHOD_F("lstrip", &string_lstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(mask?:?.)->?.\n"
+	                "(" string_lstrip_params ")->?.\n"
 	                "Strip all leading whitespace-characters, or "
 	                /**/ "characters apart of @mask, and return the resulting ?."),
 	TYPE_KWMETHOD_F("rstrip", &string_rstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(mask?:?.)->?.\n"
+	                "(" string_rstrip_params ")->?.\n"
 	                "Strip all trailing whitespace-characters, or "
 	                /**/ "characters apart of @mask, and return the resulting ?."),
 	TYPE_METHOD_F("sstrip", &string_sstrip,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(needle:?.)->?.\n"
+	              "(" string_sstrip_params ")->?.\n"
 	              "Strip all leading and trailing instances of @needle from @this ?.\n"
 	              "${"
 	              /**/ "function sstrip(needle: string): string {\n"
@@ -11036,7 +11321,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD_F("lsstrip", &string_lsstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.)->?.\n"
+	                "(" string_lsstrip_params ")->?.\n"
 	                "Strip all leading instances of @needle from @this ?.\n"
 	                "${"
 	                /**/ "function lsstrip(needle: string): string {\n"
@@ -11048,7 +11333,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("rsstrip", &string_rsstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.)->?.\n"
+	                "(" string_rsstrip_params ")->?.\n"
 	                "Strip all trailing instances of @needle from @this ?.\n"
 	                "${"
 	                /**/ "function lsstrip(needle: string): string {\n"
@@ -11060,38 +11345,38 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_METHOD_F("striplines", &string_striplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(mask?:?.)->?.\n"
+	              "(" string_striplines_params ")->?.\n"
 	              "Strip all whitspace, or @mask characters at the start, end, and before/after linefeeds\n"
 	              "Note that for this purpose, linefeed characters don't count as whitespace\n"
 	              "aka: strip all leading and trailing whitespace\n"
 	              "Similar to ${\"\".join(this.splitlines(true).each.strip())}"),
 	TYPE_METHOD_F("lstriplines", &string_lstriplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(mask?:?.)->?.\n"
+	              "(" string_lstriplines_params ")->?.\n"
 	              "Strip all whitspace, or @mask characters at the start, and after linefeeds\n"
 	              "Note that for this purpose, linefeed characters don't count as whitespace\n"
 	              "aka: strip all leading whitespace\n"
 	              "Similar to ${\"\".join(this.splitlines(true).each.lstrip())}"),
 	TYPE_METHOD_F("rstriplines", &string_rstriplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(mask?:?.)->?.\n"
+	              "(" string_rstriplines_params ")->?.\n"
 	              "Strip all whitspace, or @mask characters at the end, and before linefeeds\n"
 	              "Note that for this purpose, linefeed characters don't count as whitespace\n"
 	              "aka: strip all trailing whitespace\n"
 	              "Similar to ${\"\".join(this.splitlines(true).each.rstrip())}"),
 	TYPE_METHOD_F("sstriplines", &string_sstriplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(needle:?.)->?.\n"
+	              "(" string_sstriplines_params ")->?.\n"
 	              "Same as ?#striplines, but sequence for complete sequences of #needle, rather "
 	              "than bytes apart of its $mask character."),
 	TYPE_METHOD_F("lsstriplines", &string_lsstriplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(needle:?.)->?.\n"
+	              "(" string_lsstriplines_params ")->?.\n"
 	              "Same as ?#lstriplines, but sequence for complete sequences of #needle, rather "
 	              "than bytes apart of its $mask character."),
 	TYPE_METHOD_F("rsstriplines", &string_rsstriplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(needle:?.)->?.\n"
+	              "(" string_rsstriplines_params ")->?.\n"
 	              "Same as ?#rstriplines, but sequence for complete sequences of #needle, rather "
 	              "than bytes apart of its $mask character."),
 	TYPE_KWMETHOD_F("startswith", &string_startswith,
@@ -11116,17 +11401,13 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "If @needle could not be found, ${(this, \"\", \"\")} is returned"),
 	TYPE_METHOD_F("compare", &string_compare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "" get_compare_decl("other", "->?Dint") "\n"
 	              "Compare the sub-string ${left = this.substr(my_start, my_end)} with "
 	              "${right = other.substr(other_start, other_end)}, returning ${< 0} if "
 	              "${left < right}, ${> 0} if ${left > right}, and ${== 0} if they are equal"),
 	TYPE_METHOD_F("vercompare", &string_vercompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "" get_compare_decl("other", "->?Dint") "\n"
 	              "Performs a version-string comparison. This is similar to ?#compare, but rather than "
 	              /**/ "performing a strict lexicographical comparison, the numbers found in the strings "
 	              /**/ "being compared are compared as a whole, solving the common problem seen in applications "
@@ -11138,9 +11419,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "for which you may follow the link for further details"),
 	TYPE_METHOD_F("wildcompare", &string_wildcompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	              "" get_compare_decl("pattern", "->?Dint") "\n"
 	              "Perform a wild-character-enabled comparising of the sub-string ${left = this.substr(my_start, my_end)} "
 	              /**/ "with ${right = pattern.substr(pattern_start, pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
 	              /**/ "if ${left > right}, or ${== 0} if they are equal\n"
@@ -11149,9 +11428,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "any number of characters"),
 	TYPE_METHOD_F("fuzzycompare", &string_fuzzycompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "" get_compare_decl("other", "->?Dint") "\n"
 	              "Perform a fuzzy string comparison between ${this.substr(my_start, my_end)} and "
 	              /**/ "${other.substr(other_start, other_end)}\n"
 	              "The return value is a similarty-factor that can be used to score how close the "
@@ -11165,9 +11442,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "Note that there is another version ?#casefuzzycompare that also ignores casing"),
 	TYPE_METHOD_F("wmatch", &string_wmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
+	              "" get_compare_decl("pattern", "->?Dbool") "\n"
 	              "Same as ?#wildcompare, returning ?t where ?#wildcompare would return $0, "
 	              /**/ "and ?f in all pattern cases"),
 
@@ -11235,51 +11510,51 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#contains, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casestrip", &string_casestrip,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(mask?:?.)->?.\n"
+	              "(" string_casestrip_params ")->?.\n"
 	              "Same as ?#strip, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("caselstrip", &string_caselstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(mask?:?.)->?.\n"
+	                "(" string_caselstrip_params ")->?.\n"
 	                "Same as ?#lstrip, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("caserstrip", &string_caserstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(mask?:?.)->?.\n"
+	                "(" string_caserstrip_params ")->?.\n"
 	                "Same as ?#rstrip, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casesstrip", &string_casesstrip,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(needle:?.)->?.\n"
+	              "(" string_casesstrip_params ")->?.\n"
 	              "Same as ?#sstrip, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("caselsstrip", &string_caselsstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.)->?.\n"
+	                "(" string_caselsstrip_params ")->?.\n"
 	                "Same as ?#lsstrip, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casersstrip", &string_casersstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.)->?.\n"
+	                "(" string_casersstrip_params ")->?.\n"
 	                "Same as ?#rsstrip, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casestriplines", &string_casestriplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(mask?:?.)->?.\n"
+	              "(" string_casestriplines_params ")->?.\n"
 	              "Same as ?#striplines, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
 	TYPE_METHOD_F("caselstriplines", &string_caselstriplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(mask?:?.)->?.\n"
+	              "(" string_caselstriplines_params ")->?.\n"
 	              "Same as ?#lstriplines, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
 	TYPE_METHOD_F("caserstriplines", &string_caserstriplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(mask?:?.)->?.\n"
+	              "(" string_caserstriplines_params ")->?.\n"
 	              "Same as ?#rstriplines, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casesstriplines", &string_casesstriplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(needle:?.)->?.\n"
+	              "(" string_casesstriplines_params ")->?.\n"
 	              "Same as ?#sstriplines, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_METHOD_F("caselsstriplines", &string_caselsstriplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(needle:?.)->?.\n"
+	              "(" string_caselsstriplines_params ")->?.\n"
 	              "Same as ?#lsstriplines, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casersstriplines", &string_casersstriplines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(needle:?.)->?.\n"
+	              "(" string_casersstriplines_params ")->?.\n"
 	              "Same as ?#rsstriplines, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casestartswith", &string_casestartswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
@@ -11299,89 +11574,79 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#rpartition, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casecompare", &string_casecompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "" get_compare_decl("other", "->?Dint") "\n"
 	              "Same as ?#compare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casevercompare", &string_casevercompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "" get_compare_decl("other", "->?Dint") "\n"
 	              "Same as ?#vercompare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casewildcompare", &string_casewildcompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	              "" get_compare_decl("pattern", "->?Dint") "\n"
 	              "Same as ?#wildcompare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casefuzzycompare", &string_casefuzzycompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "" get_compare_decl("other", "->?Dint") "\n"
 	              "Same as ?#fuzzycompare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casewmatch", &string_casewmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
+	              "" get_compare_decl("pattern", "->?Dbool") "\n"
 	              "Same as ?#wmatch, however compare strings with their casing folded (s.a. ?#casefold)"),
 
 	/* String alignment functions. */
 	TYPE_METHOD_F("center", &string_center,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(width:?Dint,filler=!P{ })->?.\n"
+	              "(" string_center_params ")->?.\n"
 	              "Use @this ?. as result, then evenly insert @filler at "
 	              /**/ "the front and back to pad its length to @width characters"),
 	TYPE_METHOD_F("ljust", &string_ljust,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(width:?Dint,filler=!P{ })->?.\n"
+	              "(" string_ljust_params ")->?.\n"
 	              "Use @this ?. as result, then insert @filler "
 	              /**/ "at the back to pad its length to @width characters"),
 	TYPE_METHOD_F("rjust", &string_rjust,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(width:?Dint,filler=!P{ })->?.\n"
+	              "(" string_rjust_params ")->?.\n"
 	              "Use @this ?. as result, then insert @filler "
 	              /**/ "at the front to pad its length to @width characters"),
 	TYPE_METHOD_F("zfill", &string_zfill,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(width:?Dint,filler=!P{0})->?.\n"
+	              "(" string_zfill_params ")->?.\n"
 	              "Skip leading ${\'+\'} and ${\'-\'} characters, then insert @filler "
 	              /**/ "to pad the resulting ?. to a length of @width characters"),
 	TYPE_KWMETHOD_F("reversed", &string_reversed,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(" string_reversed_params ")->?.\n"
 	                "Return the sub-string ${this.substr(start, end)} with its character order reversed"),
 	TYPE_METHOD_F("expandtabs", &string_expandtabs,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(tabwidth=!8)->?.\n"
+	              "(" string_expandtabs_params ")->?.\n"
 	              "Expand tab characters with whitespace offset from the start "
 	              /**/ "of their respective line at multiples of @tabwidth"),
 	TYPE_METHOD_F("unifylines", &string_unifylines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(replacement=!P{\\\n})->?.\n"
+	              "(" string_unifylines_params ")->?.\n"
 	              "Unify all linefeed character sequences found in @this ?. to "
 	              /**/ "make exclusive use of @replacement"),
 
 	/* String -- sequence interaction. */
 	TYPE_METHOD_F("join", &string_join,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(seq:?S?O)->?.\n"
+	              "(" string_join_params ")->?.\n"
 	              "Iterate @seq and convert all items into strings, inserting @this "
 	              /**/ "?. before each element, starting only with the second"),
 	TYPE_METHOD_F("split", &string_split,
 	              METHOD_FCONSTCALL,
-	              "(sep:?.)->?S?.\n"
+	              "(" string_split_params ")->?S?.\n"
 	              "Split @this ?. at each instance of @sep, returning a "
 	              /**/ "sequence of the resulting parts"),
 	TYPE_METHOD_F("casesplit", &string_casesplit,
 	              METHOD_FCONSTCALL,
-	              "(sep:?.)->?S?.\n"
+	              "(" string_casesplit_params ")->?S?.\n"
 	              "Same as ?#split, however perform a case-folded search"),
 	TYPE_METHOD_F("splitlines", &string_splitlines,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(keepends=!f)->?S?.\n"
+	              "(" string_splitlines_params ")->?S?.\n"
 	              "Split @this ?. at each linefeed, returning a sequence of all contained lines\n"
 	              "When @keepends is ?f, this is identical to ${this.unifylines().split(\"\\n\")}\n"
 	              "When @keepends is ?t, items found in the returned sequence will still have their "
@@ -11390,7 +11655,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* String indentation. */
 	TYPE_METHOD_F("indent", &string_indent,
 	              METHOD_FCONSTCALL,
-	              "(filler=!P{\t})->?.\n"
+	              "(" string_indent_params ")->?.\n"
 	              "Using @this ?. as result, insert @filler at the front, as well as after "
 	              /**/ "every linefeed with the exception of one that may be located at its end\n"
 	              "The intended use is for generating strings from structured data, such as HTML:\n"
@@ -11400,36 +11665,28 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}"),
 	TYPE_METHOD_F("dedent", &string_dedent,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(max_chars=!1,mask?:?.)->?.\n"
-	              "Using @this ?. as result, remove up to @max_chars whitespace "
+	              "(" string_dedent_params ")->?.\n"
+	              "Using @this ?. as result, remove up to @max whitespace "
 	              /**/ "(s.a. ?#isspace) characters, or if given: characters apart of @mask "
 	              /**/ "from the front, as well as following any linefeed"),
 
 	/* Common-character search functions. */
 	TYPE_METHOD_F("common", &string_common,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "" get_compare_decl("other", "->?Dint") "\n"
 	              "Returns the number of common leading characters shared between @this and @other, "
 	              /**/ "or in other words: the lowest index $i for which ${this[i] != other[i]} is true"),
 	TYPE_METHOD_F("rcommon", &string_rcommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "" get_compare_decl("other", "->?Dint") "\n"
 	              "Returns the number of common trailing characters shared between @this and @other"),
 	TYPE_METHOD_F("casecommon", &string_casecommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "" get_compare_decl("other", "->?Dint") "\n"
 	              "Same as ?#common, however perform a case-folded search"),
 	TYPE_METHOD_F("casercommon", &string_casercommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "" get_compare_decl("other", "->?Dint") "\n"
 	              "Same as ?#rcommon, however perform a case-folded search"),
 
 	/* Find match character sequences */
@@ -11567,7 +11824,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 
 	TYPE_METHOD_F("segments", &string_segments,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(substring_length:?Dint)->?S?.\n"
+	              "(" string_segments_params ")->?S?.\n"
 	              "Split @this ?. into segments, each exactly @substring_length characters long, with the "
 	              /**/ "last segment containing the remaining characters and having a length of between "
 	              /**/ "$1 and @substring_length characters.\n"
@@ -11576,10 +11833,10 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "the length of sub-strings and figures out their amount"),
 	TYPE_METHOD_F("distribute", &string_distribute,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(substring_count:?Dint)->?S?.\n"
+	              "(" string_distribute_params ")->?S?.\n"
 	              "Split @this ?. into @substring_count similarly sized sub-strings, each with a "
-	              /**/ "length of ${(##this + (substring_count - 1)) / substring_count}, followed by a last, optional "
-	              /**/ "sub-string containing all remaining characters.\n"
+	              /**/ "length of ${(##this + (substring_count - 1)) / substring_count}, followed "
+	              /**/ "by a last, optional sub-string containing all remaining characters.\n"
 	              "This function is similar to ?#segments, but instead of being given the "
 	              /**/ "length of sub-strings and figuring out their amount, this function takes "
 	              /**/ "the amount of sub-strings and figures out their lengths"),

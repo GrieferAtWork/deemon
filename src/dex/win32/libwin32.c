@@ -959,7 +959,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetLastError_f(size_t argc, DeeOb
 	struct {
 		DWORD dwErrCode;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwErrCode,  UNPu32 ":SetLastError", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwErrCode, UNPu32 ":SetLastError", &args))
 		goto err;
 	return libwin32_SetLastError_f_impl(args.dwErrCode);
 err:
@@ -3021,7 +3021,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FormatErrorMessage_f(size_t argc,
 	struct {
 		DWORD dwError;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwError,  UNPu32 ":FormatErrorMessage", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwError, UNPu32 ":FormatErrorMessage", &args))
 		goto err;
 	return libwin32_FormatErrorMessage_f_impl(args.dwError);
 err:
@@ -3415,7 +3415,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f(size_t argc, DeeOb
 	struct {
 		int32_t nStdHandle;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__nStdHandle,  UNPd32 ":GetStdHandle", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__nStdHandle, UNPd32 ":GetStdHandle", &args))
 		goto err;
 	return libwin32_GetStdHandle_f_impl(args.nStdHandle);
 err:
@@ -3478,7 +3478,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetStdHandle_f(size_t argc, DeeOb
 		DeeObject *raw_hHandle;
 	} args;
 	HANDLE hHandle;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__nStdHandle_hHandle,  UNPu32 "o:SetStdHandle", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__nStdHandle_hHandle, UNPu32 "o:SetStdHandle", &args))
 		goto err;
 	if unlikely(DeeNTSystem_TryGetHandle(args.raw_hHandle, (void **)&hHandle))
 		goto err;
@@ -3529,8 +3529,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f_impl(LPCWSTR lpName, DWORD dwOpenMode, DWORD dwPipeMode, DWORD nMaxInstances, DWORD nOutBufferSize, DWORD nInBufferSize, DWORD nDefaultTimeOut, DeeObject *lpSecurityAttributes);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CREATENAMEDPIPE_DEF { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FREADONLY, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=!|!PIPE_TYPE_BYTE!PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize:?Dint=!none,nInBufferSize:?Dint=!none,nDefaultTimeOut=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE") },
-#define LIBWIN32_CREATENAMEDPIPE_DEF_DOC(doc) { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FREADONLY, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=!|!PIPE_TYPE_BYTE!PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize:?Dint=!none,nInBufferSize:?Dint=!none,nDefaultTimeOut=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE\n" doc) },
+#define LIBWIN32_CREATENAMEDPIPE_DEF { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FREADONLY, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=!|!PIPE_TYPE_BYTE!PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize=!65536,nInBufferSize=!65536,nDefaultTimeOut=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE") },
+#define LIBWIN32_CREATENAMEDPIPE_DEF_DOC(doc) { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FREADONLY, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=!|!PIPE_TYPE_BYTE!PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize=!65536,nInBufferSize=!65536,nDefaultTimeOut=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateNamedPipe, &libwin32_CreateNamedPipe_f, METHOD_FNORMAL);
 #ifndef DEFINED_kwlist__lpName_dwOpenMode_dwPipeMode_nMaxInstances_nOutBufferSize_nInBufferSize_nDefaultTimeOut_lpSecurityAttributes
 #define DEFINED_kwlist__lpName_dwOpenMode_dwPipeMode_nMaxInstances_nOutBufferSize_nInBufferSize_nDefaultTimeOut_lpSecurityAttributes
@@ -3766,7 +3766,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenProcess_f(size_t argc, DeeObj
 		bool bInheritHandle;
 		DWORD dwProcessId;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwDesiredAccess_bInheritHandle_dwProcessId,  UNPu32 "b" UNPu32 ":OpenProcess", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwDesiredAccess_bInheritHandle_dwProcessId, UNPu32 "b" UNPu32 ":OpenProcess", &args))
 		goto err;
 	return libwin32_OpenProcess_f_impl(args.dwDesiredAccess, args.bInheritHandle, args.dwProcessId);
 err:
@@ -4675,8 +4675,8 @@ PRIVATE LPRTLNTSTATUSTODOSERROR DCALL get_RtlNtStatusToDosError(void) {
      "->" MAYBE_NONE("?DBytes")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f_impl(HANDLE ProcessHandle, unsigned int ProcessInformationClass, size_t ProcessInformationLength);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!none)->?DBytes") },
-#define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF_DOC(doc) { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!none)->?DBytes\n" doc) },
+#define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength=!64)->?DBytes") },
+#define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF_DOC(doc) { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength=!64)->?DBytes\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_NtQueryInformationProcess, &libwin32_NtQueryInformationProcess_f, METHOD_FNORMAL);
 #ifndef DEFINED_kwlist__ProcessHandle_ProcessInformationClass_ProcessInformationLength
 #define DEFINED_kwlist__ProcessHandle_ProcessInformationClass_ProcessInformationLength
@@ -4770,8 +4770,8 @@ err:
      "->" MAYBE_NONE("?DBytes")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess64_f_impl(HANDLE ProcessHandle, unsigned int ProcessInformationClass, size_t ProcessInformationLength);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess64_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!none)->?DBytes") },
-#define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF_DOC(doc) { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!none)->?DBytes\n" doc) },
+#define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength=!64)->?DBytes") },
+#define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF_DOC(doc) { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength=!64)->?DBytes\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64QueryInformationProcess64, &libwin32_NtWow64QueryInformationProcess64_f, METHOD_FNORMAL);
 #ifndef DEFINED_kwlist__ProcessHandle_ProcessInformationClass_ProcessInformationLength
 #define DEFINED_kwlist__ProcessHandle_ProcessInformationClass_ProcessInformationLength
@@ -5369,7 +5369,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_Sleep_f(size_t argc, DeeObject *c
 	struct {
 		DWORD dwMilliseconds;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwMilliseconds,  UNPu32 ":Sleep", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwMilliseconds, UNPu32 ":Sleep", &args))
 		goto err;
 	return libwin32_Sleep_f_impl(args.dwMilliseconds);
 err:
@@ -5478,7 +5478,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenEvent_f(size_t argc, DeeObjec
 		bool bInheritHandle;
 		LPCWSTR lpName;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwDesiredAccess_bInheritHandle_lpName,  UNPu32 "bU16s:OpenEvent", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwDesiredAccess_bInheritHandle_lpName, UNPu32 "bU16s:OpenEvent", &args))
 		goto err;
 	return libwin32_OpenEvent_f_impl(args.dwDesiredAccess, args.bInheritHandle, args.lpName);
 err:
@@ -5702,7 +5702,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenMutex_f(size_t argc, DeeObjec
 		bool bInheritHandle;
 		LPCWSTR lpName;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwDesiredAccess_bInheritHandle_lpName,  UNPu32 "bU16s:OpenMutex", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwDesiredAccess_bInheritHandle_lpName, UNPu32 "bU16s:OpenMutex", &args))
 		goto err;
 	return libwin32_OpenMutex_f_impl(args.dwDesiredAccess, args.bInheritHandle, args.lpName);
 err:
@@ -5799,8 +5799,8 @@ err:
      "->" MAYBE_NONE("?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateSemaphore_f_impl(DeeObject *lpSemaphoreAttributes, LONG lInitialCount, LONG lMaximumCount, LPCWSTR lpName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateSemaphore_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CREATESEMAPHORE_DEF { "CreateSemaphore", (DeeObject *)&libwin32_CreateSemaphore, MODSYM_FREADONLY, DOC("(lpSemaphoreAttributes?:?GSECURITY_ATTRIBUTES,lInitialCount=!0,lMaximumCount:?Dint=!none,lpName?:?Dstring)->?GHANDLE") },
-#define LIBWIN32_CREATESEMAPHORE_DEF_DOC(doc) { "CreateSemaphore", (DeeObject *)&libwin32_CreateSemaphore, MODSYM_FREADONLY, DOC("(lpSemaphoreAttributes?:?GSECURITY_ATTRIBUTES,lInitialCount=!0,lMaximumCount:?Dint=!none,lpName?:?Dstring)->?GHANDLE\n" doc) },
+#define LIBWIN32_CREATESEMAPHORE_DEF { "CreateSemaphore", (DeeObject *)&libwin32_CreateSemaphore, MODSYM_FREADONLY, DOC("(lpSemaphoreAttributes?:?GSECURITY_ATTRIBUTES,lInitialCount=!0,lMaximumCount=!0x10000,lpName?:?Dstring)->?GHANDLE") },
+#define LIBWIN32_CREATESEMAPHORE_DEF_DOC(doc) { "CreateSemaphore", (DeeObject *)&libwin32_CreateSemaphore, MODSYM_FREADONLY, DOC("(lpSemaphoreAttributes?:?GSECURITY_ATTRIBUTES,lInitialCount=!0,lMaximumCount=!0x10000,lpName?:?Dstring)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateSemaphore, &libwin32_CreateSemaphore_f, METHOD_FNORMAL);
 #ifndef DEFINED_kwlist__lpSemaphoreAttributes_lInitialCount_lMaximumCount_lpName
 #define DEFINED_kwlist__lpSemaphoreAttributes_lInitialCount_lMaximumCount_lpName
@@ -5878,7 +5878,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenSemaphore_f(size_t argc, DeeO
 		bool bInheritHandle;
 		LPCWSTR lpName;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwDesiredAccess_bInheritHandle_lpName,  UNPu32 "bU16s:OpenSemaphore", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwDesiredAccess_bInheritHandle_lpName, UNPu32 "bU16s:OpenSemaphore", &args))
 		goto err;
 	return libwin32_OpenSemaphore_f_impl(args.dwDesiredAccess, args.bInheritHandle, args.lpName);
 err:
@@ -6054,7 +6054,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenWaitableTimer_f(size_t argc, 
 		bool bInheritHandle;
 		LPCWSTR lpName;
 	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwDesiredAccess_bInheritHandle_lpName,  UNPu32 "bU16s:OpenWaitableTimer", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__dwDesiredAccess_bInheritHandle_lpName, UNPu32 "bU16s:OpenWaitableTimer", &args))
 		goto err;
 	return libwin32_OpenWaitableTimer_f_impl(args.dwDesiredAccess, args.bInheritHandle, args.lpName);
 err:
