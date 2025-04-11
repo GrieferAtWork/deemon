@@ -12685,8 +12685,10 @@ DECL_END
 
 #ifdef CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
 #define _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL(haystack) haystack
+#define _Dee_EXPERIMENTAL_HAYSTACK_OR_ZERO(haystack) haystack
 #else /* CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
 #define _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL(haystack) NULL
+#define _Dee_EXPERIMENTAL_HAYSTACK_OR_ZERO(haystack) 0
 #endif /* !CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
 
 #define _DeeSystem_DEFINE_memmemT(rT, T, memchr, memeq, name)                          \
@@ -12738,6 +12740,31 @@ DECL_END
 #define DeeSystem_DEFINE_memrmemw(name, memrchrw, memeqw) _DeeSystem_DEFINE_memrmemT(uint16_t, uint16_t, memrchrw, memeqw, name)
 #define DeeSystem_DEFINE_memrmeml(name, memrchrl, memeql) _DeeSystem_DEFINE_memrmemT(uint32_t, uint32_t, memrchrl, memeql, name)
 #define DeeSystem_DEFINE_memrmemq(name, memrchrq, memeqq) _DeeSystem_DEFINE_memrmemT(uint64_t, uint64_t, memrchrq, memeqq, name)
+
+/* Count the # of non-overlapping instances of "needle" in "haystack" */
+#define _DeeSystem_DEFINE_memcntT(T, name, memmem)                              \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t                \
+	name(void const *haystack, size_t haystack_length,                          \
+	     void const *needle, size_t needle_length) {                            \
+		size_t result;                                                          \
+		if unlikely(!needle_length)                                             \
+			return _Dee_EXPERIMENTAL_HAYSTACK_OR_ZERO(haystack_length + 1);     \
+		for (result = 0;; ++result) {                                           \
+			void const *next = memmem(haystack, haystack_length,                \
+			                          needle, needle_length);                   \
+			if (!next)                                                          \
+				break;                                                          \
+			next = (void const *)((T const *)next + needle_length);             \
+			haystack_length -= (size_t)((T const *)next - (T const *)haystack); \
+			haystack = next;                                                    \
+		}                                                                       \
+		return result;                                                          \
+	}
+#define DeeSystem_DEFINE_memcnt(name)     _DeeSystem_DEFINE_memcntT(uint8_t, name, memmem)
+#define DeeSystem_DEFINE_memcntw(name)    _DeeSystem_DEFINE_memcntT(uint16_t, name, memmemw)
+#define DeeSystem_DEFINE_memcntl(name)    _DeeSystem_DEFINE_memcntT(uint32_t, name, memmeml)
+#define DeeSystem_DEFINE_memcntq(name)    _DeeSystem_DEFINE_memcntT(uint64_t, name, memmemq)
+#define DeeSystem_DEFINE_memcasecnt(name) _DeeSystem_DEFINE_memcntT(uint8_t, name, memcasemem)
 
 #define DeeSystem_DEFINE_strnlen(name)                              \
 	LOCAL ATTR_PURE WUNUSED size_t                                  \

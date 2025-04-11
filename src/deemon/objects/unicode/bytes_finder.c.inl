@@ -456,10 +456,9 @@ err_r:
 	return NULL;
 }
 
-
 PRIVATE struct type_seq bf_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bf_iter,
-	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size), /* TODO: Bytes.count() */
+	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
 	/* .tp_contains = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains), /* TODO: Bytes.substr() == needle */
 	/* .tp_getitem                    = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
 	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
@@ -471,7 +470,7 @@ PRIVATE struct type_seq bf_seq = {
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
-	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter),
+	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter), /* TODO: Bytes.count() */
 	/* .tp_size_fast                  = */ NULL,
 	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
 	/* .tp_getitem_index_fast         = */ NULL,
@@ -503,7 +502,7 @@ PRIVATE struct type_seq bf_seq = {
 
 PRIVATE struct type_seq bcf_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bcf_iter,
-	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size), /* TODO: Bytes.casecount() */
+	/* .tp_sizeob   = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
 	/* .tp_contains = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains), /* TODO: Bytes.substr(...).casecompare(needle) == 0 */
 	/* .tp_getitem                    = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
 	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
@@ -515,7 +514,7 @@ PRIVATE struct type_seq bcf_seq = {
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
-	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter),
+	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_iter), /* TODO: Bytes.casecount() */
 	/* .tp_size_fast                  = */ NULL,
 	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
 	/* .tp_getitem_index_fast         = */ NULL,

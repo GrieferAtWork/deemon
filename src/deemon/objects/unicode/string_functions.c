@@ -4158,9 +4158,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_count(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	size_t result = 0;
-	union dcharptr_const lhs, lep, rhs;
-	size_t mylen;
+	size_t mylen, result;
+	union dcharptr_const lhs, rhs;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("count", params: "
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
 ", docStringPrefix: "string");]]]*/
@@ -4185,13 +4184,8 @@ string_count(String *self, size_t argc,
 		mylen   = DeeString_SIZE(self);
 		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 		lhs.cp8 += args.start;
-		lep.cp8 = lhs.cp8 + mylen;
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
-		while ((lhs.cp8 = memmemb(lhs.cp8, (size_t)(lep.cp8 - lhs.cp8),
-		                          rhs.cp8, WSTR_LENGTH(rhs.cp8))) != NULL) {
-			lhs.cp8 += WSTR_LENGTH(rhs.cp8);
-			++result;
-		}
+		result  = memcntb(lhs.cp8, mylen, rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -4201,15 +4195,10 @@ string_count(String *self, size_t argc,
 		mylen = WSTR_LENGTH(lhs.cp16);
 		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 		lhs.cp16 += args.start;
-		lep.cp16 = lhs.cp16 + mylen;
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		while ((lhs.cp16 = memmemw(lhs.cp16, (size_t)(lep.cp16 - lhs.cp16),
-		                           rhs.cp16, WSTR_LENGTH(rhs.cp16))) != NULL) {
-			lhs.cp16 += WSTR_LENGTH(rhs.cp16);
-			++result;
-		}
+		result = memcntw(lhs.cp16, mylen, rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -4219,19 +4208,15 @@ string_count(String *self, size_t argc,
 		mylen = WSTR_LENGTH(lhs.cp32);
 		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 		lhs.cp32 += args.start;
-		lep.cp32 = lhs.cp32 + mylen;
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		while ((lhs.cp32 = memmeml(lhs.cp32, (size_t)(lep.cp32 - lhs.cp32),
-		                           rhs.cp32, WSTR_LENGTH(rhs.cp32))) != NULL) {
-			lhs.cp32 += WSTR_LENGTH(rhs.cp32);
-			++result;
-		}
+		result = memcntl(lhs.cp32, mylen, rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		break;
 	}
-not_found:
 	return DeeInt_NewSize(result);
+not_found:
+	return DeeInt_NewZero();
 err:
 	return NULL;
 }
@@ -4239,10 +4224,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casecount(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	size_t result = 0;
-	size_t match_length;
-	union dcharptr_const lhs, lep, rhs;
-	size_t mylen;
+	size_t mylen, result;
+	union dcharptr_const lhs, rhs;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecount", params: "
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
 ", docStringPrefix: "string");]]]*/
@@ -4267,14 +4250,8 @@ string_casecount(String *self, size_t argc,
 		mylen   = DeeString_SIZE(self);
 		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 		lhs.cp8 += args.start;
-		lep.cp8 = lhs.cp8 + mylen;
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
-		while ((lhs.cp8 = dee_memcasememb(lhs.cp8, (size_t)(lep.cp8 - lhs.cp8),
-		                                  rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                                  &match_length)) != NULL) {
-			lhs.cp8 += match_length;
-			++result;
-		}
+		result  = dee_memcasecntb(lhs.cp8, mylen, rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -4284,16 +4261,10 @@ string_casecount(String *self, size_t argc,
 		mylen = WSTR_LENGTH(lhs.cp16);
 		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 		lhs.cp16 += args.start;
-		lep.cp16 = lhs.cp16 + mylen;
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		while ((lhs.cp16 = dee_memcasememw(lhs.cp16, (size_t)(lep.cp16 - lhs.cp16),
-		                                   rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                                   &match_length)) != NULL) {
-			lhs.cp16 += match_length;
-			++result;
-		}
+		result = dee_memcasecntw(lhs.cp16, mylen, rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -4303,20 +4274,15 @@ string_casecount(String *self, size_t argc,
 		mylen = WSTR_LENGTH(lhs.cp32);
 		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 		lhs.cp32 += args.start;
-		lep.cp32 = lhs.cp32 + mylen;
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		while ((lhs.cp32 = dee_memcasememl(lhs.cp32, (size_t)(lep.cp32 - lhs.cp32),
-		                                   rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                                   &match_length)) != NULL) {
-			lhs.cp32 += match_length;
-			++result;
-		}
+		result = dee_memcasecntl(lhs.cp32, mylen, rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		break;
 	}
-not_found:
 	return DeeInt_NewSize(result);
+not_found:
+	return DeeInt_NewZero();
 err:
 	return NULL;
 }
@@ -4324,8 +4290,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 string_contains_f_impl(String *self, String *needle,
                        size_t start, size_t end) {
-	union dcharptr_const lhs, rhs;
 	size_t mylen;
+	union dcharptr_const lhs, rhs, ptr;
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
 	                                        DeeString_WIDTH(needle))) {
 
@@ -4334,9 +4300,7 @@ string_contains_f_impl(String *self, String *needle,
 		mylen   = DeeString_SIZE(self);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		if (!memmemb(lhs.cp8 + start, mylen,
-		             rhs.cp8, WSTR_LENGTH(rhs.cp8)))
-			goto not_found;
+		ptr.cp8 = memmemb(lhs.cp8 + start, mylen, rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -4348,9 +4312,7 @@ string_contains_f_impl(String *self, String *needle,
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		if (!memmemw(lhs.cp16 + start, mylen,
-		             rhs.cp16, WSTR_LENGTH(rhs.cp16)))
-			goto not_found;
+		ptr.cp16 = memmemw(lhs.cp16 + start, mylen, rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -4362,11 +4324,11 @@ string_contains_f_impl(String *self, String *needle,
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		if (!memmeml(lhs.cp32 + start, mylen,
-		             rhs.cp32, WSTR_LENGTH(rhs.cp32)))
-			goto not_found;
+		ptr.cp32 = memmeml(lhs.cp32 + start, mylen, rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		break;
 	}
+	if (!ptr.ptr)
+		goto not_found;
 	return 1;
 not_found:
 	return 0;
@@ -4405,8 +4367,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 string_casecontains_impl_f(String *self, String *needle,
                            size_t start, size_t end) {
-	union dcharptr_const lhs, rhs;
 	size_t mylen;
+	union dcharptr_const lhs, rhs, ptr;
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
 	                                        DeeString_WIDTH(needle))) {
 
@@ -4415,9 +4377,7 @@ string_casecontains_impl_f(String *self, String *needle,
 		mylen   = DeeString_SIZE(self);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		if (!dee_memcasememb(lhs.cp8 + start, mylen,
-		                     rhs.cp8, WSTR_LENGTH(rhs.cp8), NULL))
-			goto not_found;
+		ptr.cp8 = dee_memcasememb(lhs.cp8 + start, mylen, rhs.cp8, WSTR_LENGTH(rhs.cp8), NULL);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -4429,9 +4389,7 @@ string_casecontains_impl_f(String *self, String *needle,
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		if (!dee_memcasememw(lhs.cp16 + start, mylen,
-		                     rhs.cp16, WSTR_LENGTH(rhs.cp16), NULL))
-			goto not_found;
+		ptr.cp16 = dee_memcasememw(lhs.cp16 + start, mylen, rhs.cp16, WSTR_LENGTH(rhs.cp16), NULL);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -4443,11 +4401,11 @@ string_casecontains_impl_f(String *self, String *needle,
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		if (!dee_memcasememl(lhs.cp32 + start, mylen,
-		                     rhs.cp32, WSTR_LENGTH(rhs.cp32), NULL))
-			goto not_found;
+		ptr.cp32 = dee_memcasememl(lhs.cp32 + start, mylen, rhs.cp32, WSTR_LENGTH(rhs.cp32), NULL);
 		break;
 	}
+	if (!ptr.ptr)
+		goto not_found;
 	return 1;
 not_found:
 	return 0;

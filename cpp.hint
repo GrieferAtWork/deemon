@@ -1194,6 +1194,12 @@
 #define DeeSystem_DEFINE_memrmemw(n,memrchrw,memeqw) _DeeSystem_DEFINE_memrmemT(uint16_t,uint16_t,memrchrw,memeqw,n)
 #define DeeSystem_DEFINE_memrmeml(n,memrchrl,memeql) _DeeSystem_DEFINE_memrmemT(uint32_t,uint32_t,memrchrl,memeql,n)
 #define DeeSystem_DEFINE_memrmemq(n,memrchrq,memeqq) _DeeSystem_DEFINE_memrmemT(uint64_t,uint64_t,memrchrq,memeqq,n)
+#define _DeeSystem_DEFINE_memcntT(n,...) static size_t n(void const*haystack,size_t haystack_length,void const*needle,size_t needle_length){}
+#define DeeSystem_DEFINE_memcnt(n) _DeeSystem_DEFINE_memcntT(n)
+#define DeeSystem_DEFINE_memcntw(n) _DeeSystem_DEFINE_memcntT(n)
+#define DeeSystem_DEFINE_memcntl(n) _DeeSystem_DEFINE_memcntT(n)
+#define DeeSystem_DEFINE_memcntq(n) _DeeSystem_DEFINE_memcntT(n)
+#define DeeSystem_DEFINE_memcasecnt(n) _DeeSystem_DEFINE_memcntT(n)
 #define DeeSystem_DEFINE_strnlen(n) static size_t n(char const*restrict str,size_t maxlen){}
 #define _DeeSystem_DEFINE_strlenT(T,n) static size_t n(T const*restrict str){}
 #define DeeSystem_DEFINE_wcslen(n) _DeeSystem_DEFINE_strlenT(Dee_wchar_t,n)

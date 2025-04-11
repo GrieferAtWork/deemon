@@ -126,6 +126,9 @@ function t(x, w) {
 }
 
 t("abcd", x -> x);
+t("abcd\u1234", x -> x); /* Test 16-bit code paths */
+t("abcd\u12345678", x -> x); /* Test 32-bit code paths */
+
 /* string function cannot be used with Bytes arguments, since
  * raw Bytes cannot be implicitly converted into strings (since
  * their encoding is unknown) */

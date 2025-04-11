@@ -3388,7 +3388,7 @@ PUBLIC WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	switch (length) {
 	case 0:
-		goto return_zero;
+		goto do_return_zero;
 
 	case 1:
 		if (as_signed) {
@@ -3484,7 +3484,7 @@ PUBLIC WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 #ifdef __OPTIMIZE_SIZE__
 		/* Needed here because not already handled by switch above under __OPTIMIZE_SIZE__ */
 		if (!length)
-			goto return_zero;
+			goto do_return_zero;
 #endif /* __OPTIMIZE_SIZE__ */
 		sign_byte = 0x00;
 		if (little_endian) {
@@ -3497,8 +3497,8 @@ PUBLIC WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 			while (((uint8_t const *)buf)[length - 1] == sign_byte) {
 				if (!--length) {
 					if (sign_byte)
-						goto return_m1;
-					goto return_zero;
+						goto do_return_minus_one;
+					goto do_return_zero;
 				}
 				total_bits -= 8;
 			}
@@ -3521,8 +3521,8 @@ PUBLIC WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 			while (((uint8_t const *)buf)[0] == sign_byte) {
 				if (!--length) {
 					if (sign_byte)
-						goto return_m1;
-					goto return_zero;
+						goto do_return_minus_one;
+					goto do_return_zero;
 				}
 				total_bits -= 8;
 				buf = (void const *)((uint8_t const *)buf + 1);
@@ -3560,7 +3560,7 @@ PUBLIC WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 				total_bits -= 8;
 			}
 			if (!length)
-				goto return_zero;
+				goto do_return_zero;
 			msb_byte = ((uint8_t const *)buf)[length - 1];
 		} else {
 			while (length && !((uint8_t const *)buf)[0]) {
@@ -3569,7 +3569,7 @@ PUBLIC WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 				buf = (void *)((uint8_t *)buf + 1);
 			}
 			if (!length)
-				goto return_zero;
+				goto do_return_zero;
 			msb_byte = ((uint8_t const *)buf)[0];
 		}
 		msb_topbit = 7;
@@ -3674,9 +3674,9 @@ done_decr:
 		result->ob_size = -result->ob_size;
 done:
 	return (DREF DeeObject *)result;
-return_m1:
+do_return_minus_one:
 	return DeeInt_NewMinusOne();
-return_zero:
+do_return_zero:
 	return DeeInt_NewZero();
 }
 

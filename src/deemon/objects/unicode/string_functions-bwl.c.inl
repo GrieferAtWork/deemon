@@ -101,6 +101,7 @@ DECL_BEGIN
 #define LOCAL_memcaseendswith          LOCAL_FUNC(dee_memcaseendswith)
 #define LOCAL_memcasemem               LOCAL_FUNC(dee_memcasemem)
 #define LOCAL_memcasermem              LOCAL_FUNC(dee_memcasermem)
+#define LOCAL_memcasecnt               LOCAL_FUNC(dee_memcasecnt)
 #if LOCAL_SIZEOF_CHAR == 1
 #define LOCAL_memcasecmp               LOCAL_FUNC(dee_memcasecmp)
 #endif /* LOCAL_SIZEOF_CHAR == ... */
@@ -469,9 +470,12 @@ PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) ATTR_OUT_OPT(5) LOCAL_uchar_t *DCA
 LOCAL_memcasemem(LOCAL_uchar_t const *haystack, size_t haystack_length,
                  LOCAL_uchar_t const *needle, size_t needle_length,
                  size_t *p_match_length) {
+#ifdef CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
+	if unlikely(!needle_length)
+		return (LOCAL_uchar_t *)haystack;
+#endif /* CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
 	for (; haystack_length; --haystack_length, ++haystack) {
-		size_t match_length;
-		match_length = LOCAL_memcasestartswith(haystack, haystack_length, needle, needle_length);
+		size_t match_length = LOCAL_memcasestartswith(haystack, haystack_length, needle, needle_length);
 		if (match_length) {
 			if (p_match_length)
 				*p_match_length = match_length;
@@ -487,9 +491,12 @@ PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) ATTR_OUT_OPT(5) LOCAL_uchar_t *DCA
 LOCAL_memcasermem(LOCAL_uchar_t const *haystack, size_t haystack_length,
                   LOCAL_uchar_t const *needle, size_t needle_length,
                   size_t *p_match_length) {
+#ifdef CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
+	if unlikely(!needle_length)
+		return (LOCAL_uchar_t *)haystack + haystack_length;
+#endif /* CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
 	for (; haystack_length; --haystack_length) {
-		size_t match_length;
-		match_length = LOCAL_memcaseendswith(haystack, haystack_length, needle, needle_length);
+		size_t match_length = LOCAL_memcaseendswith(haystack, haystack_length, needle, needle_length);
 		if (match_length) {
 			if (p_match_length)
 				*p_match_length = match_length;
@@ -499,6 +506,30 @@ LOCAL_memcasermem(LOCAL_uchar_t const *haystack, size_t haystack_length,
 	return NULL;
 }
 #endif /* LOCAL_memcasermem */
+
+#ifdef LOCAL_memcasecnt
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL
+LOCAL_memcasecnt(LOCAL_uchar_t const *haystack, size_t haystack_length,
+                 LOCAL_uchar_t const *needle, size_t needle_length) {
+	size_t result;
+	if unlikely(!needle_length)
+		return _Dee_EXPERIMENTAL_HAYSTACK_OR_ZERO(haystack_length + 1);
+	for (result = 0;; ++result) {
+		size_t match_length;
+		LOCAL_uchar_t const *next;
+		next = LOCAL_memcasemem(haystack, haystack_length,
+		                        needle, needle_length,
+		                        &match_length);
+		if (!next)
+			break;
+		ASSERT(match_length > 0);
+		next += match_length;
+		haystack_length -= (size_t)(next - haystack);
+		haystack = next;
+	}
+	return result;
+}
+#endif /* LOCAL_memcasecnt */
 
 
 
@@ -1102,6 +1133,7 @@ LOCAL_wildcasecompare(struct unicode_foldreader *__restrict string,
 #undef LOCAL_memcaseendswith
 #undef LOCAL_memcasemem
 #undef LOCAL_memcasermem
+#undef LOCAL_memcasecnt
 #undef LOCAL_memcasecmp
 #undef LOCAL_fuzzy_compare
 #undef LOCAL_fuzzy_casecompare

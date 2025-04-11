@@ -183,6 +183,21 @@ DeeSystem_DEFINE_memrmemw(dee_memrmemw, memrchrw, MEMEQW)
 DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
 #endif /* !CONFIG_HAVE_memrmeml */
 
+#undef memcnt
+#define memcnt dee_memcnt
+#undef memcntb
+#define memcntb dee_memcnt
+DeeSystem_DEFINE_memcnt(dee_memcnt)
+
+#undef memcntw
+#define memcntw dee_memcntw
+DeeSystem_DEFINE_memcntw(dee_memcntw)
+
+#undef memcntl
+#define memcntl dee_memcntl
+DeeSystem_DEFINE_memcntl(dee_memcntl)
+
+
 
 
 
@@ -225,6 +240,10 @@ _DeeSystem_DEFINE_memcasermem(dee_memcasermem, _dee_memasciicaserchr)
 #undef memasciicasermem
 #define memasciicasermem(haystack, haystack_length, needle, needle_length) \
 	((uint8_t *)memcasermem(haystack, haystack_length, needle, needle_length))
+
+#undef memcasecnt
+#define memcasecnt dee_memcasecnt
+DeeSystem_DEFINE_memcasecnt(dee_memcasecnt)
 
 
 
@@ -302,6 +321,9 @@ PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) ATTR_OUT_OPT(5) uint32_t *DCALL de
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL dee_memcasecmpb(uint8_t const *lhs, size_t lhs_size, uint8_t const *rhs, size_t rhs_size);
 /*PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL dee_memcasecmpw(uint16_t const *lhs, size_t lhs_size, uint16_t const *rhs, size_t rhs_size);*/
 /*PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL dee_memcasecmpl(uint32_t const *lhs, size_t lhs_size, uint32_t const *rhs, size_t rhs_size);*/
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_memcasecntb(uint8_t const *haystack, size_t haystack_length, uint8_t const *needle, size_t needle_length);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_memcasecntw(uint16_t const *haystack, size_t haystack_length, uint16_t const *needle, size_t needle_length);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_memcasecntl(uint32_t const *haystack, size_t haystack_length, uint32_t const *needle, size_t needle_length);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL dee_fuzzy_compareb(uint8_t const *lhs, size_t lhs_len, uint8_t const *rhs, size_t rhs_len);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL dee_fuzzy_comparew(uint16_t const *lhs, size_t lhs_len, uint16_t const *rhs, size_t rhs_len);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL dee_fuzzy_comparel(uint32_t const *lhs, size_t lhs_len, uint32_t const *rhs, size_t rhs_len);

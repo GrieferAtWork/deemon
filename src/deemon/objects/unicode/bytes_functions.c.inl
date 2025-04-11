@@ -810,8 +810,6 @@ bytes_count(Bytes *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	Needle needle;
 	size_t result;
-	byte_t *iter;
-	size_t size;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("count", params: "
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
 ", docStringPrefix: "bytes");]]]*/
@@ -828,22 +826,15 @@ bytes_count(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	if (get_needle(&needle, args.needle))
 		goto err;
-	iter = DeeBytes_DATA(self);
-	size = DeeBytes_SIZE(self);
-	if (args.end > size)
-		args.end = size;
-	result = 0;
-	if (args.start < args.end && needle.n_size) {
-		args.end -= args.start;
-		iter += args.start;
-		while (args.end >= needle.n_size) {
-			if (MEMEQB(iter, needle.n_data, needle.n_size))
-				++result;
-			--args.end;
-			++iter;
-		}
-	}
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (OVERFLOW_USUB(args.end, args.start, &args.end))
+		goto not_found;
+	result = memcnt(DeeBytes_DATA(self) + args.start,
+	                args.end, needle.n_data, needle.n_size);
 	return DeeInt_NewSize(result);
+not_found:
+	return DeeInt_NewZero();
 err:
 	return NULL;
 }
@@ -853,8 +844,6 @@ bytes_casecount(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	Needle needle;
 	size_t result;
-	byte_t *iter;
-	size_t size;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecount", params: "
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
 ", docStringPrefix: "bytes");]]]*/
@@ -871,22 +860,15 @@ bytes_casecount(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	if (get_needle(&needle, args.needle))
 		goto err;
-	iter = DeeBytes_DATA(self);
-	size = DeeBytes_SIZE(self);
-	if (args.end > size)
-		args.end = size;
-	result = 0;
-	if (args.start < args.end && needle.n_size) {
-		args.end -= args.start;
-		iter += args.start;
-		while (args.end >= needle.n_size) {
-			if (memcasecmp(iter, needle.n_data, needle.n_size) == 0)
-				++result;
-			--args.end;
-			++iter;
-		}
-	}
+	if (args.end > DeeBytes_SIZE(self))
+		args.end = DeeBytes_SIZE(self);
+	if (OVERFLOW_USUB(args.end, args.start, &args.end))
+		goto not_found;
+	result = memcasecnt(DeeBytes_DATA(self) + args.start,
+	                    args.end, needle.n_data, needle.n_size);
 	return DeeInt_NewSize(result);
+not_found:
+	return DeeInt_NewZero();
 err:
 	return NULL;
 }
