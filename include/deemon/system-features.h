@@ -549,13 +549,6 @@ func("malloc_usable_size", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(unix),
 func("_expand", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(msvc), test: 'void *p = 0; extern size_t s; return (p = _expand(p, s)) == p;');
 func("realloc_in_place", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(unix), test: 'void *p = 0; extern size_t s; return (p = _expand(p, s)) == p;');
 
-func("setjmp", "defined(CONFIG_HAVE_SETJMP_H) && " + addparen(stdc), test: 'extern jmp_buf env; return setjmp(env);');
-func("longjmp", "defined(CONFIG_HAVE_SETJMP_H) && " + addparen(stdc), test: 'extern jmp_buf env; longjmp(env, 2);');
-func("_setjmp", "defined(CONFIG_HAVE_SETJMP_H) && (defined(__USE_MISC) || defined(__USE_XOPEN))", test: 'extern jmp_buf env; return _setjmp(env);');
-func("_longjmp", "defined(CONFIG_HAVE_SETJMP_H) && (defined(__USE_MISC) || defined(__USE_XOPEN))", test: 'extern jmp_buf env; _longjmp(env, 2);');
-func("sigsetjmp", "defined(CONFIG_HAVE_SETJMP_H) && defined(__USE_POSIX)", test: 'extern sigjmp_buf env; return sigsetjmp(env, 0);');
-func("siglongjmp", "defined(CONFIG_HAVE_SETJMP_H) && defined(__USE_POSIX)", test: 'extern sigjmp_buf env; siglongjmp(env, 2);');
-
 func("read", unix, test: 'char buf[7]; return (int)read(0, buf, 7);');
 func("_read", msvc, test: 'char buf[7]; return (int)_read(0, buf, 7);');
 func("readall", "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_KOS)", test: 'char buf[7]; return (int)readall(0, buf, 7);');
@@ -4707,52 +4700,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
 #define CONFIG_HAVE_realloc_in_place
-#endif
-
-#ifdef CONFIG_NO_setjmp
-#undef CONFIG_HAVE_setjmp
-#elif !defined(CONFIG_HAVE_setjmp) && \
-      (defined(setjmp) || defined(__setjmp_defined) || defined(CONFIG_HAVE_SETJMP_H))
-#define CONFIG_HAVE_setjmp
-#endif
-
-#ifdef CONFIG_NO_longjmp
-#undef CONFIG_HAVE_longjmp
-#elif !defined(CONFIG_HAVE_longjmp) && \
-      (defined(longjmp) || defined(__longjmp_defined) || defined(CONFIG_HAVE_SETJMP_H))
-#define CONFIG_HAVE_longjmp
-#endif
-
-#ifdef CONFIG_NO__setjmp
-#undef CONFIG_HAVE__setjmp
-#elif !defined(CONFIG_HAVE__setjmp) && \
-      (defined(_setjmp) || defined(___setjmp_defined) || (defined(CONFIG_HAVE_SETJMP_H) && \
-       (defined(__USE_MISC) || defined(__USE_XOPEN))))
-#define CONFIG_HAVE__setjmp
-#endif
-
-#ifdef CONFIG_NO__longjmp
-#undef CONFIG_HAVE__longjmp
-#elif !defined(CONFIG_HAVE__longjmp) && \
-      (defined(_longjmp) || defined(___longjmp_defined) || (defined(CONFIG_HAVE_SETJMP_H) && \
-       (defined(__USE_MISC) || defined(__USE_XOPEN))))
-#define CONFIG_HAVE__longjmp
-#endif
-
-#ifdef CONFIG_NO_sigsetjmp
-#undef CONFIG_HAVE_sigsetjmp
-#elif !defined(CONFIG_HAVE_sigsetjmp) && \
-      (defined(sigsetjmp) || defined(__sigsetjmp_defined) || (defined(CONFIG_HAVE_SETJMP_H) && \
-       defined(__USE_POSIX)))
-#define CONFIG_HAVE_sigsetjmp
-#endif
-
-#ifdef CONFIG_NO_siglongjmp
-#undef CONFIG_HAVE_siglongjmp
-#elif !defined(CONFIG_HAVE_siglongjmp) && \
-      (defined(siglongjmp) || defined(__siglongjmp_defined) || (defined(CONFIG_HAVE_SETJMP_H) && \
-       defined(__USE_POSIX)))
-#define CONFIG_HAVE_siglongjmp
 #endif
 
 #ifdef CONFIG_NO_read

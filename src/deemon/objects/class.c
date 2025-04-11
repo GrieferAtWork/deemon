@@ -3611,7 +3611,6 @@ instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc,
 
 
 /* Builtin hash & comparison support. */
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 instance_iterattr(DeeTypeObject *tp_self, DeeObject *__restrict self,
                   struct Dee_attriter *iterbuf, size_t bufsize,
@@ -3628,20 +3627,6 @@ instance_iterattr(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	/* TODO */
 	return (size_t)DeeError_NOTIMPLEMENTED();
 }
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
-instance_enumattr(DeeTypeObject *tp_self,
-                  DeeObject *__restrict self,
-                  Dee_enum_t proc, void *arg) {
-	/* Hook function for user-defined enumattr() callbacks! */
-	(void)tp_self;
-	(void)self;
-	(void)proc;
-	(void)arg;
-	/* TODO */
-	return DeeError_NOTIMPLEMENTED();
-}
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 /* GC support for class objects. */

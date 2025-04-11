@@ -29,6 +29,8 @@
 
 DECL_BEGIN
 
+/* TODO: Write a script that scans deemon source files to identify unused kwlist__* symbols. */
+
 /*[[[deemon
 import * from deemon;
 import rt.hash as rtHash;
@@ -102,7 +104,6 @@ local kw_lists = {
 	{"needle", "max"},
 	{"mask", "max"},
 	{"codec", "errors"},
-	{"ob", "name", "flagmask", "flagval", "decl"}, // TODO: Remove after "CONFIG_EXPERIMENTAL_ATTRITER"
 	{"ob", "name", "perm", "permset", "decl"},
 	{"ob", "perm", "permset", "decl"},
 	{"decl", "name", "doc", "perm", "attrtype"},
@@ -230,7 +231,6 @@ DECLARE_KWLIST(kwlist__needle_max, { KEX("needle", 0xc332b2c9, 0xac5d4abaf21e8ae
 DECLARE_KWLIST(kwlist__needle_start_end, { KEX("needle", 0xc332b2c9, 0xac5d4abaf21e8ae1), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEND });
 DECLARE_KWLIST(kwlist__needles_start_end, { KEX("needles", 0x40de2797, 0x20cff0e4d5a00c0a), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEND });
 DECLARE_KWLIST(kwlist__nonblocking, { KEX("nonblocking", 0xd2f4eb1f, 0xdf83fd2b5752ab51), KEND });
-DECLARE_KWLIST(kwlist__ob_name_flagmask_flagval_decl, { KEX("ob", 0xdfa5fee2, 0x80a90888850ad043), KEX("name", 0xdbaf43f0, 0x8bcdb293dc3cbddc), KEX("flagmask", 0x1ad95b0e, 0xb243c89ffa422745), KEX("flagval", 0x364af42c, 0x4e190d94378badaa), KEX("decl", 0x95fe81e2, 0xdc35fdc1dce5cffc), KEND });
 DECLARE_KWLIST(kwlist__ob_name_perm_permset_decl, { KEX("ob", 0xdfa5fee2, 0x80a90888850ad043), KEX("name", 0xdbaf43f0, 0x8bcdb293dc3cbddc), KEX("perm", 0x7a394a64, 0x8b7755103442f209), KEX("permset", 0x4ee6a00a, 0xd554c804f15d2e0b), KEX("decl", 0x95fe81e2, 0xdc35fdc1dce5cffc), KEND });
 DECLARE_KWLIST(kwlist__ob_perm_permset_decl, { KEX("ob", 0xdfa5fee2, 0x80a90888850ad043), KEX("perm", 0x7a394a64, 0x8b7755103442f209), KEX("permset", 0x4ee6a00a, 0xd554c804f15d2e0b), KEX("decl", 0x95fe81e2, 0xdc35fdc1dce5cffc), KEND });
 DECLARE_KWLIST(kwlist__obj_callback, { KEX("obj", 0x477b06c1, 0xffb577570f61bd03), KEX("callback", 0x3b9dd39e, 0x1e7dd8df6e98f4c6), KEND });

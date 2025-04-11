@@ -22,11 +22,6 @@
 import * from deemon;
 import rt;
 
-local CONFIG_EXPERIMENTAL_ATTRITER = enumattr.Iterator.hasoperator("copy");
-if (!CONFIG_EXPERIMENTAL_ATTRITER)
-	return;
-
-
 class MyClass {
 	this = default;
 	public member myMember;

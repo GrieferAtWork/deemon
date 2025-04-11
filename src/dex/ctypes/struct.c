@@ -494,7 +494,6 @@ struct_setattr(DeeStructTypeObject *tp_self,
 	return err_unknown_attribute_with_reason(DeeStructType_AsType(tp_self), name, "set");
 }
 
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 struct ctypes_struct_attriter {
 	Dee_ATTRITER_HEAD
 	DeeStructTypeObject *casi_struct; /* [1..1][const] The struct being enumerated */
@@ -551,39 +550,13 @@ struct_iterattr(DeeStructTypeObject *__restrict self,
 	(void)hint;
 	return sizeof(struct ctypes_struct_attriter);
 }
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
-struct_enumattr(DeeStructTypeObject *__restrict self, Dee_enum_t proc, void *arg) {
-	Dee_hash_t i;
-	Dee_ssize_t temp, result = 0;
-	for (i = 0; i < self->st_fmsk; ++i) {
-		if (!self->st_fvec[i].sf_name)
-			continue;
-		temp = (*proc)(DeeStructType_AsObject(self),
-		               DeeString_STR(self->st_fvec[i].sf_name), NULL,
-		               Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET,
-		               DeeLValueType_AsType(self->st_fvec[i].sf_type),
-		               arg);
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
-	}
-	return result;
-err:
-	return temp;
-}
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 PRIVATE struct stype_attr struct_attr = {
 	/* .st_getattr  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&struct_getattr,
 	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&struct_delattr,
 	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&struct_setattr,
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	/* .st_iterattr = */ (size_t (DCALL *)(DeeSTypeObject *__restrict, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))&struct_iterattr,
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	/* .st_enumattr = */ (Dee_ssize_t (DCALL *)(DeeSTypeObject *__restrict, Dee_enum_t, void *))&struct_enumattr,
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 };
 
 

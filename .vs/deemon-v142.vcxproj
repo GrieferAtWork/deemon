@@ -213,7 +213,6 @@
 		<ClInclude Include="..\include\deemon\super.h" />
 		<ClInclude Include="..\include\deemon\system-error.h" />
 		<ClInclude Include="..\include\deemon\system-features.h" />
-		<ClInclude Include="..\include\deemon\system-sjlj.h" />
 		<ClInclude Include="..\include\deemon\system.h" />
 		<ClInclude Include="..\include\deemon\thread.h" />
 		<ClInclude Include="..\include\deemon\traceback.h" />

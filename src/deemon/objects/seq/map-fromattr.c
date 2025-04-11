@@ -60,7 +60,6 @@ DECL_BEGIN
 /* MapFromAttrKeysIterator                                              */
 /************************************************************************/
 
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 PRIVATE NONNULL((1)) void DCALL
 mfaki_fini(MapFromAttrIterator *__restrict self) {
 	/* !!! Iterator must be finalized while still holding reference to `self->mfai_obj' */
@@ -282,165 +281,6 @@ INTERN DeeTypeObject MapFromAttrKeysIterator_Type = {
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-STATIC_ASSERT(offsetof(MapFromAttrIterator, mfai_iter) == offsetof(ProxyObject, po_obj));
-#define mfaki_fini    generic_proxy__fini
-#define mfaki_visit   generic_proxy__visit
-#define mfaki_copy    generic_proxy__copy_recursive
-#define mfaki_deep    generic_proxy__deepcopy
-#define mfaki_bool    generic_proxy__bool
-#define old_mfaki_cmp generic_proxy__cmp_recursive
-
-INTDEF WUNUSED NONNULL((1)) DREF DeeAttributeObject *DCALL /* from "../attribute.c" */
-enumattriter_next(DeeEnumAttrIteratorObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL /* from "../attribute.c" */
-attr_get_name(DeeAttributeObject *__restrict self);
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-mfaki_next(MapFromAttrIterator *__restrict self) {
-	DREF DeeStringObject *result;
-	DREF DeeAttributeObject *attr;
-	ASSERT_OBJECT_TYPE_EXACT(self->mfai_iter, &DeeEnumAttrIterator_Type);
-	attr = enumattriter_next(self->mfai_iter);
-	if (!ITER_ISOK(attr))
-		return (DREF DeeStringObject *)attr;
-	result = attr_get_name(attr);
-	Dee_Decref(attr);
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-mfaki_ctor(MapFromAttrIterator *__restrict self) {
-	self->mfai_iter = (DREF DeeEnumAttrIteratorObject *)DeeObject_NewDefault(&DeeEnumAttrIterator_Type);
-	return likely(self->mfai_iter) ? 0 : -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mfaki_init_fromob(MapFromAttrIterator *__restrict self, DeeObject *ob) {
-	DREF DeeEnumAttrObject *enumattr;
-	enumattr = (DREF DeeEnumAttrObject *)DeeObject_New(&DeeEnumAttr_Type, 1, (DeeObject *const *)&ob);
-	if unlikely(!enumattr)
-		goto err;
-	self->mfai_iter = (DREF DeeEnumAttrIteratorObject *)DeeObject_Iter((DeeObject *)enumattr);
-	Dee_Decref_unlikely(enumattr);
-	if unlikely(!self->mfai_iter)
-		goto err;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-mfaki_init(MapFromAttrIterator *__restrict self,
-           size_t argc, DeeObject *const *argv) {
-	MapFromAttr *map;
-	_DeeArg_Unpack1(err, argc, argv, "_MapFromAttrKeysIterator", &map);
-	if (DeeObject_AssertTypeExact(map, &MapFromAttr_Type))
-		goto err;
-	return mfaki_init_fromob(self, map->mfa_ob);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mfaki_getob(MapFromAttrIterator *__restrict self) {
-	DeeEnumAttrIteratorObject *iter = self->mfai_iter;
-	DeeEnumAttrObject *iterseq = iter->ei_seq;
-	ASSERT(iterseq->ea_obj);
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
-	return_reference(iterseq->ea_obj);
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	if (iterseq->ea_type == Dee_TYPE(iterseq->ea_obj))
-		return_reference(iterseq->ea_obj);
-	return DeeSuper_New(iterseq->ea_type, iterseq->ea_obj);
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF MapFromAttr *DCALL
-mfaki_getseq(MapFromAttrIterator *__restrict self) {
-	DREF MapFromAttr *result;
-	DREF DeeObject *ob = mfaki_getob(self);
-	if unlikely(!ob)
-		goto err;
-	result = DeeObject_MALLOC(MapFromAttr);
-	if unlikely(!result)
-		goto err_ob;
-	result->mfa_ob = ob; /* Inherit reference */
-	DeeObject_Init(result, &MapFromAttr_Type);
-	return result;
-err_ob:
-	Dee_Decref(ob);
-err:
-	return NULL;
-}
-
-PRIVATE struct type_getset tpconst old_mfaki_getsets[] = {
-	TYPE_GETTER_AB_F(STR_seq, &mfaki_getseq, METHOD_FNOREFESCAPE, "->?Ert:MapFromAttr"),
-	TYPE_GETTER_AB_F_NODOC("__ob__", &mfaki_getob, METHOD_FNOREFESCAPE),
-	TYPE_GETSET_END
-};
-
-PRIVATE struct type_member tpconst old_mfaki_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(MapFromAttrIterator, mfai_iter),
-	                      "->?Ert:EnumAttrIterator"),
-	TYPE_MEMBER_END
-};
-
-#define old_MapFromAttrKeysIterator_Type MapFromAttrKeysIterator_Type
-#define old_MapFromAttrKeysIterator_name "_MapFromAttrKeysIterator"
-INTERN DeeTypeObject old_MapFromAttrKeysIterator_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ old_MapFromAttrKeysIterator_name,
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?Ert:MapFromAttr)\n"
-	                         "\n"
-	                         "next->?T2?Dstring?O"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeIterator_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&mfaki_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&mfaki_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&mfaki_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&mfaki_init,
-				TYPE_FIXED_ALLOCATOR(MapFromAttrIterator)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfaki_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL,
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ DEFIMPL(&object_str),
-		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&mfaki_bool,
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
-	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mfaki_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
-	/* .tp_cmp           = */ &old_mfaki_cmp,
-	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfaki_next,
-	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ old_mfaki_getsets,
-	/* .tp_members       = */ old_mfaki_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__E31EBEB26CC72F83),
-};
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 
@@ -467,22 +307,7 @@ mfa_ctor(MapFromAttr *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF MapFromAttrIterator *DCALL
 mfa_iterkeys(MapFromAttr *__restrict self) {
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	return mfaki_ofobj(self->mfa_ob);
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	DREF MapFromAttrIterator *result;
-	result = DeeObject_MALLOC(MapFromAttrIterator);
-	if unlikely(!result)
-		goto err;
-	if unlikely(mfaki_init_fromob(result, self->mfa_ob))
-		goto err_r;
-	DeeObject_Init(result, &MapFromAttrKeysIterator_Type);
-	return result;
-err_r:
-	DeeObject_FREE(result);
-err:
-	return NULL;
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 }
 
 

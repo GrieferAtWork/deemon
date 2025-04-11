@@ -58,12 +58,8 @@ function assertIterCopyable() {
 	assert third == third2;
 }
 
-/* Assert that attribute enumeration iterators are copyable.
- * Only works under "CONFIG_EXPERIMENTAL_ATTRITER" (enumattr
- * wasn't copyable prior to this) */
-local CONFIG_EXPERIMENTAL_ATTRITER = enumattr.Iterator.hasoperator("copy");
-if (CONFIG_EXPERIMENTAL_ATTRITER)
-	assertIterCopyable();
+/* Assert that attribute enumeration iterators are copyable. */
+assertIterCopyable();
 
 assert hasitem(map, "a");
 assert hasitem(map, "b");

@@ -45,7 +45,6 @@
 //#define DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringLenHash
 //#define DEFINE_DeeObject_TGenericFindAttr
 #define DEFINE_DeeObject_TGenericIterAttr
-//#define DEFINE_DeeObject_TGenericEnumAttr
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
@@ -84,8 +83,7 @@
      defined(DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringHash) +    \
      defined(DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringLenHash) + \
      defined(DEFINE_DeeObject_TGenericFindAttr) +                         \
-     defined(DEFINE_DeeObject_TGenericIterAttr) +                         \
-     defined(DEFINE_DeeObject_TGenericEnumAttr)) != 1
+     defined(DEFINE_DeeObject_TGenericIterAttr)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
@@ -271,17 +269,10 @@
 #define LOCAL_HAS_len
 #elif defined(DEFINE_DeeObject_TGenericFindAttr)
 #define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_TGenericFindAttr
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 #define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_FindCachedAttr(tp_self, self, specs, result)
 #define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_FindMethodAttr(tp_invoker, tp_self, specs, result)
 #define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_FindGetSetAttr(tp_invoker, tp_self, specs, result)
 #define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_FindMemberAttr(tp_invoker, tp_self, specs, result)
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-#define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_FindCachedAttr(tp_self, self, retinfo, rules)
-#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_FindMethodAttr(tp_invoker, tp_self, retinfo, rules)
-#define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_FindGetSetAttr(tp_invoker, tp_self, retinfo, rules)
-#define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_FindMemberAttr(tp_invoker, tp_self, retinfo, rules)
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #define LOCAL_IS_FIND
 #elif defined(DEFINE_DeeObject_TGenericIterAttr)
 #define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_TGenericIterAttr
@@ -289,19 +280,13 @@
 #define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) type_getset_iterattr(tp_self, (tp_self)->tp_getsets, Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder))
 #define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) type_member_iterattr(tp_self, (tp_self)->tp_members, Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder))
 #define LOCAL_IS_ITER
-#elif defined(DEFINE_DeeObject_TGenericEnumAttr)
-#define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_TGenericEnumAttr
-#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) type_method_enum(tp_self, (tp_self)->tp_methods, Dee_ATTRPERM_F_IMEMBER, proc, arg)
-#define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) type_getset_enum(tp_self, (tp_self)->tp_getsets, Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY, proc, arg)
-#define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) type_member_enum(tp_self, (tp_self)->tp_members, Dee_ATTRPERM_F_IMEMBER, proc, arg)
-#define LOCAL_IS_ENUM
 #else /* ... */
 #error "Invalid configuration"
 #endif /* !... */
 
-#if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FINDINFO) && !defined(LOCAL_IS_ITER) && !defined(LOCAL_IS_ENUM)
+#if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FINDINFO) && !defined(LOCAL_IS_ITER)
 #define LOCAL_HAS_self
-#endif /* !LOCAL_IS_HAS && !LOCAL_IS_FINDINFO && !LOCAL_IS_ITER && !LOCAL_IS_ENUM */
+#endif /* !LOCAL_IS_HAS && !LOCAL_IS_FINDINFO && !LOCAL_IS_ITER */
 
 #define LOCAL_HAS_tp_self
 
@@ -326,9 +311,6 @@ DECL_BEGIN
 #elif defined(LOCAL_IS_ITER)
 #define LOCAL_return_t              size_t
 #define LOCAL_ATTR_NOT_FOUND_RESULT DONT_USE_THIS_MACRO
-#elif defined(LOCAL_IS_ENUM)
-#define LOCAL_return_t              dssize_t
-#define LOCAL_ATTR_NOT_FOUND_RESULT DONT_USE_THIS_MACRO
 #else /* ... */
 #define LOCAL_return_t              int
 #define LOCAL_ATTR_NOT_FOUND_RESULT Dee_BOUND_MISSING
@@ -336,8 +318,6 @@ DECL_BEGIN
 
 #if defined(DEFINE_DeeObject_TGenericFindAttr)
 #define LOCAL_ATTR_NONNULL NONNULL((1, 3, 4))
-#elif defined(DEFINE_DeeObject_TGenericEnumAttr)
-#define LOCAL_ATTR_NONNULL NONNULL((1, 2))
 #elif defined(LOCAL_HAS_tp_self) && defined(LOCAL_HAS_self) && defined(LOCAL_HAS_len) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_FINDINFO) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3, 6))
 #elif defined(LOCAL_HAS_tp_self) && defined(LOCAL_HAS_self) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_FINDINFO) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
@@ -367,20 +347,13 @@ PUBLIC WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #ifdef LOCAL_IS_ITER
                                            struct Dee_attriter *iterbuf, size_t bufsize,
                                            struct Dee_attrhint const *__restrict hint
-#elif defined(LOCAL_IS_ENUM)
-                                           Dee_enum_t proc, void *arg
 #else /* LOCAL_IS_ITER */
 #ifdef LOCAL_HAS_self
                                            DeeObject *self,
 #endif /* LOCAL_HAS_self */
 #ifdef LOCAL_IS_FIND
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
                                            struct Dee_attrspec const *__restrict specs,
                                            struct Dee_attrdesc *__restrict result
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-                                           struct Dee_attribute_info *__restrict retinfo,
-                                           struct Dee_attribute_lookup_rules const *__restrict rules
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 #else /* LOCAL_IS_FIND */
                                            char const *__restrict attr,
 #ifdef LOCAL_HAS_len
@@ -419,9 +392,7 @@ PUBLIC WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #ifdef LOCAL_IS_ITER
 	struct Dee_attriterchain_builder builder;
 	Dee_attriterchain_builder_init(&builder, iterbuf, bufsize);
-#elif defined(LOCAL_IS_ENUM)
-	LOCAL_return_t final_retval = 0;
-#endif /* LOCAL_IS_ENUM */
+#endif /* LOCAL_IS_ITER */
 
 	/* Verify arguments. */
 #ifdef LOCAL_HAS_tp_self
@@ -451,7 +422,6 @@ PUBLIC WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 		do {
 #if defined(LOCAL_IS_FIND) || defined(LOCAL_IS_ITER)
 continue_at_iter:
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 #ifdef LOCAL_IS_ITER
 			if (hint->ah_decl != NULL &&
 			    hint->ah_decl != (DeeObject *)iter)
@@ -459,10 +429,6 @@ continue_at_iter:
 			if (specs->as_decl != NULL &&
 			    specs->as_decl != (DeeObject *)iter)
 #endif /* !LOCAL_IS_ITER */
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-			if (rules->alr_decl != NULL &&
-			    rules->alr_decl != (DeeObject *)iter)
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 			{
 #ifdef LOCAL_IS_PRIVATE
 				break;
@@ -485,21 +451,15 @@ continue_at_iter:
 	if unlikely(retval == (size_t)-1)      \
 		goto err;                          \
 	Dee_attriterchain_builder_consume(&builder, retval)
-
-#elif defined(LOCAL_IS_ENUM)
-#define LOCAL_process_retval(retval, done) \
-	if unlikely(retval < 0)                \
-		goto err;                          \
-	final_retval += retval
-#else /* LOCAL_IS_ENUM */
+#else /* LOCAL_IS_ITER */
 #define LOCAL_process_retval(retval, done)     \
 	if (retval != LOCAL_ATTR_NOT_FOUND_RESULT) \
 		goto done
-#endif /* !LOCAL_IS_ENUM */
+#endif /* !LOCAL_IS_ITER */
 
 #ifdef LOCAL_IS_ITER
 #define LOCAL_accepts_baseperm(baseperm) Dee_attrhint_accepts_baseperm(hint, baseperm)
-#elif defined(LOCAL_IS_FIND) && defined(CONFIG_EXPERIMENTAL_ATTRITER)
+#elif defined(LOCAL_IS_FIND)
 #define LOCAL_accepts_baseperm(baseperm) Dee_attrspec_accepts_baseperm(specs, baseperm)
 #else /* ... */
 #define LOCAL_accepts_baseperm(baseperm) 1
@@ -528,21 +488,15 @@ continue_at_iter:
 		while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
 #endif /* !LOCAL_IS_PRIVATE */
 	}
-#if !defined(LOCAL_IS_ENUM) && !defined(LOCAL_IS_ITER)
+#ifndef LOCAL_IS_ITER
 done:
 	return retval;
-#else /* !LOCAL_IS_ENUM && !LOCAL_IS_ITER */
-#ifdef LOCAL_IS_ITER
+#else /* !LOCAL_IS_ITER */
 	return Dee_attriterchain_builder_pack(&builder);
-#else /* LOCAL_IS_ITER */
-	return final_retval;
-#endif /* !LOCAL_IS_ITER */
 err:
-#ifdef LOCAL_IS_ITER
 	Dee_attriterchain_builder_fini(&builder);
-#endif /* LOCAL_IS_ITER */
 	return retval;
-#endif /* LOCAL_IS_ENUM || LOCAL_IS_ITER */
+#endif /* LOCAL_IS_ITER */
 #ifdef LOCAL_IS_CALL_LIKE
 invoke_retval:
 	if likely(retval) {
@@ -587,7 +541,6 @@ invoke_retval:
 #undef LOCAL_IS_PRIVATE
 #undef LOCAL_IS_FIND
 #undef LOCAL_IS_ITER
-#undef LOCAL_IS_ENUM
 #undef LOCAL_HAS_len
 #undef LOCAL_HAS_tp_self
 #undef LOCAL_HAS_self
@@ -621,4 +574,3 @@ DECL_END
 #undef DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringLenHash
 #undef DEFINE_DeeObject_TGenericFindAttr
 #undef DEFINE_DeeObject_TGenericIterAttr
-#undef DEFINE_DeeObject_TGenericEnumAttr

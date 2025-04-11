@@ -51,7 +51,6 @@ STATIC_ASSERT(offsetof(MapByAttr, mba_map) == offsetof(ProxyObject, po_obj));
 #define byattr_deep generic_proxy__deepcopy
 #define byattr_init generic_proxy__init
 
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 byattr_iterattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
                 struct Dee_attriter *iterbuf, size_t bufsize,
@@ -60,44 +59,6 @@ PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 byattr_findattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
                 struct Dee_attrspec const *__restrict specs,
                 struct Dee_attrdesc *__restrict result);
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-struct byattr_enumattr_foreach_data {
-	MapByAttr *befd_self;
-	Dee_enum_t befd_proc;
-	void      *befd_arg;
-};
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
-byattr_enumattr_foreach(void *arg, DeeObject *key, DeeObject *value) {
-	Dee_ssize_t result;
-	struct byattr_enumattr_foreach_data *cookie;
-	cookie = (struct byattr_enumattr_foreach_data *)arg;
-	result = 0;
-	if (DeeString_Check(key)) {
-		result = (*cookie->befd_proc)((DeeObject *)cookie->befd_self,
-		                              DeeString_STR(key), NULL,
-		                              Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET |
-		                              Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_NAMEOBJ,
-		                              Dee_TYPE(value), cookie->befd_arg);
-	}
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
-byattr_enumattr(DeeTypeObject *tp_self, MapByAttr *self,
-                Dee_enum_t proc, void *arg) {
-	struct byattr_enumattr_foreach_data cookie;
-	(void)tp_self;
-	cookie.befd_self = self;
-	cookie.befd_proc = proc;
-	cookie.befd_arg  = arg;
-	/* FIXME: This can invoke user-defined code, which can break big
-	 *        time due to the stack switching done by enumattr() */
-	return DeeObject_ForeachPair(self->mba_map,
-	                             &byattr_enumattr_foreach,
-	                             &cookie);
-}
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 STATIC_ASSERT(offsetof(MapByAttr, mba_map) == offsetof(ProxyObject, po_obj));
 #define byattr_fini                      generic_proxy__fini
@@ -123,13 +84,8 @@ PRIVATE struct type_attr byattr_attr = {
 	/* .tp_getattr                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&byattr_getattr,
 	/* .tp_delattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_delattr,
 	/* .tp_setattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&byattr_setattr,
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	/* .tp_iterattr                  = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))&byattr_iterattr,
 	/* .tp_findattr                  = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&byattr_findattr,
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	/* .tp_enumattr                  = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&byattr_enumattr,
-	/* .tp_findattr                  = */ NULL,
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_hasattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_hasattr,
 	/* .tp_boundattr                 = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_boundattr,
 	/* .tp_callattr                  = */ NULL,
@@ -150,7 +106,6 @@ PRIVATE struct type_attr byattr_attr = {
 	/* .tp_boundattr_string_len_hash = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&byattr_boundattr_string_len_hash,
 };
 
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 struct byattr_attriter {
 	Dee_ATTRITER_HEAD
 	DREF DeeObject *mba_keysiter; /* [1..1][const] KeysIterator for the underlying mapping. */
@@ -258,7 +213,6 @@ byattr_findattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
 err:
 	return -1;
 }
-#endif /* CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 PRIVATE struct type_member tpconst byattr_members[] = {

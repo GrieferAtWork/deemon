@@ -438,16 +438,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ORDERED_HASHSET */
 
-/* Experimental feature switch: Use a new struct-based method of enumerating attributes */
-#if (!defined(CONFIG_EXPERIMENTAL_ATTRITER) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_ATTRITER))
-#if 1
-#define CONFIG_EXPERIMENTAL_ATTRITER
-#else
-#define CONFIG_NO_EXPERIMENTAL_ATTRITER
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_ATTRITER */
-
 /* Experimental feature switch:
  * - enabled:  >> "foo".find("") == 0
  * - disabled: >> "foo".find("") == -1 */

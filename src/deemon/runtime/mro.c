@@ -261,7 +261,6 @@ Dee_attrinfo_typeof_ininstance(struct Dee_attrinfo *__restrict self) {
 
 
 
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
 err_bad_module_access_thisarg(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 	return DeeError_Throwf(&DeeError_TypeError,
@@ -1199,7 +1198,6 @@ locate_type_member(struct type_member const *__restrict chain, char const *name_
 			return chain;
 	}
 }
-#endif /* CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 
@@ -1940,7 +1938,6 @@ DeeTypeMRO_PatchClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* METHOD */
 type_method_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_method const *chain, uint16_t chain_perm,
@@ -2137,195 +2134,6 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker,
 	}
 	return 1;
 }
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-/* Returns the object-type used to represent a given type-member. */
-INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DCALL
-type_member_typefor(struct type_member const *__restrict self);
-
-INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* METHOD */
-type_method_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
-                     struct type_method const *chain, uint16_t perm,
-                     struct Dee_attribute_info *__restrict result,
-                     struct Dee_attribute_lookup_rules const *__restrict rules) {
-	ASSERT(perm & (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER));
-	perm |= Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
-	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value)
-		goto nope;
-	for (; chain->m_name; ++chain) {
-		if (!streq(chain->m_name, rules->alr_name))
-			continue;
-		Dee_membercache_addmethod(cache, decl, rules->alr_hash, chain);
-		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
-		result->a_doc      = chain->m_doc;
-		result->a_decl     = (DREF DeeObject *)decl;
-		result->a_perm     = perm;
-		result->a_attrtype = (chain->m_flag & TYPE_METHOD_FKWDS)
-		                     ? &DeeKwObjMethod_Type
-		                     : &DeeObjMethod_Type;
-		Dee_Incref(result->a_attrtype);
-		Dee_Incref(decl);
-		return 0;
-	}
-nope:
-	return 1;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker,
-                               DeeTypeObject *tp_self,
-                               struct Dee_attribute_info *__restrict result,
-                               struct Dee_attribute_lookup_rules const *__restrict rules) {
-	uint16_t perm;
-	struct type_method const *chain;
-	perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL | Dee_ATTRPERM_F_WRAPPER;
-	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value)
-		goto nope;
-	chain = tp_self->tp_methods;
-	for (; chain->m_name; ++chain) {
-		if (!streq(chain->m_name, rules->alr_name))
-			continue;
-		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
-		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
-		result->a_doc      = chain->m_doc;
-		result->a_decl     = (DREF DeeObject *)tp_self;
-		result->a_perm     = perm;
-		result->a_attrtype = (chain->m_flag & TYPE_METHOD_FKWDS)
-		                     ? &DeeKwObjMethod_Type
-		                     : &DeeObjMethod_Type;
-		Dee_Incref(result->a_attrtype);
-		Dee_Incref(tp_self);
-		return 0;
-	}
-nope:
-	return 1;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* GETSET */
-type_getset_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
-                     struct type_getset const *chain, uint16_t perm,
-                     struct Dee_attribute_info *__restrict result,
-                     struct Dee_attribute_lookup_rules const *__restrict rules) {
-	ASSERT(perm & (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER));
-	perm |= Dee_ATTRPERM_F_PROPERTY;
-	for (; chain->gs_name; ++chain) {
-		uint16_t flags = perm;
-		if (chain->gs_get)
-			flags |= Dee_ATTRPERM_F_CANGET;
-		if (chain->gs_del)
-			flags |= Dee_ATTRPERM_F_CANDEL;
-		if (chain->gs_set)
-			flags |= Dee_ATTRPERM_F_CANSET;
-		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
-			continue;
-		if (!streq(chain->gs_name, rules->alr_name))
-			continue;
-		Dee_membercache_addgetset(cache, decl, rules->alr_hash, chain);
-		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
-		result->a_doc      = chain->gs_doc;
-		result->a_perm     = flags;
-		result->a_decl     = (DREF DeeObject *)decl;
-		result->a_attrtype = NULL;
-		Dee_Incref(decl);
-		return 0;
-	}
-	return 1;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker,
-                               DeeTypeObject *tp_self,
-                               struct Dee_attribute_info *__restrict result,
-                               struct Dee_attribute_lookup_rules const *__restrict rules) {
-	uint16_t perm;
-	struct type_getset const *chain;
-	perm  = Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER;
-	chain = tp_self->tp_getsets;
-	for (; chain->gs_name; ++chain) {
-		uint16_t flags = perm;
-		if (chain->gs_get)
-			flags |= Dee_ATTRPERM_F_CANGET;
-		if (chain->gs_del)
-			flags |= Dee_ATTRPERM_F_CANDEL;
-		if (chain->gs_set)
-			flags |= Dee_ATTRPERM_F_CANSET;
-		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
-			continue;
-		if (!streq(chain->gs_name, rules->alr_name))
-			continue;
-		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
-		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
-		result->a_doc      = chain->gs_doc;
-		result->a_perm     = flags;
-		result->a_decl     = (DREF DeeObject *)tp_self;
-		result->a_attrtype = NULL;
-		Dee_Incref(tp_self);
-		return 0;
-	}
-	return 1;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* MEMBER */
-type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
-                     struct type_member const *chain, uint16_t perm,
-                     struct Dee_attribute_info *__restrict result,
-                     struct Dee_attribute_lookup_rules const *__restrict rules) {
-	ASSERT(perm & (Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER));
-	perm |= Dee_ATTRPERM_F_CANGET;
-	for (; chain->m_name; ++chain) {
-		uint16_t flags = perm;
-		if (!TYPE_MEMBER_ISCONST(chain) &&
-		    !(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
-			flags |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
-		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
-			continue;
-		if (!streq(chain->m_name, rules->alr_name))
-			continue;
-		Dee_membercache_addmember(cache, decl, rules->alr_hash, chain);
-		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
-		result->a_doc      = chain->m_doc;
-		result->a_perm     = flags;
-		result->a_decl     = (DREF DeeObject *)decl;
-		result->a_attrtype = type_member_typefor(chain);
-		Dee_Incref(decl);
-		Dee_XIncref(result->a_attrtype);
-		return 0;
-	}
-	return 1;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker,
-                               DeeTypeObject *tp_self,
-                               struct Dee_attribute_info *__restrict result,
-                               struct Dee_attribute_lookup_rules const *__restrict rules) {
-	uint16_t perm;
-	struct type_member const *chain;
-	perm  = Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET;
-	chain = tp_self->tp_members;
-	for (; chain->m_name; ++chain) {
-		uint16_t flags = perm;
-		if (!TYPE_MEMBER_ISCONST(chain) &&
-		    !(chain->m_desc.md_field.mdf_type & STRUCT_CONST))
-			flags |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
-		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
-			continue;
-		if (!streq(chain->m_name, rules->alr_name))
-			continue;
-		Dee_membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
-		ASSERT(!(perm & Dee_ATTRPERM_F_DOCOBJ));
-		result->a_doc      = chain->m_doc;
-		result->a_perm     = flags;
-		result->a_decl     = (DREF DeeObject *)tp_self;
-		result->a_attrtype = type_member_typefor(chain);
-		Dee_Incref(tp_self);
-		Dee_XIncref(result->a_attrtype);
-		return 0;
-	}
-	return 1;
-}
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
-
-
 
 DECL_END
 

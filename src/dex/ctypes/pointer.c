@@ -503,20 +503,12 @@ DEFINE_BINARY_LVALUE_OPERATOR(DREF DeeObject *, NULL, lvalue_getattr, DeeStruct_
 DEFINE_BINARY_LVALUE_OPERATOR(int, -1, lvalue_delattr, DeeStruct_DelAttr)
 DEFINE_TRINARY_LVALUE_OPERATOR(int, -1, lvalue_setattr, DeeStruct_SetAttr)
 
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 PRIVATE NONNULL((1, 2)) size_t DCALL
 lvalue_iterattr(DeeLValueTypeObject *__restrict tp_self,
                 struct Dee_attriter *iterbuf, size_t bufsize,
                 struct Dee_attrhint const *__restrict hint) {
 	return DeeStruct_IterAttr(tp_self->lt_orig, iterbuf, bufsize, hint);
 }
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-PRIVATE NONNULL((1, 2)) dssize_t DCALL
-lvalue_enumattr(DeeLValueTypeObject *__restrict tp_self,
-                Dee_enum_t proc, void *arg) {
-	return DeeStruct_EnumAttr(tp_self->lt_orig, proc, arg);
-}
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 /* Emulating C, the call operator of a pointer automatically dereferences its pointer. */
 #define lvalue_call pointer_call
@@ -584,11 +576,7 @@ PRIVATE struct stype_attr lvalue_attr = {
 	/* .st_getattr  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *self, DeeObject *))&lvalue_getattr,
 	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *, void *self, DeeObject *))&lvalue_delattr,
 	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *, void *self, DeeObject *, DeeObject *))&lvalue_setattr,
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	/* .st_iterattr = */ (size_t (DCALL *)(DeeSTypeObject *__restrict, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))&lvalue_iterattr,
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, Dee_enum_t, void *))&lvalue_enumattr,
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 };
 
 PRIVATE WUNUSED DREF struct pointer_object *DCALL

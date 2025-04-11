@@ -615,9 +615,6 @@
 		<ClInclude Include="..\include\deemon\system-features.h">
 			<Filter>include</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\system-sjlj.h">
-			<Filter>include</Filter>
-		</ClInclude>
 		<ClInclude Include="..\include\deemon\system.h">
 			<Filter>include</Filter>
 		</ClInclude>

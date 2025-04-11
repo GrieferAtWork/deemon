@@ -1321,40 +1321,6 @@ LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 #endif /* !__OPTIMIZE_SIZE__ */
 
 
-#ifndef CONFIG_EXPERIMENTAL_ATTRITER
-/* Callback prototype for enumerating object attributes.
- * @param declarator: [1..1] The type or object that is declaring this attribute.
- * @param attr:  [1..1] The name of the attribute.
- * @param attr_doc:   [0..1] An optional documentation string containing additional information.
- * @param perm:              Set of `Dee_ATTRPERM_F_*' describing permissions granted by the attribute.
- * @param attr_type:  [0..1] The type of object that would be returned by `DeeObject_GetAttr',
- *                           or `NULL' if unknown. Note that this type is NOT derived by parsing
- *                           type annotation from `attr_doc', but instead from from other meta-
- *                           data, such as `STRUCT_*' typing for type_member attributes.
- * @param arg:               User-defined callback argument.
- * @return: < 0:      Propagate an error, letting `DeeObject_EnumAttr()' fail with the same error.
- * @return: >= 0:     Add this value to the sum of all other positive values, which `DeeObject_EnumAttr()' will then return.
- * @return: -1:       An error occurred and was thrown (This may also be returned by `DeeObject_EnumAttr()' when enumeration fails for some other reason)
- * WARNING: The callback must _NEVER_ be invoked while _ANY_ kind of lock is held! */
-typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t
-(DCALL *Dee_enum_t)(DeeObject *declarator,
-                    char const *attr, char const *attr_doc,
-                    uint16_t perm, DeeTypeObject *attr_type, void *arg);
-#define Dee_ATTRPERM_F_CANGET   0x0001 /* [NAME("g")] Attribute supports get/has queries (g -- get). */
-#define Dee_ATTRPERM_F_CANDEL   0x0002 /* [NAME("d")] Attribute supports del queries (d -- del). */
-#define Dee_ATTRPERM_F_CANSET   0x0004 /* [NAME("s")] Attribute supports set queries (s -- set). */
-#define Dee_ATTRPERM_F_CANCALL  0x0008 /* [NAME("f")] The attribute is intended to be called (f -- function). */
-#define Dee_ATTRPERM_F_IMEMBER  0x0010 /* [NAME("i")] This attribute is an instance attribute (i -- instance). */
-#define Dee_ATTRPERM_F_CMEMBER  0x0020 /* [NAME("c")] This attribute is a class attribute (c -- class). */
-#define Dee_ATTRPERM_F_PRIVATE  0x0040 /* [NAME("h")] This attribute is considered private (h -- hidden). */
-#define Dee_ATTRPERM_F_PROPERTY 0x0080 /* [NAME("p")] Accessing the attribute may have unpredictable side-effects (p -- property). */
-#define Dee_ATTRPERM_F_WRAPPER  0x0100 /* [NAME("w")] In the current context, the attribute will be accessed as a wrapper. */
-#define Dee_ATTRPERM_F_NAMEOBJ  0x4000 /* `ad_name' holds a reference to a `DeeStringObject', while pointing to its `s_str' field. */
-#define Dee_ATTRPERM_F_DOCOBJ   0x8000 /* `ad_doc' holds a reference to a `DeeStringObject', while pointing to its `s_str' field. */
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
-
-
-
 #ifndef DEE_TYPE_ALLOCATOR
 /* Specifies a custom object allocator declaration. */
 #define DEE_TYPE_ALLOCATOR(tp_malloc, tp_free) (Dee_funptr_t)(tp_free), { (Dee_funptr_t)(tp_malloc) }
@@ -2551,24 +2517,17 @@ PRIVATE struct type_iterator myob_iterator = {
 };
 #endif
 
-#ifndef CONFIG_EXPERIMENTAL_ATTRITER
-struct Dee_attribute_info;
-struct Dee_attribute_lookup_rules;
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 struct Dee_attrinfo;
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 struct Dee_attrspec;
 struct Dee_attrdesc;
 struct Dee_attriter;
 struct Dee_attrhint;
-#endif /* CONFIG_EXPERIMENTAL_ATTRITER */
 
 struct Dee_type_attr {
 	/* Basic attribute operators. */
 	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_getattr)(DeeObject *self, /*String*/ DeeObject *attr);
 	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_delattr)(DeeObject *self, /*String*/ DeeObject *attr);
 	WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *tp_setattr)(DeeObject *self, /*String*/ DeeObject *attr, DeeObject *value);
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	/* Initialize an iterator for enumerating attributes recognized by `tp_getattr'
 	 * @param: hint: Hint specifying which attributes to enumerate (may be ignored by constructed iterator,
 	 *               meaning you have to do your own additional filtering if you want to be sure that only
@@ -2580,9 +2539,6 @@ struct Dee_type_attr {
 	size_t (DCALL *tp_iterattr)(DeeTypeObject *tp_self, DeeObject *self,
 	                            struct Dee_attriter *iterbuf, size_t bufsize,
 	                            struct Dee_attrhint const *__restrict hint);
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t     (DCALL *tp_enumattr)(DeeTypeObject *tp_self, DeeObject *self, Dee_enum_t proc, void *arg);
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 	/* Everything below is just an optional hook for the purpose of optimization.
 	 * If implemented, it *MUST* behave identical to the above operators.
@@ -2620,16 +2576,11 @@ struct Dee_type_attr {
 	 *                                       about attributes that *always* resolve to standard ones.
 	 */
 
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	/* [0..1] Like `tp_iterattr', but find a specific attribute */
 	WUNUSED_T NONNULL_T((1, 2, 3, 4)) int
 	(DCALL *tp_findattr)(DeeTypeObject *tp_self, DeeObject *self,
 	                     struct Dee_attrspec const *__restrict specs,
 	                     struct Dee_attrdesc *__restrict result);
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	/* [0..1] Like `tp_enumattr', but quickly find specific attribute */
-	WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *tp_findattr)(DeeTypeObject *tp_self, DeeObject *self, struct Dee_attribute_info *__restrict result, struct Dee_attribute_lookup_rules const *__restrict rules);
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 	/* [0..1] Like `tp_getattr', but handles attribute errors:
 	 * @return: >  0: Attribute exists.
@@ -4285,14 +4236,6 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringLe
 #define DeeObject_GenericBoundAttrStringLenHash(self, attr, attrlen, hash)                    DeeObject_TGenericBoundAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash)
 
 
-#ifndef CONFIG_EXPERIMENTAL_ATTRITER
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_TGenericEnumAttr(DeeTypeObject *tp_self, Dee_enum_t proc, void *arg);
-DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_TGenericFindAttr(DeeTypeObject *tp_self, DeeObject *self, struct Dee_attribute_info *__restrict result, struct Dee_attribute_lookup_rules const *__restrict rules);
-#define DeeObject_GenericEnumAttr(self, proc, arg)     DeeObject_TGenericEnumAttr(Dee_TYPE(self), proc, arg)
-#define DeeObject_GenericFindAttr(self, result, rules) DeeObject_TGenericFindAttr(Dee_TYPE(self), self, result, rules)
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
-
-
 
 /* Generic operators that implement equals using `===' and hash using `Object.id()'
  * Use this instead of re-inventing the wheel in order to allow for special optimization
@@ -5028,15 +4971,6 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_CallAttrTupl
 #define DeeObject_CallAttrStringHashTupleKw(self, attr, hash, args, kw)             DeeObject_CallAttrStringHashKw(self, attr, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #define DeeObject_CallAttrStringLenTupleKw(self, attr, attrlen, args, kw)           DeeObject_CallAttrStringLenKw(self, attr, attrlen, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #define DeeObject_CallAttrStringLenHashTupleKw(self, attr, attrlen, hash, args, kw) DeeObject_CallAttrStringLenHashKw(self, attr, attrlen, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-
-#ifndef CONFIG_EXPERIMENTAL_ATTRITER
-/* >> DeeObject_EnumAttr() -- deemon.enumattr(<self> as <tp_self>);
- * @return: >= 0: Sum of return values of `proc'
- * @return: < 0:  First negative return value of `proc'
- * @return: -1:   An error was thrown (either by `proc', or by something else
- *                that was attempted for the purpose of attribute enumeration) */
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_EnumAttr)(DeeTypeObject *tp_self, DeeObject *self, Dee_enum_t proc, void *arg);
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 /* >> DeeObject_HasAttr() -- deemon.hasattr(<self>, <attr>);
  * Check if `self' has an attribute `attr'. Same as the builtin `deemon.hasattr()'

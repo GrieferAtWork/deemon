@@ -35,14 +35,10 @@ typedef struct {
 } MapFromAttr;
 
 typedef struct {
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	OBJECT_HEAD
 	DREF DeeObject     *mfai_obj;  /* [1..1][const] The object whose attributes are being enumerated. */
 	size_t              mfai_itsz; /* [const] Size of "ei_iter" (in bytes) */
 	struct Dee_attriter mfai_iter; /* Attribute enumerator. */
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	PROXY_OBJECT_HEAD_EX(DeeEnumAttrIteratorObject, mfai_iter) /* [1..1][const] The underlying enumattr iterator */
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 } MapFromAttrIterator;
 
 INTDEF DeeTypeObject MapFromAttr_Type;             /* type(Mapping.fromattr(ob)); */

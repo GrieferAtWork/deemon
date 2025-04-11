@@ -321,11 +321,7 @@ PRIVATE struct type_attr shlib_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&shlib_getattr,
 	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))NULL,
 	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))NULL,
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	/* .tp_iterattr = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))NULL, /* TODO */
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	/* .tp_enumattr = */ NULL,
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 };
 
 PRIVATE WUNUSED DREF DeeObject *DCALL

@@ -264,12 +264,7 @@ err:
 	return NULL;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
-DEFINE_OPERATOR_INVOKE(operator_enumattr, &instance_iterattr, &do_inherit_noop)
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-DEFINE_OPERATOR_INVOKE(operator_enumattr, &instance_enumattr, &do_inherit_noop)
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
-{
+DEFINE_OPERATOR_INVOKE(operator_enumattr, &instance_iterattr, &do_inherit_noop) {
 	DeeObject *args[2];
 	(void)p_self;
 	(void)opname;
@@ -1200,11 +1195,7 @@ INTERN_CONST struct type_operator tpconst type_operators[LENGTHOF_type_operators
 	TYPE_OPERATOR_DECL(OPERATOR_0038_GETATTR, /*    */ offsetof(Type, tp_attr), /*  */ offsetof(struct type_attr, tp_getattr), /*       */ OPCC_SPECIAL, /*         */ ".", /*       */ "getattr", /*    */ "tp_getattr", &operator_getattr),
 	TYPE_OPERATOR_DECL(OPERATOR_0039_DELATTR, /*    */ offsetof(Type, tp_attr), /*  */ offsetof(struct type_attr, tp_delattr), /*       */ OPCC_SPECIAL, /*         */ "del.", /*    */ "delattr", /*    */ "tp_delattr", &operator_delattr),
 	TYPE_OPERATOR_DECL(OPERATOR_003A_SETATTR, /*    */ offsetof(Type, tp_attr), /*  */ offsetof(struct type_attr, tp_setattr), /*       */ OPCC_SPECIAL, /*         */ ".=", /*      */ "setattr", /*    */ "tp_setattr", &operator_setattr),
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	TYPE_OPERATOR_DECL(OPERATOR_003B_ENUMATTR, /*   */ offsetof(Type, tp_attr), /*  */ offsetof(struct type_attr, tp_iterattr), /*      */ OPCC_SPECIAL, /*         */ "...", /*     */ "enumattr", /*   */ "tp_iterattr", &operator_enumattr),
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	TYPE_OPERATOR_DECL(OPERATOR_003B_ENUMATTR, /*   */ offsetof(Type, tp_attr), /*  */ offsetof(struct type_attr, tp_enumattr), /*      */ OPCC_SPECIAL, /*         */ "...", /*     */ "enumattr", /*   */ "tp_enumattr", &operator_enumattr),
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	TYPE_OPERATOR_DECL(OPERATOR_003C_ENTER, /*      */ offsetof(Type, tp_with), /*  */ offsetof(struct type_with, tp_enter), /*         */ OPCC_UNARY_INT, /*       */ "enter", /*   */ "enter", /*      */ "tp_enter", &operator_enter),
 	TYPE_OPERATOR_DECL(OPERATOR_003D_LEAVE, /*      */ offsetof(Type, tp_with), /*  */ offsetof(struct type_with, tp_leave), /*         */ OPCC_UNARY_INT, /*       */ "leave", /*   */ "leave", /*      */ "tp_leave", &operator_leave),
 	TYPE_OPERATOR_DECL(OPERATOR_8000_VISIT, /*      */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_visit), /*                     */ OPCC_SPECIAL, /*         */ "", /*        */ "", /*           */ "tp_visit", &operator_visit),

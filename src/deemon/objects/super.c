@@ -880,7 +880,6 @@ super_setattr(Super *self, /*String*/ DeeObject *name, DeeObject *value) {
 	return DeeObject_TSetAttr(self->s_type, self->s_self, name, value);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 super_iterattr(DeeTypeObject *UNUSED(tp_self), Super *self,
                struct Dee_attriter *iterbuf, size_t bufsize,
@@ -894,20 +893,6 @@ super_findattr(DeeTypeObject *UNUSED(tp_self), Super *self,
                struct Dee_attrdesc *__restrict result) {
 	return DeeObject_FindAttr(self->s_type, self->s_self, specs, result);
 }
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
-super_enumattr(DeeTypeObject *UNUSED(tp_self),
-               Super *self, Dee_enum_t proc, void *arg) {
-	return DeeObject_EnumAttr(self->s_type, self->s_self, proc, arg);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-super_findattr(DeeTypeObject *UNUSED(tp_self), Super *self,
-               struct Dee_attribute_info *__restrict result,
-               struct Dee_attribute_lookup_rules const *__restrict rules) {
-	return DeeObject_FindAttr(self->s_type, self->s_self, result, rules);
-}
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_hasattr(Super *self, DeeObject *name) {
@@ -1044,13 +1029,8 @@ PRIVATE struct type_attr super_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&super_setattr,
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	/* .tp_iterattr                      = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))&super_iterattr,
 	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))&super_findattr,
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&super_enumattr,
-	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attribute_info *__restrict, struct Dee_attribute_lookup_rules const *__restrict))&super_findattr,
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_boundattr,
 	/* .tp_callattr                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&super_callattr,

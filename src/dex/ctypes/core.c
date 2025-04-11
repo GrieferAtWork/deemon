@@ -1177,7 +1177,6 @@ struct_setattr(DeeObject *self, DeeObject *attr, DeeObject *value) {
 	return result;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 struct_iterattr(DeeTypeObject *tp_self, DeeObject *UNUSED(self),
                 struct Dee_attriter *iterbuf, size_t bufsize,
@@ -1204,24 +1203,6 @@ err_builder:
 	Dee_attriterchain_builder_fini(&builder);
 	return (size_t)-1;
 }
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
-struct_enumattr(DeeTypeObject *tp_self, DeeObject *UNUSED(self),
-                Dee_enum_t proc, void *arg) {
-	dssize_t result;
-	result = DeeStruct_EnumAttr(DeeType_AsSType(tp_self), proc, arg);
-	if (result >= 0) {
-		dssize_t temp;
-		temp = DeeObject_TGenericEnumAttr(tp_self, proc, arg);
-		if unlikely(temp < 0) {
-			result = temp;
-		} else {
-			result += temp;
-		}
-	}
-	return result;
-}
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 #undef DEFINE_BINARY_INPLACE_STRUCT_OPERATOR
 #undef DEFINE_UNARY_INPLACE_STRUCT_OPERATOR
@@ -1292,11 +1273,7 @@ PRIVATE struct type_attr struct_attr = {
 	/* .tp_getattr  = */ &struct_getattr,
 	/* .tp_delattr  = */ &struct_delattr,
 	/* .tp_setattr  = */ &struct_setattr,
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 	/* .tp_enumattr = */ &struct_iterattr,
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-	/* .tp_enumattr = */ &struct_enumattr,
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 	/* TODO: Also define all of the string-based accessors! */
 };
 
@@ -2005,7 +1982,6 @@ DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self,
 }
 
 /* Enumerate struct attributes (excluding generic attributes) */
-#ifdef CONFIG_EXPERIMENTAL_ATTRITER
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
 DeeStruct_IterAttr(DeeSTypeObject *__restrict tp_self,
                    struct Dee_attriter *iterbuf, size_t bufsize,
@@ -2015,16 +1991,6 @@ DeeStruct_IterAttr(DeeSTypeObject *__restrict tp_self,
 		return (*tp_self->st_attr->st_iterattr)(tp_self, iterbuf, bufsize, hint);
 	return Dee_attriter_initempty(iterbuf, bufsize);
 }
-#else /* CONFIG_EXPERIMENTAL_ATTRITER */
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
-                   Dee_enum_t proc, void *arg) {
-	if ((tp_self->st_attr && tp_self->st_attr->st_enumattr) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_ENUMATTR))
-		return (*tp_self->st_attr->st_enumattr)(tp_self, proc, arg);
-	return 0;
-}
-#endif /* !CONFIG_EXPERIMENTAL_ATTRITER */
 
 
 
