@@ -1495,13 +1495,6 @@
 #define DEFINE_SEW_TRINARY(n,...) SeqEachOperator*n(DeeObject*self,DeeObject*a,DeeObject*b){}
 #define DEFINE_SEO_UNARY_INPLACE(n,...) int n(SeqEachOperator**p_self){}
 #define DEFINE_SEO_BINARY_INPLACE(n,...) int n(SeqEachOperator**p_self,DeeObject*other){}
-#define DEFINE_FUZZY_COMPARE_FUNCTION(n,T,...) dssize_t n(T const*a,size_t alen,T const*b,size_t blen){}
-#define DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(n,T) dssize_t n(T const*a,size_t alen,T const*b,size_t blen){}
-#define DEFINE_VERSION_COMPARE_FUNCTION(n,T,Ts,...) Ts n(T const*a,size_t a_size,T const*b,size_t b_size){}
-#define DEFINE_FIND_MATCH_FUNCTION(n,T,...) T const*n(T const*scan_str,size_t scan_size,T const*open_str,size_t open_size,T const*clos_str,size_t clos_size){}
-#define DEFINE_CASEFIND_MATCH_FUNCTION(n,T,...) T const*n(T const*scan_str,size_t scan_size,T const*open_str,size_t open_size,T const*clos_str,size_t clos_size,size_t*p_match_length){}
-#define DEFINE_RFIND_MATCH_FUNCTION(n,T,...) T const*n(T const*scan_str,size_tscan_size,T const*open_str,size_topen_size,T const*clos_str,size_tclos_size){}
-#define DEFINE_CASERFIND_MATCH_FUNCTION(n,T,...) T const*n(T const*scan_str,size_t scan_size,T const*open_str,size_t open_size,T const*clos_str,size_t clos_size,size_t*p_match_length){}
 #define SWITCH_BUILTIN_CODECS(n,...) {}
 #define DEFINE_DEPRECATED_INPLACE_BINARY(n,...) DeeObject*object_##n(DeeObject*self,size_t argc,DeeObject*const*argv){}
 #define DEFINE_NUMERIC_ISCMP(n,...) DeeObject*numeric_##n(DeeObject*self,size_t argc,DeeObject*const*argv){}

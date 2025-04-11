@@ -546,7 +546,7 @@ LOCAL_fuzzy_compare(LOCAL_uchar_t const *lhs, size_t lhs_len,
 		v0[i] = i;
 	for (i = 0; i < lhs_len; ++i) {
 		LOCAL_uchar_t lhs_value = LOCAL_TRANSFORM(lhs[i]);
-		v1[0]   = i + 1;
+		v1[0] = i + 1;
 		for (j = 0; j < rhs_len; ++j) {
 			cost = (lhs_value == LOCAL_TRANSFORM(rhs[j])) ? 0 : 1;
 			cost += v0[j];
@@ -571,7 +571,6 @@ err_v0:
 err:
 	return -1;
 }
-#undef DEFINE_FUZZY_COMPARE_FUNCTION
 #endif /* LOCAL_fuzzy_compare */
 
 
