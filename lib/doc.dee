@@ -3368,18 +3368,18 @@ load_type_input:
 				return;
 			}
 			local head, none, tail = docParentOrPath.strip("/ ").rpartition("/")...;
-			if (!tail) {
+			if (!head) {
 				/* Module documentation */
-				if (head.startswith(".")) {
+				if (tail.startswith(".")) {
 					throw Error.ValueError(
-						f"Module name {repr head} is not absolute");
+						f"Module name {repr tail} is not absolute");
 				}
-				object    = import(head);
+				object    = import(tail);
 				m_parent  = none;
 				m_attr    = none;
 				docstring = ""; /* XXX: Module documentation texts? */
-				m_path    = "/" + head;
-				name      = head;
+				m_path    = "/" + tail;
+				name      = tail;
 				return;
 			}
 			docParentOrPath = Doc(head);
