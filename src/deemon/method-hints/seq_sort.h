@@ -72,7 +72,7 @@ __seq_sort__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N) {{
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_sort__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_sort__", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeNone_Check(args.key)) {

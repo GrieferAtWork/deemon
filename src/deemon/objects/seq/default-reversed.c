@@ -84,7 +84,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rs_gii_init(DefaultReversed_WithGetItemIndex *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqReversedWithGetItemIndex",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_SeqReversedWithGetItemIndex",
 	                  &self->drwgii_seq, &self->drwgii_max, &self->drwgii_size))
 		goto err;
 	if unlikely(verify_max_and_size(self))
@@ -105,7 +105,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rs_giif_init(DefaultReversed_WithGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqReversedWithGetItemIndexFast",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_SeqReversedWithGetItemIndexFast",
 	                  &self->drwgii_seq, &self->drwgii_max, &self->drwgii_size))
 		goto err;
 	if unlikely(verify_max_and_size(self))
@@ -128,7 +128,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rs_tgii_init(DefaultReversed_WithGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqReversedWithTryGetItemIndex",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_SeqReversedWithTryGetItemIndex",
 	                  &self->drwgii_seq, &self->drwgii_max, &self->drwgii_size))
 		goto err;
 	if unlikely(verify_max_and_size(self))

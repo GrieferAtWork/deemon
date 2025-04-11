@@ -323,7 +323,9 @@ PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_empty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("empty", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "empty");
+/*[[[end]]]*/
 	result = DeeObject_InvokeMethodHint(seq_operator_bool, self);
 	if unlikely(result < 0)
 		goto err;
@@ -334,7 +336,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_front_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("front", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "front");
+/*[[[end]]]*/
 	return DeeObject_InvokeMethodHint(seq_getfirst, self);
 err:
 	return NULL;
@@ -342,7 +346,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_back_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("back", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "back");
+/*[[[end]]]*/
 	return DeeObject_InvokeMethodHint(seq_getlast, self);
 err:
 	return NULL;
@@ -351,116 +357,180 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_filter(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *pred_keep;
-	_DeeArg_Unpack1(err, argc, argv, "filter", &pred_keep);
-	return DeeSeq_Filter(self, pred_keep);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("filter", params: "
+	keep:?DCallable
+", docStringPrefix: "seq");]]]*/
+#define seq_filter_params "keep:?DCallable"
+	struct {
+		DeeObject *keep;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "filter", &args.keep);
+/*[[[end]]]*/
+	return DeeSeq_Filter(self, args.keep);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_ubfilter(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *pred_keep;
-	_DeeArg_Unpack1(err, argc, argv, "ubfilter", &pred_keep);
-	return DeeSeq_FilterAsUnbound(self, pred_keep);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ubfilter", params: "
+	keep:?DCallable
+", docStringPrefix: "seq");]]]*/
+#define seq_ubfilter_params "keep:?DCallable"
+	struct {
+		DeeObject *keep;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "ubfilter", &args.keep);
+/*[[[end]]]*/
+	return DeeSeq_FilterAsUnbound(self, args.keep);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_map(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *mapper;
-	_DeeArg_Unpack1(err, argc, argv, "map", &mapper);
-	return DeeSeq_Map(self, mapper);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("map", params: "
+	mapper:?DCallable
+", docStringPrefix: "seq");]]]*/
+#define seq_map_params "mapper:?DCallable"
+	struct {
+		DeeObject *mapper;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "map", &args.mapper);
+/*[[[end]]]*/
+	return DeeSeq_Map(self, args.mapper);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_segments(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	size_t segsize;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":segments", &segsize))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("segments", params: "
+	size_t segment_length
+", docStringPrefix: "seq");]]]*/
+#define seq_segments_params "segment_length:?Dint"
+	struct {
+		size_t segment_length;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":segments", &args))
 		goto err;
-	if unlikely(!segsize)
+/*[[[end]]]*/
+	if unlikely(!args.segment_length)
 		goto err_invalid_segsize;
-	return DeeSeq_Segments(self, segsize);
+	return DeeSeq_Segments(self, args.segment_length);
 err_invalid_segsize:
-	err_invalid_segment_size(segsize);
+	err_invalid_segment_size(args.segment_length);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_distribute(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	size_t segsize, mylen;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":distribute", &segsize))
+	size_t mylen;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("distribute", params: "
+	size_t segment_count
+", docStringPrefix: "seq");]]]*/
+#define seq_distribute_params "segment_count:?Dint"
+	struct {
+		size_t segment_count;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":distribute", &args))
 		goto err;
-	if unlikely(!segsize)
-		goto err_invalid_segsize;
+/*[[[end]]]*/
+	if unlikely(!args.segment_count)
+		goto err_invalid_segment_count;
 	mylen = DeeObject_InvokeMethodHint(seq_operator_size, self);
 	if unlikely(mylen == (size_t)-1)
 		goto err;
-	mylen += segsize - 1;
-	mylen /= segsize;
+	mylen += args.segment_count - 1;
+	mylen /= args.segment_count;
 	if unlikely(!mylen)
 		return DeeSeq_NewEmpty();
 	return DeeSeq_Segments(self, mylen);
-err_invalid_segsize:
-	err_invalid_distribution_count(segsize);
+err_invalid_segment_count:
+	err_invalid_distribution_count(args.segment_count);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_combinations(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("combinations", params: "
 	size_t r;
 	bool cached = true;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__r_cached, UNPuSIZ "|b:combinations", &r, &cached))
+", docStringPrefix: "seq");]]]*/
+#define seq_combinations_params "r:?Dint,cached=!t"
+	struct {
+		size_t r;
+		bool cached;
+	} args;
+	args.cached = true;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__r_cached, UNPuSIZ "|b:combinations", &args))
 		goto err;
-	if (cached) {
+/*[[[end]]]*/
+	if (args.cached) {
 		self = DeeObject_InvokeMethodHint(seq_cached, self);
 		if unlikely(!self)
 			goto err;
 	} else {
 		Dee_Incref(self);
 	}
-	return DeeSeq_Combinations(self, r);
+	return DeeSeq_Combinations(self, args.r);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_repeatcombinations(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("repeatcombinations", params: "
 	size_t r;
 	bool cached = true;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__r_cached, UNPuSIZ "|b:repeatcombinations", &r, &cached))
+", docStringPrefix: "seq");]]]*/
+#define seq_repeatcombinations_params "r:?Dint,cached=!t"
+	struct {
+		size_t r;
+		bool cached;
+	} args;
+	args.cached = true;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__r_cached, UNPuSIZ "|b:repeatcombinations", &args))
 		goto err;
-	if (cached) {
+/*[[[end]]]*/
+	if (args.cached) {
 		self = DeeObject_InvokeMethodHint(seq_cached, self);
 		if unlikely(!self)
 			goto err;
 	} else {
 		Dee_Incref(self);
 	}
-	return DeeSeq_RepeatCombinations(self, r);
+	return DeeSeq_RepeatCombinations(self, args.r);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_permutations(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("permutations", params: "
 	size_t r = (size_t)-1;
 	bool cached = true;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__r_cached, "|" UNPuSIZ "b:permutations", &r, &cached))
+", docStringPrefix: "seq");]]]*/
+#define seq_permutations_params "r=!-1,cached=!t"
+	struct {
+		size_t r;
+		bool cached;
+	} args;
+	args.r = (size_t)-1;
+	args.cached = true;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__r_cached, "|" UNPxSIZ "b:permutations", &args))
 		goto err;
-	if (cached) {
+/*[[[end]]]*/
+	if (args.cached) {
 		self = DeeObject_InvokeMethodHint(seq_cached, self);
 		if unlikely(!self)
 			goto err;
 	} else {
 		Dee_Incref(self);
 	}
-	return DeeSeq_Permutations2(self, r);
+	return DeeSeq_Permutations2(self, args.r);
 err:
 	return NULL;
 }
@@ -469,51 +539,90 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:index",
-	                    &item, &start, &end, &key))
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("index", params: "
+	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
+", docStringPrefix: "seq");]]]*/
+#define seq_index_params "item,start=!0,end=!-1,key:?DCallable=!N"
+	struct {
+		DeeObject *item;
+		size_t start;
+		size_t end;
+		DeeObject *key;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	args.key = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:index", &args))
 		goto err;
-	result = !DeeNone_Check(key)
-	         ? DeeObject_InvokeMethodHint(seq_find_with_key, self, item, start, end, key)
-	         : DeeObject_InvokeMethodHint(seq_find, self, item, start, end);
+/*[[[end]]]*/
+	result = !DeeNone_Check(args.key)
+	         ? DeeObject_InvokeMethodHint(seq_find_with_key, self, args.item, args.start, args.end, args.key)
+	         : DeeObject_InvokeMethodHint(seq_find, self, args.item, args.start, args.end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
 		goto err_no_item;
 	return DeeInt_NewSize(result);
 err_no_item:
-	err_item_not_found(self, item);
+	err_item_not_found(self, args.item);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:rindex",
-	                    &item, &start, &end, &key))
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindex", params: "
+	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
+", docStringPrefix: "seq");]]]*/
+#define seq_rindex_params "item,start=!0,end=!-1,key:?DCallable=!N"
+	struct {
+		DeeObject *item;
+		size_t start;
+		size_t end;
+		DeeObject *key;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	args.key = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:rindex", &args))
 		goto err;
-	result = !DeeNone_Check(key)
-	         ? DeeObject_InvokeMethodHint(seq_rfind_with_key, self, item, start, end, key)
-	         : DeeObject_InvokeMethodHint(seq_rfind, self, item, start, end);
+/*[[[end]]]*/
+	result = !DeeNone_Check(args.key)
+	         ? DeeObject_InvokeMethodHint(seq_rfind_with_key, self, args.item, args.start, args.end, args.key)
+	         : DeeObject_InvokeMethodHint(seq_rfind, self, args.item, args.start, args.end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
 		goto err_no_item;
 	return DeeInt_NewSize(result);
 err_no_item:
-	err_item_not_found(self, item);
+	err_item_not_found(self, args.item);
 err:
 	return NULL;
 }
 
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_byhash(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("byhash", params: "
+	DeeObject *template
+", docStringPrefix: "seq");]]]*/
+#define seq_byhash_params "template"
+	struct {
+		DeeObject *_template;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__template, "o:byhash", &args))
+		goto err;
+/*[[[end]]]*/
+	return DeeSeq_HashFilter(self, DeeObject_Hash(args._template));
+err:
+	return NULL;
+}
+
 DOC_DEF(seq_byhash_doc,
-        "(template:?O)->?DSequence\n"
+        "(" seq_byhash_params ")->?DSequence\n"
         "#ptemplate{The object who's hash should be used to search for collisions}"
         "Find all objects apart of @this sequence who's hash matches that of @template\n"
         "Note that when hashing ?Dint objects, integers who's value lies within the range "
@@ -531,16 +640,7 @@ DOC_DEF(seq_byhash_doc,
         /**/ "${return myDict[ConstructNewCopyOfKey(values...)]} "
         /**/ "can be written more efficiently as "
         /**/ "${for (local e: myDict.byhash(hashOfKeyFromValues(values...))) if (e.equals(values...)) return e;}");
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_byhash(DeeObject *self, size_t argc,
-           DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *template_;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__template, "o:byhash", &template_))
-		goto err;
-	return DeeSeq_HashFilter(self, DeeObject_Hash(template_));
-err:
-	return NULL;
-}
+
 
 #ifdef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE
@@ -550,16 +650,24 @@ INTERN /* Needed for alias `List.unique' */
 WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DistinctSetWithKey *result;
-	DeeObject *key = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:distinct", &key))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("distinct", params: "
+	DeeObject *key: ?DCallable = NULL;
+", docStringPrefix: "seq");]]]*/
+#define seq_distinct_params "key?:?DCallable"
+	struct {
+		DeeObject *key;
+	} args;
+	args.key = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__key, "|o:distinct", &args))
 		goto err;
-	if (!key)
+/*[[[end]]]*/
+	if (!args.key)
 		return DeeSuper_New(&DeeSet_Type, self);
 	result = DeeObject_MALLOC(DistinctSetWithKey);
 	if unlikely(!result)
 		goto err;
-	result->dswk_key = key;
-	Dee_Incref(key);
+	result->dswk_key = args.key;
+	Dee_Incref(args.key);
 	result->dswk_seq = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &DistinctSetWithKey_Type);
@@ -571,15 +679,26 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_bcontains(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:bcontains",
-	                    &item, &start, &end, &key))
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("bcontains", params: "
+	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
+", docStringPrefix: "seq");]]]*/
+#define seq_bcontains_params "item,start=!0,end=!-1,key:?DCallable=!N"
+	struct {
+		DeeObject *item;
+		size_t start;
+		size_t end;
+		DeeObject *key;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	args.key = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:bcontains", &args))
 		goto err;
-	result = !DeeNone_Check(key)
-	         ? DeeObject_InvokeMethodHint(seq_bfind_with_key, self, item, start, end, key)
-	         : DeeObject_InvokeMethodHint(seq_bfind, self, item, start, end);
+/*[[[end]]]*/
+	result = !DeeNone_Check(args.key)
+	         ? DeeObject_InvokeMethodHint(seq_bfind_with_key, self, args.item, args.start, args.end, args.key)
+	         : DeeObject_InvokeMethodHint(seq_bfind, self, args.item, args.start, args.end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result != (size_t)-1);
@@ -589,37 +708,59 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_bindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:bindex",
-	                    &item, &start, &end, &key))
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("bindex", params: "
+	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
+", docStringPrefix: "seq");]]]*/
+#define seq_bindex_params "item,start=!0,end=!-1,key:?DCallable=!N"
+	struct {
+		DeeObject *item;
+		size_t start;
+		size_t end;
+		DeeObject *key;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	args.key = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:bindex", &args))
 		goto err;
-	result = !DeeNone_Check(key)
-	         ? DeeObject_InvokeMethodHint(seq_bfind_with_key, self, item, start, end, key)
-	         : DeeObject_InvokeMethodHint(seq_bfind, self, item, start, end);
+/*[[[end]]]*/
+	result = !DeeNone_Check(args.key)
+	         ? DeeObject_InvokeMethodHint(seq_bfind_with_key, self, args.item, args.start, args.end, args.key)
+	         : DeeObject_InvokeMethodHint(seq_bfind, self, args.item, args.start, args.end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
 		goto err_not_found;
 	return DeeInt_NewSize(result);
 err_not_found:
-	err_item_not_found(self, item);
+	err_item_not_found(self, args.item);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_blocateall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
-	size_t start = 0, end = (size_t)-1, result_range[2];
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:blocateall",
-	                    &item, &start, &end, &key))
+	size_t result_range[2];
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("blocateall", params: "
+	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
+", docStringPrefix: "seq");]]]*/
+#define seq_blocateall_params "item,start=!0,end=!-1,key:?DCallable=!N"
+	struct {
+		DeeObject *item;
+		size_t start;
+		size_t end;
+		DeeObject *key;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	args.key = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:blocateall", &args))
 		goto err;
-	if (!DeeNone_Check(key)
-	    ? DeeObject_InvokeMethodHint(seq_brange_with_key, self, item, start, end, key, result_range)
-	    : DeeObject_InvokeMethodHint(seq_brange, self, item, start, end, result_range))
+/*[[[end]]]*/
+	if (!DeeNone_Check(args.key)
+	    ? DeeObject_InvokeMethodHint(seq_brange_with_key, self, args.item, args.start, args.end, args.key, result_range)
+	    : DeeObject_InvokeMethodHint(seq_brange, self, args.item, args.start, args.end, result_range))
 		goto err;
 	return DeeObject_InvokeMethodHint(seq_operator_getrange_index, self,
 	                                  result_range[0], result_range[1]);
@@ -634,16 +775,29 @@ INTERN /* Needed for alias `List.sorted_insert' */
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_binsert(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item;
-	size_t index, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end,
-	                    "o|" UNPuSIZ UNPuSIZ "o:binsert",
-	                    &item, &start, &end))
+	size_t index;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("binsert", params: "
+	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
+", docStringPrefix: "seq");]]]*/
+#define seq_binsert_params "item,start=!0,end=!-1,key:?DCallable=!N"
+	struct {
+		DeeObject *item;
+		size_t start;
+		size_t end;
+		DeeObject *key;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	args.key = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:binsert", &args))
 		goto err;
-	index = DeeObject_InvokeMethodHint(seq_bposition, self, item, start, end);
+/*[[[end]]]*/
+	index = !DeeNone_Check(args.key)
+	        ? DeeObject_InvokeMethodHint(seq_bposition_with_key, self, args.item, args.start, args.end, args.key)
+	        : DeeObject_InvokeMethodHint(seq_bposition, self, args.item, args.start, args.end);
 	if unlikely(index == (size_t)Dee_COMPARE_ERR)
 		goto err;
-	if unlikely(DeeObject_InvokeMethodHint(seq_insert, self, index, item))
+	if unlikely(DeeObject_InvokeMethodHint(seq_insert, self, index, args.item))
 		goto err;
 	return_none;
 err:
@@ -652,7 +806,9 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_front' */
 seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popfront", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "popfront");
+/*[[[end]]]*/
 	return DeeObject_InvokeMethodHint(seq_pop, self, 0);
 err:
 	return NULL;
@@ -660,7 +816,9 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_back' */
 seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popback", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "popback");
+/*[[[end]]]*/
 	return DeeObject_InvokeMethodHint(seq_pop, self, -1);
 err:
 	return NULL;
@@ -1887,7 +2045,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	/* Method hint API functions. */
 	TYPE_KWMETHOD(DeeMA_Sequence_startswith_name, &DeeMA_Sequence_startswith,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "" DeeMA_Sequence_startswith_doc "\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Returns ?t / ?f indicative of @this Sequence's first element matching :item\n"
@@ -1896,7 +2054,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_endswith_name, &DeeMA_Sequence_endswith,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "" DeeMA_Sequence_endswith_doc "\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Returns ?t / ?f indicative of @this Sequence's last element matching :item\n"
@@ -1905,62 +2063,62 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_find_name, &DeeMA_Sequence_find,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "" DeeMA_Sequence_find_doc "\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Search for the first element matching @item and return its index. "
 	              /**/ "If no such element exists, return ${-1} instead"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_rfind_name, &DeeMA_Sequence_rfind,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "" DeeMA_Sequence_rfind_doc "\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Search for the last element matching @item and return its index. "
 	              /**/ "If no such element exists, return ${-1} instead"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_erase_name, &DeeMA_Sequence_erase,
-	              "(index:?Dint,count=!1)\n"
+	              "" DeeMA_Sequence_erase_doc "\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tIndexError{The given @index is out of bounds}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "Erase up to @count elements starting at @index"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_insert_name, &DeeMA_Sequence_insert,
-	              "(index:?Dint,item)\n"
+	              "" DeeMA_Sequence_insert_doc "\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "Insert the given @item under @index"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_insertall_name, &DeeMA_Sequence_insertall,
-	              "(index:?Dint,items:?DSequence)\n"
+	              "" DeeMA_Sequence_insertall_doc "\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "Insert all elements from @items at @index"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_METHOD(DeeMA_Sequence_pushfront_name, &DeeMA_Sequence_pushfront,
-	            "(item)\n"
+	            "" DeeMA_Sequence_pushfront_doc "\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Convenience wrapper for ?#insert at position $0"
 	            ""), /* TODO: Requirements|Implementation table */
 	TYPE_METHOD(DeeMA_Sequence_append_name, &DeeMA_Sequence_append,
-	            "(item)\n"
+	            "" DeeMA_Sequence_append_doc "\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Append the given @item at the end of @this Sequence"
 	            ""), /* TODO: Requirements|Implementation table */
 	TYPE_METHOD(DeeMA_Sequence_pushback_name, &DeeMA_Sequence_pushback,
-	            "(item)\n"
+	            "" DeeMA_Sequence_pushback_doc "\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Alias for ?#append"),
 	TYPE_METHOD(DeeMA_Sequence_extend_name, &DeeMA_Sequence_extend,
-	            "(items:?DSequence)\n"
+	            "" DeeMA_Sequence_extend_doc "\n"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Append all elements from @items at the end of @this Sequence"
 	            ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_xchitem_name, &DeeMA_Sequence_xchitem,
-	              "(index:?Dint,value)->\n"
+	              "" DeeMA_Sequence_xchitem_doc "\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tIndexError{The given @index is out of bounds}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
@@ -1968,12 +2126,12 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "@value, returning the old element found under that index"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_METHOD(DeeMA_Sequence_clear_name, &DeeMA_Sequence_clear,
-	            "()\n"
+	            "" DeeMA_Sequence_clear_doc "\n"
 	            "#tSequenceError{@this Sequence is immutable}"
 	            "Clear all elements from the Sequence"
 	            ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_pop_name, &DeeMA_Sequence_pop,
-	              "(index=!-1)->\n"
+	              "" DeeMA_Sequence_pop_doc "\n"
 	              "#tIntegerOverflow{The given @index is too large}"
 	              "#tIndexError{The given @index is out of bounds}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
@@ -1981,68 +2139,68 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "than $0, add ${##this} prior to index selection"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_remove_name, &DeeMA_Sequence_remove,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "" DeeMA_Sequence_remove_doc "\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find the first instance of @item and remove it, returning ?t if an "
 	              /**/ "element got removed, or ?f if @item could not be found"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_rremove_name, &DeeMA_Sequence_rremove,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "" DeeMA_Sequence_rremove_doc "\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find the last instance of @item and remove it, returning ?t if an "
 	              /**/ "element got removed, or ?f if @item could not be found"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_removeall_name, &DeeMA_Sequence_removeall,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,max=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "" DeeMA_Sequence_removeall_doc "\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find all instance of @item and remove them, returning the number of "
 	              /**/ "instances found (and consequently removed)"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_removeif_name, &DeeMA_Sequence_removeif,
-	              "(should:?DCallable,start=!0,end=!A!Dint!PSIZE_MAX,max=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "" DeeMA_Sequence_removeif_doc "\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Remove all elements within the given sub-range, for which ${should(item)} "
 	              /**/ "evaluates to ?t, and return the number of elements found (and consequently removed)"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_resize_name, &DeeMA_Sequence_resize,
-	              "(size:?Dint,filler=!N)\n"
+	              "" DeeMA_Sequence_resize_doc "\n"
 	              "#tSequenceError{@this Sequence isn't resizable}"
 	              "Resize @this Sequence to have a new length of @size "
 	              /**/ "items, using @filler to initialize newly added entries"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_fill_name, &DeeMA_Sequence_fill,
-	              "(start=!0,end=!A!Dint!PSIZE_MAX,filler=!N)\n"
+	              "" DeeMA_Sequence_fill_doc "\n"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Assign @filler to all elements within the given sub-range"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_reverse_name, &DeeMA_Sequence_reverse,
-	              "(start=!0,end=!A!Dint!PSIZE_MAX)\n"
+	              "" DeeMA_Sequence_reverse_doc "\n"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Reverse the order of all elements within the given range"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_reversed_name, &DeeMA_Sequence_reversed,
-	              "(start=!0,end=!A!Dint!PSIZE_MAX)->?DSequence\n"
+	              "" DeeMA_Sequence_reversed_doc "\n"
 	              "Return a Sequence that contains the elements of @this Sequence in reverse order\n"
 	              "The point at which @this Sequence is enumerated is implementation-defined"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_sort_name, &DeeMA_Sequence_sort,
-	              "(start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)\n"
+	              "" DeeMA_Sequence_sort_doc "\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Sort the elements within the given range"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_sorted_name, &DeeMA_Sequence_sorted,
-	              "(start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?DSequence\n"
+	              "" DeeMA_Sequence_sorted_doc "\n"
 	              "Return a Sequence that contains all elements from @this Sequence, "
 	              /**/ "but sorted in ascending order, or in accordance to @key\n"
 	              "The point at which @this Sequence is enumerated is implementation-defined"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_bfind_name, &DeeMA_Sequence_bfind,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N\n"
+	              "" DeeMA_Sequence_bfind_doc "\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Do a binary search (requiring @this to be sorted via @key) for @item\n"
@@ -2051,14 +2209,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "When no elements of @this match, ?N is returned."
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_bposition_name, &DeeMA_Sequence_bposition,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "" DeeMA_Sequence_bposition_doc "\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Same as ?#bfind, but return (an) index where @item should be inserted, rather "
 	              /**/ "than ?N when @this doesn't contain any matching object"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_brange_name, &DeeMA_Sequence_brange,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint\n"
+	              "" DeeMA_Sequence_brange_doc "\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Similar to ?#bfind, but return a tuple ${[begin,end)} of integers representing "
@@ -2073,7 +2231,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	/* Default operations for all sequences. */
 	TYPE_METHOD("filter", &seq_filter,
-	            "(keep:?DCallable)->?DSequence\n"
+	            "(" seq_filter_params ")->?DSequence\n"
 	            "#pkeep{A key function which is called for each element of @this Sequence}"
 	            "Returns a sub-Sequence of all elements for which ${keep(item)} evaluates to ?t. "
 	            /**/ "Semantically, this is identical to ${(for (local x: this) if (keep(x)) x)}\n"
@@ -2085,17 +2243,17 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "}"
 	            "}"),
 	TYPE_METHOD("ubfilter", &seq_ubfilter,
-	            "(keep:?DCallable)->?DSequence\n"
+	            "(" seq_ubfilter_params ")->?DSequence\n"
 	            "#pkeep{A key function which is called for each element of @this Sequence}"
 	            "Returns a sub-Sequence of all elements for which ${keep(item)} evaluates to ?t. "
-	            /**/ "Same as ?#filter, but the returned sequence has the same size as @this, and "
-	            /**/ "filtered elements are simply treated as though they were unbound:\n"
+	            /**/ "Same as ?#filter, but the returned sequence has the same size as @this, "
+	            /**/ "and filtered elements are treated as though they were unbound:\n"
 	            "${"
 	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[0] !is bound;\n"
 	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[1] is bound;"
 	            "}"),
 	TYPE_METHOD("map", &seq_map,
-	            "(mapper:?DCallable)->?DSequence\n"
+	            "(" seq_map_params ")->?DSequence\n"
 	            "#pmapper{A key function invoked to map members of @this Sequence}"
 	            "Returns a Sequence that is a transformation of @this, with each element passed "
 	            /**/ "to @mapper for processing before being returned\n"
@@ -2107,14 +2265,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 
 	TYPE_KWMETHOD(STR_index, &seq_index,
-	              "(item,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
+	              "(" seq_index_params ")->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              DOC_throws_ValueError_if_not_found
 	              "Search for the first element matching @item and return its index"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(STR_rindex, &seq_rindex,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "(" seq_rindex_params ")->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              DOC_throws_ValueError_if_not_found
@@ -2123,25 +2281,25 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	TYPE_METHOD("segments",
 	            &seq_segments,
-	            "(segmentSize:?Dint)->?S?DSequence\n"
-	            "#tIntegerOverflow{@segmentSize is negative, or too large}"
-	            "#tValueError{The given @segmentSize is zero}"
+	            "(" seq_segments_params ")->?S?DSequence\n"
+	            "#tIntegerOverflow{@segment_length is negative, or too large}"
+	            "#tValueError{The given @segment_length is zero}"
 	            "Return a Sequence of sequences contains all elements from @this Sequence, "
-	            /**/ "with the first n sequences all consisting of @segmentSize elements, before "
-	            /**/ "the last one contains the remainder of up to @segmentSize elements"),
+	            /**/ "with the first n sequences all consisting of @segment_length elements, before "
+	            /**/ "the last one contains the remainder of up to @segment_length elements"),
 	TYPE_METHOD("distribute",
 	            &seq_distribute,
-	            "(bucketCount:?Dint)->?S?DSequence\n"
-	            "#tIntegerOverflow{@bucketCount is negative, or too large}"
-	            "#tValueError{The given @bucketCount is zero}"
-	            "Re-distribute the elements of @this Sequence to form @bucketCount similarly-sized "
+	            "(" seq_distribute_params ")->?S?DSequence\n"
+	            "#tIntegerOverflow{@segment_count is negative, or too large}"
+	            "#tValueError{The given @segment_count is zero}"
+	            "Re-distribute the elements of @this Sequence to form @segment_count similarly-sized "
 	            /**/ "buckets of objects, with the last bucket containing the remaining elements, "
-	            /**/ "making its length a little bit shorter than the other buckets\n"
+	            /**/ "making its length a little less than the other buckets\n"
 	            "This is similar to #segments, however rather than having the caller specify the "
 	            /**/ "size of the a bucket, the number of buckets is specified instead."),
 	TYPE_KWMETHOD("combinations",
 	              &seq_combinations,
-	              "(r:?Dint,cached=!t)->?S?DSequence\n"
+	              "(" seq_combinations_params ")->?S?DSequence\n"
 	              "#pcached{When true, automatically wrap using ?#cached like ${this.cached.combinations(r, cached: false)}}"
 	              "#tIntegerOverflow{@r is negative, or too large}"
 	              "Returns a Sequence of r-long sequences representing all possible (ordered) "
@@ -2161,7 +2319,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "#A{itertools.combinations|https://docs.python.org/3/library/itertools.html##itertools.combinations}"),
 	TYPE_KWMETHOD("repeatcombinations",
 	              &seq_repeatcombinations,
-	              "(r:?Dint,cached=!t)->?S?DSequence\n"
+	              "(" seq_repeatcombinations_params ")->?S?DSequence\n"
 	              "#pcached{When true, automatically wrap using ?#cached like ${this.cached.repeatcombinations(r, cached: false)}}"
 	              "#tIntegerOverflow{@r is negative, or too large}"
 	              "Same as #combinations, however elements of @this Sequence may be repeated (though element order is still enforced)\n"
@@ -2179,7 +2337,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "#A{itertools.combinations_with_replacement|https://docs.python.org/3/library/itertools.html##itertools.combinations_with_replacement}"),
 	TYPE_KWMETHOD("permutations",
 	              &seq_permutations,
-	              "(r?:?Dint,cached=!t)->?S?DSequence\n"
+	              "(" seq_permutations_params ")->?S?DSequence\n"
 	              "#pcached{When true, automatically wrap using ?#cached like ${this.cached.permutations(r, cached: false)}}"
 	              "#tIntegerOverflow{@r is negative, or too large}"
 	              "Same as #combinations, however the order of elements must "
@@ -2201,7 +2359,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_KWMETHOD("byhash", &seq_byhash, DOC_GET(seq_byhash_doc)),
 
 	TYPE_KWMETHOD("distinct", &seq_distinct,
-	              "(key?:?DCallable)->?DSet\n"
+	              "(" seq_distinct_params ")->?DSet\n"
 	              DOC_param_key
 	              "When @key is not given, same as ${this as Set} (reminder: when enumerating "
 	              /**/ "items of a ?. casted into a ?DSet, deemon will ensure that every "
@@ -2275,7 +2433,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	/* TODO: unboundas(item)->?S?O
 	 * Return a view of @this sequence that replaces every unbound element with "item" */
 
-	/* TODO: findall: "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"
+	/* TODO: findall: "(item,start=!0,end=!-1,key:?DCallable=!N)->?S?Dint"
 	 * > Find not just the first, but all indices of @item */
 	/* TODO: findallseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable = none): {int...} */
 
@@ -2349,7 +2507,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	/* Binary search API */
 	TYPE_KWMETHOD("bcontains", &seq_bcontains,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	              "(" seq_bcontains_params ")->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Wrapper around ?#bfind that returns indicative of @item being bound:\n"
@@ -2358,7 +2516,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "return index !is none;"
 	              "}"),
 	TYPE_KWMETHOD("bindex", &seq_bindex,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
+	              "(" seq_bindex_params ")->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "#tValueError{The Sequence does not contain an item matching @item}"
@@ -2370,7 +2528,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "return index;"
 	              "}"),
 	TYPE_KWMETHOD("blocateall", &seq_blocateall,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?O\n"
+	              "(" seq_blocateall_params ")->?S?O\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Return the sub-range from @this of elements matching @item, as returned by ?#brange\n"
@@ -2388,7 +2546,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	print l;\n"
 	              "}"),
 	TYPE_KWMETHOD("binsert", &seq_binsert,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX)\n"
+	              "(" seq_binsert_params ")\n"
 	              "Helper wrapper for ?#insert and ?#bposition that automatically determines "
 	              /**/ "the index where a given @item should be inserted to ensure that @this sequence "
 	              /**/ "remains sorted according to @key. Note that this function makes virtual calls as "
@@ -3055,11 +3213,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_class_repeat(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
-	DeeObject *obj;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("repeat", params: "
+	DeeObject *ob;
 	size_t count;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":repeat", &obj, &count))
+", docStringPrefix: "seq");]]]*/
+#define seq_repeat_params "ob,count:?Dint"
+	struct {
+		DeeObject *ob;
+		size_t count;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ ":repeat", &args))
 		goto err;
-	return DeeSeq_RepeatItem(obj, count);
+/*[[[end]]]*/
+	return DeeSeq_RepeatItem(args.ob, args.count);
 err:
 	return NULL;
 }
@@ -3115,7 +3281,7 @@ PRIVATE struct type_method tpconst seq_class_methods[] = {
 	TYPE_METHOD("repeat", &seq_class_repeat,
 	            /* TODO: Rename to "repeatitem" */
 	            /* TODO: The "count" argument should be optional, and if not given, means "infinite" */
-	            "(obj,count:?Dint)->?DSequence\n"
+	            "(" seq_repeat_params ")->?DSequence\n"
 	            "#tIntegerOverflow{@count is negative}"
 	            "Create a proxy-Sequence that yields @obj a total of @count times\n"
 	            "The main purpose of this function is to construct large sequences "

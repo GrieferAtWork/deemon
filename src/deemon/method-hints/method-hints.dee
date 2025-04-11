@@ -1133,7 +1133,7 @@ final class MethodHint: WeakRefAble {
 
 
 function simplifyNativeOperatorNamePart(part: string): string {
-	return part[part.rfind(".") + 1:]
+	return part.rpartition(".").last
 			.lsstrip("tp_")
 			.lsstrip("CLASS_")
 			.lsstrip("OPERATOR_")
@@ -1424,8 +1424,7 @@ final class NativeOperator {
 			typed.printIntdefDeclOrAlias(f"{typed.namePrefix}default__{name.name}", none);
 		local normalNames = doPrintNativeOperatorHintDecl();
 		assert #normalNames == #typedNames;
-		local nameFieldBase = name.field;
-		local nameFieldBase = name.field[name.field.rfind(".") + 1:];
+		local nameFieldBase = name.field.rpartition(".").last;
 		if (usrtypeImpls) {
 			print(f"#define isusrtype__{name.name}({nameFieldBase}) ({
 				" || ".join(

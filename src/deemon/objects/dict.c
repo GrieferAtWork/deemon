@@ -133,12 +133,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diter_init(DictIterator *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	Dict *dict;
-	_DeeArg_Unpack1(err, argc, argv, "_DictIterator", &dict);
-	if (DeeObject_AssertType(dict, &DeeDict_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_DictIterator", params: "
+	DeeDictObject *dict;
+", docStringPrefix: "diter");]]]*/
+#define diter__DictIterator_params "dict:?DDict"
+	struct {
+		DeeDictObject *dict;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "_DictIterator", &args.dict);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.dict, &DeeDict_Type))
 		goto err;
-	self->di_dict = dict;
-	Dee_Incref(dict);
+	self->di_dict = args.dict;
+	Dee_Incref(args.dict);
 	self->di_vidx = Dee_dict_vidx_tovirt(0);
 	return 0;
 err:
@@ -324,7 +331,7 @@ INTERN DeeTypeObject DictIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictIterator",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(dict:?DDict)\n"
+	                         "(" diter__DictIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL,
@@ -3098,10 +3105,19 @@ dict_shrink_impl(Dict *__restrict self, bool fully_shrink) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_shrink(Dict *__restrict self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	bool result, fully = true;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__fully, "|b:shrink", &fully))
+	bool result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("shrink", params: "
+	bool fully = true;
+", docStringPrefix: "dict");]]]*/
+#define dict_shrink_params "fully=!t"
+	struct {
+		bool fully;
+	} args;
+	args.fully = true;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__fully, "|b:shrink", &args))
 		goto err;
-	result = dict_shrink_impl(self, fully);
+/*[[[end]]]*/
+	result = dict_shrink_impl(self, args.fully);
 	return_bool(result);
 err:
 	return NULL;
@@ -3111,22 +3127,33 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_reserve(Dict *__restrict self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	bool result;
-	size_t total = 0, more = 0;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reserve", params: "
+	size_t total = 0;
+	size_t more = 0;
 	bool weak = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__total_more_weak,
-	                    "|" UNPuSIZ UNPuSIZ "b:reserve",
-	                    &total, &more, &weak))
+", docStringPrefix: "dict");]]]*/
+#define dict_reserve_params "total=!0,more=!0,weak=!f"
+	struct {
+		size_t total;
+		size_t more;
+		bool weak;
+	} args;
+	args.total = 0;
+	args.more = 0;
+	args.weak = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__total_more_weak, "|" UNPuSIZ UNPuSIZ "b:reserve", &args))
 		goto err;
+/*[[[end]]]*/
 	DeeDict_LockWrite(self);
-	if (total < self->d_vused)
-		total = self->d_vused;
-	if (OVERFLOW_UADD(total, more, &total))
-		total = (size_t)-1;
+	if (args.total < self->d_vused)
+		args.total = self->d_vused;
+	if (OVERFLOW_UADD(args.total, args.more, &args.total))
+		args.total = (size_t)-1;
 	/* Try to allocate more space if there isn't enough space already. */
-	if (total <= self->d_valloc) {
+	if (args.total <= self->d_valloc) {
 		result = true;
 	} else {
-		result = dict_trygrow_vtab_and_htab_with(self, total, weak);
+		result = dict_trygrow_vtab_and_htab_with(self, args.total, args.weak);
 	}
 	DeeDict_LockEndWrite(self);
 	return_bool(result);
@@ -3689,16 +3716,22 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF Dict *DCALL
 dict_fromkeys_f(DeeTypeObject *UNUSED(dict), size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("fromkeys", params: "
+	DeeObject *keys: ?DSet;
+	DeeObject *value = Dee_None;
+	DeeObject *valuefor:?DCallable = NULL;
+", docStringPrefix: "dict");]]]*/
+#define dict_fromkeys_params "keys:?DSet,value=!N,valuefor?:?DCallable"
 	struct {
 		DeeObject *keys;
 		DeeObject *value;
 		DeeObject *valuefor;
 	} args;
-	args.value    = Dee_None;
+	args.value = Dee_None;
 	args.valuefor = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__keys_value_valuefor,
-	                          "o|oo:fromkeys", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__keys_value_valuefor, "o|oo:fromkeys", &args))
 		goto err;
+/*[[[end]]]*/
 	return dict_fromkeys(args.keys, args.value, args.valuefor);
 err:
 	return NULL;
@@ -3942,7 +3975,7 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	TYPE_METHOD_HINTREF(Mapping_remove),
 
 	TYPE_KWMETHOD_F("shrink", &dict_shrink, METHOD_FNOREFESCAPE,
-	                "(fully=!t)->?Dbool\n"
+	                "(" dict_shrink_params ")->?Dbool\n"
 	                "#pfully{When !f, the same sort of shrinking as done automatically when an item is removed. "
 	                /*   */ "When !t, force deallocation of #Iall unused items, even if that ruins hash "
 	                /*   */ "characteristics / memory efficiency}"
@@ -3952,7 +3985,7 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	                /**/ "and ?#__vmask__ will be the smallest hash-mask able to describe ?#__valloc__ items."),
 
 	TYPE_KWMETHOD_F("reserve", &dict_reserve, METHOD_FNOREFESCAPE,
-	                "(total=!0,more=!0,weak=!f)->?Dbool\n"
+	                "(" dict_reserve_params ")->?Dbool\n"
 	                "#pweak{Should the size-hint be considered weak? (s.a. ?#{op:constructor}'s #Cweak argument)}"
 	                "#r{Indicative of the ?. having sufficient preallocated space on return}"
 	                "Try to preallocate buffer space for ${({#this, total} > ...) + more} items"),
@@ -4019,7 +4052,7 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 
 PRIVATE struct type_method tpconst dict_class_methods[] = {
 	TYPE_KWMETHOD_F("fromkeys", &dict_fromkeys_f, METHOD_FNOREFESCAPE,
-	                "(keys:?DSet,value=!N,valuefor?:?DCallable)->?.\n"
+	                "(" dict_fromkeys_params ")->?.\n"
 	                "Construct a new ?. from @keys, and @value (or ${valuefor(key)}) as value."),
 	TYPE_METHOD_END
 };

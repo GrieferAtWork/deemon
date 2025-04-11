@@ -50,9 +50,16 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
-	DeeObject *rhs;
-	_DeeArg_Unpack1(err, argc, argv, "isdisjoint", &rhs);
-	result = SetIntersection_NonEmpty(self, rhs);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isdisjoint", params: "
+	rhs: ?DSet
+", docStringPrefix: "set");]]]*/
+#define set_isdisjoint_params "rhs:?."
+	struct {
+		DeeObject *rhs;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "isdisjoint", &args.rhs);
+/*[[[end]]]*/
+	result = SetIntersection_NonEmpty(self, args.rhs);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(!result);
@@ -63,7 +70,7 @@ err:
 PRIVATE struct type_method tpconst set_methods[] = {
 	/* Default operations for all sets. */
 	TYPE_METHOD("isdisjoint", &set_isdisjoint,
-	            "(rhs:?.)->?Dbool\n"
+	            "(" set_isdisjoint_params ")->?Dbool\n"
 	            "Returns ?t if ${!((this as Set) & rhs)}\n"
 	            "In other words: If @this and @rhs have no items in "
 	            /**/ "common (meaning their ?#intersection is empty)"),

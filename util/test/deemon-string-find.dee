@@ -19,15 +19,15 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-class marker {}
+import * from errors;
 
 
 function t(x, w) {
-	assert w("") !in x;
-	assert x.find(w("")) == -1;
-	assert x.rfind(w("")) == -1;
-	assert (try x.index(w("")) catch (...) marker) === marker;
-	assert (try x.rindex(w("")) catch (...) marker) === marker;
+	assert w("xxx") !in x;
+	assert x.find(w("xxx")) == -1;
+	assert x.rfind(w("xxx")) == -1;
+	assert (try x.index(w("xxx")) catch (e...) e) is IndexError;
+	assert (try x.rindex(w("xxx")) catch (e...) e) is IndexError;
 	for (local op: { "find", "index" }) {
 		local rop = f"r{op}";
 		assert x.operator . (op)(w("a")) == 0;

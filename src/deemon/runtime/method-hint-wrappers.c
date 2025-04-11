@@ -549,7 +549,7 @@ DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_any__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_any__", &args))
 		goto err;
 /*[[[end]]]*/
 	if (args.start == 0 && args.end == (size_t)-1) {
@@ -618,7 +618,7 @@ DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_all__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_all__", &args))
 		goto err;
 /*[[[end]]]*/
 	if (args.start == 0 && args.end == (size_t)-1) {
@@ -687,7 +687,7 @@ DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_parity__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_parity__", &args))
 		goto err;
 /*[[[end]]]*/
 	if (args.start == 0 && args.end == (size_t)-1) {
@@ -1391,7 +1391,7 @@ DeeMA___seq_sort__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_sort__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_sort__", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeNone_Check(args.key)) {
@@ -1448,7 +1448,7 @@ DeeMA___seq_sorted__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_sorted__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_sorted__", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeNone_Check(args.key))

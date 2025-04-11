@@ -72,7 +72,7 @@ __seq_any__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?Dboo
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_any__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_any__", &args))
 		goto err;
 /*[[[end]]]*/
 	if (args.start == 0 && args.end == (size_t)-1) {

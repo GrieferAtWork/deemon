@@ -96,7 +96,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgi_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndGetItemIndex",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_SeqWithSizeAndGetItemIndex",
 	                  &self->dssgi_seq, &self->dssgi_start,
 	                  &self->dssgi_end))
 		goto err;
@@ -116,7 +116,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgif_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndGetItemIndexFast",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_SeqWithSizeAndGetItemIndexFast",
 	                  &self->dssgi_seq, &self->dssgi_start,
 	                  &self->dssgi_end))
 		goto err;
@@ -136,7 +136,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_stgi_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndTryGetItemIndex",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_SeqWithSizeAndTryGetItemIndex",
 	                  &self->dssgi_seq, &self->dssgi_start,
 	                  &self->dssgi_end))
 		goto err;
@@ -1943,7 +1943,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_ial_init(DefaultSequence_WithIterAndLimit *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithIterAndLimit",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_SeqWithIterAndLimit",
 	                  &self->dsial_seq, &self->dsial_start, &self->dsial_limit))
 		goto err;
 	itertyp = Dee_TYPE(self->dsial_seq);

@@ -29,6 +29,9 @@ global final DTYPE_BY_CTYPE: {string: string} = {
 	"DeeModuleObject*": "?DModule",
 	"DeeDDIObject*": "?Ert:DDI",
 	"DeeStringObject*": "?Dstring",
+	"DeeDictObject*": "?DDict",
+	"DeeTypeObject*": "?DType",
+	"DeeSuperObject*": "?DSuper",
 	"bool": "?Dbool",
 	"__BOOL": "?Dbool",
 	"int": "?Dint",
@@ -73,6 +76,9 @@ global final CTYPE_BY_DTYPE: {string: string} = {
 	"?O": "DeeObject*",
 	"?DFrame": "DeeFrameObject*",
 	"?DModule": "DeeModuleObject*",
+	"?DDict": "DeeDictObject*",
+	"?DType": "DeeTypeObject*",
+	"?DSuper": "DeeSuperObject*",
 	"?Ert:DDI": "DeeDDIObject*",
 //	"?Dstring": "DeeStringObject*",
 	"?Dbool": "bool",
@@ -201,6 +207,10 @@ global final C_KEYWORDS: {string...} = HashSet.Frozen({
 	"for",
 	"while",
 	"do",
+	"class",
+	"struct",
+	"template",
+	"typename",
 
 	/* Now keywords, but use aliases to prevent conflict with common macros */
 	"min",
@@ -771,6 +781,18 @@ local function printDocStringWithPrefix(prefix: string, name: string, params: {U
 		break;
 	case "bytes":
 		docstring = docstring.replace("?DBytes", "?.");
+		break;
+	case "super":
+		docstring = docstring.replace("?DSuper", "?.");
+		break;
+	case "list":
+		docstring = docstring.replace("?DList", "?.");
+		break;
+	case "tuple":
+		docstring = docstring.replace("?DTuple", "?.");
+		break;
+	case "set":
+		docstring = docstring.replace("?DSet", "?.");
 		break;
 	default: break;
 	}

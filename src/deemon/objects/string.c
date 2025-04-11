@@ -38,7 +38,6 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memmem() */
-#include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
 #include <hybrid/limitcore.h>
@@ -512,9 +511,16 @@ string_new_empty(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 string_new(size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("string", params: "
 	DeeObject *ob;
-	_DeeArg_Unpack1(err, argc, argv, "string", &ob);
-	return DeeObject_Str(ob);
+", docStringPrefix: "string");]]]*/
+#define string_string_params "ob"
+	struct {
+		DeeObject *ob;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "string", &args.ob);
+/*[[[end]]]*/
+	return DeeObject_Str(args.ob);
 err:
 	return NULL;
 }
@@ -1158,14 +1164,21 @@ stringiter_copy(StringIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_init(StringIterator *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	String *str;
-	_DeeArg_Unpack1(err, argc, argv, "string.Iterator", &str);
-	if (DeeObject_AssertTypeExact(str, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringIterator", params: "
+	DeeStringObject *s;
+", docStringPrefix: "stringiter");]]]*/
+#define stringiter__StringIterator_params "s:?Dstring"
+	struct {
+		DeeStringObject *s;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "_StringIterator", &args.s);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.s, &DeeString_Type))
 		goto err;
-	self->si_string = str;
-	Dee_Incref(str);
-	self->si_width    = DeeString_WIDTH(str);
-	self->si_iter.ptr = DeeString_WSTR(str);
+	self->si_string = args.s;
+	Dee_Incref(args.s);
+	self->si_width    = DeeString_WIDTH(args.s);
+	self->si_iter.ptr = DeeString_WSTR(args.s);
 	self->si_end.ptr = (void *)((uintptr_t)self->si_iter.ptr +
 	                            WSTR_LENGTH(self->si_iter.ptr) *
 	                            STRING_SIZEOF_WIDTH(self->si_width));
@@ -1322,7 +1335,7 @@ INTERN DeeTypeObject StringIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringIterator",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(s:?Dstring)"),
+	                         "(" stringiter__StringIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -1955,10 +1968,17 @@ PRIVATE struct type_member tpconst string_class_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_class_chr(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("chr", params: "
 	uint32_t ch;
-	if (DeeArg_Unpack(argc, argv, UNPu32 ":chr", &ch))
+", docStringPrefix: "string");]]]*/
+#define string_chr_params "ch:?Dint"
+	struct {
+		uint32_t ch;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPu32 ":chr", &args))
 		goto err;
-	return DeeString_Chr(ch);
+/*[[[end]]]*/
+	return DeeString_Chr(args.ch);
 err:
 	return NULL;
 }
@@ -1978,21 +1998,26 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_class_fromseq(DeeObject *UNUSED(self),
                      size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
 	Dee_ssize_t status;
 	struct unicode_printer printer;
-	_DeeArg_Unpack1(err, argc, argv, "fromseq", &seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("fromseq", params: "
+	ordinals:?S?Dint
+", docStringPrefix: "string");]]]*/
+#define string_fromseq_params "ordinals:?S?Dint"
+	struct {
+		DeeObject *ordinals;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "fromseq", &args.ordinals);
+/*[[[end]]]*/
 	unicode_printer_init(&printer);
 #ifndef __OPTIMIZE_SIZE__
 	{
-		size_t hint = DeeObject_SizeFast(seq);
-		if (hint != (size_t)-1) {
-			(void)unicode_printer_allocate(&printer, hint,
-			                               STRING_WIDTH_1BYTE);
-		}
+		size_t hint = DeeObject_SizeFast(args.ordinals);
+		if (hint != (size_t)-1)
+			(void)unicode_printer_allocate(&printer, hint, STRING_WIDTH_1BYTE);
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
-	status = DeeObject_Foreach(seq, &string_fromseq_foreach_cb, &printer);
+	status = DeeObject_Foreach(args.ordinals, &string_fromseq_foreach_cb, &printer);
 	if unlikely(status < 0)
 		goto err_printer;
 	return unicode_printer_pack(&printer);
@@ -2005,12 +2030,12 @@ err:
 PRIVATE struct type_method tpconst string_class_methods[] = {
 	TYPE_METHOD_F("chr", &string_class_chr,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(ch:?Dint)->?.\n"
+	              "(" string_chr_params ")->?.\n"
 	              "#tIntegerOverflow{@ch is negative or greater than the greatest unicode-character}"
 	              "#r{A single-character string matching the unicode-character @ch}"),
 	TYPE_METHOD_F("fromseq", &string_class_fromseq,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(ordinals:?S?Dint)->?.\n"
+	              "(" string_fromseq_params ")->?.\n"
 	              "#tIntegerOverflow{One of the ordinals is negative, or greater than $0xffffffff}"
 	              "Construct a new string object from a sequence of ordinal values"),
 	TYPE_METHOD_END
@@ -2453,7 +2478,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         "Returns an empty string $\"\"\n"
 	                         "\n"
 
-	                         "(ob)\n"
+	                         "(" string_string_params ")\n"
 	                         "Same as ${str ob}, returning the string representation of @ob\n"
 	                         "\n"
 

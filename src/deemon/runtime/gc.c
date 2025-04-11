@@ -1857,8 +1857,8 @@ err:
 
 PRIVATE struct type_method tpconst gcenum_methods[] = {
 	TYPE_METHOD_F("collect", &gcenum_collect, METHOD_FNOREFESCAPE,
-	              "(max=!A!Dint!PSIZE_MAX)->?Dint\n"
-	              "Try to collect at least @max GC objects and return the actual number collected\n"
+	              "(max=!-1)->?Dint\n"
+	              "Try to collect at most @max GC objects and return the actual number collected\n"
 	              "Note that more than @max objects may be collected if sufficiently large reference cycles exist"),
 	TYPE_METHOD_F("referred", &gcenum_referred, METHOD_FNOREFESCAPE,
 	              "(start)->?DSet\n"

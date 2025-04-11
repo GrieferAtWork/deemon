@@ -3344,25 +3344,34 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_reserve(List *me, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	bool result = false;
-	size_t total = 0, more = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__total_more,
-	                    "|" UNPuSIZ UNPuSIZ ":reserve",
-	                    &total, &more))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reserve", params: "
+	size_t total = 0;
+	size_t more = 0;
+", docStringPrefix: "list");]]]*/
+#define list_reserve_params "total=!0,more=!0"
+	struct {
+		size_t total;
+		size_t more;
+	} args;
+	args.total = 0;
+	args.more = 0;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__total_more, "|" UNPuSIZ UNPuSIZ ":reserve", &args))
 		goto err;
+/*[[[end]]]*/
 	DeeList_LockWrite(me);
-	if (total < me->l_list.ol_elemc)
-		total = me->l_list.ol_elemc;
-	if (OVERFLOW_UADD(total, more, &total))
-		total = (size_t)-1;
-	if (total <= DeeList_GetAlloc(me)) {
+	if (args.total < me->l_list.ol_elemc)
+		args.total = me->l_list.ol_elemc;
+	if (OVERFLOW_UADD(args.total, args.more, &args.total))
+		args.total = (size_t)-1;
+	if (args.total <= DeeList_GetAlloc(me)) {
 		result = true;
 	} else {
 		/* Try to allocate more memory for this List. */
 		DREF DeeObject **new_elemv;
-		new_elemv = Dee_objectlist_elemv_tryrealloc_safe(me->l_list.ol_elemv, total);
+		new_elemv = Dee_objectlist_elemv_tryrealloc_safe(me->l_list.ol_elemv, args.total);
 		if likely(new_elemv) {
 			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, total);
+			_DeeList_SetAlloc(me, args.total);
 			result = true;
 		}
 	}
@@ -3375,7 +3384,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_shrink(List *me, size_t argc, DeeObject *const *argv) {
 	bool result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("shrink", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "shrink");
+/*[[[end]]]*/
 	result = list_do_shrink(me);
 	return_bool(result);
 err:
@@ -3629,20 +3640,29 @@ err:
 
 
 /* Deprecated functions. */
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 IteratorFuture_For(DeeObject *__restrict self); /* From "./iterator.c" */
 PRIVATE WUNUSED DREF DeeObject *DCALL
 list_insertiter_deprecated(List *me, size_t argc, DeeObject *const *argv) {
 	int temp;
-	size_t index;
-	DeeObject *iter;
 	DREF DeeObject *future;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "o:insert_iter", &index, &iter))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("insert_iter", params: "
+	size_t index;
+	DeeObject *iter: ?DIterator;
+", docStringPrefix: "list");]]]*/
+#define list_insert_iter_params "index:?Dint,iter:?DIterator"
+	struct {
+		size_t index;
+		DeeObject *iter;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "o:insert_iter", &args))
 		goto err;
-	future = IteratorFuture_For(iter);
+/*[[[end]]]*/
+	future = IteratorFuture_For(args.iter);
 	if unlikely(!future)
 		goto err;
-	temp = DeeList_InsertSequence((DeeObject *)me, index, future);
+	temp = DeeList_InsertSequence((DeeObject *)me, args.index, future);
 	Dee_Decref(future);
 	if unlikely(temp)
 		goto err;
@@ -3650,6 +3670,7 @@ list_insertiter_deprecated(List *me, size_t argc, DeeObject *const *argv) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 
 PRIVATE struct type_getset tpconst list_getsets[] = {
@@ -3724,7 +3745,7 @@ PRIVATE struct type_method tpconst list_methods[] = {
 
 	/* List buffer functions. */
 	TYPE_KWMETHOD_F("reserve", &list_reserve, METHOD_FNOREFESCAPE,
-	                "(total=!0,more=!0)->?Dbool\n"
+	                "(" list_reserve_params ")->?Dbool\n"
 	                "#r{Indicative of the ?. having sufficient preallocated space on return}"
 	                "Reserve (preallocate) memory for at least ${({#this, total} > ...) + more} items\n"
 	                "Failures to pre-allocate memory are silently ignored, "
@@ -3766,7 +3787,7 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	                "(index:?Dint,items:?S?O)\n"
 	                "Deprecated alias for ?#insertall"),
 	TYPE_METHOD_F("insert_iter", &list_insertiter_deprecated, METHOD_FNOREFESCAPE,
-	              "(index:?Dint,iter:?DIterator)\n"
+	              "(" list_insert_iter_params ")\n"
 	              "Deprecated alias for ${this.insertall(index, (iter as iterator from deemon).future)}"),
 	TYPE_METHOD_F("push_front", &DeeMA_Sequence_pushfront, METHOD_FNOREFESCAPE,
 	              "(item)\n"

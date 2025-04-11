@@ -116,7 +116,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_sgi_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_IterWithSizeAndGetItemIndex",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_IterWithSizeAndGetItemIndex",
 	                  &self->disgi_seq, &self->disgi_index, &self->disgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->disgi_seq);
@@ -134,7 +134,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_sgif_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_IterWithSizeAndGetItemIndexFast",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_IterWithSizeAndGetItemIndexFast",
 	                  &self->disgi_seq, &self->disgi_index, &self->disgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->disgi_seq);
@@ -152,7 +152,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_stgi_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_IterWithSizeAndTryGetItemIndex",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_IterWithSizeAndTryGetItemIndex",
 	                  &self->disgi_seq, &self->disgi_index, &self->disgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->disgi_seq);
@@ -2478,7 +2478,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_ncpl_init(DefaultIterator_WithNextAndCounterAndLimit *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_IterWithNextAndCounterAndLimit",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_IterWithNextAndCounterAndLimit",
 	                  &self->dincl_iter, &self->dincl_counter, &self->dincl_limit))
 		goto err;
 	itertyp = Dee_TYPE(self->dincl_iter);

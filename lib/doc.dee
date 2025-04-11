@@ -550,7 +550,7 @@ local final OPERATOR_SORTING_WEIGHTS: {string: int} = {
 	"constructor" : 0x0000, "copy" : 0x0001, "deepcopy" : 0x0002,
 	"destructor" : 0x0003, "assign" : 0x0004, "moveassign" : 0x0005,
 	"str" : 0x0100, "repr" : 0x0101, "bool" : 0x0102, "int" : 0x0103,
-	"call" : 0x0200, "eq" : 0x0300, "ne" : 0x0301, "lo" : 0x0302,
+	"call" : 0x0200, "hash" : 0x02ff, "eq" : 0x0300, "ne" : 0x0301, "lo" : 0x0302,
 	"le" : 0x0303, "gr" : 0x0304, "ge" : 0x0305, "inv" : 0x0400,
 	"pos" : 0x0401, "neg" : 0x0402, "add" : 0x0403, "sub" : 0x0404,
 	"mul" : 0x0405, "div" : 0x0406, "mod" : 0x0407, "shl" : 0x0408,
@@ -3731,13 +3731,13 @@ set_is_type:
 		local otKind = other.kind;
 		if (myKind != otKind) {
 			return
-				KIND_SORTING_WEIGHTS.get(myKind, 0) <
-				KIND_SORTING_WEIGHTS.get(otKind, 0);
+				KIND_SORTING_WEIGHTS.get(myKind, 0xffff) <
+				KIND_SORTING_WEIGHTS.get(otKind, 0xffff);
 		}
 		if (myKind == "operator") {
 			return
-				OPERATOR_SORTING_WEIGHTS.get(name, 0) <
-				OPERATOR_SORTING_WEIGHTS.get(other.name, 0);
+				OPERATOR_SORTING_WEIGHTS.get(name, 0xffff) <
+				OPERATOR_SORTING_WEIGHTS.get(other.name, 0xffff);
 		}
 		return name < other.name;
 	}
@@ -4137,12 +4137,15 @@ set_is_type:
 			local children = List(this);
 			children.sort();
 			for (local child: children) {
-				for (local sec: child.docsections) {
-					for (local seg: sec.segments) {
-						if (seg is Declaration) {
-							print fp: (">> ", child.kind, " ", seg);
-						}
-					}
+				if (child.isprivate)
+					continue; /* Don't enumerate private members. */
+				local hasDecl = false;
+				for (local decl: child.decls) {
+					print fp: (">> ", child.kind, " ", decl);
+					hasDecl = true;
+				}
+				if (!hasDecl) {
+					print fp: (">> ", child.kind, " ", child.name);
 				}
 			}
 		}

@@ -308,17 +308,28 @@ err:
 }
 
 DEFINE_OPERATOR_INVOKE(operator_getbuf, NULL, &do_inherit_buffer) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("getbuf") "', params: "
 	bool writable = false;
-	size_t start = 0, end = (size_t)-1;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+");]]]*/
+	struct {
+		bool writable;
+		size_t start;
+		size_t end;
+	} args;
+	args.writable = false;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "|b" UNPuSIZ UNPxSIZ ":" OPNAME("getbuf"), &args))
+		goto err;
+/*[[[end]]]*/
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "|b" UNPuSIZ UNPuSIZ ":" OPNAME("getbuf"),
-	                  &writable, &start, &end))
-		goto err;
 	return DeeObject_TBytes(tp_self, self,
-	                        writable ? Dee_BUFFER_FWRITABLE
-	                                 : Dee_BUFFER_FREADONLY,
-	                        start, end);
+	                        args.writable ? Dee_BUFFER_FWRITABLE
+	                                      : Dee_BUFFER_FREADONLY,
+	                        args.start, args.end);
 err:
 	return NULL;
 }

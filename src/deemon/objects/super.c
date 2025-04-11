@@ -168,13 +168,21 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 super_init(Super *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Super", params: "
 	DeeObject *ob;
 	DeeTypeObject *tp = NULL;
-	_DeeArg_Unpack1Or2(err, argc, argv, "Super", &ob, &tp);
+");]]]*/
+	struct {
+		DeeObject *ob;
+		DeeTypeObject *tp;
+	} args;
+	args.tp = NULL;
+	_DeeArg_Unpack1Or2(err, argc, argv, "Super", &args.ob, &args.tp);
+/*[[[end]]]*/
 
 	/* Special handling when the base-object is another super-object. */
-	if (DeeSuper_Check(ob)) {
-		if (!tp) {
+	if (DeeSuper_Check(args.ob)) {
+		if (!args.tp) {
 			self->s_type = DeeType_Base(DeeSuper_TYPE(self));
 			if unlikely(!self->s_type)
 				goto err_nosuper;
@@ -183,27 +191,27 @@ super_init(Super *self, size_t argc, DeeObject *const *argv) {
 			Dee_Incref(self->s_self);
 			return 0;
 		}
-		ob = DeeSuper_SELF(ob);
+		args.ob = DeeSuper_SELF(args.ob);
 	}
-	if (tp) {
-		if (tp == (DeeTypeObject *)Dee_None) {
-			tp = &DeeNone_Type;
+	if (args.tp) {
+		if (args.tp == (DeeTypeObject *)Dee_None) {
+			args.tp = &DeeNone_Type;
 		} else {
 			/* Make sure the passed type matches. */
-			if (DeeObject_AssertType(tp, &DeeType_Type))
+			if (DeeObject_AssertType(args.tp, &DeeType_Type))
 				goto err;
-			if (DeeObject_AssertTypeOrAbstract(ob, tp))
+			if (DeeObject_AssertTypeOrAbstract(args.ob, args.tp))
 				goto err;
 		}
 	} else {
-		tp = DeeType_Base(Dee_TYPE(ob));
-		if unlikely(!tp)
+		args.tp = DeeType_Base(Dee_TYPE(args.ob));
+		if unlikely(!args.tp)
 			goto err_nosuper;
 	}
-	self->s_self = ob;
-	self->s_type = tp;
-	Dee_Incref(ob);
-	Dee_Incref(tp);
+	self->s_self = args.ob;
+	self->s_type = args.tp;
+	Dee_Incref(args.ob);
+	Dee_Incref(args.tp);
 	return 0;
 err_nosuper:
 
@@ -1118,11 +1126,18 @@ PRIVATE struct type_buffer super_buffer = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_typeof(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
-	Super *super_object;
-	_DeeArg_Unpack1(err, argc, argv, "typeof", &super_object);
-	if (DeeObject_AssertTypeExact(super_object, &DeeSuper_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("typeof", params: "
+	DeeSuperObject *ob;
+", docStringPrefix: "super");]]]*/
+#define super_typeof_params "ob:?."
+	struct {
+		DeeSuperObject *ob;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "typeof", &args.ob);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.ob, &DeeSuper_Type))
 		goto err;
-	return_reference_((DeeObject *)super_object->s_type);
+	return_reference_((DeeObject *)args.ob->s_type);
 err:
 	return NULL;
 }
@@ -1130,22 +1145,29 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_selfof(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
-	Super *super_object;
-	_DeeArg_Unpack1(err, argc, argv, "selfof", &super_object);
-	if (DeeObject_AssertTypeExact(super_object, &DeeSuper_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("selfof", params: "
+	DeeSuperObject *ob;
+", docStringPrefix: "super");]]]*/
+#define super_selfof_params "ob:?."
+	struct {
+		DeeSuperObject *ob;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "selfof", &args.ob);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.ob, &DeeSuper_Type))
 		goto err;
-	return_reference_((DeeObject *)super_object->s_self);
+	return_reference_((DeeObject *)args.ob->s_self);
 err:
 	return NULL;
 }
 
 PRIVATE struct type_method tpconst super_class_methods[] = {
 	TYPE_METHOD("typeof", &super_typeof,
-	            "(ob:?.)->?DType\n"
+	            "(" super_typeof_params ")->?DType\n"
 	            "#tTypeError{@ob is not a super-object}"
 	            "#r{the type of a given super-view @ob}"),
 	TYPE_METHOD("selfof", &super_selfof,
-	            "(ob:?.)->\n"
+	            "(" super_selfof_params ")->\n"
 	            "#tTypeError{@ob is not a super-object}"
 	            "#r{the object of a given super-view @ob}"),
 	TYPE_METHOD_END

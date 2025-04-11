@@ -1109,9 +1109,16 @@ err:
 
 PRIVATE WUNUSED DREF Tuple *DCALL
 tuple_init(size_t argc, DeeObject *const *argv) {
-	DeeObject *items;
-	_DeeArg_Unpack1(err, argc, argv, "Tuple", &items);
-	return (DREF Tuple *)DeeTuple_FromSequence(items);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Tuple", params: "
+	DeeObject *items: ?S?O;
+", docStringPrefix: "tuple");]]]*/
+#define tuple_Tuple_params "items:?S?O"
+	struct {
+		DeeObject *items;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "Tuple", &args.items);
+/*[[[end]]]*/
+	return (DREF Tuple *)DeeTuple_FromSequence(args.items);
 err:
 	return NULL;
 }
@@ -1353,14 +1360,21 @@ PRIVATE struct type_seq tuple_seq = {
 PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL
 tuple_unpack_method(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
 	DREF Tuple *result;
-	size_t num_items;
-	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "o:unpack", &num_items, &seq))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unpack", params: "
+	size_t num, seq:?S?O
+", docStringPrefix: "tuple");]]]*/
+#define tuple_unpack_params "num:?Dint,seq:?S?O"
+	struct {
+		size_t num;
+		DeeObject *seq;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "o:unpack", &args))
 		goto err;
-	result = DeeTuple_NewUninitialized(num_items);
+/*[[[end]]]*/
+	result = DeeTuple_NewUninitialized(args.num);
 	if unlikely(!result)
 		goto done;
-	if unlikely(DeeSeq_Unpack(seq, num_items, DeeTuple_ELEM(result))) {
+	if unlikely(DeeSeq_Unpack(args.seq, args.num, DeeTuple_ELEM(result))) {
 		DeeTuple_FreeUninitialized(result);
 err:
 		result = NULL;
@@ -1371,7 +1385,7 @@ done:
 
 PRIVATE struct type_method tpconst tuple_class_methods[] = {
 	TYPE_METHOD("unpack", &tuple_unpack_method,
-	            "(num:?Dint,seq:?S?O)->?.\n"
+	            "(" tuple_unpack_params ")->?.\n"
 	            "#tUnpackError{The given @seq doesn't contain exactly @num elements}"
 	            "Unpack the given sequence @seq into a Tuple consisting of @num elements\n"
 	            "Deprecated alias for ${Tuple((seq as Sequence).unpack(num))}"),
@@ -2157,7 +2171,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	                         "Construct an empty ?.\n"
 	                         "\n"
 
-	                         "(items:?S?O)\n"
+	                         "(" tuple_Tuple_params ")\n"
 	                         "Construct a new ?. that is pre-initializes with the elements from @items\n"
 	                         "\n"
 
@@ -2314,15 +2328,22 @@ make_nullable(DREF DeeTupleObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL
 nullable_tuple_unpack(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
 	DREF Tuple *result;
-	size_t num_items;
-	DeeObject *init;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "o:unpack", &num_items, &init))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unpack", params: "
+	size_t num, seq:?S?O
+", docStringPrefix: "nullable_tuple");]]]*/
+#define nullable_tuple_unpack_params "num:?Dint,seq:?S?O"
+	struct {
+		size_t num;
+		DeeObject *seq;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "o:unpack", &args))
 		goto err;
-	result = DeeTuple_NewUninitialized(num_items);
+/*[[[end]]]*/
+	result = DeeTuple_NewUninitialized(args.num);
 	if unlikely(!result)
 		goto done;
-	if unlikely(DeeObject_InvokeMethodHint(seq_unpack_ub, init, num_items,
-	                                       num_items, DeeTuple_ELEM(result)) == (size_t)-1) {
+	if unlikely(DeeObject_InvokeMethodHint(seq_unpack_ub, args.seq, args.num,
+	                                       args.num, DeeTuple_ELEM(result)) == (size_t)-1) {
 		DeeTuple_FreeUninitialized(result);
 err:
 		result = NULL;
@@ -2367,9 +2388,16 @@ err:
 PRIVATE WUNUSED DREF Tuple *DCALL
 nullable_tuple_init(size_t argc, DeeObject *const *argv) {
 	DREF Tuple *result;
-	DeeObject *items;
-	_DeeArg_Unpack1(err, argc, argv, "NullableTuple", &items);
-	result = (DREF Tuple *)DeeTuple_FromSequence(items);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("NullableTuple", params: "
+	DeeObject *items: ?S?O;
+", docStringPrefix: "nullable_tuple");]]]*/
+#define nullable_tuple_NullableTuple_params "items:?S?O"
+	struct {
+		DeeObject *items;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "NullableTuple", &args.items);
+/*[[[end]]]*/
+	result = (DREF Tuple *)DeeTuple_FromSequence(args.items);
 	if likely(result)
 		result = make_nullable(result);
 	return result;
@@ -2556,7 +2584,7 @@ PRIVATE struct type_method tpconst nullable_tuple_methods[] = {
 
 PRIVATE struct type_method tpconst nullable_tuple_class_methods[] = {
 	TYPE_METHOD("unpack", &nullable_tuple_unpack,
-	            "(num:?Dint,seq:?S?O)->?.\n"
+	            "(" nullable_tuple_unpack_params ")->?.\n"
 	            "#tUnpackError{The given @seq doesn't contain exactly @num elements}"
 	            "Unpack the given sequence @seq into a Tuple consisting of @num elements.\n"
 	            "Same as ?Aunpack?DTuple, except that unbound items are not silently skipped"),
@@ -2625,7 +2653,7 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 	                         "Construct an empty ?.\n"
 	                         "\n"
 
-	                         "(items:?S?O)\n"
+	                         "(" nullable_tuple_NullableTuple_params ")\n"
 	                         "Construct a new ?. that is pre-initializes with the elements from @items"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,

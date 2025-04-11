@@ -867,7 +867,7 @@ print_text_space:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3, 5)) int DCALL
-display_help(dformatprinter printer, void *arg,
+display_help(Dee_formatprinter_t printer, void *arg,
              struct cmd_option const *__restrict option,
              size_t name_width, char const *__restrict prefix) {
 	char const *name, *text, *arg_end, *line_end;
@@ -941,7 +941,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
-display_help_group(dformatprinter printer, void *arg,
+display_help_group(Dee_formatprinter_t printer, void *arg,
                    struct cmd_option const *__restrict group,
                    char const *__restrict prefix) {
 	size_t temp, max_width = 0;
@@ -963,7 +963,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
-display_help_single(dformatprinter printer, void *arg,
+display_help_single(Dee_formatprinter_t printer, void *arg,
                     struct cmd_option const *__restrict option,
                     char const *__restrict prefix) {
 	if (option->co_flags & CMD_FGROUP) {
@@ -993,7 +993,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3, 4, 5)) int DCALL
-display_help_query(dformatprinter printer, void *arg,
+display_help_query(Dee_formatprinter_t printer, void *arg,
                    struct cmd_option const *__restrict group,
                    char const *__restrict query,
                    char const *__restrict prefix) {
@@ -1049,10 +1049,10 @@ PRIVATE WUNUSED int DCALL cmd_help(char *arg) {
 		/* Display help on all options from `cmdline_options' */
 		if (DeeFile_WriteAll(fp, str_usage, COMPILER_STRLEN(str_usage)) == (size_t)-1)
 			goto err_fp;
-		if (display_help_group((dformatprinter)&DeeFile_WriteAll, fp, cmdline_options, ""))
+		if (display_help_group((Dee_formatprinter_t)&DeeFile_WriteAll, fp, cmdline_options, ""))
 			goto err_fp;
 	} else if (arg[0] != '/') {
-		if (display_help_query((dformatprinter)&DeeFile_WriteAll, fp, cmdline_options, arg, ""))
+		if (display_help_query((Dee_formatprinter_t)&DeeFile_WriteAll, fp, cmdline_options, arg, ""))
 			goto err_fp;
 	} else {
 		/* `print Doc from doc(arg)' */
@@ -1069,7 +1069,7 @@ PRIVATE WUNUSED int DCALL cmd_help(char *arg) {
 		Dee_Decref(doc_module);
 		if unlikely(!doc_node)
 			goto err_fp;
-		error = DeeObject_Print(doc_node, (dformatprinter)&DeeFile_WriteAll, fp);
+		error = DeeObject_Print(doc_node, (Dee_formatprinter_t)&DeeFile_WriteAll, fp);
 		Dee_Decref(doc_node);
 		if unlikely(error < 0)
 			goto err_fp;
@@ -1288,7 +1288,7 @@ int main(int argc, char *argv[]) {
 				if (!ITER_ISOK(value))
 					break;
 				error = (size_t)DeeObject_PrintRepr(value,
-				                                    (dformatprinter)&DeeFile_WriteAll,
+				                                    (Dee_formatprinter_t)&DeeFile_WriteAll,
 				                                    interactive_output);
 				if likely(error != (size_t)-1)
 					error = DeeFile_WriteAll(interactive_output, "\n", 1 * sizeof(char));

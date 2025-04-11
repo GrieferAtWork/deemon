@@ -1365,7 +1365,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_sort__(DeeObject *__restr
 
 #define DeeMA___seq_sorted___flags Dee_TYPE_METHOD_FKWDS
 #define DeeMA___seq_sorted___name  _DeeMA_ATTRSTR(__seq_sorted__)
-#define DeeMA___seq_sorted___doc   "(start=!0,end=!-1,key:?DCallable=!N)"
+#define DeeMA___seq_sorted___doc   "(start=!0,end=!-1,key:?DCallable=!N)->?DSequence"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_sorted__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_sorted_flags DeeMA___seq_sorted___flags
 #define DeeMA_Sequence_sorted_name  _DeeMA_ATTRSTR(sorted)

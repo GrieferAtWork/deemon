@@ -22,7 +22,7 @@
 /* deemon.Sequence.sorted()                                             */
 /************************************************************************/
 [[kw, alias(Sequence.sorted)]]
-__seq_sorted__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N) {{
+__seq_sorted__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?DSequence {{
 #ifdef __OPTIMIZE_SIZE__
 	if (!kw && argc == 1)
 		return CALL_DEPENDENCY(seq_sorted_with_key, self, argv[0]);
@@ -62,7 +62,7 @@ __seq_sorted__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N) {{
 	args.start = 0;
 	args.end = (size_t)-1;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPuSIZ "o:__seq_sorted__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_sorted__", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeNone_Check(args.key))
