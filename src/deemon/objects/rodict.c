@@ -629,13 +629,24 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rditer_init(RoDictIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	self->rodi_vidx = 0;
-	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_RoDictIterator",
-	                  &self->rodi_dict, &self->rodi_vidx))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RoDictIterator", params: "
+	DeeRoDictObject *dict;
+	Dee_dict_vidx_t index = 0
+", docStringPrefix: "rditer");]]]*/
+#define rditer__RoDictIterator_params "dict:?Ert:RoDict,index=!0"
+	struct {
+		DeeRoDictObject *dict;
+		Dee_dict_vidx_t index;
+	} args;
+	args.index = 0;
+	if (DeeArg_UnpackStruct(argc, argv, "o|" UNPuSIZ ":_RoDictIterator", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->rodi_dict, &DeeRoDict_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.dict, &DeeRoDict_Type))
 		goto err;
-	Dee_Incref(self->rodi_dict);
+	Dee_Incref(args.dict);
+	self->rodi_dict = args.dict;
+	self->rodi_vidx = args.index;
 	return 0;
 err:
 	return -1;
@@ -749,7 +760,7 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoDictIterator",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(dict:?Ert:RoDict,index=!0)\n"
+	                         "(" rditer__RoDictIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL,
@@ -874,9 +885,15 @@ err:
 
 PRIVATE WUNUSED DREF RoDict *DCALL
 rodict_init(size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	_DeeArg_Unpack1(err, argc, argv, "_RoDict", &seq);
-	return (DREF RoDict *)DeeRoDict_FromSequence(seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RoDict", params: "
+	seq: ?S?T2?O?O
+");]]]*/
+	struct {
+		DeeObject *seq;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "_RoDict", &args.seq);
+/*[[[end]]]*/
+	return (DREF RoDict *)DeeRoDict_FromSequence(args.seq);
 err:
 	return NULL;
 }
@@ -2024,16 +2041,22 @@ rodict_fromkeys(DeeObject *keys, DeeObject *value, DeeObject *valuefor) {
 PRIVATE WUNUSED NONNULL((1)) DREF RoDict *DCALL
 rodict_fromkeys_f(DeeTypeObject *UNUSED(dict), size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("fromkeys", params: "
+	DeeObject *keys: ?DSet;
+	DeeObject *value = Dee_None;
+	DeeObject *valuefor:?DCallable = NULL;
+", docStringPrefix: "rodict");]]]*/
+#define rodict_fromkeys_params "keys:?DSet,value=!N,valuefor?:?DCallable"
 	struct {
 		DeeObject *keys;
 		DeeObject *value;
 		DeeObject *valuefor;
 	} args;
-	args.value    = Dee_None;
+	args.value = Dee_None;
 	args.valuefor = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__keys_value_valuefor,
-	                          "o|oo:fromkeys", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__keys_value_valuefor, "o|oo:fromkeys", &args))
 		goto err;
+/*[[[end]]]*/
 	return rodict_fromkeys(args.keys, args.value, args.valuefor);
 err:
 	return NULL;
@@ -2165,7 +2188,7 @@ PRIVATE struct type_method_hint tpconst rodict_method_hints[] = {
 
 PRIVATE struct type_method tpconst rodict_class_methods[] = {
 	TYPE_KWMETHOD_F("fromkeys", &rodict_fromkeys_f, METHOD_FNOREFESCAPE,
-	                "(keys:?DSet,value=!N,valuefor?:?DCallable)->?.\n"
+	                "(" rodict_fromkeys_params ")->?.\n"
 	                "Construct a new ?. from @keys, and @value (or ${valuefor(key)}) as value."),
 	TYPE_METHOD_END
 };

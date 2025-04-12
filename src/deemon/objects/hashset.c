@@ -1159,13 +1159,20 @@ INTDEF DeeTypeObject HashSetIterator_Type;
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashsetiterator_init(HashSetIterator *__restrict self,
                      size_t argc, DeeObject *const *argv) {
-	HashSet *set;
-	_DeeArg_Unpack1(err, argc, argv, "_HashSetIterator", &set);
-	if (DeeObject_AssertType(set, &DeeHashSet_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_HashSetIterator", params: "
+	DeeHashSetObject *set;
+", docStringPrefix: "hashsetiterator");]]]*/
+#define hashsetiterator__HashSetIterator_params "set:?DHashSet"
+	struct {
+		DeeHashSetObject *set;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "_HashSetIterator", &args.set);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.set, &DeeHashSet_Type))
 		goto err;
-	self->hsi_set = set;
-	Dee_Incref(set);
-	self->hsi_next = atomic_read(&set->hs_elem);
+	self->hsi_set = args.set;
+	Dee_Incref(args.set);
+	self->hsi_next = atomic_read(&args.set->hs_elem);
 	return 0;
 err:
 	return -1;
@@ -1649,10 +1656,17 @@ hashset_bool(HashSet *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashset_init(HashSet *__restrict self,
-         size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	_DeeArg_Unpack1(err, argc, argv, "HashSet", &seq);
-	return hashset_init_sequence(self, seq);
+             size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("HashSet", params: "
+	DeeObject *seq: ?S?O;
+", docStringPrefix: "hashset");]]]*/
+#define hashset_HashSet_params "seq:?S?O"
+	struct {
+		DeeObject *seq;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "HashSet", &args.seq);
+/*[[[end]]]*/
+	return hashset_init_sequence(self, args.seq);
 err:
 	return -1;
 }
@@ -1841,8 +1855,8 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	                         "Create an empty HashSet\n"
 	                         "\n"
 
-	                         "(items:?S?O)\n"
-	                         "Create a new HashSet populated with elements from @items\n"
+	                         "(" hashset_HashSet_params ")\n"
+	                         "Create a new HashSet populated with elements from @seq\n"
 	                         "\n"
 
 	                         "copy->\n"

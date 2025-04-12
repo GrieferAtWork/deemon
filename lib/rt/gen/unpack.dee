@@ -30,8 +30,13 @@ global final DTYPE_BY_CTYPE: {string: string} = {
 	"DeeDDIObject*": "?Ert:DDI",
 	"DeeStringObject*": "?Dstring",
 	"DeeDictObject*": "?DDict",
+	"DeeHashSetObject*": "?DHashSet",
 	"DeeTypeObject*": "?DType",
 	"DeeSuperObject*": "?DSuper",
+	"DeeRoSetObject*": "?Ert:RoSet",
+	"DeeRoDictObject*": "?Ert:RoDict",
+	"DeeTupleObject*": "?DTuple",
+	"DeeListObject*": "?DList",
 	"bool": "?Dbool",
 	"__BOOL": "?Dbool",
 	"int": "?Dint",
@@ -66,6 +71,8 @@ global final DTYPE_BY_CTYPE: {string: string} = {
 	"Dee_off_t": "?Dint",
 	"Dee_refcnt_t": "?Dint",
 	"Dee_hash_t": "?Dint",
+	"Dee_dict_vidx_t": "?Dint",
+	"Dee_ioflag_t": "?Dint",
 	"byte_t": "?Dint",
 	"float": "?Dfloat",
 	"double": "?Dfloat",
@@ -77,9 +84,14 @@ global final CTYPE_BY_DTYPE: {string: string} = {
 	"?DFrame": "DeeFrameObject*",
 	"?DModule": "DeeModuleObject*",
 	"?DDict": "DeeDictObject*",
+	"?DHashSet": "DeeHashSetObject*",
 	"?DType": "DeeTypeObject*",
 	"?DSuper": "DeeSuperObject*",
 	"?Ert:DDI": "DeeDDIObject*",
+	"?Ert:RoSet": "DeeRoSetObject*",
+	"?Ert:RoDict": "DeeRoDictObject*",
+	"?DTuple": "DeeTupleObject*",
+	"?DList": "DeeListObject*",
 //	"?Dstring": "DeeStringObject*",
 	"?Dbool": "bool",
 };
@@ -149,7 +161,7 @@ global final UNP_BY_CTYPE: {string: (string | (string, string))} = {
 	"unsigned short": ('" UNPuN(__SIZEOF_SHORT__) "', '" UNPxN(__SIZEOF_SHORT__) "'),
 	"int": 'd',
 	"signed int": 'd',
-	"unsigned int": ('x', 'u'),
+	"unsigned int": ('u', 'x'),
 	"long": '" UNPdN(__SIZEOF_LONG__) "',
 	"signed long": '" UNPdN(__SIZEOF_LONG__) "',
 	"unsigned long": ('" UNPuN(__SIZEOF_LONG__) "', '" UNPxN(__SIZEOF_LONG__) "'),
@@ -166,6 +178,8 @@ global final UNP_BY_CTYPE: {string: (string | (string, string))} = {
 	"Dee_off_t": '" UNPdN(Dee_SIZEOF_OFF_T) "',
 	"Dee_refcnt_t": ('" UNPuN(Dee_SIZEOF_REFCNT_T) "', '" UNPxN(Dee_SIZEOF_REFCNT_T) "'),
 	"Dee_hash_t": ('" UNPuN(Dee_SIZEOF_HASH_T) "', '" UNPxN(Dee_SIZEOF_HASH_T) "'),
+	"Dee_dict_vidx_t": ('" UNPuSIZ "', '" UNPxSIZ "'),
+	"Dee_ioflag_t": ('u', 'x'),
 	"byte_t": ('" UNPuB "', '" UNPxB "'),
 	"int8_t": '" UNPd8 "',
 	"uint8_t": ('" UNPu8 "', '" UNPx8 "'),
@@ -796,7 +810,7 @@ local function printDocStringWithPrefix(prefix: string, name: string, params: {U
 		break;
 	default: break;
 	}
-	print("#define ", prefix, "_", name, "_params ", repr docstring);
+	print("#define ", prefix, "_", name, '_params "', docstring, '"');
 }
 
 

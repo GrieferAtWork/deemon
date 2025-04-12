@@ -61,7 +61,7 @@ DECL_BEGIN
 
 typedef DeeFloatObject Float;
 
-#ifdef CONFIG_HAVE_FPU
+#if defined(CONFIG_HAVE_FPU) || defined(__DEEMON__)
 /* Create and return a new floating point object. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFloat_New(double value) {
@@ -93,24 +93,31 @@ float_copy(Float *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 float_init(Float *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	DeeObject *arg;
-	_DeeArg_Unpack1(err, argc, argv, "float", &arg);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("float", params: "
+	DeeObject *ob: ?X2?DNumeric?Dstring;
+", docStringPrefix: "float");]]]*/
+#define float_float_params "ob:?X2?DNumeric?Dstring"
+	struct {
+		DeeObject *ob;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "float", &args.ob);
+/*[[[end]]]*/
 
 	/* Special case for when a string is given. */
-	if (DeeString_Check(arg)) {
-		char const *str = DeeString_STR(arg);
+	if (DeeString_Check(args.ob)) {
+		char const *str = DeeString_STR(args.ob);
 		self->f_value = Dee_Strtod(str, (char **)&str);
-		if (str != DeeString_END(arg)) {
+		if (str != DeeString_END(args.ob)) {
 			/* There is more here than just a floating point number. */
 			return DeeError_Throwf(&DeeError_ValueError,
 			                       "Not a float point number %k",
-			                       arg);
+			                       args.ob);
 		}
 		return 0;
 	}
 
 	/* Invoke the float-operator on everything else */
-	return DeeObject_AsDouble(arg, &self->f_value);
+	return DeeObject_AsDouble(args.ob, &self->f_value);
 err:
 	return -1;
 }
@@ -126,7 +133,7 @@ float_str(Float *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-float_print(Float *__restrict self, dformatprinter printer, void *arg) {
+float_print(Float *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	return DeeFloat_PrintRepr(self, printer, arg);
 }
 
@@ -737,7 +744,7 @@ PRIVATE struct type_getset tpconst float_getsets[] = {
 	INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL                \
 	float_##name(Float *self, size_t argc, DeeObject *const *argv) { \
 		double y;                                                    \
-		if (DeeArg_Unpack(argc, argv, "D:" #name, &y))               \
+		if (DeeArg_UnpackStruct(argc, argv, "D:" #name, &y))         \
 			goto err;                                                \
 		return_bool(name(self->f_value, y));                         \
 	err:                                                             \
@@ -892,7 +899,11 @@ PRIVATE struct type_operator const float_operators[] = {
 PUBLIC DeeTypeObject DeeFloat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_float),
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "Returns the floating point constant ${0.0}\n"
+	                         "\n"
+	                         "(" float_float_params ")\n"
+	                         "Parse a string into a floating point number, or convert a ?DNumeric @ob into a ?."),
 	/* .tp_flags    = */ TP_FFINAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -915,8 +926,8 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_str,
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_str,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&float_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&float_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&float_print,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&float_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&float_print,
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,

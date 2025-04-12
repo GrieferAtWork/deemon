@@ -676,29 +676,44 @@ reader_ctor(Reader *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_init_kw(Reader *__restrict self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1, pos = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__data_start_end_pos,
-	                    "o|" UNPuSIZ UNPxSIZ UNPxSIZ ":_FileReader",
-	                    &self->r_owner, &start, &end, &pos))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_FileReader", params: "
+	data:?DBytes;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+	size_t pos = 0;
+", docStringPrefix: "reader");]]]*/
+#define reader__FileReader_params "data:?DBytes,start=!0,end=!-1,pos=!0"
+	struct {
+		DeeObject *data;
+		size_t start;
+		size_t end;
+		size_t pos;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	args.pos = 0;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__data_start_end_pos, "o|" UNPuSIZ UNPxSIZ UNPuSIZ ":_FileReader", &args))
 		goto err;
-	if (DeeObject_GetBuf(self->r_owner, &self->r_buffer, Dee_BUFFER_FREADONLY))
+/*[[[end]]]*/
+	if (DeeObject_GetBuf(args.data, &self->r_buffer, Dee_BUFFER_FREADONLY))
 		goto err;
 
 	/* Truncate the end-pointer. */
-	if (end > self->r_buffer.bb_size)
-		end = self->r_buffer.bb_size;
+	if (args.end > self->r_buffer.bb_size)
+		args.end = self->r_buffer.bb_size;
 
 	/* Handle empty read. */
-	if unlikely(start >= end)
-		start = end = 0;
+	if unlikely(args.start >= args.end)
+		args.start = args.end = 0;
 
 	/* Fill in members. */
-	Dee_Incref(self->r_owner);
+	Dee_Incref(args.data);
+	self->r_owner = args.data;
 	Dee_atomic_rwlock_init(&self->r_lock);
-	self->r_begin = (byte_t const *)self->r_buffer.bb_base + start;
-	self->r_end   = (byte_t const *)self->r_buffer.bb_base + end;
-	if (OVERFLOW_UADD((uintptr_t)self->r_begin, pos, (uintptr_t *)&self->r_ptr))
-		self->r_ptr = (byte_t const *)(uintptr_t)-1;
+	self->r_begin = (byte_t const *)self->r_buffer.bb_base + args.start;
+	self->r_end   = (byte_t const *)self->r_buffer.bb_base + args.end;
+	if (OVERFLOW_UADD((uintptr_t)self->r_begin, args.pos, (uintptr_t *)&self->r_ptr))
+		self->r_ptr = (byte_t const *)(uintptr_t)-1l;
 	return 0;
 err:
 	return -1;
@@ -740,7 +755,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "_FileReader",
 		/* .tp_doc      = */ DOC("()\n"
-		                         "(data:?DBytes,start=!0,end=!A!Dint!PSIZE_MAX,pos=!0)\n"
+		                         "(" reader__FileReader_params ")\n"
 		                         "Create a file stream for reading data of the given @data as a buffer, "
 		                         /**/ "starting at its byte-offset @start and ending at @end\n"
 		                         "Note that the given indices @start and @end refer to byte "
@@ -884,22 +899,29 @@ writer_ctor(Writer *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_init(Writer *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeStringObject *init_string;
-	_DeeArg_Unpack1(err, argc, argv, "_FileWriter", &init_string);
-	if (DeeObject_AssertTypeExact(init_string, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FileWriter", params: "
+	DeeStringObject *init
+", docStringPrefix: "writer");]]]*/
+#define writer__FileWriter_params "init:?Dstring"
+	struct {
+		DeeStringObject *init;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "_FileWriter", &args.init);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.init, &DeeString_Type))
 		goto err;
 	Dee_atomic_rwlock_init(&self->w_lock);
-	self->w_printer.up_flags = (uint8_t)DeeString_WIDTH(init_string);
+	self->w_printer.up_flags = (uint8_t)DeeString_WIDTH(args.init);
 	if (self->w_printer.up_flags == STRING_WIDTH_1BYTE) {
 		self->w_string            = NULL;
-		self->w_printer.up_buffer = (void *)DeeString_STR(init_string);
-		self->w_printer.up_length = DeeString_SIZE(init_string);
+		self->w_printer.up_buffer = (void *)DeeString_STR(args.init);
+		self->w_printer.up_length = DeeString_SIZE(args.init);
 	} else {
-		self->w_string            = init_string;
-		self->w_printer.up_buffer = (void *)DeeString_WSTR(init_string);
+		self->w_string            = args.init;
+		self->w_printer.up_buffer = (void *)DeeString_WSTR(args.init);
 		self->w_printer.up_length = WSTR_LENGTH(self->w_printer.up_buffer);
 	}
-	Dee_Incref(init_string);
+	Dee_Incref(args.init);
 	return 0;
 err:
 	return -1;
@@ -1130,7 +1152,9 @@ PRIVATE struct type_getset tpconst writer_getsets[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 writer_get(Writer *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "get");
+/*[[[end]]]*/
 	return (DREF DeeStringObject *)DeeFileWriter_GetString((DeeObject *)self);
 err:
 	return NULL;
@@ -1139,7 +1163,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_size(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("size", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "size");
+/*[[[end]]]*/
 	result = atomic_read_with_atomic_rwlock(&self->w_printer.up_length,
 	                                        &self->w_lock);
 	return DeeInt_NewSize(result);
@@ -1150,7 +1176,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_allocated(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("allocated", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "allocated");
+/*[[[end]]]*/
 	DeeFileWriter_LockRead(self);
 	result = self->w_printer.up_buffer
 	         ? WSTR_LENGTH(self->w_printer.up_buffer)
@@ -1695,7 +1723,8 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "_FileWriter",
-		/* .tp_doc      = */ NULL,
+		/* .tp_doc      = */ DOC("()\n"
+		                         "(" writer__FileWriter_params ")"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONLOOPING,
@@ -1926,7 +1955,9 @@ DeeFile_ClosePrinter(/*inherit(always)*/ DREF /*FilePrinter*/ DeeObject *__restr
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *fd;
+	unsigned int mapflags;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("mapfile", params: "
+	DeeObject *fd: ?\" FDTYP_mapfile_init_kw \";
 	size_t minbytes  = (size_t)0;
 	size_t maxbytes  = (size_t)-1;
 	Dee_pos_t offset = (Dee_pos_t)-1;
@@ -1934,23 +1965,40 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 	bool readall     = false;
 	bool mustmmap    = false;
 	bool mapshared   = false;
-	unsigned int mapflags;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__fd_minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared,
-	                    "o|" UNPuSIZ UNPxSIZ UNPuN(Dee_SIZEOF_POS_T) UNPxSIZ "bbb" ":mapfile",
-	                    &fd, &minbytes, &maxbytes, &offset, &nulbytes, &readall, &mustmmap, &mapshared))
+", docStringPrefix: "mapfile");]]]*/
+#define mapfile_mapfile_params "fd:?" FDTYP_mapfile_init_kw ",minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f"
+	struct {
+		DeeObject *fd;
+		size_t minbytes;
+		size_t maxbytes;
+		Dee_pos_t offset;
+		size_t nulbytes;
+		bool readall;
+		bool mustmmap;
+		bool mapshared;
+	} args;
+	args.minbytes = (size_t)0;
+	args.maxbytes = (size_t)-1;
+	args.offset = (Dee_pos_t)-1;
+	args.nulbytes = 0;
+	args.readall = false;
+	args.mustmmap = false;
+	args.mapshared = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__fd_minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared, "o|" UNPuSIZ UNPxSIZ UNPxN(Dee_SIZEOF_POS_T) UNPuSIZ "bbb:mapfile", &args))
 		goto err;
+/*[[[end]]]*/
 	mapflags = 0;
 	/* Package flags */
-	if (readall)
+	if (args.readall)
 		mapflags |= DEE_MAPFILE_F_READALL;
-	if (mustmmap)
+	if (args.mustmmap)
 		mapflags |= DEE_MAPFILE_F_MUSTMMAP;
-	if (mapshared) {
+	if (args.mapshared) {
 		mapflags |= DEE_MAPFILE_F_MUSTMMAP | DEE_MAPFILE_F_MAPSHARED;
-		if (nulbytes != 0) {
+		if (args.nulbytes != 0) {
 			return DeeError_Throwf(&DeeError_ValueError,
 			                       "Cannot use `mapshared = true' with non-zero `nulbytes = %" PRFuSIZ "'",
-			                       nulbytes);
+			                       args.nulbytes);
 		}
 	}
 
@@ -1958,38 +2006,41 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 	{
 		int error;
 #if defined(Dee_fd_t_IS_HANDLE) && defined(CONFIG_HOST_WINDOWS)
-#define FDTYP_mapfile_init_kw "?X3?DFile?Dint?Ewin32:HANDLE"
-		if (!DeeFile_Check(fd)) {
-			void *sysfd = DeeNTSystem_GetHandle(fd);
+#define FDTYP_mapfile_init_kw "X3?DFile?Dint?Ewin32:HANDLE"
+		if (!DeeFile_Check(args.fd)) {
+			void *sysfd = DeeNTSystem_GetHandle(args.fd);
 			if unlikely(sysfd == (void *)-1)
 				goto err;
 			error = DeeMapFile_InitSysFd(&self->mf_map, sysfd,
-			                             offset, minbytes, maxbytes,
-			                             nulbytes, mapflags);
+			                             args.offset, args.minbytes,
+			                             args.maxbytes, args.nulbytes,
+			                             mapflags);
 		} else
 #elif defined(Dee_fd_t_IS_int)
-#define FDTYP_mapfile_init_kw "?X2?DFile?Dint"
-		if (!DeeFile_Check(fd)) {
-			int sysfd = DeeUnixSystem_GetFD(fd);
+#define FDTYP_mapfile_init_kw "X2?DFile?Dint"
+		if (!DeeFile_Check(args.fd)) {
+			int sysfd = DeeUnixSystem_GetFD(args.fd);
 			if unlikely(sysfd == -1)
 				goto err;
 			error = DeeMapFile_InitSysFd(&self->mf_map, sysfd,
-			                             offset, minbytes, maxbytes,
-			                             nulbytes, mapflags);
+			                             args.offset, args.minbytes,
+			                             args.maxbytes, args.nulbytes,
+			                             mapflags);
 		} else
 #endif /* ... */
 		{
 #ifndef FDTYP_mapfile_init_kw
-#define FDTYP_mapfile_init_kw "?DFile"
+#define FDTYP_mapfile_init_kw "DFile"
 #endif /* !FDTYP_mapfile_init_kw */
-			error = DeeMapFile_InitFile(&self->mf_map, fd,
-			                            offset, minbytes, maxbytes,
-			                            nulbytes, mapflags);
+			error = DeeMapFile_InitFile(&self->mf_map, args.fd,
+			                            args.offset, args.minbytes,
+			                            args.maxbytes, args.nulbytes,
+			                            mapflags);
 		}
 		if unlikely(error)
 			goto err;
 	}
-	self->mf_rsize = DeeMapFile_GetSize(&self->mf_map) + nulbytes;
+	self->mf_rsize = DeeMapFile_GetSize(&self->mf_map) + args.nulbytes;
 	return 0;
 err:
 	return -1;
@@ -2011,7 +2062,9 @@ mapfile_getbuf(DeeMapFileObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapfile_bytes(DeeMapFileObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bytes", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "bytes");
+/*[[[end]]]*/
 	return DeeBytes_NewView((DeeObject *)self,
 	                        (void *)DeeMapFile_GetBase(&self->mf_map),
 	                        self->mf_rsize, Dee_BUFFER_FWRITABLE);
@@ -2054,15 +2107,7 @@ PRIVATE struct type_getset tpconst mapfile_getsets[] = {
 PUBLIC DeeTypeObject DeeMapFile_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapFile",
-	/* .tp_doc      = */ DOC("("
-	                         /**/ "fd:" FDTYP_mapfile_init_kw ","
-	                         /**/ "maxbytes=!A!Dint!PSIZE_MAX,"
-	                         /**/ "offset=!A!Dint!PSIZE_MAX,"
-	                         /**/ "nulbytes=!0,"
-	                         /**/ "readall=!f,"
-	                         /**/ "mustmmap=!f,"
-	                         /**/ "mapshared=!f"
-	                         ")"),
+	/* .tp_doc      = */ DOC("(" mapfile_mapfile_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

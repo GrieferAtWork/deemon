@@ -77,13 +77,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rosetiterator_init(RoSetIterator *__restrict self,
                    size_t argc, DeeObject *const *argv) {
-	RoSet *set;
-	_DeeArg_Unpack1(err, argc, argv, "_RoSetIterator", &set);
-	if (DeeObject_AssertTypeExact(set, &DeeRoSet_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RoSetIterator", params: "
+	DeeRoSetObject *set;
+", docStringPrefix: "rosetiterator");]]]*/
+#define rosetiterator__RoSetIterator_params "set:?Ert:RoSet"
+	struct {
+		DeeRoSetObject *set;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "_RoSetIterator", &args.set);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.set, &DeeRoSet_Type))
 		goto err;
-	self->rosi_set = set;
-	Dee_Incref(set);
-	self->rosi_next = set->rs_elem;
+	self->rosi_set = args.set;
+	Dee_Incref(args.set);
+	self->rosi_next = args.set->rs_elem;
 	return 0;
 err:
 	return -1;
@@ -181,7 +188,7 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoSetIterator",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(set:?Ert:RoSet)"),
+	                         "(" rosetiterator__RoSetIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -652,9 +659,16 @@ err:
 
 PRIVATE WUNUSED DREF RoSet *DCALL
 roset_init(size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	_DeeArg_Unpack1(err, argc, argv, "_RoSet", &seq);
-	return (DREF RoSet *)DeeRoSet_FromSequence(seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RoSet", params: "
+	seq: ?S?O;
+", docStringPrefix: "roset");]]]*/
+#define roset__RoSet_params "seq:?S?O"
+	struct {
+		DeeObject *seq;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "_RoSet", &args.seq);
+/*[[[end]]]*/
+	return (DREF RoSet *)DeeRoSet_FromSequence(args.seq);
 err:
 	return NULL;
 }
@@ -683,7 +697,8 @@ PRIVATE struct type_operator const roset_operators[] = {
 PUBLIC DeeTypeObject DeeRoSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoSet",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(" roset__RoSet_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

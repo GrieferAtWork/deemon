@@ -3215,6 +3215,121 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 }
 
 
+
+
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
+(DCALL DeeInt_TryAsUInt8M1)(/*Int*/ DeeObject *__restrict self,
+                            uint8_t *__restrict value) {
+	int error = DeeInt_TryGet8Bit(self, (int8_t *)value);
+	if (error == INT_SIGNED && *(int8_t const *)value < -1)
+		return false;
+	return (error != INT_POS_OVERFLOW &&
+	        error != INT_NEG_OVERFLOW);
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
+(DCALL DeeInt_TryAsUInt16M1)(/*Int*/ DeeObject *__restrict self,
+                             uint16_t *__restrict value) {
+	int error = DeeInt_TryGet16Bit(self, (int16_t *)value);
+	if (error == INT_SIGNED && *(int16_t const *)value < -1)
+		return false;
+	return (error != INT_POS_OVERFLOW &&
+	        error != INT_NEG_OVERFLOW);
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
+(DCALL DeeInt_TryAsUInt32M1)(/*Int*/ DeeObject *__restrict self,
+                             uint32_t *__restrict value) {
+	int error = DeeInt_TryGet32Bit(self, (int32_t *)value);
+	if (error == INT_SIGNED && *(int32_t const *)value < -1)
+		return false;
+	return (error != INT_POS_OVERFLOW &&
+	        error != INT_NEG_OVERFLOW);
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
+(DCALL DeeInt_TryAsUInt64M1)(/*Int*/ DeeObject *__restrict self,
+                             uint64_t *__restrict value) {
+	int error = DeeInt_TryGet64Bit(self, (int64_t *)value);
+	if (error == INT_SIGNED && *(int64_t const *)value < -1)
+		return false;
+	return (error != INT_POS_OVERFLOW &&
+	        error != INT_NEG_OVERFLOW);
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
+(DCALL DeeInt_TryAsUInt128M1)(/*Int*/ DeeObject *__restrict self,
+                              Dee_uint128_t *__restrict value) {
+	int error = DeeInt_TryGet128Bit(self, (Dee_int128_t *)value);
+	if (error == INT_SIGNED &&
+	    __hybrid_int128_isneg(*(Dee_int128_t const *)value) &&
+	    !__hybrid_int128_isminusone(*(Dee_int128_t const *)value))
+		return false;
+	return (error != INT_POS_OVERFLOW &&
+	        error != INT_NEG_OVERFLOW);
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeInt_AsUInt8M1)(/*Int*/ DeeObject *__restrict self,
+                         uint8_t *__restrict value) {
+	int error = DeeInt_Get8Bit(self, (int8_t *)value);
+	if (error == INT_SIGNED && *(int8_t const *)value < -1)
+		goto err_overflow;
+	return 0;
+err_overflow:
+	return err_integer_overflow(self, 8, false);
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeInt_AsUInt16M1)(/*Int*/ DeeObject *__restrict self,
+                          uint16_t *__restrict value) {
+	int error = DeeInt_Get16Bit(self, (int16_t *)value);
+	if (error == INT_SIGNED && *(int16_t const *)value < -1)
+		goto err_overflow;
+	return 0;
+err_overflow:
+	return err_integer_overflow(self, 16, false);
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeInt_AsUInt32M1)(/*Int*/ DeeObject *__restrict self,
+                          uint32_t *__restrict value) {
+	int error = DeeInt_Get32Bit(self, (int32_t *)value);
+	if (error == INT_SIGNED && *(int32_t const *)value < -1)
+		goto err_overflow;
+	return 0;
+err_overflow:
+	return err_integer_overflow(self, 32, false);
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeInt_AsUInt64M1)(/*Int*/ DeeObject *__restrict self,
+                          uint64_t *__restrict value) {
+	int error = DeeInt_Get64Bit(self, (int64_t *)value);
+	if (error == INT_SIGNED && *(int64_t const *)value < -1)
+		goto err_overflow;
+	return 0;
+err_overflow:
+	return err_integer_overflow(self, 64, false);
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeInt_AsUInt128M1)(/*Int*/ DeeObject *__restrict self,
+                           Dee_uint128_t *__restrict value) {
+	int error = DeeInt_Get128Bit(self, (Dee_int128_t *)value);
+	if (error == INT_SIGNED &&
+	    __hybrid_int128_isneg(*(Dee_int128_t const *)value) &&
+	    !__hybrid_int128_isminusone(*(Dee_int128_t const *)value))
+		goto err_overflow;
+	return 0;
+err_overflow:
+	return err_integer_overflow(self, 128, false);
+}
+
+
+
+
 /* Convert an integer to a binary-encoded data array. */
 PUBLIC WUNUSED ATTR_OUTS(2, 3) NONNULL((1)) int
 (DCALL DeeInt_AsBytes)(/*Int*/ DeeObject *__restrict self,

@@ -993,26 +993,33 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_init(List *__restrict self,
-          size_t argc, DeeObject *const *argv) {
-	DeeObject *sequence;
+list_init(List *__restrict self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("List", params: "
+	DeeObject *sequence_or_length: ?X2?S?O?Dint;
 	DeeObject *filler = NULL;
-	_DeeArg_Unpack1Or2(err, argc, argv, "List", &sequence, &filler);
+");]]]*/
+	struct {
+		DeeObject *sequence_or_length;
+		DeeObject *filler;
+	} args;
+	args.filler = NULL;
+	_DeeArg_Unpack1Or2(err, argc, argv, "List", &args.sequence_or_length, &args.filler);
+/*[[[end]]]*/
 	weakref_support_init(self);
 	Dee_atomic_rwlock_init(&self->l_lock);
-	if (filler || DeeInt_Check(sequence)) {
+	if (args.filler || DeeInt_Check(args.sequence_or_length)) {
 		size_t list_size;
-		if (DeeObject_AsSize(sequence, &list_size))
+		if (DeeObject_AsSize(args.sequence_or_length, &list_size))
 			goto err;
 		if (!list_size) {
 			self->l_list.ol_elemv = NULL;
 		} else {
-			if (filler == NULL)
-				filler = Dee_None;
+			if (args.filler == NULL)
+				args.filler = Dee_None;
 			self->l_list.ol_elemv = Dee_objectlist_elemv_malloc_safe(list_size);
 			if unlikely(!self->l_list.ol_elemv)
 				goto err;
-			Dee_Setrefv(self->l_list.ol_elemv, filler, list_size);
+			Dee_Setrefv(self->l_list.ol_elemv, args.filler, list_size);
 		}
 		self->l_list.ol_elemc = list_size;
 		_DeeList_SetAlloc(self, list_size);
@@ -1020,7 +1027,7 @@ list_init(List *__restrict self,
 	}
 
 	/* Fallback: initialize from a generic sequence. */
-	return Dee_objectlist_init_fromseq(&self->l_list, sequence);
+	return Dee_objectlist_init_fromseq(&self->l_list, args.sequence_or_length);
 err:
 	return -1;
 }
@@ -4394,13 +4401,24 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 li_init(ListIterator *__restrict self,
         size_t argc, DeeObject *const *argv) {
-	self->li_index = 0;
-	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_ListIterator",
-	                  &self->li_list, &self->li_index))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("List", params: "
+	DeeListObject *list;
+	size_t index = 0;
+", docStringPrefix: "li");]]]*/
+#define li_List_params "list:?DList,index=!0"
+	struct {
+		DeeListObject *list;
+		size_t index;
+	} args;
+	args.index = 0;
+	if (DeeArg_UnpackStruct(argc, argv, "o|" UNPuSIZ ":List", &args))
 		goto err;
-	if (DeeObject_AssertType(self->li_list, &DeeList_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.list, &DeeList_Type))
 		goto err;
-	Dee_Incref(self->li_list);
+	Dee_Incref(args.list);
+	self->li_index = args.index;
+	self->li_list  = args.list;
 	return 0;
 err:
 	return -1;
@@ -4585,7 +4603,7 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ListIterator",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(list:?DList,index=!0)"),
+	                         "(" li_List_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

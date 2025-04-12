@@ -60,32 +60,50 @@
 
 DECL_BEGIN
 
-DOC_DEF(map_byhash_doc,
-        "(template:?O)->?S?T2?O?O\n" /* TODO: This should return ?M?O?O */
-        "#ptemplate{The object who's hash should be used to search for collisions}"
-        "Same as ?Abyhash?DSequence, but rather than comparing the hashes of the "
-        /**/ "key-value pairs, search for pairs where the key matches the hash of @template");
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_byhash(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *template_;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__template, "o:byhash", &template_))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("byhash", params: "
+	DeeObject *template
+", docStringPrefix: "map");]]]*/
+#define map_byhash_params "template"
+	struct {
+		DeeObject *_template;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__template, "o:byhash", &args))
 		goto err;
-	return DeeMap_HashFilter(self, DeeObject_Hash(template_));
+/*[[[end]]]*/
+	return DeeMap_HashFilter(self, DeeObject_Hash(args._template));
 err:
 	return NULL;
 }
+
+DOC_DEF(map_byhash_doc,
+        "(" map_byhash_params ")->?S?T2?O?O\n" /* TODO: This should return ?M?O?O */
+        "#ptemplate{The object who's hash should be used to search for collisions}"
+        "Same as ?Abyhash?DSequence, but rather than comparing the hashes of the "
+        /**/ "key-value pairs, search for pairs where the key matches the hash of @template");
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	DeeObject *key, *def = Dee_None;
-	_DeeArg_Unpack1Or2(err, argc, argv, "get", &key, &def);
-	result = DeeObject_InvokeMethodHint(map_operator_trygetitem, self, key);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: "
+	DeeObject *key;
+	DeeObject *def = Dee_None;
+", docStringPrefix: "map");]]]*/
+#define map_get_params "key,def=!N"
+	struct {
+		DeeObject *key;
+		DeeObject *def;
+	} args;
+	args.def = Dee_None;
+	_DeeArg_Unpack1Or2(err, argc, argv, "get", &args.key, &args.def);
+/*[[[end]]]*/
+	result = DeeObject_InvokeMethodHint(map_operator_trygetitem, self, args.key);
 	if (result == ITER_DONE) {
-		Dee_Incref(def);
-		result = def;
+		Dee_Incref(args.def);
+		result = args.def;
 	}
 	return result;
 err:
@@ -253,7 +271,7 @@ err:
 PRIVATE struct type_method tpconst map_methods[] = {
 	/* Default operations for all mappings. */
 	TYPE_METHOD(STR_get, &map_get,
-	            "(key,def=!N)->\n"
+	            "(" map_get_params ")->\n"
 	            "#r{The value associated with @key or @def when @key has no value associated}"),
 	TYPE_KWMETHOD("byhash", &map_byhash, DOC_GET(map_byhash_doc)),
 
@@ -265,6 +283,12 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	              "Enumerate keys and associated values of @this mapping\n"
 	              "This function can be used to easily enumerate mapping keys and values, "
 	              /**/ "including being able to enumerate keys that are currently unbound"),
+
+	/* TODO: filter(keep:?DCallable)->?DMapping
+	 * Returns a mapping representing the sub-set of items where "keep(key)" returns true */
+
+	/* TODO: ubfilter(keep:?DCallable)->?DMapping
+	 * Same as filter(keep), but filtered items appear as unbound, rather than absent */
 
 	/* Method hint API functions. */
 	TYPE_METHOD(DeeMA_Mapping_equals_name, &DeeMA_Mapping_equals,
@@ -580,16 +604,22 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_fromkeys(DeeTypeObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	DREF MapFromKeys *result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("fromkeys", params: "
+	DeeObject *keys: ?DSet;
+	DeeObject *value = Dee_None;
+	DeeObject *valuefor:?DCallable = NULL;
+", docStringPrefix: "map");]]]*/
+#define map_fromkeys_params "keys:?DSet,value=!N,valuefor?:?DCallable"
 	struct {
 		DeeObject *keys;
 		DeeObject *value;
 		DeeObject *valuefor;
 	} args;
-	args.value    = Dee_None;
+	args.value = Dee_None;
 	args.valuefor = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__keys_value_valuefor,
-	                          "o|oo:fromkeys", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__keys_value_valuefor, "o|oo:fromkeys", &args))
 		goto err;
+/*[[[end]]]*/
 	result = args.valuefor ? MapFromKeysAndCallback_New(args.keys, args.valuefor)
 	                       : MapFromKeysAndValue_New(args.keys, args.value);
 	if unlikely(!result)
@@ -611,10 +641,17 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF MapFromAttr *DCALL
 map_fromattr(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("fromattr", params: "
 	DeeObject *ob;
-	_DeeArg_Unpack1(err, argc, argv, "fromattr", &ob);
+", docStringPrefix: "map");]]]*/
+#define map_fromattr_params "ob"
+	struct {
+		DeeObject *ob;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "fromattr", &args.ob);
+/*[[[end]]]*/
 	(void)self;
-	return MapFromAttr_New(ob);
+	return MapFromAttr_New(args.ob);
 err:
 	return NULL;
 }
@@ -622,7 +659,7 @@ err:
 
 PRIVATE struct type_method tpconst map_class_methods[] = {
 	TYPE_KWMETHOD_F("fromkeys", &map_fromkeys, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
-	                "(keys:?DSet,value=!N,valuefor?:?DCallable)->?.\n"
+	                "(" map_fromkeys_params ")->?.\n"
 	                "Construct a new ?. from @keys, and @value (or ${valuefor(key)}) as value.\n"
 	                "Behavior is similar to the following (although a proper proxy is used, meaning \n"
 	                /**/ "that operations like $getitem on the returned mapping don't require "
@@ -639,7 +676,7 @@ PRIVATE struct type_method tpconst map_class_methods[] = {
 	                /**/ "return result;"
 	                "}"),
 	TYPE_METHOD_F("fromattr", &map_fromattr, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
-	              "(ob)->?.\n"
+	              "(" map_fromattr_params ")->?.\n"
 	              "Returns the attributes of a given @ob as a mapping (doing the inverse of ?#byattr)"),
 	TYPE_METHOD_END
 };
@@ -651,19 +688,19 @@ PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	            "This member must be overwritten by sub-classes of ?."),
 	TYPE_GETTER(STR_Frozen, &map_Frozen_get,
 	            "->?DType\n"
-	            "Returns the type of sequence returned by the ?#i:frozen property"),
+	            "Returns the type of sequence returned by the ?#frozen property"),
 	TYPE_GETTER(STR_Keys, &map_Keys_get,
 	            "->?DType\n"
-	            "Returns the type of sequence returned by the ?#i:keys property"),
+	            "Returns the type of sequence returned by the ?#keys property"),
 	TYPE_GETTER(STR_Values, &map_Values_get,
 	            "->?DType\n"
-	            "Returns the type of sequence returned by the ?#i:values property"),
+	            "Returns the type of sequence returned by the ?#values property"),
 	TYPE_GETTER(STR_IterKeys, &map_IterKeys_get,
 	            "->?DType\n"
-	            "Returns the type of sequence returned by the ?#i:iterkeys property"),
+	            "Returns the type of sequence returned by the ?#iterkeys property"),
 	TYPE_GETTER(STR_IterValues, &map_IterValues_get,
 	            "->?DType\n"
-	            "Returns the type of sequence returned by the ?#i:itervalues property"),
+	            "Returns the type of sequence returned by the ?#itervalues property"),
 	TYPE_GETSET_END
 };
 
@@ -797,11 +834,15 @@ PRIVATE char const map_doc[] =
 "e.g.: ${{ \"foo\": 10, \"bar\": \"baz\" }}\n"
 "\n"
 
-"[:]->!D\n"
+"[:]->!D\n" /* TODO: Doc could auto-detect this since the impls are *__unsupported, but are implemented by Mapping.__mro__.first */
+"[:]=->!D\n"
+"del[:]->!D\n"
 "\n"
 
 "iter->\n"
 "Returns an iterator for enumerating key-value pairs as 2-elements sequences";
+
+/* TODO: Document all the other operators */
 #endif /* !CONFIG_NO_DOC */
 
 
@@ -815,7 +856,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT | TP_FNAMEOBJECT, /* Generic base class type. */
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE | (Dee_SEQCLASS_MAP << Dee_TF_SEQCLASS_SHFT),
-	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_base     = */ &DeeSeq_Type, /* XXX: Shouldn't this be "DeeSet_Type"? */
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {

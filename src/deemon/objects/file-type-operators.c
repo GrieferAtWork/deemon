@@ -367,58 +367,70 @@ make_super(DeeSuperObject *__restrict buf, DeeFileTypeObject *tp_self, DeeFileOb
  * >> operator read(maxBytes: int): Bytes; 
  * >> operator read(): Bytes; */
 DEFINE_OPERATOR_INVOKE(operator_read, &instance_read, &filetype_inherit_read) {
-	DeeObject *data  = NULL;
-	DeeObject *begin = NULL;
-	DeeObject *end   = NULL;
-	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	DeeBuffer buf;
-	size_t buf_begin, buf_end;
+	size_t buf_start, buf_end;
 	size_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("read") "', params: "
+	DeeObject *data  = NULL;
+	DeeObject *start = NULL;
+	DeeObject *end   = NULL;
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
+");]]]*/
+	struct {
+		DeeObject *data;
+		DeeObject *start;
+		DeeObject *end;
+		Dee_ioflag_t flags;
+	} args;
+	args.data = NULL;
+	args.start = NULL;
+	args.end = NULL;
+	args.flags = Dee_FILEIO_FNORMAL;
+	if (DeeArg_UnpackStruct(argc, argv, "|ooou:" OPNAME("read"), &args))
+		goto err;
+/*[[[end]]]*/
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_read);
-	if (DeeArg_Unpack(argc, argv, "|ooou:" OPNAME("read"),
-	                  &data, &begin, &end, &flags))
-		goto err;
-	if (!data) {
+	if (!args.data) {
 		DeeSuperObject super_buf;
 		DeeObject *me = make_super(&super_buf, tp_self, self);
 		return DeeFile_ReadBytes(me, (size_t)-1, false);
 	}
-	if (end) {
-		if (DeeObject_AsSSize(begin, (dssize_t *)&buf_begin))
+	if (args.end) {
+		if (DeeObject_AsSize(args.start, &buf_start))
 			goto err;
-		if (DeeObject_AsSSize(end, (dssize_t *)&buf_end))
+		if (DeeObject_AsSizeM1(args.end, &buf_end))
 			goto err;
-	} else if (begin) {
-		if (DeeObject_AsSSize(begin, (dssize_t *)&buf_end))
+	} else if (args.start) {
+		if (DeeObject_AsSizeM1(args.start, &buf_end))
 			goto err;
-		buf_begin = 0;
+		buf_start = 0;
 	} else {
-		if (DeeInt_Check(data)) {
+		if (DeeInt_Check(args.data)) {
 			DeeSuperObject super_buf;
 			DeeObject *me;
 			size_t max_bytes;
-			if (DeeInt_AsSize(data, &max_bytes))
+			if (DeeInt_AsSizeM1(args.data, &max_bytes))
 				goto err;
 			me = make_super(&super_buf, tp_self, self);
 			return DeeFile_ReadBytes(me, max_bytes, false);
 		}
-		buf_begin = 0;
+		buf_start = 0;
 		buf_end   = (size_t)-1;
 	}
-	if (DeeObject_GetBuf(data, &buf, Dee_BUFFER_FWRITABLE))
+	if (DeeObject_GetBuf(args.data, &buf, Dee_BUFFER_FWRITABLE))
 		goto err;
 	if (buf_end > buf.bb_size)
 		buf_end = buf.bb_size;
-	if (buf_begin >= buf_end) {
-		DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
+	if (buf_start >= buf_end) {
+		DeeObject_PutBuf(args.data, &buf, Dee_BUFFER_FWRITABLE);
 		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_read(tp_self, tp_self->ft_read, self,
-	                                    (byte_t *)buf.bb_base + buf_begin,
-	                                    buf_end - buf_begin, flags);
-	DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
+	                                    (byte_t *)buf.bb_base + buf_start,
+	                                    buf_end - buf_start, args.flags);
+	DeeObject_PutBuf(args.data, &buf, Dee_BUFFER_FWRITABLE);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -430,44 +442,55 @@ err:
  * >> operator write(buf: <Buffer>, max_size: int): int;
  * >> operator write(buf: <Buffer>, start: int, end: int): int; */
 DEFINE_OPERATOR_INVOKE(operator_write, &instance_write, &filetype_inherit_write) {
-	DeeObject *data  = NULL;
-	DeeObject *begin = NULL;
-	DeeObject *end   = NULL;
-	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	DeeBuffer buf;
-	size_t buf_begin, buf_end;
+	size_t buf_start, buf_end;
 	size_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("write") "', params: "
+	DeeObject *data;
+	DeeObject *start = NULL;
+	DeeObject *end   = NULL;
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
+");]]]*/
+	struct {
+		DeeObject *data;
+		DeeObject *start;
+		DeeObject *end;
+		Dee_ioflag_t flags;
+	} args;
+	args.start = NULL;
+	args.end = NULL;
+	args.flags = Dee_FILEIO_FNORMAL;
+	if (DeeArg_UnpackStruct(argc, argv, "o|oou:" OPNAME("write"), &args))
+		goto err;
+/*[[[end]]]*/
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_write);
-	if (DeeArg_Unpack(argc, argv, "o|oou:" OPNAME("write"),
-	                  &data, &begin, &end, &flags))
-		goto err;
-	if (end) {
-		if (DeeObject_AsSSize(begin, (dssize_t *)&buf_begin))
+	if (args.end) {
+		if (DeeObject_AsSize(args.start, &buf_start))
 			goto err;
-		if (DeeObject_AsSSize(end, (dssize_t *)&buf_end))
+		if (DeeObject_AsSizeM1(args.end, &buf_end))
 			goto err;
-	} else if (begin) {
-		if (DeeObject_AsSSize(begin, (dssize_t *)&buf_end))
+	} else if (args.start) {
+		if (DeeObject_AsSizeM1(args.start, &buf_end))
 			goto err;
-		buf_begin = 0;
+		buf_start = 0;
 	} else {
-		buf_begin = 0;
+		buf_start = 0;
 		buf_end   = (size_t)-1;
 	}
-	if (DeeObject_GetBuf(data, &buf, Dee_BUFFER_FREADONLY))
+	if (DeeObject_GetBuf(args.data, &buf, Dee_BUFFER_FREADONLY))
 		goto err;
 	if (buf_end > buf.bb_size)
 		buf_end = buf.bb_size;
-	if (buf_begin >= buf_end) {
-		DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
+	if (buf_start >= buf_end) {
+		DeeObject_PutBuf(args.data, &buf, Dee_BUFFER_FREADONLY);
 		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_write(tp_self, tp_self->ft_write, self,
-	                                     (byte_t const *)buf.bb_base + buf_begin,
-	                                     buf_end - buf_begin, flags);
-	DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
+	                                     (byte_t const *)buf.bb_base + buf_start,
+	                                     buf_end - buf_start, args.flags);
+	DeeObject_PutBuf(args.data, &buf, Dee_BUFFER_FREADONLY);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -475,18 +498,27 @@ err:
 	return NULL;
 }
 
+/* >> operator seek(off: int): int; */
 /* >> operator seek(off: int, whence: int): int; */
 DEFINE_OPERATOR_INVOKE(operator_seek, &instance_seek, NULL /*&filetype_inherit_seek*/) {
-	Dee_off_t off;
 	Dee_pos_t result;
-	int whence = SEEK_SET;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("seek") "', params: "
+	Dee_off_t off;
+	int whence = SEEK_SET = !A!DFile!PSEEK_SET;
+");]]]*/
+	struct {
+		Dee_off_t off;
+		int whence;
+	} args;
+	args.whence = SEEK_SET;
+	if (DeeArg_UnpackStruct(argc, argv, UNPdN(Dee_SIZEOF_OFF_T) "|d:" OPNAME("seek"), &args))
+		goto err;
+/*[[[end]]]*/
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_seek);
-	if (DeeArg_Unpack(argc, argv, UNPdN(Dee_SIZEOF_OFF_T) "|d:" OPNAME("seek"), &off, &whence))
-		goto err;
 	result = DeeFileType_invoke_ft_seek(tp_self, tp_self->ft_seek,
-	                                    self, off, whence);
+	                                    self, args.off, args.whence);
 	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
 	return DeeInt_NewUInt64(result);
@@ -553,41 +585,54 @@ err:
  * >> operator pread(maxBytes: int, pos: int): Bytes; 
  * >> operator pread(pos: int): Bytes; */
 DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread, &filetype_inherit_pread) {
-	DeeObject *a;
-	DeeObject *b = NULL;
-	DeeObject *c = NULL;
-	DeeObject *d = NULL;
-	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	Dee_pos_t pos;
 	size_t start, end;
 	size_t result;
 	DeeBuffer buf;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("pread") "', params: "
+	DeeObject *a;
+	DeeObject *b = NULL;
+	DeeObject *c = NULL;
+	DeeObject *d = NULL;
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
+");]]]*/
+	struct {
+		DeeObject *a;
+		DeeObject *b;
+		DeeObject *c;
+		DeeObject *d;
+		Dee_ioflag_t flags;
+	} args;
+	args.b = NULL;
+	args.c = NULL;
+	args.d = NULL;
+	args.flags = Dee_FILEIO_FNORMAL;
+	if (DeeArg_UnpackStruct(argc, argv, "o|ooou:" OPNAME("pread"), &args))
+		goto err;
+/*[[[end]]]*/
 	ASSERT(tp_self->ft_pread);
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "o|ooou:" OPNAME("pread"),
-	                  &a, &b, &c, &d, &flags))
-		goto err;
-	if (d) {
-		if (DeeObject_AsUInt64(d, &pos))
+	if (args.d) {
+		if (DeeObject_AsUInt64(args.d, &pos))
 			goto err;
-		if (DeeObject_AsSSize(c, (dssize_t *)&end))
+		if (DeeObject_AsSizeM1(args.c, &end))
 			goto err;
-		if (DeeObject_AsSSize(b, (dssize_t *)&start))
+		if (DeeObject_AsSize(args.b, &start))
 			goto err;
-	} else if (c) {
-		if (DeeObject_AsUInt64(c, &pos))
+	} else if (args.c) {
+		if (DeeObject_AsUInt64(args.c, &pos))
 			goto err;
-		if (DeeObject_AsSSize(b, (dssize_t *)&end))
+		if (DeeObject_AsSizeM1(args.b, &end))
 			goto err;
 		start = 0;
-	} else if (b) {
-		if (DeeObject_AsUInt64(b, &pos))
+	} else if (args.b) {
+		if (DeeObject_AsUInt64(args.b, &pos))
 			goto err;
-		if (DeeInt_Check(a)) {
+		if (DeeInt_Check(args.a)) {
 			DeeSuperObject super_buf;
 			DeeObject *me;
-			if (DeeObject_AsSSize(a, (dssize_t *)&end))
+			if (DeeInt_AsSizeM1(args.a, &end))
 				goto err;
 			me = make_super(&super_buf, tp_self, self);
 			return DeeFile_PReadBytes(me, end, pos, false);
@@ -597,23 +642,23 @@ DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread, &filetype_inherit_pread)
 	} else {
 		DeeSuperObject super_buf;
 		DeeObject *me;
-		if (DeeObject_AsUInt64(a, &pos))
+		if (DeeObject_AsUInt64(args.a, &pos))
 			goto err;
 		me = make_super(&super_buf, tp_self, self);
 		return DeeFile_PReadBytes(me, (size_t)-1, pos, false);
 	}
-	if (DeeObject_GetBuf(a, &buf, Dee_BUFFER_FWRITABLE))
+	if (DeeObject_GetBuf(args.a, &buf, Dee_BUFFER_FWRITABLE))
 		goto err;
 	if (end > buf.bb_size)
 		end = buf.bb_size;
 	if (start >= end) {
-		DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
+		DeeObject_PutBuf(args.a, &buf, Dee_BUFFER_FWRITABLE);
 		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_pread(tp_self, tp_self->ft_pread, self,
 	                                     (byte_t *)buf.bb_base + start,
-	                                     end - start, pos, flags);
-	DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
+	                                     end - start, pos, args.flags);
+	DeeObject_PutBuf(args.a, &buf, Dee_BUFFER_FWRITABLE);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -626,52 +671,64 @@ err:
  * >> operator pwrite(data: <Buffer>, start: int, end: int, pos: int): int;
  * >> operator pwrite(data: <Buffer>, start: int, end: int, pos: int, flags: int): int; */
 DEFINE_OPERATOR_INVOKE(operator_pwrite, &instance_pwrite, &filetype_inherit_pwrite) {
-	DeeObject *a;
-	DeeObject *b;
-	DeeObject *c = NULL;
-	DeeObject *d = NULL;
-	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	Dee_pos_t pos;
 	size_t start, end;
 	size_t result;
 	DeeBuffer buf;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("pwrite") "', params: "
+	DeeObject *a;
+	DeeObject *b;
+	DeeObject *c = NULL;
+	DeeObject *d = NULL;
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
+");]]]*/
+	struct {
+		DeeObject *a;
+		DeeObject *b;
+		DeeObject *c;
+		DeeObject *d;
+		Dee_ioflag_t flags;
+	} args;
+	args.c = NULL;
+	args.d = NULL;
+	args.flags = Dee_FILEIO_FNORMAL;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|oou:" OPNAME("pwrite"), &args))
+		goto err;
+/*[[[end]]]*/
 	ASSERT(tp_self->ft_pwrite);
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "oo|oou:" OPNAME("pwrite"),
-	                  &a, &b, &c, &d, &flags))
-		goto err;
-	if (d) {
-		if (DeeObject_AsUInt64(d, &pos))
+	if (args.d) {
+		if (DeeObject_AsUInt64(args.d, &pos))
 			goto err;
-		if (DeeObject_AsSSize(c, (dssize_t *)&end))
+		if (DeeObject_AsSizeM1(args.c, &end))
 			goto err;
-		if (DeeObject_AsSSize(b, (dssize_t *)&start))
+		if (DeeObject_AsSize(args.b, &start))
 			goto err;
-	} else if (c) {
-		if (DeeObject_AsUInt64(c, &pos))
+	} else if (args.c) {
+		if (DeeObject_AsUInt64(args.c, &pos))
 			goto err;
-		if (DeeObject_AsSSize(b, (dssize_t *)&end))
+		if (DeeObject_AsSizeM1(args.b, &end))
 			goto err;
 		start = 0;
 	} else {
-		if (DeeObject_AsUInt64(b, &pos))
+		if (DeeObject_AsUInt64(args.b, &pos))
 			goto err;
 		start = 0;
 		end   = (size_t)-1;
 	}
-	if (DeeObject_GetBuf(a, &buf, Dee_BUFFER_FREADONLY))
+	if (DeeObject_GetBuf(args.a, &buf, Dee_BUFFER_FREADONLY))
 		goto err;
 	if (end > buf.bb_size)
 		end = buf.bb_size;
 	if (start >= end) {
-		DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
+		DeeObject_PutBuf(args.a, &buf, Dee_BUFFER_FREADONLY);
 		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_pwrite(tp_self, tp_self->ft_pwrite, self,
 	                                      (byte_t *)buf.bb_base + start,
-	                                      end - start, pos, flags);
-	DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
+	                                      end - start, pos, args.flags);
+	DeeObject_PutBuf(args.a, &buf, Dee_BUFFER_FREADONLY);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -683,13 +740,20 @@ err:
  * >> operator getc(flags: int): int; */
 DEFINE_OPERATOR_INVOKE(operator_getc, &instance_getc, &filetype_inherit_getc) {
 	int result;
-	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("getc") "', params: "
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
+");]]]*/
+	struct {
+		Dee_ioflag_t flags;
+	} args;
+	args.flags = Dee_FILEIO_FNORMAL;
+	if (DeeArg_UnpackStruct(argc, argv, "|u:" OPNAME("getc"), &args))
+		goto err;
+/*[[[end]]]*/
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_getc);
-	if (DeeArg_Unpack(argc, argv, "|u:" OPNAME("getc"), &flags))
-		goto err;
-	result = DeeFileType_invoke_ft_getc(tp_self, tp_self->ft_getc, self, flags);
+	result = DeeFileType_invoke_ft_getc(tp_self, tp_self->ft_getc, self, args.flags);
 	if unlikely(result == GETC_ERR)
 		goto err;
 	return DeeInt_NewInt(result);
@@ -699,33 +763,47 @@ err:
 
 /* >> operator ungetc(ch: int): bool; */
 DEFINE_OPERATOR_INVOKE(operator_ungetc, &instance_ungetc, &filetype_inherit_ungetc) {
-	int ch;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("ungetc") "', params: "
+	int ch
+");]]]*/
+	struct {
+		int ch;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "d:" OPNAME("ungetc"), &args))
+		goto err;
+/*[[[end]]]*/
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_ungetc);
-	if (DeeArg_Unpack(argc, argv, "d:" OPNAME("ungetc"), &ch))
+	args.ch = DeeFileType_invoke_ft_ungetc(tp_self, tp_self->ft_ungetc, self, args.ch);
+	if unlikely(args.ch == GETC_ERR)
 		goto err;
-	ch = DeeFileType_invoke_ft_ungetc(tp_self, tp_self->ft_ungetc, self, ch);
-	if unlikely(ch == GETC_ERR)
-		goto err;
-	return_bool(ch != GETC_EOF);
+	return_bool(args.ch != GETC_EOF);
 err:
 	return NULL;
 }
 
 /* >> operator putc(ch: int): bool; */
 DEFINE_OPERATOR_INVOKE(operator_putc, &instance_putc, &filetype_inherit_putc) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("putc") "', params: "
 	int ch;
-	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
+");]]]*/
+	struct {
+		int ch;
+		Dee_ioflag_t flags;
+	} args;
+	args.flags = Dee_FILEIO_FNORMAL;
+	if (DeeArg_UnpackStruct(argc, argv, "d|u:" OPNAME("putc"), &args))
+		goto err;
+/*[[[end]]]*/
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_putc);
-	if (DeeArg_Unpack(argc, argv, "d|u:" OPNAME("putc"), &ch, &flags))
+	args.ch = DeeFileType_invoke_ft_putc(tp_self, tp_self->ft_putc, self, args.ch, args.flags);
+	if unlikely(args.ch == GETC_ERR)
 		goto err;
-	ch = DeeFileType_invoke_ft_putc(tp_self, tp_self->ft_putc, self, ch, flags);
-	if unlikely(ch == GETC_ERR)
-		goto err;
-	return_bool(ch != GETC_EOF);
+	return_bool(args.ch != GETC_EOF);
 err:
 	return NULL;
 }

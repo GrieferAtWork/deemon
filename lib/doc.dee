@@ -538,11 +538,12 @@ global final PRETTY_OPERATOR_NAMES: {string: string} = {
 
 @@Weight of different node types when being sorted
 local final KIND_SORTING_WEIGHTS: {string: int} = {
-	"module" : 0x0000, "operator" : 0x0100,
-	"type" : 0x0101, "singleton" : 0x0102,
+	"module" : 0x0000,
+	"operator" : 0x0100,
 	"function" : 0x0200, "property" : 0x0201, "member" : 0x0202,
-	"class_function" : 0x0300, "class_property" : 0x0301,
-	"class_member" : 0x0302,
+	"class_function" : 0x0300, "class_property" : 0x0301, "class_member" : 0x0302,
+	"type" : 0x0400,
+	"singleton" : 0x0500,
 };
 
 @@Weight of different operators when being sorted

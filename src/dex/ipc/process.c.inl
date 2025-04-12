@@ -5176,7 +5176,7 @@ PRIVATE struct type_getset tpconst process_getsets[] = {
 	              "When constructing a new ?., this can also be a file descriptor or ?DFile"),
 	TYPE_GETSET_F("argv", &process_get_argv, &process_del_argv, &process_set_argv, METHOD_FNOREFESCAPE,
 	              "->?S?Dstring\n"
-	              "The argument vector passed to the programms #C{main()} method"),
+	              "The argument vector passed to the program's #C{main()} method"),
 	TYPE_GETSET_F("environ", &process_get_environ, &process_del_environ, &process_set_environ, METHOD_FNOREFESCAPE,
 	              "->?M?Dstring?Dstring\n"
 	              "The state of environment variables in the given ?.\n"
@@ -5265,6 +5265,8 @@ INTERN DeeTypeObject DeeProcess_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "Process",
 	/* .tp_doc      = */ DOC("(pid:?Dint)\n"
+	                         "Construct a descriptor for a process with the given @pid\n"
+	                         "\n"
 	                         "(cmdline:?Dstring)\n"
 	                         "(exe:?X3?Dint?DFile?Dstring,argv:?S?Dstring,environ?:?S?Dstring)\n"
 	                         "Construct a new process that can be started with ?#start, and joined with ?#join"),

@@ -611,6 +611,17 @@ DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt64)(/*Int*/ Dee
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt128)(/*Int*/ DeeObject *__restrict self, Dee_uint128_t *__restrict value);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsDouble)(/*Int*/ DeeObject *__restrict self, double *__restrict value);
 
+/* Same as the functions above, but these also accept `-1' as an alias for `UINTn_MAX' */
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool DCALL DeeInt_TryAsUInt8M1(/*Int*/ DeeObject *__restrict self, uint8_t *__restrict value);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool DCALL DeeInt_TryAsUInt16M1(/*Int*/ DeeObject *__restrict self, uint16_t *__restrict value);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool DCALL DeeInt_TryAsUInt32M1(/*Int*/ DeeObject *__restrict self, uint32_t *__restrict value);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool DCALL DeeInt_TryAsUInt64M1(/*Int*/ DeeObject *__restrict self, uint64_t *__restrict value);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool DCALL DeeInt_TryAsUInt128M1(/*Int*/ DeeObject *__restrict self, Dee_uint128_t *__restrict value);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt8M1)(/*Int*/ DeeObject *__restrict self, uint8_t *__restrict value);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt16M1)(/*Int*/ DeeObject *__restrict self, uint16_t *__restrict value);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt32M1)(/*Int*/ DeeObject *__restrict self, uint32_t *__restrict value);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt64M1)(/*Int*/ DeeObject *__restrict self, uint64_t *__restrict value);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt128M1)(/*Int*/ DeeObject *__restrict self, Dee_uint128_t *__restrict value);
 
 /* Convert an integer to a binary-encoded data array. */
 DFUNDEF WUNUSED ATTR_OUTS(2, 3) NONNULL((1)) int
@@ -631,65 +642,89 @@ DFUNDEF WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 #define DeeInt_FromNativeBytes(buf, length, as_signed)     DeeInt_FromBytes(buf, length, false, as_signed)
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
-#define DEE_PRIVATE_TRYGETSINT_1(self, val)  DeeInt_TryAsInt8(self, (int8_t *)(val))
-#define DEE_PRIVATE_TRYGETSINT_2(self, val)  DeeInt_TryAsInt16(self, (int16_t *)(val))
-#define DEE_PRIVATE_TRYGETSINT_4(self, val)  DeeInt_TryAsInt32(self, (int32_t *)(val))
-#define DEE_PRIVATE_TRYGETSINT_8(self, val)  DeeInt_TryAsInt64(self, (int64_t *)(val))
-#define DEE_PRIVATE_TRYGETSINT_16(self, val) DeeInt_TryAsInt128(self, (Dee_int128_t *)(val))
-#define DEE_PRIVATE_TRYGETUINT_1(self, val)  DeeInt_TryAsUInt8(self, (uint8_t *)(val))
-#define DEE_PRIVATE_TRYGETUINT_2(self, val)  DeeInt_TryAsUInt16(self, (uint16_t *)(val))
-#define DEE_PRIVATE_TRYGETUINT_4(self, val)  DeeInt_TryAsUInt32(self, (uint32_t *)(val))
-#define DEE_PRIVATE_TRYGETUINT_8(self, val)  DeeInt_TryAsUInt64(self, (uint64_t *)(val))
-#define DEE_PRIVATE_TRYGETUINT_16(self, val) DeeInt_TryAsUInt128(self, (Dee_uint128_t *)(val))
-#define DEE_PRIVATE_TRYGETSINT(size)         DEE_PRIVATE_TRYGETSINT_##size
-#define DEE_PRIVATE_TRYGETUINT(size)         DEE_PRIVATE_TRYGETUINT_##size
-#define DeeInt_TryAsIntN(size, self, val)    DEE_PRIVATE_TRYGETSINT(size)(self, val)
-#define DeeInt_TryAsUIntN(size, self, val)   DEE_PRIVATE_TRYGETUINT(size)(self, val)
+#define DEE_PRIVATE_TRYGETSINT_1(self, val)    DeeInt_TryAsInt8(self, (int8_t *)(val))
+#define DEE_PRIVATE_TRYGETSINT_2(self, val)    DeeInt_TryAsInt16(self, (int16_t *)(val))
+#define DEE_PRIVATE_TRYGETSINT_4(self, val)    DeeInt_TryAsInt32(self, (int32_t *)(val))
+#define DEE_PRIVATE_TRYGETSINT_8(self, val)    DeeInt_TryAsInt64(self, (int64_t *)(val))
+#define DEE_PRIVATE_TRYGETSINT_16(self, val)   DeeInt_TryAsInt128(self, (Dee_int128_t *)(val))
+#define DEE_PRIVATE_TRYGETUINT_1(self, val)    DeeInt_TryAsUInt8(self, (uint8_t *)(val))
+#define DEE_PRIVATE_TRYGETUINT_2(self, val)    DeeInt_TryAsUInt16(self, (uint16_t *)(val))
+#define DEE_PRIVATE_TRYGETUINT_4(self, val)    DeeInt_TryAsUInt32(self, (uint32_t *)(val))
+#define DEE_PRIVATE_TRYGETUINT_8(self, val)    DeeInt_TryAsUInt64(self, (uint64_t *)(val))
+#define DEE_PRIVATE_TRYGETUINT_16(self, val)   DeeInt_TryAsUInt128(self, (Dee_uint128_t *)(val))
+#define DEE_PRIVATE_TRYGETUINTM1_1(self, val)  DeeInt_TryAsUInt8M1(self, (uint8_t *)(val))
+#define DEE_PRIVATE_TRYGETUINTM1_2(self, val)  DeeInt_TryAsUInt16M1(self, (uint16_t *)(val))
+#define DEE_PRIVATE_TRYGETUINTM1_4(self, val)  DeeInt_TryAsUInt32M1(self, (uint32_t *)(val))
+#define DEE_PRIVATE_TRYGETUINTM1_8(self, val)  DeeInt_TryAsUInt64M1(self, (uint64_t *)(val))
+#define DEE_PRIVATE_TRYGETUINTM1_16(self, val) DeeInt_TryAsUInt128M1(self, (Dee_uint128_t *)(val))
+#define DEE_PRIVATE_TRYGETSINT(size)           DEE_PRIVATE_TRYGETSINT_##size
+#define DEE_PRIVATE_TRYGETUINT(size)           DEE_PRIVATE_TRYGETUINT_##size
+#define DEE_PRIVATE_TRYGETUINTM1(size)         DEE_PRIVATE_TRYGETUINTM1_##size
+#define DeeInt_TryAsIntN(size, self, val)      DEE_PRIVATE_TRYGETSINT(size)(self, val)
+#define DeeInt_TryAsUIntN(size, self, val)     DEE_PRIVATE_TRYGETUINT(size)(self, val)
+#define DeeInt_TryAsUIntNM1(size, self, val)   DEE_PRIVATE_TRYGETUINTM1(size)(self, val)
 
-#define DEE_PRIVATE_GETSINT_1(self, val)  DeeInt_AsInt8(self, (int8_t *)(val))
-#define DEE_PRIVATE_GETSINT_2(self, val)  DeeInt_AsInt16(self, (int16_t *)(val))
-#define DEE_PRIVATE_GETSINT_4(self, val)  DeeInt_AsInt32(self, (int32_t *)(val))
-#define DEE_PRIVATE_GETSINT_8(self, val)  DeeInt_AsInt64(self, (int64_t *)(val))
-#define DEE_PRIVATE_GETSINT_16(self, val) DeeInt_AsInt128(self, (Dee_int128_t *)(val))
-#define DEE_PRIVATE_GETUINT_1(self, val)  DeeInt_AsUInt8(self, (uint8_t *)(val))
-#define DEE_PRIVATE_GETUINT_2(self, val)  DeeInt_AsUInt16(self, (uint16_t *)(val))
-#define DEE_PRIVATE_GETUINT_4(self, val)  DeeInt_AsUInt32(self, (uint32_t *)(val))
-#define DEE_PRIVATE_GETUINT_8(self, val)  DeeInt_AsUInt64(self, (uint64_t *)(val))
-#define DEE_PRIVATE_GETUINT_16(self, val) DeeInt_AsUInt128(self, (Dee_uint128_t *)(val))
-#define DEE_PRIVATE_GETSINT(size)         DEE_PRIVATE_GETSINT_##size
-#define DEE_PRIVATE_GETUINT(size)         DEE_PRIVATE_GETUINT_##size
-#define DeeInt_AsIntN(size, self, val)    DEE_PRIVATE_GETSINT(size)(self, val)
-#define DeeInt_AsUIntN(size, self, val)   DEE_PRIVATE_GETUINT(size)(self, val)
+#define DEE_PRIVATE_GETSINT_1(self, val)    DeeInt_AsInt8(self, (int8_t *)(val))
+#define DEE_PRIVATE_GETSINT_2(self, val)    DeeInt_AsInt16(self, (int16_t *)(val))
+#define DEE_PRIVATE_GETSINT_4(self, val)    DeeInt_AsInt32(self, (int32_t *)(val))
+#define DEE_PRIVATE_GETSINT_8(self, val)    DeeInt_AsInt64(self, (int64_t *)(val))
+#define DEE_PRIVATE_GETSINT_16(self, val)   DeeInt_AsInt128(self, (Dee_int128_t *)(val))
+#define DEE_PRIVATE_GETUINT_1(self, val)    DeeInt_AsUInt8(self, (uint8_t *)(val))
+#define DEE_PRIVATE_GETUINT_2(self, val)    DeeInt_AsUInt16(self, (uint16_t *)(val))
+#define DEE_PRIVATE_GETUINT_4(self, val)    DeeInt_AsUInt32(self, (uint32_t *)(val))
+#define DEE_PRIVATE_GETUINT_8(self, val)    DeeInt_AsUInt64(self, (uint64_t *)(val))
+#define DEE_PRIVATE_GETUINT_16(self, val)   DeeInt_AsUInt128(self, (Dee_uint128_t *)(val))
+#define DEE_PRIVATE_GETUINTM1_1(self, val)  DeeInt_AsUInt8M1(self, (uint8_t *)(val))
+#define DEE_PRIVATE_GETUINTM1_2(self, val)  DeeInt_AsUInt16M1(self, (uint16_t *)(val))
+#define DEE_PRIVATE_GETUINTM1_4(self, val)  DeeInt_AsUInt32M1(self, (uint32_t *)(val))
+#define DEE_PRIVATE_GETUINTM1_8(self, val)  DeeInt_AsUInt64M1(self, (uint64_t *)(val))
+#define DEE_PRIVATE_GETUINTM1_16(self, val) DeeInt_AsUInt128M1(self, (Dee_uint128_t *)(val))
+#define DEE_PRIVATE_GETSINT(size)           DEE_PRIVATE_GETSINT_##size
+#define DEE_PRIVATE_GETUINT(size)           DEE_PRIVATE_GETUINT_##size
+#define DEE_PRIVATE_GETUINTM1(size)         DEE_PRIVATE_GETUINTM1_##size
+#define DeeInt_AsIntN(size, self, val)      DEE_PRIVATE_GETSINT(size)(self, val)
+#define DeeInt_AsUIntN(size, self, val)     DEE_PRIVATE_GETUINT(size)(self, val)
+#define DeeInt_AsUIntNM1(size, self, val)   DEE_PRIVATE_GETUINTM1(size)(self, val)
 
 #ifdef __CHAR_UNSIGNED__
-#define DeeInt_AsChar(self, result)    DeeInt_AsUIntN(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(char *, result))
+#define DeeInt_AsChar(self, result)      DeeInt_AsUIntN(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(char *, result))
 #else /* __CHAR_UNSIGNED__ */
-#define DeeInt_AsChar(self, result)    DeeInt_AsIntN(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(char *, result))
+#define DeeInt_AsChar(self, result)      DeeInt_AsIntN(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(char *, result))
 #endif /* !__CHAR_UNSIGNED__ */
-#define DeeInt_AsSChar(self, result)   DeeInt_AsIntN(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(signed char *, result))
-#define DeeInt_AsUChar(self, result)   DeeInt_AsUIntN(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(unsigned char *, result))
-#define DeeInt_AsShort(self, result)   DeeInt_AsIntN(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(short *, result))
-#define DeeInt_AsUShort(self, result)  DeeInt_AsUIntN(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(unsigned short *, result))
-#define DeeInt_AsInt(self, result)     DeeInt_AsIntN(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(int *, result))
-#define DeeInt_AsUInt(self, result)    DeeInt_AsUIntN(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(unsigned int *, result))
-#define DeeInt_AsLong(self, result)    DeeInt_AsIntN(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(long *, result))
-#define DeeInt_AsULong(self, result)   DeeInt_AsUIntN(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(unsigned long *, result))
+#define DeeInt_AsSChar(self, result)     DeeInt_AsIntN(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(signed char *, result))
+#define DeeInt_AsUChar(self, result)     DeeInt_AsUIntN(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(unsigned char *, result))
+#define DeeInt_AsUCharM1(self, result)   DeeInt_AsUIntNM1(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(unsigned char *, result))
+#define DeeInt_AsShort(self, result)     DeeInt_AsIntN(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(short *, result))
+#define DeeInt_AsUShort(self, result)    DeeInt_AsUIntN(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(unsigned short *, result))
+#define DeeInt_AsUShortM1(self, result)  DeeInt_AsUIntNM1(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(unsigned short *, result))
+#define DeeInt_AsInt(self, result)       DeeInt_AsIntN(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(int *, result))
+#define DeeInt_AsUInt(self, result)      DeeInt_AsUIntN(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(unsigned int *, result))
+#define DeeInt_AsUIntM1(self, result)    DeeInt_AsUIntNM1(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(unsigned int *, result))
+#define DeeInt_AsLong(self, result)      DeeInt_AsIntN(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(long *, result))
+#define DeeInt_AsULong(self, result)     DeeInt_AsUIntN(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(unsigned long *, result))
+#define DeeInt_AsULongM1(self, result)   DeeInt_AsUIntNM1(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(unsigned long *, result))
 #ifdef __SIZEOF_LONG_LONG__
-#define DeeInt_AsLLong(self, result)   DeeInt_AsIntN(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__LONGLONG *, result))
-#define DeeInt_AsULLong(self, result)  DeeInt_AsUIntN(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__ULONGLONG *, result))
+#define DeeInt_AsLLong(self, result)     DeeInt_AsIntN(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__LONGLONG *, result))
+#define DeeInt_AsULLong(self, result)    DeeInt_AsUIntN(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__ULONGLONG *, result))
+#define DeeInt_AsULLongM1(self, result)  DeeInt_AsUIntNM1(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__ULONGLONG *, result))
 #endif /* __SIZEOF_LONG_LONG__ */
-#define DeeInt_AsSize(self, result)    DeeInt_AsUIntN(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(size_t *, result))
-#define DeeInt_AsSSize(self, result)   DeeInt_AsIntN(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(Dee_ssize_t *, result))
-#define DeeInt_AsPtrdiff(self, result) DeeInt_AsIntN(__SIZEOF_PTRDIFF_T__, self, Dee_REQUIRES_TYPE(ptrdiff_t *, result))
-#define DeeInt_AsIntptr(self, result)  DeeInt_AsIntN(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(intptr_t *, result))
-#define DeeInt_AsUIntptr(self, result) DeeInt_AsUIntN(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, result))
+#define DeeInt_AsSize(self, result)      DeeInt_AsUIntN(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(size_t *, result))
+#define DeeInt_AsSizeM1(self, result)    DeeInt_AsUIntNM1(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(size_t *, result))
+#define DeeInt_AsSSize(self, result)     DeeInt_AsIntN(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(Dee_ssize_t *, result))
+#define DeeInt_AsPtrdiff(self, result)   DeeInt_AsIntN(__SIZEOF_PTRDIFF_T__, self, Dee_REQUIRES_TYPE(ptrdiff_t *, result))
+#define DeeInt_AsIntptr(self, result)    DeeInt_AsIntN(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(intptr_t *, result))
+#define DeeInt_AsUIntptr(self, result)   DeeInt_AsUIntN(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, result))
+#define DeeInt_AsUIntptrM1(self, result) DeeInt_AsUIntNM1(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, result))
 
-#define DeeInt_TryAsSSize(self, val)   DeeInt_TryAsIntN(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(Dee_ssize_t *, val))
-#define DeeInt_TryAsSize(self, val)    DeeInt_TryAsUIntN(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(size_t *, val))
-#define DeeInt_TryAsInt(self, val)     DeeInt_TryAsIntN(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(int *, val))
-#define DeeInt_TryAsUInt(self, val)    DeeInt_TryAsIntN(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(unsigned int *, val))
-#define DeeInt_TryAsIntptr(self, val)  DeeInt_TryAsIntN(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(intptr_t *, val))
-#define DeeInt_TryAsUIntptr(self, val) DeeInt_TryAsUIntN(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, val))
+#define DeeInt_TryAsSSize(self, val)     DeeInt_TryAsIntN(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(Dee_ssize_t *, val))
+#define DeeInt_TryAsSize(self, val)      DeeInt_TryAsUIntN(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(size_t *, val))
+#define DeeInt_TryAsSizeM1(self, val)    DeeInt_TryAsUIntNM1(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(size_t *, val))
+#define DeeInt_TryAsInt(self, val)       DeeInt_TryAsIntN(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(int *, val))
+#define DeeInt_TryAsUInt(self, val)      DeeInt_TryAsIntN(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(unsigned int *, val))
+#define DeeInt_TryAsUIntM1(self, val)    DeeInt_TryAsIntNM1(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(unsigned int *, val))
+#define DeeInt_TryAsIntptr(self, val)    DeeInt_TryAsIntN(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(intptr_t *, val))
+#define DeeInt_TryAsUIntptr(self, val)   DeeInt_TryAsUIntN(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, val))
+#define DeeInt_TryAsUIntptrM1(self, val) DeeInt_TryAsUIntNM1(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, val))
 
 
 #ifndef __NO_builtin_choose_expr
