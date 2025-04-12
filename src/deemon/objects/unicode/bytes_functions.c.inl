@@ -5929,27 +5929,27 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "(" bytes_findany_params ")->?X2?Dint?N\n"
 	                "#tValueError{One of the given @needles is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
-	                "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	                /**/ "and return its starting index, or ${-1} if no such position exists"),
+	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
+	                /**/ "and return the lowest starting index, or ?N if no such position exists"),
 	TYPE_KWMETHOD_F("rfindany", &bytes_rfindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	                "(" bytes_rfindany_params ")->?X2?Dint?N\n"
 	                "#tValueError{One of the given @needles is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
-	                "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	                /**/ "and return its starting index, or ${-1} if no such position exists"),
+	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
+	                /**/ "and return the greatest starting index, or ?N if no such position exists"),
 	TYPE_KWMETHOD_F("indexany", &bytes_indexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	                "(" bytes_indexany_params ")->?X2?Dint?N\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
-	                "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	                /**/ "and return its starting index"),
+	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
+	                /**/ "and return the lowest starting index"),
 	TYPE_KWMETHOD_F("rindexany", &bytes_rindexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	                "(" bytes_rindexany_params ")->?X2?Dint?N\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
-	                "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
-	                /**/ "and return its starting index"),
+	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
+	                /**/ "and return the greatest starting index"),
 	TYPE_KWMETHOD_F("findall", &bytes_findall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
 	                "(" bytes_findall_params ")->?S?Dint\n"
@@ -5972,7 +5972,8 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "(" bytes_substr_params ")->?.\n"
 	                "Similar to ${this[start:end]}, and semantically equialent to ?Asubstr?Dstring\n"
 	                "This function can be used to view a sub-set of bytes from @this ?. object\n"
-	                "Modifications then made to the returned ?. object will affect the same memory already described by @this ?. object"),
+	                "Modifications then made to the returned ?. object will affect the same memory "
+	                /**/ "already described by @this ?. object"),
 	TYPE_METHOD_F("strip", &bytes_strip,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
 	              "(mask?:?X3?.?Dstring?Dint)->?.\n"
@@ -6426,13 +6427,13 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	              "(" bytes_rfindmatch_params ")->?Dint\n"
 	              "Similar to ?#findmatch, but operate in a mirrored fashion, searching for the "
-	              /**/ "last instance of @open that has no match @close within ${this.substr(start, end)}:\n"
+	              /**/ "last instance of @open that has no matching @close within ${this.substr(start, end)}:\n"
 	              "${"
-	              "s = \"get_string().foo(bar(), baz(42), 7).length\";\n"
-	              "lcol = s.find(\")\");\n"
-	              "print lcol; /* 19 */\n"
-	              "mtch = s.rfindmatch(\"(\", \")\", 0, lcol);\n"
-	              "print repr s[mtch:lcol+1]; /* \"(bar(), baz(42), 7)\" */"
+	              /**/ "s = \"get_string().foo(bar(), baz(42), 7).length\".bytes();\n"
+	              /**/ "lcol = s.rfind(\")\");\n"
+	              /**/ "print lcol; /* 34 */\n"
+	              /**/ "mtch = s.rfindmatch(\"(\", \")\", 0, lcol);\n"
+	              /**/ "print repr s[mtch:lcol + 1]; /* \"(bar(), baz(42), 7)\".bytes() */"
 	              "}\n"
 	              "If no @open without a matching @close exists, ${-1} is returned"),
 	TYPE_METHOD_F("rindexmatch", &bytes_rindexmatch,

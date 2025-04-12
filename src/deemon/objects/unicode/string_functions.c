@@ -10674,46 +10674,50 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_find_params ")->?Dint\n"
 	                "Find the first instance of @needle within ${this.substr(start, end)}, "
-	                "and return its starting index, or ${-1} if no such position exists"),
+	                /**/ "and return its starting index, or ${-1} if no such position exists\n"
+	                "When @needle is ?Ert:SeqSome, same as ?#findany on the wrapped sequence"),
 	TYPE_KWMETHOD_F("rfind", &string_rfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_rfind_params ")->?Dint\n"
 	                "Find the last instance of @needle within ${this.substr(start, end)}, "
-	                "and return its starting index, or ${-1} if no such position exists"),
+	                /**/ "and return its starting index, or ${-1} if no such position exists\n"
+	                "When @needle is ?Ert:SeqSome, same as ?#rfindany on the wrapped sequence"),
 	TYPE_KWMETHOD_F(STR_index, &string_index,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_index_params ")->?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Find the first instance of @needle within ${this.substr(start, end)}, "
-	                "and return its starting index"),
+	                /**/ "and return its starting index\n"
+	                "When @needle is ?Ert:SeqSome, same as ?#indexany on the wrapped sequence"),
 	TYPE_KWMETHOD_F("rindex", &string_rindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_rindex_params ")->?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Find the last instance of @needle within ${this.substr(start, end)}, "
-	                "and return its starting index"),
+	                /**/ "and return its starting index\n"
+	                "When @needle is ?Ert:SeqSome, same as ?#rindexany on the wrapped sequence"),
 	TYPE_KWMETHOD_F("findany", &string_findany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_findany_params ")->?X2?Dint?N\n"
-	                "Find the first instance of any of the given @needles within ${this.substr(start, end)}, "
-	                "and return its starting index, or ?N if no such position exists"),
+	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
+	                /**/ "and return the lowest starting index, or ?N if no such position exists"),
 	TYPE_KWMETHOD_F("rfindany", &string_rfindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_rfindany_params ")->?X2?Dint?N\n"
-	                "Find the last instance of any of the given @needles within ${this.substr(start, end)}, "
-	                "and return its starting index, or ?N if no such position exists"),
+	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
+	                /**/ "and return the greatest starting index, or ?N if no such position exists"),
 	TYPE_KWMETHOD_F("indexany", &string_indexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_indexany_params ")->?Dint\n"
 	                "#tIndexError{No instance of @needles can be found within ${this.substr(start, end)}}"
-	                "Find the first instance of any of the given @needles within ${this.substr(start, end)}, "
-	                "and return its starting index"),
+	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
+	                /**/ "and return the lowest starting index"),
 	TYPE_KWMETHOD_F("rindexany", &string_rindexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_rindexany_params ")->?Dint\n"
 	                "#tIndexError{No instance of @needles can be found within ${this.substr(start, end)}}"
-	                "Find the last instance of any of the given @needles within ${this.substr(start, end)}, "
-	                "and return its starting index"),
+	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
+	                /**/ "and return the greatest starting index"),
 	TYPE_KWMETHOD_F("findall", &string_findall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
 	                "(" string_findall_params ")->?S?Dint\n"
@@ -10734,8 +10738,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "(start=!0,end=!-1)->?.\n"
 	                "Similar to ${this[start:end]}, however only integer-convertible objects may "
 	                /**/ "be passed (passing ?N will invoke ${(int)none}, which results in $0), and "
-	                /**/ "passing negative values for either @start or @end will cause ?ASIZE_MAX?Dint "
-	                /**/ "to be used for that argument:\n"
+	                /**/ "passing #C{-1} for @end will cause ?#length to be used instead:\n"
 	                "${"
 	                /**/ "s = \"foo bar foobar\";\n"
 	                /**/ "print repr s.substr(0, 1);    /* \"f\" */\n"
@@ -10744,7 +10747,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "print repr s[0:##s];           /* \"foo bar foobar\" */\n"
 	                /**/ "print repr s.substr(0, 1234); /* \"foo bar foobar\" */\n"
 	                /**/ "print repr s[0:1234];         /* \"foo bar foobar\" */\n"
-	                /**/ "print repr s.substr(0, -1);   /* \"foo bar foobar\" -- Negative indices intentionally underflow into positive infinity */\n"
+	                /**/ "print repr s.substr(0, -1);   /* \"foo bar foobar\" -- `-1' intentionally underflow into positive infinity */\n"
 	                /**/ "print repr s[0:-1];           /* \"foo bar fooba\" */"
 	                "}\n"
 	                "Also note that this way of interpreting integer indices is mirrored by all other "
@@ -10916,23 +10919,27 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "(" string_casefind_params ")->?X2?T2?Dint?Dint?N\n"
 	                "Same as ?#find, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)\n"
-	                "If no match if found, ?N is returned"),
+	                "If no match if found, ?N is returned\n"
+	                "When @needle is ?Ert:SeqSome, same as ?#casefindany on the wrapped sequence"),
 	TYPE_KWMETHOD_F("caserfind", &string_caserfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_caserfind_params ")->?X2?T2?Dint?Dint?N\n"
 	                "Same as ?#rfind, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)\n"
-	                "If no match if found, ?N is returned"),
+	                "If no match if found, ?N is returned\n"
+	                "When @needle is ?Ert:SeqSome, same as ?#caserfindany on the wrapped sequence"),
 	TYPE_KWMETHOD_F("caseindex", &string_caseindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_caseindex_params ")->?T2?Dint?Dint\n"
 	                "Same as ?#index, however perform a case-folded search and return the start and end "
-	                /**/ "indices of the match (s.a. ?#casefold)"),
+	                /**/ "indices of the match (s.a. ?#casefold)\n"
+	                "When @needle is ?Ert:SeqSome, same as ?#caseindexany on the wrapped sequence"),
 	TYPE_KWMETHOD_F("caserindex", &string_caserindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_caserindex_params ")->?T2?Dint?Dint\n"
 	                "Same as ?#rindex, however perform a case-folded search and return the start and end "
-	                /**/ "indices of the match (s.a. ?#casefold)"),
+	                /**/ "indices of the match (s.a. ?#casefold)\n"
+	                "When @needle is ?Ert:SeqSome, same as ?#caserindexany on the wrapped sequence"),
 	TYPE_KWMETHOD_F("casefindany", &string_casefindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_casefindany_params ")->?X2?T2?Dint?Dint?N\n"
@@ -11189,12 +11196,12 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	              "(" string_rfindmatch_params ")->?Dint\n"
 	              "Similar to ?#findmatch, but operate in a mirrored fashion, "
-	              /**/ "searching for the last instance of @open that has no match "
+	              /**/ "searching for the last instance of @open that has no matching "
 	              /**/ "@close within ${this.substr(start, end)}:\n"
 	              "${"
 	              /**/ "s = \"get_string().foo(bar(), baz(42), 7).length\";\n"
-	              /**/ "lcol = s.find(\")\");\n"
-	              /**/ "print lcol; /* 19 */\n"
+	              /**/ "lcol = s.rfind(\")\");\n"
+	              /**/ "print lcol; /* 34 */\n"
 	              /**/ "mtch = s.rfindmatch(\"(\", \")\", 0, lcol);\n"
 	              /**/ "print repr s[mtch:lcol + 1]; /* \"(bar(), baz(42), 7)\" */"
 	              "}\n"
@@ -11276,11 +11283,11 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_METHOD_F("casepartitionmatch", &string_casepartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
 	              "(" string_casepartitionmatch_params ")->?T3?.?.?.\n"
-	              "Same as #partitionmatch, however perform a case-folded search"),
+	              "Same as ?#partitionmatch, however perform a case-folded search"),
 	TYPE_METHOD_F("caserpartitionmatch", &string_caserpartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
 	              "(" string_caserpartitionmatch_params ")->?T3?.?.?.\n"
-	              "Same as #rpartitionmatch, however perform a case-folded search"),
+	              "Same as ?#rpartitionmatch, however perform a case-folded search"),
 
 	TYPE_METHOD_F("segments", &string_segments,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
@@ -12387,15 +12394,15 @@ PUBLIC NONNULL((1)) void
 	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
 
 	CASE_WIDTH_1BYTE:
-		memmoveb(str.cp8 + dst, str.cp8 + src, length);
+		(void)memmoveb(str.cp8 + dst, str.cp8 + src, length);
 		break;
 
 	CASE_WIDTH_2BYTE:
-		memmovew(str.cp16 + dst, str.cp16 + src, length);
+		(void)memmovew(str.cp16 + dst, str.cp16 + src, length);
 		break;
 
 	CASE_WIDTH_4BYTE:
-		memmovel(str.cp32 + dst, str.cp32 + src, length);
+		(void)memmovel(str.cp32 + dst, str.cp32 + src, length);
 		break;
 	}
 }
@@ -12410,7 +12417,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
 
 	CASE_WIDTH_1BYTE:
-		return memcmp(str.cp8 + lhs_start, rhs, num_chars);
+		return memcmpb(str.cp8 + lhs_start, rhs, num_chars);
 
 	CASE_WIDTH_2BYTE: {
 		size_t i;
@@ -12459,7 +12466,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	}	break;
 
 	CASE_WIDTH_2BYTE:
-		return memcmp(str.cp16 + lhs_start, rhs, num_chars * 2); /* FIXME: Incorrect on LE for !=0 */
+		return memcmpw(str.cp16 + lhs_start, rhs, num_chars);
 
 	CASE_WIDTH_4BYTE: {
 		size_t i;
@@ -12508,7 +12515,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	}	break;
 
 	CASE_WIDTH_4BYTE:
-		return memcmp(str.cp32 + lhs_start, rhs, num_chars * 4); /* FIXME: Incorrect on LE for !=0 */
+		return memcmpl(str.cp32 + lhs_start, rhs, num_chars);
 
 	}
 	return 0;
@@ -12524,7 +12531,7 @@ PUBLIC NONNULL((1, 2)) void
 	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
 
 	CASE_WIDTH_1BYTE:
-		memcpy(str.cp8 + dst, src, num_chars);
+		(void)memcpyb(str.cp8 + dst, src, num_chars);
 		break;
 
 	CASE_WIDTH_2BYTE: {
@@ -12564,7 +12571,7 @@ PUBLIC NONNULL((1, 2)) void
 	}	break;
 
 	CASE_WIDTH_2BYTE:
-		memcpyw(str.cp16 + dst, src, num_chars);
+		(void)memcpyw(str.cp16 + dst, src, num_chars);
 		break;
 
 	CASE_WIDTH_4BYTE: {
@@ -12604,7 +12611,7 @@ PUBLIC NONNULL((1, 2)) void
 	}	break;
 
 	CASE_WIDTH_4BYTE:
-		memcpyl(str.cp32 + dst, src, num_chars);
+		(void)memcpyl(str.cp32 + dst, src, num_chars);
 		break;
 	}
 }
