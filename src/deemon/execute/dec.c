@@ -249,7 +249,7 @@ struct builtin_desc {
 import * from deemon;
 
 local sets = Dict();
-for (local l: File.open(__FILE__)) {
+for (local l: File.open("dec.c")) {
 	local setid, name, id, typeval;
 	try {
 		setid, name, id, typeval = l.scanf(" # define DEC_BUILTIN_SET%[^_]_%[^ ] %[^ ] /" "* %[^ ] *" "/")...;

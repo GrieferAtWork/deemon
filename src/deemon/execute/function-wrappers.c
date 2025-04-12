@@ -5351,7 +5351,7 @@ framesymbolsbyname_init_kw(FrameSymbolsByName *__restrict self,
 	args.ridend = (uint16_t)-1;
 	args.localc = (uint16_t)-1;
 	args.stackc = (uint16_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__frame_argc_ridstart_ridend_localc_stackc, "o|" UNPu16 UNPu16 UNPu16 UNPu16 UNPu16 ":_FrameSymbolsByName", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__frame_argc_ridstart_ridend_localc_stackc, "o|" UNPx16 UNPu16 UNPx16 UNPx16 UNPx16 ":_FrameSymbolsByName", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.frame, &DeeFrame_Type))
