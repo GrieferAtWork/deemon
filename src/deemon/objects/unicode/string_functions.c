@@ -6005,10 +6005,10 @@ get_compare_args(struct compare_args *__restrict args,
 	case 2:
 		if (DeeString_Check(argv[0])) {
 			args->other = (String *)argv[0];
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&args->ot_start))
+			if (DeeObject_AsSize(argv[1], &args->ot_start))
 				goto err;
 		} else {
-			if (DeeObject_AsSSize(argv[0], (dssize_t *)&args->my_start))
+			if (DeeObject_AsSize(argv[0], &args->my_start))
 				goto err;
 			args->other = (String *)argv[1];
 			if (DeeObject_AssertTypeExact(args->other, &DeeString_Type))
@@ -6018,20 +6018,20 @@ get_compare_args(struct compare_args *__restrict args,
 	case 3:
 		if (DeeString_Check(argv[0])) {
 			args->other = (String *)argv[0];
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&args->ot_start))
+			if (DeeObject_AsSize(argv[1], &args->ot_start))
 				goto err;
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&args->ot_end))
+			if (DeeObject_AsSizeM1(argv[2], &args->ot_end))
 				goto err;
 		} else if (DeeString_Check(argv[1])) {
-			if (DeeObject_AsSSize(argv[0], (dssize_t *)&args->my_start))
+			if (DeeObject_AsSize(argv[0], &args->my_start))
 				goto err;
 			args->other = (String *)argv[1];
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&args->ot_start))
+			if (DeeObject_AsSize(argv[2], &args->ot_start))
 				goto err;
 		} else {
-			if (DeeObject_AsSSize(argv[0], (dssize_t *)&args->my_start))
+			if (DeeObject_AsSize(argv[0], &args->my_start))
 				goto err;
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&args->my_end))
+			if (DeeObject_AsSizeM1(argv[1], &args->my_end))
 				goto err;
 			args->other = (String *)argv[2];
 			if (DeeObject_AssertTypeExact(args->other, &DeeString_Type))
@@ -6039,35 +6039,35 @@ get_compare_args(struct compare_args *__restrict args,
 		}
 		break;
 	case 4:
-		if (DeeObject_AsSSize(argv[0], (dssize_t *)&args->my_start))
+		if (DeeObject_AsSize(argv[0], &args->my_start))
 			goto err;
 		if (DeeString_Check(argv[1])) {
 			args->other = (String *)argv[1];
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&args->ot_start))
+			if (DeeObject_AsSize(argv[2], &args->ot_start))
 				goto err;
-			if (DeeObject_AsSSize(argv[3], (dssize_t *)&args->ot_end))
+			if (DeeObject_AsSizeM1(argv[3], &args->ot_end))
 				goto err;
 		} else {
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&args->my_end))
+			if (DeeObject_AsSizeM1(argv[1], &args->my_end))
 				goto err;
 			args->other = (String *)argv[2];
-			if (DeeObject_AsSSize(argv[3], (dssize_t *)&args->ot_start))
+			if (DeeObject_AsSize(argv[3], &args->ot_start))
 				goto err;
 			if (DeeObject_AssertTypeExact(args->other, &DeeString_Type))
 				goto err;
 		}
 		break;
 	case 5:
-		if (DeeObject_AsSSize(argv[0], (dssize_t *)&args->my_start))
+		if (DeeObject_AsSize(argv[0], &args->my_start))
 			goto err;
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)&args->my_end))
+		if (DeeObject_AsSizeM1(argv[1], &args->my_end))
 			goto err;
 		args->other = (String *)argv[2];
 		if (DeeObject_AssertTypeExact(args->other, &DeeString_Type))
 			goto err;
-		if (DeeObject_AsSSize(argv[3], (dssize_t *)&args->ot_start))
+		if (DeeObject_AsSize(argv[3], &args->ot_start))
 			goto err;
-		if (DeeObject_AsSSize(argv[4], (dssize_t *)&args->ot_end))
+		if (DeeObject_AsSizeM1(argv[4], &args->ot_end))
 			goto err;
 		break;
 	default:

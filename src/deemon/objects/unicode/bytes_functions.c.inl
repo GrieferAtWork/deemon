@@ -2774,6 +2774,7 @@ get_bcompare_args(Bytes *__restrict self,
 	args->lhs_ptr = DeeBytes_DATA(self);
 	args->lhs_len = DeeBytes_SIZE(self);
 	switch (argc) {
+
 	case 1:
 		args->other = other = argv[0];
 		if (DeeBytes_Check(other)) {
@@ -2788,10 +2789,11 @@ get_bcompare_args(Bytes *__restrict self,
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 		}
 		break;
+
 	case 2:
 		if (DeeBytes_Check(argv[0])) {
 			args->other = other = argv[0];
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[1], &temp))
 				goto err;
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
@@ -2803,7 +2805,7 @@ get_bcompare_args(Bytes *__restrict self,
 			}
 		} else if (DeeString_Check(argv[0])) {
 			args->other = other = argv[0];
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[1], &temp))
 				goto err;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
 			if unlikely(!args->rhs_ptr)
@@ -2816,7 +2818,7 @@ get_bcompare_args(Bytes *__restrict self,
 				args->rhs_len -= temp;
 			}
 		} else {
-			if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[0], &temp))
 				goto err;
 			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
@@ -2838,45 +2840,32 @@ get_bcompare_args(Bytes *__restrict self,
 			}
 		}
 		break;
+
 	case 3:
 		if (DeeBytes_Check(argv[0])) {
 			args->other = other = argv[0];
 			args->rhs_ptr       = DeeBytes_DATA(other);
 			args->rhs_len       = DeeBytes_SIZE(other);
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[1], &temp))
 				goto err;
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp2))
+			if (DeeObject_AsSizeM1(argv[2], &temp2))
 				goto err;
-			if unlikely(temp >= args->rhs_len) {
-				args->rhs_len = 0;
-			} else {
-				if (temp2 > args->rhs_len)
-					temp2 = args->rhs_len;
-				args->rhs_ptr += temp;
-				if (OVERFLOW_USUB(temp2, temp, &args->rhs_len))
-					args->rhs_len = 0;
-			}
+			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->rhs_len);
+			args->rhs_ptr += temp;
 		} else if (DeeString_Check(argv[0])) {
 			args->other = other = argv[0];
-			args->rhs_ptr       = DeeString_AsBytes(other, true);
+			args->rhs_ptr = DeeString_AsBytes(other, true);
 			if unlikely(!args->rhs_ptr)
 				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[1], &temp))
 				goto err;
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp2))
+			if (DeeObject_AsSizeM1(argv[2], &temp2))
 				goto err;
-			if unlikely(temp >= args->rhs_len) {
-				args->rhs_len = 0;
-			} else {
-				if (temp2 > args->rhs_len)
-					temp2 = args->rhs_len;
-				args->rhs_ptr += temp;
-				if (OVERFLOW_USUB(temp2, temp, &args->rhs_len))
-					args->rhs_len = 0;
-			}
+			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->rhs_len);
+			args->rhs_ptr += temp;
 		} else if (DeeBytes_Check(argv[1])) {
-			if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[0], &temp))
 				goto err;
 			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
@@ -2885,9 +2874,9 @@ get_bcompare_args(Bytes *__restrict self,
 				args->lhs_len -= temp;
 			}
 			args->other = other = argv[1];
-			args->rhs_ptr       = DeeBytes_DATA(other);
-			args->rhs_len       = DeeBytes_SIZE(other);
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp))
+			args->rhs_ptr = DeeBytes_DATA(other);
+			args->rhs_len = DeeBytes_SIZE(other);
+			if (DeeObject_AsSize(argv[2], &temp))
 				goto err;
 			if unlikely(temp >= args->rhs_len) {
 				args->rhs_len = 0;
@@ -2896,7 +2885,7 @@ get_bcompare_args(Bytes *__restrict self,
 				args->rhs_len -= temp;
 			}
 		} else if (DeeString_Check(argv[1])) {
-			if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[0], &temp))
 				goto err;
 			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
@@ -2905,11 +2894,11 @@ get_bcompare_args(Bytes *__restrict self,
 				args->lhs_len -= temp;
 			}
 			args->other = other = argv[1];
-			args->rhs_ptr       = DeeString_AsBytes(other, false);
+			args->rhs_ptr = DeeString_AsBytes(other, false);
 			if unlikely(!args->rhs_ptr)
 				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[2], &temp))
 				goto err;
 			if unlikely(temp >= args->rhs_len) {
 				args->rhs_len = 0;
@@ -2918,19 +2907,12 @@ get_bcompare_args(Bytes *__restrict self,
 				args->rhs_len -= temp;
 			}
 		} else {
-			if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[0], &temp))
 				goto err;
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp2))
+			if (DeeObject_AsSizeM1(argv[1], &temp2))
 				goto err;
-			if (temp >= args->lhs_len) {
-				args->lhs_len = 0;
-			} else {
-				if (temp2 > args->lhs_len)
-					temp2 = args->lhs_len;
-				args->lhs_ptr += temp;
-				if (OVERFLOW_USUB(temp2, temp, &args->lhs_len))
-					args->lhs_len = 0;
-			}
+			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->lhs_len);
+			args->lhs_ptr += temp;
 			args->other = other = argv[2];
 			if (DeeBytes_Check(other)) {
 				args->rhs_ptr = DeeBytes_DATA(other);
@@ -2945,8 +2927,9 @@ get_bcompare_args(Bytes *__restrict self,
 			}
 		}
 		break;
+
 	case 4:
-		if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
+		if (DeeObject_AsSize(argv[0], &temp))
 			goto err;
 		if (DeeBytes_Check(argv[1])) {
 			if unlikely(temp >= args->lhs_len) {
@@ -2956,21 +2939,14 @@ get_bcompare_args(Bytes *__restrict self,
 				args->lhs_len -= temp;
 			}
 			args->other = other = argv[1];
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[2], &temp))
 				goto err;
-			if (DeeObject_AsSSize(argv[3], (dssize_t *)&temp2))
+			if (DeeObject_AsSizeM1(argv[3], &temp2))
 				goto err;
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
-			if (temp >= args->rhs_len) {
-				args->rhs_len = 0;
-			} else {
-				if (temp2 > args->rhs_len)
-					temp2 = args->rhs_len;
-				args->rhs_ptr += temp;
-				if (OVERFLOW_USUB(temp2, temp, &args->rhs_len))
-					args->rhs_len = 0;
-			}
+			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->rhs_len);
+			args->rhs_ptr += temp;
 		} else if (DeeString_Check(argv[1])) {
 			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
@@ -2979,39 +2955,25 @@ get_bcompare_args(Bytes *__restrict self,
 				args->lhs_len -= temp;
 			}
 			args->other = other = argv[1];
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[2], &temp))
 				goto err;
-			if (DeeObject_AsSSize(argv[3], (dssize_t *)&temp2))
+			if (DeeObject_AsSizeM1(argv[3], &temp2))
 				goto err;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
 			if unlikely(!args->rhs_ptr)
 				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
-			if (temp >= args->rhs_len) {
-				args->rhs_len = 0;
-			} else {
-				if (temp2 > args->rhs_len)
-					temp2 = args->rhs_len;
-				args->rhs_ptr += temp;
-				if (OVERFLOW_USUB(temp2, temp, &args->rhs_len))
-					args->rhs_len = 0;
-			}
+			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->rhs_len);
+			args->rhs_ptr += temp;
 		} else {
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp2))
+			if (DeeObject_AsSizeM1(argv[1], &temp2))
 				goto err;
-			if unlikely(temp >= args->lhs_len) {
-				args->lhs_len = 0;
-			} else {
-				if (temp2 > args->lhs_len)
-					temp2 = args->lhs_len;
-				args->lhs_ptr += temp;
-				if (OVERFLOW_USUB(temp2, temp, &args->lhs_len))
-					args->lhs_len = 0;
-			}
+			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->lhs_len);
+			args->lhs_ptr += temp;
 			args->other = other = argv[2];
 			if unlikely(!DeeString_Check(other))
 				goto err_type_other;
-			if (DeeObject_AsSSize(argv[3], (dssize_t *)&temp))
+			if (DeeObject_AsSize(argv[3], &temp))
 				goto err;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
 			if unlikely(!args->rhs_ptr)
@@ -3026,19 +2988,12 @@ get_bcompare_args(Bytes *__restrict self,
 		}
 		break;
 	case 5:
-		if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
+		if (DeeObject_AsSize(argv[0], &temp))
 			goto err;
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp2))
+		if (DeeObject_AsSizeM1(argv[1], &temp2))
 			goto err;
-		if (temp >= args->lhs_len) {
-			args->lhs_len = 0;
-		} else {
-			if (temp2 > args->lhs_len)
-				temp2 = args->lhs_len;
-			args->lhs_ptr += temp;
-			if (OVERFLOW_USUB(temp2, temp, &args->lhs_len))
-				args->lhs_len = 0;
-		}
+		CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->lhs_len);
+		args->lhs_ptr += temp;
 		args->other = other = argv[2];
 		if (DeeBytes_Check(other)) {
 			args->rhs_ptr = DeeBytes_DATA(other);
@@ -3051,20 +3006,14 @@ get_bcompare_args(Bytes *__restrict self,
 				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 		}
-		if (DeeObject_AsSSize(argv[3], (dssize_t *)&temp))
+		if (DeeObject_AsSize(argv[3], &temp))
 			goto err;
-		if (DeeObject_AsSSize(argv[4], (dssize_t *)&temp2))
+		if (DeeObject_AsSizeM1(argv[4], &temp2))
 			goto err;
-		if (temp >= args->rhs_len) {
-			args->rhs_len = 0;
-		} else {
-			if (temp2 > args->rhs_len)
-				temp2 = args->rhs_len;
-			args->rhs_ptr += temp;
-			if (OVERFLOW_USUB(temp2, temp, &args->rhs_len))
-				args->rhs_len = 0;
-		}
+		CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->rhs_len);
+		args->rhs_ptr += temp;
 		break;
+
 	default:
 		err_invalid_argc(funname, argc, 1, 5);
 		goto err;
