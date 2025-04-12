@@ -3425,11 +3425,7 @@ string_startswith(String *self, size_t argc,
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		if (ot_len > my_len)
 			goto nope;
 		return_bool(MEMEQB(my_str.cp8 + args.start, ot_str.cp8, ot_len));
@@ -3439,13 +3435,11 @@ string_startswith(String *self, size_t argc,
 		if unlikely(!my_str.cp16)
 			goto err;
 		ot_str.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		my_len      = WSTR_LENGTH(my_str.cp16);
-		ot_len      = WSTR_LENGTH(ot_str.cp16);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		if unlikely(!ot_str.cp16)
+			goto err;
+		my_len = WSTR_LENGTH(my_str.cp16);
+		ot_len = WSTR_LENGTH(ot_str.cp16);
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		if (ot_len > my_len)
 			goto nope;
 		return_bool(MEMEQW(my_str.cp16 + args.start, ot_str.cp16, ot_len));
@@ -3455,17 +3449,16 @@ string_startswith(String *self, size_t argc,
 		if unlikely(!my_str.cp32)
 			goto err;
 		ot_str.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		my_len      = WSTR_LENGTH(my_str.cp32);
-		ot_len      = WSTR_LENGTH(ot_str.cp32);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		if unlikely(!ot_str.cp32)
+			goto err;
+		my_len = WSTR_LENGTH(my_str.cp32);
+		ot_len = WSTR_LENGTH(ot_str.cp32);
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		if (ot_len > my_len)
 			goto nope;
 		return_bool(MEMEQL(my_str.cp32 + args.start, ot_str.cp32, ot_len));
 	}
+empty_range:
 	return_bool(ot_len == 0);
 nope:
 	return_false;
@@ -3519,11 +3512,7 @@ string_endswith(String *self, size_t argc,
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		if (ot_len > my_len)
 			goto nope;
 		args.start += my_len;
@@ -3535,13 +3524,11 @@ string_endswith(String *self, size_t argc,
 		if unlikely(!my_str.cp16)
 			goto err;
 		ot_str.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		my_len      = WSTR_LENGTH(my_str.cp16);
-		ot_len      = WSTR_LENGTH(ot_str.cp16);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		if unlikely(!ot_str.cp16)
+			goto err;
+		my_len = WSTR_LENGTH(my_str.cp16);
+		ot_len = WSTR_LENGTH(ot_str.cp16);
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		if (ot_len > my_len)
 			goto nope;
 		args.start += my_len;
@@ -3553,19 +3540,18 @@ string_endswith(String *self, size_t argc,
 		if unlikely(!my_str.cp32)
 			goto err;
 		ot_str.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		my_len      = WSTR_LENGTH(my_str.cp32);
-		ot_len      = WSTR_LENGTH(ot_str.cp32);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		if unlikely(!ot_str.cp32)
+			goto err;
+		my_len = WSTR_LENGTH(my_str.cp32);
+		ot_len = WSTR_LENGTH(ot_str.cp32);
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		if (ot_len > my_len)
 			goto nope;
 		args.start += my_len;
 		args.start -= ot_len;
 		return_bool(MEMEQL(my_str.cp32 + args.start, ot_str.cp32, ot_len));
 	}
+empty_range:
 	return_bool(ot_len == 0);
 nope:
 	return_false;
@@ -3604,11 +3590,7 @@ string_casestartswith(String *self, size_t argc,
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		return_bool(dee_memcasestartswithb(my_str.cp8 + args.start, my_len, ot_str.cp8, ot_len));
 
 	CASE_WIDTH_2BYTE:
@@ -3616,13 +3598,11 @@ string_casestartswith(String *self, size_t argc,
 		if unlikely(!my_str.cp16)
 			goto err;
 		ot_str.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		my_len      = WSTR_LENGTH(my_str.cp16);
-		ot_len      = WSTR_LENGTH(ot_str.cp16);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		if unlikely(!ot_str.cp16)
+			goto err;
+		my_len = WSTR_LENGTH(my_str.cp16);
+		ot_len = WSTR_LENGTH(ot_str.cp16);
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		return_bool(dee_memcasestartswithw(my_str.cp16 + args.start, my_len, ot_str.cp16, ot_len));
 
 	CASE_WIDTH_4BYTE:
@@ -3630,15 +3610,14 @@ string_casestartswith(String *self, size_t argc,
 		if unlikely(!my_str.cp32)
 			goto err;
 		ot_str.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		my_len      = WSTR_LENGTH(my_str.cp32);
-		ot_len      = WSTR_LENGTH(ot_str.cp32);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		if unlikely(!ot_str.cp32)
+			goto err;
+		my_len = WSTR_LENGTH(my_str.cp32);
+		ot_len = WSTR_LENGTH(ot_str.cp32);
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		return_bool(dee_memcasestartswithl(my_str.cp32 + args.start, my_len, ot_str.cp32, ot_len));
 	}
+empty_range:
 	return_bool(ot_len == 0);
 err:
 	return NULL;
@@ -3675,11 +3654,7 @@ string_caseendswith(String *self, size_t argc,
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		return_bool(dee_memcaseendswithb(my_str.cp8 + args.start, my_len, ot_str.cp8, ot_len));
 
 	CASE_WIDTH_2BYTE:
@@ -3687,13 +3662,11 @@ string_caseendswith(String *self, size_t argc,
 		if unlikely(!my_str.cp16)
 			goto err;
 		ot_str.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		my_len      = WSTR_LENGTH(my_str.cp16);
-		ot_len      = WSTR_LENGTH(ot_str.cp16);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		if unlikely(!ot_str.cp16)
+			goto err;
+		my_len = WSTR_LENGTH(my_str.cp16);
+		ot_len = WSTR_LENGTH(ot_str.cp16);
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		return_bool(dee_memcaseendswithw(my_str.cp16 + args.start, my_len, ot_str.cp16, ot_len));
 
 	CASE_WIDTH_4BYTE:
@@ -3701,15 +3674,14 @@ string_caseendswith(String *self, size_t argc,
 		if unlikely(!my_str.cp32)
 			goto err;
 		ot_str.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		my_len      = WSTR_LENGTH(my_str.cp32);
-		ot_len      = WSTR_LENGTH(ot_str.cp32);
-		if (my_len > args.end)
-			my_len = args.end;
-		if (my_len <= args.start)
-			break;
-		my_len -= args.start;
+		if unlikely(!ot_str.cp32)
+			goto err;
+		my_len = WSTR_LENGTH(my_str.cp32);
+		ot_len = WSTR_LENGTH(ot_str.cp32);
+		CLAMP_SUBSTR(&args.start, &args.end, &my_len, empty_range);
 		return_bool(dee_memcaseendswithl(my_str.cp32 + args.start, my_len, ot_str.cp32, ot_len));
 	}
+empty_range:
 	return_bool(ot_len == 0);
 err:
 	return NULL;
@@ -6713,24 +6685,10 @@ string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_strverscmpb(my_str.cp8, my_len,
-		                         ot_str.cp8, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_strverscmpb(my_str.cp8 + args.my_start, my_len,
+		                         ot_str.cp8 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -6742,24 +6700,10 @@ string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_strverscmpw(my_str.cp16, my_len,
-		                         ot_str.cp16, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_strverscmpw(my_str.cp16 + args.my_start, my_len,
+		                         ot_str.cp16 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -6771,24 +6715,10 @@ string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_strverscmpl(my_str.cp32, my_len,
-		                         ot_str.cp32, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_strverscmpl(my_str.cp32 + args.my_start, my_len,
+		                         ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
 	return_reference(DeeInt_FromSign(result));
@@ -6812,24 +6742,10 @@ string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_strcaseverscmpb(my_str.cp8, my_len,
-		                             ot_str.cp8, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_strcaseverscmpb(my_str.cp8 + args.my_start, my_len,
+		                             ot_str.cp8 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -6841,24 +6757,10 @@ string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_strcaseverscmpw(my_str.cp16, my_len,
-		                             ot_str.cp16, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_strcaseverscmpw(my_str.cp16 + args.my_start, my_len,
+		                             ot_str.cp16 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -6870,24 +6772,10 @@ string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_strcaseverscmpl(my_str.cp32, my_len,
-		                             ot_str.cp32, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_strcaseverscmpl(my_str.cp32 + args.my_start, my_len,
+		                             ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
 	return DeeInt_NewInt32(result);
@@ -6911,24 +6799,10 @@ string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_fuzzy_compareb(my_str.cp8, my_len,
-		                            ot_str.cp8, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_fuzzy_compareb(my_str.cp8 + args.my_start, my_len,
+		                            ot_str.cp8 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -6940,24 +6814,10 @@ string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_fuzzy_comparew(my_str.cp16, my_len,
-		                            ot_str.cp16, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_fuzzy_comparew(my_str.cp16 + args.my_start, my_len,
+		                            ot_str.cp16 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -6969,24 +6829,10 @@ string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_fuzzy_comparel(my_str.cp32, my_len,
-		                            ot_str.cp32, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_fuzzy_comparel(my_str.cp32 + args.my_start, my_len,
+		                            ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
 	if unlikely(result == (dssize_t)-1)
@@ -7012,24 +6858,10 @@ string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_fuzzy_casecompareb(my_str.cp8, my_len,
-		                                ot_str.cp8, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_fuzzy_casecompareb(my_str.cp8 + args.my_start, my_len,
+		                                ot_str.cp8 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -7041,24 +6873,10 @@ string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_fuzzy_casecomparew(my_str.cp16, my_len,
-		                                ot_str.cp16, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_fuzzy_casecomparew(my_str.cp16 + args.my_start, my_len,
+		                                ot_str.cp16 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -7070,24 +6888,10 @@ string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_fuzzy_casecomparel(my_str.cp32, my_len,
-		                                ot_str.cp32, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_fuzzy_casecomparel(my_str.cp32 + args.my_start, my_len,
+		                                ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
 	if unlikely(result == (dssize_t)-1)
@@ -7112,22 +6916,10 @@ string_common(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		my_str.cp8 += args.my_start;
+		ot_str.cp8 += args.ot_start;
 		while (ot_len && my_len) {
 			uint8_t a = *my_str.cp8;
 			uint8_t b = *ot_str.cp8;
@@ -7150,22 +6942,10 @@ string_common(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		my_str.cp16 += args.my_start;
+		ot_str.cp16 += args.ot_start;
 		while (ot_len && my_len) {
 			uint16_t a = *my_str.cp16;
 			uint16_t b = *ot_str.cp16;
@@ -7188,22 +6968,10 @@ string_common(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		my_str.cp32 += args.my_start;
+		ot_str.cp32 += args.ot_start;
 		while (ot_len && my_len) {
 			uint32_t a = *my_str.cp32;
 			uint32_t b = *ot_str.cp32;
@@ -7237,22 +7005,10 @@ string_rcommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		my_str.cp8 += args.my_start;
+		ot_str.cp8 += args.ot_start;
 		while (ot_len && my_len) {
 			uint8_t a;
 			uint8_t b;
@@ -7277,22 +7033,10 @@ string_rcommon(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		my_str.cp16 += args.my_start;
+		ot_str.cp16 += args.ot_start;
 		while (ot_len && my_len) {
 			uint16_t a;
 			uint16_t b;
@@ -7317,22 +7061,10 @@ string_rcommon(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		my_str.cp32 += args.my_start;
+		ot_str.cp32 += args.ot_start;
 		while (ot_len && my_len) {
 			uint32_t a;
 			uint32_t b;
@@ -7369,24 +7101,10 @@ string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initb(&my_reader, my_str.cp8, my_len);
-		unicode_foldreader_initb(&ot_reader, ot_str.cp8, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initb(&my_reader, my_str.cp8 + args.my_start, my_len);
+		unicode_foldreader_initb(&ot_reader, ot_str.cp8 + args.ot_start, ot_len);
 		while (!unicode_foldreader_empty(&my_reader) &&
 		       !unicode_foldreader_empty(&ot_reader)) {
 			if (unicode_foldreader_getcb(&my_reader) !=
@@ -7405,24 +7123,10 @@ string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initw(&my_reader, my_str.cp16, my_len);
-		unicode_foldreader_initw(&ot_reader, ot_str.cp16, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initw(&my_reader, my_str.cp16 + args.my_start, my_len);
+		unicode_foldreader_initw(&ot_reader, ot_str.cp16 + args.ot_start, ot_len);
 		while (!unicode_foldreader_empty(&my_reader) &&
 		       !unicode_foldreader_empty(&ot_reader)) {
 			if (unicode_foldreader_getcw(&my_reader) !=
@@ -7441,24 +7145,10 @@ string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initl(&my_reader, my_str.cp32, my_len);
-		unicode_foldreader_initl(&ot_reader, ot_str.cp32, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initl(&my_reader, my_str.cp32 + args.my_start, my_len);
+		unicode_foldreader_initl(&ot_reader, ot_str.cp32 + args.ot_start, ot_len);
 		while (!unicode_foldreader_empty(&my_reader) &&
 		       !unicode_foldreader_empty(&ot_reader)) {
 			if (unicode_foldreader_getcl(&my_reader) !=
@@ -7489,24 +7179,10 @@ string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initb(&my_reader, my_str.cp8, my_len);
-		unicode_foldreader_initb(&ot_reader, ot_str.cp8, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initb(&my_reader, my_str.cp8 + args.my_start, my_len);
+		unicode_foldreader_initb(&ot_reader, ot_str.cp8 + args.ot_start, ot_len);
 		while (!unicode_foldreader_empty(&my_reader) &&
 		       !unicode_foldreader_empty(&ot_reader)) {
 			if (unicode_foldreader_rgetcb(&my_reader) !=
@@ -7525,24 +7201,10 @@ string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initw(&my_reader, my_str.cp16, my_len);
-		unicode_foldreader_initw(&ot_reader, ot_str.cp16, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initw(&my_reader, my_str.cp16 + args.my_start, my_len);
+		unicode_foldreader_initw(&ot_reader, ot_str.cp16 + args.ot_start, ot_len);
 		while (!unicode_foldreader_empty(&my_reader) &&
 		       !unicode_foldreader_empty(&ot_reader)) {
 			if (unicode_foldreader_rgetcw(&my_reader) !=
@@ -7561,24 +7223,10 @@ string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initl(&my_reader, my_str.cp32, my_len);
-		unicode_foldreader_initl(&ot_reader, ot_str.cp32, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initl(&my_reader, my_str.cp32 + args.my_start, my_len);
+		unicode_foldreader_initl(&ot_reader, ot_str.cp32 + args.ot_start, ot_len);
 		while (!unicode_foldreader_empty(&my_reader) &&
 		       !unicode_foldreader_empty(&ot_reader)) {
 			if (unicode_foldreader_rgetcl(&my_reader) !=
@@ -7610,24 +7258,10 @@ string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_wildcompareb(my_str.cp8, my_len,
-		                          ot_str.cp8, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_wildcompareb(my_str.cp8 + args.my_start, my_len,
+		                          ot_str.cp8 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -7639,24 +7273,10 @@ string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_wildcomparew(my_str.cp16, my_len,
-		                          ot_str.cp16, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_wildcomparew(my_str.cp16 + args.my_start, my_len,
+		                          ot_str.cp16 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -7668,24 +7288,10 @@ string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_wildcomparel(my_str.cp32, my_len,
-		                          ot_str.cp32, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_wildcomparel(my_str.cp32 + args.my_start, my_len,
+		                          ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
 	return DeeInt_NewInt64(result);
@@ -7709,24 +7315,10 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_wildcompareb(my_str.cp8, my_len,
-		                          ot_str.cp8, ot_len) == 0;
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_wildcompareb(my_str.cp8 + args.my_start, my_len,
+		                          ot_str.cp8 + args.ot_start, ot_len) == 0;
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -7738,24 +7330,10 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_wildcomparew(my_str.cp16, my_len,
-		                          ot_str.cp16, ot_len) == 0;
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_wildcomparew(my_str.cp16 + args.my_start, my_len,
+		                          ot_str.cp16 + args.ot_start, ot_len) == 0;
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -7767,24 +7345,10 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		result = dee_wildcomparel(my_str.cp32, my_len,
-		                          ot_str.cp32, ot_len) == 0;
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		result = dee_wildcomparel(my_str.cp32 + args.my_start, my_len,
+		                          ot_str.cp32 + args.ot_start, ot_len) == 0;
 		break;
 	}
 	return_bool(result);
@@ -7809,24 +7373,10 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initb(&my_reader, my_str.cp8, my_len);
-		unicode_foldreader_initb(&ot_reader, ot_str.cp8, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initb(&my_reader, my_str.cp8 + args.my_start, my_len);
+		unicode_foldreader_initb(&ot_reader, ot_str.cp8 + args.ot_start, ot_len);
 		result = dee_wildcasecompareb(&my_reader, &ot_reader);
 		break;
 
@@ -7839,24 +7389,10 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initw(&my_reader, my_str.cp16, my_len);
-		unicode_foldreader_initw(&ot_reader, ot_str.cp16, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initw(&my_reader, my_str.cp16 + args.my_start, my_len);
+		unicode_foldreader_initw(&ot_reader, ot_str.cp16 + args.ot_start, ot_len);
 		result = dee_wildcasecomparew(&my_reader, &ot_reader);
 		break;
 
@@ -7869,24 +7405,10 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initl(&my_reader, my_str.cp32, my_len);
-		unicode_foldreader_initl(&ot_reader, ot_str.cp32, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initl(&my_reader, my_str.cp32 + args.my_start, my_len);
+		unicode_foldreader_initl(&ot_reader, ot_str.cp32 + args.ot_start, ot_len);
 		result = dee_wildcasecomparel(&my_reader, &ot_reader);
 		break;
 	}
@@ -7912,24 +7434,10 @@ string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 		ot_str.cp8 = DeeString_As1Byte((DeeObject *)args.other);
 		my_len     = WSTR_LENGTH(my_str.cp8);
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp8 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp8 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initb(&my_reader, my_str.cp8, my_len);
-		unicode_foldreader_initb(&ot_reader, ot_str.cp8, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initb(&my_reader, my_str.cp8 + args.my_start, my_len);
+		unicode_foldreader_initb(&ot_reader, ot_str.cp8 + args.ot_start, ot_len);
 		result = dee_wildcasecompareb(&my_reader, &ot_reader);
 		break;
 
@@ -7942,24 +7450,10 @@ string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp16);
 		ot_len = WSTR_LENGTH(ot_str.cp16);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp16 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp16 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initw(&my_reader, my_str.cp16, my_len);
-		unicode_foldreader_initw(&ot_reader, ot_str.cp16, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initw(&my_reader, my_str.cp16 + args.my_start, my_len);
+		unicode_foldreader_initw(&ot_reader, ot_str.cp16 + args.ot_start, ot_len);
 		result = dee_wildcasecomparew(&my_reader, &ot_reader);
 		break;
 
@@ -7972,24 +7466,10 @@ string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		my_len = WSTR_LENGTH(my_str.cp32);
 		ot_len = WSTR_LENGTH(ot_str.cp32);
-		if (args.my_end > my_len)
-			args.my_end = my_len;
-		if (args.my_end <= args.my_start) {
-			my_len = 0;
-		} else {
-			my_str.cp32 += args.my_start;
-			my_len = args.my_end - args.my_start;
-		}
-		if (args.ot_end > ot_len)
-			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start) {
-			ot_len = 0;
-		} else {
-			ot_str.cp32 += args.ot_start;
-			ot_len = args.ot_end - args.ot_start;
-		}
-		unicode_foldreader_initl(&my_reader, my_str.cp32, my_len);
-		unicode_foldreader_initl(&ot_reader, ot_str.cp32, ot_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
+		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
+		unicode_foldreader_initl(&my_reader, my_str.cp32 + args.my_start, my_len);
+		unicode_foldreader_initl(&ot_reader, ot_str.cp32 + args.ot_start, ot_len);
 		result = dee_wildcasecomparel(&my_reader, &ot_reader);
 		break;
 	}

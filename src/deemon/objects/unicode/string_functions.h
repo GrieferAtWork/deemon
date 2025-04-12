@@ -385,7 +385,7 @@ typedef DeeStringObject String;
  * @param: p_end:   [1..1] Pointer to the "size_t end" given by the callers (may get adjusted)
  * @param: p_mylen: [1..1][in]  Pointer to the *full* length of the associated string
  *                        [out] Size of the effective sub-range (OUT(*p_end) - OUT(*p_start))
- * @param: Lempty_len: Name of a label to jump to when OUT(*p_mylen) would end up 0 or negative */
+ * @param: Lempty_len: Name of a label to jump to when OUT(*p_mylen) would end up negative */
 #define CLAMP_SUBSTR(/*in*/ p_start, /*in|out*/ p_end,            \
                      /*in|out*/ p_mylen, Lempty_len)              \
 	do {                                                          \
@@ -393,6 +393,17 @@ typedef DeeStringObject String;
 			*(p_end) = *(p_mylen);                                \
 		if unlikely(OVERFLOW_USUB(*(p_end), *(p_start), p_mylen)) \
 			goto Lempty_len;                                      \
+	}	__WHILE0
+
+/* Same as `CLAMP_SUBSTR()', but set `*p_mylen = 0' when the range
+ * underflows, rather than jump to a given label */
+#define CLAMP_SUBSTR_IMPLICIT(/*in*/ p_start, /*in|out*/ p_end,   \
+                              /*in|out*/ p_mylen)                 \
+	do {                                                          \
+		if likely(*(p_end) > *(p_mylen))                          \
+			*(p_end) = *(p_mylen);                                \
+		if unlikely(OVERFLOW_USUB(*(p_end), *(p_start), p_mylen)) \
+			*(p_mylen) = 0;                                       \
 	}	__WHILE0
 
 
