@@ -624,6 +624,13 @@ local function getQualifiedTypePath(
 			return f"{base}/c:{decodeName(qual.substr(2, nameend))}";
 		}	break;
 
+		case "M":
+			return f"/deemon/Mapping";
+		case "S":
+			return f"/deemon/Sequence";
+		case "T":
+			return f"/deemon/Tuple";
+
 		default:
 			break;
 		}
@@ -728,6 +735,53 @@ local function qualifyTyperefString(docnode: WeakRef with Doc, s: string): strin
 			return s.substr(0, attrEnd) + newtail;
 		}	break;
 
+		case "M": {
+			if (!s.startswith("?M?"))
+				break;
+			local startOfValueType = getNextTyperefStart(s, 2);
+			if (startOfValueType < 0)
+				break;
+			local newKeyType = s.substr(2, startOfValueType);
+			local newValueType = s.substr(startOfValueType);
+			local newKeyType = qualifyTyperefString(docnode, newKeyType);
+			local newValueType = qualifyTyperefString(docnode, newValueType);
+			return f"?M{newKeyType}{newValueType}";
+		}	break;
+
+		case "S": {
+			if (!s.startswith("?S?"))
+				break;
+			local newItemType = s.substr(2);
+			local newItemType = qualifyTyperefString(docnode, newItemType);
+			return f"?S{newItemType}";
+		}	break;
+
+		case "T":
+		case "X": {
+			local nStart = 2;
+			local nEnd = nStart;
+			while (nEnd < #s && s.isdigit(nEnd))
+				++nEnd;
+			if (nStart >= nEnd)
+				break;
+			local n = int(s[nStart:nEnd]);
+			File.Writer result = s.substr(0, 2);
+			print result: n,;
+			if (n) {
+				local partStart = nEnd;
+				for (none: [:n - 1]) {
+					local partEnd = getNextTyperefStart(s, partStart);
+					if (partEnd < 0)
+						partEnd = #s;
+					local newPart = s.substr(partStart, partEnd);
+					local newPart = qualifyTyperefString(docnode, newPart);
+					print result: newPart,;
+					partStart = partEnd;
+				}
+			}
+			return result.string;
+		}
+
 		default: break;
 		}
 	}
@@ -777,6 +831,13 @@ local function getTypeFromQualPath(docnode: WeakRef with Doc, qual: string): Typ
 			result = type none;
 		return result;
 	}	break;
+
+	case "S":
+		return deemon.Sequence;
+	case "M":
+		return deemon.Mapping;
+	case "T":
+		return deemon.Tuple;
 
 	default: break;
 	}
@@ -907,7 +968,7 @@ class TypeRef: WeakRefAble {
 	}
 	private member m_prettyname: string;
 
-	private getPrettyName(qual): string {
+	private getPrettyName(qual: string): string {
 		if (#qual >= 2) {
 			switch (qual[1]) {
 
@@ -935,7 +996,73 @@ class TypeRef: WeakRefAble {
 				}.{
 					decodeName(qual.substr(2, nameLen))
 				}";
-			}
+			}	break;
+
+			case "S": {
+				return f"\{{getPrettyName(qual.substr(2))}...\}";
+			}	break;
+
+			case "M": {
+				local startOfValueType = getNextTyperefStart(qual, 2);
+				if (startOfValueType < 0)
+					break;
+				local keyType = qual.substr(2, startOfValueType);
+				local valueType = qual.substr(startOfValueType);
+				return f"\{{getPrettyName(keyType)}: {getPrettyName(valueType)}\}";
+			}	break;
+
+			case "X": {
+				local nStart = 2;
+				local nEnd = nStart;
+				while (nEnd < #qual && qual.isdigit(nEnd))
+					++nEnd;
+				if (nStart >= nEnd)
+					break;
+				local n = int(qual[nStart:nEnd]);
+				if (!n)
+					break;
+				File.Writer result;
+				print result: n,;
+				local partStart = nEnd;
+				for (local i: [:n - 1]) {
+					local partEnd = getNextTyperefStart(qual, partStart);
+					if (partEnd < 0)
+						partEnd = #qual;
+					if (i)
+						print result: " | ",;
+					local part = qual.substr(partStart, partEnd);
+					print result: getPrettyName(part),;
+					partStart = partEnd;
+				}
+				return result.string;
+			}	break;
+
+			case "T": {
+				local nStart = 2;
+				local nEnd = nStart;
+				while (nEnd < #qual && qual.isdigit(nEnd))
+					++nEnd;
+				if (nStart >= nEnd)
+					break;
+				local n = int(qual[nStart:nEnd]);
+				if (!n)
+					break;
+				File.Writer result = "(";
+				print result: n,;
+				local partStart = nEnd;
+				for (local i: [:n - 1]) {
+					local partEnd = getNextTyperefStart(qual, partStart);
+					if (partEnd < 0)
+						partEnd = #qual;
+					if (i)
+						print result: ", ",;
+					local part = qual.substr(partStart, partEnd);
+					print result: getPrettyName(part),;
+					partStart = partEnd;
+				}
+				print result: ")",;
+				return result.string;
+			}	break;
 
 			default:
 				break;

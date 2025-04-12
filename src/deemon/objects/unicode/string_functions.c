@@ -1984,314 +1984,6 @@ err:
 	return NULL;
 }
 
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_find(String *self, size_t argc,
-            DeeObject *const *argv, DeeObject *kw) {
-	size_t result;
-	union dcharptr_const ptr, lhs, rhs;
-	size_t mylen;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("find", params: "
-	DeeObject *needle: ?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_find_params "needle:?.,start=!0,end=!-1"
-	struct {
-		DeeObject *needle;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":find", &args))
-		goto err;
-/*[[[end]]]*/
-	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
-		goto err; /* TODO: Support for SeqSome */
-	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(args.needle))) {
-
-	CASE_WIDTH_1BYTE:
-		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		mylen = DeeString_WLEN(self);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
-		ptr.cp8 = memmemb(lhs.cp8 + args.start, mylen,
-		                  rhs.cp8, WSTR_LENGTH(rhs.cp8));
-		if (!ptr.cp8)
-			goto not_found;
-		result = (size_t)(ptr.cp8 - lhs.cp8);
-		break;
-
-	CASE_WIDTH_2BYTE:
-		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
-		if unlikely(!lhs.cp16)
-			goto err;
-		mylen = DeeString_WLEN(self);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp16)
-			goto err;
-		ptr.cp16 = memmemw(lhs.cp16 + args.start, mylen,
-		                   rhs.cp16, WSTR_LENGTH(rhs.cp16));
-		if (!ptr.cp16)
-			goto not_found;
-		result = (size_t)(ptr.cp16 - lhs.cp16);
-		break;
-
-	CASE_WIDTH_4BYTE:
-		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
-		if unlikely(!lhs.cp32)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp32)
-			goto err;
-		ptr.cp32 = memmeml(lhs.cp32 + args.start, mylen,
-		                   rhs.cp32, WSTR_LENGTH(rhs.cp32));
-		if (!ptr.cp32)
-			goto not_found;
-		result = (size_t)(ptr.cp32 - lhs.cp32);
-		break;
-	}
-	return DeeInt_NewSize(result);
-not_found:
-	return DeeInt_NewMinusOne();
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rfind(String *self, size_t argc,
-             DeeObject *const *argv, DeeObject *kw) {
-	size_t result;
-	union dcharptr_const ptr, lhs, rhs;
-	size_t mylen;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfind", params: "
-	DeeObject *needle: ?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_rfind_params "needle:?.,start=!0,end=!-1"
-	struct {
-		DeeObject *needle;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rfind", &args))
-		goto err;
-/*[[[end]]]*/
-	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
-		goto err; /* TODO: Support for SeqSome */
-	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(args.needle))) {
-
-	CASE_WIDTH_1BYTE:
-		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
-		ptr.cp8 = memrmemb(lhs.cp8 + args.start, mylen,
-		                   rhs.cp8, WSTR_LENGTH(rhs.cp8));
-		if (!ptr.cp8)
-			goto not_found;
-		result = (size_t)(ptr.cp8 - lhs.cp8);
-		break;
-
-	CASE_WIDTH_2BYTE:
-		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
-		if unlikely(!lhs.cp16)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp16)
-			goto err;
-		ptr.cp16 = memrmemw(lhs.cp16 + args.start, mylen,
-		                    rhs.cp16, WSTR_LENGTH(rhs.cp16));
-		if (!ptr.cp16)
-			goto not_found;
-		result = (size_t)(ptr.cp16 - lhs.cp16);
-		break;
-
-	CASE_WIDTH_4BYTE:
-		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
-		if unlikely(!lhs.cp32)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp32)
-			goto err;
-		ptr.cp32 = memrmeml(lhs.cp32 + args.start, mylen,
-		                    rhs.cp32, WSTR_LENGTH(rhs.cp32));
-		if (!ptr.cp32)
-			goto not_found;
-		result = (size_t)(ptr.cp32 - lhs.cp32);
-		break;
-	}
-	return DeeInt_NewSize(result);
-not_found:
-	return DeeInt_NewMinusOne();
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_index(String *self, size_t argc,
-             DeeObject *const *argv, DeeObject *kw) {
-	size_t result;
-	union dcharptr_const ptr, lhs, rhs;
-	size_t mylen;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("index", params: "
-	DeeObject *needle: ?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_index_params "needle:?.,start=!0,end=!-1"
-	struct {
-		DeeObject *needle;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":index", &args))
-		goto err;
-/*[[[end]]]*/
-	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
-		goto err; /* TODO: Support for SeqSome */
-	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(args.needle))) {
-
-	CASE_WIDTH_1BYTE:
-		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
-		ptr.cp8 = memmemb(lhs.cp8 + args.start, mylen,
-		                  rhs.cp8, WSTR_LENGTH(rhs.cp8));
-		if unlikely(!ptr.cp8)
-			goto not_found;
-		result = (size_t)(ptr.cp8 - lhs.cp8);
-		break;
-
-	CASE_WIDTH_2BYTE:
-		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
-		if unlikely(!lhs.cp16)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp16)
-			goto err;
-		ptr.cp16 = memmemw(lhs.cp16 + args.start, mylen,
-		                   rhs.cp16, WSTR_LENGTH(rhs.cp16));
-		if unlikely(!ptr.cp16)
-			goto not_found;
-		result = (size_t)(ptr.cp16 - lhs.cp16);
-		break;
-
-	CASE_WIDTH_4BYTE:
-		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
-		if unlikely(!lhs.cp32)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp32)
-			goto err;
-		ptr.cp32 = memmeml(lhs.cp32 + args.start, mylen,
-		                   rhs.cp32, WSTR_LENGTH(rhs.cp32));
-		if unlikely(!ptr.cp32)
-			goto not_found;
-		result = (size_t)(ptr.cp32 - lhs.cp32);
-		break;
-	}
-	return DeeInt_NewSize(result);
-not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.needle);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rindex(String *self, size_t argc,
-              DeeObject *const *argv, DeeObject *kw) {
-	size_t result;
-	union dcharptr_const ptr, lhs, rhs;
-	size_t mylen;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindex", params: "
-	DeeObject *needle: ?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_rindex_params "needle:?.,start=!0,end=!-1"
-	struct {
-		DeeObject *needle;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rindex", &args))
-		goto err;
-/*[[[end]]]*/
-	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
-		goto err; /* TODO: Support for SeqSome */
-	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(args.needle))) {
-
-	CASE_WIDTH_1BYTE:
-		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
-		ptr.cp8 = memrmemb(lhs.cp8 + args.start, mylen,
-		                   rhs.cp8, WSTR_LENGTH(rhs.cp8));
-		if unlikely(!ptr.cp8)
-			goto not_found;
-		result = (size_t)(ptr.cp8 - lhs.cp8);
-		break;
-
-	CASE_WIDTH_2BYTE:
-		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
-		if unlikely(!lhs.cp16)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp16)
-			goto err;
-		ptr.cp16 = memrmemw(lhs.cp16 + args.start, mylen,
-		                    rhs.cp16, WSTR_LENGTH(rhs.cp16));
-		if unlikely(!ptr.cp16)
-			goto not_found;
-		result = (size_t)(ptr.cp16 - lhs.cp16);
-		break;
-
-	CASE_WIDTH_4BYTE:
-		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
-		if unlikely(!lhs.cp32)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp32)
-			goto err;
-		ptr.cp32 = memrmeml(lhs.cp32 + args.start, mylen,
-		                    rhs.cp32, WSTR_LENGTH(rhs.cp32));
-		if unlikely(!ptr.cp32)
-			goto not_found;
-		result = (size_t)(ptr.cp32 - lhs.cp32);
-		break;
-	}
-	return DeeInt_NewSize(result);
-not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.needle);
-err:
-	return NULL;
-}
-
-
 #ifndef DeeTuple_NewII_DEFINED
 #define DeeTuple_NewII_DEFINED
 #ifdef __OPTIMIZE_SIZE__
@@ -2322,6 +2014,271 @@ err:
 }
 #endif /* !__OPTIMIZE_SIZE__ */
 #endif /* !DeeTuple_NewII_DEFINED */
+
+
+
+
+/* @return: * :         Index
+ * @return: (size_t)-1: Not found
+ * @return: (size_t)Dee_COMPARE_ERR: Error */
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+string_findstr_impl(String *self, String *needle, size_t start, size_t end) {
+	size_t result, mylen;
+	union dcharptr_const ptr, lhs, rhs;
+	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
+	                                        DeeString_WIDTH(needle))) {
+
+	CASE_WIDTH_1BYTE:
+		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
+		mylen = DeeString_WLEN(self);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		ptr.cp8 = memmemb(lhs.cp8 + start, mylen,
+		                  rhs.cp8, WSTR_LENGTH(rhs.cp8));
+		if (!ptr.cp8)
+			goto not_found;
+		result = (size_t)(ptr.cp8 - lhs.cp8);
+		break;
+
+	CASE_WIDTH_2BYTE:
+		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
+		if unlikely(!lhs.cp16)
+			goto err;
+		mylen = DeeString_WLEN(self);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		if unlikely(!rhs.cp16)
+			goto err;
+		ptr.cp16 = memmemw(lhs.cp16 + start, mylen,
+		                   rhs.cp16, WSTR_LENGTH(rhs.cp16));
+		if (!ptr.cp16)
+			goto not_found;
+		result = (size_t)(ptr.cp16 - lhs.cp16);
+		break;
+
+	CASE_WIDTH_4BYTE:
+		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
+		if unlikely(!lhs.cp32)
+			goto err;
+		mylen = WSTR_LENGTH(lhs.ptr);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		if unlikely(!rhs.cp32)
+			goto err;
+		ptr.cp32 = memmeml(lhs.cp32 + start, mylen,
+		                   rhs.cp32, WSTR_LENGTH(rhs.cp32));
+		if (!ptr.cp32)
+			goto not_found;
+		result = (size_t)(ptr.cp32 - lhs.cp32);
+		break;
+	}
+	ASSERT(result != (size_t)-1);
+	ASSERT(result != (size_t)Dee_COMPARE_ERR);
+	return result;
+not_found:
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+
+/* @return: * :         Index
+ * @return: (size_t)-1: Not found
+ * @return: (size_t)Dee_COMPARE_ERR: Error */
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+string_rfindstr_impl(String *self, String *needle, size_t start, size_t end) {
+	size_t result, mylen;
+	union dcharptr_const ptr, lhs, rhs;
+	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
+	                                        DeeString_WIDTH(needle))) {
+
+	CASE_WIDTH_1BYTE:
+		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
+		mylen   = WSTR_LENGTH(lhs.ptr);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		ptr.cp8 = memrmemb(lhs.cp8 + start, mylen,
+		                   rhs.cp8, WSTR_LENGTH(rhs.cp8));
+		if (!ptr.cp8)
+			goto not_found;
+		result = (size_t)(ptr.cp8 - lhs.cp8);
+		break;
+
+	CASE_WIDTH_2BYTE:
+		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
+		if unlikely(!lhs.cp16)
+			goto err;
+		mylen = WSTR_LENGTH(lhs.ptr);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		if unlikely(!rhs.cp16)
+			goto err;
+		ptr.cp16 = memrmemw(lhs.cp16 + start, mylen,
+		                    rhs.cp16, WSTR_LENGTH(rhs.cp16));
+		if (!ptr.cp16)
+			goto not_found;
+		result = (size_t)(ptr.cp16 - lhs.cp16);
+		break;
+
+	CASE_WIDTH_4BYTE:
+		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
+		if unlikely(!lhs.cp32)
+			goto err;
+		mylen = WSTR_LENGTH(lhs.ptr);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		if unlikely(!rhs.cp32)
+			goto err;
+		ptr.cp32 = memrmeml(lhs.cp32 + start, mylen,
+		                    rhs.cp32, WSTR_LENGTH(rhs.cp32));
+		if (!ptr.cp32)
+			goto not_found;
+		result = (size_t)(ptr.cp32 - lhs.cp32);
+		break;
+	}
+	ASSERT(result != (size_t)-1);
+	ASSERT(result != (size_t)Dee_COMPARE_ERR);
+	return result;
+not_found:
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+
+/* @return: 0 : Success
+ * @return: 1 : Not found
+ * @return: -1: Error */
+PRIVATE WUNUSED ATTR_OUT(5) NONNULL((1, 2)) int DCALL
+string_casefindstr_impl(String *self, String *needle, size_t start, size_t end,
+                        size_t match_start_and_end[2]) {
+	size_t mylen, result, match_length;
+	union dcharptr_const ptr, lhs, rhs;
+	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
+	                                        DeeString_WIDTH(needle))) {
+
+	CASE_WIDTH_1BYTE:
+		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		mylen   = WSTR_LENGTH(lhs.ptr);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		ptr.cp8 = dee_memcasememb(lhs.cp8 + start, mylen,
+		                          rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                          &match_length);
+		if (!ptr.cp8)
+			goto not_found;
+		result = ptr.cp8 - lhs.cp8;
+		break;
+
+	CASE_WIDTH_2BYTE:
+		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
+		if unlikely(!lhs.cp16)
+			goto err;
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		if unlikely(!rhs.cp16)
+			goto err;
+		mylen = WSTR_LENGTH(lhs.ptr);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		ptr.cp16 = dee_memcasememw(lhs.cp16 + start, mylen,
+		                           rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                           &match_length);
+		if (!ptr.cp16)
+			goto not_found;
+		result = ptr.cp16 - lhs.cp16;
+		break;
+
+	CASE_WIDTH_4BYTE:
+		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
+		if unlikely(!lhs.cp32)
+			goto err;
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		if unlikely(!rhs.cp32)
+			goto err;
+		mylen = WSTR_LENGTH(lhs.ptr);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		ptr.cp32 = dee_memcasememl(lhs.cp32 + start, mylen,
+		                           rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                           &match_length);
+		if (!ptr.cp32)
+			goto not_found;
+		result = ptr.cp32 - lhs.cp32;
+		break;
+	}
+	match_start_and_end[0] = result;
+	match_start_and_end[1] = result + match_length;
+	return 0;
+not_found:
+	return 1;
+err:
+	return -1;
+}
+
+/* @return: 0 : Success
+ * @return: 1 : Not found
+ * @return: -1: Error */
+PRIVATE WUNUSED ATTR_OUT(5) NONNULL((1, 2)) int DCALL
+string_caserfindstr_impl(String *self, String *needle, size_t start, size_t end,
+                         size_t match_start_and_end[2]) {
+	size_t mylen, result, match_length;
+	union dcharptr_const ptr, lhs, rhs;
+	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
+	                                        DeeString_WIDTH(needle))) {
+
+	CASE_WIDTH_1BYTE:
+		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
+		mylen   = WSTR_LENGTH(lhs.ptr);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		ptr.cp8 = dee_memcasermemb(lhs.cp8 + start, mylen,
+		                           rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                           &match_length);
+		if (!ptr.cp8)
+			goto not_found;
+		result = ptr.cp8 - lhs.cp8;
+		break;
+
+	CASE_WIDTH_2BYTE:
+		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
+		if unlikely(!lhs.cp16)
+			goto err;
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
+		if unlikely(!rhs.cp16)
+			goto err;
+		mylen = WSTR_LENGTH(lhs.ptr);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		ptr.cp16 = dee_memcasermemw(lhs.cp16 + start, mylen,
+		                            rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                            &match_length);
+		if (!ptr.cp16)
+			goto not_found;
+		result = ptr.cp16 - lhs.cp16;
+		break;
+
+	CASE_WIDTH_4BYTE:
+		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
+		if unlikely(!lhs.cp32)
+			goto err;
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
+		if unlikely(!rhs.cp32)
+			goto err;
+		mylen = WSTR_LENGTH(lhs.ptr);
+		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+		ptr.cp32 = dee_memcasermeml(lhs.cp32 + start, mylen,
+		                            rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                            &match_length);
+		if (!ptr.cp32)
+			goto not_found;
+		result = ptr.cp32 - lhs.cp32;
+		break;
+	}
+	match_start_and_end[0] = result;
+	match_start_and_end[1] = result + match_length;
+	return 0;
+not_found:
+	return 1;
+err:
+	return -1;
+}
 
 struct string_findany_data {
 	String *sfad_self;   /* [1..1][const] The string being searched. */
@@ -2407,71 +2364,132 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_findany(String *self, size_t argc,
-               DeeObject *const *argv, DeeObject *kw) {
+/* @return: * :         Index
+ * @return: (size_t)-1: Not found
+ * @return: (size_t)Dee_COMPARE_ERR: Error */
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+string_findany_impl(String *self, DeeObject *needles, size_t start, size_t end) {
 	struct string_findany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findany", params: "
-	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_findany_params "needles:?S?.,start=!0,end=!-1"
-	struct {
-		DeeObject *needles;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":findany", &args))
-		goto err;
-/*[[[end]]]*/
 	data.sfad_self = self;
 	data.sfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&args.start, &args.end, &data.sfad_size, not_found);
-	data.sfad_base   = args.start;
+	CLAMP_SUBSTR(&start, &end, &data.sfad_size, not_found);
+	data.sfad_base   = start;
 	data.sfad_result = data.sfad_size;
-	if unlikely(DeeObject_Foreach(args.needles, &string_findany_cb, &data) == -1)
+	if unlikely(DeeObject_Foreach(needles, &string_findany_cb, &data) == -1)
 		goto err;
-	if (data.sfad_result < data.sfad_size)
-		return DeeInt_NewSize(data.sfad_base + data.sfad_result);
+	if (data.sfad_result < data.sfad_size) {
+		data.sfad_result += data.sfad_base;
+		ASSERT(data.sfad_result != (size_t)-1);
+		ASSERT(data.sfad_result != (size_t)Dee_COMPARE_ERR);
+		return data.sfad_result;
+	}
 not_found:
-	return_none;
+	return (size_t)-1;
 err:
-	return NULL;
+	return (size_t)Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_indexany(String *self, size_t argc,
-                DeeObject *const *argv, DeeObject *kw) {
-	struct string_findany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("indexany", params: "
-	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_indexany_params "needles:?S?.,start=!0,end=!-1"
-	struct {
-		DeeObject *needles;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":indexany", &args))
+
+struct string_rfindany_data {
+	String *srfad_self;   /* [1..1][const] The string being searched. */
+	size_t  srfad_base;   /* [const] Character offset into `scfad_self' of search start. */
+	size_t  srfad_size;   /* [const] Sub-string length to search in `scfad_self', starting at `srfad_base'. */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+string_rfindany_cb(void *arg, DeeObject *elem) {
+	struct string_rfindany_data *data = (struct string_rfindany_data *)arg;
+	union dcharptr_const ptr, lhs, rhs;
+	if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
 		goto err;
-/*[[[end]]]*/
-	data.sfad_self = self;
-	data.sfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&args.start, &args.end, &data.sfad_size, not_found);
-	data.sfad_base   = args.start;
-	data.sfad_result = data.sfad_size;
-	if unlikely(DeeObject_Foreach(args.needles, &string_findany_cb, &data) == -1)
-		goto err;
-	if (data.sfad_result < data.sfad_size)
-		return DeeInt_NewSize(data.sfad_base + data.sfad_result);
-not_found:
-	err_index_not_found((DeeObject *)self, args.needles);
+	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(data->srfad_self),
+	                                        DeeString_WIDTH(elem))) {
+
+	CASE_WIDTH_1BYTE:
+		lhs.cp8 = DeeString_As1Byte((DeeObject *)data->srfad_self);
+		lhs.cp8 += data->srfad_base;
+		rhs.cp8 = DeeString_As1Byte((DeeObject *)elem);
+		ptr.cp8 = memrmemb(lhs.cp8, data->srfad_size,
+		                   rhs.cp8, WSTR_LENGTH(rhs.cp8));
+		if (ptr.cp8 != NULL) {
+			size_t hit = (size_t)(ptr.cp8 - lhs.cp8) + 1;
+			ASSERT(hit <= data->srfad_size);
+			data->srfad_base += hit;
+			data->srfad_size -= hit;
+			if (data->srfad_size == 0)
+				return -2; /* Found hit at the very end -> can stop enumerating needles. */
+		}
+		break;
+
+	CASE_WIDTH_2BYTE:
+		lhs.cp16 = DeeString_As2Byte((DeeObject *)data->srfad_self);
+		if unlikely(!lhs.cp16)
+			goto err;
+		lhs.cp16 += data->srfad_base;
+		rhs.cp16 = DeeString_As2Byte((DeeObject *)elem);
+		if unlikely(!rhs.cp16)
+			goto err;
+		ptr.cp16 = memrmemw(lhs.cp16, data->srfad_size,
+		                    rhs.cp16, WSTR_LENGTH(rhs.cp16));
+		if (ptr.cp16 != NULL) {
+			size_t hit = (size_t)(ptr.cp16 - lhs.cp16) + 1;
+			ASSERT(hit <= data->srfad_size);
+			data->srfad_base += hit;
+			data->srfad_size -= hit;
+			if (data->srfad_size == 0)
+				return -2; /* Found hit at the very end -> can stop enumerating needles. */
+		}
+		break;
+
+	CASE_WIDTH_4BYTE:
+		lhs.cp32 = DeeString_As4Byte((DeeObject *)data->srfad_self);
+		if unlikely(!lhs.cp32)
+			goto err;
+		lhs.cp32 += data->srfad_base;
+		rhs.cp32 = DeeString_As4Byte((DeeObject *)elem);
+		if unlikely(!rhs.cp32)
+			goto err;
+		ptr.cp32 = memrmeml(lhs.cp32, data->srfad_size,
+		                    rhs.cp32, WSTR_LENGTH(rhs.cp32));
+		if (ptr.cp32 != NULL) {
+			size_t hit = (size_t)(ptr.cp32 - lhs.cp32) + 1;
+			ASSERT(hit <= data->srfad_size);
+			data->srfad_base += hit;
+			data->srfad_size -= hit;
+			if (data->srfad_size == 0)
+				return -2; /* Found hit at the very end -> can stop enumerating needles. */
+		}
+	}
+	return 0;
 err:
-	return NULL;
+	return -1;
 }
+
+
+/* @return: * :         Index
+ * @return: (size_t)-1: Not found
+ * @return: (size_t)Dee_COMPARE_ERR: Error */
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+string_rfindany_impl(String *self, DeeObject *needles, size_t start, size_t end) {
+	struct string_rfindany_data data;
+	data.srfad_self = self;
+	data.srfad_size = DeeString_WLEN(self);
+	CLAMP_SUBSTR(&start, &end, &data.srfad_size, not_found);
+	data.srfad_base = start;
+	if unlikely(DeeObject_Foreach(needles, &string_rfindany_cb, &data) == -1)
+		goto err;
+	if (data.srfad_base > start) {
+		--data.srfad_base;
+		ASSERT(data.srfad_base != (size_t)-1);
+		ASSERT(data.srfad_base != (size_t)Dee_COMPARE_ERR);
+		return data.srfad_base;
+	}
+not_found:
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
 
 struct string_casefindany_data {
 	String *scfad_self;   /* [1..1][const] The string being searched. */
@@ -2564,215 +2582,33 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casefindany(String *self, size_t argc,
-                   DeeObject *const *argv, DeeObject *kw) {
+/* @return: 0 : Success
+ * @return: 1 : Not found
+ * @return: -1: Error */
+PRIVATE WUNUSED ATTR_OUT(5) NONNULL((1, 2)) int DCALL
+string_casefindany_impl(String *self, DeeObject *needles, size_t start, size_t end,
+                        size_t match_start_and_end[2]) {
 	struct string_casefindany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindany", params: "
-	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_casefindany_params "needles:?S?.,start=!0,end=!-1"
-	struct {
-		DeeObject *needles;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":casefindany", &args))
-		goto err;
-/*[[[end]]]*/
 	data.scfad_self = self;
 	data.scfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&args.start, &args.end, &data.scfad_size, not_found);
-	data.scfad_base   = args.start;
+	CLAMP_SUBSTR(&start, &end, &data.scfad_size, not_found);
+	data.scfad_base   = start;
 	data.scfad_result = data.scfad_size;
-	if unlikely(DeeObject_Foreach(args.needles, &string_casefindany_cb, &data) == -1)
+	if unlikely(DeeObject_Foreach(needles, &string_casefindany_cb, &data) == -1)
 		goto err;
 	if (data.scfad_result < data.scfad_size) {
-		size_t index = data.scfad_base + data.scfad_result;
-		return DeeTuple_NewII(index, index + data.scfad_reslen);
+		data.scfad_result += data.scfad_base;
+		match_start_and_end[0] = data.scfad_result;
+		match_start_and_end[1] = data.scfad_result + data.scfad_reslen;
+		return 0;
 	}
 not_found:
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_caseindexany(String *self, size_t argc,
-                    DeeObject *const *argv, DeeObject *kw) {
-	struct string_casefindany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindexany", params: "
-	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_caseindexany_params "needles:?S?.,start=!0,end=!-1"
-	struct {
-		DeeObject *needles;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caseindexany", &args))
-		goto err;
-/*[[[end]]]*/
-	data.scfad_self = self;
-	data.scfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&args.start, &args.end, &data.scfad_size, not_found);
-	data.scfad_base   = args.start;
-	data.scfad_result = data.scfad_size;
-	if unlikely(DeeObject_Foreach(args.needles, &string_casefindany_cb, &data) == -1)
-		goto err;
-	if (data.scfad_result < data.scfad_size) {
-		size_t index = data.scfad_base + data.scfad_result;
-		return DeeTuple_NewII(index, index + data.scfad_reslen);
-	}
-not_found:
-	err_index_not_found((DeeObject *)self, args.needles);
-err:
-	return NULL;
-}
-
-
-struct string_rfindany_data {
-	String *srfad_self;   /* [1..1][const] The string being searched. */
-	size_t  srfad_base;   /* [const] Character offset into `scfad_self' of search start. */
-	size_t  srfad_size;   /* [const] Sub-string length to search in `scfad_self', starting at `srfad_base'. */
-};
-
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-string_rfindany_cb(void *arg, DeeObject *elem) {
-	struct string_rfindany_data *data = (struct string_rfindany_data *)arg;
-	union dcharptr_const ptr, lhs, rhs;
-	if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
-		goto err;
-	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(data->srfad_self),
-	                                        DeeString_WIDTH(elem))) {
-
-	CASE_WIDTH_1BYTE:
-		lhs.cp8 = DeeString_As1Byte((DeeObject *)data->srfad_self);
-		lhs.cp8 += data->srfad_base;
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)elem);
-		ptr.cp8 = memrmemb(lhs.cp8, data->srfad_size,
-		                   rhs.cp8, WSTR_LENGTH(rhs.cp8));
-		if (ptr.cp8 != NULL) {
-			size_t hit = (size_t)(ptr.cp8 - lhs.cp8) + 1;
-			ASSERT(hit <= data->srfad_size);
-			data->srfad_base += hit;
-			data->srfad_size -= hit;
-			if (data->srfad_size == 0)
-				return -2; /* Found hit at the very end -> can stop enumerating needles. */
-		}
-		break;
-
-	CASE_WIDTH_2BYTE:
-		lhs.cp16 = DeeString_As2Byte((DeeObject *)data->srfad_self);
-		if unlikely(!lhs.cp16)
-			goto err;
-		lhs.cp16 += data->srfad_base;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)elem);
-		if unlikely(!rhs.cp16)
-			goto err;
-		ptr.cp16 = memrmemw(lhs.cp16, data->srfad_size,
-		                    rhs.cp16, WSTR_LENGTH(rhs.cp16));
-		if (ptr.cp16 != NULL) {
-			size_t hit = (size_t)(ptr.cp16 - lhs.cp16) + 1;
-			ASSERT(hit <= data->srfad_size);
-			data->srfad_base += hit;
-			data->srfad_size -= hit;
-			if (data->srfad_size == 0)
-				return -2; /* Found hit at the very end -> can stop enumerating needles. */
-		}
-		break;
-
-	CASE_WIDTH_4BYTE:
-		lhs.cp32 = DeeString_As4Byte((DeeObject *)data->srfad_self);
-		if unlikely(!lhs.cp32)
-			goto err;
-		lhs.cp32 += data->srfad_base;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)elem);
-		if unlikely(!rhs.cp32)
-			goto err;
-		ptr.cp32 = memrmeml(lhs.cp32, data->srfad_size,
-		                    rhs.cp32, WSTR_LENGTH(rhs.cp32));
-		if (ptr.cp32 != NULL) {
-			size_t hit = (size_t)(ptr.cp32 - lhs.cp32) + 1;
-			ASSERT(hit <= data->srfad_size);
-			data->srfad_base += hit;
-			data->srfad_size -= hit;
-			if (data->srfad_size == 0)
-				return -2; /* Found hit at the very end -> can stop enumerating needles. */
-		}
-	}
-	return 0;
+	return 1;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rfindany(String *self, size_t argc,
-                DeeObject *const *argv, DeeObject *kw) {
-	struct string_rfindany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfindany", params: "
-	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_rfindany_params "needles:?S?.,start=!0,end=!-1"
-	struct {
-		DeeObject *needles;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":rfindany", &args))
-		goto err;
-/*[[[end]]]*/
-	data.srfad_self = self;
-	data.srfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&args.start, &args.end, &data.srfad_size, not_found);
-	data.srfad_base = args.start;
-	if unlikely(DeeObject_Foreach(args.needles, &string_rfindany_cb, &data) == -1)
-		goto err;
-	if (data.srfad_base > args.start)
-		return DeeInt_NewSize(data.srfad_base - 1);
-not_found:
-	return_none;
-err:
-	return NULL;
-}
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rindexany(String *self, size_t argc,
-                 DeeObject *const *argv, DeeObject *kw) {
-	struct string_rfindany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindexany", params: "
-	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_rindexany_params "needles:?S?.,start=!0,end=!-1"
-	struct {
-		DeeObject *needles;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":rindexany", &args))
-		goto err;
-/*[[[end]]]*/
-	data.srfad_self = self;
-	data.srfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&args.start, &args.end, &data.srfad_size, not_found);
-	data.srfad_base = args.start;
-	if unlikely(DeeObject_Foreach(args.needles, &string_rfindany_cb, &data) == -1)
-		goto err;
-	if (data.srfad_base > args.start)
-		return DeeInt_NewSize(data.srfad_base - 1);
-not_found:
-	err_index_not_found((DeeObject *)self, args.needles);
-err:
-	return NULL;
-}
 
 struct string_caserfindany_data {
 	String *scrfad_self;   /* [1..1][const] The string being searched. */
@@ -2857,10 +2693,527 @@ err:
 	return -1;
 }
 
+/* @return: 0 : Success
+ * @return: 1 : Not found
+ * @return: -1: Error */
+PRIVATE WUNUSED ATTR_OUT(5) NONNULL((1, 2)) int DCALL
+string_caserfindany_impl(String *self, DeeObject *needles, size_t start, size_t end,
+                         size_t match_start_and_end[2]) {
+	struct string_caserfindany_data data;
+	data.scrfad_self = self;
+	data.scrfad_size = DeeString_WLEN(self);
+	CLAMP_SUBSTR(&start, &end, &data.scrfad_size, not_found);
+	data.scrfad_base = start;
+	if unlikely(DeeObject_Foreach(needles, &string_caserfindany_cb, &data) == -1)
+		goto err;
+	if (data.scrfad_base > start) {
+		--data.scrfad_base;
+		match_start_and_end[0] = data.scrfad_base;
+		match_start_and_end[1] = data.scrfad_base + data.scrfad_reslen;
+		return 0;
+	}
+not_found:
+	return 1;
+err:
+	return -1;
+}
+
+
+
+
+/* @return: * :         Index
+ * @return: (size_t)-1: Not found
+ * @return: (size_t)Dee_COMPARE_ERR: Error */
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+string_find_impl(String *self, DeeObject *needle, size_t start, size_t end) {
+	if (DeeString_Check(needle))
+		return string_findstr_impl(self, (DeeStringObject *)needle, start, end);
+	if (DeeSeqSome_Check(needle))
+		return string_findany_impl(self, DeeSeqSome_GetSeq(needle), start, end);
+	DeeObject_TypeAssertFailed2(needle, &DeeString_Type, &DeeSeqSome_Type);
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+
+/* @return: * :         Index
+ * @return: (size_t)-1: Not found
+ * @return: (size_t)Dee_COMPARE_ERR: Error */
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+string_rfind_impl(String *self, DeeObject *needle, size_t start, size_t end) {
+	if (DeeString_Check(needle))
+		return string_rfindstr_impl(self, (DeeStringObject *)needle, start, end);
+	if (DeeSeqSome_Check(needle))
+		return string_rfindany_impl(self, DeeSeqSome_GetSeq(needle), start, end);
+	DeeObject_TypeAssertFailed2(needle, &DeeString_Type, &DeeSeqSome_Type);
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+
+/* @return: 0 : Success
+ * @return: 1 : Not found
+ * @return: -1: Error */
+PRIVATE WUNUSED ATTR_OUT(5) NONNULL((1, 2)) int DCALL
+string_casefind_impl(String *self, DeeObject *needle, size_t start, size_t end,
+                     size_t match_start_and_end[2]) {
+	if (DeeString_Check(needle))
+		return string_casefindstr_impl(self, (DeeStringObject *)needle, start, end, match_start_and_end);
+	if (DeeSeqSome_Check(needle))
+		return string_casefindany_impl(self, DeeSeqSome_GetSeq(needle), start, end, match_start_and_end);
+	return DeeObject_TypeAssertFailed2(needle, &DeeString_Type, &DeeSeqSome_Type);
+}
+
+/* @return: 0 : Success
+ * @return: 1 : Not found
+ * @return: -1: Error */
+PRIVATE WUNUSED ATTR_OUT(5) NONNULL((1, 2)) int DCALL
+string_caserfind_impl(String *self, DeeObject *needle, size_t start, size_t end,
+                      size_t match_start_and_end[2]) {
+	if (DeeString_Check(needle))
+		return string_caserfindstr_impl(self, (DeeStringObject *)needle, start, end, match_start_and_end);
+	if (DeeSeqSome_Check(needle))
+		return string_caserfindany_impl(self, DeeSeqSome_GetSeq(needle), start, end, match_start_and_end);
+	return DeeObject_TypeAssertFailed2(needle, &DeeString_Type, &DeeSeqSome_Type);
+}
+
+
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_find(String *self, size_t argc,
+            DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("find", params: "
+	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_find_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":find", &args))
+		goto err;
+/*[[[end]]]*/
+	result = string_find_impl(self, args.needle, args.start, args.end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto not_found;
+	return DeeInt_NewSize(result);
+not_found:
+	return DeeInt_NewMinusOne();
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_index(String *self, size_t argc,
+             DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("index", params: "
+	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_index_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":index", &args))
+		goto err;
+/*[[[end]]]*/
+	result = string_find_impl(self, args.needle, args.start, args.end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto not_found;
+	return DeeInt_NewSize(result);
+not_found:
+	err_index_not_found((DeeObject *)self,
+	                    (DeeObject *)args.needle);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_rfind(String *self, size_t argc,
+             DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfind", params: "
+	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_rfind_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rfind", &args))
+		goto err;
+/*[[[end]]]*/
+	result = string_rfind_impl(self, args.needle, args.start, args.end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto not_found;
+	return DeeInt_NewSize(result);
+not_found:
+	return DeeInt_NewMinusOne();
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_rindex(String *self, size_t argc,
+              DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindex", params: "
+	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_rindex_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rindex", &args))
+		goto err;
+/*[[[end]]]*/
+	result = string_rfind_impl(self, args.needle, args.start, args.end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto not_found;
+	return DeeInt_NewSize(result);
+not_found:
+	err_index_not_found((DeeObject *)self,
+	                    (DeeObject *)args.needle);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_casefind(String *self, size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
+	int status;
+	size_t match_start_and_end[2];
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefind", params: "
+	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casefind_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casefind", &args))
+		goto err;
+/*[[[end]]]*/
+	status = string_casefind_impl(self, args.needle, args.start, args.end, match_start_and_end);
+	if unlikely(status < 0)
+		goto err;
+	if (status == 0) {
+		return DeeTuple_NewII(match_start_and_end[0],
+		                      match_start_and_end[1]);
+	}
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_caseindex(String *self, size_t argc,
+                 DeeObject *const *argv, DeeObject *kw) {
+	int status;
+	size_t match_start_and_end[2];
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindex", params: "
+	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caseindex_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caseindex", &args))
+		goto err;
+/*[[[end]]]*/
+	status = string_casefind_impl(self, args.needle, args.start, args.end, match_start_and_end);
+	if unlikely(status < 0)
+		goto err;
+	if (status == 0) {
+		return DeeTuple_NewII(match_start_and_end[0],
+		                      match_start_and_end[1]);
+	}
+	err_index_not_found((DeeObject *)self,
+	                    (DeeObject *)args.needle);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_caserfind(String *self, size_t argc,
+                 DeeObject *const *argv, DeeObject *kw) {
+	int status;
+	size_t match_start_and_end[2];
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfind", params: "
+	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caserfind_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserfind", &args))
+		goto err;
+/*[[[end]]]*/
+	status = string_caserfind_impl(self, args.needle, args.start, args.end, match_start_and_end);
+	if unlikely(status < 0)
+		goto err;
+	if (status == 0) {
+		return DeeTuple_NewII(match_start_and_end[0],
+		                      match_start_and_end[1]);
+	}
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_caserindex(String *self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
+	int status;
+	size_t match_start_and_end[2];
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindex", params: "
+	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caserindex_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserindex", &args))
+		goto err;
+/*[[[end]]]*/
+	status = string_caserfind_impl(self, args.needle, args.start, args.end, match_start_and_end);
+	if unlikely(status < 0)
+		goto err;
+	if (status == 0) {
+		return DeeTuple_NewII(match_start_and_end[0],
+		                      match_start_and_end[1]);
+	}
+	err_index_not_found((DeeObject *)self,
+	                    (DeeObject *)args.needle);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_findany(String *self, size_t argc,
+               DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_findany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":findany", &args))
+		goto err;
+/*[[[end]]]*/
+	result = string_findany_impl(self, args.needles, args.start, args.end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto not_found;
+	return DeeInt_NewSize(result);
+not_found:
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_indexany(String *self, size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("indexany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_indexany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":indexany", &args))
+		goto err;
+/*[[[end]]]*/
+	result = string_findany_impl(self, args.needles, args.start, args.end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto not_found;
+	return DeeInt_NewSize(result);
+not_found:
+	err_index_not_found((DeeObject *)self, args.needles);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_casefindany(String *self, size_t argc,
+                   DeeObject *const *argv, DeeObject *kw) {
+	int status;
+	size_t match_start_and_end[2];
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_casefindany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":casefindany", &args))
+		goto err;
+/*[[[end]]]*/
+	status = string_casefindany_impl(self, args.needles, args.start, args.end, match_start_and_end);
+	if unlikely(status < 0)
+		goto err;
+	if (status == 0) {
+		return DeeTuple_NewII(match_start_and_end[0],
+		                      match_start_and_end[1]);
+	}
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_caseindexany(String *self, size_t argc,
+                    DeeObject *const *argv, DeeObject *kw) {
+	int status;
+	size_t match_start_and_end[2];
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindexany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_caseindexany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caseindexany", &args))
+		goto err;
+/*[[[end]]]*/
+	status = string_casefindany_impl(self, args.needles, args.start, args.end, match_start_and_end);
+	if unlikely(status < 0)
+		goto err;
+	if (status == 0) {
+		return DeeTuple_NewII(match_start_and_end[0],
+		                      match_start_and_end[1]);
+	}
+	err_index_not_found((DeeObject *)self, args.needles);
+err:
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_rfindany(String *self, size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfindany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_rfindany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":rfindany", &args))
+		goto err;
+/*[[[end]]]*/
+	result = string_rfindany_impl(self, args.needles, args.start, args.end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto not_found;
+	return DeeInt_NewSize(result);
+not_found:
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_rindexany(String *self, size_t argc,
+                 DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindexany", params: "
+	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
+", docStringPrefix: "string");]]]*/
+#define string_rindexany_params "needles:?S?.,start=!0,end=!-1"
+	struct {
+		DeeObject *needles;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":rindexany", &args))
+		goto err;
+/*[[[end]]]*/
+	result = string_rfindany_impl(self, args.needles, args.start, args.end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto not_found;
+	return DeeInt_NewSize(result);
+not_found:
+	err_index_not_found((DeeObject *)self, args.needles);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserfindany(String *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
-	struct string_caserfindany_data data;
+	int status;
+	size_t match_start_and_end[2];
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfindany", params: "
 	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
 ", docStringPrefix: "string");]]]*/
@@ -2875,17 +3228,13 @@ string_caserfindany(String *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caserfindany", &args))
 		goto err;
 /*[[[end]]]*/
-	data.scrfad_self = self;
-	data.scrfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&args.start, &args.end, &data.scrfad_size, not_found);
-	data.scrfad_base = args.start;
-	if unlikely(DeeObject_Foreach(args.needles, &string_caserfindany_cb, &data) == -1)
+	status = string_caserfindany_impl(self, args.needles, args.start, args.end, match_start_and_end);
+	if unlikely(status < 0)
 		goto err;
-	if (data.scrfad_base > args.start) {
-		size_t index = data.scrfad_base - 1;
-		return DeeTuple_NewII(index, index + data.scrfad_reslen);
+	if (status == 0) {
+		return DeeTuple_NewII(match_start_and_end[0],
+		                      match_start_and_end[1]);
 	}
-not_found:
 	return_none;
 err:
 	return NULL;
@@ -2894,7 +3243,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserindexany(String *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-	struct string_caserfindany_data data;
+	int status;
+	size_t match_start_and_end[2];
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindexany", params: "
 	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
 ", docStringPrefix: "string");]]]*/
@@ -2909,21 +3259,19 @@ string_caserindexany(String *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caserindexany", &args))
 		goto err;
 /*[[[end]]]*/
-	data.scrfad_self = self;
-	data.scrfad_size = DeeString_WLEN(self);
-	CLAMP_SUBSTR(&args.start, &args.end, &data.scrfad_size, not_found);
-	data.scrfad_base = args.start;
-	if unlikely(DeeObject_Foreach(args.needles, &string_caserfindany_cb, &data) == -1)
+	status = string_caserfindany_impl(self, args.needles, args.start, args.end, match_start_and_end);
+	if unlikely(status < 0)
 		goto err;
-	if (data.scrfad_base > args.start) {
-		size_t index = data.scrfad_base - 1;
-		return DeeTuple_NewII(index, index + data.scrfad_reslen);
+	if (status == 0) {
+		return DeeTuple_NewII(match_start_and_end[0],
+		                      match_start_and_end[1]);
 	}
-not_found:
 	err_index_not_found((DeeObject *)self, args.needles);
 err:
 	return NULL;
 }
+
+
 
 
 INTDEF WUNUSED DREF DeeObject *DCALL
@@ -2977,320 +3325,6 @@ string_casefindall(String *self, size_t argc,
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
 	return DeeString_CaseFindAll(self, args.needle, args.start, args.end);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casefind(String *self, size_t argc,
-                DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, result, match_length;
-	union dcharptr_const ptr, lhs, rhs;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefind", params: "
-	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_casefind_params "needle:?.,start=!0,end=!-1"
-	struct {
-		DeeStringObject *needle;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casefind", &args))
-		goto err;
-/*[[[end]]]*/
-	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
-		goto err; /* TODO: Support for SeqSome */
-	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(args.needle))) {
-
-	CASE_WIDTH_1BYTE:
-		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
-		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp8 = dee_memcasememb(lhs.cp8 + args.start, mylen,
-		                          rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                          &match_length);
-		if (!ptr.cp8)
-			goto not_found;
-		result = ptr.cp8 - lhs.cp8;
-		break;
-
-	CASE_WIDTH_2BYTE:
-		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
-		if unlikely(!lhs.cp16)
-			goto err;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp16)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp16 = dee_memcasememw(lhs.cp16 + args.start, mylen,
-		                           rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                           &match_length);
-		if (!ptr.cp16)
-			goto not_found;
-		result = ptr.cp16 - lhs.cp16;
-		break;
-
-	CASE_WIDTH_4BYTE:
-		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
-		if unlikely(!lhs.cp32)
-			goto err;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp32)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp32 = dee_memcasememl(lhs.cp32 + args.start, mylen,
-		                           rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                           &match_length);
-		if (!ptr.cp32)
-			goto not_found;
-		result = ptr.cp32 - lhs.cp32;
-		break;
-	}
-	return DeeTuple_NewII(result, result + match_length);
-not_found:
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_caserfind(String *self, size_t argc,
-                 DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, result, match_length;
-	union dcharptr_const ptr, lhs, rhs;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfind", params: "
-	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_caserfind_params "needle:?.,start=!0,end=!-1"
-	struct {
-		DeeStringObject *needle;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserfind", &args))
-		goto err;
-/*[[[end]]]*/
-	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
-		goto err; /* TODO: Support for SeqSome */
-	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(args.needle))) {
-
-	CASE_WIDTH_1BYTE:
-		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
-		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp8 = dee_memcasermemb(lhs.cp8 + args.start, mylen,
-		                           rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                           &match_length);
-		if (!ptr.cp8)
-			goto not_found;
-		result = ptr.cp8 - lhs.cp8;
-		break;
-
-	CASE_WIDTH_2BYTE:
-		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
-		if unlikely(!lhs.cp16)
-			goto err;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp16)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp16 = dee_memcasermemw(lhs.cp16 + args.start, mylen,
-		                            rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                            &match_length);
-		if (!ptr.cp16)
-			goto not_found;
-		result = ptr.cp16 - lhs.cp16;
-		break;
-
-	CASE_WIDTH_4BYTE:
-		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
-		if unlikely(!lhs.cp32)
-			goto err;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp32)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp32 = dee_memcasermeml(lhs.cp32 + args.start, mylen,
-		                            rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                            &match_length);
-		if (!ptr.cp32)
-			goto not_found;
-		result = ptr.cp32 - lhs.cp32;
-		break;
-	}
-	return DeeTuple_NewII(result, result + match_length);
-not_found:
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_caseindex(String *self, size_t argc,
-                 DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, result, match_length;
-	union dcharptr_const ptr, lhs, rhs;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindex", params: "
-	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_caseindex_params "needle:?.,start=!0,end=!-1"
-	struct {
-		DeeStringObject *needle;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caseindex", &args))
-		goto err;
-/*[[[end]]]*/
-	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
-		goto err; /* TODO: Support for SeqSome */
-	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(args.needle))) {
-
-	CASE_WIDTH_1BYTE:
-		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
-		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp8 = dee_memcasememb(lhs.cp8 + args.start, mylen,
-		                          rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                          &match_length);
-		if unlikely(!ptr.cp8)
-			goto not_found;
-		result = ptr.cp8 - lhs.cp8;
-		break;
-
-	CASE_WIDTH_2BYTE:
-		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
-		if unlikely(!lhs.cp16)
-			goto err;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp16)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp16 = dee_memcasememw(lhs.cp16 + args.start, mylen,
-		                           rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                           &match_length);
-		if unlikely(!ptr.cp16)
-			goto not_found;
-		result = ptr.cp16 - lhs.cp16;
-		break;
-
-	CASE_WIDTH_4BYTE:
-		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
-		if unlikely(!lhs.cp32)
-			goto err;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp32)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp32 = dee_memcasememl(lhs.cp32 + args.start, mylen,
-		                           rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                           &match_length);
-		if unlikely(!ptr.cp32)
-			goto not_found;
-		result = ptr.cp32 - lhs.cp32;
-		break;
-	}
-	return DeeTuple_NewII(result, result + match_length);
-not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.needle);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_caserindex(String *self, size_t argc,
-                  DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, result, match_length;
-	union dcharptr_const ptr, lhs, rhs;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindex", params: "
-	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
-#define string_caserindex_params "needle:?.,start=!0,end=!-1"
-	struct {
-		DeeStringObject *needle;
-		size_t start;
-		size_t end;
-	} args;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserindex", &args))
-		goto err;
-/*[[[end]]]*/
-	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
-		goto err; /* TODO: Support for SeqSome */
-	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
-	                                        DeeString_WIDTH(args.needle))) {
-
-	CASE_WIDTH_1BYTE:
-		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
-		rhs.cp8 = DeeString_As1Byte((DeeObject *)args.needle);
-		mylen   = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp8 = dee_memcasermemb(lhs.cp8 + args.start, mylen,
-		                           rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                           &match_length);
-		if unlikely(!ptr.cp8)
-			goto not_found;
-		result = ptr.cp8 - lhs.cp8;
-		break;
-
-	CASE_WIDTH_2BYTE:
-		lhs.cp16 = DeeString_As2Byte((DeeObject *)self);
-		if unlikely(!lhs.cp16)
-			goto err;
-		rhs.cp16 = DeeString_As2Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp16)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp16 = dee_memcasermemw(lhs.cp16 + args.start, mylen,
-		                            rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                            &match_length);
-		if unlikely(!ptr.cp16)
-			goto not_found;
-		result = ptr.cp16 - lhs.cp16;
-		break;
-
-	CASE_WIDTH_4BYTE:
-		lhs.cp32 = DeeString_As4Byte((DeeObject *)self);
-		if unlikely(!lhs.cp32)
-			goto err;
-		rhs.cp32 = DeeString_As4Byte((DeeObject *)args.needle);
-		if unlikely(!rhs.cp32)
-			goto err;
-		mylen = WSTR_LENGTH(lhs.ptr);
-		CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
-		ptr.cp32 = dee_memcasermeml(lhs.cp32 + args.start, mylen,
-		                            rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                            &match_length);
-		if unlikely(!ptr.cp32)
-			goto not_found;
-		result = ptr.cp32 - lhs.cp32;
-		break;
-	}
-	return DeeTuple_NewII(result, result + match_length);
-not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.needle);
 err:
 	return NULL;
 }
@@ -4672,7 +4706,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_unifylines(String *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unifylines", params: "
-	DeeStringObject *replacement = NULL = !P{\n}
+	DeeStringObject *replacement = NULL = !P{\\n}
 ", docStringPrefix: "string");]]]*/
 #define string_unifylines_params "replacement=!P{\n}"
 	struct {
@@ -8027,7 +8061,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_indent(String *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indent", params: "
-	DeeStringObject *filler = &str_tab = !P{\t}
+	DeeStringObject *filler = &str_tab = !P{\\t}
 ", docStringPrefix: "string");]]]*/
 #define string_indent_params "filler=!P{\t}"
 	struct {

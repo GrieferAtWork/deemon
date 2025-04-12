@@ -3321,6 +3321,10 @@ PRIVATE struct type_operator const seq_operators[] = {
 
 
 PRIVATE struct type_member tpconst seq_class_members[] = {
+	/* Here primarily to allow doc strings to do stuff like `{string...}.Some'
+	 * to indicate "(sequence of string).some" */
+	TYPE_MEMBER_CONST("Some", &DeeSeqSome_Type),
+
 	/* TODO: Deprecated -- remove these (librt should create custom scenarios for all of these) */
 	TYPE_MEMBER_CONST("__SeqWithIter__", &DefaultSequence_WithIter_Type),
 
