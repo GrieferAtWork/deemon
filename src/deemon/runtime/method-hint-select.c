@@ -349,8 +349,14 @@ mh_select_seq_operator_hasitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		return &default__seq_operator_hasitem__empty;
 	if (seq_operator_hasitem_index == &default__seq_operator_hasitem_index__with__seq_operator_getitem_index)
 		return &default__seq_operator_hasitem__with__seq_operator_getitem;
-	if (seq_operator_hasitem_index == &default__seq_operator_hasitem_index__with__seq_operator_size)
+	if (seq_operator_hasitem_index == &default__seq_operator_hasitem_index__with__seq_operator_size) {
+		DeeMH_seq_operator_sizeob_t seq_operator_sizeob = (DeeMH_seq_operator_sizeob_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_sizeob);
+		if (seq_operator_sizeob == &default__seq_operator_sizeob__empty)
+			return &default__seq_operator_hasitem__empty;
+		if (seq_operator_sizeob == &default__seq_operator_sizeob__with__seq_operator_size)
+			return &default__seq_operator_hasitem__with__seq_operator_hasitem_index; /* This way, sizeob isn't called, and no int-object gets created */
 		return &default__seq_operator_hasitem__with__seq_operator_sizeob;
+	}
 	if (seq_operator_hasitem_index == &default__seq_operator_hasitem_index__with__seq_enumerate_index) {
 		if ((DeeMH_seq_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_enumerate))
 			return &default__seq_operator_hasitem__with__seq_enumerate;

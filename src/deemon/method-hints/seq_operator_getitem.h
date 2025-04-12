@@ -522,8 +522,14 @@ seq_operator_hasitem = {
 		return &$empty;
 	if (seq_operator_hasitem_index == &default__seq_operator_hasitem_index__with__seq_operator_getitem_index)
 		return &$with__seq_operator_getitem;
-	if (seq_operator_hasitem_index == &default__seq_operator_hasitem_index__with__seq_operator_size)
+	if (seq_operator_hasitem_index == &default__seq_operator_hasitem_index__with__seq_operator_size) {
+		DeeMH_seq_operator_sizeob_t seq_operator_sizeob = REQUIRE(seq_operator_sizeob);
+		if (seq_operator_sizeob == &default__seq_operator_sizeob__empty)
+			return &$empty;
+		if (seq_operator_sizeob == &default__seq_operator_sizeob__with__seq_operator_size)
+			return &$with__seq_operator_hasitem_index; /* This way, sizeob isn't called, and no int-object gets created */
 		return &$with__seq_operator_sizeob;
+	}
 	if (seq_operator_hasitem_index == &default__seq_operator_hasitem_index__with__seq_enumerate_index) {
 		if (REQUIRE_NODEFAULT(seq_enumerate))
 			return &$with__seq_enumerate;
