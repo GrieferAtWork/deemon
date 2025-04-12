@@ -3352,7 +3352,6 @@ PRIVATE struct type_method_hint tpconst seo_method_hints[] = {
 	TYPE_METHOD_HINT(seq_operator_hasitem_index, &seo_mh_seq_operator_hasitem_index),
 	TYPE_METHOD_HINT(seq_operator_delitem, &seo_mh_seq_operator_delitem),
 	TYPE_METHOD_HINT(seq_operator_delitem_index, &seo_mh_seq_operator_delitem_index),
-	TYPE_METHOD_HINT(seq_operator_setitem_index, &seo_setitem_index),
 	TYPE_METHOD_HINT(seq_operator_getrange, &seo_mh_seq_operator_getrange),
 	TYPE_METHOD_HINT(seq_operator_getrange_index, &seo_mh_seq_operator_getrange_index),
 	TYPE_METHOD_HINT(seq_operator_getrange_index_n, &seo_mh_seq_operator_getrange_index_n),
