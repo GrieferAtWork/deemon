@@ -2264,7 +2264,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
 DeeInt_PrintDecimal(DREF DeeIntObject *__restrict self, uint32_t flags,
-                    size_t precision, dformatprinter printer, void *arg) {
+                    size_t precision, Dee_formatprinter_t printer, void *arg) {
 	/* !!!DISCLAIMER!!! This function was originally taken from python,
 	 *                  but has been heavily modified since. */
 	size_t size, bufsize, size_a, i, j, intlen;
@@ -2447,7 +2447,7 @@ err_pout:
  * This list of supported radices may be extended in the future. */
 PUBLIC WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
 DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
-             size_t precision, dformatprinter printer, void *arg) {
+             size_t precision, Dee_formatprinter_t printer, void *arg) {
 	ASSERT_OBJECT_TYPE(self, &DeeInt_Type);
 	switch (radix_and_flags >> DEEINT_PRINT_RSHIFT) {
 
@@ -4306,7 +4306,7 @@ int_str(DeeIntObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-int_print(DeeIntObject *__restrict self, dformatprinter printer, void *arg) {
+int_print(DeeIntObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	return DeeInt_Print((DeeObject *)self, DEEINT_PRINT_DEC, 0, printer, arg);
 }
 
@@ -5406,8 +5406,8 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&int_bool,
-		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&int_print,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&int_print,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&int_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&int_print,
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,

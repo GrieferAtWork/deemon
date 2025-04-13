@@ -1009,7 +1009,7 @@ PRIVATE struct type_member tpconst range_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 range_printrepr(Range *__restrict self,
-                dformatprinter printer, void *arg) {
+                Dee_formatprinter_t printer, void *arg) {
 	return self->r_step
 	       ? DeeFormat_Printf(printer, arg, "[%r:%r, %r]", self->r_start, self->r_end, self->r_step)
 	       : DeeFormat_Printf(printer, arg, "[%r:%r]", self->r_start, self->r_end);
@@ -1122,7 +1122,7 @@ INTERN DeeTypeObject SeqRange_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&range_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&range_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&range_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&range_visit,
 	/* .tp_gc            = */ NULL,
@@ -1546,7 +1546,7 @@ PRIVATE struct type_member tpconst intrange_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 intrange_printrepr(IntRange *__restrict self,
-                   dformatprinter printer, void *arg) {
+                   Dee_formatprinter_t printer, void *arg) {
 	if (self->ir_step != 1) {
 		return DeeFormat_Printf(printer, arg,
 		                        "[%" PRFdSIZ ":%" PRFdSIZ ", %" PRFdSIZ "]",
@@ -1629,7 +1629,7 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&intrange_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&intrange_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&intrange_printrepr,
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,

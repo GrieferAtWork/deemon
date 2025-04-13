@@ -159,7 +159,7 @@ libdisasm_public_printcode_f(size_t argc,
 		}
 		return unicode_printer_pack(&printer);
 	}
-	error = libdisasm_printcode((dformatprinter)&DeeFile_WriteAll, fp,
+	error = libdisasm_printcode((Dee_formatprinter_t)&DeeFile_WriteAll, fp,
 	                            code->co_code,
 	                            code->co_code + code->co_codebytes,
 	                            code, NULL, flags);

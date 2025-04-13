@@ -86,7 +86,7 @@ miss:
 #define PREFIX_CONSTANT "@" /* Prefix for constant expressions. */
 
 PRIVATE dssize_t DCALL
-libdisasm_printconst(dformatprinter printer, void *arg,
+libdisasm_printconst(Dee_formatprinter_t printer, void *arg,
                      uint16_t cid, DeeCodeObject *code,
                      unsigned int flags) {
 	if (code) {
@@ -128,7 +128,7 @@ print_generic:
 }
 
 PRIVATE dssize_t DCALL
-libdisasm_printstatic(dformatprinter printer, void *arg, uint16_t sid,
+libdisasm_printstatic(Dee_formatprinter_t printer, void *arg, uint16_t sid,
                       DeeCodeObject *code, unsigned int flags) {
 	if (code) {
 		char const *name;
@@ -155,7 +155,7 @@ print_generic:
 }
 
 PRIVATE dssize_t DCALL
-libdisasm_printlocal(dformatprinter printer, void *arg,
+libdisasm_printlocal(Dee_formatprinter_t printer, void *arg,
                      uint16_t lid, struct ddi_state *ddi,
                      DeeCodeObject *code, unsigned int flags) {
 	if (code) {
@@ -182,7 +182,7 @@ print_generic:
 }
 
 PRIVATE dssize_t DCALL
-libdisasm_printstack(dformatprinter printer, void *arg,
+libdisasm_printstack(Dee_formatprinter_t printer, void *arg,
                      uint16_t soff, bool is_prefix, struct ddi_state *ddi,
                      DeeCodeObject *code, unsigned int flags) {
 	if (code) {
@@ -211,7 +211,7 @@ print_generic:
 }
 
 PRIVATE dssize_t DCALL
-libdisasm_printrelstack(dformatprinter printer, void *arg,
+libdisasm_printrelstack(Dee_formatprinter_t printer, void *arg,
                         uint16_t stacksz, uint32_t sp_sub,
                         struct ddi_state *ddi, DeeCodeObject *code,
                         unsigned int flags) {
@@ -257,7 +257,7 @@ invalid_offset:
 }
 
 PRIVATE dssize_t DCALL
-libdisasm_printglobal(dformatprinter printer, void *arg,
+libdisasm_printglobal(Dee_formatprinter_t printer, void *arg,
                       uint16_t gid, DeeCodeObject *code,
                       unsigned int flags) {
 	if (code) {
@@ -276,7 +276,7 @@ print_generic:
 }
 
 PRIVATE dssize_t DCALL
-libdisasm_printmodule(dformatprinter printer, void *arg,
+libdisasm_printmodule(Dee_formatprinter_t printer, void *arg,
                       uint16_t mid, DeeCodeObject *code,
                       unsigned int flags) {
 	if (code) {
@@ -294,7 +294,7 @@ print_generic:
 }
 
 PRIVATE dssize_t DCALL
-libdisasm_printextern(dformatprinter printer, void *arg,
+libdisasm_printextern(Dee_formatprinter_t printer, void *arg,
                       uint16_t mid, uint16_t gid,
                       DeeCodeObject *code, unsigned int flags) {
 	if (code) {
@@ -342,7 +342,7 @@ print_generic:
 }
 
 PRIVATE dssize_t DCALL
-libdisasm_printref(dformatprinter printer, void *arg,
+libdisasm_printref(Dee_formatprinter_t printer, void *arg,
                    uint16_t rid, DeeCodeObject *code,
                    unsigned int flags) {
 	if (code) {
@@ -396,7 +396,7 @@ find_class_descriptor_in_constants(DeeCodeObject *__restrict code,
 
 
 PRIVATE dssize_t DCALL
-libdisasm_printmembername(dformatprinter printer, void *arg,
+libdisasm_printmembername(Dee_formatprinter_t printer, void *arg,
                           uint16_t rid, uint16_t mid,
                           DeeCodeObject *code,
                           unsigned int flags,
@@ -514,7 +514,7 @@ found_it_member:
 }
 
 PRIVATE dssize_t DCALL
-libdisasm_printarg(dformatprinter printer, void *arg,
+libdisasm_printarg(Dee_formatprinter_t printer, void *arg,
                    uint16_t aid, DeeCodeObject *code,
                    unsigned int flags) {
 	if (code) {
@@ -528,7 +528,7 @@ libdisasm_printarg(dformatprinter printer, void *arg,
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) dssize_t DCALL
-libdisasm_printprefix(dformatprinter printer, void *arg,
+libdisasm_printprefix(Dee_formatprinter_t printer, void *arg,
                       instruction_t *__restrict instr_start,
                       struct ddi_state *ddi, DeeCodeObject *code,
                       unsigned int flags) {
@@ -589,7 +589,7 @@ do_local_prefix:
 
 
 INTERN WUNUSED NONNULL((1)) dssize_t DCALL
-libdisasm_printlabel(dformatprinter printer, void *arg,
+libdisasm_printlabel(Dee_formatprinter_t printer, void *arg,
                      uint16_t opcode, code_addr_t source,
                      code_addr_t target) {
 	char const *op_name = "";
@@ -766,7 +766,7 @@ PRIVATE char const mnemonic_namepad[MNEMONIC_MINWIDTH - 1] = { ' ', ' ', ' ', ' 
 __pragma_GCC_diagnostic_push_ignored(Wswitch_unreachable)
 
 PRIVATE WUNUSED NONNULL((1, 3, 4, 6)) dssize_t DCALL
-libdisasm_printinstr_f(dformatprinter printer, void *arg,
+libdisasm_printinstr_f(Dee_formatprinter_t printer, void *arg,
                        /*[1..1]*/ instruction_t *instr_start,
                        /*[1..1]*/ instruction_t *operands_start,
                        /*[0..1]*/ instruction_t *prefix_start,
@@ -1098,7 +1098,7 @@ err:
 __pragma_GCC_diagnostic_pop_ignored(Wswitch_unreachable)
 
 INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
-libdisasm_printinstr(dformatprinter printer, void *arg,
+libdisasm_printinstr(Dee_formatprinter_t printer, void *arg,
                      instruction_t *__restrict instr_start, uint16_t stacksz,
                      struct ddi_state *ddi, DeeCodeObject *code,
                      unsigned int flags) {

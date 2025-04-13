@@ -3266,7 +3266,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-rbtree_printrepr(RBTree *__restrict self, dformatprinter printer, void *arg) {
+rbtree_printrepr(RBTree *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	dssize_t temp, result;
 	struct rbtree_node *node;
 	uintptr_t version;
@@ -3673,7 +3673,7 @@ INTERN DeeTypeObject RBTree_Type = {
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rbtree_repr,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&rbtree_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rbtree_printrepr,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rbtree_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rbtree_visit,
 	/* .tp_gc            = */ &rbtree_gc,

@@ -378,7 +378,7 @@ return_sep:
 #endif /* !DeeSystem_ALTSEP */
 
 INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
-print_ddi(dformatprinter printer, void *arg,
+print_ddi(Dee_formatprinter_t printer, void *arg,
           DeeCodeObject *__restrict code, code_addr_t ip) {
 	dssize_t temp, result;
 	struct ddi_state state;
@@ -450,7 +450,7 @@ frame_visit(Frame *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 frame_print(Frame *__restrict self,
-            dformatprinter printer, void *arg) {
+            Dee_formatprinter_t printer, void *arg) {
 	dssize_t result;
 	DREF DeeCodeObject *code;
 	code_addr_t ip;
@@ -555,13 +555,11 @@ frame_getlocation(Frame *__restrict self) {
 			if unlikely(!nameob)
 				goto err_state_r_fileob;
 		}
-		entry = DeeTuple_Newf("oddo",
+		entry = DeeTuple_Newf("OddO",
 		                      fileob,
 		                      state.rs_regs.dr_lno,
 		                      state.rs_regs.dr_col,
 		                      nameob);
-		Dee_Decref(nameob);
-		Dee_Decref(fileob);
 		if unlikely(!entry)
 			goto err_state_r;
 		DeeTuple_SET(result, i, entry); /* Inherit reference. */
@@ -1254,7 +1252,7 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
 		/* .tp_str  = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr = */ DEFIMPL(&object_repr),
 		/* .tp_bool = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&frame_print,
+		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&frame_print,
 		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&frame_visit,

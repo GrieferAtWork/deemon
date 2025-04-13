@@ -526,7 +526,7 @@ get_warning_error_class(int wnum) {
 
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeCompilerError_Print(DeeObject *__restrict self,
-                       dformatprinter printer, void *arg) {
+                       Dee_formatprinter_t printer, void *arg) {
 #if defined(_MSC_VER) && 0
 #define LOG_PREFIX "../"
 #else /* _MSC_VER */

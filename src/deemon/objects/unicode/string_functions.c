@@ -12106,8 +12106,8 @@ err:
 
 
 INTDEF dssize_t DCALL
-DeeString_CFormat(dformatprinter printer,
-                  dformatprinter format_printer, void *arg,
+DeeString_CFormat(Dee_formatprinter_t printer,
+                  Dee_formatprinter_t format_printer, void *arg,
                   /*utf-8*/ char const *__restrict format, size_t format_len,
                   size_t argc, DeeObject *const *argv);
 

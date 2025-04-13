@@ -58,8 +58,9 @@
 #include "../runtime/strings.h"
 /**/
 
-#include <stddef.h> /* offsetof */
-#include <stdint.h> /* UINT32_C */
+#include <stdbool.h> /* true, false, bool */
+#include <stddef.h>  /* offsetof */
+#include <stdint.h>  /* UINT32_C */
 
 #ifdef _WIN32_WCE
 #undef GetProcAddress
@@ -3611,7 +3612,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 thread_print_impl(DeeThreadObject *__restrict self,
-                  dformatprinter printer, void *arg,
+                  Dee_formatprinter_t printer, void *arg,
                   bool do_repr) {
 	dssize_t temp, result = 0;
 #ifndef DeeThread_USE_SINGLE_THREADED
@@ -3773,13 +3774,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 thread_print(DeeThreadObject *__restrict self,
-             dformatprinter printer, void *arg) {
+             Dee_formatprinter_t printer, void *arg) {
 	return thread_print_impl(self, printer, arg, false);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 thread_printrepr(DeeThreadObject *__restrict self,
-                 dformatprinter printer, void *arg) {
+                 Dee_formatprinter_t printer, void *arg) {
 	return thread_print_impl(self, printer, arg, true);
 }
 
@@ -3932,8 +3933,8 @@ thread_tryjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(result == NULL)
 		goto err;
 	if (result != ITER_DONE)
-		return DeeTuple_Newf("bO", 1, result);
-	return DeeTuple_Newf("bo", 0, Dee_None);
+		return DeeTuple_Newf("oO", Dee_True, result);
+	return DeeTuple_Newf("oo", Dee_False, Dee_None);
 err:
 	return NULL;
 }
@@ -3948,8 +3949,8 @@ thread_timedjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(result == NULL)
 		goto err;
 	if (result != ITER_DONE)
-		return DeeTuple_Newf("bO", 1, result);
-	return DeeTuple_Newf("bo", 0, Dee_None);
+		return DeeTuple_Newf("oO", Dee_True, result);
+	return DeeTuple_Newf("oo", Dee_False, Dee_None);
 err:
 	return NULL;
 }
@@ -4879,8 +4880,8 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&thread_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&thread_printrepr,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&thread_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&thread_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&thread_visit,
 	/* .tp_gc            = */ thread_gc_PTR,

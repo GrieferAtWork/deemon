@@ -1320,25 +1320,25 @@ PRIVATE struct type_member tpconst rwlock_proxy_members[] = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 rwlock_readlock_print(DeeGenericRWLockProxyObject *__restrict self,
-                      dformatprinter printer, void *arg) {
+                      Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<Shared Lock for %k>", self->grwl_lock);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 rwlock_writelock_print(DeeGenericRWLockProxyObject *__restrict self,
-                       dformatprinter printer, void *arg) {
+                       Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<Exclusive Lock for %k>", self->grwl_lock);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 rwlock_readlock_printrepr(DeeGenericRWLockProxyObject *__restrict self,
-                          dformatprinter printer, void *arg) {
+                          Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "%r.readlock", self->grwl_lock);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 rwlock_writelock_printrepr(DeeGenericRWLockProxyObject *__restrict self,
-                           dformatprinter printer, void *arg) {
+                           Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "%r.writelock", self->grwl_lock);
 }
 
@@ -1554,8 +1554,8 @@ INTERN DeeTypeObject DeeRWLockReadLock_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_readlock_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_readlock_printrepr
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_readlock_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_readlock_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rwlock_readlock_visit,
 	/* .tp_gc            = */ NULL,
@@ -1603,8 +1603,8 @@ INTERN DeeTypeObject DeeRWLockWriteLock_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_writelock_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_writelock_printrepr
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_writelock_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_writelock_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rwlock_writelock_visit,
 	/* .tp_gc            = */ NULL,
@@ -1650,7 +1650,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 semaphore_printrepr(DeeSemaphoreObject *__restrict self,
-                    dformatprinter printer, void *arg) {
+                    Dee_formatprinter_t printer, void *arg) {
 	uintptr_t tickets = atomic_read(&self->sem_semaphore.se_tickets);
 	return DeeFormat_Printf(printer, arg, "Semaphore(%" PRFuPTR ")", tickets);
 }
@@ -1856,7 +1856,7 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&semaphore_printrepr
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&semaphore_printrepr
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
@@ -1907,7 +1907,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 event_printrepr(DeeEventObject *__restrict self,
-                dformatprinter printer, void *arg) {
+                Dee_formatprinter_t printer, void *arg) {
 	bool isset = Dee_event_get(&self->e_event);
 	return DeeFormat_Printf(printer, arg,
 	                        "Event(isset: %s)",
@@ -2030,7 +2030,7 @@ INTERN DeeTypeObject DeeEvent_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&event_printrepr
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&event_printrepr
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
@@ -2249,7 +2249,7 @@ lock_union_visit(LockUnion *__restrict self, dvisit_t proc, void *arg) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-lock_union_print(LockUnion *__restrict self, dformatprinter printer, void *arg) {
+lock_union_print(LockUnion *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	size_t i;
 	dssize_t temp, result;
 	result = DeeFormat_PRINT(printer, arg, "<Lock-union for <");
@@ -2268,7 +2268,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-lock_union_printrepr(LockUnion *__restrict self, dformatprinter printer, void *arg) {
+lock_union_printrepr(LockUnion *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	size_t i;
 	dssize_t temp, result;
 	result = DeeFormat_PRINT(printer, arg, "LockUnion({ ");
@@ -2847,8 +2847,8 @@ INTERN DeeTypeObject DeeLockUnion_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&lock_union_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&lock_union_printrepr
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&lock_union_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&lock_union_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&lock_union_visit,
 	/* .tp_gc            = */ NULL,

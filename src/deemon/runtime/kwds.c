@@ -506,7 +506,7 @@ kwds_visit(Kwds *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 kwds_printrepr(Kwds *__restrict self,
-               dformatprinter printer, void *arg) {
+               Dee_formatprinter_t printer, void *arg) {
 #define DO(err, expr)                    \
 	do {                                 \
 		if unlikely((temp = (expr)) < 0) \
@@ -786,7 +786,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&kwds_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&kwds_printrepr,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwds_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwds_visit,
 	/* .tp_gc            = */ NULL,

@@ -715,7 +715,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 LOCAL_lockapi_printrepr(LOCAL_DeeLockObject *__restrict self,
-                        dformatprinter printer, void *arg) {
+                        Dee_formatprinter_t printer, void *arg) {
 	(void)self;
 #ifdef LOCAL_lock_init_kw
 	return DeeFormat_Printf(printer, arg,
@@ -949,7 +949,7 @@ INTERN DeeTypeObject LOCAL_DeeLock_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&LOCAL_lockapi_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&LOCAL_lockapi_printrepr
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
@@ -1029,7 +1029,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 LOCAL_rwlockapi_printrepr(LOCAL_DeeRWLockObject *__restrict self,
-                          dformatprinter printer, void *arg) {
+                          Dee_formatprinter_t printer, void *arg) {
 #ifdef LOCAL_rwlockapi_init_kw
 #ifdef CONFIG_NO_THREADS
 	uintptr_t status = atomic_read(&self->rwl_lock);
@@ -1373,7 +1373,7 @@ INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&LOCAL_rwlockapi_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&LOCAL_rwlockapi_printrepr
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,

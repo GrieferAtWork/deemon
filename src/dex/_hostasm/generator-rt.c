@@ -347,7 +347,7 @@ libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs) {
 			/* Special case: `fp << repr foo'
 			 * In this case, we can do a special optimization
 			 * to directly print the repr to the file. */
-			if (DeeObject_PrintRepr(rhs, (dformatprinter)&DeeFile_WriteAll, lhs) < 0)
+			if (DeeObject_PrintRepr(rhs, (Dee_formatprinter_t)&DeeFile_WriteAll, lhs) < 0)
 				return NULL;
 			return_reference_(lhs);
 		}

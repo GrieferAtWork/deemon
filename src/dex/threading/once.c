@@ -514,7 +514,7 @@ once_ispending_get(DeeOnceObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-once_print(DeeOnceObject *__restrict self, dformatprinter printer, void *arg) {
+once_print(DeeOnceObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	dssize_t result;
 	DREF DeeObject *value;
 	switch (Dee_once_trybegin(&self->o_once)) {
@@ -557,7 +557,7 @@ once_print(DeeOnceObject *__restrict self, dformatprinter printer, void *arg) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-once_printrepr(DeeOnceObject *__restrict self, dformatprinter printer, void *arg) {
+once_printrepr(DeeOnceObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	dssize_t result;
 	DREF DeeObject *value;
 	switch (Dee_once_trybegin(&self->o_once)) {
@@ -714,8 +714,8 @@ INTERN DeeTypeObject DeeOnce_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&once_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&once_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&once_printrepr
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&once_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&once_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&once_visit,
 	/* .tp_gc            = */ &once_gc,

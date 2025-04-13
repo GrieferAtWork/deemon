@@ -2346,7 +2346,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 code_print(DeeCodeObject *__restrict self,
-           dformatprinter printer, void *arg) {
+           Dee_formatprinter_t printer, void *arg) {
 	dssize_t result;
 	DREF DeeObject *name = code_get_name(self);
 	if unlikely(!name) {
@@ -2363,7 +2363,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 code_printrepr(DeeCodeObject *__restrict self,
-               dformatprinter printer, void *arg) {
+               Dee_formatprinter_t printer, void *arg) {
 #define DO(x)                         \
 	do {                              \
 		if unlikely((temp = (x)) < 0) \
@@ -2580,8 +2580,8 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&code_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&code_printrepr,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&code_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&code_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&code_visit,
 	/* .tp_gc            = */ NULL,

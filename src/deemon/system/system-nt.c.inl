@@ -3342,7 +3342,7 @@ err:
  * @return: >= 0: Success.
  * @return: < 0:  A deemon callback failed and an error was thrown (`*p_success' is undefined). */
 PUBLIC WUNUSED NONNULL((1, 8)) dssize_t DCALL
-DeeNTSystem_PrintFormatMessage(dformatprinter printer, void *arg,
+DeeNTSystem_PrintFormatMessage(Dee_formatprinter_t printer, void *arg,
                                DeeNT_DWORD dwFlags, void const *lpSource,
                                DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
                                /* va_list * */ void *Arguments,

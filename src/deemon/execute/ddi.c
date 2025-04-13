@@ -741,9 +741,9 @@ PRIVATE struct type_cmp ddi_cmp = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ddi_printrepr(DeeDDIObject *__restrict self,
-              dformatprinter printer, void *arg) {
+              Dee_formatprinter_t printer, void *arg) {
 	(void)self;
 	return DeeFormat_Printf(printer, arg, "DDI(TODO)");
 }
@@ -775,7 +775,7 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ddi_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ddi_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ddi_visit,
 	/* .tp_gc            = */ NULL,

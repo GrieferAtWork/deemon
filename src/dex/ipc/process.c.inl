@@ -1057,7 +1057,7 @@ PRIVATE struct type_gc tpconst process_gc = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 process_print(Process *__restrict self,
-              dformatprinter printer, void *arg) {
+              Dee_formatprinter_t printer, void *arg) {
 	DREF DeeObject *proc_exe;
 #ifdef ipc_Process_USE_cmdline
 	DREF DeeStringObject *proc_cmdline;
@@ -1155,7 +1155,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 process_printrepr(Process *__restrict self,
-                  dformatprinter printer, void *arg) {
+                  Dee_formatprinter_t printer, void *arg) {
 	DREF DeeObject *proc_exe;
 	DREF DeeObject *proc_argv;
 	DREF DeeObject *proc_environ;
@@ -5292,8 +5292,8 @@ INTERN DeeTypeObject DeeProcess_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&process_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&process_printrepr
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&process_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&process_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&process_visit,
 	/* .tp_gc            = */ &process_gc,

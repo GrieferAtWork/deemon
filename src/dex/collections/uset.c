@@ -982,7 +982,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 uset_printrepr(USet *__restrict self,
-               dformatprinter printer, void *arg) {
+               Dee_formatprinter_t printer, void *arg) {
 	dssize_t temp, result;
 	struct uset_item *iter, *end;
 	struct uset_item *vector;
@@ -1290,7 +1290,7 @@ INTERN DeeTypeObject USet_Type = {
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_repr,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&uset_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&uset_printrepr
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&uset_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uset_visit,
 	/* .tp_gc            = */ &uset_gc,
@@ -1451,7 +1451,7 @@ STATIC_ASSERT(offsetof(URoSet, urs_size) == offsetof(USet, us_used));
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 uroset_printrepr(URoSet *__restrict self,
-                 dformatprinter printer, void *arg) {
+                 Dee_formatprinter_t printer, void *arg) {
 	dssize_t temp, result;
 	bool is_first = true;
 	size_t i;
@@ -1979,7 +1979,7 @@ INTERN DeeTypeObject URoSet_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&uroset_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&uroset_printrepr
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&uroset_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uroset_visit,
 	/* .tp_gc            = */ NULL,

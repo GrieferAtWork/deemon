@@ -1498,7 +1498,7 @@ bs_bool(Bitset *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-bs_printrepr(Bitset *__restrict self, dformatprinter printer, void *arg) {
+bs_printrepr(Bitset *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	bool is_first;
 	size_t bitno;
 	Dee_ssize_t temp, result;
@@ -2147,7 +2147,7 @@ err:
 #define robs_bool bs_bool
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-robs_printrepr(Bitset *__restrict self, dformatprinter printer, void *arg) {
+robs_printrepr(Bitset *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	bool is_first;
 	size_t bitno;
 	Dee_ssize_t temp, result;
@@ -3759,7 +3759,7 @@ bsv_bool(BitsetView *self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-bsv_printrepr(BitsetView *__restrict self, dformatprinter printer, void *arg) {
+bsv_printrepr(BitsetView *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result;
 	DeeObject *owner = self->bsv_owner;
 	result = DeeFormat_Printf(printer, arg, "BitsetView(%r", owner);

@@ -666,12 +666,12 @@ done:
 }
 
 INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
-print_ddi(dformatprinter printer, void *arg,
+print_ddi(Dee_formatprinter_t printer, void *arg,
           DeeCodeObject *__restrict code, code_addr_t ip);
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 traceback_print(DeeTracebackObject *__restrict self,
-                dformatprinter printer, void *arg) {
+                Dee_formatprinter_t printer, void *arg) {
 	dssize_t temp, result = 0;
 	uint16_t i = self->tb_numframes;
 	while (i) {
@@ -822,7 +822,7 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 		/* .tp_str   = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr  = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool  = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_iter),
-		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&traceback_print,
+		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&traceback_print,
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&traceback_visit,

@@ -497,7 +497,7 @@ property_call_kw(Property *self, size_t argc, DeeObject *const *argv, DeeObject 
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 property_printrepr(Property *__restrict self,
-                   dformatprinter printer, void *arg) {
+                   Dee_formatprinter_t printer, void *arg) {
 	/* TODO: Better distinction between *actual* properties, and
 	 *       custom properties (w/ an attribute `iscustom: bool',
 	 *       and us making the repr dependent on that) */
@@ -602,7 +602,7 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&property_printrepr,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&property_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&property_visit,
 	/* .tp_gc            = */ NULL,

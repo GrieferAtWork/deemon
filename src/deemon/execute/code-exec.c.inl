@@ -2222,7 +2222,7 @@ do_push_module:
 					/* Special case: `fp << repr foo'
 					 * In this case, we can do a special optimization
 					 * to directly print the repr to the file. */
-					if (DeeObject_PrintRepr(TOP, (dformatprinter)&DeeFile_WriteAll, SECOND) < 0)
+					if (DeeObject_PrintRepr(TOP, (Dee_formatprinter_t)&DeeFile_WriteAll, SECOND) < 0)
 						HANDLE_EXCEPT();
 					POPREF();
 					DISPATCH();

@@ -3577,7 +3577,7 @@ f_libjson_write(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 
 	/* Produce JSON data, either writing it to a file, or to a string. */
 	if (into) {
-		if (DeeJsonWriter_Init(&writer, (dformatprinter)&DeeFile_WriteAll, into, format))
+		if (DeeJsonWriter_Init(&writer, (Dee_formatprinter_t)&DeeFile_WriteAll, into, format))
 			goto err;
 		error = DeeJson_WriteObject(&writer, data);
 		DeeJsonWriter_Fini(&writer);

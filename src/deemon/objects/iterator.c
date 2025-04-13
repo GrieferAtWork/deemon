@@ -170,7 +170,7 @@ err:
 
 DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 iterator_printrepr(DeeObject *__restrict self,
-                   dformatprinter printer, void *arg) {
+                   Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result;
 	DREF DeeObject *iterator;
 	DREF DeeObject *elem;

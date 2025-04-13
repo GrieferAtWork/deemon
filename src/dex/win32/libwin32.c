@@ -763,13 +763,13 @@ PRIVATE struct type_member tpconst handle_members[] = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 handle_print(DeeHandleObject *__restrict self,
-             dformatprinter printer, void *arg) {
+             Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<handle %p>", self->ho_handle);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 handle_printrepr(DeeHandleObject *__restrict self,
-                 dformatprinter printer, void *arg) {
+                 Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "HANDLE(0x%p)", self->ho_handle);
 }
 
@@ -829,8 +829,8 @@ PRIVATE DeeTypeObject DeeHandle_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&handle_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&handle_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&handle_printrepr
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&handle_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&handle_printrepr
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,

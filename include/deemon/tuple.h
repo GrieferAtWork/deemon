@@ -143,10 +143,10 @@ DFUNDEF WUNUSED DREF DeeObject *DeeTuple_TryPackSymbolic(size_t n, /*inherit(on_
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VTryPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list args);
 
 /* Create a new tuple from a given vector. */
-DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv);
-DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
-DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_TryNewVector(size_t objc, DeeObject *const *__restrict objv);
-DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_TryNewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL DeeTuple_TryNewVector(size_t objc, DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL DeeTuple_TryNewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
 
 /* Decrement the reference counter of a tuple object filled with symbolic references.
  * >> If the reference counter hits ZERO(0), simply free() the tuple object
@@ -176,7 +176,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_VNewf(char const *__
  * inheriting a reference from `self' in the process. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *sequence);
-DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeTuple_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
                          /*inherit(always)*/ DREF DeeObject *const *argv);
 
@@ -220,10 +220,10 @@ Dee_tuple_builder_append_inherited(/*struct Dee_tuple_builder*/ void *self,
                                    /*inherit(always)*/ DREF DeeObject *item);
 DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 Dee_tuple_builder_appenditems(/*struct Dee_tuple_builder*/ void *self, DeeObject *items);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) int DCALL
 Dee_tuple_builder_extend(struct Dee_tuple_builder *self, size_t objc,
                          DeeObject *const *__restrict objv);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) int DCALL
 Dee_tuple_builder_extend_inherited(struct Dee_tuple_builder *self, size_t objc,
                                    /*inherit(always)*/ DREF DeeObject *const *__restrict objv);
 

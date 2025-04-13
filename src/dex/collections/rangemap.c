@@ -141,7 +141,7 @@ typedef struct {
 /************************************************************************/
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-rangemap_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg) {
+rangemap_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	DREF DeeObject *iterator;
 	DREF DeeObject *elem;
 	dssize_t temp, result;
@@ -795,7 +795,7 @@ INTERN DeeTypeObject RangeMap_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL, /* Inherited function already does the correct thing */
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rangemap_printrepr,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rangemap_printrepr,
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,

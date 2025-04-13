@@ -517,7 +517,7 @@ DeeTuple_VNewf(char const *__restrict format, va_list args) {
 	struct va_list_struct *p_args;
 	DREF DeeTupleObject *result;
 	size_t i, tuple_size = count_pack_args(format);
-	p_args  = (struct va_list_struct *)VALIST_ADDR(args);
+	p_args = (struct va_list_struct *)VALIST_ADDR(args);
 	result = DeeTuple_NewUninitialized(tuple_size);
 	if unlikely(!result)
 		goto err;

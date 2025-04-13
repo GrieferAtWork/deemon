@@ -499,7 +499,7 @@ DeeTuple_TruncateUninitialized(/*inherit(always)*/ DREF Tuple *__restrict self,
 
 
 /* Create a new tuple from a given vector. */
-PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
 DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv) {
 	DREF Tuple *result;
 	result = DeeTuple_NewUninitialized(objc);
@@ -510,7 +510,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
 DeeTuple_NewVectorSymbolic(size_t objc, DeeObject *const *__restrict objv) {
 	DREF Tuple *result;
 	result = DeeTuple_NewUninitialized(objc);
@@ -522,7 +522,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
 DeeTuple_TryNewVector(size_t objc, DeeObject *const *__restrict objv) {
 	DREF Tuple *result;
 	result = DeeTuple_TryNewUninitialized(objc);
@@ -533,7 +533,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
 DeeTuple_TryNewVectorSymbolic(size_t objc, DeeObject *const *__restrict objv) {
 	DREF Tuple *result;
 	result = DeeTuple_TryNewUninitialized(objc);
@@ -1980,7 +1980,7 @@ err_me:
 	goto err;
 }
 
-PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(3, 2) NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeTuple_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
                          /*inherit(always)*/ DREF DeeObject *const *argv) {
 	DREF Tuple *me = (DREF Tuple *)self;
@@ -2761,7 +2761,7 @@ Dee_tuple_builder_appenditems(/*struct Dee_tuple_builder*/ void *self, DeeObject
 	return DeeObject_Foreach(items, &Dee_tuple_builder_append, me);
 }
 
-PUBLIC WUNUSED NONNULL((1)) int DCALL
+PUBLIC WUNUSED ATTR_INS(3, 2) NONNULL((1)) int DCALL
 Dee_tuple_builder_extend(struct Dee_tuple_builder *self, size_t objc,
                          DeeObject *const *__restrict objv) {
 	DeeObject **buf = Dee_tuple_builder_alloc(self, objc);
@@ -2774,7 +2774,7 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1)) int DCALL
+PUBLIC WUNUSED ATTR_INS(3, 2) NONNULL((1)) int DCALL
 Dee_tuple_builder_extend_inherited(struct Dee_tuple_builder *self, size_t objc,
                                    /*inherit(always)*/ DREF DeeObject *const *__restrict objv) {
 	DeeObject **buf = Dee_tuple_builder_alloc(self, objc);

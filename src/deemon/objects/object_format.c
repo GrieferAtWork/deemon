@@ -43,7 +43,7 @@ get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name);
 
 INTERN WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 object_format_generic(DeeObject *__restrict self,
-                      dformatprinter printer, void *arg,
+                      Dee_formatprinter_t printer, void *arg,
                       /*utf-8*/ char const *__restrict format_str,
                       size_t format_len) {
 #define ALIGN_LEFT   0
@@ -245,7 +245,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 object_format_impl(DeeObject *__restrict self,
-                   dformatprinter printer, void *arg,
+                   Dee_formatprinter_t printer, void *arg,
                    /*utf-8*/ char const *__restrict format_str,
                    size_t format_len, DeeObject *format_str_obj) {
 	DeeTypeObject *tp_self;
@@ -309,7 +309,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 DeeObject_PrintFormatString(DeeObject *__restrict self,
-                            dformatprinter printer, void *arg,
+                            Dee_formatprinter_t printer, void *arg,
                             /*utf-8*/ char const *__restrict format_str,
                             size_t format_len) {
 	return object_format_impl(self, printer, arg, format_str, format_len, NULL);
@@ -317,7 +317,7 @@ DeeObject_PrintFormatString(DeeObject *__restrict self,
 
 PUBLIC WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 DeeObject_PrintFormat(DeeObject *__restrict self,
-                      dformatprinter printer, void *arg,
+                      Dee_formatprinter_t printer, void *arg,
                       DeeObject *__restrict format_str) {
 	char const *utf8_format;
 	utf8_format = DeeString_AsUtf8(format_str);

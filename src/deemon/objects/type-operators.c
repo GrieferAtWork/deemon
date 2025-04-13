@@ -342,7 +342,7 @@ DEFINE_OPERATOR_INVOKE(operator_str, &usrtype__str__with__STR, &do_inherit_built
 	(void)opname;
 	_DeeArg_Unpack0Or1(err, argc, argv, OPNAME("str"), &fp);
 	if (fp) {
-		if unlikely(DeeObject_TPrint(tp_self, self, (dformatprinter)&DeeFile_WriteAll, fp) < 0)
+		if unlikely(DeeObject_TPrint(tp_self, self, (Dee_formatprinter_t)&DeeFile_WriteAll, fp) < 0)
 			goto err;
 		return_none;
 	}
@@ -359,7 +359,7 @@ DEFINE_OPERATOR_INVOKE(operator_repr, &usrtype__repr__with__REPR, &do_inherit_bu
 	(void)opname;
 	_DeeArg_Unpack0Or1(err, argc, argv, OPNAME("repr"), &fp);
 	if (fp) {
-		if unlikely(DeeObject_TPrintRepr(tp_self, self, (dformatprinter)&DeeFile_WriteAll, fp) < 0)
+		if unlikely(DeeObject_TPrintRepr(tp_self, self, (Dee_formatprinter_t)&DeeFile_WriteAll, fp) < 0)
 			goto err;
 		return_none;
 	}
