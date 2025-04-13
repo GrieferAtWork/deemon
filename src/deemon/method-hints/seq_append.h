@@ -40,13 +40,11 @@ int __seq_append__.seq_append([[nonnull]] DeeObject *self,
 %{$empty = "default__seq_append__unsupported"}
 %{$with__seq_extend = {
 	int result;
-	DREF DeeTupleObject *item_tuple;
-	item_tuple = DeeTuple_NewUninitialized(1);
-	if unlikely(!item_tuple)
+	DREF DeeObject *items = DeeSeq_PackOneSymbolic(item);
+	if unlikely(!items)
 		goto err;
-	DeeTuple_SET(item_tuple, 0, item);
-	result = CALL_DEPENDENCY(seq_extend, self, (DeeObject *)item_tuple);
-	DeeTuple_DecrefSymbolic((DeeObject *)item_tuple);
+	result = CALL_DEPENDENCY(seq_extend, self, items);
+	DeeSeqOne_DecrefSymbolic(items);
 	return result;
 err:
 	return -1;

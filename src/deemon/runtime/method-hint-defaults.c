@@ -2163,12 +2163,11 @@ default__seq_operator_setitem_index__empty(DeeObject *self, size_t index, DeeObj
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 default__seq_operator_setitem_index__with__seq_operator_setrange_index(DeeObject *self, size_t index, DeeObject *value) {
 	int result;
-	DREF DeeTupleObject *values = DeeTuple_NewUninitialized(1);
+	DREF DeeObject *values = DeeSeq_PackOneSymbolic(value);
 	if unlikely(!values)
 		goto err;
-	values->t_elem[0] = value;
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_setrange_index))(self, (Dee_ssize_t)index, (Dee_ssize_t)index + 1, (DeeObject *)values);
-	DeeTuple_DecrefSymbolic((DeeObject *)values);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_setrange_index))(self, (Dee_ssize_t)index, (Dee_ssize_t)index + 1, values);
+	DeeSeqOne_DecrefSymbolic(values);
 	return result;
 err:
 	return -1;
@@ -11946,13 +11945,11 @@ default__seq_insert__unsupported(DeeObject *self, size_t index, DeeObject *item)
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 default__seq_insert__with__seq_insertall(DeeObject *self, size_t index, DeeObject *item) {
 	int result;
-	DREF DeeTupleObject *item_tuple;
-	item_tuple = DeeTuple_NewUninitialized(1);
-	if unlikely(!item_tuple)
+	DREF DeeObject *items = DeeSeq_PackOneSymbolic(item);
+	if unlikely(!items)
 		goto err;
-	DeeTuple_SET(item_tuple, 0, item);
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_insertall))(self, index, (DeeObject *)item_tuple);
-	DeeTuple_DecrefSymbolic((DeeObject *)item_tuple);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_insertall))(self, index, items);
+	DeeSeqOne_DecrefSymbolic(items);
 	return result;
 err:
 	return -1;
@@ -12160,13 +12157,11 @@ default__seq_append__unsupported(DeeObject *self, DeeObject *item) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_append__with__seq_extend(DeeObject *self, DeeObject *item) {
 	int result;
-	DREF DeeTupleObject *item_tuple;
-	item_tuple = DeeTuple_NewUninitialized(1);
-	if unlikely(!item_tuple)
+	DREF DeeObject *items = DeeSeq_PackOneSymbolic(item);
+	if unlikely(!items)
 		goto err;
-	DeeTuple_SET(item_tuple, 0, item);
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_extend))(self, (DeeObject *)item_tuple);
-	DeeTuple_DecrefSymbolic((DeeObject *)item_tuple);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_extend))(self, items);
+	DeeSeqOne_DecrefSymbolic(items);
 	return result;
 err:
 	return -1;
@@ -16559,15 +16554,15 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_insert__with__seq_operator_size__and__set_insertall(DeeObject *self, DeeObject *key) {
 	int temp;
 	size_t old_size, new_size;
-	DREF DeeObject *items;
+	DREF DeeObject *keys;
 	old_size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(old_size == (size_t)-1)
 		goto err;
-	items = DeeTuple_NewVectorSymbolic(1, &key);
-	if unlikely(!items)
+	keys = DeeSeq_PackOneSymbolic(key);
+	if unlikely(!keys)
 		goto err;
-	temp = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_insertall))(self, items);
-	DeeTuple_DecrefSymbolic(items);
+	temp = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_insertall))(self, keys);
+	DeeSeqOne_DecrefSymbolic(keys);
 	if unlikely(temp)
 		goto err;
 	new_size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
@@ -16747,15 +16742,15 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_remove__with__seq_operator_size__and__set_removeall(DeeObject *self, DeeObject *key) {
 	int temp;
 	size_t old_size, new_size;
-	DREF DeeObject *items;
+	DREF DeeObject *keys;
 	old_size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(old_size == (size_t)-1)
 		goto err;
-	items = DeeTuple_NewVectorSymbolic(1, &key);
-	if unlikely(!items)
+	keys = DeeSeq_PackOneSymbolic(key);
+	if unlikely(!keys)
 		goto err;
-	temp = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_removeall))(self, items);
-	DeeTuple_DecrefSymbolic(items);
+	temp = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_removeall))(self, keys);
+	DeeSeqOne_DecrefSymbolic(keys);
 	if unlikely(temp)
 		goto err;
 	new_size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
@@ -18154,12 +18149,11 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_delitem__with__map_removekeys(DeeObject *self, DeeObject *key) {
 	int result;
-	DREF DeeTupleObject *keys = DeeTuple_NewUninitialized(1);
+	DREF DeeObject *keys = DeeSeq_PackOneSymbolic(key);
 	if unlikely(!keys)
 		goto err;
-	keys->t_elem[0] = key;
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_removekeys))(self, (DeeObject *)keys);
-	DeeTuple_DecrefSymbolic((DeeObject *)keys);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_removekeys))(self, keys);
+	DeeSeqOne_DecrefSymbolic((DeeObject *)keys);
 	return result;
 err:
 	return -1;

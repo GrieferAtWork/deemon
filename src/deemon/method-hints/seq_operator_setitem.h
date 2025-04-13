@@ -71,12 +71,14 @@ __seq_setitem__.seq_operator_setitem_index([[nonnull]] DeeObject *self,
 %{$empty = err_index_out_of_bounds(self, index, 0)}
 %{$with__seq_operator_setrange_index = {
 	int result;
-	DREF DeeTupleObject *values = DeeTuple_NewUninitialized(1);
+	DREF DeeObject *values = DeeSeq_PackOneSymbolic(value);
 	if unlikely(!values)
 		goto err;
-	values->t_elem[0] = value;
-	result = CALL_DEPENDENCY(seq_operator_setrange_index, self, (Dee_ssize_t)index, (Dee_ssize_t)index + 1, (DeeObject *)values);
-	DeeTuple_DecrefSymbolic((DeeObject *)values);
+	result = CALL_DEPENDENCY(seq_operator_setrange_index, self,
+	                         (Dee_ssize_t)index,
+	                         (Dee_ssize_t)index + 1,
+	                         values);
+	DeeSeqOne_DecrefSymbolic(values);
 	return result;
 err:
 	return -1;

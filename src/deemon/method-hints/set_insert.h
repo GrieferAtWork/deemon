@@ -56,15 +56,15 @@ err:
 %{$with__seq_operator_size__and__set_insertall = {
 	int temp;
 	size_t old_size, new_size;
-	DREF DeeObject *items;
+	DREF DeeObject *keys;
 	old_size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(old_size == (size_t)-1)
 		goto err;
-	items = DeeTuple_NewVectorSymbolic(1, &key);
-	if unlikely(!items)
+	keys = DeeSeq_PackOneSymbolic(key);
+	if unlikely(!keys)
 		goto err;
-	temp = CALL_DEPENDENCY(set_insertall, self, items);
-	DeeTuple_DecrefSymbolic(items);
+	temp = CALL_DEPENDENCY(set_insertall, self, keys);
+	DeeSeqOne_DecrefSymbolic(keys);
 	if unlikely(temp)
 		goto err;
 	new_size = CALL_DEPENDENCY(seq_operator_size, self);

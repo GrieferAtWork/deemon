@@ -50,12 +50,11 @@ err:
 }}
 %{$with__map_removekeys = {
 	int result;
-	DREF DeeTupleObject *keys = DeeTuple_NewUninitialized(1);
+	DREF DeeObject *keys = DeeSeq_PackOneSymbolic(key);
 	if unlikely(!keys)
 		goto err;
-	keys->t_elem[0] = key;
-	result = CALL_DEPENDENCY(map_removekeys, self, (DeeObject *)keys);
-	DeeTuple_DecrefSymbolic((DeeObject *)keys);
+	result = CALL_DEPENDENCY(map_removekeys, self, keys);
+	DeeSeqOne_DecrefSymbolic((DeeObject *)keys);
 	return result;
 err:
 	return -1;

@@ -499,6 +499,10 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PackOne(DeeObject *__r
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PackOneInherited(/*inherit(always)*/ DREF DeeObject *__restrict item);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PackOneInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict item);
 
+/* Pack a single-item sequence using a symbolic reference */
+#define DeeSeq_PackOneSymbolic(item) DeeSeq_PackOneInheritedOnSuccess(item)
+DFUNDEF NONNULL((1)) void DCALL DeeSeqOne_DecrefSymbolic(DREF DeeObject *__restrict self);
+
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

@@ -1286,6 +1286,21 @@ err:
 }
 
 
+/* Pack a single-item sequence using a symbolic reference */
+PUBLIC NONNULL((1)) void DCALL
+DeeSeqOne_DecrefSymbolic(DREF DeeObject *__restrict self) {
+	SeqOne *me = (SeqOne *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSeqOne_Type);
+	if (!DeeObject_IsShared(me)) {
+		DeeObject_FREE(me);
+		Dee_DecrefNokill(&DeeSeqOne_Type);
+	} else {
+		Dee_Incref(me->so_item);
+		Dee_Decref_unlikely(me);
+	}
+}
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_ONE_C */

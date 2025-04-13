@@ -788,7 +788,7 @@ DeeTuple_DecrefSymbolic(DeeObject *__restrict self) {
 	} else {
 		Dee_Increfv(DeeTuple_ELEM(self),
 		            DeeTuple_SIZE(self));
-		Dee_Decref(self);
+		Dee_Decref_unlikely(self);
 	}
 }
 
