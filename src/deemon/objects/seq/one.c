@@ -485,6 +485,31 @@ err:
 }
 
 
+STATIC_ASSERT(offsetof(SeqOne, so_item) == offsetof(ProxyObject, po_obj));
+#define so_hash generic_proxy__hash_recursive
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+so_compare_eq(SeqOne *lhs, DeeObject *rhs) {
+	return seq_docompareeq__lhs_vector(&lhs->so_item, 1, rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+so_compare(SeqOne *lhs, DeeObject *rhs) {
+	return seq_docompare__lhs_vector(&lhs->so_item, 1, rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+so_trycompare_eq(SeqOne *lhs, DeeObject *rhs) {
+	if (!DeeType_HasNativeOperator(Dee_TYPE(rhs), foreach))
+		return 1;
+	return so_compare_eq(lhs, rhs);
+}
+
+
+
+
+
+
 #define so_mh_seq_enumerate_reverse so_mh_seq_enumerate
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 so_mh_seq_enumerate(SeqOne *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
@@ -713,26 +738,204 @@ so_mh_seq_contains_with_range_and_key(SeqOne *self, DeeObject *item,
 #endif /* !DCALL_RETURN_COMMON && __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
 
 
-STATIC_ASSERT(offsetof(SeqOne, so_item) == offsetof(ProxyObject, po_obj));
-#define so_hash generic_proxy__hash_recursive
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-so_compare_eq(SeqOne *lhs, DeeObject *rhs) {
-	return seq_docompareeq__lhs_vector(&lhs->so_item, 1, rhs);
+#define so_mh_seq_rlocate so_mh_seq_locate
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+so_mh_seq_locate(SeqOne *self, DeeObject *match, DeeObject *def) {
+	int matches = so_mh_seq_any_with_key(self, match);
+	if unlikely(matches < 0)
+		goto err;
+	if (matches)
+		def = self->so_item;
+	return_reference(def);
+err:
+	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-so_compare(SeqOne *lhs, DeeObject *rhs) {
-	return seq_docompare__lhs_vector(&lhs->so_item, 1, rhs);
+#define so_mh_seq_rlocate_with_range so_mh_seq_locate_with_range
+PRIVATE WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+so_mh_seq_locate_with_range(SeqOne *self, DeeObject *match,
+                            size_t start, size_t end, DeeObject *def) {
+	int matches = so_mh_seq_any_with_range_and_key(self, start, end, match);
+	if unlikely(matches < 0)
+		goto err;
+	if (matches)
+		def = self->so_item;
+	return_reference(def);
+err:
+	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-so_trycompare_eq(SeqOne *lhs, DeeObject *rhs) {
-	if (!DeeType_HasNativeOperator(Dee_TYPE(rhs), foreach))
+#define so_mh_seq_startswith                    so_mh_seq_contains
+#define so_mh_seq_startswith_with_key           so_mh_seq_contains_with_key
+#define so_mh_seq_startswith_with_range         so_mh_seq_contains_with_range
+#define so_mh_seq_startswith_with_range_and_key so_mh_seq_contains_with_range_and_key
+#define so_mh_seq_endswith                      so_mh_seq_contains
+#define so_mh_seq_endswith_with_key             so_mh_seq_contains_with_key
+#define so_mh_seq_endswith_with_range           so_mh_seq_contains_with_range
+#define so_mh_seq_endswith_with_range_and_key   so_mh_seq_contains_with_range_and_key
+
+#define so_mh_seq_rfind so_mh_seq_find
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+so_mh_seq_find(SeqOne *self, DeeObject *item, size_t start, size_t end) {
+	size_t count = so_mh_seq_count_with_range(self, item, start, end);
+	/* count == -1  -> error     -> return (size_t)Dee_COMPARE_ERR; */
+	/* count == 0   -> not found -> return (size_t)-1; */
+	/* count == 1   -> found     -> return 0; */
+	ASSERT(count == (size_t)-1 || count == 0 || count == 1);
+#if Dee_COMPARE_ERR != -2
+	if (count == (size_t)-1)
+		return (size_t)Dee_COMPARE_ERR;
+#endif /* Dee_COMPARE_ERR != -2 */
+	return count - 1;
+}
+
+#define so_mh_seq_rfind_with_key so_mh_seq_find_with_key
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+so_mh_seq_find_with_key(SeqOne *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	size_t count = so_mh_seq_count_with_range_and_key(self, item, start, end, key);
+	/* count == -1  -> error     -> return (size_t)Dee_COMPARE_ERR; */
+	/* count == 0   -> not found -> return (size_t)-1; */
+	/* count == 1   -> found     -> return 0; */
+	ASSERT(count == (size_t)-1 || count == 0 || count == 1);
+#if Dee_COMPARE_ERR != -2
+	if (count == (size_t)-1)
+		return (size_t)Dee_COMPARE_ERR;
+#endif /* Dee_COMPARE_ERR != -2 */
+	return count - 1;
+}
+
+#define so_mh_seq_sorted so_mh_seq_reversed
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+so_mh_seq_reversed(SeqOne *self, size_t start, size_t end) {
+	if (start == 0 && end >= 1)
+		return_reference((DeeObject *)self);
+	return DeeSeq_NewEmpty();
+}
+
+#ifdef DCALL_CALLER_CLEANUP
+#define so_mh_seq_sorted_with_key (*(DREF DeeObject *(DCALL *)(SeqOne *, size_t, size_t, DeeObject *))&so_mh_seq_sorted)
+#else /* DCALL_CALLER_CLEANUP */
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+so_mh_seq_sorted_with_key(SeqOne *self, size_t start, size_t end, DeeObject *key) {
+	(void)key;
+	return so_mh_seq_sorted(self, start, end);
+}
+#endif /* !DCALL_CALLER_CLEANUP */
+
+
+#define so_mh_seq_bfind          so_mh_seq_find
+#define so_mh_seq_bfind_with_key so_mh_seq_find_with_key
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_CompareKey2(DeeObject *lhs, DeeObject *rhs, DeeObject *key) {
+	int result;
+	lhs = DeeObject_Call(key, 1, &lhs);
+	if unlikely(!lhs)
+		goto err;
+	result = DeeObject_CompareKey(lhs, rhs, key);
+	Dee_Decref(lhs);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+so_mh_seq_bposition(SeqOne *self, DeeObject *item, size_t start, size_t end) {
+	if (start == 0 && end >= 1) {
+		int cmp = DeeObject_Compare(item, self->so_item);
+		if unlikely(cmp == Dee_COMPARE_ERR)
+			goto err;
+		if (cmp <= 0)
+			return 0;
 		return 1;
-	return so_compare_eq(lhs, rhs);
+	}
+	return 0;
+err:
+	return (size_t)Dee_COMPARE_ERR;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+so_mh_seq_bposition_with_key(SeqOne *self, DeeObject *item,
+                             size_t start, size_t end, DeeObject *key) {
+	if (start == 0 && end >= 1) {
+		int cmp = DeeObject_CompareKey2(item, self->so_item, key);
+		if unlikely(cmp == Dee_COMPARE_ERR)
+			goto err;
+		if (cmp <= 0)
+			return 0;
+		return 1;
+	}
+	return 0;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+so_mh_seq_brange(SeqOne *self, DeeObject *item,
+                 size_t start, size_t end,
+                 size_t result_range[2]) {
+	if (start == 0 && end >= 1) {
+		int cmp = DeeObject_Compare(item, self->so_item);
+		if unlikely(cmp == Dee_COMPARE_ERR)
+			goto err;
+		if (cmp < 0) {
+			result_range[0] = 0;
+			result_range[1] = 0;
+		} else if (cmp == 0) {
+			result_range[0] = 0;
+			result_range[1] = 1;
+		} else {
+			result_range[0] = 1;
+			result_range[1] = 1;
+		}
+	} else {
+		result_range[0] = 0;
+		result_range[1] = 0;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5, 6)) int DCALL
+so_mh_seq_brange_with_key(SeqOne *self, DeeObject *item,
+                          size_t start, size_t end, DeeObject *key,
+                          size_t result_range[2]) {
+	if (start == 0 && end >= 1) {
+		int cmp = DeeObject_CompareKey2(item, self->so_item, key);
+		if unlikely(cmp == Dee_COMPARE_ERR)
+			goto err;
+		if (cmp < 0) {
+			result_range[0] = 0;
+			result_range[1] = 0;
+		} else if (cmp == 0) {
+			result_range[0] = 0;
+			result_range[1] = 1;
+		} else {
+			result_range[0] = 1;
+			result_range[1] = 1;
+		}
+	} else {
+		result_range[0] = 0;
+		result_range[1] = 0;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+#define so_mh_set_operator_iter    so_iter
+#define so_mh_set_operator_foreach so_foreach
+#define so_mh_set_operator_sizeob  so_sizeob
+#define so_mh_set_operator_size    so_size
+#define so_mh_set_operator_hash    so_hash
+#define so_mh_map_operator_iter    so_iter
+#define so_mh_map_operator_sizeob  so_sizeob
+#define so_mh_map_operator_size    so_size
+#define so_mh_map_operator_hash    so_hash
 
 PRIVATE struct type_math so_math = {
 	/* .tp_int32       = */ DEFIMPL_UNSUPPORTED(&default__int32__unsupported),
@@ -841,6 +1044,30 @@ PRIVATE struct type_method tpconst so_methods[] = {
 	TYPE_METHOD_HINTREF(Sequence_sum),
 	TYPE_METHOD_HINTREF(Sequence_count),
 	TYPE_METHOD_HINTREF(Sequence_contains),
+	TYPE_METHOD_HINTREF(Sequence_locate),
+	TYPE_METHOD_HINTREF(Sequence_rlocate),
+	TYPE_METHOD_HINTREF(Sequence_startswith),
+	TYPE_METHOD_HINTREF(Sequence_endswith),
+	TYPE_METHOD_HINTREF(Sequence_find),
+	TYPE_METHOD_HINTREF(Sequence_rfind),
+	TYPE_METHOD_HINTREF(Sequence_reversed),
+	TYPE_METHOD_HINTREF(Sequence_sorted),
+	TYPE_METHOD_HINTREF(Sequence_bfind),
+	TYPE_METHOD_HINTREF(Sequence_bposition),
+	TYPE_METHOD_HINTREF(Sequence_brange),
+
+	TYPE_METHOD_HINTREF(__set_iter__),
+	TYPE_METHOD_HINTREF(__set_size__),
+	TYPE_METHOD_HINTREF(__set_hash__),
+//	TYPE_METHOD_HINTREF(__set_compare_eq__),
+	TYPE_METHOD_HINTREF(__map_iter__),
+	TYPE_METHOD_HINTREF(__map_size__),
+	TYPE_METHOD_HINTREF(__map_hash__),
+//	TYPE_METHOD_HINTREF(__map_getitem__),
+//	TYPE_METHOD_HINTREF(__map_contains__),
+//	TYPE_METHOD_HINTREF(__map_enumerate__),
+//	TYPE_METHOD_HINTREF(__map_enumerate_items__),
+//	TYPE_METHOD_HINTREF(__map_compare_eq__),
 	TYPE_METHOD_END
 };
 
@@ -890,75 +1117,53 @@ PRIVATE struct type_method_hint tpconst so_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_contains_with_key, &so_mh_seq_contains_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_contains_with_range, &so_mh_seq_contains_with_range, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &so_mh_seq_contains_with_range_and_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_locate, &so_mh_seq_locate, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_locate_with_range, &so_mh_seq_locate_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rlocate, &so_mh_seq_rlocate, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rlocate_with_range, &so_mh_seq_rlocate_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith, &so_mh_seq_startswith, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith_with_key, &so_mh_seq_startswith_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith_with_range, &so_mh_seq_startswith_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith_with_range_and_key, &so_mh_seq_startswith_with_range_and_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith, &so_mh_seq_endswith, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith_with_key, &so_mh_seq_endswith_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith_with_range, &so_mh_seq_endswith_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith_with_range_and_key, &so_mh_seq_endswith_with_range_and_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find, &so_mh_seq_find, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find_with_key, &so_mh_seq_find_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind, &so_mh_seq_rfind, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind_with_key, &so_mh_seq_rfind_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_reversed, &so_mh_seq_reversed, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_sorted, &so_mh_seq_sorted, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_sorted_with_key, &so_mh_seq_sorted_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_bfind, &so_mh_seq_bfind, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_bfind_with_key, &so_mh_seq_bfind_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_bposition, &so_mh_seq_bposition, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_bposition_with_key, &so_mh_seq_bposition_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_brange, &so_mh_seq_brange, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_brange_with_key, &so_mh_seq_brange_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_iter, &so_mh_set_operator_iter, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_foreach, &so_mh_set_operator_foreach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_sizeob, &so_mh_set_operator_sizeob, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_size, &so_mh_set_operator_size, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_hash, &so_mh_set_operator_hash, METHOD_FNOREFESCAPE),
 	/* TODO: */
-//	TYPE_METHOD_HINT_F(seq_locate, &so_mh_seq_locate, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_locate_with_range, &so_mh_seq_locate_with_range, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_rlocate, &so_mh_seq_rlocate, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_rlocate_with_range, &so_mh_seq_rlocate_with_range, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_startswith, &so_mh_seq_startswith, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_startswith_with_key, &so_mh_seq_startswith_with_key, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_startswith_with_range, &so_mh_seq_startswith_with_range, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_startswith_with_range_and_key, &so_mh_seq_startswith_with_range_and_key, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_endswith, &so_mh_seq_endswith, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_endswith_with_key, &so_mh_seq_endswith_with_key, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_endswith_with_range, &so_mh_seq_endswith_with_range, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_endswith_with_range_and_key, &so_mh_seq_endswith_with_range_and_key, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_find, &so_mh_seq_find, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_find_with_key, &so_mh_seq_find_with_key, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_rfind, &so_mh_seq_rfind, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_rfind_with_key, &so_mh_seq_rfind_with_key, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_reverse, &so_mh_seq_reverse, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_reversed, &so_mh_seq_reversed, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_sort, &so_mh_seq_sort, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_sort_with_key, &so_mh_seq_sort_with_key, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_sorted, &so_mh_seq_sorted, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_sorted_with_key, &so_mh_seq_sorted_with_key, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_bfind, &so_mh_seq_bfind, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_bfind_with_key, &so_mh_seq_bfind_with_key, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_bposition, &so_mh_seq_bposition, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_bposition_with_key, &so_mh_seq_bposition_with_key, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_brange, &so_mh_seq_brange, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(seq_brange_with_key, &so_mh_seq_brange_with_key, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_operator_iter, &so_mh_set_operator_iter, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_operator_foreach, &so_mh_set_operator_foreach, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_operator_sizeob, &so_mh_set_operator_sizeob, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_operator_size, &so_mh_set_operator_size, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_operator_hash, &so_mh_set_operator_hash, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(set_operator_compare_eq, &so_mh_set_operator_compare_eq, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(set_operator_trycompare_eq, &so_mh_set_operator_trycompare_eq, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_operator_eq, &so_mh_set_operator_eq, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_operator_ne, &so_mh_set_operator_ne, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_operator_lo, &so_mh_set_operator_lo, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_operator_le, &so_mh_set_operator_le, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_operator_gr, &so_mh_set_operator_gr, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_operator_ge, &so_mh_set_operator_ge, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_frozen, &so_mh_set_frozen, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(set_unify, &so_mh_set_unify, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_operator_iter, &so_mh_map_operator_iter, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_iter, &so_mh_map_operator_iter, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(map_operator_foreach_pair, &so_mh_map_operator_foreach_pair, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_operator_sizeob, &so_mh_map_operator_sizeob, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_operator_size, &so_mh_map_operator_size, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_operator_hash, &so_mh_map_operator_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_sizeob, &so_mh_map_operator_sizeob, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_size, &so_mh_map_operator_size, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_hash, &so_mh_map_operator_hash, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(map_operator_getitem, &so_mh_map_operator_getitem, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(map_operator_trygetitem, &so_mh_map_operator_trygetitem, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(map_operator_bounditem, &so_mh_map_operator_bounditem, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(map_operator_hasitem, &so_mh_map_operator_hasitem, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(map_operator_contains, &so_mh_map_operator_contains, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_keys, &so_mh_map_keys, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_iterkeys, &so_mh_map_iterkeys, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_values, &so_mh_map_values, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_itervalues, &so_mh_map_itervalues, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(map_enumerate, &so_mh_map_enumerate, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(map_makeenumeration, &so_mh_map_makeenumeration, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(map_operator_compare_eq, &so_mh_map_operator_compare_eq, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(map_operator_trycompare_eq, &so_mh_map_operator_trycompare_eq, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_operator_eq, &so_mh_map_operator_eq, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_operator_ne, &so_mh_map_operator_ne, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_operator_lo, &so_mh_map_operator_lo, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_operator_le, &so_mh_map_operator_le, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_operator_gr, &so_mh_map_operator_gr, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_operator_ge, &so_mh_map_operator_ge, METHOD_FNOREFESCAPE),
-//	TYPE_METHOD_HINT_F(map_frozen, &so_mh_map_frozen, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_END
 };
 
@@ -967,6 +1172,13 @@ PRIVATE struct type_getset tpconst so_getsets[] = {
 	TYPE_GETTER_AB_F_NODOC(STR_last, &so_getlast, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_GETTER_AB_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_AB_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
+	TYPE_GETTER_AB_F(STR___set_frozen__, &generic_obj__asset, METHOD_FCONSTCALL, "->?."),
+	TYPE_GETTER_AB_F(STR___map_frozen__, &generic_obj__asmap, METHOD_FCONSTCALL, "->?."),
+	/* TODO: */
+//	TYPE_GETTER_AB_F_NODOC(STR___map_keys__, &so_mh_map_keys, METHOD_FNOREFESCAPE),
+//	TYPE_GETTER_AB_F_NODOC(STR___map_iterkeys__, &so_mh_map_iterkeys, METHOD_FNOREFESCAPE),
+//	TYPE_GETTER_AB_F_NODOC(STR___map_values__, &so_mh_map_values, METHOD_FNOREFESCAPE),
+//	TYPE_GETTER_AB_F_NODOC(STR___map_itervalues__, &so_mh_map_itervalues, METHOD_FNOREFESCAPE),
 	TYPE_GETSET_END
 };
 
