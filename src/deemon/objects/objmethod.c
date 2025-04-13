@@ -367,7 +367,7 @@ PRIVATE struct type_operator const objmethod_operators[] = {
 PUBLIC DeeTypeObject DeeObjMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ObjMethod",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("call(args!)->"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -807,11 +807,11 @@ INTERN DeeTypeObject DocKwds_Type = {
 	/* .tp_members       = */ dockwds_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ dockwds_class_members
-	/* TODO: Operator flags */,
+	/* .tp_class_members = */ dockwds_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
+	/* TODO: Operator flags */
 };
 
 
@@ -930,7 +930,7 @@ PRIVATE struct type_callable kwobjmethod_callable = {
 PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwObjMethod",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("call(args!,kwds!!)->"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1240,7 +1240,7 @@ PRIVATE struct type_operator const clsmethod_operators[] = {
 PUBLIC DeeTypeObject DeeClsMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassMethod",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("call(thisarg,args!)->"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1375,7 +1375,7 @@ PRIVATE struct type_callable kwclsmethod_callable = {
 PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwClassMethod",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("call(thisarg,args!,kwds!!)->"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1645,7 +1645,7 @@ PRIVATE struct type_method tpconst clsproperty_methods[] = {
 	TYPE_KWMETHOD_F("setter", &clsproperty_set, METHOD_FNOREFESCAPE, "(thisarg,value)\nAlias for ?#set"),
 	TYPE_KWMETHOD_F("isbound", &clsproperty_isbound_kw,
 	                METHOD_FNOREFESCAPE | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL,
-	                "(thisarg)->\n"
+	                "(thisarg)->?Dbool\n"
 	                "Check if the attribute is bound"),
 	TYPE_METHOD_END
 };
@@ -1802,7 +1802,7 @@ PRIVATE struct type_callable clsproperty_callable = {
 PUBLIC DeeTypeObject DeeClsProperty_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassProperty",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("call(thisarg)->"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1920,6 +1920,22 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+clsmember_isbound(DeeClsMemberObject *self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
+	bool isbound;
+	DeeObject *thisarg;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:isbound", &thisarg))
+		goto err;
+	/* Allow non-instance objects for generic types. */
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+		goto err;
+	isbound = type_member_bound(&self->cm_memb, thisarg);
+	return_bool(isbound);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_delete(DeeClsMemberObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *thisarg;
@@ -1955,6 +1971,7 @@ PRIVATE struct type_method tpconst clsmember_methods[] = {
 	TYPE_KWMETHOD_F(STR_get, &clsmember_get_kw, METHOD_FNOREFESCAPE, "(thisarg)->"),
 	TYPE_KWMETHOD_F("delete", &clsmember_delete, METHOD_FNOREFESCAPE, "(thisarg)"),
 	TYPE_KWMETHOD_F(STR_set, &clsmember_set, METHOD_FNOREFESCAPE, "(thisarg,value)"),
+	TYPE_KWMETHOD_F("isbound", &clsmember_isbound, METHOD_FNOREFESCAPE, "(thisarg)->?Dbool"),
 	TYPE_METHOD_END
 };
 
@@ -2069,7 +2086,7 @@ PRIVATE struct type_callable clsmember_callable = {
 PUBLIC DeeTypeObject DeeClsMember_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassMember",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("call(thisarg)->"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2474,7 +2491,7 @@ cmethod_printrepr(DeeCMethodObject *__restrict self,
 PUBLIC DeeTypeObject DeeCMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_CMethod",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("call(args!)->"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2557,7 +2574,7 @@ PRIVATE struct type_callable kwcmethod_callable = {
 PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwCMethod",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("call(args!,kwds!!)->"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
