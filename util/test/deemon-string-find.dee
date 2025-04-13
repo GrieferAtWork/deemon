@@ -99,7 +99,6 @@ function t(x, w) {
 			assert xv.casecontains(needle.upper()) == (n != 0);
 		}
 	}
-	assertCount("", 0);
 	assertCount("a", 1);
 	assertCount("ab", 1);
 	assertCount("abcd", 1);

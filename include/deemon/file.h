@@ -539,10 +539,10 @@ DFUNDEF WUNUSED ATTR_RETNONNULL DeeObject *DCALL DeeFile_DefaultStd(unsigned int
 #endif /* !CONFIG_HOST_WINDOWS */
 
 #ifdef __INTELLISENSE__
-extern DREF DeeObject *const DeeFile_DefaultStdin;
-extern DREF DeeObject *const DeeFile_DefaultStdout;
-extern DREF DeeObject *const DeeFile_DefaultStderr;
-extern DREF DeeObject *const DeeFile_DefaultStddbg;
+extern DeeObject *const DeeFile_DefaultStdin;
+extern DeeObject *const DeeFile_DefaultStdout;
+extern DeeObject *const DeeFile_DefaultStderr;
+extern DeeObject *const DeeFile_DefaultStddbg;
 #else /* __INTELLISENSE__ */
 #define DeeFile_DefaultStdin  DeeFile_DefaultStd(DEE_STDIN)
 #define DeeFile_DefaultStdout DeeFile_DefaultStd(DEE_STDOUT)

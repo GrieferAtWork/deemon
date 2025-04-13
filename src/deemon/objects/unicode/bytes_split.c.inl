@@ -29,9 +29,11 @@
 #include <deemon/arg.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/super.h>
 #include <deemon/system-features.h> /* memcpy */
 #include <deemon/util/atomic.h>
 
@@ -61,7 +63,7 @@ typedef struct {
 	PROXY_OBJECT_HEAD2_EX(Bytes,     bs_bytes,     /* [1..1][const] The Bytes object being split. */
 	                      DeeObject, bs_sep_owner) /* [0..1][const] The owner of the split sequence. */
 	byte_t const                    *bs_sep_ptr;   /* [const] Pointer to the effective separation sequence. */
-	size_t                           bs_sep_len;   /* [const] Length of the separation sequence (in bytes). */
+	size_t                           bs_sep_len;   /* [const][!0] Length of the separation sequence (in bytes). */
 	byte_t                           bs_sep_buf[sizeof(void *)]; /* A small inline-buffer used for single-byte splits. */
 } BytesSplit;
 
@@ -91,24 +93,6 @@ bsi_init(BytesSplitIterator *__restrict self,
 	self->bsi_end   = self->bsi_iter + DeeBytes_SIZE(self->bsi_bytes);
 	if (self->bsi_iter == self->bsi_end)
 		self->bsi_iter = NULL;
-	self->bsi_sep_ptr = self->bsi_split->bs_sep_ptr;
-	self->bsi_sep_len = self->bsi_split->bs_sep_len;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsi_ctor(BytesSplitIterator *__restrict self) {
-	DeeTypeObject *seqtyp = &BytesSplit_Type;
-	if (Dee_TYPE(self) == &BytesCaseSplitIterator_Type)
-		seqtyp = &BytesCaseSplit_Type;
-	self->bsi_split = (DREF BytesSplit *)DeeObject_NewDefault(seqtyp);
-	if unlikely(!self->bsi_split)
-		goto err;
-	self->bsi_iter    = NULL;
-	self->bsi_end     = DeeBytes_TERM(Dee_EmptyBytes);
-	self->bsi_bytes   = (Bytes *)Dee_EmptyBytes;
 	self->bsi_sep_ptr = self->bsi_split->bs_sep_ptr;
 	self->bsi_sep_len = self->bsi_split->bs_sep_len;
 	return 0;
@@ -283,7 +267,7 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&bsi_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&bsi_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&bsi_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&bsi_init,
@@ -335,7 +319,7 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&bsi_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&bsi_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&bsi_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&bsi_init,
@@ -373,15 +357,6 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bs_ctor(BytesSplit *__restrict self) {
-	self->bs_bytes     = (DREF Bytes *)DeeBytes_NewEmpty();
-	self->bs_sep_owner = NULL;
-	self->bs_sep_ptr   = NULL;
-	self->bs_sep_len   = 0;
-	return 0;
-}
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bs_copy(BytesSplit *__restrict self,
@@ -442,12 +417,16 @@ bs_init(BytesSplit *__restrict self, size_t argc,
 	if (DeeBytes_Check(self->bs_sep_owner)) {
 		self->bs_sep_ptr = DeeBytes_DATA(self->bs_sep_owner);
 		self->bs_sep_len = DeeBytes_SIZE(self->bs_sep_owner);
+		if unlikely(!self->bs_sep_len)
+			goto err_empty_sep;
 		Dee_Incref(self->bs_sep_owner);
 	} else if (DeeString_Check(self->bs_sep_owner)) {
 		self->bs_sep_ptr = DeeString_AsBytes(self->bs_sep_owner, false);
 		if unlikely(!self->bs_sep_ptr)
 			goto err;
 		self->bs_sep_len = WSTR_LENGTH(self->bs_sep_ptr);
+		if unlikely(!self->bs_sep_len)
+			goto err_empty_sep;
 		Dee_Incref(self->bs_sep_owner);
 	} else {
 		if (DeeObject_AsUIntX(self->bs_sep_owner, &self->bs_sep_buf[0]))
@@ -458,6 +437,8 @@ bs_init(BytesSplit *__restrict self, size_t argc,
 	}
 	Dee_Incref(self->bs_bytes);
 	return 0;
+err_empty_sep:
+	DeeError_Throwf(&DeeError_ValueError, "Empty split separator");
 err:
 	return -1;
 }
@@ -647,7 +628,7 @@ INTERN DeeTypeObject BytesSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&bs_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&bs_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&bs_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&bs_init,
@@ -697,7 +678,7 @@ INTERN DeeTypeObject BytesCaseSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&bs_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&bs_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&bs_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&bs_init,
@@ -770,6 +751,8 @@ DeeBytes_Split(Bytes *self, DeeObject *sep) {
 		result->bs_sep_ptr = DeeBytes_DATA(sep);
 		result->bs_sep_len = DeeBytes_SIZE(sep);
 	}
+	if unlikely(!result->bs_sep_len)
+		goto handle_empty_sep;
 	result->bs_bytes     = self;
 	result->bs_sep_owner = sep;
 	Dee_Incref(self);
@@ -780,6 +763,9 @@ done:
 err_r:
 	DeeObject_FREE(result);
 	return NULL;
+handle_empty_sep:
+	DeeObject_FREE(result);
+	return DeeSuper_New(&DeeSeq_Type, (DeeObject *)self);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -816,6 +802,8 @@ DeeBytes_CaseSplit(Bytes *self, DeeObject *sep) {
 		result->bs_sep_ptr = DeeBytes_DATA(sep);
 		result->bs_sep_len = DeeBytes_SIZE(sep);
 	}
+	if unlikely(!result->bs_sep_len)
+		goto handle_empty_sep;
 	result->bs_bytes     = self;
 	result->bs_sep_owner = sep;
 	Dee_Incref(self);
@@ -826,6 +814,9 @@ done:
 err_r:
 	DeeObject_FREE(result);
 	return NULL;
+handle_empty_sep:
+	DeeObject_FREE(result);
+	return DeeSuper_New(&DeeSeq_Type, (DeeObject *)self);
 }
 
 

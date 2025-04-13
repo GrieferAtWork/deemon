@@ -24,9 +24,11 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/super.h>
 #include <deemon/util/atomic.h>
 
 #include <hybrid/typecore.h>
@@ -53,7 +55,7 @@ INTDEF DeeTypeObject StringLineSplitIterator_Type;
 
 typedef struct {
 	PROXY_OBJECT_HEAD2_EX(DeeStringObject, s_str, /* [1..1][const] The string that is being split. */
-	                      DeeStringObject, s_sep) /* [1..1][const] The string to search for. */
+	                      DeeStringObject, s_sep) /* [1..1][const][!DeeString_IsEmpty] The string to search for. */
 } StringSplit;
 
 typedef struct {
@@ -61,7 +63,7 @@ typedef struct {
 	union dcharptr_const              s_next;  /* [0..1][atomic] Pointer to the starting address of the next split
 	                                            *                (points into the s_enc-specific string of `s_split->s_str')
 	                                            *                When the iterator is exhausted, this pointer is set to `NULL'. */
-	union dcharptr_const              s_begin; /* [1..1][const] The starting address of the width string of `s_split->s_str'. */
+	union dcharptr_const              s_start; /* [1..1][const] The starting address of the width string of `s_split->s_str'. */
 	union dcharptr_const              s_end;   /* [1..1][const] The end address of the width string of `s_split->s_str'. */
 	union dcharptr_const              s_sep;   /* [1..1][const] The starting address of the `s_enc'-encoded string of `s_split->s_sep'. */
 	size_t                            s_sepsz; /* [1..1][const][== WSTR_LENGTH(s_sep)] The length of separator string. */
@@ -86,7 +88,7 @@ splititer_next(StringSplitIterator *__restrict self) {
 				result_end.cp8 = self->s_end.cp8;
 				next_ptr.cp8   = NULL;
 			} else {
-				next_ptr.cp8 = result_end.cp8 + self->s_sepsz * 1;
+				next_ptr.cp8 = result_end.cp8 + self->s_sepsz;
 			}
 			result_len = (size_t)(result_end.cp8 -
 			                      result_start.cp8);
@@ -130,7 +132,7 @@ splititer_next(StringSplitIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 casesplititer_next(StringSplitIterator *__restrict self) {
-	/* Literally the same as the non-case version, but use `memcasemem(b|w|l)' instead. */
+	/* Literally the same as the non-case version, but use `dee_memcasemem(b|w|l)' instead. */
 	union dcharptr_const result_start, result_end, next_ptr;
 	size_t result_len, match_length;
 	do {
@@ -252,32 +254,32 @@ splititer_setup(StringSplitIterator *__restrict self,
 	SWITCH_SIZEOF_WIDTH(self->s_width) {
 
 	CASE_WIDTH_1BYTE:
-		self->s_begin.cp8 = DeeString_As1Byte((DeeObject *)split->s_str);
-		self->s_end.cp8   = self->s_begin.cp8 + WSTR_LENGTH(self->s_begin.cp8);
+		self->s_start.cp8 = DeeString_As1Byte((DeeObject *)split->s_str);
+		self->s_end.cp8   = self->s_start.cp8 + WSTR_LENGTH(self->s_start.cp8);
 		self->s_sep.cp8   = DeeString_As1Byte((DeeObject *)split->s_sep);
 		break;
 
 	CASE_WIDTH_2BYTE:
-		self->s_begin.cp16 = DeeString_As2Byte((DeeObject *)split->s_str);
-		if unlikely(!self->s_begin.cp16)
+		self->s_start.cp16 = DeeString_As2Byte((DeeObject *)split->s_str);
+		if unlikely(!self->s_start.cp16)
 			goto err;
-		self->s_end.cp16 = self->s_begin.cp16 + WSTR_LENGTH(self->s_begin.cp16);
+		self->s_end.cp16 = self->s_start.cp16 + WSTR_LENGTH(self->s_start.cp16);
 		self->s_sep.cp16 = DeeString_As2Byte((DeeObject *)split->s_sep);
 		if unlikely(!self->s_sep.cp16)
 			goto err;
 		break;
 
 	CASE_WIDTH_4BYTE:
-		self->s_begin.cp32 = DeeString_As4Byte((DeeObject *)split->s_str);
-		if unlikely(!self->s_begin.cp32)
+		self->s_start.cp32 = DeeString_As4Byte((DeeObject *)split->s_str);
+		if unlikely(!self->s_start.cp32)
 			goto err;
-		self->s_end.cp32 = self->s_begin.cp32 + WSTR_LENGTH(self->s_begin.cp32);
+		self->s_end.cp32 = self->s_start.cp32 + WSTR_LENGTH(self->s_start.cp32);
 		self->s_sep.cp32 = DeeString_As4Byte((DeeObject *)split->s_sep);
 		if unlikely(!self->s_sep.cp32)
 			goto err;
 		break;
 	}
-	self->s_next.ptr = self->s_begin.ptr;
+	self->s_next.ptr = self->s_start.ptr;
 	if (self->s_next.ptr == self->s_end.ptr)
 		self->s_next.ptr = NULL;
 	self->s_sepsz = WSTR_LENGTH(self->s_sep.ptr);
@@ -288,28 +290,12 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-splititer_ctor(StringSplitIterator *__restrict self) {
-	DREF StringSplit *split;
-	split = (DREF StringSplit *)DeeObject_NewDefault(&StringSplit_Type);
-	if unlikely(!split)
-		goto err;
-	if unlikely(splititer_setup(self, split))
-		goto err_split;
-	Dee_DecrefNokill(split);
-	return 0;
-err_split:
-	Dee_Decref(split);
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 splititer_copy(StringSplitIterator *__restrict self,
                StringSplitIterator *__restrict other) {
 	self->s_split     = other->s_split;
 	self->s_next.ptr  = GET_SPLIT_NEXT(other);
-	self->s_begin.ptr = other->s_begin.ptr;
+	self->s_start.ptr = other->s_start.ptr;
 	self->s_end.ptr   = other->s_end.ptr;
 	self->s_sep.ptr   = other->s_sep.ptr;
 	self->s_sepsz     = other->s_sepsz;
@@ -347,7 +333,7 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&splititer_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&splititer_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&splititer_copy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&splititer_init,
@@ -399,7 +385,7 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&splititer_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&splititer_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&splititer_copy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&splititer_init,
@@ -464,32 +450,32 @@ split_doiter(StringSplit *__restrict self,
 	SWITCH_SIZEOF_WIDTH(result->s_width) {
 
 	CASE_WIDTH_1BYTE:
-		result->s_begin.cp8 = DeeString_As1Byte((DeeObject *)self->s_str);
-		result->s_end.cp8   = result->s_begin.cp8 + WSTR_LENGTH(result->s_begin.cp8);
+		result->s_start.cp8 = DeeString_As1Byte((DeeObject *)self->s_str);
+		result->s_end.cp8   = result->s_start.cp8 + WSTR_LENGTH(result->s_start.cp8);
 		result->s_sep.cp8   = DeeString_As1Byte((DeeObject *)self->s_sep);
 		break;
 
 	CASE_WIDTH_2BYTE:
-		result->s_begin.cp16 = DeeString_As2Byte((DeeObject *)self->s_str);
-		if unlikely(!result->s_begin.cp16)
+		result->s_start.cp16 = DeeString_As2Byte((DeeObject *)self->s_str);
+		if unlikely(!result->s_start.cp16)
 			goto err_r;
-		result->s_end.cp16 = result->s_begin.cp16 + WSTR_LENGTH(result->s_begin.cp16);
+		result->s_end.cp16 = result->s_start.cp16 + WSTR_LENGTH(result->s_start.cp16);
 		result->s_sep.cp16 = DeeString_As2Byte((DeeObject *)self->s_sep);
 		if unlikely(!result->s_sep.cp16)
 			goto err_r;
 		break;
 
 	CASE_WIDTH_4BYTE:
-		result->s_begin.cp32 = DeeString_As4Byte((DeeObject *)self->s_str);
-		if unlikely(!result->s_begin.cp32)
+		result->s_start.cp32 = DeeString_As4Byte((DeeObject *)self->s_str);
+		if unlikely(!result->s_start.cp32)
 			goto err_r;
-		result->s_end.cp32 = result->s_begin.cp32 + WSTR_LENGTH(result->s_begin.cp32);
+		result->s_end.cp32 = result->s_start.cp32 + WSTR_LENGTH(result->s_start.cp32);
 		result->s_sep.cp32 = DeeString_As4Byte((DeeObject *)self->s_sep);
 		if unlikely(!result->s_sep.cp32)
 			goto err_r;
 		break;
 	}
-	result->s_next.ptr = result->s_begin.ptr;
+	result->s_next.ptr = result->s_start.ptr;
 	if (result->s_next.ptr == result->s_end.ptr)
 		result->s_next.ptr = NULL;
 	result->s_sepsz = WSTR_LENGTH(result->s_sep.ptr);
@@ -618,14 +604,6 @@ PRIVATE struct type_seq casesplit_seq = {
 	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
 };
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-split_ctor(StringSplit *__restrict self) {
-	self->s_str = (DREF DeeStringObject *)Dee_EmptyString;
-	self->s_sep = (DREF DeeStringObject *)Dee_EmptyString;
-	Dee_Incref_n(Dee_EmptyString, 2);
-	return 0;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 split_copy(StringSplit *__restrict self,
            StringSplit *__restrict other) {
@@ -644,6 +622,8 @@ split_init(StringSplit *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->s_sep, &DeeString_Type))
 		goto err;
+	if unlikely(DeeString_IsEmpty(self->s_sep))
+		return DeeError_Throwf(&DeeError_ValueError, "Empty split separator");
 	Dee_Incref(self->s_str);
 	Dee_Incref(self->s_sep);
 	return 0;
@@ -663,7 +643,7 @@ INTERN DeeTypeObject StringSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&split_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&split_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&split_copy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&split_init,
@@ -713,7 +693,7 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&split_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&split_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&split_copy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&split_init,
@@ -759,6 +739,8 @@ DeeString_Split(DeeStringObject *self,
 	DREF StringSplit *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT(separator, &DeeString_Type);
+	if unlikely(DeeString_IsEmpty(separator))
+		goto handle_empty_sep;
 	result = DeeObject_MALLOC(StringSplit);
 	if unlikely(!result)
 		goto done;
@@ -769,6 +751,8 @@ DeeString_Split(DeeStringObject *self,
 	result->s_sep = separator; /* Inherit */
 done:
 	return (DREF DeeObject *)result;
+handle_empty_sep:
+	return DeeSuper_New(&DeeSeq_Type, (DeeObject *)self);
 }
 
 /* @return: An abstract sequence type for enumerating the segments of a split string. */
@@ -778,6 +762,8 @@ DeeString_CaseSplit(DeeStringObject *self,
 	DREF StringSplit *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT(separator, &DeeString_Type);
+	if unlikely(DeeString_IsEmpty(separator))
+		goto handle_empty_sep;
 	result = DeeObject_MALLOC(StringSplit);
 	if unlikely(!result)
 		goto done;
@@ -789,6 +775,8 @@ DeeString_CaseSplit(DeeStringObject *self,
 	result->s_sep = separator; /* Inherit */
 done:
 	return (DREF DeeObject *)result;
+handle_empty_sep:
+	return DeeSuper_New(&DeeSeq_Type, (DeeObject *)self);
 }
 
 

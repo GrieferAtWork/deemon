@@ -20,6 +20,7 @@
 #ifndef GUARD_DEEMON_OBJECTS_NUMERIC_C
 #define GUARD_DEEMON_OBJECTS_NUMERIC_C 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>

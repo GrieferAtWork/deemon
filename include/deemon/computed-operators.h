@@ -53,7 +53,7 @@
 /* Have a deemon program that:
  * - scans the deemon source code for type declarations
  * - resolves those types to their respective deemon objects
- * - uses debug in as per "/util/test/deemon-operator-linkage.dee"
+ * - uses debug info as per "/util/test/deemon-operator-linkage.dee"
  *   to figure out all the default operators
  * - automatically completes those types by replacing "NULL" values
  *   in type initializers with "DEFIMPL(...)"
@@ -64,9 +64,9 @@
  * >> };
  * >> PRIVATE DeeTypeObject MyObject_Type = {
  * >>     OBJECT_HEAD_INIT(&DeeType_Type),
- * >>     / * .tp_name * / "_MyObject", // Script should find this one as "rt.MyObject"
+ * >>     / * .tp_name = * / "_MyObject", // Script finds this one as "rt.MyObject"
  * >>     ...
- * >>     / * .tp_seq  * / &mytyp_seq,
+ * >>     / * .tp_seq  = * / &mytyp_seq,
  * >> };
  *
  * Obviously, this magic script can only run when deemon was

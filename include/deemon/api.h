@@ -443,8 +443,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
  * - disabled: >> "foo".find("") == -1 */
 #if (!defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0) && \
      !defined(CONFIG_NO_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))
-#if 0 /* TODO: Adjust user-code to work with this
-       * TODO: Fix code that infinite-loops thanks to this (e.g. string_count) */
+#if 0 /* TODO: Adjust external user-code to work with this */
 #define CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
 #else
 #define CONFIG_NO_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0

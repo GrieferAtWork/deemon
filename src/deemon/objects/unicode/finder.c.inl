@@ -29,6 +29,8 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
+
+#include <hybrid/overflow.h>
 /**/
 
 #include "../../runtime/strings.h"
@@ -45,6 +47,7 @@ typedef struct {
 	                      String, sf_needle) /* [1..1][const] The needle being searched for. */
 	size_t                        sf_start;  /* [const] Starting search index. */
 	size_t                        sf_end;    /* [const] End search index. */
+	bool                          sf_ovrlap; /* [const] When true, "sfi_find_delta = 1", else "sfi_find_delta = max(#sf_needle, 1)" */
 } StringFind;
 
 typedef struct {
@@ -54,15 +57,18 @@ typedef struct {
 	union dcharptr_const             sfi_end;        /* [1..1][const] End pointer. */
 	union dcharptr_const             sfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
 	size_t                           sfi_needle_len; /* [const] Length of the needle being searched. */
+	size_t                           sfi_find_delta; /* [const] Delta added to `sfi_ptr' after each match */
 	unsigned int                     sfi_width;      /* [const] The common width of the searched, and needle string. */
 } StringFindIterator;
 
-INTDEF WUNUSED DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeString_FindAll(String *self, String *other,
-                  size_t start, size_t end);
-INTDEF WUNUSED DREF DeeObject *DCALL
+                  size_t start, size_t end,
+                  bool overlapping);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeString_CaseFindAll(String *self, String *other,
-                      size_t start, size_t end);
+                      size_t start, size_t end,
+                      bool overlapping);
 #define READ_PTR(x) atomic_read(&(x)->sfi_ptr.ptr)
 
 
@@ -76,7 +82,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_ctor(StringFindIterator *__restrict self) {
 	self->sfi_find = (DREF StringFind *)DeeString_FindAll((String *)Dee_EmptyString,
 	                                                      (String *)Dee_EmptyString,
-	                                                      0, 0);
+	                                                      0, 0, false);
 	if unlikely(!self->sfi_find)
 		goto err;
 	self->sfi_start.cp8      = DeeString_As1Byte(Dee_EmptyString);
@@ -84,6 +90,7 @@ sfi_ctor(StringFindIterator *__restrict self) {
 	self->sfi_end.cp8        = DeeString_As1Byte(Dee_EmptyString);
 	self->sfi_needle_ptr.cp8 = DeeString_As1Byte(Dee_EmptyString);
 	self->sfi_needle_len     = 0;
+	self->sfi_find_delta     = 1;
 	self->sfi_width          = STRING_WIDTH_1BYTE;
 	return 0;
 err:
@@ -94,7 +101,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 scfi_ctor(StringFindIterator *__restrict self) {
 	self->sfi_find = (DREF StringFind *)DeeString_CaseFindAll((String *)Dee_EmptyString,
 	                                                          (String *)Dee_EmptyString,
-	                                                          0, 0);
+	                                                          0, 0, false);
 	if unlikely(!self->sfi_find)
 		goto err;
 	self->sfi_start.cp8      = DeeString_As1Byte(Dee_EmptyString);
@@ -102,6 +109,7 @@ scfi_ctor(StringFindIterator *__restrict self) {
 	self->sfi_end.cp8        = DeeString_As1Byte(Dee_EmptyString);
 	self->sfi_needle_ptr.cp8 = DeeString_As1Byte(Dee_EmptyString);
 	self->sfi_needle_len     = 0;
+	self->sfi_find_delta     = 1;
 	self->sfi_width          = STRING_WIDTH_1BYTE;
 	return 0;
 err:
@@ -118,6 +126,7 @@ sfi_copy(StringFindIterator *__restrict self,
 	self->sfi_end.ptr        = other->sfi_end.ptr;
 	self->sfi_needle_ptr.ptr = other->sfi_needle_ptr.ptr;
 	self->sfi_needle_len     = other->sfi_needle_len;
+	self->sfi_find_delta     = other->sfi_find_delta;
 	self->sfi_width          = other->sfi_width;
 	Dee_Incref(self->sfi_find);
 	return 0;
@@ -180,6 +189,9 @@ sfi_setup(StringFindIterator *__restrict self,
 		self->sfi_needle_len = WSTR_LENGTH(self->sfi_needle_ptr.cp32);
 		break;
 	}
+	self->sfi_find_delta = self->sfi_needle_len;
+	if (self->sfi_find_delta == 0 || find->sf_ovrlap)
+		self->sfi_find_delta = 1;
 	self->sfi_find = find;
 	Dee_Incref(find);
 	return 0;
@@ -214,86 +226,98 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sfi_next(StringFindIterator *__restrict self) {
 	union dcharptr_const ptr, new_ptr;
+	size_t scan_size;
 again:
 	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
+	if (OVERFLOW_USUB((uintptr_t)self->sfi_end.ptr, (uintptr_t)ptr.ptr, &scan_size))
+		goto iter_done;
+	scan_size = Dee_STRING_DIV_SIZEOF_WIDTH(scan_size, self->sfi_width);
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
 
 	CASE_WIDTH_1BYTE:
-		new_ptr.cp8 = memmemb(ptr.cp8, (size_t)(self->sfi_end.cp8 - ptr.cp8),
-		                      self->sfi_needle_ptr.cp8,
-		                      self->sfi_needle_len);
+		new_ptr.cp8 = memmemb(ptr.cp8, scan_size, self->sfi_needle_ptr.cp8, self->sfi_needle_len);
 		if (new_ptr.cp8) {
-			if (!atomic_cmpxch_weak(&self->sfi_ptr.cp8, ptr.cp8, new_ptr.cp8 + self->sfi_needle_len))
+			if (!atomic_cmpxch_weak(&self->sfi_ptr.cp8, ptr.cp8, new_ptr.cp8 + self->sfi_find_delta))
 				goto again;
 			return DeeInt_NewSize((size_t)(new_ptr.cp8 - self->sfi_start.cp8));
 		}
 		break;
 
 	CASE_WIDTH_2BYTE:
-		new_ptr.cp16 = memmemw(ptr.cp16, (size_t)(self->sfi_end.cp16 - ptr.cp16),
-		                       self->sfi_needle_ptr.cp16,
-		                       self->sfi_needle_len);
+		new_ptr.cp16 = memmemw(ptr.cp16, scan_size, self->sfi_needle_ptr.cp16, self->sfi_needle_len);
 		if (new_ptr.cp16) {
-			if (!atomic_cmpxch_weak(&self->sfi_ptr.cp16, ptr.cp16, new_ptr.cp16 + self->sfi_needle_len))
+			if (!atomic_cmpxch_weak(&self->sfi_ptr.cp16, ptr.cp16, new_ptr.cp16 + self->sfi_find_delta))
 				goto again;
 			return DeeInt_NewSize((size_t)(new_ptr.cp16 - self->sfi_start.cp16));
 		}
 		break;
 
 	CASE_WIDTH_4BYTE:
-		new_ptr.cp32 = memmeml(ptr.cp32, (size_t)(self->sfi_end.cp32 - ptr.cp32),
-		                       self->sfi_needle_ptr.cp32,
-		                       self->sfi_needle_len);
+		new_ptr.cp32 = memmeml(ptr.cp32, scan_size, self->sfi_needle_ptr.cp32, self->sfi_needle_len);
 		if (new_ptr.cp32) {
-			if (!atomic_cmpxch_weak(&self->sfi_ptr.cp32, ptr.cp32, new_ptr.cp32 + self->sfi_needle_len))
+			if (!atomic_cmpxch_weak(&self->sfi_ptr.cp32, ptr.cp32, new_ptr.cp32 + self->sfi_find_delta))
 				goto again;
 			return DeeInt_NewSize((size_t)(new_ptr.cp32 - self->sfi_start.cp32));
 		}
 		break;
 	}
+iter_done:
 	return ITER_DONE;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 scfi_nextpair(StringFindIterator *__restrict self, DREF DeeObject *pair[2]) {
 	union dcharptr_const ptr, new_ptr;
-	size_t match_length, result;
+	size_t match_length, result, find_delta;
+	size_t scan_size;
 again:
 	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
+	if (OVERFLOW_USUB((uintptr_t)self->sfi_end.ptr, (uintptr_t)ptr.ptr, &scan_size))
+		goto iter_done;
+	scan_size = Dee_STRING_DIV_SIZEOF_WIDTH(scan_size, self->sfi_width);
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
 
 	CASE_WIDTH_1BYTE:
-		new_ptr.cp8 = dee_memcasememb(ptr.cp8, (size_t)(self->sfi_end.cp8 - ptr.cp8),
+		new_ptr.cp8 = dee_memcasememb(ptr.cp8, scan_size,
 		                              self->sfi_needle_ptr.cp8,
 		                              self->sfi_needle_len,
 		                              &match_length);
 		if (!new_ptr.cp8)
 			goto iter_done;
-		if (!atomic_cmpxch_weak(&self->sfi_ptr.cp8, ptr.cp8, new_ptr.cp8 + match_length))
+		find_delta = match_length;
+		if (find_delta == 0 || self->sfi_find->sf_ovrlap)
+			find_delta = 1;
+		if (!atomic_cmpxch_weak(&self->sfi_ptr.cp8, ptr.cp8, new_ptr.cp8 + find_delta))
 			goto again;
 		result = (size_t)(new_ptr.cp8 - self->sfi_start.cp8);
 		break;
 
 	CASE_WIDTH_2BYTE:
-		new_ptr.cp16 = dee_memcasememw(ptr.cp16, (size_t)(self->sfi_end.cp16 - ptr.cp16),
+		new_ptr.cp16 = dee_memcasememw(ptr.cp16, scan_size,
 		                               self->sfi_needle_ptr.cp16,
 		                               self->sfi_needle_len,
 		                               &match_length);
 		if (!new_ptr.cp16)
 			goto iter_done;
-		if (!atomic_cmpxch_weak(&self->sfi_ptr.cp16, ptr.cp16, new_ptr.cp16 + match_length))
+		find_delta = match_length;
+		if (find_delta == 0 || self->sfi_find->sf_ovrlap)
+			find_delta = 1;
+		if (!atomic_cmpxch_weak(&self->sfi_ptr.cp16, ptr.cp16, new_ptr.cp16 + find_delta))
 			goto again;
 		result = (size_t)(new_ptr.cp16 - self->sfi_start.cp16);
 		break;
 
 	CASE_WIDTH_4BYTE:
-		new_ptr.cp32 = dee_memcasememl(ptr.cp32, (size_t)(self->sfi_end.cp32 - ptr.cp32),
+		new_ptr.cp32 = dee_memcasememl(ptr.cp32, scan_size,
 		                               self->sfi_needle_ptr.cp32,
 		                               self->sfi_needle_len,
 		                               &match_length);
 		if (!new_ptr.cp32)
 			goto iter_done;
-		if (!atomic_cmpxch_weak(&self->sfi_ptr.cp32, ptr.cp32, new_ptr.cp32 + match_length))
+		find_delta = match_length;
+		if (find_delta == 0 || self->sfi_find->sf_ovrlap)
+			find_delta = 1;
+		if (!atomic_cmpxch_weak(&self->sfi_ptr.cp32, ptr.cp32, new_ptr.cp32 + find_delta))
 			goto again;
 		result = (size_t)(new_ptr.cp32 - self->sfi_start.cp32);
 		break;
@@ -327,55 +351,61 @@ STATIC_ASSERT(offsetof(StringFindIterator, sfi_find) == offsetof(ProxyObject, po
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_bool(StringFindIterator *__restrict self) {
 	union dcharptr_const ptr;
+	size_t scan_size;
 	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
+	if (OVERFLOW_USUB((uintptr_t)self->sfi_end.ptr, (uintptr_t)ptr.ptr, &scan_size))
+		goto iter_done;
+	scan_size = Dee_STRING_DIV_SIZEOF_WIDTH(scan_size, self->sfi_width);
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
 
 	CASE_WIDTH_1BYTE:
-		ptr.cp8 = memmemb(ptr.cp8, (size_t)(self->sfi_end.cp8 - ptr.cp8),
-		                  self->sfi_needle_ptr.cp8,
-		                  self->sfi_needle_len);
+		ptr.cp8 = memmemb(ptr.cp8, scan_size, self->sfi_needle_ptr.cp8, self->sfi_needle_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
-		ptr.cp16 = memmemw(ptr.cp16, (size_t)(self->sfi_end.cp16 - ptr.cp16),
-		                   self->sfi_needle_ptr.cp16,
-		                   self->sfi_needle_len);
+		ptr.cp16 = memmemw(ptr.cp16, scan_size, self->sfi_needle_ptr.cp16, self->sfi_needle_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
-		ptr.cp32 = memmeml(ptr.cp32, (size_t)(self->sfi_end.cp32 - ptr.cp32),
-		                   self->sfi_needle_ptr.cp32,
-		                   self->sfi_needle_len);
+		ptr.cp32 = memmeml(ptr.cp32, scan_size, self->sfi_needle_ptr.cp32, self->sfi_needle_len);
 		break;
 	}
 	return ptr.ptr != NULL;
+iter_done:
+	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 scfi_bool(StringFindIterator *__restrict self) {
 	union dcharptr_const ptr;
+	size_t scan_size;
 	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
+	if (OVERFLOW_USUB((uintptr_t)self->sfi_end.ptr, (uintptr_t)ptr.ptr, &scan_size))
+		goto iter_done;
+	scan_size = Dee_STRING_DIV_SIZEOF_WIDTH(scan_size, self->sfi_width);
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
 
 	CASE_WIDTH_1BYTE:
-		ptr.cp8 = dee_memcasememb(ptr.cp8, (size_t)(self->sfi_end.cp8 - ptr.cp8),
+		ptr.cp8 = dee_memcasememb(ptr.cp8, scan_size,
 		                          self->sfi_needle_ptr.cp8,
 		                          self->sfi_needle_len, NULL);
 		break;
 
 	CASE_WIDTH_2BYTE:
-		ptr.cp16 = dee_memcasememw(ptr.cp16, (size_t)(self->sfi_end.cp16 - ptr.cp16),
+		ptr.cp16 = dee_memcasememw(ptr.cp16, scan_size,
 		                           self->sfi_needle_ptr.cp16,
 		                           self->sfi_needle_len, NULL);
 		break;
 
 	CASE_WIDTH_4BYTE:
-		ptr.cp32 = dee_memcasememl(ptr.cp32, (size_t)(self->sfi_end.cp32 - ptr.cp32),
+		ptr.cp32 = dee_memcasememl(ptr.cp32, scan_size,
 		                           self->sfi_needle_ptr.cp32,
 		                           self->sfi_needle_len, NULL);
 		break;
 	}
 	return ptr.ptr != NULL;
+iter_done:
+	return 0;
 }
 
 PRIVATE struct type_member tpconst sfi_members[] = {
@@ -833,7 +863,8 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeString_FindAll(String *self, String *other,
-                  size_t start, size_t end) {
+                  size_t start, size_t end,
+                  bool overlapping) {
 	DREF StringFind *result;
 	result = DeeObject_MALLOC(StringFind);
 	if unlikely(!result)
@@ -842,6 +873,7 @@ DeeString_FindAll(String *self, String *other,
 	result->sf_needle = other;
 	result->sf_start  = start;
 	result->sf_end    = end;
+	result->sf_ovrlap = overlapping;
 	Dee_Incref(self);
 	Dee_Incref(other);
 	DeeObject_Init(result, &StringFind_Type);
@@ -849,9 +881,10 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeString_CaseFindAll(String *self, String *other,
-                      size_t start, size_t end) {
+                      size_t start, size_t end,
+                      bool overlapping) {
 	DREF StringFind *result;
 	result = DeeObject_MALLOC(StringFind);
 	if unlikely(!result)
@@ -860,6 +893,7 @@ DeeString_CaseFindAll(String *self, String *other,
 	result->sf_needle = other;
 	result->sf_start  = start;
 	result->sf_end    = end;
+	result->sf_ovrlap = overlapping;
 	Dee_Incref(self);
 	Dee_Incref(other);
 	DeeObject_Init(result, &StringCaseFind_Type);

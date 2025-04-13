@@ -96,6 +96,7 @@ local kw_lists = {
 	{"start", "end", "key"},
 	{"cb", "start", "end"},
 	{"needle", "start", "end"},
+	{"needle", "start", "end", "overlapping"},
 	{"needles", "start", "end"},
 	{"find", "replace", "max"},
 	{"pattern", "replace", "max", "rules"},
@@ -229,6 +230,7 @@ DECLARE_KWLIST(kwlist__name_requirenew_loc, { KEX("name", 0xdbaf43f0, 0x8bcdb293
 DECLARE_KWLIST(kwlist__name_value_builtin, { KEX("name", 0xdbaf43f0, 0x8bcdb293dc3cbddc), KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEX("builtin", 0x8047ac18, 0x860b479ebf90d5d3), KEND });
 DECLARE_KWLIST(kwlist__needle_max, { KEX("needle", 0xc332b2c9, 0xac5d4abaf21e8ae1), KEX("max", 0xc293979b, 0x822bd5c706bd9850), KEND });
 DECLARE_KWLIST(kwlist__needle_start_end, { KEX("needle", 0xc332b2c9, 0xac5d4abaf21e8ae1), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEND });
+DECLARE_KWLIST(kwlist__needle_start_end_overlapping, { KEX("needle", 0xc332b2c9, 0xac5d4abaf21e8ae1), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("overlapping", 0xd8812486, 0x37114dccfd0b84cd), KEND });
 DECLARE_KWLIST(kwlist__needles_start_end, { KEX("needles", 0x40de2797, 0x20cff0e4d5a00c0a), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEND });
 DECLARE_KWLIST(kwlist__nonblocking, { KEX("nonblocking", 0xd2f4eb1f, 0xdf83fd2b5752ab51), KEND });
 DECLARE_KWLIST(kwlist__ob_name_perm_permset_decl, { KEX("ob", 0xdfa5fee2, 0x80a90888850ad043), KEX("name", 0xdbaf43f0, 0x8bcdb293dc3cbddc), KEX("perm", 0x7a394a64, 0x8b7755103442f209), KEX("permset", 0x4ee6a00a, 0xd554c804f15d2e0b), KEX("decl", 0x95fe81e2, 0xdc35fdc1dce5cffc), KEND });

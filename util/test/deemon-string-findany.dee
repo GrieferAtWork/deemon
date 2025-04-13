@@ -22,6 +22,8 @@
 import * from deemon;
 import * from errors;
 
+global final CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 = "".find("") == 0;
+
 function identical(a, b) {
 	assert type(a) === type(b), f"{repr a} == {repr b}";
 	assert a == b;
@@ -67,21 +69,23 @@ function assertFindAnyImpl2(expected: none | int | (int, int), s: string, method
 		nonIdentical(expected, try b.operator . (indexMethod)(needles, 1) catch (IndexError) none);
 		nonIdentical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (IndexError) none);
 	}
-	local lenMinusOne = #s - 1;
-	if (expected is Sequence && #expected == 2 && expected[1] <= lenMinusOne) {
-		identical(expected, s.operator . (method)(needles, 0, lenMinusOne));
-		identical(expected, b.operator . (method)(needles, 0, lenMinusOne));
-		identical(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
-		identical(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
-		identical(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
-		identical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (IndexError) none);
-	} else if (expected is Sequence && #expected == 2 && expected[1] > lenMinusOne) {
-		nonIdentical(expected, s.operator . (method)(needles, 0, lenMinusOne));
-		nonIdentical(expected, b.operator . (method)(needles, 0, lenMinusOne));
-		nonIdentical(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
-		nonIdentical(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
-		nonIdentical(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
-		nonIdentical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (IndexError) none);
+	if (s) {
+		local lenMinusOne = #s - 1;
+		if (expected is Sequence && #expected == 2 && expected[1] <= lenMinusOne) {
+			identical(expected, s.operator . (method)(needles, 0, lenMinusOne));
+			identical(expected, b.operator . (method)(needles, 0, lenMinusOne));
+			identical(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
+			identical(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
+			identical(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
+			identical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (IndexError) none);
+		} else if (expected is Sequence && #expected == 2 && expected[1] > lenMinusOne) {
+			nonIdentical(expected, s.operator . (method)(needles, 0, lenMinusOne));
+			nonIdentical(expected, b.operator . (method)(needles, 0, lenMinusOne));
+			nonIdentical(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
+			nonIdentical(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
+			nonIdentical(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
+			nonIdentical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (IndexError) none);
+		}
 	}
 }
 
@@ -121,22 +125,22 @@ function assertFindAny(expected: none | (int, int), s: string, method: string, n
 
 /* findany: Find the lowest position of any of the given sub-strings. */
 assertFindAny(none, "", "findany", {});
-assertFindAny(none, "", "findany", { "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : none, "", "findany", { "" });
 assertFindAny(none, "foo", "findany", {});
-assertFindAny(none, "foo", "findany", { "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : none, "foo", "findany", { "" });
 assertFindAny(none, "foo[bar,baz]foo", "findany", {});
-assertFindAny(none, "foo[bar,baz]foo", "findany", { "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : none, "foo[bar,baz]foo", "findany", { "" });
 assertFindAny((7, 8), "foo[bar,baz]foo", "findany", { "," });
 assertFindAny((3, 4), "foo[bar,baz]foo", "findany", { "[" });
 assertFindAny((3, 4), "foo[bar,baz]foo", "findany", { "[", "," });
 assertFindAny((3, 4), "foo[bar,baz]foo", "findany", { ",", "[" });
 
 assertFindAny(none, "", "rfindany", {});
-assertFindAny(none, "", "rfindany", { "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : none, "", "rfindany", { "" });
 assertFindAny(none, "foo", "rfindany", {});
-assertFindAny(none, "foo", "rfindany", { "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (3, 3) : none, "foo", "rfindany", { "" });
 assertFindAny(none, "foo[bar,baz]foo", "rfindany", {});
-assertFindAny(none, "foo[bar,baz]foo", "rfindany", { "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (15, 15) : none, "foo[bar,baz]foo", "rfindany", { "" });
 assertFindAny((7, 8), "foo[bar,baz]foo", "rfindany", { "," });
 assertFindAny((3, 4), "foo[bar,baz]foo", "rfindany", { "[" });
 assertFindAny((7, 8), "foo[bar,baz]foo", "rfindany", { "[", "," });
@@ -154,31 +158,31 @@ assertFindAny((13, 15), "f[bar,o,baz]foo", "rfindany", { "oo", "ba" });
 assertFindAny((14, 15), "f[bar,o,baz]foo", "rfindany", { "oo", "ba", "f", "o" });
 
 assertFindAny((5, 6), "*#foo++foo#*", "findany", { "+" });
-assertFindAny((5, 6), "*#foo++foo#*", "findany", { "+", "" });
-assertFindAny((5, 6), "*#foo++foo#*", "findany", { "", "+" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (5, 6), "*#foo++foo#*", "findany", { "+", "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (5, 6), "*#foo++foo#*", "findany", { "", "+" });
 assertFindAny((5, 6), "*#foo++foo#*", "findany", { "+", "+" });
 assertFindAny((0, 1), "*#foo++foo#*", "findany", { "*" });
-assertFindAny((0, 1), "*#foo++foo#*", "findany", { "*", "" });
-assertFindAny((0, 1), "*#foo++foo#*", "findany", { "", "*" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (0, 1), "*#foo++foo#*", "findany", { "*", "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (0, 1), "*#foo++foo#*", "findany", { "", "*" });
 assertFindAny((0, 1), "*#foo++foo#*", "findany", { "*", "*" });
 assertFindAny((0, 1), "*#foo++foo#*", "findany", { "*", "+" });
 assertFindAny((0, 1), "*#foo++foo#*", "findany", { "+", "*" });
 
 assertFindAny((6, 7), "*#foo++foo#*", "rfindany", { "+" });
-assertFindAny((6, 7), "*#foo++foo#*", "rfindany", { "+", "" });
-assertFindAny((6, 7), "*#foo++foo#*", "rfindany", { "", "+" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (12, 12) : (6, 7), "*#foo++foo#*", "rfindany", { "+", "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (12, 12) : (6, 7), "*#foo++foo#*", "rfindany", { "", "+" });
 assertFindAny((6, 7), "*#foo++foo#*", "rfindany", { "+", "+" });
 assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "*" });
-assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "*", "" });
-assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "", "*" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (12, 12) : (11, 12), "*#foo++foo#*", "rfindany", { "*", "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (12, 12) : (11, 12), "*#foo++foo#*", "rfindany", { "", "*" });
 assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "*", "*" });
 assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "*", "+" });
 assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "+", "*" });
 
 assertFindAny(none,   "*+#", "findany", { });
-assertFindAny(none,   "*+#", "findany", { "" });
-assertFindAny((1, 2), "*+#", "findany", { "", "+" });
-assertFindAny((1, 2), "*+#", "findany", { "+", "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : none,   "*+#", "findany", { "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (1, 2), "*+#", "findany", { "", "+" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (1, 2), "*+#", "findany", { "+", "" });
 assertFindAny((0, 1), "*+#", "findany", { "*" });
 assertFindAny((1, 2), "*+#", "findany", { "+" });
 assertFindAny((2, 3), "*+#", "findany", { "#" });
@@ -198,9 +202,9 @@ assertFindAny((0, 2), "*+#", "findany", { "+", "*+" });
 assertFindAny((1, 2), "*+#", "findany", { "+", "+*" });
 
 assertFindAny(none,   "*+#", "rfindany", { });
-assertFindAny(none,   "*+#", "rfindany", { "" });
-assertFindAny((1, 2), "*+#", "rfindany", { "", "+" });
-assertFindAny((1, 2), "*+#", "rfindany", { "+", "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (3, 3) : none,   "*+#", "rfindany", { "" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (3, 3) : (1, 2), "*+#", "rfindany", { "", "+" });
+assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (3, 3) : (1, 2), "*+#", "rfindany", { "+", "" });
 assertFindAny((0, 1), "*+#", "rfindany", { "*" });
 assertFindAny((1, 2), "*+#", "rfindany", { "+" });
 assertFindAny((2, 3), "*+#", "rfindany", { "#" });

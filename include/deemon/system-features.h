@@ -12665,7 +12665,7 @@ DECL_END
 		void const *candidate;                                                           \
 		T marker;                                                                        \
 		if unlikely(!needle_length)                                                      \
-			return _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL((rT *)haystack + haystack_length); \
+			return _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL((rT *)((T *)haystack + haystack_length)); \
 		if unlikely(needle_length > haystack_length)                                     \
 			return NULL;                                                                 \
 		haystack_length -= needle_length - 1;                                            \

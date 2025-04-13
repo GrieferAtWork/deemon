@@ -1,0 +1,83 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+
+global final CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 = "".find("") == 0;
+if (!CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)
+	return;
+
+function assertFindFunction(expected, s: string, find: string, args: Tuple) {
+	local index = find.replace("find", "index");
+	local casefind = "case" + find;
+	local caseindex = casefind.replace("find", "index");
+	assert expected       == s.operator . (casefind)(args...);
+	assert expected       == s.bytes().operator . (casefind)(args...);
+	assert expected.first == s.operator . (find)(args...);
+	assert expected.first == s.bytes().operator . (find)(args...);
+	assert expected       == try s.operator . (caseindex)(args...) catch (IndexError) none;
+	assert expected       == try s.bytes().operator . (caseindex)(args...) catch (IndexError) none;
+	assert expected.first == try s.operator . (index)(args...) catch (IndexError) none;
+	assert expected.first == try s.bytes().operator . (index)(args...) catch (IndexError) none;
+}
+
+assertFindFunction((3, 6), "foobar", "find",  ("bar",));
+assertFindFunction((3, 4), "foobar", "find",  ("b",));
+assertFindFunction((1, 2), "foobar", "find",  ("o",));
+assertFindFunction((5, 6), "foobar", "find",  ("r",));
+assertFindFunction((4, 5), "foobar", "find",  ("a",));
+assertFindFunction((0, 0), "foobar", "find",  ("",));
+
+assertFindFunction((3, 6), "foobar", "rfind", ("bar",));
+assertFindFunction((3, 4), "foobar", "rfind", ("b",));
+assertFindFunction((2, 3), "foobar", "rfind", ("o",));
+assertFindFunction((5, 6), "foobar", "rfind", ("r",));
+assertFindFunction((4, 5), "foobar", "rfind", ("a",));
+assertFindFunction((6, 6), "foobar", "rfind", ("",));
+
+assertFindFunction((0, 0), "",       "find",  ("",));
+assertFindFunction((0, 0), "",       "rfind", ("",));
+
+assertFindFunction(none,   "foobar", "findany", ({},));
+assertFindFunction((3, 4), "foobar", "findany", ({ "b" },));
+assertFindFunction((1, 2), "foobar", "findany", ({ "b", "o" },));
+assertFindFunction((0, 1), "foobar", "findany", ({ "b", "o", "f" },));
+assertFindFunction((0, 0), "foobar", "findany", ({ "b", "o", "f", "" },));
+assertFindFunction((0, 0), "foobar", "findany", ({ "b", "o", "" },));
+assertFindFunction((0, 0), "foobar", "findany", ({ "b", "" },));
+assertFindFunction((0, 0), "foobar", "findany", ({ "" },));
+
+assertFindFunction(none,   "foobar", "rfindany", ({},));
+assertFindFunction((3, 4), "foobar", "rfindany", ({ "b" },));
+assertFindFunction((4, 5), "foobar", "rfindany", ({ "b", "a" },));
+assertFindFunction((5, 6), "foobar", "rfindany", ({ "b", "a", "r" },));
+assertFindFunction((6, 6), "foobar", "rfindany", ({ "b", "a", "r", "" },));
+assertFindFunction((6, 6), "foobar", "rfindany", ({ "b", "a", "" },));
+assertFindFunction((6, 6), "foobar", "rfindany", ({ "b", "" },));
+assertFindFunction((6, 6), "foobar", "rfindany", ({ "" },));
+
+
+assert {0, 1, 2, 3, 4, 5, 6} == "foobar".findall("");
+assert {(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6)} == "foobar".casefindall("");
+assert {"f", "o", "o", "b", "a", "r"} == "foobar".split("");
+assert {"f", "o", "o", "b", "a", "r"} == "foobar".casesplit("");
+

@@ -36,6 +36,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 /**/
 
@@ -45,6 +46,7 @@
 /**/
 
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN
 
@@ -57,6 +59,7 @@ typedef struct {
 	Needle                           bf_needle; /* [const] The needle being searched for. */
 	byte_t const                    *bf_start;  /* [1..1][const] Starting pointer. */
 	byte_t const                    *bf_end;    /* [1..1][const] End pointer. */
+	bool                             bf_ovrlap; /* [const] When true, "bfi_find_delta = 1", else "bfi_find_delta = max(bf_needle.n_size, 1)" */
 } BytesFind;
 
 typedef struct {
@@ -66,14 +69,17 @@ typedef struct {
 	byte_t const                   *bfi_end;        /* [1..1][const] End pointer. */
 	byte_t const                   *bfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
 	size_t                          bfi_needle_len; /* [const] Length of the needle being searched. */
+	size_t                          bfi_find_delta; /* [const] Delta added to `sfi_ptr' after each match */
 } BytesFindIterator;
 
-INTDEF WUNUSED DREF DeeObject *DCALL
-DeeBytes_FindAll(Bytes *self, DeeObject *other,
-                 size_t start, size_t end);
-INTDEF WUNUSED DREF DeeObject *DCALL
-DeeBytes_CaseFindAll(Bytes *self, DeeObject *other,
-                     size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeBytes_FindAll(Bytes *self, DeeObject *needle,
+                 size_t start, size_t end,
+                 bool overlapping);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeBytes_CaseFindAll(Bytes *self, DeeObject *needle,
+                     size_t start, size_t end,
+                     bool overlapping);
 #define READ_PTR(x) atomic_read(&(x)->bfi_ptr)
 
 INTDEF DeeTypeObject BytesFindIterator_Type;
@@ -85,7 +91,7 @@ INTDEF DeeTypeObject BytesCaseFind_Type;
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_ctor(BytesFindIterator *__restrict self) {
 	self->bfi_find = (DREF BytesFind *)DeeBytes_FindAll((Bytes *)Dee_EmptyBytes,
-	                                                    Dee_EmptyBytes, 0, 0);
+	                                                    Dee_EmptyBytes, 0, 0, false);
 	if unlikely(!self->bfi_find)
 		goto err;
 	self->bfi_start      = DeeBytes_DATA(Dee_EmptyBytes);
@@ -93,6 +99,7 @@ bfi_ctor(BytesFindIterator *__restrict self) {
 	self->bfi_end        = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_needle_ptr = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_needle_len = 0;
+	self->bfi_find_delta = 1;
 	return 0;
 err:
 	return -1;
@@ -101,7 +108,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bcfi_ctor(BytesFindIterator *__restrict self) {
 	self->bfi_find = (DREF BytesFind *)DeeBytes_CaseFindAll((Bytes *)Dee_EmptyBytes,
-	                                                        Dee_EmptyBytes, 0, 0);
+	                                                        Dee_EmptyBytes, 0, 0, false);
 	if unlikely(!self->bfi_find)
 		goto err;
 	self->bfi_start      = DeeBytes_DATA(Dee_EmptyBytes);
@@ -109,6 +116,7 @@ bcfi_ctor(BytesFindIterator *__restrict self) {
 	self->bfi_end        = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_needle_ptr = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_needle_len = 0;
+	self->bfi_find_delta = 1;
 	return 0;
 err:
 	return -1;
@@ -124,6 +132,7 @@ bfi_copy(BytesFindIterator *__restrict self,
 	self->bfi_end        = other->bfi_end;
 	self->bfi_needle_ptr = other->bfi_needle_ptr;
 	self->bfi_needle_len = other->bfi_needle_len;
+	self->bfi_find_delta = other->bfi_find_delta;
 	Dee_Incref(self->bfi_find);
 	return 0;
 }
@@ -137,6 +146,9 @@ bfi_setup(BytesFindIterator *__restrict self,
 	self->bfi_end        = find->bf_end;
 	self->bfi_needle_ptr = find->bf_needle.n_data;
 	self->bfi_needle_len = find->bf_needle.n_size;
+	self->bfi_find_delta = find->bf_needle.n_size;
+	if (self->bfi_find_delta == 0 || find->bf_ovrlap)
+		self->bfi_find_delta = 1;
 	Dee_Incref(find);
 	return 0;
 }
@@ -167,38 +179,42 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bfi_next(BytesFindIterator *__restrict self) {
+	size_t scan_size;
 	byte_t const *ptr, *new_ptr;
 again:
-	ptr     = atomic_read(&self->bfi_ptr);
-	new_ptr = (byte_t *)memmemb(ptr, (size_t)(self->bfi_end - ptr),
-	                            self->bfi_needle_ptr,
-	                            self->bfi_needle_len);
+	ptr = atomic_read(&self->bfi_ptr);
+	if (OVERFLOW_USUB((uintptr_t)self->bfi_end, (uintptr_t)ptr, &scan_size))
+		goto iter_done;
+	new_ptr = memmemb(ptr, scan_size, self->bfi_needle_ptr, self->bfi_needle_len);
 	if (new_ptr) {
-		if (!atomic_cmpxch_weak(&self->bfi_ptr, ptr, new_ptr + self->bfi_needle_len))
+		if (!atomic_cmpxch_weak(&self->bfi_ptr, ptr, new_ptr + self->bfi_find_delta))
 			goto again;
 		return DeeInt_NewSize((size_t)(new_ptr - self->bfi_start));
 	}
+iter_done:
 	return ITER_DONE;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bcfi_next(BytesFindIterator *__restrict self) {
+	size_t scan_size;
 	byte_t const *ptr, *new_ptr;
 again:
-	ptr     = atomic_read(&self->bfi_ptr);
-	new_ptr = (byte_t *)memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
-	                                    self->bfi_needle_ptr,
-	                                    self->bfi_needle_len);
+	ptr = atomic_read(&self->bfi_ptr);
+	if (OVERFLOW_USUB((uintptr_t)self->bfi_end, (uintptr_t)ptr, &scan_size))
+		goto iter_done;
+	new_ptr = memasciicasemem(ptr, scan_size,
+	                          self->bfi_needle_ptr,
+	                          self->bfi_needle_len);
 	if (new_ptr) {
 		size_t result;
-		if (!atomic_cmpxch_weak(&self->bfi_ptr, ptr, new_ptr + self->bfi_needle_len))
+		if (!atomic_cmpxch_weak(&self->bfi_ptr, ptr, new_ptr + self->bfi_find_delta))
 			goto again;
 		result = (size_t)(new_ptr - self->bfi_start);
-		return DeeTuple_Newf(PCKuSIZ
-		                     PCKuSIZ,
-		                     result,
-		                     result + self->bfi_needle_len);
+		return DeeTuple_Newf(PCKuSIZ PCKuSIZ,
+		                     result, result + self->bfi_needle_len);
 	}
+iter_done:
 	return ITER_DONE;
 }
 
@@ -208,22 +224,26 @@ STATIC_ASSERT(offsetof(BytesFindIterator, bfi_find) == offsetof(ProxyObject, po_
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_bool(BytesFindIterator *__restrict self) {
-	byte_t const *ptr;
-	ptr = atomic_read(&self->bfi_ptr);
-	ptr = memmemb(ptr, (size_t)(self->bfi_end - ptr),
-	              self->bfi_needle_ptr,
-	              self->bfi_needle_len);
+	size_t scan_size;
+	byte_t const *ptr = atomic_read(&self->bfi_ptr);
+	if (OVERFLOW_USUB((uintptr_t)self->bfi_end, (uintptr_t)ptr, &scan_size))
+		goto iter_done;
+	ptr = memmemb(ptr, scan_size, self->bfi_needle_ptr, self->bfi_needle_len);
 	return ptr != NULL;
+iter_done:
+	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bcfi_bool(BytesFindIterator *__restrict self) {
-	byte_t const *ptr;
-	ptr = atomic_read(&self->bfi_ptr);
-	ptr = (byte_t *)memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
-	                                self->bfi_needle_ptr,
-	                                self->bfi_needle_len);
+	size_t scan_size;
+	byte_t const *ptr = atomic_read(&self->bfi_ptr);
+	if (OVERFLOW_USUB((uintptr_t)self->bfi_end, (uintptr_t)ptr, &scan_size))
+		goto iter_done;
+	ptr = memasciicasemem(ptr, scan_size, self->bfi_needle_ptr, self->bfi_needle_len);
 	return ptr != NULL;
+iter_done:
+	return 0;
 }
 
 PRIVATE struct type_member tpconst bfi_members[] = {
@@ -704,25 +724,27 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 };
 
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeBytes_FindAll(Bytes *self, DeeObject *other,
-                 size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeBytes_FindAll(Bytes *self, DeeObject *needle,
+                 size_t start, size_t end,
+                 bool overlapping) {
 	DREF BytesFind *result;
 	result = DeeObject_MALLOC(BytesFind);
 	if unlikely(!result)
 		goto done;
-	if (get_needle(&result->bf_needle, other))
+	if (get_needle(&result->bf_needle, needle))
 		goto err_r;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
 		return DeeSeq_NewEmpty();
-	result->bf_bytes = self;
-	result->bf_other = other;
-	result->bf_start = DeeBytes_DATA(self) + start;
-	result->bf_end   = DeeBytes_DATA(self) + end;
+	result->bf_bytes  = self;
+	result->bf_other  = needle;
+	result->bf_start  = DeeBytes_DATA(self) + start;
+	result->bf_end    = DeeBytes_DATA(self) + end;
+	result->bf_ovrlap = overlapping;
 	Dee_Incref(self);
-	Dee_Incref(other);
+	Dee_Incref(needle);
 	DeeObject_Init(result, &BytesFind_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -731,25 +753,27 @@ err_r:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeBytes_CaseFindAll(Bytes *self, DeeObject *other,
-                     size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeBytes_CaseFindAll(Bytes *self, DeeObject *needle,
+                     size_t start, size_t end,
+                     bool overlapping) {
 	DREF BytesFind *result;
 	result = DeeObject_MALLOC(BytesFind);
 	if unlikely(!result)
 		goto done;
-	if (get_needle(&result->bf_needle, other))
+	if (get_needle(&result->bf_needle, needle))
 		goto err_r;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
 		return DeeSeq_NewEmpty();
-	result->bf_bytes = self;
-	result->bf_other = other;
-	result->bf_start = DeeBytes_DATA(self) + start;
-	result->bf_end   = DeeBytes_DATA(self) + end;
+	result->bf_bytes  = self;
+	result->bf_other  = needle;
+	result->bf_start  = DeeBytes_DATA(self) + start;
+	result->bf_end    = DeeBytes_DATA(self) + end;
+	result->bf_ovrlap = overlapping;
 	Dee_Incref(self);
-	Dee_Incref(other);
+	Dee_Incref(needle);
 	DeeObject_Init(result, &BytesCaseFind_Type);
 done:
 	return (DREF DeeObject *)result;

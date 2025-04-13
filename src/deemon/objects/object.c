@@ -4889,8 +4889,8 @@ PRIVATE struct type_callable type_callable = {
 PUBLIC DeeTypeObject DeeType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type), /* The type of Type is Type :D */
 	/* .tp_name     = */ DeeString_STR(&str_Type),
-	/* .tp_doc      = */ DOC("The so-called Type-Type, that is the type of anything that "
-	                         /**/ "is also a Type, such as ?Dint or ?DList, or even itself"),
+	/* .tp_doc      = */ DOC("The so-called Type-Type, that is the type of anything that is "
+	                         /**/ "also a Type, such as ?Dint or ?DList, or even ?. itself"),
 	/* .tp_flags    = */ TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeTypeObject),
 	/* .tp_features = */ TF_NONE,

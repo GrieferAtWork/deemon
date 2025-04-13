@@ -58,6 +58,16 @@
 
 DECL_BEGIN
 
+#ifndef IFELSE_FINDEMPTY_AT_INDEX_0
+#ifdef CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
+#define IF_FINDEMPTY_AT_INDEX_0(x)          x
+#define IFELSE_FINDEMPTY_AT_INDEX_0(tt, ff) tt
+#else /* CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
+#define IF_FINDEMPTY_AT_INDEX_0(x)          /* nothing */
+#define IFELSE_FINDEMPTY_AT_INDEX_0(tt, ff) ff
+#endif /* !CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
+#endif /* !IFELSE_FINDEMPTY_AT_INDEX_0 */
+
 #ifdef __INTELLISENSE__
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_StripSpc(String *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_LStripSpc(String *__restrict self, size_t max_count);
@@ -2308,7 +2318,7 @@ string_findany_cb(void *arg, DeeObject *elem) {
 		                  rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		if (ptr.cp8 != NULL) {
 			size_t hit = (size_t)(ptr.cp8 - lhs.cp8);
-			ASSERT(hit < data->sfad_result);
+			ASSERT(hit <= data->sfad_result);
 			data->sfad_result = hit;
 			if (hit == 0)
 				return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
@@ -2330,7 +2340,7 @@ string_findany_cb(void *arg, DeeObject *elem) {
 		                   rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		if (ptr.cp16 != NULL) {
 			size_t hit = (size_t)(ptr.cp16 - lhs.cp16);
-			ASSERT(hit < data->sfad_result);
+			ASSERT(hit <= data->sfad_result);
 			data->sfad_result = hit;
 			if (hit == 0)
 				return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
@@ -2352,7 +2362,7 @@ string_findany_cb(void *arg, DeeObject *elem) {
 		                   rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		if (ptr.cp32 != NULL) {
 			size_t hit = (size_t)(ptr.cp32 - lhs.cp32);
-			ASSERT(hit < data->sfad_result);
+			ASSERT(hit <= data->sfad_result);
 			data->sfad_result = hit;
 			if (hit == 0)
 				return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
@@ -2369,15 +2379,17 @@ err:
  * @return: (size_t)Dee_COMPARE_ERR: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 string_findany_impl(String *self, DeeObject *needles, size_t start, size_t end) {
+	Dee_ssize_t status;
 	struct string_findany_data data;
 	data.sfad_self = self;
 	data.sfad_size = DeeString_WLEN(self);
 	CLAMP_SUBSTR(&start, &end, &data.sfad_size, not_found);
 	data.sfad_base   = start;
 	data.sfad_result = data.sfad_size;
-	if unlikely(DeeObject_Foreach(needles, &string_findany_cb, &data) == -1)
+	status = DeeObject_Foreach(needles, &string_findany_cb, &data);
+	if unlikely(status == -1)
 		goto err;
-	if (data.sfad_result < data.sfad_size) {
+	if (data.sfad_result < data.sfad_size || status == -2) {
 		data.sfad_result += data.sfad_base;
 		ASSERT(data.sfad_result != (size_t)-1);
 		ASSERT(data.sfad_result != (size_t)Dee_COMPARE_ERR);
@@ -2413,10 +2425,10 @@ string_rfindany_cb(void *arg, DeeObject *elem) {
 		                   rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		if (ptr.cp8 != NULL) {
 			size_t hit = (size_t)(ptr.cp8 - lhs.cp8) + 1;
-			ASSERT(hit <= data->srfad_size);
+			ASSERT((hit - 1) <= data->srfad_size);
 			data->srfad_base += hit;
 			data->srfad_size -= hit;
-			if (data->srfad_size == 0)
+			if (data->srfad_size == IFELSE_FINDEMPTY_AT_INDEX_0((size_t)-1, 0))
 				return -2; /* Found hit at the very end -> can stop enumerating needles. */
 		}
 		break;
@@ -2433,10 +2445,10 @@ string_rfindany_cb(void *arg, DeeObject *elem) {
 		                    rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		if (ptr.cp16 != NULL) {
 			size_t hit = (size_t)(ptr.cp16 - lhs.cp16) + 1;
-			ASSERT(hit <= data->srfad_size);
+			ASSERT((hit - 1) <= data->srfad_size);
 			data->srfad_base += hit;
 			data->srfad_size -= hit;
-			if (data->srfad_size == 0)
+			if (data->srfad_size == IFELSE_FINDEMPTY_AT_INDEX_0((size_t)-1, 0))
 				return -2; /* Found hit at the very end -> can stop enumerating needles. */
 		}
 		break;
@@ -2453,10 +2465,10 @@ string_rfindany_cb(void *arg, DeeObject *elem) {
 		                    rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		if (ptr.cp32 != NULL) {
 			size_t hit = (size_t)(ptr.cp32 - lhs.cp32) + 1;
-			ASSERT(hit <= data->srfad_size);
+			ASSERT((hit - 1) <= data->srfad_size);
 			data->srfad_base += hit;
 			data->srfad_size -= hit;
-			if (data->srfad_size == 0)
+			if (data->srfad_size == IFELSE_FINDEMPTY_AT_INDEX_0((size_t)-1, 0))
 				return -2; /* Found hit at the very end -> can stop enumerating needles. */
 		}
 	}
@@ -2471,14 +2483,16 @@ err:
  * @return: (size_t)Dee_COMPARE_ERR: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 string_rfindany_impl(String *self, DeeObject *needles, size_t start, size_t end) {
+	Dee_ssize_t status;
 	struct string_rfindany_data data;
 	data.srfad_self = self;
 	data.srfad_size = DeeString_WLEN(self);
 	CLAMP_SUBSTR(&start, &end, &data.srfad_size, not_found);
 	data.srfad_base = start;
-	if unlikely(DeeObject_Foreach(needles, &string_rfindany_cb, &data) == -1)
+	status = DeeObject_Foreach(needles, &string_rfindany_cb, &data);
+	if unlikely(status == -1)
 		goto err;
-	if (data.srfad_base > start) {
+	if (data.srfad_base > start || status == -2) {
 		--data.srfad_base;
 		ASSERT(data.srfad_base != (size_t)-1);
 		ASSERT(data.srfad_base != (size_t)Dee_COMPARE_ERR);
@@ -2521,10 +2535,10 @@ string_casefindany_cb(void *arg, DeeObject *elem) {
 		                          &match_length);
 		if (ptr.cp8 != NULL) {
 			size_t hit = (size_t)(ptr.cp8 - lhs.cp8);
-			ASSERT(hit < data->scfad_result);
+			ASSERT(hit <= data->scfad_result);
 			data->scfad_result = hit;
 			data->scfad_reslen = match_length;
-			if (hit == 0)
+			if (hit == 0 && match_length <= IFELSE_FINDEMPTY_AT_INDEX_0(0, 1))
 				return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
 		}
 		break;
@@ -2545,10 +2559,10 @@ string_casefindany_cb(void *arg, DeeObject *elem) {
 		                           &match_length);
 		if (ptr.cp16 != NULL) {
 			size_t hit = (size_t)(ptr.cp16 - lhs.cp16);
-			ASSERT(hit < data->scfad_result);
+			ASSERT(hit <= data->scfad_result);
 			data->scfad_result = hit;
 			data->scfad_reslen = match_length;
-			if (hit == 0)
+			if (hit == 0 && match_length <= IFELSE_FINDEMPTY_AT_INDEX_0(0, 1))
 				return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
 		}
 		break;
@@ -2569,10 +2583,10 @@ string_casefindany_cb(void *arg, DeeObject *elem) {
 		                           &match_length);
 		if (ptr.cp32 != NULL) {
 			size_t hit = (size_t)(ptr.cp32 - lhs.cp32);
-			ASSERT(hit < data->scfad_result);
+			ASSERT(hit <= data->scfad_result);
 			data->scfad_result = hit;
 			data->scfad_reslen = match_length;
-			if (hit == 0)
+			if (hit == 0 && match_length <= IFELSE_FINDEMPTY_AT_INDEX_0(0, 1))
 				return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
 		}
 		break;
@@ -2588,15 +2602,17 @@ err:
 PRIVATE WUNUSED ATTR_OUT(5) NONNULL((1, 2)) int DCALL
 string_casefindany_impl(String *self, DeeObject *needles, size_t start, size_t end,
                         size_t match_start_and_end[2]) {
+	Dee_ssize_t status;
 	struct string_casefindany_data data;
 	data.scfad_self = self;
 	data.scfad_size = DeeString_WLEN(self);
 	CLAMP_SUBSTR(&start, &end, &data.scfad_size, not_found);
 	data.scfad_base   = start;
 	data.scfad_result = data.scfad_size;
-	if unlikely(DeeObject_Foreach(needles, &string_casefindany_cb, &data) == -1)
+	status = DeeObject_Foreach(needles, &string_casefindany_cb, &data);
+	if unlikely(status == -1)
 		goto err;
-	if (data.scfad_result < data.scfad_size) {
+	if (data.scfad_result < data.scfad_size || status == -2) {
 		data.scfad_result += data.scfad_base;
 		match_start_and_end[0] = data.scfad_result;
 		match_start_and_end[1] = data.scfad_result + data.scfad_reslen;
@@ -2636,11 +2652,11 @@ string_caserfindany_cb(void *arg, DeeObject *elem) {
 		                           &match_length);
 		if (ptr.cp8 != NULL) {
 			size_t hit = (size_t)(ptr.cp8 - lhs.cp8) + 1;
-			ASSERT(hit <= data->scrfad_size);
+			ASSERT((hit - 1) <= data->scrfad_size);
 			data->scrfad_base += hit;
 			data->scrfad_size -= hit;
 			data->scrfad_reslen = match_length;
-			if (data->scrfad_size == 0)
+			if (data->scrfad_size == (size_t)-1)
 				return -2; /* Found hit at the very end -> can stop enumerating needles. */
 		}
 		break;
@@ -2658,11 +2674,11 @@ string_caserfindany_cb(void *arg, DeeObject *elem) {
 		                            &match_length);
 		if (ptr.cp16 != NULL) {
 			size_t hit = (size_t)(ptr.cp16 - lhs.cp16) + 1;
-			ASSERT(hit <= data->scrfad_size);
+			ASSERT((hit - 1) <= data->scrfad_size);
 			data->scrfad_base += hit;
 			data->scrfad_size -= hit;
 			data->scrfad_reslen = match_length;
-			if (data->scrfad_size == 0)
+			if (data->scrfad_size == (size_t)-1)
 				return -2; /* Found hit at the very end -> can stop enumerating needles. */
 		}
 		break;
@@ -2680,11 +2696,11 @@ string_caserfindany_cb(void *arg, DeeObject *elem) {
 		                            &match_length);
 		if (ptr.cp32 != NULL) {
 			size_t hit = (size_t)(ptr.cp32 - lhs.cp32) + 1;
-			ASSERT(hit <= data->scrfad_size);
+			ASSERT((hit - 1) <= data->scrfad_size);
 			data->scrfad_base += hit;
 			data->scrfad_size -= hit;
 			data->scrfad_reslen = match_length;
-			if (data->scrfad_size == 0)
+			if (data->scrfad_size == (size_t)-1)
 				return -2; /* Found hit at the very end -> can stop enumerating needles. */
 		}
 	}
@@ -2699,14 +2715,16 @@ err:
 PRIVATE WUNUSED ATTR_OUT(5) NONNULL((1, 2)) int DCALL
 string_caserfindany_impl(String *self, DeeObject *needles, size_t start, size_t end,
                          size_t match_start_and_end[2]) {
+	Dee_ssize_t status;
 	struct string_caserfindany_data data;
 	data.scrfad_self = self;
 	data.scrfad_size = DeeString_WLEN(self);
 	CLAMP_SUBSTR(&start, &end, &data.scrfad_size, not_found);
 	data.scrfad_base = start;
-	if unlikely(DeeObject_Foreach(needles, &string_caserfindany_cb, &data) == -1)
+	status = DeeObject_Foreach(needles, &string_caserfindany_cb, &data);
+	if unlikely(status == -1)
 		goto err;
-	if (data.scrfad_base > start) {
+	if (data.scrfad_base > start || status == -2) {
 		--data.scrfad_base;
 		match_start_and_end[0] = data.scrfad_base;
 		match_start_and_end[1] = data.scrfad_base + data.scrfad_reslen;
@@ -3274,33 +3292,37 @@ err:
 
 
 
-INTDEF WUNUSED DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeString_FindAll(String *self, String *other,
-                  size_t start, size_t end);
-INTDEF WUNUSED DREF DeeObject *DCALL
+                  size_t start, size_t end,
+                  bool overlapping);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeString_CaseFindAll(String *self, String *other,
-                      size_t start, size_t end);
+                      size_t start, size_t end,
+                      bool overlapping);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_findall(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findall", params: "
-	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1, bool overlapping = false
 ", docStringPrefix: "string");]]]*/
-#define string_findall_params "needle:?.,start=!0,end=!-1"
+#define string_findall_params "needle:?.,start=!0,end=!-1,overlapping=!f"
 	struct {
 		DeeStringObject *needle;
 		size_t start;
 		size_t end;
+		bool overlapping;
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":findall", &args))
+	args.overlapping = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end_overlapping, "o|" UNPuSIZ UNPxSIZ "b:findall", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_FindAll(self, args.needle, args.start, args.end);
+	return DeeString_FindAll(self, args.needle, args.start, args.end, args.overlapping);
 err:
 	return NULL;
 }
@@ -3309,22 +3331,24 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefindall(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindall", params: "
-	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
+	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1, bool overlapping = false
 ", docStringPrefix: "string");]]]*/
-#define string_casefindall_params "needle:?.,start=!0,end=!-1"
+#define string_casefindall_params "needle:?.,start=!0,end=!-1,overlapping=!f"
 	struct {
 		DeeStringObject *needle;
 		size_t start;
 		size_t end;
+		bool overlapping;
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casefindall", &args))
+	args.overlapping = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end_overlapping, "o|" UNPuSIZ UNPxSIZ "b:casefindall", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_CaseFindAll(self, args.needle, args.start, args.end);
+	return DeeString_CaseFindAll(self, args.needle, args.start, args.end, args.overlapping);
 err:
 	return NULL;
 }
