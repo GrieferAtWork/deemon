@@ -150,10 +150,10 @@ print("#error \"Unsupported hash configuration\"");
 print("#endif /" "* !... *" "/");
 print("};");
 ]]]*/
-#define NUM_BUILTINS_SYM  54
-#define NUM_BUILTINS_SPC  72
+#define NUM_BUILTINS_SYM  52
+#define NUM_BUILTINS_SPC  69
 #define BUILTINS_HASHMASK 0x7f
-STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == 54, "You need to re-run `deemon -F src/deemon/runtime/builtin.c'");
+STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == 52, "You need to re-run `deemon -F src/deemon/runtime/builtin.c'");
 PRIVATE struct module_symbol deemon_symbols[128] = {
 #if _Dee_HashSelect(32, 64) == 32
 	{ DeeString_STR(&str_none), NULL, UINT32_C(0xde6dda00), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_none } },
@@ -179,7 +179,7 @@ PRIVATE struct module_symbol deemon_symbols[128] = {
 	{ DeeString_STR(&str_Sequence), NULL, UINT32_C(0xe5937b14), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_Sequence } },
 	{ DeeString_STR(&str_boundattr), DOCOF_boundattr, UINT32_C(0xbe67bf95), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_boundattr } },
 	{ NULL, NULL, 0, 0, { 0 } },
-	{ DeeString_STR(&str_false), NULL, UINT32_C(0xd5619e17), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_false } },
+	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
@@ -270,7 +270,7 @@ PRIVATE struct module_symbol deemon_symbols[128] = {
 	{ DeeString_STR(&str_Tuple), NULL, UINT32_C(0xf10ca66f), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_Tuple } },
 	{ DeeString_STR(&str___neosb), NULL, UINT32_C(0x3a5bef0), MODSYM_FREADONLY | MODSYM_FHIDDEN | MODSYM_FNAMEOBJ, { id___neosb } },
 	{ DeeString_STR(&str___giosi), NULL, UINT32_C(0x30dd03a8), MODSYM_FREADONLY | MODSYM_FHIDDEN | MODSYM_FNAMEOBJ, { id___giosi } },
-	{ DeeString_STR(&str_true), NULL, UINT32_C(0x34edcf72), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_true } },
+	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ DeeString_STR(&str_Module), NULL, UINT32_C(0x5d2db7f4), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_Module } },
 	{ DeeString_STR(&str_Cell), NULL, UINT32_C(0x152b23f5), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_Cell } },
@@ -327,12 +327,12 @@ PRIVATE struct module_symbol deemon_symbols[128] = {
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
-	{ DeeString_STR(&str___import__), DOCOF___import__, UINT64_C(0x9083cbce4d7003c2), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id___import__ } },
+	{ NULL, NULL, 0, 0, { 0 } },
 	{ DeeString_STR(&str_Traceback), NULL, UINT64_C(0xa37936341573a7ab), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_Traceback } },
 	{ DeeString_STR(&str___roloc), NULL, UINT64_C(0xa00f637868f0b44e), MODSYM_FREADONLY | MODSYM_FHIDDEN | MODSYM_FNAMEOBJ, { id___roloc } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
-	{ DeeString_STR(&str___grosr), NULL, UINT64_C(0x4b4bdaef29d9b42b), MODSYM_FREADONLY | MODSYM_FHIDDEN | MODSYM_FNAMEOBJ, { id___grosr } },
+	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
@@ -353,7 +353,7 @@ PRIVATE struct module_symbol deemon_symbols[128] = {
 	{ DeeString_STR(&str___pooad), NULL, UINT64_C(0xd5562c36880fcfa0), MODSYM_FREADONLY | MODSYM_FHIDDEN | MODSYM_FNAMEOBJ, { id___pooad } },
 	{ DeeString_STR(&str_hasattr), DOCOF_hasattr, UINT64_C(0xad2ec658de4b00d3), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_hasattr } },
 	{ NULL, NULL, 0, 0, { 0 } },
-	{ DeeString_STR(&str_true), NULL, UINT64_C(0xbd1e3bcd102bfbc4), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_true } },
+	{ DeeString_STR(&str___import__), DOCOF___import__, UINT64_C(0x9083cbce4d7003c2), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id___import__ } },
 	{ DeeString_STR(&str___gaosa), NULL, UINT64_C(0x31b6aef35b2a1f6), MODSYM_FREADONLY | MODSYM_FHIDDEN | MODSYM_FNAMEOBJ, { id___gaosa } },
 	{ DeeString_STR(&str_Module), NULL, UINT64_C(0x75bd883e9fa8a946), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_Module } },
 	{ DeeString_STR(&str_HashSet), NULL, UINT64_C(0xbe7c97fdd78092a1), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_HashSet } },
@@ -371,7 +371,7 @@ PRIVATE struct module_symbol deemon_symbols[128] = {
 	{ DeeString_STR(&str_InstanceMethod), NULL, UINT64_C(0x6aaa126ce9665d53), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_InstanceMethod } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ DeeString_STR(&str_Property), NULL, UINT64_C(0x1cf12720947fcc55), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_Property } },
-	{ DeeString_STR(&str_false), NULL, UINT64_C(0x83cada938c98c156), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_false } },
+	{ DeeString_STR(&str___grosr), NULL, UINT64_C(0x4b4bdaef29d9b42b), MODSYM_FREADONLY | MODSYM_FHIDDEN | MODSYM_FNAMEOBJ, { id___grosr } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ DeeString_STR(&str_compare), DOCOF_compare, UINT64_C(0x9165e5178389f3e4), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_compare } },

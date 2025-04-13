@@ -113,10 +113,8 @@ BUILTIN(Numeric, &DeeNumeric_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
  */
 BUILTIN(WeakRefAble, &DeeWeakRefAble_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
 
-/* Objects that can also be accessed as builtin compiler keywords. */
+/* "none" is really only here for doc strings (?N is an alias for ?Dnone, so this needs to be here) */
 BUILTIN(none, Dee_None, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(true, Dee_True, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(false, Dee_False, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
 
 /* Core functional types. */
 BUILTIN(Function, &DeeFunction_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)

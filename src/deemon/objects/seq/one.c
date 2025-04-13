@@ -1172,8 +1172,8 @@ PRIVATE struct type_getset tpconst so_getsets[] = {
 	TYPE_GETTER_AB_F_NODOC(STR_last, &so_getlast, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_GETTER_AB_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_AB_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
-	TYPE_GETTER_AB_F(STR___set_frozen__, &generic_obj__asset, METHOD_FCONSTCALL, "->?."),
-	TYPE_GETTER_AB_F(STR___map_frozen__, &generic_obj__asmap, METHOD_FCONSTCALL, "->?."),
+	TYPE_GETTER_AB_F(STR___set_frozen__, &generic_obj__asset, METHOD_FCONSTCALL, "->?DSet"),
+	TYPE_GETTER_AB_F(STR___map_frozen__, &generic_obj__asmap, METHOD_FCONSTCALL, "->?DMapping"),
 	/* TODO: */
 //	TYPE_GETTER_AB_F_NODOC(STR___map_keys__, &so_mh_map_keys, METHOD_FNOREFESCAPE),
 //	TYPE_GETTER_AB_F_NODOC(STR___map_iterkeys__, &so_mh_map_iterkeys, METHOD_FNOREFESCAPE),
@@ -1198,7 +1198,8 @@ PUBLIC DeeTypeObject DeeSeqOne_Type = {
 	/* .tp_name     = */ "_SeqOne",
 	/* .tp_doc      = */ DOC("Specialized sequence type that always contains exactly 1 item\n"
 	                         "\n"
-	                         "(item)"),
+	                         "(item)\n"
+	                         "#pitem{The one and only item of @this ?DSequence}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

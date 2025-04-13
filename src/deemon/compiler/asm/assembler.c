@@ -3253,7 +3253,7 @@ INTERN WUNUSED NONNULL((1)) struct symbol *DCALL
 asm_bind_deemon_export(DeeObject *__restrict constval) {
 	uint16_t i;
 	if (!DeeType_Check(constval)) {
-		/* To speed this up, check what the user wants to seach for. */
+		/* To speed this up, check what the user wants to search for. */
 		if (DeeNone_Check(constval)) {
 			i = id_none;
 			goto did_find_export;
@@ -3262,8 +3262,6 @@ asm_bind_deemon_export(DeeObject *__restrict constval) {
 			i = id_gc;
 			goto did_find_export;
 		}
-		if (DeeBool_Check(constval))
-			goto do_search;
 		if (DeeCMethod_Check(constval))
 			goto do_search;
 		goto done;

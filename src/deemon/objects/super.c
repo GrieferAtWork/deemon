@@ -1179,6 +1179,8 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	/* .tp_name     = */ DeeString_STR(&str_Super),
 	/* .tp_doc      = */ DOC("Emulate access to an instance of a derived class in "
 	                         /**/ "a way that bypasses overwritten operators/methods\n"
+	                         "?.-objects are created by ${ob as Type} or by writing ${super} within "
+	                         /**/ "a class-context (which is an alias for ${this as <BaseClass>})\n"
 
 	                         "\n"
 	                         "()\n"
