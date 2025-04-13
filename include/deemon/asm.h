@@ -942,7 +942,7 @@
 #define ASM_BREAKPOINT        0xcc /* [1][-0,+0]   `debug break'                        - Break into an attached debugger.
                                     * NOTE: An opcode of CCh has been intentionally assigned for this
                                     *       opcode, so-as to mirror x86's int3 instruction, as well as
-                                    *       give it the recognizable bit-layout `10101010'. */
+                                    *       give it the recognizable bit-layout `0b10101010'. */
 #define ASM_UD                0xcd /* [1][-0,+0]   `ud'                                 - Undefined instruction (always raises an `Error.RuntimeError.IllegalInstruction'). */
 /* Call attribute. */
 #define ASM_CALLATTR_C_KW     0xce /* [4][-1-n,+1] `callattr top, const <imm8>, #<imm8>, const <imm8>' - Similar to `ASM_CALLATTR_C', but also pass a keywords mapping from `<imm8>' */
