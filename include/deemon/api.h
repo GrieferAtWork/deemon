@@ -440,10 +440,17 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 
 /* Experimental feature switch:
  * - enabled:  >> "foo".find("") == 0
- * - disabled: >> "foo".find("") == -1 */
+ * - disabled: >> "foo".find("") == -1
+ *
+ * TODO: Once this becomes mandatory, remove mentions of:
+ * - _MEMMEM_EMPTY_NEEDLE_NULL_SOURCE
+ * - __USE_MEMMEM_EMPTY_NEEDLE_NULL
+ *
+ * Also consider removing support for "_MEMMEM_EMPTY_NEEDLE_NULL_SOURCE" from KOS
+ */
 #if (!defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0) && \
      !defined(CONFIG_NO_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))
-#if 0 /* TODO: Adjust external user-code to work with this */
+#if 1
 #define CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
 #else
 #define CONFIG_NO_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
