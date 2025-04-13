@@ -2617,7 +2617,7 @@ __NAMESPACE_INT_END
 /************************************************************************/
 
 /* >> __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC
- * When defined, properly aligned writes to word types with sizes
+ * When defined, properly aligned writes  to word types with  sizes
  * that are <= __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC are inherently
  * atomic.
  *

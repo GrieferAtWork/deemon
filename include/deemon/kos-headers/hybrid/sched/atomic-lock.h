@@ -268,9 +268,9 @@ __NOTHROW(__hybrid_atomic_load128_with_atomic_lock)(__UINT128_TYPE__ const *__re
 #endif /* __UINT128_TYPE__ */
 /*[[[end]]]*/
 
-/* Helper for doing atomic reads of aligned works, either through
+/* Helper for doing  atomic reads of  aligned works, either  through
  * use of CPU-intrinsic atomics, or (if regular writes to such words
- * are not atomic on the host CPU, acquire the mentioned lock and
+ * are  not atomic on  the host CPU, acquire  the mentioned lock and
  * perform a normal reading while said lock is being held. */
 #if __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC >= (defined(__UINT128_TYPE__) ? 16 : (defined(__UINT64_TYPE__) ? 8 : 4))
 #define __hybrid_atomic_load_with_atomic_lock(p, order, lock) __hybrid_atomic_load(p, order)
