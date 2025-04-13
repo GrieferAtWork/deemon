@@ -442,6 +442,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\deemon-string-encoding.dee = ..\util\test\deemon-string-encoding.dee
 		..\util\test\deemon-string-find.dee = ..\util\test\deemon-string-find.dee
 		..\util\test\deemon-string-findany.dee = ..\util\test\deemon-string-findany.dee
+		..\util\test\deemon-string-findempty.dee = ..\util\test\deemon-string-findempty.dee
 		..\util\test\deemon-string-format-extended.dee = ..\util\test\deemon-string-format-extended.dee
 		..\util\test\deemon-string-isspace.dee = ..\util\test\deemon-string-isspace.dee
 		..\util\test\deemon-string-join.dee = ..\util\test\deemon-string-join.dee

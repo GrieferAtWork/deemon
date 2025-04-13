@@ -54,8 +54,16 @@ assertFindFunction((5, 6), "foobar", "rfind", ("r",));
 assertFindFunction((4, 5), "foobar", "rfind", ("a",));
 assertFindFunction((6, 6), "foobar", "rfind", ("",));
 
-assertFindFunction((0, 0), "",       "find",  ("",));
-assertFindFunction((0, 0), "",       "rfind", ("",));
+assertFindFunction((0, 0), "", "find",  ("",));
+assertFindFunction((0, 0), "", "rfind", ("",));
+
+assertFindFunction(none,   "", "findany", ({},));
+assertFindFunction(none,   "", "findany", ({ "b" },));
+assertFindFunction((0, 0), "", "findany", ({ "" },));
+
+assertFindFunction(none,   "", "rfindany", ({},));
+assertFindFunction(none,   "", "rfindany", ({ "b" },));
+assertFindFunction((0, 0), "", "rfindany", ({ "" },));
 
 assertFindFunction(none,   "foobar", "findany", ({},));
 assertFindFunction((3, 4), "foobar", "findany", ({ "b" },));
