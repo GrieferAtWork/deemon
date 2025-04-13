@@ -531,7 +531,7 @@ so_mh_seq_unpack(SeqOne *__restrict self, size_t count, DREF DeeObject *result[]
 }
 
 #define so_mh_seq_unpack_ub so_mh_seq_unpack_ex
-PRIVATE WUNUSED NONNULL((1, 3)) size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 so_mh_seq_unpack_ex(SeqOne *__restrict self, size_t min_count,
                     size_t max_count, DREF DeeObject *result[]) {
 	if likely(min_count <= 1 && max_count >= 1) {
