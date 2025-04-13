@@ -45,6 +45,8 @@
 #ifndef CONFIG_LANGUAGE_NO_ASM
 DECL_BEGIN
 
+#define DO(expr) if unlikely(expr) goto err
+
 #ifdef __INTELLISENSE__
 INTERN struct user_assembler current_userasm;
 INTERN struct asm_symtab symtab;
@@ -94,8 +96,7 @@ LOCAL WUNUSED NONNULL((1, 2)) bool dee_strcaseeq(char *a, char *b) {
 PRIVATE WUNUSED DREF DeeObject *DFCALL do_parse_constant(void) {
 	DREF struct ast *const_ast;
 	DREF DeeObject *result;
-	if unlikely(scope_push())
-		goto err;
+	DO(scope_push());
 	const_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
 	scope_pop();
 	if unlikely(!const_ast)
@@ -122,14 +123,12 @@ err:
 
 PRIVATE struct asm_sym *DFCALL do_parse_symbol_for_op(int wid) {
 	struct asm_intexpr expr;
-	if unlikely(uasm_parse_intexpr(&expr, UASM_INTEXPR_FHASSP))
-		goto err;
+	DO(uasm_parse_intexpr(&expr, UASM_INTEXPR_FHASSP));
 	if (!expr.ie_sym) {
 		expr.ie_sym = asm_newsym();
 		asm_defsym(expr.ie_sym);
 warn_symbol:
-		if (WARN(wid))
-			goto err;
+		DO(WARN(wid));
 	} else {
 		if (expr.ie_rel != ASM_OVERLOAD_FRELABS &&
 		    expr.ie_rel != (uint16_t)-1)
@@ -231,8 +230,7 @@ uasm_parse_directive(void) {
 			goto err;
 		/* Make sure that the symbol hasn't already been defined. */
 		if unlikely(ASM_SYM_DEFINED(label)) {
-			if (WARN(W_UASM_SYMBOL_ALREADY_DEFINED, label_name->k_name))
-				goto err;
+			DO(WARN(W_UASM_SYMBOL_ALREADY_DEFINED, label_name->k_name));
 		} else {
 			uasm_defsym(label);
 		}
@@ -287,8 +285,7 @@ uasm_parse_directive(void) {
 		goto do_handle_qword;
 
 	/* Unknown directive... (Discard the remainder of the line) */
-	if (WARN(W_UASM_UNKNOWN_DIRECTIVE, name))
-		goto err;
+	DO(WARN(W_UASM_UNKNOWN_DIRECTIVE, name));
 	while (tok > 0 && tok != ';' && tok != '\n')
 		if (yield() < 0)
 			goto err;
@@ -333,8 +330,7 @@ do_handle_code:
 			current_basescope->bs_flags &= ~CODE_FASSEMBLY;
 #endif
 		} else {
-			if (WARN(W_UASM_CODE_UNKNOWN_FLAG, name->k_name))
-				goto err;
+			DO(WARN(W_UASM_CODE_UNKNOWN_FLAG, name->k_name));
 		}
 		if (tok != ',')
 			break;
@@ -355,21 +351,17 @@ do_handle_reloc:
 				goto err;
 		} else {
 			struct asm_intexpr expr;
-			if (WARN(W_UASM_RELOC_NEED_DOT))
-				goto err;
-			if (uasm_parse_intexpr(&expr, UASM_INTEXPR_FNORMAL))
-				goto err;
+			DO(WARN(W_UASM_RELOC_NEED_DOT));
+			DO(uasm_parse_intexpr(&expr, UASM_INTEXPR_FNORMAL));
 		}
-		if (skip(',', W_EXPECTED_COMMA))
-			goto err;
+		DO(skip(',', W_EXPECTED_COMMA));
 		reloc_name  = uasm_parse_symnam();
 		reloc_sym   = NULL;
 		reloc_value = 0;
 		reloc_type  = get_reloc_by_name(reloc_name->k_name);
 		/* Check if the relocation name could be determined. */
 		if unlikely(reloc_type == R_DMN_COUNT) {
-			if (WARN(W_UASM_RELOC_UNKNOWN_NAME, reloc_name->k_name))
-				goto err;
+			DO(WARN(W_UASM_RELOC_UNKNOWN_NAME, reloc_name->k_name));
 			reloc_type = R_DMN_NONE;
 		}
 		if (tok == ',') {
@@ -384,24 +376,21 @@ do_handle_reloc:
 				if unlikely(yield() < 0)
 					goto err;
 				/* Parse the relocation value. */
-				if (uasm_parse_intexpr(&rval, UASM_INTEXPR_FNORMAL))
-					goto err;
-				if (rval.ie_sym && WARN(W_UASM_RELOC_VALUE_NOT_A_SYMBOL))
-					goto err;
+				DO(uasm_parse_intexpr(&rval, UASM_INTEXPR_FNORMAL));
+				if (rval.ie_sym)
+					DO(WARN(W_UASM_RELOC_VALUE_NOT_A_SYMBOL));
 				reloc_value = (uint16_t)rval.ie_val;
 			}
 		}
 	
 		/* Make sure that a relocation making use of a symbol actually has one. */
 		if (REL_HASSYM(reloc_type) && !reloc_sym) {
-			if (WARN(W_UASM_RELOC_NAME_NEEDS_SYMBOL))
-				goto err;
+			DO(WARN(W_UASM_RELOC_NAME_NEEDS_SYMBOL));
 			reloc_sym = asm_newsym();
 			asm_defsym(reloc_sym);
 		}
 		/* Emit the relocation. */
-		if (asm_putrel(reloc_type | R_DMN_FUSER, reloc_sym, reloc_value))
-			goto err;
+		DO(asm_putrel(reloc_type | R_DMN_FUSER, reloc_sym, reloc_value));
 	}	goto done;
 
 
@@ -421,11 +410,9 @@ do_handle_except:
 		 *   - `[@]mask(const)' -- Use `const' as exception handler mask.
 		 */
 		except_start = do_parse_symbol_for_except();
-		if (skip(',', W_EXPECTED_COMMA))
-			goto err;
+		DO(skip(',', W_EXPECTED_COMMA));
 		except_end = do_parse_symbol_for_except();
-		if (skip(',', W_EXPECTED_COMMA))
-			goto err;
+		DO(skip(',', W_EXPECTED_COMMA));
 		except_entry = do_parse_symbol_for_except();
 		except_flags = EXCEPTION_HANDLER_FNORMAL;
 		except_mask  = NULL;
@@ -524,8 +511,7 @@ do_emit_memory:
 		current_assembler.a_flag &= ~(ASM_FPEEPHOLE);
 		current_basescope->bs_flags |= CODE_FASSEMBLY;
 		for (;;) {
-			if unlikely(uasm_parse_intexpr(&value, UASM_INTEXPR_FHASSP))
-				goto err;
+			DO(uasm_parse_intexpr(&value, UASM_INTEXPR_FHASSP));
 			if (value.ie_sym) {
 				/* Emit a relocation. */
 				uint16_t relo_type;
@@ -589,39 +575,31 @@ check_invalid_stack_and_adjust:
 
 				default: __builtin_unreachable();
 				}
-				if (asm_putrel(relo_type, value.ie_sym, 0))
-					goto err;
+				DO(asm_putrel(relo_type, value.ie_sym, 0));
 			}
 			/* Emit the raw data word. */
 			switch (width) {
 
 			case 1:
-				if ((value.ie_val < INT8_MIN || value.ie_val > INT8_MAX) &&
-				    WARN(W_UASM_TRUNCATED_TO_FIT))
-					goto err;
-				if (asm_put_data8((uint8_t)(uint64_t)value.ie_val))
-					goto err;
+				if (value.ie_val < INT8_MIN || value.ie_val > INT8_MAX)
+					DO(WARN(W_UASM_TRUNCATED_TO_FIT));
+				DO(asm_put_data8((uint8_t)(uint64_t)value.ie_val));
 				break;
 
 			case 2:
-				if ((value.ie_val < INT16_MIN || value.ie_val > INT16_MAX) &&
-				    WARN(W_UASM_TRUNCATED_TO_FIT))
-					goto err;
-				if (asm_put_data16((uint16_t)(uint64_t)value.ie_val))
-					goto err;
+				if (value.ie_val < INT16_MIN || value.ie_val > INT16_MAX)
+					DO(WARN(W_UASM_TRUNCATED_TO_FIT));
+				DO(asm_put_data16((uint16_t)(uint64_t)value.ie_val));
 				break;
 
 			case 4:
-				if ((value.ie_val < INT32_MIN || value.ie_val > INT32_MAX) &&
-				    WARN(W_UASM_TRUNCATED_TO_FIT))
-					goto err;
-				if (asm_put_data32((uint32_t)(uint64_t)value.ie_val))
-					goto err;
+				if (value.ie_val < INT32_MIN || value.ie_val > INT32_MAX)
+					DO(WARN(W_UASM_TRUNCATED_TO_FIT));
+				DO(asm_put_data32((uint32_t)(uint64_t)value.ie_val));
 				break;
 
 			case 8:
-				if (asm_put_data64((uint64_t)value.ie_val))
-					goto err;
+				DO(asm_put_data64((uint64_t)value.ie_val));
 				break;
 
 			default:
@@ -706,7 +684,8 @@ do_handle_ddi:
 					sym = ddi->dc_sym;
 					ASSERT(sym->as_used >= 1);
 					if (sym->as_used > 1) {
-						if unlikely((sym = asm_newsym()) == NULL)
+						sym = asm_newsym();
+						if unlikely(!sym)
 							goto err;
 						--ddi->dc_sym->as_used;
 						ddi->dc_sym = sym;
@@ -716,8 +695,11 @@ do_handle_ddi:
 					goto ddi_update;
 				}
 			}
-			if unlikely((sym = asm_newsym()) == NULL ||
-			            (ddi = asm_newddi()) == NULL)
+			sym = asm_newsym();
+			if unlikely(!sym)
+				goto err;
+			ddi = asm_newddi();
+			if unlikely(!ddi)
 				goto err;
 			/* Simply define the symbol at the current text position.
 			 * NOTE: Its actual address may change during later assembly phases. */
@@ -777,22 +759,18 @@ do_handle_adjstack:
 		 * >>               // between this point and the end of it's instruction.
 		 * >> 1:  print @"The current stack depth is 42", nl
 		 */
-		if unlikely(uasm_parse_intexpr(&new_depth, UASM_INTEXPR_FHASSP))
-			goto err;
-		if unlikely(new_depth.ie_sym &&
-		            WARN(W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION))
-			goto err;
-		if unlikely((new_depth.ie_val < 0 || new_depth.ie_val > UINT16_MAX) &&
-		            WARN(W_UASM_ILLEGAL_STACK_DEPTH, (long)new_depth.ie_val))
-			goto err;
+		DO(uasm_parse_intexpr(&new_depth, UASM_INTEXPR_FHASSP));
+		if unlikely(new_depth.ie_sym)
+			DO(WARN(W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION));
+		if unlikely(new_depth.ie_val < 0 || new_depth.ie_val > UINT16_MAX)
+			DO(WARN(W_UASM_ILLEGAL_STACK_DEPTH, (long)new_depth.ie_val));
 		/* Special case: If nothing changed, don't even sweat it. */
 		if (current_assembler.a_stackcur == (uint16_t)new_depth.ie_val &&
 		    !(current_userasm.ua_mode & USER_ASM_FSTKINV))
 			goto done;
 		/* Warn if the previous instruction does actually return. */
 		if unlikely(!DeeAsm_IsNoreturn(current_userasm.ua_lasti, current_basescope->bs_flags)) {
-			if (WARN(W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT))
-				goto err;
+			DO(WARN(W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT));
 #if 1
 			/* Disable peephole, so-as not to confuse it. */
 			current_assembler.a_flag &= ~(ASM_FPEEPHOLE);

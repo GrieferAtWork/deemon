@@ -37,6 +37,8 @@
 
 DECL_BEGIN
 
+#define DO(expr) if unlikely(expr) goto err
+
 INTDEF DeeStringObject *tpconst rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_MIN)];
 
 /* @return:  1: Symbol doesn't exist.
@@ -99,8 +101,7 @@ ast_gen_operator_func(struct ast *binding,
 	                                                                false);
 	if unlikely(!ITER_ISOK(operators_module)) {
 		if (operators_module) {
-			if (WARNAST(ddi_ast, W_MODULE_NOT_FOUND, &str_operators))
-				goto err;
+			DO(WARNAST(ddi_ast, W_MODULE_NOT_FOUND, &str_operators));
 			return asm_gpush_none();
 		}
 		goto err;
@@ -119,7 +120,7 @@ ast_gen_operator_func(struct ast *binding,
 			goto err_module; /* <...> from operators */
 		if (binding) {
 			if (ast_genasm_one(binding, ASM_G_FPUSHRES))
-				goto err;
+				goto err_module;
 			deemon_module_id = asm_newmodule(DeeModule_GetDeemon());
 			if unlikely(deemon_module_id < 0)
 				goto err_module;

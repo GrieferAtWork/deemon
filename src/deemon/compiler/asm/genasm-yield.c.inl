@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_ASM_GENASM_YIELD_C
-#define GUARD_DEEMON_COMPILER_ASM_GENASM_YIELD_C 1
+#ifndef GUARD_DEEMON_COMPILER_ASM_GENASM_YIELD_C_INL
+#define GUARD_DEEMON_COMPILER_ASM_GENASM_YIELD_C_INL 1
 
 #include <deemon/api.h>
 #include <deemon/compiler/assembler.h>
@@ -31,6 +31,8 @@
 #include <stddef.h> /* size_t */
 
 DECL_BEGIN
+
+#define DO(expr) if unlikely(expr) goto err
 
 /* Yield the given `yieldexpr'. (keeps the stack-pointer unmodified) */
 PRIVATE WUNUSED NONNULL((1, 2)) int
@@ -51,8 +53,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 				size_t i;
 				for (i = 0; i < expandexpr->a_multiple.m_astc; ++i) {
 					/* Yield the contained sequence expression. */
-					if unlikely(ast_genasm_yield(expandexpr->a_multiple.m_astv[i], ddi))
-						goto err;
+					DO(ast_genasm_yield(expandexpr->a_multiple.m_astv[i], ddi));
 				}
 				goto done;
 			}
@@ -123,14 +124,10 @@ err_seqexpr:
 after_constexpr_expand:
 		/* Special case: Must do a YIELDALL when the
 		 *               expression is an expand-expression. */
-		if (ast_genasm(expandexpr, ASM_G_FPUSHRES))
-			goto err;
-		if (asm_putddi(ddi))
-			goto err;
-		if (asm_giterself())
-			goto err;
-		if (asm_gyieldall())
-			goto err;
+		DO(ast_genasm(expandexpr, ASM_G_FPUSHRES));
+		DO(asm_putddi(ddi));
+		DO(asm_giterself());
+		DO(asm_gyieldall());
 		goto done;
 	}
 
@@ -138,23 +135,17 @@ after_constexpr_expand:
 	if (yieldexpr->a_type == AST_SYM) {
 		struct symbol *sym = yieldexpr->a_sym;
 		if (asm_can_prefix_symbol_for_read(sym)) {
-			if (asm_putddi(ddi))
-				goto err;
-			if (asm_gprefix_symbol_for_read(sym, yieldexpr))
-				goto err;
-			if (asm_gyield_p())
-				goto err;
+			DO(asm_putddi(ddi));
+			DO(asm_gprefix_symbol_for_read(sym, yieldexpr));
+			DO(asm_gyield_p());
 			goto done;
 		}
 	}
 
 	/* Fallback: Yield the raw expression AST */
-	if (ast_genasm(yieldexpr, ASM_G_FPUSHRES))
-		goto err;
-	if (asm_putddi(ddi))
-		goto err;
-	if (asm_gyield())
-		goto err;
+	DO(ast_genasm(yieldexpr, ASM_G_FPUSHRES));
+	DO(asm_putddi(ddi));
+	DO(asm_gyield());
 done:
 	return 0;
 err:
@@ -164,4 +155,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_ASM_GENASM_YIELD_C */
+#endif /* !GUARD_DEEMON_COMPILER_ASM_GENASM_YIELD_C_INL */

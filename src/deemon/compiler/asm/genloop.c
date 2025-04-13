@@ -31,6 +31,8 @@
 
 DECL_BEGIN
 
+#define DO(expr) if unlikely(expr) goto err
+
 /* @param: loop_flags:   Set of `AST_FLOOP_*'
  * @param: elem_or_cond: The loop element target ([0..1] in a foreach loop),
  *                       or the loop-continue condition ([0..1] in other loop types).
@@ -81,24 +83,18 @@ INTERN WUNUSED NONNULL((5)) struct asm_sym *
 		    !(iter_or_next->a_operator.o_exflag & (AST_OPERATOR_FPOSTOP | AST_OPERATOR_FVARARGS)) &&
 		    iter_or_next->a_operator.o_op0) {
 			/* Generate a sequence as an ASP, thus optimizing away unnecessary casts. */
-			if (ast_genasm_asp(iter_or_next->a_operator.o_op0, ASM_G_FPUSHRES))
-				goto err;
-			if (asm_putddi(iter_or_next))
-				goto err;
-			if (asm_giterself())
-				goto err;
+			DO(ast_genasm_asp(iter_or_next->a_operator.o_op0, ASM_G_FPUSHRES));
+			DO(asm_putddi(iter_or_next));
+			DO(asm_giterself());
 		} else {
-			if (ast_genasm(iter_or_next, ASM_G_FPUSHRES))
-				goto err;
+			DO(ast_genasm(iter_or_next, ASM_G_FPUSHRES));
 		}
 		/* This is where the loop starts! (and where `continue' jump to) */
 		asm_defsym(loop_continue);
 		/* The foreach instruction will jump to the break-address
 		 * when the iterator has been exhausted. */
-		if (asm_putddi(ddi_ast))
-			goto err;
-		if (asm_gjmp(ASM_FOREACH, loop_break))
-			goto err;
+		DO(asm_putddi(ddi_ast));
+		DO(asm_gjmp(ASM_FOREACH, loop_break));
 		/* TODO: Support for ASM_FOREACH_KEY, ASM_FOREACH_VALUE, ASM_FOREACH_PAIR */
 
 		asm_diicsp(); /* -2, +1: loop-branch of a foreach instruction. */
@@ -112,31 +108,24 @@ INTERN WUNUSED NONNULL((5)) struct asm_sym *
 			loop_begin = asm_newsym();
 			if unlikely(!loop_begin)
 				goto err;
-			if (asm_putddi(ddi_ast))
-				goto err;
-			if (asm_gjmp(ASM_JMP, loop_begin))
-				goto err; /* Jump into cold text. */
+			DO(asm_putddi(ddi_ast));
+			DO(asm_gjmp(ASM_JMP, loop_begin)); /* Jump into cold text. */
 			current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
 		}
 
 		/* Store the foreach iterator into the loop variable(s) */
 		if (elem_or_cond) {
-			if (asm_gpop_expr(elem_or_cond))
-				goto err;
+			DO(asm_gpop_expr(elem_or_cond));
 		} else {
-			if (asm_gpop())
-				goto err;
+			DO(asm_gpop());
 		}
 
 		/* Generate the loop block itself. */
-		if (block &&
-		    ast_genasm(block, ASM_G_FNORMAL))
-			goto err;
+		if (block)
+			DO(ast_genasm(block, ASM_G_FNORMAL));
 
-		if (asm_putddi(ddi_ast))
-			goto err;
-		if (asm_gjmp(ASM_JMP, loop_continue))
-			goto err; /* Jump back to yield the next item. */
+		DO(asm_putddi(ddi_ast));
+		DO(asm_gjmp(ASM_JMP, loop_continue)); /* Jump back to yield the next item. */
 		current_assembler.a_curr = prev_section;
 
 		/* -1: Adjust for the `ASM_FOREACH' instruction popping the iterator once it's empty. */
@@ -153,23 +142,18 @@ INTERN WUNUSED NONNULL((5)) struct asm_sym *
 		 *       considering that it's meant to contain code that's unlikely
 		 *       to be called. */
 		/* Generate the loop itself. */
-		if (block &&
-		    ast_genasm(block, ASM_G_FNORMAL))
-			goto err;
+		if (block)
+			DO(ast_genasm(block, ASM_G_FNORMAL));
 
 		/* Evaluate the condition after the loop (and after the continue-symbol). */
 		asm_defsym(loop_continue);
-		if (iter_or_next &&
-		    ast_genasm(iter_or_next, ASM_G_FNORMAL))
-			goto err;
+		if (iter_or_next)
+			DO(ast_genasm(iter_or_next, ASM_G_FNORMAL));
 		if (elem_or_cond) {
-			if (asm_gjcc(elem_or_cond, ASM_JT, loop_block, ddi_ast))
-				goto err; /* if (cond) goto loop_block; */
+			DO(asm_gjcc(elem_or_cond, ASM_JT, loop_block, ddi_ast)); /* if (cond) goto loop_block; */
 		} else {
-			if (asm_putddi(ddi_ast))
-				goto err;
-			if (asm_gjmp(ASM_JMP, loop_block))
-				goto err; /* if (cond) goto loop_block; */
+			DO(asm_putddi(ddi_ast));
+			DO(asm_gjmp(ASM_JMP, loop_block)); /* if (cond) goto loop_block; */
 		}
 	} else {
 		struct asm_sym *loop_block;
@@ -189,49 +173,41 @@ INTERN WUNUSED NONNULL((5)) struct asm_sym *
 			loop_enter = asm_newsym();
 			if unlikely(!loop_enter)
 				goto err;
-			if (asm_gjcc(elem_or_cond, ASM_JT, loop_enter, ddi_ast))
-				goto err; /* if (cond) goto enter_loop; */
+			DO(asm_gjcc(elem_or_cond, ASM_JT, loop_enter, ddi_ast)); /* if (cond) goto enter_loop; */
 
 			prev_section             = current_assembler.a_curr;
 			current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
 			asm_defsym(loop_enter);
 
 			/* Generate the loop itself. */
-			if (block &&
-			    ast_genasm(block, ASM_G_FNORMAL))
-				goto err;
+			if (block)
+				DO(ast_genasm(block, ASM_G_FNORMAL));
 
 			if (iter_or_next) {
 				asm_defsym(loop_continue);
-				if (ast_genasm(iter_or_next, ASM_G_FNORMAL))
-					goto err;
+				DO(ast_genasm(iter_or_next, ASM_G_FNORMAL));
 			}
+
 			/* Jump back to re-evaluate the condition. */
-			if (asm_putddi(ddi_ast))
-				goto err;
-			if (asm_gjmp(ASM_JMP, loop_block))
-				goto err;
+			DO(asm_putddi(ddi_ast));
+			DO(asm_gjmp(ASM_JMP, loop_block));
 			current_assembler.a_curr = prev_section;
 		} else {
-			if (elem_or_cond &&
-			    asm_gjcc(elem_or_cond, ASM_JF, loop_break, ddi_ast))
-				goto err; /* if (!(cond)) break; */
+			if (elem_or_cond)
+				DO(asm_gjcc(elem_or_cond, ASM_JF, loop_break, ddi_ast)); /* if (!(cond)) break; */
 
 			/* Generate the loop itself. */
-			if (block &&
-			    ast_genasm(block, ASM_G_FNORMAL))
-				goto err;
+			if (block)
+				DO(ast_genasm(block, ASM_G_FNORMAL));
 
 			if (iter_or_next) {
 				asm_defsym(loop_continue);
-				if (ast_genasm(iter_or_next, ASM_G_FNORMAL))
-					goto err;
+				DO(ast_genasm(iter_or_next, ASM_G_FNORMAL));
 			}
+
 			/* Jump back to re-evaluate the condition. */
-			if (asm_putddi(ddi_ast))
-				goto err;
-			if (asm_gjmp(ASM_JMP, loop_block))
-				goto err;
+			DO(asm_putddi(ddi_ast));
+			DO(asm_gjmp(ASM_JMP, loop_block));
 		}
 	}
 
@@ -247,7 +223,6 @@ INTERN WUNUSED NONNULL((5)) struct asm_sym *
 err:
 	return NULL;
 }
-
 
 DECL_END
 

@@ -36,6 +36,8 @@
 
 DECL_BEGIN
 
+#define DO(expr) if unlikely(expr) goto err
+
 PRIVATE WUNUSED DREF DeeCodeObject *DCALL
 ast_assemble_function(struct ast *__restrict function_ast,
                       uint16_t *__restrict p_refc,
@@ -86,8 +88,7 @@ asm_gpush_function(struct ast *__restrict function_ast) {
 	code = ast_assemble_function(function_ast, &refc, &refv);
 	if unlikely(!code)
 		goto err;
-	if (asm_putddi(function_ast))
-		goto err;
+	DO(asm_putddi(function_ast));
 	ASSERT(code->co_refstaticc >= code->co_refc);
 	if (!refc && code->co_refstaticc <= code->co_refc) {
 		/* Special case: The function doesn't reference any code.
@@ -114,8 +115,7 @@ asm_gpush_function(struct ast *__restrict function_ast) {
 		refv[i].sr_sym->s_flag &= ~(SYMBOL_FALLOC | SYMBOL_FALLOCREF);
 		refv[i].sr_sym->s_flag |= refv[i].sr_orig_flag & (SYMBOL_FALLOC | SYMBOL_FALLOCREF);
 		refv[i].sr_sym->s_refid = refv[i].sr_orig_refid;
-		if (asm_gpush_symbol(refv[i].sr_sym, function_ast))
-			goto err_refv;
+		DO(asm_gpush_symbol(refv[i].sr_sym, function_ast));
 	}
 	Dee_Free(refv);
 	/* Generate assembly to create (and push) the new function object. */
@@ -137,8 +137,7 @@ asm_gmov_function(struct symbol *__restrict dst,
 	code = ast_assemble_function(function_ast, &refc, &refv);
 	if unlikely(!code)
 		goto err;
-	if (asm_putddi(function_ast))
-		goto err;
+	DO(asm_putddi(function_ast));
 	if (!refc) {
 		/* Special case: The function doesn't reference any code.
 		 * -> In this case, we can construct the function object
@@ -153,8 +152,7 @@ asm_gmov_function(struct symbol *__restrict dst,
 		Dee_Decref(function);
 		if unlikely(cid < 0)
 			goto err;
-		if (asm_gprefix_symbol(dst, dst_warn_ast))
-			goto err;
+		DO(asm_gprefix_symbol(dst, dst_warn_ast));
 		return asm_gpush_const_p((uint16_t)cid);
 	}
 	cid = asm_newconst((DeeObject *)code);
@@ -166,13 +164,11 @@ asm_gmov_function(struct symbol *__restrict dst,
 		refv[i].sr_sym->s_flag &= ~(SYMBOL_FALLOC | SYMBOL_FALLOCREF);
 		refv[i].sr_sym->s_flag |= refv[i].sr_orig_flag & (SYMBOL_FALLOC | SYMBOL_FALLOCREF);
 		refv[i].sr_sym->s_refid = refv[i].sr_orig_refid;
-		if (asm_gpush_symbol(refv[i].sr_sym, function_ast))
-			goto err_refv;
+		DO(asm_gpush_symbol(refv[i].sr_sym, function_ast));
 	}
 	Dee_Free(refv);
 	/* Generate assembly to create (and push) the new function object. */
-	if (asm_gprefix_symbol(dst, dst_warn_ast))
-		goto err;
+	DO(asm_gprefix_symbol(dst, dst_warn_ast));
 	ASSERT(refc != 0);
 	return asm_gfunction_ii_prefixed((uint16_t)cid,
 	                                 (uint16_t)refc);
@@ -181,9 +177,6 @@ err_refv:
 err:
 	return -1;
 }
-
-
-
 
 DECL_END
 

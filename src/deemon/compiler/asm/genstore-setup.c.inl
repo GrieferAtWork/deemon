@@ -45,6 +45,8 @@
 
 DECL_BEGIN
 
+#define DO(expr) if unlikely(expr) goto err
+
 #ifdef ENTER
 INTERN WUNUSED NONNULL((1)) int
 (DCALL asm_gpop_expr_enter)(struct ast *__restrict self)
@@ -59,10 +61,9 @@ INTERN WUNUSED NONNULL((1)) int
 
 	case AST_SYM:
 #ifdef LEAVE
-		if (asm_putddi(self))
-			goto err;
-		if (PUSH_RESULT && asm_gdup())
-			goto err;
+		DO(asm_putddi(self));
+		if (PUSH_RESULT)
+			DO(asm_gdup());
 		return asm_gpop_symbol(self->a_sym, self);
 #endif /* LEAVE */
 		break;
@@ -78,10 +79,8 @@ INTERN WUNUSED NONNULL((1)) int
 				goto done;
 			if (self->a_multiple.m_astc > 1) {
 				ASM_PUSH_SCOPE(self->a_scope, err);
-				for (; i < self->a_multiple.m_astc - 1; ++i) {
-					if (ast_genasm(self->a_multiple.m_astv[i], ASM_G_FNORMAL))
-						goto err;
-				}
+				for (; i < self->a_multiple.m_astc - 1; ++i)
+					DO(ast_genasm(self->a_multiple.m_astv[i], ASM_G_FNORMAL));
 				ASM_POP_SCOPE(0, err);
 			}
 			ASSERT(i == self->a_multiple.m_astc - 1);
@@ -102,8 +101,7 @@ INTERN WUNUSED NONNULL((1)) int
 			for (i = 0; i < self->a_multiple.m_astc; ++i) {
 				uint16_t old_stacksz = current_assembler.a_stackcur;
 				struct ast *inner    = self->a_multiple.m_astv[i];
-				if (asm_gpop_expr_enter(inner))
-					goto err;
+				DO(asm_gpop_expr_enter(inner));
 				ASSERT(current_assembler.a_stackcur >= old_stacksz);
 				/* Remember how many stack-temporaries were produced by this entry. */
 				inner->a_temp = current_assembler.a_stackcur - old_stacksz;
@@ -116,8 +114,7 @@ INTERN WUNUSED NONNULL((1)) int
 				/* Move the result below the block of stack-temporaries used by target-expressions. */
 				cnt = self->a_multiple.m_astc;
 				vec = self->a_multiple.m_astv;
-				if (asm_putddi(self))
-					goto err;
+				DO(asm_putddi(self));
 				i = cnt;
 				while (i--)
 					total_diff += vec[i]->a_temp;
@@ -136,28 +133,28 @@ INTERN WUNUSED NONNULL((1)) int
 					/* TODO */
 				}
 				if (PUSH_RESULT) {
-					if (asm_gdup())
-						goto err; /* <temp...>, result, result */
-					if (total_diff != 0 && asm_grrot(total_diff + 2))
-						goto err; /* result, <temp...>, result */
+					DO(asm_gdup()); /* <temp...>, result, result */
+					if (total_diff != 0)
+						DO(asm_grrot(total_diff + 2)); /* result, <temp...>, result */
 				}
-				if (asm_gunpack((uint16_t)cnt))
-					goto err;
+				DO(asm_gunpack((uint16_t)cnt));
+
 				/* Directly leave expressions that didn't use any stack-temporaries. */
 				while (cnt && vec[cnt - 1]->a_temp == 0) {
-					if (asm_gpop_expr_leave(vec[cnt - 1], ASM_G_FNORMAL))
-						goto err;
+					DO(asm_gpop_expr_leave(vec[cnt - 1], ASM_G_FNORMAL));
 					--cnt;
 				}
 				if (cnt) {
 					size_t j;
 					/* Right now, the stack looks like this:
 					 * [result], T0a, T0b, T1a, T1b, T2a, T2b, V0, V1, V2
+					 *
 					 * However, we want it to look like this:
 					 * [result], T0a, T0b, V0, T1a, T1b, V1, T2a, T2b, V2
+					 *
 					 * Because of this, we must adjust the stack. */
-					if (asm_grrot((uint16_t)cnt))
-						goto err; /* T0a, T0b, T1a, T1b, T2a, T2b, V2, V0, V1 */
+					DO(asm_grrot((uint16_t)cnt)); /* T0a, T0b, T1a, T1b, T2a, T2b, V2, V0, V1 */
+
 					/* -> asm_grrot(5); // T0a, T0b, T1a, T1b, V1, T2a, T2b, V2, V0 */
 					/* -> asm_grrot(7); // T0a, T0b, V0, T1a, T1b, V1, T2a, T2b, V2 */
 					i = cnt;
@@ -165,14 +162,12 @@ INTERN WUNUSED NONNULL((1)) int
 						uint16_t total = (uint16_t)cnt;
 						for (j = i; j < cnt; ++j)
 							total += vec[j]->a_temp;
-						if (asm_grrot(total))
-							goto err;
+						DO(asm_grrot(total));
 					}
 					/* The leave-stack is unwound in reverse order! */
 					i = cnt;
 					while (i--) {
-						if (asm_gpop_expr_leave(vec[i], ASM_G_FNORMAL))
-							goto err;
+						DO(asm_gpop_expr_leave(vec[i], ASM_G_FNORMAL));
 					}
 				}
 			}
@@ -200,49 +195,36 @@ INTERN WUNUSED NONNULL((1)) int
 					if (sym->s_type == SYMBOL_TYPE_THIS &&
 					    !SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
 #ifdef LEAVE
-						if (asm_putddi(self))
-							goto err;
-						if (PUSH_RESULT && asm_gdup())
-							goto err;
-						if (asm_gsetattr_this_const((uint16_t)cid))
-							goto err;
+						DO(asm_putddi(self));
+						if (PUSH_RESULT)
+							DO(asm_gdup());
+						DO(asm_gsetattr_this_const((uint16_t)cid));
 #endif /* LEAVE */
 						goto done;
 					}
 				}
 #ifdef ENTER
-				if (ast_genasm(base, ASM_G_FPUSHRES))
-					goto err;
+				DO(ast_genasm(base, ASM_G_FPUSHRES));
 #else /* ENTER */
-				if (asm_putddi(self))
-					goto err; /* base, value */
+				DO(asm_putddi(self)); /* base, value */
 				if (PUSH_RESULT) {
-					if (asm_gdup())
-						goto err; /* base, value, value */
-					if (asm_grrot(3))
-						goto err; /* value, base, value */
+					DO(asm_gdup()); /* base, value, value */
+					DO(asm_grrot(3)); /* value, base, value */
 				}
-				if (asm_gsetattr_const((uint16_t)cid))
-					goto err;
+				DO(asm_gsetattr_const((uint16_t)cid));
 #endif /* !ENTER */
 				goto done;
 			}
 #ifdef ENTER
-			if (ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES))
-				goto err;
-			if (ast_genasm_one(self->a_operator.o_op1, ASM_G_FPUSHRES))
-				goto err;
+			DO(ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES));
+			DO(ast_genasm_one(self->a_operator.o_op1, ASM_G_FPUSHRES));
 #else /* ENTER */
-			if (asm_putddi(self))
-				goto err;
+			DO(asm_putddi(self));
 			if (PUSH_RESULT) {
-				if (asm_gdup())
-					goto err; /* base, attr, value, value */
-				if (asm_grrot(4))
-					goto err; /* value, base, attr, value */
+				DO(asm_gdup()); /* base, attr, value, value */
+				DO(asm_grrot(4)); /* value, base, attr, value */
 			}
-			if (asm_gsetattr())
-				goto err;
+			DO(asm_gsetattr());
 #endif /* !ENTER */
 			goto done;
 		}
@@ -253,62 +235,48 @@ INTERN WUNUSED NONNULL((1)) int
 			if unlikely((index = self->a_operator.o_op1) == NULL)
 				break;
 #ifdef ENTER
-			if (ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES))
-				goto err;
+			DO(ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES));
 #endif /* ENTER */
 			if (index->a_type == AST_CONSTEXPR) {
-				int32_t int_index;
+				int16_t int_index;
 				/* Special optimizations for constant indices. */
 				if (DeeInt_Check(index->a_constexpr) &&
-				    DeeInt_TryAsInt32(index->a_constexpr, &int_index) &&
-				    int_index >= INT16_MIN && int_index <= INT16_MAX) {
+				    DeeInt_TryAsInt16(index->a_constexpr, &int_index)) {
 #ifdef LEAVE
-					if (asm_putddi(self))
-						goto err;
+					DO(asm_putddi(self));
 					if (PUSH_RESULT) {
-						if (asm_gdup())
-							goto err; /* base, value, value */
-						if (asm_grrot(3))
-							goto err; /* value, base, value */
+						DO(asm_gdup()); /* base, value, value */
+						DO(asm_grrot(3)); /* value, base, value */
 					}
-					if (asm_gsetitem_index((int16_t)int_index))
-						goto err;
+					DO(asm_gsetitem_index((int16_t)int_index));
 #endif /* LEAVE */
 					goto done;
 				}
 				if (asm_allowconst(index->a_constexpr)) {
 #ifdef LEAVE
-					int_index = asm_newconst(index->a_constexpr);
-					if unlikely(int_index < 0)
+					int32_t cid;
+					cid = asm_newconst(index->a_constexpr);
+					if unlikely(cid < 0)
 						goto err;
-					if (asm_putddi(self))
-						goto err;
+					DO(asm_putddi(self));
 					if (PUSH_RESULT) {
-						if (asm_gdup())
-							goto err; /* base, value, value */
-						if (asm_grrot(3))
-							goto err; /* value, base, value */
+						DO(asm_gdup()); /* base, value, value */
+						DO(asm_grrot(3)); /* value, base, value */
 					}
-					if (asm_gsetitem_const((uint16_t)int_index))
-						goto err;
+					DO(asm_gsetitem_const((uint16_t)cid));
 #endif /* LEAVE */
 					goto done;
 				}
 			}
 #ifdef ENTER
-			if (ast_genasm_one(index, ASM_G_FPUSHRES))
-				goto err; /* STACK: base, index */
+			DO(ast_genasm_one(index, ASM_G_FPUSHRES)); /* STACK: base, index */
 #else /* ENTER */
-			if (asm_putddi(self))
-				goto err;
+			DO(asm_putddi(self));
 			if (PUSH_RESULT) {
-				if (asm_gdup())
-					goto err; /* base, index, value, value */
-				if (asm_grrot(4))
-					goto err; /* value, base, index, value */
+				DO(asm_gdup()); /* base, index, value, value */
+				DO(asm_grrot(4)); /* value, base, index, value */
 			}
-			if (asm_gsetitem())
-				goto err;
+			DO(asm_gsetitem());
 #endif /* !ENTER */
 			goto done;
 		}
@@ -319,8 +287,7 @@ INTERN WUNUSED NONNULL((1)) int
 			if unlikely(!self->a_operator.o_op2)
 				break;
 #ifdef ENTER
-			if (ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES))
-				goto err;
+			DO(ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES));
 #endif /* ENTER */
 			begin = self->a_operator.o_op1;
 			end   = self->a_operator.o_op2;
@@ -335,34 +302,25 @@ INTERN WUNUSED NONNULL((1)) int
 					    index >= INT16_MIN && index <= INT16_MAX) {
 						/* `setrange pop, none, $<Simm16>, pop' */
 #ifdef LEAVE
-						if (asm_putddi(self))
-							goto err;
+						DO(asm_putddi(self));
 						if (PUSH_RESULT) {
-							if (asm_gdup())
-								goto err; /* base, value, value */
-							if (asm_grrot(3))
-								goto err; /* value, base, value */
+							DO(asm_gdup()); /* base, value, value */
+							DO(asm_grrot(3)); /* value, base, value */
 						}
-						if (asm_gsetrange_ni((int16_t)index))
-							goto err;
+						DO(asm_gsetrange_ni((int16_t)index));
 #endif /* LEAVE */
 						goto done;
 					}
 					/* `setrange pop, none, pop, pop' */
 #ifdef ENTER
-					if (ast_genasm_one(end, ASM_G_FPUSHRES))
-						goto err; /* STACK: base, end */
+					DO(ast_genasm_one(end, ASM_G_FPUSHRES)); /* STACK: base, end */
 #else /* ENTER */
-					if (asm_putddi(self))
-						goto err;
+					DO(asm_putddi(self));
 					if (PUSH_RESULT) {
-						if (asm_gdup())
-							goto err; /* base, end, value, value */
-						if (asm_grrot(4))
-							goto err; /* value, base, end, value */
+						DO(asm_gdup()); /* base, end, value, value */
+						DO(asm_grrot(4)); /* value, base, end, value */
 					}
-					if (asm_gsetrange_np())
-						goto err;
+					DO(asm_gsetrange_np());
 #endif /* !ENTER */
 					goto done;
 				}
@@ -375,16 +333,12 @@ INTERN WUNUSED NONNULL((1)) int
 						if (DeeNone_Check(end_index)) {
 							/* `setrange pop, $<Simm16>, none, pop' */
 #ifdef LEAVE
-							if (asm_putddi(self))
-								goto err;
+							DO(asm_putddi(self));
 							if (PUSH_RESULT) {
-								if (asm_gdup())
-									goto err; /* base, value, value */
-								if (asm_grrot(3))
-									goto err; /* value, base, value */
+								DO(asm_gdup()); /* base, value, value */
+								DO(asm_grrot(3)); /* value, base, value */
 							}
-							if (asm_gsetrange_in((int16_t)index))
-								goto err;
+							DO(asm_gsetrange_in((int16_t)index));
 #endif /* LEAVE */
 							goto done;
 						}
@@ -393,34 +347,25 @@ INTERN WUNUSED NONNULL((1)) int
 						    index2 >= INT16_MIN && index2 <= INT16_MAX) {
 							/* `setrange pop, $<Simm16>, $<Simm16>, pop' */
 #ifdef LEAVE
-							if (asm_putddi(self))
-								goto err;
+							DO(asm_putddi(self));
 							if (PUSH_RESULT) {
-								if (asm_gdup())
-									goto err; /* base, value, value */
-								if (asm_grrot(3))
-									goto err; /* value, base, value */
+								DO(asm_gdup()); /* base, value, value */
+								DO(asm_grrot(3)); /* value, base, value */
 							}
-							if (asm_gsetrange_ii((int16_t)index, (int16_t)index2))
-								goto err;
+							DO(asm_gsetrange_ii((int16_t)index, (int16_t)index2));
 #endif /* LEAVE */
 							goto done;
 						}
 					}
 #ifdef ENTER
-					if (ast_genasm_one(end, ASM_G_FPUSHRES))
-						goto err; /* STACK: base, end */
+					DO(ast_genasm_one(end, ASM_G_FPUSHRES)); /* STACK: base, end */
 #else /* ENTER */
-					if (asm_putddi(self))
-						goto err;
+					DO(asm_putddi(self));
 					if (PUSH_RESULT) {
-						if (asm_gdup())
-							goto err; /* base, end, value, value */
-						if (asm_grrot(4))
-							goto err; /* value, base, end, value */
+						DO(asm_gdup()); /* base, end, value, value */
+						DO(asm_grrot(4)); /* value, base, end, value */
 					}
-					if (asm_gsetrange_ip((int16_t)index))
-						goto err;
+					DO(asm_gsetrange_ip((int16_t)index));
 #endif /* !ENTER */
 					goto done;
 				}
@@ -430,19 +375,14 @@ INTERN WUNUSED NONNULL((1)) int
 				if (DeeNone_Check(end_index)) {
 					/* `setrange pop, pop, none, pop' */
 #ifdef ENTER
-					if (ast_genasm_one(begin, ASM_G_FPUSHRES))
-						goto err; /* STACK: base, begin */
+					DO(ast_genasm_one(begin, ASM_G_FPUSHRES)); /* STACK: base, begin */
 #else /* ENTER */
-					if (asm_putddi(self))
-						goto err;
+					DO(asm_putddi(self));
 					if (PUSH_RESULT) {
-						if (asm_gdup())
-							goto err; /* base, begin, value, value */
-						if (asm_grrot(4))
-							goto err; /* value, base, begin, value */
+						DO(asm_gdup()); /* base, begin, value, value */
+						DO(asm_grrot(4)); /* value, base, begin, value */
 					}
-					if (asm_gsetrange_pn())
-						goto err;
+					DO(asm_gsetrange_pn());
 #endif /* !ENTER */
 					goto done;
 				}
@@ -451,39 +391,28 @@ INTERN WUNUSED NONNULL((1)) int
 				    index >= INT16_MIN && index <= INT16_MAX) {
 					/* `setrange pop, pop, $<Simm16>, pop' */
 #ifdef ENTER
-					if (ast_genasm_one(begin, ASM_G_FPUSHRES))
-						goto err; /* STACK: base, begin */
+					DO(ast_genasm_one(begin, ASM_G_FPUSHRES)); /* STACK: base, begin */
 #else /* ENTER */
-					if (asm_putddi(self))
-						goto err;
+					DO(asm_putddi(self));
 					if (PUSH_RESULT) {
-						if (asm_gdup())
-							goto err; /* base, begin, value, value */
-						if (asm_grrot(4))
-							goto err; /* value, base, begin, value */
+						DO(asm_gdup()); /* base, begin, value, value */
+						DO(asm_grrot(4)); /* value, base, begin, value */
 					}
-					if (asm_gsetrange_pi((int16_t)index))
-						goto err;
+					DO(asm_gsetrange_pi((int16_t)index));
 #endif /* !ENTER */
 					goto done;
 				}
 			}
 #ifdef ENTER
-			if (ast_genasm_one(begin, ASM_G_FPUSHRES))
-				goto err;
-			if (ast_genasm_one(end, ASM_G_FPUSHRES))
-				goto err;
+			DO(ast_genasm_one(begin, ASM_G_FPUSHRES));
+			DO(ast_genasm_one(end, ASM_G_FPUSHRES));
 #else /* ENTER */
-			if (asm_putddi(self))
-				goto err;
+			DO(asm_putddi(self));
 			if (PUSH_RESULT) {
-				if (asm_gdup())
-					goto err; /* base, begin, end, value, value */
-				if (asm_grrot(5))
-					goto err; /* value, base, begin, end, value */
+				DO(asm_gdup()); /* base, begin, end, value, value */
+				DO(asm_grrot(5)); /* value, base, begin, end, value */
 			}
-			if (asm_gsetrange())
-				goto err;
+			DO(asm_gsetrange());
 #endif /* !ENTER */
 			goto done;
 		}
@@ -498,8 +427,8 @@ INTERN WUNUSED NONNULL((1)) int
 		if (!DeeNone_Check(self->a_constexpr))
 			goto default_case;
 #ifdef LEAVE
-		if (!PUSH_RESULT && asm_gpop())
-			goto err;
+		if (!PUSH_RESULT)
+			DO(asm_gpop());
 #endif /* LEAVE */
 		break;
 
@@ -507,22 +436,16 @@ INTERN WUNUSED NONNULL((1)) int
 	default_case:
 		/* Fallback: Generate the self and store it directly. */
 #ifdef ENTER
-		if (ast_genasm(self, ASM_G_FPUSHRES))
-			goto err;
+		DO(ast_genasm(self, ASM_G_FPUSHRES));
 #else /* ENTER */
 		/* Emit a warning about an r-value store. */
-		if (WARNAST(self, W_ASM_STORE_TO_RVALUE))
-			goto err;
-		if (asm_putddi(self))
-			goto err;
+		DO(WARNAST(self, W_ASM_STORE_TO_RVALUE));
+		DO(asm_putddi(self));
 		if (PUSH_RESULT) {
-			if (asm_gdup_n(0))
-				goto err; /* dst, value, dst */
-			if (asm_gswap())
-				goto err; /* dst, dst, value */
+			DO(asm_gdup_n(0)); /* dst, value, dst */
+			DO(asm_gswap()); /* dst, dst, value */
 		}
-		if (asm_gassign())
-			goto err;
+		DO(asm_gassign());
 #endif /* !ENTER */
 		break;
 	}

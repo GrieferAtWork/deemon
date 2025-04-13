@@ -32,6 +32,8 @@
 
 DECL_BEGIN
 
+#define DO(expr) if unlikely(expr) goto err
+
 INTERN WUNUSED NONNULL((1)) int
 (DCALL asm_genclass)(struct ast *__restrict class_ast,
                      unsigned int gflags) {
@@ -46,13 +48,10 @@ INTERN WUNUSED NONNULL((1)) int
 			//} else if (base->s_type == SYMBOL_TYPE_EXTERN) {
 			//}
 		}
-		if (ast_genasm(class_ast->a_class.c_base, ASM_G_FPUSHRES))
-			goto err;
+		DO(ast_genasm(class_ast->a_class.c_base, ASM_G_FPUSHRES));
 	} else {
-		if (asm_putddi(class_ast))
-			goto err;
-		if (asm_gpush_none())
-			goto err;
+		DO(asm_putddi(class_ast));
+		DO(asm_gpush_none());
 	}
 	if (class_ast->a_class.c_supersym &&
 	    !(class_ast->a_flag & AST_FCLASS_NOWRITESUPER) &&
@@ -62,15 +61,11 @@ INTERN WUNUSED NONNULL((1)) int
 		/* Save the super-class in its symbol. */
 		if (asm_can_prefix_symbol(class_ast->a_class.c_supersym)) {
 			/* mov <c_supersym>, top */
-			if (asm_gprefix_symbol(class_ast->a_class.c_supersym, class_ast))
-				goto err;
-			if (asm_gdup_p())
-				goto err;
+			DO(asm_gprefix_symbol(class_ast->a_class.c_supersym, class_ast));
+			DO(asm_gdup_p());
 		} else {
-			if (asm_gdup())
-				goto err;
-			if (asm_gpop_symbol(class_ast->a_class.c_supersym, class_ast))
-				goto err;
+			DO(asm_gdup());
+			DO(asm_gpop_symbol(class_ast->a_class.c_supersym, class_ast));
 		}
 	}
 	if (class_ast->a_class.c_desc->a_type == AST_CONSTEXPR &&
@@ -78,15 +73,11 @@ INTERN WUNUSED NONNULL((1)) int
 		int32_t cid = asm_newconst(class_ast->a_class.c_desc->a_constexpr);
 		if unlikely(cid < 0)
 			goto err;
-		if (asm_gclass_c((uint16_t)cid))
-			goto err;
+		DO(asm_gclass_c((uint16_t)cid));
 	} else {
-		if (ast_genasm_one(class_ast->a_class.c_desc, ASM_G_FPUSHRES))
-			goto err;
-		if (asm_putddi(class_ast))
-			goto err;
-		if (asm_gclass())
-			goto err;
+		DO(ast_genasm_one(class_ast->a_class.c_desc, ASM_G_FPUSHRES));
+		DO(asm_putddi(class_ast));
+		DO(asm_gclass());
 	}
 
 	/* At this point, the new class type has already been created.
@@ -96,15 +87,11 @@ INTERN WUNUSED NONNULL((1)) int
 	if (class_ast->a_class.c_classsym) {
 		if (asm_can_prefix_symbol(class_ast->a_class.c_classsym)) {
 			/* mov <c_classsym>, top */
-			if (asm_gprefix_symbol(class_ast->a_class.c_classsym, class_ast))
-				goto err;
-			if (asm_gdup_p())
-				goto err;
+			DO(asm_gprefix_symbol(class_ast->a_class.c_classsym, class_ast));
+			DO(asm_gdup_p());
 		} else {
-			if (asm_gdup())
-				goto err;
-			if (asm_gpop_symbol(class_ast->a_class.c_classsym, class_ast))
-				goto err;
+			DO(asm_gdup());
+			DO(asm_gpop_symbol(class_ast->a_class.c_classsym, class_ast));
 		}
 	}
 
@@ -113,21 +100,17 @@ INTERN WUNUSED NONNULL((1)) int
 		struct class_member *member;
 		member = &class_ast->a_class.c_memberv[i];
 		if likely(member->cm_index != (uint16_t)-1) {
-			if (ast_genasm_one(member->cm_ast, ASM_G_FPUSHRES))
-				goto err;
-			if (asm_putddi(class_ast))
-				goto err;
-			if (asm_gdefcmember(member->cm_index))
-				goto err;
+			DO(ast_genasm_one(member->cm_ast, ASM_G_FPUSHRES));
+			DO(asm_putddi(class_ast));
+			DO(asm_gdefcmember(member->cm_index));
 		} else {
-			if (ast_genasm_one(member->cm_ast, ASM_G_FNORMAL))
-				goto err;
+			DO(ast_genasm_one(member->cm_ast, ASM_G_FNORMAL));
 		}
 	}
 
 	/* And that's already it! - The new class is complete. */
-	if (!(gflags & ASM_G_FPUSHRES) && asm_gpop())
-		goto err;
+	if (!(gflags & ASM_G_FPUSHRES))
+		DO(asm_gpop());
 	return 0;
 err:
 	return -1;

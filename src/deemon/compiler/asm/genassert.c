@@ -36,6 +36,8 @@
 
 DECL_BEGIN
 
+#define DO(expr) if unlikely(expr) goto err
+
 /* Quick translation table for most basic operator instruction codes. */
 INTDEF instruction_t const operator_instr_table[];
 
@@ -63,10 +65,8 @@ INTERN WUNUSED NONNULL((1, 3)) int
 	Dee_operator_t operator_name;
 	if (current_assembler.a_flag & ASM_FNOASSERT) {
 		/* Discard the assert-expression and message and emit a constant true. */
-		if (gflags & ASM_G_FPUSHRES) {
-			if (ast_genasm(expr, gflags))
-				goto err;
-		}
+		if (gflags & ASM_G_FPUSHRES)
+			DO(ast_genasm(expr, gflags));
 		goto done;
 	}
 
@@ -101,9 +101,11 @@ INTERN WUNUSED NONNULL((1, 3)) int
 	 * >>                         //       event that the assertion-failure function was overwritten,
 	 * >>                         //       it may actually return once again!
 	 */
-	if unlikely((assert_enter = asm_newsym()) == NULL)
+	assert_enter = asm_newsym();
+	if unlikely(assert_enter == NULL)
 		goto err; /* .cold.1: */
-	if unlikely((assert_leave = asm_newsym()) == NULL)
+	assert_leave = asm_newsym();
+	if unlikely(assert_leave == NULL)
 		goto err; /* 2: */
 	if (expr->a_type == AST_OPERATOR &&
 	    /* NOTE: Don't handle varargs operators. */
@@ -116,28 +118,23 @@ INTERN WUNUSED NONNULL((1, 3)) int
 
 		/* Figure out how many operands there are while generating code for the operator itself. */
 		argc = 1;
-		if (ast_genasm(expr->a_operator.o_op0, ASM_G_FPUSHRES))
-			goto err;
+		DO(ast_genasm(expr->a_operator.o_op0, ASM_G_FPUSHRES));
 		if (!expr->a_operator.o_op1)
 			goto emit_instruction;
 		++argc;
-		if (ast_genasm_one(expr->a_operator.o_op1, ASM_G_FPUSHRES))
-			goto err;
+		DO(ast_genasm_one(expr->a_operator.o_op1, ASM_G_FPUSHRES));
 		if (!expr->a_operator.o_op2)
 			goto emit_instruction;
 		++argc;
-		if (ast_genasm_one(expr->a_operator.o_op2, ASM_G_FPUSHRES))
-			goto err;
+		DO(ast_genasm_one(expr->a_operator.o_op2, ASM_G_FPUSHRES));
 		if (!expr->a_operator.o_op3)
 			goto emit_instruction;
 		++argc;
-		if (ast_genasm_one(expr->a_operator.o_op3, ASM_G_FPUSHRES))
-			goto err;
+		DO(ast_genasm_one(expr->a_operator.o_op3, ASM_G_FPUSHRES));
 
 		/* Duplicate all operands. */
 emit_instruction:
-		if (asm_putddi(ddi_ast))
-			goto err;
+		DO(asm_putddi(ddi_ast));
 
 		/* TODO: Some operands don't need to be duplicated, as re-loading them
 		 *       from their base-expression doesn't have any side-effects.
@@ -146,42 +143,31 @@ emit_instruction:
 		switch (argc) {
 
 		case 4:
-			if (asm_gdup_n(2))
-				goto err;
-			if (asm_gdup_n(2))
-				goto err;
-			if (asm_gdup_n(2))
-				goto err;
-			if (asm_gdup_n(2))
-				goto err;
+			DO(asm_gdup_n(2));
+			DO(asm_gdup_n(2));
+			DO(asm_gdup_n(2));
+			DO(asm_gdup_n(2));
 			break;
 
 		case 3:
-			if (asm_gdup_n(1))
-				goto err;
-			if (asm_gdup_n(1))
-				goto err;
-			if (asm_gdup_n(1))
-				goto err;
+			DO(asm_gdup_n(1));
+			DO(asm_gdup_n(1));
+			DO(asm_gdup_n(1));
 			break;
 
 		case 2:
-			if (asm_gdup_n(0))
-				goto err;
-			if (asm_gdup_n(0))
-				goto err;
+			DO(asm_gdup_n(0));
+			DO(asm_gdup_n(0));
 			break;
 
 		case 1:
-			if (asm_gdup())
-				goto err;
+			DO(asm_gdup());
 			break;
 
 		default: break;
 		}
 
-		if (asm_putddi(expr))
-			goto err;
+		DO(asm_putddi(expr));
 
 		/* With all the operands on-stack, as well as duplicated,
 		 * it's time to perform the operation that's to-be asserted. */
@@ -203,10 +189,8 @@ emit_instruction:
 				kw_ast  = expr->a_operator.o_op2;
 				kw_type = ast_predict_type_noanno(kw_ast);
 				if (!kw_type || !DeeType_IsKw(kw_type)) {
-					if (asm_putddi(kw_ast))
-						goto err;
-					if (asm_gcast_varkwds())
-						goto err;
+					DO(asm_putddi(kw_ast));
+					DO(asm_gcast_varkwds());
 				}
 				error = asm_gcall_tuple_kwds();
 			}	break;
@@ -242,8 +226,7 @@ fallback_generate_goperator:
 				goto err;
 		} else {
 			/* The operator has its own dedicated instruction, which we can use. */
-			if (asm_put(op_instr))
-				goto err;
+			DO(asm_put(op_instr));
 			asm_subsp(argc);
 
 			/* STACK: a, [b, [c, [d]]], [check_cond] (remember the duplicates we created above) */
@@ -253,89 +236,73 @@ fallback_generate_goperator:
 			switch (operand_mode & OPCOUNT_RESULTMASK) {
 
 			case OPCOUNT_PUSHFIRST:
-				if (argc > 1 ? asm_gdup_n(argc - 2) : asm_gdup())
-					goto err; /* `dup #argc-1' */
+				DO(argc > 1 ? asm_gdup_n(argc - 2) : asm_gdup()); /* `dup #argc-1' */
 				break;
 
 			case OPCOUNT_PUSHSECOND:
-				if (argc > 2 ? asm_gdup_n(argc - 3) : asm_gdup())
-					goto err; /* `dup #argc-2' */
+				DO(argc > 2 ? asm_gdup_n(argc - 3) : asm_gdup()); /* `dup #argc-2' */
 				break;
 
 			case OPCOUNT_PUSHTHIRD:
-				if (argc > 3 ? asm_gdup_n(argc - 4) : asm_gdup())
-					goto err; /* `dup #argc-3' */
+				DO(argc > 3 ? asm_gdup_n(argc - 4) : asm_gdup()); /* `dup #argc-3' */
 				break;
 
 			case OPCOUNT_PUSHFOURTH:
 				ASSERT(!(argc > 4));
-				if (/*argc > 4 ? asm_gdup_n(argc-5) : */ asm_gdup())
-					goto err; /* `dup #argc-4' */
+				DO(/*argc > 4 ? asm_gdup_n(argc-5) : */ asm_gdup()); /* `dup #argc-4' */
 				break;
 
 			case OPCOUNT_POPPUSHNONE:
 				asm_incsp();
-				if (asm_gpop())
-					goto err;
+				DO(asm_gpop());
 				ATTR_FALLTHROUGH
 			case OPCOUNT_PUSHNONE:
-				if (asm_gpush_none())
-					goto err; /* Kind-of pointless, but still a case that can happen... */
+				DO(asm_gpush_none()); /* Kind-of pointless, but still a case that can happen... */
 				break;
 
 			default: asm_incsp(); /* The instruction leaves behind the result. */
 			}
 		}
-		if (asm_putddi(ddi_ast))
-			goto err;
+		DO(asm_putddi(ddi_ast));
 
 		/* Duplicate `condition' to-be re-used as result of the assert expression. */
-		if ((gflags & ASM_G_FPUSHRES) && asm_gdup())
-			goto err;
+		if (gflags & ASM_G_FPUSHRES)
+			DO(asm_gdup());
 
 		/* STACK: a, [b, [c, [d]]] condition [condition] */
 #define assert_cleanup assert_enter
 		old_section = current_assembler.a_curr;
 		if (old_section == &current_assembler.a_sect[SECTION_COLD]) {
-			if (asm_gjmp(ASM_JT, assert_cleanup))
-				goto err;
+			DO(asm_gjmp(ASM_JT, assert_cleanup));
 			asm_decsp(); /* Adjust for `ASM_JT' */
 		} else {
-			if (asm_gjmp(ASM_JF, assert_enter))
-				goto err;
+			DO(asm_gjmp(ASM_JF, assert_enter));
 			asm_decsp(); /* Adjust for `ASM_JF' */
 			current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
-			if (asm_putddi(ddi_ast))
-				goto err;
+			DO(asm_putddi(ddi_ast));
 			asm_defsym(assert_enter);
 		}
 
 		/* STACK: a, [b, [c, [d]]], [condition] */
-		if ((gflags & ASM_G_FPUSHRES) && asm_gpop())
-			goto err; /* Pop the duplicated `condition' */
+		if (gflags & ASM_G_FPUSHRES)
+			DO(asm_gpop()); /* Pop the duplicated `condition' */
 
 		/* STACK: a, [b, [c, [d]]] */
 		if (message) {
-			if (ast_genasm_one(message, ASM_G_FPUSHRES))
-				goto err;
-			if (asm_putddi(ddi_ast))
-				goto err;
+			DO(ast_genasm_one(message, ASM_G_FPUSHRES));
+			DO(asm_putddi(ddi_ast));
 		} else {
-			if (asm_gpush_none())
-				goto err;
+			DO(asm_gpush_none());
 		}
 
 		/* STACK: a, [b, [c, [d]]], message */
-		if (asm_grrot(argc + 1))
-			goto err;
+		DO(asm_grrot(argc + 1));
 
 		/* STACK: message, a, [b, [c, [d]]] */
-		if (asm_gpush_u16(operator_name))
-			goto err; /* Push the instruction id */
+		DO(asm_gpush_u16(operator_name)); /* Push the instruction id */
 
 		/* STACK: message, a, [b, [c, [d]]], operator_name */
-		if (asm_grrot(argc + 1))
-			goto err;
+		DO(asm_grrot(argc + 1));
 
 		/* STACK: message, operator_name, a, [b, [c, [d]]] */
 
@@ -345,33 +312,30 @@ fallback_generate_goperator:
 			goto err;
 
 		/* Generate the call to the builtin assertion function. */
-		if (asm_gcall_extern((uint16_t)deemon_modid, id___assert, argc + 2))
-			goto err;
+		DO(asm_gcall_extern((uint16_t)deemon_modid, id___assert, argc + 2));
 
 		/* Pop the result when it isn't being used. */
-		if (!(gflags & ASM_G_FPUSHRES) && asm_gpop())
-			goto err;
+		if (!(gflags & ASM_G_FPUSHRES))
+			DO(asm_gpop());
 
 		/* Jump back to regular code. */
-		if (asm_gjmp(ASM_JMP, assert_leave))
-			goto err;
+		DO(asm_gjmp(ASM_JMP, assert_leave));
 		current_assembler.a_curr = old_section;
 
 		/* Generate the stack-cleanup for when the assertion didn't fail. */
 		asm_addsp(argc);
 		if (old_section == &current_assembler.a_sect[SECTION_COLD]) {
 			asm_defsym(assert_cleanup);
-		} else if (asm_putddi(ddi_ast)) {
-			goto err;
+		} else {
+			DO(asm_putddi(ddi_ast));
 		}
 
 		/* STACK: a, [b, [c, [d]]] [condition] */
-		if ((gflags & ASM_G_FPUSHRES) && asm_grrot(argc + 1))
-			goto err;
+		if (gflags & ASM_G_FPUSHRES)
+			DO(asm_grrot(argc + 1));
 
 		/* STACK: [condition] a, [b, [c, [d]]] */
-		if (asm_gadjstack(-(int16_t)argc))
-			goto err;
+		DO(asm_gadjstack(-(int16_t)argc));
 
 		/* STACK: [condition] */
 		asm_defsym(assert_leave);
@@ -386,28 +350,20 @@ fallback_generate_goperator:
 			/* Special case: in-expressions. */
 			operator_name = OPERATOR_CONTAINS;
 			argc          = 2;
-			if (ast_genasm(expr->a_action.a_act0, ASM_G_FPUSHRES))
-				goto err;
-			if (ast_genasm_one(expr->a_action.a_act1, ASM_G_FPUSHRES))
-				goto err;
-			if (asm_putddi(ddi_ast))
-				goto err;
-			if (asm_gswap())
-				goto err;
+			DO(ast_genasm(expr->a_action.a_act0, ASM_G_FPUSHRES));
+			DO(ast_genasm_one(expr->a_action.a_act1, ASM_G_FPUSHRES));
+			DO(asm_putddi(ddi_ast));
+			DO(asm_gswap());
 			goto emit_instruction;
 
 		case AST_FACTION_CALL_KW:
 			/* Special case: call with keywords. */
 			operator_name = OPERATOR_CALL;
 			argc          = 3;
-			if (ast_genasm(expr->a_action.a_act0, ASM_G_FPUSHRES))
-				goto err;
-			if (ast_genasm_one(expr->a_action.a_act1, ASM_G_FPUSHRES))
-				goto err;
-			if (ast_genasm_one(expr->a_action.a_act2, ASM_G_FPUSHRES))
-				goto err;
-			if (asm_putddi(ddi_ast))
-				goto err;
+			DO(ast_genasm(expr->a_action.a_act0, ASM_G_FPUSHRES));
+			DO(ast_genasm_one(expr->a_action.a_act1, ASM_G_FPUSHRES));
+			DO(ast_genasm_one(expr->a_action.a_act2, ASM_G_FPUSHRES));
+			DO(asm_putddi(ddi_ast));
 			goto emit_instruction;
 
 		case AST_FACTION_IS:
@@ -426,12 +382,9 @@ fallback_generate_goperator:
 				break;
 			default: __builtin_unreachable();
 			}
-			if (ast_genasm(expr->a_action.a_act0, ASM_G_FPUSHRES))
-				goto err;
-			if (ast_genasm_one(expr->a_action.a_act1, ASM_G_FPUSHRES))
-				goto err;
-			if (asm_putddi(ddi_ast))
-				goto err;
+			DO(ast_genasm(expr->a_action.a_act0, ASM_G_FPUSHRES));
+			DO(ast_genasm_one(expr->a_action.a_act1, ASM_G_FPUSHRES));
+			DO(asm_putddi(ddi_ast));
 			argc = 2;
 			goto emit_instruction;
 
@@ -454,38 +407,31 @@ fallback_generate_goperator:
 
 	/* Fallback: Do not include extended information in the failure.
 	 * In this kind of message, information about operands is omit. */
-	if (ast_genasm(expr, ASM_G_FPUSHRES))
-		goto err;
-	if (asm_putddi(ddi_ast))
-		goto err;
-	if ((gflags & ASM_G_FPUSHRES) && asm_gdup())
-		goto err;
+	DO(ast_genasm(expr, ASM_G_FPUSHRES));
+	DO(asm_putddi(ddi_ast));
+	if (gflags & ASM_G_FPUSHRES)
+		DO(asm_gdup());
 	old_section = current_assembler.a_curr;
 	if (old_section == &current_assembler.a_sect[SECTION_COLD]) {
-		if (asm_gjmp(ASM_JT, assert_leave))
-			goto err;
+		DO(asm_gjmp(ASM_JT, assert_leave));
 		asm_decsp(); /* Adjust for `ASM_JT' / `ASM_JF' */
 	} else {
-		if (asm_gjmp(ASM_JF, assert_enter))
-			goto err;
+		DO(asm_gjmp(ASM_JF, assert_enter));
 		asm_decsp(); /* Adjust for `ASM_JT' / `ASM_JF' */
 		current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
-		if (asm_putddi(ddi_ast))
-			goto err;
+		DO(asm_putddi(ddi_ast));
 	}
 	asm_defsym(assert_enter);
 
 	/* Now we're inside the assertion handler. */
-	if ((gflags & ASM_G_FPUSHRES) && asm_gpop())
-		goto err; /* The asserted expression. */
+	if (gflags & ASM_G_FPUSHRES)
+		DO(asm_gpop()); /* The asserted expression. */
 	argc = 0;
 
 	/* Generate code for the assertion message. */
 	if (message) {
-		if (ast_genasm_one(message, ASM_G_FPUSHRES))
-			goto err;
-		if (asm_putddi(ddi_ast))
-			goto err;
+		DO(ast_genasm_one(message, ASM_G_FPUSHRES));
+		DO(asm_putddi(ddi_ast));
 		++argc;
 	}
 
@@ -495,17 +441,15 @@ fallback_generate_goperator:
 		goto err;
 
 	/* Generate the call to the builtin assertion function. */
-	if (asm_gcall_extern((uint16_t)deemon_modid, id___assert, argc))
-		goto err;
+	DO(asm_gcall_extern((uint16_t)deemon_modid, id___assert, argc));
 
 	/* Pop the result when it isn't being used. */
-	if (!(gflags & ASM_G_FPUSHRES) && asm_gpop())
-		goto err;
+	if (!(gflags & ASM_G_FPUSHRES))
+		DO(asm_gpop());
 
 	/* Jump back to regular code if we went into the cold section. */
-	if (old_section != &current_assembler.a_sect[SECTION_COLD] &&
-	    asm_gjmp(ASM_JMP, assert_leave))
-		goto err;
+	if (old_section != &current_assembler.a_sect[SECTION_COLD])
+		DO(asm_gjmp(ASM_JMP, assert_leave));
 	current_assembler.a_curr = old_section;
 	asm_defsym(assert_leave);
 done:

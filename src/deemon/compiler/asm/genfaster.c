@@ -28,6 +28,7 @@
 #include <deemon/hashset.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
@@ -123,7 +124,7 @@ DeeRoSet_FromSequenceOrMappingForContains(DeeObject *__restrict self) {
 	 * As such, when checking if a key is apart of a constant
 	 * mapping, we need to construct a set of that mapping's
 	 * keys! */
-	keys = DeeObject_GetAttrString(self, "keys");
+	keys = DeeObject_InvokeMethodHint(map_keys, self);
 	if unlikely(!keys)
 		goto err;
 	result = DeeRoSet_FromSequence(keys);
@@ -155,6 +156,7 @@ restore_error:
 			Dee_Decref_unlikely(inner_set);
 			return result;
 		}
+
 		/* The inner set-expression isn't allowed as a constant.
 		 * Instead, try to generate it as a regular hash-set. */
 		Dee_Decref_likely(inner_set);

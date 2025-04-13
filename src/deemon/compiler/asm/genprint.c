@@ -40,6 +40,8 @@
 
 DECL_BEGIN
 
+#define DO(expr) if unlikely(expr) goto err
+
 #ifndef NDEBUG
 #define DBG_memset (void)memset
 #else /* !NDEBUG */
@@ -116,8 +118,7 @@ ast_genprint_emptystring(instruction_t mode,
 
 	/* Just print an empty line. */
 	if ((mode & ~(PRINT_MODE_FILE | PRINT_MODE_ALL)) == PRINT_MODE_NL) {
-		if (asm_putddi(ddi_ast))
-			goto err;
+		DO(asm_putddi(ddi_ast));
 		return asm_put((instruction_t)(ASM_PRINTNL + (mode & PRINT_MODE_FILE)));
 	}
 
@@ -129,8 +130,7 @@ ast_genprint_emptystring(instruction_t mode,
 	empty_cid = asm_newconst(Dee_EmptyString);
 	if unlikely(empty_cid < 0)
 		goto err;
-	if (asm_putddi(ddi_ast))
-		goto err;
+	DO(asm_putddi(ddi_ast));
 	return asm_gprint_const((uint16_t)empty_cid);
 err:
 	return -1;
@@ -149,10 +149,8 @@ ast_unwrap_effective(struct ast *__restrict self) {
 		struct ast **vector;
 		vector = self->a_multiple.m_astv;
 		count  = self->a_multiple.m_astc - 1;
-		for (i = 0; i < count; ++i) {
-			if (ast_genasm(vector[i], ASM_G_FNORMAL))
-				goto err;
-		}
+		for (i = 0; i < count; ++i)
+			DO(ast_genasm(vector[i], ASM_G_FNORMAL));
 		ASSERT(i == count);
 		self = vector[i];
 	}
@@ -175,8 +173,7 @@ ast_genprint_utf8_string(instruction_t mode, char const *str,
 	Dee_Decref(ob);
 	if unlikely(cid < 0)
 		goto err;
-	if (asm_putddi(ddi_ast))
-		goto err;
+	DO(asm_putddi(ddi_ast));
 	return asm_put816(ASM_PRINT_C + mode, (uint16_t)cid);
 err:
 	return -1;
@@ -266,13 +263,11 @@ ast_genprint_string_format(instruction_t mode,
 
 			/* Print this argument. */
 			if (insert_size == 0) {
-				if unlikely(ast_genprint(argument_mode, format_argv[0], ddi_ast))
-					goto err;
+				DO(ast_genprint(argument_mode, format_argv[0], ddi_ast));
 			} else {
 				ASSERTF(insert_size == 2 && insert_start[0] == '!' && insert_start[1] == 'r',
 				        "This should have been asserted by `ast_genprint_string_format_check_simple()'");
-				if unlikely(ast_genprint_repr(argument_mode, format_argv[0], ddi_ast))
-					goto err;
+				DO(ast_genprint_repr(argument_mode, format_argv[0], ddi_ast));
 			}
 
 			/* Consume argument */
@@ -434,8 +429,7 @@ empty_operand:
 				item_mode = PRINT_MODE_SP | (mode & PRINT_MODE_FILE);
 				if (iter == end - 1)
 					item_mode = (mode & ~PRINT_MODE_ALL);
-				if unlikely(ast_genprint(item_mode, *iter, ddi_ast))
-					goto err;
+				DO(ast_genprint(item_mode, *iter, ddi_ast));
 			}
 			return 0;
 		}
@@ -471,7 +465,7 @@ empty_operand:
 					if (asm_gpush_constexpr(elem))
 						goto err_items;
 					if (asm_putddi(ddi_ast))
-						goto err;
+						goto err_items;
 					if unlikely(asm_put(ASM_PRINT + item_mode))
 						goto err_items;
 					asm_decsp();
@@ -480,7 +474,7 @@ empty_operand:
 					if unlikely(const_cid < 0)
 						goto err_items;
 					if (asm_putddi(ddi_ast))
-						goto err;
+						goto err_items;
 					if (asm_put816(ASM_PRINT_C + item_mode, (uint16_t)const_cid))
 						goto err_items;
 				}
@@ -504,8 +498,7 @@ err_items:
 			const_cid = asm_newconst(print_expression->a_constexpr);
 			if unlikely(const_cid < 0)
 				goto err;
-			if (asm_putddi(ddi_ast))
-				goto err;
+			DO(asm_putddi(ddi_ast));
 			return asm_put816(ASM_PRINT_C + mode, (uint16_t)const_cid);
 		}
 	}
@@ -513,12 +506,9 @@ err_items:
 fallback:
 	/* Fallback: Compile the print expression, then print it as an expanded sequence. */
 	if (print_expression->a_type == AST_EXPAND && !(mode & PRINT_MODE_ALL)) {
-		if (ast_genasm(print_expression->a_expand, ASM_G_FPUSHRES))
-			goto err;
-		if (asm_putddi(ddi_ast))
-			goto err;
-		if (asm_put(ASM_PRINTALL + mode))
-			goto err;
+		DO(ast_genasm(print_expression->a_expand, ASM_G_FPUSHRES));
+		DO(asm_putddi(ddi_ast));
+		DO(asm_put(ASM_PRINTALL + mode));
 	} else {
 
 		/* Perform some special optimizations for certain cases. */
@@ -555,10 +545,7 @@ fallback:
 					instruction_t elem_mode = mode;
 					if (i < cnt - 1)
 						elem_mode &= ~(PRINT_MODE_SP | PRINT_MODE_NL);
-					if unlikely(ast_genprint(elem_mode,
-					                         print_expression->a_multiple.m_astv[i],
-					                         ddi_ast))
-						goto err;
+					DO(ast_genprint(elem_mode, print_expression->a_multiple.m_astv[i], ddi_ast));
 				}
 				return 0;
 			}
@@ -591,6 +578,7 @@ fallback:
 					 * >> print f"foo = {bar}";
 					 * Is compiled as:
 					 * >> print "foo = {}".format({ bar });
+					 *
 					 * So really, this optimization is for template-strings. */
 					if (!print_expression->a_operator.o_op1)
 						break;
@@ -661,8 +649,7 @@ fallback:
 						break;
 					lhs_mode = mode & ~(PRINT_MODE_SP | PRINT_MODE_NL);
 					rhs_mode = mode;
-					if (ast_genprint(lhs_mode, print_expression->a_operator.o_op0, ddi_ast))
-						goto err;
+					DO(ast_genprint(lhs_mode, print_expression->a_operator.o_op0, ddi_ast));
 					return ast_genprint(rhs_mode, print_expression->a_operator.o_op1, ddi_ast);
 				}	break;
 
@@ -674,12 +661,9 @@ fallback:
 		}
 
 		/* Fallback: just generate the expected assembly */
-		if (ast_genasm(print_expression, ASM_G_FPUSHRES))
-			goto err;
-		if (asm_putddi(ddi_ast))
-			goto err;
-		if (asm_put(ASM_PRINT + mode))
-			goto err;
+		DO(ast_genasm(print_expression, ASM_G_FPUSHRES));
+		DO(asm_putddi(ddi_ast));
+		DO(asm_put(ASM_PRINT + mode));
 	}
 	asm_decsp(); /* Consume the print expression. */
 	return 0;

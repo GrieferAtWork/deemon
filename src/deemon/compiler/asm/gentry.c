@@ -37,6 +37,8 @@
 
 DECL_BEGIN
 
+#define DO(expr) if unlikely(expr) goto err
+
 INTERN WUNUSED NONNULL((1)) int
 (DCALL asm_gentry)(struct ast *__restrict try_ast,
                    unsigned int gflags) {
@@ -171,8 +173,7 @@ gen_guard:
 	 *               meant to work, or knew what they were at all.
 	 *               Looking back, it's amazing that I managed to create something
 	 *               that worked, knowing so little about how it's done correctly. */
-	if (ast_genasm(try_ast->a_try.t_guard, gflags))
-		goto err;
+	DO(ast_genasm(try_ast->a_try.t_guard, gflags));
 
 	/* Check if a loop control statement was used within the guarded block.
 	 * Because if one was, then we must do some special handling to compile

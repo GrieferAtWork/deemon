@@ -1971,8 +1971,8 @@ do_extern_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
 			break;
 		if unlikely(do_parse_extern_operands(&invoc.ai_prefix_id1,
-			                                  &invoc.ai_prefix_id2))
-		goto err;
+		                                     &invoc.ai_prefix_id2))
+			goto err;
 		invoc.ai_prefix = ASM_EXTERN;
 		goto continue_after_prefix;
 	}	break;

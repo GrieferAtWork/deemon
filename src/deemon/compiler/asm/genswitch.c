@@ -42,6 +42,7 @@
 
 DECL_BEGIN
 
+#define DO(expr) if unlikely(expr) goto err
 
 /* Assuming that the switch-expression is located ontop of the stack,
  * generate code to jump to `target' after popping said expression
@@ -53,40 +54,36 @@ emit_runtime_check(struct ast *__restrict ddi_ast,
                    struct asm_sym *__restrict target) {
 	struct asm_sym *temp, *guard_begin, *guard_end;
 	struct asm_exc *exc_hand;
-	if unlikely((temp = asm_newsym()) == NULL)
+	temp = asm_newsym();
+	if unlikely(!temp)
 		goto err;
-	if unlikely((guard_begin = asm_newsym()) == NULL)
+	guard_begin = asm_newsym();
+	if unlikely(!guard_begin)
 		goto err;
-	if unlikely((guard_end = asm_newsym()) == NULL)
+	guard_end = asm_newsym();
+	if unlikely(!guard_end)
 		goto err;
-	if (asm_putddi(ddi_ast))
-		goto err;
-	if (asm_gdup())
-		goto err; /* expr, expr */
-	if (ast_genasm_one(case_expr, ASM_G_FPUSHRES))
-		goto err; /* expr, expr, case */
+	DO(asm_putddi(ddi_ast));
+	DO(asm_gdup()); /* expr, expr */
+	DO(ast_genasm_one(case_expr, ASM_G_FPUSHRES)); /* expr, expr, case */
 
 	/* This instruction must be protected by an exception
 	 * handler for NOT_IMPLEMENTED and TYPE errors that
 	 * are handled by jumping to the next check. */
-	if (asm_putddi(ddi_ast))
-		goto err;
+	DO(asm_putddi(ddi_ast));
 	asm_defsym(guard_begin);
-	if (asm_gcmp_eq())
-		goto err; /* expr, expr==case */
+	DO(asm_gcmp_eq()); /* expr, expr==case */
 	asm_defsym(guard_end);
-	if (asm_gjmp(ASM_JF, temp))
-		goto err; /* if (!(expr == case)) goto temp; */
+	DO(asm_gjmp(ASM_JF, temp)); /* if (!(expr == case)) goto temp; */
 	asm_decsp();  /* Adjust for ASM_JF */
-	if (asm_gpop())
-		goto err; /* Pop `expr' before jumping to `target' */
-	if (asm_gjmp(ASM_JMP, target))
-		goto err;
+	DO(asm_gpop()); /* Pop `expr' before jumping to `target' */
+	DO(asm_gjmp(ASM_JMP, target));
 	asm_incsp();      /* Revert the popping of `expr' after the jump. */
 	asm_defsym(temp); /* Jump here when the expressions didn't match. */
 
 	/* Create a primary exception handler for NOT_IMPLEMENTED errors. */
-	if unlikely((exc_hand = asm_newexc()) == NULL)
+	exc_hand = asm_newexc();
+	if unlikely(!exc_hand)
 		goto err;
 	Dee_Incref(&DeeError_NotImplemented);
 	exc_hand->ex_mask  = &DeeError_NotImplemented;
@@ -102,7 +99,8 @@ emit_runtime_check(struct ast *__restrict ddi_ast,
 	++temp->as_used;
 
 	/* Create a secondary exception handler for TYPE-errors. */
-	if unlikely((exc_hand = asm_newexc()) == NULL)
+	exc_hand = asm_newexc();
+	if unlikely(!exc_hand)
 		goto err;
 	Dee_Incref(&DeeError_TypeError);
 	exc_hand->ex_mask  = &DeeError_TypeError;
@@ -137,9 +135,9 @@ pack_target_tuple(struct asm_sym *__restrict sym) {
 		goto err_ip;
 	result = DeeTuple_PackSymbolic(2, ri_ip, ri_sp); /* Inherit references. */
 	if unlikely(!result)
-		goto err_sp;
+		goto err_ip_sp;
 	return result;
-err_sp:
+err_ip_sp:
 	Dee_DecrefDokill(ri_sp);
 err_ip:
 	Dee_DecrefDokill(ri_ip);
@@ -296,27 +294,23 @@ err_cases:
 /*use_runtime_checks:*/
 		if (!has_expression) {
 			/* Assemble text for the switch expression. */
-			if (ast_genasm(self->a_switch.s_expr, ASM_G_FPUSHRES))
-				goto err;
+			DO(ast_genasm(self->a_switch.s_expr, ASM_G_FPUSHRES));
 			has_expression = true;
 		}
 		for (i = 0; i < num_constants; ++i) {
-			if unlikely(emit_runtime_check(self, constant_cases->tl_expr,
-			                               constant_cases->tl_asym))
-				goto err;
+			DO(emit_runtime_check(self,
+			                      constant_cases->tl_expr,
+			                      constant_cases->tl_asym));
 			constant_cases = constant_cases->tl_next;
 		}
 		ASSERT(!constant_cases);
 
 		/* With all cases now in check, pop the expression and jump ahead to the default case. */
-		if (asm_putddi(self))
-			goto err;
-		if (asm_gpop())
-			goto err; /* Pop the switch-expression. */
+		DO(asm_putddi(self));
+		DO(asm_gpop()); /* Pop the switch-expression. */
 
 		/* Jump to the default case when no other was matched. */
-		if (asm_gjmp(ASM_JMP, default_sym))
-			goto err;
+		DO(asm_gjmp(ASM_JMP, default_sym));
 		goto do_generate_block;
 	}
 
@@ -382,8 +376,7 @@ err_jump_table:
 				goto err_cases;
 			has_expression = true;
 		} else {
-			if (asm_gswap())
-				goto err;
+			DO(asm_gswap());
 		}
 		/* jump_table, expr */
 		default_target = pack_target_tuple(default_sym);
@@ -393,18 +386,14 @@ err_jump_table:
 		Dee_Decref_unlikely(default_target);
 		if unlikely(default_cid < 0)
 			goto err;
-		if (asm_gpush_const((uint16_t)default_cid))
-			goto err; /* jump_table, expr, default */
+		DO(asm_gpush_const((uint16_t)default_cid)); /* jump_table, expr, default */
 		get_cid = asm_newconst((DeeObject *)&str_get);
 		if unlikely(get_cid < 0)
 			goto err;
-		if (asm_gcallattr_const((uint16_t)get_cid, 2))
-			goto err; /* target */
+		DO(asm_gcallattr_const((uint16_t)get_cid, 2)); /* target */
 		case_unpack_addr = asm_ip();
-		if (asm_gunpack(2))
-			goto err; /* target.PC, target.SP */
-		if (asm_gjmp_pop_pop())
-			goto err;
+		DO(asm_gunpack(2)); /* target.PC, target.SP */
+		DO(asm_gjmp_pop_pop());
 		stack_size_after_jump = current_assembler.a_stackcur;
 	}
 #else
@@ -413,8 +402,7 @@ err_jump_table:
 
 do_generate_block:
 	/* With all the jump-code out of the way, generate the switch block. */
-	if (ast_genasm(self->a_switch.s_block, ASM_G_FNORMAL))
-		goto err;
+	DO(ast_genasm(self->a_switch.s_block, ASM_G_FNORMAL));
 
 	/* If the user didn't define a default symbol,
 	 * it will jump where `break' is located at. */
