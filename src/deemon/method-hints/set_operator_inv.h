@@ -28,7 +28,7 @@ __set_inv__()->?DSet {
 
 [[operator(Set: tp_math->tp_inv)]]
 [[wunused]] DREF DeeObject *
-__set_size__.set_operator_inv([[nonnull]] DeeObject *__restrict self)
+__set_inv__.set_operator_inv([[nonnull]] DeeObject *__restrict self)
 %{unsupported({
 	return (DREF DeeObject *)SetInversion_New(self);
 })}

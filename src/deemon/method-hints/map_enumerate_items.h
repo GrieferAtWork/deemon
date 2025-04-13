@@ -41,9 +41,7 @@ __map_enumerate_items__.map_makeenumeration([[nonnull]] DeeObject *__restrict se
 %{$none = "default__seq_makeenumeration__none"}
 %{$empty = "default__seq_makeenumeration__empty"}
 %{$with__operator_iter = [[inherit_as(default__map_makeenumeration__with__map_operator_iter)]] "DeeObject_NewRef"}
-%{$with__map_operator_iter = {
-	return DeeSuper_New(&DeeMapping_Type, self); /* DefaultEnumeration__with__map_operator_iter__and__unpack */
-}}
+%{$with__map_operator_iter = "generic_obj__asmap"} /* DefaultEnumeration__with__map_operator_iter__and__unpack */
 %{$with__map_iterkeys__and__map_operator_getitem = {
 	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__map_iterkeys__and__map_operator_getitem, self);
 }}

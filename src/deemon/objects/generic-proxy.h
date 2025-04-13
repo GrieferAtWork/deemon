@@ -233,6 +233,12 @@ INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_proxy2__hash_recursive_orde
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__trycompare_eq_recursive(ProxyObject2 *self, ProxyObject2 *other); /* DeeObject_TryCompareEq(self->po_obj1, other->po_obj1) ?: DeeObject_TryCompareEq(self->po_obj2, other->po_obj2) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__compare_eq_recursive(ProxyObject2 *self, ProxyObject2 *other);    /* DeeObject_CompareEq(self->po_obj1, other->po_obj1) ?: DeeObject_CompareEq(self->po_obj2, other->po_obj2) */
 
+
+/* Wrap the given object "self" as a Sequence, Set, or Mapping */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_obj__asseq(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_obj__asset(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_obj__asmap(DeeObject *__restrict self);
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_GENERIC_PROXY_H */

@@ -29,7 +29,6 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
-#include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
@@ -48,6 +47,7 @@
 #include "../runtime/method-hints.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 #include "seq/combinations.h"
 #include "seq/default-iterators.h"
 #include "seq/default-sequences.h"
@@ -2875,17 +2875,8 @@ err:
 }
 
 #define seq_asseq DeeObject_NewRef
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_asset(DeeObject *__restrict self) {
-	return DeeSuper_New(&DeeSet_Type, self);
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_asmap(DeeObject *__restrict self) {
-	return DeeSuper_New(&DeeMapping_Type, self);
-}
-
+#define seq_asset generic_obj__asset
+#define seq_asmap generic_obj__asmap
 
 PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER("length", &default__seq_operator_sizeob,

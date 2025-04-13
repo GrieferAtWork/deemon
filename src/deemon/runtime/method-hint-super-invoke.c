@@ -2470,14 +2470,14 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_ge[5] = {
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__set_operator_inv[6] = {
 	(Dee_funptr_t)&default__set_operator_inv,
-	(Dee_funptr_t)&default__set_operator_inv__with_callattr___set_size__,
+	(Dee_funptr_t)&default__set_operator_inv__with_callattr___set_inv__,
 	(Dee_funptr_t)&default__set_operator_inv__unsupported,
 	(Dee_funptr_t)&default__set_operator_inv__none,
 	(Dee_funptr_t)&default__set_operator_inv__empty,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__set_operator_inv[3] = {
-	MH_SUPER_MAP_TYPED_INIT(&default__set_operator_inv__with_callobjectcache___set_size__, &tdefault__set_operator_inv__with_callobjectcache___set_size__),
+	MH_SUPER_MAP_TYPED_INIT(&default__set_operator_inv__with_callobjectcache___set_inv__, &tdefault__set_operator_inv__with_callobjectcache___set_inv__),
 	MH_SUPER_MAP_TYPED_INIT(&usrtype__inv__with__INV, &tusrtype__inv__with__INV),
 	MH_SUPER_MAP_TYPED_END
 };

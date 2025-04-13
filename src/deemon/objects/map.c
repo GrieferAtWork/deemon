@@ -37,8 +37,7 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/thread.h>
+/**/
 
 #include "../runtime/kwlist.h"
 #include "../runtime/method-hint-defaults.h"
@@ -53,6 +52,7 @@
 #include "seq/map-fromattr.h"
 #include "seq/map-fromkeys.h"
 #include "seq/unique-iterator.h"
+#include "generic-proxy.h"
 /**/
 
 #include <stdbool.h> /* bool */
@@ -458,19 +458,10 @@ err_temp:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-map_items(DeeObject *self) {
-	return DeeSuper_New(&DeeSet_Type, self);
-}
+#define map_items generic_obj__asset
 
-#define map_asseq set_asseq
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_asseq(DeeObject *__restrict self);
-
-#define map_asset seq_asset
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_asset(DeeObject *__restrict self);
-
+#define map_asseq generic_obj__asseq
+#define map_asset generic_obj__asset
 #define map_asmap DeeObject_NewRef
 
 PRIVATE struct type_getset tpconst map_getsets[] = {

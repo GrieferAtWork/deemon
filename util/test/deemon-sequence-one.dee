@@ -19,11 +19,28 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import rt;
+import * from deemon;
+
+assert type [42] === List;
+assert type (42,) === Tuple;
+assert {42} is Sequence;
+assert {} is Sequence;
+
+assert {"foo"}.bfind("a") is none;
+assert {"foo"}.bfind("foo") == 0;
+assert {"foo"}.bfind("z") is none;
+
+assert {"foo"}.bposition("a") == 0;
+assert {"foo"}.bposition("foo") == 0;
+assert {"foo"}.bposition("z") == 1;
+
+assert (0, 0) == {"foo"}.brange("a");
+assert (0, 1) == {"foo"}.brange("foo");
+assert (1, 1) == {"foo"}.brange("z");
+
 
 #if __DEEMON_VARIANT__ == "gatw"
-assert rt.List     === type [42];
-assert rt.Tuple    === type (42,);
+import rt;
 assert rt.SeqOne   === type {42};
 assert rt.Sequence === type {};
 #endif /* __DEEMON_VARIANT__ == "gatw" */

@@ -21,8 +21,12 @@
 #define GUARD_DEEMON_OBJECTS_GENERIC_PROXY_C 1
 
 #include <deemon/api.h>
+#include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
+#include <deemon/seq.h>
+#include <deemon/set.h>
+#include <deemon/super.h>
 
 #include "../runtime/runtime_error.h"
 
@@ -623,6 +627,23 @@ generic_proxy2__compare_eq_recursive(ProxyObject2 *self,
 	return result;
 err:
 	return Dee_COMPARE_ERR;
+}
+
+
+/* Wrap the given object "self" as a Sequence, Set, or Mapping */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_obj__asseq(DeeObject *__restrict self) {
+	return DeeSuper_New(&DeeSeq_Type, self);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_obj__asset(DeeObject *__restrict self) {
+	return DeeSuper_New(&DeeSet_Type, self);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_obj__asmap(DeeObject *__restrict self) {
+	return DeeSuper_New(&DeeMapping_Type, self);
 }
 
 

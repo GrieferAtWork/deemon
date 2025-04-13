@@ -27,8 +27,10 @@
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/tuple.h>
+/**/
 
-#include "../objects/seq/concat.h" /* DeeSeq_Concat */
+#include "../objects/generic-proxy.h" /* generic_obj__asmap */
+#include "../objects/seq/concat.h"    /* DeeSeq_Concat */
 
 DECL_BEGIN
 
@@ -1766,9 +1768,9 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_ge__w
 
 /* set_operator_inv */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_inv(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_inv__with_callattr___set_size__(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_inv__with_callobjectcache___set_size__(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__set_operator_inv__with_callobjectcache___set_size__(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_inv__with_callattr___set_inv__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_inv__with_callobjectcache___set_inv__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__set_operator_inv__with_callobjectcache___set_inv__(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_inv__unsupported(DeeObject *__restrict self);
 #define default__set_operator_inv__none (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_NewRef1)
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_inv__empty(DeeObject *__restrict self);
@@ -2334,7 +2336,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_makeenumeration__
 #define default__map_makeenumeration__none (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&default__seq_makeenumeration__none)
 #define default__map_makeenumeration__empty (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&default__seq_makeenumeration__empty)
 #define default__map_makeenumeration__with__operator_iter (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeObject_NewRef)
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_makeenumeration__with__map_operator_iter(DeeObject *__restrict self);
+#define default__map_makeenumeration__with__map_operator_iter (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&generic_obj__asmap)
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_makeenumeration__with__map_iterkeys__and__map_operator_getitem(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_makeenumeration__with__map_iterkeys__and__map_operator_trygetitem(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_makeenumeration__with__map_enumerate(DeeObject *__restrict self);

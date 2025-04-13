@@ -15850,16 +15850,16 @@ default__set_operator_inv(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__set_operator_inv__with_callattr___set_size__(DeeObject *__restrict self) {
-	return DeeObject_CallAttr(self, (DeeObject *)&str___set_size__, 0, NULL);
+default__set_operator_inv__with_callattr___set_inv__(DeeObject *__restrict self) {
+	return DeeObject_CallAttr(self, (DeeObject *)&str___set_inv__, 0, NULL);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__set_operator_inv__with_callobjectcache___set_size__(DeeObject *__restrict self) {
+default__set_operator_inv__with_callobjectcache___set_inv__(DeeObject *__restrict self) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__set_operator_inv__with_callobjectcache___set_size__(Dee_TYPE(self), self);
+	return tdefault__set_operator_inv__with_callobjectcache___set_inv__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_size__, 1, (DeeObject *const *)&self);
+	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_inv__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -19081,11 +19081,6 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__map_makeenumeration__unsupported(DeeObject *__restrict self) {
 	err_map_unsupportedf(self, "__map_enumerate_items__()");
 	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__map_makeenumeration__with__map_operator_iter(DeeObject *__restrict self) {
-	return DeeSuper_New(&DeeMapping_Type, self); /* DefaultEnumeration__with__map_operator_iter__and__unpack */
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -22856,8 +22851,8 @@ tdefault__set_operator_ge__with_callobjectcache___set_ge__(DeeTypeObject *tp_sel
 
 /* set_operator_inv */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__set_operator_inv__with_callobjectcache___set_size__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_size__, 1, (DeeObject *const *)&self);
+tdefault__set_operator_inv__with_callobjectcache___set_inv__(DeeTypeObject *tp_self, DeeObject *self) {
+	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_inv__, 1, (DeeObject *const *)&self);
 }
 
 /* set_operator_add */

@@ -34,13 +34,14 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
-#include <deemon/super.h>
+/**/
 
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"
 #include "../runtime/strings.h"
 #include "seq/default-sets.h"
 #include "seq/unique-iterator.h"
+#include "generic-proxy.h"
 /**/
 
 #include <stddef.h> /* size_t */
@@ -153,17 +154,9 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	TYPE_METHOD_END
 };
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_asseq(DeeObject *__restrict self) {
-	return DeeSuper_New(&DeeSeq_Type, self);
-}
-
+#define set_asseq generic_obj__asseq
 #define set_asset DeeObject_NewRef
-
-#define set_asmap seq_asmap
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_asmap(DeeObject *__restrict self);
-
+#define set_asmap generic_obj__asmap
 
 INTDEF struct type_getset tpconst set_getsets[];
 INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
