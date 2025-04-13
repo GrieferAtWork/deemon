@@ -1990,28 +1990,28 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obmemb_iterattr(DeeTypeObject *__r
 
 /* Helper functions for accessing type attributes. */
 #define type_method_get(desc, self)                                                                  \
-	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_New((dkwobjmethod_t)(desc)->m_func, self) \
+	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_New((Dee_kwobjmethod_t)(desc)->m_func, self) \
 	                                      : DeeObjMethod_New((desc)->m_func, self))
 #define type_method_doc(desc) DeeString_NewUtf8((desc)->m_doc, strlen((desc)->m_doc), STRING_ERROR_FIGNORE)
 #define type_method_call(desc, self, argc, argv)                                                                            \
-	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_CallFunc((dkwobjmethod_t)(desc)->m_func, self, argc, argv, NULL) \
+	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_CallFunc((Dee_kwobjmethod_t)(desc)->m_func, self, argc, argv, NULL) \
 	                                      : DeeObjMethod_CallFunc((desc)->m_func, self, argc, argv))
 #define type_method_vcallf(desc, self, format, args)                                                                      \
-	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_VCallFuncf((dkwobjmethod_t)(desc)->m_func, self, format, args) \
+	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_VCallFuncf((Dee_kwobjmethod_t)(desc)->m_func, self, format, args) \
 	                                      : DeeObjMethod_VCallFuncf((desc)->m_func, self, format, args))
 #define type_method_call_kw(desc, self, argc, argv, kw)                                                                   \
-	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_CallFunc((dkwobjmethod_t)(desc)->m_func, self, argc, argv, kw) \
+	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_CallFunc((Dee_kwobjmethod_t)(desc)->m_func, self, argc, argv, kw) \
 	                                      : type_method_call_kw_normal(desc, self, argc, argv, kw))
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_method_call_kw_normal(struct type_method const *desc, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define type_obmeth_get(cls_type, desc)                                                                  \
-	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwClsMethod_New(cls_type, (dkwobjmethod_t)(desc)->m_func) \
+	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwClsMethod_New(cls_type, (Dee_kwobjmethod_t)(desc)->m_func) \
 	                                      : DeeClsMethod_New(cls_type, (desc)->m_func))
 #define type_obmeth_doc(desc) DeeString_NewUtf8((desc)->m_doc, strlen((desc)->m_doc), STRING_ERROR_FIGNORE)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obmeth_call(DeeTypeObject *cls_type, struct type_method const *desc, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obmeth_call_kw(DeeTypeObject *cls_type, struct type_method const *desc, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL type_obmeth_vcallf(DeeTypeObject *cls_type, struct type_method const *desc, char const *__restrict format, va_list args);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getset_get(struct type_getset const *desc, DeeObject *__restrict self);
-#define type_obprop_get(cls_type, desc) DeeClsProperty_New(cls_type, (desc)->gs_get, (desc)->gs_del, (desc)->gs_set)
+#define type_obprop_get(cls_type, desc) DeeClsProperty_New(cls_type, desc)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obprop_call(DeeTypeObject *cls_type, struct type_getset const *desc, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obprop_call_kw(DeeTypeObject *cls_type, struct type_getset const *desc, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL type_obprop_vcallf(DeeTypeObject *cls_type, struct type_getset const *desc, char const *__restrict format, va_list args);

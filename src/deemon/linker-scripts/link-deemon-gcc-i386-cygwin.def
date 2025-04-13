@@ -71,7 +71,8 @@ EXPORTS
 	_DeeClsMethod_GetOrigin@8=DeeClsMethod_GetOrigin@8
 	_DeeClsMethod_New@8=DeeClsMethod_New@8
 	_DeeClsProperty_GetOrigin@8=DeeClsProperty_GetOrigin@8
-	_DeeClsProperty_New@16=DeeClsProperty_New@16
+	_DeeClsProperty_New@8=DeeClsProperty_New@8
+	_DeeClsProperty_NewEx@20=DeeClsProperty_NewEx@20
 	_DeeCode_FindDDI@20=DeeCode_FindDDI@20
 	_DeeCode_GetASymbolName@8=DeeCode_GetASymbolName@8
 	_DeeCode_GetDDIString@8=DeeCode_GetDDIString@8

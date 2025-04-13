@@ -5212,13 +5212,15 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeClass_BoundMemberSafe)(DeeTypeObject *__restrict self, uint16_t addr) {
+	bool bound;
 	if (DeeObject_AssertType(self, &DeeType_Type))
 		goto err;
 	if (!DeeType_IsClass(self))
 		goto err_req_class;
 	if (addr >= DeeClass_DESC(self)->cd_desc->cd_cmemb_size)
 		goto err_bad_index;
-	return Dee_BOUND_FROMBOOL(DeeClass_BoundMember(self, addr));
+	bound = DeeClass_BoundMember(self, addr);
+	return Dee_BOUND_FROMBOOL(bound);
 err_bad_index:
 	return err_invalid_class_addr(self, addr);
 err_req_class:

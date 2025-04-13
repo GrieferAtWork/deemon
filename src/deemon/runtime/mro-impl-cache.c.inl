@@ -710,7 +710,7 @@ DECL_BEGIN
 #ifndef DKWOBJMETHOD_VCALLF_LEN_DEFINED
 #define DKWOBJMETHOD_VCALLF_LEN_DEFINED
 PRIVATE NONNULL((1, 2, 3, 5)) DREF DeeObject *DCALL
-dkwobjmethod_vcallf_len(dkwobjmethod_t self,
+dkwobjmethod_vcallf_len(Dee_kwobjmethod_t self,
                         DeeTypeObject *__restrict cls_type,
                         char const *__restrict attr, size_t attrlen,
                         char const *__restrict format, va_list args) {
@@ -743,7 +743,7 @@ err_noargs:
 #ifndef DOBJMETHOD_VCALLF_LEN_DEFINED
 #define DOBJMETHOD_VCALLF_LEN_DEFINED
 PRIVATE NONNULL((1, 2, 3, 5)) DREF DeeObject *DCALL
-dobjmethod_vcallf_len(dobjmethod_t self,
+dobjmethod_vcallf_len(Dee_objmethod_t self,
                       DeeTypeObject *__restrict cls_type,
                       char const *__restrict attr, size_t attrlen,
                       char const *__restrict format, va_list args) {
@@ -781,7 +781,7 @@ err_noargs:
 #ifndef DKWOBJMETHOD_VCALLF_DEFINED
 #define DKWOBJMETHOD_VCALLF_DEFINED
 PRIVATE NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
-dkwobjmethod_vcallf(dkwobjmethod_t self,
+dkwobjmethod_vcallf(Dee_kwobjmethod_t self,
                     DeeTypeObject *__restrict cls_type,
                     char const *__restrict attr,
                     char const *__restrict format, va_list args) {
@@ -814,7 +814,7 @@ err_noargs:
 #ifndef DOBJMETHOD_VCALLF_DEFINED
 #define DOBJMETHOD_VCALLF_DEFINED
 PRIVATE NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
-dobjmethod_vcallf(dobjmethod_t self,
+dobjmethod_vcallf(Dee_objmethod_t self,
                   DeeTypeObject *__restrict cls_type,
                   char const *__restrict attr,
                   char const *__restrict format, va_list args) {
@@ -1199,12 +1199,12 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 		/* Get or Call... */
 
 		case MEMBERCACHE_METHOD: {
-			dobjmethod_t func = item->mcs_method.m_func;
+			Dee_objmethod_t func = item->mcs_method.m_func;
 #ifdef LOCAL_IS_GET
 #ifdef LOCAL_HAS_self
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-				return DeeKwObjMethod_New((dkwobjmethod_t)func, LOCAL_self);
+				return DeeKwObjMethod_New((Dee_kwobjmethod_t)func, LOCAL_self);
 			}
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 			return DeeObjMethod_New(func, LOCAL_self);
@@ -1212,7 +1212,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			DeeTypeObject *decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-				return DeeKwClsMethod_New(decl, (dkwobjmethod_t)func);
+				return DeeKwClsMethod_New(decl, (Dee_kwobjmethod_t)func);
 			}
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 			return DeeClsMethod_New(decl, func);
@@ -1224,7 +1224,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #endif /* !LOCAL_assert_kw_empty_IS_NOOP */
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-				return LOCAL_invoke_dkwobjmethod_thisarg((dkwobjmethod_t)func, LOCAL_self);
+				return LOCAL_invoke_dkwobjmethod_thisarg((Dee_kwobjmethod_t)func, LOCAL_self);
 			}
 #ifndef LOCAL_assert_kw_empty_IS_NOOP
 			decl = item->mcs_decl;
@@ -1249,7 +1249,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 					goto err;
 #define NEED_err
 #endif /* LOCAL_MUST_ASSERT_ARGC */
-				return LOCAL_invoke_dkwobjmethod((dkwobjmethod_t)func, decl);
+				return LOCAL_invoke_dkwobjmethod((Dee_kwobjmethod_t)func, decl);
 			}
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 #ifdef LOCAL_MUST_ASSERT_ARGC
@@ -1265,13 +1265,14 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 
 		case MEMBERCACHE_GETSET: {
 #ifdef LOCAL_IS_GET
-			dgetmethod_t get = item->mcs_getset.gs_get;
+			Dee_getmethod_t get = item->mcs_getset.gs_get;
 #ifndef LOCAL_HAS_self
-			ddelmethod_t del = item->mcs_getset.gs_del;
-			dsetmethod_t set = item->mcs_getset.gs_set;
+			Dee_delmethod_t del = item->mcs_getset.gs_del;
+			Dee_setmethod_t set = item->mcs_getset.gs_set;
+			Dee_boundmethod_t bound = item->mcs_getset.gs_bound;
 			DeeTypeObject *decl = item->mcs_decl;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			return DeeClsProperty_New(decl, get, del, set);
+			return DeeClsProperty_NewEx(decl, get, del, set, bound);
 #else /* !LOCAL_HAS_self */
 			if likely(get) {
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
@@ -1283,7 +1284,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #define NEED_err
 #endif /* LOCAL_HAS_self */
 #else /* LOCAL_IS_GET */
-			dgetmethod_t getter;
+			Dee_getmethod_t getter;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
 #ifdef LOCAL_HAS_self
@@ -1408,7 +1409,7 @@ check_and_invoke_callback:
 
 #ifdef LOCAL_IS_CLASS
 		case MEMBERCACHE_INSTANCE_METHOD: {
-			dobjmethod_t func;
+			Dee_objmethod_t func;
 			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
 			decl = item->mcs_decl;
@@ -1423,14 +1424,14 @@ check_and_invoke_callback:
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 #ifdef LOCAL_IS_GET
-				return DeeKwClsMethod_New(decl, (dkwobjmethod_t)func);
+				return DeeKwClsMethod_New(decl, (Dee_kwobjmethod_t)func);
 #else /* LOCAL_IS_GET */
 #ifdef LOCAL_MUST_ASSERT_ARGC
 				if (DeeObject_AssertTypeOrAbstract(LOCAL_argv[0], decl))
 					goto err;
 #define NEED_err
 #endif /* LOCAL_MUST_ASSERT_ARGC */
-				return LOCAL_invoke_dkwobjmethod((dkwobjmethod_t)func, decl);
+				return LOCAL_invoke_dkwobjmethod((Dee_kwobjmethod_t)func, decl);
 #endif /* !LOCAL_IS_GET */
 			}
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
@@ -1449,18 +1450,15 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_GETSET: {
 #ifdef LOCAL_IS_GET
-			dgetmethod_t get;
-			ddelmethod_t del;
-			dsetmethod_t set;
-			DeeTypeObject *decl;
-			get  = item->mcs_getset.gs_get;
-			del  = item->mcs_getset.gs_del;
-			set  = item->mcs_getset.gs_set;
-			decl = item->mcs_decl;
+			Dee_getmethod_t get = item->mcs_getset.gs_get;
+			Dee_delmethod_t del = item->mcs_getset.gs_del;
+			Dee_setmethod_t set = item->mcs_getset.gs_set;
+			Dee_boundmethod_t bound = item->mcs_getset.gs_bound;
+			DeeTypeObject *decl = item->mcs_decl;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			return DeeClsProperty_New(decl, get, del, set);
+			return DeeClsProperty_NewEx(decl, get, del, set, bound);
 #else /* LOCAL_IS_GET */
-			dgetmethod_t getter;
+			Dee_getmethod_t getter;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
 				DREF DeeObject *result;
@@ -1562,8 +1560,8 @@ check_and_invoke_callback:
 #ifdef LOCAL_HAS_self
 		case MEMBERCACHE_GETSET: {
 #ifdef LOCAL_IS_BOUND
-			dboundmethod_t bound;
-			dgetmethod_t getter;
+			Dee_boundmethod_t bound;
+			Dee_getmethod_t getter;
 			DREF DeeObject *temp;
 			bound  = item->mcs_getset.gs_bound;
 			getter = item->mcs_getset.gs_get;
@@ -1582,7 +1580,7 @@ check_and_invoke_callback:
 			Dee_Decref(temp);
 			return Dee_BOUND_YES;
 #elif defined(LOCAL_IS_DEL)
-			ddelmethod_t del;
+			Dee_delmethod_t del;
 			DeeTypeObject *decl;
 			del = item->mcs_getset.gs_del;
 			if likely(del) {
@@ -1595,7 +1593,7 @@ check_and_invoke_callback:
 			goto err;
 #define NEED_err
 #elif defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
-			dsetmethod_t set;
+			Dee_setmethod_t set;
 			DeeTypeObject *decl;
 			set = item->mcs_getset.gs_set;
 			if likely(set) {

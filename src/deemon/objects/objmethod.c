@@ -1453,10 +1453,18 @@ DeeClsProperty_GetOrigin(DeeObject const *__restrict self,
 
 
 /* Create a new unbound class property object. */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF /*ClsProperty*/ DeeObject *
+(DCALL DeeClsProperty_New)(DeeTypeObject *__restrict type,
+                           struct Dee_type_getset const *getset) {
+	return DeeClsProperty_NewEx(type,
+	                            getset->gs_get, getset->gs_del,
+	                            getset->gs_set, getset->gs_bound);
+}
+
 PUBLIC WUNUSED NONNULL((1)) DREF /*ClsProperty*/ DeeObject *DCALL
-DeeClsProperty_New(DeeTypeObject *__restrict type,
-                   dgetmethod_t get, ddelmethod_t del,
-                   dsetmethod_t set) {
+DeeClsProperty_NewEx(DeeTypeObject *__restrict type,
+                     Dee_getmethod_t get, Dee_delmethod_t del,
+                     Dee_setmethod_t set, Dee_boundmethod_t bound) {
 	DeeClsPropertyObject *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	result = DeeObject_MALLOC(DeeClsPropertyObject);
@@ -1465,9 +1473,10 @@ DeeClsProperty_New(DeeTypeObject *__restrict type,
 	DeeObject_Init(result, &DeeClsProperty_Type);
 	result->cp_type = type;
 	Dee_Incref(type);
-	result->cp_get = get;
-	result->cp_del = del;
-	result->cp_set = set;
+	result->cp_get   = get;
+	result->cp_del   = del;
+	result->cp_set   = set;
+	result->cp_bound = bound;
 done:
 	return (DREF DeeObject *)result;
 }
@@ -1478,6 +1487,7 @@ clsproperty_hash(DeeClsPropertyObject *__restrict self) {
 	result = Dee_HashPointer(self->cp_get);
 	result = Dee_HashCombine(result, Dee_HashPointer(self->cp_del));
 	result = Dee_HashCombine(result, Dee_HashPointer(self->cp_set));
+	result = Dee_HashCombine(result, Dee_HashPointer(self->cp_bound));
 	return result;
 }
 
@@ -1488,7 +1498,8 @@ clsproperty_compare_eq(DeeClsPropertyObject *self,
 		goto err;
 	return (self->cp_get == other->cp_get &&
 	        self->cp_del == other->cp_del &&
-	        self->cp_set == other->cp_set)
+	        self->cp_set == other->cp_set &&
+	        self->cp_bound == other->cp_bound)
 	       ? 0
 	       : 1;
 err:
@@ -1545,6 +1556,42 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+clsproperty_isbound_kw(DeeClsPropertyObject *__restrict self,
+                       size_t argc, DeeObject *const *argv,
+                       DeeObject *kw) {
+	int isbound;
+	DeeObject *thisarg;
+	if unlikely(!self->cp_get) {
+		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
+		goto err;
+	}
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:isbound", &thisarg))
+		goto err;
+	/* Allow non-instance objects for generic types. */
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
+		goto err;
+	if (self->cp_bound) {
+		isbound = (*self->cp_bound)(thisarg);
+		if (Dee_BOUND_ISERR(isbound))
+			goto err;
+	} else {
+		DREF DeeObject *value;
+		value = (*self->cp_get)(thisarg);
+		if (value) {
+			Dee_Decref(value);
+			isbound = Dee_BOUND_YES;
+		} else if (DeeError_Catch(&DeeError_UnboundAttribute)) {
+			isbound = Dee_BOUND_NO;
+		} else {
+			goto err;
+		}
+	}
+	return_bool(Dee_BOUND_ISBOUND(isbound));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_delete(DeeClsPropertyObject *__restrict self,
                    size_t argc, DeeObject *const *argv,
                    DeeObject *kw) {
@@ -1596,6 +1643,10 @@ PRIVATE struct type_method tpconst clsproperty_methods[] = {
 	                METHOD_FNOREFESCAPE | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL,
 	                "(thisarg)->\nAlias for ?#get"),
 	TYPE_KWMETHOD_F("setter", &clsproperty_set, METHOD_FNOREFESCAPE, "(thisarg,value)\nAlias for ?#set"),
+	TYPE_KWMETHOD_F("isbound", &clsproperty_isbound_kw,
+	                METHOD_FNOREFESCAPE | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL,
+	                "(thisarg)->\n"
+	                "Check if the attribute is bound"),
 	TYPE_METHOD_END
 };
 

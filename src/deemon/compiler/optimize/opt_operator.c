@@ -125,18 +125,18 @@ emulate_method_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		 * However, builtin codecs are still allowed!
 		 * NOTE: Both `string' and `Bytes' use the same underlying
 		 *       function in order to implement `encode' and `decode'! */
-		dobjmethod_t method;
+		Dee_objmethod_t method;
 		DeeObject *meth_self = DeeObjMethod_SELF(self);
 		method               = DeeObjMethod_FUNC(self);
-		if (method == (dobjmethod_t)&string_encode)
+		if (method == (Dee_objmethod_t)&string_encode)
 			return emulate_object_encode(meth_self, argc, argv);
-		if (method == (dobjmethod_t)&string_decode)
+		if (method == (Dee_objmethod_t)&string_decode)
 			return emulate_object_decode(meth_self, argc, argv);
 		if (IS_BLACKLISTED_BASE(meth_self))
 			return ITER_DONE;
 	}
 	if (DeeClsProperty_Check(self)) {
-		dgetmethod_t get;
+		Dee_getmethod_t get;
 		get = DeeClsProperty_GET(self);
 		/* `Object.id()' should not be evaluated at compile-time! */
 		if (get == &object_id_get)

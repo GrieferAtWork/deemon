@@ -193,33 +193,42 @@ struct Dee_clsproperty_origin {
 
 struct Dee_clsproperty_object {
 	Dee_OBJECT_HEAD
-	DREF DeeTypeObject *cp_type; /* [1..1] The type that this-arguments must match. */
-	Dee_getmethod_t     cp_get;  /* [0..1] Getter callback. */
-	Dee_delmethod_t     cp_del;  /* [0..1] Delete callback. */
-	Dee_setmethod_t     cp_set;  /* [0..1] Setter callback. */
+	DREF DeeTypeObject *cp_type;  /* [1..1] The type that this-arguments must match. */
+	Dee_getmethod_t     cp_get;   /* [0..1] Getter callback. */
+	Dee_delmethod_t     cp_del;   /* [0..1] Delete callback. */
+	Dee_setmethod_t     cp_set;   /* [0..1] Setter callback. */
+	Dee_boundmethod_t   cp_bound; /* [0..1] Is-bound callback. */
 };
 
 DDATDEF DeeTypeObject DeeClsProperty_Type;
-#define DeeClsProperty_TYPE(x)         ((DeeClsPropertyObject *)Dee_REQUIRES_OBJECT(x))->cp_type
-#define DeeClsProperty_GET(x)          ((DeeClsPropertyObject *)Dee_REQUIRES_OBJECT(x))->cp_get
-#define DeeClsProperty_DEL(x)          ((DeeClsPropertyObject *)Dee_REQUIRES_OBJECT(x))->cp_del
-#define DeeClsProperty_SET(x)          ((DeeClsPropertyObject *)Dee_REQUIRES_OBJECT(x))->cp_set
-#define DeeClsProperty_Check(x)        DeeObject_InstanceOfExact(x, &DeeClsProperty_Type) /* `_ClassProperty' is final. */
-#define DeeClsProperty_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeClsProperty_Type)
-#define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set)                     \
+#define DeeClsProperty_TYPE(x)       ((DeeClsPropertyObject const *)Dee_REQUIRES_OBJECT(x))->cp_type
+#define DeeClsProperty_GET(x)        ((DeeClsPropertyObject const *)Dee_REQUIRES_OBJECT(x))->cp_get
+#define DeeClsProperty_DEL(x)        ((DeeClsPropertyObject const *)Dee_REQUIRES_OBJECT(x))->cp_del
+#define DeeClsProperty_SET(x)        ((DeeClsPropertyObject const *)Dee_REQUIRES_OBJECT(x))->cp_set
+#define DeeClsProperty_BOUND(x)      ((DeeClsPropertyObject const *)Dee_REQUIRES_OBJECT(x))->cp_bound
+#define DeeClsProperty_Check(x)      DeeObject_InstanceOfExact(x, &DeeClsProperty_Type) /* `_ClassProperty' is final. */
+#define DeeClsProperty_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeClsProperty_Type)
+#define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set, bound)              \
 	DeeClsPropertyObject name = { Dee_OBJECT_HEAD_INIT(&DeeClsProperty_Type), \
 	                              type,                                       \
 	                              Dee_REQUIRES_GETMETHOD(get),                \
 	                              Dee_REQUIRES_DELMETHOD(del),                \
-	                              Dee_REQUIRES_SETMETHOD(set) }
+	                              Dee_REQUIRES_SETMETHOD(set),                \
+	                              Dee_REQUIRES_BOUNDMETHOD(bound) }
 
 
 /* Create a new unbound class property object. */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*ClsProperty*/ DeeObject *
+(DCALL DeeClsProperty_New)(DeeTypeObject *__restrict type,
+                           struct Dee_type_getset const *getset);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*ClsProperty*/ DeeObject *DCALL
-DeeClsProperty_New(DeeTypeObject *__restrict type,
-                   Dee_getmethod_t get,
-                   Dee_delmethod_t del,
-                   Dee_setmethod_t set); /* TODO: is-bound callback */
+DeeClsProperty_NewEx(DeeTypeObject *__restrict type,
+                     Dee_getmethod_t get, Dee_delmethod_t del,
+                     Dee_setmethod_t set, Dee_boundmethod_t bound);
+#ifndef __OPTIMIZE_SIZE__
+#define DeeClsProperty_New(type, getset) \
+	DeeClsProperty_NewEx(type, (getset)->gs_get, (getset)->gs_del, (getset)->gs_set, (getset)->gs_bound)
+#endif /* !__OPTIMIZE_SIZE__ */
 
 /* Lookup the origin of the function bound by
  * the given `_ClassProperty', or `NULL' if unknown. */

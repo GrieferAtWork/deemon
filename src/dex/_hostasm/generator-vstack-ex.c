@@ -2789,10 +2789,7 @@ vopgetattr_constattr(struct fungen *__restrict self,
 		/* Wrapper for producing `DeeClsProperty_Type' */
 		struct type_getset const *item = attr->ai_value.v_instance_getset;
 		DREF DeeObject *value;
-		value = DeeClsProperty_New((DeeTypeObject *)attr->ai_decl,
-		                           item->gs_get,
-		                           item->gs_del,
-		                           item->gs_set);
+		value = DeeClsProperty_New((DeeTypeObject *)attr->ai_decl, item);
 		if unlikely(!value)
 			goto err;
 		return vpop_twice_and_push_constant_value(self, value);

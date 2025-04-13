@@ -364,7 +364,7 @@ Dee_attrdesc_callget(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 			return DeeClsMethod_New((DeeTypeObject *)thisarg, self->ad_info.ai_value.v_instance_method->m_func);
 		case Dee_ATTRINFO_INSTANCE_GETSET: {
 			struct type_getset const *gs = self->ad_info.ai_value.v_instance_getset;
-			return DeeClsProperty_New((DeeTypeObject *)thisarg, gs->gs_get, gs->gs_del, gs->gs_set);
+			return DeeClsProperty_New((DeeTypeObject *)thisarg, gs);
 		}	break;
 		case Dee_ATTRINFO_INSTANCE_MEMBER:
 			return DeeClsMember_New((DeeTypeObject *)thisarg, self->ad_info.ai_value.v_instance_member);

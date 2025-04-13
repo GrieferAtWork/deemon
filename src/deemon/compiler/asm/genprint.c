@@ -618,7 +618,7 @@ fallback:
 						/* Check for a constant expression `"pattern".format' */
 						if (!DeeObjMethod_Check(format_str_ast->a_constexpr))
 							break;
-						if (DeeObjMethod_FUNC(format_str_ast->a_constexpr) != (dobjmethod_t)&string_format)
+						if (DeeObjMethod_FUNC(format_str_ast->a_constexpr) != (Dee_objmethod_t)&string_format)
 							break;
 						format_str = DeeObjMethod_SELF(format_str_ast->a_constexpr);
 						ASSERT(DeeString_Check(format_str));

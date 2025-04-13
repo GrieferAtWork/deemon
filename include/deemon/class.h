@@ -693,7 +693,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL DeeClass_SetMemberSafe(DeeTypeObject *
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeClass_GetMember(DeeTypeObject *__restrict self, uint16_t addr);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeClass_GetMemberSafe(DeeTypeObject *__restrict self, uint16_t addr);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeClass_BoundMemberSafe(DeeTypeObject *__restrict self, uint16_t addr);
-#define DeeClass_BoundMember(self, addr) (__hybrid_atomic_load(&DeeClass_DESC(self)->cd_members[addr], __ATOMIC_ACQUIRE) != NULL)
+#define DeeClass_BoundMember(self, addr) (Dee_atomic_read_with_atomic_rwlock(&DeeClass_DESC(self)->cd_members[addr], &DeeClass_DESC(self)->cd_lock) != NULL)
 
 
 #ifdef CONFIG_BUILDING_DEEMON

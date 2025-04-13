@@ -419,7 +419,7 @@ type_obmeth_call(DeeTypeObject *cls_type,
 
 	/* Use the first argument as the this-argument. */
 	if (desc->m_flag & TYPE_METHOD_FKWDS)
-		return (*(dkwobjmethod_t)desc->m_func)(argv[0], argc - 1, argv + 1, NULL);
+		return (*(Dee_kwobjmethod_t)desc->m_func)(argv[0], argc - 1, argv + 1, NULL);
 	return (*desc->m_func)(argv[0], argc - 1, argv + 1);
 err:
 	return NULL;
@@ -441,7 +441,7 @@ type_obmeth_call_kw(DeeTypeObject *cls_type,
 
 	/* Use the first argument as the this-argument. */
 	if (desc->m_flag & TYPE_METHOD_FKWDS)
-		return (*(dkwobjmethod_t)desc->m_func)(argv[0], argc - 1, argv + 1, kw);
+		return (*(Dee_kwobjmethod_t)desc->m_func)(argv[0], argc - 1, argv + 1, kw);
 	if (kw) {
 		if (DeeKwds_Check(kw)) {
 			if (DeeKwds_SIZE(kw) != 0)

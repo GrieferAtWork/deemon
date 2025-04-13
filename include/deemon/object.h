@@ -2754,15 +2754,6 @@ DFUNDEF int (DCALL _DeeNone_reti1_1)(void *);
 #error "Unsupported value for `Dee_BOUND_YES'"
 #endif /* Dee_BOUND_YES != 1 */
 
-#ifdef DEE_SOURCE
-typedef Dee_objmethod_t   dobjmethod_t;
-typedef Dee_kwobjmethod_t dkwobjmethod_t;
-typedef Dee_getmethod_t   dgetmethod_t;
-typedef Dee_delmethod_t   ddelmethod_t;
-typedef Dee_setmethod_t   dsetmethod_t;
-typedef Dee_boundmethod_t dboundmethod_t;
-#endif /* DEE_SOURCE */
-
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
 /* Highlight usage errors in IDE */
 extern "C++" {
@@ -2925,7 +2916,7 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
 /* Possible values for `struct Dee_type_method::m_flag' (also accepts `Dee_METHOD_FMASK') */
 #define Dee_TYPE_METHOD_FNORMAL 0x00000000 /* Normal type method flags. */
 #define Dee_TYPE_METHOD_FKWDS   0x00000001 /* `m_func' takes a keywords argument.
-                                            * When set, `m_func' is actually a `dkwobjmethod_t' */
+                                            * When set, `m_func' is actually a `Dee_kwobjmethod_t' */
 #ifdef DEE_SOURCE
 #define TYPE_METHOD_FNORMAL Dee_TYPE_METHOD_FNORMAL
 #define TYPE_METHOD_FKWDS   Dee_TYPE_METHOD_FKWDS
