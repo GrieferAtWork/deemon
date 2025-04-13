@@ -30,10 +30,12 @@
 #include <deemon/error.h>
 #include <deemon/hashset.h>
 #include <deemon/list.h>
+#include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
 #include <deemon/seq.h>
+#include <deemon/set.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 /**/
@@ -108,27 +110,47 @@ multiple_continue_at_iter:
 		}
 		if (self->a_multiple.m_astc == 0) {
 			DREF DeeObject *cexpr;
-			if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
+			switch (self->a_flag) {
+
+			case AST_FMULTIPLE_KEEPLAST:
 				cexpr = DeeNone_NewRef();
-			} else if (self->a_flag == AST_FMULTIPLE_TUPLE ||
-			           self->a_flag == AST_FMULTIPLE_GENERIC) {
+				break;
+
+			case AST_FMULTIPLE_TUPLE:
 				cexpr = DeeTuple_NewEmpty();
-			} else if (self->a_flag == AST_FMULTIPLE_LIST) {
+				break;
+
+			case AST_FMULTIPLE_GENERIC:
+				cexpr = DeeSeq_NewEmpty();
+				break;
+
+			case AST_FMULTIPLE_GENERIC_SET:
+				cexpr = DeeSet_NewEmpty();
+				break;
+
+			case AST_FMULTIPLE_GENERIC_MAP:
+				cexpr = DeeMapping_NewEmpty();
+				break;
+
+			case AST_FMULTIPLE_LIST:
 				cexpr = DeeList_New();
 				if unlikely(!cexpr)
 					goto err;
-			} else if (self->a_flag == AST_FMULTIPLE_HASHSET) {
+				break;
+
+			case AST_FMULTIPLE_HASHSET:
 				cexpr = DeeHashSet_New();
 				if unlikely(!cexpr)
 					goto err;
-			} else if (self->a_flag == AST_FMULTIPLE_DICT) {
+				break;
+
+			case AST_FMULTIPLE_DICT:
 				cexpr = DeeDict_New();
 				if unlikely(!cexpr)
 					goto err;
-			} else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
-				cexpr = Dee_EmptyRoDict;
-				Dee_Incref(cexpr);
-			} else {
+				break;
+
+			default:
 				goto after_multiple_constexpr;
 			}
 			Dee_Free(self->a_multiple.m_astv);
@@ -136,6 +158,14 @@ multiple_continue_at_iter:
 		} else if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
 			if unlikely(ast_graft_onto(self, self->a_multiple.m_astv[self->a_multiple.m_astc - 1]))
 				goto err;
+		} else if (self->a_flag == AST_FMULTIPLE_GENERIC && self->a_multiple.m_astc == 1) {
+			DREF DeeObject *seqone;
+			seqone = DeeSeq_PackOne(self->a_multiple.m_astv[0]->a_constexpr);
+			if unlikely(!seqone)
+				goto err;
+			ast_decref(self->a_multiple.m_astv[0]);
+			Dee_Free(self->a_multiple.m_astv);
+			self->a_constexpr = seqone; /* Inherit reference. */
 		} else if (self->a_flag == AST_FMULTIPLE_TUPLE ||
 		           self->a_flag == AST_FMULTIPLE_GENERIC) {
 			DREF DeeTupleObject *new_tuple;
@@ -199,7 +229,7 @@ multiple_continue_at_iter:
 			ast_decrefv(self->a_multiple.m_astv, self->a_multiple.m_astc);
 			Dee_Free(self->a_multiple.m_astv);
 			self->a_constexpr = new_dict; /* Inherit reference. */
-		} else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
+		} else if (self->a_flag == AST_FMULTIPLE_GENERIC_MAP) {
 			struct Dee_rodict_builder new_dict;
 			size_t i, length = self->a_multiple.m_astc / 2;
 			Dee_rodict_builder_init_with_hint(&new_dict, length);

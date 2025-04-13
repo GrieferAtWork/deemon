@@ -482,6 +482,24 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Some(DeeObject *__restr
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 
+/************************************************************************/
+/* Type for `{ item }'                                                  */
+/************************************************************************/
+typedef struct {
+	Dee_OBJECT_HEAD
+	DREF DeeObject *so_item; /* [1..1][const] The sequence's first and only item. */
+} DeeSeqOneObject;
+
+DDATDEF DeeTypeObject DeeSeqOne_Type;
+#define DeeSeqOne_Check(self)      DeeObject_InstanceOfExact(self, &DeeSeqSome_Type)
+#define DeeSeqOne_CheckExact(self) DeeObject_InstanceOfExact(self, &DeeSeqSome_Type)
+
+/* Construct a some-wrapper for `self' */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PackOne(DeeObject *__restrict item);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PackOneInherited(/*inherit(always)*/ DREF DeeObject *__restrict item);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PackOneInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict item);
+
+
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
 #define DeeSeq_Unpack(self, dst_length, objv) __builtin_expect(DeeSeq_Unpack(self, dst_length, objv), 0)

@@ -137,7 +137,7 @@ do_realloc_dict:
 		if likely(new_elemv)
 			elemv = new_elemv;
 	}
-	result = ast_multiple(AST_FMULTIPLE_GENERIC_KEYS, elemc * 2, elemv);
+	result = ast_multiple(AST_FMULTIPLE_GENERIC_MAP, elemc * 2, elemv);
 	if unlikely(!result)
 		goto err_dict_elemv;
 	/* NOTE: On success, all items have been inherited by the branch. */

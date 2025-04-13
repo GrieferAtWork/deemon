@@ -2435,6 +2435,20 @@ librt_get_MapDifferenceIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 	return_cached(get_Iterator_of(librt_get_MapDifference_impl_f()));
 }
 
+
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqOneIterator_Type_impl_f(void) {
+	return_cached(DeeObject_GetAttr((DeeObject *)&DeeSeqOne_Type,
+	                                (DeeObject *)&str_Iterator));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqOneIterator_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_SeqOneIterator_Type_impl_f();
+}
+
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SharedVectorIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return_cached(DeeObject_GetAttr((DeeObject *)&DeeSharedVector_Type, (DeeObject *)&str_Iterator));
@@ -3494,6 +3508,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_MapIntersection, &librt_get_MapIntersection_f, 
 PRIVATE DEFINE_CMETHOD(librt_get_MapIntersectionIterator, &librt_get_MapIntersectionIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MapDifference, &librt_get_MapDifference_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MapDifferenceIterator, &librt_get_MapDifferenceIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqOneIterator, &librt_get_SeqOneIterator_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ClassOperatorTable, &librt_get_ClassOperatorTable_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ClassOperatorTableIterator, &librt_get_ClassOperatorTableIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ClassAttribute, &librt_get_ClassAttribute_f, METHOD_FCONSTCALL);
@@ -3845,6 +3860,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqWithSizeObAndGetItem", (DeeObject *)&librt_get_SeqWithSizeAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* DefaultSequence_WithSizeObAndGetItem_Type */
 	{ "SeqWithIter", (DeeObject *)&librt_get_SeqWithIter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                   /* DefaultSequence_WithIter_Type */
 	{ "SeqWithIterAndLimit", (DeeObject *)&librt_get_SeqWithIterAndLimit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* DefaultSequence_WithIterAndLimit_Type */
+
+	/* Special sequence types */
+	{ "SeqOne", (DeeObject *)&DeeSeqOne_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
+	{ "SeqOneIterator", (DeeObject *)&librt_get_SeqOneIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* SeqOneIterator_Type */
 
 	/* Misc. helper types for sequences */
 	{ "SeqEnumerateWrapper", (DeeObject *)&librt_get_EnumerateWrapper, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* SeqEnumerateWrapper_Type */

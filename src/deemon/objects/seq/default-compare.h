@@ -141,7 +141,6 @@ INTDEF WUNUSED NONNULL((1, 3, 5)) int DCALL seq_docompare__lhs_vector__rhs_size_
 INTDEF WUNUSED NONNULL((1, 3, 5)) int DCALL seq_docompare__lhs_vector__rhs_size_and_trygetitem_index(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs, size_t rhs_size, DREF DeeObject *(DCALL *rhs_trygetitem_index)(DeeObject *self, size_t index));
 INTDEF WUNUSED NONNULL((1, 3, 5)) int DCALL seq_docompare__lhs_vector__rhs_size_and_getitem_index(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs, size_t rhs_size, DREF DeeObject *(DCALL *rhs_getitem_index)(DeeObject *self, size_t index));
 INTDEF WUNUSED NONNULL((1, 3, 4, 5)) int DCALL seq_docompare__lhs_vector__rhs_sizeob_and_getitem(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs, DeeObject *rhs_sizeob, DREF DeeObject *(DCALL *rhs_getitem)(DeeObject *self, DeeObject *index));
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL seq_dotrycompareeq__lhs_vector(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL seq_docompareeq__lhs_vector(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL seq_docompare__lhs_vector(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs);
 #endif /* !__OPTIMIZE_SIZE__ */

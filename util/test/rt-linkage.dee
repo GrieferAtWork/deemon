@@ -119,6 +119,9 @@ assertRtTypeName("SeqWithSizeObAndGetItem");
 assertRtTypeName("SeqWithIter");
 assertRtTypeName("SeqWithIterAndLimit");
 
+assertRtTypeName("SeqOne");
+assertRtTypeName("SeqOneIterator");
+
 assertRtTypeName("SeqEnumerateWrapper");
 assertRtTypeName("SeqEnumerateIndexWrapper");
 //TODO: SeqRemoveWithRemoveIfPredicate

@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/gc.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -118,7 +119,7 @@ catiterator_init(CatIterator *__restrict self,
 	if (DeeObject_AssertTypeExact(self->cti_cat, &SeqConcat_Type))
 		goto err;
 	self->cti_pseq = DeeTuple_ELEM(self->cti_cat);
-	self->cti_curr = DeeObject_Iter(self->cti_pseq[0]);
+	self->cti_curr = DeeObject_InvokeMethodHint(seq_operator_iter, self->cti_pseq[0]);
 	if unlikely(!self->cti_curr)
 		goto err;
 	Dee_Incref(self->cti_cat);
@@ -176,7 +177,7 @@ catiterator_bool(CatIterator *__restrict self) {
 	/* Check if one of the upcoming sequences is non-empty. */
 	catend = DeeTuple_END(self->cti_cat);
 	for (; iterpos < catend; ++iterpos) {
-		result = DeeObject_Bool(*iterpos);
+		result = DeeObject_InvokeMethodHint(seq_operator_bool, *iterpos);
 		if (result != 0)
 			break;
 	}
@@ -268,7 +269,7 @@ do_iter:
 		CatIterator_LockEndWrite(self);
 
 		/* Create an iterator for this sequence. */
-		iter = DeeObject_Iter(*p_next);
+		iter = DeeObject_InvokeMethodHint(seq_operator_iter, *p_next);
 		if unlikely(!iter)
 			goto err;
 		CatIterator_LockWrite(self);
@@ -409,7 +410,7 @@ cat_iter(Cat *__restrict self) {
 	if unlikely(!result)
 		goto err;
 	ASSERT(DeeTuple_SIZE(self) != 0);
-	result->cti_curr = DeeObject_Iter(DeeTuple_GET(self, 0));
+	result->cti_curr = DeeObject_InvokeMethodHint(seq_operator_iter, DeeTuple_GET(self, 0));
 	if unlikely(!result->cti_curr)
 		goto err_r;
 	result->cti_pseq = DeeTuple_ELEM(self);
@@ -442,7 +443,7 @@ cat_get_frozen(Cat *__restrict self) {
 		goto err;
 	for (i = 0; i < self->t_size; ++i) {
 		DREF DeeObject *inner_frozen;
-		inner_frozen = DeeObject_GetAttr(self->t_elem[i], (DeeObject *)&str_frozen);
+		inner_frozen = DeeObject_InvokeMethodHint(seq_frozen, self->t_elem[i]);
 		if unlikely(!inner_frozen)
 			goto err_r_i;
 		result->t_elem[i] = inner_frozen;
@@ -490,7 +491,8 @@ PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 cat_size(Cat *__restrict self) {
 	size_t i, result = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
-		size_t temp = DeeObject_Size(DeeTuple_GET(self, i));
+		DeeObject *item = DeeTuple_GET(self, i);
+		size_t temp = DeeObject_InvokeMethodHint(seq_operator_size, item);
 		if unlikely(temp == (size_t)-1)
 			return (size_t)-1;
 		if (OVERFLOW_UADD(result, temp, &result)) {
@@ -520,12 +522,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_contains(Cat *self, DeeObject *search_item) {
 	size_t i;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
-		DREF DeeObject *result;
-		int error;
-		result = DeeObject_Contains(DeeTuple_GET(self, i), search_item);
-		if unlikely(!result)
-			goto err;
-		error = DeeObject_BoolInherited(result);
+		int error = DeeObject_InvokeMethodHint(seq_contains, DeeTuple_GET(self, i), search_item);
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
@@ -541,7 +538,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cat_getitem_index(Cat *__restrict self, size_t index) {
 	size_t i, temp, sub_index = index, total_length = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
-		temp = DeeObject_Size(DeeTuple_GET(self, i));
+		temp = DeeObject_InvokeMethodHint(seq_operator_size, DeeTuple_GET(self, i));
 		if unlikely(temp == (size_t)-1)
 			goto err;
 		if (sub_index >= temp) {
@@ -549,7 +546,9 @@ cat_getitem_index(Cat *__restrict self, size_t index) {
 			total_length += temp;
 			continue;
 		}
-		return DeeObject_GetItemIndex(DeeTuple_GET(self, i), sub_index);
+		return DeeObject_InvokeMethodHint(seq_operator_getitem_index,
+		                                  DeeTuple_GET(self, i),
+		                                  sub_index);
 	}
 	err_index_out_of_bounds((DeeObject *)self, index, total_length);
 err:
@@ -560,7 +559,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cat_delitem_index(Cat *__restrict self, size_t index) {
 	size_t i, temp, sub_index = index, total_length = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
-		temp = DeeObject_Size(DeeTuple_GET(self, i));
+		temp = DeeObject_InvokeMethodHint(seq_operator_size, DeeTuple_GET(self, i));
 		if unlikely(temp == (size_t)-1)
 			goto err;
 		if (sub_index >= temp) {
@@ -568,7 +567,8 @@ cat_delitem_index(Cat *__restrict self, size_t index) {
 			total_length += temp;
 			continue;
 		}
-		return DeeObject_DelItemIndex(DeeTuple_GET(self, i), sub_index);
+		return DeeObject_InvokeMethodHint(seq_operator_delitem_index,
+		                                  DeeTuple_GET(self, i), sub_index);
 	}
 	return err_index_out_of_bounds((DeeObject *)self, index, total_length);
 err:
@@ -579,7 +579,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 cat_setitem_index(Cat *self, size_t index, DeeObject *value) {
 	size_t i, temp, sub_index = index, total_length = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
-		temp = DeeObject_Size(DeeTuple_GET(self, i));
+		temp = DeeObject_InvokeMethodHint(seq_operator_size, DeeTuple_GET(self, i));
 		if unlikely(temp == (size_t)-1)
 			goto err;
 		if (sub_index >= temp) {
@@ -587,7 +587,9 @@ cat_setitem_index(Cat *self, size_t index, DeeObject *value) {
 			total_length += temp;
 			continue;
 		}
-		return DeeObject_SetItemIndex(DeeTuple_GET(self, i), sub_index, value);
+		return DeeObject_InvokeMethodHint(seq_operator_setitem_index,
+		                                  DeeTuple_GET(self, i),
+		                                  sub_index, value);
 	}
 	return err_index_out_of_bounds((DeeObject *)self, index, total_length);
 err:
@@ -598,14 +600,15 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cat_bounditem_index(Cat *self, size_t index) {
 	size_t i, temp, sub_index = index;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
-		temp = DeeObject_Size(DeeTuple_GET(self, i));
+		temp = DeeObject_InvokeMethodHint(seq_operator_size, DeeTuple_GET(self, i));
 		if unlikely(temp == (size_t)-1)
 			goto err;
 		if (sub_index >= temp) {
 			sub_index -= temp;
 			continue;
 		}
-		return DeeObject_BoundItemIndex(DeeTuple_GET(self, i), sub_index);
+		return DeeObject_InvokeMethodHint(seq_operator_bounditem_index,
+		                                  DeeTuple_GET(self, i), sub_index);
 	}
 	return Dee_BOUND_MISSING;
 err:
@@ -617,7 +620,9 @@ cat_foreach(Cat *self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
 	size_t i;
 	for (i = 0; i < self->t_size; ++i) {
-		temp = DeeObject_Foreach(self->t_elem[i], proc, arg);
+		temp = DeeObject_InvokeMethodHint(seq_operator_foreach,
+		                                  DeeTuple_GET(self, i),
+		                                  proc, arg);
 		if unlikely(temp < 0)
 			goto err_temp;
 		result += temp;

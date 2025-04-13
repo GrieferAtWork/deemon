@@ -62,7 +62,7 @@ PUBLIC size_t (DCALL _DeeNone_rets0)(void) {
 	return 0;
 }
 
-PUBLIC int (DCALL _DeeNone_reti1)(void) {
+PUBLIC size_t (DCALL _DeeNone_rets1)(void) {
 	return 1;
 }
 
@@ -71,6 +71,10 @@ PUBLIC size_t (DCALL _DeeNone_retsm1)(void) {
 }
 
 #if !defined(DCALL_RETURN_COMMON) && __SIZEOF_SIZE_T__ != __SIZEOF_INT__
+PUBLIC int (DCALL _DeeNone_reti1)(void) {
+	return 1;
+}
+
 PUBLIC int (DCALL _DeeNone_reti0)(void) {
 	return 0;
 }
@@ -128,7 +132,7 @@ PUBLIC size_t (DCALL _DeeNone_rets0_6)(void *UNUSED(a), void *UNUSED(b), void *U
 	return 0;
 }
 
-PUBLIC int (DCALL _DeeNone_reti1_1)(void *UNUSED(a)) {
+PUBLIC size_t (DCALL _DeeNone_rets1_1)(void *UNUSED(a)) {
 	return 1;
 }
 
@@ -165,6 +169,10 @@ PUBLIC size_t (DCALL _DeeNone_retsm1_5)(void *UNUSED(a), void *UNUSED(b), void *
 }
 
 #if !defined(DCALL_RETURN_COMMON) && __SIZEOF_SIZE_T__ != __SIZEOF_INT__
+PUBLIC int (DCALL _DeeNone_reti1_1)(void *UNUSED(a)) {
+	return 1;
+}
+
 PUBLIC int (DCALL _DeeNone_reti0_1)(void *UNUSED(a)) {
 	return 0;
 }

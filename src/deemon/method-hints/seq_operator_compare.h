@@ -2007,7 +2007,7 @@ __seq_compare_eq__.seq_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
 	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
-	return rhs_nonempty ? 0 : 1 /*or: -1*/;
+	return rhs_nonempty ? 1 /*or: -1*/ : 0;
 err:
 	if (DeeError_Catch(&DeeError_NotImplemented))
 		return -1;

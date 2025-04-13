@@ -90,6 +90,11 @@ generic_proxy__fini(ProxyObject *__restrict self) {
 	Dee_Decref(self->po_obj);
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__getobj(ProxyObject *__restrict self) {
+	return_reference(self->po_obj);
+}
+
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy2__copy_alias12(ProxyObject2 *__restrict self,
                              ProxyObject2 *__restrict other) {

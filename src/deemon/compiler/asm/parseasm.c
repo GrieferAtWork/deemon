@@ -1702,6 +1702,10 @@ parse_local_operand:
 				result->io_class = OPERAND_CLASS_DICT;
 				goto done_yield_1;
 			}
+			if (IS_KWD_NOCASE_S(8, STR_Sequence)) {
+				result->io_class = OPERAND_CLASS_SEQUENCE;
+				goto done_yield_1;
+			}
 			if (IS_KWD_NOCASE_S(3, STR_int)) {
 				result->io_class = OPERAND_CLASS_INT;
 				goto done_yield_1;

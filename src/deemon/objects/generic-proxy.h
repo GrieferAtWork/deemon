@@ -75,6 +75,8 @@ INTDEF NONNULL((1)) void DCALL generic_proxy__fini(ProxyObject *__restrict self)
 #define generic_proxy__fini_likely   generic_proxy__fini
 #define generic_proxy__fini_unlikely generic_proxy__fini
 
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__getobj(ProxyObject *__restrict self);
+
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__copy_alias12(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__copy_recursive1_alias2(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__deepcopy(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);

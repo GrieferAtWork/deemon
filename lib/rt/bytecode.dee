@@ -93,6 +93,7 @@ final global ASM_CAST_LIST = 0x41;
 final global ASM_PACK_TUPLE = 0x42;
 final global ASM_PACK_LIST = 0x43;
 final global ASM_CAST_VARKWDS = 0x44;
+final global ASM_PACK_ONE = 0x45;
 final global ASM_UNPACK = 0x46;
 final global ASM_CONCAT = 0x47;
 final global ASM_EXTEND = 0x48;

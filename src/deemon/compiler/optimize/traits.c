@@ -261,7 +261,7 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 			return &DeeHashSet_Type;
 		if (self->a_flag == AST_FMULTIPLE_DICT)
 			return &DeeDict_Type;
-		if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS)
+		if (self->a_flag == AST_FMULTIPLE_GENERIC_MAP)
 			return &DeeMapping_Type;
 		return &DeeSeq_Type; /* That's all we can guaranty. */
 
@@ -564,7 +564,7 @@ ast_predict_object_refcnt(struct ast *__restrict self) {
 		}
 		if (self->a_multiple.m_astc == 0 && (self->a_flag == AST_FMULTIPLE_TUPLE ||
 		                                     self->a_flag == AST_FMULTIPLE_GENERIC ||
-		                                     self->a_flag == AST_FMULTIPLE_GENERIC_KEYS))
+		                                     self->a_flag == AST_FMULTIPLE_GENERIC_MAP))
 			goto nope; /* These will generate to access global singletons (with unknown reference counts) */
 		if (self->a_flag != AST_FMULTIPLE_TUPLE)
 			return 1; /* Anything but tuples must be created on the spot. */

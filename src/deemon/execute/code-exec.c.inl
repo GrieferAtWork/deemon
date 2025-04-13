@@ -2040,6 +2040,15 @@ do_pack_list:
 			DISPATCH();
 		}
 
+		TARGET(ASM_PACK_ONE, -1, +1) {
+			DREF DeeObject *sequence;
+			sequence = DeeSeq_PackOneInheritedOnSuccess(TOP); /* Inherit references. */
+			if unlikely(!sequence)
+				HANDLE_EXCEPT();
+			TOP = sequence; /* Inherit references. */
+			DISPATCH();
+		}
+
 		RAW_TARGET(ASM_UNPACK) {
 			int error;
 			DREF DeeObject *sequence;

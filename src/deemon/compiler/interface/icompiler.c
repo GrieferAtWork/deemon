@@ -491,7 +491,7 @@ get_ast_multiple_typing(DeeTypeObject *__restrict typing) {
 	} else if (typing == &DeeSeq_Type) {
 		result = AST_FMULTIPLE_GENERIC;
 	} else if (typing == &DeeMapping_Type) {
-		result = AST_FMULTIPLE_GENERIC_KEYS;
+		result = AST_FMULTIPLE_GENERIC_MAP;
 	} else {
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Invalid multi-branch typing: %k",

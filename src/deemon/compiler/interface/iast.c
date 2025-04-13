@@ -494,7 +494,7 @@ ast_getmultiple_typing(Ast *__restrict self) {
 		case AST_FMULTIPLE_GENERIC:
 			result = (DeeObject *)&DeeSeq_Type;
 			break;
-		case AST_FMULTIPLE_GENERIC_KEYS:
+		case AST_FMULTIPLE_GENERIC_MAP:
 			result = (DeeObject *)&DeeMapping_Type;
 			break;
 
@@ -3574,7 +3574,7 @@ force_scope:
 			break;
 
 		case AST_FMULTIPLE_DICT:
-		case AST_FMULTIPLE_GENERIC_KEYS:
+		case AST_FMULTIPLE_GENERIC_MAP:
 			PRINT("{ ");
 			for (i = 0; i < self->a_multiple.m_astc / 2; ++i) {
 				DO(print_ast_code(self->a_multiple.m_astv[i * 2 + 0], printer, arg, true, self->a_scope, indent + 1));
@@ -4972,7 +4972,7 @@ print_ast_repr(struct ast *__restrict self,
 			typing = STR_Dict;
 		} else if (self->a_flag == AST_FMULTIPLE_GENERIC) {
 			typing = STR_Sequence;
-		} else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
+		} else if (self->a_flag == AST_FMULTIPLE_GENERIC_MAP) {
 			typing = STR_Mapping;
 		}
 		printf("makemultiple(branches: { ");

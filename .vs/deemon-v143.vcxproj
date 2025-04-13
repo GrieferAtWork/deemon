@@ -420,6 +420,7 @@
 		<ClInclude Include="..\src\deemon\objects\seq\map-fromattr.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\map-fromkeys.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\mapped.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\one.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\range.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\removeif-cb.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\repeat.h" />
@@ -617,6 +618,7 @@
 		<ClCompile Include="..\src\deemon\objects\seq\map-fromattr.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\map-fromkeys.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\mapped.c" />
+		<ClCompile Include="..\src\deemon\objects\seq\one.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\range.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\removeif-cb.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\repeat.c" />

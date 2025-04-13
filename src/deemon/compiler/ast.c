@@ -29,8 +29,11 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
+#include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/seq.h>
+#include <deemon/set.h>
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 /**/
@@ -364,17 +367,26 @@ got_result:
 
 	/* Prevent some more ambiguity when ZERO(0) expressions were passed. */
 	if unlikely(exprc == 0) {
-		if (flags == AST_FMULTIPLE_KEEPLAST) {
+		switch (flags) {
+		case AST_FMULTIPLE_KEEPLAST:
 			result = ast_constexpr(Dee_None);
 got_result_maybe:
 			if unlikely(!result)
 				goto err;
 			goto got_result;
-		}
-		if (flags == AST_FMULTIPLE_TUPLE ||
-		    flags == AST_FMULTIPLE_GENERIC) {
+		case AST_FMULTIPLE_TUPLE:
 			result = ast_constexpr(Dee_EmptyTuple);
 			goto got_result_maybe;
+		case AST_FMULTIPLE_GENERIC:
+			result = ast_constexpr(Dee_EmptySeq);
+			goto got_result_maybe;
+		case AST_FMULTIPLE_GENERIC_SET:
+			result = ast_constexpr(Dee_EmptySet);
+			goto got_result_maybe;
+		case AST_FMULTIPLE_GENERIC_MAP:
+			result = ast_constexpr(Dee_EmptyMapping);
+			goto got_result_maybe;
+		default: break;
 		}
 	}
 	result = ast_new();

@@ -35,9 +35,12 @@
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
+#include <deemon/map.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/seq.h>
+#include <deemon/set.h>
 #include <deemon/tuple.h>
 
 #include "../../runtime/builtin.h"
@@ -219,7 +222,7 @@ struct seqops {
 /* Make sure that generic sequences are encoded as either
  * tuples or lists with used in non-specific contexts. */
 STATIC_ASSERT((AST_FMULTIPLE_GENERIC & 3) <= 1);
-STATIC_ASSERT((AST_FMULTIPLE_GENERIC_KEYS & 3) == (AST_FMULTIPLE_DICT & 3));
+STATIC_ASSERT((AST_FMULTIPLE_GENERIC_MAP & 3) == (AST_FMULTIPLE_DICT & 3));
 
 INTDEF struct seqops seqops_info[4];
 INTERN struct seqops seqops_info[4] = {
@@ -233,7 +236,20 @@ INTERN struct seqops seqops_info[4] = {
 PRIVATE int DCALL pack_sequence(uint16_t type, uint16_t num_args) {
 	uint16_t (*p_opcode)[2], op;
 	ASSERT(type != AST_FMULTIPLE_KEEPLAST);
-	if (AST_FMULTIPLE_ISDICT(type)) {
+	if (type == AST_FMULTIPLE_GENERIC && num_args == 1)
+		return asm_gpack_one();
+	if (num_args == 0) {
+		switch (type) {
+		case AST_FMULTIPLE_GENERIC:
+			return asm_gpush_constexpr(Dee_EmptySeq);
+		case AST_FMULTIPLE_GENERIC_SET:
+			return asm_gpush_constexpr(Dee_EmptySet);
+		case AST_FMULTIPLE_GENERIC_MAP:
+			return asm_gpush_constexpr(Dee_EmptyMapping);
+		default: break;
+		}
+	}
+	if (AST_FMULTIPLE_ISMAP(type)) {
 		/* Special case: Dict. */
 		if unlikely((num_args & 1) && asm_gpop())
 			goto err; /* Discard superfluous element. */
@@ -385,14 +401,20 @@ done_push_none:
 					goto err;
 			} else {
 				/* Must push an empty sequence. */
-				if (AST_FMULTIPLE_ISDICT(self->a_flag)) {
-					error = asm_gpack_dict(0);
-				} else if (self->a_flag == AST_FMULTIPLE_HASHSET) {
+				if (self->a_flag == AST_FMULTIPLE_HASHSET) {
 					error = asm_gpack_hashset(0);
 				} else if (self->a_flag == AST_FMULTIPLE_LIST) {
 					error = asm_gpack_list(0);
-				} else {
+				} else if (self->a_flag == AST_FMULTIPLE_TUPLE) {
 					error = asm_gpack_tuple(0);
+				} else if (self->a_flag == AST_FMULTIPLE_DICT) {
+					error = asm_gpack_dict(0);
+				} else if (AST_FMULTIPLE_ISMAP(self->a_flag)) {
+					error = asm_gpush_constexpr(Dee_EmptyMapping);
+				} else if (AST_FMULTIPLE_ISSET(self->a_flag)) {
+					error = asm_gpush_constexpr(Dee_EmptySet);
+				} else {
+					error = asm_gpush_constexpr(Dee_EmptySeq);
 				}
 				if (error)
 					goto err;

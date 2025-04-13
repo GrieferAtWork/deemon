@@ -3349,6 +3349,18 @@ target_pack_list:
 
 
 
+target_pack_one:
+	pushl  TOP
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeSeq_PackOneInheritedOnSuccess,4)
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jz     .except   /* Check for errors. */
+	movl   %eax, TOP /* Store EAX in TOP. */
+	jmp    .disp
+
+
+
 target16_unpack:
 	lodsw
 	jmp    1f
@@ -9218,6 +9230,9 @@ prefix_target_pack_list = prefix_invop
 .ifndef prefix_target_cast_varkwds
 prefix_target_cast_varkwds = prefix_invop
 .endif
+.ifndef prefix_target_pack_one
+prefix_target_pack_one = prefix_invop
+.endif
 .ifndef prefix_target_unpack
 prefix_target_unpack = prefix_invop
 .endif
@@ -10346,6 +10361,9 @@ repr_target_pack_list = repr_invop
 .ifndef repr_target_cast_varkwds
 repr_target_cast_varkwds = repr_invop
 .endif
+.ifndef repr_target_pack_one
+repr_target_pack_one = repr_invop
+.endif
 .ifndef repr_target_unpack
 repr_target_unpack = repr_invop
 .endif
@@ -10896,7 +10914,7 @@ inst_table:
 	.long target_pack_tuple              /* 0x42 : `push pack Tuple, #<imm8>' */
 	.long target_pack_list               /* 0x43 : `push pack List, #<imm8>' */
 	.long target_cast_varkwds            /* 0x44 : `cast top, varkwds' */
-	.long invop
+	.long target_pack_one                /* 0x45 : `push pack Sequence, #1' */
 	.long target_unpack                  /* 0x46 : `unpack pop, #<imm8>' */
 	.long target_concat                  /* 0x47 : `concat top, pop' */
 	.long target_extend                  /* 0x48 : `extend top, #<imm8>' */
@@ -11101,14 +11119,14 @@ inst_table_f0:
 	.long target16_push_bnd_static       /* 0x0d : `push bound static <imm16>' */
 	.long target16_push_bnd_global       /* 0x0e : `push bound global <imm16>' */
 	.long target16_push_bnd_local        /* 0x0f : `push bound local <imm16>' */
-	.long target_foreach_key             /* 0x10 : `foreach_key, top, <Sdisp8>' */
-	.long target_foreach_key16           /* 0x11 : `foreach_key, top, <Sdisp16>' */
-	.long target_foreach_value           /* 0x12 : `foreach_value, top, <Sdisp8>' */
-	.long target_foreach_value16         /* 0x13 : `foreach_value, top, <Sdisp16>' */
+	.long target_foreach_key             /* 0x10 : `foreach_key top, <Sdisp8>' */
+	.long target_foreach_key16           /* 0x11 : `foreach_key top, <Sdisp16>' */
+	.long target_foreach_value           /* 0x12 : `foreach_value top, <Sdisp8>' */
+	.long target_foreach_value16         /* 0x13 : `foreach_value top, <Sdisp16>' */
 	.long target32_jmp                   /* 0x14 : `jmp <Sdisp32>' */
 	.long invop
-	.long target_foreach_pair            /* 0x16 : `foreach_pair, top, <Sdisp8>' */
-	.long target_foreach_pair16          /* 0x17 : `foreach_pair, top, <Sdisp16>' */
+	.long target_foreach_pair            /* 0x16 : `foreach_pair top, <Sdisp8>' */
+	.long target_foreach_pair16          /* 0x17 : `foreach_pair top, <Sdisp16>' */
 	.long target_jmp_pop_pop             /* 0x18 : `jmp pop, #pop' */
 	.long target16_operator              /* 0x19 : `op top, $<imm16>, #<imm8>' */
 	.long target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop...' */
@@ -11412,7 +11430,7 @@ prefix_inst_table:
 	.long prefix_target_pack_tuple              /* 0x42 : `push pack Tuple, #<imm8>' */
 	.long prefix_target_pack_list               /* 0x43 : `push pack List, #<imm8>' */
 	.long prefix_target_cast_varkwds            /* 0x44 : `cast top, varkwds' */
-	.long prefix_invop
+	.long prefix_target_pack_one                /* 0x45 : `push pack Sequence, #1' */
 	.long prefix_target_unpack                  /* 0x46 : `unpack pop, #<imm8>' */
 	.long prefix_target_concat                  /* 0x47 : `concat top, pop' */
 	.long prefix_target_extend                  /* 0x48 : `extend top, #<imm8>' */
@@ -11617,14 +11635,14 @@ prefix_inst_table_f0:
 	.long prefix_target16_push_bnd_static       /* 0x0d : `push bound static <imm16>' */
 	.long prefix_target16_push_bnd_global       /* 0x0e : `push bound global <imm16>' */
 	.long prefix_target16_push_bnd_local        /* 0x0f : `push bound local <imm16>' */
-	.long prefix_target_foreach_key             /* 0x10 : `foreach_key, top, <Sdisp8>' */
-	.long prefix_target_foreach_key16           /* 0x11 : `foreach_key, top, <Sdisp16>' */
-	.long prefix_target_foreach_value           /* 0x12 : `foreach_value, top, <Sdisp8>' */
-	.long prefix_target_foreach_value16         /* 0x13 : `foreach_value, top, <Sdisp16>' */
+	.long prefix_target_foreach_key             /* 0x10 : `foreach_key top, <Sdisp8>' */
+	.long prefix_target_foreach_key16           /* 0x11 : `foreach_key top, <Sdisp16>' */
+	.long prefix_target_foreach_value           /* 0x12 : `foreach_value top, <Sdisp8>' */
+	.long prefix_target_foreach_value16         /* 0x13 : `foreach_value top, <Sdisp16>' */
 	.long prefix_target32_jmp                   /* 0x14 : `jmp <Sdisp32>' */
 	.long prefix_invop
-	.long prefix_target_foreach_pair            /* 0x16 : `foreach_pair, top, <Sdisp8>' */
-	.long prefix_target_foreach_pair16          /* 0x17 : `foreach_pair, top, <Sdisp16>' */
+	.long prefix_target_foreach_pair            /* 0x16 : `foreach_pair top, <Sdisp8>' */
+	.long prefix_target_foreach_pair16          /* 0x17 : `foreach_pair top, <Sdisp16>' */
 	.long prefix_target_jmp_pop_pop             /* 0x18 : `jmp pop, #pop' */
 	.long prefix_target16_operator              /* 0x19 : `op top, $<imm16>, #<imm8>' */
 	.long prefix_target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop...' */
@@ -11928,7 +11946,7 @@ repr_inst_table:
 	.long repr_target_pack_tuple              /* 0x42 : `push pack Tuple, #<imm8>' */
 	.long repr_target_pack_list               /* 0x43 : `push pack List, #<imm8>' */
 	.long repr_target_cast_varkwds            /* 0x44 : `cast top, varkwds' */
-	.long repr_invop
+	.long repr_target_pack_one                /* 0x45 : `push pack Sequence, #1' */
 	.long repr_target_unpack                  /* 0x46 : `unpack pop, #<imm8>' */
 	.long repr_target_concat                  /* 0x47 : `concat top, pop' */
 	.long repr_target_extend                  /* 0x48 : `extend top, #<imm8>' */

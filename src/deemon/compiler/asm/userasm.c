@@ -264,6 +264,10 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
 		raw_operand_string = STR_Dict;
 		goto do_raw_string;
 
+	case OPERAND_CLASS_SEQUENCE:
+		raw_operand_string = STR_Sequence;
+		goto do_raw_string;
+
 	case OPERAND_CLASS_INT:
 		raw_operand_string = STR_int;
 		goto do_raw_string;
@@ -1762,7 +1766,7 @@ write_regular_local:
 	case ASM_OP_SEQ_MAP:
 		if (self->a_type == AST_MULTIPLE &&
 		    self->a_flag != AST_FMULTIPLE_KEEPLAST &&
-		    AST_FMULTIPLE_ISDICT(self->a_flag)) {
+		    AST_FMULTIPLE_ISMAP(self->a_flag)) {
 			size_t i, length = self->a_multiple.m_astc & ~1;
 			for (i = 0; i < length; ++i) {
 				if (ast_genasm_one(self->a_multiple.m_astv[i], ASM_G_FPUSHRES))
@@ -1820,7 +1824,7 @@ write_regular_local:
 	case ASM_OP_SEQ_SEQ:
 		if (self->a_type == AST_MULTIPLE &&
 		    self->a_flag != AST_FMULTIPLE_KEEPLAST &&
-		    !AST_FMULTIPLE_ISDICT(self->a_flag)) {
+		    !AST_FMULTIPLE_ISMAP(self->a_flag)) {
 			size_t i, length = self->a_multiple.m_astc;
 			for (i = 0; i < length; ++i) {
 				if (ast_genasm_one(self->a_multiple.m_astv[i], ASM_G_FPUSHRES))

@@ -50,6 +50,7 @@
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
+#include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
@@ -210,8 +211,11 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 
 #define DEC_BUILTIN_SET0_False                 0x68 /* Dee_FalseTrue[0] */
 #define DEC_BUILTIN_SET0_True                  0x69 /* Dee_FalseTrue[1] */
-/*      DEC_BUILTIN_SET0_                      0x6a /* ... */
-/*      DEC_BUILTIN_SET0_                      ...  /* ... */
+#define DEC_BUILTIN_SET0_EmptySeq              0x6a /* DeeSeq_EmptyInstance */
+#define DEC_BUILTIN_SET0_EmptySet              0x6b /* DeeSet_EmptyInstance */
+#define DEC_BUILTIN_SET0_EmptyMapping          0x6c /* DeeMapping_EmptyInstance */
+/*      DEC_BUILTIN_SET0_                      0x6d /* ... */
+/*      DEC_BUILTIN_SET0_                      0x6e /* ... */
 /*      DEC_BUILTIN_SET0_                      0x6f /* ... */
 
 /*      DEC_BUILTIN_SET0_                      0x70 /* ... */
@@ -306,7 +310,7 @@ for (local setname, setlist: sets) {
 }
 ]]]*/
 #define NUM_BUILTIN_OBJECT_SETS 1
-#define NUM_BUILTIN_OBJECTS     56
+#define NUM_BUILTIN_OBJECTS     59
 PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
 	{ (DeeObject *)&DeeError_Signal, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Signal) },
 	{ (DeeObject *)&DeeError_Interrupt, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Interrupt) },
@@ -351,6 +355,9 @@ PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
 	{ (DeeObject *)&DeeCell_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Cell) },
 	{ (DeeObject *)&Dee_FalseTrue[0], DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_False) },
 	{ (DeeObject *)&Dee_FalseTrue[1], DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_True) },
+	{ (DeeObject *)&DeeSeq_EmptyInstance, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptySeq) },
+	{ (DeeObject *)&DeeSet_EmptyInstance, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptySet) },
+	{ (DeeObject *)&DeeMapping_EmptyInstance, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptyMapping) },
 	{ (DeeObject *)&DeeType_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Type) },
 	{ (DeeObject *)&DeeTraceback_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Traceback) },
 	{ (DeeObject *)&DeeThread_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Thread) },
@@ -456,9 +463,9 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 	/* 0x67 */ NULL,
 	/* 0x68 */ (DeeObject *)&Dee_FalseTrue[0], /* False */
 	/* 0x69 */ (DeeObject *)&Dee_FalseTrue[1], /* True */
-	/* 0x6a */ NULL,
-	/* 0x6b */ NULL,
-	/* 0x6c */ NULL,
+	/* 0x6a */ (DeeObject *)&DeeSeq_EmptyInstance, /* EmptySeq */
+	/* 0x6b */ (DeeObject *)&DeeSet_EmptyInstance, /* EmptySet */
+	/* 0x6c */ (DeeObject *)&DeeMapping_EmptyInstance, /* EmptyMapping */
 	/* 0x6d */ NULL,
 	/* 0x6e */ NULL,
 	/* 0x6f */ NULL,

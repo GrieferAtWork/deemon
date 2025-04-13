@@ -1523,7 +1523,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_reversed__with_ca
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__seq_reversed__with_callobjectcache___seq_reversed__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_reversed__unsupported(DeeObject *self, size_t start, size_t end);
 #define default__seq_reversed__none (*(DREF DeeObject *(DCALL *)(DeeObject *, size_t, size_t))&_DeeNone_NewRef3)
-#define default__seq_reversed__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, size_t, size_t))&_DeeNone_rets0_3)
+#define default__seq_reversed__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, size_t, size_t))&default__seq_operator_getrange_index__empty)
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_reversed__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *self, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_reversed__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *self, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_reversed__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *self, size_t start, size_t end);

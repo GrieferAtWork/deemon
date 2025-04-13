@@ -1236,7 +1236,7 @@ check_getattr_base_symbol_class_tuple:
 					goto err;
 				goto pop_unused;
 			}
-			if (arg0->a_flag == AST_FMULTIPLE_GENERIC_KEYS &&
+			if (arg0->a_flag == AST_FMULTIPLE_GENERIC_MAP &&
 			    arg0->a_multiple.m_astc <= (size_t)UINT8_MAX * 2) {
 				size_t seq_argc       = arg0->a_multiple.m_astc & ~1;
 				struct ast **seq_argv = arg0->a_multiple.m_astv;

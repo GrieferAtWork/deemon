@@ -119,6 +119,7 @@ for (local x: names) {
 #define TUPLE          OPERAND_CLASS_TUPLE
 #define HASHSET        OPERAND_CLASS_HASHSET
 #define DICT           OPERAND_CLASS_DICT
+#define SEQUENCE       OPERAND_CLASS_SEQUENCE
 #define INT            OPERAND_CLASS_INT
 #define BOOL           OPERAND_CLASS_BOOL
 #define EQ             OPERAND_CLASS_EQ
@@ -566,14 +567,15 @@ INSTR("cast", (
 
 /* CONSTRAINTS: `pack ..., ...' */
 INSTR("pack", (
-	O2(ASM_PACK_TUPLE,     FPUSH | FSTKABS, (TUPLE)(SPIMM8))                  /* `push pack Tuple, #<imm8>' */
-	O2(ASM16_PACK_TUPLE,   FPUSH | FSTKABS, (TUPLE)(SPIMM16))                 /* `push pack Tuple, #<imm16>' */
-	O2(ASM_PACK_LIST,      FPUSH | FSTKABS, (LIST)(SPIMM8))                   /* `push pack List, #<imm8>' */
-	O2(ASM16_PACK_LIST,    FPUSH | FSTKABS, (LIST)(SPIMM16))                  /* `push pack List, #<imm16>' */
-	O2(ASM_PACK_HASHSET,   FPUSH | FSTKABS, (HASHSET)(SPIMM8))                /* `push pack HashSet, #<imm8>' */
-	O2(ASM16_PACK_HASHSET, FPUSH | FSTKABS, (HASHSET)(SPIMM16))               /* `push pack HashSet, #<imm16>' */
-	O2(ASM_PACK_DICT,      FPUSH | FSTKABS, (DICT)(FSTACKFLAG | DISP8_HALF))  /* `push pack Dict, #<imm8> * 2' */
-	O2(ASM16_PACK_DICT,    FPUSH | FSTKABS, (DICT)(FSTACKFLAG | DISP16_HALF)) /* `push pack Dict, #<imm16> * 2' */
+	O2(ASM_PACK_TUPLE,     FPUSH | FSTKABS, (TUPLE)(SPIMM8))                    /* `push pack Tuple, #<imm8>' */
+	O2(ASM16_PACK_TUPLE,   FPUSH | FSTKABS, (TUPLE)(SPIMM16))                   /* `push pack Tuple, #<imm16>' */
+	O2(ASM_PACK_LIST,      FPUSH | FSTKABS, (LIST)(SPIMM8))                     /* `push pack List, #<imm8>' */
+	O2(ASM16_PACK_LIST,    FPUSH | FSTKABS, (LIST)(SPIMM16))                    /* `push pack List, #<imm16>' */
+	O2(ASM_PACK_HASHSET,   FPUSH | FSTKABS, (HASHSET)(SPIMM8))                  /* `push pack HashSet, #<imm8>' */
+	O2(ASM16_PACK_HASHSET, FPUSH | FSTKABS, (HASHSET)(SPIMM16))                 /* `push pack HashSet, #<imm16>' */
+	O2(ASM_PACK_DICT,      FPUSH | FSTKABS, (DICT)(FSTACKFLAG | DISP8_HALF))    /* `push pack Dict, #<imm8> * 2' */
+	O2(ASM16_PACK_DICT,    FPUSH | FSTKABS, (DICT)(FSTACKFLAG | DISP16_HALF))   /* `push pack Dict, #<imm16> * 2' */
+	O2(ASM_PACK_ONE,       FPUSH | FSTKABS, (SEQUENCE)(FSTACKFLAG | DISP_EQ_1)) /* `push pack Sequence, #1' */
 ))
 
 /* CONSTRAINTS: `unpack <ps>, ...' */
@@ -1316,6 +1318,7 @@ for (local x: names) {
 #undef EQ
 #undef BOOL
 #undef INT
+#undef SEQUENCE
 #undef DICT
 #undef HASHSET
 #undef TUPLE

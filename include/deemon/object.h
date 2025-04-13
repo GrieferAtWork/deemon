@@ -2743,6 +2743,15 @@ typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_setmethod_t)(DeeObject *self
  * @return: Dee_BOUND_ERR: Some other error occurred. */
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_boundmethod_t)(DeeObject *__restrict self);
 #if Dee_BOUND_YES == 1
+#if defined(DCALL_RETURN_COMMON) || __SIZEOF_SIZE_T__ == __SIZEOF_INT__
+#ifdef DCALL_CALLER_CLEANUP
+DFUNDEF size_t (DCALL _DeeNone_rets1)(void); /* Always returns "1" */
+#define Dee_boundmethod__ALWAYS_PTR (Dee_boundmethod_t)&_DeeNone_rets1
+#else /* DCALL_CALLER_CLEANUP */
+DFUNDEF size_t (DCALL _DeeNone_rets1_1)(void *);
+#define Dee_boundmethod__ALWAYS_PTR (Dee_boundmethod_t)&_DeeNone_rets1_1
+#endif /* !DCALL_CALLER_CLEANUP */
+#else /* DCALL_RETURN_COMMON || __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
 #ifdef DCALL_CALLER_CLEANUP
 DFUNDEF int (DCALL _DeeNone_reti1)(void); /* Always returns "1" */
 #define Dee_boundmethod__ALWAYS_PTR (Dee_boundmethod_t)&_DeeNone_reti1
@@ -2750,6 +2759,7 @@ DFUNDEF int (DCALL _DeeNone_reti1)(void); /* Always returns "1" */
 DFUNDEF int (DCALL _DeeNone_reti1_1)(void *);
 #define Dee_boundmethod__ALWAYS_PTR (Dee_boundmethod_t)&_DeeNone_reti1_1
 #endif /* !DCALL_CALLER_CLEANUP */
+#endif /* !DCALL_RETURN_COMMON && __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
 #else /* Dee_BOUND_YES == 1 */
 #error "Unsupported value for `Dee_BOUND_YES'"
 #endif /* Dee_BOUND_YES != 1 */

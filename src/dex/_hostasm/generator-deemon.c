@@ -1127,6 +1127,10 @@ do_jcc:
 		return fg_vpackseq(self, seq_type, elemc);
 	}	break;
 
+	TARGET(ASM_PACK_ONE)
+		/* TODO: Optimizations */
+		return fg_vcallapi(self, &DeeSeq_PackOne, VCALL_CC_OBJECT, 1);
+
 	TARGET(ASM_UNPACK)
 		return fg_vopunpack(self, instr[1]);
 	TARGET(ASM16_UNPACK)

@@ -109,7 +109,7 @@ __seq_reversed__.seq_reversed([[nonnull]] DeeObject *self,
                               size_t start, size_t end)
 %{unsupported(auto)}
 %{$none = return_none}
-%{$empty = 0}
+%{$empty = "default__seq_operator_getrange_index__empty"}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DefaultReversed_WithGetItemIndex *result;

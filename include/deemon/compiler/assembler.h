@@ -357,30 +357,31 @@ struct asm_invoke_operand {
 #define OPERAND_CLASS_TUPLE            0x008b     /* `Tuple' */
 #define OPERAND_CLASS_HASHSET          0x008c     /* `HashSet' */
 #define OPERAND_CLASS_DICT             0x008d     /* `Dict' */
-#define OPERAND_CLASS_INT              0x008e     /* `int' */
-#define OPERAND_CLASS_BOOL             0x008f     /* `bool' */
-#define OPERAND_CLASS_EQ               0x0090     /* `eq' */
-#define OPERAND_CLASS_NE               0x0091     /* `ne' */
-#define OPERAND_CLASS_LO               0x0092     /* `lo' */
-#define OPERAND_CLASS_LE               0x0093     /* `le' */
-#define OPERAND_CLASS_GR               0x0094     /* `gr' */
-#define OPERAND_CLASS_GE               0x0095     /* `ge' */
-#define OPERAND_CLASS_SO               0x0096     /* `so' */
-#define OPERAND_CLASS_DO               0x0097     /* `do' */
-#define OPERAND_CLASS_BREAK            0x0098     /* `break' */
-#define OPERAND_CLASS_MIN              0x0099     /* `min' */
-#define OPERAND_CLASS_MAX              0x009a     /* `max' */
-#define OPERAND_CLASS_SUM              0x009b     /* `sum' */
-#define OPERAND_CLASS_ANY              0x009c     /* `any' */
-#define OPERAND_CLASS_ALL              0x009d     /* `all' */
-#define OPERAND_CLASS_SP               0x009e     /* `sp' */
-#define OPERAND_CLASS_NL               0x009f     /* `nl' */
-#define OPERAND_CLASS_MOVE             0x00a0     /* `move' */
-#define OPERAND_CLASS_DEFAULT          0x00a1     /* `default' */
-#define OPERAND_CLASS_VARARGS          0x00a2     /* `varargs' */
-#define OPERAND_CLASS_VARKWDS          0x00a3     /* `varkwds' */
-#define OPERAND_CLASS_UNBOUND          0x00a4     /* `unbound' */
-#define OPERAND_CLASS_LOCK             0x00a5     /* `lock' */
+#define OPERAND_CLASS_SEQUENCE         0x008e     /* `Dict' */
+#define OPERAND_CLASS_INT              0x008f     /* `int' */
+#define OPERAND_CLASS_BOOL             0x0090     /* `bool' */
+#define OPERAND_CLASS_EQ               0x0091     /* `eq' */
+#define OPERAND_CLASS_NE               0x0092     /* `ne' */
+#define OPERAND_CLASS_LO               0x0093     /* `lo' */
+#define OPERAND_CLASS_LE               0x0094     /* `le' */
+#define OPERAND_CLASS_GR               0x0095     /* `gr' */
+#define OPERAND_CLASS_GE               0x0096     /* `ge' */
+#define OPERAND_CLASS_SO               0x0097     /* `so' */
+#define OPERAND_CLASS_DO               0x0098     /* `do' */
+#define OPERAND_CLASS_BREAK            0x0099     /* `break' */
+#define OPERAND_CLASS_MIN              0x009a     /* `min' */
+#define OPERAND_CLASS_MAX              0x009b     /* `max' */
+#define OPERAND_CLASS_SUM              0x009c     /* `sum' */
+#define OPERAND_CLASS_ANY              0x009d     /* `any' */
+#define OPERAND_CLASS_ALL              0x009e     /* `all' */
+#define OPERAND_CLASS_SP               0x009f     /* `sp' */
+#define OPERAND_CLASS_NL               0x00a0     /* `nl' */
+#define OPERAND_CLASS_MOVE             0x00a1     /* `move' */
+#define OPERAND_CLASS_DEFAULT          0x00a2     /* `default' */
+#define OPERAND_CLASS_VARARGS          0x00a3     /* `varargs' */
+#define OPERAND_CLASS_VARKWDS          0x00a4     /* `varkwds' */
+#define OPERAND_CLASS_UNBOUND          0x00a5     /* `unbound' */
+#define OPERAND_CLASS_LOCK             0x00a6     /* `lock' */
 	uint16_t                           io_class;  /* Operand class (One of `OPERAND_CLASS_*'). */
 	union {
 		uint16_t                       io_symid;  /* Symbol id. */
@@ -1272,6 +1273,7 @@ INTDEF WUNUSED int DCALL asm_gunwind(void);
 #define asm_gpack_list(n)             (asm_subsp(n), asm_incsp(), asm_put816(ASM_PACK_LIST, n))
 #define asm_gpack_hashset(n)          (asm_subsp(n), asm_incsp(), asm_put((ASM_PACK_HASHSET & 0xff00) >> 8) || ((n) <= UINT8_MAX ? asm_putimm8((ASM_PACK_HASHSET & 0xff), (uint8_t)(n)) : asm_putimm16((ASM16_PACK_HASHSET & 0xff), (uint16_t)(n))))
 #define asm_gpack_dict(n)             (asm_subsp((n)*2), asm_incsp(), asm_put((ASM_PACK_DICT & 0xff00) >> 8) || ((n) <= UINT8_MAX ? asm_putimm8((ASM_PACK_DICT & 0xff), (uint8_t)(n)) : asm_putimm16((ASM16_PACK_DICT & 0xff), (uint16_t)(n))))
+#define asm_gpack_one()               (asm_dicsp(), asm_put(ASM_PACK_ONE))
 #define asm_gunpack(n)                (asm_decsp(), asm_addsp(n), asm_put816(ASM_UNPACK, n))
 #define asm_gunpack_p(n)              (asm_addsp(n), asm_put816(ASM_UNPACK, n))
 #define asm_gvarargs_unpack(n)        (asm_addsp(n), asm_put((ASM_VARARGS_UNPACK & 0xff00) >> 8) || asm_putimm8(ASM_VARARGS_UNPACK & 0xff, (uint8_t)(n)))

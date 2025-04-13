@@ -117,7 +117,7 @@ function Type_assert(typ: Type, impls: {string: string}) {
 		throw AssertionError((
 			for (local hintOrOperator, expectedImpl, actualImpl: wrongImpls)
 				f"\n{typ}.<native>.{hintOrOperator.ljust(longestHintOrOperator)} = "
-				f"{actualImpl.ljust(longestActualImpl)} (should be {expectedImpl})"
+				f"{actualImpl.ljust(longestActualImpl)} (should be {repr expectedImpl})"
 		) + ...);
 	}
 }
@@ -880,9 +880,9 @@ Type_assert(deemon.Dict, {
 	"mh_seq_any_with_key":                        "default__seq_any_with_key__with__seq_operator_foreach",
 	"mh_seq_any_with_range":                      "default__seq_any_with_range__with__seqclass_map__and__seq_operator_bool__and__map_operator_size",
 	"mh_seq_any_with_range_and_key":              "default__seq_any_with_range_and_key__with__seq_enumerate_index",
-	"mh_seq_all":                                 {"_DeeNone_reti1_1", "_DeeNone_reti1"},
+	"mh_seq_all":                                 {"_DeeNone_rets1_1", "_DeeNone_rets1", "_DeeNone_reti1_1", "_DeeNone_reti1"},
 	"mh_seq_all_with_key":                        "default__seq_all_with_key__with__seq_operator_foreach",
-	"mh_seq_all_with_range":                      {"_DeeNone_reti1_3", "_DeeNone_reti1"},
+	"mh_seq_all_with_range":                      {"_DeeNone_rets1_3", "_DeeNone_rets1", "_DeeNone_reti1_3", "_DeeNone_reti1"},
 	"mh_seq_all_with_range_and_key":              "default__seq_all_with_range_and_key__with__seq_enumerate_index",
 	"mh_seq_parity":                              "default__seq_parity__with__seq_count",
 	"mh_seq_parity_with_key":                     "default__seq_parity_with_key__with__seq_operator_foreach",

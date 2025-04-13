@@ -862,8 +862,8 @@ generic_operator_optimizations:
 			} else {
 				goto after_sequence_cast_propagation;
 			}
-			if (AST_FMULTIPLE_ISDICT(new_kind)) {
-				if (!AST_FMULTIPLE_ISDICT(cast_expr->a_flag)) {
+			if (AST_FMULTIPLE_ISMAP(new_kind)) {
+				if (!AST_FMULTIPLE_ISMAP(cast_expr->a_flag)) {
 					/* TODO: unpack each element of `cast_expr' into a key/value
 					 *       pair, and inline all of them into a new multi-branch
 					 *       If this isn't possible for all branches, don't perform
@@ -874,7 +874,7 @@ generic_operator_optimizations:
 					goto after_sequence_cast_propagation;
 				}
 			} else {
-				if (AST_FMULTIPLE_ISDICT(cast_expr->a_flag)) {
+				if (AST_FMULTIPLE_ISMAP(cast_expr->a_flag)) {
 					if unlikely((cast_expr->a_multiple.m_astc & 1) != 0)
 						goto after_sequence_cast_propagation;
 					/* TODO: Take every first and second element and pack them together
