@@ -617,20 +617,6 @@ DECL_END
 #endif /* !DCALL */
 
 
-#ifdef CONFIG_BUILDING_DEEMON
-/* Expand to the assembly symbol name of a INTERN/PUBLIC function declared via "DCALL". */
-#if (defined(__i386__) && !defined(__x86_64__)) && defined(__PE__)
-#if 0
-#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT4(__USER_LABEL_PREFIX__, x, @, s)
-#else
-#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x@s)
-#endif
-#else /* ... */
-#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x)
-#endif /* !... */
-#endif /* CONFIG_BUILDING_DEEMON */
-
-
 /* Calling convention for short leaf functions with up to 2 arguments (e.g. `Dee_HashCombine'). */
 #ifndef DFCALL
 #if defined(__i386__) && !defined(__x86_64__)
@@ -784,6 +770,21 @@ DECL_END
 #endif /* !Dee_CHECKMEMORY */
 
 #endif /* __CC__ */
+
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Expand to the assembly symbol name of a INTERN/PUBLIC function declared via "DCALL". */
+#if (defined(__i386__) && !defined(__x86_64__)) && defined(__PE__)
+#if 0
+#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT4(__USER_LABEL_PREFIX__, x, @, s)
+#else
+#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x@s)
+#endif
+#else /* ... */
+#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x)
+#endif /* !... */
+#endif /* CONFIG_BUILDING_DEEMON */
+
 
 /* NOTE: This config option only affects internal documentation strings. */
 #ifndef CONFIG_NO_DOC

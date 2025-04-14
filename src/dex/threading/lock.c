@@ -149,6 +149,7 @@ typedef struct {
 	DREF DeeObject *grwl_lock; /* [1..1][const] Pointed-to rwlock object. */
 } DeeGenericRWLockProxyObject;
 
+#undef sizeof_field
 #define sizeof_field(T, s) sizeof(((T *)0)->s)
 
 /* Assert that shared lock objects are binary-compatible with atomic lock objects. */

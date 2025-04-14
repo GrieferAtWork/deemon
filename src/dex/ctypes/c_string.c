@@ -190,40 +190,40 @@ DeeSystem_DEFINE_memcasemem(dee_memcasemem)
 DeeSystem_DEFINE_memrev(dee_memrev)
 #endif /* !CONFIG_HAVE_memrev */
 
-#ifndef CONFIG_HAVE_memxrchr
-#define CONFIG_HAVE_memxrchr
-#undef memxrchr
-#define memxrchr dee_memxrchr
-DeeSystem_DEFINE_memxrchr(dee_memxrchr)
-#endif /* !CONFIG_HAVE_memxrchr */
+#ifndef CONFIG_HAVE_memrxchr
+#define CONFIG_HAVE_memrxchr
+#undef memrxchr
+#define memrxchr dee_memrxchr
+DeeSystem_DEFINE_memrxchr(dee_memrxchr)
+#endif /* !CONFIG_HAVE_memrxchr */
 
-#ifndef CONFIG_HAVE_memxrend
-#define CONFIG_HAVE_memxrend
-#undef memxrend
-#define memxrend dee_memxrend
-DeeSystem_DEFINE_memxrend(dee_memxrend)
-#endif /* !CONFIG_HAVE_memxrend */
+#ifndef CONFIG_HAVE_memrxend
+#define CONFIG_HAVE_memrxend
+#undef memrxend
+#define memrxend dee_memrxend
+DeeSystem_DEFINE_memrxend(dee_memrxend)
+#endif /* !CONFIG_HAVE_memrxend */
 
-#ifndef CONFIG_HAVE_memxrlen
-#define CONFIG_HAVE_memxrlen
-#undef memxrlen
-#define memxrlen dee_memxrlen
-DeeSystem_DEFINE_memxrlen(dee_memxrlen)
-#endif /* !CONFIG_HAVE_memxrlen */
+#ifndef CONFIG_HAVE_memrxlen
+#define CONFIG_HAVE_memrxlen
+#undef memrxlen
+#define memrxlen dee_memrxlen
+DeeSystem_DEFINE_memrxlen(dee_memrxlen)
+#endif /* !CONFIG_HAVE_memrxlen */
 
-#ifndef CONFIG_HAVE_rawmemxrchr
-#define CONFIG_HAVE_rawmemxrchr
-#undef rawmemxrchr
-#define rawmemxrchr dee_rawmemxrchr
-DeeSystem_DEFINE_rawmemxrchr(dee_rawmemxrchr)
-#endif /* !CONFIG_HAVE_rawmemxrchr */
+#ifndef CONFIG_HAVE_rawmemrxchr
+#define CONFIG_HAVE_rawmemrxchr
+#undef rawmemrxchr
+#define rawmemrxchr dee_rawmemrxchr
+DeeSystem_DEFINE_rawmemrxchr(dee_rawmemrxchr)
+#endif /* !CONFIG_HAVE_rawmemrxchr */
 
-#ifndef CONFIG_HAVE_rawmemxrlen
-#define CONFIG_HAVE_rawmemxrlen
-#undef rawmemxrlen
-#define rawmemxrlen dee_rawmemxrlen
-DeeSystem_DEFINE_rawmemxrlen(dee_rawmemxrlen)
-#endif /* !CONFIG_HAVE_rawmemxrlen */
+#ifndef CONFIG_HAVE_rawmemrxlen
+#define CONFIG_HAVE_rawmemrxlen
+#undef rawmemrxlen
+#define rawmemrxlen dee_rawmemrxlen
+DeeSystem_DEFINE_rawmemrxlen(dee_rawmemrxlen)
+#endif /* !CONFIG_HAVE_rawmemrxlen */
 
 #ifndef CONFIG_HAVE_memcasermem
 #define CONFIG_HAVE_memcasermem
@@ -954,18 +954,18 @@ err:
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-capi_memxrchr(size_t argc, DeeObject *const *argv) {
+capi_memrxchr(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxrchr",
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrxchr",
 	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memxrchr(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memrxchr(haystack.ptr, needle, num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -990,18 +990,18 @@ err:
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-capi_memxrend(size_t argc, DeeObject *const *argv) {
+capi_memrxend(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxrend",
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrxend",
 	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memxrend(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memrxend(haystack.ptr, needle, num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1026,18 +1026,18 @@ err:
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-capi_memxrlen(size_t argc, DeeObject *const *argv) {
+capi_memrxlen(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_haystack;
 	size_t result;
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxrlen",
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrxlen",
 	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_FAULTPROTECT(result = memxrlen(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result = memrxlen(haystack.ptr, needle, num_bytes), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1061,17 +1061,17 @@ err:
 }
 
 INTDEF WUNUSED DREF DeeObject *DCALL
-capi_rawmemxrchr(size_t argc, DeeObject *const *argv) {
+capi_rawmemrxchr(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxrchr",
+	if (DeeArg_Unpack(argc, argv, "od:rawmemrxchr",
 	                  &ob_haystack, &needle))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = rawmemxrchr(haystack.ptr, needle), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = rawmemrxchr(haystack.ptr, needle), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1095,17 +1095,17 @@ err:
 }
 
 INTDEF WUNUSED DREF DeeObject *DCALL
-capi_rawmemxrlen(size_t argc, DeeObject *const *argv) {
+capi_rawmemrxlen(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_haystack;
 	size_t result;
 	union pointer haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxrlen",
+	if (DeeArg_Unpack(argc, argv, "od:rawmemrxlen",
 	                  &ob_haystack, &needle))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_FAULTPROTECT(result = rawmemxrlen(haystack.ptr, needle), goto err);
+	CTYPES_FAULTPROTECT(result = rawmemrxlen(haystack.ptr, needle), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;

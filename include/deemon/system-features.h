@@ -1025,7 +1025,7 @@ func("rawmemchr", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_GNU)", test: "
 functest('atoi("42")', "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc));
 functest('strlen("foo")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
 functest('strchr("foo", 102)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
-func('wcschr', stdc, test: "wchar_t c[] = { 'A', 0 }; wcschr(c, 'A');");
+func('wcschr', stdc, test: "wchar_t c[] = { 'A', 0 }; return wcschr(c, 'A') == c;");
 functest('strrchr("foo", 102)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
 functest('strnchr("foo", 102, 3)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
 functest('strnrchr("foo", 102, 3)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
@@ -1067,7 +1067,7 @@ func("bcmpq", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", te
 (func)("memmem", "(defined(__USE_GNU) || defined(__USE_BSD)) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
 (func)("memrmem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
 (func)("memcasemem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
-(func)("memcasermem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
+(func)("memcasermem", "0", check_defined: false);
 
 (func)("memmemw", "0", check_defined: false);
 (func)("memmeml", "0", check_defined: false);
@@ -1084,12 +1084,12 @@ func("_memccpy", "defined(CONFIG_HAVE_STRING_H) && (defined(__USE_MISC) || defin
 functest('strcmp("foo", "bar")', stdc);
 functest('strcmpz("foo", "bar", 3)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
 functest('strncmp("foo", "bar", 3)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
-functest('strcpy((char *)0, "bar")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
-functest('stpcpy((char *)0, "bar")', "defined(__USE_XOPEN2K8)");
-functest('stpncpy((char *)0, "bar", 3)', "defined(__USE_XOPEN2K8)");
-functest('strcat((char *)0, "bar")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
-functest('strncpy((char *)0, "bar", 3)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
-functest('strncat((char *)0, "bar", 3)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
+func("strcpy", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: 'extern char *buf; return strcpy(buf, "bar") == buf;');
+func("stpcpy", "defined(__USE_XOPEN2K8)", test: 'extern char *buf; return stpcpy(buf, "bar") == buf + 3;');
+func("stpncpy", "defined(__USE_XOPEN2K8)", test: 'extern char *buf; return stpncpy(buf, "bar", 16) == buf + 3;');
+func("strcat", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: 'extern char *buf; return strcat(buf, "bar") == buf;');
+func("strncpy", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: 'extern char *buf; return strncpy(buf, "bar", 16) == buf;');
+func("strncat", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: 'extern char *buf; return strncat(buf, "bar", 16) == buf;');
 functest('strstr("foobar", "foo")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
 functest('strcasestr("foobar", "foo")', "defined(__USE_GNU) || defined(__USE_BSD)");
 functest('strnstr("foobar", "foo", 6)', "defined(__USE_BSD) || defined(__USE_KOS)");
@@ -1171,11 +1171,11 @@ func("memxlen", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_XCHR)", t
 func("memxchr", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_XCHR)", test: "extern void const *buf; void *p = memxchr(buf, '!', 123); return p == buf;");
 func("rawmemxchr", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_XCHR)", test: "extern void const *buf; void *p = rawmemxchr(buf, '!'); return p == buf;");
 func("rawmemxlen", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_XCHR)", test: "extern void const *buf; size_t s = rawmemxlen(buf, '!'); return s == 0;");
-func("memxrchr", test: "extern void const *buf; void *p = memxrchr(buf, '!', 123); return p != NULL;");
-func("memxrend", test: "extern void const *buf; void *p = memxrend(buf, '!', 123); return p == buf;");
-func("memxrlen", test: "extern void const *buf; size_t s = memxrlen(buf, '!', 123); return s == 0;");
-func("rawmemxrchr", test: "extern void const *buf; void *p = rawmemxrchr(buf, '!'); return p == buf;");
-func("rawmemxrlen", test: "extern void const *buf; size_t s = rawmemxrlen(buf, '!'); return s == 0;");
+func("memrxchr", test: "extern void const *buf; void *p = memrxchr(buf, '!', 123); return p != NULL;");
+func("memrxend", test: "extern void const *buf; void *p = memrxend(buf, '!', 123); return p == buf;");
+func("memrxlen", test: "extern void const *buf; size_t s = memrxlen(buf, '!', 123); return s == 0;");
+func("rawmemrxchr", test: "extern void const *buf; void *p = rawmemrxchr(buf, '!'); return p == buf;");
+func("rawmemrxlen", test: "extern void const *buf; size_t s = rawmemrxlen(buf, '!'); return s == 0;");
 
 functest("tolower('!')", "defined(CONFIG_HAVE_CTYPE_H)");
 functest("toupper('!')", "defined(CONFIG_HAVE_CTYPE_H)");
@@ -8011,8 +8011,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifdef CONFIG_NO_memcasermem
 #undef CONFIG_HAVE_memcasermem
-#elif !defined(CONFIG_HAVE_memcasermem) && \
-      (defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
+#elif 0
 #define CONFIG_HAVE_memcasermem
 #endif
 
@@ -8738,39 +8737,39 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_rawmemxlen
 #endif
 
-#ifdef CONFIG_NO_memxrchr
-#undef CONFIG_HAVE_memxrchr
-#elif !defined(CONFIG_HAVE_memxrchr) && \
-      (defined(memxrchr) || defined(__memxrchr_defined))
-#define CONFIG_HAVE_memxrchr
+#ifdef CONFIG_NO_memrxchr
+#undef CONFIG_HAVE_memrxchr
+#elif !defined(CONFIG_HAVE_memrxchr) && \
+      (defined(memrxchr) || defined(__memrxchr_defined))
+#define CONFIG_HAVE_memrxchr
 #endif
 
-#ifdef CONFIG_NO_memxrend
-#undef CONFIG_HAVE_memxrend
-#elif !defined(CONFIG_HAVE_memxrend) && \
-      (defined(memxrend) || defined(__memxrend_defined))
-#define CONFIG_HAVE_memxrend
+#ifdef CONFIG_NO_memrxend
+#undef CONFIG_HAVE_memrxend
+#elif !defined(CONFIG_HAVE_memrxend) && \
+      (defined(memrxend) || defined(__memrxend_defined))
+#define CONFIG_HAVE_memrxend
 #endif
 
-#ifdef CONFIG_NO_memxrlen
-#undef CONFIG_HAVE_memxrlen
-#elif !defined(CONFIG_HAVE_memxrlen) && \
-      (defined(memxrlen) || defined(__memxrlen_defined))
-#define CONFIG_HAVE_memxrlen
+#ifdef CONFIG_NO_memrxlen
+#undef CONFIG_HAVE_memrxlen
+#elif !defined(CONFIG_HAVE_memrxlen) && \
+      (defined(memrxlen) || defined(__memrxlen_defined))
+#define CONFIG_HAVE_memrxlen
 #endif
 
-#ifdef CONFIG_NO_rawmemxrchr
-#undef CONFIG_HAVE_rawmemxrchr
-#elif !defined(CONFIG_HAVE_rawmemxrchr) && \
-      (defined(rawmemxrchr) || defined(__rawmemxrchr_defined))
-#define CONFIG_HAVE_rawmemxrchr
+#ifdef CONFIG_NO_rawmemrxchr
+#undef CONFIG_HAVE_rawmemrxchr
+#elif !defined(CONFIG_HAVE_rawmemrxchr) && \
+      (defined(rawmemrxchr) || defined(__rawmemrxchr_defined))
+#define CONFIG_HAVE_rawmemrxchr
 #endif
 
-#ifdef CONFIG_NO_rawmemxrlen
-#undef CONFIG_HAVE_rawmemxrlen
-#elif !defined(CONFIG_HAVE_rawmemxrlen) && \
-      (defined(rawmemxrlen) || defined(__rawmemxrlen_defined))
-#define CONFIG_HAVE_rawmemxrlen
+#ifdef CONFIG_NO_rawmemrxlen
+#undef CONFIG_HAVE_rawmemrxlen
+#elif !defined(CONFIG_HAVE_rawmemrxlen) && \
+      (defined(rawmemrxlen) || defined(__rawmemrxlen_defined))
+#define CONFIG_HAVE_rawmemrxlen
 #endif
 
 #ifdef CONFIG_NO_tolower
@@ -12943,7 +12942,7 @@ DECL_END
 		return buf;                        \
 	}
 
-#define DeeSystem_DEFINE_memxrchr(name)               \
+#define DeeSystem_DEFINE_memrxchr(name)               \
 	LOCAL ATTR_PURE WUNUSED void *                    \
 	name(void const *__restrict p, int c, size_t n) { \
 		uint8_t *haystack = (uint8_t *)p + n;         \
@@ -12954,7 +12953,7 @@ DECL_END
 		return NULL;                                  \
 	}
 
-#define DeeSystem_DEFINE_memxrend(name)               \
+#define DeeSystem_DEFINE_memrxend(name)               \
 	LOCAL ATTR_PURE WUNUSED void *                    \
 	name(void const *p, int byte, size_t num_bytes) { \
 		uint8_t *haystack = (uint8_t *)p;             \
@@ -12966,13 +12965,13 @@ DECL_END
 		return haystack;                              \
 	}
 
-#define DeeSystem_DEFINE_memxrlen(name)                                          \
+#define DeeSystem_DEFINE_memrxlen(name)                                          \
 	LOCAL ATTR_PURE WUNUSED size_t                                               \
 	name(void const *p, int byte, size_t num_bytes) {                            \
-		return (size_t)((uintptr_t)memxrend(p, byte, num_bytes) - (uintptr_t)p); \
+		return (size_t)((uintptr_t)memrxend(p, byte, num_bytes) - (uintptr_t)p); \
 	}
 
-#define DeeSystem_DEFINE_rawmemxrchr(name)  \
+#define DeeSystem_DEFINE_rawmemrxchr(name)  \
 	LOCAL ATTR_PURE WUNUSED void *          \
 	name(void const *__restrict p, int c) { \
 		uint8_t *haystack = (uint8_t *)p;   \
@@ -12983,10 +12982,10 @@ DECL_END
 		return haystack;                    \
 	}
 
-#define DeeSystem_DEFINE_rawmemxrlen(name)                               \
+#define DeeSystem_DEFINE_rawmemrxlen(name)                               \
 	LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t                          \
 	name(void const *p, int byte) {                                      \
-		return (size_t)((uintptr_t)rawmemxrchr(p, byte) - (uintptr_t)p); \
+		return (size_t)((uintptr_t)rawmemrxchr(p, byte) - (uintptr_t)p); \
 	}
 
 #define DeeSystem_DEFINE__memlowerrchr(name)              \

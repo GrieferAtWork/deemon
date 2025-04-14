@@ -509,13 +509,13 @@ PRIVATE DEFINE_CMETHOD(ctypes_rawmemrlen, &capi_rawmemrlen, METHOD_FNORMAL);
 PRIVATE DEFINE_CMETHOD(ctypes_memxchr, &capi_memxchr, METHOD_FNORMAL);
 PRIVATE DEFINE_CMETHOD(ctypes_memxlen, &capi_memxlen, METHOD_FNORMAL);
 PRIVATE DEFINE_CMETHOD(ctypes_memxend, &capi_memxend, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memxrchr, &capi_memxrchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memxrlen, &capi_memxrlen, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memxrend, &capi_memxrend, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(ctypes_memrxchr, &capi_memrxchr, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(ctypes_memrxlen, &capi_memrxlen, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(ctypes_memrxend, &capi_memrxend, METHOD_FNORMAL);
 PRIVATE DEFINE_CMETHOD(ctypes_rawmemxchr, &capi_rawmemxchr, METHOD_FNORMAL);
 PRIVATE DEFINE_CMETHOD(ctypes_rawmemxlen, &capi_rawmemxlen, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_rawmemxrchr, &capi_rawmemxrchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_rawmemxrlen, &capi_rawmemxrlen, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(ctypes_rawmemrxchr, &capi_rawmemrxchr, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(ctypes_rawmemrxlen, &capi_rawmemrxlen, METHOD_FNORMAL);
 PRIVATE DEFINE_CMETHOD(ctypes_bcmp, &capi_bcmp, METHOD_FNORMAL);
 PRIVATE DEFINE_CMETHOD(ctypes_memcmp, &capi_memcmp, METHOD_FNORMAL);
 PRIVATE DEFINE_CMETHOD(ctypes_memcasecmp, &capi_memcasecmp, METHOD_FNORMAL);
@@ -965,13 +965,13 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "memxend", (DeeObject *)&ctypes_memxend, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemend, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memxrchr", (DeeObject *)&ctypes_memxrchr, MODSYM_FREADONLY,
+	{ "memrxchr", (DeeObject *)&ctypes_memrxchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemrchr, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memxrlen", (DeeObject *)&ctypes_memxrlen, MODSYM_FREADONLY,
+	{ "memrxlen", (DeeObject *)&ctypes_memrxlen, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
 	      "Same as ?Gmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memxrend", (DeeObject *)&ctypes_memxrend, MODSYM_FREADONLY,
+	{ "memrxend", (DeeObject *)&ctypes_memrxend, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemrend, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "rawmemxchr", (DeeObject *)&ctypes_rawmemxchr, MODSYM_FREADONLY,
@@ -980,10 +980,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "rawmemxlen", (DeeObject *)&ctypes_rawmemxlen, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
 	      "Same as ?Grawmemlen, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "rawmemxrchr", (DeeObject *)&ctypes_rawmemxrchr, MODSYM_FREADONLY,
+	{ "rawmemrxchr", (DeeObject *)&ctypes_rawmemrxchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Grawmemrchr, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "rawmemxrlen", (DeeObject *)&ctypes_rawmemxrlen, MODSYM_FREADONLY,
+	{ "rawmemrxlen", (DeeObject *)&ctypes_rawmemrxlen, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
 	      "Same as ?Grawmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "bcmp", (DeeObject *)&ctypes_bcmp, MODSYM_FREADONLY,

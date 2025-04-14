@@ -32,8 +32,9 @@
 #include <deemon/system-features.h>
 /**/
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint32_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint32_t */
 
 DECL_BEGIN
 
@@ -309,7 +310,7 @@ strip_trailing_whitespace(struct unicode_printer *__restrict printer,
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 contains_only_decimals_dot_colon_or_backslash(/*utf-8*/ char const *text,
-                                               /*utf-8*/ char const *end) {
+                                              /*utf-8*/ char const *end) {
 	uint32_t ch;
 	for (;;) {
 		ch = unicode_readutf8_n(&text, end);

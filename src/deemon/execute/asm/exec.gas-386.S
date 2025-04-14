@@ -8538,7 +8538,7 @@ impl_xch_prefix_static:
 	cmpl   $(ITER_DONE), %edx
 	je     99f
 #ifndef CONFIG_NO_THREADS
-	rwlock_endwrite co_constlock(%ecx)
+	rwlock_endwrite fo_reflock(%ecx)
 #endif /* !CONFIG_NO_THREADS */
 	leal   fo_refv(%ecx,%eax,4), %eax
 	pushl  %edx
@@ -8552,7 +8552,7 @@ impl_xch_prefix_static:
 	ret
 99:	xchgl  fo_refv(%ecx,%eax,4), %edx
 #ifndef CONFIG_NO_THREADS
-	rwlock_endwrite co_constlock(%ecx)
+	rwlock_endwrite fo_reflock(%ecx)
 #endif /* !CONFIG_NO_THREADS */
 	decref %edx, 1, 1
 	pushl  %eax     /* err_unbound_static:index */

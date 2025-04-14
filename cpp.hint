@@ -1222,11 +1222,11 @@
 #define DeeSystem_DEFINE_memcasemem(n) DeeSystem_DEFINE__memlowerchr(_##n##_memlowerchr) _DeeSystem_DEFINE_memcasemem(n)
 #define _DeeSystem_DEFINE_memcasemem(n,...) static void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
 #define DeeSystem_DEFINE_memrev(n) static void*n(void*restrict buf,size_t n){}
-#define DeeSystem_DEFINE_memxrchr(n) static void*n(void const*restrict p,int c,size_t n){}
-#define DeeSystem_DEFINE_memxrend(n) static void*n(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memxrlen(n) static size_t n(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_rawmemxrchr(n) static void*n(void const*restrict p,int c){}
-#define DeeSystem_DEFINE_rawmemxrlen(n) static size_t n(void const*p,int byte){}
+#define DeeSystem_DEFINE_memrxchr(n) static void*n(void const*restrict p,int c,size_t n){}
+#define DeeSystem_DEFINE_memrxend(n) static void*n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memrxlen(n) static size_t n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_rawmemrxchr(n) static void*n(void const*restrict p,int c){}
+#define DeeSystem_DEFINE_rawmemrxlen(n) static size_t n(void const*p,int byte){}
 #define DeeSystem_DEFINE__memlowerrchr(n) static void*n(void const*restrict p,uint8_t c,size_t n){}
 #define DeeSystem_DEFINE_memcasermem(n) DeeSystem_DEFINE__memlowerrchr(_##n##_memlowerrchr) _DeeSystem_DEFINE_memcasermem(n)
 #define _DeeSystem_DEFINE_memcasermem(n,...) void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
