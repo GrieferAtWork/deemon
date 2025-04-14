@@ -63,39 +63,134 @@
 #endif /* !CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
 #endif /* !VALIST_ADDR */
 
+/* MSCV for 32-bit is wholly broken in terms of stack alignment:
+ *
+ * >> PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ * >> file_seek(DeeObject *self, size_t argc,
+ * >>           DeeObject *const *argv, DeeObject *kw) {
+ * >>	Dee_pos_t result;
+ * >>	int whence = SEEK_SET;
+ * >>	struct {
+ * >>		Dee_off_t off;
+ * >>		DeeObject *whence;
+ * >>	} args;
+ * >>	args.whence = NULL;
+ * >>	ASSERT(IS_ALIGNED((uintptr_t)&args, 8));
+ * >>	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__off_whence,
+ * >>	                          UNPdN(Dee_SIZEOF_OFF_T) "|o:seek", &args))
+ * >>		goto err;
+ * >>	...
+ * >> }
+ *
+ * Without special handling here, the above breaks on MSVC+32-bit. Not because
+ * the code above is buggy, but because MSVC is:
+ * - Even though MSVC reports "alignof(Dee_off_t) == 8", it just simply disregards
+ *   that fact when it comes to allocating the containing structure on-stack. As
+ *   such, the "ASSERT" in the above code will fail (since "args" only gets aligned
+ *   on 4-byte boundary)
+ * - As such, without some special handling here, we would RIGHTFULLY try to align
+ *   the initial "args" pointer to its nearest 8-byte address (which actually ends
+ *   up being the high 32-bit of "args.off" and "args.whence")
+ *
+ * >> I've never seen such immsense BS, so please excuse the upcoming language. <<
+ *
+ * ==== CAUTION ==== RETARDED MSVC NONSENSE AHEAD ====
+ * Type                                                            sizeof  alignof stack align (32-bit)
+ * __int8, unsigned __int8, char, bool                               1        1      1
+ * __int16, unsigned __int16, short, unsigned short, wchar_t         2        2      2
+ * __int32, unsigned __int32, int, unsigned int, long, unsigned long 4        4      4
+ * float                                                             4        4      4
+ * double                                                            8        8      4
+ * __int64, unsigned __int64, long long, unsigned long long          8        8      4
+ * __ptr32                                                           4        4      4
+ * __ptr64                                                           8        8      4
+ * __m64                                                             8        8      8
+ * __m128, __m128d, __m128i                                          16       16     16
+ * src: https://github.com/rust-lang/rust/issues/112480#issuecomment-2411262503
+ * ==== CAUTION ==== RETARDED MSVC NONSENSE ABOVE ====
+ *
+ * The FUCKING BS TLDR of the above is, that we essentially have to align
+ * a proxy "offset" variable that starts at "0" instead of looking at the
+ * actual pointer that's supposed to be getting aligned:
+ * >> OUT(char)  ->  (CEIL_ALIGN(offset, 1) - offset=0) == 0  ->  don't align  (new offset=1)
+ * >> OUT(int)   ->  (CEIL_ALIGN(offset, 4) - offset=1) == 3  ->  out+=3       (new offset=8)
+ *
+ * !HOWEVER! this only needs to happen under _MSC_VER + __i386__
+ *
+ * NOTE: The real solution ms should've gone for here would have been to
+ *       just have `alignof(int64_t) == 4', like gcc does and actually
+ *       makes a lot of sense when you realize that int64_t on a 32-bit
+ *       machine is actually just int32_t[2] with a bunch of compiler
+ *       magic. */
+#undef COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT
+#if defined(_MSC_VER) && defined(__i386__) && !defined(__x86_64__) && __ALIGNOF_INT64__ == 8
+#define COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT
+#endif /* _MSC_VER && __i386__ && !__x86_64__ && __ALIGNOF_INT64__ == 8 */
+
+
 #ifdef DEFINE_DeeArg_Unpack
-#define LOCAL_Dee_VPUnpackf                    Dee_VPUnpackf
-#define LOCAL_Dee_VPUnpackfSkip                Dee_VPUnpackfSkip
-#define LOCAL_DeeArg_VUnpack                   DeeArg_VUnpack
-#define LOCAL_DeeArg_VUnpackKw                 DeeArg_VUnpackKw
-#define LOCAL_Dee_VUnpackf                     Dee_VUnpackf
-#define LOCAL_PARAM_P_OUT                      struct va_list_struct *__restrict p_args
-#define LOCAL_PARAM_OUT                        va_list args
-#define LOCAL_ARG_P_OUT                        p_args
-#define LOCAL_ARG_OUT                          args
-#define LOCAL_VAL_P_OUT                        p_args->vl_ap
-#define LOCAL_OUTPUT(out, T, alignof_T, value) (void)(*va_arg(out, T *) = (value))
-#define LOCAL_OUTPUT_PTR(out, T, alignof_T)    va_arg(out, T *)
-#define LOCAL_SKIP(out, T, alignof_T)          (void)va_arg(out, T *)
+#define LOCAL_Dee_VPUnpackf               Dee_VPUnpackf
+#define LOCAL_Dee_VPUnpackfSkip           Dee_VPUnpackfSkip
+#define LOCAL_DeeArg_VUnpack              DeeArg_VUnpack
+#define LOCAL_DeeArg_VUnpackKw            DeeArg_VUnpackKw
+#define LOCAL_Dee_VUnpackf                Dee_VUnpackf
+#define LOCAL_PARAM_P_OUT                 struct va_list_struct *__restrict p_args
+#define LOCAL_PARAM_OUT                   va_list args
+#define LOCAL_ARG_P_OUT                   p_args
+#define LOCAL_ARG_OUT                     args
+#define LOCAL_OUTPUT(T, alignof_T, value) (void)(*va_arg(p_args->vl_ap, T *) = (value))
+#define LOCAL_OUTPUT_PTR_PREALIGN(T, _)   (void)0
+#define LOCAL_OUTPUT_PTR(T)               va_arg(p_args->vl_ap, T *)
+#define LOCAL_SKIP(T, alignof_T)          (void)va_arg(p_args->vl_ap, T *)
 #else /* DEFINE_DeeArg_Unpack */
+
+#ifdef COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT
+#define LOCAL_Dee_VPUnpackf     pab_Dee_PUnpackStruct /* pab == PissAssBuggy */
+#define LOCAL_Dee_VPUnpackfSkip pab_Dee_PUnpackStructSkip
+#define LOCAL_PARAM_P_OUT       void **p_out, uintptr_t *p_out_align
+#define LOCAL_ARG_P_OUT         p_out, p_out_align
+#else /* COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT */
 #define LOCAL_Dee_VPUnpackf     Dee_PUnpackStruct
 #define LOCAL_Dee_VPUnpackfSkip Dee_PUnpackStructSkip
+#define LOCAL_PARAM_P_OUT       void **p_out
+#define LOCAL_ARG_P_OUT         p_out
+#endif /* !COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT */
 #define LOCAL_DeeArg_VUnpack    DeeArg_UnpackStruct
 #define LOCAL_DeeArg_VUnpackKw  DeeArg_UnpackStructKw
 #define LOCAL_Dee_VUnpackf      Dee_UnpackStruct
-#define LOCAL_PARAM_P_OUT       void **p_out
 #define LOCAL_PARAM_OUT         void *out
-#define LOCAL_ARG_P_OUT         p_out
 #define LOCAL_ARG_OUT           out
-#define LOCAL_VAL_P_OUT         *p_out
-#define LOCAL_OUTPUT(out, T, alignof_T, value)                                          \
-	(void)((out) = (void *)(((uintptr_t)(out) + (alignof_T) - 1) & ~((alignof_T) - 1)), \
-	       *(T *)(out) = (value), (out) = (void *)((uintptr_t)(out) + sizeof(T)))
-#define LOCAL_OUTPUT_PTR(out, T, alignof_T)                                                     \
-	((out) = (void *)((((uintptr_t)(out) + (alignof_T) - 1) & ~((alignof_T) - 1)) + sizeof(T)), \
-	 (T *)(void *)((uintptr_t)(out) - sizeof(T)))
-#define LOCAL_SKIP(out, T, alignof_T) \
-	(void)((out) = (void *)((((uintptr_t)(out) + (alignof_T) - 1) & ~((alignof_T) - 1)) + sizeof(T)))
+#ifdef COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT
+#define LOCAL_OUTPUT(T, alignof_T, value)                                                \
+	do {                                                                                 \
+		uintptr_t new_out_align = (*p_out_align + (alignof_T) - 1) & ~((alignof_T) - 1); \
+		size_t delta = new_out_align - *p_out_align;                                     \
+		*p_out = (void *)((uintptr_t)*p_out + delta);                                    \
+		*p_out_align += delta;                                                           \
+		*(T *)*p_out = (value);                                                          \
+		*p_out = (void *)((uintptr_t)*p_out + sizeof(T));                                \
+		*p_out_align += sizeof(T);                                                       \
+	}	__WHILE0
+#define LOCAL_OUTPUT_PTR_PREALIGN(T, alignof_T) \
+	do {                                                                                 \
+		uintptr_t new_out_align = (*p_out_align + (alignof_T) - 1) & ~((alignof_T) - 1); \
+		size_t delta = (new_out_align - *p_out_align) + sizeof(T);                       \
+		*p_out = (void *)((uintptr_t)*p_out + delta);                                    \
+		*p_out_align += delta;                                                           \
+	}	__WHILE0
+#define LOCAL_OUTPUT_PTR(T) ((T *)(void *)((uintptr_t)*p_out - sizeof(T)))
+#define LOCAL_SKIP(T, alignof_T) \
+	(void)(*p_out = (void *)((((uintptr_t)*p_out + (alignof_T) - 1) & ~((alignof_T) - 1)) + sizeof(T)))
+#else /* COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT */
+#define LOCAL_OUTPUT(T, alignof_T, value)                                                 \
+	(void)(*p_out = (void *)(((uintptr_t)*p_out + (alignof_T) - 1) & ~((alignof_T) - 1)), \
+	       *(T *)*p_out = (value), *p_out = (void *)((uintptr_t)*p_out + sizeof(T)))
+#define LOCAL_OUTPUT_PTR_PREALIGN(T, alignof_T) \
+	(void)(*p_out = (void *)((((uintptr_t)*p_out + (alignof_T) - 1) & ~((alignof_T) - 1)) + sizeof(T)))
+#define LOCAL_OUTPUT_PTR(T) ((T *)(void *)((uintptr_t)*p_out - sizeof(T)))
+#define LOCAL_SKIP(T, alignof_T) \
+	(void)(*p_out = (void *)((((uintptr_t)*p_out + (alignof_T) - 1) & ~((alignof_T) - 1)) + sizeof(T)))
+#endif /* !COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT */
 #endif /* !DEFINE_DeeArg_Unpack */
 
 
@@ -172,7 +267,12 @@ done:
 }
 #endif /* !DEFINED_count_unpack_args */
 
-PUBLIC WUNUSED NONNULL((1, 2, 3)) int
+#if defined(DEFINE_DeeArg_UnpackStruct) && defined(COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT)
+PRIVATE
+#else /* DEFINE_DeeArg_UnpackStruct && COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT */
+PUBLIC
+#endif /* !DEFINE_DeeArg_UnpackStruct || !COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT */
+WUNUSED NONNULL((1, 2, 3)) int
 (DCALL LOCAL_Dee_VPUnpackf)(DeeObject *__restrict self,
                             char const **__restrict p_format,
                             LOCAL_PARAM_P_OUT) {
@@ -259,7 +359,7 @@ err_iter:
 		break;
 
 	case 'o': /* Store the object as-is. */
-		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, DeeObject *, __ALIGNOF_POINTER__, self);
+		LOCAL_OUTPUT(DeeObject *, __ALIGNOF_POINTER__, self);
 		break;
 
 	case 'S': { /* Store a fixed-width string. */
@@ -284,7 +384,7 @@ err_iter:
 		}
 		if unlikely(!str)
 			goto err;
-		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void const *, __ALIGNOF_POINTER__, str);
+		LOCAL_OUTPUT(void const *, __ALIGNOF_POINTER__, str);
 	}	break;
 
 	case 'U': { /* Store a unicode string. */
@@ -309,13 +409,13 @@ err_iter:
 		}
 		if unlikely(!str)
 			goto err;
-		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void const *, __ALIGNOF_POINTER__, str);
+		LOCAL_OUTPUT(void const *, __ALIGNOF_POINTER__, str);
 	}	break;
 
 	case 's': /* Store a string. */
 		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
 			goto err;
-		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, char const *, __ALIGNOF_POINTER__, DeeString_STR(self));
+		LOCAL_OUTPUT(char const *, __ALIGNOF_POINTER__, DeeString_STR(self));
 		break;
 
 	case '$': { /* Store a string, including its length. */
@@ -373,8 +473,8 @@ err_iter:
 			++format;
 			str = DeeString_STR(self);
 		}
-		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, size_t, __ALIGNOF_SIZE_T__, WSTR_LENGTH(str));
-		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void const *, __ALIGNOF_POINTER__, str);
+		LOCAL_OUTPUT(size_t, __ALIGNOF_SIZE_T__, WSTR_LENGTH(str));
+		LOCAL_OUTPUT(void const *, __ALIGNOF_POINTER__, str);
 	}	break;
 
 #ifdef __LONGDOUBLE
@@ -392,15 +492,15 @@ err_iter:
 		if (DeeObject_AsDouble(self, &value))
 			goto err;
 		if (format[-1] == 'f') {
-			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, float, __ALIGNOF_FLOAT__, (float)value);
+			LOCAL_OUTPUT(float, __ALIGNOF_FLOAT__, (float)value);
 		} else
 #ifdef __LONGDOUBLE
 		if (format[-2] == 'L') {
-			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, __LONGDOUBLE, __ALIGNOF_LONG_DOUBLE__, (__LONGDOUBLE)value);
+			LOCAL_OUTPUT(__LONGDOUBLE, __ALIGNOF_LONG_DOUBLE__, (__LONGDOUBLE)value);
 		} else
 #endif /* __LONGDOUBLE */
 		{
-			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, double, __ALIGNOF_DOUBLE__, (double)value);
+			LOCAL_OUTPUT(double, __ALIGNOF_DOUBLE__, (double)value);
 		}
 	}	break;
 
@@ -409,7 +509,7 @@ err_iter:
 		temp = DeeObject_Bool(self);
 		if unlikely(temp < 0)
 			return temp;
-		LOCAL_OUTPUT(LOCAL_VAL_P_OUT, bool, __ALIGNOF_BOOL__, !!temp);
+		LOCAL_OUTPUT(bool, __ALIGNOF_BOOL__, !!temp);
 	}	break;
 
 	/* Int */
@@ -436,7 +536,7 @@ err_iter:
 			str = DeeString_AsWide(self);
 			if unlikely(!str)
 				goto err;
-			LOCAL_OUTPUT(LOCAL_VAL_P_OUT, void const *, __ALIGNOF_POINTER__, str);
+			LOCAL_OUTPUT(void const *, __ALIGNOF_POINTER__, str);
 			break;
 		}
 		ATTR_FALLTHROUGH
@@ -496,19 +596,24 @@ do_integer_format:
 		if (format[-1] == 'd' || format[-1] == 'i') {
 			switch (length) { /* signed int */
 			case LEN_INT_IB1:
-				temp = DeeObject_AsInt8(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, int8_t, __ALIGNOF_INT8__));
+				LOCAL_OUTPUT_PTR_PREALIGN(int8_t, __ALIGNOF_INT8__);
+				temp = DeeObject_AsInt8(self, LOCAL_OUTPUT_PTR(int8_t));
 				break;
 			case LEN_INT_IB2:
-				temp = DeeObject_AsInt16(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, int16_t, __ALIGNOF_INT16__));
+				LOCAL_OUTPUT_PTR_PREALIGN(int16_t, __ALIGNOF_INT16__);
+				temp = DeeObject_AsInt16(self, LOCAL_OUTPUT_PTR(int16_t));
 				break;
 			case LEN_INT_IB4:
-				temp = DeeObject_AsInt32(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, int32_t, __ALIGNOF_INT32__));
+				LOCAL_OUTPUT_PTR_PREALIGN(int32_t, __ALIGNOF_INT32__);
+				temp = DeeObject_AsInt32(self, LOCAL_OUTPUT_PTR(int32_t));
 				break;
 			case LEN_INT_IB8:
-				temp = DeeObject_AsInt64(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, int64_t, __ALIGNOF_INT64__));
+				LOCAL_OUTPUT_PTR_PREALIGN(int64_t, __ALIGNOF_INT64__);
+				temp = DeeObject_AsInt64(self, LOCAL_OUTPUT_PTR(int64_t));
 				break;
 			case LEN_INT_IB16:
-				temp = DeeObject_AsInt128(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, Dee_int128_t, __ALIGNOF_INT128__));
+				LOCAL_OUTPUT_PTR_PREALIGN(Dee_int128_t, __ALIGNOF_INT128__);
+				temp = DeeObject_AsInt128(self, LOCAL_OUTPUT_PTR(Dee_int128_t));
 				break;
 			default: __builtin_unreachable();
 			}
@@ -516,38 +621,48 @@ do_integer_format:
 parse_unsigned_int:
 			switch (length) { /* unsigned int */
 			case LEN_INT_IB1:
-				temp = DeeObject_AsUInt8(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint8_t, __ALIGNOF_INT8__));
+				LOCAL_OUTPUT_PTR_PREALIGN(uint8_t, __ALIGNOF_INT8__);
+				temp = DeeObject_AsUInt8(self, LOCAL_OUTPUT_PTR(uint8_t));
 				break;
 			case LEN_INT_IB2:
-				temp = DeeObject_AsUInt16(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint16_t, __ALIGNOF_INT16__));
+				LOCAL_OUTPUT_PTR_PREALIGN(uint16_t, __ALIGNOF_INT16__);
+				temp = DeeObject_AsUInt16(self, LOCAL_OUTPUT_PTR(uint16_t));
 				break;
 			case LEN_INT_IB4:
-				temp = DeeObject_AsUInt32(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint32_t, __ALIGNOF_INT32__));
+				LOCAL_OUTPUT_PTR_PREALIGN(uint32_t, __ALIGNOF_INT32__);
+				temp = DeeObject_AsUInt32(self, LOCAL_OUTPUT_PTR(uint32_t));
 				break;
 			case LEN_INT_IB8:
-				temp = DeeObject_AsUInt64(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint64_t, __ALIGNOF_INT64__));
+				LOCAL_OUTPUT_PTR_PREALIGN(uint64_t, __ALIGNOF_INT64__);
+				temp = DeeObject_AsUInt64(self, LOCAL_OUTPUT_PTR(uint64_t));
 				break;
 			case LEN_INT_IB16:
-				temp = DeeObject_AsUInt128(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, Dee_uint128_t, __ALIGNOF_INT128__));
+				LOCAL_OUTPUT_PTR_PREALIGN(Dee_uint128_t, __ALIGNOF_INT128__);
+				temp = DeeObject_AsUInt128(self, LOCAL_OUTPUT_PTR(Dee_uint128_t));
 				break;
 			default: __builtin_unreachable();
 			}
 		} else if (format[-1] == 'x') {
 			switch (length) { /* unsigned int */
 			case LEN_INT_IB1:
-				temp = DeeObject_AsUInt8M1(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint8_t, __ALIGNOF_INT8__));
+				LOCAL_OUTPUT_PTR_PREALIGN(uint8_t, __ALIGNOF_INT8__);
+				temp = DeeObject_AsUInt8M1(self, LOCAL_OUTPUT_PTR(uint8_t));
 				break;
 			case LEN_INT_IB2:
-				temp = DeeObject_AsUInt16M1(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint16_t, __ALIGNOF_INT16__));
+				LOCAL_OUTPUT_PTR_PREALIGN(uint16_t, __ALIGNOF_INT16__);
+				temp = DeeObject_AsUInt16M1(self, LOCAL_OUTPUT_PTR(uint16_t));
 				break;
 			case LEN_INT_IB4:
-				temp = DeeObject_AsUInt32M1(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint32_t, __ALIGNOF_INT32__));
+				LOCAL_OUTPUT_PTR_PREALIGN(uint32_t, __ALIGNOF_INT32__);
+				temp = DeeObject_AsUInt32M1(self, LOCAL_OUTPUT_PTR(uint32_t));
 				break;
 			case LEN_INT_IB8:
-				temp = DeeObject_AsUInt64M1(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, uint64_t, __ALIGNOF_INT64__));
+				LOCAL_OUTPUT_PTR_PREALIGN(uint64_t, __ALIGNOF_INT64__);
+				temp = DeeObject_AsUInt64M1(self, LOCAL_OUTPUT_PTR(uint64_t));
 				break;
 			case LEN_INT_IB16:
-				temp = DeeObject_AsUInt128M1(self, LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, Dee_uint128_t, __ALIGNOF_INT128__));
+				LOCAL_OUTPUT_PTR_PREALIGN(Dee_uint128_t, __ALIGNOF_INT128__);
+				temp = DeeObject_AsUInt128M1(self, LOCAL_OUTPUT_PTR(Dee_uint128_t));
 				break;
 			default: __builtin_unreachable();
 			}
@@ -566,7 +681,7 @@ parse_unsigned_int:
 						err_integer_overflow_i(8, true);
 						goto err;
 					}
-					LOCAL_OUTPUT(LOCAL_VAL_P_OUT, uint8_t, __ALIGNOF_INT8__, (uint8_t)ch);
+					LOCAL_OUTPUT(uint8_t, __ALIGNOF_INT8__, (uint8_t)ch);
 					break;
 
 				case LEN_INT_IB2:
@@ -574,19 +689,21 @@ parse_unsigned_int:
 						err_integer_overflow_i(16, true);
 						goto err;
 					}
-					LOCAL_OUTPUT(LOCAL_VAL_P_OUT, uint16_t, __ALIGNOF_INT16__, (uint16_t)ch);
+					LOCAL_OUTPUT(uint16_t, __ALIGNOF_INT16__, (uint16_t)ch);
 					break;
 
 				case LEN_INT_IB4:
-					LOCAL_OUTPUT(LOCAL_VAL_P_OUT, uint32_t, __ALIGNOF_INT32__, (uint32_t)ch);
+					LOCAL_OUTPUT(uint32_t, __ALIGNOF_INT32__, (uint32_t)ch);
 					break;
 
 				case LEN_INT_IB8:
-					LOCAL_OUTPUT(LOCAL_VAL_P_OUT, uint64_t, __ALIGNOF_INT64__, (uint64_t)ch);
+					LOCAL_OUTPUT(uint64_t, __ALIGNOF_INT64__, (uint64_t)ch);
 					break;
 
 				case LEN_INT_IB16: {
-					Dee_uint128_t *p = LOCAL_OUTPUT_PTR(LOCAL_VAL_P_OUT, Dee_uint128_t, __ALIGNOF_INT128__);
+					Dee_uint128_t *p;
+					LOCAL_OUTPUT_PTR_PREALIGN(Dee_uint128_t, __ALIGNOF_INT128__);
+					p = LOCAL_OUTPUT_PTR(Dee_uint128_t);
 					__hybrid_uint128_set32(*p, ch);
 				}	break;
 
@@ -644,21 +761,21 @@ again:
 	case 'D':
 	case 'f':
 	case 'b':
-		(void)va_arg(LOCAL_VAL_P_OUT, void *);
+		LOCAL_SKIP(void, ~);
 		break;
 #else /* DEFINE_DeeArg_Unpack */
 #ifdef __LONGDOUBLE
-		LOCAL_SKIP(LOCAL_VAL_P_OUT, long double, __ALIGNOF_LONG_DOUBLE__);
+		LOCAL_SKIP(long double, __ALIGNOF_LONG_DOUBLE__);
 		break;
 #endif /* __LONGDOUBLE */
 	case 'D':
-		LOCAL_SKIP(LOCAL_VAL_P_OUT, double, __ALIGNOF_DOUBLE__);
+		LOCAL_SKIP(double, __ALIGNOF_DOUBLE__);
 		break;
 	case 'f':
-		LOCAL_SKIP(LOCAL_VAL_P_OUT, float, __ALIGNOF_FLOAT__);
+		LOCAL_SKIP(float, __ALIGNOF_FLOAT__);
 		break;
 	case 'b':
-		LOCAL_SKIP(LOCAL_VAL_P_OUT, bool, __ALIGNOF_BOOL__);
+		LOCAL_SKIP(bool, __ALIGNOF_BOOL__);
 		break;
 #endif /* !DEFINE_DeeArg_Unpack */
 
@@ -675,7 +792,7 @@ again:
 		ATTR_FALLTHROUGH
 	case 'o':
 	case 's':
-		LOCAL_SKIP(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__);
+		LOCAL_SKIP(void *, __ALIGNOF_POINTER__);
 		break;
 
 	case '$': /* Store a string, including its length. */
@@ -696,14 +813,14 @@ again:
 			ASSERTF(*format == 's', "Invalid format: `%s'", format);
 			++format;
 		}
-		LOCAL_SKIP(LOCAL_VAL_P_OUT, size_t, __ALIGNOF_SIZE_T__);
-		LOCAL_SKIP(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__);
+		LOCAL_SKIP(size_t, __ALIGNOF_SIZE_T__);
+		LOCAL_SKIP(void *, __ALIGNOF_POINTER__);
 		break;
 
 	/* Int */
 	case 'l':
 		if (*format == 's') {
-			LOCAL_SKIP(LOCAL_VAL_P_OUT, Dee_wchar_t *, __ALIGNOF_POINTER__);
+			LOCAL_SKIP(Dee_wchar_t *, __ALIGNOF_POINTER__);
 			break;
 		}
 		ATTR_FALLTHROUGH
@@ -772,14 +889,14 @@ again:
 		}
 #undef LOCAL_SETLENGTH
 #ifdef DEFINE_DeeArg_Unpack
-		LOCAL_SKIP(LOCAL_VAL_P_OUT, void *, __ALIGNOF_POINTER__);
+		LOCAL_SKIP(void *, __ALIGNOF_POINTER__);
 #else /* DEFINE_DeeArg_Unpack */
 		switch (length) { /* unsigned int */
-		case LEN_INT_IB1: LOCAL_SKIP(LOCAL_VAL_P_OUT, uint8_t, __ALIGNOF_INT8__); break;
-		case LEN_INT_IB2: LOCAL_SKIP(LOCAL_VAL_P_OUT, uint16_t, __ALIGNOF_INT16__); break;
-		case LEN_INT_IB4: LOCAL_SKIP(LOCAL_VAL_P_OUT, uint32_t, __ALIGNOF_INT32__); break;
-		case LEN_INT_IB8: LOCAL_SKIP(LOCAL_VAL_P_OUT, uint64_t, __ALIGNOF_INT64__); break;
-		case LEN_INT_IB16: LOCAL_SKIP(LOCAL_VAL_P_OUT, Dee_uint128_t, __ALIGNOF_INT128__); break;
+		case LEN_INT_IB1: LOCAL_SKIP(uint8_t, __ALIGNOF_INT8__); break;
+		case LEN_INT_IB2: LOCAL_SKIP(uint16_t, __ALIGNOF_INT16__); break;
+		case LEN_INT_IB4: LOCAL_SKIP(uint32_t, __ALIGNOF_INT32__); break;
+		case LEN_INT_IB8: LOCAL_SKIP(uint64_t, __ALIGNOF_INT64__); break;
+		case LEN_INT_IB16: LOCAL_SKIP(Dee_uint128_t, __ALIGNOF_INT128__); break;
 		default: __builtin_unreachable();
 		}
 #endif /* !DEFINE_DeeArg_Unpack */
@@ -822,8 +939,12 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 	struct va_list_struct *p_args = (struct va_list_struct *)VALIST_ADDR(args);
 #else /* DEFINE_DeeArg_Unpack */
 	void **p_out = &out;
+#ifdef COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT
+	uintptr_t out_align = 0;
+#define p_out_align &out_align
+#endif /* COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT */
 #endif /* !DEFINE_DeeArg_Unpack */
-	char const *fmt_start   = format;
+	char const *fmt_start = format;
 	bool is_optional = false;
 	DeeObject *const *iter = argv;
 	DeeObject *const *end = argv + argc;
@@ -861,6 +982,7 @@ invalid_argc:
 		err_invalid_argc(format, argc, argc_min, argc_max);
 	}
 	return -1;
+#undef p_out_align
 }
 
 
@@ -900,6 +1022,10 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 	struct va_list_struct *p_args;
 #else /* DEFINE_DeeArg_Unpack */
 	void **p_out;
+#ifdef COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT
+	uintptr_t out_align;
+#define p_out_align &out_align
+#endif /* COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT */
 #endif /* !DEFINE_DeeArg_Unpack */
 	if (!kw) /* Without arguments, do a regular unpack. */
 		return LOCAL_DeeArg_VUnpack(argc, argv, format, LOCAL_ARG_OUT);
@@ -909,6 +1035,9 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 	p_args = (struct va_list_struct *)VALIST_ADDR(args);
 #else /* DEFINE_DeeArg_Unpack */
 	p_out = &out;
+#ifdef COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT
+	out_align = 0;
+#endif /* COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT */
 #endif /* !DEFINE_DeeArg_Unpack */
 	if (DeeKwds_Check(kw)) {
 		/* Indirect keyword list. */
@@ -1120,6 +1249,7 @@ err_invalid_argc:
 	}
 err:
 	return -1;
+#undef p_out_align
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
@@ -1133,6 +1263,18 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 #endif /* !DEFINE_DeeArg_Unpack */
 }
 
+
+#ifdef DEFINE_DeeArg_UnpackStruct
+#ifdef COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int
+(DCALL Dee_PUnpackStruct)(DeeObject *__restrict self,
+                          char const **__restrict p_format,
+                          void **p_out) {
+	uintptr_t out_align = (uintptr_t)*p_out;
+	return pab_Dee_PUnpackStruct(self, p_format, p_out, &out_align);
+}
+#endif /* COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT */
+#endif /* DEFINE_DeeArg_UnpackStruct */
 
 
 #ifdef DEFINE_DeeArg_Unpack
@@ -1227,6 +1369,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 #undef LOCAL_VAL_P_OUT
 #undef LOCAL_OUTPUT
 #undef LOCAL_OUTPUT_PTR
+#undef LOCAL_OUTPUT_PTR_PREALIGN
 #undef LOCAL_SKIP
 
 DECL_END
