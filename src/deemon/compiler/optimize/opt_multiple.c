@@ -284,7 +284,17 @@ after_multiple_constexpr:
 		if (self->a_multiple.m_astc == 1 &&
 		    self->a_multiple.m_astv[0]->a_type == AST_EXPAND) {
 			/* Something like `{ x... }' can be optimized to `x' when
-			 * it is already  known that `x' has some sequence typing. */
+			 * it is already  known that `x' has some sequence typing.
+			 *
+			 * TODO: This can only be done when "type(x)" doesn't re-
+			 *       implement any sequence function using some custom
+			 *       override (e.g. "string" defines a Sequence-incompatible
+			 *       "find" function and thus defines "__seq_find__" as
+			 *       a compatible alternative; same goes for "Bytes")
+			 *
+			 * Generally, if the type defines "__seq_*" member, or has
+			 * a __seq_class__ that differs from "Sequence", then the
+			 * cast-to-sequence cannot be optimized away. */
 			struct ast *expanded_expr;
 			DeeTypeObject *expanded_type;
 			DeeTypeObject *needed_type;
@@ -292,12 +302,16 @@ after_multiple_constexpr:
 				needed_type = &DeeTuple_Type;
 			} else if (self->a_flag == AST_FMULTIPLE_GENERIC) {
 				needed_type = &DeeSeq_Type;
+			} else if (self->a_flag == AST_FMULTIPLE_GENERIC_SET) {
+				needed_type = &DeeSet_Type;
 			} else {
 				goto done_seq_cast_optimization;
 			}
 			expanded_expr = self->a_multiple.m_astv[0]->a_expand;
 			expanded_type = ast_predict_type(expanded_expr);
-			if (expanded_type && DeeType_Extends(expanded_type, needed_type)) {
+			/* TODO: When "needed_type == &DeeSeq_Type", also accept all
+			 *       sequence-compatible proxy types (e.g. StringSplit) */
+			if (expanded_type && expanded_type == needed_type) {
 				if (ast_assign(self, expanded_expr))
 					goto err;
 				OPTIMIZE_VERBOSE("Replace `{ x... }' with `x' of type %k\n",
@@ -308,7 +322,8 @@ after_multiple_constexpr:
 done_seq_cast_optimization:
 
 		/* Try to optimize something like `[10, [x, y]...]' to `[10, x, y]' */
-		end = (iter = self->a_multiple.m_astv) + self->a_multiple.m_astc;
+		iter = self->a_multiple.m_astv;
+		end  = iter + self->a_multiple.m_astc;
 continue_inline_at_iter:
 		for (; iter < end; ++iter) {
 			struct ast *inner;
@@ -339,8 +354,8 @@ continue_inline_at_iter:
 				                                            sizeof(DREF struct ast *));
 				if unlikely(!new_astv)
 					goto err;
-				move_count              = (size_t)((end - iter) - 1);
-				iter                    = new_astv + (iter - self->a_multiple.m_astv);
+				move_count = (size_t)((end - iter) - 1);
+				iter = new_astv + (iter - self->a_multiple.m_astv);
 				self->a_multiple.m_astv = new_astv;
 				self->a_multiple.m_astc += inner->a_multiple.m_astc - 1;
 				end = new_astv + self->a_multiple.m_astc;
@@ -372,9 +387,7 @@ continue_inline_at_iter:
 				if (!len) {
 					ast_decref(expand);
 					--end;
-					memmovedownc(iter,
-					             iter + 1,
-					             (size_t)(end - iter),
+					memmovedownc(iter, iter + 1, (size_t)(end - iter),
 					             sizeof(DREF struct ast *));
 					--self->a_multiple.m_astc;
 					goto continue_inline_at_iter;
@@ -388,15 +401,13 @@ err_expand_vec:
 					Dee_Free(vec);
 					goto err;
 				}
-				move_count              = (size_t)((end - iter) - 1);
-				iter                    = new_astv + (iter - self->a_multiple.m_astv);
+				move_count = (size_t)((end - iter) - 1);
+				iter = new_astv + (iter - self->a_multiple.m_astv);
 				self->a_multiple.m_astv = new_astv;
 				self->a_multiple.m_astc += len - 1;
 				end = new_astv + self->a_multiple.m_astc;
 				/* NOTE: len >= 1 */
-				memmoveupc(iter + len,
-				           iter + 1,
-				           move_count,
+				memmoveupc(iter + len, iter + 1, move_count,
 				           sizeof(DREF struct ast *));
 				/* Wrap all of the sequence elements of the
 				 * inner expression into constant-branches. */
