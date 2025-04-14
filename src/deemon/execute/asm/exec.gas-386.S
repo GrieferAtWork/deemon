@@ -29,7 +29,7 @@
  * was executed before something goes wrong, narrowing down
  * the search for bugs. */
 #undef TRACE_EXECUTION
-//#define TRACE_EXECUTION 1
+#define TRACE_EXECUTION 1
 
 #ifdef NDEBUG
 /* Always use a register for `Code' outside of debug-mode. */
@@ -1436,7 +1436,7 @@ target_rethrow:
 	cmpw   %cx, L_EXCEPT_RECURSION
 	/* We've already thrown at least one exception, meaning
 	 * we can simply go back to handling it again! */
-	jb    .except /* if (except_recursion < this_thread->t_exceptsz) HANDLE_EXCEPT(); */
+	jb     .except /* if (except_recursion < this_thread->t_exceptsz) HANDLE_EXCEPT(); */
 	/* Rethrow an exception of the caller. */
 	movl   t_except(%eax),     %ecx
 	testl  %ecx, %ecx
@@ -1528,7 +1528,7 @@ target_endfinally:
 	/* Check if a return value has been assigned.
 	 * If one has been, stop execution. */
 	cmpl   $0, FRAME_RESULT
-	jne   .end_return
+	jne    .end_return
 	/* Check if unhandled exceptions have occurred, and if so: start handling them. */
 	movl   L_THIS_THREAD, %eax
 	movw   t_exceptsz(%eax), %ax
@@ -1539,7 +1539,7 @@ target_endfinally_n:
 	lodsb  /* EAX = min_except */
 	/* If a return value has been assigned, stop execution. */
 	cmpl   $0, FRAME_RESULT
-	jne   .end_return
+	jne    .end_return
 	/* Check for errors, but only handle them if there are more than `min_except+1'. */
 	movzwl L_EXCEPT_RECURSION, %ecx
 	incl   %eax
@@ -1554,7 +1554,7 @@ target_endfinally_except:
 	/* Check if a return value has been assigned.
 	 * If one has been, stop execution. */
 	cmpl   $0, FRAME_RESULT
-	jne   .end_return
+	jne    .end_return
 
 	/* Otherwise, an exception *must* be present */
 #ifndef NDEBUG
@@ -1654,10 +1654,10 @@ target_jf:
 	call   fSYM(DeeObject_BoolInheritedOnSuccess,4)
 	ADJUST_CFA_OFFSET(-4)
 	cmpl   $0, %eax
-	jb    .except_x4
+	jl     .except_x4
 	popl   %edx /* Displacement offset */
 	ADJUST_CFA_OFFSET(-4)
-	jz     1f /* if (bool != 0) DISPATCH() */
+	jz     1f   /* if (bool == 0) goto DO_JUMP; */
 	subl   $4, SP /* POP() (reference was inherited on success) */
 	jmp    .disp
 1:	cmpl   $0, %edx
@@ -1675,7 +1675,7 @@ target_jf:
 	ADJUST_CFA_OFFSET(-4)
 1:
 	addl   %edx, PC /* ip += Simm8/16 */
-	sp_popref %ecx /* POPREF() */
+	subl   $4, SP /* POP() (reference was inherited on success) */
 #ifndef NDEBUG
 .disp_checkip:
 	LOAD_CODE(%eax)
@@ -1709,7 +1709,7 @@ target_jt:
 	call   fSYM(DeeObject_BoolInheritedOnSuccess,4)
 	ADJUST_CFA_OFFSET(-4)
 	cmpl   $0, %eax
-	jb    .except_x4
+	jb     .except_x4
 	popl   %edx /* Displacement offset */
 	ADJUST_CFA_OFFSET(-4)
 	jnz    1f /* if (bool == 0) DISPATCH() */
@@ -1729,7 +1729,7 @@ target_jt:
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 1:	addl   %edx, PC /* ip += Simm8/16 */
-	sp_popref %ecx /* POPREF() */
+	subl   $4, SP /* POP() (reference was inherited on success) */
 	jmp    .disp_checkip
 
 
@@ -1859,7 +1859,7 @@ target_iterself:
 	xchgl  TOP, %eax /* Store the result onto the stack. */
 	decref %eax
 	cmpb   $(ASM_FOREACH), 0(PC)
-	jne   .disp /* Unlikely case: some other opcode follows. */
+	jne    .disp /* Unlikely case: some other opcode follows. */
 	incl   PC /* Adjust to advance past the FOREACH opcode. */
 	/* Fall through to start a foreach loop */
 target_foreach:
@@ -3776,7 +3776,7 @@ target_not:
 	ADJUST_CFA_OFFSET(-4)
 	xorl   %ecx, %ecx /* Clear ECX */
 	cmpl   $0, %eax
-	jb    .except /* Check for errors. */
+	jb     .except /* Check for errors. */
 	sete   %cl /* set ECX to 0/1 indicative of the reverse boolean */
 	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax
 	incref %eax
@@ -7017,12 +7017,12 @@ do_breakpoint_return:
 	testl  $(CODE_FYIELDING), co_flags(CODE_OR_ECX)
 	jz     1f
 	cmpl   $0, FRAME_RESULT
-	jne   .end_without_finally
+	jne    .end_without_finally
 	/* Replace a NULL-return value with ITER_DONE in yield-functions. */
 	movl   $(ITER_DONE), FRAME_RESULT
 	jmp    .end_without_finally
 1:	cmpl   $0, FRAME_RESULT
-	jne   .end_return
+	jne    .end_return
 	/* Replace a NULL-return value with `none' in non-yield-functions. */
 	movl   $(SYM(DeeNone_Singleton)), FRAME_RESULT
 	incref_addr SYM(DeeNone_Singleton)
@@ -8926,9 +8926,9 @@ impl_get_prefix_table:
 	.long  invop                    /* 0xf8 : ??? */
 	.long  invop                    /* 0xf9 : ??? */
 	.long  impl_get_prefix_stack    /* 0xfa : ASM_STACK */
-	.long  impl_get_prefix_static   /* 0xfb : ASM_STATIC */
+	.long  invop                    /* 0xfb : ??? */
 	.long  impl_get_prefix_extern   /* 0xfc : ASM_EXTERN */
-	.long  invop                    /* 0xfd : ??? */
+	.long  impl_get_prefix_static   /* 0xfd : ASM_STATIC */
 	.long  impl_get_prefix_global   /* 0xfe : ASM_GLOBAL */
 	.long  impl_get_prefix_local    /* 0xff : ASM_LOCAL */
 END(impl_get_prefix_table)
@@ -8939,10 +8939,10 @@ END(impl_get_prefix_table)
 impl_get_prefix_table_f0:
 	.long  invop                    /* 0xf0f8 : ??? */
 	.long  invop                    /* 0xf0f9 : ??? */
-	.long  invop                    /* 0xf0fa : ??? */
-	.long  impl_get_prefix16_stack  /* 0xf0fb : ASM16_STACK */
-	.long  impl_get_prefix16_static /* 0xf0fc : ASM16_STATIC */
-	.long  impl_get_prefix16_extern /* 0xf0fd : ASM16_EXTERN */
+	.long  impl_get_prefix16_stack  /* 0xf0fa : ASM16_STACK */
+	.long  invop                    /* 0xf0fb : ??? */
+	.long  impl_get_prefix16_extern /* 0xf0fc : ASM16_EXTERN */
+	.long  impl_get_prefix16_static /* 0xf0fd : ASM16_STATIC */
 	.long  impl_get_prefix16_global /* 0xf0fe : ASM16_GLOBAL */
 	.long  impl_get_prefix16_local  /* 0xf0ff : ASM16_LOCAL */
 END(impl_get_prefix_table_f0)
