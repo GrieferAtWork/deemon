@@ -76,10 +76,6 @@
 #ifndef __EXTENSIONS__
 #define __EXTENSIONS__ 1
 #endif /* !__EXTENSIONS__ */
-/* Ask KOS headers to provide the empty-needle-is-NULL variant of `memmem()' */
-#ifndef _MEMMEM_EMPTY_NEEDLE_NULL_SOURCE
-#define _MEMMEM_EMPTY_NEEDLE_NULL_SOURCE 1
-#endif /* !_MEMMEM_EMPTY_NEEDLE_NULL_SOURCE */
 
 
 

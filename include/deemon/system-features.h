@@ -1064,9 +1064,9 @@ func("bcmpq", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", te
 //       we do by wrapping `func' with parenthesis so that `./configure' can't identify it
 //       as a configure test)
 // TODO: Re-write this part once "CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0" becomes mandatory
-(func)("memmem", "(defined(__USE_GNU) || defined(__USE_BSD)) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
-(func)("memrmem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
-(func)("memcasemem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
+(func)("memmem", "(defined(__USE_GNU) || defined(__USE_BSD)) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
+(func)("memrmem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
+(func)("memcasemem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
 (func)("memcasermem", "0", check_defined: false);
 
 (func)("memmemw", "0", check_defined: false);
@@ -7990,22 +7990,22 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_NO_memmem
 #undef CONFIG_HAVE_memmem
 #elif !defined(CONFIG_HAVE_memmem) && \
-      ((defined(__USE_GNU) || defined(__USE_BSD)) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || \
-       defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
+      ((defined(__USE_GNU) || defined(__USE_BSD)) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) \
+       != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
 #define CONFIG_HAVE_memmem
 #endif
 
 #ifdef CONFIG_NO_memrmem
 #undef CONFIG_HAVE_memrmem
 #elif !defined(CONFIG_HAVE_memrmem) && \
-      (defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
+      (defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
 #define CONFIG_HAVE_memrmem
 #endif
 
 #ifdef CONFIG_NO_memcasemem
 #undef CONFIG_HAVE_memcasemem
 #elif !defined(CONFIG_HAVE_memcasemem) && \
-      (defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) || defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
+      (defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
 #define CONFIG_HAVE_memcasemem
 #endif
 
