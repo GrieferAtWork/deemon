@@ -470,13 +470,11 @@ PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) ATTR_OUT_OPT(5) LOCAL_uchar_t *DCA
 LOCAL_memcasemem(LOCAL_uchar_t const *haystack, size_t haystack_length,
                  LOCAL_uchar_t const *needle, size_t needle_length,
                  size_t *p_match_length) {
-#ifdef CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
 	if unlikely(!needle_length) {
 		if (p_match_length)
 			*p_match_length = 0;
 		return (LOCAL_uchar_t *)haystack;
 	}
-#endif /* CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
 	for (; haystack_length; --haystack_length, ++haystack) {
 		size_t match_length = LOCAL_memcasestartswith(haystack, haystack_length, needle, needle_length);
 		if (match_length) {
@@ -494,13 +492,11 @@ PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) ATTR_OUT_OPT(5) LOCAL_uchar_t *DCA
 LOCAL_memcasermem(LOCAL_uchar_t const *haystack, size_t haystack_length,
                   LOCAL_uchar_t const *needle, size_t needle_length,
                   size_t *p_match_length) {
-#ifdef CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
 	if unlikely(!needle_length) {
 		if (p_match_length)
 			*p_match_length = 0;
 		return (LOCAL_uchar_t *)haystack + haystack_length;
 	}
-#endif /* CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
 	for (; haystack_length; --haystack_length) {
 		size_t match_length = LOCAL_memcaseendswith(haystack, haystack_length, needle, needle_length);
 		if (match_length) {
@@ -519,7 +515,7 @@ LOCAL_memcasecnt(LOCAL_uchar_t const *haystack, size_t haystack_length,
                  LOCAL_uchar_t const *needle, size_t needle_length) {
 	size_t result;
 	if unlikely(!needle_length)
-		return _Dee_EXPERIMENTAL_HAYSTACK_OR_ZERO(haystack_length + 1);
+		return haystack_length + 1;
 	for (result = 0;; ++result) {
 		size_t match_length;
 		LOCAL_uchar_t const *next;

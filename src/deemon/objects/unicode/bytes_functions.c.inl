@@ -53,16 +53,6 @@
 
 DECL_BEGIN
 
-#ifndef IFELSE_FINDEMPTY_AT_INDEX_0
-#ifdef CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
-#define IF_FINDEMPTY_AT_INDEX_0(x)          x
-#define IFELSE_FINDEMPTY_AT_INDEX_0(tt, ff) tt
-#else /* CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
-#define IF_FINDEMPTY_AT_INDEX_0(x)          /* nothing */
-#define IFELSE_FINDEMPTY_AT_INDEX_0(tt, ff) ff
-#endif /* !CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
-#endif /* !IFELSE_FINDEMPTY_AT_INDEX_0 */
-
 #undef byte_t
 #define byte_t __BYTE_TYPE__
 
@@ -554,7 +544,7 @@ bytes_casefindany_cb(void *arg, DeeObject *elem) {
 		ASSERT(hit <= data->bcfad_result);
 		data->bcfad_result = hit;
 		data->bcfad_reslen = needle.n_size;
-		if (hit == 0 && needle.n_size <= IFELSE_FINDEMPTY_AT_INDEX_0(0, 1))
+		if (hit == 0 && needle.n_size <= 0)
 			return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
 	}
 	return 0;
@@ -655,7 +645,7 @@ bytes_rfindany_cb(void *arg, DeeObject *elem) {
 		ASSERT((hit - 1) <= data->brfad_size);
 		data->brfad_base += hit;
 		data->brfad_size -= hit;
-		if (data->brfad_size == IFELSE_FINDEMPTY_AT_INDEX_0((size_t)-1, 0))
+		if (data->brfad_size == (size_t)-1)
 			return -2; /* Found hit at the very end -> can stop enumerating needles. */
 	}
 	return 0;
@@ -754,7 +744,7 @@ bytes_caserfindany_cb(void *arg, DeeObject *elem) {
 		data->bcrfad_base += hit;
 		data->bcrfad_size -= hit;
 		data->bcrfad_reslen = needle.n_size;
-		if (data->bcrfad_size == IFELSE_FINDEMPTY_AT_INDEX_0((size_t)-1, 0))
+		if (data->bcrfad_size == (size_t)-1)
 			return -2; /* Found hit at the very end -> can stop enumerating needles. */
 	}
 	return 0;

@@ -410,7 +410,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 
 
 /************************************************************************/
-/* EXPERIMENTAL FEATURES                                                */
+/* EXPERIMENTAL/WIP FEATURES                                            */
 /************************************************************************/
 
 /* Experimental feature switch: use altered status codes for "boundattr" / "bounditem".
@@ -433,25 +433,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #define CONFIG_NO_EXPERIMENTAL_ORDERED_HASHSET
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ORDERED_HASHSET */
-
-/* Experimental feature switch:
- * - enabled:  >> "foo".find("") == 0
- * - disabled: >> "foo".find("") == -1
- *
- * TODO: Once this becomes mandatory, remove mentions of:
- * - _MEMMEM_EMPTY_NEEDLE_NULL_SOURCE
- * - __USE_MEMMEM_EMPTY_NEEDLE_NULL
- *
- * Also consider removing support for "_MEMMEM_EMPTY_NEEDLE_NULL_SOURCE" from KOS
- */
-#if (!defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))
-#if 1
-#define CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
-#else
-#define CONFIG_NO_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
 /************************************************************************/
 
 

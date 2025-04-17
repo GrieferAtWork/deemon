@@ -58,16 +58,6 @@
 
 DECL_BEGIN
 
-#ifndef IFELSE_FINDEMPTY_AT_INDEX_0
-#ifdef CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
-#define IF_FINDEMPTY_AT_INDEX_0(x)          x
-#define IFELSE_FINDEMPTY_AT_INDEX_0(tt, ff) tt
-#else /* CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
-#define IF_FINDEMPTY_AT_INDEX_0(x)          /* nothing */
-#define IFELSE_FINDEMPTY_AT_INDEX_0(tt, ff) ff
-#endif /* !CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
-#endif /* !IFELSE_FINDEMPTY_AT_INDEX_0 */
-
 #ifdef __INTELLISENSE__
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_StripSpc(String *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_LStripSpc(String *__restrict self, size_t max_count);
@@ -2428,7 +2418,7 @@ string_rfindany_cb(void *arg, DeeObject *elem) {
 			ASSERT((hit - 1) <= data->srfad_size);
 			data->srfad_base += hit;
 			data->srfad_size -= hit;
-			if (data->srfad_size == IFELSE_FINDEMPTY_AT_INDEX_0((size_t)-1, 0))
+			if (data->srfad_size == (size_t)-1)
 				return -2; /* Found hit at the very end -> can stop enumerating needles. */
 		}
 		break;
@@ -2448,7 +2438,7 @@ string_rfindany_cb(void *arg, DeeObject *elem) {
 			ASSERT((hit - 1) <= data->srfad_size);
 			data->srfad_base += hit;
 			data->srfad_size -= hit;
-			if (data->srfad_size == IFELSE_FINDEMPTY_AT_INDEX_0((size_t)-1, 0))
+			if (data->srfad_size == (size_t)-1)
 				return -2; /* Found hit at the very end -> can stop enumerating needles. */
 		}
 		break;
@@ -2468,7 +2458,7 @@ string_rfindany_cb(void *arg, DeeObject *elem) {
 			ASSERT((hit - 1) <= data->srfad_size);
 			data->srfad_base += hit;
 			data->srfad_size -= hit;
-			if (data->srfad_size == IFELSE_FINDEMPTY_AT_INDEX_0((size_t)-1, 0))
+			if (data->srfad_size == (size_t)-1)
 				return -2; /* Found hit at the very end -> can stop enumerating needles. */
 		}
 	}
@@ -2538,7 +2528,7 @@ string_casefindany_cb(void *arg, DeeObject *elem) {
 			ASSERT(hit <= data->scfad_result);
 			data->scfad_result = hit;
 			data->scfad_reslen = match_length;
-			if (hit == 0 && match_length <= IFELSE_FINDEMPTY_AT_INDEX_0(0, 1))
+			if (hit == 0 && match_length <= 0)
 				return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
 		}
 		break;
@@ -2562,7 +2552,7 @@ string_casefindany_cb(void *arg, DeeObject *elem) {
 			ASSERT(hit <= data->scfad_result);
 			data->scfad_result = hit;
 			data->scfad_reslen = match_length;
-			if (hit == 0 && match_length <= IFELSE_FINDEMPTY_AT_INDEX_0(0, 1))
+			if (hit == 0 && match_length <= 0)
 				return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
 		}
 		break;
@@ -2586,7 +2576,7 @@ string_casefindany_cb(void *arg, DeeObject *elem) {
 			ASSERT(hit <= data->scfad_result);
 			data->scfad_result = hit;
 			data->scfad_reslen = match_length;
-			if (hit == 0 && match_length <= IFELSE_FINDEMPTY_AT_INDEX_0(0, 1))
+			if (hit == 0 && match_length <= 0)
 				return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
 		}
 		break;

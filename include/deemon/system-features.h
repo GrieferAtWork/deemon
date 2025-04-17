@@ -1052,29 +1052,17 @@ func("bcmpw", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", te
 func("bcmpl", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", test: "extern void const *a, *b; return bcmpl(a, b, 16) == 0;");
 func("bcmpq", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", test: "extern void const *a, *b; return bcmpq(a, b, 16) == 0;");
 
-// NOTE: The GNU-variant of memmem() returns the start of the haystack
-//       when `needle_length == 0', however for this case, deemon requires
-//       that `NULL' be returned, as deemon considers an empty string not
-//       to be contained ~in-between two other characters~
-// KOS provides this behavior when given the `_MEMMEM_EMPTY_NEEDLE_SOURCE' option,
-// which reports back an ACK in the form of `__USE_MEMMEM_EMPTY_NEEDLE_NULL'
-// NOTE: Because we need the specific KOS-variant of this (and because the KOS variant
-//       is guarantied to report back its presence with `__USE_MEMMEM_EMPTY_NEEDLE_NULL'),
-//       we don't include these configure options as part of the autoconf testing (which
-//       we do by wrapping `func' with parenthesis so that `./configure' can't identify it
-//       as a configure test)
-// TODO: Re-write this part once "CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0" becomes mandatory
-(func)("memmem", "(defined(__USE_GNU) || defined(__USE_BSD)) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
-(func)("memrmem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
-(func)("memcasemem", "defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0))", check_defined: false);
-(func)("memcasermem", "0", check_defined: false);
+func("memmem", "defined(__USE_GNU) || defined(__USE_BSD)", test: "extern void const *h, *n; return memmem(h, 10, n, 5) == h;");
+func("memrmem", "defined(__USE_KOS)", test: "extern void const *h, *n; return memrmem(h, 10, n, 5) == h;");
+func("memcasemem", "defined(__USE_KOS)", test: "extern void const *h, *n; return memcasemem(h, 10, n, 5) == h;");
+func("memcasermem", "0", test: "extern void const *h, *n; return memcasermem(h, 10, n, 5) == h;");
 
-(func)("memmemw", "0", check_defined: false);
-(func)("memmeml", "0", check_defined: false);
-(func)("memmemq", "0", check_defined: false);
-(func)("memrmemw", "0", check_defined: false);
-(func)("memrmeml", "0", check_defined: false);
-(func)("memrmemq", "0", check_defined: false);
+func("memmemw", "0", test: "extern uint16_t const *h, *n; return memmemw(h, 10, n, 5) == h;");
+func("memmeml", "0", test: "extern uint32_t const *h, *n; return memmeml(h, 10, n, 5) == h;");
+func("memmemq", "0", test: "extern uint64_t const *h, *n; return memmemq(h, 10, n, 5) == h;");
+func("memrmemw", "0", test: "extern uint16_t const *h, *n; return memrmemw(h, 10, n, 5) == h;");
+func("memrmeml", "0", test: "extern uint32_t const *h, *n; return memrmeml(h, 10, n, 5) == h;");
+func("memrmemq", "0", test: "extern uint64_t const *h, *n; return memrmemq(h, 10, n, 5) == h;");
 
 func("memcpy", stdc, test: "extern void *a; extern void const *b; return memcpy(a, b, 16) == a;");
 func("memset", stdc, test: "extern void *a; return memset(a, 0, 42) == a;");
@@ -7990,64 +7978,71 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_NO_memmem
 #undef CONFIG_HAVE_memmem
 #elif !defined(CONFIG_HAVE_memmem) && \
-      ((defined(__USE_GNU) || defined(__USE_BSD)) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) \
-       != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
+      (defined(memmem) || defined(__memmem_defined) || (defined(__USE_GNU) || \
+       defined(__USE_BSD)))
 #define CONFIG_HAVE_memmem
 #endif
 
 #ifdef CONFIG_NO_memrmem
 #undef CONFIG_HAVE_memrmem
 #elif !defined(CONFIG_HAVE_memrmem) && \
-      (defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
+      (defined(memrmem) || defined(__memrmem_defined) || defined(__USE_KOS))
 #define CONFIG_HAVE_memrmem
 #endif
 
 #ifdef CONFIG_NO_memcasemem
 #undef CONFIG_HAVE_memcasemem
 #elif !defined(CONFIG_HAVE_memcasemem) && \
-      (defined(__USE_KOS) && (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL) != defined(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)))
+      (defined(memcasemem) || defined(__memcasemem_defined) || defined(__USE_KOS))
 #define CONFIG_HAVE_memcasemem
 #endif
 
 #ifdef CONFIG_NO_memcasermem
 #undef CONFIG_HAVE_memcasermem
-#elif 0
+#elif !defined(CONFIG_HAVE_memcasermem) && \
+      (defined(memcasermem) || defined(__memcasermem_defined))
 #define CONFIG_HAVE_memcasermem
 #endif
 
 #ifdef CONFIG_NO_memmemw
 #undef CONFIG_HAVE_memmemw
-#elif 0
+#elif !defined(CONFIG_HAVE_memmemw) && \
+      (defined(memmemw) || defined(__memmemw_defined))
 #define CONFIG_HAVE_memmemw
 #endif
 
 #ifdef CONFIG_NO_memmeml
 #undef CONFIG_HAVE_memmeml
-#elif 0
+#elif !defined(CONFIG_HAVE_memmeml) && \
+      (defined(memmeml) || defined(__memmeml_defined))
 #define CONFIG_HAVE_memmeml
 #endif
 
 #ifdef CONFIG_NO_memmemq
 #undef CONFIG_HAVE_memmemq
-#elif 0
+#elif !defined(CONFIG_HAVE_memmemq) && \
+      (defined(memmemq) || defined(__memmemq_defined))
 #define CONFIG_HAVE_memmemq
 #endif
 
 #ifdef CONFIG_NO_memrmemw
 #undef CONFIG_HAVE_memrmemw
-#elif 0
+#elif !defined(CONFIG_HAVE_memrmemw) && \
+      (defined(memrmemw) || defined(__memrmemw_defined))
 #define CONFIG_HAVE_memrmemw
 #endif
 
 #ifdef CONFIG_NO_memrmeml
 #undef CONFIG_HAVE_memrmeml
-#elif 0
+#elif !defined(CONFIG_HAVE_memrmeml) && \
+      (defined(memrmeml) || defined(__memrmeml_defined))
 #define CONFIG_HAVE_memrmeml
 #endif
 
 #ifdef CONFIG_NO_memrmemq
 #undef CONFIG_HAVE_memrmemq
-#elif 0
+#elif !defined(CONFIG_HAVE_memrmemq) && \
+      (defined(memrmemq) || defined(__memrmemq_defined))
 #define CONFIG_HAVE_memrmemq
 #endif
 
@@ -12629,52 +12624,45 @@ _DeeSystem_DEFINE_memcmpT(uint8_t, dee_memcmp)
 DECL_END
 #endif /* !CONFIG_HAVE_memcmp */
 
-#ifdef CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0
-#define _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL(haystack) haystack
-#define _Dee_EXPERIMENTAL_HAYSTACK_OR_ZERO(haystack) haystack
-#else /* CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
-#define _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL(haystack) NULL
-#define _Dee_EXPERIMENTAL_HAYSTACK_OR_ZERO(haystack) 0
-#endif /* !CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 */
-
 #define _DeeSystem_DEFINE_memmemT(rT, T, memchr, memeq, name)                          \
 	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) rT *                         \
 	name(void const *haystack, size_t haystack_length,                                 \
 	     void const *needle, size_t needle_length) {                                   \
 		T *candidate, marker;                                                          \
 		if unlikely(!needle_length)                                                    \
-			return _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL((rT *)haystack);                 \
+			return (rT *)haystack;                                                     \
 		if unlikely(needle_length > haystack_length)                                   \
 			return NULL;                                                               \
-		haystack_length -= (needle_length - 1), marker = *(T *)needle;                 \
+		haystack_length -= (needle_length - 1);                                        \
+		marker = *(T const *)needle;                                                   \
 		while ((candidate = (T *)memchr(haystack, marker, haystack_length)) != NULL) { \
 			if (memeq(candidate, needle, needle_length))                               \
 				return (rT *)candidate;                                                \
 			++candidate;                                                               \
-			haystack_length = ((T *)haystack + haystack_length) - candidate;           \
+			haystack_length = ((T const *)haystack + haystack_length) - candidate;     \
 			haystack        = (void const *)candidate;                                 \
 		}                                                                              \
 		return NULL;                                                                   \
 	}
 
-#define _DeeSystem_DEFINE_memrmemT(rT, T, memrchr, memeq, name)                          \
-	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) rT *                           \
-	name(void const *haystack, size_t haystack_length,                                   \
-	     void const *needle, size_t needle_length) {                                     \
-		void const *candidate;                                                           \
-		T marker;                                                                        \
-		if unlikely(!needle_length)                                                      \
-			return _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL((rT *)((T *)haystack + haystack_length)); \
-		if unlikely(needle_length > haystack_length)                                     \
-			return NULL;                                                                 \
-		haystack_length -= needle_length - 1;                                            \
-		marker = *(T *)needle;                                                           \
-		while ((candidate = memrchr(haystack, marker, haystack_length)) != NULL) {       \
-			if (memeq(candidate, needle, needle_length))                                 \
-				return (rT *)candidate;                                                  \
-			haystack_length = (size_t)((T *)candidate - (T *)haystack);                  \
-		}                                                                                \
-		return NULL;                                                                     \
+#define _DeeSystem_DEFINE_memrmemT(rT, T, memrchr, memeq, name)                    \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) rT *                     \
+	name(void const *haystack, size_t haystack_length,                             \
+	     void const *needle, size_t needle_length) {                               \
+		void const *candidate;                                                     \
+		T marker;                                                                  \
+		if unlikely(!needle_length)                                                \
+			return (rT *)((T *)haystack + haystack_length);                        \
+		if unlikely(needle_length > haystack_length)                               \
+			return NULL;                                                           \
+		haystack_length -= needle_length - 1;                                      \
+		marker = *(T *)needle;                                                     \
+		while ((candidate = memrchr(haystack, marker, haystack_length)) != NULL) { \
+			if (memeq(candidate, needle, needle_length))                           \
+				return (rT *)candidate;                                            \
+			haystack_length = (size_t)((T *)candidate - (T *)haystack);            \
+		}                                                                          \
+		return NULL;                                                               \
 	}
 
 #define DeeSystem_DEFINE_memmem(name) _DeeSystem_DEFINE_memmemT(void, uint8_t, memchr, 0 == bcmp, name)
@@ -12694,7 +12682,7 @@ DECL_END
 	     void const *needle, size_t needle_length) {                            \
 		size_t result;                                                          \
 		if unlikely(!needle_length)                                             \
-			return _Dee_EXPERIMENTAL_HAYSTACK_OR_ZERO(haystack_length + 1);     \
+			return haystack_length + 1;                                         \
 		for (result = 0;; ++result) {                                           \
 			void const *next = memmem(haystack, haystack_length,                \
 			                          needle, needle_length);                   \
@@ -12913,7 +12901,7 @@ DECL_END
 		void const *candidate;                                                          \
 		uint8_t marker;                                                                 \
 		if unlikely(!needle_len)                                                        \
-			return _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL((void *)haystack);                \
+			return (void *)haystack;                                                    \
 		if unlikely(needle_len > haystack_len)                                          \
 			return NULL;                                                                \
 		haystack_len -= needle_len - 1;                                                 \
@@ -13009,7 +12997,7 @@ DECL_END
 		void const *candidate;                                                       \
 		uint8_t marker;                                                              \
 		if unlikely(!needle_len)                                                     \
-			return _Dee_EXPERIMENTAL_HAYSTACK_OR_NULL((void *)((uintptr_t)haystack + haystack_len)); \
+			return (void *)((uintptr_t)haystack + haystack_len);                     \
 		if unlikely(needle_len > haystack_len)                                       \
 			return NULL;                                                             \
 		haystack_len -= needle_len - 1;                                              \

@@ -22,8 +22,6 @@
 import * from deemon;
 import * from errors;
 
-global final CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 = "".find("") == 0;
-
 function identical(a, b) {
 	assert type(a) === type(b), f"{repr a} == {repr b}";
 	assert a == b;
@@ -125,22 +123,22 @@ function assertFindAny(expected: none | (int, int), s: string, method: string, n
 
 /* findany: Find the lowest position of any of the given sub-strings. */
 assertFindAny(none, "", "findany", {});
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : none, "", "findany", { "" });
+assertFindAny((0, 0), "", "findany", { "" });
 assertFindAny(none, "foo", "findany", {});
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : none, "foo", "findany", { "" });
+assertFindAny((0, 0), "foo", "findany", { "" });
 assertFindAny(none, "foo[bar,baz]foo", "findany", {});
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : none, "foo[bar,baz]foo", "findany", { "" });
+assertFindAny((0, 0), "foo[bar,baz]foo", "findany", { "" });
 assertFindAny((7, 8), "foo[bar,baz]foo", "findany", { "," });
 assertFindAny((3, 4), "foo[bar,baz]foo", "findany", { "[" });
 assertFindAny((3, 4), "foo[bar,baz]foo", "findany", { "[", "," });
 assertFindAny((3, 4), "foo[bar,baz]foo", "findany", { ",", "[" });
 
 assertFindAny(none, "", "rfindany", {});
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : none, "", "rfindany", { "" });
+assertFindAny((0, 0), "", "rfindany", { "" });
 assertFindAny(none, "foo", "rfindany", {});
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (3, 3) : none, "foo", "rfindany", { "" });
+assertFindAny((3, 3), "foo", "rfindany", { "" });
 assertFindAny(none, "foo[bar,baz]foo", "rfindany", {});
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (15, 15) : none, "foo[bar,baz]foo", "rfindany", { "" });
+assertFindAny((15, 15), "foo[bar,baz]foo", "rfindany", { "" });
 assertFindAny((7, 8), "foo[bar,baz]foo", "rfindany", { "," });
 assertFindAny((3, 4), "foo[bar,baz]foo", "rfindany", { "[" });
 assertFindAny((7, 8), "foo[bar,baz]foo", "rfindany", { "[", "," });
@@ -158,31 +156,31 @@ assertFindAny((13, 15), "f[bar,o,baz]foo", "rfindany", { "oo", "ba" });
 assertFindAny((14, 15), "f[bar,o,baz]foo", "rfindany", { "oo", "ba", "f", "o" });
 
 assertFindAny((5, 6), "*#foo++foo#*", "findany", { "+" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (5, 6), "*#foo++foo#*", "findany", { "+", "" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (5, 6), "*#foo++foo#*", "findany", { "", "+" });
+assertFindAny((0, 0), "*#foo++foo#*", "findany", { "+", "" });
+assertFindAny((0, 0), "*#foo++foo#*", "findany", { "", "+" });
 assertFindAny((5, 6), "*#foo++foo#*", "findany", { "+", "+" });
 assertFindAny((0, 1), "*#foo++foo#*", "findany", { "*" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (0, 1), "*#foo++foo#*", "findany", { "*", "" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (0, 1), "*#foo++foo#*", "findany", { "", "*" });
+assertFindAny((0, 0), "*#foo++foo#*", "findany", { "*", "" });
+assertFindAny((0, 0), "*#foo++foo#*", "findany", { "", "*" });
 assertFindAny((0, 1), "*#foo++foo#*", "findany", { "*", "*" });
 assertFindAny((0, 1), "*#foo++foo#*", "findany", { "*", "+" });
 assertFindAny((0, 1), "*#foo++foo#*", "findany", { "+", "*" });
 
 assertFindAny((6, 7), "*#foo++foo#*", "rfindany", { "+" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (12, 12) : (6, 7), "*#foo++foo#*", "rfindany", { "+", "" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (12, 12) : (6, 7), "*#foo++foo#*", "rfindany", { "", "+" });
+assertFindAny((12, 12), "*#foo++foo#*", "rfindany", { "+", "" });
+assertFindAny((12, 12), "*#foo++foo#*", "rfindany", { "", "+" });
 assertFindAny((6, 7), "*#foo++foo#*", "rfindany", { "+", "+" });
 assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "*" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (12, 12) : (11, 12), "*#foo++foo#*", "rfindany", { "*", "" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (12, 12) : (11, 12), "*#foo++foo#*", "rfindany", { "", "*" });
+assertFindAny((12, 12), "*#foo++foo#*", "rfindany", { "*", "" });
+assertFindAny((12, 12), "*#foo++foo#*", "rfindany", { "", "*" });
 assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "*", "*" });
 assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "*", "+" });
 assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "+", "*" });
 
 assertFindAny(none,   "*+#", "findany", { });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : none,   "*+#", "findany", { "" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (1, 2), "*+#", "findany", { "", "+" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (0, 0) : (1, 2), "*+#", "findany", { "+", "" });
+assertFindAny((0, 0), "*+#", "findany", { "" });
+assertFindAny((0, 0), "*+#", "findany", { "", "+" });
+assertFindAny((0, 0), "*+#", "findany", { "+", "" });
 assertFindAny((0, 1), "*+#", "findany", { "*" });
 assertFindAny((1, 2), "*+#", "findany", { "+" });
 assertFindAny((2, 3), "*+#", "findany", { "#" });
@@ -202,9 +200,9 @@ assertFindAny((0, 2), "*+#", "findany", { "+", "*+" });
 assertFindAny((1, 2), "*+#", "findany", { "+", "+*" });
 
 assertFindAny(none,   "*+#", "rfindany", { });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (3, 3) : none,   "*+#", "rfindany", { "" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (3, 3) : (1, 2), "*+#", "rfindany", { "", "+" });
-assertFindAny(CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 ? (3, 3) : (1, 2), "*+#", "rfindany", { "+", "" });
+assertFindAny((3, 3), "*+#", "rfindany", { "" });
+assertFindAny((3, 3), "*+#", "rfindany", { "", "+" });
+assertFindAny((3, 3), "*+#", "rfindany", { "+", "" });
 assertFindAny((0, 1), "*+#", "rfindany", { "*" });
 assertFindAny((1, 2), "*+#", "rfindany", { "+" });
 assertFindAny((2, 3), "*+#", "rfindany", { "#" });

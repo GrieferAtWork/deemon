@@ -22,10 +22,6 @@
 import * from deemon;
 import * from errors;
 
-global final CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0 = "".find("") == 0;
-if (!CONFIG_EXPERIMENTAL_FINDEMPTY_AT_INDEX_0)
-	return;
-
 function assertFindFunction(expected, s: string, find: string, args: Tuple) {
 	local index = find.replace("find", "index");
 	local casefind = "case" + find;
