@@ -656,11 +656,11 @@ struct socket_object {
 	Dee_atomic_rwlock_t s_lock;     /* Lock for this socket. */
 #endif /* !CONFIG_NO_THREADS */
 	sock_t              s_socket;   /* [lock(s_lock)] System-specific socket handle.
-	                                 *  NOTE: Set to `INVALID_SOCKET' when closed. */
+	                                 * NOTE: Set to `INVALID_SOCKET' when closed. */
 	SockAddr            s_sockaddr; /* [const(.sa.sa_family)][lock(s_lock)]
-	                                 *  Local socket address (family is the `af' constructor argument) */
+	                                 * Local socket address (family is the `af' constructor argument) */
 	SockAddr            s_peeraddr; /* [const(.sa.sa_family)][lock(s_lock)]
-	                                 *  Local socket address (family is the `af' constructor argument) */
+	                                 * Local socket address (family is the `af' constructor argument) */
 	int                 s_type;     /* [const] Socket type (`type' constructor argument). */
 	int                 s_proto;    /* [const] Socket protocol (`proto' constructor argument). */
 	uint16_t            s_state;    /* [lock(s_lock) + ATOMIC] Socket state (Set of `SOCKET_F*') */

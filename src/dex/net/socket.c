@@ -60,9 +60,8 @@ err_no_af_support(neterrno_t error, sa_family_t af) {
 }
 
 PRIVATE NONNULL((1)) int DCALL
-socket_ctor(Socket *__restrict self,
-            size_t argc, DeeObject *const *argv,
-            DeeObject *kw) {
+socket_ctor(Socket *__restrict self, size_t argc,
+            DeeObject *const *argv, DeeObject *kw) {
 	int af, type, proto;
 	DeeObject *arg_af, *arg_type = Dee_None, *arg_proto = Dee_None;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(af), K(type), K(proto), KEND });
@@ -137,7 +136,7 @@ PRIVATE NONNULL((1)) void DCALL
 socket_fini(Socket *__restrict self) {
 	if (self->s_state & SOCKET_FOPENED) {
 		DBG_ALIGNMENT_DISABLE();
-		closesocket(self->s_socket);
+		(void)closesocket(self->s_socket);
 		DBG_ALIGNMENT_ENABLE();
 	}
 }
@@ -238,7 +237,7 @@ DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self,
 	}
 	DBG_ALIGNMENT_ENABLE();
 	socket_endread(self);
-	if unlikely(ok && throw_error) {
+	if unlikely(ok != 0 && throw_error) {
 		neterrno_t err;
 		DBG_ALIGNMENT_DISABLE();
 		err = GET_NET_ERROR();
@@ -385,7 +384,9 @@ again_shutdown:
 	COMPILER_WRITE_BARRIER();
 	socket_endwrite(self);
 	/* Close the old socket handle. */
-	closesocket(socket_handle);
+	DBG_ALIGNMENT_DISABLE();
+	(void)closesocket(socket_handle);
+	DBG_ALIGNMENT_ENABLE();
 	return_none;
 err:
 	return NULL;
@@ -552,11 +553,11 @@ select_interruptible(SOCKET hSocket, LONG lNetworkEvents, DWORD dwTimeout) {
 	 *       These API functions will propagate errors for us automatically. */
 	DBG_ALIGNMENT_DISABLE();
 	hSockEvent = WSACreateEvent();
-	WSAEventSelect(hSocket, hSockEvent, lNetworkEvents);
+	(void)WSAEventSelect(hSocket, hSockEvent, lNetworkEvents);
 	dwResult = WSAWaitForMultipleEvents(1, &hSockEvent, FALSE, dwTimeout, TRUE);
 	/* Apparently this is required to prevent the event also closing the socket??? */
-	WSAEventSelect(hSocket, hSockEvent, 0);
-	WSACloseEvent(hSockEvent);
+	(void)WSAEventSelect(hSocket, hSockEvent, 0);
+	(void)WSACloseEvent(hSockEvent);
 	DBG_ALIGNMENT_ENABLE();
 	return dwResult;
 }
@@ -2388,8 +2389,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_wasshutdown(Socket *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	int mode;
+	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	uint16_t state = self->s_state;
 	_DeeArg_Unpack0Or1(err, argc, argv, "wasshutdown", &shutdown_mode);
 	if (DeeString_Check(shutdown_mode) &&
@@ -2406,7 +2407,8 @@ socket_wasshutdown(Socket *self, size_t argc, DeeObject *const *argv) {
 		       (SOCKET_FSHUTDOWN_R | SOCKET_FSHUTDOWN_W);
 	}
 	/* If the socket is't open any more, then it was shut down. */
-	mode |= !(state & SOCKET_FOPENED);
+	if (!(state & SOCKET_FOPENED))
+		mode = true;
 	return_bool(mode);
 err:
 	return NULL;

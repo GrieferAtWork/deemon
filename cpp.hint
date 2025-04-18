@@ -1561,17 +1561,17 @@
 	T ha_start;\
 	T ha_outmod;\
 	T ha_table[256];
-#define DEFINE_LIBMATH_CONVERSION_1(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
-#define DEFINE_LIBMATH_CONVERSION_1_E(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
-#define DEFINE_LIBMATH_CONVERSION_2(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
-#define DEFINE_LIBMATH_CONVERSION_2_E(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
-#define DEFINE_LIBMATH_FLOAT_TRAIT(n)  DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
-#define DEFINE_LIBMATH_FLOAT_TRAIT2(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
-#define DEFINE_SLABINFO_FIELD_READER(n) DeeObject*si_get_##n(SlabInfoObject*self){}
+#define DEFINE_LIBMATH_CONVERSION_1(n) static DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
+#define DEFINE_LIBMATH_CONVERSION_1_E(n) static DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
+#define DEFINE_LIBMATH_CONVERSION_2(n) static DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
+#define DEFINE_LIBMATH_CONVERSION_2_E(n) static DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
+#define DEFINE_LIBMATH_FLOAT_TRAIT(n)  static DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
+#define DEFINE_LIBMATH_FLOAT_TRAIT2(n) static DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
+#define DEFINE_SLABINFO_FIELD_READER(n) static DeeObject*si_get_##n(SlabInfoObject*self){}
 #define DEFINE_LIBTIME_AS(n, ...) \
-	DeeObject*time_getval_##n(DeeTimeObject*self){}\
-	int time_setval_##n(DeeTimeObject*self,DeeObject*value){}\
-	int time_delval_##n(DeeTimeObject*self){}
+	static DeeObject*time_getval_##n(DeeTimeObject*self){}\
+	static int time_setval_##n(DeeTimeObject*self,DeeObject*value){}\
+	static int time_delval_##n(DeeTimeObject*self){}
 
 #define DEFINE_CCALL_OPTIMIZATION(name,...) int name(struct fungen*self,vstackaddr_t argc){}
 #define DEFINE_CCALL_OPERATOR(name,...) int name(struct fungen*self,vstackaddr_t argc){}

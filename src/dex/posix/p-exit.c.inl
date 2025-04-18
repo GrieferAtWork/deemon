@@ -25,6 +25,16 @@
 #include "libposix.h"
 /**/
 
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/exec.h>
+#include <deemon/module.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h>
+#include <deemon/tuple.h>
+/**/
+
 #include <stddef.h> /* size_t */
 
 DECL_BEGIN
@@ -196,7 +206,11 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_abort_f_impl(void)
 /*[[[end]]]*/
 {
+#ifdef EXIT_FAILURE
 	Dee_Exit(EXIT_FAILURE, false);
+#else /* EXIT_FAILURE */
+	Dee_Exit(1, false);
+#endif /* !EXIT_FAILURE */
 	return NULL;
 }
 

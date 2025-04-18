@@ -25,12 +25,18 @@
 #include "libposix.h"
 /**/
 
-#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/int.h>
 #include <deemon/mapfile.h>
+#include <deemon/module.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/objmethod.h>
+#include <deemon/string.h>
 
 /* Include posix dependencies */
 #include "p-readlink.c.inl" /* Needed for `lcopyfile()' to check for symbolic links. */
@@ -39,6 +45,7 @@
 /**/
 
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* uint64_t */
 
 DECL_BEGIN
 
@@ -229,7 +236,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5))DREF DeeObject *DCALL posix_copyfile_f_i
 		src_file = DeeFile_Open(oldpath, OPEN_FRDONLY, 0);
 		if unlikely(src_file == ITER_DONE) {
 			DeeError_Throwf(&DeeError_FileNotFound, "File %r could not be found", oldpath);
-			goto err_src_file;
+			goto err;
 		}
 
 		/* We opened the source-file, so we can assume that it's file-pointer is at the start. */
@@ -400,7 +407,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5))DREF DeeObject *DCALL posix_lcopyfile_f_
 		src_file = DeeFile_Open(oldpath, OPEN_FRDONLY | OPEN_FNOFOLLOW, 0);
 		if unlikely(src_file == ITER_DONE) {
 			DeeError_Throwf(&DeeError_FileNotFound, "File %r could not be found", oldpath);
-			goto err_src_file;
+			goto err;
 		}
 
 		/* We opened the source-file, so we can assume that it's file-pointer is at the start. */

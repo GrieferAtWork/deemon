@@ -25,8 +25,17 @@
 #include "libposix.h"
 /**/
 
-#include "p-stat.c.inl"
-/**/
+#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/error.h>
+#include <deemon/module.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h>
+#include <deemon/system-features.h>
+#include <deemon/system.h>
+#include <deemon/thread.h>
 
 #include <hybrid/debug-alignment.h>
 /**/
@@ -151,6 +160,10 @@ DECL_BEGIN
 #define posix_linkat_USE_STUB
 #endif /* !... */
 
+
+#ifdef posix_renameat2_USE_posix_renameat
+#include "p-stat.c.inl"
+#endif /* posix_renameat2_USE_posix_renameat */
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("rename", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/

@@ -24,13 +24,11 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
-#include <deemon/map.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -43,7 +41,6 @@
 #include <deemon/util/rlock.h>
 
 #include "../runtime/runtime_error.h"
-#include "../runtime/strings.h"
 
 DECL_BEGIN
 

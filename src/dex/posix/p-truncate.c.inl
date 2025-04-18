@@ -25,10 +25,21 @@
 #include "libposix.h"
 /**/
 
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/file.h>
+#include <deemon/module.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h>
+#include <deemon/system-features.h>
+#include <deemon/system.h>
+
 #include <hybrid/debug-alignment.h>
 /**/
 
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* uint64_t */
 
 DECL_BEGIN
 

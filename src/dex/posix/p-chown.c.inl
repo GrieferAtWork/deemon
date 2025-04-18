@@ -29,6 +29,18 @@
 #include "p-path.c.inl"     /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
 /**/
 
+#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/error.h>
+#include <deemon/module.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h>
+#include <deemon/system-features.h>
+#include <deemon/system.h>
+/**/
+
 #include <stddef.h> /* size_t */
 
 DECL_BEGIN

@@ -29,6 +29,15 @@
 #include "p-path.c.inl"     /* For `posix_chmod_USE_posix_readlink__AND__posix_lchmod()' */
 /**/
 
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/error.h>
+#include <deemon/module.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h>
+#include <deemon/system-features.h>
+
 #include <hybrid/debug-alignment.h>
 /**/
 

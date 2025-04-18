@@ -61,13 +61,18 @@
 #include "p-ondemand.c.inl"
 #endif /* !__INTELLISENSE__ */
 
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/bool.h>
+#include <deemon/dex.h>
 #include <deemon/error.h>
-#include <deemon/error_types.h>
-#include <deemon/seq.h>
+#include <deemon/module.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-
+#include <deemon/system.h>
 
 DECL_BEGIN
 
@@ -1646,7 +1651,7 @@ for (local x: names)
 
 
 /* Stat helper functions. */
-INTERN WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISDIR(size_t argc, DeeObject *const *argv) {
 	unsigned int arg;
 	if (DeeArg_Unpack(argc, argv, "u:S_ISDIR", &arg))
@@ -1656,7 +1661,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISCHR(size_t argc, DeeObject *const *argv) {
 	unsigned int arg;
 	if (DeeArg_Unpack(argc, argv, "u:S_ISCHR", &arg))
@@ -1666,7 +1671,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISBLK(size_t argc, DeeObject *const *argv) {
 	unsigned int arg;
 	if (DeeArg_Unpack(argc, argv, "u:S_ISBLK", &arg))
@@ -1676,7 +1681,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISDEV(size_t argc, DeeObject *const *argv) {
 	unsigned int arg;
 	if (DeeArg_Unpack(argc, argv, "u:S_ISDEV", &arg))
@@ -1686,7 +1691,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISREG(size_t argc, DeeObject *const *argv) {
 	unsigned int arg;
 	if (DeeArg_Unpack(argc, argv, "u:S_ISREG", &arg))
@@ -1696,7 +1701,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISFIFO(size_t argc, DeeObject *const *argv) {
 	unsigned int arg;
 	if (DeeArg_Unpack(argc, argv, "u:S_ISFIFO", &arg))
@@ -1706,7 +1711,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISLNK(size_t argc, DeeObject *const *argv) {
 	unsigned int arg;
 	if (DeeArg_Unpack(argc, argv, "u:S_ISLNK", &arg))
@@ -1716,7 +1721,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISSOCK(size_t argc, DeeObject *const *argv) {
 	unsigned int arg;
 	if (DeeArg_Unpack(argc, argv, "u:S_ISSOCK", &arg))

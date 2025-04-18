@@ -87,7 +87,7 @@
  * - Even though MSVC reports "alignof(Dee_off_t) == 8", it just simply disregards
  *   that fact when it comes to allocating the containing structure on-stack. As
  *   such, the "ASSERT" in the above code will fail (since "args" only gets aligned
- *   on 4-byte boundary)
+ *   on a 4-byte boundary)
  * - As such, without some special handling here, we would RIGHTFULLY try to align
  *   the initial "args" pointer to its nearest 8-byte address (which actually ends
  *   up being the high 32-bit of "args.off" and "args.whence")

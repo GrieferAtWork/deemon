@@ -195,17 +195,26 @@
 #define NEED_nt_SetSecurityInfo
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/format.h>
+#include <deemon/int.h>
 #include <deemon/mapfile.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/system-features.h>
+#include <deemon/system.h>
+#include <deemon/thread.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/once.h>
 
+#include <hybrid/debug-alignment.h>
+#include <hybrid/int128.h>
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
-
-#include <hybrid/debug-alignment.h>
 /**/
 
 #include <stddef.h> /* size_t */
@@ -513,12 +522,18 @@ nt_SetFileTime(HANDLE hFile, DeeObject *atime,
                DeeObject *mtime, DeeObject *birthtime) {
 	BOOL bOK;
 	FILETIME osATime, osMTime, osBTime;
-	if (!DeeNone_Check(atime) && unlikely(nt_ObjectToFILETIME(atime, &osATime)))
-		goto err;
-	if (!DeeNone_Check(mtime) && unlikely(nt_ObjectToFILETIME(mtime, &osMTime)))
-		goto err;
-	if (!DeeNone_Check(birthtime) && unlikely(nt_ObjectToFILETIME(birthtime, &osBTime)))
-		goto err;
+	if (!DeeNone_Check(atime)) {
+		if unlikely(nt_ObjectToFILETIME(atime, &osATime))
+			goto err;
+	}
+	if (!DeeNone_Check(mtime)) {
+		if unlikely(nt_ObjectToFILETIME(mtime, &osMTime))
+			goto err;
+	}
+	if (!DeeNone_Check(birthtime)) {
+		if unlikely(nt_ObjectToFILETIME(birthtime, &osBTime))
+			goto err;
+	}
 again_SetFileTime:
 	DBG_ALIGNMENT_DISABLE();
 	bOK = SetFileTime(hFile,
@@ -4097,7 +4112,7 @@ nt_SetCurrentDirectory(DeeObject *__restrict lpPathName) {
 		DBG_ALIGNMENT_ENABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return !bOK;
+	return bOK ? 0 : 1;
 err:
 	return -1;
 }
@@ -4296,7 +4311,7 @@ nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
 		SetLastError(dwError);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return !bOK;
+	return bOK ? 0 : 1;
 err:
 	return -1;
 }
@@ -4381,7 +4396,7 @@ nt_SetFileAttributes(DeeObject *__restrict lpFileName,
 		DBG_ALIGNMENT_ENABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return !bOK;
+	return bOK ? 0 : 1;
 err:
 	return -1;
 }
@@ -4425,7 +4440,7 @@ nt_CreateDirectory(DeeObject *__restrict lpPathName,
 		DBG_ALIGNMENT_ENABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return !bOK;
+	return bOK ? 0 : 1;
 err:
 	return -1;
 }
@@ -4467,7 +4482,7 @@ nt_RemoveDirectory(DeeObject *__restrict lpPathName) {
 		DBG_ALIGNMENT_ENABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return !bOK;
+	return bOK ? 0 : 1;
 err:
 	return -1;
 }
@@ -4509,7 +4524,7 @@ nt_DeleteFile(DeeObject *__restrict lpFileName) {
 		DBG_ALIGNMENT_ENABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return !bOK;
+	return bOK ? 0 : 1;
 err:
 	return -1;
 }
@@ -4563,7 +4578,7 @@ nt_MoveFileEx(DeeObject *lpExistingFileName,
 		DBG_ALIGNMENT_ENABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return !bOK;
+	return bOK ? 0 : 1;
 err_new:
 	Dee_Decref(lpNewFileName);
 err_existing:
@@ -4620,7 +4635,7 @@ nt_CreateHardLink(DeeObject *lpFileName,
 		DBG_ALIGNMENT_ENABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return !bOK;
+	return bOK ? 0 : 1;
 err_existing:
 	Dee_Decref(lpExistingFileName);
 err_filename:

@@ -25,12 +25,22 @@
 #include "libposix.h"
 /**/
 
-#include <hybrid/debug-alignment.h>
-/**/
-
 #include "p-readlink.c.inl" /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()' */
 #include "p-path.c.inl"     /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()' */
 #include "p-stat.c.inl"     /* For `DEE_STAT_F_LSTAT', `stat_get_ctime_IS_stat_get_mtime' */
+/**/
+
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/module.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h>
+#include <deemon/string.h>
+#include <deemon/system-features.h>
+#include <deemon/system.h>
+
+#include <hybrid/debug-alignment.h>
 /**/
 
 #include <stddef.h> /* size_t */

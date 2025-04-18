@@ -25,7 +25,16 @@
 #include "libposix.h"
 /**/
 
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/error.h>
+#include <deemon/module.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h>
+#include <deemon/system-features.h>
 #include <deemon/system.h>
+#include <deemon/thread.h>
+#include <deemon/tuple.h>
 
 #include <hybrid/debug-alignment.h>
 /**/
