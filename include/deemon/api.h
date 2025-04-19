@@ -433,6 +433,39 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #define CONFIG_NO_EXPERIMENTAL_ORDERED_HASHSET
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ORDERED_HASHSET */
+
+/* Experimental feature switch: ST_ISDIR can be imported as a module, and modules
+ * whose names match an equally named directory within the same containing directory
+ * also expose all the symbols from that directory within themselves:
+ * Files:
+ * - mylib/foo.dee          >> global final symbolFromFoo = 42;
+ * - mylib/foo/bar.dee      >> global final symbolFromBar = "Wow!";
+ * - mylib/foobar/baz.dee   >> global final symbolFromBaz = "This is baz";
+ * Code:
+ * >> import mylib;
+ * >> print mylib.foo.symbolFromFoo;        // 42
+ * >> print mylib.foo.bar.symbolFromBar;    // Wow!
+ * >> print mylib.foobar.baz.symbolFromBaz; // This is baz
+ *
+ * Additionally, this feature changes the builtin "import" function to an object,
+ * that also overrides "operator ." as an alias for its call-operator, meaning you
+ * can now write `import.deemon.string' instead of `string from deemon'
+ *
+ * NOTE: The ambiguity in the following is resolved by preferring symbols over directories:
+ * - mylib/foo.dee     >> global final bar = "Oops. Overwrote the other module";
+ * - mylib/foo/bar.dee >> global final notGonnaSeeThisOne = "Nope";
+ * >> import mylib, mylib.foo.bar;
+ * >> print mylib.foo.bar;          // "Oops. Overwrote the other module"
+ * >> print bar.notGonnaSeeThisOne; // "Nope"
+ */
+#if (!defined(CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_MODULE_DIRECTORIES))
+#if 0 /* TODO: Implementation is incomplete */
+#define CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#else
+#define CONFIG_NO_EXPERIMENTAL_MODULE_DIRECTORIES
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_MODULE_DIRECTORIES */
 /************************************************************************/
 
 

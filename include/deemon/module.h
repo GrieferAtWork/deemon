@@ -285,6 +285,10 @@ INTDEF WUNUSED DREF struct Dee_string_object *DCALL module_symbol_getdocobj(stru
 
 
 #define Dee_MODULE_FNORMAL           0x0000 /* Normal module flags. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#define Dee_MODULE_FISDIR            0x0200 /* [lock(const)] This is a module directory (mo_importc == 0, mo_globalc == 0); `mo_name' is the directory's path. */
+#define Dee_MODULE_FDIRSCANNED       0x0400 /* [lock(WRITE_ONCE)] A directory matching the name of the module has been scanned for extra symbols. */
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #ifndef CONFIG_NO_DEC
 #define Dee_MODULE_FHASCTIME         0x0800 /* [lock(WRITE_ONCE)] The `mo_ctime' field has been initialized. */
 #endif /* !CONFIG_NO_DEC */
@@ -347,6 +351,9 @@ struct Dee_module_object {
 	                                              * when compilation of the module finished.
 	                                              * NOTE: Never equal to (uint64_t)-1 */
 #endif /* !CONFIG_NO_DEC */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	/* TODO: Hash-table for sub-directory files; s.a. `Dee_MODULE_FDIRSCANNED' */
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_WEAKREF_SUPPORT
 };
 
