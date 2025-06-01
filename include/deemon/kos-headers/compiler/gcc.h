@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!included_by <__stdinc.h>*/
 #ifdef __CHECKER__
 #include "checker.h"
 #else /* __CHECKER__ */
@@ -787,6 +788,7 @@ extern "C++" { template<class T> struct __compiler_alignof { char __x; T __y; };
 #define __FORCELOCAL  static __ATTR_FORCEINLINE
 
 #ifdef __INTELLISENSE__
+#define _Exit __real__Exit /* Because for some reason, intellisence pre-defines this one... */
 #define __NO_EXTERN_INLINE /* Intellisense likes to freeze when parsing `__attribute__((__gnu_inline__))'... */
 #define __EXTERN_INLINE      static
 #define __EXTERN_FORCEINLINE static
