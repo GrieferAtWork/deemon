@@ -359,7 +359,7 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 #define Dee_STRING_UTF_FASCII  0x0001 /* FLAG: The string contains no character outside the ASCII range.
                                        * NOTE: This flag isn't required to be set, even if there are only ASCII characters. */
 #define Dee_STRING_UTF_FINVBYT 0x0002 /* FLAG: The string in `u_data[Dee_STRING_WIDTH_1BYTE]' contains truncated characters (represented as `?') */
-#define Dee_STRING_UTF_FREGEX  0x0004 /* FLAG: The string appears in the regex cache */
+#define Dee_STRING_UTF_FFINIHOOK  0x0004 /* FLAG: The string appears in the regex cache */
 
 
 #ifdef DEE_SOURCE
@@ -385,7 +385,7 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 #define STRING_UTF_FNORMAL      Dee_STRING_UTF_FNORMAL
 #define STRING_UTF_FASCII       Dee_STRING_UTF_FASCII
 #define STRING_UTF_FINVBYT      Dee_STRING_UTF_FINVBYT
-#define STRING_UTF_FREGEX       Dee_STRING_UTF_FREGEX
+#define STRING_UTF_FFINIHOOK    Dee_STRING_UTF_FFINIHOOK
 #endif /* DEE_SOURCE */
 
 struct Dee_string_utf {
@@ -3477,6 +3477,59 @@ DeeCodec_Decode(DeeObject *self, DeeObject *name,
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCodec_Encode(DeeObject *self, DeeObject *name,
                 unsigned int error_mode);
+
+
+/* Callback invoked whenever a string that had fini hooks enabled is destroyed.
+ * Using this, you can use the address (or contents) of strings in hash tables
+ * or trees to store additional meta-data on certain strings (e.g. pre-compiled
+ * regex bytecode), and make use of string finalization hooks to (safely) remove
+ * strings that have been destroyed from your table (or tree). */
+typedef NONNULL((2)) void
+(DCALL *Dee_string_fini_hook_t)(void *cookie, DeeObject *__restrict string);
+
+/* Register an additional string finalization hook.
+ *
+ * The hook is only guarantied to be called for strings that had
+ * finalization hooks enabled (using `DeeString_EnableFiniHook()')
+ * during their life-time. Strings that never had finalization
+ * hooks enabled may not invoke these hooks.
+ *
+ * This function considers the combination of `hook' and `cookie'
+ * when it comes to determining if a hook was already defined.
+ *
+ * @return: 1 : No-op (given `hook' + `cookie' was already registered)
+ * @return: 0 : Success (hook was registered)
+ * @return: -1: Failure (an error was thrown) */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeString_AddFiniHook(Dee_string_fini_hook_t hook, void *cookie);
+
+/* Unregister a previously register string finalization hook.
+ * @return: true:  Given `hook' + `cookie' pair has been unregistered.
+ * @return: false: Given `hook' + `cookie' pair wasn't registered. */
+DFUNDEF NONNULL((1)) bool DCALL
+DeeString_RemoveFiniHook(Dee_string_fini_hook_t hook, void *cookie);
+
+/* Mark a given string object `self' such that upon that string's
+ * finalization (i.e.: it's reference count dropping to `0'), all
+ * string finalization hooks (still) registered at **that** point
+ * will be invoked. Execution order of hooks is undefined.
+ *
+ * If this function is called multiple times on the same string,
+ * all additional calls are no-ops.
+ *
+ * @return: 0 : Success (finalization hooks have been enabled for `self')
+ * @return: -1: Insufficient memory (an error was thrown) */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeString_EnableFiniHook(/*string*/ DeeObject *__restrict self);
+
+/* Same as `DeeString_EnableFiniHook()', but don't throw an error
+ * on failure, and use `Dee_TryMalloc()' instead of `Dee_Malloc()'
+ * to allocate memory (meaning user-defined OOM handler or any
+ * other user-code for that matter won't be invoked).
+ * @return: true:  Success
+ * @return: false: Insufficient memory (**NO** error was thrown) */
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL
+DeeString_TryEnableFiniHook(/*string*/ DeeObject *__restrict self);
 
 DECL_END
 

@@ -39,9 +39,11 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memmem() */
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/limitcore.h>
 #include <hybrid/minmax.h>
+#include <hybrid/sequence/bsearch.h>
 #include <hybrid/typecore.h>
 
 #include "../runtime/method-hint-defaults.h"
@@ -629,19 +631,423 @@ err:
 }
 
 
+
+struct string_fini_hook {
+	Dee_string_fini_hook_t sfh_cb;      /* [1..1][const] Callback */
+	void                  *sfh_cookie;  /* [?..?][const] Cookie for `sfh_cb' */
+	bool                   sfh_deleted; /* Entry has been deleted (but could not be removed) */
+};
+
+struct string_fini_hooks {
+	Dee_refcnt_t                                     sfhs_refcnt; /* Reference counter */
+	size_t                                           sfhs_count;  /* # of registered hooks */
+	COMPILER_FLEXIBLE_ARRAY(struct string_fini_hook, sfhs_hooks); /* [sfhs_count] Table of hooks (sorted by [sfh_cb ASC, sfh_cookie ASC]) */
+};
+
+
+PRIVATE struct string_fini_hooks_empty {
+	Dee_refcnt_t sfhs_refcnt; /* Reference counter */
+	size_t       sfhs_count;  /* # of registered hooks */
+} string_fini_hooks_empty = { 2, 0 };
+
+#define string_fini_hooks_alloc(count)                                                        \
+	((struct string_fini_hooks *)Dee_Mallococ(offsetof(struct string_fini_hooks, sfhs_hooks), \
+	                                          count, sizeof(struct string_fini_hook)))
+#define string_fini_hooks_tryalloc(count)                                                        \
+	((struct string_fini_hooks *)Dee_TryMallococ(offsetof(struct string_fini_hooks, sfhs_hooks), \
+	                                             count, sizeof(struct string_fini_hook)))
+#define string_fini_hooks_free(self) Dee_Free(self)
+
+#define string_fini_hooks_destroy(self) string_fini_hooks_free(self)
+#define string_fini_hooks_incref(self) \
+	_DeeRefcnt_Inc(&(self)->sfhs_refcnt)
+#define string_fini_hooks_decref(self)                  \
+	(void)(_DeeRefcnt_DecFetch(&(self)->sfhs_refcnt) || \
+	       (string_fini_hooks_destroy(self), 0))
+
+
+#define STRING_FINI_HOOKS_INSERT_ALREADY_PRESENT \
+	((DREF struct string_fini_hooks *)-1)
+PRIVATE WUNUSED NONNULL((1, 2)) DREF struct string_fini_hooks *DCALL
+string_fini_hooks_insert(struct string_fini_hooks const *__restrict self,
+                         Dee_string_fini_hook_t hook, void *cookie) {
+	DREF struct string_fini_hooks *result;
+	size_t newsize, lo, hi, index;
+	lo = 0;
+	hi = self->sfhs_count;
+	for (;;) {
+		int cmp;
+		struct string_fini_hook const *entry;
+		index = (lo + hi) / 2;
+		entry = &self->sfhs_hooks[index];
+		if (lo >= hi)
+			break;
+		if (hook < entry->sfh_cb) {
+handle_lo:
+			hi = index;
+			continue;
+		}
+		if (hook > entry->sfh_cb) {
+handle_gr:
+			lo = index + 1;
+			continue;
+		}
+		ASSERT(hook == entry->sfh_cb);
+		if (cookie < entry->sfh_cookie)
+			goto handle_lo;
+		if (cookie > entry->sfh_cookie)
+			goto handle_gr;
+		ASSERT(cookie == entry->sfh_cookie);
+
+		/* Callback was already registered. */
+		return STRING_FINI_HOOKS_INSERT_ALREADY_PRESENT;
+	}
+
+	/* Allocate a new hook table. */
+	newsize = self->sfhs_count + 1;
+	result  = string_fini_hooks_alloc(newsize);
+	if unlikely(!result)
+		goto err;
+
+	/* Fill in the new hook table. */
+	{
+		struct string_fini_hook *dst;
+		struct string_fini_hook const *src;
+		size_t remainder;
+		dst = result->sfhs_hooks;
+		src = self->sfhs_hooks;
+		dst = (struct string_fini_hook *)mempcpyc(dst, src, index, sizeof(struct string_fini_hook));
+		src += index;
+		dst->sfh_cb      = hook;
+		dst->sfh_cookie  = cookie;
+		dst->sfh_deleted = false;
+		++dst;
+		remainder = self->sfhs_count - index;
+		memcpyc(dst, src, remainder, sizeof(struct string_fini_hook));
+	}
+
+	/* Fill in remaining fields. */
+	result->sfhs_refcnt = 1;
+	result->sfhs_count  = newsize;
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF struct string_fini_hooks *DCALL
+string_fini_hooks_tryremove(struct string_fini_hooks const *__restrict self,
+                            size_t index) {
+	DREF struct string_fini_hooks *result;
+	struct string_fini_hook *dst;
+	struct string_fini_hook const *src;
+	size_t newsize, remainder;
+	ASSERT(index < self->sfhs_count);
+	ASSERT(self->sfhs_count != 0);
+	newsize = self->sfhs_count - 1;
+	if unlikely(newsize == 0) {
+		result = (DREF struct string_fini_hooks *)&string_fini_hooks_empty;
+		string_fini_hooks_incref(result);
+		return result;
+	}
+	result = string_fini_hooks_tryalloc(newsize);
+	if unlikely(!result)
+		goto err;
+	dst = result->sfhs_hooks;
+	src = self->sfhs_hooks;
+	dst = (struct string_fini_hook *)mempcpyc(dst, src, index, sizeof(struct string_fini_hook));
+	src += index;
+	src += 1; /* Skip deleted entry */
+	remainder = newsize - index;
+	memcpyc(dst, src, remainder, sizeof(struct string_fini_hook));
+	/* Fill in remaining fields. */
+	result->sfhs_refcnt = 1;
+	result->sfhs_count  = newsize;
+	return result;
+err:
+	return NULL;
+}
+
+/* Returned by `string_fini_hooks_indexof()' when the hook wasn't found */
+#define STRING_FINI_HOOKS_INDEXOF_NOT_FOUND ((size_t)-1)
+
+/* Find the index of `hook'+`cookie', or `STRING_FINI_HOOKS_INDEXOF_NOT_FOUND' */
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+string_fini_hooks_indexof(struct string_fini_hooks const *__restrict self,
+                          Dee_string_fini_hook_t hook, void *cookie) {
+	size_t lo, hi, index;
+	lo = 0;
+	hi = self->sfhs_count;
+	for (;;) {
+		int cmp;
+		struct string_fini_hook const *entry;
+		index = (lo + hi) / 2;
+		entry = &self->sfhs_hooks[index];
+		if (lo >= hi)
+			break;
+		if (hook < entry->sfh_cb) {
+handle_lo:
+			hi = index;
+			continue;
+		}
+		if (hook > entry->sfh_cb) {
+handle_gr:
+			lo = index + 1;
+			continue;
+		}
+		ASSERT(hook == entry->sfh_cb);
+		if (cookie < entry->sfh_cookie)
+			goto handle_lo;
+		if (cookie > entry->sfh_cookie)
+			goto handle_gr;
+		ASSERT(cookie == entry->sfh_cookie);
+		return index;
+	}
+	return STRING_FINI_HOOKS_INDEXOF_NOT_FOUND;
+}
+
+
+#ifndef CONFIG_NO_THREADS
+PRIVATE Dee_atomic_rwlock_t string_fini_hooks_lock = DEE_ATOMIC_RWLOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+#define string_fini_hooks_lock_reading()    Dee_atomic_rwlock_reading(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_writing()    Dee_atomic_rwlock_writing(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_tryread()    Dee_atomic_rwlock_tryread(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_trywrite()   Dee_atomic_rwlock_trywrite(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_canread()    Dee_atomic_rwlock_canread(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_canwrite()   Dee_atomic_rwlock_canwrite(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_waitread()   Dee_atomic_rwlock_waitread(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_read()       Dee_atomic_rwlock_read(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_write()      Dee_atomic_rwlock_write(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_upgrade()    Dee_atomic_rwlock_upgrade(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_downgrade()  Dee_atomic_rwlock_downgrade(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_endwrite()   Dee_atomic_rwlock_endwrite(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_endread()    Dee_atomic_rwlock_endread(&string_fini_hooks_lock)
+#define string_fini_hooks_lock_end()        Dee_atomic_rwlock_end(&string_fini_hooks_lock)
+
+
+/* [1..1][lock(string_fini_hooks_lock)]
+ * Currently defined table of string finalization hooks. */
+PRIVATE DREF struct string_fini_hooks *
+string_fini_hooks = (DREF struct string_fini_hooks *)&string_fini_hooks_empty;
+
+
+PRIVATE ATTR_RETNONNULL WUNUSED DREF struct string_fini_hooks *DCALL
+string_fini_hooks_get(void) {
+	DREF struct string_fini_hooks *result;
+	string_fini_hooks_lock_read();
+	result = string_fini_hooks;
+	string_fini_hooks_incref(result);
+	string_fini_hooks_lock_endread();
+	return result;
+}
+
+PRIVATE ATTR_RETNONNULL WUNUSED struct string_fini_hooks *DCALL
+string_fini_hooks_ptr(void) {
+	struct string_fini_hooks *result;
+	string_fini_hooks_lock_read();
+	result = string_fini_hooks;
+	string_fini_hooks_lock_endread();
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+string_fini_hooks_cmpxch(/*inherit(on_success)*/ DREF struct string_fini_hooks *__restrict oldhooks,
+                         /*inherit(on_success)*/ DREF struct string_fini_hooks *__restrict newhooks) {
+	bool result;
+	DREF struct string_fini_hooks *real_oldhooks;
+	string_fini_hooks_lock_write();
+	real_oldhooks = string_fini_hooks;
+	result = real_oldhooks == oldhooks;
+	if (result)
+		string_fini_hooks = newhooks; /* Inherit (on success) */
+	string_fini_hooks_lock_endwrite();
+	if (result)
+		string_fini_hooks_decref(oldhooks); /* Inherit (on success) */
+	return result;
+}
+
+
+
+/* Register an additional string finalization hook.
+ *
+ * The hook is only guarantied to be called for strings that had
+ * finalization hooks enabled (using `DeeString_EnableFiniHook()')
+ * during their life-time. Strings that never had finalization
+ * hooks enabled may not invoke these hooks.
+ *
+ * This function considers the combination of `hook' and `cookie'
+ * when it comes to determining if a hook was already defined.
+ *
+ * @return: 1 : No-op (given `hook' + `cookie' was already registered)
+ * @return: 0 : Success (hook was registered)
+ * @return: -1: Failure (an error was thrown) */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeString_AddFiniHook(Dee_string_fini_hook_t hook, void *cookie) {
+	DREF struct string_fini_hooks *oldlist;
+	DREF struct string_fini_hooks *newlist;
+again:
+	oldlist = string_fini_hooks_get();
+	newlist = string_fini_hooks_insert(oldlist, hook, cookie);
+	if unlikely(newlist == NULL)
+		goto err_oldlist;
+	if unlikely(newlist == STRING_FINI_HOOKS_INSERT_ALREADY_PRESENT) {
+		string_fini_hooks_decref(oldlist);
+		return 1; /* Already present */
+	}
+	if likely(string_fini_hooks_cmpxch(oldlist, newlist))
+		return 0; /* New hook table successfully installed. */
+	string_fini_hooks_decref(oldlist);
+	string_fini_hooks_decref(newlist);
+	goto again;
+err_oldlist:
+	string_fini_hooks_decref(oldlist);
+	return -1;
+}
+
+
+/* Unregister a previously register string finalization hook.
+ * @return: true:  Given `hook' + `cookie' pair has been unregistered.
+ * @return: false: Given `hook' + `cookie' pair wasn't registered. */
+PUBLIC NONNULL((1)) bool DCALL
+DeeString_RemoveFiniHook(Dee_string_fini_hook_t hook, void *cookie) {
+	bool delete_ok;
+	struct string_fini_hooks *curlist;
+	DREF struct string_fini_hooks *oldlist;
+	DREF struct string_fini_hooks *newlist;
+	size_t indexof;
+again:
+	oldlist = string_fini_hooks_get();
+	indexof = string_fini_hooks_indexof(oldlist, hook, cookie);
+	if unlikely(indexof == STRING_FINI_HOOKS_INDEXOF_NOT_FOUND) {
+		string_fini_hooks_decref(oldlist);
+		return false; /* Not found */
+	}
+	newlist = string_fini_hooks_tryremove(oldlist, indexof);
+	if likely(newlist) {
+		if likely(string_fini_hooks_cmpxch(oldlist, newlist))
+			return true; /* New hook table successfully installed. */
+		goto again;
+	}
+
+	/* OOM when trying to allocate truncated table
+	 * -> mark entry as deleted in current table. */
+	delete_ok = atomic_xch(&oldlist->sfhs_hooks[indexof].sfh_deleted, true);
+	string_fini_hooks_decref(oldlist);;
+	if (!delete_ok)
+		return false; /* Other thread is/has already deleted our entry. */
+
+	/* Make sure that "oldlist" is still the current table. */
+	curlist = string_fini_hooks_ptr();
+	if likely(curlist == oldlist)
+		return true;
+
+	/* Active table has changed -> start over and try to remove from the new table. */
+	goto again;
+}
+
+
+PRIVATE NONNULL((1)) void DCALL
+DeeString_InvokeUserFiniHooks(String *__restrict self) {
+	size_t i;
+	DREF struct string_fini_hooks *hooks = string_fini_hooks_get();
+	for (i = 0; i < hooks->sfhs_count; ++i) {
+		struct string_fini_hook const *hook;
+		hook = &hooks->sfhs_hooks[i];
+		if likely(!atomic_read(&hook->sfh_deleted))
+			(*hook->sfh_cb)(hook->sfh_cookie, (DeeObject *)self);
+	}
+	string_fini_hooks_decref(hooks);
+}
+
+
 /* Destroy the regex cache associated with `self'.
- * Called from `DeeString_Type.tp_fini' when `STRING_UTF_FREGEX' was set. */
+ * Called from `DeeString_Type.tp_fini' when `STRING_UTF_FFINIHOOK' was set. */
 INTDEF NONNULL((1)) void DCALL /* From "./unicode/regex.c" */
 DeeString_DestroyRegex(String *__restrict self);
+
+PRIVATE NONNULL((1)) void DCALL
+DeeString_InvokeFiniHooks(String *__restrict self) {
+	/* Built-in finalization hooks */
+	DeeString_DestroyRegex(self);
+
+	/* User-defined finalization hooks */
+	DeeString_InvokeUserFiniHooks(self);
+}
+
+
+/* Mark a given string object `self' such that upon that string's
+ * finalization (i.e.: it's reference count dropping to `0'), all
+ * string finalization hooks (still) registered at **that** point
+ * will be invoked. Execution order of hooks is undefined.
+ *
+ * If this function is called multiple times on the same string,
+ * all additional calls are no-ops.
+ *
+ * @return: 0 : Success (finalization hooks have been enabled for `self')
+ * @return: -1: Insufficient memory (an error was thrown) */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeString_EnableFiniHook(/*string*/ DeeObject *__restrict self) {
+	struct string_utf *utf;
+	DeeStringObject *me = (DeeStringObject *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeString_Type);
+	utf = me->s_data;
+	if (!utf) {
+		utf = Dee_string_utf_alloc();
+		if unlikely(!utf)
+			goto err;
+		utf = (struct string_utf *)Dee_UntrackAlloc(utf);
+		if unlikely(!atomic_cmpxch(&me->s_data, NULL, utf)) {
+			Dee_string_utf_free(utf);
+			utf = me->s_data;
+		}
+	}
+	ASSERT(utf);
+	atomic_or(&utf->u_flags, STRING_UTF_FFINIHOOK);
+	return 0;
+err:
+	return -1;
+}
+
+/* Same as `DeeString_EnableFiniHook()', but don't throw an error
+ * on failure, and use `Dee_TryMalloc()' instead of `Dee_Malloc()'
+ * to allocate memory (meaning user-defined OOM handler or any
+ * other user-code for that matter won't be invoked).
+ * @return: true:  Success
+ * @return: false: Insufficient memory (**NO** error was thrown) */
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
+DeeString_TryEnableFiniHook(/*string*/ DeeObject *__restrict self) {
+	struct string_utf *utf;
+	DeeStringObject *me = (DeeStringObject *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeString_Type);
+	utf = me->s_data;
+	if (!utf) {
+		utf = Dee_string_utf_tryalloc();
+		if unlikely(!utf)
+			goto err;
+		utf = (struct string_utf *)Dee_UntrackAlloc(utf);
+		if unlikely(!atomic_cmpxch(&me->s_data, NULL, utf)) {
+			Dee_string_utf_free(utf);
+			utf = me->s_data;
+		}
+	}
+	ASSERT(utf);
+	atomic_or(&utf->u_flags, STRING_UTF_FFINIHOOK);
+	return true;
+err:
+	return false;
+}
+
 
 PRIVATE NONNULL((1)) void DCALL
 string_fini(String *__restrict self) {
 	struct string_utf *utf;
 	/* Clean up UTF data. */
 	if ((utf = self->s_data) != NULL) {
-		/* If present */
-		if unlikely(utf->u_flags & STRING_UTF_FREGEX)
-			DeeString_DestroyRegex(self);
+		/* Invoke finalization hooks if the relevant flag was set. */
+		if unlikely(utf->u_flags & STRING_UTF_FFINIHOOK)
+			DeeString_InvokeFiniHooks(self);
 
 		Dee_string_utf_fini(utf, self);
 		Dee_string_utf_free(utf);
@@ -2063,7 +2469,7 @@ string_hasregex(String *__restrict self) {
 	utf = atomic_read(&self->s_data);
 	if (utf == NULL)
 		return_false;
-	return_bool((atomic_read(&utf->u_flags) & STRING_UTF_FREGEX) != 0);
+	return_bool((atomic_read(&utf->u_flags) & STRING_UTF_FFINIHOOK) != 0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

@@ -309,12 +309,12 @@ again:
 
 /* Compile the regex pattern of a given string `self' */
 PRIVATE WUNUSED NONNULL((1)) struct DeeRegexCode *DCALL
-re_compile(DeeObject *__restrict self, unsigned int compile_flags) {
+re_compile(DeeStringObject *__restrict self, unsigned int compile_flags) {
 	re_errno_t comp_error;
 	struct re_compiler comp;
 	char const *utf8;
 again:
-	utf8 = DeeString_AsUtf8(self);
+	utf8 = DeeString_AsUtf8((DeeObject *)self);
 	if unlikely(!utf8)
 		goto err;
 
@@ -416,7 +416,7 @@ PRIVATE bool DCALL regex_cache_rehash(int sizedir) {
 		end = (iter = regex_cache_base) + (regex_cache_mask + 1);
 		for (; iter < end; ++iter) {
 			struct regex_cache_entry *item;
-			dhash_t i, perturb;
+			Dee_hash_t i, perturb;
 			/* Skip dummy keys. */
 			if (!iter->rce_str || iter->rce_str == REGEX_CACHE_DUMMY_STR)
 				continue;
@@ -441,11 +441,11 @@ PRIVATE bool DCALL regex_cache_rehash(int sizedir) {
 
 
 /* Destroy the regex cache associated with `self'.
- * Called from `DeeString_Type.tp_fini' when `STRING_UTF_FREGEX' was set. */
+ * Called from `DeeString_Type.tp_fini' when `STRING_UTF_FFINIHOOK' was set. */
 INTERN NONNULL((1)) void DCALL
 DeeString_DestroyRegex(DeeStringObject *__restrict self) {
 	struct regex_cache_entry *item, old_item;
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	hash = regex_cache_entry_hashstr(self);
 	regex_cache_lock_write();
 	perturb = i = regex_cache_hashst(hash);
@@ -485,8 +485,9 @@ DeeString_GetRegex(/*String*/ DeeObject *__restrict self,
                    DeeObject *rules) {
 	struct DeeRegexCode *result;
 	struct regex_cache_entry *first_dummy;
-	dhash_t i, perturb, hash;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
+	DeeStringObject *me = (DeeStringObject *)self;
+	Dee_hash_t i, perturb, hash;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeString_Type);
 
 	/* Parse `rules' (if given) */
 	if (rules != NULL) {
@@ -513,7 +514,7 @@ again_rules_iter:
 	}
 
 	/* Lookup regex in cache */
-	hash = regex_cache_entry_hashstr(self);
+	hash = regex_cache_entry_hashstr(me);
 	regex_cache_lock_read();
 	perturb = i = regex_cache_hashst(hash);
 	for (;; regex_cache_hashnx(i, perturb)) {
@@ -521,7 +522,7 @@ again_rules_iter:
 		item = regex_cache_hashit(i);
 		if (!item->rce_str)
 			break; /* End-of-hash-chain */
-		if (item->rce_str == (DeeStringObject *)self &&
+		if (item->rce_str == (DeeStringObject *)me &&
 		    item->rce_syntax == compile_flags) {
 			result = item->rce_regex;
 			regex_cache_lock_endread();
@@ -531,7 +532,7 @@ again_rules_iter:
 	regex_cache_lock_endread();
 
 	/* Not found int cache -> create a new regex object. */
-	result = re_compile(self, compile_flags);
+	result = re_compile(me, compile_flags);
 	if unlikely(!result)
 		goto err; /* Error */
 
@@ -539,7 +540,7 @@ again_rules_iter:
 again_lock_and_insert_result:
 	regex_cache_lock_write();
 again_insert_result:
-	hash = regex_cache_entry_hashstr(self);
+	hash = regex_cache_entry_hashstr(me);
 	first_dummy = NULL;
 	perturb = i = regex_cache_hashst(hash);
 	for (;; regex_cache_hashnx(i, perturb)) {
@@ -554,14 +555,14 @@ again_insert_result:
 			first_dummy = item;
 			continue;
 		}
-		if (item->rce_str == (DeeStringObject *)self &&
+		if (item->rce_str == me &&
 		    item->rce_syntax == compile_flags) {
 			struct DeeRegexCode *existing_regex;
 
 			/* Race condition: another thread was faster (but use their result) */
-			ASSERTF(((DeeStringObject *)self)->s_data != NULL,
+			ASSERTF(me->s_data != NULL,
 			        "String is in regex cache, but doesn't have UTF-data allocated?");
-			ASSERTF(((DeeStringObject *)self)->s_data->u_flags & STRING_UTF_FREGEX,
+			ASSERTF(me->s_data->u_flags & STRING_UTF_FFINIHOOK,
 			        "String is in regex cache, but doesn't have regex-flag set?");
 			existing_regex = item->rce_regex;
 			regex_cache_lock_endwrite();
@@ -574,36 +575,21 @@ again_insert_result:
 	if ((first_dummy != NULL) &&
 	    (regex_cache_size + 1 < regex_cache_mask ||
 	     first_dummy->rce_str != NULL)) {
-		/* Make sure that the string's regex flag is set. */
 		bool wasdummy;
-		struct string_utf *utf;
-		utf = ((DeeStringObject *)self)->s_data;
-		if (utf == NULL) {
-			bool haslock = true;
-			utf = Dee_string_utf_tryalloc();
-			if unlikely(!utf) {
-				regex_cache_lock_endwrite();
-				utf = Dee_string_utf_alloc();
-				haslock = false;
-			}
-			utf = (struct string_utf *)Dee_UntrackAlloc(utf);
-			if unlikely(!atomic_cmpxch(&((DeeStringObject *)self)->s_data, NULL, utf)) {
-				Dee_string_utf_free(utf);
-				utf = ((DeeStringObject *)self)->s_data;
-			}
-			if unlikely(!haslock)
-				goto again_lock_and_insert_result;
-		}
-		ASSERT(utf);
 
-		/* Set the regex flag (so that the string destructor will later clean-up the regex cache) */
-		atomic_or(&utf->u_flags, STRING_UTF_FREGEX);
+		/* Enable finalization hooks for the string */
+		if (!DeeString_TryEnableFiniHook((DeeObject *)me)) {
+			regex_cache_lock_endwrite();
+			if unlikely(DeeString_EnableFiniHook((DeeObject *)me))
+				goto err_r;
+			goto again_lock_and_insert_result;
+		}
 
 		/* Remember the string within the regex cache. */
 		ASSERT(first_dummy->rce_str == NULL ||
 		       first_dummy->rce_str == REGEX_CACHE_DUMMY_STR);
 		wasdummy = first_dummy->rce_str != NULL;
-		first_dummy->rce_str    = (DeeStringObject *)self;
+		first_dummy->rce_str    = me;
 		first_dummy->rce_regex  = (struct DeeRegexCode *)Dee_UntrackAlloc(result);
 		first_dummy->rce_syntax = compile_flags;
 		++regex_cache_used;
@@ -622,6 +608,8 @@ again_insert_result:
 	regex_cache_lock_endwrite();
 	if (Dee_CollectMemory(1))
 		goto again_lock_and_insert_result;
+err_r:
+	Dee_Free(result);
 err:
 	return NULL;
 }

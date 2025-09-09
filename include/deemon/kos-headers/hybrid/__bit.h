@@ -696,7 +696,7 @@ __NOTHROW(__hybrid_popcount8)(__UINT8_TYPE__ __i) {
 	__i = (__i & __UINT8_C(0x55)) + ((__i >> 1) & __UINT8_C(0x55));
 	__i = (__i & __UINT8_C(0x33)) + ((__i >> 2) & __UINT8_C(0x33));
 	__i = (__i & __UINT8_C(0x0f)) + ((__i >> 4) & __UINT8_C(0x0f));
-	return __i;
+	return (__SHIFT_TYPE__)__i;
 }
 #endif /* !... */
 #endif /* !__hybrid_popcount8 */
@@ -714,7 +714,7 @@ __NOTHROW(__hybrid_popcount16)(__UINT16_TYPE__ __i) {
 	__i = (__i & __UINT16_C(0x3333)) + ((__i >> 2) & __UINT16_C(0x3333));
 	__i = (__i & __UINT16_C(0x0f0f)) + ((__i >> 4) & __UINT16_C(0x0f0f));
 	__i = (__i & __UINT16_C(0x00ff)) + ((__i >> 8) & __UINT16_C(0x00ff));
-	return __i;
+	return (__SHIFT_TYPE__)__i;
 }
 #endif /* !... */
 #endif /* !__hybrid_popcount16 */
@@ -731,7 +731,7 @@ __NOTHROW(__hybrid_popcount32)(__UINT32_TYPE__ __i) {
 	__i = (__i & __UINT32_C(0x0f0f0f0f)) + ((__i >> 4) & __UINT32_C(0x0f0f0f0f));
 	__i = (__i & __UINT32_C(0x00ff00ff)) + ((__i >> 8) & __UINT32_C(0x00ff00ff));
 	__i = (__i & __UINT32_C(0x0000ffff)) + ((__i >> 16) & __UINT32_C(0x0000ffff));
-	return __i;
+	return (__SHIFT_TYPE__)__i;
 }
 #endif /* !__hybrid_popcount64 */
 #endif /* !__hybrid_popcount32 */
@@ -747,7 +747,7 @@ __NOTHROW(__hybrid_popcount64)(__UINT64_TYPE__ __i) {
 	__i = (__i & __UINT64_C(0x00ff00ff00ff00ff)) + ((__i >> 8) & __UINT64_C(0x00ff00ff00ff00ff));
 	__i = (__i & __UINT64_C(0x0000ffff0000ffff)) + ((__i >> 16) & __UINT64_C(0x0000ffff0000ffff));
 	__i = (__i & __UINT64_C(0x00000000ffffffff)) + ((__i >> 32) & __UINT64_C(0x00000000ffffffff));
-	return __i;
+	return (__SHIFT_TYPE__)__i;
 }
 #endif /* !__hybrid_popcount64 */
 #endif /* __UINT64_TYPE__ */

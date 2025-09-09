@@ -589,6 +589,16 @@ DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefIfNotOne)(DeeObject *__restri
 DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob);
 
 #ifdef __INTELLISENSE__
+#define _DeeRefcnt_Inc(x)               (void)(++*(x))
+#define _DeeRefcnt_Dec(x)               (void)(--*(x))
+#define _DeeRefcnt_FetchInc(x)          ((*(x))++)
+#define _DeeRefcnt_FetchDec(x)          ((*(x))--)
+#define _DeeRefcnt_IncFetch(x)          (++(*(x)))
+#define _DeeRefcnt_DecFetch(x)          (--(*(x)))
+#define _DeeRefcnt_AddFetch(x, n)       ((*(x)) += (n))
+#define _DeeRefcnt_FetchAdd(x, n)       ((Dee_refcnt_t)(((*(x)) += (n)) - (n)))
+#define _DeeRefcnt_SubFetch(x, n)       ((*(x)) -= (n))
+#define _DeeRefcnt_FetchSub(x, n)       ((Dee_refcnt_t)(((*(x)) -= (n)) + (n)))
 #define Dee_Incref_untraced(x)          (void)(&(x)->ob_refcnt)
 #define Dee_Incref_n_untraced(x, n)     (void)(((x)->ob_refcnt += (n)))
 #define Dee_Decref_untraced(x)          (void)(&(x)->ob_refcnt)
@@ -609,6 +619,8 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define _DeeFatal_BadDecref(ob) DeeFatal_BadDecref((DeeObject *)(ob), __FILE__, __LINE__)
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 #ifdef CONFIG_NO_THREADS
+#define _DeeRefcnt_Inc(x)         (void)(++*(x))
+#define _DeeRefcnt_Dec(x)         (void)(--*(x))
 #define _DeeRefcnt_FetchInc(x)    ((*(x))++)
 #define _DeeRefcnt_FetchDec(x)    ((*(x))--)
 #define _DeeRefcnt_IncFetch(x)    (++(*(x)))
@@ -656,31 +668,39 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
  *       debug information when the resulting code isn't getting optimized.
  *       Therefor, try to bypass them here to speed up compile-time and ease debugging. */
 #if Dee_SIZEOF_REFCNT_T == __SIZEOF_LONG__
+#   define _DeeRefcnt_Inc(x)      (void)_InterlockedIncrement((long volatile *)(x))
+#   define _DeeRefcnt_Dec(x)      (void)_InterlockedDecrement((long volatile *)(x))
 #   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)_InterlockedIncrement((long volatile *)(x)) - 1)
 #   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)_InterlockedDecrement((long volatile *)(x)) + 1)
 #   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)_InterlockedIncrement((long volatile *)(x)))
 #   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)_InterlockedDecrement((long volatile *)(x)))
 #elif Dee_SIZEOF_REFCNT_T == 8
+#   define _DeeRefcnt_Inc(x)      (void)_InterlockedIncrement64((__int64 volatile *)(x))
+#   define _DeeRefcnt_Dec(x)      (void)_InterlockedDecrement64((__int64 volatile *)(x))
 #   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)_InterlockedIncrement64((__int64 volatile *)(x)) - 1)
 #   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)_InterlockedDecrement64((__int64 volatile *)(x)) + 1)
 #   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)_InterlockedIncrement64((__int64 volatile *)(x)))
 #   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)_InterlockedDecrement64((__int64 volatile *)(x)))
 #endif /* Dee_SIZEOF_REFCNT_T == ... */
 #endif /* _MSC_VER */
-#ifndef _DeeRefcnt_FetchInc
+#ifndef _DeeRefcnt_Inc
+#define _DeeRefcnt_Inc(x)      __hybrid_atomic_inc(x, __ATOMIC_SEQ_CST)
+#define _DeeRefcnt_Dec(x)      __hybrid_atomic_dec(x, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_FetchInc(x) __hybrid_atomic_fetchinc(x, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_FetchDec(x) __hybrid_atomic_fetchdec(x, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_IncFetch(x) __hybrid_atomic_incfetch(x, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_DecFetch(x) __hybrid_atomic_decfetch(x, __ATOMIC_SEQ_CST)
-#endif /* !_DeeRefcnt_FetchInc */
-#ifndef _DeeRefcnt_FetchAdd
+#endif /* !_DeeRefcnt_Inc */
+#ifndef _DeeRefcnt_Add
+#define _DeeRefcnt_Add(x, n)      __hybrid_atomic_add(x, n, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_FetchAdd(x, n) __hybrid_atomic_fetchadd(x, n, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_AddFetch(x, n) __hybrid_atomic_addfetch(x, n, __ATOMIC_SEQ_CST)
-#endif /* !_DeeRefcnt_FetchAdd */
-#ifndef _DeeRefcnt_FetchSub
+#endif /* !_DeeRefcnt_Add */
+#ifndef _DeeRefcnt_Sub
+#define _DeeRefcnt_Sub(x, n)      __hybrid_atomic_sub(x, n, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_FetchSub(x, n) __hybrid_atomic_fetchsub(x, n, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_SubFetch(x, n) __hybrid_atomic_subfetch(x, n, __ATOMIC_SEQ_CST)
-#endif /* !_DeeRefcnt_FetchSub */
+#endif /* !_DeeRefcnt_Sub */
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 #ifdef __NO_builtin_expect
 #define Dee_Incref_untraced(x)          (void)(_DeeRefcnt_FetchInc(&(x)->ob_refcnt) || (_DeeFatal_BadIncref(x), 0))
@@ -701,8 +721,8 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #define Dee_DecrefIfOne_untraced(self)  Dee_DecrefIfOne_untraced_d((DeeObject *)(self), __FILE__, __LINE__)
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-#define Dee_Incref_untraced(x)          (void)_DeeRefcnt_FetchInc(&(x)->ob_refcnt)
-#define Dee_Incref_n_untraced(x, n)     (void)_DeeRefcnt_AddFetch(&(x)->ob_refcnt, n)
+#define Dee_Incref_untraced(x)          _DeeRefcnt_Inc(&(x)->ob_refcnt)
+#define Dee_Incref_n_untraced(x, n)     _DeeRefcnt_Add(&(x)->ob_refcnt, n)
 #define Dee_Decref_untraced(x)          (void)(_DeeRefcnt_DecFetch(&(x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_Decref_n_untraced(x, n)     (void)(_DeeRefcnt_SubFetch(&(x)->ob_refcnt, n) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_Decref_likely_untraced(x)   (void)(unlikely(_DeeRefcnt_DecFetch(&(x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), 0))
