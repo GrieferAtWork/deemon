@@ -3479,13 +3479,34 @@ DeeCodec_Encode(DeeObject *self, DeeObject *name,
                 unsigned int error_mode);
 
 
+#ifdef DEE_SOURCE
 /* Callback invoked whenever a string that had fini hooks enabled is destroyed.
  * Using this, you can use the address (or contents) of strings in hash tables
  * or trees to store additional meta-data on certain strings (e.g. pre-compiled
  * regex bytecode), and make use of string finalization hooks to (safely) remove
  * strings that have been destroyed from your table (or tree). */
-typedef NONNULL((2)) void
-(DCALL *Dee_string_fini_hook_t)(void *cookie, DeeObject *__restrict string);
+struct Dee_string_fini_hook {
+	/* Internal reference counter for this hook. */
+	Dee_refcnt_t sfh_refcnt;
+
+	/* [1..1][const] Called when `sfh_refcnt' hits zero.
+	 * This may happen asynchronously **AFTER** `DeeString_RemoveFiniHook()'
+	 * was called, possibly after `sfh_onfini' was called a couple more
+	 * times, and/or in the context of another thread. */
+	NONNULL_T((1)) void
+	(DCALL *sfh_destroy)(struct Dee_string_fini_hook *__restrict self);
+
+	/* [1..1][const] The callback that gets invoked */
+	NONNULL_T((1, 2)) void
+	(DCALL *sfh_onfini)(struct Dee_string_fini_hook *__restrict self,
+	                    DeeStringObject *__restrict string);
+};
+
+#define Dee_string_fini_hook_destroy(self) (*(self)->sfh_destroy)(self)
+#define Dee_string_fini_hook_incref(self)  _DeeRefcnt_Inc(&(self)->sfh_refcnt)
+#define Dee_string_fini_hook_decref(self)              \
+	(void)(_DeeRefcnt_DecFetch(&(self)->sfh_refcnt) || \
+	       (Dee_string_fini_hook_destroy(self), 0))
 
 /* Register an additional string finalization hook.
  *
@@ -3494,20 +3515,17 @@ typedef NONNULL((2)) void
  * during their life-time. Strings that never had finalization
  * hooks enabled may not invoke these hooks.
  *
- * This function considers the combination of `hook' and `cookie'
- * when it comes to determining if a hook was already defined.
- *
- * @return: 1 : No-op (given `hook' + `cookie' was already registered)
+ * @return: 1 : No-op (given `hook' was already registered)
  * @return: 0 : Success (hook was registered)
  * @return: -1: Failure (an error was thrown) */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
-DeeString_AddFiniHook(Dee_string_fini_hook_t hook, void *cookie);
+DeeString_AddFiniHook(struct Dee_string_fini_hook *__restrict hook);
 
 /* Unregister a previously register string finalization hook.
- * @return: true:  Given `hook' + `cookie' pair has been unregistered.
- * @return: false: Given `hook' + `cookie' pair wasn't registered. */
+ * @return: true:  Given `hook' has been unregistered.
+ * @return: false: Given `hook' was never registered. */
 DFUNDEF NONNULL((1)) bool DCALL
-DeeString_RemoveFiniHook(Dee_string_fini_hook_t hook, void *cookie);
+DeeString_RemoveFiniHook(struct Dee_string_fini_hook *__restrict hook);
 
 /* Mark a given string object `self' such that upon that string's
  * finalization (i.e.: it's reference count dropping to `0'), all
@@ -3530,6 +3548,7 @@ DeeString_EnableFiniHook(/*string*/ DeeObject *__restrict self);
  * @return: false: Insufficient memory (**NO** error was thrown) */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeString_TryEnableFiniHook(/*string*/ DeeObject *__restrict self);
+#endif /* DEE_SOURCE */
 
 DECL_END
 
