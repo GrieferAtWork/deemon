@@ -671,7 +671,7 @@ PRIVATE size_t string_fini_hooks_size = 0;
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeString_AddFiniHook(struct Dee_string_fini_hook *__restrict hook) {
 #define ES sizeof(DREF struct Dee_string_fini_hook *)
-	size_t index, new_index, old_hookc;
+	size_t index, new_index, old_hookc, new_hookc;
 	DREF struct Dee_string_fini_hook **old_hooks;
 	DREF struct Dee_string_fini_hook **new_hooks;
 again:
@@ -682,8 +682,9 @@ again:
 		return 1;
 	}
 	old_hookc = string_fini_hooks_size;
+	new_hookc = old_hookc + 1;
 	new_hooks = (DREF struct Dee_string_fini_hook **)Dee_TryReallocc(string_fini_hooks_list,
-	                                                                 old_hookc, ES);
+	                                                                 new_hookc, ES);
 	if likely(new_hooks) {
 		memmoveupc(&new_hooks[index + 1],
 		           &new_hooks[index],
@@ -696,7 +697,7 @@ again:
 		return 0;
 	}
 	string_fini_hooks_lock_endwrite();
-	new_hooks = (DREF struct Dee_string_fini_hook **)Dee_Mallocc(old_hookc, ES);
+	new_hooks = (DREF struct Dee_string_fini_hook **)Dee_Mallocc(new_hookc, ES);
 	if unlikely(!new_hooks)
 		goto err;
 	string_fini_hooks_lock_write();
@@ -717,7 +718,7 @@ free_new_hooks_and_restart:
 	memcpyc(new_hooks + index + 1, old_hooks + index,
 	        old_hookc - index, ES);
 	string_fini_hooks_list = new_hooks;
-	++string_fini_hooks_size;
+	string_fini_hooks_size = new_hookc;
 	string_fini_hooks_lock_endwrite();
 	Dee_Free(old_hooks);
 	return 0;
@@ -806,7 +807,10 @@ DeeString_EnableFiniHook(/*string*/ DeeObject *__restrict self) {
 		utf = Dee_string_utf_alloc();
 		if unlikely(!utf)
 			goto err;
-		utf = (struct string_utf *)Dee_UntrackAlloc(utf);
+		bzero(utf, sizeof(struct string_utf));
+		utf->u_width = STRING_WIDTH_1BYTE;
+		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
+		utf = Dee_string_utf_untrack(utf);
 		if unlikely(!atomic_cmpxch(&me->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			utf = me->s_data;
@@ -835,7 +839,10 @@ DeeString_TryEnableFiniHook(/*string*/ DeeObject *__restrict self) {
 		utf = Dee_string_utf_tryalloc();
 		if unlikely(!utf)
 			goto err;
-		utf = (struct string_utf *)Dee_UntrackAlloc(utf);
+		bzero(utf, sizeof(struct string_utf));
+		utf->u_width = STRING_WIDTH_1BYTE;
+		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
+		utf = Dee_string_utf_untrack(utf);
 		if unlikely(!atomic_cmpxch(&me->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			utf = me->s_data;
@@ -2273,12 +2280,21 @@ string_hasutf(String *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_hasregex(String *__restrict self) {
+string_hasfinihooks(String *__restrict self) {
 	struct string_utf *utf;
 	utf = atomic_read(&self->s_data);
 	if (utf == NULL)
 		return_false;
 	return_bool((atomic_read(&utf->u_flags) & STRING_UTF_FFINIHOOK) != 0);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_withfinihooks(String *__restrict self) {
+	if unlikely(DeeString_EnableFiniHook((DeeObject *)self))
+		goto err;
+	return_reference(self);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2566,22 +2582,25 @@ PRIVATE struct type_method_hint tpconst string_method_hints[] = {
 };
 
 PRIVATE struct type_getset tpconst string_getsets[] = {
-	TYPE_GETTER_F("ordinals", &DeeString_Ordinals, METHOD_FCONSTCALL,
-	              "->?S?Dint\n"
-	              "Returns a proxy view for the characters of @this ?. as a sequence of "
-	              /**/ "integers referring to the ordinal values of each character (s.a. ?#ord)"),
-	TYPE_GETTER_F("__hashed__", &string_hashed,
-	              METHOD_FNOREFESCAPE, /* Not CONSTCALL, because can change to true */
-	              "->?Dbool\n"
-	              "Evaluates to ?t if @this ?. has been hashed"),
-	TYPE_GETTER_F("__hasutf__", &string_hasutf,
-	              METHOD_FNOREFESCAPE, /* Not CONSTCALL, because can change to true */
-	              "->?Dbool\n"
-	              "Evaluates to ?t if @this ?. owns a UTF container"),
-	TYPE_GETTER_F("__hasregex__", &string_hasregex,
-	              METHOD_FNOREFESCAPE, /* Not CONSTCALL, because can change to true */
-	              "->?Dbool\n"
-	              "Evaluates to ?t if @this ?. has been compiled as a regex pattern in the past"),
+	TYPE_GETTER_AB_F("ordinals", &DeeString_Ordinals, METHOD_FCONSTCALL,
+	                 "->?S?Dint\n"
+	                 "Returns a proxy view for the characters of @this ?. as a sequence of "
+	                 /**/ "integers referring to the ordinal values of each character (s.a. ?#ord)"),
+	TYPE_GETTER_AB_F("__hashed__", &string_hashed,
+	                 METHOD_FNOREFESCAPE, /* Not CONSTCALL, because can change to true */
+	                 "->?Dbool\n"
+	                 "Evaluates to ?t if @this ?. has been hashed"),
+	TYPE_GETTER_AB_F("__hasutf__", &string_hasutf,
+	                 METHOD_FNOREFESCAPE, /* Not CONSTCALL, because can change to true */
+	                 "->?Dbool\n"
+	                 "Evaluates to ?t if @this ?. owns a UTF container"),
+	TYPE_GETTER_AB_F("__hasfinihooks__", &string_hasfinihooks,
+	                 METHOD_FNOREFESCAPE, /* Not CONSTCALL, because can change to true */
+	                 "->?Dbool\n"
+	                 "Evaluates to ?t if finalization hooks are enabled for @this ?.\n"
+	                 "Hooks are enabled if the string is compiled as regex, or ?#__enable_fini_hooks__ "
+	                 /**/ "has been evaluated. Other modules may also enable finalization hooks in order "
+	                 /**/ "to have custom code execute when strings are disposed (s.a. ?Ert:StringFiniHook)"),
 	TYPE_GETTER_BOUND_F(STR_first, &string_getfirst, &string_nonempty_asbound,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?.\n"
@@ -2592,47 +2611,51 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	                    "->?.\n"
 	                    "#tUnboundAttribute{@this ?. is empty}"
 	                    "Returns the last character of @this ?."),
-	TYPE_GETTER_F("__sizeof__", &string_sizeof,
-	              METHOD_FNOREFESCAPE, /* Not CONSTCALL, because can change when UTF data is allocated */
-	              "->?Dint"),
+	TYPE_GETTER_AB_F("__sizeof__", &string_sizeof,
+	                 METHOD_FNOREFESCAPE, /* Not CONSTCALL, because can change when UTF data is allocated */
+	                 "->?Dint"),
+	TYPE_GETTER_AB_F("__withfinihooks__", &string_withfinihooks,
+	                 METHOD_FEXACTRETURN | METHOD_FNOREFESCAPE,
+	                 "->?.\n"
+	                 "Enable finalization hooks for @this (s.a. ?Ert:StringFiniHook)"),
 
 #ifdef CONFIG_HAVE_STRING_AUDITING_INTERNALS
-	TYPE_GETTER_F("__str_bytes__", &string_audit_str_bytes, METHOD_FCONSTCALL,
-	              "->?DBytes\n"
-	              "Internal function to view the bytes of ${DeeString_STR()}"),
-	TYPE_GETTER_F("__str_bytes_isutf8__", &string_audit_str_bytes_isutf8, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Value of ${DeeString_STR_ISUTF8()}"),
-	TYPE_GETTER_F("__str_bytes_islatin1__", &string_audit_str_bytes_islatin1, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Value of ${DeeString_STR_ISLATIN1()}"),
-	TYPE_GETTER_F("__str_width__", &string_audit_str_width, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Returns $1, $2 or $4 based on ${DeeString_WIDTH()}"),
-	TYPE_GETTER_F("__wstr_bytes__", &string_audit_wstr_bytes, METHOD_FCONSTCALL,
-	              "->?DBytes\n"
-	              "Internal function to view the bytes of ${DeeString_WSTR()}"),
-	TYPE_GETTER_F("__utf8_bytes__", &string_audit_utf8_bytes, METHOD_FCONSTCALL,
-	              "->?DBytes\n"
-	              "Internal function to view the bytes of ${DeeString_AsUtf8()}"),
-	TYPE_GETTER_F("__utf16_bytes__", &string_audit_utf16_bytes, METHOD_FCONSTCALL,
-	              "->?DBytes\n"
-	              "#tUnicodeEncodeError{@this ?Dstring contains ordinals that can't be encoded as utf-16}"
-	              "Internal function to view the bytes of ${DeeString_AsUtf16()}"),
-	TYPE_GETTER_F("__utf32_bytes__", &string_audit_utf32_bytes, METHOD_FCONSTCALL,
-	              "->?DBytes\n"
-	              "Internal function to view the bytes of ${DeeString_AsUtf32()}"),
-	TYPE_GETTER_F("__1byte_bytes__", &string_audit_1byte_bytes, METHOD_FCONSTCALL,
-	              "->?DBytes\n"
-	              "#tUnicodeEncodeError{@this ?Dstring contains ordinals greater than $0xff}"
-	              "Internal function to view the bytes of ${DeeString_As1Byte()}"),
-	TYPE_GETTER_F("__2byte_bytes__", &string_audit_2byte_bytes, METHOD_FCONSTCALL,
-	              "->?DBytes\n"
-	              "#tUnicodeEncodeError{@this ?Dstring contains ordinals greater than $0xffff}"
-	              "Internal function to view the bytes of ${DeeString_As2Byte()}"),
-	TYPE_GETTER_F("__4byte_bytes__", &string_audit_4byte_bytes, METHOD_FCONSTCALL,
-	              "->?DBytes\n"
-	              "Internal function to view the bytes of ${DeeString_As4Byte()}"),
+	TYPE_GETTER_AB_F("__str_bytes__", &string_audit_str_bytes, METHOD_FCONSTCALL,
+	                 "->?DBytes\n"
+	                 "Internal function to view the bytes of ${DeeString_STR()}"),
+	TYPE_GETTER_AB_F("__str_bytes_isutf8__", &string_audit_str_bytes_isutf8, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Value of ${DeeString_STR_ISUTF8()}"),
+	TYPE_GETTER_AB_F("__str_bytes_islatin1__", &string_audit_str_bytes_islatin1, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "Value of ${DeeString_STR_ISLATIN1()}"),
+	TYPE_GETTER_AB_F("__str_width__", &string_audit_str_width, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Returns $1, $2 or $4 based on ${DeeString_WIDTH()}"),
+	TYPE_GETTER_AB_F("__wstr_bytes__", &string_audit_wstr_bytes, METHOD_FCONSTCALL,
+	                 "->?DBytes\n"
+	                 "Internal function to view the bytes of ${DeeString_WSTR()}"),
+	TYPE_GETTER_AB_F("__utf8_bytes__", &string_audit_utf8_bytes, METHOD_FCONSTCALL,
+	                 "->?DBytes\n"
+	                 "Internal function to view the bytes of ${DeeString_AsUtf8()}"),
+	TYPE_GETTER_AB_F("__utf16_bytes__", &string_audit_utf16_bytes, METHOD_FCONSTCALL,
+	                 "->?DBytes\n"
+	                 "#tUnicodeEncodeError{@this ?Dstring contains ordinals that can't be encoded as utf-16}"
+	                 "Internal function to view the bytes of ${DeeString_AsUtf16()}"),
+	TYPE_GETTER_AB_F("__utf32_bytes__", &string_audit_utf32_bytes, METHOD_FCONSTCALL,
+	                 "->?DBytes\n"
+	                 "Internal function to view the bytes of ${DeeString_AsUtf32()}"),
+	TYPE_GETTER_AB_F("__1byte_bytes__", &string_audit_1byte_bytes, METHOD_FCONSTCALL,
+	                 "->?DBytes\n"
+	                 "#tUnicodeEncodeError{@this ?Dstring contains ordinals greater than $0xff}"
+	                 "Internal function to view the bytes of ${DeeString_As1Byte()}"),
+	TYPE_GETTER_AB_F("__2byte_bytes__", &string_audit_2byte_bytes, METHOD_FCONSTCALL,
+	                 "->?DBytes\n"
+	                 "#tUnicodeEncodeError{@this ?Dstring contains ordinals greater than $0xffff}"
+	                 "Internal function to view the bytes of ${DeeString_As2Byte()}"),
+	TYPE_GETTER_AB_F("__4byte_bytes__", &string_audit_4byte_bytes, METHOD_FCONSTCALL,
+	                 "->?DBytes\n"
+	                 "Internal function to view the bytes of ${DeeString_As4Byte()}"),
 #endif /* CONFIG_HAVE_STRING_AUDITING_INTERNALS */
 	TYPE_GETSET_END
 };

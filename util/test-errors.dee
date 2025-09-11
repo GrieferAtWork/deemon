@@ -376,7 +376,7 @@ function main() {
 //	invokeAsync(deemon.string.ordinals);
 //	invokeAsync(deemon.string.__hashed__);
 //	invokeAsync(deemon.string.__hasutf__);
-//	invokeAsync(deemon.string.__hasregex__);
+//	invokeAsync(deemon.string.__hasfinihooks__);
 //	invokeAsync(deemon.string.first);
 //	invokeAsync(deemon.string.last);
 //	invokeAsync(deemon.string.__sizeof__);

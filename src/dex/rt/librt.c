@@ -3752,7 +3752,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Set the threshold specifying how often a ?DFunction or ?DCode object "
 	      /**/ "needs to be called before deemon will automatically try to optimize it.") },
 
-	{ "SlabStat", (DeeObject *)&SlabStat_Type, MODSYM_FREADONLY }, /* Access to slab allocator statistics. */
+	{ "SlabStat", (DeeObject *)&SlabStat_Type, MODSYM_FREADONLY },             /* Access to slab allocator statistics. */
+	{ "StringFiniHook", (DeeObject *)&StringFiniHook_Type, MODSYM_FREADONLY }, /* Definition of user-defined string finalization hooks. */
 	{ "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
 	  DOC("(base:?X3?N?DType?S?DType,descriptor:?GClassDescriptor,module:?X2?DModule?N=!N)->?DType\n"
 	      "#pmodule{The module that is declaring the class (and returned by ${return.__module__}). "

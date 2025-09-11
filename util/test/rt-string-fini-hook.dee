@@ -17,35 +17,47 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_RT_LIBRT_H
-#define GUARD_DEX_RT_LIBRT_H 1
 
-#include <deemon/alloc.h>
-#include <deemon/api.h>
-#include <deemon/dex.h>
-#include <deemon/object.h>
+import * from deemon;
+import rt;
 
-DECL_BEGIN
+varying function dummy(x) {}
+__asm__("" : "+X" (dummy)); /* Prevent inlining */
 
-/* Types for accessing slab allocator statistics. */
+global destroyedStrings: {int...} = List();
 
-typedef struct {
-	OBJECT_HEAD
-	DeeSlabStat st_stat; /* [const] Slab statistics. */
-} SlabStatObject;
+function main() {
+	destroyedStrings.clear();
+	local hook = rt.StringFiniHook(id -> destroyedStrings.append(id));
 
-typedef struct {
-	OBJECT_HEAD
-	DREF SlabStatObject *si_stat; /* [1..1][const] Slab statistics. */
-	DeeSlabInfo         *si_info; /* [1..1][const] Slab information. */
-} SlabInfoObject;
+	function tester(x: string, enableHooks: bool = true): int {
+		local rtString = x.upper();
+		assert !rtString.__hasfinihooks__;
+		if (enableHooks) {
+			assert rtString.__withfinihooks__ === rtString;
+			assert rtString.__hasfinihooks__;
+		}
+		return rtString.id;
+	}
 
-INTDEF DeeTypeObject SlabStat_Type;
-INTDEF DeeTypeObject SlabInfo_Type;
+	local id1 = tester("foo");
+	assert destroyedStrings == {id1};
+	local id2 = tester("barfoo");
+	assert destroyedStrings == {id1, id2};
+
+	/* Strings that don't have fini hooks enabled mustn't appear */
+	tester("foo", enableHooks: false);
+	tester("barfoo", enableHooks: false);
+	tester("barbiz", enableHooks: false);
+	tester("bazbaz", enableHooks: false);
+	assert destroyedStrings == {id1, id2};
+
+	dummy(hook); /* Force dummy dependency to prevent early destruction */
+}
+
+if (hasattr(rt, "StringFiniHook")) {
+	main();
+	main(); /* Run test twice to assert that hook cleanup works */
+}
 
 
-INTDEF DeeTypeObject StringFiniHook_Type;
-
-DECL_END
-
-#endif /* !GUARD_DEX_RT_LIBRT_H */
