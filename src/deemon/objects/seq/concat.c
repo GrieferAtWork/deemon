@@ -153,7 +153,7 @@ catiterator_clear(CatIterator *__restrict self) {
 	Dee_Decref(iter);
 }
 
-PRIVATE struct type_gc catiterator_gc = {
+PRIVATE struct type_gc tpconst catiterator_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&catiterator_clear
 };
 

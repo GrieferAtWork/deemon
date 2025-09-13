@@ -168,9 +168,11 @@ DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line)
 /* If supported by the OS, provide a way to determine the allocated size of an malloc-pointer. */
 #undef Dee_MallocUsableSize
 #ifdef CONFIG_HAVE_malloc_usable_size
-#define Dee_MallocUsableSize(ptr) malloc_usable_size(ptr)
+#define Dee_MallocUsableSize(ptr)        malloc_usable_size(ptr)
+#define Dee_MallocUsableSizeNonNull(ptr) malloc_usable_size(ptr)
 #elif defined(CONFIG_HAVE__msize)
-#define Dee_MallocUsableSize(ptr) (likely(ptr) ? _msize(ptr) : 0)
+#define Dee_MallocUsableSize(ptr)        (likely(ptr) ? _msize(ptr) : 0)
+#define Dee_MallocUsableSizeNonNull(ptr) _msize(ptr)
 #endif /* ... */
 
 #ifndef NDEBUG

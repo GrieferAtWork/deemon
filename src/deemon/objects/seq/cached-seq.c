@@ -198,7 +198,7 @@ cswi_clear(CachedSeq_WithIter *__restrict self) {
 	Dee_objectlist_elemv_free(old_elemv);
 }
 
-PRIVATE struct type_gc cswi_gc = {
+PRIVATE struct type_gc tpconst cswi_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&cswi_clear
 };
 
@@ -1130,7 +1130,7 @@ cswgi_clear(CachedSeq_WithGetItem *__restrict self, dvisit_t proc, void *arg) {
 
 #define cswsogi_gc cswgi_gc
 #define cswsgi_gc  cswgi_gc
-PRIVATE struct type_gc cswgi_gc = {
+PRIVATE struct type_gc tpconst cswgi_gc = {
 	/* .tp_clear */ (void (DCALL *)(DeeObject *__restrict))&cswgi_clear
 };
 

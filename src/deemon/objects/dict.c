@@ -3387,7 +3387,7 @@ err:
 }
 
 
-PRIVATE struct type_gc dict_gc = {
+PRIVATE struct type_gc tpconst dict_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&dict_clear,
 	/* .tp_pclear = */ NULL,
 	/* .tp_gcprio = */ 0,

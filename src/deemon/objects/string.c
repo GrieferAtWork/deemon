@@ -742,7 +742,20 @@ DeeString_RemoveFiniHook(struct Dee_string_fini_hook *__restrict hook) {
 		memmovedownc(&string_fini_hooks_list[index],
 		             &string_fini_hooks_list[index + 1],
 		             string_fini_hooks_size - index, ES);
-		string_fini_hooks_lock_endwrite();
+		if (string_fini_hooks_size == 0) {
+			struct Dee_string_fini_hook **old_list;
+			old_list = string_fini_hooks_list;
+			string_fini_hooks_lock_endwrite();
+			Dee_Free(old_list);
+		} else {
+			struct Dee_string_fini_hook **new_list;
+			new_list = (struct Dee_string_fini_hook **)Dee_TryReallocc(string_fini_hooks_list,
+			                                                           string_fini_hooks_size,
+			                                                           sizeof(struct Dee_string_fini_hook *));
+			if likely(new_list)
+				string_fini_hooks_list = new_list;
+			string_fini_hooks_lock_endwrite();
+		}
 		Dee_string_fini_hook_decref(hook);
 		return true;
 	}
@@ -753,7 +766,7 @@ DeeString_RemoveFiniHook(struct Dee_string_fini_hook *__restrict hook) {
 
 
 PRIVATE NONNULL((1)) void DCALL
-DeeString_InvokeUserFiniHooks(String *__restrict self) {
+DeeString_InvokeUserFiniHooks(String const *__restrict self) {
 	size_t i;
 	string_fini_hooks_lock_read();
 	for (i = 0; i < string_fini_hooks_size; ++i) {
@@ -772,10 +785,10 @@ DeeString_InvokeUserFiniHooks(String *__restrict self) {
 /* Destroy the regex cache associated with `self'.
  * Called from `DeeString_Type.tp_fini' when `STRING_UTF_FFINIHOOK' was set. */
 INTDEF NONNULL((1)) void DCALL /* From "./unicode/regex.c" */
-DeeString_DestroyRegex(String *__restrict self);
+DeeString_DestroyRegex(String const *__restrict self);
 
 PRIVATE NONNULL((1)) void DCALL
-DeeString_InvokeFiniHooks(String *__restrict self) {
+DeeString_InvokeFiniHooks(String const *__restrict self) {
 	/* Built-in finalization hooks */
 	DeeString_DestroyRegex(self);
 

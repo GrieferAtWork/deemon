@@ -1042,7 +1042,7 @@ sfi_clear(SeqFlatIterator *__restrict self) {
 	Dee_Decref(old_curriter);
 }
 
-PRIVATE struct type_gc sfi_gc = {
+PRIVATE struct type_gc tpconst sfi_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&sfi_clear
 };
 

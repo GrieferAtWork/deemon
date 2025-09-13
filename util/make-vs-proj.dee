@@ -232,6 +232,44 @@ class SourceFile {
 	@@Source file kind (one o `FILE_KIND_*`)
 	public member kind: int;
 
+	public property properties: {string: string} = {
+		get(): {string: string} {
+			if (_properties !is bound)
+				_properties = _loadProperties();
+			return _properties;
+		}
+	}
+	private member _properties: {string: string};
+	private function _loadProperties(): {string: string} {
+		local fileData = File.open(path, "rb").read();
+		final local PREFIX = "/*[[[vs";
+		final local SUFFIX = "]]]*/";
+		if (!fileData.startswith(PREFIX))
+			return Dict.Frozen();
+		local start = #PREFIX;
+		local end = fileData.find(SUFFIX, start);
+		if (end < 0)
+			throw Error(f"Missing {repr SUFFIX} in header of {repr path}");
+		while (start < end && fileData.isspace(start))
+			++start;
+		while (end > start && fileData.isspace(end - 1))
+			--end;
+		local header = fileData[start:end];
+		local result = Dict();
+		for (local line: header.splitlines(false)) {
+			line = line.strip();
+			if (line.startswith("#") || !line)
+				continue;
+			local eq = line.find("=");
+			if (eq < 0)
+				throw Error(f"Missing '=' in {repr line} in file {repr path}");
+			local key = line[:eq].rstrip();
+			local val = line[eq+1:].lstrip();
+			result[key] = val;
+		}
+		return result;
+	}
+
 	public function getFilterPath(componentName: string): string {
 		if (r"\" !in path)
 			return "";
@@ -280,7 +318,21 @@ function printVcxprojSourceFileGroups(fp: File, pathPrefix: string, sourceFiles:
 	for (local sourceFile: sourceFiles) {
 		if (sourceFile.kind != FILE_KIND_SRC)
 			continue;
-		fp << '		<ClCompile Include="' << pathPrefix << sourceFile.path << '" />\r\n';
+		local props = sourceFile.properties;
+		local clCompileOptions = [];
+		local ClCompile_CompileAs = props.get("ClCompile.CompileAs");
+		if (ClCompile_CompileAs !is none) {
+			clCompileOptions.append(f"<CompileAs>{ClCompile_CompileAs}</CompileAs>");
+		}
+		
+		if (clCompileOptions) {
+			fp << '		<ClCompile Include="' << pathPrefix << sourceFile.path << '">\r\n';
+			for (local opt: clCompileOptions)
+				fp << '			' << opt << '\r\n';
+			fp << '		</ClCompile>\r\n';
+		} else {
+			fp << '		<ClCompile Include="' << pathPrefix << sourceFile.path << '" />\r\n';
+		}
 	}
 
 	local miscSourceFiles = List(

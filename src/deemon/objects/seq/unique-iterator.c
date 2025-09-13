@@ -104,7 +104,7 @@ di_clear(DistinctIterator *__restrict self) {
 	Dee_simple_hashset_with_lock_clear(&self->di_encountered);
 }
 
-PRIVATE struct type_gc di_gc = {
+PRIVATE struct type_gc tpconst di_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&di_clear
 };
 

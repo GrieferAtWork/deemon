@@ -865,7 +865,7 @@ muiter_bool(MapUnionIterator *__restrict self) {
 	                                     self->mui_union->mu_a);
 }
 
-PRIVATE struct type_gc muiter_gc = {
+PRIVATE struct type_gc tpconst muiter_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *))&muiter_clear
 };
 
@@ -2708,7 +2708,7 @@ PRIVATE struct type_iterator msditer_iterator = {
 	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextkey),
 };
 
-PRIVATE struct type_gc msditer_gc = {
+PRIVATE struct type_gc tpconst msditer_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *))&msditer_clear
 };
 

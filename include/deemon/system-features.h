@@ -632,6 +632,11 @@ func("wfsymlinkat", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wfsymlinka
 
 functest("time(NULL)", "defined(CONFIG_HAVE_TIME_H)");
 functest("time64(NULL)", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_TIME64)");
+functest("gmtime_r(NULL, NULL)", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX)");
+functest("gmtime64_r(NULL, NULL)", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX) && defined(__USE_TIME64)");
+functest("localtime_s(NULL, NULL)", "defined(CONFIG_HAVE_TIME_H) && " + addparen(msvc));
+functest("_localtime32_s(NULL, NULL)", "defined(CONFIG_HAVE_TIME_H) && " + addparen(msvc));
+functest("_localtime64_s(NULL, NULL)", "defined(CONFIG_HAVE_TIME_H) && " + addparen(msvc));
 func("clock_gettime", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)", test: "struct timespec ts; return clock_gettime(0, &ts);");
 func("clock_gettime64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309) && defined(__USE_TIME64)", test: "struct timespec64 ts; return clock_gettime64(0, &ts);");
 constant("CLOCK_MONOTONIC", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)");
@@ -5233,6 +5238,46 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(time64) || defined(__time64_defined) || (defined(CONFIG_HAVE_TIME_H) && \
        defined(__USE_TIME64)))
 #define CONFIG_HAVE_time64
+#endif
+
+#ifdef CONFIG_NO_gmtime_r
+#undef CONFIG_HAVE_gmtime_r
+#elif !defined(CONFIG_HAVE_gmtime_r) && \
+      (defined(gmtime_r) || defined(__gmtime_r_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(__USE_POSIX)))
+#define CONFIG_HAVE_gmtime_r
+#endif
+
+#ifdef CONFIG_NO_gmtime64_r
+#undef CONFIG_HAVE_gmtime64_r
+#elif !defined(CONFIG_HAVE_gmtime64_r) && \
+      (defined(gmtime64_r) || defined(__gmtime64_r_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(__USE_POSIX) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_gmtime64_r
+#endif
+
+#ifdef CONFIG_NO_localtime_s
+#undef CONFIG_HAVE_localtime_s
+#elif !defined(CONFIG_HAVE_localtime_s) && \
+      (defined(localtime_s) || defined(__localtime_s_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE_localtime_s
+#endif
+
+#ifdef CONFIG_NO__localtime32_s
+#undef CONFIG_HAVE__localtime32_s
+#elif !defined(CONFIG_HAVE__localtime32_s) && \
+      (defined(_localtime32_s) || defined(___localtime32_s_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__localtime32_s
+#endif
+
+#ifdef CONFIG_NO__localtime64_s
+#undef CONFIG_HAVE__localtime64_s
+#elif !defined(CONFIG_HAVE__localtime64_s) && \
+      (defined(_localtime64_s) || defined(___localtime64_s_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__localtime64_s
 #endif
 
 #ifdef CONFIG_NO_clock_gettime
@@ -10285,6 +10330,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* memccpy = _memccpy */
 
 #if defined(CONFIG_HAVE__msize) && !defined(CONFIG_HAVE_malloc_usable_size)
+#define CONFIG_HAVE_malloc_usable_size_IS__msize
 #define CONFIG_HAVE_malloc_usable_size
 #undef malloc_usable_size
 #define malloc_usable_size(ptr) (likely(ptr) ? _msize(ptr) : 0)

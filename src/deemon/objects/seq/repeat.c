@@ -147,7 +147,7 @@ repeatiter_clear(RepeatIterator *__restrict self) {
 	Dee_Decref(iter);
 }
 
-PRIVATE struct type_gc repeatiter_gc = {
+PRIVATE struct type_gc tpconst repeatiter_gc = {
 	/* .tp_gc = */ (void (DCALL *)(DeeObject *__restrict))&repeatiter_clear
 };
 

@@ -56,7 +56,7 @@ struct string_fini_hook_object {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 StringFiniHook_OnFini_impl(StringFiniHook *__restrict self,
-                           DeeStringObject *__restrict string) {
+                           DeeStringObject const *__restrict string) {
 	uintptr_t string_id = DeeObject_Id(string);
 	DREF DeeObject *result, *argv[1];
 	argv[0] = DeeInt_NewUIntptr(string_id);
@@ -74,7 +74,7 @@ err:
 
 PRIVATE NONNULL((1, 2)) void DCALL
 StringFiniHook_OnFini(StringFiniHook *__restrict self,
-                      DeeStringObject *__restrict string) {
+                      DeeStringObject const *__restrict string) {
 	int error = StringFiniHook_OnFini_impl(self, string);
 	if unlikely(error) {
 		DeeError_Print("Unhandled exception in string finalization hook\n",
@@ -92,7 +92,7 @@ user_string_fini_hook_destroy(struct Dee_string_fini_hook *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 user_string_fini_hook_onfini(struct Dee_string_fini_hook *__restrict self,
-                             DeeStringObject *__restrict string) {
+                             DeeStringObject const *__restrict string) {
 	DREF StringFiniHook *user;
 	struct user_string_fini_hook *me = user_string_fini_hook_fromhook(self);
 	user = (DREF StringFiniHook *)Dee_weakref_lock(&me->usfh_user);

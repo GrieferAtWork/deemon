@@ -432,7 +432,7 @@ suiter_clear(SetUnionIterator *__restrict self) {
 	Dee_Decref(iter);
 }
 
-PRIVATE struct type_gc suiter_gc = {
+PRIVATE struct type_gc tpconst suiter_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *))&suiter_clear
 };
 

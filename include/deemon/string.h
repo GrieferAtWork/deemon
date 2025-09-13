@@ -3499,7 +3499,7 @@ struct Dee_string_fini_hook {
 	/* [1..1][const] The callback that gets invoked */
 	NONNULL_T((1, 2)) void
 	(DCALL *sfh_onfini)(struct Dee_string_fini_hook *__restrict self,
-	                    DeeStringObject *__restrict string);
+	                    DeeStringObject const *__restrict string);
 };
 
 #define Dee_string_fini_hook_destroy(self) (*(self)->sfh_destroy)(self)

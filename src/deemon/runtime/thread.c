@@ -51,6 +51,7 @@
 #include <hybrid/debug-alignment.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
+#include <hybrid/sequence/bsearch.h>
 #include <hybrid/sequence/list.h>
 /**/
 
@@ -1145,6 +1146,7 @@ PRIVATE Dee_shared_lock_t thread_list_lock = DEE_SHARED_LOCK_INIT;
 INTERN DeeOSThreadObject DeeThread_Main = {
 	/* .ot_thread = */ {
 		OBJECT_HEAD_INIT(&DeeThread_Type),
+		/* .t_inthookon  = */ 0,
 		/* .t_str_curr   = */ NULL,
 		/* .t_repr_curr  = */ NULL,
 		/* .t_hash_curr  = */ NULL,
@@ -2841,6 +2843,9 @@ PRIVATE VOID NTAPI dummy_apc_func(ULONG_PTR Parameter) {
 INTDEF NONNULL((1)) void DCALL
 DeeFutex_WakeGlobal(DeeThreadObject *thread);
 
+PRIVATE NONNULL((1)) void DCALL
+DeeThread_InvokeUserInterruptHooks(DeeThreadObject *__restrict self);
+
 /* Try to wake the thread. This will:
  * - Interrupt a currently running, blocking system call (unless
  *   that call is specifically being made as uninterruptible)
@@ -2944,6 +2949,10 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 	/* Release the DETACHING lock. */
 	atomic_and(&me->ot_thread.t_state, ~Dee_THREAD_STATE_DETACHING);
 #endif /* !DeeThread_USE_SINGLE_THREADED */
+
+	/* Invoke interrupt hooks if enabled for the thread. */
+	if (atomic_read(&me->ot_thread.t_inthookon) != 0)
+		DeeThread_InvokeUserInterruptHooks(&me->ot_thread);
 }
 
 /* Schedule an interrupt for a given thread.
@@ -3791,6 +3800,7 @@ thread_init(DeeThreadObject *__restrict self,
 	if (argc == 1 && DeeInt_Check(argv[0])) {
 		/* Construct unmanaged thread from TID */
 		DeeOSThreadObject *me = DeeThread_AsOSThread(self);
+		me->ot_thread.t_inthookon              = 0;
 		me->ot_thread.t_str_curr               = NULL;
 		me->ot_thread.t_repr_curr              = NULL;
 		me->ot_thread.t_hash_curr              = NULL;
@@ -3867,6 +3877,7 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_except            = NULL;
 	self->t_exceptsz          = 0;
 	self->t_execsz            = 0;
+	self->t_inthookon         = 0;
 	self->t_str_curr          = NULL;
 	self->t_repr_curr         = NULL;
 	self->t_hash_curr         = NULL;
@@ -5259,6 +5270,147 @@ except_frame_gettb(struct except_frame *__restrict self) {
 	return self->ef_trace;
 }
 
+
+#ifndef CONFIG_NO_THREADS
+PRIVATE Dee_atomic_rwlock_t thread_interrupt_hooks_lock = DEE_ATOMIC_RWLOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+#define thread_interrupt_hooks_lock_reading()    Dee_atomic_rwlock_reading(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_writing()    Dee_atomic_rwlock_writing(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_tryread()    Dee_atomic_rwlock_tryread(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_trywrite()   Dee_atomic_rwlock_trywrite(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_canread()    Dee_atomic_rwlock_canread(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_canwrite()   Dee_atomic_rwlock_canwrite(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_waitread()   Dee_atomic_rwlock_waitread(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_read()       Dee_atomic_rwlock_read(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_write()      Dee_atomic_rwlock_write(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_upgrade()    Dee_atomic_rwlock_upgrade(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_downgrade()  Dee_atomic_rwlock_downgrade(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_endwrite()   Dee_atomic_rwlock_endwrite(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_endread()    Dee_atomic_rwlock_endread(&thread_interrupt_hooks_lock)
+#define thread_interrupt_hooks_lock_end()        Dee_atomic_rwlock_end(&thread_interrupt_hooks_lock)
+
+/* [0..thread_interrupt_hooks_size][lock(thread_interrupt_hooks_lock)]
+ * List of string fini hooks (sorted ascendingly by the address of hooks). */
+PRIVATE DREF struct Dee_thread_interrupt_hook **thread_interrupt_hooks_list = NULL;
+PRIVATE size_t thread_interrupt_hooks_size = 0;
+
+
+/* Register an additional thread interrupt hook.
+ * @return: 1 : No-op (given `hook' was already registered)
+ * @return: 0 : Success (hook was registered)
+ * @return: -1: Failure (an error was thrown) */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeThread_AddInterruptHook(struct Dee_thread_interrupt_hook *__restrict hook) {
+#define ES sizeof(DREF struct Dee_thread_interrupt_hook *)
+	size_t index, new_index, old_hookc, new_hookc;
+	DREF struct Dee_thread_interrupt_hook **old_hooks;
+	DREF struct Dee_thread_interrupt_hook **new_hooks;
+again:
+	thread_interrupt_hooks_lock_write();
+	BSEARCH (index, thread_interrupt_hooks_list,
+	         thread_interrupt_hooks_size, , hook) {
+		thread_interrupt_hooks_lock_endwrite();
+		return 1;
+	}
+	old_hookc = thread_interrupt_hooks_size;
+	new_hookc = old_hookc + 1;
+	new_hooks = (DREF struct Dee_thread_interrupt_hook **)Dee_TryReallocc(thread_interrupt_hooks_list,
+	                                                                      new_hookc, ES);
+	if likely(new_hooks) {
+		memmoveupc(&new_hooks[index + 1],
+		           &new_hooks[index],
+		           old_hookc - index, ES);
+		Dee_thread_interrupt_hook_incref(hook);
+		new_hooks[index] = hook;
+		thread_interrupt_hooks_list = new_hooks;
+		++thread_interrupt_hooks_size;
+		thread_interrupt_hooks_lock_endwrite();
+		return 0;
+	}
+	thread_interrupt_hooks_lock_endwrite();
+	new_hooks = (DREF struct Dee_thread_interrupt_hook **)Dee_Mallocc(new_hookc, ES);
+	if unlikely(!new_hooks)
+		goto err;
+	thread_interrupt_hooks_lock_write();
+	if unlikely(old_hookc != thread_interrupt_hooks_size) {
+free_new_hooks_and_restart:
+		thread_interrupt_hooks_lock_endwrite();
+		Dee_Free(new_hooks);
+		goto again;
+	}
+	old_hooks = thread_interrupt_hooks_list;
+	BSEARCH (new_index, old_hooks, old_hookc, , hook)
+		goto free_new_hooks_and_restart;
+	if (new_index != index)
+		goto free_new_hooks_and_restart;
+	memcpyc(new_hooks, old_hooks, index, ES);
+	Dee_thread_interrupt_hook_incref(hook);
+	new_hooks[index] = hook;
+	memcpyc(new_hooks + index + 1, old_hooks + index,
+	        old_hookc - index, ES);
+	thread_interrupt_hooks_list = new_hooks;
+	thread_interrupt_hooks_size = new_hookc;
+	thread_interrupt_hooks_lock_endwrite();
+	Dee_Free(old_hooks);
+	return 0;
+err:
+	return -1;
+#undef ES
+}
+
+/* Unregister a previously register string finalization hook.
+ * @return: true:  Given `hook' has been unregistered.
+ * @return: false: Given `hook' was never registered. */
+PUBLIC NONNULL((1)) bool DCALL
+DeeThread_RemoveInterruptHook(struct Dee_thread_interrupt_hook *__restrict hook) {
+#define ES sizeof(DREF struct Dee_thread_interrupt_hook *)
+	size_t index;
+	thread_interrupt_hooks_lock_write();
+	BSEARCH (index, thread_interrupt_hooks_list,
+	         thread_interrupt_hooks_size, , hook) {
+		--thread_interrupt_hooks_size;
+		memmovedownc(&thread_interrupt_hooks_list[index],
+		             &thread_interrupt_hooks_list[index + 1],
+		             thread_interrupt_hooks_size - index, ES);
+		if (thread_interrupt_hooks_size == 0) {
+			struct Dee_thread_interrupt_hook **old_list;
+			old_list = thread_interrupt_hooks_list;
+			thread_interrupt_hooks_lock_endwrite();
+			Dee_Free(old_list);
+		} else {
+			struct Dee_thread_interrupt_hook **new_list;
+			new_list = (struct Dee_thread_interrupt_hook **)Dee_TryReallocc(thread_interrupt_hooks_list,
+			                                                                thread_interrupt_hooks_size,
+			                                                                sizeof(struct Dee_thread_interrupt_hook *));
+			if likely(new_list)
+				thread_interrupt_hooks_list = new_list;
+			thread_interrupt_hooks_lock_endwrite();
+		}
+		Dee_thread_interrupt_hook_decref(hook);
+		return true;
+	}
+	thread_interrupt_hooks_lock_endwrite();
+	return false;
+#undef ES
+}
+
+PRIVATE NONNULL((1)) void DCALL
+DeeThread_InvokeUserInterruptHooks(DeeThreadObject *__restrict self) {
+	size_t i;
+	thread_interrupt_hooks_lock_read();
+	for (i = 0; i < thread_interrupt_hooks_size; ++i) {
+		DREF struct Dee_thread_interrupt_hook *hook;
+		hook = thread_interrupt_hooks_list[i];
+		Dee_thread_interrupt_hook_incref(hook);
+		thread_interrupt_hooks_lock_endread();
+		(*hook->tih_onwake)(hook, self);
+		Dee_thread_interrupt_hook_decref(hook);
+		thread_interrupt_hooks_lock_read();
+	}
+	thread_interrupt_hooks_lock_endread();
+}
 
 DECL_END
 

@@ -735,7 +735,7 @@ extend_typ_until_i:
 			local itemCTypeRaw = item.cTypeRaw;
 			UNPformat = UNP_BY_CTYPE.get(itemCTypeRaw);
 			if (UNPformat is none) {
-				if (itemCTypeRaw.endswith("Object*")) {
+				if (itemCTypeRaw.endswith("*")) {
 					UNPformat = "o";
 				} else {
 					throw Error(f"No way to encode type {repr itemCTypeRaw} in as UNPformat");

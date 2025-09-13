@@ -443,7 +443,7 @@ PRIVATE bool DCALL regex_cache_rehash(int sizedir) {
 /* Destroy the regex cache associated with `self'.
  * Called from `DeeString_Type.tp_fini' when `STRING_UTF_FFINIHOOK' was set. */
 INTERN NONNULL((1)) void DCALL
-DeeString_DestroyRegex(DeeStringObject *__restrict self) {
+DeeString_DestroyRegex(DeeStringObject const *__restrict self) {
 	struct regex_cache_entry *item, old_item;
 	Dee_hash_t i, perturb, hash;
 	hash = regex_cache_entry_hashstr(self);

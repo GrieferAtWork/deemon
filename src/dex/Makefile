@@ -167,6 +167,25 @@ $(BIN_PATH)/lib/rt$(DLL): $(DEX_OBJECTS_rt) $(BIN_PATH)/deemon$(EXE)
 	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_rt) $(LIBS) $(DEX_LIBS)
 
 
+### sqlite3
+ifndef CONFIG_WITHOUT_DEX_SQLITE3
+DEX += sqlite3
+DEX_SOURCES_sqlite3 += $(wildcard $(SRC_ROOT)/src/dex/sqlite3/*.c)
+DEX_OBJECTS_sqlite3 = $(call dex_objects,sqlite3,$(DEX_SOURCES_sqlite3))
+-include $(foreach F,$(DEX_OBJECTS_sqlite3),$(F:.o=.MF))
+$(BLD_PATH)/dex/sqlite3/%.o: $(SRC_ROOT)/%.c
+	@mkdir -p $(dir $@)
+	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
+#Special case: compile "ext-sqlite3.c" as C-code (and never as C++ code)
+$(BLD_PATH)/dex/sqlite3/ext-sqlite3.c: $(SRC_ROOT)/src/dex/sqlite3/ext-sqlite3.c
+	@mkdir -p $(dir $@)
+	$(CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
+# Include $(LIBDL) here because sqlite needs it for extensions
+$(BIN_PATH)/lib/sqlite3$(DLL): $(DEX_OBJECTS_sqlite3) $(BIN_PATH)/deemon$(EXE)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_sqlite3) $(LIBS) $(DEX_LIBS) $(LIBDL)
+endif
+
+
 ### threading
 ifndef CONFIG_WITHOUT_DEX_THREADING
 DEX += threading

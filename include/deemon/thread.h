@@ -326,6 +326,7 @@ struct Dee_thread_interrupt {
 struct Dee_thread_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC object. */
+	Dee_refcnt_t                   t_inthookon;  /* [lock(ATOMIC)]  */
 	struct Dee_repr_frame         *t_str_curr;   /* [lock(PRIVATE(DeeThread_Self()))][0..1]
 	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
 	                                              * Chain of GC objects currently invoking the `__str__' operator. */
@@ -543,7 +544,9 @@ INTDEF WUNUSED NONNULL((1)) int
  * will be able to optimize the secondary lookup away, making the code slightly faster. */
 #define DeeThread_CheckInterrupt() DeeThread_CheckInterruptSelf(DeeThread_Self())
 #endif /* !__OPTIMIZE_SIZE__ */
-#endif /* CONFIG_BUILDING_DEEMON */
+#else /* CONFIG_BUILDING_DEEMON */
+#define DeeThread_CheckInterruptSelf(self) DeeThread_CheckInterrupt()
+#endif /* !CONFIG_BUILDING_DEEMON */
 
 /* Suspend/resume execution of the given thread.
  * WARNING: Do _NOT_ expose these functions to user-code.
@@ -646,14 +649,72 @@ INTDEF bool DCALL DeeThread_ClearTls(void);
  *       Also: Don't expose these to user-code! */
 struct Dee_tls_callback_hooks {
 	/* [1..1][lock(WRITE_ONCE)] Called during thread finalization / clear.
-	 * @param: data: The `t_tlsdata' value of the thread in question (may not be calling thread)
-	 *               If the thread's `t_tlsdata' value was NULL, this function is not called. */
+	 * @param: data: The `t_context.d_tls' value of the thread in question (may not be calling thread)
+	 *               If the thread's `t_context.d_tls' value was NULL, this function is not called. */
 	void (DCALL *tc_fini)(void *__restrict data);
 };
 
 /* TLS implementation callbacks. */
 DDATDEF struct Dee_tls_callback_hooks _DeeThread_TlsCallbacks;
 #endif /* CONFIG_BUILDING_LIBTHREADING || CONFIG_BUILDING_DEEMON */
+
+
+/* Callback hook invoked by `DeeThread_Wake()'. These hooks are presented
+ * to allow special interrupt forwarding calls to get the thread to stop
+ * doing what it's currently doing, in case it is in some deeply nested
+ * 3rd party C code that only provides explicit means of interrupting
+ *
+ * To prevent unnecessary invocation of hooks, these additional hooks are
+ * only executed if a thread has a non-zero `t_inthookon'. This still means
+ * that you can just permanently enable hooks for some thread, but most
+ * code should simply inc/dec `t_inthookon' around sections where some
+ * thread should receive interrupt hooks.
+ *
+ * Example: sqlite3's `sqlite3_interrupt()' function is called if the
+ *          thread being interrupted is currently doing a database op. */
+struct Dee_thread_interrupt_hook {
+	/* Internal reference counter for this hook. */
+	Dee_refcnt_t tih_refcnt;
+
+	/* [1..1][const] Called when `tih_refcnt' hits zero.
+	 * This may happen asynchronously **AFTER** `DeeThread_RemoveInterruptHook()'
+	 * was called, possibly after `tih_onwake' was called a couple more times,
+	 * and/or in the context of another thread. */
+	NONNULL_T((1)) void
+	(DCALL *tih_destroy)(struct Dee_thread_interrupt_hook *__restrict self);
+
+	/* [1..1][const] The callback that gets invoked */
+	NONNULL_T((1, 2)) void
+	(DCALL *tih_onwake)(struct Dee_thread_interrupt_hook *__restrict self,
+	                    DeeThreadObject *__restrict thread);
+};
+
+#define Dee_thread_interrupt_hook_destroy(self) (*(self)->tih_destroy)(self)
+#define Dee_thread_interrupt_hook_incref(self)  _DeeRefcnt_Inc(&(self)->tih_refcnt)
+#define Dee_thread_interrupt_hook_decref(self)         \
+	(void)(_DeeRefcnt_DecFetch(&(self)->tih_refcnt) || \
+	       (Dee_thread_interrupt_hook_destroy(self), 0))
+
+/* Helper macros to enable/disable interrupt hooks for a given thread. */
+#define DeeThread_EnableInterruptHooks(self) \
+	_DeeRefcnt_Inc(&((DeeThreadObject *)Dee_REQUIRES_OBJECT(self))->t_inthookon)
+#define DeeThread_DisableInterruptHooks(self) \
+	_DeeRefcnt_Dec(&((DeeThreadObject *)Dee_REQUIRES_OBJECT(self))->t_inthookon)
+
+/* Register an additional thread interrupt hook.
+ * @return: 1 : No-op (given `hook' was already registered)
+ * @return: 0 : Success (hook was registered)
+ * @return: -1: Failure (an error was thrown) */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeThread_AddInterruptHook(struct Dee_thread_interrupt_hook *__restrict hook);
+
+/* Unregister a previously register string finalization hook.
+ * @return: true:  Given `hook' has been unregistered.
+ * @return: false: Given `hook' was never registered. */
+DFUNDEF NONNULL((1)) bool DCALL
+DeeThread_RemoveInterruptHook(struct Dee_thread_interrupt_hook *__restrict hook);
+
+
 
 /* The max stack-depth during execution before a stack-overflow is raised. */
 DDATDEF uint16_t DeeExec_StackLimit;
