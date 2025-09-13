@@ -1200,6 +1200,7 @@ EXPORTS
 	DeeSlab_TryMalloc5@0=_DeeSlab_TryMalloc5@0
 	DeeSlab_TryMalloc6@0=_DeeSlab_TryMalloc6@0
 	DeeSlab_TryMalloc8@0=_DeeSlab_TryMalloc8@0
+	DeeString_AddFiniHook@4=_DeeString_AddFiniHook@4
 	DeeString_As2Byte@4=_DeeString_As2Byte@4
 	DeeString_As4Byte@4=_DeeString_As4Byte@4
 	DeeString_AsBytes@8=_DeeString_AsBytes@8
@@ -1209,6 +1210,7 @@ EXPORTS
 	DeeString_Chr32@4=_DeeString_Chr32@4
 	DeeString_Chr8@4=_DeeString_Chr8@4
 	DeeString_DecodeBackslashEscaped@16=_DeeString_DecodeBackslashEscaped@16
+	DeeString_EnableFiniHook@4=_DeeString_EnableFiniHook@4
 	DeeString_FormatPrinter@24=_DeeString_FormatPrinter@24
 	DeeString_FreeWidth@4=_DeeString_FreeWidth@4
 	DeeString_FromBackslashEscaped@12=_DeeString_FromBackslashEscaped@12
@@ -1230,10 +1232,12 @@ EXPORTS
 	DeeString_PackUtf16Buffer@8=_DeeString_PackUtf16Buffer@8
 	DeeString_PackUtf32Buffer@8=_DeeString_PackUtf32Buffer@8
 	DeeString_PrintRepr@12=_DeeString_PrintRepr@12
+	DeeString_RemoveFiniHook@4=_DeeString_RemoveFiniHook@4
 	DeeString_ResizeBuffer@8=_DeeString_ResizeBuffer@8
 	DeeString_SetChar@12=_DeeString_SetChar@12
 	DeeString_SetUtf8@8=_DeeString_SetUtf8@8
 	DeeString_TryAsUtf8@4=_DeeString_TryAsUtf8@4
+	DeeString_TryEnableFiniHook@4=_DeeString_TryEnableFiniHook@4
 	DeeString_TryPack2ByteBuffer@4=_DeeString_TryPack2ByteBuffer@4
 	DeeString_TryPackUtf16Buffer@4=_DeeString_TryPackUtf16Buffer@4
 	DeeString_TryPackUtf32Buffer@4=_DeeString_TryPackUtf32Buffer@4
@@ -1255,6 +1259,7 @@ EXPORTS
 	DeeSystem_PrintPwd@8=_DeeSystem_PrintPwd@8
 	DeeSystem_Unlink@8=_DeeSystem_Unlink@8
 	DeeThread_Accede@0=_DeeThread_Accede@0
+	DeeThread_AddInterruptHook@4=_DeeThread_AddInterruptHook@4
 	DeeThread_CheckInterrupt@0=_DeeThread_CheckInterrupt@0
 	DeeThread_Detach@4=_DeeThread_Detach@4
 	DeeThread_FromTid@4=_DeeThread_FromTid@4
@@ -1262,6 +1267,7 @@ EXPORTS
 	DeeThread_GetTimeMicroSeconds@0=_DeeThread_GetTimeMicroSeconds@0
 	DeeThread_Interrupt@12=_DeeThread_Interrupt@12
 	DeeThread_Join@12=_DeeThread_Join@12
+	DeeThread_RemoveInterruptHook@4=_DeeThread_RemoveInterruptHook@4
 	DeeThread_Resume@4=_DeeThread_Resume@4
 	DeeThread_ResumeAll@0=_DeeThread_ResumeAll@0
 	DeeThread_Secede@4=_DeeThread_Secede@4

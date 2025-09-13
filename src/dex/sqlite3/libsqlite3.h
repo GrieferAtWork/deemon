@@ -90,10 +90,10 @@ typedef struct {
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Cell_GetValue(Cell *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Cell_Init(Cell *__restrict self, sqlite3_stmt *stmt, int col);
 /* Allocate a copy of columns from "stmt" as cell data */
-INTDEF WUNUSED Cell *DCALL Cell_NewRow(size_t ncol, sqlite3_stmt *stmt);
+INTDEF WUNUSED Cell *DCALL Cell_NewRow(unsigned int ncol, sqlite3_stmt *stmt);
 /* Destroy cell data */
-INTDEF NONNULL((1)) void DCALL Cell_DestroyRow(Cell *__restrict data, size_t ncol);
-INTDEF NONNULL((1, 3)) void DCALL Cell_VisitRow(Cell *__restrict data, size_t ncol, Dee_visit_t proc, void *arg);
+INTDEF NONNULL((1)) void DCALL Cell_DestroyRow(Cell *__restrict data, unsigned int ncol);
+INTDEF NONNULL((1, 3)) void DCALL Cell_VisitRow(Cell *__restrict data, unsigned int ncol, Dee_visit_t proc, void *arg);
 
 
 typedef struct {
@@ -112,7 +112,7 @@ typedef struct {
 
 struct rowfmt_object {
 	OBJECT_HEAD
-	size_t                           rf_ncol;  /* [const] # of columns in result set */
+	unsigned int                     rf_ncol;  /* [const] # of columns in result set */
 	COMPILER_FLEXIBLE_ARRAY(CellFmt, rf_cols); /* [const] cell specs */
 };
 #define RowFmt_Alloc(ncol) \
@@ -256,9 +256,9 @@ INTDEF WUNUSED NONNULL((1)) DREF Row *DCALL Query_Step(Query *__restrict self);
 INTDEF WUNUSED NONNULL((1)) uint64_t DCALL Query_Exec(Query *__restrict self);
 
 /* Skip at most `count' rows, returning the actual # of skipped rows.
- * @return: (size_t)-1: Error
+ * @return: (uint64_t)-1: Error
  * @return: * : The # of skipped rows */
-INTDEF WUNUSED NONNULL((1)) size_t DCALL Query_Skip(Query *__restrict self, size_t count);
+INTDEF WUNUSED NONNULL((1)) uint64_t DCALL Query_Skip(Query *__restrict self, uint64_t count);
 
 
 
@@ -476,10 +476,10 @@ INTDEF WUNUSED NONNULL((1)) uint64_t DCALL
 db_exec_stmt(DB *__restrict self, sqlite3_stmt *stmt);
 
 /* Skip at most `count' rows in `stmt', returning the actual # of skipped rows.
- * @return: (size_t)-1: Error
+ * @return: (uint64_t)-1: Error
  * @return: * : The # of skipped rows */
-INTDEF WUNUSED NONNULL((1)) size_t DCALL
-db_skip_stmt(DB *__restrict self, sqlite3_stmt *stmt, size_t count);
+INTDEF WUNUSED NONNULL((1)) uint64_t DCALL
+db_skip_stmt(DB *__restrict self, sqlite3_stmt *stmt, uint64_t count);
 
 
 

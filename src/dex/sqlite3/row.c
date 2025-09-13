@@ -94,14 +94,14 @@ err:
 
 /* Allocate a copy of columns from "stmt" as cell data */
 INTERN WUNUSED Cell *DCALL
-Cell_NewRow(size_t ncol, sqlite3_stmt *stmt) {
-	size_t i;
+Cell_NewRow(unsigned int ncol, sqlite3_stmt *stmt) {
+	unsigned int i;
 	Cell *result = (Cell *)Dee_Mallocc(ncol, sizeof(Cell));
 	if unlikely(!result)
 		goto err;
 	for (i = 0; i < ncol; ++i) {
 		Cell *cell = &result[i];
-		if unlikely(Cell_Init(cell, stmt, i))
+		if unlikely(Cell_Init(cell, stmt, (int)i))
 			goto err_r_icol;
 	}
 	return result;
@@ -116,14 +116,14 @@ err:
 
 /* Destroy cell data */
 INTERN NONNULL((1)) void DCALL
-Cell_DestroyRow(Cell *__restrict data, size_t ncol) {
+Cell_DestroyRow(Cell *__restrict data, unsigned int ncol) {
 	while (ncol--)
 		Cell_Fini(&data[ncol]);
 	Dee_Free(data);
 }
 
 INTERN NONNULL((1, 3)) void DCALL
-Cell_VisitRow(Cell *__restrict data, size_t ncol, Dee_visit_t proc, void *arg) {
+Cell_VisitRow(Cell *__restrict data, unsigned int ncol, Dee_visit_t proc, void *arg) {
 	while (ncol--)
 		Cell_Visit(&data[ncol]);
 }
@@ -135,7 +135,7 @@ Cell_VisitRow(Cell *__restrict data, size_t ncol, Dee_visit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) DREF RowFmt *DCALL
 _Query_NewRowFmt(Query *__restrict self) {
 	DREF RowFmt *result;
-	size_t i, ncol;
+	unsigned int i, ncol;
 	/* Need to lock the query because:
 	 * >> sqlite3_column_name:
 	 * >> >> The returned string pointer is valid until either the prepared statement
@@ -149,7 +149,7 @@ _Query_NewRowFmt(Query *__restrict self) {
 	 */
 	if (Query_Acquire(self))
 		goto err;
-	ncol = (size_t)sqlite3_column_count(self->q_stmt);
+	ncol = (unsigned int)sqlite3_column_count(self->q_stmt);
 	result = RowFmt_Alloc(ncol);
 	if unlikely(!result)
 		goto err_unlock;
@@ -162,7 +162,7 @@ _Query_NewRowFmt(Query *__restrict self) {
 
 		/* Allocate name */
 		do {
-			name = sqlite3_column_name(self->q_stmt, i);
+			name = sqlite3_column_name(self->q_stmt, (int)i);
 			/* >> If sqlite3_malloc() fails [...] then a NULL pointer is returned */
 		} while (!name && Dee_CollectMemory(32));
 		if unlikely(!name)
@@ -175,7 +175,7 @@ _Query_NewRowFmt(Query *__restrict self) {
 
 		/* Allocate decltype */
 		do {
-			decltype_ = sqlite3_column_decltype(self->q_stmt, i);
+			decltype_ = sqlite3_column_decltype(self->q_stmt, (int)i);
 			/* >> If sqlite3_malloc() fails [...] then a NULL pointer is returned */
 		} while (!decltype_ && Dee_CollectMemory(32));
 		if unlikely(!decltype_) {
@@ -382,34 +382,34 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 rowfmt_fini(RowFmt *__restrict self) {
-	size_t i;
+	unsigned int i;
 	for (i = 0; i < self->rf_ncol; ++i)
 		CellFmt_Fini(&self->rf_cols[i]);
 }
 
 /* Returns the index of column "column_name", or `(size_t)-1' if not found */
-PRIVATE NONNULL((1, 2)) size_t DCALL
+PRIVATE NONNULL((1, 2)) unsigned int DCALL
 rowfmt_indexof_string(RowFmt *__restrict self, char const *column_name) {
-	size_t i;
+	unsigned int i;
 	for (i = 0; i < self->rf_ncol; ++i) {
 		CellFmt *cell = &self->rf_cols[i];
 		if (DeeString_EqualsCStr(cell->cfmt_name, column_name))
 			return i;
 	}
-	return (size_t)-1;
+	return (unsigned int)-1;
 }
 
-PRIVATE NONNULL((1, 2)) size_t DCALL
+PRIVATE NONNULL((1, 2)) unsigned int DCALL
 rowfmt_indexof_string_len(RowFmt *__restrict self,
                           char const *column_name,
                           size_t column_namelen) {
-	size_t i;
+	unsigned int i;
 	for (i = 0; i < self->rf_ncol; ++i) {
 		CellFmt *cell = &self->rf_cols[i];
 		if (DeeString_EqualsBuf(cell->cfmt_name, column_name, column_namelen))
 			return i;
 	}
-	return (size_t)-1;
+	return (unsigned int)-1;
 }
 
 
@@ -559,15 +559,15 @@ row_getfmt(Row *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 row_size_fast(Row *__restrict self) {
-	size_t result;
+	unsigned int result;
 	Row_LockRead(self);
 	if (self->r_query) {
-		result = (size_t)sqlite3_column_count(self->r_query->q_stmt);
+		result = (unsigned int)sqlite3_column_count(self->r_query->q_stmt);
 	} else {
 		result = self->r_rowfmt->rf_ncol;
 	}
 	Row_LockEndRead(self);
-	return result;
+	return (size_t)result;
 }
 
 /* Upgrade a read-lock to "self" with a full lock to "query"
@@ -602,9 +602,9 @@ row_size_fast(Row *__restrict self) {
 	}	__WHILE0
 
 
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) unsigned int DCALL
 row_indexof_string(Row *__restrict self, char const *column_name) {
-	size_t result;
+	unsigned int result;
 	DREF RowFmt *fmt = row_getfmt(self);
 	if unlikely(!fmt)
 		goto err;
@@ -612,14 +612,14 @@ row_indexof_string(Row *__restrict self, char const *column_name) {
 	Dee_Decref(fmt);
 	return result;
 err:
-	return (size_t)-2;
+	return (unsigned int)-2;
 }
 
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) unsigned int DCALL
 row_indexof_string_len(Row *__restrict self,
                        char const *column_name,
                        size_t column_namelen) {
-	size_t result;
+	unsigned int result;
 	DREF RowFmt *fmt = row_getfmt(self);
 	if unlikely(!fmt)
 		goto err;
@@ -627,7 +627,7 @@ row_indexof_string_len(Row *__restrict self,
 	Dee_Decref(fmt);
 	return result;
 err:
-	return (size_t)-2;
+	return (unsigned int)-2;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -692,10 +692,10 @@ err_oob:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 row_getitem_string_hash(Row *__restrict self, char const *name, Dee_hash_t UNUSED(hash)) {
-	size_t index = row_indexof_string(self, name);
-	if unlikely(index == (size_t)-2)
+	unsigned int index = row_indexof_string(self, name);
+	if unlikely(index == (unsigned int)-2)
 		return NULL;
-	if unlikely(index == (size_t)-1) {
+	if unlikely(index == (unsigned int)-1) {
 		err_unknown_key_str((DeeObject *)self, name);
 		return NULL;
 	}
@@ -704,10 +704,10 @@ row_getitem_string_hash(Row *__restrict self, char const *name, Dee_hash_t UNUSE
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 row_getitem_string_len_hash(Row *__restrict self, char const *name, size_t namelen, Dee_hash_t UNUSED(hash)) {
-	size_t index = row_indexof_string_len(self, name, namelen);
-	if unlikely(index == (size_t)-2)
+	unsigned int index = row_indexof_string_len(self, name, namelen);
+	if unlikely(index == (unsigned int)-2)
 		return NULL;
-	if unlikely(index == (size_t)-1) {
+	if unlikely(index == (unsigned int)-1) {
 		err_unknown_key_str_len((DeeObject *)self, name, namelen);
 		return NULL;
 	}
@@ -716,20 +716,20 @@ row_getitem_string_len_hash(Row *__restrict self, char const *name, size_t namel
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 row_hasitem_string_hash(Row *__restrict self, char const *name, Dee_hash_t UNUSED(hash)) {
-	size_t index = row_indexof_string(self, name);
-	if unlikely(index == (size_t)-2)
+	unsigned int index = row_indexof_string(self, name);
+	if unlikely(index == (unsigned int)-2)
 		return -1;
-	if unlikely(index == (size_t)-1)
+	if unlikely(index == (unsigned int)-1)
 		return 0;
 	return 1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 row_hasitem_string_len_hash(Row *__restrict self, char const *name, size_t namelen, Dee_hash_t UNUSED(hash)) {
-	size_t index = row_indexof_string_len(self, name, namelen);
-	if unlikely(index == (size_t)-2)
+	unsigned int index = row_indexof_string_len(self, name, namelen);
+	if unlikely(index == (unsigned int)-2)
 		return -1;
-	if unlikely(index == (size_t)-1)
+	if unlikely(index == (unsigned int)-1)
 		return 0;
 	return 1;
 }

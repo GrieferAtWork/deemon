@@ -712,12 +712,12 @@ err:
 }
 
 /* Skip at most `count' rows in `stmt', returning the actual # of skipped rows.
- * @return: (size_t)-1: Error
+ * @return: (uint64_t)-1: Error
  * @return: * : The # of skipped rows */
-INTERN WUNUSED NONNULL((1)) size_t DCALL
-db_skip_stmt(DB *__restrict self, sqlite3_stmt *stmt, size_t count) {
+INTERN WUNUSED NONNULL((1)) uint64_t DCALL
+db_skip_stmt(DB *__restrict self, sqlite3_stmt *stmt, uint64_t count) {
 	int rc;
-	size_t result = 0;
+	uint64_t result = 0;
 	if unlikely(!count)
 		return 0;
 again:

@@ -101,7 +101,7 @@ qiter_next(QueryIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 qiter_advance(QueryIterator *__restrict self, size_t step) {
-	return Query_Skip(self->qi_query, step);
+	return (size_t)Query_Skip(self->qi_query, (uint64_t)step);
 }
 
 PRIVATE struct Dee_type_iterator qiter_iterator = {
@@ -347,18 +347,18 @@ err:
 
 
 /* Skip at most `count' rows, returning the actual # of skipped rows.
- * @return: (size_t)-1: Error
+ * @return: (uint64_t)-1: Error
  * @return: * : The # of skipped rows */
-INTERN WUNUSED NONNULL((1)) size_t DCALL
-Query_Skip(Query *__restrict self, size_t count) {
-	size_t result;
+INTERN WUNUSED NONNULL((1)) uint64_t DCALL
+Query_Skip(Query *__restrict self, uint64_t count) {
+	uint64_t result;
 	if unlikely(Query_AcquireAndDetachRow(self))
 		goto err;
 	result = db_skip_stmt(self->q_db, self->q_stmt, count);
 	Query_Release(self);
 	return result;
 err:
-	return (size_t)-1;
+	return (uint64_t)-1;
 }
 
 
@@ -388,21 +388,21 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 query_skip(Query *__restrict self, size_t argc, DeeObject *const *argv) {
-	size_t result;
+	uint64_t result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("skip", params: "
-	size_t count
+	uint64_t count
 ", docStringPrefix: "query");]]]*/
 #define query_skip_params "count:?Dint"
 	struct {
-		size_t count;
+		uint64_t count;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":skip", &args))
+	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":skip", &args))
 		goto err;
 /*[[[end]]]*/
 	result = Query_Skip(self, args.count);
-	if unlikely(result == (size_t)-1)
+	if unlikely(result == (uint64_t)-1)
 		goto err;
-	return DeeInt_NewSize(result);
+	return DeeInt_NewUInt64(result);
 err:
 	return NULL;
 }
