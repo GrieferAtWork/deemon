@@ -25,34 +25,34 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/dex.h>
 #include <deemon/error.h>
-#include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/super.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
-#include <deemon/util/rlock.h>
 
-#include <hybrid/align.h>
+#include <hybrid/sequence/list.h>
+
+#include <stdint.h>
 
 /**/
-#include "sqlite3-external.h"
 #include "libsqlite3.h"
+#include "sqlite3-external.h"
 
 DECL_BEGIN
+
+#ifndef CONFIG_HAVE_memsetp
+#define CONFIG_HAVE_memsetp
+#define memsetp(dst, pointer, num_pointers) \
+	dee_memsetp(dst, (__UINTPTR_TYPE__)(pointer), num_pointers)
+DeeSystem_DEFINE_memsetp(dee_memsetp)
+#endif /* !CONFIG_HAVE_memsetp */
 
 INTERN_CONST struct query_cache_empty_list_struct const
 query_cache_empty_list_ = {
@@ -135,14 +135,14 @@ db_free_oldest_unused_query_and_unlock(DB *__restrict self) {
 	ASSERT(!Query_InUse(oldest_query));
 	ASSERT(Query_IsUnused(oldest_query));
 	ASSERT(qc_index < qc_list->qcl_count);
-	ASSERT(qc_list != &query_cache_empty_list);
+	ASSERT(qc_list != query_cache_empty_list_PTR);
 	query_cache_list_remove(qc_list, qc_index);
 	--self->db_querycache_size;
 	TAILQ_REMOVE_HEAD(&self->db_querycache_unused, q_unused);
 	--self->db_querycache_unused_count;
 	if (qc_list->qcl_count == 0) {
 		/* Last query removed from list -> replace with empty-list-pointer */
-		self->db_querycache[list_index] = &query_cache_empty_list;
+		self->db_querycache[list_index] = query_cache_empty_list_PTR;
 		DB_QueryCache_LockEndWrite(self);
 		_query_cache_list_free(qc_list);
 	} else {
@@ -486,7 +486,7 @@ again_acquire_write_lock:
 	--self->db_querycache_size;
 	if unlikely(qc_list->qcl_count == 0) {
 		/* Last query removed from list -> replace with empty-list-pointer */
-		self->db_querycache[list_index] = &query_cache_empty_list;
+		self->db_querycache[list_index] = query_cache_empty_list_PTR;
 		DB_QueryCache_LockEndWrite(self);
 		_query_cache_list_free(qc_list);
 	} else {
@@ -582,7 +582,7 @@ again_open:
 	}
 
 	/* Fill in remaining fields... */
-	memsetp(self->db_querycache, &query_cache_empty_list, DB_QUERYCACHE_SIZE);
+	memsetp(self->db_querycache, query_cache_empty_list_PTR, DB_QUERYCACHE_SIZE);
 	TAILQ_INIT(&self->db_querycache_unused);
 	self->db_querycache_size = 0;
 	self->db_querycache_unused_count = 0;
@@ -646,8 +646,8 @@ db_fini(DB *__restrict self) {
 	/* Destroy all still-cached, unused queries. */
 	for (cache_index = 0; cache_index < COMPILER_LENOF(self->db_querycache); ++cache_index) {
 		struct query_cache_list *list = self->db_querycache[cache_index];
-		ASSERT((list->qcl_count == 0) == (list == &query_cache_empty_list));
-		if (list != &query_cache_empty_list) {
+		ASSERT((list->qcl_count == 0) == (list == query_cache_empty_list_PTR));
+		if (list != query_cache_empty_list_PTR) {
 			size_t list_index = 0;
 			do {
 				Query *query = list->qcl_queries[list_index];

@@ -87,7 +87,7 @@ qiter_visit(QueryIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->qi_query);
 }
 
-PRIVATE NONNULL((1, 2)) DREF Row *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Row *DCALL
 qiter_next(QueryIterator *__restrict self) {
 #ifdef QUERY_STEP_DONE_IS_ITER_DONE
 	return Query_Step(self->qi_query);

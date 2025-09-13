@@ -159,6 +159,10 @@ print "/" "**" "/";
 #define posix_close_USE_STUB
 #endif /* !CONFIG_HAVE_close */
 
+/* Prevent problems caused by system headers defining a function "posix_close(3)" */
+#undef posix_close
+#define posix_close libposix_close
+
 
 
 

@@ -161,9 +161,10 @@ DECL_BEGIN
 #endif /* !... */
 
 
-#ifdef posix_renameat2_USE_posix_renameat
+#if (defined(posix_renameat2_USE_renameat2) || \
+     defined(posix_renameat2_USE_posix_renameat))
 #include "p-stat.c.inl"
-#endif /* posix_renameat2_USE_posix_renameat */
+#endif /* posix_renameat2_USE_renameat2 || posix_renameat2_USE_posix_renameat */
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("rename", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/

@@ -26,7 +26,7 @@ ClCompile.CompileAs = CompileAsC
 
 #ifdef __cplusplus
 #error "This won't work; sqlite.c can only be compiled under as C, but not C++"
-#endif /* __cplusplus */
+#else /* __cplusplus */
 
 #include <deemon/api.h>
 /**/
@@ -49,7 +49,7 @@ ClCompile.CompileAs = CompileAsC
 
 #include "sqlite3-external.h"
 
-/* Configure sqlite */
+/* Configure SQLite */
 #define SQLITE_PRIVATE PRIVATE
 
 
@@ -136,7 +136,7 @@ ClCompile.CompileAs = CompileAsC
 #define HAVE_MALLOC_USABLE_SIZE 0
 #endif /* !... */
 
-/* Deemon always needs a big stack, so sqlite can make use of that, too. */
+/* Deemon always needs a big stack, so SQLite can make use of that, too. */
 #undef SQLITE_USE_ALLOCA
 #ifdef __hybrid_alloca
 #define SQLITE_USE_ALLOCA 1
@@ -157,18 +157,22 @@ ClCompile.CompileAs = CompileAsC
 #endif /* !CONFIG_NO_THREADS */
 
 /* Enable some compatibility aliases originally
- * meant for KOS, but also useful for sqlite */
+ * meant for KOS, but also useful for SQLite */
 #include <deemon/util/kos-compat.h>
 
 
-/* Delete some stuff that sqlite doesn't like */
+/* Delete some stuff that SQLite doesn't like */
 #undef likely
 #undef unlikely
 #ifdef __cplusplus
 #define new new_
 #endif /* __cplusplus */
 
-/* Include sqlite source */
+__pragma_GCC_diagnostic_ignored(Wunused_parameter)
+__pragma_GCC_diagnostic_ignored(Wsign_compare)
+__pragma_GCC_diagnostic_ignored(Wunused_function)
+
+/* Include SQLite source */
 #ifndef __INTELLISENSE__
 #include "../../external/sqlite-amalgamation-3500400/sqlite3.c"
 #endif /* !__INTELLISENSE__ */
@@ -195,5 +199,6 @@ SQLITE_API int sqlite3_bind_parameter_index__without_prefix(sqlite3_stmt *pStmt,
 	return 0;
 }
 
+#endif /* !__cplusplus */
 
 #endif /* !GUARD_DEX_SQLITE3_SQLITE3_EXTERNAL_C */

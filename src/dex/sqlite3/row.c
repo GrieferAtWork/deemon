@@ -245,7 +245,8 @@ again:
 		Dee_Decref_unlikely(row);
 		if unlikely(Query_GetRowFmt(self) == NULL)
 			goto err;
-		Query_Acquire(self);
+		if unlikely(Query_Acquire(self))
+			goto err;
 		goto again;
 	}
 

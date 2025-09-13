@@ -61,7 +61,7 @@ again:
 		size_t length = DeeString_SIZE(self);
 #if __SIZEOF_SIZE_T__ > 4
 		rc = sqlite3_bind_text64(stmt, index, DeeString_STR(self), (sqlite3_uint64)length,
-		                         &_dee_sqlite3_bind_string_decref);
+		                         &_dee_sqlite3_bind_string_decref, SQLITE_UTF8);
 #else /* __SIZEOF_SIZE_T__ > 4 */
 		rc = sqlite3_bind_text(stmt, index, DeeString_STR(self), (int)length,
 		                       &_dee_sqlite3_bind_string_decref);
@@ -73,7 +73,7 @@ again:
 			goto err;
 		length = WSTR_LENGTH(utf8);
 #if __SIZEOF_SIZE_T__ > 4
-		rc = sqlite3_bind_text64(stmt, index, utf8, (sqlite3_uint64)length, NULL);
+		rc = sqlite3_bind_text64(stmt, index, utf8, (sqlite3_uint64)length, NULL, SQLITE_UTF8);
 #else /* __SIZEOF_SIZE_T__ > 4 */
 		rc = sqlite3_bind_text(stmt, index, utf8, (int)length, NULL);
 #endif /* __SIZEOF_SIZE_T__ <= 4 */

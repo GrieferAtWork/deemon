@@ -269,14 +269,14 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL Query_Skip(Query *__restrict self, size
 /************************************************************************/
 
 struct query_cache_list {
-	size_t                           qcl_count;    /* [lock(:db_querycache_lock)] # of queries (only `0' for `query_cache_empty_list') */
+	size_t                           qcl_count;    /* [lock(:db_querycache_lock)] # of queries (only `0' for `query_cache_empty_list_PTR') */
 #ifndef Dee_MallocUsableSizeNonNull
 	size_t                           qcl_alloc;    /* [const] Allocated space */
 #define query_cache_list_getalloc(self)    ((self)->qcl_alloc)
 #define query_cache_list_setalloc(self, v) ((self)->qcl_alloc = (v))
 #else /* !Dee_MallocUsableSizeNonNull */
 #define query_cache_list_getalloc(self) \
-	((self) == &query_cache_empty_list ? 0 : ((Dee_MallocUsableSizeNonNull(self) - offsetof(struct query_cache_list, qcl_queries)) / sizeof(Query *)))
+	((self) == query_cache_empty_list_PTR ? 0 : ((Dee_MallocUsableSizeNonNull(self) - offsetof(struct query_cache_list, qcl_queries)) / sizeof(Query *)))
 #define query_cache_list_setalloc(self, v) (void)0
 #endif /* Dee_MallocUsableSizeNonNull */
 	COMPILER_FLEXIBLE_ARRAY(Query *, qcl_queries); /* [1..1][lock(:db_querycache_lock)]
@@ -296,11 +296,11 @@ struct query_cache_list {
 #define _query_cache_list_tryrealloc(self, count)                                                      \
 	((struct query_cache_list *)Dee_TryReallococ(self, offsetof(struct query_cache_list, qcl_queries), \
 	                                             count, sizeof(Query *)))
-#define query_cache_list_tryrealloc(self, count)                                   \
-	((self) != &query_cache_empty_list ? _query_cache_list_tryrealloc(self, count) \
-	                                   : query_cache_list_trycalloc(count))
+#define query_cache_list_tryrealloc(self, count)                                      \
+	((self) != query_cache_empty_list_PTR ? _query_cache_list_tryrealloc(self, count) \
+	                                      : query_cache_list_trycalloc(count))
 #define _query_cache_list_free(self) Dee_Free(self)
-#define query_cache_list_free(self) ((self) != &query_cache_empty_list ? _query_cache_list_free(self) : (void)0)
+#define query_cache_list_free(self)  ((self) != query_cache_empty_list_PTR ? _query_cache_list_free(self) : (void)0)
 
 struct query_cache_empty_list_struct {
 	size_t qcl_count;
@@ -309,8 +309,7 @@ struct query_cache_empty_list_struct {
 #endif /* !Dee_MallocUsableSizeNonNull */
 };
 INTDEF struct query_cache_empty_list_struct const query_cache_empty_list_;
-#define query_cache_empty_list \
-	(*(struct query_cache_list *)&query_cache_empty_list_)
+#define query_cache_empty_list_PTR ((struct query_cache_list *)&query_cache_empty_list_)
 #define query_cache_list_remove(self, index)               \
 	(void)(--(self)->qcl_count,                            \
 	       memmovedownc(&(self)->qcl_queries[(index)],     \

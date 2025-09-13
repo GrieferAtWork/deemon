@@ -176,8 +176,8 @@ DEX_OBJECTS_sqlite3 = $(call dex_objects,sqlite3,$(DEX_SOURCES_sqlite3))
 $(BLD_PATH)/dex/sqlite3/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
-#Special case: compile "ext-sqlite3.c" as C-code (and never as C++ code)
-$(BLD_PATH)/dex/sqlite3/ext-sqlite3.c: $(SRC_ROOT)/src/dex/sqlite3/ext-sqlite3.c
+#Special case: compile "sqlite3-external.c" as C-code (and never as C++ code)
+$(BLD_PATH)/dex/sqlite3/src/dex/sqlite3/sqlite3-external.o: $(SRC_ROOT)/src/dex/sqlite3/sqlite3-external.c
 	@mkdir -p $(dir $@)
 	$(CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 # Include $(LIBDL) here because sqlite needs it for extensions

@@ -48,6 +48,16 @@ DECL_BEGIN
 #endif /* !ELIMIT && ECOUNT */
 
 
+#ifdef __CYGWIN__
+/* Prevent syntax errors because of `_Pragma' deprecation warnings
+ * inside definitions, which in turn break use of these within
+ * preprocessor expressions. */
+#undef ENOSHARE
+#undef ECASECLASH
+#define ENOSHARE   136
+#define ECASECLASH 137
+#endif /* __CYGWIN__ */
+
 
 /*[[[deemon
 import * from deemon;
