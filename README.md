@@ -85,7 +85,7 @@ With visual studio
 - Full Unicode support (`assert "²".asnumeric() == 2`)
 	- Fully featured string API (for doing anything you might think of)
 	- Built-in regular expression support
-- Infinite-precision integers
+- Infinite-precision integers (`2 ** 999 == 3575430359[...]2834034688`)
 - Sequence, Set, and Map-like built-in containers
 	- Mutable/Immutable sequences (`List` / `Tuple`)
 	- Mutable/Immutable mappings (`Dict` / `Dict.Frozen`)
