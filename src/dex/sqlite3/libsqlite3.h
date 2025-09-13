@@ -164,7 +164,7 @@ struct query_object {
 	OBJECT_HEAD                         /* [@ob_type: ref_if(true)] */
 	WEAKREF_SUPPORT                     /* [valid_if(Query_InUse(self))] Weak references */
 	DREF DB                  *q_db;     /* [ref_if(Query_InUse(self))][1..1][const] Associated database */
-	DREF DeeStringObject              *q_sql;    /* [ref_if(Query_InUse(self))][1..1][const] DeeStringObject that was used to compile this query */
+	DREF DeeStringObject     *q_sql;    /* [ref_if(Query_InUse(self))][1..1][const] DeeStringObject that was used to compile this query */
 	WEAKREF(Row)              q_row;    /* [0..1][lock(READ(API), WRITE(q_lock && API))][valid_if(Query_InUse(self))] Cached row pointer (during `sqlite3_step()', if this weakref is still valid, this row is updated with copies of data from all columns) */
 	DREF RowFmt              *q_rowfmt; /* [valid_if(!WAS_DESTROYED(q_sql))][owned][0..1][lock(ATOMIC && WRITE_ONCE)] Descriptor for how rows are formatted */
 	sqlite3_stmt             *q_stmt;   /* [valid_if(!WAS_DESTROYED(q_sql))][owned][?..1][const]
@@ -553,6 +553,20 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_multiple_statements(DeeStringObject 
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_index_out_of_bounds)(DeeObject *__restrict self, size_t index, size_t size);
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_key_str)(DeeObject *__restrict map, char const *__restrict key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_key_str_len)(DeeObject *__restrict map, char const *__restrict key, size_t keylen);
+
+/************************************************************************/
+/* Initialization                                                       */
+/************************************************************************/
+
+/* These functions are called when a "DB_Type" object is created/destroyed.
+ * Internally, these keep a running counter such that:
+ * - The first call does `sqlite3_initialize()' and throws an error if something went wrong
+ * - The last call does `sqlite3_shutdown()'
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+INTDEF WUNUSED int DCALL libsqlite3_init(void);
+INTDEF void DCALL libsqlite3_fini(void);
+
 
 DECL_END
 

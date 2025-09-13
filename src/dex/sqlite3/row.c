@@ -412,6 +412,8 @@ rowfmt_indexof_string_len(RowFmt *__restrict self,
 	return (unsigned int)-1;
 }
 
+/* TODO: Expose some way to query sqlite3_column_name     (RowFmt::rf_cols::cfmt_name) */
+/* TODO: Expose some way to query sqlite3_column_decltype (RowFmt::rf_cols::cfmt_decltype) */
 
 INTERN DeeTypeObject RowFmt_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),

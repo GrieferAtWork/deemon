@@ -253,6 +253,19 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+query_getsql(Query *__restrict self) {
+	DREF DeeObject *result;
+	char *sql_repr = query_get_expanded_sql(self);
+	if unlikely(!sql_repr)
+		goto err;
+	result = DeeString_NewUtf8(sql_repr, strlen(sql_repr), STRING_ERROR_FIGNORE);
+	sqlite3_free(sql_repr);
+	return result;
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 query_printrepr(Query *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t result;
@@ -438,13 +451,46 @@ PRIVATE struct type_method tpconst query_methods[] = {
 	/* TODO: fetchone()->?GRecord              (read 1 row, assert that there are no other rows, then return that row as a record)  */
 	/* TODO: fetchall()->?S?GRecord            (same as ".frozen.each.asrecord") */
 	/* TODO: fetch(limit:?Dint)->?S?GRecord    (same as "[:limit].frozen.each.asrecord") */
+
+	/* TODO: Directly expose sqlite3_stmt_explain() */
+	/* TODO: Directly expose sqlite3_stmt_isexplain() */
+	/* TODO: Directly expose sqlite3_stmt_readonly() */
+	/* TODO: Directly expose sqlite3_stmt_status() */
+	/* TODO: Directly expose sqlite3_column_count() */
+	/* TODO: Directly expose sqlite3_column_database_name() */
+	/* TODO: Directly expose sqlite3_column_origin_name() */
+	/* TODO: Directly expose sqlite3_column_table_name() */
+	/* TODO: Directly expose sqlite3_column_decltype() */
+	/* TODO: Directly expose sqlite3_column_name() */
+	/* TODO: Directly expose sqlite3_column_blob()    (get a specific column as Bytes) */
+	/* TODO: Directly expose sqlite3_column_double()  (get a specific column as float) */
+	/* TODO: Directly expose sqlite3_column_int64()   (get a specific column as int) */
+	/* TODO: Directly expose sqlite3_column_text()    (get a specific column as string) */
+	/* TODO: Directly expose sqlite3_column_type()    (get type of a specific column) */
+	/* TODO: Directly expose sqlite3_data_count() */
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst query_getsets[] = {
-	TYPE_GETTER_AB("row", &Query_GetRow, "()->?GRow\nDescriptor for the most-recent row"),
-	TYPE_GETTER_AB("_rowfmt", &query_rowfmt_get, "()->?G_RowFmt\nDescriptor for the format of rows"),
-	TYPE_METHOD_END
+	TYPE_GETTER_AB("row", &Query_GetRow,
+	               "->?GRow\n"
+	               "Descriptor for the most-recent row"),
+	TYPE_GETTER_AB("_rowfmt", &query_rowfmt_get,
+	               "->?G_RowFmt\n"
+	               "Descriptor for the format of rows"),
+	TYPE_GETTER_AB("sql", &query_getsql,
+	               "->?Dstring\n"
+	               "The effective SQL being queried, after "
+	               /**/ "parameters were inserted (s.a. ?#rawsql)"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst query_members[] = {
+	TYPE_MEMBER_FIELD_DOC("db", STRUCT_OBJECT, offsetof(Query, q_db), "->?GDB"),
+	TYPE_MEMBER_FIELD_DOC("rawsql", STRUCT_OBJECT, offsetof(Query, q_sql),
+	                      "->?Dstring\n"
+	                      "The original SQL before parameters were inserted (s.a. ?#sql)"),
+	TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject Query_Type = {
@@ -494,7 +540,7 @@ INTERN DeeTypeObject Query_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ query_methods,
 	/* .tp_getsets       = */ query_getsets,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ query_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL

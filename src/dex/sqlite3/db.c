@@ -45,6 +45,11 @@
 #include "libsqlite3.h"
 #include "sqlite3-external.h"
 
+#ifndef INT_MAX
+#include <hybrid/limitcore.h>
+#define INT_MAX __INT_MAX__
+#endif /* !INT_MAX */
+
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memsetp
@@ -545,6 +550,12 @@ db_thread_interrupt_hook_onwake(struct Dee_thread_interrupt_hook *__restrict sel
 }
 
 
+PRIVATE int db_sqlite_progress_handler(void *UNUSED(ignored)) {
+	/* >> If the progress callback returns non-zero, the operation is interrupted */
+	DeeThreadObject *thread = DeeThread_Self();
+	return DeeThread_WasInterrupted(thread);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 db_init(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	int rc;
@@ -564,6 +575,8 @@ db_init(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	ti_hook = db_thread_interrupt_hook_alloc();
 	if unlikely(!ti_hook)
 		goto err_sf_hook;
+	if unlikely(libsqlite3_init())
+		goto err_sf_hook_ti_hook;
 
 	/* TODO: Allow user-code to specify "flags" */
 	/* TODO: Allow user-code to specify "zVfs" */
@@ -578,7 +591,7 @@ again_open:
 		(void)sqlite3_close_v2(self->db_db);
 		if (rc == 0)
 			goto again_open;
-		goto err_sf_hook_ti_hook;
+		goto err_sf_hook_ti_hook_lib;
 	}
 
 	/* Fill in remaining fields... */
@@ -606,19 +619,33 @@ again_open:
 
 	/* Register string finalization hooks. */
 	if unlikely(DeeString_AddFiniHook(&self->db_sf_hook->dsfh_hook))
-		goto err_sf_hook_ti_hook_self;
+		goto err_sf_hook_ti_hook_lib_self;
 
 	/* Register string finalization hooks. */
 	if unlikely(DeeThread_AddInterruptHook(&self->db_ti_hook->dtih_hook))
-		goto err_sf_hook_ti_hook_self_sf_hook;
+		goto err_sf_hook_ti_hook_lib_self_sf_hook;
+
+	/* Because of how SQLite interfaces with system libraries, interrupt
+	 * injection may be a bit flaky when it comes to forcing long-running
+	 * queries to end prematurely (reason: "xMutexEnter" returns "void",
+	 * meaning there is no way of saying "mutex not entered; fail with
+	 * reason 'SQLITE_INTERRUPT'").
+	 *
+	 * To fix that issue, also inject a "Progress handler" that checks if
+	 * the calling thread has been interrupted every couple thousand of
+	 * virtual opcodes, acting as a fallback to always allow queries to
+	 * be canceled. */
+	sqlite3_progress_handler(self->db_db, 100000, &db_sqlite_progress_handler, NULL);
 
 	return 0;
-err_sf_hook_ti_hook_self_sf_hook:
+err_sf_hook_ti_hook_lib_self_sf_hook:
 	DeeString_RemoveFiniHook(&self->db_sf_hook->dsfh_hook);
-err_sf_hook_ti_hook_self:
+err_sf_hook_ti_hook_lib_self:
 	Dee_weakref_fini(&sf_hook->dsfh_db);
 	weakref_support_fini(self);
 	(void)sqlite3_close_v2(self->db_db);
+err_sf_hook_ti_hook_lib:
+	libsqlite3_fini();
 err_sf_hook_ti_hook:
 	db_thread_interrupt_hook_free(ti_hook);
 err_sf_hook:
@@ -662,6 +689,9 @@ db_fini(DB *__restrict self) {
 
 	/* Close the underlying database */
 	(void)sqlite3_close_v2(self->db_db);
+
+	/* Close library (if this is the last DB to go away) */
+	libsqlite3_fini();
 }
 
 PRIVATE NONNULL((1)) bool DCALL
@@ -675,6 +705,22 @@ again:
 		goto again;
 	}
 	DB_QueryCache_LockEndWrite(self);
+
+	/* Also try to invoke `sqlite3_db_release_memory()' */
+	if (!result) {
+		sqlite3_mutex *mutex = sqlite3_db_mutex(self->db_db);
+		if (sqlite3_mutex_try(mutex) == SQLITE_OK) {
+			/* Sadly, this function doesn't return if it managed to free
+			 * something, so to prevent infinite loops, never return true
+			 * at this point... */
+			(void)sqlite3_db_release_memory(self->db_db);
+			(void)sqlite3_mutex_leave(mutex);
+		}
+#ifdef SQLITE_ENABLE_MEMORY_MANAGEMENT
+		if (sqlite3_release_memory(INT_MAX) > 0)
+			result = true;
+#endif /* SQLITE_ENABLE_MEMORY_MANAGEMENT */
+	}
 	return result;
 }
 
@@ -891,7 +937,27 @@ db_printrepr(DB *__restrict self, Dee_formatprinter_t printer, void *arg) {
 PRIVATE struct type_method tpconst db_methods[] = {
 	TYPE_METHOD("exec", &db_exec, "(sql:?Dstring,params:?X2?M?Dstring" T_SQL_OBJECT "?S" T_SQL_OBJECT "=!T0)"),
 	TYPE_METHOD("query", &db_query, "(sql:?Dstring,params:?X2?M?Dstring" T_SQL_OBJECT "?S" T_SQL_OBJECT "=!T0)->?GQuery"),
+	/* TODO: Expose sqlite3_blob_open() */
+	/* TODO: Expose sqlite3_db_cacheflush() */
+	/* TODO: Expose sqlite3_db_config() */
+	/* TODO: Expose sqlite3_db_filename() */
+	/* TODO: Expose sqlite3_db_name()  (maybe also expose as a custom proxy object that allows easy enumeration of attached DBs) */
+	/* TODO: Expose sqlite3_db_readonly() */
+	/* TODO: Expose sqlite3_db_status() */
+	/* TODO: Expose sqlite3_file_control() */
+	/* TODO: Expose sqlite3_get_autocommit() */
+	/* TODO: Expose sqlite3_get_clientdata() + sqlite3_set_clientdata() (these should be usable to encapsulate a single "DeeObject" linked to every database) */
+	/* TODO: Directly expose sqlite3_interrupt() (already gets called during `DeeThread_Wake()') */
+	/* TODO: Directly expose sqlite3_is_interrupted() */
+	/* TODO: Expose sqlite3_limit() */
+	/* TODO: Expose sqlite3_table_column_metadata() */
+	/* TODO: Expose sqlite3_txn_state() */
 	TYPE_METHOD_END
+};
+
+PRIVATE struct type_getset tpconst db_getsets[] = {
+	/* TODO: Expose sqlite3_last_insert_rowid() / sqlite3_set_last_insert_rowid() */
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_gc tpconst db_gc = {
@@ -942,7 +1008,7 @@ INTERN DeeTypeObject DB_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ db_methods,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ db_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

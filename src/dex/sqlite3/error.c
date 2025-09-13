@@ -165,6 +165,40 @@ err_sql_throwerror(int errcode, unsigned int flags) {
 
 
 
+
+/* These functions are called when a "DB_Type" object is created/destroyed.
+ * Internally, these keep a running counter such that:
+ * - The first call does `sqlite3_initialize()' and throws an error if something went wrong
+ * - The last call does `sqlite3_shutdown()'
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+PRIVATE Dee_refcnt_t libsqlite3_initialized = 0;
+
+PRIVATE ATTR_NOINLINE WUNUSED int DCALL
+libsqlite3_init_impl(void) {
+	int rc;
+again:
+	rc = sqlite3_initialize();
+	if likely(rc == SQLITE_OK)
+		return 0;
+	rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_ALLOW_RESTART);
+	if (rc == 0)
+		goto again;
+	return -1;
+}
+
+INTERN WUNUSED int DCALL libsqlite3_init(void) {
+	if (_DeeRefcnt_FetchInc(&libsqlite3_initialized) == 0)
+		return libsqlite3_init_impl();
+	return 0;
+}
+
+INTERN void DCALL libsqlite3_fini(void) {
+	if (_DeeRefcnt_DecFetch(&libsqlite3_initialized) == 0)
+		(void)sqlite3_shutdown();
+}
+
+
 DECL_END
 
 #endif /* !GUARD_DEX_SQLITE3_ERROR_C */
