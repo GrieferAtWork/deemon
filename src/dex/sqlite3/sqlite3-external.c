@@ -172,6 +172,8 @@ ClCompile.CompileAs = CompileAsC
 #define new new_
 #endif /* __cplusplus */
 
+#define SQLITE_CUSTOM_STMT_DATA Vdbe *pNextFreeStmt;
+
 __pragma_GCC_diagnostic_ignored(Wunused_parameter)
 __pragma_GCC_diagnostic_ignored(Wsign_compare)
 __pragma_GCC_diagnostic_ignored(Wunused_function)
@@ -202,6 +204,13 @@ SQLITE_API int sqlite3_bind_parameter_index__without_prefix(sqlite3_stmt *pStmt,
 		i += pIn[i + 1];
 	} while (i < mx);
 	return 0;
+}
+
+SQLITE_API sqlite3_stmt *sqlite3_stmt_getnextfree(sqlite3_stmt *pStmt) {
+	return (sqlite3_stmt *)((Vdbe*)pStmt)->pNextFreeStmt; /* ON-COMPILE-ERROR: Did you forget to patch sqlite3 with "SQLITE_CUSTOM_STMT_DATA"? */
+}
+SQLITE_API void sqlite3_stmt_setnextfree(sqlite3_stmt *pStmt, sqlite3_stmt *pNext) {
+	((Vdbe*)pStmt)->pNextFreeStmt = (Vdbe*)pNext; /* ON-COMPILE-ERROR: Did you forget to patch sqlite3 with "SQLITE_CUSTOM_STMT_DATA"? */
 }
 
 #endif /* !__cplusplus */

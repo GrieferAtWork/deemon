@@ -36,6 +36,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <stddef.h>
 #include <stdint.h>
 
 /**/
@@ -281,6 +282,26 @@ again:
 	row = (DREF Row *)Dee_weakref_lock(&self->q_row);
 	if (!row) /* Row isn't cached -> nothing to detach! */
 		return result;
+
+	/* XXX: In regular deemon code like this:
+	 * >> for (local row: db.query("SELECT * FROM foo"))
+	 * >>     print repr row;
+	 *
+	 * Without optimizations, this code will keep the
+	 * old "row" alive until **AFTER** it is overwritten
+	 * by the next row, meaning that we get here during
+	 * every iteration, having to detach the old row.
+	 *
+	 * Is there some way to prevent that?
+	 *
+	 * This doesn't happen when writing like this:
+	 * >> for (__stack local row: db.query("SELECT * FROM foo"))
+	 * >>     print repr row;
+	 *
+	 * Similarly, when executed using _hostasm, we don't
+	 * get here either (even in user-code without __stack)
+	 * Reason is that _hostasm actively tries to minimize
+	 * the effective life-time of all variables */
 	rowfmt = self->q_rowfmt;
 	if unlikely(rowfmt == NULL) {
 		/* Must allocate new row format descriptor */

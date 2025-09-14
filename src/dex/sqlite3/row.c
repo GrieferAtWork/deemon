@@ -24,24 +24,22 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/error.h>
+#include <deemon/bytes.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
-#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <stddef.h>
 #include <stdint.h>
 
 /**/
-#include "sqlite3-external.h"
 #include "libsqlite3.h"
 
 DECL_BEGIN

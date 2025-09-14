@@ -22,11 +22,13 @@
 #define CONFIG_BUILDING_LIBSQLITE3
 #define DEE_SOURCE
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/thread.h>
 /**/
 
 #include "libsqlite3.h"

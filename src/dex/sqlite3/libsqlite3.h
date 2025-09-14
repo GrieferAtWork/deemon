@@ -170,6 +170,7 @@ struct db_thread_interrupt_hook {
 struct db_object {
 	OBJECT_HEAD
 	sqlite3                 *db_db;                      /* [?..1][const] Database context */
+	sqlite3_stmt            *db_freelist;                /* [0..N][lock(ATOMIC)] List of statements that should be finalized */
 #ifndef CONFIG_NO_THREADS
 	Dee_shared_lock_t        db_dblock;                  /* Lock for `db_db' */
 #endif /* !CONFIG_NO_THREADS */
@@ -182,9 +183,9 @@ struct db_object {
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t      db_querycache_lock;         /* Lock for `db_querycache' */
 #endif /* !CONFIG_NO_THREADS */
-	DREF struct db_string_fini_hook      *db_sf_hook; /* [1..1][const] DeeStringObject finalization hook */
-	DREF struct db_thread_interrupt_hook *db_ti_hook; /* [1..1][const] Thread interrupt hook */
-	WEAKREF_SUPPORT                                   /* Weak referencing support */
+	DREF struct db_string_fini_hook      *db_sf_hook;    /* [1..1][const] DeeStringObject finalization hook */
+	DREF struct db_thread_interrupt_hook *db_ti_hook;    /* [1..1][const] Thread interrupt hook */
+	WEAKREF_SUPPORT                                      /* Weak referencing support */
 };
 
 /* Use these to serialize all sqlite3 calls that may access the DB (`sqlite3 *') */

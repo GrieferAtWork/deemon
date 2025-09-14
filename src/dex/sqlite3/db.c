@@ -133,6 +133,30 @@ db_free_oldest_unused_query_and_unlock(DB *__restrict self) {
 /************************************************************************/
 /************************************************************************/
 
+SQLITE_API sqlite3_stmt *sqlite3_stmt_getnextfree(sqlite3_stmt *pStmt);
+SQLITE_API void sqlite3_stmt_setnextfree(sqlite3_stmt *pStmt, sqlite3_stmt *pNext);
+
+PRIVATE NONNULL((1)) void DCALL
+db_free_list_clear(DB *__restrict self) {
+	sqlite3_stmt *flist;
+	flist = atomic_xch(&self->db_freelist, NULL);
+	while (flist) {
+		sqlite3_stmt *next;
+		next = sqlite3_stmt_getnextfree(flist);
+		(void)sqlite3_finalize(flist);
+		flist = next;
+	}
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+db_free_list_insert(DB *__restrict self, sqlite3_stmt *pStmt) {
+	sqlite3_stmt *last;
+	do {
+		last = atomic_read(&self->db_freelist);
+		sqlite3_stmt_setnextfree(pStmt, last);
+	} while (!atomic_cmpxch_weak(&self->db_freelist, last, pStmt));
+}
+
 /* Use these to serialize all sqlite3 calls that may access the DB (`sqlite3 *') */
 INTERN WUNUSED NONNULL((1)) bool DCALL
 DB_TryLock(DB *__restrict self) {
@@ -160,10 +184,17 @@ err:
 
 INTERN NONNULL((1)) void DCALL
 DB_Unlock(DB *__restrict self) {
+again:
 	ASSERT(self->db_thread == DeeThread_Self());
 	DeeThread_DisableInterruptHooks(self->db_thread);
 	atomic_write(&self->db_thread, NULL);
 	Dee_shared_lock_release(&self->db_dblock);
+	if unlikely(atomic_read(&self->db_freelist) != NULL) {
+		if (DB_TryLock(self)) {
+			db_free_list_clear(self);
+			goto again;
+		}
+	}
 }
 
 
@@ -174,8 +205,8 @@ DB_FinalizeStmt(DB *__restrict self, sqlite3_stmt *stmt) {
 		(void)sqlite3_finalize(stmt);
 		DB_Unlock(self);
 	} else {
-		/* FIXME: This sqlite3_finalize() needs a DB lock -- only way
-		 *        to get that here is via a lockop (as seen in KOS)
+		/* This sqlite3_finalize() needs a DB lock -- only way to get that here
+		 * is via a lockop (as seen in KOS).
 		 *
 		 * NOTE: Can even get here due to our own thread holding the DB lock:
 		 * >> local s = "select * from foo";
@@ -194,8 +225,18 @@ DB_FinalizeStmt(DB *__restrict self, sqlite3_stmt *stmt) {
 		 * it), but it may also try to finalize the statement created by the
 		 * initial "db.query(t)" call above, which could then lead us here in
 		 * a context where it is our own thread that is locking the DB.
+		 *
+		 * NOTE: However, for us to be able to chain "stmt", sqlite3 needs some
+		 *       kind of way for us to read/write a pointer-sized "user_data"
+		 *       field to/from a "sqlite3_stmt" object.
 		 */
-		(void)sqlite3_finalize(stmt);
+		db_free_list_insert(self, stmt);
+
+		/* In case the lock became available again in the meantime,
+		 * reap the free-statement-list now so unused statements
+		 * won't stay in there indefinitely. */
+		if (DB_TryLock(self))
+			DB_Unlock(self);
 	}
 }
 
@@ -650,6 +691,7 @@ again_open:
 	weakref_support_init(self);
 	Dee_shared_lock_init(&self->db_dblock);
 	self->db_thread = NULL;
+	self->db_freelist = NULL;
 
 	/* Initialize string finalization hooks. */
 	sf_hook->dsfh_hook.sfh_refcnt  = 1;
