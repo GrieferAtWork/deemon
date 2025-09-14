@@ -27,6 +27,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
+#include <deemon/thread.h>
 #include <deemon/types.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>

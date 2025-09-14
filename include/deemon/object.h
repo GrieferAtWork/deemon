@@ -471,6 +471,12 @@ DFUNDEF NONNULL((1, 2)) bool DCALL
 Dee_weakref_set(struct Dee_weakref *__restrict self,
                 DeeObject *__restrict ob);
 
+#if !defined(NDEBUG) && !defined(NDEBUG_ASSERT)
+#define Dee_weakref_set_forced(self, ob) Dee_ASSERT(Dee_weakref_set(self, ob))
+#else /* !defined(NDEBUG) && !defined(NDEBUG_ASSERT) */
+#define Dee_weakref_set_forced(self, ob) Dee_weakref_set(self, ob)
+#endif /* NDEBUG || NDEBUG_ASSERT */
+
 /* Clear the weak reference `self', returning true if it used to point to an object.
  * NOTE: Upon success (return is `true'), the callback will not be
  *       executed for the previously bound object's destruction. */

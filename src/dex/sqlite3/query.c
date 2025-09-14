@@ -558,7 +558,7 @@ again_with_row:
 	Dee_Incref(self);
 	result->r_rowfmt = NULL; /* Lazily allocated */
 	result->r_cells  = NULL; /* Lazily allocated */
-	Dee_weakref_set(&self->q_row, (DeeObject *)result);
+	Dee_weakref_set_forced(&self->q_row, (DeeObject *)result);
 
 	Query_Release(self);
 	return result;
@@ -730,7 +730,7 @@ INTERN DeeTypeObject Query_Type = {
 	/* NOTE: "TP_FVARIABLE" because of our custom destroy function
 	 *       (so must prevent _hostasm from using stack allocation) */
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
-	/* .tp_weakrefs = */ 0,
+	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Query),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
