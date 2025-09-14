@@ -25,6 +25,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/bytes.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
@@ -174,27 +175,20 @@ INTERN DeeTypeObject QueryIterator_Type = {
 /************************************************************************/
 /************************************************************************/
 
+/* Returns ITER_DONE if lock was released and you should try again */
 PRIVATE WUNUSED NONNULL((1)) DREF RowFmt *DCALL
-_Query_NewRowFmt(Query *__restrict self) {
+_Query_TryNewRowFmtOrUnlock(Query *__restrict self) {
 	DREF RowFmt *result;
 	unsigned int i, ncol;
-	/* Need to lock the query because:
-	 * >> sqlite3_column_name:
-	 * >> >> The returned string pointer is valid until either the prepared statement
-	 * >> >> is destroyed by sqlite3_finalize() or until the statement is automatically
-	 * >> >> reprepared by the first call to sqlite3_step() for a particular run or
-	 * >> >> until the next call to sqlite3_column_name() or sqlite3_column_name16() on
-	 * >> >> the same column.
-	 *
-	 * iow: sqlite3_column_name() being called twice invalidates the previous string,
-	 *      meaning that particular function isn't thread-safe!
-	 */
-	if (Query_Acquire(self))
-		goto err;
+	size_t badalloc_memsize;
 	ncol = (unsigned int)sqlite3_column_count(self->q_stmt);
-	result = RowFmt_Alloc(ncol);
-	if unlikely(!result)
-		goto err_unlock;
+	result = RowFmt_TryAlloc(ncol);
+	if unlikely(!result) {
+		Query_UnlockWithDB(self);
+		if (Dee_CollectMemory(RowFmt_Sizeof(ncol)))
+			return (DREF RowFmt *)ITER_DONE;
+		return NULL;
+	}
 	DeeObject_Init(result, &RowFmt_Type);
 	result->rf_ncol = ncol;
 	for (i = 0; i < ncol; ++i) {
@@ -203,16 +197,28 @@ _Query_NewRowFmt(Query *__restrict self) {
 		char const *name, *decltype_;
 
 		/* Allocate name */
-		do {
-			name = sqlite3_column_name(self->q_stmt, (int)i);
-			/* >> If sqlite3_malloc() fails [...] then a NULL pointer is returned */
-		} while (!name && Dee_CollectMemory(32));
-		if unlikely(!name)
-			goto err_unlock_r_i;
-		nameob = (DREF DeeStringObject *)DeeString_NewUtf8(name, strlen(name),
-		                                                   STRING_ERROR_FIGNORE);
+		name = sqlite3_column_name(self->q_stmt, (int)i);
+		/* >> If sqlite3_malloc() fails [...] then a NULL pointer is returned */
+		if unlikely(!name) {
+			bool collect_ok;
+			badalloc_memsize = 32; /* Guess required size */
+			nameob = NULL;
+err_nomem__unlock_r_i_nameopt:
+			Query_UnlockWithDB(self);
+			collect_ok = Dee_CollectMemory(badalloc_memsize);
+			while (i--) {
+				fmt = &result->rf_cols[i];
+				cellfmt_fini(fmt);
+			}
+			RowFmt_Free(result);
+			Dee_XDecref_unlikely(nameob);
+			return collect_ok ? (DREF RowFmt *)ITER_DONE : NULL;
+		}
+		badalloc_memsize = strlen(name);
+		nameob = (DREF DeeStringObject *)DeeString_TryNewUtf8(name, badalloc_memsize,
+		                                                      STRING_ERROR_FIGNORE);
 		if unlikely(!nameob)
-			goto err_unlock_r_i;
+			goto err_nomem__unlock_r_i_nameopt;
 		fmt->cfmt_name = nameob; /* Inherit reference */
 
 		/* Allocate decltype */
@@ -220,131 +226,226 @@ _Query_NewRowFmt(Query *__restrict self) {
 		/* >> If the Nth column of the result set is an expression or subquery, then a NULL pointer is returned */
 		decltypeob = NULL;
 		if likely(decltype_) {
-			decltypeob = (DREF DeeStringObject *)DeeString_NewUtf8(decltype_, strlen(decltype_),
-			                                                       STRING_ERROR_FIGNORE);
-			if unlikely(!decltypeob) {
-/*err_unlock_r_i_name:*/
-				Dee_Decref_likely(nameob);
-				goto err_unlock_r_i;
-			}
+			badalloc_memsize = strlen(decltype_);
+			decltypeob = (DREF DeeStringObject *)DeeString_TryNewUtf8(decltype_, badalloc_memsize,
+			                                                          STRING_ERROR_FIGNORE);
+			if unlikely(!decltypeob)
+				goto err_nomem__unlock_r_i_nameopt;
 		}
 		fmt->cfmt_decltype = decltypeob; /* Inherit reference */
 	}
-	Query_Release(self);
 	return result;
-err_unlock_r_i:
-	while (i--) {
-		struct cellfmt *fmt = &result->rf_cols[i];
-		cellfmt_fini(fmt);
-	}
-/*err_unlock_r:*/
-	RowFmt_Free(result);
-err_unlock:
-	Query_Release(self);
-err:
-	return NULL;
 }
 
 /* Return (and lazily allocate on first use) the RowFmt descriptor of this query. */
 INTERN WUNUSED NONNULL((1)) RowFmt *DCALL
 Query_GetRowFmt(Query *__restrict self) {
 	RowFmt *result = atomic_read(&self->q_rowfmt);
-	if (!result) {
-		result = _Query_NewRowFmt(self);
-		if likely(result) {
-			if unlikely(!atomic_cmpxch(&self->q_rowfmt, NULL, result)) {
-				Dee_DecrefDokill(result);
-				result = atomic_read(&self->q_rowfmt);
-				ASSERT(result);
-			}
-		}
+	if likely(result)
+		return result;
+again:
+	if unlikely(Query_LockWithDB(self))
+		goto err;
+	result = self->q_rowfmt;
+	if unlikely(result) {
+		Query_UnlockWithDB(self);
+		return result;
 	}
+	ASSERT(!self->q_rowfmt);
+	result = _Query_TryNewRowFmtOrUnlock(self);
+	ASSERT(!self->q_rowfmt);
+	if unlikely(!ITER_ISOK(result)) {
+		if unlikely(!result)
+			goto err;
+		goto again;
+	}
+	DB_Unlock(self->q_db); /* Not needed anymore... */
+	ASSERT(!self->q_rowfmt);
+	self->q_rowfmt = result; /* Inherit reference */
+	Query_Unlock(self);
 	return result;
+err:
+	return NULL;
 }
+
 
 
 /* Ensure that `self->q_row' is either dead or NULL.
  * If it isn't, try to copy row data into "q_row", then clear the weakref. */
-#define QUERY_DETACHROWORUNLOCK_OK       0    /* Success, and lock was never lost */
-#define QUERY_DETACHROWORUNLOCK_UNLOCKED 1    /* Success, but query lock was released at one point */
-#define QUERY_DETACHROWORUNLOCK_ERR      (-1) /* Error, and query lock was released */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Query_DetachRowOrUnlock(Query *__restrict self) {
 	int result = QUERY_DETACHROWORUNLOCK_OK;
 	DREF Row *row;
 	RowFmt *rowfmt;
-	struct cell *rowdata;
 again:
 	row = (DREF Row *)Dee_weakref_lock(&self->q_row);
 	if (!row) /* Row isn't cached -> nothing to detach! */
 		return result;
-	rowfmt = atomic_read(&self->q_rowfmt);
+	rowfmt = self->q_rowfmt;
 	if unlikely(rowfmt == NULL) {
 		/* Must allocate new row format descriptor */
-		Query_Release(self);
+		rowfmt = _Query_TryNewRowFmtOrUnlock(self);
+		if unlikely(!ITER_ISOK(rowfmt)) {
+			if unlikely(!rowfmt)
+				goto err;
+			result = QUERY_DETACHROWORUNLOCK_UNLOCKED;
+			goto again;
+		}
+		self->q_rowfmt = rowfmt; /* Inherit reference */
+	}
+
+	/* Check if "row" has already been detached. */
+	if unlikely(!Row_LockTryRead(row)) {
+		Query_UnlockWithDB(self);
+		Row_LockWaitRead(row);
+decref_row_and_start_again:
 		result = QUERY_DETACHROWORUNLOCK_UNLOCKED;
-		Dee_Decref_unlikely(row);
-		if unlikely(Query_GetRowFmt(self) == NULL)
-			goto err;
-		if unlikely(Query_Acquire(self))
+		Dee_Decref(row);
+		if unlikely(Query_LockWithDB(self))
 			goto err;
 		goto again;
 	}
 
-	/* Check if "row" has already been detached. */
-	Row_LockRead(row);
-	ASSERT((row->r_query == self) || (row->r_query == NULL));
+	ASSERT((row->r_query == self) ||
+	       (row->r_query == NULL));
 	if (row->r_query == NULL) {
 		Row_LockEndRead(row);
-		goto done_decref_row;
-	}
-	ASSERT(row->r_rowfmt == NULL);
-	ASSERT(row->r_cells == NULL);
-	Row_LockEndRead(row);
+	} else {
+		struct cell *rowdata;
+		size_t i, ncol;
+		sqlite3_stmt *stmt;
+		ASSERT(row->r_rowfmt == NULL);
+		ASSERT(row->r_cells == NULL);
 
-	/* Allocate data to detach row. */
-	/* TODO: Should use TryMalloc and release query lock for this one, too
-	 *       Same deal when it comes to creating new string/bytes objects... */
-	rowdata = cell_newrow(rowfmt->rf_ncol, self->q_stmt);
-	if unlikely(!rowdata)
-		goto err_row;
+		/* Upgrade lock to row into a write-lock */
+		if unlikely(!Row_LockTryUpgrade(row)) {
+			Row_LockEndRead(row);
+			Query_UnlockWithDB(self);
+			Row_LockWaitWrite(row);
+			goto decref_row_and_start_again;
+		}
 
-	/* Detach the row by gifting it "rowdata" */
-	Row_LockWrite(row);
-	ASSERT((row->r_query == self) || (row->r_query == NULL));
-	if (row->r_query == NULL) {
+		/* Allocate data to detach row. */
+		ncol = rowfmt->rf_ncol;
+		rowdata = (struct cell *)Dee_TryMallocc(ncol, sizeof(struct cell));
+		if unlikely(!rowdata) {
+			Row_LockEndWrite(row);
+			Query_UnlockWithDB(self);
+			if (!Dee_CollectMemoryc(ncol, sizeof(struct cell)))
+				goto err_row;
+			goto decref_row_and_start_again;
+		}
+
+		/* Initialize "rowdata" */
+		stmt = self->q_stmt;
+		for (i = 0; i < ncol; ++i) {
+			unsigned int length;
+			int type = sqlite3_column_type(stmt, (int)i);
+			struct cell *c = &rowdata[i];
+			switch (type) {
+
+			case SQLITE_INTEGER:
+				c->c_type = CELLTYPE_INT;
+				c->c_data.d_int = sqlite3_column_int64(stmt, (int)i);
+				break;
+
+			case SQLITE_FLOAT:
+				c->c_type = CELLTYPE_FLOAT;
+				c->c_data.d_float = sqlite3_column_double(stmt, (int)i);
+				break;
+
+			case SQLITE_TEXT: {
+				DREF DeeObject *string;
+				unsigned char const *text;
+				length = (unsigned int)sqlite3_column_bytes(stmt, (int)i);
+				text = sqlite3_column_text(stmt, (int)i);
+				if unlikely(!text) {
+					bool ok;
+unlock_and_collect_length_memory:
+					Row_LockEndWrite(row);
+					Query_UnlockWithDB(self);
+					ok = Dee_CollectMemoryc((length + 1), sizeof(char));
+					while (i--)
+						cell_fini(&rowdata[i]);
+					Dee_Free(rowdata);
+					if (!ok)
+						goto err_row;
+					goto decref_row_and_start_again;
+				}
+				string = DeeString_TryNewUtf8((char const *)text, length,
+				                              STRING_ERROR_FIGNORE);
+				if unlikely(!string)
+					goto unlock_and_collect_length_memory;
+				c->c_type = CELLTYPE_OBJECT;
+				c->c_data.d_obj = string; /* Inherit reference */
+			}	break;
+
+			case SQLITE_BLOB: {
+				DREF DeeObject *bytes;
+				void const *blob = NULL;
+				length = (unsigned int)sqlite3_column_bytes(stmt, (int)i);
+				if (length) {
+					blob = sqlite3_column_blob(stmt, (int)i);
+					if unlikely(!blob)
+						goto unlock_and_collect_length_memory;
+				}
+				bytes = DeeBytes_TryNewBufferData(blob, length);
+				if unlikely(!bytes)
+					goto unlock_and_collect_length_memory;
+				c->c_type = CELLTYPE_OBJECT;
+				c->c_data.d_obj = bytes; /* Inherit reference */
+			}	break;
+
+			default:
+				c->c_type = CELLTYPE_NONE;
+				break;
+			}
+		}
+
+		/* Detach the row by gifting it "rowdata" */
+		ASSERT(row->r_query == self);
+		ASSERT(row->r_rowfmt == NULL);
+		ASSERT(row->r_cells == NULL);
+		row->r_query = NULL;    /* Steal reference */
+		Dee_DecrefNokill(self); /* Old reference from "row->r_query" */
+		row->r_rowfmt = rowfmt;
+		Dee_Incref(rowfmt);
+		row->r_cells = rowdata; /* Gift data */
 		Row_LockEndWrite(row);
-		cell_destroyrow(rowdata, rowfmt->rf_ncol);
-		goto done_decref_row;
 	}
-	ASSERT(row->r_rowfmt == NULL);
-	ASSERT(row->r_cells == NULL);
-	row->r_query = NULL;    /* Steal reference */
-	Dee_DecrefNokill(self); /* Old reference from "row->r_query" */
-	row->r_rowfmt = rowfmt;
-	Dee_Incref(rowfmt);
-	row->r_cells = rowdata; /* Gift data */
-	Row_LockEndWrite(row);
 
-	/* Clear our weakref to the row -> we're done now! */
-done_decref_row:
+	/* Clear our weakref to the row -> we're done now!
+	 * HINT: Clearing a weakref never invokes callbacks, so this is safe */
 	Dee_weakref_clear(&self->q_row);
-	Dee_Decref_unlikely(row);
+
+	/* Drop our reference to "row". Note that if this one ends up being
+	 * destroyed, then we have to do so without holding any locks, since
+	 * those locks might be re-acquired by string-fini-hooks that may
+	 * have been enabled on cached strings stored within "row". */
+	if unlikely(!Dee_DecrefIfNotOne(row)) {
+		Query_UnlockWithDB(self);
+		Dee_Decref(row);
+		if unlikely(Query_LockWithDB(self))
+			goto err;
+		result = QUERY_DETACHROWORUNLOCK_UNLOCKED;
+		goto again;
+	}
+
 	return result;
 err_row:
-	Dee_Decref_unlikely(row);
+	Dee_Decref(row);
 err:
 	return QUERY_DETACHROWORUNLOCK_ERR;
 }
 
-/* Same as `Query_Acquire()', but ensure that `q_row' is unbound,
+/* Same as `Query_LockWithDB()', but ensure that `q_row' is unbound,
  * and any potential old row has been detached (given its own copy
  * of cell data)
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Query_AcquireAndDetachRow(Query *__restrict self) {
-	int result = Query_Acquire(self);
+Query_LockWithDBAndDetachRow(Query *__restrict self) {
+	int result = Query_LockWithDB(self);
 	if likely(result == 0) {
 		STATIC_ASSERT(QUERY_DETACHROWORUNLOCK_ERR == -1);
 		result = Query_DetachRowOrUnlock(self);
@@ -379,12 +480,12 @@ Query_GetRow(Query *__restrict self) {
 	result->r_cells  = NULL; /* Lazily allocated */
 
 	/* Remember that this is the current row */
-	if unlikely(Query_Acquire(self))
+	if unlikely(Query_Lock(self))
 		goto err_r;
 	existing_row = (DREF Row *)Dee_weakref_cmpxch(&self->q_row, NULL,
 	                                              (DeeObject *)result);
 	ASSERT(existing_row != (DREF Row *)ITER_DONE);
-	Query_Release(self);
+	Query_Unlock(self);
 
 	/* Check for case: another thread also allocated the row */
 	if unlikely(existing_row) {
@@ -427,10 +528,6 @@ query_destroy(Query *__restrict self) {
 		return;
 	}
 
-	/* Reset query and bindings */
-	(void)sqlite3_reset(self->q_stmt);
-	(void)sqlite3_clear_bindings(self->q_stmt);
-
 	/* Mark query as unused */
 	DB_QueryCache_LockWrite(db);
 
@@ -456,10 +553,10 @@ PRIVATE WUNUSED NONNULL((1)) char *DCALL
 query_get_expanded_sql(Query *__restrict self) {
 	char *result;
 again:
-	if unlikely(Query_Acquire(self))
+	if unlikely(Query_LockWithDB(self))
 		goto err;
 	result = sqlite3_expanded_sql(self->q_stmt);
-	Query_Release(self);
+	Query_UnlockWithDB(self);
 	if unlikely(!result) {
 		if (Dee_CollectMemory(DeeString_SIZE(self->q_sql)))
 			goto again;
@@ -514,35 +611,33 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF Row *DCALL
 Query_Step(Query *__restrict self) {
 	int rc;
+	DREF Row *result;
 
 	/* Allocate the row */
-	DREF Row *result = Row_Alloc();
+	result = Row_Alloc();
 	if unlikely(!result)
 		goto err;
 
-	/* Lock query and detach old row */
+	/* Lock query and DB, and detach old row */
 again_with_row:
-	if unlikely(Query_AcquireAndDetachRow(self))
+	if unlikely(Query_LockWithDBAndDetachRow(self))
 		goto err_r;
 	ASSERT(Dee_weakref_getaddr(&self->q_row) == NULL);
-
-	/* Lock DB */
-	if unlikely(DB_Lock(self->q_db))
-		goto err_r_lock;
 
 	/* Perform the SQL step */
 	rc = sqlite3_step(self->q_stmt);
 	if unlikely(rc != SQLITE_ROW) {
-		Query_Release(self);
-		if (rc == SQLITE_DONE) {
+		Query_Unlock(self);
+		if likely(rc == SQLITE_DONE) {
 			Row_Free(result);
 			DB_Unlock(self->q_db);
 			return QUERY_STEP_DONE;
 		}
-		rc = err_sql_throwerror_and_maybe_unlock(self->q_db, NULL, rc, NULL,
-		                                         ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-		                                         ERR_SQL_THROWERROR_F_UNLOCK_DB);
-		if (rc)
+		rc = err_sql_throwerror_ex(rc,
+		                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
+		                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
+		                           self->q_db, NULL);
+		if unlikely(rc)
 			goto err_r;
 		goto again_with_row;
 	}
@@ -560,10 +655,9 @@ again_with_row:
 	result->r_cells  = NULL; /* Lazily allocated */
 	Dee_weakref_set_forced(&self->q_row, (DeeObject *)result);
 
-	Query_Release(self);
+	/* Unlock query */
+	Query_Unlock(self);
 	return result;
-err_r_lock:
-	Query_Release(self);
 err_r:
 	Row_Free(result);
 err:
@@ -578,27 +672,63 @@ err:
  * @return: * : The # of affected rows */
 INTERN WUNUSED NONNULL((1)) uint64_t DCALL
 Query_Exec(Query *__restrict self) {
-	uint64_t result;
-	if unlikely(Query_AcquireAndDetachRow(self))
+	int rc;
+	uint64_t changes = 0;
+	uint64_t changes_at_start;
+	DB *db = self->q_db;
+again:
+	if unlikely(Query_LockWithDBAndDetachRow(self))
 		goto err;
-	result = db_exec_stmt(self->q_db, self->q_stmt);
-	Query_Release(self);
-	return result;
+	changes_at_start = (uint64_t)sqlite3_changes64(db->db_db);
+	do {
+		rc = sqlite3_step(self->q_stmt);
+	} while (rc == SQLITE_ROW);
+	changes += (uint64_t)sqlite3_changes64(db->db_db) - changes_at_start;
+	if (rc != SQLITE_DONE && rc != SQLITE_OK) {
+		Query_Unlock(self);
+		rc = err_sql_throwerror_ex(rc,
+		                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
+		                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
+		                           db, NULL);
+		if (rc == 0)
+			goto again;
+		goto err;
+	}
+	Query_UnlockWithDB(self);
+	return changes;
 err:
 	return (uint64_t)-1;
 }
-
 
 /* Skip at most `count' rows, returning the actual # of skipped rows.
  * @return: (uint64_t)-1: Error
  * @return: * : The # of skipped rows */
 INTERN WUNUSED NONNULL((1)) uint64_t DCALL
 Query_Skip(Query *__restrict self, uint64_t count) {
-	uint64_t result;
-	if unlikely(Query_AcquireAndDetachRow(self))
+	int rc;
+	uint64_t result = 0;
+	DB *db = self->q_db;
+	if unlikely(!count)
+		return 0;
+again:
+	if unlikely(Query_LockWithDBAndDetachRow(self))
 		goto err;
-	result = db_skip_stmt(self->q_db, self->q_stmt, count);
-	Query_Release(self);
+	do {
+		rc = sqlite3_step(self->q_stmt);
+		if (rc != SQLITE_ROW)
+			break;
+	} while (++result < count);
+	if (rc != SQLITE_DONE && rc != SQLITE_OK) {
+		Query_Unlock(self);
+		rc = err_sql_throwerror_ex(rc,
+		                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
+		                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
+		                           db, NULL);
+		if (rc == 0)
+			goto again;
+		goto err;
+	}
+	Query_UnlockWithDB(self);
 	return result;
 err:
 	return (uint64_t)-1;
@@ -678,9 +808,9 @@ PRIVATE struct type_method tpconst query_methods[] = {
 	TYPE_METHOD("exec", &query_exec, "()->?Dint\nExecute query until there are no more rows, returning the number of affected rows"),
 	TYPE_METHOD("step", &query_step, "()->?X2?GRow?N\nReturn the next row that hasn't already been read (returns ?N when there are no more rows)"),
 	TYPE_METHOD("skip", &query_skip, "(count:?Dint)->?Dint\nSkip at most @count rows, returning how many rows were actually skipped"),
-	/* TODO: fetchone()->?GRecord              (read 1 row, assert that there are no other rows, then return that row as a record)  */
-	/* TODO: fetchall()->?S?GRecord            (same as "this.frozen.each.asrecord") */
-	/* TODO: fetch(limit:?Dint)->?S?GRecord    (same as "this[:limit].frozen.each.asrecord") */
+	/* TODO: fetchone()->?GRow                 (read 1 row, assert that there are no other rows, then return that row as a record)  */
+	/* TODO: fetchall()->?S?GRow               (same as "this.frozen") */
+	/* TODO: fetch(limit:?Dint)->?S?GRow       (same as "this[:limit].frozen") */
 
 	/* TODO: Directly expose sqlite3_stmt_explain() */
 	/* TODO: Directly expose sqlite3_stmt_isexplain() */
@@ -702,6 +832,7 @@ PRIVATE struct type_method tpconst query_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst query_getsets[] = {
+	/* TODO: records->?S?GRecord   (same as "this.each.asrecord") */
 	TYPE_GETTER_AB("row", &Query_GetRow,
 	               "->?GRow\n"
 	               "Descriptor for the most-recent row"),

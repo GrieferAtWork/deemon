@@ -81,19 +81,22 @@ err_multiple_statements(DeeStringObject *__restrict sql) {
  * @return: 0 : try again (only when `ERR_SQL_THROWERROR_F_ALLOW_RESTART' was set)
  * @return: -1: Error was thrown */
 INTERN ATTR_COLD int DCALL
-err_sql_throwerror_and_maybe_unlock(DB *db, char const *sql, int errcode,
-                                    char const *errmsg, unsigned int flags) {
+err_sql_throwerror_ex(int errcode, unsigned int flags,
+                      DB *db, char const *sql) {
+#define LOCAL_UNLOCK()                              \
+	do {                                            \
+		if (flags & ERR_SQL_THROWERROR_F_UNLOCK_DB) \
+			DB_Unlock(db);                          \
+	}	__WHILE0
 	int result;
 	DeeTypeObject *type;
 	int erroffs = -1;
+	char const *errmsg = NULL;
 	if (db != NULL) {
 		int db_errcode = sqlite3_errcode(db->db_db);
 		if (db_errcode != 0) {
-			char const *db_errmsg;
-			errcode   = db_errcode;
-			db_errmsg = sqlite3_errmsg(db->db_db);
-			if (db_errmsg != NULL)
-				errmsg = db_errmsg;
+			errcode = db_errcode;
+			errmsg  = sqlite3_errmsg(db->db_db);
 		}
 		if (sql != NULL)
 			erroffs = sqlite3_error_offset(db->db_db);
@@ -115,8 +118,7 @@ handle_eacces:
 	case SQLITE_NOMEM:
 handle_nomem:
 		if (flags & ERR_SQL_THROWERROR_F_ALLOW_RESTART) {
-			if (flags & ERR_SQL_THROWERROR_F_UNLOCK_DB)
-				DB_Unlock(db);
+			LOCAL_UNLOCK();
 			return Dee_CollectMemory(4096) ? 0 : -1;
 		}
 		type = &DeeError_NoMemory;
@@ -127,8 +129,7 @@ handle_nomem:
 		break;
 	case SQLITE_INTERRUPT:
 		if (flags & ERR_SQL_THROWERROR_F_ALLOW_RESTART) {
-			if (flags & ERR_SQL_THROWERROR_F_UNLOCK_DB)
-				DB_Unlock(db);
+			LOCAL_UNLOCK();
 			return DeeThread_CheckInterrupt();
 		}
 		type = &DeeError_Interrupt;
@@ -153,6 +154,7 @@ handle_nomem:
 		break;
 	default: break;
 	}
+	LOCAL_UNLOCK(); /* FIXME: "errmsg" must be copied before this is unlocked! */
 	if (erroffs >= 0) {
 		result = DeeError_Throwf(type, "SQL error %d: %s [at offset %d in %q]",
 		                         errcode, errmsg, erroffs, sql);
@@ -160,52 +162,13 @@ handle_nomem:
 		result = DeeError_Throwf(type, "SQL error %d: %s",
 		                         errcode, errmsg);
 	}
-	if (flags & ERR_SQL_THROWERROR_F_UNLOCK_DB)
-		DB_Unlock(db);
 	return result;
 }
 
 INTERN ATTR_COLD int DCALL
 err_sql_throwerror(int errcode, unsigned int flags) {
-	return err_sql_throwerror_and_maybe_unlock(NULL, NULL, errcode, NULL,
-	                                           flags | ERR_SQL_THROWERROR_F_NORMAL);
+	return err_sql_throwerror_ex(errcode, flags, NULL, NULL);
 }
-
-
-
-
-/* These functions are called when a "DB_Type" object is created/destroyed.
- * Internally, these keep a running counter such that:
- * - The first call does `sqlite3_initialize()' and throws an error if something went wrong
- * - The last call does `sqlite3_shutdown()'
- * @return: 0 : Success
- * @return: -1: An error was thrown */
-PRIVATE Dee_refcnt_t libsqlite3_initialized = 0;
-
-PRIVATE ATTR_NOINLINE WUNUSED int DCALL
-libsqlite3_init_impl(void) {
-	int rc;
-again:
-	rc = sqlite3_initialize();
-	if likely(rc == SQLITE_OK)
-		return 0;
-	rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_ALLOW_RESTART);
-	if (rc == 0)
-		goto again;
-	return -1;
-}
-
-INTERN WUNUSED int DCALL libsqlite3_init(void) {
-	if (_DeeRefcnt_FetchInc(&libsqlite3_initialized) == 0)
-		return libsqlite3_init_impl();
-	return 0;
-}
-
-INTERN void DCALL libsqlite3_fini(void) {
-	if (_DeeRefcnt_DecFetch(&libsqlite3_initialized) == 0)
-		(void)sqlite3_shutdown();
-}
-
 
 DECL_END
 

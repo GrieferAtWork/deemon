@@ -482,11 +482,53 @@ done:
 	return (DREF DeeObject *)result;
 }
 
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeBytes_TryNewBufferUninitialized(size_t num_bytes) {
+	DREF Bytes *result;
+	result = (DREF Bytes *)DeeObject_TryMalloccSafe(offsetof(Bytes, b_data),
+	                                                num_bytes, sizeof(byte_t));
+	if unlikely(!result)
+		goto done;
+	result->b_base           = result->b_data;
+	result->b_size           = num_bytes;
+	result->b_orig           = (DREF DeeObject *)result;
+	result->b_flags          = Dee_BUFFER_FWRITABLE;
+	result->b_buffer.bb_base = result->b_data;
+	result->b_buffer.bb_size = num_bytes;
+#ifndef __INTELLISENSE__
+	result->b_buffer.bb_put = NULL;
+#endif /* !__INTELLISENSE__ */
+	DeeObject_Init(result, &DeeBytes_Type);
+done:
+	return (DREF DeeObject *)result;
+}
+
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
 	DREF Bytes *result;
 	result = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data),
 	                                         num_bytes, sizeof(byte_t));
+	if unlikely(!result)
+		goto done;
+	result->b_base  = (byte_t *)memcpy(result->b_data, data, num_bytes);
+	result->b_size  = num_bytes;
+	result->b_orig  = (DREF DeeObject *)result;
+	result->b_flags = Dee_BUFFER_FWRITABLE;
+	result->b_buffer.bb_base = result->b_data;
+	result->b_buffer.bb_size = num_bytes;
+#ifndef __INTELLISENSE__
+	result->b_buffer.bb_put = NULL;
+#endif /* !__INTELLISENSE__ */
+	DeeObject_Init(result, &DeeBytes_Type);
+done:
+	return (DREF DeeObject *)result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeBytes_TryNewBufferData(void const *__restrict data, size_t num_bytes) {
+	DREF Bytes *result;
+	result = (DREF Bytes *)DeeObject_TryMallocc(offsetof(Bytes, b_data),
+	                                            num_bytes, sizeof(byte_t));
 	if unlikely(!result)
 		goto done;
 	result->b_base  = (byte_t *)memcpy(result->b_data, data, num_bytes);

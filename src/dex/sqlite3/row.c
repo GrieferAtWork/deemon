@@ -69,74 +69,18 @@ cell_getvalue(struct cell *__restrict self) {
 	}
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-cell_init(struct cell *__restrict self, sqlite3_stmt *stmt, int col) {
-	int type = sqlite3_column_type(stmt, col);
-	switch (type) {
-	case SQLITE_INTEGER:
-		self->c_type = CELLTYPE_INT;
-		self->c_data.d_int = sqlite3_column_int64(stmt, col);
-		break;
-	case SQLITE_FLOAT:
-		self->c_type = CELLTYPE_FLOAT;
-		self->c_data.d_float = sqlite3_column_double(stmt, col);
-		break;
-		break;
-	case SQLITE_TEXT:
-		self->c_type = CELLTYPE_OBJECT;
-		self->c_data.d_obj = (DREF DeeObject *)dee_sqlite3_column_string(stmt, col);
-		if unlikely(!self->c_data.d_obj)
-			goto err;
-		break;
-	case SQLITE_BLOB:
-		self->c_type = CELLTYPE_OBJECT;
-		self->c_data.d_obj = (DREF DeeObject *)dee_sqlite3_column_bytes(stmt, col);
-		if unlikely(!self->c_data.d_obj)
-			goto err;
-		break;
-	default:
-		self->c_type = CELLTYPE_NONE;
-		break;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-/* Allocate a copy of columns from "stmt" as cell data */
-INTERN WUNUSED struct cell *DCALL
-cell_newrow(unsigned int ncol, sqlite3_stmt *stmt) {
-	unsigned int i;
-	struct cell *result = (struct cell *)Dee_Mallocc(ncol, sizeof(struct cell));
-	if unlikely(!result)
-		goto err;
-	for (i = 0; i < ncol; ++i) {
-		struct cell *cell = &result[i];
-		if unlikely(cell_init(cell, stmt, (int)i))
-			goto err_r_icol;
-	}
-	return result;
-err_r_icol:
-	while (i--)
-		Cell_Fini(&result[i]);
-/*err_r:*/
-	Dee_Free(result);
-err:
-	return NULL;
-}
-
 /* Destroy cell data */
 INTERN NONNULL((1)) void DCALL
 cell_destroyrow(struct cell *__restrict data, unsigned int ncol) {
 	while (ncol--)
-		Cell_Fini(&data[ncol]);
+		cell_fini(&data[ncol]);
 	Dee_Free(data);
 }
 
 INTERN NONNULL((1, 3)) void DCALL
 cell_visitrow(struct cell *__restrict data, unsigned int ncol, Dee_visit_t proc, void *arg) {
 	while (ncol--)
-		Cell_Visit(&data[ncol]);
+		cell_visit(&data[ncol]);
 }
 
 
@@ -750,20 +694,20 @@ row_size_fast(Row *__restrict self) {
  */
 #define Row_ReplaceReadLockWithQueryLock(again, err, self, query) \
 	do {                                                          \
-		if (!Query_TryAcquire(query)) {                           \
+		if (!Query_TryLock(query)) {                              \
 			Dee_Incref(query);                                    \
 			Row_LockEndRead(self);                                \
-			if unlikely(Query_Acquire(query)) {                   \
+			if unlikely(Query_Lock(query)) {                      \
 				Dee_Decref(query);                                \
 				goto err;                                         \
 			}                                                     \
 			if unlikely(!Row_LockTryRead(self)) {                 \
-				Query_Release(query);                             \
+				Query_Unlock(query);                              \
 				Dee_Decref(query);                                \
 				goto again;                                       \
 			}                                                     \
 			if unlikely((self)->r_query != query) {               \
-				Query_Release(query);                             \
+				Query_Unlock(query);                              \
 				Row_LockEndRead(self);                            \
 				Dee_Decref(query);                                \
 				goto again;                                       \
@@ -802,12 +746,43 @@ err:
 	return (unsigned int)-2;
 }
 
+
+/* Upgrade a read-lock to `self->r_lock' (which gets released)
+ * into locks equivalent to `Query_LockWithDB()' */
+#define ROW_READUPGRADE_LOCK_QUERY_WITHDB_RETRY   1    /* Try again (lock to "self" was lost) */
+#define ROW_READUPGRADE_LOCK_QUERY_WITHDB_SUCCESS 0    /* Success */
+#define ROW_READUPGRADE_LOCK_QUERY_WITHDB_ERROR   (-1) /* Error was thrown (lock to "self" was lost) */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+Row_ReadUpgradeLockQueryWithDB(Row *__restrict self) {
+	int result;
+	Query *query = self->r_query;
+	ASSERT(Row_LockReading(self));
+	ASSERT(query);
+	if likely(Query_TryLockWithDB(query)) {
+		Row_LockEndRead(self);
+		ASSERT(self->r_query == query);
+		return ROW_READUPGRADE_LOCK_QUERY_WITHDB_SUCCESS;
+	}
+	Dee_Incref(query);
+	Row_LockEndRead(self);
+	result = Dee_shared_lock_waitfor(&query->q_lock);
+	if likely(result == 0)
+		result = Dee_shared_lock_waitfor(&query->q_db->db_dblock);
+	if likely(result == 0)
+		result = ROW_READUPGRADE_LOCK_QUERY_WITHDB_RETRY;
+	Dee_Decref_unlikely(query);
+	ASSERT(result == ROW_READUPGRADE_LOCK_QUERY_WITHDB_RETRY ||
+	       result == ROW_READUPGRADE_LOCK_QUERY_WITHDB_ERROR);
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 row_getitem_index(Row *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	Query *query;
 	size_t length;
 	int column_type;
+	unsigned int data_length;
 again:
 	Row_LockRead(self);
 	if ((query = self->r_query) == NULL) {
@@ -821,45 +796,80 @@ again:
 	}
 
 	/* Complicated (but likely) case: active row */
-	Row_ReplaceReadLockWithQueryLock(again, err, self, query);
+	switch (Row_ReadUpgradeLockQueryWithDB(self)) {
+	case ROW_READUPGRADE_LOCK_QUERY_WITHDB_SUCCESS:
+		break;
+	case ROW_READUPGRADE_LOCK_QUERY_WITHDB_RETRY:
+		goto again;
+	case ROW_READUPGRADE_LOCK_QUERY_WITHDB_ERROR:
+		goto err;
+	default: __builtin_unreachable();
+	}
 
 	/* Got a lock to the query -> read data from sqlite */
 	length = (size_t)sqlite3_column_count(query->q_stmt);
 	if unlikely(index >= length) {
-		Query_Release(query);
+		Query_Unlock(query);
 		goto err_oob;
 	}
+
 	column_type = sqlite3_column_type(query->q_stmt, (int)index);
 	switch (column_type) {
+
 	case SQLITE_INTEGER: {
 		int64_t value = sqlite3_column_int64(query->q_stmt, (int)index);
-		Query_Release(query);
+		Query_UnlockWithDB(query);
 		result = DeeInt_NewInt64(value);
 	}	break;
+
 	case SQLITE_FLOAT: {
 		double value = sqlite3_column_double(query->q_stmt, (int)index);
-		Query_Release(query);
+		Query_UnlockWithDB(query);
 		result = DeeFloat_New(value);
 	}	break;
-	case SQLITE_TEXT:
-		result = (DREF DeeObject *)dee_sqlite3_column_string(query->q_stmt, (int)index);
-		Query_Release(query);
-		break;
-	case SQLITE_BLOB:
-		result = (DREF DeeObject *)dee_sqlite3_column_bytes(query->q_stmt, (int)index);
-		Query_Release(query);
-		break;
+
+	case SQLITE_TEXT: {
+		unsigned char const *text;
+		data_length = (unsigned int)sqlite3_column_bytes(query->q_stmt, (int)index);
+		text = sqlite3_column_text(query->q_stmt, (int)index);
+		if unlikely(!text) {
+unlock_and_collect_length_memory:
+			Query_UnlockWithDB(query);
+			if (!Dee_CollectMemoryc((data_length + 1), sizeof(char)))
+				goto err;
+			goto again;
+		}
+		result = DeeString_TryNewUtf8((char const *)text, data_length,
+		                              STRING_ERROR_FIGNORE);
+		if unlikely(!result)
+			goto unlock_and_collect_length_memory;
+		Query_UnlockWithDB(query);
+	}	break;
+
+	case SQLITE_BLOB: {
+		void const *blob = NULL;
+		data_length = (unsigned int)sqlite3_column_bytes(query->q_stmt, (int)index);
+		if (data_length) {
+			blob = sqlite3_column_blob(query->q_stmt, (int)index);
+			if unlikely(!blob)
+				goto unlock_and_collect_length_memory;
+		}
+		result = DeeBytes_TryNewBufferData(blob, data_length);
+		if unlikely(!result)
+			goto unlock_and_collect_length_memory;
+		Query_UnlockWithDB(query);
+	}	break;
+
 	default:
+		Query_UnlockWithDB(query);
 		result = DeeNone_NewRef();
-		Query_Release(query);
 		break;
 	}
 	return result;
-err:
-	return NULL;
 err_oob:
 	err_index_out_of_bounds((DeeObject *)self, index, length);
-	goto err;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

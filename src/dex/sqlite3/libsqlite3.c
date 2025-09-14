@@ -27,10 +27,55 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 
+#include <deemon/util/futex.h>
+
 /**/
 #include "libsqlite3.h"
 
 DECL_BEGIN
+
+PRIVATE Dee_refcnt_t libsqlite3_initialized = 0;
+PRIVATE Dee_shared_lock_t libsqlite3_initialized_lock = DEE_SHARED_LOCK_INIT;
+
+PRIVATE WUNUSED int DCALL libsqlite3_init_impl(void) {
+	int result;
+again:
+	result = sqlite3_initialize();
+	if likely(result == SQLITE_OK)
+		return 0;
+	result = err_sql_throwerror(result, ERR_SQL_THROWERROR_F_ALLOW_RESTART);
+	if (result == 0)
+		goto again;
+	return result;
+}
+
+PRIVATE void DCALL libsqlite3_fini_impl(void) {
+	(void)sqlite3_shutdown();
+}
+
+/* These functions are called when a "DB_Type" object is created/destroyed.
+ * Internally, these keep a running counter such that:
+ * - The first call does `sqlite3_initialize()' and throws an error if something went wrong
+ * - The last call does `sqlite3_shutdown()'
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+INTERN WUNUSED int DCALL libsqlite3_init(void) {
+	int result = Dee_shared_lock_acquire(&libsqlite3_initialized_lock);
+	if likely(result == 0) {
+		if (libsqlite3_initialized++ == 0)
+			result = libsqlite3_init_impl();
+		Dee_shared_lock_release(&libsqlite3_initialized_lock);
+	}
+	return result;
+}
+
+INTERN void DCALL libsqlite3_fini(void) {
+	Dee_shared_lock_acquire_noint(&libsqlite3_initialized_lock);
+	if (--libsqlite3_initialized == 0)
+		libsqlite3_fini_impl();
+	Dee_shared_lock_release(&libsqlite3_initialized_lock);
+}
+
 
 PRIVATE struct dex_symbol symbols[] = {
 	/* sqlite3 dex module:

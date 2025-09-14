@@ -59,6 +59,8 @@ DECL_BEGIN
 DeeSystem_DEFINE_memsetp(dee_memsetp)
 #endif /* !CONFIG_HAVE_memsetp */
 
+
+
 INTERN_CONST struct query_cache_empty_list_struct const
 query_cache_empty_list_ = {
 	0
@@ -88,48 +90,6 @@ query_cache_list_indexof(struct query_cache_list const *__restrict self,
 }
 
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-DB_Lock(DB *__restrict self) {
-	DeeThreadObject *me = DeeThread_Self();
-again:
-	sqlite3_mutex_enter(sqlite3_db_mutex(self->db_db));
-#ifdef CONFIG_NO_THREADS
-	self->db_interruptible = true;
-#else /* CONFIG_NO_THREADS */
-	atomic_write(&self->db_thread, me);
-#endif /* !CONFIG_NO_THREADS */
-	DeeThread_EnableInterruptHooks(me);
-	if unlikely(DeeThread_WasInterrupted(me)) {
-		DeeThread_DisableInterruptHooks(me);
-#ifdef CONFIG_NO_THREADS
-		self->db_interruptible = false;
-#else /* CONFIG_NO_THREADS */
-		atomic_write(&self->db_thread, NULL);
-		sqlite3_mutex_leave(sqlite3_db_mutex(self->db_db));
-#endif /* !CONFIG_NO_THREADS */
-		if (DeeThread_CheckInterruptSelf(self))
-			goto err;
-		goto again;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-INTERN NONNULL((1)) void DCALL
-DB_Unlock(DB *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	DeeThreadObject *me = DeeThread_Self();
-	DeeThread_DisableInterruptHooks(me);
-	self->db_interruptible = false;
-#else /* CONFIG_NO_THREADS */
-	DeeThread_DisableInterruptHooks(self->db_thread);
-	atomic_write(&self->db_thread, NULL);
-#endif /* !CONFIG_NO_THREADS */
-	sqlite3_mutex_leave(sqlite3_db_mutex(self->db_db));
-}
-
-
 /* Free the oldest entry from "db_querycache_unused" and call "DB_QueryCache_LockEndWrite()" */
 INTERN NONNULL((1)) void DCALL
 db_free_oldest_unused_query_and_unlock(DB *__restrict self) {
@@ -155,8 +115,14 @@ db_free_oldest_unused_query_and_unlock(DB *__restrict self) {
 	}
 
 	/* Free "oldest_query" */
-	Query_Free(oldest_query);
+	Query_Free(oldest_query, self);
 }
+
+
+
+
+
+
 
 
 /************************************************************************/
@@ -166,6 +132,54 @@ db_free_oldest_unused_query_and_unlock(DB *__restrict self) {
 /*                                                                      */
 /************************************************************************/
 /************************************************************************/
+
+/* Use these to serialize all sqlite3 calls that may access the DB (`sqlite3 *') */
+INTERN WUNUSED NONNULL((1)) bool DCALL
+DB_TryLock(DB *__restrict self) {
+	bool result = Dee_shared_lock_tryacquire(&self->db_dblock);
+	if (result) {
+		DeeThreadObject *me = DeeThread_Self();
+		atomic_write(&self->db_thread, me);
+		DeeThread_EnableInterruptHooks(me);
+	}
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DB_Lock(DB *__restrict self) {
+	DeeThreadObject *me;
+	if unlikely(Dee_shared_lock_acquire(&self->db_dblock))
+		goto err;
+	me = DeeThread_Self();
+	atomic_write(&self->db_thread, me);
+	DeeThread_EnableInterruptHooks(me);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN NONNULL((1)) void DCALL
+DB_Unlock(DB *__restrict self) {
+	ASSERT(self->db_thread == DeeThread_Self());
+	DeeThread_DisableInterruptHooks(self->db_thread);
+	atomic_write(&self->db_thread, NULL);
+	Dee_shared_lock_release(&self->db_dblock);
+}
+
+
+/* Safely call `sqlite3_finalize(stmt)' */
+INTERN NONNULL((1)) void DCALL
+DB_FinalizeStmt(DB *__restrict self, sqlite3_stmt *stmt) {
+	if (DB_TryLock(self)) {
+		(void)sqlite3_finalize(stmt);
+		DB_Unlock(self);
+	} else {
+		/* FIXME: This sqlite3_finalize() needs a DB lock -- only way
+		 *        to get that here is via a lockop (as seen in KOS) */ 
+		(void)sqlite3_finalize(stmt);
+	}
+}
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) Query *DCALL
 db_find_unused_query_near(struct query_cache_list *__restrict list,
@@ -286,6 +300,16 @@ DB_NewQuery(DB *__restrict self, DeeStringObject *__restrict sql,
 		DB_QueryCache_LockEndRead(self);
 		atomic_write(&result->ob_refcnt, 1); /* Mask as in-use */
 		ASSERT(Query_InUse(result));
+
+		/* In order to reset the query, we need a lock to the DB */
+		if unlikely(DB_Lock(self)) {
+			Dee_DecrefDokill(result);
+			goto err;
+		}
+		(void)sqlite3_reset(result->q_stmt);
+		(void)sqlite3_clear_bindings(result->q_stmt);
+		DB_Unlock(self);
+
 		return result;
 	}
 	DB_QueryCache_LockEndRead(self);
@@ -310,9 +334,10 @@ again_prepare:
 		                        SQLITE_PREPARE_PERSISTENT, /* Hint PERSISTENT because we cache the query */
 		                        &result->q_stmt, &sql_tail );
 		if unlikely(rc != SQLITE_OK) {
-			rc = err_sql_throwerror_and_maybe_unlock(self, sql_utf8, rc, NULL,
-			                                         ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-			                                         ERR_SQL_THROWERROR_F_UNLOCK_DB);
+			rc = err_sql_throwerror_ex(rc,
+			                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
+			                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
+			                           self, sql_utf8);
 			if (rc == 0)
 				goto again_prepare;
 			goto err_r;
@@ -372,7 +397,7 @@ use_existing_result:
 			Dee_DecrefNokill(&Query_Type); /* result->ob_type */
 			Dee_DecrefNokill(self);        /* result->q_db */
 			Dee_DecrefNokill(sql);         /* result->q_sql */
-			(void)sqlite3_finalize(result->q_stmt);
+			DB_FinalizeStmt(self, result->q_stmt);
 			DeeObject_FREE(result);
 			return existing_result;
 		}
@@ -432,7 +457,7 @@ err_r_sql_misc:
 	Dee_DecrefNokill(self);        /* result->q_db */
 	Dee_DecrefNokill(sql);         /* result->q_sql */
 err_r_sql:
-	(void)sqlite3_finalize(result->q_stmt);
+	DB_FinalizeStmt(self, result->q_stmt);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -499,7 +524,7 @@ again_acquire_write_lock:
 	}
 
 	/* Free query */
-	Query_Free(dead_query);
+	Query_Free(dead_query, self);
 
 	/* If there are more queries, then we must remove those, too. */
 	if (sql_has_more_queries)
@@ -586,8 +611,8 @@ again_open:
 	                     SQLITE_OPEN_EXRESCODE,
 	                     NULL);
 	if (rc != SQLITE_OK) {
-		rc = err_sql_throwerror_and_maybe_unlock(self, NULL, rc, NULL,
-		                                         ERR_SQL_THROWERROR_F_ALLOW_RESTART);
+		rc = err_sql_throwerror_ex(rc, ERR_SQL_THROWERROR_F_ALLOW_RESTART,
+		                           self, NULL);
 		(void)sqlite3_close_v2(self->db_db);
 		if (rc == 0)
 			goto again_open;
@@ -604,6 +629,8 @@ again_open:
 	self->db_sf_hook = sf_hook;
 	self->db_ti_hook = ti_hook;
 	weakref_support_init(self);
+	Dee_shared_lock_init(&self->db_dblock);
+	self->db_thread = NULL;
 
 	/* Initialize string finalization hooks. */
 	sf_hook->dsfh_hook.sfh_refcnt  = 1;
@@ -681,7 +708,11 @@ db_fini(DB *__restrict self) {
 				ASSERT(query);
 				ASSERT(!Query_InUse(query));
 				ASSERT(TAILQ_ISBOUND(query, q_unused));
-				Query_Free(query);
+				/* Directly finalize statement -> DB is going away (meaning we're the
+				 * last living thread able to see it), so no need to play around with
+				 * locks anymore! */
+				(void)sqlite3_finalize(query->q_stmt);
+				_Query_Free(query);
 			} while (++list_index < list->qcl_count);
 			_query_cache_list_free(list);
 		}
@@ -730,7 +761,7 @@ again:
 /* Execute `stmt' until there is no more data present.
  * @return: (uint64_t)-1: Error
  * @return: * : The # of affected rows */
-INTERN WUNUSED NONNULL((1)) uint64_t DCALL
+PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
 db_exec_stmt(DB *__restrict self, sqlite3_stmt *stmt) {
 	int rc;
 	uint64_t changes = 0;
@@ -744,9 +775,10 @@ again:
 	} while (rc == SQLITE_ROW);
 	changes += (uint64_t)sqlite3_changes64(self->db_db) - changes_at_start;
 	if (rc != SQLITE_DONE && rc != SQLITE_OK) {
-		rc = err_sql_throwerror_and_maybe_unlock(self, NULL, rc, NULL,
-		                                         ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-		                                         ERR_SQL_THROWERROR_F_UNLOCK_DB);
+		rc = err_sql_throwerror_ex(rc,
+		                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
+		                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
+		                           self, NULL);
 		if (rc == 0)
 			goto again;
 		goto err;
@@ -756,39 +788,6 @@ again:
 err:
 	return (uint64_t)-1;
 }
-
-/* Skip at most `count' rows in `stmt', returning the actual # of skipped rows.
- * @return: (uint64_t)-1: Error
- * @return: * : The # of skipped rows */
-INTERN WUNUSED NONNULL((1)) uint64_t DCALL
-db_skip_stmt(DB *__restrict self, sqlite3_stmt *stmt, uint64_t count) {
-	int rc;
-	uint64_t result = 0;
-	if unlikely(!count)
-		return 0;
-again:
-	if unlikely(DB_Lock(self))
-		goto err;
-	do {
-		rc = sqlite3_step(stmt);
-		if (rc != SQLITE_ROW)
-			break;
-	} while (++result < count);
-	if (rc != SQLITE_DONE && rc != SQLITE_OK) {
-		rc = err_sql_throwerror_and_maybe_unlock(self, NULL, rc, NULL,
-		                                         ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-		                                         ERR_SQL_THROWERROR_F_UNLOCK_DB);
-		if (rc == 0)
-			goto again;
-		goto err;
-	}
-	DB_Unlock(self);
-	return result;
-err:
-	return (uint64_t)-1;
-}
-
-
 
 PRIVATE NONNULL((1)) DREF Query *DCALL
 db_query(DB *__restrict self, size_t argc, DeeObject *const *argv) {
@@ -810,7 +809,7 @@ db_query(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	/* Bind query "params". Because the query isn't being shared,
 	 * we don't even have to lock it, yet! */
 	ASSERT(!DeeObject_IsShared(result));
-	if unlikely(dee_sqlite3_bind_params(result->q_stmt, params, 0) < 0)
+	if unlikely(dee_sqlite3_bind_params(self, result->q_stmt, params, 0) < 0)
 		goto err_r;
 
 	/* Return the fully initialized query. */
@@ -841,7 +840,7 @@ db_exec(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if likely(query0 != DB_NEWQUERY_NOQUERY) {
 		ASSERT(!DeeObject_IsShared(query0));
-		bind_status = dee_sqlite3_bind_params(query0->q_stmt, params, 0);
+		bind_status = dee_sqlite3_bind_params(self, query0->q_stmt, params, 0);
 		if unlikely(bind_status < 0)
 			goto err_query0;
 		changes = db_exec_stmt(self, query0->q_stmt);
@@ -874,9 +873,10 @@ again_prepare:
 		                        (int)utf8_sql_length,
 		                        &stmt, &sql_tail);
 		if unlikely(rc != SQLITE_OK) {
-			rc = err_sql_throwerror_and_maybe_unlock(self, utf8_sql, rc, NULL,
-			                                         ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-			                                         ERR_SQL_THROWERROR_F_UNLOCK_DB);
+			rc = err_sql_throwerror_ex(rc,
+			                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
+			                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
+			                           self, utf8_sql);
 			if (rc == 0)
 				goto again_prepare;
 			goto err;
@@ -886,20 +886,16 @@ again_prepare:
 		/* When source SQL is just one big comment, "stmt" is set to "NULL" */
 		if likely(stmt != NULL) {
 			/* Bind parameters */
-			bind_status = dee_sqlite3_bind_params(stmt, params, params_offset);
+			bind_status = dee_sqlite3_bind_params(self, stmt, params, params_offset);
 			if unlikely(bind_status < 0) {
-				(void)sqlite3_finalize(stmt);
+				DB_FinalizeStmt(self, stmt);
 				goto err;
 			}
-			/* Account for offset caused by "?"-parameters in relation to future statements. */
-			params_offset += (size_t)bind_status;
-			/* Execute statement */
-			part_changes = db_exec_stmt(self, stmt);
-			/* Destroy the statement */
-			(void)sqlite3_finalize(stmt);
-			/* Check for errors that may have happened during execution */
+			params_offset += (size_t)bind_status;    /* Account for offset caused by "?"-parameters in relation to future statements. */
+			part_changes = db_exec_stmt(self, stmt); /* Execute statement */
+			DB_FinalizeStmt(self, stmt);             /* Destroy the statement */
 			if unlikely(part_changes == (uint64_t)-1)
-				goto err;
+				goto err;  /* Check for errors that may have happened during execution */
 			changes += part_changes;
 		}
 
@@ -957,6 +953,8 @@ PRIVATE struct type_method tpconst db_methods[] = {
 
 PRIVATE struct type_getset tpconst db_getsets[] = {
 	/* TODO: Expose sqlite3_last_insert_rowid() / sqlite3_set_last_insert_rowid() */
+	/* TODO: Expose cached queries (in the form of a `{string...}'-Sequence) */
+	/* TODO: Expose control for "db_querycache_unused_limit" (also: when lowered, delete old unused queries) */
 	TYPE_GETSET_END
 };
 

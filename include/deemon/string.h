@@ -1097,6 +1097,18 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_NewUtf8)(/*utf-
 #define DeeString_NewUtf8(str, length, error_mode) DeeDbgString_NewUtf8(str, length, error_mode, __FILE__, __LINE__)
 #endif /* !NDEBUG */
 
+/* Same as `DeeString_NewUtf8()', but uses `DeeObject_TryMalloc' & friends
+ * Given `error_mode' _MUST_ be `Dee_STRING_ERROR_FREPLAC' or `Dee_STRING_ERROR_FIGNORE' */
+#undef DeeString_TryNewUtf8
+#undef DeeDbgString_TryNewUtf8
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryNewUtf8)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_TryNewUtf8)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode, char const *file, int line);
+#ifdef NDEBUG
+#define DeeDbgString_TryNewUtf8(str, length, error_mode, file, line) DeeString_TryNewUtf8(str, length, error_mode)
+#else /* NDEBUG */
+#define DeeString_TryNewUtf8(str, length, error_mode) DeeDbgString_TryNewUtf8(str, length, error_mode, __FILE__, __LINE__)
+#endif /* !NDEBUG */
+
 /* Given a string `self' that has previously been allocated as a byte-buffer
  * string (such as `DeeString_NewSized()' or `DeeString_NewBuffer()'), convert
  * it into a UTF-8 string, using the byte-buffer data as UTF-8 text.

@@ -38,6 +38,8 @@ EXPORTS
 	DeeBytes_NewView@16=_DeeBytes_NewView@16
 	DeeBytes_ResizeBuffer@8=_DeeBytes_ResizeBuffer@8
 	DeeBytes_TruncateBuffer@8=_DeeBytes_TruncateBuffer@8
+	DeeBytes_TryNewBufferData@8=_DeeBytes_TryNewBufferData@8
+	DeeBytes_TryNewBufferUninitialized@4=_DeeBytes_TryNewBufferUninitialized@4
 	DeeCMethod_New@8=_DeeCMethod_New@8
 	DeeCMethod_VCallFuncf@12=_DeeCMethod_VCallFuncf@12
 	DeeCachedDict_New@4=_DeeCachedDict_New@4
@@ -153,6 +155,7 @@ EXPORTS
 	DeeDbgString_NewBuffer@12=_DeeDbgString_NewBuffer@12
 	DeeDbgString_NewSized@16=_DeeDbgString_NewSized@16
 	DeeDbgString_NewUtf8@20=_DeeDbgString_NewUtf8@20
+	DeeDbgString_TryNewUtf8@20=_DeeDbgString_TryNewUtf8@20
 	DeeDbg_Calloc@12=_DeeDbg_Calloc@12
 	DeeDbg_Free@12=_DeeDbg_Free@12
 	DeeDbg_Malloc@12=_DeeDbg_Malloc@12
@@ -1238,6 +1241,7 @@ EXPORTS
 	DeeString_SetUtf8@8=_DeeString_SetUtf8@8
 	DeeString_TryAsUtf8@4=_DeeString_TryAsUtf8@4
 	DeeString_TryEnableFiniHook@4=_DeeString_TryEnableFiniHook@4
+	DeeString_TryNewUtf8@12=_DeeString_TryNewUtf8@12
 	DeeString_TryPack2ByteBuffer@4=_DeeString_TryPack2ByteBuffer@4
 	DeeString_TryPackUtf16Buffer@4=_DeeString_TryPackUtf16Buffer@4
 	DeeString_TryPackUtf32Buffer@4=_DeeString_TryPackUtf32Buffer@4

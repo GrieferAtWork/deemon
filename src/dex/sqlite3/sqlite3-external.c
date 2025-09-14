@@ -53,7 +53,11 @@ ClCompile.CompileAs = CompileAsC
 #define SQLITE_PRIVATE PRIVATE
 
 
+#ifdef __BYTE_ORDER__
 #define SQLITE_BYTEORDER __BYTE_ORDER__
+#else /* __BYTE_ORDER__ */
+#define SQLITE_BYTEORDER 0
+#endif /* !__BYTE_ORDER__ */
 
 #define UINT32_TYPE __UINT32_TYPE__
 #define UINT16_TYPE __UINT16_TYPE__

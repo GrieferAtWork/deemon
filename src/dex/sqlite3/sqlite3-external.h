@@ -31,7 +31,22 @@
 #define SQLITE_OMIT_COMPILEOPTION_DIAGS
 #define SQLITE_OMIT_LOAD_EXTENSION
 #define SQLITE_OMIT_AUTOINIT
+#define SQLITE_OMIT_DEPRECATED
+#define SQLITE_UNTESTABLE
 /*#define SQLITE_ENABLE_MEMORY_MANAGEMENT*/
+
+/* Tell sqlite3 that we do our own locking (with blackjack & hookers)
+ * Reason: The way that sqlite3 does locking, there is a situation where
+ *         DeeThread_Wake() will be unable to interrupt certain threads:
+ * - Thread #1: holding lock to DB mutex, and in long-running query
+ * - Thread #2: trying to acquire lock to DB mutex
+ * - Thread #3: Sends interrupt to Thread #2
+ * - Thread #2: Unable to receive interrupt because sqlite3's mutex can't indicate interrupts
+ *
+ * Solution: can't rely on sqlite3's mutex code -- must do our
+ *           own and compile sqlite3 with SQLITE_THREADSAFE=2 */
+#define SQLITE_THREADSAFE 2
+
 
 #ifdef __INT64_TYPE__
 #define SQLITE_INT64_TYPE  __INT64_TYPE__
