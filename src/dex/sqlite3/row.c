@@ -26,7 +26,10 @@
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -43,8 +46,16 @@
 
 DECL_BEGIN
 
+/************************************************************************/
+/************************************************************************/
+/*                                                                      */
+/* Cell                                                                 */
+/*                                                                      */
+/************************************************************************/
+/************************************************************************/
+
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Cell_GetValue(Cell *__restrict self) {
+cell_getvalue(struct cell *__restrict self) {
 	switch (self->c_type) {
 	case CELLTYPE_OBJECT:
 		return_reference(self->c_data.d_obj);
@@ -59,7 +70,7 @@ Cell_GetValue(Cell *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-Cell_Init(Cell *__restrict self, sqlite3_stmt *stmt, int col) {
+cell_init(struct cell *__restrict self, sqlite3_stmt *stmt, int col) {
 	int type = sqlite3_column_type(stmt, col);
 	switch (type) {
 	case SQLITE_INTEGER:
@@ -93,15 +104,15 @@ err:
 }
 
 /* Allocate a copy of columns from "stmt" as cell data */
-INTERN WUNUSED Cell *DCALL
-Cell_NewRow(unsigned int ncol, sqlite3_stmt *stmt) {
+INTERN WUNUSED struct cell *DCALL
+cell_newrow(unsigned int ncol, sqlite3_stmt *stmt) {
 	unsigned int i;
-	Cell *result = (Cell *)Dee_Mallocc(ncol, sizeof(Cell));
+	struct cell *result = (struct cell *)Dee_Mallocc(ncol, sizeof(struct cell));
 	if unlikely(!result)
 		goto err;
 	for (i = 0; i < ncol; ++i) {
-		Cell *cell = &result[i];
-		if unlikely(Cell_Init(cell, stmt, (int)i))
+		struct cell *cell = &result[i];
+		if unlikely(cell_init(cell, stmt, (int)i))
 			goto err_r_icol;
 	}
 	return result;
@@ -116,255 +127,274 @@ err:
 
 /* Destroy cell data */
 INTERN NONNULL((1)) void DCALL
-Cell_DestroyRow(Cell *__restrict data, unsigned int ncol) {
+cell_destroyrow(struct cell *__restrict data, unsigned int ncol) {
 	while (ncol--)
 		Cell_Fini(&data[ncol]);
 	Dee_Free(data);
 }
 
 INTERN NONNULL((1, 3)) void DCALL
-Cell_VisitRow(Cell *__restrict data, unsigned int ncol, Dee_visit_t proc, void *arg) {
+cell_visitrow(struct cell *__restrict data, unsigned int ncol, Dee_visit_t proc, void *arg) {
 	while (ncol--)
 		Cell_Visit(&data[ncol]);
 }
 
 
-
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF RowFmt *DCALL
-_Query_NewRowFmt(Query *__restrict self) {
-	DREF RowFmt *result;
-	unsigned int i, ncol;
-	/* Need to lock the query because:
-	 * >> sqlite3_column_name:
-	 * >> >> The returned string pointer is valid until either the prepared statement
-	 * >> >> is destroyed by sqlite3_finalize() or until the statement is automatically
-	 * >> >> reprepared by the first call to sqlite3_step() for a particular run or
-	 * >> >> until the next call to sqlite3_column_name() or sqlite3_column_name16() on
-	 * >> >> the same column.
-	 *
-	 * iow: sqlite3_column_name() being called twice invalidates the previous string,
-	 *      meaning that particular function isn't thread-safe!
-	 */
-	if (Query_Acquire(self))
-		goto err;
-	ncol = (unsigned int)sqlite3_column_count(self->q_stmt);
-	result = RowFmt_Alloc(ncol);
-	if unlikely(!result)
-		goto err_unlock;
-	DeeObject_Init(result, &RowFmt_Type);
-	result->rf_ncol = ncol;
-	for (i = 0; i < ncol; ++i) {
-		DREF DeeStringObject *nameob, *decltypeob;
-		CellFmt *fmt = &result->rf_cols[i];
-		char const *name, *decltype_;
-
-		/* Allocate name */
-		do {
-			name = sqlite3_column_name(self->q_stmt, (int)i);
-			/* >> If sqlite3_malloc() fails [...] then a NULL pointer is returned */
-		} while (!name && Dee_CollectMemory(32));
-		if unlikely(!name)
-			goto err_unlock_r_i;
-		nameob = (DREF DeeStringObject *)DeeString_NewUtf8(name, strlen(name),
-		                                          STRING_ERROR_FIGNORE);
-		if unlikely(!nameob)
-			goto err_unlock_r_i;
-		fmt->cfmt_name = nameob; /* Inherit reference */
-
-		/* Allocate decltype */
-		do {
-			decltype_ = sqlite3_column_decltype(self->q_stmt, (int)i);
-			/* >> If sqlite3_malloc() fails [...] then a NULL pointer is returned */
-		} while (!decltype_ && Dee_CollectMemory(32));
-		if unlikely(!decltype_) {
-err_unlock_r_i_name:
-			Dee_Decref_likely(fmt->cfmt_name);
-			goto err_unlock_r_i;
-		}
-		decltypeob = (DREF DeeStringObject *)DeeString_NewUtf8(decltype_, strlen(decltype_),
-		                                          STRING_ERROR_FIGNORE);
-		if unlikely(!decltypeob)
-			goto err_unlock_r_i_name;
-		fmt->cfmt_decltype = decltypeob; /* Inherit reference */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF CellFmt *DCALL
+CellFmt_New(RowFmt *__restrict rowfmt, struct cellfmt const *__restrict cell) {
+	DREF CellFmt *result = DeeObject_MALLOC(CellFmt);
+	if likely(result) {
+		DeeObject_Init(result, &CellFmt_Type);
+		result->cfo_fmt  = rowfmt;
+		result->cfo_cell = cell;
+		Dee_Incref(rowfmt);
 	}
-	Query_Release(self);
 	return result;
-err_unlock_r_i:
-	while (i--) {
-		CellFmt *fmt = &result->rf_cols[i];
-		CellFmt_Fini(fmt);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+ob_cellfmt_fini(CellFmt *__restrict self) {
+	Dee_Decref_unlikely(self->cfo_fmt);
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+cellfmt_print(CellFmt *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	DeeStringObject *decltype_ = self->cfo_cell->cfmt_decltype;
+	return DeeFormat_Printf(printer, arg, "<cell '%#q%s%#q'>",
+	                        DeeString_STR(self->cfo_cell->cfmt_name),
+	                        decltype_ ? " " : "",
+	                        decltype_ ? DeeString_STR(decltype_) : "");
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+cellfmt_printrepr(CellFmt *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "%r[%r]",
+	                        self->cfo_fmt,
+	                        self->cfo_cell->cfmt_name);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cellfmt_getname(CellFmt *__restrict self) {
+	return_reference(self->cfo_cell->cfmt_name);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+cellfmt_getdecltype(CellFmt *__restrict self) {
+	DeeStringObject *result = self->cfo_cell->cfmt_decltype;
+	if likely(result) {
+		Dee_Incref(result);
+		return result;
 	}
-/*err_unlock_r:*/
-	RowFmt_Free(result);
-err_unlock:
-	Query_Release(self);
-err:
+	err_unbound_attribute_string(&CellFmt_Type, "decltype");
 	return NULL;
 }
 
-/* Return (and lazily allocate on first use) the RowFmt descriptor of this query. */
-INTERN WUNUSED NONNULL((1)) RowFmt *DCALL
-Query_GetRowFmt(Query *__restrict self) {
-	RowFmt *result = atomic_read(&self->q_rowfmt);
-	if (!result) {
-		result = _Query_NewRowFmt(self);
-		if likely(result) {
-			if unlikely(!atomic_cmpxch(&self->q_rowfmt, NULL, result)) {
-				Dee_DecrefDokill(result);
-				result = atomic_read(&self->q_rowfmt);
-				ASSERT(result);
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cellfmt_bounddecltype(CellFmt *__restrict self) {
+	return Dee_BOUND_FROMBOOL(self->cfo_cell->cfmt_decltype);
+}
+
+PRIVATE struct type_getset tpconst cellfmt_getsets[] = {
+	TYPE_GETTER_AB_F("name", &cellfmt_getname,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dstring"),
+	TYPE_GETTER_BOUND_F("decltype", &cellfmt_getdecltype, &cellfmt_bounddecltype,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dstring"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst cellfmt_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__rowfmt__", STRUCT_OBJECT, offsetof(CellFmt, cfo_fmt), "->?G_RowFmt"),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject CellFmt_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_CellFmt",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL, /* TODO */
+				TYPE_FIXED_ALLOCATOR(CellFmt),
 			}
-		}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ob_cellfmt_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cellfmt_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cellfmt_printrepr,
+	},
+	/* .tp_visit         = */ NULL, /* Not needed -- only references DeeStringObject objects (or other objects that only reference such) */
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ cellfmt_getsets,
+	/* .tp_members       = */ cellfmt_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+
+
+
+
+
+
+/************************************************************************/
+/************************************************************************/
+/*                                                                      */
+/* RowFmtColumns                                                        */
+/*                                                                      */
+/************************************************************************/
+/************************************************************************/
+
+PRIVATE NONNULL((1)) void DCALL
+rowfmtcolumns_fini(RowFmtColumns *__restrict self) {
+	Dee_Decref(self->rfc_fmt);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF RowFmtColumns *DCALL
+RowFmtColumns_NewInherited(/*inherit(always)*/DREF RowFmt *__restrict self) {
+	DREF RowFmtColumns *result = DeeObject_MALLOC(RowFmtColumns);
+	if likely(result) {
+		DeeObject_Init(result, &RowFmtColumns_Type);
+		result->rfc_fmt = self; /* Inherited */
+	} else {
+		Dee_Decref_unlikely(self); /* always inherited */
 	}
 	return result;
 }
 
-
-/* Ensure that `self->q_row' is either dead or NULL.
- * If it isn't, try to copy row data into "q_row", then clear the weakref. */
-#define QUERY_DETACHROWORUNLOCK_OK       0    /* Success, and lock was never lost */
-#define QUERY_DETACHROWORUNLOCK_UNLOCKED 1    /* Success, but query lock was released at one point */
-#define QUERY_DETACHROWORUNLOCK_ERR      (-1) /* Error, and query lock was released */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Query_DetachRowOrUnlock(Query *__restrict self) {
-	int result = QUERY_DETACHROWORUNLOCK_OK;
-	DREF Row *row;
-	RowFmt *rowfmt;
-	Cell *rowdata;
-again:
-	row = (DREF Row *)Dee_weakref_lock(&self->q_row);
-	if (!row) /* Row isn't cached -> nothing to detach! */
-		return result;
-	rowfmt = atomic_read(&self->q_rowfmt);
-	if unlikely(rowfmt == NULL) {
-		/* Must allocate new row format descriptor */
-		Query_Release(self);
-		result = QUERY_DETACHROWORUNLOCK_UNLOCKED;
-		Dee_Decref_unlikely(row);
-		if unlikely(Query_GetRowFmt(self) == NULL)
-			goto err;
-		if unlikely(Query_Acquire(self))
-			goto err;
-		goto again;
-	}
-
-	/* Check if "row" has already been detached. */
-	Row_LockRead(row);
-	ASSERT((row->r_query == self) || (row->r_query == NULL));
-	if (row->r_query == NULL) {
-		Row_LockEndRead(row);
-		goto done_decref_row;
-	}
-	ASSERT(row->r_rowfmt == NULL);
-	ASSERT(row->r_cells == NULL);
-	Row_LockEndRead(row);
-
-	/* Allocate data to detach row. */
-	/* TODO: Should use TryMalloc and release query lock for this one, too
-	 *       Same deal when it comes to creating new string/bytes objects... */
-	rowdata = Cell_NewRow(rowfmt->rf_ncol, self->q_stmt);
-	if unlikely(!rowdata)
-		goto err_row;
-
-	/* Detach the row by gifting it "rowdata" */
-	Row_LockWrite(row);
-	ASSERT((row->r_query == self) || (row->r_query == NULL));
-	if (row->r_query == NULL) {
-		Row_LockEndWrite(row);
-		Cell_DestroyRow(rowdata, rowfmt->rf_ncol);
-		goto done_decref_row;
-	}
-	ASSERT(row->r_rowfmt == NULL);
-	ASSERT(row->r_cells == NULL);
-	row->r_query = NULL;    /* Steal reference */
-	Dee_DecrefNokill(self); /* Old reference from "row->r_query" */
-	row->r_rowfmt = rowfmt;
-	Dee_Incref(rowfmt);
-	row->r_cells = rowdata; /* Gift data */
-	Row_LockEndWrite(row);
-
-	/* Clear our weakref to the row -> we're done now! */
-done_decref_row:
-	Dee_weakref_clear(&self->q_row);
-	Dee_Decref_unlikely(row);
-	return result;
-err_row:
-	Dee_Decref_unlikely(row);
-err:
-	return QUERY_DETACHROWORUNLOCK_ERR;
-}
-
-/* Same as `Query_Acquire()', but ensure that `q_row' is unbound,
- * and any potential old row has been detached (given its own copy
- * of cell data)
- * @return: 0 : Success
- * @return: -1: Error */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Query_AcquireAndDetachRow(Query *__restrict self) {
-	int result = Query_Acquire(self);
-	if likely(result == 0) {
-		STATIC_ASSERT(QUERY_DETACHROWORUNLOCK_ERR == -1);
-		result = Query_DetachRowOrUnlock(self);
-		if (result != QUERY_DETACHROWORUNLOCK_ERR)
-			result = 0;
-	}
-	return result;
-}
-
-
-/* Return a reference to the Row descriptor of a given Query.
- * When the first step hasn't been executed yet, the returned
- * row will not contain any valid data,  */
-INTERN WUNUSED NONNULL((1)) DREF Row *DCALL
-Query_GetRow(Query *__restrict self) {
-	DREF Row *existing_row;
-	DREF Row *result = (DREF Row *)Dee_weakref_lock(&self->q_row);
-	if (result)
-		return result;
-	/* Must allocate new row descriptor */
-	result = Row_Alloc();
-	if unlikely(!result)
-		goto err;
-
-	/* Initialize the new row */
-	DeeObject_Init(result, &Row_Type);
-	weakref_support_init(result);
-	Dee_atomic_rwlock_init(&result->r_lock);
-	result->r_query = self;
+PRIVATE WUNUSED NONNULL((1)) DREF RowFmtColumns *DCALL
+RowFmtColumns_New(RowFmt *__restrict self) {
 	Dee_Incref(self);
-	result->r_rowfmt = NULL; /* Lazily allocated */
-	result->r_cells  = NULL; /* Lazily allocated */
+	return RowFmtColumns_NewInherited(self);
+}
 
-	/* Remember that this is the current row */
-	if unlikely(Query_Acquire(self))
-		goto err_r;
-	existing_row = (DREF Row *)Dee_weakref_cmpxch(&self->q_row, NULL,
-	                                              (DeeObject *)result);
-	ASSERT(existing_row != (DREF Row *)ITER_DONE);
-	Query_Release(self);
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+rowfmtcolumns_size_fast(RowFmtColumns *__restrict self) {
+	return self->rfc_fmt->rf_ncol;
+}
 
-	/* Check for case: another thread also allocated the row */
-	if unlikely(existing_row) {
-		weakref_support_fini(result);
-		Dee_DecrefNokill(self); /* result->r_query */
-		Dee_DecrefNokill(&Row_Type);
-		Row_Free(result);
-		return existing_row;
-	}
-	return result;
-err_r:
-	weakref_support_fini(result);
-	Dee_DecrefNokill(self); /* result->r_query */
-	Dee_DecrefNokill(&Row_Type);
-	Row_Free(result);
-err:
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+rowfmtcolumns_getitem_index_fast(RowFmtColumns *__restrict self, size_t index) {
+	DeeStringObject *result;
+	ASSERT(index < self->rfc_fmt->rf_ncol);
+	result = self->rfc_fmt->rf_cols[index].cfmt_name;
+	return_reference_(result);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+rowfmtcolumns_getitem_index(RowFmtColumns *__restrict self, size_t index) {
+	if unlikely(index >= self->rfc_fmt->rf_ncol)
+		goto err_oob;
+	return rowfmtcolumns_getitem_index_fast(self, index);
+err_oob:
+	err_index_out_of_bounds((DeeObject *)self, index, self->rfc_fmt->rf_ncol);
 	return NULL;
 }
 
+PRIVATE struct type_seq rowfmtcolumns_seq = {
+	/* .tp_iter               = */ NULL,
+	/* .tp_sizeob             = */ NULL,
+	/* .tp_contains           = */ NULL,
+	/* .tp_getitem            = */ NULL,
+	/* .tp_delitem            = */ NULL,
+	/* .tp_setitem            = */ NULL,
+	/* .tp_getrange           = */ NULL,
+	/* .tp_delrange           = */ NULL,
+	/* .tp_setrange           = */ NULL,
+	/* .tp_foreach            = */ NULL,
+	/* .tp_foreach_pair       = */ NULL,
+	/* .tp_bounditem          = */ NULL,
+	/* .tp_hasitem            = */ NULL,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&rowfmtcolumns_size_fast,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&rowfmtcolumns_size_fast,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rowfmtcolumns_getitem_index,
+	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rowfmtcolumns_getitem_index_fast,
+};
 
+PRIVATE struct type_member tpconst rowfmtcolumns_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__rowfmt__", STRUCT_OBJECT,
+	                      offsetof(RowFmtColumns, rfc_fmt),
+	                      "->?G_RowFmt"),
+	TYPE_MEMBER_END
+};
 
+PRIVATE struct type_member tpconst rowfmtcolumns_class_members[] = {
+	TYPE_MEMBER_CONST("ItemType", &DeeString_Type),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject RowFmtColumns_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_RowFmtColumns",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL, /* TODO */
+				TYPE_FIXED_ALLOCATOR(RowFmtColumns),
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rowfmtcolumns_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ NULL,
+	},
+	/* .tp_visit         = */ NULL, /* Not needed -- only references DeeStringObject objects */
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &rowfmtcolumns_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ rowfmtcolumns_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ rowfmtcolumns_class_members,
+	/* .tp_method_hints  = */ NULL,
+};
 
 
 
@@ -384,7 +414,7 @@ PRIVATE NONNULL((1)) void DCALL
 rowfmt_fini(RowFmt *__restrict self) {
 	unsigned int i;
 	for (i = 0; i < self->rf_ncol; ++i)
-		CellFmt_Fini(&self->rf_cols[i]);
+		cellfmt_fini(&self->rf_cols[i]);
 }
 
 /* Returns the index of column "column_name", or `(size_t)-1' if not found */
@@ -392,7 +422,7 @@ PRIVATE NONNULL((1, 2)) unsigned int DCALL
 rowfmt_indexof_string(RowFmt *__restrict self, char const *column_name) {
 	unsigned int i;
 	for (i = 0; i < self->rf_ncol; ++i) {
-		CellFmt *cell = &self->rf_cols[i];
+		struct cellfmt *cell = &self->rf_cols[i];
 		if (DeeString_EqualsCStr(cell->cfmt_name, column_name))
 			return i;
 	}
@@ -405,15 +435,155 @@ rowfmt_indexof_string_len(RowFmt *__restrict self,
                           size_t column_namelen) {
 	unsigned int i;
 	for (i = 0; i < self->rf_ncol; ++i) {
-		CellFmt *cell = &self->rf_cols[i];
+		struct cellfmt *cell = &self->rf_cols[i];
 		if (DeeString_EqualsBuf(cell->cfmt_name, column_name, column_namelen))
 			return i;
 	}
 	return (unsigned int)-1;
 }
 
-/* TODO: Expose some way to query sqlite3_column_name     (RowFmt::rf_cols::cfmt_name) */
-/* TODO: Expose some way to query sqlite3_column_decltype (RowFmt::rf_cols::cfmt_decltype) */
+PRIVATE NONNULL((1)) size_t DCALL
+rowfmt_size_fast(RowFmt *__restrict self) {
+	return self->rf_ncol;
+}
+
+PRIVATE NONNULL((1, 2)) DREF CellFmt *DCALL
+rowfmt_getitem_index(RowFmt *__restrict self, size_t index) {
+	if unlikely(index >= self->rf_ncol)
+		goto err_obb;
+	return CellFmt_New(self, &self->rf_cols[index]);
+err_obb:
+	err_index_out_of_bounds((DeeObject *)self, index, self->rf_ncol);
+	return NULL;
+}
+
+PRIVATE NONNULL((1, 2)) int DCALL
+rowfmt_bounditem_index(RowFmt *__restrict self, size_t index) {
+	return Dee_BOUND_FROMPRESENT_BOUND(index < self->rf_ncol);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF CellFmt *DCALL
+rowfmt_getitem_string_hash(RowFmt *__restrict self, char const *name, Dee_hash_t UNUSED(hash)) {
+	unsigned int index = rowfmt_indexof_string(self, name);
+	if unlikely(index == (unsigned int)-2)
+		return NULL;
+	if unlikely(index == (unsigned int)-1) {
+		err_unknown_key_str((DeeObject *)self, name);
+		return NULL;
+	}
+	return rowfmt_getitem_index(self, index);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF CellFmt *DCALL
+rowfmt_getitem_string_len_hash(RowFmt *__restrict self, char const *name, size_t namelen, Dee_hash_t UNUSED(hash)) {
+	unsigned int index = rowfmt_indexof_string_len(self, name, namelen);
+	if unlikely(index == (unsigned int)-2)
+		return NULL;
+	if unlikely(index == (unsigned int)-1) {
+		err_unknown_key_str_len((DeeObject *)self, name, namelen);
+		return NULL;
+	}
+	return rowfmt_getitem_index(self, index);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF CellFmt *DCALL
+rowfmt_getitem(RowFmt *self, DeeObject *key) {
+	size_t index;
+	if (DeeString_Check(key))
+		return rowfmt_getitem_string_len_hash(self, DeeString_STR(key), DeeString_SIZE(key), 0);
+	if (DeeObject_AsSize(key, &index))
+		goto err;
+	return rowfmt_getitem_index(self, index);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rowfmt_bounditem_string_hash(RowFmt *__restrict self, char const *name, Dee_hash_t UNUSED(hash)) {
+	unsigned int index = rowfmt_indexof_string(self, name);
+	if unlikely(index == (unsigned int)-2)
+		return Dee_BOUND_ERR;
+	return Dee_BOUND_FROMPRESENT_BOUND(index == (unsigned int)-1);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rowfmt_bounditem_string_len_hash(RowFmt *__restrict self, char const *name, size_t namelen, Dee_hash_t UNUSED(hash)) {
+	unsigned int index = rowfmt_indexof_string_len(self, name, namelen);
+	if unlikely(index == (unsigned int)-2)
+		return Dee_BOUND_ERR;
+	return Dee_BOUND_FROMPRESENT_BOUND(index == (unsigned int)-1);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rowfmt_bounditem(RowFmt *self, DeeObject *key) {
+	size_t index;
+	if (DeeString_Check(key))
+		return rowfmt_bounditem_string_len_hash(self, DeeString_STR(key), DeeString_SIZE(key), 0);
+	if (DeeObject_AsSize(key, &index))
+		goto err;
+	return rowfmt_bounditem_index(self, index);
+err:
+	return Dee_BOUND_ERR;
+}
+
+#define rowfmt_keys RowFmtColumns_New
+
+PRIVATE struct type_seq rowfmt_seq = {
+	/* .tp_iter                       = */ NULL,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rowfmt_getitem,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&rowfmt_bounditem,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rowfmt_size_fast,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&rowfmt_size_fast,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rowfmt_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&rowfmt_bounditem_index,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&rowfmt_getitem_string_hash,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&rowfmt_bounditem_string_hash,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rowfmt_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rowfmt_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
+};
+
+PRIVATE struct type_getset tpconst rowfmt_getsets[] = {
+	TYPE_GETTER_AB_F_NODOC("keys", &rowfmt_keys, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_GETTER_AB_F("frozen", &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
+	TYPE_GETTER_AB_F("cached", &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst rowfmt_class_members[] = {
+	TYPE_MEMBER_CONST("KeyType", &DeeString_Type),
+	TYPE_MEMBER_CONST("ValueType", &CellFmt_Type),
+	TYPE_MEMBER_END
+};
 
 INTERN DeeTypeObject RowFmt_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -422,7 +592,7 @@ INTERN DeeTypeObject RowFmt_Type = {
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
@@ -442,24 +612,25 @@ INTERN DeeTypeObject RowFmt_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rowfmt_print,
-		/* .tp_printrepr = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rowfmt_printrepr,
+		/* .tp_printrepr = */ NULL,
 	},
 	/* .tp_visit         = */ NULL, /* Not needed -- only references DeeStringObject objects */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ NULL, /* TODO: user-access to column names and types */
+	/* .tp_seq           = */ &rowfmt_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL, /* TODO: user-access to column names and types */
-	/* .tp_getsets       = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ rowfmt_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ rowfmt_class_members,
+	/* .tp_method_hints  = */ NULL,
 };
 
 
@@ -490,7 +661,7 @@ row_fini(Row *__restrict self) {
 	} else {
 		ASSERT(self->r_rowfmt);
 		ASSERT(self->r_cells);
-		Cell_DestroyRow(self->r_cells, self->r_rowfmt->rf_ncol);
+		cell_destroyrow(self->r_cells, self->r_rowfmt->rf_ncol);
 		Dee_Decref(self->r_rowfmt);
 	}
 	weakref_support_fini(self);
@@ -506,7 +677,7 @@ row_visit(Row *__restrict self, Dee_visit_t proc, void *arg) {
 	} else {
 		ASSERT(self->r_rowfmt);
 		ASSERT(self->r_cells);
-		Cell_VisitRow(self->r_cells, self->r_rowfmt->rf_ncol, proc, arg);
+		cell_visitrow(self->r_cells, self->r_rowfmt->rf_ncol, proc, arg);
 		Dee_Visit(self->r_rowfmt);
 	}
 	Row_LockEndRead(self);
@@ -519,8 +690,7 @@ row_getquery(Row *__restrict self) {
 	result = self->r_query;
 	if unlikely(!result) {
 		Row_LockEndRead(self);
-		DeeError_Throwf(&DeeError_UnboundAttribute,
-		                "Unbound attribute `Row.query'");
+		err_unbound_attribute_string(&Row_Type, "query");
 		return NULL;
 	}
 	Dee_Incref(result);
@@ -641,13 +811,13 @@ row_getitem_index(Row *__restrict self, size_t index) {
 again:
 	Row_LockRead(self);
 	if ((query = self->r_query) == NULL) {
-		Cell *cell;
+		struct cell *cell;
 		Row_LockEndRead(self);
 		length = self->r_rowfmt->rf_ncol;
 		if unlikely(index >= length)
 			goto err_oob;
 		cell = &self->r_cells[index];
-		return Cell_GetValue(cell);
+		return cell_getvalue(cell);
 	}
 
 	/* Complicated (but likely) case: active row */
@@ -705,7 +875,8 @@ row_getitem_string_hash(Row *__restrict self, char const *name, Dee_hash_t UNUSE
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-row_getitem_string_len_hash(Row *__restrict self, char const *name, size_t namelen, Dee_hash_t UNUSED(hash)) {
+row_getitem_string_len_hash(Row *__restrict self, char const *name,
+                            size_t namelen, Dee_hash_t UNUSED(hash)) {
 	unsigned int index = row_indexof_string_len(self, name, namelen);
 	if unlikely(index == (unsigned int)-2)
 		return NULL;
@@ -716,31 +887,70 @@ row_getitem_string_len_hash(Row *__restrict self, char const *name, size_t namel
 	return row_getitem_index(self, index);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-row_hasitem_string_hash(Row *__restrict self, char const *name, Dee_hash_t UNUSED(hash)) {
-	unsigned int index = row_indexof_string(self, name);
-	if unlikely(index == (unsigned int)-2)
-		return -1;
-	if unlikely(index == (unsigned int)-1)
-		return 0;
-	return 1;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+row_bounditem_index(Row *__restrict self, size_t index) {
+	size_t length = row_size_fast(self);
+	return Dee_BOUND_FROMPRESENT_BOUND(index < length);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-row_hasitem_string_len_hash(Row *__restrict self, char const *name, size_t namelen, Dee_hash_t UNUSED(hash)) {
+row_bounditem_string_hash(Row *__restrict self, char const *name, Dee_hash_t UNUSED(hash)) {
+	unsigned int index = row_indexof_string(self, name);
+	if unlikely(index == (unsigned int)-2)
+		return Dee_BOUND_ERR;
+	return Dee_BOUND_FROMPRESENT_BOUND(index != (unsigned int)-1);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+row_bounditem_string_len_hash(Row *__restrict self, char const *name,
+                              size_t namelen, Dee_hash_t UNUSED(hash)) {
 	unsigned int index = row_indexof_string_len(self, name, namelen);
 	if unlikely(index == (unsigned int)-2)
-		return -1;
-	if unlikely(index == (unsigned int)-1)
-		return 0;
-	return 1;
+		return Dee_BOUND_ERR;
+	return Dee_BOUND_FROMPRESENT_BOUND(index != (unsigned int)-1);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+row_getitem(Row *self, DeeObject *key) {
+	size_t index;
+	if (DeeString_Check(key))
+		return row_getitem_string_len_hash(self, DeeString_STR(key), DeeString_SIZE(key), 0);
+	if (DeeObject_AsSize(key, &index))
+		goto err;
+	return row_getitem_index(self, index);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+row_bounditem(Row *self, DeeObject *key) {
+	size_t index;
+	if (DeeString_Check(key))
+		return row_bounditem_string_len_hash(self, DeeString_STR(key), DeeString_SIZE(key), 0);
+	if (DeeObject_AsSize(key, &index))
+		goto err;
+	return row_bounditem_index(self, index);
+err:
+	return Dee_BOUND_ERR;
+}
+
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF RowFmtColumns *DCALL
+row_getkeys(Row *__restrict self) {
+	DREF RowFmt *rowfmt = row_getfmt(self);
+	if unlikely(!rowfmt)
+		goto err;
+	return RowFmtColumns_NewInherited(rowfmt);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_seq row_seq = {
 	/* .tp_iter                       = */ NULL,
 	/* .tp_sizeob                     = */ NULL,
 	/* .tp_contains                   = */ NULL,
-	/* .tp_getitem                    = */ NULL,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&row_getitem,
 	/* .tp_delitem                    = */ NULL,
 	/* .tp_setitem                    = */ NULL,
 	/* .tp_getrange                   = */ NULL,
@@ -748,7 +958,7 @@ PRIVATE struct type_seq row_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_bounditem                  = */ NULL,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&row_bounditem,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&row_size_fast,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&row_size_fast,
@@ -756,7 +966,7 @@ PRIVATE struct type_seq row_seq = {
 	/* .tp_getitem_index_fast         = */ NULL,
 	/* .tp_delitem_index              = */ NULL,
 	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&row_bounditem_index,
 	/* .tp_hasitem_index              = */ NULL,
 	/* .tp_getrange_index             = */ NULL,
 	/* .tp_delrange_index             = */ NULL,
@@ -770,18 +980,18 @@ PRIVATE struct type_seq row_seq = {
 	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&row_getitem_string_hash,
 	/* .tp_delitem_string_hash        = */ NULL,
 	/* .tp_setitem_string_hash        = */ NULL,
-	/* .tp_bounditem_string_hash      = */ NULL,
-	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&row_hasitem_string_hash,
+	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&row_bounditem_string_hash,
+	/* .tp_hasitem_string_hash        = */ NULL,
 	/* .tp_trygetitem_string_len_hash = */ NULL,
 	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&row_getitem_string_len_hash,
 	/* .tp_delitem_string_len_hash    = */ NULL,
 	/* .tp_setitem_string_len_hash    = */ NULL,
-	/* .tp_bounditem_string_len_hash  = */ NULL,
-	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&row_hasitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&row_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
-
 PRIVATE struct type_getset tpconst row_getsets[] = {
+	TYPE_GETTER_AB("keys", &row_getkeys, "->?G_RowFmtColumns"),
 	TYPE_GETTER_BOUND("query", &row_getquery, &row_boundquery,
 	                  "->?GQuery\n"
 	                  "Returns the query linked to this row. "
@@ -794,6 +1004,12 @@ PRIVATE struct type_getset tpconst row_getsets[] = {
 	TYPE_GETSET_END
 };
 
+PRIVATE struct type_member tpconst row_class_members[] = {
+	TYPE_MEMBER_CONST("Keys", &RowFmtColumns_Type),
+	TYPE_MEMBER_CONST("KeyType", &DeeString_Type),
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject Row_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "Row",
@@ -801,7 +1017,7 @@ INTERN DeeTypeObject Row_Type = {
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
@@ -838,7 +1054,8 @@ INTERN DeeTypeObject Row_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ row_class_members,
+	/* .tp_method_hints  = */ NULL,
 };
 
 DECL_END

@@ -46,12 +46,16 @@ DECL_BEGIN
 /************************************************************************/
 /* Library Types                                                        */
 /************************************************************************/
-typedef struct row_object Row;
-typedef struct rowfmt_object RowFmt;
-typedef struct query_object Query;
-typedef struct db_object DB;
+typedef struct cellfmt_object /*  */ CellFmt;       /* CellFmt_Type */
+typedef struct rowfmt_columns_object RowFmtColumns; /* RowFmtColumns_Type */
+typedef struct rowfmt_object /*   */ RowFmt;        /* RowFmt_Type */
+typedef struct row_object /*      */ Row;           /* Row_Type */
+typedef struct query_object /*    */ Query;         /* Query_Type */
+typedef struct db_object /*       */ DB;            /* DB_Type */
 TAILQ_HEAD(query_tailq, query_object);
 
+INTDEF DeeTypeObject CellFmt_Type;       /* Item type of "_RowFmt" */
+INTDEF DeeTypeObject RowFmtColumns_Type; /* {string...} -- Type for "_RowFmt.columns" and "Row.keys" */
 INTDEF DeeTypeObject RowFmt_Type;
 INTDEF DeeTypeObject Row_Type;
 INTDEF DeeTypeObject QueryIterator_Type;
@@ -64,19 +68,19 @@ INTDEF DeeTypeObject DB_Type;
 /* >>> CELL                                                             */
 /************************************************************************/
 
-/* Possible values for `Cell::c_type' */
+/* Possible values for `struct cell::c_type' */
 #define CELLTYPE_OBJECT 0
 #define CELLTYPE_NONE   1
 #define CELLTYPE_INT    2
 #define CELLTYPE_FLOAT  3
-typedef struct {
+struct cell {
 	unsigned int c_type; /* One of `CELLTYPE_*' */
 	union {
 		DREF DeeObject *d_obj;   /* CELLTYPE_OBJECT */
 		int64_t         d_int;   /* CELLTYPE_INT */
 		double          d_float; /* CELLTYPE_FLOAT */
 	} c_data;
-} Cell;
+};
 
 #define Cell_Fini(self)                  \
 	(((self)->c_type == CELLTYPE_OBJECT) \
@@ -87,22 +91,28 @@ typedef struct {
 	 ? Dee_Visit((self)->c_data.d_obj)   \
 	 : (void)0)
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Cell_GetValue(Cell *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL Cell_Init(Cell *__restrict self, sqlite3_stmt *stmt, int col);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL cell_getvalue(struct cell *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL cell_init(struct cell *__restrict self, sqlite3_stmt *stmt, int col);
 /* Allocate a copy of columns from "stmt" as cell data */
-INTDEF WUNUSED Cell *DCALL Cell_NewRow(unsigned int ncol, sqlite3_stmt *stmt);
+INTDEF WUNUSED struct cell *DCALL cell_newrow(unsigned int ncol, sqlite3_stmt *stmt);
 /* Destroy cell data */
-INTDEF NONNULL((1)) void DCALL Cell_DestroyRow(Cell *__restrict data, unsigned int ncol);
-INTDEF NONNULL((1, 3)) void DCALL Cell_VisitRow(Cell *__restrict data, unsigned int ncol, Dee_visit_t proc, void *arg);
+INTDEF NONNULL((1)) void DCALL cell_destroyrow(struct cell *__restrict data, unsigned int ncol);
+INTDEF NONNULL((1, 3)) void DCALL cell_visitrow(struct cell *__restrict data, unsigned int ncol, Dee_visit_t proc, void *arg);
 
-
-typedef struct {
+struct cellfmt {
 	DREF DeeStringObject *cfmt_name;     /* [1..1] Name of this column (~ala `sqlite3_column_name()') */
-	DREF DeeStringObject *cfmt_decltype; /* [1..1] Type of this column (~ala `sqlite3_column_decltype()') */
-} CellFmt;
-#define CellFmt_Fini(self)          \
+	DREF DeeStringObject *cfmt_decltype; /* [0..1] Type of this column (~ala `sqlite3_column_decltype()') */
+};
+#define cellfmt_fini(self)          \
 	(Dee_Decref((self)->cfmt_name), \
-	 Dee_Decref((self)->cfmt_decltype))
+	 Dee_XDecref((self)->cfmt_decltype))
+
+struct cellfmt_object {
+	OBJECT_HEAD
+	DREF RowFmt          *cfo_fmt;  /* [1..1][const] Linked row format */
+	struct cellfmt const *cfo_cell; /* [1..1][const] struct cell being described */
+};
+
 
 
 
@@ -110,13 +120,18 @@ typedef struct {
 /* >>> ROW                                                              */
 /************************************************************************/
 
-struct rowfmt_object {
+struct rowfmt_columns_object {
 	OBJECT_HEAD
-	unsigned int                     rf_ncol;  /* [const] # of columns in result set */
-	COMPILER_FLEXIBLE_ARRAY(CellFmt, rf_cols); /* [const] cell specs */
+	DREF RowFmt *rfc_fmt; /* [1..1][const] Linked row format */
+};
+
+struct rowfmt_object { /* Item type is "CellFmt" */
+	OBJECT_HEAD
+	unsigned int                            rf_ncol;  /* [const] # of columns in result set */
+	COMPILER_FLEXIBLE_ARRAY(struct cellfmt, rf_cols); /* [const] cell specs */
 };
 #define RowFmt_Alloc(ncol) \
-	((RowFmt *)DeeObject_Mallocc(offsetof(RowFmt, rf_cols), ncol, sizeof(CellFmt)))
+	((RowFmt *)DeeObject_Mallocc(offsetof(RowFmt, rf_cols), ncol, sizeof(struct cellfmt)))
 #define RowFmt_Free(self) DeeObject_Free(self)
 
 struct row_object {
@@ -129,7 +144,7 @@ struct row_object {
 	DREF Query         *r_query;  /* [0..1][lock(r_lock && CLEAR_ONCE)] Original query (set to "NULL" when `sqlite3_step()' is called on query) */
 	DREF RowFmt        *r_rowfmt; /* [0..1][if(r_query == NULL, [1..1])][lock(r_lock && WRITE_ONCE)]
 	                               * Data-layout of rows (always non-NULL when "r_query == NULL") */
-	Cell               *r_cells;  /* [0..r_rowfmt->rf_ncol][if(r_query == NULL, [1..1])][lock(r_lock && WRITE_ONCE)][owned]
+	struct cell        *r_cells;  /* [0..r_rowfmt->rf_ncol][if(r_query == NULL, [1..1])][lock(r_lock && WRITE_ONCE)][owned]
 	                               * Data-blob for column (always non-NULL when "r_query == NULL") */
 };
 
@@ -553,6 +568,7 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_multiple_statements(DeeStringObject 
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_index_out_of_bounds)(DeeObject *__restrict self, size_t index, size_t size);
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_key_str)(DeeObject *__restrict map, char const *__restrict key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_key_str_len)(DeeObject *__restrict map, char const *__restrict key, size_t keylen);
+INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp, char const *__restrict name);
 
 /************************************************************************/
 /* Initialization                                                       */

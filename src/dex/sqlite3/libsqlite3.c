@@ -87,6 +87,8 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* Internal types */
 	{ "_RowFmt", (DeeObject *)&RowFmt_Type, MODSYM_FREADONLY },
+	{ "_RowFmtColumns", (DeeObject *)&RowFmtColumns_Type, MODSYM_FREADONLY },
+	{ "_CellFmt", (DeeObject *)&CellFmt_Type, MODSYM_FREADONLY },
 
 	/* TODO: Directly expose sqlite3_config() */
 	{ NULL }
