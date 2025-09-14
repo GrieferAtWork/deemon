@@ -175,6 +175,7 @@ ClCompile.CompileAs = CompileAsC
 __pragma_GCC_diagnostic_ignored(Wunused_parameter)
 __pragma_GCC_diagnostic_ignored(Wsign_compare)
 __pragma_GCC_diagnostic_ignored(Wunused_function)
+__pragma_GCC_diagnostic_ignored(Wunused_variable)
 
 /* Include SQLite source */
 #ifndef __INTELLISENSE__

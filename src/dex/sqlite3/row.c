@@ -391,7 +391,7 @@ rowfmt_size_fast(RowFmt *__restrict self) {
 	return self->rf_ncol;
 }
 
-PRIVATE NONNULL((1, 2)) DREF CellFmt *DCALL
+PRIVATE NONNULL((1)) DREF CellFmt *DCALL
 rowfmt_getitem_index(RowFmt *__restrict self, size_t index) {
 	if unlikely(index >= self->rf_ncol)
 		goto err_obb;
@@ -401,7 +401,7 @@ err_obb:
 	return NULL;
 }
 
-PRIVATE NONNULL((1, 2)) int DCALL
+PRIVATE NONNULL((1)) int DCALL
 rowfmt_bounditem_index(RowFmt *__restrict self, size_t index) {
 	return Dee_BOUND_FROMPRESENT_BOUND(index < self->rf_ncol);
 }
