@@ -175,7 +175,26 @@ DB_FinalizeStmt(DB *__restrict self, sqlite3_stmt *stmt) {
 		DB_Unlock(self);
 	} else {
 		/* FIXME: This sqlite3_finalize() needs a DB lock -- only way
-		 *        to get that here is via a lockop (as seen in KOS) */ 
+		 *        to get that here is via a lockop (as seen in KOS)
+		 *
+		 * NOTE: Can even get here due to our own thread holding the DB lock:
+		 * >> local s = "select * from foo";
+		 * >> __asm__("" : "+X" (s)); // Prevent constant propagation
+		 * >> local t = s.upper();    // runtime-string
+		 * >> db.query(t);            // Create query for runtime-string
+		 * >> db.query("INSERT INTO bar (v) VALUES (?)", t)...; // Bind query string in another statment
+		 * >> [...]  // No more usages of "t" here
+		 *
+		 * Since to bind strings, we gift sqlite3 a reference to our string,
+		 * *it* is allowed to call the destructor whenever it pleases, so it
+		 * may actually call that destructor while the DB lock is held.
+		 *
+		 * If that happens, string-fini-hooks could invoke arbitrary user-code,
+		 * which is something we can't prevent (so we're just going to ignore
+		 * it), but it may also try to finalize the statement created by the
+		 * initial "db.query(t)" call above, which could then lead us here in
+		 * a context where it is our own thread that is locking the DB.
+		 */
 		(void)sqlite3_finalize(stmt);
 	}
 }
