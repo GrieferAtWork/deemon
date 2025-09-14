@@ -113,6 +113,7 @@ With visual studio
 	- Low-level networking and sockets (`net`)
 	- Extra threading functionality like locks and TLS variables (`threading`)
 	- Timestamps and time deltas (`time`)
+	- Working with SQLite databases (`sqlite3`)
 	- Interfacing with doc strings and other RTTI (`doc`, `doctext`, as well as `/util/doc-server.dee`)
 	- ...
 
