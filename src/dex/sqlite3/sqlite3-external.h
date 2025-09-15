@@ -33,6 +33,7 @@
 #define SQLITE_OMIT_AUTOINIT
 #define SQLITE_OMIT_DEPRECATED
 #define SQLITE_UNTESTABLE
+#undef SQLITE_DEBUG
 /*#define SQLITE_ENABLE_MEMORY_MANAGEMENT*/
 
 /* Tell sqlite3 that we do our own locking (with blackjack & hookers)
@@ -45,7 +46,11 @@
  *
  * Solution: can't rely on sqlite3's mutex code -- must do our
  *           own and compile sqlite3 with SQLITE_THREADSAFE=2 */
+#ifdef CONFIG_NO_THREADS
+#define SQLITE_THREADSAFE 0
+#else /* CONFIG_NO_THREADS */
 #define SQLITE_THREADSAFE 2
+#endif /* !CONFIG_NO_THREADS */
 
 
 #ifdef __INT64_TYPE__
@@ -54,6 +59,14 @@
 #endif /* __INT64_TYPE__ */
 
 /* Include sqlite */
+#ifndef NDEBUG
+#define NDEBUG
+#define DEE_PRIVATE_NDEBUG_FOR_EXTERNAL_SQLITE3_H
+#endif /* !NDEBUG */
 #include "../../external/sqlite-amalgamation-3500400/sqlite3.h"
+#ifdef DEE_PRIVATE_NDEBUG_FOR_EXTERNAL_SQLITE3_H
+#undef DEE_PRIVATE_NDEBUG_FOR_EXTERNAL_SQLITE3_H
+#undef NDEBUG
+#endif /* DEE_PRIVATE_NDEBUG_FOR_EXTERNAL_SQLITE3_H */
 
 #endif /* !GUARD_DEX_SQLITE3_SQLITE3_EXTERNAL_H */

@@ -153,12 +153,18 @@ ClCompile.CompileAs = CompileAsC
 #undef SQLITE_SYSTEM_MALLOC
 #define SQLITE_SYSTEM_MALLOC 1
 
-#undef SQLITE_THREADSAFE
-#ifdef CONFIG_NO_THREADS
-#define SQLITE_THREADSAFE 0
-#else /* CONFIG_NO_THREADS */
-#define SQLITE_THREADSAFE 1
-#endif /* !CONFIG_NO_THREADS */
+#undef NDEBUG
+#define NDEBUG
+
+#undef SQLITE_MALLOCSIZE
+#if !defined(__APPLE__) || defined(SQLITE_WITHOUT_ZONEMALLOC)
+#if defined(CONFIG_HAVE_malloc_usable_size) && !defined(CONFIG_HAVE_malloc_usable_size_IS__msize)
+#define SQLITE_MALLOCSIZE(x) malloc_usable_size(x)
+#elif defined(CONFIG_HAVE__msize)
+#define SQLITE_MALLOCSIZE(x) _msize(x)
+#endif /* ... */
+#endif /* ... */
+
 
 /* Enable some compatibility aliases originally
  * meant for KOS, but also useful for SQLite */
