@@ -531,18 +531,18 @@ INTERN DeeTypeObject RowFmt_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RowFmt",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(RowFmt),
+			/* .tp_var = */ {
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+				/* .tp_free      = */ (Dee_funptr_t)NULL,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rowfmt_fini,
@@ -1008,7 +1008,6 @@ PRIVATE struct type_getset tpconst row_getsets[] = {
 	TYPE_GETTER_AB("_fmt", &row_getfmt,
 	               "->?G_RowFmt\n"
 	               "Returns the format descriptor for rows of the associated query"),
-	/* TODO: asrecord */
 	TYPE_GETSET_END
 };
 

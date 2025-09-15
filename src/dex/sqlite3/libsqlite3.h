@@ -367,13 +367,6 @@ again:
 /* Return (and lazily allocate on first use) the RowFmt descriptor of this query. */
 INTDEF WUNUSED NONNULL((1)) RowFmt *DCALL Query_GetRowFmt(Query *__restrict self);
 
-/* Ensure that `self->q_row' is either dead or NULL.
- * If it isn't, try to copy row data into "q_row", then clear the weakref. */
-#define QUERY_DETACHROWORUNLOCK_OK       0    /* Success, and locks were never lost */
-#define QUERY_DETACHROWORUNLOCK_UNLOCKED 1    /* Success, but Query+DB lock was released at one point */
-#define QUERY_DETACHROWORUNLOCK_ERR      (-1) /* Error, and Query+DB lock was released */
-INTDEF WUNUSED NONNULL((1)) int DCALL Query_DetachRowOrUnlock(Query *__restrict self);
-
 /* Same as `Query_LockWithDB()', but ensure that `q_row' is unbound,
  * and any potential old row has been detached (given its own copy
  * of cell data)
@@ -387,10 +380,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Query_LockWithDBAndDetachRow(Query *__rest
 INTDEF WUNUSED NONNULL((1)) DREF Row *DCALL Query_GetRow(Query *__restrict self);
 
 /* Advance the query by 1 step and return the resulting row.
- * Returns "QUERY_STEP_DONE" when there are no more rows. */
+ * Returns "(DREF Row *)ITER_DONE" when there are no more rows. */
 INTDEF WUNUSED NONNULL((1)) DREF Row *DCALL Query_Step(Query *__restrict self);
-#define QUERY_STEP_DONE ((DREF Row *)ITER_DONE) /* Returned by "Query_Step" indicate no-more-rows */
-#define QUERY_STEP_DONE_IS_ITER_DONE
 
 
 /* Execute `self' until there is no more data present.

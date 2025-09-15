@@ -91,14 +91,7 @@ qiter_visit(QueryIterator *__restrict self, Dee_visit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF Row *DCALL
 qiter_next(QueryIterator *__restrict self) {
-#ifdef QUERY_STEP_DONE_IS_ITER_DONE
 	return Query_Step(self->qi_query);
-#else /* !QUERY_STEP_DONE_IS_ITER_DONE */
-	DREF Row *result = Query_Step(self->qi_query);
-	if (result == QUERY_STEP_DONE_IS_ITER_DONE)
-		result = (DREF Row *)ITER_DONE;
-	return result;
-#endif /* QUERY_STEP_DONE_IS_ITER_DONE */
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -273,7 +266,10 @@ err:
 
 /* Ensure that `self->q_row' is either dead or NULL.
  * If it isn't, try to copy row data into "q_row", then clear the weakref. */
-INTERN WUNUSED NONNULL((1)) int DCALL
+#define QUERY_DETACHROWORUNLOCK_OK       0    /* Success, and locks were never lost */
+#define QUERY_DETACHROWORUNLOCK_UNLOCKED 1    /* Success, but Query+DB lock was released at one point */
+#define QUERY_DETACHROWORUNLOCK_ERR      (-1) /* Error, and Query+DB lock was released */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 Query_DetachRowOrUnlock(Query *__restrict self) {
 	int result = QUERY_DETACHROWORUNLOCK_OK;
 	DREF Row *row;
@@ -283,7 +279,7 @@ again:
 	if (!row) /* Row isn't cached -> nothing to detach! */
 		return result;
 
-	/* XXX: In regular deemon code like this:
+	/* XXX: Given regular deemon user-code like this:
 	 * >> for (local row: db.query("SELECT * FROM foo"))
 	 * >>     print repr row;
 	 *
@@ -315,8 +311,7 @@ again:
 		self->q_rowfmt = rowfmt; /* Inherit reference */
 	}
 
-	/* Check if "row" has already been detached. */
-	if unlikely(!Row_LockTryRead(row)) {
+	if unlikely(!Row_LockTryWrite(row)) {
 		Query_UnlockWithDB(self);
 		Row_LockWaitRead(row);
 decref_row_and_start_again:
@@ -327,24 +322,14 @@ decref_row_and_start_again:
 		goto again;
 	}
 
-	ASSERT((row->r_query == self) ||
-	       (row->r_query == NULL));
-	if (row->r_query == NULL) {
-		Row_LockEndRead(row);
-	} else {
+	/* Check if "row" has already been detached. */
+	if likely(row->r_query != NULL) {
 		struct cell *rowdata;
 		size_t i, ncol;
 		sqlite3_stmt *stmt;
+		ASSERT(row->r_query == self);
 		ASSERT(row->r_rowfmt == NULL);
 		ASSERT(row->r_cells == NULL);
-
-		/* Upgrade lock to row into a write-lock */
-		if unlikely(!Row_LockTryUpgrade(row)) {
-			Row_LockEndRead(row);
-			Query_UnlockWithDB(self);
-			Row_LockWaitWrite(row);
-			goto decref_row_and_start_again;
-		}
 
 		/* Allocate data to detach row. */
 		ncol = rowfmt->rf_ncol;
@@ -432,8 +417,8 @@ unlock_and_collect_length_memory:
 		row->r_rowfmt = rowfmt;
 		Dee_Incref(rowfmt);
 		row->r_cells = rowdata; /* Gift data */
-		Row_LockEndWrite(row);
 	}
+	Row_LockEndWrite(row);
 
 	/* Clear our weakref to the row -> we're done now!
 	 * HINT: Clearing a weakref never invokes callbacks, so this is safe */
@@ -628,7 +613,7 @@ err:
 }
 
 /* Advance the query by 1 step and return the resulting row.
- * Returns "QUERY_STEP_DONE" when there are no more rows. */
+ * Returns "(DREF Row *)ITER_DONE" when there are no more rows. */
 INTERN WUNUSED NONNULL((1)) DREF Row *DCALL
 Query_Step(Query *__restrict self) {
 	int rc;
@@ -648,12 +633,13 @@ again_with_row:
 	/* Perform the SQL step */
 	rc = sqlite3_step(self->q_stmt);
 	if unlikely(rc != SQLITE_ROW) {
-		Query_Unlock(self);
 		if likely(rc == SQLITE_DONE) {
-			Row_Free(result);
+			Query_Unlock(self);
 			DB_Unlock(self->q_db);
-			return QUERY_STEP_DONE;
+			Row_Free(result);
+			return (DREF Row *)ITER_DONE;
 		}
+		Query_Unlock(self);
 		rc = err_sql_throwerror_ex(rc,
 		                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
 		                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
@@ -773,7 +759,7 @@ query_step(Query *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	_DeeArg_Unpack0(err, argc, argv, "step");
 	result = (DREF DeeObject *)Query_Step(self);
-	if (result == (DREF DeeObject *)QUERY_STEP_DONE)
+	if (result == ITER_DONE)
 		result = DeeNone_NewRef();
 	return result;
 err:
@@ -833,6 +819,7 @@ PRIVATE struct type_method tpconst query_methods[] = {
 	/* TODO: fetchall()->?S?GRow               (same as "this.frozen") */
 	/* TODO: fetch(limit:?Dint)->?S?GRow       (same as "this[:limit].frozen") */
 
+	/* TODO: Directly expose sqlite3_reset() */
 	/* TODO: Directly expose sqlite3_stmt_explain() */
 	/* TODO: Directly expose sqlite3_stmt_isexplain() */
 	/* TODO: Directly expose sqlite3_stmt_readonly() */
@@ -853,7 +840,6 @@ PRIVATE struct type_method tpconst query_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst query_getsets[] = {
-	/* TODO: records->?S?GRecord   (same as "this.each.asrecord") */
 	TYPE_GETTER_AB("row", &Query_GetRow,
 	               "->?GRow\n"
 	               "Descriptor for the most-recent row"),

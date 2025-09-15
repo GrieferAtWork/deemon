@@ -106,17 +106,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *     - Implements "operator getitem(index: int): Object" to lookup columns by index (using "sqlite3_column_*()")
 	 *     - Implements "operator getitem(name: string): Object" to lookup columns by name (using "sqlite3_column_*()")
 	 *     - Implements "operator size(): int" to return the # of columns in the query (using "sqlite3_column_count()")
-	 *     - Implements "property asrecord: Record" that returns the row as a Record (see below)
 	 *     - Implements an iterator "RowIterator" that yields {Object...} (same as >> for (local index: [:#this]) yield this[index])
 	 *   - When a Query steps ahead to the next row, but the "Row" object for the current row
 	 *     hasn't been destroyed yet, then the old "Row" is updated to contain copies of all
 	 *     old columns (meaning that the apparent contents of some "Row" don't change if the
 	 *     query is advanced)
-	 *
-	 * Record and Row types:
-	 * - Internally "Record" is just a wrapper around "Row"
-	 *   (meaning it's pretty much just `Mapping.byattr(row)'):
-	 *   >> Record.operator . (name: string) -> this._wrapped_row[name];
 	 *
 	 * Above, `Object' as returned or passed into sqlite3 is always mapped as:
 	 * - SQLITE_INTEGER: int

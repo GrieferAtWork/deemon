@@ -63,7 +63,7 @@ DECL_BEGIN
 
 
 /* Figure out how to implement `DeeSystem_GetFilenameOfFD()'
- * NOTE: This listing is duplicated in `src/dex/posix/p-realpath.c.inl' */
+ * NOTE: This listing is duplicated in `src/deemon/system/system-unix.c.inl' */
 #undef DeeSystem_PrintFilenameOfFD_USE_get_osfhandle__AND__PrintFilenameOfHandle
 #undef DeeSystem_PrintFilenameOfFD_USE_frealpath
 #undef DeeSystem_PrintFilenameOfFD_USE_readlink_procfs
