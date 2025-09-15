@@ -690,10 +690,10 @@ struct Dee_code_object {
 	                                                         *          instruction is always executed, no matter what. */
 };
 
-#define DeeCode_Malloc(co_codebytes)          ((DREF DeeCodeObject *)DeeObject_TryMalloc(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
-#define DeeCode_Realloc(ptr, co_codebytes)    ((DREF DeeCodeObject *)DeeObject_TryRealloc(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
-#define DeeCode_TryMalloc(co_codebytes)       ((DREF DeeCodeObject *)DeeObject_Malloc(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
-#define DeeCode_TryRealloc(ptr, co_codebytes) ((DREF DeeCodeObject *)DeeObject_Realloc(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
+#define DeeCode_Malloc(co_codebytes)          ((DREF DeeCodeObject *)DeeObject_Malloc(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
+#define DeeCode_Realloc(ptr, co_codebytes)    ((DREF DeeCodeObject *)DeeObject_Realloc(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
+#define DeeCode_TryMalloc(co_codebytes)       ((DREF DeeCodeObject *)DeeObject_TryMalloc(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
+#define DeeCode_TryRealloc(ptr, co_codebytes) ((DREF DeeCodeObject *)DeeObject_TryRealloc(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
 #define DeeCode_Free(ptr)                     DeeObject_Free(ptr)
 
 #ifdef CONFIG_HAVE_CODE_METRICS
