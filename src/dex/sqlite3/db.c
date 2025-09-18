@@ -379,6 +379,10 @@ DB_NewQuery(DB *__restrict self, DeeStringObject *__restrict sql,
 	if unlikely(!result)
 		goto err;
 
+	/* Make sure that fini hooks are enabled for "sql" */
+	if unlikely(DeeString_EnableFiniHook((DeeObject *)sql))
+		goto err_r;
+
 	/* Compile (prepare) SQL code */
 	{
 		int rc;
@@ -990,6 +994,85 @@ db_printrepr(DB *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_PRINT(printer, arg, "DB(TODO)");
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+db_get_last_insert_rowid(DB *__restrict self) {
+	sqlite3_int64 result;
+	if (DB_Lock(self))
+		goto err;
+	result = sqlite3_last_insert_rowid(self->db_db);
+	DB_Unlock(self);
+	return DeeInt_NewUInt64((uint64_t)result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+db_set_last_insert_rowid_f(DB *self, uint64_t rowid) {
+	int result = DB_Lock(self);
+	if likely(result == 0) {
+		sqlite3_set_last_insert_rowid(self->db_db, (sqlite3_int64)rowid);
+		DB_Unlock(self);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+db_set_last_insert_rowid(DB *self, DeeObject *value) {
+	uint64_t rowid;
+	int result = DeeObject_AsUInt64(value, &rowid);
+	if likely(result == 0)
+		result = db_set_last_insert_rowid_f(self, rowid);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+db_get_qc_cur_unused(DB *__restrict self) {
+	size_t result;
+	DB_QueryCache_LockRead(self);
+	result = self->db_querycache_unused_count;
+	DB_QueryCache_LockEndRead(self);
+	return DeeInt_NewSize(result);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+db_get_qc_max_unused(DB *__restrict self) {
+	size_t result;
+	DB_QueryCache_LockRead(self);
+	result = self->db_querycache_unused_limit;
+	DB_QueryCache_LockEndRead(self);
+	return DeeInt_NewSize(result);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+db_set_qc_max_unused_v(DB *__restrict self, size_t limit) {
+	DB_QueryCache_LockWrite(self);
+	self->db_querycache_unused_limit = limit;
+	while (self->db_querycache_unused_count > self->db_querycache_unused_limit) {
+		bool last = (self->db_querycache_unused_count - 1) <=
+		            (self->db_querycache_unused_limit);
+		db_free_oldest_unused_query_and_unlock(self);
+		if (last)
+			return;
+		DB_QueryCache_LockWrite(self);
+	}
+	DB_QueryCache_LockEndWrite(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+db_del_qc_max_unused(DB *__restrict self) {
+	db_set_qc_max_unused_v(self, DEFAULT_DB_QUERYCACHE_UNUSED_LIMIT);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+db_set_qc_max_unused(DB *self, DeeObject *value) {
+	size_t limit;
+	int result = DeeObject_AsSize(value, &limit);
+	if likely(result == 0)
+		db_set_qc_max_unused_v(self, limit);
+	return result;
+}
+
 
 PRIVATE struct type_method tpconst db_methods[] = {
 	TYPE_METHOD("exec", &db_exec, "(sql:?Dstring,params:?X2?M?Dstring" T_SQL_OBJECT "?S" T_SQL_OBJECT "=!T0)"),
@@ -1013,9 +1096,33 @@ PRIVATE struct type_method tpconst db_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst db_getsets[] = {
-	/* TODO: Expose sqlite3_last_insert_rowid() / sqlite3_set_last_insert_rowid() */
+	/* TODO: schemas->?GSchemas  -- {string: Schema}  (using "sqlite3_db_name()")
+	 * - "Schema" (value type of "Schemas") should then have another getset
+	 *   - "tables->?GTables", which is another {string: Table}
+	 * - "Table" (value type of "Tables") should then have another getset
+	 *   "rows->?GRows", which is another {int: Row} (where the "int" is
+	 *   the "_ROWID_" of rows)
+	 */
+
+	TYPE_GETSET_AB("last_insert_rowid",
+	               &db_get_last_insert_rowid, NULL,
+	               &db_set_last_insert_rowid,
+	               "->?Dint\n"
+	               "Interface to get/set #Csqlite3_last_insert_rowid and #Csqlite3_set_last_insert_rowid"),
+	TYPE_GETTER_AB("qc_cur_unused", &db_get_qc_cur_unused,
+	               "->?Dint\n"
+	               "Return the number of unused (unreferenced) queries with "
+	               "not-yet-destroyed template SQL strings that are being cached"),
+	TYPE_GETSET_AB("qc_max_unused",
+	               &db_get_qc_max_unused,
+	               &db_del_qc_max_unused,
+	               &db_set_qc_max_unused,
+	               "->?Dint\n"
+	               "Get/set the max number of unused (unreferenced) queries "
+	               /**/ "with not-yet-destroyed template SQL strings to keep cached\n"
+	               "Deleting this attribute restores the default "
+	               /**/ "$" PP_STR(DEFAULT_DB_QUERYCACHE_UNUSED_LIMIT)),
 	/* TODO: Expose cached queries (in the form of a `{string...}'-Sequence) */
-	/* TODO: Expose control for "db_querycache_unused_limit" (also: when lowered, delete old unused queries) */
 	TYPE_GETSET_END
 };
 
@@ -1038,10 +1145,10 @@ INTERN DeeTypeObject DB_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)&db_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&db_init,
 				TYPE_FIXED_ALLOCATOR(DB),
 			}
 		},
