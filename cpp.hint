@@ -1578,6 +1578,7 @@
 
 #define DEFINE_FILETYPE_INHERIT_HOOK(x,...) bool x(DeeFileTypeObject*self,DeeTypeObject*type_type,struct Dee_opinfo const*info){}
 #define DEFINE_TYPE_INHERIT_HOOK(x,...) bool x(DeeTypeObject*self,DeeTypeObject*type_type,struct Dee_opinfo const*info){}
+#define DEFINE_TYPE_INHERIT_FUNCTION(n,...) bool n(DeeFileTypeObject*__restrict self){}
 
 #define CTYPES_INT_DEFINE_COMPARE_OPERATOR(n,...) static DeeObject*int_##n(DeeSTypeObject*tp_self,T*self,DeeObject*some_object){}
 #define CYTYPES_DEFINE_ATOMIC_BINOP(n,...) DeeObject*n(size_t argc,DeeObject*const*argv){}

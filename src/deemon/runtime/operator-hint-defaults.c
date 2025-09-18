@@ -996,7 +996,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__iter_next__with__ITERNEXT(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *result;
 #ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(tp_self, OPERATOR_ITERNEXT, 0, NULL);
+	result = DeeClass_CallOperator(tp_self, self, OPERATOR_ITERNEXT, 0, NULL);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *func;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_ITERNEXT);
@@ -1050,7 +1050,7 @@ usrtype__iter_next__with__ITERNEXT(DeeObject *__restrict self) {
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
 #ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(Dee_TYPE(self), OPERATOR_ITERNEXT, 0, NULL);
+	result = DeeClass_CallOperator(Dee_TYPE(self), self, OPERATOR_ITERNEXT, 0, NULL);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *func;
 	func = DeeClass_GetOperator(Dee_TYPE(self), OPERATOR_ITERNEXT);

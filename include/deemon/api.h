@@ -510,8 +510,11 @@ DECL_END
 
 /* Const modifier for static type callback-table declaration */
 #ifndef Dee_tpconst
-#if (defined(__PIC__) || defined(__PIE__) || \
-     defined(__pic__) || defined(__pie__))
+#ifdef __INTELLISENSE__
+#define Dee_tpconst_IS_const
+#define Dee_tpconst const
+#elif (defined(__PIC__) || defined(__PIE__) || \
+       defined(__pic__) || defined(__pie__))
 #undef Dee_tpconst_IS_const
 #define Dee_tpconst /* nothing */
 #elif defined(CONFIG_BUILDING_DEEMON)

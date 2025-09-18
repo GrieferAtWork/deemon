@@ -30,7 +30,7 @@ tp_iter_next([[nonnull]] DeeObject *__restrict self)
 %{class using OPERATOR_ITERNEXT: {
 	DREF DeeObject *result;
 #ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, OPERATOR_ITERNEXT, 0, NULL);
+	result = DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_ITERNEXT, 0, NULL);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *func;
 	func = DeeClass_GetOperator(THIS_TYPE, OPERATOR_ITERNEXT);

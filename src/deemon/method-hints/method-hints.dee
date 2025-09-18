@@ -2304,7 +2304,7 @@ function printNativeOperatorHintBadAllocTable() {
 	local ppCondPrinter = PPCondPrinter();
 	for (local none, nativeOperator /*: NativeOperator*/: NATIVE_OPERATORS) {
 		ppCondPrinter.setPPCond(nativeOperator.ppCond);
-		print(f"	/* {nativeOperator.name.name.ljust(longestNameLength)} */ "),;
+		print(f"	/* {f"[Dee_TNO_{nativeOperator.name.name}]".ljust(longestNameLength + 10)} = */ "),;
 		if (nativeOperator.customBadAllocImplName) {
 			print(f"(Dee_funptr_t)&{nativeOperator.customBadAllocImplName},");
 		} else if (nativeOperator.name.table) {
@@ -2322,7 +2322,7 @@ function printNativeOperatorHintUnsupportedTable() {
 	local ppCondPrinter = PPCondPrinter();
 	for (local none, nativeOperator /*: NativeOperator*/: NATIVE_OPERATORS) {
 		ppCondPrinter.setPPCond(nativeOperator.ppCond);
-		print(f"	/* {nativeOperator.name.name.ljust(longestNameLength)} */ "),;
+		print(f"	/* {f"[Dee_TNO_{nativeOperator.name.name}]".ljust(longestNameLength + 10)} = */ "),;
 		if (nativeOperator.customUnsupportedImplName) {
 			if (nativeOperator.customUnsupportedImplName == "NULL") {
 				print(f"NULL,");
@@ -2582,6 +2582,8 @@ function printSuperMethodHintWrappers(impl: bool) {
 				print(f"		return (*(DeeMH_{name}_t)specs.smh_cb)(({
 						nativeMethod.params.first.fullTypWithoutRestrict}){
 						", ".join(usedParams.each.name)});");
+			} else {
+				print(f"/*	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER: // Unused */");
 			}
 
 			if (needWithTyped) {
@@ -2619,8 +2621,10 @@ function printSuperMethodHintWrappers(impl: bool) {
 					print(f"({selfArg}->s_type, {selfArg}->s_self{
 							"".join(for (local x: usedParams[1:].each.name) f", {x}")});");
 				}
+			} else {
+				print(f"/*	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE: // Unused */");
 			}
-			print(f"	default: break;");
+			print(f"	default: __builtin_unreachable();");
 			print(f"	\}");
 			print(f"	__builtin_unreachable();");
 			print(f"\}");
@@ -2632,11 +2636,13 @@ function printSuperMethodHintWrappers(impl: bool) {
 
 @@Print the initializer for `super_mhcache`
 function printSuperMethodHintCacheInitializer() {
+	local longestNativeMethodHintNameLength = NATIVE_METHOD_HINTS.keys.each.length > ...;
 	for (local name, nativeMethod /*: NativeMethod*/: NATIVE_METHOD_HINTS) {
+		print(f"	/* .mh_{name.ljust(longestNativeMethodHintNameLength)} = */ "),;
 		if (nativeMethod.unsupportedImpl is none) {
-			print("	NULL,");
+			print("NULL,");
 		} else {
-			print("	(DeeMH_", name, "_t)&super_mh__", name, ",");
+			print("(DeeMH_", name, "_t)&super_mh__", name, ",");
 		}
 	}
 }
