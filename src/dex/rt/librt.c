@@ -279,22 +279,32 @@ err:
 
 PRIVATE WUNUSED DREF DeeTypeObject *DCALL
 librt_makeclass_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *base, *descriptor;
-	DeeModuleObject *declaring_module = (DeeModuleObject *)Dee_None;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(base), K(descriptor), K(module), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo|o:makeclass",
-	                    &base, &descriptor, &declaring_module))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makeclass", params: "
+	DeeObject *base:?X3?N?DType?S?DType;
+	DeeObject *descriptor:?GClassDescriptor;
+	DeeModuleObject *module:?X2?DModule?N = (DeeModuleObject *)Dee_None;
+", docStringPrefix: "librt", defineKwList: true);]]]*/
+	static DEFINE_KWLIST(makeclass_kwlist, { KEX("base", 0xc3cb0590, 0x56fd8eccbdfdd7a7), KEX("descriptor", 0xea150d1, 0xfc445bb1317b9d67), KEX("module", 0xae3684a4, 0xbb78a82535e5801e), KEND });
+#define librt_makeclass_params "base:?X3?N?DType?S?DType,descriptor:?GClassDescriptor,module:?X2?DModule?N=!N"
+	struct {
+		DeeObject *base;
+		DeeObject *descriptor;
+		DeeModuleObject *_module;
+	} args;
+	args._module = (DeeModuleObject *)Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, makeclass_kwlist, "oo|o:makeclass", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.descriptor, &DeeClassDescriptor_Type))
 		goto err;
-	if (DeeNone_Check(declaring_module)) {
+	if (DeeNone_Check(args._module)) {
 		/* Special case: no declaring module given. */
-		declaring_module = NULL;
+		args._module = NULL;
 	} else {
-		if (DeeObject_AssertTypeExact(declaring_module, &DeeModule_Type))
+		if (DeeObject_AssertTypeExact(args._module, &DeeModule_Type))
 			goto err;
 	}
-	return DeeClass_New(base, descriptor, declaring_module);
+	return DeeClass_New(args.base, args.descriptor, args._module);
 err:
 	return NULL;
 }
@@ -3755,7 +3765,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SlabStat", (DeeObject *)&SlabStat_Type, MODSYM_FREADONLY },             /* Access to slab allocator statistics. */
 	{ "StringFiniHook", (DeeObject *)&StringFiniHook_Type, MODSYM_FREADONLY }, /* Definition of user-defined string finalization hooks. */
 	{ "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
-	  DOC("(base:?X3?N?DType?S?DType,descriptor:?GClassDescriptor,module:?X2?DModule?N=!N)->?DType\n"
+	  DOC("(" librt_makeclass_params ")->?DType\n"
 	      "#pmodule{The module that is declaring the class (and returned by ${return.__module__}). "
 	      /*    */ "When not given (or given as ?N), the type is not linked to a module.}"
 	      "Construct a new class from a given @base type, as well as class @descriptor") },

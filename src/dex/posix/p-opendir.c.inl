@@ -1979,26 +1979,39 @@ diriter_visit(DeeDirIteratorObject *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE DEFINE_KWLIST(opendir_kwlist, { K(path), K(skipdots), K(inheritfd), KEND });
+/*[[[deemon (print_DEFINE_KWLIST from rt.gen.unpack)({ "path", "skipdots", "inheritfd" });]]]*/
+#ifndef DEFINED_kwlist__path_skipdots_inheritfd
+#define DEFINED_kwlist__path_skipdots_inheritfd
+PRIVATE DEFINE_KWLIST(kwlist__path_skipdots_inheritfd, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("skipdots", 0x5f2962eb, 0x59ddb5f9342c7b50), KEX("inheritfd", 0x3b58e99c, 0x17889f39738f4141), KEND });
+#endif /* !DEFINED_kwlist__path_skipdots_inheritfd */
+/*[[[end]]]*/
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diriter_init_kw(DeeDirIteratorObject *__restrict self,
                 size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *path;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_DirIterator", params: "
+	DeeObject *path:?X4?GDIR?Dstring?DFile?Dint;
 	bool skipdots  = true;
 	bool inheritfd = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, opendir_kwlist,
-	                    "o|bb:_DirIterator",
-	                    &path, &skipdots, &inheritfd))
+", docStringPrefix: "posix");]]]*/
+#define posix__DirIterator_params "path:?X4?GDIR?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f"
+	struct {
+		DeeObject *path;
+		bool skipdots;
+		bool inheritfd;
+	} args;
+	args.skipdots = true;
+	args.inheritfd = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path_skipdots_inheritfd, "o|bb:_DirIterator", &args))
 		goto err;
-	if (Dee_TYPE(path) == &DeeDir_Type) {
-		DeeDirObject *dir;
-		dir       = (DeeDirObject *)path;
-		skipdots  = dir->d_skipdots;
-		inheritfd = dir->d_inheritfd;
-		path      = dir->d_path;
+/*[[[end]]]*/
+	if (Dee_TYPE(args.path) == &DeeDir_Type) {
+		DeeDirObject *dir = (DeeDirObject *)args.path;
+		args.skipdots  = dir->d_skipdots;
+		args.inheritfd = dir->d_inheritfd;
+		args.path      = dir->d_path;
 	}
-	return directory_open(self, path, skipdots, inheritfd);
+	return directory_open(self, args.path, args.skipdots, args.inheritfd);
 err:
 	return -1;
 }
@@ -2071,7 +2084,7 @@ PRIVATE struct type_member tpconst diriter_members[] = {
 INTERN DeeTypeObject DeeDirIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DirIterator",
-	/* .tp_doc      = */ DOC("(path:?X4?GDIR?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f)"),
+	/* .tp_doc      = */ DOC("(" posix__DirIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2140,11 +2153,46 @@ STATIC_ASSERT(offsetof(DeeDirIteratorObject, odi_path) ==
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dir_init_kw(DeeDirObject *__restrict self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	self->d_skipdots  = true;
+#if 1
+	struct _layout {
+		DeeObject *path;
+		bool skipdots;
+		bool inheritfd;
+	};
+#define RELBASE d_path
+	STATIC_ASSERT((COMPILER_OFFSETOF(DeeDirObject, d_path) - offsetof(DeeDirObject, RELBASE)) == COMPILER_OFFSETOF(struct _layout, path));
+	STATIC_ASSERT((COMPILER_OFFSETAFTER(DeeDirObject, d_path) - offsetof(DeeDirObject, RELBASE)) == COMPILER_OFFSETAFTER(struct _layout, path));
+	STATIC_ASSERT((COMPILER_OFFSETOF(DeeDirObject, d_skipdots) - offsetof(DeeDirObject, RELBASE)) == COMPILER_OFFSETOF(struct _layout, skipdots));
+	STATIC_ASSERT((COMPILER_OFFSETAFTER(DeeDirObject, d_skipdots) - offsetof(DeeDirObject, RELBASE)) == COMPILER_OFFSETAFTER(struct _layout, skipdots));
+	STATIC_ASSERT((COMPILER_OFFSETOF(DeeDirObject, d_inheritfd) - offsetof(DeeDirObject, RELBASE)) == COMPILER_OFFSETOF(struct _layout, inheritfd));
+	STATIC_ASSERT((COMPILER_OFFSETAFTER(DeeDirObject, d_inheritfd) - offsetof(DeeDirObject, RELBASE)) == COMPILER_OFFSETAFTER(struct _layout, inheritfd));
+	self->d_skipdots = true;
 	self->d_inheritfd = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, opendir_kwlist, "o|bb:opendir",
-	                    &self->d_path, &self->d_skipdots, &self->d_inheritfd))
+#define posix_opendir_params "path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f"
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path_skipdots_inheritfd, "o|bb:opendir", &self->RELBASE))
 		goto err;
+#undef RELBASE
+#else
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("opendir", params: "
+	DeeObject *path:?X3?Dstring?DFile?Dint;
+	bool skipdots  = true;
+	bool inheritfd = false;
+", docStringPrefix: "posix");]]]*/
+#define posix_opendir_params "path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f"
+	struct {
+		DeeObject *path;
+		bool skipdots;
+		bool inheritfd;
+	} args;
+	args.skipdots = true;
+	args.inheritfd = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path_skipdots_inheritfd, "o|bb:opendir", &args))
+		goto err;
+/*[[[end]]]*/
+	self->d_path      = args.path;
+	self->d_skipdots  = args.skipdots;
+	self->d_inheritfd = args.inheritfd;
+#endif
 	Dee_Incref(self->d_path);
 	return 0;
 err:
@@ -2154,20 +2202,30 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_fdopendir_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeDirObject *result;
-	DeeObject *path;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("fdopendir", params: "
+	DeeObject *path:?X3?Dstring?DFile?Dint;
 	bool skipdots  = true;
 	bool inheritfd = true;
-	if (DeeArg_UnpackKw(argc, argv, kw, opendir_kwlist, "o|bb:fdopendir",
-	                    &path, &skipdots, &inheritfd))
+", docStringPrefix: "posix");]]]*/
+#define posix_fdopendir_params "path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!t"
+	struct {
+		DeeObject *path;
+		bool skipdots;
+		bool inheritfd;
+	} args;
+	args.skipdots = true;
+	args.inheritfd = true;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path_skipdots_inheritfd, "o|bb:fdopendir", &args))
 		goto err;
+/*[[[end]]]*/
 	result = DeeObject_MALLOC(DeeDirObject);
 	if unlikely(!result)
 		goto err;
 	DeeObject_Init(result, &DeeDir_Type);
-	Dee_Incref(path);
-	result->d_path      = path;
-	result->d_skipdots  = skipdots;
-	result->d_inheritfd = inheritfd;
+	Dee_Incref(args.path);
+	result->d_path      = args.path;
+	result->d_skipdots  = args.skipdots;
+	result->d_inheritfd = args.inheritfd;
 	return (DREF DeeObject *)result;
 err:
 	return NULL;
@@ -2217,7 +2275,7 @@ PRIVATE struct type_member tpconst dir_class_members[] = {
 INTERN DeeTypeObject DeeDir_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "DIR",
-	/* .tp_doc      = */ DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f)"),
+	/* .tp_doc      = */ DOC("(" posix_opendir_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

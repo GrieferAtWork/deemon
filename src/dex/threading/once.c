@@ -204,7 +204,7 @@ once_init_kw(DeeOnceObject *__restrict self, size_t argc,
 #ifndef CONFIG_NO_THREADS
 	self->o_inuse = 0;
 #endif /* !CONFIG_NO_THREADS */
-	error = DeeArg_UnpackKw(argc, argv, kw, kwlist, "|o:Once", &self->o_value);
+	error = DeeArg_UnpackStructKw(argc, argv, kw, kwlist, "|o:Once", &self->o_value);
 	if likely(error == 0)
 		Dee_XIncref(self->o_value);
 	return error;
@@ -315,13 +315,26 @@ already_run:
 	} else {
 		/* No callback has been given. In this case, we must process the
 		 * caller-given arguments for 2 arguments `(callback,args)' */
-		DeeObject *cb, *cb_args = Dee_EmptyTuple, *cb_kwds = NULL;
-		PRIVATE DEFINE_KWLIST(kwlist, { K(callback), K(args), K(kwds), KEND });
-		if unlikely(DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:Once.operator()", &cb, &cb_args, &cb_kwds))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("operator()", params: "
+		DeeObject *callback:?DCallable,
+		DeeObject *args:?DTuple = Dee_EmptyTuple,
+		DeeObject *kwds:?M?Dstring?O = NULL,
+", docStringPrefix: "once", defineKwList: true, args: "cb_args");]]]*/
+	static DEFINE_KWLIST(operator_call_kwlist, { KEX("callback", 0x3b9dd39e, 0x1e7dd8df6e98f4c6), KEX("args", 0xc6fc997f, 0x4af7cd17f976719e), KEX("kwds", 0x6dfae69b, 0x66fee9115d75f3ef), KEND });
+#define once_operator_call_params "callback:?DCallable,args=!T0,kwds?:?M?Dstring?O"
+	struct {
+		DeeObject *callback;
+		DeeObject *args;
+		DeeObject *kwds;
+	} cb_args;
+	cb_args.args = Dee_EmptyTuple;
+	cb_args.kwds = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, operator_call_kwlist, "o|oo:operator()", &cb_args))
+		goto err;
+/*[[[end]]]*/
+		if unlikely(DeeObject_AssertTypeExact(cb_args.args, &DeeTuple_Type))
 			goto err_abort;
-		if unlikely(DeeObject_AssertTypeExact(cb_args, &DeeTuple_Type))
-			goto err_abort;
-		result = DeeObject_CallTupleKw(cb, cb_args, cb_kwds);
+		result = DeeObject_CallTupleKw(cb_args.callback, cb_args.args, cb_args.kwds);
 	}
 
 	/* Check if the callback completed with an error. */
@@ -350,27 +363,36 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 once_finish(DeeOnceObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	int status;
-	DeeObject *result;
-	bool override_ = false;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(result), K(override), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|b:finish", &result, &override_))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("finish", params: "
+	DeeObject *result,
+	bool override = false,
+", docStringPrefix: "once", defineKwList: true);]]]*/
+	static DEFINE_KWLIST(finish_kwlist, { KEX("result", 0x1a595f32, 0xd99e3f67e2599248), KEX("override", 0x5ecc02a7, 0xb7b65ecd369641ca), KEND });
+#define once_finish_params "result,override=!f"
+	struct {
+		DeeObject *result;
+		bool _override;
+	} args;
+	args._override = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, finish_kwlist, "o|b:finish", &args))
 		goto err;
+/*[[[end]]]*/
 	status = Dee_once_begin(&self->o_once);
 	if (status <= 0) {
 		if unlikely(status < 0)
 			goto err;
-		if (!override_)
+		if (!args._override)
 			goto err_already_finished;
-		Dee_Incref(result);
-		result = atomic_xch(&self->o_value, result);
+		Dee_Incref(args.result);
+		args.result = atomic_xch(&self->o_value, args.result);
 		DeeOnce_InUseWaitFor(self);
-		Dee_XDecref(result);
+		Dee_XDecref(args.result);
 	} else {
 		/* Complete the once-objct with the given value */
 		DREF DeeObject *callback;
 		callback = self->o_value;
-		Dee_Incref(result);
-		self->o_value = result;
+		Dee_Incref(args.result);
+		self->o_value = args.result;
 		Dee_once_commit(&self->o_once);
 		Dee_XDecref(callback);
 	}
@@ -434,7 +456,7 @@ err_already_finished:
 
 PRIVATE struct type_method tpconst once_methods[] = {
 	TYPE_KWMETHOD_F("finish", &once_finish, METHOD_FNOREFESCAPE,
-	                "(result,override=!f)\n"
+	                "(" once_finish_params ")\n"
 	                "#tValueError{@this ?GOnce-object has already finished, and @override is false}"
 	                "By-pass any stored callback and force @this ?GOnce-object to finish with "
 	                /**/ "the given @result. When @override is true, override a stored ?#result "

@@ -63,16 +63,26 @@ PRIVATE NONNULL((1)) int DCALL
 socket_ctor(Socket *__restrict self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	int af, type, proto;
-	DeeObject *arg_af, *arg_type = Dee_None, *arg_proto = Dee_None;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(af), K(type), K(proto), KEND });
-	/* Parse and translate arguments. */
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:socket", &arg_af, &arg_type, &arg_proto))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("socket", params: "
+	af:?X2?Dint?Dstring,type:?X3?Dint?Dstring?N=!N,proto:?X3?Dint?Dstring?N=!N
+", docStringPrefix: "socket", defineKwList: true);]]]*/
+	static DEFINE_KWLIST(socket_kwlist, { KEX("af", 0x5b382189, 0x6dfc80eaad0fec70), KEX("type", 0x79f23513, 0xd08fc7c8724a760a), KEX("proto", 0x3046135, 0x87e38aec26b344e), KEND });
+#define socket_socket_params "af:?X2?Dint?Dstring,type:?X3?Dint?Dstring?N=!N,proto:?X3?Dint?Dstring?N=!N"
+	struct {
+		DeeObject *af;
+		DeeObject *type;
+		DeeObject *proto;
+	} args;
+	args.type = Dee_None;
+	args.proto = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, socket_kwlist, "o|oo:socket", &args))
 		goto err;
-	if (sock_getafof(arg_af, &af))
+/*[[[end]]]*/
+	if (sock_getafof(args.af, &af))
 		goto err;
-	if (sock_gettypeof(arg_type, &type))
+	if (sock_gettypeof(args.type, &type))
 		goto err;
-	if (sock_getprotoof(arg_proto, &proto))
+	if (sock_getprotoof(args.proto, &proto))
 		goto err;
 	if (af == AF_AUTO) {
 		DeeError_Throwf(&DeeError_ValueError,
@@ -2782,7 +2792,7 @@ err:
 INTERN DeeTypeObject DeeSocket_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "socket",
-	/* .tp_doc      = */ DOC("(af:?X2?Dint?Dstring,type:?X2?Dint?Dstring=!N,proto:?X2?Dint?Dstring=!N)\n"
+	/* .tp_doc      = */ DOC("(" socket_socket_params ")\n"
 	                         "#pproto{The protocol to use for the socket, or ?N or $0 to use the default}"
 	                         "#ptype{The socket type, or none to use $\"SOCK_STREAM\"}"
 	                         "#paf{The socket address family (e.g.: $\"AF_INET\" or $\"AF_INET6\").}"

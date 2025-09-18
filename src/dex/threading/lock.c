@@ -1892,11 +1892,19 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 event_init_kw(DeeEventObject *__restrict self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	PRIVATE DEFINE_KWLIST(event_kwlist, { K(isset), KEND });
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("Event", params: "
 	bool isset = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, event_kwlist, "|b:Event", &isset))
+", docStringPrefix: "event", defineKwList: true);]]]*/
+	static DEFINE_KWLIST(Event_kwlist, { KEX("isset", 0xbc9a78a1, 0x5b60f653e62d5e87), KEND });
+#define event_Event_params "isset=!f"
+	struct {
+		bool isset;
+	} args;
+	args.isset = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, Event_kwlist, "|b:Event", &args))
 		goto err;
-	if (isset) {
+/*[[[end]]]*/
+	if (args.isset) {
 		Dee_event_init_set(&self->e_event);
 	} else {
 		Dee_event_init(&self->e_event);

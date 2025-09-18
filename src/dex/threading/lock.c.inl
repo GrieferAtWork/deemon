@@ -697,8 +697,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_lockapi_init_kw(LOCAL_DeeLockObject *__restrict self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
 	bool acquired = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, lock_init_acquired_kwlist,
-	                    "|b:" LOCAL_S_Lock, &acquired))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, lock_init_acquired_kwlist,
+	                          "|b:" LOCAL_S_Lock, &acquired))
 		goto err;
 	if (acquired) {
 		LOCAL_lock_init_acquired(&self->l_lock);
@@ -1001,27 +1001,31 @@ PRIVATE DEFINE_KWLIST(rwlock_init_readers_writing_kwlist, { K(readers), K(writin
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_rwlockapi_init_kw(LOCAL_DeeRWLockObject *__restrict self,
                         size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	uintptr_t readers = 0;
-	bool writing = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, rwlock_init_readers_writing_kwlist,
-	                    "|" UNPuPTR "b:" LOCAL_S_RWLock, &readers, &writing))
+	struct {
+		uintptr_t readers;
+		bool writing;
+	} args;
+	args.readers = 0;
+	args.writing = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, rwlock_init_readers_writing_kwlist,
+	                          "|" UNPuPTR "b:" LOCAL_S_RWLock, &args))
 		goto err;
-	if (writing) {
-		if unlikely(readers != 0)
+	if (args.writing) {
+		if unlikely(args.readers != 0)
 			goto err_cannot_initialize_readers_with_writers;
 
 		/* Initialize in write-mode */
 		LOCAL_rwlock_init_write(&self->rwl_lock);
 	} else {
-		if unlikely(readers > LOCAL_RWLOCK_MAX_READERS)
+		if unlikely(args.readers > LOCAL_RWLOCK_MAX_READERS)
 			goto err_readers_counter_is_too_large;
-		LOCAL_rwlock_init_read(&self->rwl_lock, readers);
+		LOCAL_rwlock_init_read(&self->rwl_lock, args.readers);
 	}
 	return 0;
 err_cannot_initialize_readers_with_writers:
 	return err_rwlock_with_readers_and_writers();
 err_readers_counter_is_too_large:
-	return err_rwlock_too_many_readers(readers);
+	return err_rwlock_too_many_readers(args.readers);
 err:
 	return -1;
 }

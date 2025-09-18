@@ -2717,24 +2717,36 @@ err_r:
 PRIVATE WUNUSED DREF DeeTimeObject *DCALL
 f_libtime_maketime(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeTimeObject *result;
-	Dee_int128_t hour, minute, second, nanosecond;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(hour), K(minute), K(second), K(nanosecond), KEND });
-	__hybrid_int128_setzero(hour);
-	__hybrid_int128_setzero(minute);
-	__hybrid_int128_setzero(second);
-	__hybrid_int128_setzero(nanosecond);
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPd128 UNPd128 UNPd128 UNPd128 ":maketime",
-	                    &hour, &minute, &second, &nanosecond))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("maketime", params: "
+	Dee_int128_t hour = 0,
+	Dee_int128_t minute = 0,
+	Dee_int128_t second = 0,
+	Dee_int128_t nanosecond = 0,
+", docStringPrefix: "libtime", defineKwList: true);]]]*/
+	static DEFINE_KWLIST(maketime_kwlist, { KEX("hour", 0x1a9ed795, 0x10f3e1a52760b6c5), KEX("minute", 0x951f07e5, 0x841bf13791a969b), KEX("second", 0x1a084e7b, 0x3058181b9a44b68c), KEX("nanosecond", 0xe8e3c3b6, 0x16f16d5d9832d2aa), KEND });
+#define libtime_maketime_params "hour=!0,minute=!0,second=!0,nanosecond=!0"
+	struct {
+		Dee_int128_t hour;
+		Dee_int128_t minute;
+		Dee_int128_t second;
+		Dee_int128_t nanosecond;
+	} args;
+	__hybrid_int128_setzero(args.hour);
+	__hybrid_int128_setzero(args.minute);
+	__hybrid_int128_setzero(args.second);
+	__hybrid_int128_setzero(args.nanosecond);
+	if (DeeArg_UnpackStructKw(argc, argv, kw, maketime_kwlist, "|" UNPd128 UNPd128 UNPd128 UNPd128 ":maketime", &args))
 		goto err;
+/*[[[end]]]*/
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	__hybrid_int128_setzero(result->t_nanos);
-	DeeTime_SetRepr(result, &hour, TIME_REPR_HOUR);
-	DeeTime_SetRepr(result, &minute, TIME_REPR_MINUTE);
-	DeeTime_SetRepr(result, &second, TIME_REPR_SECOND);
-	DeeTime_SetRepr(result, &nanosecond, TIME_REPR_NANOSECOND);
+	DeeTime_SetRepr(result, &args.hour, TIME_REPR_HOUR);
+	DeeTime_SetRepr(result, &args.minute, TIME_REPR_MINUTE);
+	DeeTime_SetRepr(result, &args.second, TIME_REPR_SECOND);
+	DeeTime_SetRepr(result, &args.nanosecond, TIME_REPR_NANOSECOND);
 	DeeObject_Init(result, &DeeTime_Type);
 done:
 	return result;
@@ -2745,22 +2757,32 @@ err:
 PRIVATE WUNUSED DREF DeeTimeObject *DCALL
 f_libtime_makedate(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeTimeObject *result;
-	Dee_int128_t year, month, day;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(year), K(month), K(day), KEND });
-	__hybrid_int128_setzero(year);
-	__hybrid_int128_setone(month);
-	__hybrid_int128_setone(day);
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPd128 UNPd128 UNPd128 ":makedate",
-	                    &year, &month, &day))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makedate", params: "
+	Dee_int128_t year = 0,
+	Dee_int128_t month = 1,
+	Dee_int128_t day = 1,
+", docStringPrefix: "libtime", defineKwList: true);]]]*/
+	static DEFINE_KWLIST(makedate_kwlist, { KEX("year", 0x310a1818, 0xa8d044c5ea490cb6), KEX("month", 0x51ca185c, 0xbe9d67504ee78acc), KEX("day", 0xe0fe498d, 0x8e12be46fd64d268), KEND });
+#define libtime_makedate_params "year=!0,month=!1,day=!1"
+	struct {
+		Dee_int128_t year;
+		Dee_int128_t month;
+		Dee_int128_t day;
+	} args;
+	__hybrid_int128_setzero(args.year);
+	__hybrid_int128_setone(args.month);
+	__hybrid_int128_setone(args.day);
+	if (DeeArg_UnpackStructKw(argc, argv, kw, makedate_kwlist, "|" UNPd128 UNPd128 UNPd128 ":makedate", &args))
 		goto err;
+/*[[[end]]]*/
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	__hybrid_int128_setzero(result->t_nanos);
-	DeeTime_SetRepr(result, &year, TIME_REPR_YEAR);
-	DeeTime_SetRepr(result, &month, TIME_REPR_MONTH);
-	DeeTime_SetRepr(result, &day, TIME_REPR_MDAY);
+	DeeTime_SetRepr(result, &args.year, TIME_REPR_YEAR);
+	DeeTime_SetRepr(result, &args.month, TIME_REPR_MONTH);
+	DeeTime_SetRepr(result, &args.day, TIME_REPR_MDAY);
 	DeeObject_Init(result, &DeeTime_Type);
 done:
 	return result;
@@ -2959,10 +2981,10 @@ PRIVATE struct type_method tpconst time_class_methods[] = {
 	            "->?Dint\n"
 	            "Deprecated. Always returns $1000000"),
 	TYPE_KWMETHOD("time", &time_class_maketime,
-	              "(hour=!0,minute=!0,second=!0,nanosecond=!0)->?.\n"
+	              "(" libtime_maketime_params ")->?.\n"
 	              "Deprecated. Use ?Gmaketime or ?GTime instead"),
 	TYPE_KWMETHOD("date", &time_class_makedate,
-	              "(year=!0,month=!1,day=!1)->?.\n"
+	              "(" libtime_makedate_params ")->?.\n"
 	              "Deprecated. Use ?Gmakedate or ?GTime instead"),
 	TYPE_METHOD("from_time_t", &time_class_from_time_t,
 	            "(time_t_value:?Dint)->?.\n"
@@ -3585,7 +3607,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "The tick itself is offset from some undefined point in time, meaning that the only "
 	      /**/ "meaningful use, is to subtract the return values of two calls to this function.") },
 	{ "maketime", (DeeObject *)&libtime_maketime, MODSYM_FREADONLY,
-	  DOC("(hour=!0,minute=!0,second=!0,nanosecond=!0)->?GTime\n"
+	  DOC("(" libtime_maketime_params ")->?GTime\n"
 	      "Construct a new ?GTime object using the given arguments for the "
 	      /**/ "sub-day portion, while filling in the remainder as all zeroes:\n"
 	      "${"
@@ -3593,7 +3615,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "Time(hour: hour, minute: minute, second: second, nanosecond: nanosecond);"
 	      "}") },
 	{ "makedate", (DeeObject *)&libtime_makedate, MODSYM_FREADONLY,
-	  DOC("(year=!0,month=!1,day=!1)->?GTime\n"
+	  DOC("(" libtime_makedate_params ")->?GTime\n"
 	      "Construct a new ?GTime object using the given arguments for the "
 	      /**/ "post-day portion, while filling in the remainder as all zeroes:\n"
 	      "${"

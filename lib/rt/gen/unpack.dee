@@ -65,6 +65,8 @@ global final DTYPE_BY_CTYPE: {string: string} = {
 	"uint16_t": "?Dint",
 	"uint32_t": "?Dint",
 	"uint64_t": "?Dint",
+	"Dee_int128_t": "?Dint",
+	"Dee_uint128_t": "?Dint",
 	"size_t": "?Dint",
 	"Dee_ssize_t": "?Dint",
 	"Dee_pos_t": "?Dint",
@@ -225,11 +227,19 @@ global final C_KEYWORDS: {string...} = HashSet.Frozen({
 	"struct",
 	"template",
 	"typename",
+	"override",
+	"module",
+	"true",
+	"false",
 
 	/* Now keywords, but use aliases to prevent conflict with common macros */
 	"min",
 	"max",
 });
+
+function makeIdentifier(name: string): string {
+	return name.replace("()", "_call").replace(" ", "_");
+}
 
 
 function removeUnusedSpaces(text: string): string {
@@ -372,6 +382,8 @@ global final UNPACK_PARAM_DECODERS: {string: UnpackParamDecoder | UnpackTypeProx
 	"c:uint32_t":  UnpackTypeProxy("uint32_t", '" UNPu32 "', "?Dint"),
 	"c:int64_t":   UnpackTypeProxy("int64_t", '" UNPd64 "', "?Dint"),
 	"c:uint64_t":  UnpackTypeProxy("uint64_t", '" UNPu64 "', "?Dint"),
+	"c:int128_t":  UnpackTypeProxy("Dee_int128_t", '" UNPd128 "', "?Dint"),
+	"c:uint128_t": UnpackTypeProxy("Dee_uint128_t", '" UNPu128 "', "?Dint"),
 
 	/* ctypes integration */
 	"c:ptr": UnpackParamDecoder("void *", "?Aptr?Ectypes:void", (cIn, cOut, err) ->
@@ -412,6 +424,11 @@ global final UNPACK_PARAM_DECODERS: {string: UnpackParamDecoder | UnpackTypeProx
 };
 
 
+function hashesOf(text: string): string {
+	local nameHash32 = rtHash.hash32(text);
+	local nameHash64 = rtHash.hash64(text);
+	return f"{nameHash32.hex()}, {nameHash64.hex()}";
+}
 
 final class UnpackParam {
 	this = default;
@@ -442,7 +459,7 @@ final class UnpackParam {
 
 	public property nameHash32: int = { get() -> rtHash.hash32(name); }
 	public property nameHash64: int = { get() -> rtHash.hash64(name); }
-	public property nameHashes: string = { get() -> f"{nameHash32.hex()}, {nameHash64.hex()}"; }
+	public property nameHashes: string = { get() -> hashesOf(name); }
 
 	public property cTypeRaw: string = {
 		get(): string -> removeUnusedSpaces(cType);
@@ -532,6 +549,40 @@ final class UnpackParam {
 			return result;
 		}
 	}
+
+	public function formatCInitializer(args: string): string | none {
+		if (cInit !is none && cInit != "?") {
+			local dst = f"{args}.{cName}";
+			switch (cType) {
+			case "Dee_int128_t":
+			case "Dee_uint128_t": {
+				local signed = cType == "Dee_int128_t";
+				local base = f"__hybrid_{signed ? "" : "u"}int128_";
+				local cInitVal = try int(cInit) catch (...) none;
+				if (cInitVal !is none) {
+					switch (cInitVal) {
+					case 0:
+						return f"{base}setzero({dst})";
+					case 1:
+						return f"{base}setone({dst})";
+					case -1:
+						return f"{base}setminusone({dst})";
+					default: break;
+					}
+					local bits = cInitVal.bitcount(signed: signed);
+					for (local maxBits: {8, 16, 32, 64}) {
+						if (bits <= maxBits)
+							return f"{base}set{maxBits}({dst}, UINT{maxBits}_C({cInitVal}))";
+					}
+				}
+			}	break;
+			default: break;
+			}
+			return f"{dst} = {cInit}";
+		}
+		return none;
+	}
+
 }
 
 @@Parse parameter specs. Format:
@@ -810,9 +861,29 @@ local function printDocStringWithPrefix(prefix: string, name: string, params: {U
 		break;
 	default: break;
 	}
-	print("#define ", prefix, "_", name, '_params "', docstring, '"');
+	print("#define ", prefix, "_", makeIdentifier(name), '_params "', docstring, '"');
 }
 
+
+function print_DEFINE_KWLIST(kwds: {string...} = (),
+                             name: string = "",
+                             params: string | {UnpackParam...} = (),
+                             visibility: string = "PRIVATE") {
+	if (!kwds) {
+		if (params is string)
+			params = parseParamSpec(params).cached;
+		kwds = params.each.name;
+	}
+	if (!name)
+		name = makeIdentifier(f"kwlist__{"_".join(kwds)}");
+	print(f'#ifndef DEFINED_{name}');
+	print(f'#define DEFINED_{name}');
+	print(f"{visibility} DEFINE_KWLIST({name}, \{ {((
+		for (local kwd: kwds)
+			f"KEX({repr kwd}, {hashesOf(kwd)}), "
+	) + ...) ?? ""}KEND \});");
+	print(f'#endif /* !DEFINED_{name} */');
+}
 
 
 @@Usage:
@@ -835,6 +906,7 @@ function print_DeeArg_UnpackKw(name: string = "",
                                argc: string = "argc",
                                argv: string = "argv",
                                kw: string = "kw",
+                               kwlist: string = "",
                                params: string | {UnpackParam...} = (),
                                args: string = "args",
                                err: string = "err",
@@ -842,9 +914,9 @@ function print_DeeArg_UnpackKw(name: string = "",
                                docStringPrefix: string = "") {
 	if (params is string)
 		params = parseParamSpec(params).cached;
-	local kwlistName = f"kwlist__{"_".join(params.each.name)}";
+	local kwlistName = kwlist ?: makeIdentifier(f"kwlist__{"_".join(params.each.name)}");
 	if (defineKwList) {
-		kwlistName = name ? f"{name}_kwlist" : "kwlist";
+		kwlistName = makeIdentifier(name ? f"{name}_kwlist" : "kwlist");
 		print(f"	static DEFINE_KWLIST({kwlistName}, \{ {((
 			for (local param: params)
 				f"KEX({repr param.name}, {param.nameHashes}), "
@@ -863,8 +935,9 @@ function print_DeeArg_UnpackKw(name: string = "",
 				param.decode.printCOutDecl(param.cOutName, param.isOptional);
 		}
 		for (local param: params) {
-			if (param.cInit !is none && param.cInit != "?")
-				print(f"	{args}.{param.cName} = {param.cInit};");
+			local init = param.formatCInitializer(args);
+			if (init !is none)
+				print("	", init, ";");
 		}
 		print(f"	if (DeeArg_UnpackStructKw({argc}, {argv}, {kw}, {kwlistName}, {
 				getUnpackFormat(name: name, params: params)}, &{args}))");
@@ -919,6 +992,11 @@ function print_DeeArg_Unpack(name: string = "",
 		for (local param: params) {
 			if (param.decode !is none)
 				param.decode.printCOutDecl(param.cOutName, param.isOptional);
+		}
+		for (local param: params) {
+			local init = param.formatCInitializer(args);
+			if (init !is none)
+				print("	", init, ";");
 		}
 		for (local param: params) {
 			if (param.cInit !is none && param.cInit != "?")
@@ -1212,7 +1290,7 @@ function print_libMethod(name: string,
 	methodFlags = methodFlags ? methodFlags[3:] : "METHOD_FNORMAL";
 	print(f"{visi} DEFINE_{kw ? "KW" : ""}CMETHOD({libfoo_bar}, &{libfoo_bar_f}, {methodFlags});");
 	if (kw) {
-		local kwlistName = f"kwlist__{"_".join(params.each.name)}";
+		local kwlistName = makeIdentifier(f"kwlist__{"_".join(params.each.name)}");
 		print(f'#ifndef DEFINED_{kwlistName}');
 		print(f'#define DEFINED_{kwlistName}');
 		print(f"{visi} DEFINE_KWLIST({kwlistName}, \{ {((

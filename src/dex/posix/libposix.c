@@ -1990,13 +1990,13 @@ PRIVATE struct dex_symbol symbols[] = {
 	D({ "dirent", (DeeObject *)&DeeDirIterator_Type, MODSYM_FREADONLY },)
 	D({ "DIR", (DeeObject *)&DeeDir_Type, MODSYM_FREADONLY },)
 	D({ "opendir", (DeeObject *)&DeeDir_Type, MODSYM_FREADONLY,
-	    DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f)->?GDIR\n"
+	    DOC("(" posix_opendir_params ")->?GDIR\n"
 	        "Read the contents of a given directory. The returned "
 	        /**/ "object may be iterated to yield ?Gdirent objects.\n"
 	        "Additionally, you may specify @skipdots as ?f if you "
 	        /**/ "wish to include the special $'.' and $'..' entries.") },)
 	D({ "fdopendir", (DeeObject *)&posix_fdopendir, MODSYM_FREADONLY,
-	    DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!t)->?GDIR\n"
+	    DOC("(" posix_fdopendir_params ")->?GDIR\n"
 	        "Same as ?Gopendir, but the default value of @inheritfd is ?t, "
 	        /**/ "mimicking the behavior of the native $fdopendir function") },)
 

@@ -609,23 +609,71 @@ copyfile_progress_copy(DeeCopyFileProgressObject *__restrict self,
 	return 0;
 }
 
-PRIVATE DEFINE_KWLIST(copyfile_progress_init_kwlist, {
-	K(srcfile), K(dstfile), K(copied), K(total), KEND });
+/*[[[deemon (print_DEFINE_KWLIST from rt.gen.unpack)({ "srcfile", "dstfile", "copied", "total", "bufsize" });]]]*/
+#ifndef DEFINED_kwlist__srcfile_dstfile_copied_total_bufsize
+#define DEFINED_kwlist__srcfile_dstfile_copied_total_bufsize
+PRIVATE DEFINE_KWLIST(kwlist__srcfile_dstfile_copied_total_bufsize, { KEX("srcfile", 0xe0c1a055, 0x9196764c7ba30338), KEX("dstfile", 0x6c1ba93a, 0xd0ccc50d75a5d500), KEX("copied", 0xaa579ad7, 0x7c66efa2308d3e42), KEX("total", 0x48601e35, 0xd63cdba353c9c786), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
+#endif /* !DEFINED_kwlist__srcfile_dstfile_copied_total_bufsize */
+/*[[[end]]]*/
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 copyfile_progress_init_kw(DeeCopyFileProgressObject *__restrict self,
                           size_t argc, DeeObject *const *argv, DeeObject *kw) {
+#if 1
+	struct _layout {
+		DeeObject *srcfile;
+		DeeObject *dstfile;
+		uint64_t copied;
+		uint64_t total;
+		size_t bufsize;
+	};
+#define RELBASE cfp_srcfile
+	STATIC_ASSERT((COMPILER_OFFSETOF(DeeCopyFileProgressObject, cfp_srcfile) - offsetof(DeeCopyFileProgressObject, RELBASE)) == COMPILER_OFFSETOF(struct _layout, srcfile));
+	STATIC_ASSERT((COMPILER_OFFSETAFTER(DeeCopyFileProgressObject, cfp_srcfile) - offsetof(DeeCopyFileProgressObject, RELBASE)) == COMPILER_OFFSETAFTER(struct _layout, srcfile));
+	STATIC_ASSERT((COMPILER_OFFSETOF(DeeCopyFileProgressObject, cfp_dstfile) - offsetof(DeeCopyFileProgressObject, RELBASE)) == COMPILER_OFFSETOF(struct _layout, dstfile));
+	STATIC_ASSERT((COMPILER_OFFSETAFTER(DeeCopyFileProgressObject, cfp_dstfile) - offsetof(DeeCopyFileProgressObject, RELBASE)) == COMPILER_OFFSETAFTER(struct _layout, dstfile));
+	STATIC_ASSERT((COMPILER_OFFSETOF(DeeCopyFileProgressObject, cfp_copied) - offsetof(DeeCopyFileProgressObject, RELBASE)) == COMPILER_OFFSETOF(struct _layout, copied));
+	STATIC_ASSERT((COMPILER_OFFSETAFTER(DeeCopyFileProgressObject, cfp_copied) - offsetof(DeeCopyFileProgressObject, RELBASE)) == COMPILER_OFFSETAFTER(struct _layout, copied));
+	STATIC_ASSERT((COMPILER_OFFSETOF(DeeCopyFileProgressObject, cfp_total) - offsetof(DeeCopyFileProgressObject, RELBASE)) == COMPILER_OFFSETOF(struct _layout, total));
+	STATIC_ASSERT((COMPILER_OFFSETAFTER(DeeCopyFileProgressObject, cfp_total) - offsetof(DeeCopyFileProgressObject, RELBASE)) == COMPILER_OFFSETAFTER(struct _layout, total));
+	STATIC_ASSERT((COMPILER_OFFSETOF(DeeCopyFileProgressObject, cfp_bufsize) - offsetof(DeeCopyFileProgressObject, RELBASE)) == COMPILER_OFFSETOF(struct _layout, bufsize));
+	STATIC_ASSERT((COMPILER_OFFSETAFTER(DeeCopyFileProgressObject, cfp_bufsize) - offsetof(DeeCopyFileProgressObject, RELBASE)) == COMPILER_OFFSETAFTER(struct _layout, bufsize));
 	self->cfp_copied  = 0;
 	self->cfp_total   = (uint64_t)-1;
 	self->cfp_bufsize = POSIX_COPYFILE_DEFAULT_IO_BUFSIZE;
-	if (DeeArg_UnpackKw(argc, argv, kw, copyfile_progress_init_kwlist,
-	                    "oo|" UNPu64 UNPu64 UNPuSIZ ":attribute",
-	                    &self->cfp_srcfile,
-	                    &self->cfp_dstfile,
-	                    &self->cfp_copied,
-	                    &self->cfp_total,
-	                    &self->cfp_bufsize))
+#define posix_CopyFileProgress_params "srcfile:?DFile,dstfile:?DFile,copied=!0,total?:?Dint,bufsize?:?Dint"
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__srcfile_dstfile_copied_total_bufsize,
+	                          "oo|" UNPu64 UNPx64 UNPuSIZ ":CopyFileProgress", &self->RELBASE))
 		goto err;
+#undef RELBASE
+#else
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("CopyFileProgress", params: "
+	DeeObject *srcfile:?DFile,
+	DeeObject *dstfile:?DFile,
+	uint64_t   copied = 0,
+	uint64_t   total? = (uint64_t)-1,
+	size_t     bufsize? = POSIX_COPYFILE_DEFAULT_IO_BUFSIZE,
+", docStringPrefix: "posix");]]]*/
+#define posix_CopyFileProgress_params "srcfile:?DFile,dstfile:?DFile,copied=!0,total?:?Dint,bufsize?:?Dint"
+	struct {
+		DeeObject *srcfile;
+		DeeObject *dstfile;
+		uint64_t copied;
+		uint64_t total;
+		size_t bufsize;
+	} args;
+	args.copied = 0;
+	args.total = (uint64_t)-1;
+	args.bufsize = POSIX_COPYFILE_DEFAULT_IO_BUFSIZE;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__srcfile_dstfile_copied_total_bufsize, "oo|" UNPu64 UNPx64 UNPuSIZ ":CopyFileProgress", &args))
+		goto err;
+/*[[[end]]]*/
+	self->cfp_srcfile = args.srcfile;
+	self->cfp_dstfile = args.dstfile;
+	self->cfp_copied  = args.copied;
+	self->cfp_total   = args.total;
+	self->cfp_bufsize = args.bufsize;
+#endif
 	if unlikely(self->cfp_bufsize == 0) {
 		err_bad_copyfile_bufsize_is_zero();
 #define NEED_err_bad_copyfile_bufsize_is_zero
@@ -705,7 +753,7 @@ INTERN DeeTypeObject DeeCopyFileProgress_Type = {
 	/* .tp_doc      = */ DOC("The type of object that is passed to the $progress argument of "
 	                         /**/ "?Gcopyfile, ?Gcopyfileat, ?Gfcopyfile and ?Glcopyfile\n"
 	                         "\n"
-	                         "(srcfile:?DFile,dstfile:?DFile,copied=!0,total?:?Dint)"),
+	                         "(" posix_CopyFileProgress_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
