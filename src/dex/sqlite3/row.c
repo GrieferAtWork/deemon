@@ -515,13 +515,14 @@ PRIVATE struct type_seq rowfmt_seq = {
 };
 
 PRIVATE struct type_getset tpconst rowfmt_getsets[] = {
-	TYPE_GETTER_AB_F_NODOC("keys", &rowfmt_keys, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_GETTER_AB_F("keys", &rowfmt_keys, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?G_RowFmtColumns"),
 	TYPE_GETTER_AB_F("frozen", &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_AB_F("cached", &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst rowfmt_class_members[] = {
+	TYPE_MEMBER_CONST("Keys", &RowFmtColumns_Type),
 	TYPE_MEMBER_CONST("KeyType", &DeeString_Type),
 	TYPE_MEMBER_CONST("ValueType", &CellFmt_Type),
 	TYPE_MEMBER_END
@@ -530,7 +531,8 @@ PRIVATE struct type_member tpconst rowfmt_class_members[] = {
 INTERN DeeTypeObject RowFmt_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RowFmt",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("[](key:?Dstring)->?G_CellFmt\n"
+	                         "[](index:?Dint)->?G_CellFmt"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1020,7 +1022,8 @@ PRIVATE struct type_member tpconst row_class_members[] = {
 INTERN DeeTypeObject Row_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "Row",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("[](key:?Dstring)->" T_SQL_OBJECT "\n"
+	                         "[](index:?Dint)->" T_SQL_OBJECT),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Row),
 	/* .tp_features = */ TF_NONE,

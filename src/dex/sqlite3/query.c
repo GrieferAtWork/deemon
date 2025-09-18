@@ -114,7 +114,9 @@ PRIVATE struct type_member tpconst qiter_members[] = {
 INTERN DeeTypeObject QueryIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "QueryIterator",
-	/* .tp_doc      = */ DOC("(query:?GQuery)"),
+	/* .tp_doc      = */ DOC("(query:?GQuery)\n"
+	                         "\n"
+	                         "next->?GRow"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -861,6 +863,11 @@ PRIVATE struct type_member tpconst query_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_member tpconst query_class_members[] = {
+	TYPE_MEMBER_CONST("Iterator", &QueryIterator_Type),
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject Query_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "Query",
@@ -911,7 +918,7 @@ INTERN DeeTypeObject Query_Type = {
 	/* .tp_members       = */ query_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ query_class_members
 };
 
 DECL_END
