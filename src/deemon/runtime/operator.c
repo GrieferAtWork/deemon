@@ -35,6 +35,8 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
+
 #include "../objects/int_logic.h"
 #include "runtime_error.h"
 #include "strings.h"
@@ -508,7 +510,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 
-#ifdef CONFIG_VA_LIST_IS_STACK_POINTER
+#ifdef __ARCH_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
 DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_VNewPack, 12),
                     DCALL_ASSEMBLY_NAME(DeeObject_New, 12));
@@ -519,7 +521,7 @@ DeeObject_VNewPack(DeeTypeObject *object_type,
 	return DeeObject_New(object_type, argc, (DeeObject **)args);
 }
 #endif /* __NO_DEFINE_ALIAS */
-#else /* CONFIG_VA_LIST_IS_STACK_POINTER */
+#else /* __ARCH_VA_LIST_IS_STACK_POINTER */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_VNewPack(DeeTypeObject *object_type,
                    size_t argc, va_list args) {
@@ -533,7 +535,7 @@ DeeObject_VNewPack(DeeTypeObject *object_type,
 err:
 	return NULL;
 }
-#endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
+#endif /* !__ARCH_VA_LIST_IS_STACK_POINTER */
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_VNewf(DeeTypeObject *object_type,

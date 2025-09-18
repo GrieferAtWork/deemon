@@ -331,17 +331,60 @@
 #undef __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS
 #ifdef _ALIGNMENT_REQUIRED
 #if (_ALIGNMENT_REQUIRED + 0) == 0
-#define __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS 1
+#define __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS
 #endif /* _ALIGNMENT_REQUIRED */
 #elif defined(__i386__) || defined(__x86_64__) || defined(__mc68020__) || defined(__s390__)
-#define __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS 1
+#define __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS
 #elif defined(__arm__) && defined(__ARM_FEATURE_UNALIGNED)
-#define __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS 1
+#define __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS
 #elif !defined(__KOS_SYSTEM_HEADERS__) && __has_include(<sys/isa_defs.h>)
 #include <sys/isa_defs.h>
 #if defined(_ALIGNMENT_REQUIRED) && (_ALIGNMENT_REQUIRED + 0) == 0
-#define __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS 1
+#define __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS
 #endif /* _ALIGNMENT_REQUIRED == 0 */
+#endif /* ... */
+
+
+
+/* The `va_list' structure is simply a pointer into the argument list,
+ * where arguments can be indexed by alignment of at least sizeof(void *).
+ * This allows one to do the following:
+ *
+ * >> FUNDEF void function_a(size_t argc, void **argv);
+ * >> FUNDEF void function_b(size_t argc, va_list args);
+ * >> FUNDEF void function_c(size_t argc, ...);
+ * >>
+ * >> ...
+ * >>
+ * >> PUBLIC void function_a(size_t argc, void **argv) {
+ * >>     size_t i;
+ * >>     for (i = 0; i < argc; ++i)
+ * >>         printf("argv[%lu] = %p\n", (unsigned long)i, argv[i]);
+ * >> }
+ * >>
+ * >> #ifdef __ARCH_VA_LIST_IS_STACK_POINTER
+ * >> DEFINE_PUBLIC_ALIAS(function_b, function_a); // ABI-compatible
+ * >> #else // __ARCH_VA_LIST_IS_STACK_POINTER
+ * >> PUBLIC void DCALL function_b(size_t argc, va_list args) {
+ * >>     size_t i;
+ * >>     void **argv;
+ * >>     argv = (void **)alloca(argc * sizeof(void *));
+ * >>     for (i = 0; i < argc; ++i)
+ * >>         argv[i] = va_arg(args, void *);
+ * >>     function_a(argc, argv);
+ * >> }
+ * >> #endif // !__ARCH_VA_LIST_IS_STACK_POINTER
+ * >>
+ * >> void function_c(size_t argc, ...) {
+ * >>     va_list args;
+ * >>     va_start(args, argc);
+ * >>     function_b(argc, args);
+ * >>     va_end(args, argc);
+ * >> }
+ */
+#undef __ARCH_VA_LIST_IS_STACK_POINTER
+#if defined(__i386__) && !defined(__x86_64__)
+#define __ARCH_VA_LIST_IS_STACK_POINTER
 #endif /* ... */
 
 
@@ -349,20 +392,20 @@
 #undef __ARCH_STACK_GROWS_UPWARDS
 #undef __ARCH_STACK_GROWS_DOWNWARDS
 #if defined(__i386__) || defined(__x86_64__)
-#define __ARCH_STACK_GROWS_DOWNWARDS 1
+#define __ARCH_STACK_GROWS_DOWNWARDS
 #elif defined(__arm__)
-#define __ARCH_STACK_GROWS_DOWNWARDS 1
+#define __ARCH_STACK_GROWS_DOWNWARDS
 #else /* ... */
 #if !defined(__KOS_SYSTEM_HEADERS__) && __has_include(<sys/isa_defs.h>)
 #include <sys/isa_defs.h>
 #if defined(_STACK_GROWS_DOWNWARD) && !defined(_STACK_GROWS_UPWARD)
-#define __ARCH_STACK_GROWS_DOWNWARDS 1
+#define __ARCH_STACK_GROWS_DOWNWARDS
 #elif !defined(_STACK_GROWS_DOWNWARD) && defined(_STACK_GROWS_UPWARD)
-#define __ARCH_STACK_GROWS_UPWARDS 1
+#define __ARCH_STACK_GROWS_UPWARDS
 #endif /* !_STACK_GROWS_DOWNWARD */
 #endif /* ... */
 #if !defined(__ARCH_STACK_GROWS_DOWNWARDS) && !defined(__ARCH_STACK_GROWS_UPWARDS)
-#define __ARCH_STACK_GROWS_DOWNWARDS 1 /* Default assumption... */
+#define __ARCH_STACK_GROWS_DOWNWARDS /* Default assumption... */
 #endif /* !__ARCH_STACK_GROWS_DOWNWARDS && !__ARCH_STACK_GROWS_UPWARDS */
 #endif /* !... */
 

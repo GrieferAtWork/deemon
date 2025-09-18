@@ -26,6 +26,8 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 
+#include <hybrid/host.h>
+
 /**/
 #include "operator-hint-errors.h"
 #include "runtime_error.h"
@@ -2241,7 +2243,7 @@ DeeObject_IntInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restri
 	return result;
 }
 
-#ifdef CONFIG_VA_LIST_IS_STACK_POINTER
+#ifdef __ARCH_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
 DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_VCallPack, 12),
                     DCALL_ASSEMBLY_NAME(DeeObject_Call, 12));
@@ -2251,7 +2253,7 @@ DeeObject_VCallPack(DeeObject *self, size_t argc, va_list args) {
 	return DeeObject_Call(self, argc, (DeeObject **)args);
 }
 #endif /* __NO_DEFINE_ALIAS */
-#else /* CONFIG_VA_LIST_IS_STACK_POINTER */
+#else /* __ARCH_VA_LIST_IS_STACK_POINTER */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_VCallPack(DeeObject *self, size_t argc, va_list args) {
 	DREF DeeObject *result, *args_tuple;
@@ -2264,7 +2266,7 @@ DeeObject_VCallPack(DeeObject *self, size_t argc, va_list args) {
 err:
 	return NULL;
 }
-#endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
+#endif /* !__ARCH_VA_LIST_IS_STACK_POINTER */
 
 
 

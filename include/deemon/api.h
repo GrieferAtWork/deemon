@@ -477,57 +477,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* CONFIG_HOST_WINDOWS */
 
 
-#if defined(__i386__) && !defined(__x86_64__)
-/* The `va_list' structure is simply a pointer into the argument list,
- * where arguments can be indexed by alignment of at least sizeof(void *).
- * This allows one to do the following:
- * >> DFUNDEF void DCALL function_a(size_t argc, void **argv);
- * >> DFUNDEF void DCALL function_b(size_t argc, va_list args);
- * >> DFUNDEF void function_c(size_t argc, ...);
- * >>
- * >> ...
- * >>
- * >> PUBLIC void DCALL function_a(size_t argc, void **argv) {
- * >>     size_t i;
- * >>     for (i = 0; i < argc; ++i)
- * >>         printf("argv[%lu] = %p\n", (unsigned long)i, argv[i]);
- * >> }
- * >>
- * >> #ifdef CONFIG_VA_LIST_IS_STACK_POINTER
- * >> #ifndef __NO_DEFINE_ALIAS
- * >> DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(function_b, 8),
- * >>                     DCALL_ASSEMBLY_NAME(function_a, 8));
- * >> #else // !__NO_DEFINE_ALIAS
- * >> PUBLIC void DCALL function_b(size_t argc, va_list args) {
- * >>      function_a(argc, (void **)args);
- * >> }
- * >> #endif // __NO_DEFINE_ALIAS
- * >> #else // CONFIG_VA_LIST_IS_STACK_POINTER
- * >> PUBLIC void DCALL function_b(size_t argc, va_list args) {
- * >>     size_t i;
- * >>     void **argv;
- * >>     argv = (void **)Dee_Allocac(argc, sizeof(void *));
- * >>     for (i = 0; i < argc; ++i)
- * >>         argv[i] = va_arg(args, void *);
- * >>     function_a(argc, argv);
- * >> }
- * >> #endif // !CONFIG_VA_LIST_IS_STACK_POINTER
- * >>
- * >> void function_c(size_t argc, ...) {
- * >>     va_list args;
- * >>     va_start(args, argc);
- * >>     function_b(argc, args);
- * >>     va_end(args, argc);
- * >> }
- * Using this internally, we can greatly optimize calls to functions
- * like `DeeObject_CallPack()' by not needing to pack everything together
- * into a temporary vector that would have to be allocated on the heap.
- */
-#define CONFIG_VA_LIST_IS_STACK_POINTER
-#endif
-
-
-
 #ifdef __CC__
 
 #if (defined(__INTELLISENSE__) || defined(__VASSISTX_INSPECT__)) && defined(__cplusplus)

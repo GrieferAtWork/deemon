@@ -40,6 +40,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
 #include <hybrid/limitcore.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
@@ -624,7 +625,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-#ifdef CONFIG_VA_LIST_IS_STACK_POINTER
+#ifdef __ARCH_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
 DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeTuple_VPack, 8),
                     DCALL_ASSEMBLY_NAME(DeeTuple_NewVector, 8));
@@ -655,7 +656,7 @@ DeeTuple_VTryPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list arg
 	return DeeTuple_TryNewVectorSymbolic(n, (DeeObject **)args);
 }
 #endif /* __NO_DEFINE_ALIAS */
-#else /* CONFIG_VA_LIST_IS_STACK_POINTER */
+#else /* __ARCH_VA_LIST_IS_STACK_POINTER */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_VPack(size_t n, va_list args) {
 	size_t i;
@@ -721,7 +722,7 @@ DeeTuple_VTryPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list arg
 done:
 	return (DREF DeeObject *)result;
 }
-#endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
+#endif /* !__ARCH_VA_LIST_IS_STACK_POINTER */
 
 /* Create new tuple objects. */
 PUBLIC WUNUSED DREF DeeObject *

@@ -25,6 +25,8 @@
 #include <deemon/attribute.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* bzero(), ... */
+
+#include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
 /**/
 
 #include <stdarg.h> /* va_list */
@@ -384,7 +386,7 @@ PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *
 
 
 
-#ifdef CONFIG_VA_LIST_IS_STACK_POINTER
+#ifdef __ARCH_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
 DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_VCallAttrPack, 16),
                     DCALL_ASSEMBLY_NAME(DeeObject_CallAttr, 16));
@@ -396,7 +398,7 @@ DeeObject_VCallAttrPack(DeeObject *self,
 	return DeeObject_CallAttr(self, attr_name, argc, (DeeObject **)args);
 }
 #endif /* __NO_DEFINE_ALIAS */
-#else /* CONFIG_VA_LIST_IS_STACK_POINTER */
+#else /* __ARCH_VA_LIST_IS_STACK_POINTER */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_VCallAttrPack(DeeObject *self,
                         /*String*/ DeeObject *attr_name,
@@ -412,7 +414,7 @@ DeeObject_VCallAttrPack(DeeObject *self,
 err:
 	return NULL;
 }
-#endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
+#endif /* !__ARCH_VA_LIST_IS_STACK_POINTER */
 
 PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1, 2)) DREF DeeObject *
 DeeObject_CallAttrPack(DeeObject *self,
@@ -438,7 +440,7 @@ DeeObject_CallAttrf(DeeObject *self,
 	return result;
 }
 
-#ifdef CONFIG_VA_LIST_IS_STACK_POINTER
+#ifdef __ARCH_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
 DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_VCallAttrStringPack, 16),
                     DCALL_ASSEMBLY_NAME(DeeObject_CallAttrString, 16));
@@ -459,7 +461,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	return DeeObject_CallAttrStringHash(self, attr, hash, argc, (DeeObject **)args);
 }
 #endif /* __NO_DEFINE_ALIAS */
-#else /* CONFIG_VA_LIST_IS_STACK_POINTER */
+#else /* __ARCH_VA_LIST_IS_STACK_POINTER */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_VCallAttrStringHashPack)(DeeObject *self,
                                           char const *__restrict attr,
@@ -482,7 +484,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
                                       size_t argc, va_list args) {
 	return DeeObject_VCallAttrStringHashPack(self, attr, Dee_HashStr(attr), argc, args);
 }
-#endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
+#endif /* !__ARCH_VA_LIST_IS_STACK_POINTER */
 
 PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DeeObject_CallAttrStringPack)(DeeObject *self,
