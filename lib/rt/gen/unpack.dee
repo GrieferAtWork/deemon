@@ -630,6 +630,8 @@ extend_typ_until_i:
 		local name = params[nameStart:nameEnd];
 		if (name in C_TYPE_KEYWORDS)
 			goto extend_typ_until_i;
+		if (name.startswith("$"))
+			name = name[1:];
 		while (i < len && params.isspace(i))
 			++i;
 		local cType: string | none = params[typStart:typEnd];

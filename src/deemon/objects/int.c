@@ -4355,33 +4355,54 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_hex(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("hex", params: "
 	size_t precision = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision,
-	                    "|" UNPuSIZ ":hex", &precision))
+", docStringPrefix: "int");]]]*/
+#define int_hex_params "precision=!0"
+	struct {
+		size_t precision;
+	} args;
+	args.precision = 0;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|" UNPuSIZ ":hex", &args))
 		goto err;
-	return int_tostr_impl(self, DEEINT_PRINT(16, DEEINT_PRINT_FNUMSYS), precision);
+/*[[[end]]]*/
+	return int_tostr_impl(self, DEEINT_PRINT(16, DEEINT_PRINT_FNUMSYS), args.precision);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_bin(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("bin", params: "
 	size_t precision = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision,
-	                    "|" UNPuSIZ ":bin", &precision))
+", docStringPrefix: "int");]]]*/
+#define int_bin_params "precision=!0"
+	struct {
+		size_t precision;
+	} args;
+	args.precision = 0;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|" UNPuSIZ ":bin", &args))
 		goto err;
-	return int_tostr_impl(self, DEEINT_PRINT(2, DEEINT_PRINT_FNUMSYS), precision);
+/*[[[end]]]*/
+	return int_tostr_impl(self, DEEINT_PRINT(2, DEEINT_PRINT_FNUMSYS), args.precision);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_oct(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("oct", params: "
 	size_t precision = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision,
-	                    "|" UNPuSIZ ":oct", &precision))
+", docStringPrefix: "int");]]]*/
+#define int_oct_params "precision=!0"
+	struct {
+		size_t precision;
+	} args;
+	args.precision = 0;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|" UNPuSIZ ":oct", &args))
 		goto err;
-	return int_tostr_impl(self, DEEINT_PRINT(8, DEEINT_PRINT_FNUMSYS), precision);
+/*[[[end]]]*/
+	return int_tostr_impl(self, DEEINT_PRINT(8, DEEINT_PRINT_FNUMSYS), args.precision);
 err:
 	return NULL;
 }
@@ -4534,44 +4555,52 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_frombytes(DeeObject *UNUSED(self), size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *bytes;
-	DeeObject *byteorder = Dee_None;
-	bool is_signed       = false;
 	bool encode_little;
 	DeeBuffer buf;
 	DREF DeeObject *result;
-	if (DeeArg_UnpackKw(argc, argv, kw,
-	                    kwlist__bytes_byteorder_signed,
-	                    "o|ob:frombytes",
-	                    &bytes, &byteorder, &is_signed))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("frombytes", params: "
+	DeeObject *bytes:?DBytes;
+	DeeObject *byteorder:?X2?Dstring?N = Dee_None;
+	bool       $signed = false;
+", docStringPrefix: "int");]]]*/
+#define int_frombytes_params "bytes:?DBytes,byteorder:?X2?Dstring?N=!N,signed=!f"
+	struct {
+		DeeObject *bytes;
+		DeeObject *byteorder;
+		bool _signed;
+	} args;
+	args.byteorder = Dee_None;
+	args._signed = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__bytes_byteorder_signed, "o|ob:frombytes", &args))
 		goto err;
-	if (DeeNone_Check(byteorder)) {
+/*[[[end]]]*/
+	if (DeeNone_Check(args.byteorder)) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 		encode_little = true;
 #else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 		encode_little = false;
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	} else {
-		if (DeeObject_AssertTypeExact(byteorder, &DeeString_Type))
+		if (DeeObject_AssertTypeExact(args.byteorder, &DeeString_Type))
 			goto err;
-		if (DeeString_EQUALS_ASCII(byteorder, "little")) {
+		if (DeeString_EQUALS_ASCII(args.byteorder, "little")) {
 			encode_little = true;
-		} else if (DeeString_EQUALS_ASCII(byteorder, "big")) {
+		} else if (DeeString_EQUALS_ASCII(args.byteorder, "big")) {
 			encode_little = false;
 		} else {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Invalid byteorder %r",
-			                byteorder);
+			                args.byteorder);
 			goto err;
 		}
 	}
-	if (DeeObject_GetBuf(bytes, &buf, Dee_BUFFER_FREADONLY))
+	if (DeeObject_GetBuf(args.bytes, &buf, Dee_BUFFER_FREADONLY))
 		goto err;
 	result = DeeInt_FromBytes(buf.bb_base,
 	                          buf.bb_size,
 	                          encode_little,
-	                          is_signed);
-	DeeObject_PutBuf(bytes, &buf, Dee_BUFFER_FREADONLY);
+	                          args._signed);
+	DeeObject_PutBuf(args.bytes, &buf, Dee_BUFFER_FREADONLY);
 	return result;
 err:
 	return NULL;
@@ -4580,7 +4609,7 @@ err:
 PRIVATE struct type_method tpconst int_class_methods[] = {
 	TYPE_KWMETHOD_F("frombytes", &int_frombytes,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(data:?DBytes,byteorder:?X2?Dstring?N=!N,signed=!f)->?.\n"
+	                "(" int_frombytes_params ")->?.\n"
 	                "#pbyteorder{The byteorder encoding used by the returned bytes. "
 	                /*       */ "One of $\"little\" (for little-endian), $\"big\" "
 	                /*       */ "(for big-endian) or ?N (for host-endian)}"
