@@ -2247,16 +2247,16 @@ again_check_for_interrupts:
 	if (self == &DeeThread_Main.ot_thread)
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	{
-		for (;;) {
-			uint8_t count;
+		uint8_t count;
+		while ((count = atomic_read(&keyboard_interrupt_counter)) != 0) {
 			DeeSignalObject *keyboard_interrupt;
-			if ((count = atomic_read(&keyboard_interrupt_counter)) == 0)
-				break;
-			if (!atomic_cmpxch_weak(&keyboard_interrupt_counter, count, count - 1))
-				continue;
 			keyboard_interrupt = DeeObject_MALLOC(DeeSignalObject);
 			if unlikely(!keyboard_interrupt)
 				goto err;
+			if (!atomic_cmpxch_weak(&keyboard_interrupt_counter, count, count - 1)) {
+				DeeObject_FREE(keyboard_interrupt);
+				continue;
+			}
 			DeeObject_Init(keyboard_interrupt, &DeeError_KeyboardInterrupt);
 			DeeError_ThrowInherited((DeeObject *)keyboard_interrupt);
 			goto err;
