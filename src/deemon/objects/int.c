@@ -224,7 +224,8 @@ Dee_intcache_clearall(size_t max_clear) {
 			--total_free;
 			while (total_free--)
 				chain_end = chain_end->fi_next;
-			set->fis_head      = chain_end->fi_next;
+			ASSERT(chain_end);
+			set->fis_head = chain_end->fi_next;
 			chain_end->fi_next = NULL;
 		}
 		ASSERT((set->fis_head != NULL) == (set->fis_size != 0));
@@ -948,7 +949,7 @@ DeeInt_GetSleb(/*Int*/ DeeObject *__restrict self,
 	src  = me->ob_digit;
 	if ((Dee_ssize_t)size < 0) {
 		/* Negative integer. */
-		size = (size_t) - (Dee_ssize_t)size;
+		size = (size_t)(-(Dee_ssize_t)size);
 		/* Special handling for writing the first byte. */
 		end      = src + size;
 		temp     = *src++;
@@ -2275,7 +2276,7 @@ DeeInt_PrintDecimal(DREF DeeIntObject *__restrict self, uint32_t flags,
 	size_a   = (size_t)self->ob_size;
 	negative = (Dee_ssize_t)size_a < 0;
 	if (negative)
-		size_a = (size_t) - (Dee_ssize_t)size_a;
+		size_a = (size_t)(-(Dee_ssize_t)size_a);
 	if unlikely(size_a > SSIZE_MAX / DIGIT_BITS) {
 		DeeError_Throwf(&DeeError_IntegerOverflow,
 		                "int too large to format");
@@ -2499,7 +2500,7 @@ do_print:
 				intlen  = 1;
 				goto do_print_prefix;
 			}
-			num_digits = (size_t) - (Dee_ssize_t)num_digits;
+			num_digits = (size_t)(-(Dee_ssize_t)num_digits);
 		}
 		bufsize = (num_digits * DIGIT_BITS) / dig_bits;
 		if (radix_and_flags & DEEINT_PRINT_FSEPS)
@@ -4399,7 +4400,7 @@ int_reqbits(DeeIntObject const *__restrict self, bool is_signed) {
 	if ((Dee_ssize_t)digit_count < 0) {
 		if unlikely(!is_signed)
 			goto err_underflow;
-		digit_count = (size_t) - (Dee_ssize_t)digit_count;
+		digit_count = (size_t)(-(Dee_ssize_t)digit_count);
 	}
 	while (digit_count && self->ob_digit[digit_count - 1] == 0)
 		--digit_count;

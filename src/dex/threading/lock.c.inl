@@ -928,15 +928,15 @@ INTERN DeeTypeObject LOCAL_DeeLock_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&LOCAL_lockapi_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_lockapi_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(LOCAL_DeeLockObject),
 #ifdef LOCAL_lockapi_init_kw
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&LOCAL_lockapi_init_kw
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&LOCAL_lockapi_init_kw
 #else /* LOCAL_lockapi_init_kw */
-				/* .tp_any_ctor_kw = */ (dfunptr_t)NULL
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL
 #endif /* !LOCAL_lockapi_init_kw */
 			}
 		},
@@ -1356,15 +1356,15 @@ INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&LOCAL_rwlockapi_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_rwlockapi_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(LOCAL_DeeRWLockObject),
 #ifdef LOCAL_rwlockapi_init_kw
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&LOCAL_rwlockapi_init_kw
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&LOCAL_rwlockapi_init_kw
 #else /* LOCAL_rwlockapi_init_kw */
-				/* .tp_any_ctor_kw = */ (dfunptr_t)NULL
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL
 #endif /* !LOCAL_rwlockapi_init_kw */
 			}
 		},
@@ -1626,10 +1626,10 @@ INTERN DeeTypeObject LOCAL_DeeRWLockReadLock_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&LOCAL_rwlockapi_readlock_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_rwlockapi_readlock_init,
 				TYPE_FIXED_ALLOCATOR(DeeGenericRWLockProxyObject)
 			}
 		},
@@ -1672,10 +1672,10 @@ INTERN DeeTypeObject LOCAL_DeeRWLockWriteLock_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&LOCAL_rwlockapi_writelock_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_rwlockapi_writelock_init,
 				TYPE_FIXED_ALLOCATOR(DeeGenericRWLockProxyObject)
 			}
 		},

@@ -535,9 +535,9 @@ once_ispending_get(DeeOnceObject *__restrict self) {
 	return_bool(Dee_once_ispending(&self->o_once));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 once_print(DeeOnceObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	dssize_t result;
+	Dee_ssize_t result;
 	DREF DeeObject *value;
 	switch (Dee_once_trybegin(&self->o_once)) {
 
@@ -578,9 +578,9 @@ once_print(DeeOnceObject *__restrict self, Dee_formatprinter_t printer, void *ar
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 once_printrepr(DeeOnceObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	dssize_t result;
+	Dee_ssize_t result;
 	DREF DeeObject *value;
 	switch (Dee_once_trybegin(&self->o_once)) {
 
@@ -719,12 +719,12 @@ INTERN DeeTypeObject DeeOnce_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&once_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&once_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&once_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&once_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&once_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&once_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&once_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&once_init,
 				TYPE_FIXED_ALLOCATOR_GC(DeeOnceObject),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&once_init_kw
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&once_init_kw
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&once_fini,
@@ -736,8 +736,8 @@ INTERN DeeTypeObject DeeOnce_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&once_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&once_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&once_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&once_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&once_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&once_visit,
 	/* .tp_gc            = */ &once_gc,

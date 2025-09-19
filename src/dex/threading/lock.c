@@ -683,10 +683,10 @@ INTERN DeeTypeObject DeeLock_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorCtor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeObject)
 			}
 		},
@@ -1236,10 +1236,10 @@ INTERN DeeTypeObject DeeRWLock_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorCtor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeObject)
 			}
 		},
@@ -1319,25 +1319,25 @@ PRIVATE struct type_member tpconst rwlock_proxy_members[] = {
 #define rwlock_writelock_visit   rwlock_proxy_visit
 #define rwlock_writelock_members rwlock_proxy_members
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rwlock_readlock_print(DeeGenericRWLockProxyObject *__restrict self,
                       Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<Shared Lock for %k>", self->grwl_lock);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rwlock_writelock_print(DeeGenericRWLockProxyObject *__restrict self,
                        Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<Exclusive Lock for %k>", self->grwl_lock);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rwlock_readlock_printrepr(DeeGenericRWLockProxyObject *__restrict self,
                           Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "%r.readlock", self->grwl_lock);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rwlock_writelock_printrepr(DeeGenericRWLockProxyObject *__restrict self,
                            Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "%r.writelock", self->grwl_lock);
@@ -1540,10 +1540,10 @@ INTERN DeeTypeObject DeeRWLockReadLock_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&rwlock_readlock_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&rwlock_readlock_init,
 				TYPE_FIXED_ALLOCATOR(DeeGenericRWLockProxyObject)
 			}
 		},
@@ -1555,8 +1555,8 @@ INTERN DeeTypeObject DeeRWLockReadLock_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_readlock_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_readlock_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_readlock_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_readlock_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rwlock_readlock_visit,
 	/* .tp_gc            = */ NULL,
@@ -1589,10 +1589,10 @@ INTERN DeeTypeObject DeeRWLockWriteLock_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&rwlock_writelock_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&rwlock_writelock_init,
 				TYPE_FIXED_ALLOCATOR(DeeGenericRWLockProxyObject)
 			}
 		},
@@ -1604,8 +1604,8 @@ INTERN DeeTypeObject DeeRWLockWriteLock_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_writelock_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_writelock_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_writelock_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rwlock_writelock_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rwlock_writelock_visit,
 	/* .tp_gc            = */ NULL,
@@ -1649,7 +1649,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 semaphore_printrepr(DeeSemaphoreObject *__restrict self,
                     Dee_formatprinter_t printer, void *arg) {
 	uintptr_t tickets = atomic_read(&self->sem_semaphore.se_tickets);
@@ -1841,10 +1841,10 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&semaphore_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&semaphore_init,
 				TYPE_FIXED_ALLOCATOR(DeeSemaphoreObject)
 			}
 		},
@@ -1857,7 +1857,7 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&semaphore_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&semaphore_printrepr
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
@@ -1914,7 +1914,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 event_printrepr(DeeEventObject *__restrict self,
                 Dee_formatprinter_t printer, void *arg) {
 	bool isset = Dee_event_get(&self->e_event);
@@ -2022,12 +2022,12 @@ INTERN DeeTypeObject DeeEvent_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeEventObject),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&event_init_kw
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&event_init_kw
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -2039,7 +2039,7 @@ INTERN DeeTypeObject DeeEvent_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&event_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&event_printrepr
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
@@ -2257,10 +2257,10 @@ lock_union_visit(LockUnion *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visitv(self->lu_elem, self->lu_size);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 lock_union_print(LockUnion *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	size_t i;
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	result = DeeFormat_PRINT(printer, arg, "<Lock-union for <");
 	if unlikely(result < 0)
 		goto done;
@@ -2276,10 +2276,10 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 lock_union_printrepr(LockUnion *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	size_t i;
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	result = DeeFormat_PRINT(printer, arg, "LockUnion({ ");
 	if unlikely(result < 0)
 		goto done;
@@ -2841,11 +2841,11 @@ INTERN DeeTypeObject DeeLockUnion_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&lock_union_init,
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&lock_union_init,
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&lock_union_fini,
@@ -2856,8 +2856,8 @@ INTERN DeeTypeObject DeeLockUnion_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&lock_union_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&lock_union_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&lock_union_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&lock_union_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&lock_union_visit,
 	/* .tp_gc            = */ NULL,

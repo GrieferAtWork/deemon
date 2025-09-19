@@ -70,10 +70,10 @@ DECL_BEGIN
 #endif /* NDEBUG */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
-asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+asm_invoke_operand_print(struct asm_invoke_operand const *__restrict self,
                          struct ascii_printer *__restrict printer) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	char const *raw_operand_string = NULL;
 	if (self->io_class & OPERAND_CLASS_FBRACKETFLAG) {
 		temp = ascii_printer_putc(printer, '[');
@@ -399,11 +399,11 @@ err:
 	return temp;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
-asm_invocation_print(struct asm_invocation *__restrict self,
-                     struct asm_mnemonic *__restrict instr,
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+asm_invocation_print(struct asm_invocation const *__restrict self,
+                     struct asm_mnemonic const *__restrict instr,
                      struct ascii_printer *__restrict printer) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	unsigned int i;
 	if (self->ai_flags & INVOKE_FPUSH) {
 		temp = ASCII_PRINTER_PRINT(printer, "push ");
@@ -481,8 +481,8 @@ err:
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-asm_invocation_tostring(struct asm_invocation *__restrict self,
-                        struct asm_mnemonic *__restrict instr) {
+asm_invocation_tostring(struct asm_invocation const *__restrict self,
+                        struct asm_mnemonic const *__restrict instr) {
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	if unlikely(asm_invocation_print(self, instr, &printer) < 0)
 		goto err;
@@ -496,8 +496,8 @@ err:
 
 
 /* @param: ao_flags: Set of `ASM_OVERLOAD_F*' */
-PRIVATE bool DFCALL
-compatible_operand(struct asm_invoke_operand   const *__restrict iop,
+PRIVATE WUNUSED NONNULL((1, 2)) bool DFCALL
+compatible_operand(struct asm_invoke_operand const *__restrict iop,
                    struct asm_overload_operand const *__restrict oop,
                    uint16_t ao_flags) {
 	tint_t imm_val;
@@ -784,9 +784,9 @@ PRIVATE struct reldesc const reldescs[ASM_OVERLOAD_FRELMSK + 1] = {
 
 
 INTERN WUNUSED NONNULL((1, 2)) int DFCALL
-uasm_invoke(struct asm_mnemonic *__restrict instr,
+uasm_invoke(struct asm_mnemonic const *__restrict instr,
             struct asm_invocation *__restrict invoc) {
-	struct asm_overload *iter, *end;
+	struct asm_overload const *iter, *end;
 	unsigned int i;
 	bool stackabs_translated = false;
 retry:
@@ -825,7 +825,8 @@ retry:
 
 		/* Match operands against each other. */
 		for (i = 0; i < iter->ao_opcount; ++i) {
-			if (!compatible_operand(&invoc->ai_ops[i], &iter->ao_ops[i],
+			if (!compatible_operand(&invoc->ai_ops[i],
+			                        &iter->ao_ops[i],
 			                        iter->ao_flags))
 				goto next_overload;
 		}
@@ -843,7 +844,7 @@ next_overload:
 		 * >> add top, #1
 		 * Translate to this when the previous stack-alignment was `#2'
 		 * >> add top, pop */
-		i                    = invoc->ai_opcount;
+		i = invoc->ai_opcount;
 		immediate_stackdepth = current_assembler.a_stackcur;
 		while (i) {
 			--i;
@@ -2046,7 +2047,7 @@ assembly_formatter_fini(struct assembly_formatter *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) /*ref*/ struct TPPString *DCALL
 assembly_formatter_format(struct assembly_formatter *__restrict self,
-                          struct TPPString *__restrict input) {
+                          struct TPPString const *__restrict input) {
 #define print(p, s)                                                   \
 	do {                                                              \
 		if unlikely(ascii_printer_print(&self->af_printer, p, s) < 0) \
@@ -2601,7 +2602,7 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-compile_operator(struct asm_operand *__restrict op, bool is_output) {
+compile_operator(struct asm_operand const *__restrict op, bool is_output) {
 	char const *format;
 	struct ast *expr = op->ao_expr;
 	ASSERT(op->ao_type);

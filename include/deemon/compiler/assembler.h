@@ -401,8 +401,8 @@ struct asm_invoke_operand {
 };
 
 /* Print a human-readable representation of `self' to `printer' */
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
-asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+asm_invoke_operand_print(struct asm_invoke_operand const *__restrict self,
                          struct ascii_printer *__restrict printer);
 
 #define OPERAND_CLASS_POP_DOTS       (OPERAND_CLASS_FDOTSFLAG | OPERAND_CLASS_POP) /* `pop...' */
@@ -468,13 +468,13 @@ struct asm_invocation {
 struct asm_mnemonic;
 
 /* Print a human-readable representation of `self' to `printer' */
-INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
-asm_invocation_print(struct asm_invocation *__restrict self,
-                     struct asm_mnemonic *__restrict instr,
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+asm_invocation_print(struct asm_invocation const *__restrict self,
+                     struct asm_mnemonic const *__restrict instr,
                      struct ascii_printer *__restrict printer);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-asm_invocation_tostring(struct asm_invocation *__restrict self,
-                        struct asm_mnemonic *__restrict instr);
+asm_invocation_tostring(struct asm_invocation const *__restrict self,
+                        struct asm_mnemonic const *__restrict instr);
 
 
 
@@ -590,7 +590,7 @@ INTDEF WUNUSED int32_t DFCALL uasm_parse_imm16(uint16_t features);
 /* Invoke a given `instr' using data from `invoc'.
  * NOTE: This function also sets the `CODE_FASSEMBLY' flag in the current base scope. */
 INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
-uasm_invoke(struct asm_mnemonic *__restrict instr,
+uasm_invoke(struct asm_mnemonic const *__restrict instr,
             struct asm_invocation *__restrict invoc);
 
 /* Check if the given `name' refers to a

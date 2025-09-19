@@ -536,12 +536,14 @@ DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
                __BYTE_TYPE__ *__restrict writer);
 
 /* Calculate the worst-case required memory for writing a given integer in LEB format. */
-#define DeeInt_GetSlebMaxSize(self)                                                     \
-	(((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size < 0                           \
-	 ? (((-((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size + 1) * DIGIT_BITS) / 7) \
-	 : (((((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size + 1) * DIGIT_BITS) / 7))
+#define DeeInt_GetSlebMaxSize(self) \
+	(((_DeeInt_GetAbsSize(self) + 1) * DIGIT_BITS) / 7)
 #define DeeInt_GetUlebMaxSize(self) \
 	((((size_t)((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size + 1) * DIGIT_BITS) / 7)
+#define _DeeInt_GetAbsSize(self)                                       \
+	(((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size < 0          \
+	 ? (size_t)(-((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size) \
+	 : (size_t)((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size)
 
 #define DeeInt_IsNeg(self)  (((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size < 0)
 #define DeeInt_IsZero(self) (((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size == 0)
