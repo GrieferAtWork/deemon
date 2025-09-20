@@ -3875,7 +3875,7 @@ PRIVATE struct type_math int_math = {
 	/* .tp_inplace_and = */ DEFIMPL(&default__inplace_and__with__and), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
 	/* .tp_inplace_or  = */ DEFIMPL(&default__inplace_or__with__or), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
 	/* .tp_inplace_xor = */ DEFIMPL(&default__inplace_xor__with__xor), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
-	/* .tp_inplace_pow = */ NULL  /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */,
+	/* .tp_inplace_pow = */ DEFIMPL(&default__inplace_pow__with__pow), /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
 };
 
 
