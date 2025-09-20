@@ -192,6 +192,7 @@ struct db_object {
 INTDEF WUNUSED NONNULL((1)) bool DCALL DB_TryLock(DB *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DB_Lock(DB *__restrict self);
 INTDEF NONNULL((1)) void DCALL DB_Unlock(DB *__restrict self);
+#define DB_WaitFor(self) Dee_shared_lock_waitfor(&(self)->db_dblock)
 #define DB_IsInterruptible(self, thread) (atomic_read(&(self)->db_thread) == (thread))
 
 /* Safely call `sqlite3_finalize(stmt)' */
@@ -290,38 +291,17 @@ struct query_object {
 	WEAKREF_SUPPORT                     /* [valid_if(Query_InUse(self))] Weak references */
 	DREF DB                  *q_db;     /* [ref_if(Query_InUse(self))][1..1][const] Associated database */
 	DREF DeeStringObject     *q_sql;    /* [ref_if(Query_InUse(self))][1..1][const] DeeStringObject that was used to compile this query */
-	WEAKREF(Row)              q_row;    /* [0..1][lock(READ(API), WRITE(q_lock && API))][valid_if(Query_InUse(self))] Cached row pointer (during `sqlite3_step()', if this weakref is still valid, this row is updated with copies of data from all columns) */
-	DREF RowFmt              *q_rowfmt; /* [valid_if(!WAS_DESTROYED(q_sql))][owned][0..1][lock(READ(ATOMIC), WRITE(q_lock && WRITE_ONCE))] Descriptor for how rows are formatted */
+	WEAKREF(Row)              q_row;    /* [0..1][lock(READ(API), WRITE(q_db->q_db && API))][valid_if(Query_InUse(self))] Cached row pointer (during `sqlite3_step()', if this weakref is still valid, this row is updated with copies of data from all columns) */
+	DREF RowFmt              *q_rowfmt; /* [valid_if(!WAS_DESTROYED(q_sql))][owned][0..1][lock(READ(ATOMIC), WRITE(q_db->q_db && WRITE_ONCE))] Descriptor for how rows are formatted */
 	sqlite3_stmt             *q_stmt;   /* [valid_if(!WAS_DESTROYED(q_sql))][owned][?..1][const]
 	                                     * Statement context. This only gets finalized when `q_sql' is destroyed */
 	size_t                    q_sql_utf8_nextstmt_offset; /* [const] Byte-offset into UTF-8 repr of `q_sql' to the start some other statement (or `0' if there is none) */
-#ifndef CONFIG_NO_THREADS
-	Dee_shared_lock_t         q_lock;   /* Lock to hold while interacting with (configuring/using) `q_stmt' */
-#endif /* !CONFIG_NO_THREADS */
 	TAILQ_ENTRY(query_object) q_unused; /* [0..1][lock(q_db->db_querycache_lock)][if(Query_InUse(self), [0..0])] Entry in list of unused queries. */
 };
-#define Query_TryLock(self)   Dee_shared_lock_tryacquire(&(self)->q_lock)
-#define Query_LockNoInt(self) Dee_shared_lock_acquire_noint(&(self)->q_lock)
-#define Query_Lock(self)      Dee_shared_lock_acquire(&(self)->q_lock)
-#define Query_Unlock(self)    Dee_shared_lock_release(&(self)->q_lock)
-#define Query_TryLockWithDB(self)                                \
-	(Query_TryLock(self)                                         \
-	 ? (DB_TryLock((self)->q_db) || (Query_Unlock(self), false)) \
-	 : false)
-#define Query_UnlockWithDB(self) (DB_Unlock((self)->q_db), Query_Unlock(self))
-LOCAL WUNUSED NONNULL((1)) int DCALL Query_LockWithDB(Query *__restrict self) {
-	int result;
-again:
-	result = Query_Lock(self);
-	if (likely(result == 0) && unlikely(!DB_TryLock(self->q_db))) {
-		Query_Unlock(self);
-		result = Dee_shared_lock_waitfor(&self->q_db->db_dblock);
-		if likely(result == 0)
-			goto again;
-	}
-	return result;
-}
-
+#define Query_TryLockDB(self) DB_TryLock((self)->q_db)
+#define Query_LockDB(self)    DB_Lock((self)->q_db)
+#define Query_UnlockDB(self)  DB_Unlock((self)->q_db)
+#define Query_WaitForDB(self) DB_WaitFor((self)->q_db)
 
 /* Common initialization for re-use after "ob_refcnt" was "0" */
 #define Query_InitCommon(self)              \
@@ -340,12 +320,11 @@ again:
 #define Query_Alloc() DeeObject_MALLOC(Query)
 
 /* First-time initialization */
-#define Query_InitOnce(self, db, sql)       \
-	(DeeObject_Init(self, &Query_Type),     \
-	 (self)->q_db  = (db),                  \
-	 (self)->q_sql = (sql),                 \
-	 Dee_shared_lock_init(&(self)->q_lock), \
-	 (self)->q_rowfmt = NULL,               \
+#define Query_InitOnce(self, db, sql)   \
+	(DeeObject_Init(self, &Query_Type), \
+	 (self)->q_db     = (db),           \
+	 (self)->q_sql    = (sql),          \
+	 (self)->q_rowfmt = NULL,           \
 	 Query_InitCommon(self))
 
 /* Last-time finalization (+ free) */
@@ -367,12 +346,12 @@ again:
 /* Return (and lazily allocate on first use) the RowFmt descriptor of this query. */
 INTDEF WUNUSED NONNULL((1)) RowFmt *DCALL Query_GetRowFmt(Query *__restrict self);
 
-/* Same as `Query_LockWithDB()', but ensure that `q_row' is unbound,
+/* Same as `Query_LockDB()', but ensure that `q_row' is unbound,
  * and any potential old row has been detached (given its own copy
  * of cell data)
  * @return: 0 : Success
  * @return: -1: Error */
-INTDEF WUNUSED NONNULL((1)) int DCALL Query_LockWithDBAndDetachRow(Query *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL Query_LockDBAndDetachRow(Query *__restrict self);
 
 /* Return a reference to the Row descriptor of a given Query.
  * When the first step hasn't been executed yet, the returned
@@ -474,7 +453,7 @@ struct row_object {
 	Dee_atomic_rwlock_t r_lock;   /* Lock for this row (needed to replace effective data
 	                               * with copy if still alive during `sqlite3_step()') */
 #endif /* !CONFIG_NO_THREADS */
-	DREF Query         *r_query;  /* [0..1][lock(r_lock && r_query->q_lock && r_query->q_db->db_dblock && CLEAR_ONCE)]
+	DREF Query         *r_query;  /* [0..1][lock(r_lock && r_query->q_db->db_dblock && CLEAR_ONCE)]
 	                               * Original query (set to "NULL" when `sqlite3_step()' is called on query) */
 	DREF RowFmt        *r_rowfmt; /* [0..1][if(r_query == NULL, [1..1])][lock(r_lock && WRITE_ONCE)]
 	                               * Data-layout of rows (always non-NULL when "r_query == NULL") */

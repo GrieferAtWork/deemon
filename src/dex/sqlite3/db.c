@@ -1100,8 +1100,8 @@ PRIVATE struct type_getset tpconst db_getsets[] = {
 	 * - "Schema" (value type of "Schemas") should then have another getset
 	 *   - "tables->?GTables", which is another {string: Table}
 	 * - "Table" (value type of "Tables") should then have another getset
-	 *   "rows->?GRows", which is another {int: Row} (where the "int" is
-	 *   the "_ROWID_" of rows)
+	 *   "rows->?GRows", which is another {int: Row} (where the "int" is the
+	 *   "_ROWID_" of rows) (XXX: this doesn't work for "WITHOUT ROWID" tables)
 	 */
 
 	TYPE_GETSET_AB("last_insert_rowid",

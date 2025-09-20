@@ -686,38 +686,6 @@ row_size_fast(Row *__restrict self) {
 	return (size_t)result;
 }
 
-/* Upgrade a read-lock to "self" with a full lock to "query"
- * @param: again: label to start over from scratch (called with no locks held)
- * @param: err:   label to jump to on error (called with no locks held)
- * @param: Row *self:    Row for which the caller current has a read-lock (this lock will be released)
- * @param: Query *query: Query that the caller wants a lock to (this lock will be acquired on success)
- */
-#define Row_ReplaceReadLockWithQueryLock(again, err, self, query) \
-	do {                                                          \
-		if (!Query_TryLock(query)) {                              \
-			Dee_Incref(query);                                    \
-			Row_LockEndRead(self);                                \
-			if unlikely(Query_Lock(query)) {                      \
-				Dee_Decref(query);                                \
-				goto err;                                         \
-			}                                                     \
-			if unlikely(!Row_LockTryRead(self)) {                 \
-				Query_Unlock(query);                              \
-				Dee_Decref(query);                                \
-				goto again;                                       \
-			}                                                     \
-			if unlikely((self)->r_query != query) {               \
-				Query_Unlock(query);                              \
-				Row_LockEndRead(self);                            \
-				Dee_Decref(query);                                \
-				goto again;                                       \
-			}                                                     \
-			Dee_DecrefNokill(query);                              \
-		}                                                         \
-		Row_LockEndRead(self);                                    \
-	}	__WHILE0
-
-
 PRIVATE WUNUSED NONNULL((1)) unsigned int DCALL
 row_indexof_string(Row *__restrict self, char const *column_name) {
 	unsigned int result;
@@ -748,31 +716,31 @@ err:
 
 
 /* Upgrade a read-lock to `self->r_lock' (which gets released)
- * into locks equivalent to `Query_LockWithDB()' */
-#define ROW_READUPGRADE_LOCK_QUERY_WITHDB_RETRY   1    /* Try again (lock to "self" was lost) */
-#define ROW_READUPGRADE_LOCK_QUERY_WITHDB_SUCCESS 0    /* Success */
-#define ROW_READUPGRADE_LOCK_QUERY_WITHDB_ERROR   (-1) /* Error was thrown (lock to "self" was lost) */
+ * into locks equivalent to `Query_LockDB()' */
+#define ROW_READUPGRADE_LOCKDB_SUCCESS 1    /* Success */
+#define ROW_READUPGRADE_LOCKDB_RETRY   0    /* Try again (lock to "self" was lost) */
+#define ROW_READUPGRADE_LOCKDB_ERROR   (-1) /* Error was thrown (lock to "self" was lost) */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-Row_ReadUpgradeLockQueryWithDB(Row *__restrict self) {
+Row_ReadUpgradeLockDB(Row *__restrict self) {
 	int result;
 	Query *query = self->r_query;
 	ASSERT(Row_LockReading(self));
 	ASSERT(query);
-	if likely(Query_TryLockWithDB(query)) {
+	if likely(Query_TryLockDB(query)) {
 		Row_LockEndRead(self);
 		ASSERT(self->r_query == query);
-		return ROW_READUPGRADE_LOCK_QUERY_WITHDB_SUCCESS;
+		return ROW_READUPGRADE_LOCKDB_SUCCESS;
 	}
 	Dee_Incref(query);
 	Row_LockEndRead(self);
-	result = Dee_shared_lock_waitfor(&query->q_lock);
+	result = Query_WaitForDB(query);
+#if ROW_READUPGRADE_LOCKDB_RETRY != 0
 	if likely(result == 0)
-		result = Dee_shared_lock_waitfor(&query->q_db->db_dblock);
-	if likely(result == 0)
-		result = ROW_READUPGRADE_LOCK_QUERY_WITHDB_RETRY;
+		result = ROW_READUPGRADE_LOCKDB_RETRY;
+#endif /* ROW_READUPGRADE_LOCKDB_RETRY != 0 */
 	Dee_Decref_unlikely(query);
-	ASSERT(result == ROW_READUPGRADE_LOCK_QUERY_WITHDB_RETRY ||
-	       result == ROW_READUPGRADE_LOCK_QUERY_WITHDB_ERROR);
+	ASSERT(result == ROW_READUPGRADE_LOCKDB_RETRY ||
+	       result == ROW_READUPGRADE_LOCKDB_ERROR);
 	return result;
 }
 
@@ -796,12 +764,12 @@ again:
 	}
 
 	/* Complicated (but likely) case: active row */
-	switch (Row_ReadUpgradeLockQueryWithDB(self)) {
-	case ROW_READUPGRADE_LOCK_QUERY_WITHDB_SUCCESS:
+	switch (Row_ReadUpgradeLockDB(self)) {
+	case ROW_READUPGRADE_LOCKDB_SUCCESS:
 		break;
-	case ROW_READUPGRADE_LOCK_QUERY_WITHDB_RETRY:
+	case ROW_READUPGRADE_LOCKDB_RETRY:
 		goto again;
-	case ROW_READUPGRADE_LOCK_QUERY_WITHDB_ERROR:
+	case ROW_READUPGRADE_LOCKDB_ERROR:
 		goto err;
 	default: __builtin_unreachable();
 	}
@@ -809,7 +777,7 @@ again:
 	/* Got a lock to the query -> read data from sqlite */
 	length = (size_t)sqlite3_column_count(query->q_stmt);
 	if unlikely(index >= length) {
-		Query_Unlock(query);
+		Query_UnlockDB(query);
 		goto err_oob;
 	}
 
@@ -818,13 +786,13 @@ again:
 
 	case SQLITE_INTEGER: {
 		int64_t value = sqlite3_column_int64(query->q_stmt, (int)index);
-		Query_UnlockWithDB(query);
+		Query_UnlockDB(query);
 		result = DeeInt_NewInt64(value);
 	}	break;
 
 	case SQLITE_FLOAT: {
 		double value = sqlite3_column_double(query->q_stmt, (int)index);
-		Query_UnlockWithDB(query);
+		Query_UnlockDB(query);
 		result = DeeFloat_New(value);
 	}	break;
 
@@ -834,7 +802,7 @@ again:
 		text = sqlite3_column_text(query->q_stmt, (int)index);
 		if unlikely(!text) {
 unlock_and_collect_length_memory:
-			Query_UnlockWithDB(query);
+			Query_UnlockDB(query);
 			if (!Dee_CollectMemoryc((data_length + 1), sizeof(char)))
 				goto err;
 			goto again;
@@ -843,7 +811,7 @@ unlock_and_collect_length_memory:
 		                              STRING_ERROR_FIGNORE);
 		if unlikely(!result)
 			goto unlock_and_collect_length_memory;
-		Query_UnlockWithDB(query);
+		Query_UnlockDB(query);
 	}	break;
 
 	case SQLITE_BLOB: {
@@ -857,11 +825,11 @@ unlock_and_collect_length_memory:
 		result = DeeBytes_TryNewBufferData(blob, data_length);
 		if unlikely(!result)
 			goto unlock_and_collect_length_memory;
-		Query_UnlockWithDB(query);
+		Query_UnlockDB(query);
 	}	break;
 
 	default:
-		Query_UnlockWithDB(query);
+		Query_UnlockDB(query);
 		result = DeeNone_NewRef();
 		break;
 	}
