@@ -1458,6 +1458,7 @@ again_find_running_thread:
 
 		if (!(state & Dee_THREAD_STATE_TERMINATED))
 			break;
+		ASSERT(LIST_ISBOUND(thread, t_global));
 		LIST_UNBIND(thread, t_global);
 	}
 	if (thread == NULL) {
@@ -1479,6 +1480,7 @@ again_find_running_thread:
 	if (!Dee_IncrefIfNotZero(thread)) {
 		ASSERTF(atomic_read(&thread->t_state) & Dee_THREAD_STATE_TERMINATED,
 		        "STARTED thread with 0 references, but no TERMINATED flag?");
+		ASSERT(LIST_ISBOUND(thread, t_global));
 		LIST_UNBIND(thread, t_global);
 		goto again_find_running_thread;
 	}
@@ -5039,18 +5041,21 @@ thread_collect_traceback(DeeThreadObject *__restrict self,
  *       to acquire a reference to. */
 PRIVATE void DCALL
 clear_frames(size_t length, struct code_frame *__restrict vector) {
-	size_t i;
 	for (; length; --length, ++vector) {
-		DeeCodeObject *code = vector->cf_func->fo_code;
+		DeeCodeObject *code;
+		ASSERT(vector->cf_func);
+		code = vector->cf_func->fo_code;
 		ASSERT(!vector->cf_prev);
 		ASSERT(!vector->cf_stack);
 		ASSERT(!vector->cf_stacksz);
 		ASSERT(!vector->cf_sp);
 		if (vector->cf_argv) {
+			size_t i;
 			for (i = 0; i < vector->cf_argc; ++i)
 				Dee_DecrefNokill(vector->cf_argv[i]);
 		}
 		if (vector->cf_frame) {
+			uint16_t i;
 			for (i = 0; i < code->co_localc; ++i)
 				Dee_XDecrefNokill(vector->cf_frame[i]);
 		}
