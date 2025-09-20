@@ -24,7 +24,7 @@
 
 #ifdef CONFIG_BUILDING_DEEMON
 
-/* Figure out of computed operators should be used */
+/* Figure out if computed operators should be used */
 #if defined(CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS) || 0 /*<<< change to "1" to quickly disable */
 #undef CONFIG_WITH_COMPUTED_DEFAULT_OPERATORS
 #undef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
