@@ -36,6 +36,13 @@
 #undef SQLITE_DEBUG
 /*#define SQLITE_ENABLE_MEMORY_MANAGEMENT*/
 
+/* Enable some lightweight/useful extensions */
+#define SQLITE_ENABLE_STMTVTAB
+#define SQLITE_ENABLE_FTS3
+#define SQLITE_ENABLE_FTS4
+#define SQLITE_ENABLE_FTS5
+
+
 /* Tell sqlite3 that we do our own locking (with blackjack & hookers)
  * Reason: The way that sqlite3 does locking, there is a situation where
  *         DeeThread_Wake() will be unable to interrupt certain threads:
