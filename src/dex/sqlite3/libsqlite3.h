@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/bytes.h>
+#include <deemon/error_types.h>
 #include <deemon/gc.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -523,14 +524,36 @@ dee_sqlite3_bind_params(DB *__restrict db, sqlite3_stmt *stmt,
 /************************************************************************/
 /* Error handling                                                       */
 /************************************************************************/
-#define ERR_SQL_THROWERROR_F_NORMAL        0x0000
-#define ERR_SQL_THROWERROR_F_ALLOW_RESTART 0x0001 /* Allow "0" to be returned to indicate that the operation should be retried */
-#define ERR_SQL_THROWERROR_F_UNLOCK_DB     0x0002 /* (only for `err_sql_throwerror_ex') The "db"
-                                                   * argument is non-NULL and **MUST** be unlocked,
-                                                   * no matter what will be returned. */
-INTDEF ATTR_COLD int DCALL err_sql_throwerror_ex(int errcode, unsigned int flags, DB *db, char const *sql);
-INTDEF ATTR_COLD int DCALL err_sql_throwerror(int errcode, unsigned int flags);
+
+/* Generic SQL error type. -- Only used for SQL-specific errors. If the
+ * error code returned by SQL can be explained using a more relevant
+ * `DeeError_*' type, that type of error is thrown instead. */
+typedef struct {
+	DeeSystemErrorObject  sqe_system;     /* Underlying system error (set to `sqlite3_system_errno()')
+	                                       * Underlying message is set to `sqlite3_errmsg()' / `sqlite3_errstr()' */
+	DREF DeeStringObject *sqe_sql;        /* [0..1][const] The failing SQL source code */
+	int                   sqe_sqloffutf8; /* [valid_if(sqe_sql != NULL)][const] Byte offset into utf8-repr of "sqe_sql"
+	                                       * where the error happened (when `sqlite3_error_offset()' would return `-1',
+	                                       * we set `sqe_sql' to `NULL' to indicate that this isn't a SQL parser problem). */
+	int                   sqe_ecode;      /* [const] SQLite error code (one of `') */
+} SQLError;
+
+INTDEF DeeTypeObject SQLError_Type;                /* extends DeeError_SystemError */
+INTDEF DeeTypeObject /**/ SQLSyntaxError_Type;     /* extends SQLError_Type */
+INTDEF DeeTypeObject /**/ SQLConstraintError_Type; /* extends SQLError_Type */
+
+/* TODO: Special class for [TODO: what else?] */
+
+
+/* Throw an error and possibly unlock the DB
+ * @return: 0 : try again
+ * @return: -1: Error was thrown */
+INTDEF ATTR_COLD WUNUSED int DCALL err_sql_throwerror(int errcode, unsigned int flags, DB *db, DeeStringObject *sql);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_multiple_statements(DeeStringObject *__restrict sql);
+#define ERR_SQL_THROWERROR_F_NORMAL    0x0000
+#define ERR_SQL_THROWERROR_F_UNLOCK_DB 0x0001 /* (only for `err_sql_throwerror') The "db"
+                                               * argument is non-NULL and **MUST** be unlocked,
+                                               * no matter what will be returned. */
 
 
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_index_out_of_bounds)(DeeObject *__restrict self, size_t index, size_t size);

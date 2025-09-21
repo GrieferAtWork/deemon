@@ -43,7 +43,7 @@ again:
 	result = sqlite3_initialize();
 	if likely(result == SQLITE_OK)
 		return 0;
-	result = err_sql_throwerror(result, ERR_SQL_THROWERROR_F_ALLOW_RESTART);
+	result = err_sql_throwerror(result, ERR_SQL_THROWERROR_F_NORMAL, NULL, NULL);
 	if (result == 0)
 		goto again;
 	return result;
@@ -123,6 +123,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Query", (DeeObject *)&Query_Type, MODSYM_FREADONLY },
 	{ "QueryIterator", (DeeObject *)&QueryIterator_Type, MODSYM_FREADONLY },
 	{ "Row", (DeeObject *)&Row_Type, MODSYM_FREADONLY },
+	{ "SQLError", (DeeObject *)&SQLError_Type, MODSYM_FREADONLY },
+	{ "SQLSyntaxError", (DeeObject *)&SQLSyntaxError_Type, MODSYM_FREADONLY },
+	{ "SQLConstraintError", (DeeObject *)&SQLConstraintError_Type, MODSYM_FREADONLY },
 
 	/* Internal types */
 	{ "_RowFmt", (DeeObject *)&RowFmt_Type, MODSYM_FREADONLY },

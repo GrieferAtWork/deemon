@@ -398,10 +398,7 @@ again_prepare:
 		                        SQLITE_PREPARE_PERSISTENT, /* Hint PERSISTENT because we cache the query */
 		                        &result->q_stmt, &sql_tail );
 		if unlikely(rc != SQLITE_OK) {
-			rc = err_sql_throwerror_ex(rc,
-			                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-			                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
-			                           self, sql_utf8);
+			rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_UNLOCK_DB, self, sql);
 			if (rc == 0)
 				goto again_prepare;
 			goto err_r;
@@ -645,6 +642,14 @@ PRIVATE int db_sqlite_progress_handler(void *UNUSED(ignored)) {
 	return DeeThread_WasInterrupted(thread);
 }
 
+PRIVATE WUNUSED int DCALL db_defconfig(sqlite3 *db) {
+	/* Turn foreign keys on by default (docs even state that
+	 * in the future, this may be the default, and personally
+	 * I believe that they should be used and not just no-ops) */
+	int rc = sqlite3_db_config(db, SQLITE_DBCONFIG_ENABLE_FKEY, 1, (int *)NULL);
+	return rc;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 db_init(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	int rc;
@@ -674,8 +679,10 @@ again_open:
 	                     SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE |
 	                     SQLITE_OPEN_EXRESCODE,
 	                     NULL);
+	if (rc == SQLITE_OK)
+		rc = db_defconfig(self->db_db);
 	if (rc != SQLITE_OK) {
-		rc = err_sql_throwerror_ex(rc, ERR_SQL_THROWERROR_F_ALLOW_RESTART,
+		rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_NORMAL,
 		                           self, NULL);
 		(void)sqlite3_close_v2(self->db_db);
 		if (rc == 0)
@@ -839,10 +846,7 @@ again:
 	} while (rc == SQLITE_ROW);
 	changes += (uint64_t)sqlite3_changes64(self->db_db) - changes_at_start;
 	if (rc != SQLITE_DONE && rc != SQLITE_OK) {
-		rc = err_sql_throwerror_ex(rc,
-		                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-		                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
-		                           self, NULL);
+		rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_UNLOCK_DB, self, NULL);
 		if (rc == 0)
 			goto again;
 		goto err;
@@ -887,8 +891,9 @@ err:
 PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 db_exec(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF Query *query0;
-	DeeObject *sql, *params = Dee_EmptyTuple;
-	char const *utf8_sql;
+	DeeStringObject *sql;
+	DeeObject *params = Dee_EmptyTuple;
+	char const *utf8_sql, *utf8_sql_orig;
 	size_t offset_of_next_query;
 	Dee_ssize_t bind_status;
 	int rc;
@@ -896,10 +901,11 @@ db_exec(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	_DeeArg_Unpack1Or2(err, argc, argv, "exec", &sql, &params);
 	if (DeeObject_AssertTypeExact(sql, &DeeString_Type))
 		goto err;
-	utf8_sql = DeeString_AsUtf8(sql);
+	utf8_sql = DeeString_AsUtf8((DeeObject *)sql);
 	if unlikely(!utf8_sql)
 		goto err;
-	query0 = DB_NewQuery(self, (DeeStringObject *)sql, &offset_of_next_query);
+	utf8_sql_orig = utf8_sql;
+	query0 = DB_NewQuery(self, sql, &offset_of_next_query);
 	if unlikely(!query0)
 		goto err;
 	if likely(query0 != DB_NEWQUERY_NOQUERY) {
@@ -937,10 +943,21 @@ again_prepare:
 		                        (int)utf8_sql_length,
 		                        &stmt, &sql_tail);
 		if unlikely(rc != SQLITE_OK) {
-			rc = err_sql_throwerror_ex(rc,
-			                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-			                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
-			                           self, utf8_sql);
+			if (utf8_sql == utf8_sql_orig) {
+				rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_UNLOCK_DB, self, sql);
+			} else {
+				DREF DeeStringObject *sql_rem;
+				sql_rem = (DREF DeeStringObject *)DeeString_TryNewUtf8(utf8_sql, utf8_sql_length,
+				                                                       STRING_ERROR_FIGNORE);
+				if unlikely(!sql_rem) {
+					DB_Unlock(self);
+					if (Dee_CollectMemory(utf8_sql_length))
+						goto again_prepare;
+					goto err;
+				}
+				rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_UNLOCK_DB, self, sql_rem);
+				Dee_Decref_unlikely(sql_rem);
+			}
 			if (rc == 0)
 				goto again_prepare;
 			goto err;

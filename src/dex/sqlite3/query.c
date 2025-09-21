@@ -639,10 +639,7 @@ again_with_row:
 			Row_Free(result);
 			return (DREF Row *)ITER_DONE;
 		}
-		rc = err_sql_throwerror_ex(rc,
-		                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-		                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
-		                           self->q_db, NULL);
+		rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_UNLOCK_DB, self->q_db, NULL);
 		if unlikely(rc)
 			goto err_r;
 		goto again_with_row;
@@ -688,10 +685,7 @@ again:
 	} while (rc == SQLITE_ROW);
 	changes += (uint64_t)sqlite3_changes64(db->db_db) - changes_at_start;
 	if (rc != SQLITE_DONE && rc != SQLITE_OK) {
-		rc = err_sql_throwerror_ex(rc,
-		                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-		                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
-		                           db, NULL);
+		rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_UNLOCK_DB, db, NULL);
 		if (rc == 0)
 			goto again;
 		goto err;
@@ -721,10 +715,7 @@ again:
 			break;
 	} while (++result < count);
 	if (rc != SQLITE_DONE && rc != SQLITE_OK) {
-		rc = err_sql_throwerror_ex(rc,
-		                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-		                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
-		                           db, NULL);
+		rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_UNLOCK_DB, db, NULL);
 		if (rc == 0)
 			goto again;
 		goto err;

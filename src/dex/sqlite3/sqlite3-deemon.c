@@ -88,9 +88,7 @@ again:
 	DB_Unlock(db);
 	return 0;
 err_rc:
-	rc = err_sql_throwerror_ex(rc,
-	                           ERR_SQL_THROWERROR_F_ALLOW_RESTART | ERR_SQL_THROWERROR_F_UNLOCK_DB,
-	                           db, NULL);
+	rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_UNLOCK_DB, db, NULL);
 	if (rc == 0)
 		goto again;
 	return rc;
@@ -136,10 +134,7 @@ again:
 	DB_Unlock(db);
 	return 0;
 err_rc:
-	rc = err_sql_throwerror_ex(rc,
-	                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-	                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
-	                           db, NULL);
+	rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_UNLOCK_DB, db, NULL);
 	if (rc == 0)
 		goto again;
 	return rc;
@@ -214,10 +209,7 @@ again:
 	DB_Unlock(db);
 	return 0;
 err_rc:
-	rc = err_sql_throwerror_ex(rc,
-	                           ERR_SQL_THROWERROR_F_ALLOW_RESTART |
-	                           ERR_SQL_THROWERROR_F_UNLOCK_DB,
-	                           db, NULL);
+	rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_UNLOCK_DB, db, NULL);
 	if (rc == 0)
 		goto again;
 	return rc;
@@ -273,11 +265,8 @@ dee_sqlite3_bind_params_named(void *arg, DeeObject *key, DeeObject *value) {
 	 *       doesn't need to lock the database, so we can call it would the
 	 *       need of locking the DB, and then duplicating the string! */
 	param_index = sqlite3_bind_parameter_index__without_prefix(data->sbpnd_stmt, utf8_name);
-	if unlikely(param_index == 0) {
-		return DeeError_Throwf(&DeeError_ValueError,
-		                       "SQL query param %q not found",
-		                       utf8_name);
-	}
+	if unlikely(param_index == 0)
+		return 0; /* Ignore parameter (may be used by a subsequent query) */
 	return dee_sqlite3_bind_object(data->sbpnd_db, data->sbpnd_stmt,
 	                               param_index, value);
 err:

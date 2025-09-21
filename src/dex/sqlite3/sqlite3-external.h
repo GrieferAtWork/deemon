@@ -33,6 +33,7 @@
 #define SQLITE_OMIT_AUTOINIT
 #define SQLITE_OMIT_DEPRECATED
 #define SQLITE_UNTESTABLE
+#define SQLITE_OMIT_SHARED_CACHE /* as per https://sqlite.org/sharedcache.html#dontuse */
 #undef SQLITE_DEBUG
 /*#define SQLITE_ENABLE_MEMORY_MANAGEMENT*/
 
