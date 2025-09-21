@@ -1022,7 +1022,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 db_set_last_insert_rowid_f(DB *self, uint64_t rowid) {
 	int result = DB_Lock(self);
 	if likely(result == 0) {
