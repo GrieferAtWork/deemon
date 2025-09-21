@@ -1582,13 +1582,13 @@ PRIVATE ATTR_THREAD DREF DeeThreadObject *thread_self_tls = NULL;
 #ifdef thread_self_tls_USE_TlsAlloc
 PRIVATE DWORD thread_self_tls;
 
-#ifdef __i386__
+#if defined(__i386__) && !defined(__x86_64__)
 /* Considering how often we need to read this TLS, here's
  * an inline implementation that does the same.
  * Microsoft doesn't guaranty that this will work forever, but
  * I don't see a reason why this should ever break short of them
  * intentionally breaking it so only their stuff can continue to
- * work with whatever offsets they choose to go for them.
+ * work with whatever offsets they choose to go for then.
  * https://en.wikipedia.org/wiki/Win32_Thread_Information_Block */
 #ifdef _MSC_VER
 #define thread_tls_get() thread_tls_get()
@@ -1626,7 +1626,7 @@ FORCELOCAL void(thread_tls_set)(void *value) {
 	        , "r" (value));
 }
 #endif /* ... */
-#endif /* __i386__ */
+#endif /* __i386__ && !__x86_64__ */
 
 #ifndef thread_tls_get
 #define thread_tls_get()  (DeeThreadObject *)TlsGetValue(thread_self_tls)
@@ -1667,7 +1667,8 @@ DeeThreadObject *DCALL DeeThread_Self(void) {
 	DBG_ALIGNMENT_DISABLE();
 	result = thread_tls_get();
 	DBG_ALIGNMENT_ENABLE();
-	ASSERTF(result, "Your thread is not affiliated with deemon. You have to call `DeeThread_Accede()' first");
+	ASSERTF(result, "Your thread is not affiliated with deemon. "
+	                "You have to call `DeeThread_Accede()' first");
 	return result;
 #endif /* !thread_self_tls_USE_DeeThread_Main */
 }
