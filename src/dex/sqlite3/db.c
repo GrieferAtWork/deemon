@@ -804,13 +804,12 @@ again:
 
 	/* Also try to invoke `sqlite3_db_release_memory()' */
 	if (!result) {
-		sqlite3_mutex *mutex = sqlite3_db_mutex(self->db_db);
-		if (sqlite3_mutex_try(mutex) == SQLITE_OK) {
+		if (DB_TryLock(self)) {
 			/* Sadly, this function doesn't return if it managed to free
 			 * something, so to prevent infinite loops, never return true
 			 * at this point... */
 			(void)sqlite3_db_release_memory(self->db_db);
-			(void)sqlite3_mutex_leave(mutex);
+			DB_Unlock(self);
 		}
 #ifdef SQLITE_ENABLE_MEMORY_MANAGEMENT
 		if (sqlite3_release_memory(INT_MAX) > 0)
