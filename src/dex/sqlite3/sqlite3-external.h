@@ -26,14 +26,16 @@
 #include <hybrid/typecore.h>
 
 /* Configure sqlite */
-#define SQLITE_EXTERN INTDEF
-#define SQLITE_API    INTERN
-#define SQLITE_OMIT_COMPILEOPTION_DIAGS
-#define SQLITE_OMIT_LOAD_EXTENSION
-#define SQLITE_OMIT_AUTOINIT
-#define SQLITE_OMIT_DEPRECATED
-#define SQLITE_UNTESTABLE
-#define SQLITE_OMIT_SHARED_CACHE /* as per https://sqlite.org/sharedcache.html#dontuse */
+#define SQLITE_EXTERN                   INTDEF
+#define SQLITE_API                      INTERN
+#define SQLITE_OMIT_COMPILEOPTION_DIAGS   /* Don't need APIs to query compile options */
+#define SQLITE_OMIT_LOAD_EXTENSION        /* We never care about extension loading */
+#define SQLITE_OMIT_AUTOINIT              /* We do our own initialization */
+#define SQLITE_OMIT_DEPRECATED            /* Don't need deprecated APIs */
+#define SQLITE_UNTESTABLE                 /* Omit code used by sqlite's built-in self-test */
+#define SQLITE_OMIT_SHARED_CACHE          /* recommended: https://sqlite.org/sharedcache.html#dontuse */
+#define SQLITE_LIKE_DOESNT_MATCH_BLOBS    /* recommended: https://sqlite.org/compile.html#like_doesnt_match_blobs */
+#define SQLITE_DQS                      0 /* recommended: https://sqlite.org/compile.html#dqs */
 #undef SQLITE_DEBUG
 /*#define SQLITE_ENABLE_MEMORY_MANAGEMENT*/
 
