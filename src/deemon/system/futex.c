@@ -851,12 +851,15 @@ futex_controller_wakeall(struct futex_controller *__restrict self) {
 	(void)cnd_broadcast(&self->fc_cond);
 	(void)mtx_unlock(&self->fc_mutx);
 #elif defined(DeeFutex_USE_sem_t)
-	size_t n_threads;
-	n_threads = atomic_read(&self->fc_n_threads);
+	size_t n_threads = atomic_read(&self->fc_n_threads);
+#ifdef CONFIG_HAVE_sem_post_multiple
+	(void)sem_post_multiple(&self->fc_sem, n_threads);
+#else /* CONFIG_HAVE_sem_post_multiple */
 	while (n_threads > 0) {
 		(void)sem_post(&self->fc_sem);
 		--n_threads;
 	}
+#endif /* !CONFIG_HAVE_sem_post_multiple */
 #endif /* ... */
 }
 

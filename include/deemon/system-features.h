@@ -12083,6 +12083,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define pthread_unsuspend_np pthread_continue
 #endif /* pthread_unsuspend_np = pthread_continue */
 
+#if !defined(CONFIG_HAVE_sem_post) && defined(CONFIG_HAVE_sem_post_multiple)
+#endif
+#if defined(CONFIG_HAVE_sem_post_multiple) && !defined(CONFIG_HAVE_sem_post)
+#define CONFIG_HAVE_sem_post
+#undef sem_post
+#define sem_post(sem) sem_post_multiple(sem, 1)
+#endif /* sem_post = sem_post_multiple */
+
 /* We'd need both suspend() and continue() functions (they only come as pairs!) */
 #if ((defined(CONFIG_HAVE_pthread_continue) && !defined(CONFIG_HAVE_pthread_suspend)) || \
      (!defined(CONFIG_HAVE_pthread_continue) && defined(CONFIG_HAVE_pthread_suspend)))
