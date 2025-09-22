@@ -119,7 +119,9 @@
 #define DEE_VERSION_COMPILER 200
 #define DEE_VERSION_REVISION 0
 
-#include <hybrid/compiler.h>
+#include <hybrid/compiler.h> /* TODO: Get rid of this include (<__stdinc.h> is fine, but this one
+                              *       clobbers too much of the global namespace and can break compat
+                              *       with 3rd party code that uses identifiers defined here) */
 
 #include <hybrid/host.h>
 #include <hybrid/typecore.h> /* __SSIZE_TYPE__ */

@@ -1225,7 +1225,7 @@ err:
 
 
 
-PUBLIC WUNUSED DREF /*Module*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_NewString(/*utf-8*/ char const *__restrict name, size_t namelen) {
 	DREF DeeObject *name_object, *result;
 	name_object = DeeString_NewUtf8(name,
@@ -1241,7 +1241,7 @@ err:
 }
 
 /* Create a new module object that has yet to be initialized or loaded. */
-PUBLIC WUNUSED DREF /*Module*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_New(/*String*/ DeeObject *__restrict name) {
 	DeeModuleObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);

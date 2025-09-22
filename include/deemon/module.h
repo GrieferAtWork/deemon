@@ -271,8 +271,8 @@ struct Dee_module_symbol {
 #define Dee_MODULE_SYMBOL_GETDOCSTR(x)  ((x)->ss_doc)
 #define Dee_MODULE_SYMBOL_GETDOCLEN(x)  (((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str)) : strlen((x)->ss_doc))
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED DREF struct Dee_string_object *DCALL module_symbol_getnameobj(struct Dee_module_symbol *__restrict self);
-INTDEF WUNUSED DREF struct Dee_string_object *DCALL module_symbol_getdocobj(struct Dee_module_symbol *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF struct Dee_string_object *DCALL module_symbol_getnameobj(struct Dee_module_symbol *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF struct Dee_string_object *DCALL module_symbol_getdocobj(struct Dee_module_symbol *__restrict self);
 #else /* CONFIG_BUILDING_DEEMON */
 #define Dee_module_symbol_getnameobj(x)   ((DeeStringObject *)(((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str)) : DeeString_NewWithHash((x)->ss_name, (x)->ss_hash)))
 #define Dee_module_symbol_getdocobj(x)    ((DeeStringObject *)(((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str)) : DeeString_NewUtf8((x)->ss_doc, strlen((x)->ss_doc), Dee_STRING_ERROR_FIGNORE)))
@@ -440,9 +440,9 @@ INTDEF struct Dee_static_module_struct DeeModule_Empty;
 
 
 /* Create a new module object that has yet to be initialized or loaded. */
-DFUNDEF WUNUSED DREF /*Module*/ DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_New(/*String*/ DeeObject *__restrict name);
-DFUNDEF WUNUSED DREF /*Module*/ DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_NewString(/*utf-8*/ char const *__restrict name, size_t namelen);
 
 /* Returns the name of the given module, which is either the module's

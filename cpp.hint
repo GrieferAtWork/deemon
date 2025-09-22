@@ -1614,3 +1614,13 @@
 #define LOCAL_seq_docompare__(x) seq_docompare__##x
 #define LOCAL_NONNULL
 #define LOCAL_MAYBE_PUBLIC
+
+#define SQLITE_EXTERN extern
+#define SQLITE_API
+#define SQLITE_DEPRECATED
+#define SQLITE_EXPERIMENTAL
+#define SQLITE_CDECL
+#define SQLITE_APICALL
+#define SQLITE_STDCALL
+#define SQLITE_CALLBACK
+#define SQLITE_SYSAPI

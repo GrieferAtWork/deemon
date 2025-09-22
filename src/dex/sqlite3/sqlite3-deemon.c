@@ -22,7 +22,6 @@
 #define CONFIG_BUILDING_LIBSQLITE3
 #define DEE_SOURCE
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>

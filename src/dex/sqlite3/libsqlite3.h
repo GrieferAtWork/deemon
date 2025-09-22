@@ -32,7 +32,6 @@
 #include <deemon/types.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
-#include <deemon/util/rlock.h>
 
 #include <hybrid/sequence/list.h>
 

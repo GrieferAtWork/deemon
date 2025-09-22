@@ -2756,9 +2756,10 @@ PUBLIC WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 Dee_tuple_builder_appenditems(/*struct Dee_tuple_builder*/ void *self, DeeObject *items) {
 	struct Dee_tuple_builder *me = (struct Dee_tuple_builder *)self;
 	size_t hint = DeeObject_SizeFast(items);
-	if (hint != (size_t)-1)
+	if (hint != (size_t)-1) {
 		Dee_tuple_builder_reserve(me, hint);
-	/* TODO: Use tp_asvector. */
+		/* TODO: Use tp_asvector. */
+	}
 	return DeeObject_Foreach(items, &Dee_tuple_builder_append, me);
 }
 

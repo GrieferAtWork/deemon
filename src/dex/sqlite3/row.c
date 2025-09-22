@@ -34,7 +34,6 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/util/lock.h>
 
 #include <stddef.h>
 #include <stdint.h>
