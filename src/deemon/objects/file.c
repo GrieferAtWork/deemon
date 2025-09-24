@@ -1677,7 +1677,7 @@ PRIVATE WUNUSED int DCALL
 file_std_isbound(unsigned int id) {
 	DeeObject *result;
 	ASSERT(id < DEE_STDCNT);
-	result = atomic_read_with_atomic_rwlock(&dee_std[id], &dee_std_lock);
+	result = Dee_atomic_read_with_atomic_rwlock(&dee_std[id], &dee_std_lock);
 	return Dee_BOUND_FROMBOOL(result != NULL);
 }
 

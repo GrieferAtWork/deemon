@@ -146,7 +146,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 * >>      private final member _keys: {Object: int};
 	 * >>      private final member _present: Bitset;
 	 * >>      this(keys: {Object...}) {
-	 * >>          _keys = Dict.Frozen(for (local i, key: ) (key, i));
+	 * >>          _keys = Mapping.frozen(for (local i, key: Sequence.enumerate(keys)) (key, i));
 	 * >>          _present = Bitset(#_keys);
 	 * >>      }
 	 * >>      operator contains(ob) {
@@ -162,7 +162,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 * >>      private final member _keys: {Object: int};
 	 * >>      private final member _present: FixedList;
 	 * >>      this(keys: {Object...}) {
-	 * >>          _keys = Dict.Frozen(for (local i, key: ) (key, i));
+	 * >>          _keys = Mapping.frozen(for (local i, key: Sequence.enumerate(keys)) (key, i));
 	 * >>          _present = FixedList(#_keys);
 	 * >>      }
 	 * >>      operator [] (key) {

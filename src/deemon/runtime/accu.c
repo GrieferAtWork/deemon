@@ -88,7 +88,11 @@ Dee_accu_fini(struct Dee_accu *__restrict self) {
 }
 
 /* Pack the accumulator and return its final result as an object.
- * Returns `NULL' if an error was thrown. */
+ * This function may only be called once, as it does an implicit
+ * `Dee_accu_fini()'. Returns `NULL' if an error was thrown.
+ *
+ * Hint: if you want `self' to remain valid, you can just re-init it
+ *       after the call using `Dee_accu_init_with_first_inherited()' */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_accu_pack(struct Dee_accu *__restrict self) {
 	switch (self->acu_mode) {

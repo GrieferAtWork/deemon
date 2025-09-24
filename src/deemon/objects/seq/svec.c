@@ -364,7 +364,7 @@ rvec_bounditem_index(RefVector *self, size_t index) {
 	if unlikely(index >= self->rv_length)
 		return Dee_BOUND_MISSING;
 	value = RefVector_IsWritable(self)
-	        ? atomic_read_with_atomic_rwlock(&self->rv_vector[index], self->rv_plock)
+	        ? Dee_atomic_read_with_atomic_rwlock(&self->rv_vector[index], self->rv_plock)
 	        : self->rv_vector[index];
 	return Dee_BOUND_FROMBOOL(value != NULL);
 }

@@ -938,7 +938,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 frame_bound_frame(Frame *__restrict self) {
-	struct code_frame *frame = atomic_read_with_atomic_rwlock(&self->f_frame, &self->f_lock);
+	struct code_frame *frame;
+	frame = Dee_atomic_read_with_atomic_rwlock(&self->f_frame,
+	                                           &self->f_lock);
 	return Dee_BOUND_FROMBOOL(frame != NULL);
 }
 

@@ -678,14 +678,6 @@ DECL_END
 	}	__WHILE1
 #endif /* !CONFIG_NO_THREADS */
 
-#ifdef DEE_SOURCE
-#undef atomic_read_with_atomic_lock
-#undef atomic_read_with_atomic_rwlock
-#define atomic_read_with_atomic_lock(p, self)   Dee_atomic_read_with_atomic_lock(p, self)
-#define atomic_read_with_atomic_rwlock(p, self) Dee_atomic_read_with_atomic_rwlock(p, self)
-#endif /* DEE_SOURCE */
-
-
 /* Helpers to (safely) acquire multiple atomic [rw]locks at the same time. */
 #define Dee_atomic_lock_acquire_2(a, b)                                                                     \
 	DeeLock_Acquire2(Dee_atomic_lock_acquire(a), Dee_atomic_lock_tryacquire(a), Dee_atomic_lock_release(a), \

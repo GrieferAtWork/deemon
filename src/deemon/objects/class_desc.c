@@ -2540,8 +2540,8 @@ ot_bounditem_index(ObjectTable *__restrict self, size_t index) {
 	DeeObject *value;
 	if unlikely(index >= self->ot_size)
 		return Dee_BOUND_MISSING;
-	value = atomic_read_with_atomic_rwlock(&self->ot_desc->id_vtab[index],
-	                                       &self->ot_desc->id_lock);
+	value = Dee_atomic_read_with_atomic_rwlock(&self->ot_desc->id_vtab[index],
+	                                           &self->ot_desc->id_lock);
 	return Dee_BOUND_FROMBOOL(value);
 }
 
@@ -4257,8 +4257,8 @@ DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
 		return Dee_BOUND_ERR;
 	} else {
 		/* Simply return the attribute as-is. */
-		value = atomic_read_with_atomic_rwlock(&self->id_vtab[attr->ca_addr],
-		                                       &self->id_lock);
+		value = Dee_atomic_read_with_atomic_rwlock(&self->id_vtab[attr->ca_addr],
+		                                           &self->id_lock);
 		return value != NULL;
 	}
 unbound:
@@ -4921,8 +4921,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 	desc = DeeClass_DESC(tp_self);
 	ASSERT(addr < desc->cd_desc->cd_imemb_size);
 	inst  = DeeInstance_DESC(desc, self);
-	value = atomic_read_with_atomic_rwlock(&inst->id_vtab[addr],
-	                                       &inst->id_lock);
+	value = Dee_atomic_read_with_atomic_rwlock(&inst->id_vtab[addr],
+	                                           &inst->id_lock);
 	return value != NULL;
 }
 

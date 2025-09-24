@@ -522,7 +522,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_sync(Reader *__restrict self) {
-	if unlikely(!atomic_read_with_atomic_rwlock(&self->r_owner, &self->r_lock)) {
+	if unlikely(!Dee_atomic_read_with_atomic_rwlock(&self->r_owner, &self->r_lock)) {
 		return err_file_closed();
 	}
 	return 0;
@@ -1166,8 +1166,8 @@ writer_size(Writer *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("size", params: "");]]]*/
 	_DeeArg_Unpack0(err, argc, argv, "size");
 /*[[[end]]]*/
-	result = atomic_read_with_atomic_rwlock(&self->w_printer.up_length,
-	                                        &self->w_lock);
+	result = Dee_atomic_read_with_atomic_rwlock(&self->w_printer.up_length,
+	                                            &self->w_lock);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;

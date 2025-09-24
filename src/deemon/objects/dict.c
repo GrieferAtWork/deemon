@@ -3503,7 +3503,7 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict___hidxio__(Dict *__restrict self) {
-	size_t valloc = atomic_read_with_atomic_rwlock(&self->d_valloc, &self->d_lock);
+	size_t valloc = Dee_atomic_read_with_atomic_rwlock(&self->d_valloc, &self->d_lock);
 	shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(valloc);
 	return DeeInt_NEWU(hidxio);
 }
