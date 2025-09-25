@@ -1780,6 +1780,7 @@ PRIVATE WUNUSED int DCALL
 operation_mode_printpp(int argc, char **argv) {
 	if (!TPP_INITIALIZE())
 		goto err_nofin;
+	parser_errors_init(&current_parser_errors);
 	TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_WANTSPACE |
 	                              TPPLEXER_FLAG_WANTLF |
 	                              TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA |
@@ -2369,6 +2370,7 @@ dformat_source_files(char *filename,
 	DREF DeeFileObject *filestream;
 	if (!TPP_INITIALIZE())
 		goto err_nofin;
+	parser_errors_init(&current_parser_errors);
 	/* Configure the lexer for what we have in mind. */
 	TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_WANTCOMMENTS |
 #ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
