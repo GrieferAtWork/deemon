@@ -3511,11 +3511,11 @@ public:
 		args[2] = value;
 		return inherit(DeeObject_CallAttrStringHash(this, "__setrange__", _Dee_HashSelectC(0x7f9874f9, 0x9da9fdb9a7e37ce8), 3, args));
 	}
-	WUNUSED Ref<Object> (__iter__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__iter__", _Dee_HashSelectC(0x4ae49b3, 0x29df7f8a609cead7), 0, NULL));
+	WUNUSED Ref<Object> (__iterself__)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "__iterself__", _Dee_HashSelectC(0x4daaaed1, 0x5517f97b342fe2c1), 0, NULL));
 	}
-	WUNUSED Ref<Object> (__next__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__next__", _Dee_HashSelectC(0xa1934f1e, 0xe3997be8198920dd), 0, NULL));
+	WUNUSED Ref<Object> (__iternext__)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "__iternext__", _Dee_HashSelectC(0x29de3af1, 0xa4832d636bd81d42), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__getattr__)(DeeObject *name) {
 		DeeObject *args[1];
@@ -3569,12 +3569,6 @@ public:
 	}
 	WUNUSED Ref<string> (__format__)(char const *format) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "__format__", _Dee_HashSelectC(0xb59a1ae2, 0xdf14ed3788cde344), "s", format));
-	}
-	WUNUSED Ref<Object> (__iterself__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__iterself__", _Dee_HashSelectC(0x4daaaed1, 0x5517f97b342fe2c1), 0, NULL));
-	}
-	WUNUSED Ref<Object> (__iternext__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__iternext__", _Dee_HashSelectC(0x29de3af1, 0xa4832d636bd81d42), 0, NULL));
 	}
 	WUNUSED Ref<Object> (__move__)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "__move__", _Dee_HashSelectC(0xa04fc316, 0x9e97bf092c9c90d2), 0, NULL));

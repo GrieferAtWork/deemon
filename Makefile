@@ -142,3 +142,28 @@ method-hints:
 computed-operators:
 	$(DEEMON) util/scripts/computed-operators.dee
 .PHONY: computed-operators
+
+cxx-generated:
+	$(DEEMON) -F -Wno-user \
+		include/deemon/cxx/bool.h \
+		include/deemon/cxx/bytes.h \
+		include/deemon/cxx/callable.h \
+		include/deemon/cxx/cell.h \
+		include/deemon/cxx/dict.h \
+		include/deemon/cxx/file.h \
+		include/deemon/cxx/float.h \
+		include/deemon/cxx/function.h \
+		include/deemon/cxx/hashset.h \
+		include/deemon/cxx/int.h \
+		include/deemon/cxx/iterator.h \
+		include/deemon/cxx/list.h \
+		include/deemon/cxx/mapping.h \
+		include/deemon/cxx/none.h \
+		include/deemon/cxx/numeric.h \
+		include/deemon/cxx/object.h \
+		include/deemon/cxx/sequence.h \
+		include/deemon/cxx/set.h \
+		include/deemon/cxx/string.h \
+		include/deemon/cxx/tuple.h \
+		include/deemon/cxx/type.h
+.PHONY: cxx-generated

@@ -348,8 +348,11 @@ public:
 		args[0] = ch;
 		return inherit(DeeObject_CallAttrStringHash(this, "ungetutf8", _Dee_HashSelectC(0xa3df015d, 0x478925f9320a9ed8), 1, args));
 	}
-	WUNUSED Ref<deemon::bool_> (ungetutf8)(char const *ch) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "ungetutf8", _Dee_HashSelectC(0xa3df015d, 0x478925f9320a9ed8), "s", ch));
+	WUNUSED Ref<deemon::bool_> (ungetutf8)(Dee_ssize_t ch) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "ungetutf8", _Dee_HashSelectC(0xa3df015d, 0x478925f9320a9ed8),  DEE_PCKdSIZ, ch));
+	}
+	WUNUSED Ref<deemon::bool_> (ungetutf8)(size_t ch) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "ungetutf8", _Dee_HashSelectC(0xa3df015d, 0x478925f9320a9ed8),  DEE_PCKuSIZ, ch));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (pututf8)(DeeObject *data) {
 		DeeObject *args[1];
