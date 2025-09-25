@@ -157,8 +157,8 @@
 #define DEFINE_PUBLIC_WEAK_ALIAS      __DEFINE_PUBLIC_WEAK_ALIAS
 #define DEFINE_INTERN_WEAK_ALIAS      __DEFINE_INTERN_WEAK_ALIAS
 
-#define likely              __likely
-#define unlikely            __unlikely
+#define likely(x)           __likely(x) /* Extra paren to prevent compile errors in "[[likely]]" c++ attributes */
+#define unlikely(x)         __unlikely(x)
 
 #define DECL_BEGIN          __DECL_BEGIN
 #define DECL_END            __DECL_END

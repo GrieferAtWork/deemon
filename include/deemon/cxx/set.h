@@ -31,7 +31,7 @@
 
 DEE_CXX_BEGIN
 
-template<class T = Object>
+template<class T>
 class Set: public Sequence<T> {
 public:
 	static WUNUSED Type &classtype() DEE_CXX_NOTHROW {

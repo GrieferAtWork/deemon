@@ -114,6 +114,12 @@ public:
 		return inherit(DeeString_NewWideBe(str, length, error_mode));
 	}
 
+	static WUNUSED Ref<string> of(char const *__restrict str) {
+		return inherit(DeeString_New(str));
+	}
+	static WUNUSED Ref<string> of(char const *__restrict str, size_t length) {
+		return inherit(DeeString_NewSized(str, length));
+	}
 	static WUNUSED Ref<string> ofascii(char const *__restrict str) {
 		return inherit(DeeString_New(str));
 	}
@@ -201,38 +207,38 @@ public:
 	ATTR_RETNONNULL WUNUSED uint8_t *casbytes(bool allow_invalid = false) {
 		return (uint8_t *)throw_if_null((DeeObject *)DeeString_AsBytes(this, allow_invalid));
 	}
-	ATTR_RETNONNULL WUNUSED uint8_t *cas1byte() DEE_CXX_NOTHROW {
+	ATTR_RETNONNULL WUNUSED uint8_t const *cas1byte() DEE_CXX_NOTHROW {
 		return DeeString_As1Byte(this);
 	}
-	ATTR_RETNONNULL WUNUSED uint16_t *cas2byte() {
-		return (uint16_t *)throw_if_null((DeeObject *)DeeString_As2Byte(this));
+	ATTR_RETNONNULL WUNUSED uint16_t const *cas2byte() {
+		return (uint16_t const *)throw_if_null((DeeObject *)DeeString_As2Byte(this));
 	}
-	ATTR_RETNONNULL WUNUSED uint32_t *cas4byte() {
-		return (uint32_t *)throw_if_null((DeeObject *)DeeString_As4Byte(this));
+	ATTR_RETNONNULL WUNUSED uint32_t const *cas4byte() {
+		return (uint32_t const *)throw_if_null((DeeObject *)DeeString_As4Byte(this));
 	}
-	ATTR_RETNONNULL WUNUSED uint8_t *cget1byte() DEE_CXX_NOTHROW {
+	ATTR_RETNONNULL WUNUSED uint8_t const *cget1byte() DEE_CXX_NOTHROW {
 		return DeeString_Get1Byte(this);
 	}
-	ATTR_RETNONNULL WUNUSED uint16_t *cget2byte() {
+	ATTR_RETNONNULL WUNUSED uint16_t const *cget2byte() {
 		return DeeString_Get2Byte(this);
 	}
-	ATTR_RETNONNULL WUNUSED uint32_t *cget4byte() {
+	ATTR_RETNONNULL WUNUSED uint32_t const *cget4byte() {
 		return DeeString_Get4Byte(this);
 	}
-	ATTR_RETNONNULL WUNUSED char *casutf8() {
-		return (char *)throw_if_null((DeeObject *)DeeString_AsUtf8(this));
+	ATTR_RETNONNULL WUNUSED char const *casutf8() {
+		return (char const *)throw_if_null((DeeObject *)DeeString_AsUtf8(this));
 	}
-	WUNUSED char *ctryasutf8() DEE_CXX_NOTHROW {
+	WUNUSED char const *ctryasutf8() DEE_CXX_NOTHROW {
 		return DeeString_TryAsUtf8(this);
 	}
-	ATTR_RETNONNULL WUNUSED uint16_t *casutf16(unsigned int error_mode = Dee_STRING_ERROR_FSTRICT) {
-		return (uint16_t *)throw_if_null((DeeObject *)DeeString_AsUtf16(this, error_mode));
+	ATTR_RETNONNULL WUNUSED uint16_t const *casutf16(unsigned int error_mode = Dee_STRING_ERROR_FSTRICT) {
+		return (uint16_t const *)throw_if_null((DeeObject *)DeeString_AsUtf16(this, error_mode));
 	}
-	ATTR_RETNONNULL WUNUSED uint32_t *casutf32() {
-		return (uint32_t *)throw_if_null((DeeObject *)DeeString_AsUtf32(this));
+	ATTR_RETNONNULL WUNUSED uint32_t const *casutf32() {
+		return (uint32_t const *)throw_if_null((DeeObject *)DeeString_AsUtf32(this));
 	}
-	ATTR_RETNONNULL WUNUSED Dee_wchar_t *caswide() {
-		return (Dee_wchar_t *)throw_if_null((DeeObject *)DeeString_AsWide(this));
+	ATTR_RETNONNULL WUNUSED Dee_wchar_t const *caswide() {
+		return (Dee_wchar_t const *)throw_if_null((DeeObject *)DeeString_AsWide(this));
 	}
 
 

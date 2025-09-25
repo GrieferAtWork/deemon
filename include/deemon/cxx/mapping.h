@@ -33,7 +33,7 @@
 
 DEE_CXX_BEGIN
 
-template<class Key = Object, class Value = Object>
+template<class Key, class Value>
 class Mapping
 	: public Sequence<_AbstractTuple<Key, Value> >
 	, public detail::ItemProxyAccessor<Mapping<Key, Value>, Value>

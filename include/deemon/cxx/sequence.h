@@ -31,6 +31,9 @@
 
 DEE_CXX_BEGIN
 
+template<class T = Object> class Set;
+template<class Key = Object, class Value = Object> class Mapping;
+
 template<class T>
 class Sequence
 	: public Object

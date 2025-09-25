@@ -2034,7 +2034,7 @@ public:
 	WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
 		return DeeObject_GetItemStringLenHash(m_ptr, m_key, m_len, m_hsh);
 	}
-	WUNUSED DREF DeeObject *_trygetref(DeeObject *def) const DEE_CXX_NOTHROW {
+	WUNUSED DREF DeeObject *_trygetref() const DEE_CXX_NOTHROW {
 		return DeeObject_TryGetItemStringLenHash(m_ptr, m_key, m_len, m_hsh);
 	}
 	WUNUSED int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
