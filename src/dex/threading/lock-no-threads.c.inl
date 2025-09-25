@@ -23,12 +23,18 @@
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/thread.h>
+
+#include <hybrid/typecore.h> /* __CHAR_BIT__ */
 /**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint64_t, uintptr_t */
 
 DECL_BEGIN
+
+#ifndef CHAR_BIT
+#define CHAR_BIT __CHAR_BIT__
+#endif /* !CHAR_BIT */
 
 /* Delete definitions */
 #undef Dee_atomic_lock_t
@@ -443,7 +449,7 @@ typedef struct {
 #define _Dee_rshared_lock_release_NDEBUG(self)                    (--*(self))
 
 #define Dee_rshared_rwlock_t                                          uintptr_t
-#define _DEE_RSHARED_RWLOCK_WMASK                                     ((uintptr_t)1 << ((sizeof(uintptr_t) * 8) - 1))
+#define _DEE_RSHARED_RWLOCK_WMASK                                     ((uintptr_t)1 << ((sizeof(uintptr_t) * CHAR_BIT) - 1))
 #define Dee_rshared_rwlock_init(self)                                 (void)(*(self) = 0)
 #define Dee_rshared_rwlock_cinit(self)                                (void)Dee_ASSERT(*(self) == 0)
 #define Dee_rshared_rwlock_reading(self)                              (*(self) != 0)

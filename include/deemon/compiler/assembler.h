@@ -163,9 +163,9 @@ asm_reldel(struct asm_rel *__restrict self) {
 		--self->ar_sym->as_used;
 #ifndef NDEBUG
 #if __SIZEOF_POINTER__ == 4
-		self->ar_sym = (struct asm_sym *)0xcccccccclu;
+		self->ar_sym = (struct asm_sym *)__UINTPTR_C(0xcccccccc);
 #elif __SIZEOF_POINTER__ == 8
-		self->ar_sym = (struct asm_sym *)0xccccccccccccccccllu;
+		self->ar_sym = (struct asm_sym *)__UINTPTR_C(0xcccccccccccccccc);
 #endif /* __SIZEOF_POINTER__... */
 #endif /* !NDEBUG */
 	}
