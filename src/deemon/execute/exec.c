@@ -558,7 +558,7 @@ again:
 	if unlikely(!new_list) {
 		size_t old_size = atexit_size;
 		atexit_lock_release();
-		if (Dee_CollectMemory((old_size + 1) * sizeof(struct atexit_entry)))
+		if (Dee_CollectMemoryc(old_size + 1, sizeof(struct atexit_entry)))
 			goto again;
 		goto err;
 	}

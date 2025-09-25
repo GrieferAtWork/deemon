@@ -196,7 +196,7 @@ again:
 						for (;;) {
 							if likely(JITObjectTable_TryRehash(self, new_mask))
 								goto again;
-							if unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
+							if unlikely(!Dee_CollectMemoryc(new_mask + 1, sizeof(struct jit_object_entry)))
 								goto err;
 						}
 					}
@@ -330,7 +330,7 @@ again:
 						for (;;) {
 							if likely(JITObjectTable_TryRehash(self, new_mask))
 								goto again;
-							if unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
+							if unlikely(!Dee_CollectMemoryc(new_mask + 1, sizeof(struct jit_object_entry)))
 								goto err;
 						}
 					}

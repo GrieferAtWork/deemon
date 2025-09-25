@@ -88,7 +88,7 @@ do_realloc:
 						new_expra = exprc + 1;
 						goto do_realloc;
 					}
-					if (Dee_CollectMemory(new_expra * sizeof(DREF struct ast *)))
+					if (Dee_CollectMemoryc(new_expra, sizeof(DREF struct ast *)))
 						goto do_realloc;
 					goto err_exprv;
 				}
@@ -168,7 +168,7 @@ do_realloc_catchv:
 					new_catcha = catchc + 1;
 					goto do_realloc_catchv;
 				}
-				if (Dee_CollectMemory(new_catcha * sizeof(struct catch_expr)))
+				if (Dee_CollectMemoryc(new_catcha, sizeof(struct catch_expr)))
 					goto do_realloc_catchv;
 				goto err_try;
 			}
@@ -372,7 +372,7 @@ do_realloc_catchv:
 					new_catcha = catchc + 1;
 					goto do_realloc_catchv;
 				}
-				if (Dee_CollectMemory(new_catcha * sizeof(struct catch_expr)))
+				if (Dee_CollectMemoryc(new_catcha, sizeof(struct catch_expr)))
 					goto do_realloc_catchv;
 				goto err_try;
 			}

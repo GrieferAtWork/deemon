@@ -72,7 +72,7 @@ do_realloc:
 			new_alloc = self->ast_c + min_add;
 			goto do_realloc;
 		}
-		if (Dee_CollectMemory(new_alloc * sizeof(DREF struct ast *)))
+		if (Dee_CollectMemoryc(new_alloc, sizeof(DREF struct ast *)))
 			goto do_realloc;
 		return -1;
 	}

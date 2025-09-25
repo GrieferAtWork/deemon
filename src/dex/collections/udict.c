@@ -408,8 +408,7 @@ again:
 		                                                   sizeof(struct udict_item));
 		if unlikely(!self->ud_elem) {
 			UDict_LockEndRead(other);
-			if (Dee_CollectMemory((other->ud_mask + 1) *
-			                      sizeof(struct udict_item)))
+			if (Dee_CollectMemoryc(other->ud_mask + 1, sizeof(struct udict_item)))
 				goto again;
 			goto err;
 		}

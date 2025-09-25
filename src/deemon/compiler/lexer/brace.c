@@ -119,7 +119,7 @@ do_realloc_dict:
 					new_elema = elemc + 1;
 					goto do_realloc_dict;
 				}
-				if (Dee_CollectMemory((new_elema * 2) * sizeof(DREF struct ast *)))
+				if (Dee_CollectMemoryc(new_elema * 2, sizeof(DREF struct ast *)))
 					goto do_realloc_dict;
 				goto err_dict_keyitem;
 			}
@@ -203,7 +203,7 @@ do_realloc_list:
 					new_elema = elemc + 1;
 					goto do_realloc_list;
 				}
-				if (Dee_CollectMemory(new_elema * sizeof(DREF struct ast *)))
+				if (Dee_CollectMemoryc(new_elema, sizeof(DREF struct ast *)))
 					goto do_realloc_list;
 				goto err_list_elemv_result;
 			}

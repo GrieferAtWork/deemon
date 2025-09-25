@@ -77,7 +77,7 @@ do_realloc:
 				new_alloc = late_options.lco_optc + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_alloc * sizeof(struct late_cmd_option)))
+			if (Dee_CollectMemoryc(new_alloc, sizeof(struct late_cmd_option)))
 				goto do_realloc;
 			return -1;
 		}

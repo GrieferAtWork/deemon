@@ -660,7 +660,7 @@ do_realloc:
 				new_alloc = self->cm_class_initc + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_alloc * sizeof(struct class_member)))
+			if (Dee_CollectMemoryc(new_alloc, sizeof(struct class_member)))
 				goto do_realloc;
 			goto err;
 		}
@@ -688,7 +688,7 @@ do_realloc:
 				new_alloc = self->cm_initc + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_alloc * sizeof(DREF struct ast *)))
+			if (Dee_CollectMemoryc(new_alloc, sizeof(DREF struct ast *)))
 				goto do_realloc;
 			return -1;
 		}

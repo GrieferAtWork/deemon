@@ -5202,7 +5202,7 @@ Dee_unicode_printer_alloc_utf8(struct unicode_printer *__restrict self,
 	char *result;
 	do {
 		result = unicode_printer_tryalloc_utf8(self, length);
-	} while (unlikely(!result) && Dee_CollectMemory(length * sizeof(uint8_t)));
+	} while (unlikely(!result) && Dee_CollectMemoryc(length, sizeof(uint8_t)));
 	return result;
 }
 
@@ -5212,7 +5212,7 @@ Dee_unicode_printer_resize_utf8(struct unicode_printer *__restrict self,
 	char *result;
 	do {
 		result = unicode_printer_tryresize_utf8(self, buf, new_length);
-	} while (unlikely(!result) && Dee_CollectMemory(new_length * sizeof(uint8_t)));
+	} while (unlikely(!result) && Dee_CollectMemoryc(new_length, sizeof(uint8_t)));
 	return result;
 }
 
@@ -5574,7 +5574,7 @@ Dee_unicode_printer_alloc_utf16(struct unicode_printer *__restrict self,
 	uint16_t *result;
 	do {
 		result = unicode_printer_tryalloc_utf16(self, length);
-	} while (unlikely(!result) && Dee_CollectMemory(length * sizeof(uint16_t)));
+	} while (unlikely(!result) && Dee_CollectMemoryc(length, sizeof(uint16_t)));
 	return result;
 }
 
@@ -5584,7 +5584,7 @@ Dee_unicode_printer_resize_utf16(struct unicode_printer *__restrict self,
 	uint16_t *result;
 	do {
 		result = unicode_printer_tryresize_utf16(self, buf, new_length);
-	} while (unlikely(!result) && Dee_CollectMemory(new_length * sizeof(uint16_t)));
+	} while (unlikely(!result) && Dee_CollectMemoryc(new_length, sizeof(uint16_t)));
 	return result;
 }
 
@@ -5848,7 +5848,7 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 	uint32_t *result;
 	do {
 		result = unicode_printer_tryalloc_utf32(self, length);
-	} while (unlikely(!result) && Dee_CollectMemory(length * sizeof(uint32_t)));
+	} while (unlikely(!result) && Dee_CollectMemoryc(length, sizeof(uint32_t)));
 	return result;
 }
 
@@ -5858,7 +5858,7 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 	uint32_t *result;
 	do {
 		result = unicode_printer_tryresize_utf32(self, buf, new_length);
-	} while (unlikely(!result) && Dee_CollectMemory(new_length * sizeof(uint32_t)));
+	} while (unlikely(!result) && Dee_CollectMemoryc(new_length, sizeof(uint32_t)));
 	return result;
 }
 

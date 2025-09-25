@@ -427,7 +427,7 @@ again:
 		                                                      sizeof(struct hashset_item));
 		if unlikely(!self->hs_elem) {
 			DeeHashSet_LockEndRead(other);
-			if (Dee_CollectMemory((other->hs_mask + 1) * sizeof(struct hashset_item)))
+			if (Dee_CollectMemoryc(other->hs_mask + 1, sizeof(struct hashset_item)))
 				goto again;
 			goto err;
 		}

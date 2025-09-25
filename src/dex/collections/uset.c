@@ -588,7 +588,7 @@ again_hashset:
 			                                                   sizeof(struct uset_item));
 			if unlikely(!self->us_elem) {
 				DeeHashSet_LockEndRead(src);
-				if (Dee_CollectMemory((self->us_mask + 1) * sizeof(struct uset_item)))
+				if (Dee_CollectMemoryc(self->us_mask + 1, sizeof(struct uset_item)))
 					goto again_hashset;
 				return -1;
 			}
@@ -736,7 +736,7 @@ again:
 		                                                  sizeof(struct uset_item));
 		if unlikely(!self->us_elem) {
 			USet_LockEndRead(other);
-			if (Dee_CollectMemory((self->us_mask + 1) * sizeof(struct uset_item)))
+			if (Dee_CollectMemoryc(self->us_mask + 1, sizeof(struct uset_item)))
 				goto again;
 			return -1;
 		}

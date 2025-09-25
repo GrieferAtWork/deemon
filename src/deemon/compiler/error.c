@@ -181,7 +181,7 @@ do_realloc_errors:
 			new_alloc = current_parser_errors.pe_errorc + 1;
 			goto do_realloc_errors;
 		}
-		if (Dee_CollectMemory(new_alloc * sizeof(DREF DeeCompilerErrorObject *)))
+		if (Dee_CollectMemoryc(new_alloc, sizeof(DREF DeeCompilerErrorObject *)))
 			goto do_realloc_errors;
 		return -1;
 	}

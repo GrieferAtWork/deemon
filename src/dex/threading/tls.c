@@ -182,7 +182,7 @@ again:
 		if unlikely(!new_bitset) {
 			tls_reglock_release();
 			/* Try to collect some memory. */
-			if (Dee_CollectMemory(((tls_nexti / 8) + 1) * sizeof(uint8_t)))
+			if (Dee_CollectMemoryc((tls_nexti / 8) + 1, sizeof(uint8_t)))
 				goto again;
 			return (size_t)-1;
 		}

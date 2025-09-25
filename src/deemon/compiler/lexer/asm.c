@@ -102,7 +102,7 @@ do_realloc:
 				new_alloc = self->ol_c + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_alloc * sizeof(struct asm_operand)))
+			if (Dee_CollectMemoryc(new_alloc, sizeof(struct asm_operand)))
 				goto do_realloc;
 			goto err;
 		}

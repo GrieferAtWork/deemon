@@ -388,7 +388,7 @@ do_realloc:
 				new_alloc = sec->ds_relc + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_alloc * sizeof(struct dec_rel)))
+			if (Dee_CollectMemoryc(new_alloc, sizeof(struct dec_rel)))
 				goto do_realloc;
 			goto done;
 		}

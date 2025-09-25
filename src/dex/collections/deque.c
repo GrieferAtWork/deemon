@@ -471,7 +471,7 @@ again:
 	pop_objv = (DREF DeeObject **)Dee_TryMallocac(result, sizeof(DREF DeeObject *));
 	if unlikely(!pop_objv) {
 		Deque_LockEndWrite(self);
-		if (Dee_CollectMemory(result * sizeof(DREF DeeObject *)))
+		if (Dee_CollectMemoryc(result, sizeof(DREF DeeObject *)))
 			goto again;
 		goto err;
 	}

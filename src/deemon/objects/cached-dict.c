@@ -83,8 +83,8 @@ again:
 		                                                          sizeof(struct cached_dict_item));
 		if unlikely(!self->cd_elem) {
 			DeeCachedDict_LockEndRead(other);
-			if (Dee_CollectMemory((other->cd_mask + 1) *
-			                      sizeof(struct cached_dict_item)))
+			if (Dee_CollectMemoryc(other->cd_mask + 1,
+			                       sizeof(struct cached_dict_item)))
 				goto again;
 			goto err;
 		}

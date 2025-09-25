@@ -118,7 +118,7 @@ do_realloc_symv:
 				new_arga = current_basescope->bs_argc + 1;
 				goto do_realloc_symv;
 			}
-			if (Dee_CollectMemory(new_arga * sizeof(struct symbol *)))
+			if (Dee_CollectMemoryc(new_arga, sizeof(struct symbol *)))
 				goto do_realloc_symv;
 			return -1;
 		}
@@ -147,7 +147,7 @@ do_realloc_symv:
 				new_defaulta = defaultc + 1;
 				goto do_realloc_symv;
 			}
-			if (Dee_CollectMemory(new_defaulta * sizeof(DREF DeeObject *)))
+			if (Dee_CollectMemoryc(new_defaulta, sizeof(DREF DeeObject *)))
 				goto do_realloc_symv;
 			return -1;
 		}

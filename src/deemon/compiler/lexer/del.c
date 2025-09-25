@@ -186,7 +186,7 @@ do_realloc_delv:
 						new_dela = delc + 1;
 						goto do_realloc_delv;
 					}
-					if (Dee_CollectMemory(new_dela * sizeof(DREF struct ast *)))
+					if (Dee_CollectMemoryc(new_dela, sizeof(DREF struct ast *)))
 						goto do_realloc_delv;
 					goto err_delv_r;
 				}

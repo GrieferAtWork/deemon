@@ -1047,7 +1047,7 @@ again:
 	return (DREF DeeObject *)result;
 err_collect:
 	DeeFileWriter_LockEndRead(me);
-	if (Dee_CollectMemory((size_t)-1))
+	if (Dee_CollectMemory(512))
 		goto again;
 	return NULL;
 }
@@ -1544,7 +1544,7 @@ again:
 				buffer_copy = DeeString_TryNew2ByteBuffer(length + bufsize);
 				if unlikely(!buffer_copy) {
 					DeeFileWriter_LockEndWrite(self);
-					if (Dee_CollectMemory(sizeof(size_t) + (length + bufsize + 1) * 2))
+					if (Dee_CollectMemoryoc(sizeof(size_t), length + bufsize + 1, 2))
 						goto again;
 					goto err;
 				}
@@ -1557,7 +1557,7 @@ again:
 				buffer_copy = DeeString_TryNew4ByteBuffer(length + bufsize);
 				if unlikely(!buffer_copy) {
 					DeeFileWriter_LockEndWrite(self);
-					if (Dee_CollectMemory(sizeof(size_t) + (length + bufsize + 1) * 4))
+					if (Dee_CollectMemoryoc(sizeof(size_t), length + bufsize + 1, 4))
 						goto again;
 					goto err;
 				}

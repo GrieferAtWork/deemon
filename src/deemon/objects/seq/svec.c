@@ -1315,7 +1315,7 @@ again:
 	                                                    sizeof(DREF DeeObject *));
 	if unlikely(!self->sv_vector) {
 		SharedVector_LockEndRead(other);
-		if (Dee_CollectMemory(self->sv_length * sizeof(DREF DeeObject *)))
+		if (Dee_CollectMemoryc(self->sv_length, sizeof(DREF DeeObject *)))
 			goto again;
 		goto err;
 	}

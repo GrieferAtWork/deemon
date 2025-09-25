@@ -180,7 +180,7 @@ do_realloc:
 					new_expra = exprc + 1;
 					goto do_realloc;
 				}
-				if (Dee_CollectMemory(new_expra * sizeof(DREF struct ast *)))
+				if (Dee_CollectMemoryc(new_expra, sizeof(DREF struct ast *)))
 					goto do_realloc;
 				goto err;
 			}

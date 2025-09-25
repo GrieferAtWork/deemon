@@ -187,7 +187,7 @@ do_realloc:
 				new_alloc = current_assembler.a_ddi.da_checkc + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_alloc * sizeof(struct ddi_checkpoint)))
+			if (Dee_CollectMemoryc(new_alloc, sizeof(struct ddi_checkpoint)))
 				goto do_realloc;
 			goto done;
 		}
@@ -588,7 +588,7 @@ do_realloc:
 			new_alloc = current_assembler.a_exceptc + 1;
 			goto do_realloc;
 		}
-		if (Dee_CollectMemory(new_alloc * sizeof(struct asm_exc)))
+		if (Dee_CollectMemoryc(new_alloc, sizeof(struct asm_exc)))
 			goto do_realloc;
 	}
 	current_assembler.a_excepta = new_alloc;
@@ -1644,7 +1644,7 @@ do_realloc:
 				new_rela = current_assembler.a_curr->sec_relc + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_rela * sizeof(struct asm_rel)))
+			if (Dee_CollectMemoryc(new_rela, sizeof(struct asm_rel)))
 				goto do_realloc;
 			return NULL;
 		}
@@ -1699,7 +1699,7 @@ INTERN WUNUSED instruction_t *(DFCALL asm_alloc)(size_t n_bytes) {
 				new_size = min_size;
 				goto realloc_instr;
 			}
-			if (Dee_CollectMemory(new_size * sizeof(instruction_t)))
+			if (Dee_CollectMemoryc(new_size, sizeof(instruction_t)))
 				goto realloc_instr;
 			return NULL;
 		}
@@ -2595,7 +2595,7 @@ do_realloc:
 				new_consta = current_assembler.a_constc + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_consta * sizeof(DREF DeeObject *)))
+			if (Dee_CollectMemoryc(new_consta, sizeof(DREF DeeObject *)))
 				goto do_realloc;
 			return -1;
 		}
@@ -2697,7 +2697,7 @@ do_realloc:
 				new_statica = current_assembler.a_staticc + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_statica * sizeof(DREF DeeObject *)))
+			if (Dee_CollectMemoryc(new_statica, sizeof(DREF DeeObject *)))
 				goto do_realloc;
 			goto err;
 		}
@@ -3074,7 +3074,7 @@ do_realloc:
 				new_size = result + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_size * sizeof(struct asm_symbol_ref)))
+			if (Dee_CollectMemoryc(new_size, sizeof(struct asm_symbol_ref)))
 				goto do_realloc;
 			return -1;
 		}
@@ -3131,7 +3131,7 @@ do_realloc:
 				new_size = result + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_size * sizeof(struct symbol *)))
+			if (Dee_CollectMemoryc(new_size, sizeof(struct symbol *)))
 				goto do_realloc;
 			return -1;
 		}
@@ -3184,7 +3184,7 @@ do_realloc:
 				new_size = result + 1;
 				goto do_realloc;
 			}
-			if (Dee_CollectMemory(new_size * sizeof(DREF DeeModuleObject *)))
+			if (Dee_CollectMemoryc(new_size, sizeof(DREF DeeModuleObject *)))
 				goto do_realloc;
 			goto err;
 		}
