@@ -664,7 +664,37 @@ db_init(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	if unlikely(libsqlite3_init())
 		goto err_sf_hook_ti_hook;
 
-	/* TODO: Allow user-code to specify "flags" */
+	/* TODO: Allow user-code to specify/config "flags" as:
+	 * one of (these are the only combinations allowed by sqlite):
+	 * - SQLITE_OPEN_READONLY
+	 * - SQLITE_OPEN_READWRITE
+	 * - SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
+	 * - SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_DELETEONCLOSE
+	 *
+	 * Optionally or'd with (each of these is its own bool-keyword-argument):
+	 * - uri=!f       -- SQLITE_OPEN_URI
+	 * - nofollow=!f  -- SQLITE_OPEN_NOFOLLOW
+	 *
+	 * -- TODO: SQLITE_OPEN_MAIN_DB
+	 * -- TODO: SQLITE_OPEN_TEMP_DB
+	 * -- TODO: SQLITE_OPEN_TRANSIENT_DB
+	 * -- TODO: SQLITE_OPEN_MAIN_JOURNAL
+	 * -- TODO: SQLITE_OPEN_TEMP_JOURNAL
+	 * -- TODO: SQLITE_OPEN_SUBJOURNAL
+	 * -- TODO: SQLITE_OPEN_SUPER_JOURNAL
+	 * -- TODO: SQLITE_OPEN_WAL
+	 * -- TODO: SQLITE_OPEN_AUTOPROXY
+	 * -- TODO: SQLITE_OPEN_MASTER_JOURNAL
+	 *
+	 * The following flags cannot be controlled:
+	 * - SQLITE_OPEN_MEMORY       (never set; implicitly available by using ":memory:" as filename)
+	 * - SQLITE_OPEN_NOMUTEX      (never set; deemon does its own (enforced) mutex handling)
+	 * - SQLITE_OPEN_FULLMUTEX    (never set; deemon does its own (enforced) mutex handling)
+	 * - SQLITE_OPEN_SHAREDCACHE  (never set; shared cache is disabled as recommended by sqlite docs)
+	 * - SQLITE_OPEN_PRIVATECACHE (never set; shared cache is disabled as recommended by sqlite docs)
+	 * - SQLITE_OPEN_EXRESCODE    (always set; error handling is done internally, so user can't control this)
+	 * - SQLITE_OPEN_EXCLUSIVE    (never set; docs warn that it doesn't do O_EXCL-behavior, so it's useless)
+	 */
 	/* TODO: Allow user-code to specify "zVfs" */
 again_open:
 	rc = sqlite3_open_v2(utf8_filename, &self->db_db,
@@ -672,8 +702,7 @@ again_open:
 	                     SQLITE_OPEN_EXRESCODE,
 	                     NULL);
 	if (rc != SQLITE_OK) {
-		rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_NORMAL,
-		                        self, NULL);
+		rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_NORMAL, self, NULL);
 		(void)sqlite3_close_v2(self->db_db);
 		if (rc == 0)
 			goto again_open;

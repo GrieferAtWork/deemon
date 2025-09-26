@@ -550,9 +550,7 @@ INTDEF DeeTypeObject /**/ SQLConstraintError_Type; /* extends SQLError_Type */
 INTDEF ATTR_COLD WUNUSED int DCALL err_sql_throwerror(int errcode, unsigned int flags, DB *db, DeeStringObject *sql);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_multiple_statements(DeeStringObject *__restrict sql);
 #define ERR_SQL_THROWERROR_F_NORMAL    0x0000
-#define ERR_SQL_THROWERROR_F_UNLOCK_DB 0x0001 /* (only for `err_sql_throwerror') The "db"
-                                               * argument is non-NULL and **MUST** be unlocked,
-                                               * no matter what will be returned. */
+#define ERR_SQL_THROWERROR_F_UNLOCK_DB 0x0001 /* The "db" argument is non-NULL and **MUST** be unlocked, no matter what will be returned. */
 
 
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_index_out_of_bounds)(DeeObject *__restrict self, size_t index, size_t size);
