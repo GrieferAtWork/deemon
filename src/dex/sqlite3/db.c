@@ -642,14 +642,6 @@ PRIVATE int db_sqlite_progress_handler(void *UNUSED(ignored)) {
 	return DeeThread_WasInterrupted(thread);
 }
 
-PRIVATE WUNUSED int DCALL db_defconfig(sqlite3 *db) {
-	/* Turn foreign keys on by default (docs even state that
-	 * in the future, this may be the default, and personally
-	 * I believe that they should be used and not just no-ops) */
-	int rc = sqlite3_db_config(db, SQLITE_DBCONFIG_ENABLE_FKEY, 1, (int *)NULL);
-	return rc;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 db_init(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	int rc;
@@ -679,11 +671,9 @@ again_open:
 	                     SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE |
 	                     SQLITE_OPEN_EXRESCODE,
 	                     NULL);
-	if (rc == SQLITE_OK)
-		rc = db_defconfig(self->db_db);
 	if (rc != SQLITE_OK) {
 		rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_NORMAL,
-		                           self, NULL);
+		                        self, NULL);
 		(void)sqlite3_close_v2(self->db_db);
 		if (rc == 0)
 			goto again_open;

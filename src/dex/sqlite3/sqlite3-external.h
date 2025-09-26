@@ -36,6 +36,7 @@
 #define SQLITE_OMIT_SHARED_CACHE          /* recommended: https://sqlite.org/sharedcache.html#dontuse */
 #define SQLITE_LIKE_DOESNT_MATCH_BLOBS    /* recommended: https://sqlite.org/compile.html#like_doesnt_match_blobs */
 #define SQLITE_DQS                      0 /* recommended: https://sqlite.org/compile.html#dqs */
+#define SQLITE_DEFAULT_FOREIGN_KEYS     1 /* Enable foreign key enforcement by default */
 #undef SQLITE_DEBUG
 /*#define SQLITE_ENABLE_MEMORY_MANAGEMENT*/
 
