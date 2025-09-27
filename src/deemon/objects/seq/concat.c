@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/gc.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
@@ -491,15 +492,16 @@ PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 cat_size(Cat *__restrict self) {
 	size_t i, result = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
+		size_t new_result;
 		DeeObject *item = DeeTuple_GET(self, i);
 		size_t temp = DeeObject_InvokeMethodHint(seq_operator_size, item);
 		if unlikely(temp == (size_t)-1)
 			return (size_t)-1;
-		if (OVERFLOW_UADD(result, temp, &result)) {
-			err_integer_overflow_i(sizeof(size_t) * 8, true);
+		if (OVERFLOW_UADD(result, temp, &new_result)) {
+			DeeRT_ErrIntegerOverflowUAdd(result, temp);
 			return (size_t)-1;
 		}
-		result += temp;
+		result = new_result;
 	}
 	return result;
 }

@@ -178,7 +178,7 @@ bool_shl(DeeObject *self, DeeObject *other) {
 	if (DeeObject_AsSSize(other, &shift_value))
 		goto err;
 	if unlikely(shift_value < 0) {
-		err_shift_negative(self, other, true);
+		err_negative_shift(self, other, true);
 		goto err;
 	}
 	return_reference_(self);
@@ -192,7 +192,7 @@ bool_shr(DeeObject *self, DeeObject *other) {
 	if (DeeObject_AsSSize(other, &shift_value))
 		goto err;
 	if unlikely(shift_value < 0) {
-		err_shift_negative(self, other, false);
+		err_negative_shift(self, other, false);
 		goto err;
 	}
 	if (shift_value != 0)

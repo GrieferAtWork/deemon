@@ -3098,7 +3098,7 @@ instance_autoload_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 	}
 	if unlikely(at->ca_addr < data->ialf_next_table_index) {
 		/* Member had already been initialized via a positional argument! */
-		err_keywords_shadows_positional(DeeString_STR(key));
+		err_keywords_shadows_positional(key);
 		goto err;
 	}
 	if unlikely(DeeInstance_SetBasicAttribute(data->ialf_desc,
@@ -3124,7 +3124,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 		size_t i, positional_argc;
 		DeeObject *const *kw_argv;
 		if unlikely(DeeKwds_SIZE(kwds) > argc)
-			return err_keywords_bad_for_argc(argc, DeeKwds_SIZE(kwds));
+			return err_keywords_bad_for_argc((DeeKwdsObject *)kwds, argc, argv);
 		positional_argc = argc - DeeKwds_SIZE(kwds);
 		kw_argv         = argv + positional_argc;
 		/* Load positional arguments into the first positional_argc instance members. */
@@ -3153,7 +3153,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 			}
 			if unlikely(at->ca_addr < next_table_index) {
 				/* Member had already been initialized via a positional argument! */
-				err_keywords_shadows_positional(DeeString_STR(kwds->kw_map[i].ke_name));
+				err_keywords_shadows_positional((DeeObject *)kwds->kw_map[i].ke_name);
 				goto err;
 			}
 			if unlikely(DeeInstance_SetBasicAttribute(desc, instance, at,

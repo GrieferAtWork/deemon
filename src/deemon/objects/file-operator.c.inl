@@ -21,6 +21,7 @@
 #include <deemon/api.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/error-rt.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -441,7 +442,6 @@ do_handle_filetype:
 }
 
 DEFINE_FILE_OPERATOR(Dee_pos_t, Seek, (DeeObject *__restrict self, Dee_off_t off, int whence)) {
-	Dee_pos_t result;
 	DREF DeeObject *result_ob;
 	LOAD_TP_SELF;
 IF_TYPED(again:)
@@ -464,16 +464,7 @@ do_handle_filetype:
 	                                            PCKd64 "d", (int64_t)off, whence);
 	if unlikely(!result_ob)
 		goto err;
-	if unlikely(DeeObject_AsUIntX(result_ob, &result))
-		goto err_result_ob;
-	if unlikely(result == (Dee_pos_t)-1)
-		goto err_result_ob_overflow;
-	Dee_Decref(result_ob);
-	return result;
-err_result_ob_overflow:
-	err_integer_overflow(result_ob, sizeof(Dee_pos_t) * 8, true);
-err_result_ob:
-	Dee_Decref(result_ob);
+	return DeeObject_AsXDirectUIntInherited(Dee_SIZEOF_POS_T, result_ob);
 err:
 	return (Dee_pos_t)-1;
 }
@@ -676,7 +667,7 @@ do_handle_filetype:
 		Dee_Decref(result_ob);
 		return temp;
 	}
-	err_integer_overflow(result_ob, 8, temp >= 0);
+	DeeRT_ErrIntegerOverflowS(temp, GETC_EOF, 0xff);
 err_result_ob:
 	Dee_Decref(result_ob);
 err:
@@ -753,7 +744,7 @@ do_handle_filetype:
 		Dee_Decref(result_ob);
 		return temp;
 	}
-	err_integer_overflow(result_ob, 8, temp >= 0);
+	DeeRT_ErrIntegerOverflowS(temp, GETC_EOF, 0xff);
 err_result_ob:
 	Dee_Decref(result_ob);
 err:

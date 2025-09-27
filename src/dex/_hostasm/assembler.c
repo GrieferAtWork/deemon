@@ -283,7 +283,7 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >> #endif
 		 * >>         size_t effective_argc;
 		 * >>         if unlikely(OVERFLOW_USUB(argc, kw->kw_size, &effective_argc)) {
-		 * >>             err_keywords_bad_for_argc(argc, kw->kw_size);
+		 * >>             err_keywords_bad_for_argc(kw, argc, argv);
 		 * >>             HANDLE_EXCEPT();
 		 * >>         }
 		 * >>         argc = effective_argc;

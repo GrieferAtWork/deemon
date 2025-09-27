@@ -29,6 +29,7 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* strnlen(), memcpyc(), ... */
+#include <deemon/variant.h>
 
 #include <hybrid/int128.h>
 #include <hybrid/minmax.h>
@@ -954,6 +955,17 @@ nextfmt:
 			if (ch == 'R')
 				Dee_Decref(in_ob);
 		}
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}	break;
+
+	case 'V': {
+		struct Dee_variant *v = va_arg(args, struct Dee_variant *);
+		ch = *format++;
+		ASSERT(ch == 'k' || ch == 'r');
+		temp = ch == 'r' ? Dee_variant_printrepr(v, printer, arg)
+		                 : Dee_variant_print(v, printer, arg);
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;

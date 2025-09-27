@@ -24,6 +24,7 @@
 #include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
@@ -1615,18 +1616,23 @@ tdefault__int32__with__int64(DeeTypeObject *tp_self, DeeObject *self, int32_t *p
 	int64_t value;
 	int status = (*(tp_self->tp_math->tp_int64 == &default__int64__with__int ? &tdefault__int64__with__int : tp_self->tp_math->tp_int64 == &default__int64__with__double ? &tdefault__int64__with__double : &tdefault__int64))(tp_self, self, &value);
 	if (status == Dee_INT_UNSIGNED) {
-		if ((uint64_t)value > UINT32_MAX && !(tp_self->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+		if ((uint64_t)value > UINT32_MAX && !(tp_self->tp_flags & TP_FTRUNCATE)) {
+			return DeeRT_ErrIntegerOverflowEx(self, 32,
+			                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
+			                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
+		}
 		*p_result = (int32_t)(uint32_t)(uint64_t)value;
 	} else {
 		if ((value < INT32_MIN || value > INT32_MAX) && status == Dee_INT_SIGNED &&
-		    !(tp_self->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+		    !(tp_self->tp_flags & TP_FTRUNCATE)) {
+			unsigned int flags = (value > INT32_MAX)
+			                     ? (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE)
+			                     : (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
+			return DeeRT_ErrIntegerOverflowEx(self, 32, flags);
+		}
 		*p_result = (int32_t)value;
 	}
 	return status;
-err_overflow:
-	return err_integer_overflow(self, 32, status == Dee_INT_SIGNED);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -1649,19 +1655,17 @@ tdefault__int32__with__double(DeeTypeObject *tp_self, DeeObject *self, int32_t *
 	if unlikely(status < 0)
 		goto err;
 	if (value < INT32_MIN && !(tp_self->tp_flags & TP_FTRUNCATE))
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowEx(self, 32, DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 	if (value > INT32_MAX) {
 		if (value <= UINT32_MAX) {
 			*p_result = (int32_t)(uint32_t)value;
 			return Dee_INT_UNSIGNED;
 		}
 		if (!(tp_self->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+			return DeeRT_ErrIntegerOverflowEx(self, 32, DeeRT_ErrIntegerOverflowEx_F_UNSIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 	}
 	*p_result = (int32_t)value;
 	return Dee_INT_SIGNED;
-err_overflow:
-	err_integer_overflow(self, 32, value >= 0);
 err:
 	return -1;
 }
@@ -1679,18 +1683,23 @@ default__int32__with__int64(DeeObject *__restrict self, int32_t *__restrict p_re
 	int64_t value;
 	int status = (*Dee_TYPE(self)->tp_math->tp_int64)(self, &value);
 	if (status == Dee_INT_UNSIGNED) {
-		if ((uint64_t)value > UINT32_MAX && !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+		if ((uint64_t)value > UINT32_MAX && !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE)) {
+			return DeeRT_ErrIntegerOverflowEx(self, 32,
+			                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
+			                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
+		}
 		*p_result = (int32_t)(uint32_t)(uint64_t)value;
 	} else {
 		if ((value < INT32_MIN || value > INT32_MAX) && status == Dee_INT_SIGNED &&
-		    !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+		    !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE)) {
+			unsigned int flags = (value > INT32_MAX)
+			                     ? (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE)
+			                     : (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
+			return DeeRT_ErrIntegerOverflowEx(self, 32, flags);
+		}
 		*p_result = (int32_t)value;
 	}
 	return status;
-err_overflow:
-	return err_integer_overflow(self, 32, status == Dee_INT_SIGNED);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -1721,19 +1730,17 @@ default__int32__with__double(DeeObject *__restrict self, int32_t *__restrict p_r
 	if unlikely(status < 0)
 		goto err;
 	if (value < INT32_MIN && !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowEx(self, 32, DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 	if (value > INT32_MAX) {
 		if (value <= UINT32_MAX) {
 			*p_result = (int32_t)(uint32_t)value;
 			return Dee_INT_UNSIGNED;
 		}
 		if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+			return DeeRT_ErrIntegerOverflowEx(self, 32, DeeRT_ErrIntegerOverflowEx_F_UNSIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 	}
 	*p_result = (int32_t)value;
 	return Dee_INT_SIGNED;
-err_overflow:
-	err_integer_overflow(self, 32, value >= 0);
 err:
 	return -1;
 #endif /* __OPTIMIZE_SIZE__ */
@@ -1772,19 +1779,17 @@ tdefault__int64__with__double(DeeTypeObject *tp_self, DeeObject *self, int64_t *
 	if unlikely(status < 0)
 		goto err;
 	if (value < INT64_MIN && !(tp_self->tp_flags & TP_FTRUNCATE))
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowEx(self, 64, DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 	if (value > INT64_MAX) {
 		if (value <= UINT64_MAX) {
 			*p_result = (int64_t)(uint64_t)value;
 			return Dee_INT_UNSIGNED;
 		}
 		if (!(tp_self->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+			return DeeRT_ErrIntegerOverflowEx(self, 64, DeeRT_ErrIntegerOverflowEx_F_UNSIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 	}
 	*p_result = (int64_t)value;
 	return Dee_INT_SIGNED;
-err_overflow:
-	err_integer_overflow(self, 64, value >= 0);
 err:
 	return -1;
 }
@@ -1837,19 +1842,17 @@ default__int64__with__double(DeeObject *__restrict self, int64_t *__restrict p_r
 	if unlikely(status < 0)
 		goto err;
 	if (value < INT64_MIN && !(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowEx(self, 64, DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 	if (value > INT64_MAX) {
 		if (value <= UINT64_MAX) {
 			*p_result = (int64_t)(uint64_t)value;
 			return Dee_INT_UNSIGNED;
 		}
 		if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+			return DeeRT_ErrIntegerOverflowEx(self, 64, DeeRT_ErrIntegerOverflowEx_F_UNSIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 	}
 	*p_result = (int64_t)value;
 	return Dee_INT_SIGNED;
-err_overflow:
-	err_integer_overflow(self, 64, value >= 0);
 err:
 	return -1;
 #endif /* __OPTIMIZE_SIZE__ */

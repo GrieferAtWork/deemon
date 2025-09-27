@@ -151,8 +151,10 @@ if (hasKey) {
 	print('				/' '* Found it! (at "mid") *' '/');
 if (isFind || isPosition) {
 	print('				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end\', it can\'t be SIZE_MAX!");');
-	print('				if unlikely(mid == (size_t)Dee_COMPARE_ERR)');
+	print('				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {');
+	print('					end = mid;');
 	print('					goto err_item_overflow;');
+	print('				}');
 	NEED_err_item_overflow = true;
 if (hasKey)
 	print('				Dee_Decref(item);');
@@ -245,7 +247,7 @@ if (isFind) {
 }
 if (NEED_err_item_overflow) {
 	print('err_item_overflow:');
-	print('	err_integer_overflow_i(sizeof(size_t) * 8, true);');
+	print('	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);');
 }
 if (hasKey) {
 	print('err_item:');
@@ -393,8 +395,10 @@ __seq_bfind__.seq_bfind([[nonnull]] DeeObject *self,
 			} else {
 				/* Found it! (at "mid") */
 				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
-				if unlikely(mid == (size_t)Dee_COMPARE_ERR)
+				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
+					end = mid;
 					goto err_item_overflow;
+				}
 				return mid;
 			}
 			/* Since this runs in O(log(N)), there's no need to check for interrupts! */
@@ -403,7 +407,7 @@ __seq_bfind__.seq_bfind([[nonnull]] DeeObject *self,
 	ASSERT(start >= end);
 	return (size_t)-1;
 err_item_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }} {
@@ -481,8 +485,10 @@ __seq_bfind__.seq_bfind_with_key([[nonnull]] DeeObject *self,
 			} else {
 				/* Found it! (at "mid") */
 				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
-				if unlikely(mid == (size_t)Dee_COMPARE_ERR)
+				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
+					end = mid;
 					goto err_item_overflow;
+				}
 				Dee_Decref(item);
 				return mid;
 			}
@@ -493,7 +499,7 @@ __seq_bfind__.seq_bfind_with_key([[nonnull]] DeeObject *self,
 	Dee_Decref(item);
 	return (size_t)-1;
 err_item_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
 err_item:
 	Dee_Decref(item);
 err:
@@ -569,8 +575,10 @@ __seq_bposition__.seq_bposition([[nonnull]] DeeObject *self,
 			} else {
 				/* Found it! (at "mid") */
 				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
-				if unlikely(mid == (size_t)Dee_COMPARE_ERR)
+				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
+					end = mid;
 					goto err_item_overflow;
+				}
 				return mid;
 			}
 			/* Since this runs in O(log(N)), there's no need to check for interrupts! */
@@ -581,7 +589,7 @@ __seq_bposition__.seq_bposition([[nonnull]] DeeObject *self,
 		goto err_item_overflow;
 	return end;
 err_item_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }} {
@@ -659,8 +667,10 @@ __seq_bposition__.seq_bposition_with_key([[nonnull]] DeeObject *self,
 			} else {
 				/* Found it! (at "mid") */
 				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
-				if unlikely(mid == (size_t)Dee_COMPARE_ERR)
+				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
+					end = mid;
 					goto err_item_overflow;
+				}
 				Dee_Decref(item);
 				return mid;
 			}
@@ -673,7 +683,7 @@ __seq_bposition__.seq_bposition_with_key([[nonnull]] DeeObject *self,
 		goto err_item_overflow;
 	return end;
 err_item_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
 err_item:
 	Dee_Decref(item);
 err:

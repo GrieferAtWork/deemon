@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/gc.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
@@ -303,14 +304,16 @@ sf_foreach_pair(SeqFlat *__restrict self, Dee_foreach_pair_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 sf_size_foreach_cb(void *arg, DeeObject *subseq) {
+	size_t sum, *p_sum = (size_t *)arg;
 	size_t subseq_size = DeeObject_InvokeMethodHint(seq_operator_size, subseq);
 	if unlikely(subseq_size == (size_t)-1)
 		goto err;
-	if (OVERFLOW_UADD(*(size_t *)arg, subseq_size, (size_t *)arg))
+	if (OVERFLOW_UADD(*p_sum, subseq_size, &sum))
 		goto err_overflow;
+	*p_sum = sum;
 	return 0;
 err_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowUAdd(*p_sum, subseq_size);
 err:
 	return -1;
 }
@@ -324,7 +327,7 @@ sf_size(SeqFlat *__restrict self) {
 		goto err_overflow;
 	return result;
 err_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowU(result, (size_t)-2);
 err:
 	return (size_t)-1;
 }

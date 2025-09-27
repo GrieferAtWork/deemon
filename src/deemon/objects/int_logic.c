@@ -1622,7 +1622,7 @@ int_shr(DeeIntObject *a, DeeObject *b) {
 		if (DeeObject_AsSSize(b, &shiftby))
 			goto err;
 		if (shiftby < 0) {
-			err_shift_negative((DeeObject *)a, b, false);
+			err_negative_shift((DeeObject *)a, b, false);
 			goto err;
 		}
 		wordshift = shiftby / DIGIT_BITS;
@@ -1658,7 +1658,7 @@ int_shl(DeeIntObject *a, DeeObject *b) {
 	if (DeeObject_AsSSize(b, &shiftby))
 		goto err;
 	if (shiftby < 0) {
-		err_shift_negative((DeeObject *)a, b, true);
+		err_negative_shift((DeeObject *)a, b, true);
 		goto err;
 	}
 	wordshift = shiftby / DIGIT_BITS;

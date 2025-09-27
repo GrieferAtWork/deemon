@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_OBJECT_FORMAT_C 1
 
 #include <deemon/api.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
@@ -98,6 +99,7 @@ object_format_generic(DeeObject *__restrict self,
 	filler_len      = 0;
 	while (format_str < format_end) {
 		uint8_t digit;
+		size_t temp_alignment_width;
 		ch = *format_str++;
 		if (!DeeUni_AsDigit(ch, 10, &digit)) {
 			if (ch != ':')
@@ -109,9 +111,10 @@ object_format_generic(DeeObject *__restrict self,
 				goto err_bad_format_str;
 			break;
 		}
-		if (OVERFLOW_UMUL(alignment_width, 10, &alignment_width) ||
-		    OVERFLOW_UADD(alignment_width, digit, &alignment_width))
-			return err_integer_overflow_i(sizeof(size_t) * 8, true);
+		if (OVERFLOW_UMUL(alignment_width, 10, &temp_alignment_width))
+			return DeeRT_ErrIntegerOverflowUMul(alignment_width, 10);
+		if (OVERFLOW_UADD(temp_alignment_width, digit, &alignment_width))
+			return DeeRT_ErrIntegerOverflowUAdd(temp_alignment_width, digit);
 	}
 
 	/* Special case: With an alignment width of ZERO(0), we already

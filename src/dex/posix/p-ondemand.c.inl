@@ -3983,6 +3983,7 @@ err_stat_no_info(char const *__restrict level) {
 #ifdef NEED_err_integer_overflow
 #undef NEED_err_integer_overflow
 INTERN ATTR_COLD int DCALL err_integer_overflow(void) {
+	/* TODO: Use `DeeRT_ErrIntegerOverflow()' */
 	return DeeError_Throwf(&DeeError_IntegerOverflow, "Integer overflow");
 }
 #endif /* NEED_err_integer_overflow */

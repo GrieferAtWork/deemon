@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -1129,7 +1130,7 @@ bytes_mul(Bytes *self, DeeObject *other) {
 	}
 	return result;
 err_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowUMul(my_length, repeat);
 err:
 	return NULL;
 }

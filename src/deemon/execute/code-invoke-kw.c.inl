@@ -111,7 +111,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 	kw_argc = DeeKwds_SIZE(kw);
 	if unlikely(kw_argc > GET_ARGC()) {
 		/* Argument list is too short of the given keywords */
-		err_keywords_bad_for_argc(GET_ARGC(), kw_argc);
+		err_keywords_bad_for_argc((DeeKwdsObject *)kw, GET_ARGC(), GET_ARGV());
 		goto err;
 	}
 	frame.cf_argc = GET_ARGC() - kw_argc; /* # of positional, non-keyword arguments. */

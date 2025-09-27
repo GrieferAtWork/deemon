@@ -26,6 +26,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -366,7 +367,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 					/* Rethrow the last active exception. */
 					ASSERT(self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET);
 					if (DeeThread_Self()->t_exceptsz <= self->jl_context->jc_except)
-						err_no_active_exception();
+						DeeRT_ErrNoActiveException();
 					result = NULL;
 #else /* JIT_EVAL */
 					result = 0;

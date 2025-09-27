@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/file.h>
@@ -4093,7 +4094,7 @@ thread_crash_error(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 		if (self != caller)
 			_DeeThread_ReleaseSetup(self);
 #endif /* !DeeThread_USE_SINGLE_THREADED */
-		err_no_active_exception();
+		DeeRT_ErrNoActiveException();
 		goto err;
 	}
 	result = self->t_except->ef_error;
@@ -4133,7 +4134,7 @@ thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject *const *arg
 		if (self != caller)
 			_DeeThread_ReleaseSetup(self);
 #endif /* !DeeThread_USE_SINGLE_THREADED */
-		err_no_active_exception();
+		DeeRT_ErrNoActiveException();
 		goto err;
 	}
 	result = (DeeObject *)self->t_except->ef_trace;

@@ -86,7 +86,7 @@ __seq_rfind__.seq_rfind([[nonnull]] DeeObject *self,
 	status = (*renum)(self, &default_seq_find_foreach_cb, &data, start, end);
 	if likely(status == -2) {
 		if unlikely(data.dsff_index == (size_t)Dee_COMPARE_ERR)
-			err_integer_overflow_i(sizeof(size_t) * 8, true);
+			DeeRT_ErrIntegerOverflowU(data.dsff_index, (size_t)Dee_COMPARE_ERR - 1);
 		return data.dsff_index;
 	}
 	if unlikely(status == -1)
@@ -105,24 +105,24 @@ err:
 	if unlikely(status == -1)
 		goto err;
 	if unlikely(data.dsrf_result == (size_t)Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
+		DeeRT_ErrIntegerOverflowU(data.dsrf_result, (size_t)Dee_COMPARE_ERR - 1);
 	return data.dsrf_result;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }} {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -183,7 +183,7 @@ __seq_rfind__.seq_rfind_with_key([[nonnull]] DeeObject *self,
 	Dee_Decref(data.dsfwkf_base.dsff_elem);
 	if likely(status == -2) {
 		if unlikely(data.dsfwkf_base.dsff_index == (size_t)Dee_COMPARE_ERR)
-			err_integer_overflow_i(sizeof(size_t) * 8, true);
+			DeeRT_ErrIntegerOverflowU(data.dsfwkf_base.dsff_index, (size_t)Dee_COMPARE_ERR - 1);
 		return data.dsfwkf_base.dsff_index;
 	}
 	if unlikely(status == -1)
@@ -205,24 +205,24 @@ err:
 	if unlikely(status == -1)
 		goto err;
 	if unlikely(data.dsrfwk_result == (size_t)Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
+		DeeRT_ErrIntegerOverflowU(data.dsrfwk_result, (size_t)Dee_COMPARE_ERR - 1);
 	return data.dsrfwk_result;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }} {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }

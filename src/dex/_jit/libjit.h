@@ -1643,7 +1643,6 @@ INTDEF DeeTypeObject JITYieldFunctionIterator_Type;
 
 
 /* RT Exception handlers. */
-INTDEF ATTR_COLD int DCALL err_no_active_exception(void);
 INTDEF ATTR_COLD ATTR_INS(1, 2) int DCALL err_invalid_argc_len(char const *function_name, size_t function_size, size_t argc_cur, size_t argc_min, size_t argc_max);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_global(DeeObject *__restrict key);
 INTDEF ATTR_COLD ATTR_INS(1, 2) int DCALL err_unknown_global_str_len(char const *__restrict key, size_t keylen);

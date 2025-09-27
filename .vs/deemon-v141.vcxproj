@@ -93,6 +93,7 @@
 		<ClInclude Include="..\include\deemon\dec.h" />
 		<ClInclude Include="..\include\deemon\dex.h" />
 		<ClInclude Include="..\include\deemon\dict.h" />
+		<ClInclude Include="..\include\deemon\error-rt.h" />
 		<ClInclude Include="..\include\deemon\error.h" />
 		<ClInclude Include="..\include\deemon\error_types.h" />
 		<ClInclude Include="..\include\deemon\exec.h" />
@@ -230,6 +231,7 @@
 		<ClInclude Include="..\include\deemon\util\rlock-utils.h" />
 		<ClInclude Include="..\include\deemon\util\rlock.h" />
 		<ClInclude Include="..\include\deemon\util\simple-hashset.h" />
+		<ClInclude Include="..\include\deemon\variant.h" />
 		<ClInclude Include="..\include\deemon\weakref.h" />
 		<ClInclude Include="..\src\deemon\Makefile" />
 		<ClInclude Include="..\src\deemon\cmdline.h" />
@@ -651,6 +653,7 @@
 		<ClCompile Include="..\src\deemon\runtime\builtin.c" />
 		<ClCompile Include="..\src\deemon\runtime\builtin_functions.c" />
 		<ClCompile Include="..\src\deemon\runtime\computed-operators.c" />
+		<ClCompile Include="..\src\deemon\runtime\error-rt.c" />
 		<ClCompile Include="..\src\deemon\runtime\error.c" />
 		<ClCompile Include="..\src\deemon\runtime\format.c" />
 		<ClCompile Include="..\src\deemon\runtime\gc.c" />
@@ -681,6 +684,7 @@
 		<ClCompile Include="..\src\deemon\runtime\strings.c" />
 		<ClCompile Include="..\src\deemon\runtime\thread.c" />
 		<ClCompile Include="..\src\deemon\runtime\type_member.c" />
+		<ClCompile Include="..\src\deemon\runtime\variant.c" />
 		<ClCompile Include="..\src\deemon\system\file.c" />
 		<ClCompile Include="..\src\deemon\system\futex.c" />
 		<ClCompile Include="..\src\deemon\system\system.c" />

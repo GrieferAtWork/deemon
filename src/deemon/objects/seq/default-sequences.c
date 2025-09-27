@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
 #include <deemon/method-hints.h>
@@ -2089,28 +2090,28 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_ial_getitem_index(DefaultSequence_WithIterAndLimit *__restrict self, size_t index) {
-	size_t iter_status;
+	size_t iter_status, abs_index;
 	DREF DeeObject *result, *iter;
 	if unlikely(index >= self->dsial_limit)
 		goto err_obb;
-	if unlikely(OVERFLOW_UADD(index, self->dsial_start, &index))
+	if unlikely(OVERFLOW_UADD(index, self->dsial_start, &abs_index))
 		goto err_overflow;
 	iter = (*self->dsial_tp_iter)(self->dsial_seq);
 	if unlikely(!iter)
 		goto err;
-	iter_status = DeeObject_IterAdvance(iter, index);
-	if (iter_status != index) {
+	iter_status = DeeObject_IterAdvance(iter, abs_index);
+	if (iter_status != abs_index) {
 		if unlikely(iter_status == (size_t)-1)
 			goto err_iter;
 		if (OVERFLOW_USUB(iter_status, self->dsial_start, &iter_status))
 			iter_status = 0;
-		err_index_out_of_bounds((DeeObject *)self, index, iter_status);
+		err_index_out_of_bounds((DeeObject *)self, abs_index, iter_status);
 		goto err_iter;
 	}
 	result = DeeObject_IterNext(iter);
 	Dee_Decref(iter);
 	if unlikely(result == ITER_DONE) {
-		index -= self->dsial_start;
+		ASSERT(index == (abs_index - self->dsial_start));
 		err_index_out_of_bounds((DeeObject *)self, index, index);
 		goto err;
 	}
@@ -2120,7 +2121,7 @@ err_iter:
 err:
 	return NULL;
 err_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowUAdd(index, self->dsial_start);
 	goto err;
 err_obb:
 	err_index_out_of_bounds((DeeObject *)self, index, self->dsial_limit);

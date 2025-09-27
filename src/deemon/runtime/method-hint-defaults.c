@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/class.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -78,6 +79,10 @@
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
+
+#ifndef CHAR_BIT
+#define CHAR_BIT __CHAR_BIT__
+#endif /* !CHAR_BIT */
 
 DECL_BEGIN
 
@@ -632,7 +637,7 @@ default__seq_operator_size__with__seq_enumerate_index(DeeObject *__restrict self
 		goto err;
 	++result;
 	if unlikely(result == (size_t)-1)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
+		DeeRT_ErrIntegerOverflowU(result, (size_t)-2);
 	return result;
 err:
 	return (size_t)-1;
@@ -11319,18 +11324,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_find__with_callattr_find(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_find, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -11338,18 +11343,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_find__with_callattr___seq_find__(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_find__, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -11360,18 +11365,18 @@ default__seq_find__with_callobjectcache___seq_find__(DeeObject *self, DeeObject 
 	return tdefault__seq_find__with_callobjectcache___seq_find__(Dee_TYPE(self), self, item, start, end);
 #else /* __OPTIMIZE_SIZE__ */
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_find__, self, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -11418,7 +11423,7 @@ default__seq_find__with__seq_enumerate_index(DeeObject *self, DeeObject *item, s
 	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_find_foreach_cb, &data, start, end);
 	if likely(status == -2) {
 		if unlikely(data.dsff_index == (size_t)Dee_COMPARE_ERR)
-			err_integer_overflow_i(sizeof(size_t) * 8, true);
+			DeeRT_ErrIntegerOverflowU(data.dsff_index, (size_t)Dee_COMPARE_ERR - 1);
 		return data.dsff_index;
 	}
 	if unlikely(status == -1)
@@ -11433,18 +11438,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_find_with_key__with_callattr_find(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_find, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -11452,18 +11457,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_find_with_key__with_callattr___seq_find__(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_find__, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -11474,18 +11479,18 @@ default__seq_find_with_key__with_callobjectcache___seq_find__(DeeObject *self, D
 	return tdefault__seq_find_with_key__with_callobjectcache___seq_find__(Dee_TYPE(self), self, item, start, end, key);
 #else /* __OPTIMIZE_SIZE__ */
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_find__, self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -11536,7 +11541,7 @@ default__seq_find_with_key__with__seq_enumerate_index(DeeObject *self, DeeObject
 	Dee_Decref(data.dsfwkf_base.dsff_elem);
 	if likely(status == -2) {
 		if unlikely(data.dsfwkf_base.dsff_index == (size_t)Dee_COMPARE_ERR)
-			err_integer_overflow_i(sizeof(size_t) * 8, true);
+			DeeRT_ErrIntegerOverflowU(data.dsfwkf_base.dsff_index, (size_t)Dee_COMPARE_ERR - 1);
 		return data.dsfwkf_base.dsff_index;
 	}
 	if unlikely(status == -1)
@@ -11551,18 +11556,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_rfind__with_callattr_rfind(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_rfind, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -11570,18 +11575,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_rfind__with_callattr___seq_rfind__(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_rfind__, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -11592,18 +11597,18 @@ default__seq_rfind__with_callobjectcache___seq_rfind__(DeeObject *self, DeeObjec
 	return tdefault__seq_rfind__with_callobjectcache___seq_rfind__(Dee_TYPE(self), self, item, start, end);
 #else /* __OPTIMIZE_SIZE__ */
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_rfind__, self, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -11626,7 +11631,7 @@ default__seq_rfind__with__seq_enumerate_index_reverse(DeeObject *self, DeeObject
 	status = (*renum)(self, &default_seq_find_foreach_cb, &data, start, end);
 	if likely(status == -2) {
 		if unlikely(data.dsff_index == (size_t)Dee_COMPARE_ERR)
-			err_integer_overflow_i(sizeof(size_t) * 8, true);
+			DeeRT_ErrIntegerOverflowU(data.dsff_index, (size_t)Dee_COMPARE_ERR - 1);
 		return data.dsff_index;
 	}
 	if unlikely(status == -1)
@@ -11671,7 +11676,7 @@ default__seq_rfind__with__seq_enumerate_index(DeeObject *self, DeeObject *item, 
 	if unlikely(status == -1)
 		goto err;
 	if unlikely(data.dsrf_result == (size_t)Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
+		DeeRT_ErrIntegerOverflowU(data.dsrf_result, (size_t)Dee_COMPARE_ERR - 1);
 	return data.dsrf_result;
 err:
 	return (size_t)Dee_COMPARE_ERR;
@@ -11682,18 +11687,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_rfind_with_key__with_callattr_rfind(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_rfind, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -11701,18 +11706,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_rfind_with_key__with_callattr___seq_rfind__(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_rfind__, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -11723,18 +11728,18 @@ default__seq_rfind_with_key__with_callobjectcache___seq_rfind__(DeeObject *self,
 	return tdefault__seq_rfind_with_key__with_callobjectcache___seq_rfind__(Dee_TYPE(self), self, item, start, end, key);
 #else /* __OPTIMIZE_SIZE__ */
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_rfind__, self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -11761,7 +11766,7 @@ default__seq_rfind_with_key__with__seq_enumerate_index_reverse(DeeObject *self, 
 	Dee_Decref(data.dsfwkf_base.dsff_elem);
 	if likely(status == -2) {
 		if unlikely(data.dsfwkf_base.dsff_index == (size_t)Dee_COMPARE_ERR)
-			err_integer_overflow_i(sizeof(size_t) * 8, true);
+			DeeRT_ErrIntegerOverflowU(data.dsfwkf_base.dsff_index, (size_t)Dee_COMPARE_ERR - 1);
 		return data.dsfwkf_base.dsff_index;
 	}
 	if unlikely(status == -1)
@@ -11810,7 +11815,7 @@ default__seq_rfind_with_key__with__seq_enumerate_index(DeeObject *self, DeeObjec
 	if unlikely(status == -1)
 		goto err;
 	if unlikely(data.dsrfwk_result == (size_t)Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
+		DeeRT_ErrIntegerOverflowU(data.dsrfwk_result, (size_t)Dee_COMPARE_ERR - 1);
 	return data.dsrfwk_result;
 err:
 	return (size_t)Dee_COMPARE_ERR;
@@ -11867,12 +11872,10 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_erase__with__seq_operator_delrange_index(DeeObject *__restrict self, size_t index, size_t count) {
 	size_t end_index;
 	if unlikely(OVERFLOW_UADD(index, count, &end_index))
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowUAdd(index, count);
 	if unlikely(end_index > SSIZE_MAX)
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowU(end_index, SSIZE_MAX);
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_delrange_index))(self, (Dee_ssize_t)index, (Dee_ssize_t)end_index);
-err_overflow:
-	return err_integer_overflow_i((sizeof(size_t) * 8) - 1, true);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -11880,7 +11883,7 @@ default__seq_erase__with__seq_pop(DeeObject *__restrict self, size_t index, size
 	DeeMH_seq_pop_t cached_seq_pop = DeeType_RequireMethodHint(Dee_TYPE(self), seq_pop);
 	size_t end_index;
 	if unlikely(OVERFLOW_UADD(index, count, &end_index))
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowUAdd(index, count);
 	while (end_index > index) {
 		--end_index;
 		if unlikely((*cached_seq_pop)(self, (Dee_ssize_t)end_index))
@@ -11889,8 +11892,6 @@ default__seq_erase__with__seq_pop(DeeObject *__restrict self, size_t index, size
 			goto err;
 	}
 	return 0;
-err_overflow:
-	err_integer_overflow_i((sizeof(size_t) * 8) - 1, true);
 err:
 	return -1;
 }
@@ -14315,8 +14316,10 @@ default__seq_bfind__with__seq_operator_size__and__seq_operator_trygetitem_index(
 			} else {
 				/* Found it! (at "mid") */
 				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
-				if unlikely(mid == (size_t)Dee_COMPARE_ERR)
+				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
+					end = mid;
 					goto err_item_overflow;
+				}
 				return mid;
 			}
 			/* Since this runs in O(log(N)), there's no need to check for interrupts! */
@@ -14325,7 +14328,7 @@ default__seq_bfind__with__seq_operator_size__and__seq_operator_trygetitem_index(
 	ASSERT(start >= end);
 	return (size_t)-1;
 err_item_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -14435,8 +14438,10 @@ default__seq_bfind_with_key__with__seq_operator_size__and__seq_operator_trygetit
 			} else {
 				/* Found it! (at "mid") */
 				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
-				if unlikely(mid == (size_t)Dee_COMPARE_ERR)
+				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
+					end = mid;
 					goto err_item_overflow;
+				}
 				Dee_Decref(item);
 				return mid;
 			}
@@ -14447,7 +14452,7 @@ default__seq_bfind_with_key__with__seq_operator_size__and__seq_operator_trygetit
 	Dee_Decref(item);
 	return (size_t)-1;
 err_item_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
 err_item:
 	Dee_Decref(item);
 err:
@@ -14556,8 +14561,10 @@ default__seq_bposition__with__seq_operator_size__and__seq_operator_trygetitem_in
 			} else {
 				/* Found it! (at "mid") */
 				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
-				if unlikely(mid == (size_t)Dee_COMPARE_ERR)
+				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
+					end = mid;
 					goto err_item_overflow;
+				}
 				return mid;
 			}
 			/* Since this runs in O(log(N)), there's no need to check for interrupts! */
@@ -14568,7 +14575,7 @@ default__seq_bposition__with__seq_operator_size__and__seq_operator_trygetitem_in
 		goto err_item_overflow;
 	return end;
 err_item_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -14678,8 +14685,10 @@ default__seq_bposition_with_key__with__seq_operator_size__and__seq_operator_tryg
 			} else {
 				/* Found it! (at "mid") */
 				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
-				if unlikely(mid == (size_t)Dee_COMPARE_ERR)
+				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
+					end = mid;
 					goto err_item_overflow;
+				}
 				Dee_Decref(item);
 				return mid;
 			}
@@ -14692,7 +14701,7 @@ default__seq_bposition_with_key__with__seq_operator_size__and__seq_operator_tryg
 		goto err_item_overflow;
 	return end;
 err_item_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
 err_item:
 	Dee_Decref(item);
 err:
@@ -22257,18 +22266,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 tdefault__seq_find__with_callobjectcache___seq_find__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_find__, self, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -22277,18 +22286,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3, 6)) size_t DCALL
 tdefault__seq_find_with_key__with_callobjectcache___seq_find__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_find__, self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -22297,18 +22306,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 tdefault__seq_rfind__with_callobjectcache___seq_rfind__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_rfind__, self, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -22317,18 +22326,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3, 6)) size_t DCALL
 tdefault__seq_rfind_with_key__with_callobjectcache___seq_rfind__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_rfind__, self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }

@@ -979,7 +979,7 @@ Dee_rshared_rwlock_upgrade(Dee_rshared_rwlock_t *__restrict self) {
 	return Dee_rshared_rwlock_write(self);
 }
 
-LOCAL WUNUSED NONNULL((1)) __BOOL DCALL
+LOCAL WUNUSED NONNULL((1)) bool DCALL
 Dee_rshared_rwlock_upgrade_noint(Dee_rshared_rwlock_t *__restrict self) {
 	if (Dee_rshared_rwlock_tryupgrade(self))
 		return 1;

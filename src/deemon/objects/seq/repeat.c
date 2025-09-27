@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
@@ -483,7 +484,7 @@ repeat_size(Repeat *__restrict self) {
 	if unlikely(base_size == (size_t)-1)
 		return (size_t)-1;
 	if (OVERFLOW_UMUL(base_size, self->rp_num, &result)) {
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
+		DeeRT_ErrIntegerOverflowUAdd(base_size, self->rp_num);
 		return (size_t)-1;
 	}
 	return result;
@@ -932,7 +933,7 @@ repeatitem_contains(RepeatItem *self,
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 repeatitem_size(RepeatItem *__restrict self) {
 	if unlikely(self->rpit_num == (size_t)-1)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
+		DeeRT_ErrIntegerOverflowU(self->rpit_num, (size_t)-2);
 	return self->rpit_num;
 }
 
@@ -1014,7 +1015,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 repeatitem_asvector(RepeatItem *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	if unlikely(self->rpit_num == (size_t)-1) {
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
+		DeeRT_ErrIntegerOverflowU(self->rpit_num, (size_t)-2);
 	} else {
 		if likely(dst_length >= self->rpit_num)
 			Dee_Setrefv(dst, self->rpit_obj, self->rpit_num);

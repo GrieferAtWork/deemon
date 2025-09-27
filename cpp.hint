@@ -1418,7 +1418,7 @@
 #define keyword                        Dee_keyword
 #define kwds_entry                     dee_kwds_entry
 #define kwds_mapping_object            dee_kwds_mapping_object
-#define kwds_object                    dee_kwds_object
+#define kwds_object                    Dee_kwds_object
 
 
 

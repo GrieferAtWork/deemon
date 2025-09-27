@@ -1441,7 +1441,7 @@ target_rethrow:
 	/* Rethrow an exception of the caller. */
 	movl   t_except(%eax),     %ecx
 	testl  %ecx, %ecx
-	/* if (!this_thread->t_except) err_no_active_exception(); */
+	/* if (!this_thread->t_except) DeeRT_ErrNoActiveException(); */
 	jz     .except_no_active_exception
 	movl   ef_error(%ecx),     %ecx
 	ASSERT_NONZERO(%ecx)
@@ -1452,7 +1452,7 @@ target_rethrow:
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .except
 .except_no_active_exception:
-	call   fSYM(err_no_active_exception,0)
+	call   fSYM(DeeRT_ErrNoActiveException,0)
 	jmp    .except
 
 
@@ -3633,12 +3633,14 @@ target_varargs_getitem_i:
 	LOAD_CODE(%edx)
 	movzwl co_argc_max(CODE_OR_EDX), %edx
 	subl   %edx, %ecx       /* ECX = frame->cf_argc - code->co_argc_max */
+	pushl  FRAME_FUNC       /* err_va_index_out_of_bounds:func */
+	ADJUST_CFA_OFFSET(4)
 	pushl  %ecx             /* err_va_index_out_of_bounds:size */
 	ADJUST_CFA_OFFSET(4)
 	pushl  %eax             /* err_va_index_out_of_bounds:index */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(err_va_index_out_of_bounds,8)
-	ADJUST_CFA_OFFSET(-8)
+	call   fSYM(err_va_index_out_of_bounds,12)
+	ADJUST_CFA_OFFSET(-12)
 	jmp    .except
 
 

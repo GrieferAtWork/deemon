@@ -35,6 +35,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -84,6 +85,43 @@
 #ifndef CHAR_BIT
 #define CHAR_BIT __CHAR_BIT__
 #endif /* !CHAR_BIT */
+
+#ifndef INT8_MIN
+#define INT8_MIN __INT8_MIN__
+#endif /* !INT8_MIN */
+#ifndef INT8_MAX
+#define INT8_MAX __INT8_MAX__
+#endif /* !INT8_MAX */
+#ifndef UINT8_MAX
+#define UINT8_MAX __UINT8_MAX__
+#endif /* !UINT8_MAX */
+#ifndef INT16_MIN
+#define INT16_MIN __INT16_MIN__
+#endif /* !INT16_MIN */
+#ifndef INT16_MAX
+#define INT16_MAX __INT16_MAX__
+#endif /* !INT16_MAX */
+#ifndef UINT16_MAX
+#define UINT16_MAX __UINT16_MAX__
+#endif /* !UINT16_MAX */
+#ifndef INT32_MIN
+#define INT32_MIN __INT32_MIN__
+#endif /* !INT32_MIN */
+#ifndef INT32_MAX
+#define INT32_MAX __INT32_MAX__
+#endif /* !INT32_MAX */
+#ifndef UINT32_MAX
+#define UINT32_MAX __UINT32_MAX__
+#endif /* !UINT32_MAX */
+#ifndef INT64_MIN
+#define INT64_MIN __INT64_MIN__
+#endif /* !INT64_MIN */
+#ifndef INT64_MAX
+#define INT64_MAX __INT64_MAX__
+#endif /* !INT64_MAX */
+#ifndef UINT64_MAX
+#define UINT64_MAX __UINT64_MAX__
+#endif /* !UINT64_MAX */
 
 #ifndef CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS
 #if defined(__OPTIMIZE_SIZE__) && defined(CONFIG_HAVE_MATH_H)
@@ -2037,10 +2075,11 @@ invalid:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1, 4)) int
-(DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str,
-                   size_t len, uint32_t radix_and_flags,
-                   int64_t *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 4)) int
+(DCALL Dee_Atoi64_impl)(/*utf-8*/ char const *__restrict str,
+                        size_t len, uint32_t radix_and_flags,
+                        int64_t *__restrict value,
+                        size_t cutoff_bits_for_overflow_errors) {
 	unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
 	char const *iter;
 	char const *start = str;
@@ -2072,12 +2111,8 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 		}
 		break;
 	}
-	if unlikely(negative && !(radix_and_flags & DEEATOI_STRING_FSIGNED)) {
-		/* Negative value when unsigned was needed. */
-		if (radix_and_flags & DEEINT_STRING_FTRY)
-			return 1;
-		return err_integer_overflow_i(64, false);
-	}
+	if unlikely(negative && !(radix_and_flags & DEEATOI_STRING_FSIGNED))
+		goto err_overflow; /* Negative value when unsigned was required. */
 	if (!radix) {
 		/* Automatically determine the radix. */
 		uint32_t leading_zero;
@@ -2172,7 +2207,23 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 err_overflow:
 	if (radix_and_flags & DEEINT_STRING_FTRY)
 		return 1;
-	return err_integer_overflow_i(64, !negative);
+	{
+		DREF DeeIntObject *intob;
+		intob = (DREF DeeIntObject *)DeeInt_FromString(str, len, radix_and_flags);
+		if likely(intob) {
+			unsigned int flags;
+			flags = DeeInt_IsNeg(intob) ? DeeRT_ErrIntegerOverflowEx_F_NEGATIVE
+			                            : DeeRT_ErrIntegerOverflowEx_F_POSITIVE;
+			flags |= (radix_and_flags & DEEATOI_STRING_FSIGNED)
+			         ? DeeRT_ErrIntegerOverflowEx_F_SIGNED
+			         : DeeRT_ErrIntegerOverflowEx_F_UNSIGNED;
+			DeeRT_ErrIntegerOverflowEx((DeeObject *)intob,
+			                           cutoff_bits_for_overflow_errors,
+			                           flags);
+			Dee_Decref_likely(intob);
+		}
+		return -1;
+	}
 err_invalid:
 	if (radix_and_flags & DEEINT_STRING_FTRY)
 		return 1;
@@ -2182,20 +2233,27 @@ err_invalid:
 }
 
 PUBLIC WUNUSED NONNULL((1, 4)) int
+(DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str,
+                   size_t len, uint32_t radix_and_flags,
+                   int64_t *__restrict value) {
+	return Dee_Atoi64_impl(str, len, radix_and_flags, value, 64);
+}
+
+PUBLIC WUNUSED NONNULL((1, 4)) int
 (DCALL Dee_Atoi32)(/*utf-8*/ char const *__restrict str,
                    size_t len, uint32_t radix_and_flags,
                    int32_t *__restrict value) {
 	int64_t val64;
-	int result = Dee_Atoi64(str, len, radix_and_flags, &val64);
+	int result = Dee_Atoi64_impl(str, len, radix_and_flags, &val64, 32);
 	if (result == 0) {
 		if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
 			if unlikely(val64 < INT32_MIN || val64 > INT32_MAX) {
-				err_integer_overflow_i(32, val64 < 0);
+				DeeRT_ErrIntegerOverflowS64(val64, INT32_MIN, INT32_MAX);
 				goto err;
 			}
 		} else {
 			if unlikely((uint64_t)val64 > UINT32_MAX) {
-				err_integer_overflow_i(32, true);
+				DeeRT_ErrIntegerOverflowU64(val64, UINT32_MAX);
 				goto err;
 			}
 		}
@@ -2211,16 +2269,16 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
                    size_t len, uint32_t radix_and_flags,
                    int16_t *__restrict value) {
 	int64_t val64;
-	int result = Dee_Atoi64(str, len, radix_and_flags, &val64);
+	int result = Dee_Atoi64_impl(str, len, radix_and_flags, &val64, 16);
 	if (result == 0) {
 		if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
 			if unlikely(val64 < INT16_MIN || val64 > INT16_MAX) {
-				err_integer_overflow_i(16, val64 < 0);
+				DeeRT_ErrIntegerOverflowS64(val64, INT16_MIN, INT16_MAX);
 				goto err;
 			}
 		} else {
 			if unlikely((uint64_t)val64 > UINT16_MAX) {
-				err_integer_overflow_i(16, true);
+				DeeRT_ErrIntegerOverflowU64(val64, UINT16_MAX);
 				goto err;
 			}
 		}
@@ -2239,16 +2297,16 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
                   size_t len, uint32_t radix_and_flags,
                   int8_t *__restrict value) {
 	int64_t val64;
-	int result = Dee_Atoi64(str, len, radix_and_flags, &val64);
+	int result = Dee_Atoi64_impl(str, len, radix_and_flags, &val64, 8);
 	if (result == 0) {
 		if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
 			if unlikely(val64 < INT8_MIN || val64 > INT8_MAX) {
-				err_integer_overflow_i(8, val64 < 0);
+				DeeRT_ErrIntegerOverflowS64(val64, INT8_MIN, INT8_MAX);
 				goto err;
 			}
 		} else {
 			if unlikely((uint64_t)val64 > UINT8_MAX) {
-				err_integer_overflow_i(8, true);
+				DeeRT_ErrIntegerOverflowU64(val64, UINT8_MAX);
 				goto err;
 			}
 		}
@@ -3041,7 +3099,11 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return result;
 err_overflow:
-	return err_integer_overflow(self, 8, result == INT_POS_OVERFLOW);
+	return DeeRT_ErrIntegerOverflowEx(self, 8,
+	                                  DeeRT_ErrIntegerOverflowEx_F_ANYSIGN |
+	                                  (result == INT_POS_OVERFLOW
+	                                   ? DeeRT_ErrIntegerOverflowEx_F_POSITIVE
+	                                   : DeeRT_ErrIntegerOverflowEx_F_NEGATIVE));
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3052,7 +3114,11 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return result;
 err_overflow:
-	return err_integer_overflow(self, 16, result == INT_POS_OVERFLOW);
+	return DeeRT_ErrIntegerOverflowEx(self, 16,
+	                                  DeeRT_ErrIntegerOverflowEx_F_ANYSIGN |
+	                                  (result == INT_POS_OVERFLOW
+	                                   ? DeeRT_ErrIntegerOverflowEx_F_POSITIVE
+	                                   : DeeRT_ErrIntegerOverflowEx_F_NEGATIVE));
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3063,7 +3129,11 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return result;
 err_overflow:
-	return err_integer_overflow(self, 32, result == INT_POS_OVERFLOW);
+	return DeeRT_ErrIntegerOverflowEx(self, 32,
+	                                  DeeRT_ErrIntegerOverflowEx_F_ANYSIGN |
+	                                  (result == INT_POS_OVERFLOW
+	                                   ? DeeRT_ErrIntegerOverflowEx_F_POSITIVE
+	                                   : DeeRT_ErrIntegerOverflowEx_F_NEGATIVE));
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3074,7 +3144,11 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return result;
 err_overflow:
-	return err_integer_overflow(self, 64, result == INT_POS_OVERFLOW);
+	return DeeRT_ErrIntegerOverflowEx(self, 64,
+	                                  DeeRT_ErrIntegerOverflowEx_F_ANYSIGN |
+	                                  (result == INT_POS_OVERFLOW
+	                                   ? DeeRT_ErrIntegerOverflowEx_F_POSITIVE
+	                                   : DeeRT_ErrIntegerOverflowEx_F_NEGATIVE));
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3085,7 +3159,11 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return result;
 err_overflow:
-	return err_integer_overflow(self, 128, result == INT_POS_OVERFLOW);
+	return DeeRT_ErrIntegerOverflowEx(self, 128,
+	                                  DeeRT_ErrIntegerOverflowEx_F_ANYSIGN |
+	                                  (result == INT_POS_OVERFLOW
+	                                   ? DeeRT_ErrIntegerOverflowEx_F_POSITIVE
+	                                   : DeeRT_ErrIntegerOverflowEx_F_NEGATIVE));
 }
 
 /* Read the signed/unsigned values from the given integer.
@@ -3099,7 +3177,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 8, true);
+	return DeeRT_ErrIntegerOverflowEx(self, 8,
+	                                  DeeRT_ErrIntegerOverflowEx_F_SIGNED |
+	                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3110,7 +3190,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 16, true);
+	return DeeRT_ErrIntegerOverflowEx(self, 16,
+	                                  DeeRT_ErrIntegerOverflowEx_F_SIGNED |
+	                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3121,7 +3203,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 32, true);
+	return DeeRT_ErrIntegerOverflowEx(self, 32,
+	                                  DeeRT_ErrIntegerOverflowEx_F_SIGNED |
+	                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3132,7 +3216,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 64, true);
+	return DeeRT_ErrIntegerOverflowEx(self, 64,
+	                                  DeeRT_ErrIntegerOverflowEx_F_SIGNED |
+	                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3143,7 +3229,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 128, true);
+	return DeeRT_ErrIntegerOverflowEx(self, 128,
+	                                  DeeRT_ErrIntegerOverflowEx_F_SIGNED |
+	                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3154,7 +3242,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 8, false);
+	return DeeRT_ErrIntegerOverflowEx(self, 8,
+	                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
+	                                  DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3165,7 +3255,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 16, false);
+	return DeeRT_ErrIntegerOverflowEx(self, 16,
+	                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
+	                                  DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3176,7 +3268,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 32, false);
+	return DeeRT_ErrIntegerOverflowEx(self, 32,
+	                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
+	                                  DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3187,7 +3281,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 64, false);
+	return DeeRT_ErrIntegerOverflowEx(self, 64,
+	                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
+	                                  DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3198,7 +3294,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 128, false);
+	return DeeRT_ErrIntegerOverflowEx(self, 128,
+	                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
+	                                  DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3279,7 +3377,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 8, false);
+	return DeeRT_ErrIntegerOverflowS16(*(int8_t *)value, -1, UINT8_MAX);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3290,7 +3388,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 16, false);
+	return DeeRT_ErrIntegerOverflowS32(*(int16_t *)value, -1, UINT16_MAX);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3301,7 +3399,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 32, false);
+	return DeeRT_ErrIntegerOverflowS64(*(int32_t *)value, -1, UINT32_MAX);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
@@ -3311,9 +3409,46 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	if (error == INT_SIGNED && *(int64_t const *)value < -1)
 		goto err_overflow;
 	return 0;
+	{
+		Dee_int128_t val128, minval;
+		Dee_uint128_t maxval;
 err_overflow:
-	return err_integer_overflow(self, 64, false);
+		__hybrid_int128_set64(val128, *(int32_t *)value);
+		__hybrid_int128_setminusone(minval);
+		__hybrid_uint128_set64(maxval, UINT64_MAX);
+		return DeeRT_ErrIntegerOverflowS128(val128, minval, *(Dee_int128_t *)&maxval);
+	}
 }
+
+INTERN struct {
+	OBJECT_HEAD
+	Dee_ssize_t _size;
+	Dee_digit_t _digits[CEILDIV(128, Dee_DIGIT_BITS)];
+} dee_uint128_max = {
+	OBJECT_HEAD_INIT(&DeeInt_Type),
+	CEILDIV(128, Dee_DIGIT_BITS),
+	{
+#if Dee_DIGIT_BITS == 15
+		UINT16_C(0x7fff), /* +15 = 15 */
+		UINT16_C(0x7fff), /* +15 = 30 */
+		UINT16_C(0x7fff), /* +15 = 45 */
+		UINT16_C(0x7fff), /* +15 = 60 */
+		UINT16_C(0x7fff), /* +15 = 75 */
+		UINT16_C(0x7fff), /* +15 = 90 */
+		UINT16_C(0x7fff), /* +15 = 105 */
+		UINT16_C(0x7fff), /* +15 = 120 */
+		UINT16_C(0x00ff), /* +8  = 128 */
+#elif Dee_DIGIT_BITS == 30
+		UINT32_C(0x3fffffff), /* +30 = 30 */
+		UINT32_C(0x3fffffff), /* +30 = 60 */
+		UINT32_C(0x3fffffff), /* +30 = 90 */
+		UINT32_C(0x3fffffff), /* +30 = 120 */
+		UINT32_C(0x000000ff), /* +8  = 128 */
+#else /* Dee_DIGIT_BITS == ... */
+#error "Unsupported 'Dee_DIGIT_BITS'"
+#endif /* Dee_DIGIT_BITS != ... */
+	}
+};
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsUInt128M1)(/*Int*/ DeeObject *__restrict self,
@@ -3325,7 +3460,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return err_integer_overflow(self, 128, false);
+	return DeeRT_ErrIntegerOverflow(self, DeeInt_MinusOne,
+	                                (DeeObject *)&dee_uint128_max,
+	                                false);
 }
 
 
@@ -3357,7 +3494,9 @@ PUBLIC WUNUSED ATTR_OUTS(2, 3) NONNULL((1)) int
 		count = (size_t)(-(Dee_ssize_t)count);
 		leading_byte = 0xff;
 		if unlikely(!as_signed) {
-			err_integer_overflow((DeeObject *)me, 0, false);
+			DeeRT_ErrIntegerOverflowEx((DeeObject *)me, length * CHAR_BIT,
+			                           DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
+			                           DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 			goto err;
 		}
 	}
@@ -3481,7 +3620,10 @@ done_decr:
 #endif
 	return 0;
 err_overflow:
-	err_integer_overflow((DeeObject *)me, length * CHAR_BIT, true);
+	DeeRT_ErrIntegerOverflowEx((DeeObject *)me, length * CHAR_BIT,
+	                           (as_signed ? DeeRT_ErrIntegerOverflowEx_F_SIGNED
+	                                      : DeeRT_ErrIntegerOverflowEx_F_UNSIGNED) |
+	                           (DeeRT_ErrIntegerOverflowEx_F_POSITIVE));
 err:
 	return -1;
 }
@@ -4469,7 +4611,9 @@ not_a_limit_int:
 	}
 	return result;
 err_underflow:
-	err_integer_overflow((DeeObject *)self, 0, false);
+	DeeRT_ErrIntegerOverflowEx((DeeObject *)self, 0,
+	                           DeeRT_ErrIntegerOverflowEx_F_NEGATIVE |
+	                           DeeRT_ErrIntegerOverflowEx_F_UNSIGNED);
 	return (size_t)-1;
 }
 

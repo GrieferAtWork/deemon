@@ -27,6 +27,7 @@
 #include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -2105,7 +2106,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err;
 #if __SIZEOF_SIZE_T__ > 4
 	if unlikely(text_buf.bb_size > (code_size_t)-1) {
-		err_integer_overflow_i(32, true);
+		DeeRT_ErrIntegerOverflowU(text_buf.bb_size, __UINT32_MAX__);
 		goto err_buf;
 	}
 #endif /* __SIZEOF_SIZE_T__ > 4 */
@@ -2201,7 +2202,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		if unlikely(constants_cnt > (uint16_t)-1) {
 			Dee_Decrefv(constants_vec, constants_cnt);
 			Dee_Free(constants_vec);
-			err_integer_overflow_i(16, true);
+			DeeRT_ErrIntegerOverflowU(constants_cnt, __UINT16_MAX__);
 			goto err_r_defaultv;
 		}
 		result->co_constc = (uint16_t)constants_cnt;

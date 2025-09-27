@@ -55,10 +55,6 @@ err_invalid_argc_len(char const *function_name, size_t function_size,
 	}
 }
 
-INTERN ATTR_COLD int DCALL err_no_active_exception(void) {
-	return DeeError_Throwf(&DeeError_RuntimeError, "No active exception");
-}
-
 INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unknown_global(DeeObject *__restrict key) {
 	ASSERT_OBJECT(key);

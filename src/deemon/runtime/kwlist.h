@@ -136,6 +136,9 @@ local kw_lists = {
 	{"total", "more"},
 	{"total", "more", "weak"},
 
+	// For runtime errors...
+	{"value", "minval", "maxval", "positive"},
+
 	{"#ifdef CONFIG_HOST_WINDOWS", "message", "inner", "errno", "nterr_np"},
 	{"#ifndef CONFIG_HOST_WINDOWS", "message", "inner", "errno"},
 };
@@ -262,6 +265,7 @@ DECLARE_KWLIST(kwlist__thisarg_value, { KEX("thisarg", 0xfeb6b4f, 0xd3f418e6f91d
 DECLARE_KWLIST(kwlist__total_more, { KEX("total", 0x48601e35, 0xd63cdba353c9c786), KEX("more", 0x8a39c376, 0xff9278cf274776cc), KEND });
 DECLARE_KWLIST(kwlist__total_more_weak, { KEX("total", 0x48601e35, 0xd63cdba353c9c786), KEX("more", 0x8a39c376, 0xff9278cf274776cc), KEX("weak", 0x41118332, 0xc8855a0749fb5152), KEND });
 DECLARE_KWLIST(kwlist__tuple_kwds_async, { KEX("tuple", 0x8abf5ca6, 0x32af754eabcdc75a), KEX("kwds", 0x6dfae69b, 0x66fee9115d75f3ef), KEX("async", 0x4499f053, 0xcc6733737627be1e), KEND });
+DECLARE_KWLIST(kwlist__value_minval_maxval_positive, { KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEX("minval", 0xe27ba338, 0x4e47c2b647c0c914), KEX("maxval", 0x9b12afc9, 0x5d03f68d9f1f4fca), KEX("positive", 0x1d6e0331, 0xde5754ca3c53de03), KEND });
 DECLARE_KWLIST(kwlist__value_scope_loc, { KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEX("scope", 0x8b65b2f8, 0x52824a24d6447e5), KEX("loc", 0x4f1e6896, 0xc8a6c6e417ce00f9), KEND });
 DECLARE_KWLIST(kwlist__yfunc_argc_ridstart_ridend, { KEX("yfunc", 0xdedea038, 0xc47ce4fa3cfab784), KEX("argc", 0xe5c6c120, 0xd96a642eb89eed13), KEX("ridstart", 0x1948fbda, 0xf5df625781b6632b), KEX("ridend", 0x815ea972, 0x9fd191cbcc2b1731), KEND });
 #ifdef CONFIG_HOST_WINDOWS

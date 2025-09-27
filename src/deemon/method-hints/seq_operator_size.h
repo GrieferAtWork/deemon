@@ -184,7 +184,7 @@ err:
 		goto err;
 	++result;
 	if unlikely(result == (size_t)-1)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
+		DeeRT_ErrIntegerOverflowU(result, (size_t)-2);
 	return result;
 err:
 	return (size_t)-1;

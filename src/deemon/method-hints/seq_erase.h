@@ -38,18 +38,16 @@ int __seq_erase__.seq_erase([[nonnull]] DeeObject *__restrict self,
 %{$with__seq_operator_delrange_index = {
 	size_t end_index;
 	if unlikely(OVERFLOW_UADD(index, count, &end_index))
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowUAdd(index, count);
 	if unlikely(end_index > SSIZE_MAX)
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowU(end_index, SSIZE_MAX);
 	return CALL_DEPENDENCY(seq_operator_delrange_index, self, (Dee_ssize_t)index, (Dee_ssize_t)end_index);
-err_overflow:
-	return err_integer_overflow_i((sizeof(size_t) * 8) - 1, true);
 }}
 %{$with__seq_pop = {
 	PRELOAD_DEPENDENCY(seq_pop)
 	size_t end_index;
 	if unlikely(OVERFLOW_UADD(index, count, &end_index))
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowUAdd(index, count);
 	while (end_index > index) {
 		--end_index;
 		if unlikely(CALL_DEPENDENCY(seq_pop, self, (Dee_ssize_t)end_index))
@@ -58,8 +56,6 @@ err_overflow:
 			goto err;
 	}
 	return 0;
-err_overflow:
-	err_integer_overflow_i((sizeof(size_t) * 8) - 1, true);
 err:
 	return -1;
 }} {

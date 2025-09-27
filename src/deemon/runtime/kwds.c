@@ -1163,7 +1163,9 @@ kmap_init(size_t argc, DeeObject *const *argv) {
 		goto err;
 	kw_argc = kwds->kw_size;
 	if (DeeTuple_SIZE(args) != kw_argc) {
-		err_keywords_bad_for_argc(DeeTuple_SIZE(args), kw_argc);
+		err_keywords_bad_for_argc((DeeKwdsObject *)kwds,
+		                          DeeTuple_SIZE(args),
+		                          DeeTuple_ELEM(args));
 		goto err;
 	}
 	result = (DREF KwdsMapping *)DeeObject_Mallocc(offsetof(KwdsMapping, kmo_args),
@@ -1642,11 +1644,10 @@ DeeKwMapping_New(size_t *__restrict p_argc,
 	if (!kw)
 		return_reference_(Dee_EmptyRoDict);
 	if (DeeKwds_Check(kw)) {
-		size_t num_keywords;
-		num_keywords = DeeKwds_SIZE(kw);
+		size_t num_keywords = DeeKwds_SIZE(kw);
 		if unlikely(num_keywords > *p_argc) {
 			/* Argument list is too short of the given keywords */
-			err_keywords_bad_for_argc(*p_argc, num_keywords);
+			err_keywords_bad_for_argc((DeeKwdsObject *)kw, *p_argc, argv);
 			return NULL;
 		}
 		*p_argc -= num_keywords;
@@ -1688,7 +1689,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 		size_t num_keywords = DeeKwds_SIZE(kw);
 		if unlikely(num_keywords > *p_argc) {
 			/* Argument list is too short of the given keywords */
-			return err_keywords_bad_for_argc(*p_argc, num_keywords);
+			return err_keywords_bad_for_argc((DeeKwdsObject *)kw, *p_argc, argv);
 		}
 		*p_argc -= num_keywords;
 		self->kwa_kwargv = argv + *p_argc;
@@ -1751,7 +1752,7 @@ DeeKwArgs_GetItemNR(DeeKwArgs *__restrict self,
 		size_t kw_index;
 		kw_index = DeeKwds_IndexOf(self->kwa_kw, name);
 		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found(DeeString_STR(name));
+			err_keywords_not_found(name);
 			return NULL;
 		}
 		++self->kwa_kwused;
@@ -1776,7 +1777,7 @@ DeeKwArgs_GetItemNRStringHash(DeeKwArgs *__restrict self,
 		size_t kw_index;
 		kw_index = DeeKwds_IndexOfStringHash(self->kwa_kw, name, hash);
 		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found(name);
+			err_keywords_not_found_str(name);
 			return NULL;
 		}
 		++self->kwa_kwused;
@@ -1802,7 +1803,7 @@ DeeKwArgs_GetItemNRStringLenHash(DeeKwArgs *__restrict self,
 		size_t kw_index;
 		kw_index = DeeKwds_IndexOfStringLenHash(self->kwa_kw, name, namelen, hash);
 		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found(name);
+			err_keywords_not_found_str_len(name, namelen);
 			return NULL;
 		}
 		++self->kwa_kwused;
@@ -1891,12 +1892,12 @@ DeeArg_GetKwNR(size_t argc, DeeObject *const *argv, DeeObject *kw,
 		size_t num_keywords = DeeKwds_SIZE(kw);
 		if unlikely(num_keywords > argc) {
 			/* Argument list is too short of the given keywords */
-			err_keywords_bad_for_argc(argc, num_keywords);
+			err_keywords_bad_for_argc((DeeKwdsObject *)kw, argc, argv);
 			return NULL;
 		}
 		kw_index = DeeKwds_IndexOf(kw, name);
 		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found(DeeString_STR(name));
+			err_keywords_not_found(name);
 			return NULL;
 		}
 		ASSERT(kw_index < num_keywords);
@@ -1917,12 +1918,12 @@ DeeArg_GetKwNRStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
 		size_t num_keywords = DeeKwds_SIZE(kw);
 		if unlikely(num_keywords > argc) {
 			/* Argument list is too short of the given keywords */
-			err_keywords_bad_for_argc(argc, num_keywords);
+			err_keywords_bad_for_argc((DeeKwdsObject *)kw, argc, argv);
 			return NULL;
 		}
 		kw_index = DeeKwds_IndexOfStringHash(kw, name, hash);
 		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found(name);
+			err_keywords_not_found_str(name);
 			return NULL;
 		}
 		ASSERT(kw_index < num_keywords);
@@ -1943,12 +1944,12 @@ DeeArg_GetKwNRStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
 		size_t num_keywords = DeeKwds_SIZE(kw);
 		if unlikely(num_keywords > argc) {
 			/* Argument list is too short of the given keywords */
-			err_keywords_bad_for_argc(argc, num_keywords);
+			err_keywords_bad_for_argc((DeeKwdsObject *)kw, argc, argv);
 			return NULL;
 		}
 		kw_index = DeeKwds_IndexOfStringLenHash(kw, name, namelen, hash);
 		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found(name);
+			err_keywords_not_found_str(name);
 			return NULL;
 		}
 		ASSERT(kw_index < num_keywords);

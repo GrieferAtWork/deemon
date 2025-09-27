@@ -71,6 +71,8 @@ DECL_BEGIN
  *   - `%r': Taking a `DeeObject *', print `__repr__' (return `-1', but don't set an (additional) error if NULL)
  *   - `%K': Same as `%k', but decref() the object afterwards.
  *   - `%R': Same as `%r', but decref() the object afterwards.
+ *   - `%Vk': Print `Dee_variant_print(va_arg(struct Dee_variant *))'
+ *   - `%Vr': Print `Dee_variant_printrepr(va_arg(struct Dee_variant *))'
  * HINT: To guaranty fulfillment of `K' and `R' operands,
  *       the format string is _always_ fully processed.
  * @return: * :  The sum of all return values from calls to `*printer'

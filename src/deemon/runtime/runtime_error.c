@@ -64,17 +64,6 @@ PUBLIC ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes) {
 	return DeeError_ThrowInherited((DeeObject *)nomem_error);
 }
 
-INTERN ATTR_COLD int (DCALL err_no_active_exception)(void) {
-	return DeeError_Throwf(&DeeError_RuntimeError, "No active exception");
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_subclass_final_type)(DeeTypeObject *__restrict tp) {
-	ASSERT_OBJECT(tp);
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Cannot create sub-class of final type `%r'", tp);
-}
-
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeObject_TypeAssertFailed)(DeeObject *self,
                                    DeeTypeObject *required_type) {
@@ -149,27 +138,22 @@ err:
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_divide_by_zero)(DeeObject *a, DeeObject *b) {
-	ASSERT_OBJECT(a);
-	ASSERT_OBJECT(b);
+(DCALL err_divide_by_zero)(DeeObject *lhs, DeeObject *rhs) {
+	ASSERT_OBJECT(lhs);
+	ASSERT_OBJECT(rhs);
 	return DeeError_Throwf(&DeeError_DivideByZero,
-	                       "Divide by Zero: `%k / %k'", a, b);
-}
-
-INTERN ATTR_COLD int
-(DCALL err_divide_by_zero_i)(dssize_t a) {
-	return DeeError_Throwf(&DeeError_DivideByZero,
-	                       "Divide by Zero: `%" PRFdSIZ " / 0'", a);
+	                       "Divide by Zero: `%k / %k'",
+	                       lhs, rhs);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_shift_negative)(DeeObject *a, DeeObject *b, bool is_left_shift) {
-	ASSERT_OBJECT(a);
-	ASSERT_OBJECT(b);
+(DCALL err_negative_shift)(DeeObject *lhs, DeeObject *rhs, bool is_left_shift) {
+	ASSERT_OBJECT(lhs);
+	ASSERT_OBJECT(rhs);
 	return DeeError_Throwf(&DeeError_NegativeShift,
 	                       "Negative %s shift: `%k %s %k'",
-	                       is_left_shift ? "left" : "right", a,
-	                       is_left_shift ? "<<" : ">>", b);
+	                       is_left_shift ? "left" : "right", lhs,
+	                       is_left_shift ? "<<" : ">>", rhs);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
@@ -282,15 +266,10 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	                       index, DeeObject_SizeOb(self), Dee_TYPE(self));
 }
 
-INTERN ATTR_COLD NONNULL((1, 2, 3)) int
-(DCALL err_index_out_of_bounds_ob_x)(DeeObject *self, DeeObject *index, DeeObject *sizeob) {
-	return DeeError_Throwf(&DeeError_IndexError,
-	                       "Index `%r' lies outside the valid bounds `0...%R' of sequence of type `%k'",
-	                       index, sizeob, Dee_TYPE(self));
-}
-
-INTERN ATTR_COLD int
-(DCALL err_va_index_out_of_bounds)(size_t index, size_t size) {
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_va_index_out_of_bounds)(DeeFunctionObject *__restrict func,
+                                   size_t index, size_t size) {
+	(void)func;
 	ASSERT(index >= size);
 	return DeeError_Throwf(&DeeError_IndexError,
 	                       "Index `%" PRFuSIZ "' lies outside the valid bounds `0...%" PRFuSIZ "' of varargs",
@@ -347,6 +326,39 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unknown_key)(DeeObject *map, DeeObject *key) {
+	ASSERT_OBJECT(map);
+	ASSERT_OBJECT(key);
+	return DeeError_Throwf(&DeeError_KeyError,
+	                       "Could not find key `%k' in %k `%k'",
+	                       key, Dee_TYPE(map), map);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_unknown_key_int)(DeeObject *map, size_t key) {
+	ASSERT_OBJECT(map);
+	return DeeError_Throwf(&DeeError_KeyError,
+	                       "Could not find key `%" PRFuSIZ "' in %k `%k'",
+	                       key, Dee_TYPE(map), map);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unknown_key_str)(DeeObject *map, char const *key) {
+	ASSERT_OBJECT(map);
+	return DeeError_Throwf(&DeeError_KeyError,
+	                       "Could not find key `%s' in %k `%k'",
+	                       key, Dee_TYPE(map), map);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unknown_key_str_len)(DeeObject *map, char const *key, size_t keylen) {
+	ASSERT_OBJECT(map);
+	return DeeError_Throwf(&DeeError_KeyError,
+	                       "Could not find key `%$s' in %k `%k'",
+	                       keylen, key, Dee_TYPE(map), map);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_readonly_key)(DeeObject *self, DeeObject *key) {
 	ASSERT_OBJECT(self);
 	ASSERT_OBJECT(key);
@@ -391,34 +403,17 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       Dee_TYPE(but_instead_got), but_instead_got);
 }
 
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_integer_overflow)(DeeObject *__restrict overflowing_object,
-                             size_t cutoff_bits, bool positive_overflow) {
-	ASSERT_OBJECT(overflowing_object);
-	if (!cutoff_bits) {
-		return DeeError_Throwf(&DeeError_IntegerOverflow,
-		                       "%s integer overflow in %k",
-		                       positive_overflow ? "positive" : "negative",
-		                       overflowing_object);
-	}
-	return DeeError_Throwf(&DeeError_IntegerOverflow,
-	                       "%s integer overflow after %" PRFuSIZ " bits in %k",
-	                       positive_overflow ? "positive" : "negative",
-	                       cutoff_bits, overflowing_object);
-}
-
-INTERN ATTR_COLD int
-(DCALL err_integer_overflow_i)(size_t cutoff_bits, bool positive_overflow) {
-	if (!cutoff_bits) {
-		return DeeError_Throwf(&DeeError_IntegerOverflow,
-		                       "%s integer overflow",
-		                       positive_overflow ? "positive" : "negative");
-	}
-	return DeeError_Throwf(&DeeError_IntegerOverflow,
-	                       "%s integer overflow after %" PRFuSIZ " bits",
-	                       positive_overflow ? "positive" : "negative",
-	                       cutoff_bits);
-}
+#if __SIZE_WIDTH__ == 8
+#define SIZE_WIDTH_STR "8"
+#elif __SIZE_WIDTH__ == 16
+#define SIZE_WIDTH_STR "16"
+#elif __SIZE_WIDTH__ == 32
+#define SIZE_WIDTH_STR "32"
+#elif __SIZE_WIDTH__ == 64
+#define SIZE_WIDTH_STR "64"
+#else /* __SIZE_WIDTH__ == ... */
+#define SIZE_WIDTH_STR PP_STR(__SIZE_WIDTH__)
+#endif /* __SIZE_WIDTH__ != ... */
 
 INTERN NONNULL((1, 2)) int
 (DFCALL check_empty_keywords)(DeeObject *kw, DeeTypeObject *tp_self) {
@@ -537,25 +532,45 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 
-INTERN ATTR_COLD int
-(DCALL err_keywords_bad_for_argc)(size_t argc, size_t kwdc) {
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_keywords_bad_for_argc)(struct kwds_object *kwds,
+                                  size_t argc, DeeObject *const *argv) {
+	ASSERT_OBJECT_TYPE_EXACT(kwds, &DeeKwds_Type);
+	(void)argv;
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Invalid keyword list containing %" PRFuSIZ " keywords "
 	                       "when only %" PRFuSIZ " arguments were given",
-	                       kwdc, argc);
+	                       DeeKwds_SIZE(kwds), argc);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_keywords_not_found)(char const *__restrict keyword) {
+(DCALL err_keywords_not_found)(DeeObject *__restrict keyword) {
+	ASSERT_OBJECT_TYPE_EXACT(keyword, &DeeString_Type);
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Missing argument %s",
+	                       "Missing argument %r",
 	                       keyword);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_keywords_shadows_positional)(char const *__restrict keyword) {
+(DCALL err_keywords_not_found_str)(char const *__restrict keyword) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Keyword argument %s has already been passed as positional",
+	                       "Missing argument %q",
+	                       keyword);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_keywords_not_found_str_len)(char const *__restrict keyword,
+                                       size_t keyword_len) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Missing argument %$q",
+	                       keyword_len, keyword);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_keywords_shadows_positional)(DeeObject *__restrict keyword) {
+	ASSERT_OBJECT_TYPE_EXACT(keyword, &DeeString_Type);
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Keyword argument %r has already been passed as positional",
 	                       keyword);
 }
 
@@ -1074,39 +1089,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot write global property: `%k.%s'",
 	                       self->mo_name, name);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unknown_key)(DeeObject *map, DeeObject *key) {
-	ASSERT_OBJECT(map);
-	ASSERT_OBJECT(key);
-	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Could not find key `%k' in %k `%k'",
-	                       key, Dee_TYPE(map), map);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_unknown_key_int)(DeeObject *__restrict map, size_t key) {
-	ASSERT_OBJECT(map);
-	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Could not find key `%" PRFuSIZ "' in %k `%k'",
-	                       key, Dee_TYPE(map), map);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unknown_key_str)(DeeObject *__restrict map, char const *__restrict key) {
-	ASSERT_OBJECT(map);
-	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Could not find key `%s' in %k `%k'",
-	                       key, Dee_TYPE(map), map);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unknown_key_str_len)(DeeObject *__restrict map, char const *__restrict key, size_t keylen) {
-	ASSERT_OBJECT(map);
-	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Could not find key `%$s' in %k `%k'",
-	                       keylen, key, Dee_TYPE(map), map);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int

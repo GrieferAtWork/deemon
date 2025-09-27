@@ -29,6 +29,7 @@
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
@@ -269,7 +270,7 @@ get_token_from_obj(DeeObject *__restrict obj, bool create_missing) {
 	if (DeeObject_AsUInt(obj, &result))
 		return TOK_ERR;
 	if unlikely((tok_t)result < 0) {
-		err_integer_overflow(obj, sizeof(tok_t) * 8, false);
+		DeeRT_ErrIntegerOverflowS((tok_t)result, 0, INT_MAX);
 		result = (unsigned int)TOK_ERR;
 	}
 	return (tok_t)result;

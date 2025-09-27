@@ -30,19 +30,17 @@
 
 DECL_BEGIN
 
+struct kwds_object;
 struct module_object;
 struct code_object;
 struct class_attribute;
 struct class_desc;
+struct function_object;
 
-INTDEF ATTR_COLD int DCALL err_no_active_exception(void);
-INTDEF ATTR_COLD int DCALL err_subclass_final_type(DeeTypeObject *__restrict tp);
-#define err_unimplemented_constructor(tp, argc, argv) \
-	err_unimplemented_constructor_kw(tp, argc, argv, NULL)
+#define err_unimplemented_constructor(tp, argc, argv) err_unimplemented_constructor_kw(tp, argc, argv, NULL)
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_constructor_kw(DeeTypeObject *tp, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_divide_by_zero(DeeObject *a, DeeObject *b);
-INTDEF ATTR_COLD int DCALL err_divide_by_zero_i(dssize_t a);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_shift_negative(DeeObject *a, DeeObject *b, bool is_left_shift);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_divide_by_zero(DeeObject *lhs, DeeObject *rhs);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_negative_shift(DeeObject *lhs, DeeObject *rhs, bool is_left_shift);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_int_negative(DeeObject *__restrict ob);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_int_negative_or_zero(DeeObject *__restrict ob);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_int_zero(DeeObject *__restrict ob);
@@ -52,20 +50,21 @@ INTDEF ATTR_COLD int DCALL err_cannot_lock_weakref(void);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_bytes_not_writable(DeeObject *__restrict bytes_ob);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_index_out_of_bounds(DeeObject *__restrict self, size_t index, size_t size);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_index_out_of_bounds_ob(DeeObject *self, DeeObject *index);
-INTDEF ATTR_COLD NONNULL((1, 2, 3)) int DCALL err_index_out_of_bounds_ob_x(DeeObject *self, DeeObject *index, DeeObject *sizeob);
-INTDEF ATTR_COLD int DCALL err_va_index_out_of_bounds(size_t index, size_t size);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_va_index_out_of_bounds(struct function_object *__restrict func, size_t index, size_t size);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unbound_index(DeeObject *__restrict self, size_t index);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_index_ob(DeeObject *self, DeeObject *indexob);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_key(DeeObject *self, DeeObject *key);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unbound_key_int(DeeObject *self, size_t key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_key_str(DeeObject *self, char const *key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_key_str_len(DeeObject *self, char const *key, size_t keylen);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key(DeeObject *map, DeeObject *key);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_key_int(DeeObject *map, size_t key);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key_str(DeeObject *map, char const *key);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key_str_len(DeeObject *map, char const *key, size_t keylen);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_readonly_key(DeeObject *self, DeeObject *key);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_readonly_key_int(DeeObject *self, size_t key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_readonly_key_str(DeeObject *self, char const *key);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_single_character_string(DeeObject *__restrict str);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_integer_overflow(DeeObject *__restrict overflowing_object, size_t cutoff_bits, bool positive_overflow);
-INTDEF ATTR_COLD int DCALL err_integer_overflow_i(size_t cutoff_bits, bool positive_overflow);
 #define xcheck_empty_keywords(kw) (!(kw) ? 0 : check_empty_keywords(kw))
 INTDEF NONNULL((1, 2)) int DFCALL check_empty_keywords(DeeObject *kw, DeeTypeObject *tp_self);
 INTDEF NONNULL((1)) int DFCALL check_empty_keywords_obj(DeeObject *__restrict kw);
@@ -79,9 +78,11 @@ INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classproperty_requires_1_argument
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classproperty_requires_1_argument_string_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument_string(DeeTypeObject *tp_self, char const *__restrict name);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument_string_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
-INTDEF ATTR_COLD int DCALL err_keywords_bad_for_argc(size_t argc, size_t kwdc);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_not_found(char const *__restrict keyword);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_shadows_positional(char const *__restrict keyword);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_bad_for_argc(struct kwds_object *kwds, size_t argc, DeeObject *const *argv);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_not_found(DeeObject *__restrict keyword);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_not_found_str(char const *__restrict keyword);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_not_found_str_len(char const *__restrict keyword, size_t keyword_len);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_shadows_positional(DeeObject *__restrict keyword);
 INTDEF ATTR_COLD int DCALL err_invalid_segment_size(size_t segsz);
 INTDEF ATTR_COLD int DCALL err_invalid_distribution_count(size_t distcnt);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_argc_missing_kw(char const *__restrict argument_name, char const *function_name, size_t argc_cur, size_t argc_min, size_t argc_max);
@@ -103,10 +104,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_requires_class(DeeTypeObject *__rest
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_class_addr(DeeTypeObject *__restrict tp_self, uint16_t addr);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_invalid_instance_addr(DeeTypeObject *tp_self, DeeObject *self, uint16_t addr);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_refs_size(DeeObject *__restrict code, size_t num_refs);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key(DeeObject *map, DeeObject *key);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_key_int(DeeObject *__restrict map, size_t key);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key_str(DeeObject *__restrict map, char const *__restrict key);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key_str_len(DeeObject *__restrict map, char const *__restrict key, size_t keylen);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_empty_sequence(DeeObject *__restrict seq);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_changed_sequence(DeeObject *__restrict seq);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_item_not_found(DeeObject *seq, DeeObject *item);
@@ -164,20 +161,16 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 
 
 #ifndef Dee_ASSUMED_VALUE_IS_NOOP
-#define err_no_active_exception()                                                                         Dee_ASSUMED_VALUE(err_no_active_exception(), -1)
-#define err_subclass_final_type(tp)                                                                       Dee_ASSUMED_VALUE(err_subclass_final_type(tp), -1)
 #define err_unimplemented_constructor_kw(tp, argc, argv, kw)                                              Dee_ASSUMED_VALUE(err_unimplemented_constructor_kw(tp, argc, argv, kw), -1)
 #define err_divide_by_zero(a, b)                                                                          Dee_ASSUMED_VALUE(err_divide_by_zero(a, b), -1)
-#define err_divide_by_zero_i(a)                                                                           Dee_ASSUMED_VALUE(err_divide_by_zero_i(a), -1)
-#define err_shift_negative(a, b, is_left_shift)                                                           Dee_ASSUMED_VALUE(err_shift_negative(a, b, is_left_shift), -1)
+#define err_negative_shift(a, b, is_left_shift)                                                           Dee_ASSUMED_VALUE(err_negative_shift(a, b, is_left_shift), -1)
 #define err_cannot_weak_reference(ob)                                                                     Dee_ASSUMED_VALUE(err_cannot_weak_reference(ob), -1)
 #define err_reference_loop(a, b)                                                                          Dee_ASSUMED_VALUE(err_reference_loop(a, b), -1)
 #define err_cannot_lock_weakref()                                                                         Dee_ASSUMED_VALUE(err_cannot_lock_weakref(), -1)
 #define err_bytes_not_writable(bytes_ob)                                                                  Dee_ASSUMED_VALUE(err_bytes_not_writable(bytes_ob), -1)
 #define err_index_out_of_bounds(self, index, size)                                                        Dee_ASSUMED_VALUE(err_index_out_of_bounds(self, index, size), -1)
 #define err_index_out_of_bounds_ob(self, index)                                                           Dee_ASSUMED_VALUE(err_index_out_of_bounds_ob(self, index), -1)
-#define err_index_out_of_bounds_ob_x(self, index, sizeob)                                                 Dee_ASSUMED_VALUE(err_index_out_of_bounds_ob_x(self, index, sizeob), -1)
-#define err_va_index_out_of_bounds(index, size)                                                           Dee_ASSUMED_VALUE(err_va_index_out_of_bounds(index, size), -1)
+#define err_va_index_out_of_bounds(func, index, size)                                                     Dee_ASSUMED_VALUE(err_va_index_out_of_bounds(func, index, size), -1)
 #define err_unbound_index(self, index)                                                                    Dee_ASSUMED_VALUE(err_unbound_index(self, index), -1)
 #define err_unbound_index_ob(self, indexob)                                                               Dee_ASSUMED_VALUE(err_unbound_index_ob(self, indexob), -1)
 #define err_unbound_key(self, key)                                                                        Dee_ASSUMED_VALUE(err_unbound_key(self, key), -1)
@@ -188,8 +181,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_readonly_key_int(self, key)                                                                   Dee_ASSUMED_VALUE(err_readonly_key_int(self, key), -1)
 #define err_readonly_key_str(self, key)                                                                   Dee_ASSUMED_VALUE(err_readonly_key_str(self, key), -1)
 #define err_expected_single_character_string(str)                                                         Dee_ASSUMED_VALUE(err_expected_single_character_string(str), -1)
-#define err_integer_overflow(overflowing_object, cutoff_bits, positive_overflow)                          Dee_ASSUMED_VALUE(err_integer_overflow(overflowing_object, cutoff_bits, positive_overflow), -1)
-#define err_integer_overflow_i(cutoff_bits, positive_overflow)                                            Dee_ASSUMED_VALUE(err_integer_overflow_i(cutoff_bits, positive_overflow), -1)
 #define err_keywords_not_accepted(tp_self, kw)                                                            Dee_ASSUMED_VALUE(err_keywords_not_accepted(tp_self, kw), -1)
 #define err_keywords_func_not_accepted_string(tp_self, name, kw)                                          Dee_ASSUMED_VALUE(err_keywords_func_not_accepted_string(tp_self, name, kw), -1)
 #define err_keywords_func_not_accepted_string_len(tp_self, name, namelen, kw)                             Dee_ASSUMED_VALUE(err_keywords_func_not_accepted_string_len(tp_self, name, namelen, kw), -1)
@@ -200,8 +191,8 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_classproperty_requires_1_argument_string_len(tp_self, name, namelen)                          Dee_ASSUMED_VALUE(err_classproperty_requires_1_argument_string_len(tp_self, name, namelen), -1)
 #define err_classmethod_requires_at_least_1_argument_string(tp_self, name)                                Dee_ASSUMED_VALUE(err_classmethod_requires_at_least_1_argument_string(tp_self, name), -1)
 #define err_classmethod_requires_at_least_1_argument_string_len(tp_self, name, namelen)                   Dee_ASSUMED_VALUE(err_classmethod_requires_at_least_1_argument_string_len(tp_self, name, namelen), -1)
-#define err_keywords_bad_for_argc(argc, kwdc)                                                             Dee_ASSUMED_VALUE(err_keywords_bad_for_argc(argc, kwdc), -1)
-#define err_keywords_not_found(keyword)                                                                   Dee_ASSUMED_VALUE(err_keywords_not_found(keyword), -1)
+#define err_keywords_bad_for_argc(kwds, argc, argv)                                                       Dee_ASSUMED_VALUE(err_keywords_bad_for_argc(kwds, argc, argv), -1)
+#define err_keywords_not_found_str(keyword)                                                               Dee_ASSUMED_VALUE(err_keywords_not_found_str(keyword), -1)
 #define err_keywords_shadows_positional(keyword)                                                          Dee_ASSUMED_VALUE(err_keywords_shadows_positional(keyword), -1)
 #define err_invalid_segment_size(segsz)                                                                   Dee_ASSUMED_VALUE(err_invalid_segment_size(segsz), -1)
 #define err_invalid_distribution_count(distcnt)                                                           Dee_ASSUMED_VALUE(err_invalid_distribution_count(distcnt), -1)

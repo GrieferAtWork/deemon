@@ -337,7 +337,7 @@ error_print(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *
 	return type_print((DeeObject *)Dee_TYPE(self), printer, arg);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 error_printrepr(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	if (self->e_inner) {
 		if (self->e_message) {
@@ -664,10 +664,12 @@ PUBLIC DeeTypeObject DeeError_ArithmeticError =
 INIT_CUSTOM_ERROR("ArithmeticError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
                   NULL, NULL, NULL, NULL, arithmetic_class_members);
+#if 0 /* Custom impl... */
 PUBLIC DeeTypeObject DeeError_IntegerOverflow =
 INIT_CUSTOM_ERROR("IntegerOverflow", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ArithmeticError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
                   NULL, NULL, NULL, NULL, NULL);
+#endif
 PUBLIC DeeTypeObject DeeError_DivideByZero =
 INIT_CUSTOM_ERROR("DivideByZero", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ArithmeticError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,

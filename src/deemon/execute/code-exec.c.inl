@@ -28,6 +28,7 @@
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/dict.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/hashset.h>
@@ -1367,7 +1368,7 @@ next_instr:
 			} else {
 				/* Throw an exception because none had been thrown, yet. */
 except_no_active_exception:
-				err_no_active_exception();
+				DeeRT_ErrNoActiveException();
 			}
 			HANDLE_EXCEPT();
 		}
@@ -5426,7 +5427,8 @@ do_pack_dict:
 						HANDLE_EXCEPT();
 					if (OVERFLOW_UADD(index, code->co_argc_max, &index) ||
 					    index >= frame->cf_argc) {
-						err_va_index_out_of_bounds((size_t)(index - code->co_argc_max),
+						err_va_index_out_of_bounds(frame->cf_func,
+						                           (size_t)(index - code->co_argc_max),
 						                           (size_t)(frame->cf_argc - code->co_argc_max));
 						HANDLE_EXCEPT();
 					}
@@ -5452,7 +5454,9 @@ do_pack_dict:
 						size_t va_size = 0;
 						if (frame->cf_argc > code->co_argc_max)
 							va_size = (size_t)(frame->cf_argc - code->co_argc_max);
-						err_va_index_out_of_bounds((size_t)(index - code->co_argc_max), va_size);
+						err_va_index_out_of_bounds(frame->cf_func,
+						                           (size_t)(index - code->co_argc_max),
+						                           va_size);
 						HANDLE_EXCEPT();
 					}
 					/* Push the argument */

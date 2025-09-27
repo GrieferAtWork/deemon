@@ -255,6 +255,9 @@
 		<ClInclude Include="..\include\deemon\dict.h">
 			<Filter>include</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\error-rt.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\error.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -665,6 +668,9 @@
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\simple-hashset.h">
 			<Filter>include\util</Filter>
+		</ClInclude>
+		<ClInclude Include="..\include\deemon\variant.h">
+			<Filter>include</Filter>
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\weakref.h">
 			<Filter>include</Filter>
@@ -1925,6 +1931,9 @@
 		<ClCompile Include="..\src\deemon\runtime\computed-operators.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\error-rt.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\error.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
@@ -2013,6 +2022,9 @@
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\type_member.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\variant.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\system\file.c">

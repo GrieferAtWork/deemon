@@ -1230,7 +1230,7 @@ cswgi_size(CachedSeq_WithGetItem *__restrict self) {
 			goto err;
 	}
 	if unlikely(result.csi_index == (size_t)-1)
-		err_integer_overflow_i(sizeof(size_t) * __CHAR_BIT__, true);
+		DeeRT_ErrIntegerOverflowU(result.csi_index, (size_t)-2);
 	return result.csi_index;
 err:
 	return (size_t)-1;

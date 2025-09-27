@@ -24,6 +24,7 @@
 
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/kwds.h>
 #include <deemon/object.h>
@@ -62,6 +63,43 @@
 #define VALIST_ADDR(x) (&(x)[0])
 #endif /* !CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
 #endif /* !VALIST_ADDR */
+
+#ifndef INT8_MIN
+#define INT8_MIN __INT8_MIN__
+#endif /* !INT8_MIN */
+#ifndef INT8_MAX
+#define INT8_MAX __INT8_MAX__
+#endif /* !INT8_MAX */
+#ifndef UINT8_MAX
+#define UINT8_MAX __UINT8_MAX__
+#endif /* !UINT8_MAX */
+#ifndef INT16_MIN
+#define INT16_MIN __INT16_MIN__
+#endif /* !INT16_MIN */
+#ifndef INT16_MAX
+#define INT16_MAX __INT16_MAX__
+#endif /* !INT16_MAX */
+#ifndef UINT16_MAX
+#define UINT16_MAX __UINT16_MAX__
+#endif /* !UINT16_MAX */
+#ifndef INT32_MIN
+#define INT32_MIN __INT32_MIN__
+#endif /* !INT32_MIN */
+#ifndef INT32_MAX
+#define INT32_MAX __INT32_MAX__
+#endif /* !INT32_MAX */
+#ifndef UINT32_MAX
+#define UINT32_MAX __UINT32_MAX__
+#endif /* !UINT32_MAX */
+#ifndef INT64_MIN
+#define INT64_MIN __INT64_MIN__
+#endif /* !INT64_MIN */
+#ifndef INT64_MAX
+#define INT64_MAX __INT64_MAX__
+#endif /* !INT64_MAX */
+#ifndef UINT64_MAX
+#define UINT64_MAX __UINT64_MAX__
+#endif /* !UINT64_MAX */
 
 /* MSCV for 32-bit is wholly broken in terms of stack alignment:
  *
@@ -677,16 +715,16 @@ parse_unsigned_int:
 				switch (length) { /* unsigned int */
 
 				case LEN_INT_IB1:
-					if (ch > 0xff) {
-						err_integer_overflow_i(8, true);
+					if (ch > UINT8_MAX) {
+						DeeRT_ErrIntegerOverflowU32(ch, UINT8_MAX);
 						goto err;
 					}
 					LOCAL_OUTPUT(uint8_t, __ALIGNOF_INT8__, (uint8_t)ch);
 					break;
 
 				case LEN_INT_IB2:
-					if (ch > 0xffff) {
-						err_integer_overflow_i(16, true);
+					if (ch > UINT16_MAX) {
+						DeeRT_ErrIntegerOverflowU32(ch, UINT16_MAX);
 						goto err;
 					}
 					LOCAL_OUTPUT(uint16_t, __ALIGNOF_INT16__, (uint16_t)ch);
@@ -1044,7 +1082,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 		size_t pos_argc;
 		kw_argc = ((DeeKwdsObject *)kw)->kw_size;
 		if unlikely(kw_argc > argc)
-			return err_keywords_bad_for_argc(argc, kw_argc);
+			return err_keywords_bad_for_argc((DeeKwdsObject *)kw, argc, argv);
 
 		/* Parse all argument not passed through keywords. */
 		pos_argc = argc - kw_argc;

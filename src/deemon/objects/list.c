@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -3895,7 +3896,7 @@ again:
 	my_elemc = me->l_list.ol_elemc;
 	if (OVERFLOW_UMUL(my_elemc, multiplier, &res_elemc)) {
 		DeeList_LockEndRead(me);
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
+		DeeRT_ErrIntegerOverflowUMul(my_elemc, multiplier);
 		goto err;
 	}
 	if unlikely(res_elemc == 0) {
@@ -3960,7 +3961,7 @@ again:
 	my_length = me->l_list.ol_elemc;
 	if (OVERFLOW_UMUL(my_length, multiplier, &result_length)) {
 		DeeList_LockEndWrite(me);
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
+		DeeRT_ErrIntegerOverflowUMul(my_length, multiplier);
 		goto err;
 	}
 	elemv = me->l_list.ol_elemv;

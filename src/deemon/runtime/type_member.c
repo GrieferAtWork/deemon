@@ -35,6 +35,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strlen() */
 #include <deemon/util/atomic.h>
+#include <deemon/variant.h>
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
@@ -65,6 +66,7 @@ STATIC_ASSERT((STRUCT_CSTR_OPT & 1) == 1);
 STATIC_ASSERT((STRUCT_CSTR_EMPTY & 1) == 1);
 STATIC_ASSERT((STRUCT_STRING & 1) == 1);
 STATIC_ASSERT((STRUCT_CHAR & 1) == 1);
+STATIC_ASSERT((STRUCT_VARIANT & 1) == 1);
 STATIC_ASSERT((STRUCT_BOOL8 & 1) == 1);
 STATIC_ASSERT((STRUCT_BOOL16 & 1) == 1);
 STATIC_ASSERT((STRUCT_BOOL32 & 1) == 1);
@@ -732,6 +734,9 @@ handle_null_ob:
 	CASE(STRUCT_CHAR):
 		return DeeString_Chr(FIELD(unsigned char));
 
+	CASE(STRUCT_VARIANT):
+		return Dee_variant_getobject(&FIELD(struct Dee_variant), self, desc->m_name);
+
 	CASE(STRUCT_BOOL8):
 		return_bool(FIELD(uint8_t) != 0);
 
@@ -853,6 +858,9 @@ Dee_type_member_bound(struct type_member const *desc,
 	CASE(STRUCT_WOBJECT_OPT):
 		return true;
 
+	CASE(STRUCT_VARIANT):
+		return Dee_variant_isbound(&FIELD(struct Dee_variant));
+
 	CASE(STRUCT_WOBJECT):
 		return Dee_weakref_bound(&FIELD(struct weakref));
 
@@ -899,6 +907,10 @@ Dee_type_member_set(struct type_member const *desc,
 		}
 		WRITE(FIELD(char), chr_value);
 	}	return 0;
+
+	case STRUCT_VARIANT:
+		Dee_variant_setobject(&FIELD(struct Dee_variant), value);
+		return 0;
 
 	case STRUCT_BOOL8:
 	case STRUCT_BOOL16:

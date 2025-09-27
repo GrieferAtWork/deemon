@@ -357,6 +357,8 @@ DeeMA___seq_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
+	args.start = 0;
+	args.end = (size_t)-1;
 	if (DeeArg_UnpackStruct(argc, argv, "o|" UNPuSIZ UNPxSIZ ":__seq_enumerate__", &args))
 		goto err;
 {
@@ -383,6 +385,8 @@ DeeMA___seq_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject
 		DeeObject *start;
 		DeeObject *end;
 	} args;
+	args.start = NULL;
+	args.end = NULL;
 	args.start = NULL;
 	args.end = NULL;
 	_DeeArg_Unpack0Or1Or2(err, argc, argv, "__seq_enumerate_items__", &args.start, &args.end);
@@ -1849,6 +1853,7 @@ DeeMA___set_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		DeeObject *def;
 	} args;
 	args.def = NULL;
+	args.def = NULL;
 	_DeeArg_Unpack0Or1(err, argc, argv, "__set_pop__", &args.def);
 {
 	return args.def ? (*DeeType_RequireMethodHint(Dee_TYPE(self), set_pop_with_default))(self, args.def)
@@ -2327,6 +2332,7 @@ DeeMA___map_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		DeeObject *key;
 		DeeObject *def;
 	} args;
+	args.def = NULL;
 	args.def = NULL;
 	_DeeArg_Unpack1Or2(err, argc, argv, "__map_pop__", &args.key, &args.def);
 {

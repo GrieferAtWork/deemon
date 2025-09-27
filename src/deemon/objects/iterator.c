@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -1287,7 +1288,7 @@ got_rewound_iter:
 	Dee_Decref(copy);
 	return index;
 err_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowU(index, (size_t)-3);
 	goto err;
 err_copy:
 	Dee_Decref(copy);

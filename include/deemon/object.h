@@ -3079,6 +3079,7 @@ struct Dee_type_getset {
 #define Dee_STRUCT_CSTR_EMPTY  0x8025 /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */
 #define Dee_STRUCT_STRING      0x8027 /* `char const[*]' (utf-8) (Accessible as `DeeStringObject') */
 #define Dee_STRUCT_CHAR        0x0029 /* `unsigned char const' (latin-1) (Accessible as `DeeStringObject') */
+#define Dee_STRUCT_VARIANT     0x002b /* `struct Dee_variant' (combine with `Dee_STRUCT_CONST' to make read-only) */
 #define Dee_STRUCT_BOOL8       0x0041 /* `uint8_t' (Accessible as `DeeBoolObject') */
 #define Dee_STRUCT_BOOL16      0x0043 /* `uint16_t' (Accessible as `DeeBoolObject') */
 #define Dee_STRUCT_BOOL32      0x0045 /* `uint32_t' (Accessible as `DeeBoolObject') */
@@ -3136,6 +3137,7 @@ struct Dee_type_getset {
 #define STRUCT_CSTR_EMPTY  Dee_STRUCT_CSTR_EMPTY  /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */
 #define STRUCT_STRING      Dee_STRUCT_STRING      /* `char const[*]' (utf-8) (Accessible as `DeeStringObject') */
 #define STRUCT_CHAR        Dee_STRUCT_CHAR        /* `unsigned char const' (latin-1) (Accessible as `DeeStringObject') */
+#define STRUCT_VARIANT     Dee_STRUCT_VARIANT     /* `struct Dee_variant' (combine with `Dee_STRUCT_CONST' to make read-only) */
 #define STRUCT_BOOL8       Dee_STRUCT_BOOL8       /* `uint8_t' (Accessible as `DeeBoolObject') */
 #define STRUCT_BOOL16      Dee_STRUCT_BOOL16      /* `uint16_t' (Accessible as `DeeBoolObject') */
 #define STRUCT_BOOL32      Dee_STRUCT_BOOL32      /* `uint32_t' (Accessible as `DeeBoolObject') */

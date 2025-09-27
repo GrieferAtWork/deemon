@@ -142,7 +142,7 @@ DECL_BEGIN
 #ifdef DEE_SOURCE
 #define dee_kwds_entry    kwds_entry
 #define Dee_string_object string_object
-#define dee_kwds_object   kwds_object
+#define Dee_kwds_object   kwds_object
 #define dee_kwargs        kwds_args
 #define DEFINE_KWDS       Dee_DEFINE_KWDS
 #define Dee_code_object   code_object
@@ -161,8 +161,8 @@ struct dee_kwds_entry {
 	                                          *       argument, aka. `(argc - :kw_size) + 0' */
 };
 
-typedef struct dee_kwds_object DeeKwdsObject;
-struct dee_kwds_object {
+typedef struct Dee_kwds_object DeeKwdsObject;
+struct Dee_kwds_object {
 	/* This type of object is used by user-code to
 	 * re-map the designation of optional arguments.
 	 * When given, unpacking the an argument list will

@@ -202,6 +202,9 @@ local STRINGS = List {
 	"ambig",
 	"fwd",
 	"const",
+
+	// Messages
+	"No active exception",
 };
 
 // Append strings needed for method hints
@@ -210,7 +213,7 @@ STRINGS.extend(getAllMethodHintAttributes());
 
 local generatedStrings = HashSet();
 for (local s: STRINGS
-	.map(e -> e is string ? { f"str_{e.replace(".", "_")}", e } : e)
+	.map(e -> e is string ? { f"str_{e.rereplace(r"[.\s]", "_")}", e } : e)
 //	.sorted()
 ) {
 	if (generatedStrings.insert(s.last))
@@ -642,6 +645,9 @@ DEF_STRING(str_fwd, "fwd", 0x4d05936a, 0x468b9d355ef7e041)
 #define Dee_HashStr__const _Dee_HashSelectC(0x95daec48, 0x2e9cb1cd0ec552da)
 DEF_STRING(str_const, "const", 0x95daec48, 0x2e9cb1cd0ec552da)
 #define STR_const DeeString_STR(&str_const)
+#define Dee_HashStr__No_active_exception _Dee_HashSelectC(0xa6c0d0c8, 0x132615532aa858b6)
+DEF_STRING(str_No_active_exception, "No active exception", 0xa6c0d0c8, 0x132615532aa858b6)
+#define STR_No_active_exception DeeString_STR(&str_No_active_exception)
 #define Dee_HashStr____seq_bool__ _Dee_HashSelectC(0x385ee23, 0x45c831bf3a70ded9)
 DEF_STRING(str___seq_bool__, "__seq_bool__", 0x385ee23, 0x45c831bf3a70ded9)
 #define STR___seq_bool__ DeeString_STR(&str___seq_bool__)

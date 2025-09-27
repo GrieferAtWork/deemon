@@ -23,10 +23,11 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/format.h>
 #include <deemon/class.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -140,23 +141,13 @@ instance_twrite(DeeFileTypeObject *tp_self, DeeFileObject *self,
 INTERN WUNUSED NONNULL((1, 2)) Dee_pos_t DCALL
 instance_tseek(DeeFileTypeObject *tp_self, DeeFileObject *self,
                Dee_off_t off, int whence) {
-	Dee_pos_t result;
 	DREF DeeObject *result_ob;
 	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, (DeeObject *)self,
 	                                   FILE_OPERATOR_SEEK,
 	                                   PCKd64 "d", (int64_t)off, whence);
 	if unlikely(!result_ob)
 		goto err;
-	if unlikely(DeeObject_AsUIntX(result_ob, &result))
-		goto err_result_ob;
-	if unlikely(result == (Dee_pos_t)-1)
-		goto err_result_ob_overflow;
-	Dee_Decref(result_ob);
-	return result;
-err_result_ob_overflow:
-	err_integer_overflow(result_ob, sizeof(Dee_pos_t) * 8, true);
-err_result_ob:
-	Dee_Decref(result_ob);
+	return DeeObject_AsXDirectUIntInherited(Dee_SIZEOF_POS_T, result_ob);
 err:
 	return (Dee_pos_t)-1;
 }
@@ -250,7 +241,7 @@ instance_tgetc(DeeFileTypeObject *tp_self, DeeFileObject *self, Dee_ioflag_t fla
 		Dee_Decref(result_ob);
 		return temp;
 	}
-	err_integer_overflow(result_ob, 8, temp >= 0);
+	DeeRT_ErrIntegerOverflowS(temp, GETC_EOF, 0xff);
 err_result_ob:
 	Dee_Decref(result_ob);
 err:

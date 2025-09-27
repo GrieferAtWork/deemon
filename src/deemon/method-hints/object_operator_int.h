@@ -81,18 +81,23 @@ tp_math->tp_int32([[nonnull]] DeeObject *__restrict self,
 	int64_t value;
 	int status = CALL_DEPENDENCY(tp_math->tp_int64, self, &value);
 	if (status == Dee_INT_UNSIGNED) {
-		if ((uint64_t)value > UINT32_MAX && !(THIS_TYPE->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+		if ((uint64_t)value > UINT32_MAX && !(THIS_TYPE->tp_flags & TP_FTRUNCATE)) {
+			return DeeRT_ErrIntegerOverflowEx(self, 32,
+			                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
+			                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
+		}
 		*p_result = (int32_t)(uint32_t)(uint64_t)value;
 	} else {
 		if ((value < INT32_MIN || value > INT32_MAX) && status == Dee_INT_SIGNED &&
-		    !(THIS_TYPE->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+		    !(THIS_TYPE->tp_flags & TP_FTRUNCATE)) {
+			unsigned int flags = (value > INT32_MAX)
+			                     ? (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE)
+			                     : (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
+			return DeeRT_ErrIntegerOverflowEx(self, 32, flags);
+		}
 		*p_result = (int32_t)value;
 	}
 	return status;
-err_overflow:
-	return err_integer_overflow(self, 32, status == Dee_INT_SIGNED);
 }}
 %{using tp_math->tp_int: {
 	int status;
@@ -111,19 +116,17 @@ err:
 	if unlikely(status < 0)
 		goto err;
 	if (value < INT32_MIN && !(THIS_TYPE->tp_flags & TP_FTRUNCATE))
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowEx(self, 32, DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 	if (value > INT32_MAX) {
 		if (value <= UINT32_MAX) {
 			*p_result = (int32_t)(uint32_t)value;
 			return Dee_INT_UNSIGNED;
 		}
 		if (!(THIS_TYPE->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+			return DeeRT_ErrIntegerOverflowEx(self, 32, DeeRT_ErrIntegerOverflowEx_F_UNSIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 	}
 	*p_result = (int32_t)value;
 	return Dee_INT_SIGNED;
-err_overflow:
-	err_integer_overflow(self, 32, value >= 0);
 err:
 	return -1;
 }} = OPERATOR_INT;
@@ -162,19 +165,17 @@ err:
 	if unlikely(status < 0)
 		goto err;
 	if (value < INT64_MIN && !(THIS_TYPE->tp_flags & TP_FTRUNCATE))
-		goto err_overflow;
+		return DeeRT_ErrIntegerOverflowEx(self, 64, DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 	if (value > INT64_MAX) {
 		if (value <= UINT64_MAX) {
 			*p_result = (int64_t)(uint64_t)value;
 			return Dee_INT_UNSIGNED;
 		}
 		if (!(THIS_TYPE->tp_flags & TP_FTRUNCATE))
-			goto err_overflow;
+			return DeeRT_ErrIntegerOverflowEx(self, 64, DeeRT_ErrIntegerOverflowEx_F_UNSIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 	}
 	*p_result = (int64_t)value;
 	return Dee_INT_SIGNED;
-err_overflow:
-	err_integer_overflow(self, 64, value >= 0);
 err:
 	return -1;
 }} = OPERATOR_INT;

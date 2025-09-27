@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
@@ -2054,7 +2055,7 @@ tuple_repeat(Tuple *self, DeeObject *other) {
 return_empty:
 	return (Tuple *)DeeTuple_NewEmpty();
 err_overflow:
-	err_integer_overflow(other, sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowUMul(my_length, count);
 err:
 	return NULL;
 }

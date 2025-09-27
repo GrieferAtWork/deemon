@@ -740,7 +740,7 @@ PRIVATE struct type_seq traceback_seq = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-traceback_current(DeeObject *__restrict UNUSED(self)) {
+traceback_current(DeeObject *__restrict self) {
 	DREF DeeThreadObject *thread;
 	DREF DeeObject *result;
 	thread = DeeThread_Self();
@@ -752,7 +752,7 @@ traceback_current(DeeObject *__restrict UNUSED(self)) {
 	Dee_Incref(result);
 	return result;
 err_no_except:
-	err_no_active_exception(); /* TODO: Throw UnboundAttribute */
+	err_unbound_attribute_string(Dee_TYPE(self), "current");
 	return NULL;
 }
 

@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
@@ -12089,7 +12090,7 @@ string_mul(String *self, DeeObject *other) {
 
 	}
 err_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
+	DeeRT_ErrIntegerOverflowUMul(my_length, repeat);
 err:
 	return NULL;
 }

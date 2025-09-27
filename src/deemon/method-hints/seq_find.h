@@ -86,7 +86,7 @@ __seq_find__.seq_find([[nonnull]] DeeObject *self,
 	status = CALL_DEPENDENCY(seq_enumerate_index, self, &default_seq_find_foreach_cb, &data, start, end);
 	if likely(status == -2) {
 		if unlikely(data.dsff_index == (size_t)Dee_COMPARE_ERR)
-			err_integer_overflow_i(sizeof(size_t) * 8, true);
+			DeeRT_ErrIntegerOverflowU(data.dsff_index, (size_t)Dee_COMPARE_ERR - 1);
 		return data.dsff_index;
 	}
 	if unlikely(status == -1)
@@ -96,18 +96,18 @@ err:
 	return (size_t)Dee_COMPARE_ERR;
 }} {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -167,7 +167,7 @@ __seq_find__.seq_find_with_key([[nonnull]] DeeObject *self,
 	Dee_Decref(data.dsfwkf_base.dsff_elem);
 	if likely(status == -2) {
 		if unlikely(data.dsfwkf_base.dsff_index == (size_t)Dee_COMPARE_ERR)
-			err_integer_overflow_i(sizeof(size_t) * 8, true);
+			DeeRT_ErrIntegerOverflowU(data.dsfwkf_base.dsff_index, (size_t)Dee_COMPARE_ERR - 1);
 		return data.dsfwkf_base.dsff_index;
 	}
 	if unlikely(status == -1)
@@ -177,18 +177,18 @@ err:
 	return (size_t)Dee_COMPARE_ERR;
 }} {
 	int temp;
-	Dee_ssize_t result_index;
+	size_t result_index;
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSSize(result, &result_index);
+	temp = DeeObject_AsSizeM1(result, &result_index);
 	Dee_Decref(result);
 	if unlikely(temp)
 		goto err;
-	if unlikely(result_index == Dee_COMPARE_ERR)
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-	return (size_t)result_index;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		DeeRT_ErrIntegerOverflowU(result_index, (size_t)Dee_COMPARE_ERR - 1);
+	return result_index;
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
