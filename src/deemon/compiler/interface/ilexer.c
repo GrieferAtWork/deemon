@@ -43,6 +43,8 @@
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/tuple.h>
 
+#include <hybrid/typecore.h>
+
 #include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
@@ -52,6 +54,10 @@
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
+
+#ifndef INT_MAX
+#define INT_MAX __INT_MAX__
+#endif /* !INT_MAX */
 
 /* @return: TOK_ERR: An error occurred (and was thrown)
  * @return: -2:      A keyword wasn't found (and `create_missing' was false) */

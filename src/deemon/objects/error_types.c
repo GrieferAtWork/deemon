@@ -250,7 +250,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_init(DeeObject *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeErrorObject *me = (DeeErrorObject *)self;
@@ -269,7 +269,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_init_kw(DeeObject *__restrict self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DeeErrorObject *me = (DeeErrorObject *)self;

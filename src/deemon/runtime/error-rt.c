@@ -33,6 +33,7 @@
 #include <deemon/variant.h>
 
 #include <hybrid/int128.h>
+#include <hybrid/typecore.h>
 /**/
 
 #include "kwlist.h"
@@ -44,6 +45,10 @@
 #include <stdint.h>
 
 DECL_BEGIN
+
+#ifndef __SIZEOF_BOOL__
+#define __SIZEOF_BOOL__ __SIZEOF_CHAR__
+#endif /* !__SIZEOF_BOOL__ */
 
 #define INIT_CUSTOM_ERROR(tp_name, tp_doc, tp_flags,                                \
                           tp_base, T, tp_str, tp_print,                             \
