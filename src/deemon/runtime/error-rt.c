@@ -22,13 +22,12 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
-#include <deemon/error_types.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
 #include <deemon/struct.h>
 #include <deemon/variant.h>
 
@@ -36,8 +35,6 @@
 #include <hybrid/typecore.h>
 /**/
 
-#include "kwlist.h"
-#include "runtime_error.h"
 #include "strings.h"
 /**/
 

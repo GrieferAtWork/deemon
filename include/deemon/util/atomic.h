@@ -153,26 +153,26 @@ DEE_DEFINE_ATOMIC_HELPERS(64, __UINT64_TYPE__)
 #define _Dee_ATOMIC_DOWNCAST(T) (T)
 #endif /* !_MSC_VER */
 /* clang-format off */
-#define Dee_atomic_xch_explicit(p, value, order)                                                                                                 \
-	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_xch_no_threads_8((__UINT8_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
-	                         sizeof(x) == 2 ? _Dee_atomic_xch_no_threads_16((__UINT16_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
-	                         sizeof(x) == 4 ? _Dee_atomic_xch_no_threads_32((__UINT32_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
-	                                          _Dee_atomic_xch_no_threads_64((__UINT64_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
-#define Dee_atomic_fetchand_explicit(p, value, order)                                                                                                 \
-	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchand_no_threads_8((__UINT8_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
-	                         sizeof(x) == 2 ? _Dee_atomic_fetchand_no_threads_16((__UINT16_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
-	                         sizeof(x) == 4 ? _Dee_atomic_fetchand_no_threads_32((__UINT32_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
-	                                          _Dee_atomic_fetchand_no_threads_64((__UINT64_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
-#define Dee_atomic_fetchor_explicit(p, value, order)                                                                                                 \
-	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchor_no_threads_8((__UINT8_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
-	                         sizeof(x) == 2 ? _Dee_atomic_fetchor_no_threads_16((__UINT16_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
-	                         sizeof(x) == 4 ? _Dee_atomic_fetchor_no_threads_32((__UINT32_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
-	                                          _Dee_atomic_fetchor_no_threads_64((__UINT64_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
-#define Dee_atomic_fetchnand_explicit(p, value, order)                                                                                                 \
-	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchnand_no_threads_8((__UINT8_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
-	                         sizeof(x) == 2 ? _Dee_atomic_fetchnand_no_threads_16((__UINT16_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
-	                         sizeof(x) == 4 ? _Dee_atomic_fetchnand_no_threads_32((__UINT32_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
-	                                          _Dee_atomic_fetchnand_no_threads_64((__UINT64_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
+#define Dee_atomic_xch_explicit(p, value, order)                                                                                                    \
+	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_xch_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
+	                         sizeof(x) == 2 ? _Dee_atomic_xch_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
+	                         sizeof(x) == 4 ? _Dee_atomic_xch_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
+	                                          _Dee_atomic_xch_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
+#define Dee_atomic_fetchand_explicit(p, value, order)                                                                                                    \
+	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchand_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
+	                         sizeof(x) == 2 ? _Dee_atomic_fetchand_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
+	                         sizeof(x) == 4 ? _Dee_atomic_fetchand_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
+	                                          _Dee_atomic_fetchand_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
+#define Dee_atomic_fetchor_explicit(p, value, order)                                                                                                    \
+	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchor_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
+	                         sizeof(x) == 2 ? _Dee_atomic_fetchor_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
+	                         sizeof(x) == 4 ? _Dee_atomic_fetchor_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
+	                                          _Dee_atomic_fetchor_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
+#define Dee_atomic_fetchnand_explicit(p, value, order)                                                                                                    \
+	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchnand_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
+	                         sizeof(x) == 2 ? _Dee_atomic_fetchnand_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
+	                         sizeof(x) == 4 ? _Dee_atomic_fetchnand_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
+	                                          _Dee_atomic_fetchnand_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
 /* clang-format on */
 #endif /* !... */
 

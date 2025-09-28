@@ -111,8 +111,11 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU128)(Dee_uint128_t value, 
 #ifndef Dee_ASSUMED_VALUE_IS_NOOP
 #define DeeRT_ErrNoActiveException()                              Dee_ASSUMED_VALUE((DeeRT_ErrNoActiveException)(), -1)
 #define DeeRT_ErrIntegerOverflow(value, minval, maxval, positive) Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflow)(value, minval, maxval, positive), -1)
+#define DeeRT_ErrIntegerOverflowEx(value, num_bits, flags)        Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowEx)(value, num_bits, flags), -1)
 #define DeeRT_ErrIntegerOverflowS(value, minval, maxval)          Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowS)(value, minval, maxval), -1)
 #define DeeRT_ErrIntegerOverflowU(value, maxval)                  Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowU)(value, maxval), -1)
+#define DeeRT_ErrIntegerOverflowUMul(lhs, rhs)                    Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowUMul)(lhs, rhs), -1)
+#define DeeRT_ErrIntegerOverflowUAdd(lhs, rhs)                    Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowUAdd)(lhs, rhs), -1)
 #if __SIZEOF_SIZE_T__ < 8
 #define DeeRT_ErrIntegerOverflowS64(value, minval, maxval) Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowS64)(value, minval, maxval), -1)
 #define DeeRT_ErrIntegerOverflowU64(value, maxval)         Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowU64)(value, maxval), -1)
