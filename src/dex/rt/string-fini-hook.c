@@ -136,6 +136,8 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 sfh_fini(StringFiniHook *__restrict self) {
+	DeeString_RemoveFiniHook(&self->sfh_hook->usfh_hook);
+	Dee_string_fini_hook_decref(&self->sfh_hook->usfh_hook);
 	weakref_support_fini(self);
 	Dee_Decref(self->sfh_cb);
 }

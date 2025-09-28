@@ -32,6 +32,7 @@ function main() {
 
 	function tester(x: string, enableHooks: bool = true): int {
 		local rtString = x.upper();
+		assert rtString.id != x.id;
 		assert !rtString.__hasfinihooks__;
 		if (enableHooks) {
 			assert rtString.__withfinihooks__ === rtString;

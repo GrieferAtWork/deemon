@@ -745,6 +745,7 @@ DeeString_RemoveFiniHook(struct Dee_string_fini_hook *__restrict hook) {
 		if (string_fini_hooks_size == 0) {
 			struct Dee_string_fini_hook **old_list;
 			old_list = string_fini_hooks_list;
+			string_fini_hooks_list = NULL;
 			string_fini_hooks_lock_endwrite();
 			Dee_Free(old_list);
 		} else {

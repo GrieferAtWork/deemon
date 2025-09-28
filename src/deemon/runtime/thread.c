@@ -5384,6 +5384,7 @@ DeeThread_RemoveInterruptHook(struct Dee_thread_interrupt_hook *__restrict hook)
 		if (thread_interrupt_hooks_size == 0) {
 			struct Dee_thread_interrupt_hook **old_list;
 			old_list = thread_interrupt_hooks_list;
+			thread_interrupt_hooks_list = NULL;
 			thread_interrupt_hooks_lock_endwrite();
 			Dee_Free(old_list);
 		} else {
