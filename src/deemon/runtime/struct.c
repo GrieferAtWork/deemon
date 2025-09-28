@@ -492,8 +492,8 @@ struct_init_unbound_cb(void *arg, DeeTypeObject *declaring_type,
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeStructObject_Ctor(DeeObject *__restrict self) {
-	return DeeStructObject_ForeachField(Dee_TYPE(self), &struct_init_unbound_cb,
-	                                    &struct_fini_cb, self);
+	return (int)DeeStructObject_ForeachField(Dee_TYPE(self), &struct_init_unbound_cb,
+	                                         &struct_fini_cb, self);
 }
 
 PUBLIC NONNULL((1)) void DCALL /* Remember to set "Dee_TF_TPVISIT" */
@@ -1273,8 +1273,8 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-#define STRUCT_CMP_ENCODE(v) ((v) == 0 ? 0 : ((v) - 4))
-#define STRUCT_CMP_DECODE(v) ((v) == 0 ? 0 : ((v) + 4))
+#define STRUCT_CMP_ENCODE(v) ((Dee_ssize_t)((v) == 0 ? 0 : ((v) - 4)))
+#define STRUCT_CMP_DECODE(v) ((int)((v) == 0 ? 0 : ((v) + 4)))
 STATIC_ASSERT(STRUCT_CMP_ENCODE(0) == 0);
 STATIC_ASSERT(STRUCT_CMP_DECODE(0) == 0);
 STATIC_ASSERT(STRUCT_CMP_ENCODE(1) < 0);

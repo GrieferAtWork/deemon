@@ -1719,12 +1719,12 @@ __DECL_END
 #define __hybrid_uint128_setone(var)                               \
 	(void)(__hybrid_PRIVATE_uint128_vec64_significand(var, 0) = 1, \
 	       __hybrid_PRIVATE_uint128_vec64_significand(var, 1) = 0)
-#define __hybrid_int128_isminusone(var)              \
-	(__hybrid_PRIVATE_uint128_vec64(var)[0] == -1 && \
-	 __hybrid_PRIVATE_uint128_vec64(var)[1] == -1)
-#define __hybrid_int128_setminusone(var)                \
-	(void)(__hybrid_PRIVATE_uint128_vec64(var)[0] = -1, \
-	       __hybrid_PRIVATE_uint128_vec64(var)[1] = -1)
+#define __hybrid_int128_isminusone(var)             \
+	(__hybrid_PRIVATE_int128_vec64(var)[0] == -1 && \
+	 __hybrid_PRIVATE_int128_vec64(var)[1] == -1)
+#define __hybrid_int128_setminusone(var)               \
+	(void)(__hybrid_PRIVATE_int128_vec64(var)[0] = -1, \
+	       __hybrid_PRIVATE_int128_vec64(var)[1] = -1)
 #define __hybrid_int128_ismin(var)                             \
 	(__hybrid_PRIVATE_int128_vec64_significand(var, 0) == 0 && \
 	 __hybrid_PRIVATE_int128_vec64_significand(var, 1) == __PRIVATE_MIN_S8)
