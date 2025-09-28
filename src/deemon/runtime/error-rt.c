@@ -44,31 +44,26 @@
 
 DECL_BEGIN
 
-#ifndef CONFIG_NO_OBJECT_SLABS
-LOCAL ATTR_CONST WUNUSED NONNULL((1)) size_t DCALL
-get_slab_size(void (DCALL *tp_free)(void *__restrict ob)) {
-#define CHECK_SIZE(index, size)                 \
-	if (tp_free == &DeeObject_SlabFree##size || \
-	    tp_free == &DeeGCObject_SlabFree##size) \
-		return size * __SIZEOF_POINTER__;
-	DeeSlab_ENUMERATE(CHECK_SIZE)
-#undef CHECK_SIZE
-	return 0;
-}
-
-#define GET_INSTANCE_SIZE(self)                        \
-	((self)->tp_init.tp_alloc.tp_free                  \
-	 ? get_slab_size((self)->tp_init.tp_alloc.tp_free) \
-	 : (self)->tp_init.tp_alloc.tp_instance_size)
-#else /* !CONFIG_NO_OBJECT_SLABS */
-#define GET_INSTANCE_SIZE(self) \
-	((self)->tp_init.tp_alloc.tp_instance_size)
-#endif /* CONFIG_NO_OBJECT_SLABS */
-
+/* Default "Error" functions. */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+error_ctor(DeeErrorObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+error_copy(DeeErrorObject *__restrict self,
+           DeeErrorObject *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+error_deep(DeeErrorObject *__restrict self,
+           DeeErrorObject *__restrict other);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+error_init(DeeErrorObject *__restrict self,
+           size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+error_init_kw(DeeErrorObject *__restrict self, size_t argc,
+              DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-error_printrepr(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg);
-
-
+error_printrepr(DeeErrorObject *__restrict self,
+                Dee_formatprinter_t printer, void *arg);
+INTDEF NONNULL((1)) void DCALL
+error_fini(DeeErrorObject *__restrict self);
 
 
 
@@ -85,17 +80,6 @@ PUBLIC ATTR_COLD int (DCALL DeeRT_ErrNoActiveException)(void) {
 
 
 
-/* Throws a `DeeError_IntegerOverflow' indicating that some an integer
- * object or native (C) value cannot be used/processed because its value
- * exceeds the maximum supported value bounds within some context-of-use.
- *
- * The unsigned overflow throwing functions will only take the upper
- * bound (greatest) of valid values, and assume that the lower bound
- * is equal to `0'
- *
- * @param: positive: When true, assume "value > maxval".
- *                   Else, assume "value < maxval" */
-
 /************************************************************************/
 /* General-purpose, parameterized errors                                */
 /************************************************************************/
@@ -103,54 +87,105 @@ typedef struct {
 	ERROR_OBJECT_HEAD
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_variant, io_params); /* [...] Error parameters */
 } ParameterizedError;
-#define ParameterizedErrorType_GetParamCount(self) \
-	((GET_INSTANCE_SIZE(self) - offsetof(ParameterizedError, io_params)) / sizeof(struct Dee_variant))
-#define ParameterizedError_GetParamCount(self) \
-	ParameterizedErrorType_GetParamCount(Dee_TYPE(self))
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ParameterizedError_Copy(ParameterizedError *__restrict self,
-                        ParameterizedError *__restrict other) {
-	size_t i, n_params = ParameterizedError_GetParamCount(self);
-	for (i = 0; i < n_params; ++i) {
-		Dee_variant_init_copy(&self->io_params[i],
-		                      &other->io_params[i]);
+ParameterizedError_CopyEx(ParameterizedError *__restrict self,
+                          ParameterizedError *__restrict other,
+                          size_t n_params) {
+	int result = error_copy((DeeErrorObject *)self, (DeeErrorObject *)other);
+	if likely(result == 0) {
+		size_t i;
+		for (i = 0; i < n_params; ++i) {
+			Dee_variant_init_copy(&self->io_params[i],
+								  &other->io_params[i]);
+		}
 	}
-	return 0;
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ParameterizedError_Deep(ParameterizedError *__restrict self,
-                        ParameterizedError *__restrict other) {
-	size_t i, n_params = ParameterizedError_GetParamCount(self);
-	for (i = 0; i < n_params; ++i) {
-		if unlikely(Dee_variant_init_deepcopy(&self->io_params[i],
-		                                      &other->io_params[i]))
-			goto err_i;
+ParameterizedError_DeepEx(ParameterizedError *__restrict self,
+                          ParameterizedError *__restrict other,
+                          size_t n_params) {
+	size_t i;
+	int result = error_deep((DeeErrorObject *)self, (DeeErrorObject *)other);
+	if likely(result == 0) {
+		for (i = 0; i < n_params; ++i) {
+			if unlikely(Dee_variant_init_deepcopy(&self->io_params[i],
+			                                      &other->io_params[i]))
+				goto err_i;
+		}
 	}
-	return 0;
+	return result;
 err_i:
 	while (i--)
 		Dee_variant_fini(&self->io_params[i]);
+	error_fini((DeeErrorObject *)self);
 	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
-ParameterizedError_Fini(ParameterizedError *__restrict self) {
-	size_t i, n_params = ParameterizedError_GetParamCount(self);
+ParameterizedError_FiniEx(ParameterizedError *__restrict self,
+                          size_t n_params) {
+	size_t i;
 	for (i = 0; i < n_params; ++i)
 		Dee_variant_fini(&self->io_params[i]);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-ParameterizedError_Visit(ParameterizedError *__restrict self,
-                         Dee_visit_t proc, void *arg) {
-	size_t i, n_params = ParameterizedError_GetParamCount(self);
+ParameterizedError_VisitEx(ParameterizedError *__restrict self,
+                           Dee_visit_t proc, void *arg,
+                           size_t n_params) {
+	size_t i;
 	for (i = 0; i < n_params; ++i)
 		Dee_variant_visit(&self->io_params[i]);
 }
 
-#define PARAMETERIZED_ERROR_TYPE_INIT(tp_name, tp_base, T,                               \
+
+#define FOREACH_ParameterizedError_ParamCount(cb) \
+	cb(3) /* Add parameter counts as-needed */
+
+#define DEFINE_ParameterizedError_Visit(N)                                    \
+	PRIVATE NONNULL((1, 2)) void DCALL                                        \
+	ParameterizedError_Visit##N(DeeObject *__restrict self,                   \
+	                            Dee_visit_t proc, void *arg) {                \
+		ParameterizedError_VisitEx((ParameterizedError *)self, proc, arg, N); \
+	}
+FOREACH_ParameterizedError_ParamCount(DEFINE_ParameterizedError_Visit)
+#undef DEFINE_ParameterizedError_Visit
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
+ParameterizedError_GetParamCount(ParameterizedError const *__restrict self) {
+	DeeTypeObject *type = Dee_TYPE(self);
+	do {
+#define LOCAL_check_count(N)                                \
+		if (type->tp_visit == &ParameterizedError_Visit##N) \
+			return N;
+		FOREACH_ParameterizedError_ParamCount(LOCAL_check_count)
+#undef LOCAL_check_count
+	} while ((type = DeeType_Base(type)) != NULL);
+	return 0; /* Shouldn't happen */
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ParameterizedError_Copy(ParameterizedError *__restrict self,
+                        ParameterizedError *__restrict other) {
+	return ParameterizedError_CopyEx(self, other, ParameterizedError_GetParamCount(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ParameterizedError_Deep(ParameterizedError *__restrict self,
+                        ParameterizedError *__restrict other) {
+	return ParameterizedError_DeepEx(self, other, ParameterizedError_GetParamCount(self));
+}
+
+PRIVATE NONNULL((1)) void DCALL
+ParameterizedError_Fini(ParameterizedError *__restrict self) {
+	return ParameterizedError_FiniEx(self, ParameterizedError_GetParamCount(self));
+}
+
+#define PARAMETERIZED_ERROR_TYPE_INIT(tp_name, tp_base, T, PARAM_COUNT,                  \
                                       tp_print, tp_printrepr,                            \
                                       tp_methods, tp_getsets, tp_members,                \
                                       tp_class_methods, tp_class_members)                \
@@ -158,18 +193,23 @@ ParameterizedError_Visit(ParameterizedError *__restrict self,
 		OBJECT_HEAD_INIT(&DeeType_Type),                                                 \
 		/* .tp_name     = */ tp_name,                                                    \
 		/* .tp_doc      = */ NULL,                                                       \
-		/* .tp_flags    = */ TP_FINHERITCTOR,                                            \
+		/* .tp_flags    = */ TP_FNORMAL,                                                 \
 		/* .tp_weakrefs = */ 0,                                                          \
 		/* .tp_features = */ TF_NONE,                                                    \
 		/* .tp_base     = */ tp_base,                                                    \
 		/* .tp_init = */ {                                                               \
 			{                                                                            \
 				/* .tp_alloc = */ {                                                      \
-					/* .tp_ctor      = */ (Dee_funptr_t)NULL, /* Inherited */            \
-					/* .tp_copy_ctor = */ (Dee_funptr_t)&ParameterizedError_Copy,        \
-					/* .tp_deep_ctor = */ (Dee_funptr_t)&ParameterizedError_Deep,        \
-					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* Inherited */            \
-					TYPE_FIXED_ALLOCATOR(T)                                              \
+					/* Can re-use Error's constructors, since that one bzero's "self" */ \
+					/* .tp_ctor        = */ (Dee_funptr_t)&error_ctor,                   \
+					/* .tp_copy_ctor   = */ (Dee_funptr_t)&ParameterizedError_Copy,      \
+					/* .tp_deep_ctor   = */ (Dee_funptr_t)&ParameterizedError_Deep,      \
+					/* .tp_any_ctor    = */ (Dee_funptr_t)&error_init,                   \
+					TYPE_FIXED_ALLOCATOR(T),                                             \
+					/* TODO: Custom init function that scan's uses type_member fields    \
+					 *       defined by the type and its bases as (optional) keyword     \
+					 *       arguments taken by the constructor */                       \
+					/* .tp_any_ctor_kw = */ (Dee_funptr_t)&error_init_kw                 \
 				}                                                                        \
 			},                                                                           \
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ParameterizedError_Fini, \
@@ -183,7 +223,7 @@ ParameterizedError_Visit(ParameterizedError *__restrict self,
 			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))(tp_print), \
 			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))(tp_printrepr) \
 		},                                                                               \
-		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ParameterizedError_Visit, \
+		/* .tp_visit         = */ &ParameterizedError_Visit##PARAM_COUNT,                \
 		/* .tp_gc            = */ NULL,                                                  \
 		/* .tp_math          = */ NULL,                                                  \
 		/* .tp_cmp           = */ NULL,                                                  \
@@ -200,6 +240,8 @@ ParameterizedError_Visit(ParameterizedError *__restrict self,
 		/* .tp_class_getsets = */ NULL,                                                  \
 		/* .tp_class_members = */ tp_class_members                                       \
 	}
+
+
 
 
 
@@ -296,12 +338,22 @@ PRIVATE struct type_member tpconst integer_overflow_members[] = {
 
 PUBLIC DeeTypeObject DeeError_IntegerOverflow =
 PARAMETERIZED_ERROR_TYPE_INIT("IntegerOverflow", &DeeError_ArithmeticError,
-                              IntegerOverflow,
+                              IntegerOverflow, 3,
                               &integer_overflow_print,
                               &integer_overflow_printrepr,
                               NULL, NULL, integer_overflow_members,
                               integer_overflow_class_methods, NULL);
 
+/* Throws a `DeeError_IntegerOverflow' indicating that some an integer
+ * object or native (C) value cannot be used/processed because its value
+ * exceeds the maximum supported value bounds within some context-of-use.
+ *
+ * The unsigned overflow throwing functions will only take the upper
+ * bound (greatest) of valid values, and assume that the lower bound
+ * is equal to `0'
+ *
+ * @param: positive: When true, assume "value > maxval".
+ *                   Else, assume "value < maxval" */
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 (DCALL DeeRT_ErrIntegerOverflow)(/*Numeric*/ DeeObject *value,
                                  /*Numeric*/ DeeObject *minval,
@@ -499,9 +551,11 @@ PUBLIC ATTR_COLD int
 PUBLIC ATTR_COLD int
 (DCALL DeeRT_ErrIntegerOverflowU)(size_t value, size_t maxval) {
 #if __SIZEOF_SIZE_T__ < 8
-	return DeeRT_ErrIntegerOverflow32_impl((int32_t)value, 0, (int32_t)maxval, false);
+	return DeeRT_ErrIntegerOverflow32_impl((int32_t)value, 0,
+	                                       (int32_t)maxval, false);
 #else /* __SIZEOF_SIZE_T__ < 8 */
-	return DeeRT_ErrIntegerOverflow64_impl((int64_t)value, 0, (int64_t)maxval, false);
+	return DeeRT_ErrIntegerOverflow64_impl((int64_t)value, 0,
+	                                       (int64_t)maxval, false);
 #endif /* __SIZEOF_SIZE_T__ >= 8 */
 }
 
@@ -515,7 +569,8 @@ PUBLIC ATTR_COLD int
 
 PUBLIC ATTR_COLD int
 (DCALL DeeRT_ErrIntegerOverflowU64)(uint64_t value, uint64_t maxval) {
-	return DeeRT_ErrIntegerOverflow64_impl((int64_t)value, 0, (int64_t)maxval, false);
+	return DeeRT_ErrIntegerOverflow64_impl((int64_t)value, 0,
+	                                       (int64_t)maxval, false);
 }
 #endif /* __SIZEOF_SIZE_T__ < 8 */
 

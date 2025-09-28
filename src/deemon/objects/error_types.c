@@ -198,7 +198,7 @@ PRIVATE struct type_member tpconst error_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 error_ctor(DeeErrorObject *__restrict self) {
 	size_t sizeof_instance;
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
@@ -212,7 +212,7 @@ error_ctor(DeeErrorObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 error_copy(DeeErrorObject *__restrict self,
            DeeErrorObject *__restrict other) {
 	size_t sizeof_instance;
@@ -229,7 +229,7 @@ error_copy(DeeErrorObject *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 error_deep(DeeErrorObject *__restrict self,
            DeeErrorObject *__restrict other) {
 	size_t sizeof_instance;
@@ -252,7 +252,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 error_init(DeeErrorObject *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	size_t sizeof_instance;
@@ -279,7 +279,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 error_init_kw(DeeErrorObject *__restrict self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	size_t sizeof_instance;
@@ -304,7 +304,7 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 error_fini(DeeErrorObject *__restrict self) {
 	Dee_XDecref(self->e_message);
 	Dee_XDecref(self->e_inner);
@@ -402,7 +402,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&error_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
-	/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__8F384E6A64571883),
+	/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__8F384E6A64571883), /* TODO: memcmp additional fields */
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
 	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
 	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
