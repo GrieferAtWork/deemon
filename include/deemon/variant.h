@@ -249,6 +249,7 @@ Dee_variant_getobject(struct Dee_variant *__restrict self,
                       DeeObject *owner, char const *attr);
 
 /* Set the value of a variant (these can never fail) */
+DFUNDEF NONNULL((1)) void DCALL Dee_variant_setunbound(struct Dee_variant *__restrict self);
 DFUNDEF NONNULL((1, 2)) void DCALL Dee_variant_setobject(struct Dee_variant *__restrict self, DeeObject *value);
 DFUNDEF NONNULL((1)) void DCALL Dee_variant_setint32(struct Dee_variant *__restrict self, int32_t value);
 DFUNDEF NONNULL((1)) void DCALL Dee_variant_setuint32(struct Dee_variant *__restrict self, uint32_t value);
@@ -275,6 +276,12 @@ Dee_variant_print(struct Dee_variant *__restrict self,
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_variant_printrepr(struct Dee_variant *__restrict self,
                       Dee_formatprinter_t printer, void *arg);
+
+/* Compare variants with each other. */
+DFUNDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL Dee_variant_hash(struct Dee_variant *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_variant_compare(struct Dee_variant *lhs, struct Dee_variant *rhs);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_variant_compare_eq(struct Dee_variant *lhs, struct Dee_variant *rhs);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_variant_trycompare_eq(struct Dee_variant *lhs, struct Dee_variant *rhs);
 
 DECL_END
 

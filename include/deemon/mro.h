@@ -491,11 +491,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) size_t DCALL DeeObject_TGenericIterAttr(DeeTy
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL Dee_type_member_get(struct Dee_type_member const *desc, DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL Dee_type_member_bound(struct Dee_type_member const *desc, DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_type_member_set(struct Dee_type_member const *desc, DeeObject *self, DeeObject *value);
-#ifdef __INTELLISENSE__
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_type_member_del(struct Dee_type_member const *desc, DeeObject *self);
-#else /* __INTELLISENSE__ */
-#define Dee_type_member_del(desc, self) Dee_type_member_set(desc, self, Dee_None)
-#endif /* !__INTELLISENSE__ */
 
 
 /* Try to add the specified attribute to the cache of "self".

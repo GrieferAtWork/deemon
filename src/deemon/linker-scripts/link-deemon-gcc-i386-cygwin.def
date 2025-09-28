@@ -1259,6 +1259,19 @@ EXPORTS
 	_DeeString_TryResizeBuffer@8=DeeString_TryResizeBuffer@8
 	_DeeString_TrySetUtf8@4=DeeString_TrySetUtf8@4
 	_DeeString_VNewf@8=DeeString_VNewf@8
+	_DeeStructObject_Compare@8=DeeStructObject_Compare@8
+	_DeeStructObject_CompareEq@8=DeeStructObject_CompareEq@8
+	_DeeStructObject_Copy@8=DeeStructObject_Copy@8
+	_DeeStructObject_Ctor@4=DeeStructObject_Ctor@4
+	_DeeStructObject_Deep@8=DeeStructObject_Deep@8
+	_DeeStructObject_Fini@4=DeeStructObject_Fini@4
+	_DeeStructObject_ForeachField@16=DeeStructObject_ForeachField@16
+	_DeeStructObject_Hash@4=DeeStructObject_Hash@4
+	_DeeStructObject_Init@12=DeeStructObject_Init@12
+	_DeeStructObject_InitKw@16=DeeStructObject_InitKw@16
+	_DeeStructObject_PrintRepr@12=DeeStructObject_PrintRepr@12
+	_DeeStructObject_TryCompareEq@8=DeeStructObject_TryCompareEq@8
+	_DeeStructObject_Visit@16=DeeStructObject_Visit@16
 	_DeeSuper_New@8=DeeSuper_New@8
 	_DeeSuper_Of@4=DeeSuper_Of@4
 	_DeeSystem_DlClose@4=DeeSystem_DlClose@4
@@ -1514,6 +1527,7 @@ EXPORTS
 	_Dee_tuple_builder_pack@4=Dee_tuple_builder_pack@4
 	_Dee_tuple_builder_reserve@8=Dee_tuple_builder_reserve@8
 	_Dee_type_member_bound@8=Dee_type_member_bound@8
+	_Dee_type_member_del@8=Dee_type_member_del@8
 	_Dee_type_member_get@8=Dee_type_member_get@8
 	_Dee_type_member_set@12=Dee_type_member_set@12
 	_Dee_unicode_printer_alloc_utf16@8=Dee_unicode_printer_alloc_utf16@8
@@ -1568,7 +1582,10 @@ EXPORTS
 	_Dee_unicode_readutf8_n@8=Dee_unicode_readutf8_n@8
 	_Dee_unicode_readutf8_rev_n@8=Dee_unicode_readutf8_rev_n@8
 	_Dee_unicode_writeutf8@8=Dee_unicode_writeutf8@8
+	_Dee_variant_compare@8=Dee_variant_compare@8
+	_Dee_variant_compare_eq@8=Dee_variant_compare_eq@8
 	_Dee_variant_getobject@12=Dee_variant_getobject@12
+	_Dee_variant_hash@4=Dee_variant_hash@4
 	_Dee_variant_init_copy@8=Dee_variant_init_copy@8
 	_Dee_variant_init_deepcopy@8=Dee_variant_init_deepcopy@8
 	_Dee_variant_print@12=Dee_variant_print@12
@@ -1580,6 +1597,8 @@ EXPORTS
 	_Dee_variant_setuint128@20=Dee_variant_setuint128@20
 	_Dee_variant_setuint32@8=Dee_variant_setuint32@8
 	_Dee_variant_setuint64@12=Dee_variant_setuint64@12
+	_Dee_variant_setunbound@4=Dee_variant_setunbound@4
+	_Dee_variant_trycompare_eq@8=Dee_variant_trycompare_eq@8
 	_Dee_variant_trygetobject@4=Dee_variant_trygetobject@4
 	_Dee_vsnprintf@16=Dee_vsnprintf@16
 	_Dee_vsprintf@12=Dee_vsprintf@12

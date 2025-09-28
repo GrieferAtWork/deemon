@@ -190,6 +190,12 @@ err_unbound:
 	}	__WHILE0
 
 /* Set the value of a variant (these can never fail) */
+PUBLIC NONNULL((1)) void DCALL
+Dee_variant_setunbound(struct Dee_variant *__restrict self) {
+#define _Dee_variant_set_unbound(self, v) (void)0
+	VARIANT_SETVALUE(self, _Dee_variant_set_unbound, ~, Dee_VARIANT_UNBOUND);
+}
+
 PUBLIC NONNULL((1, 2)) void DCALL
 Dee_variant_setobject(struct Dee_variant *__restrict self, DeeObject *value) {
 #define _Dee_variant_set_object(self, v) (void)((self)->var_data.d_object = (v))
@@ -292,6 +298,302 @@ Dee_variant_printrepr(struct Dee_variant *__restrict self,
 		result = Dee_variant_print_impl(&copy, printer, arg);
 	}
 	Dee_variant_fini(&copy);
+	return result;
+}
+
+
+
+#ifndef CONFIG_NO_FPU
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL
+float_hash(DeeFloatObject *__restrict self);
+#endif /* !CONFIG_NO_FPU */
+
+/* Compare variants with each other. */
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+Dee_variant_hash_impl(struct Dee_variant const *__restrict self) {
+	switch (self->var_type) {
+	case Dee_VARIANT_UNBOUND:
+		return DEE_HASHOF_UNBOUND_ITEM;
+	case Dee_VARIANT_OBJECT:
+		return DeeObject_Hash(self->var_data.d_object);
+	case Dee_VARIANT_INT32:
+		return (Dee_hash_t)_Dee_variant_get_int32(self);
+	case Dee_VARIANT_UINT32:
+		return (Dee_hash_t)_Dee_variant_get_uint32(self);
+	case Dee_VARIANT_INT64:
+		return (Dee_hash_t)_Dee_variant_get_int64(self);
+	case Dee_VARIANT_UINT64:
+		return (Dee_hash_t)_Dee_variant_get_uint64(self);
+	case Dee_VARIANT_INT128:
+	case Dee_VARIANT_UINT128: {
+		Dee_uint128_t value = _Dee_variant_get_uint128(self);
+#if Dee_SIZEOF_HASH_T <= 4
+		return (Dee_hash_t)__hybrid_uint128_get32(value);
+#else /* Dee_SIZEOF_HASH_T <= 4 */
+		return (Dee_hash_t)__hybrid_uint128_get64(value);
+#endif /* Dee_SIZEOF_HASH_T > 4 */
+	}	break;
+#ifndef CONFIG_NO_FPU
+	case Dee_VARIANT_FLOAT: {
+		double value = _Dee_variant_get_float(self);
+		DeeFloatObject *obj = COMPILER_CONTAINER_OF(&value, DeeFloatObject, f_value);
+		return float_hash(obj);
+	}	break;
+#endif /* !CONFIG_NO_FPU */
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+/* Fast-pass comparison function that only implements cases that
+ * can never throw an exception. Returns "Dee_COMPARE_ERR" if the
+ * variant-type case between "lhs" and "rhs" doesn't have a fast-
+ * pass, or cannot be done without ever throwing an exception.
+ *
+ * @return: -1: lhs < rhs
+ * @return: 0 : Equal
+ * @return: 1 : lhs > rhs
+ * @return: Dee_COMPARE_ERR: Fast comparison isn't possible */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+Dee_variant_fast_compare_impl(struct Dee_variant const *__restrict lhs,
+                              struct Dee_variant const *__restrict rhs) {
+	switch (lhs->var_type) {
+
+	case Dee_VARIANT_UNBOUND:
+		return rhs->var_type == Dee_VARIANT_UNBOUND
+		       ? 0   /* UNBOUND == UNBOUND */
+		       : -1; /* UNBOUND < BOUND */
+
+	case Dee_VARIANT_INT32: {
+		int32_t lhs_value = _Dee_variant_get_int32(lhs);
+		switch (rhs->var_type) {
+		case Dee_VARIANT_INT32:
+			Dee_return_compareT(int32_t, lhs_value, _Dee_variant_get_int32(rhs));
+		case Dee_VARIANT_UINT32:
+			Dee_return_compareT(int64_t, lhs_value, _Dee_variant_get_uint32(rhs));
+		case Dee_VARIANT_INT64:
+			Dee_return_compareT(int64_t, lhs_value, _Dee_variant_get_int64(rhs));
+		default: break;
+		}
+	}	break;
+
+	case Dee_VARIANT_UINT32: {
+		uint32_t lhs_value = _Dee_variant_get_uint32(lhs);
+		switch (rhs->var_type) {
+		case Dee_VARIANT_INT32:
+			Dee_return_compareT(int64_t, lhs_value, _Dee_variant_get_int32(rhs));
+		case Dee_VARIANT_UINT32:
+			Dee_return_compareT(uint32_t, lhs_value, _Dee_variant_get_uint32(rhs));
+		case Dee_VARIANT_INT64:
+			Dee_return_compareT(int64_t, lhs_value, _Dee_variant_get_int64(rhs));
+		case Dee_VARIANT_UINT64:
+			Dee_return_compareT(uint64_t, lhs_value, _Dee_variant_get_uint64(rhs));
+		default: break;
+		}
+	}	break;
+
+	case Dee_VARIANT_INT64: {
+		int64_t lhs_value = _Dee_variant_get_int64(lhs);
+		switch (rhs->var_type) {
+		case Dee_VARIANT_INT32:
+			Dee_return_compareT(int64_t, lhs_value, _Dee_variant_get_int32(rhs));
+		case Dee_VARIANT_UINT32:
+			Dee_return_compareT(int64_t, lhs_value, _Dee_variant_get_uint32(rhs));
+		case Dee_VARIANT_INT64:
+			Dee_return_compareT(int64_t, lhs_value, _Dee_variant_get_int64(rhs));
+		default: break;
+		}
+	}	break;
+
+	case Dee_VARIANT_UINT64: {
+		int64_t lhs_value = _Dee_variant_get_int64(lhs);
+		switch (rhs->var_type) {
+		case Dee_VARIANT_UINT32:
+			Dee_return_compareT(uint64_t, lhs_value, _Dee_variant_get_uint32(rhs));
+		case Dee_VARIANT_UINT64:
+			Dee_return_compareT(uint64_t, lhs_value, _Dee_variant_get_uint64(rhs));
+		default: break;
+		}
+	}	break;
+
+	case Dee_VARIANT_INT128: {
+		if (rhs->var_type == Dee_VARIANT_INT128) {
+			Dee_int128_t lhs_value = _Dee_variant_get_int128(lhs);
+			Dee_int128_t rhs_value = _Dee_variant_get_int128(rhs);
+			if (__hybrid_int128_lo128(lhs_value, rhs_value))
+				return -1;
+			if (__hybrid_int128_gr128(lhs_value, rhs_value))
+				return 1;
+			return 0;
+		}
+	}	break;
+
+	case Dee_VARIANT_UINT128: {
+		if (rhs->var_type == Dee_VARIANT_UINT128) {
+			Dee_uint128_t lhs_value = _Dee_variant_get_uint128(lhs);
+			Dee_uint128_t rhs_value = _Dee_variant_get_uint128(rhs);
+			if (__hybrid_uint128_lo128(lhs_value, rhs_value))
+				return -1;
+			if (__hybrid_uint128_gr128(lhs_value, rhs_value))
+				return 1;
+			return 0;
+		}
+	}	break;
+
+#ifndef CONFIG_NO_FPU
+	case Dee_VARIANT_FLOAT: {
+		if (rhs->var_type == Dee_VARIANT_FLOAT) {
+			Dee_return_compareT(double,
+			                    _Dee_variant_get_float(lhs),
+			                    _Dee_variant_get_float(rhs));
+		}
+	}	break;
+#endif /* !CONFIG_NO_FPU */
+
+	default: break;
+	}
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+Dee_variant_compare_impl(struct Dee_variant *__restrict lhs,
+                         struct Dee_variant *__restrict rhs) {
+	DREF DeeObject *lhs_ob;
+	DREF DeeObject *rhs_ob;
+	int result = Dee_variant_fast_compare_impl(lhs, rhs);
+	if (result != Dee_COMPARE_ERR)
+		return result;
+	lhs_ob = Dee_variant_trygetobject(lhs);
+	if unlikely(!ITER_ISOK(lhs_ob)) {
+		if unlikely(!lhs_ob)
+			goto err;
+		return Dee_variant_isbound_nonatomic(rhs)
+		       ? -1 /* UNBOUND < BOUND */
+		       : 0; /* UNBOUND == UNBOUND */
+	}
+	rhs_ob = Dee_variant_trygetobject(rhs);
+	if unlikely(!ITER_ISOK(rhs_ob)) {
+		Dee_Decref(lhs_ob);
+		if unlikely(!rhs_ob)
+			goto err;
+		return 1; /* BOUND > UNBOUND */
+	}
+	result = DeeObject_Compare(lhs_ob, rhs_ob);
+	Dee_Decref_unlikely(rhs_ob);
+	Dee_Decref_unlikely(lhs_ob);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+Dee_variant_compare_eq_impl(struct Dee_variant *__restrict lhs,
+                            struct Dee_variant *__restrict rhs) {
+	DREF DeeObject *lhs_ob;
+	DREF DeeObject *rhs_ob;
+	int result = Dee_variant_fast_compare_impl(lhs, rhs);
+	if (result != Dee_COMPARE_ERR)
+		return result;
+	lhs_ob = Dee_variant_trygetobject(lhs);
+	if unlikely(!ITER_ISOK(lhs_ob)) {
+		if unlikely(!lhs_ob)
+			goto err;
+		return Dee_variant_isbound_nonatomic(rhs)
+		       ? -1 /* UNBOUND < BOUND */
+		       : 0; /* UNBOUND == UNBOUND */
+	}
+	rhs_ob = Dee_variant_trygetobject(rhs);
+	if unlikely(!ITER_ISOK(rhs_ob)) {
+		Dee_Decref(lhs_ob);
+		if unlikely(!rhs_ob)
+			goto err;
+		return 1; /* BOUND > UNBOUND */
+	}
+	result = DeeObject_CompareEq(lhs_ob, rhs_ob);
+	Dee_Decref_unlikely(rhs_ob);
+	Dee_Decref_unlikely(lhs_ob);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+Dee_variant_trycompare_eq_impl(struct Dee_variant *__restrict lhs,
+                               struct Dee_variant *__restrict rhs) {
+	DREF DeeObject *lhs_ob;
+	DREF DeeObject *rhs_ob;
+	int result = Dee_variant_fast_compare_impl(lhs, rhs);
+	if (result != Dee_COMPARE_ERR)
+		return result;
+	lhs_ob = Dee_variant_trygetobject(lhs);
+	if unlikely(!ITER_ISOK(lhs_ob)) {
+		if unlikely(!lhs_ob)
+			goto err;
+		return Dee_variant_isbound_nonatomic(rhs)
+		       ? -1 /* UNBOUND < BOUND */
+		       : 0; /* UNBOUND == UNBOUND */
+	}
+	rhs_ob = Dee_variant_trygetobject(rhs);
+	if unlikely(!ITER_ISOK(rhs_ob)) {
+		Dee_Decref(lhs_ob);
+		if unlikely(!rhs_ob)
+			goto err;
+		return 1; /* BOUND > UNBOUND */
+	}
+	result = DeeObject_TryCompareEq(lhs_ob, rhs_ob);
+	Dee_Decref_unlikely(rhs_ob);
+	Dee_Decref_unlikely(lhs_ob);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PUBLIC WUNUSED NONNULL((1)) Dee_hash_t DCALL
+Dee_variant_hash(struct Dee_variant *__restrict self) {
+	Dee_hash_t result;
+	struct Dee_variant copy;
+	Dee_variant_init_copy(&copy, self);
+	result = Dee_variant_hash_impl(&copy);
+	Dee_variant_fini(&copy);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+Dee_variant_compare(struct Dee_variant *lhs, struct Dee_variant *rhs) {
+	int result;
+	struct Dee_variant lhs_copy;
+	struct Dee_variant rhs_copy;
+	Dee_variant_init_copy(&lhs_copy, lhs);
+	Dee_variant_init_copy(&rhs_copy, rhs);
+	result = Dee_variant_compare_impl(&lhs_copy, &rhs_copy);
+	Dee_variant_fini(&rhs_copy);
+	Dee_variant_fini(&lhs_copy);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+Dee_variant_compare_eq(struct Dee_variant *lhs, struct Dee_variant *rhs) {
+	int result;
+	struct Dee_variant lhs_copy;
+	struct Dee_variant rhs_copy;
+	Dee_variant_init_copy(&lhs_copy, lhs);
+	Dee_variant_init_copy(&rhs_copy, rhs);
+	result = Dee_variant_compare_eq_impl(&lhs_copy, &rhs_copy);
+	Dee_variant_fini(&rhs_copy);
+	Dee_variant_fini(&lhs_copy);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+Dee_variant_trycompare_eq(struct Dee_variant *lhs, struct Dee_variant *rhs) {
+	int result;
+	struct Dee_variant lhs_copy;
+	struct Dee_variant rhs_copy;
+	Dee_variant_init_copy(&lhs_copy, lhs);
+	Dee_variant_init_copy(&rhs_copy, rhs);
+	result = Dee_variant_trycompare_eq_impl(&lhs_copy, &rhs_copy);
+	Dee_variant_fini(&rhs_copy);
+	Dee_variant_fini(&lhs_copy);
 	return result;
 }
 

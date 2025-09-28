@@ -1087,11 +1087,16 @@ DEFINE_OPERATOR(void, Visit, (DeeObject *__restrict self, dvisit_t proc, void *a
 	do {
 		if (tp_self->tp_visit) {
 			if (tp_self->tp_visit == &instance_visit) {
+				/* TODO: Remove "instance_visit" and use "TF_TPVISIT" instead! */
 				/* Required to prevent redundancy in class instances.
 				 * Without this, all instance levels would be visited more
 				 * than once by the number of recursive user-types, when
 				 * one visit (as implemented here) is already enough. */
 				instance_tvisit(tp_self, self, proc, arg);
+			} else if (tp_self->tp_features & TF_TPVISIT) {
+				typedef void (DCALL *tp_tvisit_t)(DeeTypeObject *tp_self, DeeObject *self,
+				                                  Dee_visit_t proc, void *arg);
+				(*(tp_tvisit_t)tp_self->tp_visit)(tp_self, self, proc, arg);
 			} else {
 				(*tp_self->tp_visit)(self, proc, arg);
 			}

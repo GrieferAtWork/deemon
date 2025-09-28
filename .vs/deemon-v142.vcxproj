@@ -211,6 +211,7 @@
 		<ClInclude Include="..\include\deemon\set.h" />
 		<ClInclude Include="..\include\deemon\string.h" />
 		<ClInclude Include="..\include\deemon\stringutils.h" />
+		<ClInclude Include="..\include\deemon\struct.h" />
 		<ClInclude Include="..\include\deemon\super.h" />
 		<ClInclude Include="..\include\deemon\system-error.h" />
 		<ClInclude Include="..\include\deemon\system-features.h" />
@@ -682,6 +683,7 @@
 		<ClCompile Include="..\src\deemon\runtime\runtime_error.c" />
 		<ClCompile Include="..\src\deemon\runtime\simple-hashset.c" />
 		<ClCompile Include="..\src\deemon\runtime\strings.c" />
+		<ClCompile Include="..\src\deemon\runtime\struct.c" />
 		<ClCompile Include="..\src\deemon\runtime\thread.c" />
 		<ClCompile Include="..\src\deemon\runtime\type_member.c" />
 		<ClCompile Include="..\src\deemon\runtime\variant.c" />

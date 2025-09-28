@@ -3819,6 +3819,7 @@ struct Dee_type_operator {
                                             * or any sort of container object capable of holding instances of the same type. */
 #define Dee_TF_KW               0x00000002 /* Instances of this type can be used as keyword argument objects (s.a. `DeeType_IsKw()')
                                             * WARNING: If you set this flag, you must also implement support in `DeeKw_Get*' */
+#define Dee_TF_TPVISIT          0x00000004 /* "tp_visit" is actually typed as "void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg)" */
 #define Dee_TF_SEQCLASS_SHFT    26         /* [INTERNAL] Shift for `Dee_TF_SEQCLASS_MASK' */
 #define Dee_TF_SEQCLASS_MASK    0x1c000000 /* [INTERNAL] Mask for cached `Dee_SEQCLASS_*' */
 #define Dee_TF_NOTCONSTCASTABLE 0x20000000 /* [INTERNAL] Cached result for `DeeType_IsConstCastable': false */
@@ -3843,6 +3844,7 @@ struct Dee_type_operator {
 #define TF_NONE             Dee_TF_NONE
 #define TF_NONLOOPING       Dee_TF_NONLOOPING
 #define TF_KW               Dee_TF_KW
+#define TF_TPVISIT          Dee_TF_TPVISIT
 #define TF_SINGLETON        Dee_TF_SINGLETON
 #endif /* DEE_SOURCE */
 
@@ -3867,6 +3869,8 @@ struct Dee_type_object {
 	                                                  * NOTE: When the `TP_FINHERITCTOR' flag is set, then this field must be non-NULL. */
 	struct Dee_type_constructor         tp_init;     /* Constructor/destructor operators. */
 	struct Dee_type_cast                tp_cast;     /* Type casting operators. */
+	/* WARNING: When "Dee_TF_TPVISIT" is set, "tp_visit" is actually typed as:
+	 * >> void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg); */
 	NONNULL_T((1, 2)) void      (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
 	/* NOTE: Anything used by `DeeType_Inherit*' can't be made `Dee_tpconst' here! */
 	struct Dee_type_gc Dee_tpconst     *tp_gc;       /* [0..1] GC related operators. */

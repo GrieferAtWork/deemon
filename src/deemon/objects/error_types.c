@@ -29,11 +29,13 @@
 #include <deemon/error_types.h>
 #include <deemon/exec.h>
 #include <deemon/format.h>
+#include <deemon/kwds.h>
 #include <deemon/module.h>
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/struct.h>
 #include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/system.h>
 #include <deemon/tuple.h>
@@ -60,44 +62,82 @@
 
 DECL_BEGIN
 
+/* TODO: Migrate everything from in here into "error-rt.c" */
 
-#define INIT_CUSTOM_ERROR(tp_name, tp_doc, tp_flags, tp_base,                                          \
-                          tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor,                            \
-                          T, tp_dtor, tp_str, tp_print, tp_visit,                                      \
-                          tp_methods, tp_getsets, tp_members,                                          \
-                          tp_class_members)                                                            \
+
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("message");
+print define_Dee_HashStr("inner");
+]]]*/
+#define Dee_HashStr__message _Dee_HashSelectC(0x14820755, 0xbeaa4b97155366df)
+#define Dee_HashStr__inner _Dee_HashSelectC(0x20e82985, 0x4f20d07bb803c1fe)
+/*[[[end]]]*/
+
+
+#define INIT_CUSTOM_ERROR(tp_name, tp_doc, tp_flags,                        \
+                          tp_base, T, tp_str, tp_print,                     \
+                          tp_methods, tp_getsets, tp_members,               \
+                          tp_class_members)                                 \
+	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_TPVISIT, tp_base, T, \
+	                     &DeeStructObject_Ctor, &DeeStructObject_Copy,      \
+	                     &DeeStructObject_Deep, &DeeStructObject_Init,      \
+	                     &DeeStructObject_InitKw, &DeeStructObject_Fini,    \
+	                     &DeeStructObject_Visit, &DeeStructObject_Cmp,      \
+	                     tp_str, tp_print,                                  \
+	                     tp_methods, tp_getsets, tp_members,                \
+	                     tp_class_members)
+
+/* Initialize an error type that uses `DeeErrorObject' as its struct type */
+#define INIT_LIKE_ERROR(tp_name, tp_doc, tp_flags,                          \
+                        tp_base, tp_str, tp_print,                          \
+                        tp_methods, tp_getsets, tp_class_members)           \
+	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_NONE,                \
+	                     tp_base, DeeErrorObject, &error_ctor, &error_copy, \
+	                     &error_deep, &error_init, &error_init_kw,          \
+	                     NULL, NULL, NULL, tp_str, tp_print,                \
+	                     tp_methods, tp_getsets, NULL,                      \
+	                     tp_class_members)
+#define INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, tp_features,                                   \
+                             tp_base, T, tp_ctor, tp_copy, tp_deep, tp_init,                           \
+                             tp_init_kw, tp_fini, tp_visit, tp_cmp,                                    \
+                             tp_str, tp_print,                                                         \
+                             tp_methods, tp_getsets, tp_members,                                       \
+                             tp_class_members)                                                         \
 	{                                                                                                  \
 		OBJECT_HEAD_INIT(&DeeType_Type),                                                               \
 		/* .tp_name     = */ tp_name,                                                                  \
 		/* .tp_doc      = */ DOC(tp_doc),                                                              \
 		/* .tp_flags    = */ tp_flags,                                                                 \
 		/* .tp_weakrefs = */ 0,                                                                        \
-		/* .tp_features = */ TF_NONE,                                                                  \
+		/* .tp_features = */ TF_NONE | (tp_features),                                                  \
 		/* .tp_base     = */ tp_base,                                                                  \
 		/* .tp_init = */ {                                                                             \
 			{                                                                                          \
 				/* .tp_alloc = */ {                                                                    \
-					/* .tp_ctor      = */ (dfunptr_t)(tp_ctor),                                        \
-					/* .tp_copy_ctor = */ (dfunptr_t)(tp_copy_ctor),                                   \
-					/* .tp_deep_ctor = */ (dfunptr_t)(tp_deep_ctor),                                   \
-					/* .tp_any_ctor  = */ (dfunptr_t)(tp_any_ctor),                                    \
-					TYPE_FIXED_ALLOCATOR(T)                                                            \
+					/* .tp_ctor      = */ (Dee_funptr_t)(tp_ctor),                                     \
+					/* .tp_copy_ctor = */ (Dee_funptr_t)(tp_copy),                                     \
+					/* .tp_deep_ctor = */ (Dee_funptr_t)(tp_deep),                                     \
+					/* .tp_any_ctor  = */ (Dee_funptr_t)(tp_init),                                     \
+					TYPE_FIXED_ALLOCATOR(T),                                                           \
+					/* .tp_any_ctor_kw = */ (Dee_funptr_t)(tp_init_kw)                                 \
 				}                                                                                      \
 			},                                                                                         \
-			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))(tp_dtor),                  \
+			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))(tp_fini),                  \
 			/* .tp_assign      = */ NULL,                                                              \
 			/* .tp_move_assign = */ NULL                                                               \
 		},                                                                                             \
 		/* .tp_cast = */ {                                                                             \
-			/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str),               \
-			/* .tp_repr  = */ NULL,                                                                    \
-			/* .tp_bool  = */ NULL,                                                                    \
-			/* .tp_print = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))(tp_print) \
+			/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str),          \
+			/* .tp_repr      = */ NULL,                                                                \
+			/* .tp_bool      = */ NULL,                                                                \
+			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))(tp_print), \
+			/* .tp_printrepr = */ &DeeStructObject_PrintRepr,                                          \
 		},                                                                                             \
-		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))(tp_visit), \
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))(tp_visit), \
 		/* .tp_gc            = */ NULL,                                                                \
 		/* .tp_math          = */ NULL,                                                                \
-		/* .tp_cmp           = */ NULL,                                                                \
+		/* .tp_cmp           = */ tp_cmp,                                                              \
 		/* .tp_seq           = */ NULL,                                                                \
 		/* .tp_iter_next     = */ NULL,                                                                \
 		/* .tp_iterator      = */ NULL,                                                                \
@@ -111,76 +151,6 @@ DECL_BEGIN
 		/* .tp_class_getsets = */ NULL,                                                                \
 		/* .tp_class_members = */ tp_class_members                                                     \
 	}
-
-
-#ifndef CONFIG_NO_OBJECT_SLABS
-LOCAL ATTR_CONST WUNUSED NONNULL((1)) size_t DCALL
-get_slab_size(void (DCALL *tp_free)(void *__restrict ob)) {
-#define CHECK_SIZE(index, size)                 \
-	if (tp_free == &DeeObject_SlabFree##size || \
-	    tp_free == &DeeGCObject_SlabFree##size) \
-		return size * __SIZEOF_POINTER__;
-	DeeSlab_ENUMERATE(CHECK_SIZE)
-#undef CHECK_SIZE
-	return 0;
-}
-
-#define GET_INSTANCE_SIZE(self)                                \
-	(Dee_TYPE(self)->tp_init.tp_alloc.tp_free                  \
-	 ? get_slab_size(Dee_TYPE(self)->tp_init.tp_alloc.tp_free) \
-	 : Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size)
-#else /* !CONFIG_NO_OBJECT_SLABS */
-#define GET_INSTANCE_SIZE(self) \
-	(Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size)
-#endif /* CONFIG_NO_OBJECT_SLABS */
-
-
-/* Try to construct the given error object using its legacy constructor.
- * Note that any additional memory are zero-initialized upon success (true),
- * and that no error will be thrown on failure (false).
- * NOTE: Upon failure, the message and inner fields are initialized to NULL. */
-PRIVATE WUNUSED NONNULL((1)) bool DCALL
-error_try_init(DeeErrorObject *__restrict self,
-               size_t argc, DeeObject *const *argv) {
-	size_t sizeof_instance;
-	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	sizeof_instance = GET_INSTANCE_SIZE(self);
-	ASSERT(sizeof_instance >= sizeof(DeeErrorObject));
-	switch (argc) {
-
-	case 0:
-		self->e_message = NULL;
-		self->e_inner   = NULL;
-		goto done_ok;
-
-	case 1:
-		if (!DeeString_Check(argv[0]))
-			break;
-		self->e_message = (DeeStringObject *)argv[0];
-		Dee_Incref(self->e_message);
-		self->e_inner = NULL;
-		goto done_ok;
-
-	case 2:
-		if (!DeeString_Check(argv[0]))
-			break;
-		self->e_message = (DeeStringObject *)argv[0];
-		self->e_inner   = argv[1];
-		Dee_Incref(self->e_message);
-		Dee_Incref(self->e_inner);
-		goto done_ok;
-
-	default: break;
-	}
-	self->e_message = NULL;
-	self->e_inner   = NULL;
-	return false;
-done_ok:
-	/* Clear our any additional fields. */
-	bzero(self + 1, sizeof_instance - sizeof(DeeErrorObject));
-	return true;
-}
-
 
 
 
@@ -197,124 +167,6 @@ PRIVATE struct type_member tpconst error_class_members[] = {
 	TYPE_MEMBER_CONST("AppExit", &DeeError_AppExit),
 	TYPE_MEMBER_END
 };
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-error_ctor(DeeErrorObject *__restrict self) {
-	size_t sizeof_instance;
-	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	sizeof_instance = GET_INSTANCE_SIZE(self);
-	ASSERT(sizeof_instance >= sizeof(DeeErrorObject));
-	bzero(&self->e_message,
-	      sizeof_instance -
-	      offsetof(DeeErrorObject, e_message));
-	ASSERT(!self->e_inner);
-	ASSERT(!self->e_message);
-	return 0;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-error_copy(DeeErrorObject *__restrict self,
-           DeeErrorObject *__restrict other) {
-	size_t sizeof_instance;
-	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	sizeof_instance = GET_INSTANCE_SIZE(self);
-	ASSERT(sizeof_instance >= sizeof(DeeErrorObject));
-	self->e_inner   = other->e_inner;
-	self->e_message = other->e_message;
-	Dee_XIncref(self->e_inner);
-	Dee_XIncref(self->e_message);
-	bzero(self + 1,
-	      sizeof_instance -
-	      sizeof(DeeErrorObject));
-	return 0;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-error_deep(DeeErrorObject *__restrict self,
-           DeeErrorObject *__restrict other) {
-	size_t sizeof_instance;
-	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	sizeof_instance = GET_INSTANCE_SIZE(self);
-	ASSERT(sizeof_instance >= sizeof(DeeErrorObject));
-	self->e_inner = NULL;
-	if (other->e_inner) {
-		self->e_inner = DeeObject_DeepCopy(other->e_inner);
-		if unlikely(!self->e_inner)
-			goto err;
-	}
-	self->e_message = other->e_message;
-	Dee_XIncref(self->e_message);
-	bzero(self + 1,
-	      sizeof_instance -
-	      sizeof(DeeErrorObject));
-	return 0;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-error_init(DeeErrorObject *__restrict self,
-           size_t argc, DeeObject *const *argv) {
-	size_t sizeof_instance;
-	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	sizeof_instance = GET_INSTANCE_SIZE(self);
-	ASSERTF(sizeof_instance >= sizeof(DeeErrorObject),
-	        "sizeof_instance = %" PRFuSIZ "\n"
-	        "name          = %q\n",
-	        sizeof_instance,
-	        Dee_TYPE(self)->tp_name);
-	self->e_message = NULL;
-	self->e_inner   = NULL;
-	_DeeArg_Unpack0Or1Or2(err, argc, argv, "Error", &self->e_message, &self->e_inner);
-	if (self->e_message &&
-	    DeeObject_AssertTypeExact(self->e_message, &DeeString_Type))
-		goto err;
-	Dee_XIncref(self->e_message);
-	Dee_XIncref(self->e_inner);
-	bzero(self + 1,
-	      sizeof_instance -
-	      sizeof(DeeErrorObject));
-	return 0;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-error_init_kw(DeeErrorObject *__restrict self, size_t argc,
-              DeeObject *const *argv, DeeObject *kw) {
-	size_t sizeof_instance;
-	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
-	sizeof_instance = GET_INSTANCE_SIZE(self);
-	ASSERT(sizeof_instance >= sizeof(DeeErrorObject));
-	self->e_message = NULL;
-	self->e_inner   = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__message_inner, "|oo:Error",
-	                    &self->e_message, &self->e_inner))
-		goto err;
-	if (self->e_message &&
-	    DeeObject_AssertTypeExact(self->e_message, &DeeString_Type))
-		goto err;
-	Dee_XIncref(self->e_message);
-	Dee_XIncref(self->e_inner);
-	bzero(self + 1,
-	      sizeof_instance -
-	      sizeof(DeeErrorObject));
-	return 0;
-err:
-	return -1;
-}
-
-INTERN NONNULL((1)) void DCALL
-error_fini(DeeErrorObject *__restrict self) {
-	Dee_XDecref(self->e_message);
-	Dee_XDecref(self->e_inner);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-error_visit(DeeErrorObject *__restrict self, dvisit_t proc, void *arg) {
-	Dee_XVisit(self->e_message);
-	Dee_XVisit(self->e_inner);
-}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 error_str(DeeErrorObject *__restrict self) {
@@ -337,31 +189,141 @@ error_print(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *
 	return type_print((DeeObject *)Dee_TYPE(self), printer, arg);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-error_printrepr(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	if (self->e_inner) {
-		if (self->e_message) {
-			return DeeFormat_Printf(printer, arg, "%r(%r, inner: %r)",
-			                        Dee_TYPE(self), self->e_message, self->e_inner);
-		}
-		return DeeFormat_Printf(printer, arg, "%r(inner: %r)",
-		                        Dee_TYPE(self), self->e_inner);
-	}
-	if (self->e_message) {
-		return DeeFormat_Printf(printer, arg, "%r(%r)",
-		                        Dee_TYPE(self), self->e_message);
-	}
-	return DeeFormat_Printf(printer, arg, "%r()",
-	                        Dee_TYPE(self));
+#ifdef __OPTIMIZE_SIZE__
+#define error_fini        DeeStructObject_Fini
+#define error_visit       DeeStructObject_Visit
+#define error_tp_features TF_TPVISIT
+#define error_ctor        DeeStructObject_Ctor
+#define error_copy        DeeStructObject_Copy
+#define error_deep        DeeStructObject_Deep
+#define error_init        DeeStructObject_Init
+#define error_init_kw     DeeStructObject_InitKw
+#else /* __OPTIMIZE_SIZE__ */
+#define error_tp_features TF_NONE
+PRIVATE NONNULL((1)) void DCALL
+error_fini(DeeObject *__restrict self) {
+	DeeErrorObject *me = (DeeErrorObject *)self;
+	Dee_XDecref(me->e_message);
+	Dee_XDecref(me->e_inner);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+error_visit(DeeObject *__restrict self, Dee_visit_t proc, void *arg) {
+	DeeErrorObject *me = (DeeErrorObject *)self;
+	Dee_XVisit(me->e_message);
+	Dee_XVisit(me->e_inner);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+error_ctor(DeeObject *__restrict self) {
+	DeeErrorObject *me = (DeeErrorObject *)self;
+	me->e_message = NULL;
+	me->e_inner   = NULL;
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+error_copy(DeeObject *__restrict self, DeeObject *__restrict other_ob) {
+	DeeErrorObject *me = (DeeErrorObject *)self;
+	DeeErrorObject *other = (DeeErrorObject *)other_ob;
+	me->e_message = other->e_message;
+	me->e_inner   = other->e_inner;
+	Dee_XIncref(me->e_message);
+	Dee_XIncref(me->e_inner);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+error_deep(DeeObject *__restrict self, DeeObject *__restrict other_ob) {
+	DeeErrorObject *me = (DeeErrorObject *)self;
+	DeeErrorObject *other = (DeeErrorObject *)other_ob;
+	me->e_inner = NULL;
+	if (other->e_inner) {
+		me->e_inner = DeeObject_DeepCopy(other->e_inner);
+		if unlikely(!me->e_inner)
+			goto err;
+	}
+	me->e_message = other->e_message;
+	Dee_XIncref(me->e_message);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+error_init(DeeObject *__restrict self,
+           size_t argc, DeeObject *const *argv) {
+	DeeErrorObject *me = (DeeErrorObject *)self;
+	me->e_message = NULL;
+	me->e_inner   = NULL;
+	_DeeArg_Unpack0Or1Or2(err, argc, argv, Dee_TYPE(me)->tp_name,
+	                      &me->e_message, &me->e_inner);
+	if (me->e_message) {
+		if (DeeObject_AssertTypeExact(me->e_message, &DeeString_Type))
+			goto err;
+		Dee_Incref(me->e_message);
+	}
+	Dee_XIncref(me->e_inner);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+error_init_kw(DeeObject *__restrict self, size_t argc,
+              DeeObject *const *argv, DeeObject *kw) {
+	DeeErrorObject *me = (DeeErrorObject *)self;
+	DeeKwArgs kwds;
+	if unlikely(!kw)
+		return error_init((DeeObject *)me, argc, argv);
+	if unlikely(DeeKwArgs_Init(&kwds, &argc, argv, kw))
+		goto err;
+	switch (argc) {
+	case 0:
+		me->e_message = (DeeStringObject *)DeeKwArgs_TryGetItemNRStringHash(&kwds, "message", Dee_HashStr__message);
+		if unlikely(!me->e_message)
+			goto err;
+		if (me->e_message == (DeeStringObject *)ITER_DONE)
+			me->e_message = (DeeStringObject *)NULL;
+		__IF0 {
+	case 1:
+			me->e_message = (DeeStringObject *)argv[0];
+		}
+		me->e_inner = DeeKwArgs_TryGetItemNRStringHash(&kwds, "inner", Dee_HashStr__inner);
+		if unlikely(!me->e_inner)
+			goto err;
+		if (me->e_inner == ITER_DONE)
+			me->e_inner = NULL;
+		break;
+	case 2:
+		me->e_message = (DeeStringObject *)argv[0];
+		me->e_inner   = argv[1];
+		break;
+	default:
+		return DeeArg_BadArgcEx(Dee_TYPE(me)->tp_name, argc, 0, 2);
+	}
+	Dee_XIncref(me->e_message);
+	Dee_XIncref(me->e_inner);
+	if unlikely(DeeKwArgs_Done(&kwds, argc, Dee_TYPE(me)->tp_name))
+		goto err_self;
+	return 0;
+err_self:
+	Dee_XDecref_unlikely(me->e_inner);
+	Dee_XDecref_unlikely(me->e_message);
+err:
+	return -1;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+
 PRIVATE struct type_member tpconst error_members[] = {
-	TYPE_MEMBER_FIELD_DOC("inner", STRUCT_OBJECT_OPT, offsetof(DeeErrorObject, e_inner),
-	                      "->?X3?DError?O?N\n"
-	                      "An optional inner error object, or ?N when not set"),
+#define Error_init_params "message:?X2?Dstring?N=!N,inner:?X3?DError?O?N=!N"
 	TYPE_MEMBER_FIELD_DOC("message", STRUCT_OBJECT_OPT, offsetof(DeeErrorObject, e_message),
 	                      "->?X2?Dstring?N\n"
 	                      "The error message associated with this Error object, or ?N when not set"),
+	TYPE_MEMBER_FIELD_DOC("inner", STRUCT_OBJECT_OPT, offsetof(DeeErrorObject, e_inner),
+	                      "->?X3?DError?O?N\n"
+	                      "An optional inner error object, or ?N when not set"),
 	TYPE_MEMBER_END
 };
 
@@ -371,21 +333,21 @@ PUBLIC DeeTypeObject DeeError_Error = {
 	/* .tp_doc      = */ DOC("Base class for all errors thrown by the runtime\n"
 	                         "\n"
 
-	                         "(message?:?Dstring,inner?:?X2?DError?O)\n"
+	                         "(" Error_init_params ")\n"
 	                         "Create a new error object with the given @message and @inner error"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ error_tp_features,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (dfunptr_t)&error_ctor,
-				/* .tp_copy_ctor   = */ (dfunptr_t)&error_copy,
-				/* .tp_deep_ctor   = */ (dfunptr_t)&error_deep,
-				/* .tp_any_ctor    = */ (dfunptr_t)&error_init,
+				/* .tp_ctor        = */ (Dee_funptr_t)&error_ctor,
+				/* .tp_copy_ctor   = */ (Dee_funptr_t)&error_copy,
+				/* .tp_deep_ctor   = */ (Dee_funptr_t)&error_deep,
+				/* .tp_any_ctor    = */ (Dee_funptr_t)&error_init,
 				TYPE_FIXED_ALLOCATOR(DeeErrorObject),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&error_init_kw,
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&error_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&error_fini,
@@ -397,12 +359,12 @@ PUBLIC DeeTypeObject DeeError_Error = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&error_print,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&error_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&DeeStructObject_PrintRepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&error_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&error_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
-	/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__8F384E6A64571883), /* TODO: memcmp additional fields */
+	/* .tp_cmp           = */ &DeeStructObject_Cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
 	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
 	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
@@ -436,14 +398,15 @@ PRIVATE struct type_member tpconst attribute_error_class_members[] = {
 	TYPE_MEMBER_CONST("UnboundAttribute", &DeeError_UnboundAttribute),
 	TYPE_MEMBER_END
 };
+#define AttributeError_init_params Error_init_params
 PUBLIC DeeTypeObject DeeError_AttributeError =
-INIT_CUSTOM_ERROR("AttributeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, attribute_error_class_members);
+INIT_LIKE_ERROR("AttributeError", "(" AttributeError_init_params ")",
+                TP_FNORMAL, &DeeError_Error, NULL, NULL,
+                NULL, NULL, attribute_error_class_members);
 PUBLIC DeeTypeObject DeeError_UnboundAttribute =
-INIT_CUSTOM_ERROR("UnboundAttribute", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_AttributeError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("UnboundAttribute", "(" AttributeError_init_params ")",
+                TP_FNORMAL, &DeeError_AttributeError, NULL, NULL,
+                NULL, NULL, NULL);
 /* END::AttributeError */
 
 
@@ -452,6 +415,67 @@ INIT_CUSTOM_ERROR("UnboundAttribute", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeEr
 
 
 /* BEGIN::CompilerError */
+PRIVATE NONNULL((1)) void DCALL
+comerr_init_common(DeeCompilerErrorObject *__restrict self) {
+	weakref_support_init(self);
+	self->ce_mode = 0;
+	self->ce_wnum = 0;
+	self->ce_locs.cl_prev = NULL;
+	self->ce_locs.cl_file = NULL;
+	self->ce_locs.cl_line = 0;
+	self->ce_locs.cl_col = 0;
+	self->ce_loc = NULL;
+	Dee_weakref_initempty(&self->ce_master);
+	self->ce_errorc = 0;
+	self->ce_errorv = NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+comerr_ctor(DeeCompilerErrorObject *__restrict self) {
+	int result = error_ctor((DeeObject *)self);
+	if likely(result == 0)
+		comerr_init_common(self);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+comerr_copy(DeeCompilerErrorObject *__restrict self,
+            DeeCompilerErrorObject *__restrict other) {
+	/* TODO */
+	(void)self;
+	(void)other;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+comerr_deep(DeeCompilerErrorObject *__restrict self,
+            DeeCompilerErrorObject *__restrict other) {
+	/* TODO */
+	(void)self;
+	(void)other;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+comerr_init(DeeCompilerErrorObject *__restrict self,
+            size_t argc, DeeObject *const *argv) {
+	/* TODO: Initialization for CompilerError-specific fields */
+	int result = error_init((DeeObject *)self, argc, argv);
+	if likely(result == 0)
+		comerr_init_common(self);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+comerr_init_kw(DeeCompilerErrorObject *__restrict self,
+               size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	/* TODO: Initialization for CompilerError-specific fields */
+	int result = error_init_kw((DeeObject *)self, argc, argv, kw);
+	if likely(result == 0)
+		comerr_init_common(self);
+	return result;
+}
+
 PRIVATE NONNULL((1)) void DCALL
 comerr_fini(DeeCompilerErrorObject *__restrict self) {
 	size_t i, count = self->ce_errorc;
@@ -481,7 +505,7 @@ comerr_fini(DeeCompilerErrorObject *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 comerr_visit(DeeCompilerErrorObject *__restrict self,
-             dvisit_t proc, void *arg) {
+             Dee_visit_t proc, void *arg) {
 	size_t i, count = self->ce_errorc;
 	for (i = 0; i < count; ++i) {
 		if (self->ce_errorv[i] != self)
@@ -489,24 +513,130 @@ comerr_visit(DeeCompilerErrorObject *__restrict self,
 	}
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+comerr_printrepr(DeeCompilerErrorObject *__restrict self,
+                 Dee_formatprinter_t printer, void *arg) {
+	/* TODO */
+	return DeeStructObject_PrintRepr((DeeObject *)self, printer, arg);
+}
+
+#define comerr_cmp DeeStructObject_Cmp /* TODO */
+
 PRIVATE struct type_member tpconst compiler_error_class_members[] = {
 	TYPE_MEMBER_CONST("SyntaxError", &DeeError_SyntaxError),
 	TYPE_MEMBER_CONST("SymbolError", &DeeError_SymbolError),
 	TYPE_MEMBER_END
 };
-PUBLIC DeeTypeObject DeeError_CompilerError =
-INIT_CUSTOM_ERROR("CompilerError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
-                  NULL, NULL, NULL, NULL, DeeCompilerErrorObject,
-                  &comerr_fini, NULL, &DeeCompilerError_Print, &comerr_visit, NULL, NULL, NULL,
-                  compiler_error_class_members);
+
+
+#define CompilerError_init_params Error_init_params /* ",TODO" */
+PUBLIC DeeTypeObject DeeError_CompilerError = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "CompilerError",
+	/* .tp_doc      = */ DOC("(" CompilerError_init_params ")"),
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeError_Error,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (Dee_funptr_t)&comerr_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&comerr_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&comerr_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&comerr_init,
+				TYPE_FIXED_ALLOCATOR(DeeCompilerErrorObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&comerr_init_kw,
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&comerr_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ &DeeCompilerError_Print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&comerr_printrepr,
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&comerr_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &comerr_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL, /* TODO */
+	/* .tp_getsets       = */ NULL, /* TODO */
+	/* .tp_members       = */ NULL, /* TODO */
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ compiler_error_class_members
+};
+
+#define INIT_LIKE_COMPILE_ERROR(tp_name, tp_doc, tp_flags,                \
+                                tp_base, tp_str, tp_print,                \
+                                tp_methods, tp_getsets, tp_class_members) \
+	{                                                                     \
+		OBJECT_HEAD_INIT(&DeeType_Type),                                  \
+		/* .tp_name     = */ tp_name,                                     \
+		/* .tp_doc      = */ DOC(tp_doc),                                 \
+		/* .tp_flags    = */ TP_FNORMAL | (tp_flags),                     \
+		/* .tp_weakrefs = */ 0,                                           \
+		/* .tp_features = */ TF_NONE,                                     \
+		/* .tp_base     = */ tp_base,                                     \
+		/* .tp_init = */ {                                                \
+			{                                                             \
+				/* .tp_alloc = */ {                                       \
+					/* .tp_ctor      = */ (Dee_funptr_t)&comerr_ctor,     \
+					/* .tp_copy_ctor = */ (Dee_funptr_t)&comerr_copy,     \
+					/* .tp_deep_ctor = */ (Dee_funptr_t)&comerr_deep,     \
+					/* .tp_any_ctor  = */ (Dee_funptr_t)&comerr_init,     \
+					TYPE_FIXED_ALLOCATOR(DeeCompilerErrorObject),         \
+					/* .tp_any_ctor_kw = */ (Dee_funptr_t)&comerr_init_kw,\
+				}                                                         \
+			},                                                            \
+			/* .tp_dtor        = */ NULL,                                 \
+			/* .tp_assign      = */ NULL,                                 \
+			/* .tp_move_assign = */ NULL                                  \
+		},                                                                \
+		/* .tp_cast = */ {                                                \
+			/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str), \
+			/* .tp_repr      = */ NULL,                                   \
+			/* .tp_bool      = */ NULL,                                   \
+			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))(tp_print), \
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&comerr_printrepr, \
+		},                                                                \
+		/* .tp_visit         = */ NULL,                                   \
+		/* .tp_gc            = */ NULL,                                   \
+		/* .tp_math          = */ NULL,                                   \
+		/* .tp_cmp           = */ &comerr_cmp,                            \
+		/* .tp_seq           = */ NULL,                                   \
+		/* .tp_iter_next     = */ NULL,                                   \
+		/* .tp_iterator      = */ NULL,                                   \
+		/* .tp_attr          = */ NULL,                                   \
+		/* .tp_with          = */ NULL,                                   \
+		/* .tp_buffer        = */ NULL,                                   \
+		/* .tp_methods       = */ tp_methods,                             \
+		/* .tp_getsets       = */ tp_getsets,                             \
+		/* .tp_members       = */ NULL,                                   \
+		/* .tp_class_methods = */ NULL,                                   \
+		/* .tp_class_getsets = */ NULL,                                   \
+		/* .tp_class_members = */ tp_class_members                        \
+	}                                                                     \
+
 PUBLIC DeeTypeObject DeeError_SyntaxError =
-INIT_CUSTOM_ERROR("SyntaxError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_CompilerError,
-                  NULL, NULL, NULL, NULL, DeeCompilerErrorObject,
-                  NULL, NULL, &DeeCompilerError_Print, NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_COMPILE_ERROR("SyntaxError", "(" CompilerError_init_params ")",
+                        TP_FNORMAL, &DeeError_CompilerError, NULL, &DeeCompilerError_Print,
+                        NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_SymbolError =
-INIT_CUSTOM_ERROR("SymbolError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_CompilerError,
-                  NULL, NULL, NULL, NULL, DeeCompilerErrorObject,
-                  NULL, NULL, &DeeCompilerError_Print, NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_COMPILE_ERROR("SymbolError", "(" CompilerError_init_params ")",
+                        TP_FNORMAL, &DeeError_CompilerError, NULL, &DeeCompilerError_Print,
+                        NULL, NULL, NULL);
 /* END::CompilerError */
 
 
@@ -514,48 +644,18 @@ INIT_CUSTOM_ERROR("SymbolError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_C
 
 
 
+/* BEGIN::ThreadCrash */
+#define ThreadCrash_init_params Error_init_params
 PUBLIC DeeTypeObject DeeError_ThreadCrash =
-INIT_CUSTOM_ERROR("ThreadCrash", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("ThreadCrash", "(" ThreadCrash_init_params ")",
+                TP_FNORMAL, &DeeError_Error, NULL, NULL,
+                NULL, NULL, NULL);
+/* END::ThreadCrash */
 
 
 
 
 /* BEGIN::NoMemory */
-PRIVATE struct type_member tpconst nomemory_members[] = {
-	TYPE_MEMBER_FIELD(STR_size, STRUCT_SIZE_T, offsetof(DeeNoMemoryErrorObject, nm_allocsize)),
-	TYPE_MEMBER_END
-};
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-nomemory_ctor(DeeNoMemoryErrorObject *__restrict self,
-              size_t argc, DeeObject *const *argv) {
-	if (error_try_init((DeeErrorObject *)self, argc, argv))
-		goto done;
-	self->nm_allocsize = 1;
-	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ ":NoMemory", &self->nm_allocsize))
-		goto err;
-done:
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-nomemory_copy(DeeNoMemoryErrorObject *__restrict self,
-              DeeNoMemoryErrorObject *__restrict other) {
-	self->nm_allocsize = other->nm_allocsize;
-	return error_copy((DeeErrorObject *)self, (DeeErrorObject *)other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-nomemory_deep(DeeNoMemoryErrorObject *__restrict self,
-              DeeNoMemoryErrorObject *__restrict other) {
-	self->nm_allocsize = other->nm_allocsize;
-	return error_deep((DeeErrorObject *)self, (DeeErrorObject *)other);
-}
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 nomemory_str(DeeNoMemoryErrorObject *__restrict self) {
 	if (self->nm_allocsize) {
@@ -576,10 +676,15 @@ nomemory_print(DeeNoMemoryErrorObject *__restrict self,
 	return error_print((DeeErrorObject *)self, printer, arg);
 }
 
+PRIVATE struct type_member tpconst nomemory_members[] = {
+#define NoMemory_init_params Error_init_params ",size=!0"
+	TYPE_MEMBER_FIELD(STR_size, STRUCT_SIZE_T, offsetof(DeeNoMemoryErrorObject, nm_allocsize)),
+	TYPE_MEMBER_END
+};
 PUBLIC DeeTypeObject DeeError_NoMemory =
-INIT_CUSTOM_ERROR("NoMemory", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
-                  NULL, &nomemory_copy, &nomemory_deep, &nomemory_ctor,
-                  DeeNoMemoryErrorObject, NULL, &nomemory_str, &nomemory_print, NULL,
+INIT_CUSTOM_ERROR("NoMemory", "(" NoMemory_init_params ")",
+                  TP_FNORMAL, &DeeError_Error, DeeNoMemoryErrorObject,
+                  &nomemory_str, &nomemory_print,
                   NULL, NULL, nomemory_members, NULL);
 /* END::NoMemory */
 
@@ -596,43 +701,46 @@ PRIVATE struct type_member tpconst runtimeerror_class_members[] = {
 	TYPE_MEMBER_CONST("IllegalInstruction", &DeeError_IllegalInstruction),
 	TYPE_MEMBER_END
 };
+#define RuntimeError_init_params Error_init_params
 PUBLIC DeeTypeObject DeeError_RuntimeError =
-INIT_CUSTOM_ERROR("RuntimeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, runtimeerror_class_members);
+INIT_LIKE_ERROR("RuntimeError", "(" RuntimeError_init_params ")",
+                TP_FNORMAL, &DeeError_Error, NULL, NULL,
+                NULL, NULL, runtimeerror_class_members);
 PUBLIC DeeTypeObject DeeError_NotImplemented =
-INIT_CUSTOM_ERROR("NotImplemented", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
-PUBLIC DeeTypeObject DeeError_AssertionError =
-INIT_CUSTOM_ERROR("AssertionError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
-PUBLIC DeeTypeObject DeeError_UnboundLocal =
-INIT_CUSTOM_ERROR("UnboundLocal", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("NotImplemented", "(" RuntimeError_init_params ")",
+                TP_FNORMAL, &DeeError_RuntimeError, NULL, NULL,
+                NULL, NULL, NULL);
+PUBLIC DeeTypeObject DeeError_AssertionError = /* TODO: Include details about the failing assert expression */
+INIT_LIKE_ERROR("AssertionError", "(" RuntimeError_init_params ")",
+                TP_FNORMAL, &DeeError_RuntimeError, NULL, NULL,
+                NULL, NULL, NULL);
+PUBLIC DeeTypeObject DeeError_UnboundLocal = /* TODO: Include the Code/lid */
+INIT_LIKE_ERROR("UnboundLocal", "(" RuntimeError_init_params ")",
+                TP_FNORMAL, &DeeError_RuntimeError, NULL, NULL,
+                NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_StackOverflow =
-INIT_CUSTOM_ERROR("StackOverflow", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("StackOverflow", "(" RuntimeError_init_params ")",
+                TP_FNORMAL, &DeeError_RuntimeError, NULL, NULL,
+                NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_SegFault =
-INIT_CUSTOM_ERROR("SegFault", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
-PUBLIC DeeTypeObject DeeError_IllegalInstruction =
-INIT_CUSTOM_ERROR("IllegalInstruction", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("SegFault", "(" RuntimeError_init_params ")",
+                TP_FNORMAL, &DeeError_RuntimeError, NULL, NULL,
+                NULL, NULL, NULL);
+PUBLIC DeeTypeObject DeeError_IllegalInstruction = /* TODO: Include the illegal instruction in question */
+INIT_LIKE_ERROR("IllegalInstruction", "(" RuntimeError_init_params ")",
+                TP_FNORMAL, &DeeError_RuntimeError, NULL, NULL,
+                NULL, NULL, NULL);
 /* END::RuntimeError */
 
 
 
 
+/* BEGIN::TypeError */
 PUBLIC DeeTypeObject DeeError_TypeError =
-INIT_CUSTOM_ERROR("TypeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("IllegalInstruction", "(" Error_init_params ")",
+                TP_FNORMAL, &DeeError_Error, NULL, NULL,
+                NULL, NULL, NULL);
+/* END::TypeError */
 
 
 
@@ -649,10 +757,12 @@ PRIVATE struct type_member tpconst valueerror_class_members[] = {
 	TYPE_MEMBER_CONST("BufferError", &DeeError_BufferError),
 	TYPE_MEMBER_END
 };
+#define ValueError_init_params Error_init_params
 PUBLIC DeeTypeObject DeeError_ValueError =
-INIT_CUSTOM_ERROR("ValueError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, valueerror_class_members);
+INIT_LIKE_ERROR("ValueError", "(" ValueError_init_params ")",
+                TP_FNORMAL, &DeeError_Error, NULL, NULL,
+                NULL, NULL, valueerror_class_members);
+
 /* BEGIN::ValueError.ArithmeticError */
 PRIVATE struct type_member tpconst arithmetic_class_members[] = {
 	TYPE_MEMBER_CONST("IntegerOverflow", &DeeError_IntegerOverflow),
@@ -660,78 +770,77 @@ PRIVATE struct type_member tpconst arithmetic_class_members[] = {
 	TYPE_MEMBER_CONST("NegativeShift", &DeeError_NegativeShift),
 	TYPE_MEMBER_END
 };
+#define ArithmeticError_init_params ValueError_init_params
 PUBLIC DeeTypeObject DeeError_ArithmeticError =
-INIT_CUSTOM_ERROR("ArithmeticError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, arithmetic_class_members);
-#if 0 /* Custom impl... */
-PUBLIC DeeTypeObject DeeError_IntegerOverflow =
-INIT_CUSTOM_ERROR("IntegerOverflow", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ArithmeticError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
-#endif
+INIT_LIKE_ERROR("ArithmeticError", "(" ArithmeticError_init_params ")",
+                TP_FNORMAL, &DeeError_ValueError, NULL, NULL,
+
+                                NULL, NULL, arithmetic_class_members);
 PUBLIC DeeTypeObject DeeError_DivideByZero =
-INIT_CUSTOM_ERROR("DivideByZero", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ArithmeticError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("DivideByZero", "(" ArithmeticError_init_params ")",
+                TP_FNORMAL, &DeeError_ArithmeticError, NULL, NULL,
+                NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_NegativeShift =
-INIT_CUSTOM_ERROR("NegativeShift", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ArithmeticError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("NegativeShift", "(" ArithmeticError_init_params ")",
+                TP_FNORMAL, &DeeError_ArithmeticError, NULL, NULL,
+                NULL, NULL, NULL);
 /* END::ValueError.ArithmeticError */
 PUBLIC DeeTypeObject DeeError_KeyError =
-INIT_CUSTOM_ERROR("KeyError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("KeyError", "(" ValueError_init_params ")",
+                TP_FNORMAL, &DeeError_ValueError, NULL, NULL,
+                NULL, NULL, NULL);
 /* BEGIN::ValueError.IndexError */
 PRIVATE struct type_member tpconst indexerror_class_members[] = {
 	TYPE_MEMBER_CONST("UnboundItem", &DeeError_UnboundItem),
 	TYPE_MEMBER_END
 };
+#define IndexError_init_params ValueError_init_params
 PUBLIC DeeTypeObject DeeError_IndexError =
-INIT_CUSTOM_ERROR("IndexError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, indexerror_class_members);
+INIT_LIKE_ERROR("IndexError", "(" IndexError_init_params ")",
+                TP_FNORMAL, &DeeError_ValueError, NULL, NULL,
+                NULL, NULL, indexerror_class_members);
 PUBLIC DeeTypeObject DeeError_UnboundItem =
-INIT_CUSTOM_ERROR("UnboundItem", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_IndexError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("UnboundItem", "(" IndexError_init_params ")",
+                TP_FNORMAL, &DeeError_IndexError, NULL, NULL,
+                NULL, NULL, NULL);
 /* END::ValueError.IndexError */
 PUBLIC DeeTypeObject DeeError_SequenceError =
-INIT_CUSTOM_ERROR("SequenceError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("SequenceError", "(" ValueError_init_params ")",
+                TP_FNORMAL, &DeeError_ValueError, NULL, NULL,
+                NULL, NULL, NULL);
 /* BEGIN::ValueError.UnicodeError */
 PRIVATE struct type_member tpconst unicodeerror_class_members[] = {
 	TYPE_MEMBER_CONST("UnicodeDecodeError", &DeeError_UnicodeDecodeError),
 	TYPE_MEMBER_CONST("UnicodeEncodeError", &DeeError_UnicodeEncodeError),
 	TYPE_MEMBER_END
 };
+#define UnicodeError_init_params ValueError_init_params
 PUBLIC DeeTypeObject DeeError_UnicodeError =
-INIT_CUSTOM_ERROR("UnicodeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, unicodeerror_class_members);
+INIT_LIKE_ERROR("UnicodeError", "(" UnicodeError_init_params ")",
+                TP_FNORMAL, &DeeError_ValueError, NULL, NULL,
+
+                                NULL, NULL, unicodeerror_class_members);
 PUBLIC DeeTypeObject DeeError_UnicodeDecodeError =
-INIT_CUSTOM_ERROR("UnicodeDecodeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_UnicodeError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("UnicodeDecodeError", "(" UnicodeError_init_params ")",
+                TP_FNORMAL, &DeeError_UnicodeError, NULL, NULL,
+                NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_UnicodeEncodeError =
-INIT_CUSTOM_ERROR("UnicodeEncodeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_UnicodeError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("UnicodeEncodeError", "(" UnicodeError_init_params ")",
+                TP_FNORMAL, &DeeError_UnicodeError, NULL, NULL,
+                NULL, NULL, NULL);
 /* END::ValueError.UnicodeError */
 PUBLIC DeeTypeObject DeeError_ReferenceError =
-INIT_CUSTOM_ERROR("ReferenceError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("ReferenceError", "(" ValueError_init_params ")",
+                TP_FNORMAL, &DeeError_ValueError, NULL, NULL,
+                NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_UnpackError =
-INIT_CUSTOM_ERROR("UnpackError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("UnpackError", "(" ValueError_init_params ")",
+                TP_FNORMAL, &DeeError_ValueError, NULL, NULL,
+                NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_BufferError =
-INIT_CUSTOM_ERROR("BufferError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
-                  NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_LIKE_ERROR("BufferError", "(" ValueError_init_params ")",
+                TP_FNORMAL, &DeeError_ValueError, NULL, NULL,
+                NULL, NULL, NULL);
 /* END::ValueError */
 
 
@@ -1017,15 +1126,15 @@ PRIVATE struct type_member tpconst systemerror_members[] = {
 };
 
 #ifdef CONFIG_HOST_WINDOWS
-#define systemerror_doc DOC("(message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring,nterr_np?:?Dint)")
+#define SystemError_init_params "message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring,nterr_np?:?Dint"
 #else /* CONFIG_HOST_WINDOWS */
-#define systemerror_doc DOC("(message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring)")
+#define SystemError_init_params "message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring"
 #endif /* !CONFIG_HOST_WINDOWS */
 
 PUBLIC DeeTypeObject DeeError_SystemError = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "SystemError",
-	/* .tp_doc      = */ systemerror_doc,
+	/* .tp_doc      = */ DOC("(" SystemError_init_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1033,12 +1142,12 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor   = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor   = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
+				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeSystemErrorObject),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&systemerror_init_kw
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&systemerror_init_kw
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -1055,7 +1164,7 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
-	/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__8F384E6A64571883),
+	/* .tp_cmp           = */ &DeeStructObject_Cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
 	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
 	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
@@ -1073,11 +1182,63 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
-PUBLIC DeeTypeObject DeeError_UnsupportedAPI =
-INIT_CUSTOM_ERROR("UnsupportedAPI", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_SystemError,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
-PRIVATE struct type_member tpconst fserror_class_members[] = {
+#define INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS(tp_name, tp_doc, tp_flags,                \
+                                               tp_base, T, tp_str, tp_print,             \
+                                               tp_methods, tp_getsets, tp_class_members) \
+	{                                                                                    \
+		OBJECT_HEAD_INIT(&DeeType_Type),                                                 \
+		/* .tp_name     = */ tp_name,                                                    \
+		/* .tp_doc      = */ DOC(tp_doc),                                                \
+		/* .tp_flags    = */ TP_FNORMAL | (tp_flags),                                    \
+		/* .tp_weakrefs = */ 0,                                                          \
+		/* .tp_features = */ TF_NONE,                                                    \
+		/* .tp_base     = */ tp_base,                                                    \
+		/* .tp_init = */ {                                                               \
+			{                                                                            \
+				/* .tp_alloc = */ {                                                      \
+					/* .tp_ctor        = */ (Dee_funptr_t)NULL,                          \
+					/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,                          \
+					/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,                          \
+					/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,                          \
+					TYPE_FIXED_ALLOCATOR(T),                                             \
+					/* .tp_any_ctor_kw = */ (Dee_funptr_t)&systemerror_init_kw           \
+				}                                                                        \
+			},                                                                           \
+			/* .tp_dtor        = */ NULL,                                                \
+			/* .tp_assign      = */ NULL,                                                \
+			/* .tp_move_assign = */ NULL,                                                \
+		},                                                                               \
+		/* .tp_cast = */ {                                                               \
+			/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str), \
+			/* .tp_repr      = */ NULL,                                                  \
+			/* .tp_bool      = */ NULL,                                                  \
+			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))(tp_print), \
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&systemerror_printrepr, \
+		},                                                                               \
+		/* .tp_visit         = */ NULL,                                                  \
+		/* .tp_gc            = */ NULL,                                                  \
+		/* .tp_math          = */ NULL,                                                  \
+		/* .tp_cmp           = */ &DeeStructObject_Cmp,                                  \
+		/* .tp_seq           = */ NULL,                                                  \
+		/* .tp_iter_next     = */ NULL,                                                  \
+		/* .tp_iterator      = */ NULL,                                                  \
+		/* .tp_attr          = */ NULL,                                                  \
+		/* .tp_with          = */ NULL,                                                  \
+		/* .tp_buffer        = */ NULL,                                                  \
+		/* .tp_methods       = */ tp_methods,                                            \
+		/* .tp_getsets       = */ tp_getsets,                                            \
+		/* .tp_members       = */ NULL,                                                  \
+		/* .tp_class_methods = */ NULL,                                                  \
+		/* .tp_class_getsets = */ NULL,                                                  \
+		/* .tp_class_members = */ tp_class_members,                                      \
+	}                                                                                    \
+
+PUBLIC DeeTypeObject DeeError_UnsupportedAPI = /* TODO: Include name of unsupported API */
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("UnsupportedAPI", "(" SystemError_init_params ")",
+                                       TP_FNORMAL, &DeeError_SystemError, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, NULL);
+
+PRIVATE struct type_member tpconst FSError_class_members[] = {
 	TYPE_MEMBER_CONST("FileAccessError", &DeeError_FileAccessError),
 	TYPE_MEMBER_CONST("FileNotFound", &DeeError_FileNotFound),
 	TYPE_MEMBER_CONST("FileExists", &DeeError_FileExists),
@@ -1086,97 +1247,133 @@ PRIVATE struct type_member tpconst fserror_class_members[] = {
 	TYPE_MEMBER_CONST("BusyFile", &DeeError_BusyFile),
 	TYPE_MEMBER_END
 };
+#define FSError_init_params SystemError_init_params
+PUBLIC DeeTypeObject DeeError_FSError = /* TODO: Include filename of affected file */
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("FSError", "(" FSError_init_params ")",
+                                       TP_FNORMAL, &DeeError_SystemError, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, FSError_class_members);
 
-PRIVATE struct type_member tpconst file_exists_class_members[] = {
-	TYPE_MEMBER_CONST("IsDirectory", &DeeError_IsDirectory),
-	TYPE_MEMBER_CONST("DirectoryNotEmpty", &DeeError_DirectoryNotEmpty),
+
+PRIVATE struct type_member tpconst FileAccessError_class_members[] = {
+	TYPE_MEMBER_CONST("ReadOnlyFile", &DeeError_ReadOnlyFile),
 	TYPE_MEMBER_END
 };
+#define FileAccessError_init_params FSError_init_params
+PUBLIC DeeTypeObject DeeError_FileAccessError =
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("FileAccessError",
+                                       "(" FileAccessError_init_params ")\n"
+                                       "An error derived from :FSError that is thrown when attempting "
+                                       /**/ "to access a file or directory without the necessary permissions",
+                                       TP_FNORMAL, &DeeError_SystemError, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, FileAccessError_class_members);
 
-PRIVATE struct type_member tpconst file_not_found_class_members[] = {
+PUBLIC DeeTypeObject DeeError_ReadOnlyFile =
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("ReadOnlyFile",
+                                       "(" FileAccessError_init_params ")\n"
+                                       "An error derived from :FileAccessError that is thrown when attempting "
+                                       /**/ "to modify a file or directory when it or the filesystem is read-only",
+                                       TP_FNORMAL, &DeeError_FileAccessError, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, NULL);
+
+PRIVATE struct type_member tpconst FileNotFound_class_members[] = {
 	TYPE_MEMBER_CONST("NoDirectory", &DeeError_NoDirectory),
 	TYPE_MEMBER_CONST("NoSymlink", &DeeError_NoSymlink),
 	TYPE_MEMBER_END
 };
+#define FileNotFound_init_params FSError_init_params
+PUBLIC DeeTypeObject DeeError_FileNotFound =
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("FileNotFound", "(" FileNotFound_init_params ")",
+                                       TP_FNORMAL, &DeeError_FSError, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, FileNotFound_class_members);
 
-PUBLIC DeeTypeObject DeeError_FSError =
-INIT_CUSTOM_ERROR("FSError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_SystemError,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, fserror_class_members);
-PRIVATE struct type_member tpconst accesserror_members[] = {
-	TYPE_MEMBER_CONST("ReadOnlyFile", &DeeError_ReadOnlyFile),
+PRIVATE struct type_member tpconst FileExists_class_members[] = {
+	TYPE_MEMBER_CONST("IsDirectory", &DeeError_IsDirectory),
+	TYPE_MEMBER_CONST("DirectoryNotEmpty", &DeeError_DirectoryNotEmpty),
 	TYPE_MEMBER_END
 };
-PUBLIC DeeTypeObject DeeError_FileAccessError =
-INIT_CUSTOM_ERROR("FileAccessError", "An error derived from :FSError that is thrown when attempting "
-                                     "to access a file or directory without the necessary permissions",
-                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, accesserror_members);
-PUBLIC DeeTypeObject DeeError_ReadOnlyFile =
-INIT_CUSTOM_ERROR("ReadOnlyFile", "An error derived from :FileAccessError that is thrown when attempting "
-                                  "to modify a file or directory when it or the filesystem is read-only",
-                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileAccessError,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
-PUBLIC DeeTypeObject DeeError_FileNotFound =
-INIT_CUSTOM_ERROR("FileNotFound", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, file_not_found_class_members);
+#define FileExists_init_params FSError_init_params
 PUBLIC DeeTypeObject DeeError_FileExists =
-INIT_CUSTOM_ERROR("FileExists", "An error derived from :FSError that is thrown when attempting "
-                                "to create a filesystem object when the target path already exists",
-                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, file_exists_class_members);
-PUBLIC DeeTypeObject DeeError_FileClosed =
-INIT_CUSTOM_ERROR("FileClosed", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("FileExists",
+                                       "(" FileExists_init_params ")\n"
+                                       "An error derived from :FSError that is thrown when attempting "
+                                       /**/ "to create a filesystem object when the target path already exists",
+                                       TP_FNORMAL, &DeeError_FSError, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, FileExists_class_members);
 
+PUBLIC DeeTypeObject DeeError_FileClosed =
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("FileClosed", "(" FSError_init_params ")",
+                                       TP_FNORMAL, &DeeError_FSError, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_NoDirectory =
-INIT_CUSTOM_ERROR("NoDirectory", "An error derived from :FileNotFound that is thrown when a "
-                                 "directory was expected, but something different was found",
-                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileNotFound,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("NoDirectory",
+                                       "(" FileNotFound_init_params ")\n"
+                                       "An error derived from :FileNotFound that is thrown when a "
+                                       /**/ "directory was expected, but something different was found",
+                                       TP_FNORMAL, &DeeError_FileNotFound, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_IsDirectory =
-INIT_CUSTOM_ERROR("IsDirectory", "An error derived from :FileExists that is thrown when something "
-                                 "other than a directory was expected, but one was found none-the-less",
-                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileExists,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("IsDirectory",
+                                       "(" FileExists_init_params ")\n"
+                                       "An error derived from :FileExists that is thrown when something "
+                                       /**/ "other than a directory was expected, but one was found none-the-less",
+                                       TP_FNORMAL, &DeeError_FileExists, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_CrossDeviceLink =
-INIT_CUSTOM_ERROR("CrossDeviceLink", "An error derived from :FSError that is thrown when attempting "
-                                     "to move a file between different devices or partitions",
-                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("CrossDeviceLink",
+                                       "(" FSError_init_params ")\n"
+                                       "An error derived from :FSError that is thrown when attempting "
+                                       /**/ "to move a file between different devices or partitions",
+                                       TP_FNORMAL, &DeeError_FSError, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_DirectoryNotEmpty =
-INIT_CUSTOM_ERROR("DirectoryNotEmpty", "An error derived from :FileExists that is thrown when "
-                                       "attempting to remove a directory that isn't empty",
-                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileExists,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("DirectoryNotEmpty",
+                                       "(" FileExists_init_params ")\n"
+                                       "An error derived from :FileExists that is thrown when "
+                                       /**/ "attempting to remove a directory that isn't empty",
+                                       TP_FNORMAL, &DeeError_FileExists, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_BusyFile =
-INIT_CUSTOM_ERROR("BusyFile", "An error derived from :FSError that is thrown when "
-                              "attempting to remove a file or directory that is being "
-                              "used by another process",
-                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("BusyFile",
+                                       "(" FSError_init_params ")\n"
+                                       "An error derived from :FSError that is thrown when "
+                                       /**/ "attempting to remove a file or directory that is being "
+                                       /**/ "used by another process",
+                                       TP_FNORMAL, &DeeError_FSError, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_NoSymlink =
-INIT_CUSTOM_ERROR("NoSymlink", "An error derived from :FileNotFound that is thrown when attempting "
-                               "to invoke :readlink on a file that isn't a symbolic link",
-                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileNotFound,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
+INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("NoSymlink",
+                                       "(" FileNotFound_init_params ")\n"
+                                       "An error derived from :FileNotFound that is thrown when attempting "
+                                       /**/ "to invoke ?Eposix:readlink on a file that isn't a symbolic link",
+                                       TP_FNORMAL, &DeeError_FileNotFound, DeeSystemErrorObject,
+                                       NULL, NULL, NULL, NULL, NULL);
 /* END::SystemError */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* SPECIAL CASE: AppExit                                                */
+/************************************************************************/
 
 #ifndef EXIT_SUCCESS
 #define EXIT_SUCCESS 0
 #endif /* !EXIT_SUCCESS */
-
 
 PRIVATE int DCALL
 appexit_init(struct appexit_object *__restrict self,
@@ -1317,7 +1514,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	                         "(exitcode:?Dint)\n"
 	                         "Construct a new AppExit object using the given @exitcode "
 	                         /**/ "or the host's default value for #CEXIT_SUCCESS, or $1"),
-	/* .tp_flags    = */ TP_FFINAL|TP_FINTERRUPT,
+	/* .tp_flags    = */ TP_FFINAL | TP_FINTERRUPT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ NULL, /* No base type (to only allow AppExit-interrupt handlers,
@@ -1325,10 +1522,10 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&appexit_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&appexit_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&appexit_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&appexit_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&appexit_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&appexit_init,
 				TYPE_FIXED_ALLOCATOR(struct appexit_object)
 			}
 		},
@@ -1346,7 +1543,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
-	/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__8F384E6A64571883),
+	/* .tp_cmp           = */ &DeeStructObject_Cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
 	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
 	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
@@ -1385,66 +1582,127 @@ PUBLIC DeeNoMemoryErrorObject DeeError_NoMemory_instance = {
 
 
 /* ==== Signal type subsystem ==== */
-PUBLIC DeeTypeObject DeeError_StopIteration =
-INIT_CUSTOM_ERROR("StopIteration", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Signal,
-                  NULL, NULL, NULL, NULL, DeeSignalObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
-PRIVATE struct type_member tpconst interrupt_class_members[] = {
-	TYPE_MEMBER_CONST("KeyboardInterrupt", &DeeError_KeyboardInterrupt),
-	TYPE_MEMBER_CONST("ThreadExit", &DeeError_ThreadExit),
-	TYPE_MEMBER_END
-};
-PUBLIC DeeTypeObject DeeError_Interrupt =
-INIT_CUSTOM_ERROR("Interrupt", NULL, TP_FNORMAL | TP_FINHERITCTOR | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Signal,
-                  NULL, NULL, NULL, NULL, DeeSignalObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, interrupt_class_members);
-PRIVATE int DCALL
-threadexit_init(struct threadexit_object *__restrict self,
-                size_t argc, DeeObject *const *argv) {
-	self->te_result = Dee_None;
-	_DeeArg_Unpack0Or1(err, argc, argv, "ThreadExit", &self->te_result);
-	Dee_Incref(self->te_result);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE void DCALL
-threadexit_fini(struct threadexit_object *__restrict self) {
-	Dee_Decref(self->te_result);
-}
-
-PRIVATE void DCALL
-threadexit_visit(struct threadexit_object *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->te_result);
-}
-
-PRIVATE struct type_member tpconst threadexit_members[] = {
-	TYPE_MEMBER_FIELD("__result__", STRUCT_OBJECT, offsetof(struct threadexit_object, te_result)),
-	TYPE_MEMBER_END
-};
-PUBLIC DeeTypeObject DeeError_ThreadExit =
-INIT_CUSTOM_ERROR("ThreadExit", NULL,
-                  TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Signal,
-                  NULL, NULL, NULL, &threadexit_init, struct threadexit_object,
-                  &threadexit_fini, NULL, NULL, &threadexit_visit,
-                  NULL, NULL, threadexit_members, interrupt_class_members);
-PUBLIC DeeTypeObject DeeError_KeyboardInterrupt =
-INIT_CUSTOM_ERROR("KeyboardInterrupt", NULL,
-                  TP_FNORMAL | TP_FINHERITCTOR | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Interrupt,
-                  NULL, NULL, NULL, NULL, DeeSignalObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL);
-PRIVATE struct type_member tpconst signal_class_members[] = {
-	TYPE_MEMBER_CONST("Interrupt", &DeeError_Interrupt),
-	TYPE_MEMBER_CONST("StopIteration", &DeeError_StopIteration),
-	TYPE_MEMBER_END
-};
+#define INIT_CUSTOM_SIGNAL(tp_name, tp_doc, tp_flags, tp_base,           \
+                           tp_ctor, tp_copy, tp_deep, tp_init,           \
+                           tp_init_kw, tp_visit, T,                      \
+                           tp_str, tp_print, tp_repr, tp_printrepr,      \
+                           tp_methods, tp_getsets, tp_members,           \
+                           tp_class_members)                             \
+	{                                                                    \
+		OBJECT_HEAD_INIT(&DeeType_Type),                                 \
+		/* .tp_name     = */ tp_name,                                    \
+		/* .tp_doc      = */ DOC(tp_doc),                                \
+		/* .tp_flags    = */ tp_flags,                                   \
+		/* .tp_weakrefs = */ 0,                                          \
+		/* .tp_features = */ TF_NONE | TF_TPVISIT,                       \
+		/* .tp_base     = */ tp_base,                                    \
+		/* .tp_init = */ {                                               \
+			{                                                            \
+				/* .tp_alloc = */ {                                      \
+					/* .tp_ctor      = */ (Dee_funptr_t)(tp_ctor),       \
+					/* .tp_copy_ctor = */ (Dee_funptr_t)(tp_copy),       \
+					/* .tp_deep_ctor = */ (Dee_funptr_t)(tp_deep),       \
+					/* .tp_any_ctor  = */ (Dee_funptr_t)(tp_init),       \
+					TYPE_FIXED_ALLOCATOR(T),                             \
+					/* .tp_any_ctor_kw = */ (Dee_funptr_t)(tp_init_kw)   \
+				}                                                        \
+			},                                                           \
+			/* .tp_dtor        = */ NULL,                                \
+			/* .tp_assign      = */ NULL,                                \
+			/* .tp_move_assign = */ NULL                                 \
+		},                                                               \
+		/* .tp_cast = */ {                                               \
+			/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str), \
+			/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_repr), \
+			/* .tp_bool      = */ NULL,                                  \
+			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))(tp_print), \
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))(tp_printrepr),                                  \
+		},                                                               \
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))(tp_visit), \
+		/* .tp_gc            = */ NULL,                                  \
+		/* .tp_math          = */ NULL,                                  \
+		/* .tp_cmp           = */ &DeeStructObject_Cmp,                  \
+		/* .tp_seq           = */ NULL,                                  \
+		/* .tp_iter_next     = */ NULL,                                  \
+		/* .tp_iterator      = */ NULL,                                  \
+		/* .tp_attr          = */ NULL,                                  \
+		/* .tp_with          = */ NULL,                                  \
+		/* .tp_buffer        = */ NULL,                                  \
+		/* .tp_methods       = */ tp_methods,                            \
+		/* .tp_getsets       = */ tp_getsets,                            \
+		/* .tp_members       = */ tp_members,                            \
+		/* .tp_class_methods = */ NULL,                                  \
+		/* .tp_class_getsets = */ NULL,                                  \
+		/* .tp_class_members = */ tp_class_members                       \
+	}
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 signal_printrepr(DeeSignalObject *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "%k()", Dee_TYPE(self));
 }
+
+
+/************************************************************************/
+/* Signal.StopIteration                                                 */
+/************************************************************************/
+PUBLIC DeeTypeObject DeeError_StopIteration =
+INIT_CUSTOM_SIGNAL("StopIteration", NULL, TP_FNORMAL, &DeeError_Signal,
+                   &DeeNone_OperatorCtor, &DeeNone_OperatorCopy, &DeeNone_OperatorCopy, NULL,
+                   NULL, NULL, DeeSignalObject,
+                   NULL, NULL, NULL, &signal_printrepr,
+                   NULL, NULL, NULL, NULL);
+
+/************************************************************************/
+/* Signal.Interrupt                                                     */
+/************************************************************************/
+PRIVATE struct type_member tpconst interrupt_class_members[] = {
+	TYPE_MEMBER_CONST("KeyboardInterrupt", &DeeError_KeyboardInterrupt),
+	TYPE_MEMBER_CONST("ThreadExit", &DeeError_ThreadExit),
+	TYPE_MEMBER_END
+};
+PUBLIC DeeTypeObject DeeError_Interrupt =
+INIT_CUSTOM_SIGNAL("Interrupt", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Signal,
+                   &DeeNone_OperatorCtor, &DeeNone_OperatorCopy, &DeeNone_OperatorCopy, NULL,
+                   NULL, NULL, DeeSignalObject,
+                   NULL, NULL, NULL, &signal_printrepr,
+                   NULL, NULL, NULL, interrupt_class_members);
+
+
+/************************************************************************/
+/* Signal.Interrupt.ThreadExit                                          */
+/************************************************************************/
+PRIVATE struct type_member tpconst threadexit_members[] = {
+	TYPE_MEMBER_FIELD("__result__", STRUCT_OBJECT, offsetof(struct threadexit_object, te_result)),
+	TYPE_MEMBER_END
+};
+PUBLIC DeeTypeObject DeeError_ThreadExit =
+INIT_CUSTOM_SIGNAL("ThreadExit", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Interrupt,
+                   NULL, &DeeStructObject_Copy, &DeeStructObject_Deep, &DeeStructObject_Init,
+                   &DeeStructObject_InitKw, &DeeStructObject_Visit, struct threadexit_object,
+                   NULL, NULL, NULL, &DeeStructObject_PrintRepr,
+                   NULL, NULL, threadexit_members, interrupt_class_members);
+
+
+/************************************************************************/
+/* Signal.Interrupt.KeyboardInterrupt                                   */
+/************************************************************************/
+PUBLIC DeeTypeObject DeeError_KeyboardInterrupt =
+INIT_CUSTOM_SIGNAL("KeyboardInterrupt", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Interrupt,
+                   &DeeNone_OperatorCtor, &DeeNone_OperatorCopy, &DeeNone_OperatorCopy, NULL,
+                   NULL, NULL, DeeSignalObject,
+                   NULL, NULL, NULL, &signal_printrepr,
+                   NULL, NULL, NULL, NULL);
+
+
+/************************************************************************/
+/* Signal                                                               */
+/************************************************************************/
+PRIVATE struct type_member tpconst signal_class_members[] = {
+	TYPE_MEMBER_CONST("Interrupt", &DeeError_Interrupt),
+	TYPE_MEMBER_CONST("StopIteration", &DeeError_StopIteration),
+	TYPE_MEMBER_END
+};
 
 PUBLIC DeeTypeObject DeeError_Signal = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1459,10 +1717,10 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorCtor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeSignalObject)
 			}
 		},
@@ -1480,7 +1738,7 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
-	/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__8F384E6A64571883),
+	/* .tp_cmp           = */ &DeeStructObject_Cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__2019F6A38C2B50B6),
 	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
 	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),

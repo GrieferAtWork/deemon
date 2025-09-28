@@ -874,13 +874,9 @@ Dee_type_member_bound(struct type_member const *desc,
 	return false;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
-Dee_type_member_set(struct type_member const *desc,
-                    DeeObject *self, DeeObject *value) {
-	if (TYPE_MEMBER_ISCONST(desc))
-		goto cant_access;
-	if (desc->m_desc.md_field.mdf_type & STRUCT_CONST)
-		goto cant_access;
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_type_member_set_impl(struct type_member const *desc,
+                         DeeObject *self, DeeObject *value) {
 	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC)) {
 #define WRITE(dst, src) atomic_write(&dst, src)
 
@@ -1067,11 +1063,40 @@ Dee_type_member_set(struct type_member const *desc,
 	default: break;
 	}
 	return 0;
-cant_access:
-	err_cant_access_attribute_string(type_member_typeof(desc, self),
-	                                 desc->m_name, ATTR_ACCESS_SET);
 err:
 	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_type_member_set(struct type_member const *desc,
+                    DeeObject *self, DeeObject *value) {
+	if (TYPE_MEMBER_ISCONST(desc))
+		goto err_cant_access;
+	if (desc->m_desc.md_field.mdf_type & STRUCT_CONST)
+		goto err_cant_access;
+	return Dee_type_member_set_impl(desc, self, value);
+err_cant_access:
+	return err_cant_access_attribute_string(type_member_typeof(desc, self),
+	                                        desc->m_name, ATTR_ACCESS_SET);
+}
+
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+Dee_type_member_del(struct type_member const *desc, DeeObject *self) {
+	if unlikely(TYPE_MEMBER_ISCONST(desc))
+		goto cant_access;
+	if unlikely(desc->m_desc.md_field.mdf_type & STRUCT_CONST)
+		goto cant_access;
+	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC)) {
+	case STRUCT_VARIANT:
+		Dee_variant_setunbound(&FIELD(struct Dee_variant));
+		return 0;
+	default: break;
+	}
+	return Dee_type_member_set_impl(desc, self, Dee_None);
+cant_access:
+	return err_cant_access_attribute_string(type_member_typeof(desc, self),
+	                                        desc->m_name, ATTR_ACCESS_SET);
 }
 
 #undef IF_THREADS

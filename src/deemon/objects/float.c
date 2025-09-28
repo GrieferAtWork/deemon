@@ -284,7 +284,7 @@ PRIVATE struct type_math float_math = {
 
 STATIC_ASSERT(sizeof(double) == __SIZEOF_DOUBLE__);
 
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 float_hash(Float *__restrict self) {
 #if __SIZEOF_DOUBLE__ == Dee_SIZEOF_HASH_T
 	union {
