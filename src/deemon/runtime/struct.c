@@ -42,27 +42,6 @@
 
 DECL_BEGIN
 
-#ifndef CONFIG_NO_OBJECT_SLABS
-LOCAL ATTR_CONST WUNUSED NONNULL((1)) size_t DCALL
-get_slab_size(void (DCALL *tp_free)(void *__restrict ob)) {
-#define CHECK_SIZE(index, size)                 \
-	if (tp_free == &DeeObject_SlabFree##size || \
-	    tp_free == &DeeGCObject_SlabFree##size) \
-		return size * __SIZEOF_POINTER__;
-	DeeSlab_ENUMERATE(CHECK_SIZE)
-#undef CHECK_SIZE
-	return 0;
-}
-
-#define GET_INSTANCE_SIZE(self)                                \
-	(Dee_TYPE(self)->tp_init.tp_alloc.tp_free                  \
-	 ? get_slab_size(Dee_TYPE(self)->tp_init.tp_alloc.tp_free) \
-	 : Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size)
-#else /* !CONFIG_NO_OBJECT_SLABS */
-#define GET_INSTANCE_SIZE(self) \
-	(Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size)
-#endif /* CONFIG_NO_OBJECT_SLABS */
-
 #undef uintptr_half_t
 #define uintptr_half_t __UINTPTR_HALF_TYPE__
 #undef byte_t
@@ -207,16 +186,6 @@ DeeStructObject_ForeachField(DeeTypeObject *__restrict type,
                              void *arg) {
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	return struct_foreach_field_at_step(type, type, cb, undo, arg);
-}
-
-
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeStructObject_Ctor(DeeObject *__restrict self) {
-	/* FIXME: This here is actually incorrect -- we must **ONLY** initialize type_member-fields! */
-	size_t instance_size = GET_INSTANCE_SIZE(self);
-	ASSERT(instance_size >= sizeof(*self));
-	bzero(self + 1, instance_size - sizeof(*self));
-	return 0;
 }
 
 
@@ -403,12 +372,59 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL /* from "./type_member.c" */
 Dee_type_member_set_impl(struct type_member const *desc,
                          DeeObject *self, DeeObject *value);
 
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_type_member_init(struct type_member const *desc,
+                     DeeObject *self, DeeObject *value) {
+	byte_t *dst = (byte_t *)self + desc->m_desc.md_field.mdf_offset;
+	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+	case STRUCT_OBJECT & ~STRUCT_CONST:
+	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
+		Dee_Incref(value);
+		*(DeeObject **)dst = value;
+		break;
+	case STRUCT_WOBJECT_OPT:
+		if (DeeNone_Check(value)) {
+			Dee_weakref_initempty((struct weakref *)dst);
+			return 0;
+		}
+		ATTR_FALLTHROUGH
+	case STRUCT_WOBJECT:
+		if unlikely(!Dee_weakref_init((struct weakref *)dst, value, NULL))
+			return err_cannot_weak_reference(value);
+		break;
+	case STRUCT_VARIANT:
+		Dee_variant_init_object((struct Dee_variant *)dst, value);
+		break;
+	default:
+		return Dee_type_member_set_impl(desc, self, value);
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+Dee_type_member_init_unbound(struct type_member const *desc, DeeObject *self) {
+	byte_t *dst = (byte_t *)self + desc->m_desc.md_field.mdf_offset;
+	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
+		*(DeeObject **)dst = NULL;
+		break;
+	case STRUCT_WOBJECT_OPT:
+		Dee_weakref_initempty((struct weakref *)dst);
+		break;
+	case STRUCT_VARIANT:
+		Dee_variant_init_unbound((struct Dee_variant *)dst);
+		break;
+	default:
+		return Dee_type_member_set_impl(desc, self, Dee_None);
+	}
+	return 0;
+}
+
 PRIVATE NONNULL((2, 3)) Dee_ssize_t DCALL
 struct_init_cb(void *arg, DeeTypeObject *declaring_type,
                struct type_member const *field) {
 	DeeObject *initializer;
 	struct struct_init_data *data = (struct struct_init_data *)arg;
-	byte_t *dst = (byte_t *)data->sid_self + field->m_desc.md_field.mdf_offset;
 	(void)declaring_type;
 	ASSERT(TYPE_MEMBER_ISFIELD(field));
 	/* Load initializer argument (starting with positional arguments,
@@ -419,50 +435,23 @@ struct_init_cb(void *arg, DeeTypeObject *declaring_type,
 	if (data->sid_posargc) {
 		initializer = *data->sid_posargv++;
 		--data->sid_posargc;
-		ASSERT(initializer != ITER_DONE);
 	} else {
 		initializer = DeeKwArgs_TryGetItemNRString(&data->sid_kwargs, field->m_name);
+		if (!ITER_ISOK(initializer)) {
+			if unlikely(!initializer)
+				return -1;
+			return Dee_type_member_init_unbound(field, data->sid_self);
+		}
 	}
-	ASSERT(initializer != NULL);
-	switch (field->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
-	case STRUCT_OBJECT & ~STRUCT_CONST:
-		if unlikely(initializer == ITER_DONE)
-			break;
-		ATTR_FALLTHROUGH
-	case STRUCT_OBJECT_OPT & ~STRUCT_CONST: {
-		if (initializer == ITER_DONE) {
-			initializer = NULL;
-		} else {
-			Dee_Incref(initializer);
-		}
-		*(DeeObject **)dst = initializer;
-		return 0;
-	}	break;
-	case STRUCT_WOBJECT_OPT:
-		if (initializer == ITER_DONE || DeeNone_Check(initializer)) {
-			Dee_weakref_initempty((struct weakref *)dst);
-			return 0;
-		}
-		ATTR_FALLTHROUGH
-	case STRUCT_WOBJECT:
-		if (initializer == ITER_DONE)
-			break;
-		if unlikely(!Dee_weakref_init((struct weakref *)dst, initializer, NULL))
-			return err_cannot_weak_reference(initializer);
-		return 0;
-	case STRUCT_VARIANT:
-		if (initializer == ITER_DONE) {
-			Dee_variant_init_unbound((struct Dee_variant *)dst);
-		} else {
-			Dee_variant_init_object((struct Dee_variant *)dst, initializer);
-		}
-		return 0;
-	default:
-		if (initializer == ITER_DONE)
-			initializer = Dee_None;
-		return Dee_type_member_set_impl(field, data->sid_self, initializer);
-	}
-	return DeeError_NOTIMPLEMENTED();
+	ASSERT(ITER_ISOK(initializer));
+	return Dee_type_member_init(field, data->sid_self, initializer);
+}
+
+PRIVATE NONNULL((2, 3)) void DCALL
+struct_init_undo_cb(void *arg, DeeTypeObject *declaring_type,
+                    struct type_member const *field) {
+	struct struct_init_data *data = (struct struct_init_data *)arg;
+	struct_fini_cb(data->sid_self, declaring_type, field);
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
@@ -477,7 +466,7 @@ DeeStructObject_InitKw(DeeObject *__restrict self,
 	data.sid_posargc = argc;
 	data.sid_posargv = argv;
 	if unlikely(DeeStructObject_ForeachField(tp_self, &struct_init_cb,
-	                                         &struct_fini_cb, &data))
+	                                         &struct_init_undo_cb, &data))
 		goto err;
 	result = DeeKwArgs_Done(&data.sid_kwargs, argc, tp_self->tp_name);
 	if unlikely(result)
@@ -491,6 +480,20 @@ PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeStructObject_Init(DeeObject *__restrict self,
                      size_t argc, DeeObject *const *argv) {
 	return DeeStructObject_InitKw(self, argc, argv, NULL);
+}
+
+PRIVATE NONNULL((2, 3)) Dee_ssize_t DCALL
+struct_init_unbound_cb(void *arg, DeeTypeObject *declaring_type,
+                       struct type_member const *field) {
+	(void)declaring_type;
+	ASSERT(TYPE_MEMBER_ISFIELD(field));
+	return Dee_type_member_init_unbound(field, (DeeObject *)arg);
+}
+
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeStructObject_Ctor(DeeObject *__restrict self) {
+	return DeeStructObject_ForeachField(Dee_TYPE(self), &struct_init_unbound_cb,
+	                                    &struct_fini_cb, self);
 }
 
 PUBLIC NONNULL((1)) void DCALL /* Remember to set "Dee_TF_TPVISIT" */
@@ -616,8 +619,23 @@ struct_printrepr_cb(void *arg, DeeTypeObject *declaring_type,
 		Dee_Decref(value);
 	}	break;
 
-	case STRUCT_VARIANT:
-		return Dee_variant_printrepr((struct Dee_variant *)src, data->spr_printer, data->spr_arg);
+	case STRUCT_VARIANT: {
+		struct Dee_variant value;
+		result = 0;
+		Dee_variant_init_copy(&value, (struct Dee_variant *)src);
+		if (Dee_variant_isbound_nonatomic(&value)) {
+			result = struct_printrepr_prefix(data, field);
+			if likely(result >= 0) {
+				temp = Dee_variant_printrepr(&value, data->spr_printer, data->spr_arg);
+				if unlikely(temp < 0) {
+					result = temp;
+				} else {
+					result += temp;
+				}
+			}
+		}
+		Dee_variant_fini(&value);
+	}	break;
 
 	case STRUCT_CHAR: {
 		char value = *(char const *)src;
@@ -1300,7 +1318,7 @@ DeeStructObject_Compare(DeeObject *lhs, DeeObject *rhs) {
 	struct struct_compare_data data;
 	if (DeeObject_AssertTypeExact(rhs, tp_lhs))
 		goto err;
-	data.scd_lhs = rhs;
+	data.scd_lhs = lhs;
 	data.scd_rhs = rhs;
 	result = DeeStructObject_ForeachField(tp_lhs, &struct_compare_cb, NULL, &data);
 	return STRUCT_CMP_DECODE(result);
@@ -1315,7 +1333,7 @@ DeeStructObject_CompareEq(DeeObject *lhs, DeeObject *rhs) {
 	struct struct_compare_data data;
 	if (DeeObject_AssertTypeExact(rhs, tp_lhs))
 		goto err;
-	data.scd_lhs = rhs;
+	data.scd_lhs = lhs;
 	data.scd_rhs = rhs;
 	result = DeeStructObject_ForeachField(tp_lhs, &struct_compare_eq_cb, NULL, &data);
 	return STRUCT_CMP_DECODE(result);
@@ -1330,7 +1348,7 @@ DeeStructObject_TryCompareEq(DeeObject *lhs, DeeObject *rhs) {
 	struct struct_compare_data data;
 	if (!DeeObject_InstanceOfExact(rhs, tp_lhs))
 		return 1;
-	data.scd_lhs = rhs;
+	data.scd_lhs = lhs;
 	data.scd_rhs = rhs;
 	result = DeeStructObject_ForeachField(tp_lhs, &struct_trycompare_eq_cb, NULL, &data);
 	return STRUCT_CMP_DECODE(result);

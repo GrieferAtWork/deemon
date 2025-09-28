@@ -24,41 +24,20 @@ import * from errors;
 
 #define TRY(x) (try x catch (e...) e)
 
+/* Assert that "IntegerOverflow" errors can be compared to check for equality */
+assert IntegerOverflow(positive: true).positive == true;
+assert IntegerOverflow(positive: false).positive == false;
+assert IntegerOverflow().positive == false;
+assert IntegerOverflow(value: 1, minval: 2, maxval: 3, positive: true) == IntegerOverflow(value: 1, minval: 2, maxval: 3, positive: true);
+assert IntegerOverflow(value: 1, minval: 2, maxval: 3, positive: true) != IntegerOverflow(value: 1, minval: 2, maxval: 3, positive: false);
+assert IntegerOverflow(value: 1, minval: 2, maxval: 3, positive: true) != IntegerOverflow(value: 1, minval: 2, maxval: 4, positive: true);
+assert IntegerOverflow(value: 1, minval: 2, maxval: 3, positive: true) != IntegerOverflow(value: 1, minval: 5, maxval: 3, positive: true);
+assert IntegerOverflow(value: 1, minval: 2, maxval: 3, positive: true) != IntegerOverflow(value: 6, minval: 2, maxval: 3, positive: true);
 
-local v = TRY((0xff).tobytes(1));
-assert v == { 0xff };
-
-
-local v = TRY((0x1ff).tobytes(1));
-assert v.value == 0x1ff;
-assert v.minval == 0;
-assert v.maxval == 0xff;
-assert v.positive == true;
-
-
-local v = TRY((-0x1ff).tobytes(1));
-assert v is IntegerOverflow;
-assert v.value == -0x1ff;
-assert v.minval == 0;
-assert v.maxval == 0xff;
-assert v.positive == false;
-
-
-local v = TRY((0xffff).tobytes(2));
-assert v == { 0xff, 0xff };
-
-
-local v = TRY((-0xffff).tobytes(2));
-assert v is IntegerOverflow;
-assert v.value == -0xffff;
-assert v.minval == 0;
-assert v.maxval == 0xffff;
-assert v.positive == false;
-
-
-local v = TRY((0x1ffff).tobytes(2));
-assert v is IntegerOverflow;
-assert v.value == 0x1ffff;
-assert v.minval == 0;
-assert v.maxval == 0xffff;
-assert v.positive == true;
+/* Assert that "int.tobytes()" produces the expected "IntegerOverflow" errors when values are bad. */
+assert { 0xff } == (0xff).tobytes(1);
+assert { 0xff, 0xff } == (0xffff).tobytes(2);
+assert IntegerOverflow(value: 0x1ff, minval: 0, maxval: 0xff, positive: true) == TRY((0x1ff).tobytes(1));
+assert IntegerOverflow(value: -0x1ff, minval: 0, maxval: 0xff, positive: false) == TRY((-0x1ff).tobytes(1));
+assert IntegerOverflow(value: -0xffff, minval: 0, maxval: 0xffff, positive: false) == TRY((-0xffff).tobytes(2));
+assert IntegerOverflow(value: 0x1ffff, minval: 0, maxval: 0xffff, positive: true) == TRY((0x1ffff).tobytes(2));

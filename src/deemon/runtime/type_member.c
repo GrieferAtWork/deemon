@@ -877,7 +877,7 @@ Dee_type_member_bound(struct type_member const *desc,
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 Dee_type_member_set_impl(struct type_member const *desc,
                          DeeObject *self, DeeObject *value) {
-	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC)) {
+	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC | STRUCT_CONST)) {
 #define WRITE(dst, src) atomic_write(&dst, src)
 
 	case STRUCT_WOBJECT_OPT:
@@ -912,12 +912,11 @@ Dee_type_member_set_impl(struct type_member const *desc,
 	case STRUCT_BOOL16:
 	case STRUCT_BOOL32:
 	case STRUCT_BOOL64: {
-		int boolval;
-		boolval = DeeObject_Bool(value);
+		int boolval = DeeObject_Bool(value);
 		if unlikely(boolval < 0)
 			goto err;
 		boolval = !!boolval;
-		switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC)) {
+		switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC | STRUCT_CONST)) {
 		case STRUCT_BOOL8:  FIELD(uint8_t)  = (uint8_t )(unsigned int)boolval; break;
 		case STRUCT_BOOL16: FIELD(uint16_t) = (uint16_t)(unsigned int)boolval; break;
 		case STRUCT_BOOL32: FIELD(uint32_t) = (uint32_t)(unsigned int)boolval; break;
@@ -940,7 +939,7 @@ Dee_type_member_set_impl(struct type_member const *desc,
 		boolval = DeeObject_Bool(value);
 		if unlikely(boolval < 0)
 			goto err;
-		mask = STRUCT_BOOLBITMASK(desc->m_desc.md_field.mdf_type & ~STRUCT_ATOMIC);
+		mask = STRUCT_BOOLBITMASK(desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC | STRUCT_CONST));
 		pfield = &FIELD(uint8_t);
 		if (boolval) {
 			IF_THREADS(if (desc->m_desc.md_field.mdf_type & STRUCT_ATOMIC) {
@@ -964,19 +963,11 @@ Dee_type_member_set_impl(struct type_member const *desc,
 		double data;
 		if (DeeObject_AsDouble(value, &data))
 			goto err;
-		switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC)) {
-
-		case STRUCT_FLOAT:
-			FIELD(float) = (float)data;
-			break;
-
-		case STRUCT_DOUBLE:
-			FIELD(double) = data;
-			break;
-
-		default:
-			FIELD(long double) = (long double)data;
-			break;
+		switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC | STRUCT_CONST)) {
+		case STRUCT_FLOAT: FIELD(float) = (float)data; break;
+		case STRUCT_DOUBLE: FIELD(double) = data; break;
+		case STRUCT_LDOUBLE:  FIELD(long double) = (long double)data; break;
+		default: __builtin_unreachable();
 		}
 		return 0;
 	}	break;
