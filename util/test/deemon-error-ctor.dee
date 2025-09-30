@@ -1,0 +1,47 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+
+
+assert IntegerOverflow() == IntegerOverflow();
+assert IntegerOverflow("foo").message == "foo";
+assert IntegerOverflow("foo", Error("foo")).message == "foo";
+assert IntegerOverflow("foo", Error("foo")).inner == Error("foo");
+assert IntegerOverflow(message: "foo").message == "foo";
+assert IntegerOverflow(inner: Error("foo")).inner == Error("foo");
+assert IntegerOverflow(inner: Error("foo")).inner != Error("bar");
+assert IntegerOverflow().message is none;
+assert IntegerOverflow().inner is none;
+assert IntegerOverflow().value !is bound;
+assert IntegerOverflow().minval !is bound;
+assert IntegerOverflow().maxval !is bound;
+assert IntegerOverflow().positive == false;
+assert IntegerOverflow(value: 42).message is none;
+assert IntegerOverflow(value: 42).inner is none;
+assert IntegerOverflow(value: 42).value == 42;
+assert IntegerOverflow(value: 42).minval !is bound;
+assert IntegerOverflow(value: 42).maxval !is bound;
+assert IntegerOverflow(value: 42).positive == false;
+assert "IntegerOverflow()" == repr IntegerOverflow();
+assert "IntegerOverflow(value: 42)" == repr IntegerOverflow(value: 42);
+
