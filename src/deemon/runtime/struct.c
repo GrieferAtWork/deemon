@@ -1361,12 +1361,14 @@ PUBLIC struct type_cmp DeeStructObject_Cmp = {
 	/* .tp_compare_eq    = */ &DeeStructObject_CompareEq,
 	/* .tp_compare       = */ &DeeStructObject_Compare,
 	/* .tp_trycompare_eq = */ &DeeStructObject_TryCompareEq,
-	/* .tp_eq            = */ &default__eq__with__compare_eq,
-	/* .tp_ne            = */ &default__ne__with__compare_eq,
-	/* .tp_lo            = */ &default__lo__with__compare,
-	/* .tp_le            = */ &default__le__with__compare,
-	/* .tp_gr            = */ &default__gr__with__compare,
-	/* .tp_ge            = */ &default__ge__with__compare,
+#ifndef __pic__ /* These also get auto-filled in, so we don't need relocations */
+	/* .tp_eq = */ &default__eq__with__compare_eq,
+	/* .tp_ne = */ &default__ne__with__compare_eq,
+	/* .tp_lo = */ &default__lo__with__compare,
+	/* .tp_le = */ &default__le__with__compare,
+	/* .tp_gr = */ &default__gr__with__compare,
+	/* .tp_ge = */ &default__ge__with__compare,
+#endif /* !__pic__ */
 };
 
 DECL_END

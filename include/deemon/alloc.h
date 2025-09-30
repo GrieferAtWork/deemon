@@ -1080,9 +1080,9 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
  * allocator functions when doing so would require the creation of
  * relocations that might cause loading times to become larger. */
 #undef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
-#if !defined(CONFIG_BUILDING_DEEMON) || defined(__PIE__) || \
+#if (!defined(CONFIG_BUILDING_DEEMON) || defined(__PIE__) ||     \
      defined(__PIC__) || defined(__pie__) || defined(__pic__) || \
-     defined(CONFIG_NO_OBJECT_SLABS)
+     defined(CONFIG_NO_OBJECT_SLABS))
 #define CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
 #ifdef GUARD_DEEMON_OBJECT_H
 #define DEE_TYPE_FIXED_ALLOCATOR_S(T)    DEE_TYPE_AUTO_ALLOCATOR(T)
@@ -1097,7 +1097,7 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define DeeObject_TRYMALLOC_S(T) ((T *)DeeObject_TryMalloc(sizeof(T)))
 #define DeeObject_TRYCALLOC_S(T) ((T *)DeeObject_TryCalloc(sizeof(T)))
 #define DeeObject_FREE_S               DeeObject_Free
-#else /* !CONFIG_BUILDING_DEEMON || __PIC__ */
+#else /* !CONFIG_BUILDING_DEEMON || __pic__ */
 #ifdef GUARD_DEEMON_OBJECT_H
 #define DEE_TYPE_FIXED_ALLOCATOR_S(T)    DEE_TYPE_FIXED_ALLOCATOR(T)
 #define DEE_TYPE_FIXED_ALLOCATOR_GC_S(T) DEE_TYPE_FIXED_ALLOCATOR_GC(T)
@@ -1111,7 +1111,7 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define DeeObject_TRYFMALLOC_S DeeObject_TRYMALLOC
 #define DeeObject_TRYFCALLOC_S DeeObject_TRYCALLOC
 #define DeeObject_FREE_S       DeeObject_FREE
-#endif /* CONFIG_BUILDING_DEEMON && !__PIC__ */
+#endif /* CONFIG_BUILDING_DEEMON && !__pic__ */
 
 
 /* Define the deemon api's alloca() function (if it can be implemented) */

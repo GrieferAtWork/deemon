@@ -47,27 +47,34 @@ DECL_BEGIN
 #define __SIZEOF_BOOL__ __SIZEOF_CHAR__
 #endif /* !__SIZEOF_BOOL__ */
 
-#define INIT_CUSTOM_ERROR(tp_name, tp_doc, tp_flags,                                \
-                          tp_base, T, tp_str, tp_print,                             \
-                          tp_methods, tp_getsets, tp_members,                       \
-                          tp_class_members)                                         \
-	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_TPVISIT,                     \
-	                     tp_base, T, &DeeStructObject_Fini, &DeeStructObject_Visit, \
-	                     tp_str, tp_print, &DeeStructObject_Cmp,                    \
-	                     tp_methods, tp_getsets, tp_members,                        \
+#define INIT_CUSTOM_ERROR(tp_name, tp_doc, tp_flags,                        \
+                          tp_base, T, tp_str, tp_print,                     \
+                          tp_methods, tp_getsets, tp_members,               \
+                          tp_class_members)                                 \
+	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_TPVISIT, tp_base, T, \
+	                     &DeeStructObject_Ctor, &DeeStructObject_Copy,      \
+	                     &DeeStructObject_Deep, &DeeStructObject_Init,      \
+	                     &DeeStructObject_InitKw, &DeeStructObject_Fini,    \
+	                     &DeeStructObject_Visit, &DeeStructObject_Cmp,      \
+	                     tp_str, tp_print,                                  \
+	                     tp_methods, tp_getsets, tp_members,                \
 	                     tp_class_members)
 
-/* Same as `INIT_CUSTOM_ERROR', but don't define any (new) member fields */
-#define INIT_CUSTOM_ERROR_NO_NEW_FIELDS(tp_name, tp_doc, tp_flags,                \
-                                        tp_base, T, tp_str, tp_print,             \
-                                        tp_methods, tp_getsets, tp_class_members) \
-	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_NONE,                      \
-	                     tp_base, T, NULL, NULL, tp_str, tp_print,                \
-	                     NULL, tp_methods, tp_getsets, NULL,                      \
+/* Initialize an error type that uses `DeeErrorObject' as its struct type */
+#define INIT_LIKE_ERROR(tp_name, tp_doc, tp_flags,                          \
+                        tp_base, tp_str, tp_print,                          \
+                        tp_methods, tp_getsets, tp_class_members)           \
+	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_NONE,                \
+	                     tp_base, DeeErrorObject, &error_ctor, &error_copy, \
+	                     &error_deep, &error_init, &error_init_kw,          \
+	                     NULL, NULL, NULL, tp_str, tp_print,                \
+	                     tp_methods, tp_getsets, NULL,                      \
 	                     tp_class_members)
-#define INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, tp_features,                                                \
-                             tp_base, T, tp_fini, tp_visit, tp_str, tp_print,                          \
-                             tp_cmp, tp_methods, tp_getsets, tp_members,                                       \
+#define INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, tp_features,                                   \
+                             tp_base, T, tp_ctor, tp_copy, tp_deep, tp_init,                           \
+                             tp_init_kw, tp_fini, tp_visit, tp_cmp,                                    \
+                             tp_str, tp_print,                                                         \
+                             tp_methods, tp_getsets, tp_members,                                       \
                              tp_class_members)                                                         \
 	{                                                                                                  \
 		OBJECT_HEAD_INIT(&DeeType_Type),                                                               \
@@ -80,12 +87,12 @@ DECL_BEGIN
 		/* .tp_init = */ {                                                                             \
 			{                                                                                          \
 				/* .tp_alloc = */ {                                                                    \
-					/* .tp_ctor      = */ (Dee_funptr_t)&DeeStructObject_Ctor,                         \
-					/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeStructObject_Copy,                         \
-					/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeStructObject_Deep,                         \
-					/* .tp_any_ctor  = */ (Dee_funptr_t)&DeeStructObject_Init,                         \
+					/* .tp_ctor      = */ (Dee_funptr_t)(tp_ctor),                                     \
+					/* .tp_copy_ctor = */ (Dee_funptr_t)(tp_copy),                                     \
+					/* .tp_deep_ctor = */ (Dee_funptr_t)(tp_deep),                                     \
+					/* .tp_any_ctor  = */ (Dee_funptr_t)(tp_init),                                     \
 					TYPE_FIXED_ALLOCATOR(T),                                                           \
-					/* .tp_any_ctor_kw = */ (Dee_funptr_t)&DeeStructObject_InitKw                      \
+					/* .tp_any_ctor_kw = */ (Dee_funptr_t)(tp_init_kw)                                 \
 				}                                                                                      \
 			},                                                                                         \
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))(tp_fini),                  \
