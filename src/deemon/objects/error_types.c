@@ -737,7 +737,7 @@ INIT_LIKE_ERROR("IllegalInstruction", "(" RuntimeError_init_params ")",
 
 /* BEGIN::TypeError */
 PUBLIC DeeTypeObject DeeError_TypeError =
-INIT_LIKE_ERROR("IllegalInstruction", "(" Error_init_params ")",
+INIT_LIKE_ERROR("TypeError", "(" Error_init_params ")",
                 TP_FNORMAL, &DeeError_Error, NULL, NULL,
                 NULL, NULL, NULL);
 /* END::TypeError */
