@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/error.h>
+#include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
@@ -1218,9 +1219,8 @@ bytes_ord(Bytes *self, size_t argc, DeeObject *const *argv) {
 		if (DeeArg_Unpack(argc, argv, UNPuSIZ ":ord", &index))
 			goto err;
 		if (index >= DeeBytes_SIZE(self)) {
-			err_index_out_of_bounds((DeeObject *)self,
-			                        index,
-			                        DeeBytes_SIZE(self));
+			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+			                          DeeBytes_SIZE(self));
 			goto err;
 		}
 	} else if unlikely(DeeBytes_SIZE(self) != 1) {
@@ -1426,9 +1426,8 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 			if (DeeObject_AsSize(argv[0], &start))                   \
 				goto err;                                            \
 			if unlikely(start >= DeeBytes_SIZE(self)) {              \
-				err_index_out_of_bounds((DeeObject *)self,           \
-				                        start,                       \
-				                        DeeBytes_SIZE(self));        \
+				DeeRT_ErrIndexOutOfBounds((DeeObject *)self, start,  \
+				                          DeeBytes_SIZE(self));      \
 				goto err;                                            \
 			}                                                        \
 			ch = DeeBytes_DATA(self)[start];                         \
@@ -1515,8 +1514,8 @@ bytes_asdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asdigit", &index, &defl))
 			goto err;
 		if unlikely(index >= DeeBytes_SIZE(self)) {
-			err_index_out_of_bounds((DeeObject *)self, index,
-			                        DeeBytes_SIZE(self));
+			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+			                          DeeBytes_SIZE(self));
 			goto err;
 		}
 		ch = DeeBytes_DATA(self)[index];
@@ -1549,8 +1548,8 @@ bytes_asxdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asxdigit", &index, &defl))
 			goto err;
 		if unlikely(index >= DeeBytes_SIZE(self)) {
-			err_index_out_of_bounds((DeeObject *)self, index,
-			                        DeeBytes_SIZE(self));
+			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+			                          DeeBytes_SIZE(self));
 			goto err;
 		}
 		ch = DeeBytes_DATA(self)[index];
@@ -5624,7 +5623,8 @@ bytes_xchitem_index(Bytes *self, size_t index, DeeObject *value) {
 	if (DeeObject_AsByte(value, &val))
 		goto err;
 	if unlikely(index >= DeeBytes_SIZE(self)) {
-		err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+		                          DeeBytes_SIZE(self));
 		goto err;
 	}
 	if unlikely(!DeeBytes_WRITABLE(self))

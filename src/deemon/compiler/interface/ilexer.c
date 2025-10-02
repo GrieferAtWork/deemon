@@ -2873,7 +2873,8 @@ lexer_syspaths_getitem(DeeCompilerWrapperObject *self,
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
 	if (i >= TPPLexer_Current->l_syspaths.il_pathc) {
-		err_index_out_of_bounds((DeeObject *)self, i, TPPLexer_Current->l_syspaths.il_pathc);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, i,
+		                          TPPLexer_Current->l_syspaths.il_pathc);
 		result = NULL;
 	} else {
 		struct TPPString *string;

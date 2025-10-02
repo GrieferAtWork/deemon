@@ -29,6 +29,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dex.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
@@ -538,7 +539,7 @@ Deque_llrot(Deque *__restrict self, size_t num_objects) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
-		return err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
+		return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, num_objects, my_size);
 	}
 	Deque_llrot_unlocked(self, num_objects);
 	Deque_LockEndWrite(self);
@@ -552,7 +553,7 @@ Deque_lrrot(Deque *__restrict self, size_t num_objects) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
-		return err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
+		return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, num_objects, my_size);
 	}
 	Deque_lrrot_unlocked(self, num_objects);
 	Deque_LockEndWrite(self);
@@ -566,7 +567,7 @@ Deque_rlrot(Deque *__restrict self, size_t num_objects) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
-		return err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
+		return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, num_objects, my_size);
 	}
 	Deque_rlrot_unlocked(self, num_objects);
 	Deque_LockEndWrite(self);
@@ -580,7 +581,7 @@ Deque_rrrot(Deque *__restrict self, size_t num_objects) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
-		return err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
+		return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, num_objects, my_size);
 	}
 	Deque_rrrot_unlocked(self, num_objects);
 	Deque_LockEndWrite(self);
@@ -1030,7 +1031,7 @@ deq_getitem_index(Deque *__restrict self, size_t index) {
 		size_t deq_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndRead(self);
-		err_index_out_of_bounds((DeeObject *)self, index, deq_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, deq_size);
 		goto err;
 	}
 	result = DEQUE_ITEM(self, index);
@@ -1089,7 +1090,7 @@ deq_setitem_index(Deque *self, size_t index, DeeObject *value) {
 		size_t deq_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndRead(self);
-		err_index_out_of_bounds((DeeObject *)self, index, deq_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, deq_size);
 		goto err;
 	}
 	/* Exchange the stored item. */
@@ -1179,7 +1180,7 @@ deq_xchitem_index(Deque *self, size_t index, DeeObject *value) {
 		size_t deq_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndRead(self);
-		err_index_out_of_bounds((DeeObject *)self, index, deq_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, deq_size);
 		goto err;
 	}
 	/* Exchange the stored item. */

@@ -435,8 +435,8 @@ filter_getitem_index(Filter *self, size_t index) {
 	if unlikely(foreach_status == -1)
 		goto err;
 	/* Index out-of-bounds */
-	err_index_out_of_bounds((DeeObject *)self, index,
-	                        index - data.fgid_skip);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+	                          index - data.fgid_skip);
 err:
 	return NULL;
 }

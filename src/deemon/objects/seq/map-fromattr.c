@@ -349,8 +349,9 @@ mfa_setitem(MapFromAttr *self, DeeObject *key, DeeObject *value) {
 		goto err;
 	result = DeeObject_SetAttr(self->mfa_ob, key, value);
 	if unlikely(result) {
-		if (DeeError_Catch(&DeeError_AttributeError))
-			err_unknown_key((DeeObject *)self, key);
+		DREF DeeObject *inner;
+		if ((inner = DeeError_CatchError(&DeeError_AttributeError)) != NULL)
+			DeeRT_ErrUnknownKeyWithInner((DeeObject *)self, key, inner);
 	}
 	return result;
 err:
@@ -389,7 +390,7 @@ mfa_getitem_string_hash(MapFromAttr *self, char const *key, Dee_hash_t hash) {
 		if (DeeError_Catch(&DeeError_UnboundAttribute)) {
 			DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
 		} else if (DeeError_Catch(&DeeError_AttributeError)) {
-			err_unknown_key_str((DeeObject *)self, key);
+			DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
 		}
 	}
 	return result;
@@ -408,7 +409,7 @@ mfa_setitem_string_hash(MapFromAttr *self, char const *key, Dee_hash_t hash, Dee
 	int result = DeeObject_SetAttrStringHash(self->mfa_ob, key, hash, value);
 	if unlikely(result) {
 		if (DeeError_Catch(&DeeError_AttributeError))
-			err_unknown_key_str((DeeObject *)self, key);
+			DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
 	}
 	return result;
 }
@@ -425,7 +426,7 @@ mfa_getitem_string_len_hash(MapFromAttr *self, char const *key, size_t keylen, D
 		if (DeeError_Catch(&DeeError_UnboundAttribute)) {
 			DeeRT_ErrUnboundKeyStrLen((DeeObject *)self, key, keylen);
 		} else if (DeeError_Catch(&DeeError_AttributeError)) {
-			err_unknown_key_str_len((DeeObject *)self, key, keylen);
+			DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
 		}
 	}
 	return result;
@@ -445,7 +446,7 @@ mfa_setitem_string_len_hash(MapFromAttr *self, char const *key, size_t keylen,
 	int result = DeeObject_SetAttrStringLenHash(self->mfa_ob, key, keylen, hash, value);
 	if unlikely(result) {
 		if (DeeError_Catch(&DeeError_AttributeError))
-			err_unknown_key_str_len((DeeObject *)self, key, keylen);
+			DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
 	}
 	return result;
 }

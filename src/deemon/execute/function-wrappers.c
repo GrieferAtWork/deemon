@@ -329,7 +329,7 @@ funcstatics_getitem_index(FunctionStatics *__restrict self, size_t index) {
 	DeeCodeObject *code = func->fo_code;
 	DREF DeeObject *result;
 	if (OVERFLOW_UADD(index, code->co_refc, &index) || index >= code->co_refstaticc) {
-		err_index_out_of_bounds((DeeObject *)self, index, funcstatics_size(self));
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, funcstatics_size(self));
 		return NULL;
 	}
 	DeeFunction_RefLockRead(func);
@@ -368,7 +368,7 @@ funcstatics_delitem_index(FunctionStatics *__restrict self, size_t index) {
 	DeeCodeObject *code = func->fo_code;
 	DREF DeeObject *oldval;
 	if (OVERFLOW_UADD(index, code->co_refc, &index) || index >= code->co_refstaticc)
-		return err_index_out_of_bounds((DeeObject *)self, index, funcstatics_size(self));
+		return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, funcstatics_size(self));
 	DeeFunction_RefLockWrite(func);
 	oldval = func->fo_refv[index]; /* Inherit reference */
 	func->fo_refv[index] = NULL;
@@ -385,7 +385,7 @@ funcstatics_setitem_index(FunctionStatics *self, size_t index, DeeObject *value)
 	DeeCodeObject *code = func->fo_code;
 	DREF DeeObject *oldval;
 	if (OVERFLOW_UADD(index, code->co_refc, &index) || index >= code->co_refstaticc)
-		return err_index_out_of_bounds((DeeObject *)self, index, funcstatics_size(self));
+		return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, funcstatics_size(self));
 	Dee_Incref(value);
 	DeeFunction_RefLockWrite(func);
 	oldval = func->fo_refv[index]; /* Inherit reference */
@@ -422,7 +422,7 @@ funcstatics_mh_seq_xchitem_index(FunctionStatics *self, size_t index, DeeObject 
 	DeeCodeObject *code = func->fo_code;
 	DREF DeeObject *oldval;
 	if (OVERFLOW_UADD(index, code->co_refc, &index) || index >= code->co_refstaticc) {
-		err_index_out_of_bounds((DeeObject *)self, index, funcstatics_size(self));
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, funcstatics_size(self));
 		return NULL;
 	}
 	Dee_Incref(value);
@@ -1172,7 +1172,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) uint16_t DCALL
 FunctionSymbolsByName_GetRefIdByObject(FunctionSymbolsByName const *self, DeeObject *key) {
 	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByObject(self, key);
 	if unlikely(rid == RID_UNK) {
-		err_unknown_key((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey((DeeObject *)self, key);
 		rid = RID_ERR;
 	}
 	return rid;
@@ -1182,7 +1182,7 @@ PRIVATE WUNUSED NONNULL((1)) uint16_t DCALL
 FunctionSymbolsByName_GetRefIdByIndex(FunctionSymbolsByName const *self, size_t key) {
 	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByIndex(self, key);
 	if unlikely(rid == RID_UNK) {
-		err_unknown_key_int((DeeObject *)self, key);
+		DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
 		rid = RID_ERR;
 	}
 	return rid;
@@ -1195,7 +1195,7 @@ FunctionSymbolsByName_GetRefIdByStringLen(FunctionSymbolsByName const *self,
                                           char const *key, size_t keylen) {
 	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByStringLen(self, key, keylen);
 	if unlikely(rid == RID_UNK) {
-		err_unknown_key_str_len((DeeObject *)self, key, keylen);
+		DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
 		rid = RID_ERR;
 	}
 	return rid;
@@ -1233,7 +1233,7 @@ err_no_such_key:
 	return ITER_DONE;
 err_unlock_ro:
 	DeeFunction_RefLockEndWrite(func);
-	err_readonly_key((DeeObject *)self, key);
+	DeeRT_ErrReadOnlyKey((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -1262,7 +1262,7 @@ funcsymbolsbyname_mh_setnew_ex(FunctionSymbolsByName *self,
 	return ITER_DONE;
 err_unlock_ro:
 	DeeFunction_RefLockEndWrite(func);
-	err_readonly_key((DeeObject *)self, key);
+	DeeRT_ErrReadOnlyKey((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -1322,8 +1322,8 @@ err_funcsymbolsbyname_rid_unbound(FunctionSymbolsByName *self, uint16_t rid) {
 PRIVATE NONNULL((1)) int DCALL
 err_funcsymbolsbyname_rid_readonly(FunctionSymbolsByName *self, uint16_t rid) {
 	char const *name = DeeCode_GetRSymbolName((DeeObject *)self->fsbn_func->fo_code, rid);
-	return name ? err_readonly_key_str((DeeObject *)self, name)
-	            : err_readonly_key_int((DeeObject *)self, rid - self->fsbn_rid_start);
+	return name ? DeeRT_ErrReadOnlyKeyStr((DeeObject *)self, name)
+	            : DeeRT_ErrReadOnlyKeyInt((DeeObject *)self, rid - self->fsbn_rid_start);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2437,7 +2437,7 @@ YieldFunctionSymbolsByName_LookupSymByObject(YieldFunctionSymbolsByName const *s
                                              DeeObject *key) {
 	yfuncsymbol_t result = YieldFunctionSymbolsByName_TryLookupSymByObject(self, key);
 	if unlikely(result == YFUNCSYMBOL_INVALID) {
-		err_unknown_key((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey((DeeObject *)self, key);
 		result = YFUNCSYMBOL_ERROR;
 	}
 	return result;
@@ -2449,7 +2449,7 @@ YieldFunctionSymbolsByName_LookupSymByStringLen(YieldFunctionSymbolsByName const
                                                 char const *key, size_t keylen) {
 	yfuncsymbol_t result = YieldFunctionSymbolsByName_TryLookupSymByStringLen(self, key, keylen);
 	if unlikely(result == YFUNCSYMBOL_INVALID) {
-		err_unknown_key_str_len((DeeObject *)self, key, keylen);
+		DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
 		result = YFUNCSYMBOL_ERROR;
 	}
 	return result;
@@ -2459,7 +2459,7 @@ PRIVATE WUNUSED NONNULL((1)) yfuncsymbol_t DCALL
 YieldFunctionSymbolsByName_LookupSymByIndex(YieldFunctionSymbolsByName const *self, size_t key) {
 	yfuncsymbol_t result = YieldFunctionSymbolsByName_TryLookupSymByIndex(self, key);
 	if unlikely(result == YFUNCSYMBOL_INVALID) {
-		err_unknown_key_int((DeeObject *)self, key);
+		DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
 		result = YFUNCSYMBOL_ERROR;
 	}
 	return result;
@@ -2521,7 +2521,7 @@ yfuncsymbolsbyname_mh_setold_ex(YieldFunctionSymbolsByName *self,
 	DeeFunction_RefLockEndWrite(func);
 	return ITER_DONE;
 err_rokey:
-	err_readonly_key((DeeObject *)self, key);
+	DeeRT_ErrReadOnlyKey((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -2554,7 +2554,7 @@ yfuncsymbolsbyname_mh_setnew_ex(YieldFunctionSymbolsByName *self,
 	DeeFutex_WakeAll(&func->fo_refv[rid]);
 	return ITER_DONE;
 err_rokey:
-	err_readonly_key((DeeObject *)self, key);
+	DeeRT_ErrReadOnlyKey((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -2693,7 +2693,7 @@ yfuncsymbolsbyname_setitem(YieldFunctionSymbolsByName *self,
 		Dee_Incref(oldvalue);
 	return 0;
 err_rokey:
-	err_readonly_key((DeeObject *)self, key);
+	DeeRT_ErrReadOnlyKey((DeeObject *)self, key);
 err:
 	return -1;
 }
@@ -2722,7 +2722,7 @@ yfuncsymbolsbyname_delitem(YieldFunctionSymbolsByName *self,
 		Dee_Incref(oldvalue);
 	return 0;
 err_rokey:
-	err_readonly_key((DeeObject *)self, key);
+	DeeRT_ErrReadOnlyKey((DeeObject *)self, key);
 err:
 	return -1;
 }
@@ -2969,8 +2969,8 @@ frameargs_getitem_index(FrameArgs *__restrict self, size_t index) {
 	struct code_frame const *frame;
 	DREF DeeObject *result;
 	DeeCodeObject *code = self->fa_code;
-	if (index >= code->co_argc_max) {
-		err_index_out_of_bounds((DeeObject *)self, index, code->co_argc_max);
+	if unlikely(index >= code->co_argc_max) {
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, code->co_argc_max);
 		goto err;
 	}
 	frame = DeeFrame_LockRead((DeeObject *)self->fa_frame);
@@ -3220,7 +3220,7 @@ framelocals_getitem_index(FrameLocals *__restrict self, size_t index) {
 	struct code_frame const *frame;
 	DREF DeeObject *result;
 	if unlikely(index >= self->fl_localc) {
-		err_index_out_of_bounds((DeeObject *)self, index, self->fl_localc);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_localc);
 		goto err;
 	}
 	frame = DeeFrame_LockRead((DeeObject *)self->fl_frame);
@@ -3264,7 +3264,7 @@ framelocals_delitem_index(FrameLocals *__restrict self, size_t index) {
 	struct code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
-		err_index_out_of_bounds((DeeObject *)self, index, self->fl_localc);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_localc);
 		goto err;
 	}
 	frame = DeeFrame_LockWrite((DeeObject *)self->fl_frame);
@@ -3284,7 +3284,7 @@ framelocals_setitem_index(FrameLocals *self, size_t index, DeeObject *value) {
 	struct code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
-		err_index_out_of_bounds((DeeObject *)self, index, self->fl_localc);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_localc);
 		goto err;
 	}
 	frame = DeeFrame_LockWrite((DeeObject *)self->fl_frame);
@@ -3305,7 +3305,7 @@ framelocals_mh_seq_xchitem_index(FrameLocals *self, size_t index, DeeObject *val
 	struct code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
-		err_index_out_of_bounds((DeeObject *)self, index, self->fl_localc);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_localc);
 		goto err;
 	}
 	frame = DeeFrame_LockWrite((DeeObject *)self->fl_frame);
@@ -3574,7 +3574,7 @@ framestack_getitem_index(FrameStack *__restrict self, size_t index) {
 	stackc = Dee_code_frame_getspaddr(frame);
 	if unlikely(index >= stackc) {
 		DeeFrame_LockEndRead((DeeObject *)self->fs_frame);
-		err_index_out_of_bounds((DeeObject *)self, index, stackc);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, stackc);
 		goto err;
 	}
 	result = frame->cf_stack[index];
@@ -3619,7 +3619,7 @@ framestack_mh_seq_xchitem_index(FrameStack *self, size_t index, DeeObject *value
 	stackc = Dee_code_frame_getspaddr(frame);
 	if unlikely(index >= stackc) {
 		DeeFrame_LockEndWrite((DeeObject *)self->fs_frame);
-		err_index_out_of_bounds((DeeObject *)self, index, stackc);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, stackc);
 		goto err;
 	}
 	Dee_Incref(value);
@@ -4367,7 +4367,7 @@ FrameSymbolsByName_XchCLidValue(FrameSymbolsByName *self,
 		name = FrameSymbolsByName_GetCLidName(self, clid);
 		if unlikely(!name)
 			goto err;
-		err_unknown_key((DeeObject *)self, name);
+		DeeRT_ErrUnknownKey((DeeObject *)self, name);
 		Dee_Decref(name);
 		goto err;
 	}
@@ -4398,7 +4398,7 @@ err_ro:
 		name = FrameSymbolsByName_GetCLidName(self, clid);
 		if unlikely(!name)
 			goto err;
-		err_readonly_key((DeeObject *)self, name);
+		DeeRT_ErrReadOnlyKey((DeeObject *)self, name);
 		Dee_Decref(name);
 	}
 err:
@@ -4904,7 +4904,7 @@ FrameSymbolsByName_Key2LocId(FrameSymbolsByName *self, DeeObject *key) {
 		goto err_no_such_key;
 	return result;
 err_no_such_key:
-	return (canonical_lid_t)err_unknown_key((DeeObject *)self, key);
+	return (canonical_lid_t)DeeRT_ErrUnknownKey((DeeObject *)self, key);
 }
 
 
@@ -4953,7 +4953,7 @@ framesymbolsbyname_mh_setold_ex(FrameSymbolsByName *self,
 	} else if ((oldvalue = *loc.cll_ptr) != NULL) {
 		if unlikely(!loc.cll_writable) {
 			DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
-			err_readonly_key((DeeObject *)self, key);
+			DeeRT_ErrReadOnlyKey((DeeObject *)self, key);
 			goto err;
 		}
 		Dee_Incref(value);
@@ -5009,7 +5009,7 @@ framesymbolsbyname_mh_setnew_ex(FrameSymbolsByName *self,
 	} else {
 		if unlikely(!loc.cll_writable) {
 			DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
-			err_readonly_key((DeeObject *)self, key);
+			DeeRT_ErrReadOnlyKey((DeeObject *)self, key);
 			goto err;
 		}
 		Dee_Incref(value);
@@ -5019,7 +5019,7 @@ framesymbolsbyname_mh_setnew_ex(FrameSymbolsByName *self,
 	}
 	__builtin_unreachable();
 err_no_such_key:
-	err_unknown_key((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey((DeeObject *)self, key);
 err:
 	return NULL;
 }

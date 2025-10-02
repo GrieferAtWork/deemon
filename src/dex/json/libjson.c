@@ -32,6 +32,7 @@
 #include <deemon/bytes.h>
 #include <deemon/class.h>
 #include <deemon/dex.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
@@ -108,17 +109,6 @@ err_json_cannot_parse_type_as_type(DeeTypeObject *native_json_type,
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Cannot parse instance of `%k' into `%k'",
 	                       native_json_type, into_type);
-}
-
-
-PRIVATE ATTR_COLD NONNULL((1)) int
-(DCALL err_index_out_of_bounds)(DeeObject *__restrict self,
-                                size_t index, size_t size) {
-	ASSERT_OBJECT(self);
-	return DeeError_Throwf(&DeeError_IndexError,
-	                       "Index `%" PRFuSIZ "' lies outside the valid bounds "
-	                       "`0...%" PRFuSIZ "' of sequence of type `%k'",
-	                       index, size, Dee_TYPE(self));
 }
 
 
@@ -1018,7 +1008,7 @@ jseq_getitem_index(DeeJsonSequenceObject *__restrict self, size_t index) {
 done:
 	return result;
 err_out_of_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, self->js_size);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->js_size);
 	goto err;
 err_syntax_r:
 	Dee_Decref(result);

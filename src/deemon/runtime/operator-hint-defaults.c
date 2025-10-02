@@ -3717,7 +3717,7 @@ tdefault__getitem__with__trygetitem__and__hasitem(DeeTypeObject *tp_self, DeeObj
 		if (has > 0) {
 			DeeRT_ErrUnboundKey(self, index);
 		} else if (has == 0) {
-			err_unknown_key(self, index);
+			DeeRT_ErrUnknownKey(self, index);
 		}
 		result = NULL;
 	}
@@ -3729,7 +3729,7 @@ tdefault__getitem__with__trygetitem(DeeTypeObject *tp_self, DeeObject *self, Dee
 	DREF DeeObject *result = (*(tp_self->tp_seq->tp_trygetitem == &default__trygetitem__with__trygetitem_index__and__trygetitem_string_len_hash ? &tdefault__trygetitem__with__trygetitem_index__and__trygetitem_string_len_hash : tp_self->tp_seq->tp_trygetitem == &default__trygetitem__with__trygetitem_index__and__trygetitem_string_hash ? &tdefault__trygetitem__with__trygetitem_index__and__trygetitem_string_hash : tp_self->tp_seq->tp_trygetitem == &default__trygetitem__with__trygetitem_index ? &tdefault__trygetitem__with__trygetitem_index : tp_self->tp_seq->tp_trygetitem == &default__trygetitem__with__trygetitem_string_len_hash ? &tdefault__trygetitem__with__trygetitem_string_len_hash : tp_self->tp_seq->tp_trygetitem == &default__trygetitem__with__trygetitem_string_hash ? &tdefault__trygetitem__with__trygetitem_string_hash : &tdefault__trygetitem))(tp_self, self, index);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key(self, index);
+		DeeRT_ErrUnknownKey(self, index);
 		result = NULL;
 	}
 	return result;
@@ -3834,7 +3834,7 @@ default__getitem__with__trygetitem__and__hasitem(DeeObject *self, DeeObject *ind
 		if (has > 0) {
 			DeeRT_ErrUnboundKey(self, index);
 		} else if (has == 0) {
-			err_unknown_key(self, index);
+			DeeRT_ErrUnknownKey(self, index);
 		}
 		result = NULL;
 	}
@@ -3850,7 +3850,7 @@ default__getitem__with__trygetitem(DeeObject *self, DeeObject *index) {
 	DREF DeeObject *result = (*Dee_TYPE(self)->tp_seq->tp_trygetitem)(self, index);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key(self, index);
+		DeeRT_ErrUnknownKey(self, index);
 		result = NULL;
 	}
 	return result;
@@ -3871,7 +3871,7 @@ tdefault__getitem_index__with__size__and__getitem_index_fast(DeeTypeObject *tp_s
 		DeeRT_ErrUnboundIndex(self, index);
 	return result;
 err_oob:
-	err_index_out_of_bounds(self, index, size);
+	DeeRT_ErrIndexOutOfBounds(self, index, size);
 err:
 	return NULL;
 }
@@ -3884,7 +3884,7 @@ tdefault__getitem_index__with__trygetitem_index__and__hasitem_index(DeeTypeObjec
 		if (has > 0) {
 			DeeRT_ErrUnboundKeyInt(self, index);
 		} else if (has == 0) {
-			err_unknown_key_int(self, index);
+			DeeRT_ErrUnknownKeyInt(self, index);
 		}
 		result = NULL;
 	}
@@ -3909,7 +3909,7 @@ tdefault__getitem_index__with__trygetitem_index(DeeTypeObject *tp_self, DeeObjec
 	DREF DeeObject *result = (*(tp_self->tp_seq->tp_trygetitem_index == &default__trygetitem_index__with__size__and__getitem_index_fast ? &tdefault__trygetitem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_trygetitem_index == &default__trygetitem_index__with__trygetitem ? &tdefault__trygetitem_index__with__trygetitem : &tdefault__trygetitem_index))(tp_self, self, index);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key_int(self, index);
+		DeeRT_ErrUnknownKeyInt(self, index);
 		result = NULL;
 	}
 	return result;
@@ -3936,7 +3936,7 @@ default__getitem_index__with__size__and__getitem_index_fast(DeeObject *self, siz
 		DeeRT_ErrUnboundIndex(self, index);
 	return result;
 err_oob:
-	err_index_out_of_bounds(self, index, size);
+	DeeRT_ErrIndexOutOfBounds(self, index, size);
 err:
 	return NULL;
 #endif /* __OPTIMIZE_SIZE__ */
@@ -3953,7 +3953,7 @@ default__getitem_index__with__trygetitem_index__and__hasitem_index(DeeObject *se
 		if (has > 0) {
 			DeeRT_ErrUnboundKeyInt(self, index);
 		} else if (has == 0) {
-			err_unknown_key_int(self, index);
+			DeeRT_ErrUnknownKeyInt(self, index);
 		}
 		result = NULL;
 	}
@@ -3986,7 +3986,7 @@ default__getitem_index__with__trygetitem_index(DeeObject *self, size_t index) {
 	DREF DeeObject *result = (*Dee_TYPE(self)->tp_seq->tp_trygetitem_index)(self, index);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key_int(self, index);
+		DeeRT_ErrUnknownKeyInt(self, index);
 		result = NULL;
 	}
 	return result;
@@ -4007,7 +4007,7 @@ tdefault__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string
 		if (has > 0) {
 			DeeRT_ErrUnboundKeyStr(self, key);
 		} else if (has == 0) {
-			err_unknown_key_str(self, key);
+			DeeRT_ErrUnboundKeyStr(self, key);
 		}
 		result = NULL;
 	}
@@ -4032,7 +4032,7 @@ tdefault__getitem_string_hash__with__trygetitem_string_hash(DeeTypeObject *tp_se
 	DREF DeeObject *result = (*(tp_self->tp_seq->tp_trygetitem_string_hash == &default__trygetitem_string_hash__with__trygetitem_string_len_hash ? &tdefault__trygetitem_string_hash__with__trygetitem_string_len_hash : tp_self->tp_seq->tp_trygetitem_string_hash == &default__trygetitem_string_hash__with__trygetitem ? &tdefault__trygetitem_string_hash__with__trygetitem : &tdefault__trygetitem_string_hash))(tp_self, self, key, hash);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key_str(self, key);
+		DeeRT_ErrUnboundKeyStr(self, key);
 		result = NULL;
 	}
 	return result;
@@ -4063,7 +4063,7 @@ default__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_
 		if (has > 0) {
 			DeeRT_ErrUnboundKeyStr(self, key);
 		} else if (has == 0) {
-			err_unknown_key_str(self, key);
+			DeeRT_ErrUnboundKeyStr(self, key);
 		}
 		result = NULL;
 	}
@@ -4096,7 +4096,7 @@ default__getitem_string_hash__with__trygetitem_string_hash(DeeObject *self, char
 	DREF DeeObject *result = (*Dee_TYPE(self)->tp_seq->tp_trygetitem_string_hash)(self, key, hash);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key_str(self, key);
+		DeeRT_ErrUnboundKeyStr(self, key);
 		result = NULL;
 	}
 	return result;
@@ -4154,7 +4154,7 @@ tdefault__getitem_string_len_hash__with__getitem_string_hash(DeeTypeObject *tp_s
 	             result = (*(tp_self->tp_seq->tp_getitem_string_hash == &default__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash ? &tdefault__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash : tp_self->tp_seq->tp_getitem_string_hash == &default__getitem_string_hash__with__getitem ? &tdefault__getitem_string_hash__with__getitem : tp_self->tp_seq->tp_getitem_string_hash == &default__getitem_string_hash__with__trygetitem_string_hash ? &tdefault__getitem_string_hash__with__trygetitem_string_hash : &tdefault__getitem_string_hash))(tp_self, self, zkey, hash));
 	return result;
 err_unknown:
-	err_unknown_key_str_len(self, key, keylen);
+	DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 err:
 	return NULL;
 }
@@ -4167,7 +4167,7 @@ tdefault__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasite
 		if (has > 0) {
 			DeeRT_ErrUnboundKeyStrLen(self, key, keylen);
 		} else if (has == 0) {
-			err_unknown_key_str_len(self, key, keylen);
+			DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 		}
 		result = NULL;
 	}
@@ -4192,7 +4192,7 @@ tdefault__getitem_string_len_hash__with__trygetitem_string_len_hash(DeeTypeObjec
 	DREF DeeObject *result = (*(tp_self->tp_seq->tp_trygetitem_string_len_hash == &default__trygetitem_string_len_hash__with__trygetitem_string_hash ? &tdefault__trygetitem_string_len_hash__with__trygetitem_string_hash : tp_self->tp_seq->tp_trygetitem_string_len_hash == &default__trygetitem_string_len_hash__with__trygetitem ? &tdefault__trygetitem_string_len_hash__with__trygetitem : &tdefault__trygetitem_string_len_hash))(tp_self, self, key, keylen, hash);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key_str_len(self, key, keylen);
+		DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 		result = NULL;
 	}
 	return result;
@@ -4213,7 +4213,7 @@ default__getitem_string_len_hash__with__getitem_string_hash(DeeObject *self, cha
 	             result = (*Dee_TYPE(self)->tp_seq->tp_getitem_string_hash)(self, zkey, hash));
 	return result;
 err_unknown:
-	err_unknown_key_str_len(self, key, keylen);
+	DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 err:
 	return NULL;
 #endif /* __OPTIMIZE_SIZE__ */
@@ -4230,7 +4230,7 @@ default__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem
 		if (has > 0) {
 			DeeRT_ErrUnboundKeyStrLen(self, key, keylen);
 		} else if (has == 0) {
-			err_unknown_key_str_len(self, key, keylen);
+			DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 		}
 		result = NULL;
 	}
@@ -4263,7 +4263,7 @@ default__getitem_string_len_hash__with__trygetitem_string_len_hash(DeeObject *se
 	DREF DeeObject *result = (*Dee_TYPE(self)->tp_seq->tp_trygetitem_string_len_hash)(self, key, keylen, hash);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key_str_len(self, key, keylen);
+		DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 		result = NULL;
 	}
 	return result;

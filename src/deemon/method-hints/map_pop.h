@@ -121,7 +121,7 @@ __map_pop__.map_pop([[nonnull]] DeeObject *self,
 %{unsupported(auto)}
 %{$none = return_none}
 %{$empty = {
-	err_unknown_key(self, key);
+	DeeRT_ErrUnknownKey(self, key);
 	return NULL;
 }}
 %{$with__map_operator_getitem__and__map_operator_delitem = {
@@ -147,7 +147,7 @@ err:
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status < 0)
 		goto err;
-	err_unknown_key(self, key);
+	DeeRT_ErrUnknownKey(self, key);
 err:
 	return NULL;
 }}
@@ -162,7 +162,7 @@ err:
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status < 0)
 		goto err;
-	err_unknown_key(self, key);
+	DeeRT_ErrUnknownKey(self, key);
 err:
 	return NULL;
 }} {

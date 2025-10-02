@@ -346,7 +346,7 @@ so_getitem_index(SeqOne *__restrict self, size_t index) {
 		goto err_index;
 	return_reference(self->so_item);
 err_index:
-	err_index_out_of_bounds((DeeObject *)self, index, 1);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, 1);
 	return NULL;
 }
 

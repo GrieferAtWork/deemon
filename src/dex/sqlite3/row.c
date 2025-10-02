@@ -26,6 +26,7 @@
 #include <deemon/api.h>
 #include <deemon/bytes.h>
 #include <deemon/float.h>
+#include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
@@ -253,7 +254,7 @@ rowfmtcolumns_getitem_index(RowFmtColumns *__restrict self, size_t index) {
 		goto err_oob;
 	return rowfmtcolumns_getitem_index_fast(self, index);
 err_oob:
-	err_index_out_of_bounds((DeeObject *)self, index, self->rfc_fmt->rf_ncol);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rfc_fmt->rf_ncol);
 	return NULL;
 }
 
@@ -394,7 +395,7 @@ rowfmt_getitem_index(RowFmt *__restrict self, size_t index) {
 		goto err_obb;
 	return CellFmt_New(self, &self->rf_cols[index]);
 err_obb:
-	err_index_out_of_bounds((DeeObject *)self, index, self->rf_ncol);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rf_ncol);
 	return NULL;
 }
 
@@ -409,7 +410,7 @@ rowfmt_getitem_string_hash(RowFmt *__restrict self, char const *name, Dee_hash_t
 	if unlikely(index == (unsigned int)-2)
 		return NULL;
 	if unlikely(index == (unsigned int)-1) {
-		err_unknown_key_str((DeeObject *)self, name);
+		DeeRT_ErrUnboundKeyStr((DeeObject *)self, name);
 		return NULL;
 	}
 	return rowfmt_getitem_index(self, index);
@@ -421,7 +422,7 @@ rowfmt_getitem_string_len_hash(RowFmt *__restrict self, char const *name, size_t
 	if unlikely(index == (unsigned int)-2)
 		return NULL;
 	if unlikely(index == (unsigned int)-1) {
-		err_unknown_key_str_len((DeeObject *)self, name, namelen);
+		DeeRT_ErrUnboundKeyStrLen((DeeObject *)self, name, namelen);
 		return NULL;
 	}
 	return rowfmt_getitem_index(self, index);
@@ -834,7 +835,7 @@ unlock_and_collect_length_memory:
 	}
 	return result;
 err_oob:
-	err_index_out_of_bounds((DeeObject *)self, index, length);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, length);
 err:
 	return NULL;
 }
@@ -845,7 +846,7 @@ row_getitem_string_hash(Row *__restrict self, char const *name, Dee_hash_t UNUSE
 	if unlikely(index == (unsigned int)-2)
 		return NULL;
 	if unlikely(index == (unsigned int)-1) {
-		err_unknown_key_str((DeeObject *)self, name);
+		DeeRT_ErrUnboundKeyStr((DeeObject *)self, name);
 		return NULL;
 	}
 	return row_getitem_index(self, index);
@@ -858,7 +859,7 @@ row_getitem_string_len_hash(Row *__restrict self, char const *name,
 	if unlikely(index == (unsigned int)-2)
 		return NULL;
 	if unlikely(index == (unsigned int)-1) {
-		err_unknown_key_str_len((DeeObject *)self, name, namelen);
+		DeeRT_ErrUnboundKeyStrLen((DeeObject *)self, name, namelen);
 		return NULL;
 	}
 	return row_getitem_index(self, index);

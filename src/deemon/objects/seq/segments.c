@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -296,10 +297,9 @@ seg_getitem_index(Segments *__restrict self, size_t index) {
 	if (len == (size_t)-1)
 		goto err;
 	if (start + self->s_len > len) {
-		if (start >= len) {
-			err_index_out_of_bounds((DeeObject *)self,
-			                        index,
-			                        (len + (self->s_len - 1)) / self->s_len);
+		if unlikely(start >= len) {
+			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+			                          (len + (self->s_len - 1)) / self->s_len);
 			goto err;
 		}
 		len -= start;

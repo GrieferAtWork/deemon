@@ -552,7 +552,7 @@ cat_getitem_index(Cat *__restrict self, size_t index) {
 		                                  DeeTuple_GET(self, i),
 		                                  sub_index);
 	}
-	err_index_out_of_bounds((DeeObject *)self, index, total_length);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, total_length);
 err:
 	return NULL;
 }
@@ -572,7 +572,7 @@ cat_delitem_index(Cat *__restrict self, size_t index) {
 		return DeeObject_InvokeMethodHint(seq_operator_delitem_index,
 		                                  DeeTuple_GET(self, i), sub_index);
 	}
-	return err_index_out_of_bounds((DeeObject *)self, index, total_length);
+	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, total_length);
 err:
 	return -1;
 }
@@ -593,7 +593,7 @@ cat_setitem_index(Cat *self, size_t index, DeeObject *value) {
 		                                  DeeTuple_GET(self, i),
 		                                  sub_index, value);
 	}
-	return err_index_out_of_bounds((DeeObject *)self, index, total_length);
+	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, total_length);
 err:
 	return -1;
 }

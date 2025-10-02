@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/dict.h>
+#include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/hashset.h>
@@ -1556,7 +1557,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 dict_mh_pop(Dict *self, DeeObject *key) {
 	DREF DeeObject *result = dict_popvalue(self, key);
 	if unlikely(result == ITER_DONE) {
-		err_unknown_key((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey((DeeObject *)self, key);
 		result = NULL;
 	}
 	return result;
@@ -1576,7 +1577,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 dict_getitem(Dict *self, DeeObject *key) {
 	DREF DeeObject *result = dict_trygetitem(self, DeeObject key);
 	if unlikely(result == ITER_DONE) {
-		err_unknown_key((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey((DeeObject *)self, key);
 		result = NULL;
 	}
 	return result;
@@ -1586,7 +1587,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_getitem_index(Dict *self, size_t index) {
 	DREF DeeObject *result = dict_trygetitem_index(self, index);
 	if unlikely(result == ITER_DONE) {
-		err_unknown_key_int((DeeObject *)self, index);
+		DeeRT_ErrUnknownKeyInt((DeeObject *)self, index);
 		result = NULL;
 	}
 	return result;
@@ -1596,7 +1597,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 dict_getitem_string_hash(Dict *self, char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result = dict_trygetitem_string_hash(self, key, hash);
 	if unlikely(result == ITER_DONE) {
-		err_unknown_key_str((DeeObject *)self, key);
+		DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
 		result = NULL;
 	}
 	return result;
@@ -1606,7 +1607,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 dict_getitem_string_len_hash(Dict *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	DREF DeeObject *result = dict_trygetitem_string_len_hash(self, key, size_t keylen, hash);
 	if unlikely(result == ITER_DONE) {
-		err_unknown_key_str_len((DeeObject *)self, key, keylen);
+		DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
 		result = NULL;
 	}
 	return result;
@@ -2525,7 +2526,7 @@ dict_mh_seq_getitem_index_impl(Dict *__restrict self, size_t index, bool tryget)
 		DeeTuple_FreeUninitializedPair(result);
 		if (tryget)
 			return (DREF DeeTupleObject *)ITER_DONE;
-		err_index_out_of_bounds((DeeObject *)self, index, real_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, real_size);
 		goto err;
 	}
 	item = &_DeeDict_GetRealVTab(self)[index];
@@ -2547,7 +2548,7 @@ dict_mh_seq_delitem_index(Dict *__restrict self, size_t index) {
 	if unlikely(index >= self->d_vused) {
 		size_t real_size = self->d_vused;
 		DeeDict_LockEndWrite(self);
-		err_index_out_of_bounds((DeeObject *)self, index, real_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, real_size);
 		goto err;
 	}
 	if (_DeeDict_CanOptimizeVTab(self))
@@ -2607,7 +2608,7 @@ dict_mh_seq_setitem_index_impl_cb(void *arg, Dict *self,
 	if unlikely(data->dsqsii_index >= self->d_vused) {
 		size_t used = self->d_vused;
 		DeeDict_LockEndWrite(self);
-		err_index_out_of_bounds((DeeObject *)self, data->dsqsii_index, used);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, data->dsqsii_index, used);
 		return Dee_DICT_HTAB_EOF;
 	}
 	result = dict_unoptimize_vtab_index(self, data->dsqsii_index);
@@ -2690,7 +2691,7 @@ dict_mh_seq_insert_impl_cb(void *arg, Dict *self,
 	if unlikely(result >= self->d_vused) {
 		size_t used = self->d_vused;
 		DeeDict_LockEndWrite(self);
-		err_index_out_of_bounds((DeeObject *)self, result, used);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, result, used);
 		return Dee_DICT_HTAB_EOF;
 	}
 	result = dict_unoptimize_vtab_index(self, result);
@@ -2864,7 +2865,7 @@ dict_mh_seq_pop(Dict *self, Dee_ssize_t index) {
 	if unlikely((size_t)index >= self->d_vused) {
 		size_t real_size = self->d_vused;
 		DeeDict_LockEndWrite(self);
-		err_index_out_of_bounds((DeeObject *)self, (size_t)index, real_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, (size_t)index, real_size);
 		goto err_r;
 	}
 	if (_DeeDict_CanOptimizeVTab(self))

@@ -29,6 +29,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dict.h>
+#include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
@@ -764,7 +765,7 @@ udict_getitem(UDict *self, DeeObject *key) {
 			break;
 	}
 	UDict_LockEndRead(self);
-	err_unknown_key((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey((DeeObject *)self, key);
 	return NULL;
 }
 
@@ -826,7 +827,7 @@ udict_mh_pop(UDict *self, DeeObject *key) {
 			break;
 	}
 	UDict_LockEndWrite(self);
-	err_unknown_key((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey((DeeObject *)self, key);
 	return NULL;
 }
 
@@ -1894,7 +1895,7 @@ urodict_getitem(URoDict *self, DeeObject *key) {
 		if (USAME(item->di_key, key))
 			return_reference_(item->di_value); /* Found it! */
 	}
-	err_unknown_key((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey((DeeObject *)self, key);
 	return NULL;
 }
 

@@ -104,7 +104,7 @@ err:
 		if (has > 0) {
 			DeeRT_ErrUnboundKey(self, index);
 		} else if (has == 0) {
-			err_unknown_key(self, index);
+			DeeRT_ErrUnknownKey(self, index);
 		}
 		result = NULL;
 	}
@@ -114,7 +114,7 @@ err:
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem, self, index);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key(self, index);
+		DeeRT_ErrUnknownKey(self, index);
 		result = NULL;
 	}
 	return result;
@@ -137,7 +137,7 @@ tp_seq->tp_getitem_index([[nonnull]] DeeObject *self, size_t index)
 		DeeRT_ErrUnboundIndex(self, index);
 	return result;
 err_oob:
-	err_index_out_of_bounds(self, index, size);
+	DeeRT_ErrIndexOutOfBounds(self, index, size);
 err:
 	return NULL;
 }}
@@ -148,7 +148,7 @@ err:
 		if (has > 0) {
 			DeeRT_ErrUnboundKeyInt(self, index);
 		} else if (has == 0) {
-			err_unknown_key_int(self, index);
+			DeeRT_ErrUnknownKeyInt(self, index);
 		}
 		result = NULL;
 	}
@@ -169,7 +169,7 @@ err:
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key_int(self, index);
+		DeeRT_ErrUnknownKeyInt(self, index);
 		result = NULL;
 	}
 	return result;
@@ -191,7 +191,7 @@ tp_seq->tp_getitem_string_hash([[nonnull]] DeeObject *self,
 		if (has > 0) {
 			DeeRT_ErrUnboundKeyStr(self, key);
 		} else if (has == 0) {
-			err_unknown_key_str(self, key);
+			DeeRT_ErrUnboundKeyStr(self, key);
 		}
 		result = NULL;
 	}
@@ -212,7 +212,7 @@ err:
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_hash, self, key, hash);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key_str(self, key);
+		DeeRT_ErrUnboundKeyStr(self, key);
 		result = NULL;
 	}
 	return result;
@@ -279,7 +279,7 @@ tp_seq->tp_getitem_string_len_hash([[nonnull]] DeeObject *self,
 	             result = CALL_DEPENDENCY(tp_seq->tp_getitem_string_hash, self, zkey, hash));
 	return result;
 err_unknown:
-	err_unknown_key_str_len(self, key, keylen);
+	DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 err:
 	return NULL;
 }}
@@ -290,7 +290,7 @@ err:
 		if (has > 0) {
 			DeeRT_ErrUnboundKeyStrLen(self, key, keylen);
 		} else if (has == 0) {
-			err_unknown_key_str_len(self, key, keylen);
+			DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 		}
 		result = NULL;
 	}
@@ -311,7 +311,7 @@ err:
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self, key, keylen, hash);
 	if unlikely(result == ITER_DONE) {
 		/* Assume that there is no such thing as unbound indices */
-		err_unknown_key_str_len(self, key, keylen);
+		DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 		result = NULL;
 	}
 	return result;

@@ -931,6 +931,41 @@ INIT_CUSTOM_ERROR("IndexError", "(" IndexError_init_params ")",
                   TP_FNORMAL, &DeeError_KeyError, IndexError, NULL, &IndexError_print,
                   NULL, NULL, IndexError_members, NULL);
 
+/* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrIndexOutOfBounds)(DeeObject *seq, size_t index, size_t length) {
+	DREF IndexError *result = DeeObject_MALLOC(IndexError);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->ie_base.ke_base, &DeeError_IndexError);
+	result->ie_base.ke_base.e_message = NULL;
+	result->ie_base.ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ie_base.ke_base.ve_value, seq);
+	Dee_variant_init_size(&result->ie_base.ke_key, index);
+	Dee_variant_init_size(&result->ie_length, length);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
+(DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeObject *seq, DeeObject *index, DeeObject *length) {
+	DREF IndexError *result = DeeObject_MALLOC(IndexError);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->ie_base.ke_base, &DeeError_IndexError);
+	result->ie_base.ke_base.e_message = NULL;
+	result->ie_base.ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ie_base.ke_base.ve_value, seq);
+	Dee_variant_init_object(&result->ie_base.ke_key, index);
+	Dee_variant_init_object(&result->ie_length, length);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+
+
 
 /************************************************************************/
 /* Error.ValueError.SequenceError.KeyError.UnknownKey                   */
@@ -1207,11 +1242,6 @@ err:
 	return -1;
 }
 
-PUBLIC ATTR_COLD NONNULL((1)) int
-(DCALL DeeRT_ErrUnboundKeyInt)(DeeObject *seq, size_t key) {
-	return DeeRT_ErrUnboundItemInt(seq, key, true);
-}
-
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrUnboundKeyStr)(DeeObject *seq, char const *key) {
 	DREF DeeObject *keyob = DeeString_New(key);
@@ -1230,6 +1260,11 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	return DeeRT_ErrUnboundItemInherited(seq, keyob, true);
 err:
 	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrUnboundKeyInt)(DeeObject *seq, size_t key) {
+	return DeeRT_ErrUnboundItemInt(seq, key, true);
 }
 
 PUBLIC ATTR_COLD NONNULL((1)) int

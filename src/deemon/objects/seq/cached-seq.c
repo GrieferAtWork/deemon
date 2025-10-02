@@ -333,7 +333,7 @@ err_oob:
 		CachedSeq_WithIter_LockAcquire(self);
 		size = self->cswi_cache.ol_elemc;
 		CachedSeq_WithIter_LockRelease(self);
-		err_index_out_of_bounds((DeeObject *)self, index, size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, size);
 	}
 /*err:*/
 	return NULL;
@@ -1263,7 +1263,7 @@ cswgi_getitem(CachedSeq_WithGetItem *self, DeeObject *index) {
 		DREF DeeObject *sizeob = cswgi_sizeob(self);
 		if unlikely(!sizeob)
 			goto err;
-		err_index_out_of_bounds_ob((DeeObject *)self, index, sizeob);
+		DeeRT_ErrIndexOutOfBoundsObj((DeeObject *)self, index, sizeob);
 		Dee_Decref_unlikely(sizeob);
 		goto err;
 	}
@@ -1359,7 +1359,7 @@ cswgi_getitem_index(CachedSeq_WithGetItem *self, size_t index) {
 			goto err;
 		indexob = DeeInt_NewSize(index);
 		if likely(indexob) {
-			err_index_out_of_bounds_ob((DeeObject *)self, indexob, sizeob);
+			DeeRT_ErrIndexOutOfBoundsObj((DeeObject *)self, indexob, sizeob);
 			Dee_Decref_likely(indexob);
 		}
 		Dee_Decref_unlikely(sizeob);

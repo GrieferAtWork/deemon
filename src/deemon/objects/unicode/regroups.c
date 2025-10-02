@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
@@ -65,7 +66,7 @@ rg_getitem_index(ReGroups *__restrict self, size_t index) {
 		goto err_bounds;
 	return DeeRegexMatch_AsRangeObject(&self->rg_groups[index]);
 err_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, self->rg_ngroups);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rg_ngroups);
 	return NULL;
 }
 
@@ -152,7 +153,7 @@ rss_getitem_index(ReSubStrings *__restrict self, size_t index) {
 	                                 self->rss_baseown,
 	                                 self->rss_baseptr);
 err_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, self->rss_ngroups);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rss_ngroups);
 	return NULL;
 }
 
@@ -164,7 +165,7 @@ rsb_getitem_index(ReSubBytes *__restrict self, size_t index) {
 	                                self->rss_baseown,
 	                                self->rss_baseptr);
 err_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, self->rss_ngroups);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rss_ngroups);
 	return NULL;
 }
 

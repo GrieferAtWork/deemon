@@ -36,7 +36,7 @@ __seq_getitem__.seq_operator_getitem([[nonnull]] DeeObject *self,
 %{unsupported(auto("operator []"))}
 %{$none = return_none}
 %{$empty = {
-	err_index_out_of_bounds_ob(self, index);
+	DeeRT_ErrIndexOutOfBoundsObj(self, index, DeeInt_Zero);
 	return NULL;
 }}
 %{using seq_operator_getitem_index: {
@@ -61,7 +61,7 @@ err:
 	ASSERT(status == -1 || status == 0);
 	if (status < 0)
 		goto err;
-	err_index_out_of_bounds_ob(self, index);
+	DeeRT_ErrIndexOutOfBoundsObj(self, index, DeeInt_Zero);
 err:
 	return NULL;
 }} {
@@ -165,7 +165,7 @@ __seq_getitem__.seq_operator_getitem_index([[nonnull]] DeeObject *__restrict sel
 %{unsupported(auto("operator []"))}
 %{$none = return_none}
 %{$empty = {
-	err_index_out_of_bounds(self, index, 0);
+	DeeRT_ErrIndexOutOfBounds(self, index, 0);
 	return NULL;
 }}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_getitem_index_with_foreach)]] {
@@ -181,7 +181,7 @@ __seq_getitem__.seq_operator_getitem_index([[nonnull]] DeeObject *__restrict sel
 	}
 	return data.dsgiiwfd_result;
 err_bad_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, index - data.dsgiiwfd_nskip);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, index - data.dsgiiwfd_nskip);
 err:
 	return NULL;
 }}
@@ -201,7 +201,7 @@ err:
 	DeeRT_ErrUnboundIndex(self, index);
 	goto err;
 err_bad_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, size);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, size);
 err:
 	return NULL;
 }}
@@ -234,7 +234,7 @@ err_unbound:
 	DeeRT_ErrUnboundIndex(self, index);
 	goto err;
 err_bad_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, index - data.dsgiiwme_nskip);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, index - data.dsgiiwme_nskip);
 err:
 	return NULL;
 }}
@@ -252,7 +252,7 @@ err:
 		return data.dsgiiwsei_result;
 	}
 	if likely(status == 0)
-		err_index_out_of_bounds(self, index, data.dsgiiwsei_lastindex + 1);
+		DeeRT_ErrIndexOutOfBounds(self, index, data.dsgiiwsei_lastindex + 1);
 	return NULL;
 }} = $with__seq_operator_getitem;
 

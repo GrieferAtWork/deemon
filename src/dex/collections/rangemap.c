@@ -28,6 +28,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -466,7 +467,7 @@ rangemap_getitem(DeeObject *self, DeeObject *key) {
 	/* Check if a sub-class is overriding `operator iter'. If
 	 * not, then the mapping is empty for all we're concerned */
 	if (tp_self->tp_seq->tp_iter == &rangemap_iterself) {
-		err_unknown_key(self, key);
+		DeeRT_ErrUnknownKey(self, key);
 		goto err;
 	}
 
@@ -500,7 +501,7 @@ rangemap_getitem(DeeObject *self, DeeObject *key) {
 			goto err_iter;
 	}
 	if (item == ITER_DONE)
-		err_unknown_key(self, key);
+		DeeRT_ErrUnknownKey(self, key);
 err_iter:
 	Dee_Decref(iter);
 err:

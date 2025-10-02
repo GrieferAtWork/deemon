@@ -250,21 +250,15 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       tp, info3 ? info3->oi_sname : Q3);
 }
 
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_index_out_of_bounds)(DeeObject *__restrict self,
-                                size_t index, size_t size) {
-	ASSERT_OBJECT(self);
-	return DeeError_Throwf(&DeeError_IndexError,
-	                       "Index `%" PRFuSIZ "' lies outside the valid bounds "
-	                       "`0...%" PRFuSIZ "' of sequence of type `%k'",
-	                       index, size, Dee_TYPE(self));
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
 (DCALL err_index_out_of_bounds_ob)(DeeObject *self, DeeObject *index) {
-	return DeeError_Throwf(&DeeError_IndexError,
-	                       "Index `%r' lies outside the valid bounds `0...%R' of sequence of type `%k'",
-	                       index, DeeObject_SizeOb(self), Dee_TYPE(self));
+	int result;
+	DREF DeeObject *size_ob = DeeObject_SizeOb(self);
+	if unlikely(!size_ob)
+		return -1;
+	result = DeeRT_ErrIndexOutOfBoundsObj(self, index, size_ob);
+	Dee_Decref_unlikely(size_ob);
+	return result;
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
@@ -276,50 +270,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       "Index `%" PRFuSIZ "' lies outside the valid bounds `0...%" PRFuSIZ "' of varargs",
 	                       index, size);
 }
-
-INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
-(DCALL err_unknown_key)(DeeObject *map, DeeObject *key) {
-	ASSERT_OBJECT(map);
-	ASSERT_OBJECT(key);
-	return DeeRT_ErrUnknownKey(map, key);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int /* DEPRECATED! */
-(DCALL err_unknown_key_int)(DeeObject *map, size_t key) {
-	ASSERT_OBJECT(map);
-	return DeeRT_ErrUnknownKeyInt(map, key);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
-(DCALL err_unknown_key_str)(DeeObject *map, char const *key) {
-	ASSERT_OBJECT(map);
-	return DeeRT_ErrUnknownKeyStr(map, key);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
-(DCALL err_unknown_key_str_len)(DeeObject *map, char const *key, size_t keylen) {
-	ASSERT_OBJECT(map);
-	return DeeRT_ErrUnknownKeyStrLen(map, key, keylen);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
-(DCALL err_readonly_key)(DeeObject *self, DeeObject *key) {
-	ASSERT_OBJECT(self);
-	ASSERT_OBJECT(key);
-	return DeeRT_ErrReadOnlyKey(self, key);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int /* DEPRECATED! */
-(DCALL err_readonly_key_int)(DeeObject *self, size_t key) {
-	return DeeRT_ErrReadOnlyKeyInt(self, key);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
-(DCALL err_readonly_key_str)(DeeObject *self, char const *key) {
-	return DeeRT_ErrReadOnlyKeyStr(self, key);
-}
-
-
 
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_expected_single_character_string)(DeeObject *__restrict str) {
@@ -1070,7 +1020,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_index_not_found)(DeeObject *seq, DeeObject *item) {
 	ASSERT_OBJECT(seq);
-	return DeeError_Throwf(&DeeError_IndexError,
+	return DeeError_Throwf(&DeeError_IndexError, /* TODO: This needs to be a new "SequenceError.ItemNotFound" error */
 	                       "Could not locate item `%k' in sequence `%k'",
 	                       item, seq);
 }
@@ -1078,7 +1028,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_regex_index_not_found)(DeeObject *seq) {
 	ASSERT_OBJECT(seq);
-	return DeeError_Throwf(&DeeError_IndexError,
+	return DeeError_Throwf(&DeeError_IndexError, /* TODO: This needs to be a new "SequenceError.ItemNotFound" error */
 	                       "Could not locate regex pattern in string %r",
 	                       seq);
 }

@@ -56,32 +56,6 @@ DeeSystem_DEFINE_memcasemem(dee_memcasemem)
 /* GENERIC DEEMON ERROR THROWING                                        */
 /************************************************************************/
 
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_index_out_of_bounds)(DeeObject *__restrict self,
-                                size_t index, size_t size) {
-	ASSERT_OBJECT(self);
-	return DeeError_Throwf(&DeeError_IndexError,
-	                       "Index `%" PRFuSIZ "' lies outside the valid bounds "
-	                       "`0...%" PRFuSIZ "' of sequence of type `%k'",
-	                       index, size, Dee_TYPE(self));
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unknown_key_str)(DeeObject *__restrict map, char const *__restrict key) {
-	ASSERT_OBJECT(map);
-	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Could not find key `%s' in %k `%k'",
-	                       key, Dee_TYPE(map), map);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unknown_key_str_len)(DeeObject *__restrict map, char const *__restrict key, size_t keylen) {
-	ASSERT_OBJECT(map);
-	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Could not find key `%$s' in %k `%k'",
-	                       keylen, key, Dee_TYPE(map), map);
-}
-
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp,
                                      char const *__restrict name) {

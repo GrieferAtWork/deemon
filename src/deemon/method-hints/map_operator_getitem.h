@@ -63,7 +63,7 @@ __map_getitem__.map_operator_getitem([[nonnull]] DeeObject *self,
 %{unsupported(auto("operator []"))}
 %{$none = return_none}
 %{$empty = {
-	err_unknown_key(self, key);
+	DeeRT_ErrUnknownKey(self, key);
 	return NULL;
 }}
 %{using [map_operator_getitem_index, map_operator_getitem_string_len_hash]: {
@@ -134,7 +134,7 @@ err:
 	ASSERT(status == -1 || status == 0);
 	if (status < 0)
 		goto err;
-	err_unknown_key(self, key);
+	DeeRT_ErrUnknownKey(self, key);
 err:
 	return NULL;
 }} {
@@ -292,7 +292,7 @@ __map_getitem__.map_operator_getitem_index([[nonnull]] DeeObject *self, size_t k
 %{unsupported(auto("operator []"))}
 %{$none = return_none}
 %{$empty = {
-	err_unknown_key_int(self, key);
+	DeeRT_ErrUnknownKeyInt(self, key);
 	return NULL;
 }}
 %{using map_operator_getitem: {
@@ -400,7 +400,7 @@ __map_getitem__.map_operator_getitem_string_hash([[nonnull]] DeeObject *self,
 })}
 %{$none = return_none}
 %{$empty = {
-	err_unknown_key_str(self, key);
+	DeeRT_ErrUnboundKeyStr(self, key);
 	return NULL;
 }}
 %{$with__map_enumerate = [[prefix(DEFINE_default_map_getitem_string_hash_with_enumerate_cb)]] {
@@ -418,7 +418,7 @@ __map_getitem__.map_operator_getitem_string_hash([[nonnull]] DeeObject *self,
 	ASSERT(status == -1 || status == 0);
 	if (status < 0)
 		goto err;
-	err_unknown_key_str(self, key);
+	DeeRT_ErrUnboundKeyStr(self, key);
 err:
 	return NULL;
 }}
@@ -550,7 +550,7 @@ __map_getitem__.map_operator_getitem_string_len_hash([[nonnull]] DeeObject *self
 })}
 %{$none = return_none}
 %{$empty = {
-	err_unknown_key_str_len(self, key, keylen);
+	DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 	return NULL;
 }}
 %{$with__map_enumerate = [[prefix(DEFINE_default_map_getitem_string_len_hash_with_enumerate_cb)]] {
@@ -569,7 +569,7 @@ __map_getitem__.map_operator_getitem_string_len_hash([[nonnull]] DeeObject *self
 	ASSERT(status == -1 || status == 0);
 	if (status < 0)
 		goto err;
-	err_unknown_key_str(self, key);
+	DeeRT_ErrUnboundKeyStr(self, key);
 err:
 	return NULL;
 }}

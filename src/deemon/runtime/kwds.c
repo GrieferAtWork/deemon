@@ -27,6 +27,7 @@
 #include <deemon/cached-dict.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
@@ -609,7 +610,7 @@ kwds_getitem(Kwds *self, DeeObject *key) {
 		goto nope;
 	return DeeInt_NewSize(index);
 nope:
-	err_unknown_key((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey((DeeObject *)self, key);
 	return NULL;
 }
 
@@ -620,7 +621,7 @@ kwds_getitem_string_hash(Kwds *self, char const *key, Dee_hash_t hash) {
 		goto nope;
 	return DeeInt_NewSize(index);
 nope:
-	err_unknown_key_str((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
 	return NULL;
 }
 
@@ -631,7 +632,7 @@ kwds_getitem_string_len_hash(Kwds *self, char const *key, size_t keylen, Dee_has
 		goto nope;
 	return DeeInt_NewSize(index);
 nope:
-	err_unknown_key_str_len((DeeObject *)self, key, keylen);
+	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
 	return NULL;
 }
 
@@ -1273,7 +1274,7 @@ kmap_getitem(KwdsMapping *self, DeeObject *key) {
 		return result;
 	}
 nope:
-	err_unknown_key((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey((DeeObject *)self, key);
 	return NULL;
 }
 
@@ -1289,7 +1290,7 @@ kmap_getitem_string_hash(KwdsMapping *self, char const *key, Dee_hash_t hash) {
 		Dee_Incref(result);
 		return result;
 	}
-	err_unknown_key_str((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
 	return NULL;
 }
 
@@ -1305,7 +1306,7 @@ kmap_getitem_string_len_hash(KwdsMapping *self, char const *key, size_t keylen, 
 		Dee_Incref(result);
 		return result;
 	}
-	err_unknown_key_str_len((DeeObject *)self, key, keylen);
+	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
 	return NULL;
 }
 
@@ -1386,7 +1387,7 @@ kmap_getitemnr(DeeKwdsMappingObject *__restrict self,
 		DeeKwdsMapping_LockEndRead(self);
 		return result;
 	}
-	err_unknown_key((DeeObject *)self, name);
+	DeeRT_ErrUnknownKey((DeeObject *)self, name);
 	return NULL;
 }
 
@@ -1402,7 +1403,7 @@ kmap_getitemnr_string_hash(DeeKwdsMappingObject *__restrict self,
 		DeeKwdsMapping_LockEndRead(self);
 		return result;
 	}
-	err_unknown_key_str((DeeObject *)self, name);
+	DeeRT_ErrUnboundKeyStr((DeeObject *)self, name);
 	return NULL;
 }
 
@@ -1419,7 +1420,7 @@ kmap_getitemnr_string_len_hash(DeeKwdsMappingObject *__restrict self,
 		DeeKwdsMapping_LockEndRead(self);
 		return result;
 	}
-	err_unknown_key_str_len((DeeObject *)self, name, namelen);
+	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, name, namelen);
 	return NULL;
 }
 
@@ -1745,7 +1746,7 @@ DeeKwArgs_GetItemNR(DeeKwArgs *__restrict self,
 	DeeObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	if (!self->kwa_kw) {
-		err_unknown_key(Dee_EmptyRoDict, name);
+		DeeRT_ErrUnknownKey(Dee_EmptyRoDict, name);
 		return NULL;
 	}
 	if (DeeKwds_Check(self->kwa_kw)) {
@@ -1770,7 +1771,7 @@ DeeKwArgs_GetItemNRStringHash(DeeKwArgs *__restrict self,
                               Dee_hash_t hash) {
 	DeeObject *result;
 	if (!self->kwa_kw) {
-		err_unknown_key_str(Dee_EmptyRoDict, name);
+		DeeRT_ErrUnboundKeyStr(Dee_EmptyRoDict, name);
 		return NULL;
 	}
 	if (DeeKwds_Check(self->kwa_kw)) {
@@ -1795,7 +1796,7 @@ DeeKwArgs_GetItemNRStringLenHash(DeeKwArgs *__restrict self,
                                  size_t namelen, Dee_hash_t hash) {
 	DeeObject *result;
 	if (!self->kwa_kw) {
-		err_unknown_key_str(Dee_EmptyRoDict, name);
+		DeeRT_ErrUnboundKeyStr(Dee_EmptyRoDict, name);
 		return NULL;
 	}
 	++self->kwa_kwused;
@@ -1884,7 +1885,7 @@ DeeArg_GetKwNR(size_t argc, DeeObject *const *argv, DeeObject *kw,
                /*string*/ DeeObject *__restrict name) {
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	if (!kw) {
-		err_unknown_key(Dee_EmptyRoDict, name);
+		DeeRT_ErrUnknownKey(Dee_EmptyRoDict, name);
 		return NULL;
 	}
 	if (DeeKwds_Check(kw)) {
@@ -1910,7 +1911,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL
 DeeArg_GetKwNRStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
                          char const *__restrict name, Dee_hash_t hash) {
 	if (!kw) {
-		err_unknown_key_str(Dee_EmptyRoDict, name);
+		DeeRT_ErrUnboundKeyStr(Dee_EmptyRoDict, name);
 		return NULL;
 	}
 	if (DeeKwds_Check(kw)) {
@@ -1936,7 +1937,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL
 DeeArg_GetKwNRStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
                             char const *__restrict name, size_t namelen, Dee_hash_t hash) {
 	if (!kw) {
-		err_unknown_key_str_len(Dee_EmptyRoDict, name, namelen);
+		DeeRT_ErrUnknownKeyStrLen(Dee_EmptyRoDict, name, namelen);
 		return NULL;
 	}
 	if (DeeKwds_Check(kw)) {

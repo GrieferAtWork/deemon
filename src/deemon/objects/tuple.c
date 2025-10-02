@@ -854,9 +854,9 @@ tuple_iterator_init(TupleIterator *__restrict self,
 	Dee_Incref(self->ti_tuple);
 	return 0;
 err_bounds:
-	err_index_out_of_bounds((DeeObject *)self->ti_tuple,
-	                        self->ti_index,
-	                        DeeTuple_SIZE(self->ti_tuple));
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self->ti_tuple,
+	                          self->ti_index,
+	                          DeeTuple_SIZE(self->ti_tuple));
 err:
 	return -1;
 }
@@ -1178,8 +1178,8 @@ tuple_getitem(Tuple *self, DeeObject *index) {
 		goto err_bounds;
 	return_reference(DeeTuple_GET(self, i));
 err_bounds:
-	err_index_out_of_bounds((DeeObject *)self,
-	                        i, DeeTuple_SIZE(self));
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, i,
+	                          DeeTuple_SIZE(self));
 err:
 	return NULL;
 }
@@ -1239,7 +1239,7 @@ tuple_getitem_index(Tuple *__restrict self, size_t index) {
 		goto err_bounds;
 	return_reference(self->t_elem[index]);
 err_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, self->t_size);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->t_size);
 	return NULL;
 }
 
@@ -2454,7 +2454,7 @@ err_unbound:
 	DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 	return NULL;
 err_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, self->t_size);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->t_size);
 	return NULL;
 }
 

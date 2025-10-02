@@ -365,7 +365,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fl_getitem_index(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->fl_size) {
-		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_size);
 		goto err;
 	}
 	FixedList_LockRead(self);
@@ -437,7 +437,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 fl_delitem_index(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->fl_size) {
-		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_size);
 		goto err;
 	}
 	FixedList_LockRead(self);
@@ -454,7 +454,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 fl_setitem_index(FixedList *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->fl_size) {
-		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_size);
 		goto err;
 	}
 	Dee_Incref(value);
@@ -717,7 +717,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 fl_xchitem_index(FixedList *self, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->fl_size) {
-		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_size);
 		goto err;
 	}
 	FixedList_LockRead(self);
@@ -752,9 +752,9 @@ fl_mh_pop(FixedList *__restrict self, Dee_ssize_t index) {
 	}
 	return result;
 err_bounds:
-	err_index_out_of_bounds((DeeObject *)self,
-	                        (size_t)index,
-	                        self->fl_size);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self,
+	                          (size_t)index,
+	                          self->fl_size);
 	return NULL;
 }
 

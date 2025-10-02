@@ -576,7 +576,7 @@ DeeList_Pop(DeeObject *__restrict self, Dee_ssize_t index) {
 		index += length;
 	if unlikely((size_t)index >= length) {
 		DeeList_LockEndWrite(me);
-		err_index_out_of_bounds((DeeObject *)me, (size_t)index, length);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)me, (size_t)index, length);
 		return NULL;
 	}
 	delob = DeeList_GET(me, (size_t)index);
@@ -1149,7 +1149,7 @@ list_getitem(List *me, DeeObject *index) {
 	if unlikely(i >= DeeList_SIZE(me)) {
 		size_t list_size = DeeList_SIZE(me);
 		DeeList_LockEndRead(me);
-		err_index_out_of_bounds((DeeObject *)me, i, list_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)me, i, list_size);
 		goto err;
 	}
 	result = DeeList_GET(me, i);
@@ -1302,9 +1302,7 @@ list_delitem_index(List *__restrict me, size_t index) {
 	return 0;
 unlock_and_err_index:
 	DeeList_LockEndWrite(me);
-	return err_index_out_of_bounds((DeeObject *)me,
-	                               index,
-	                               length);
+	return DeeRT_ErrIndexOutOfBounds((DeeObject *)me, index, length);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1334,9 +1332,7 @@ list_setitem_index(List *me, size_t index, DeeObject *value) {
 unlock_and_err_index:
 		length = DeeList_SIZE(me);
 		DeeList_LockEndWrite(me);
-		return err_index_out_of_bounds((DeeObject *)me,
-		                               index,
-		                               length);
+		return DeeRT_ErrIndexOutOfBounds((DeeObject *)me, index, length);
 	}
 }
 
@@ -2317,7 +2313,7 @@ list_getitem_index(List *__restrict me, size_t index) {
 	if unlikely(index >= DeeList_SIZE(me)) {
 		size_t list_size = DeeList_SIZE(me);
 		DeeList_LockEndRead(me);
-		err_index_out_of_bounds((DeeObject *)me, index, list_size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)me, index, list_size);
 		return NULL;
 	}
 	result = DeeList_GET(me, index);
@@ -2344,10 +2340,10 @@ PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 list_xchitem_index(List *me, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
 	DeeList_LockWrite(me);
-	if (index >= DeeList_SIZE(me)) {
+	if unlikely(index >= DeeList_SIZE(me)) {
 		size_t my_length = DeeList_SIZE(me);
 		DeeList_LockEndWrite(me);
-		err_index_out_of_bounds((DeeObject *)me, index, my_length);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)me, index, my_length);
 		return NULL;
 	}
 	Dee_Incref(value);

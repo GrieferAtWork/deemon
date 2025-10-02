@@ -29,6 +29,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
@@ -397,7 +398,7 @@ sseg_getitem_index(StringSegments *__restrict self, size_t index) {
 	index *= self->s_siz;
 	return string_getsubstr(self->s_str, index, index + self->s_siz);
 err_index:
-	err_index_out_of_bounds((DeeObject *)self, index, length);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, length);
 	return NULL;
 }
 

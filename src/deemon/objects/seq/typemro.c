@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -562,7 +563,7 @@ typemro_getitem_index(TypeMRO *__restrict self, size_t index) {
 			return_reference_(iter);
 		++position;
 	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
-	err_index_out_of_bounds((DeeObject *)self, index, position);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, position);
 	return NULL;
 }
 
@@ -594,7 +595,7 @@ typebases_getitem_index(TypeMRO *__restrict self, size_t index) {
 			return_reference_(iter);
 		++position;
 	}
-	err_index_out_of_bounds((DeeObject *)self, index, position);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, position);
 	return NULL;
 }
 

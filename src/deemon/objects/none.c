@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/bool.h>
+#include <deemon/error-rt.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
 #include <deemon/mro.h>
@@ -241,7 +242,7 @@ DeeNone_OperatorNe(DeeObject *UNUSED(self), DeeObject *other) {
 PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeNone_OperatorGetItemNR(DeeObject *__restrict UNUSED(self),
                           /*string*/ DeeObject *__restrict key) {
-	err_unknown_key(Dee_None, key);
+	DeeRT_ErrUnknownKey(Dee_None, key);
 	return NULL;
 }
 
@@ -249,7 +250,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeNone_OperatorGetItemNRStringHash(DeeObject *__restrict UNUSED(self),
                                     char const *__restrict key,
                                     Dee_hash_t UNUSED(hash)) {
-	err_unknown_key_str(Dee_None, key);
+	DeeRT_ErrUnboundKeyStr(Dee_None, key);
 	return NULL;
 }
 
@@ -257,7 +258,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeNone_OperatorGetItemNRStringLenHash(DeeObject *__restrict UNUSED(self),
                                        char const *__restrict key,
                                        size_t keylen, Dee_hash_t UNUSED(hash)) {
-	err_unknown_key_str_len(Dee_None, key, keylen);
+	DeeRT_ErrUnknownKeyStrLen(Dee_None, key, keylen);
 	return NULL;
 }
 

@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
@@ -1290,7 +1291,7 @@ scv_getitem_index(SeqCombinationsView *__restrict self, size_t index) {
 	index = idx[index];
 	return DeeObject_InvokeMethodHint(seq_operator_getitem_index, self->scv_com->sc_seq, index);
 err_oob:
-	err_index_out_of_bounds((DeeObject *)self, index, self->scv_com->sc_rparam);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->scv_com->sc_rparam);
 	return NULL;
 }
 

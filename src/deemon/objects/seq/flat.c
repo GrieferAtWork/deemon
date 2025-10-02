@@ -569,7 +569,7 @@ sf_getitem_index(SeqFlat *__restrict self, size_t index) {
 		size_t size = sf_size(self);
 		if unlikely(size == (size_t)-1)
 			goto err;
-		err_index_out_of_bounds((DeeObject *)self, index, size);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, size);
 		goto err;
 	}
 #ifndef NDEBUG
@@ -598,7 +598,7 @@ sf_getitem_index(SeqFlat *__restrict self, size_t index) {
 	}
 	if unlikely(status < 0)
 		goto err;
-	err_index_out_of_bounds((DeeObject *)self, index, data.sfeid_index);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, data.sfeid_index);
 err:
 	return NULL;
 }
@@ -650,7 +650,7 @@ sf_interact_withitem(SeqFlat *__restrict self, size_t index,
 	if unlikely(status < 0)
 		goto err;
 	/* Item not found -> index must be out-of-bounds */
-	err_index_out_of_bounds((DeeObject *)self, index, data.sfiwid_count);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, data.sfiwid_count);
 err:
 	return -1;
 }

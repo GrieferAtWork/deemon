@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -101,8 +102,8 @@ stringordinals_getitem_index(StringOrdinals *__restrict self, size_t index) {
 	}
 	__builtin_unreachable();
 err_oob:
-	err_index_out_of_bounds((DeeObject *)self, index,
-	                        WSTR_LENGTH(self->so_ptr.ptr));
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+	                          WSTR_LENGTH(self->so_ptr.ptr));
 	return NULL;
 }
 

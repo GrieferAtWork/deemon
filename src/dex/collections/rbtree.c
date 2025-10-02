@@ -28,6 +28,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/format.h>
@@ -1792,7 +1793,7 @@ rbtree_getitem(RBTree *self, DeeObject *key) {
 	DREF DeeObject *result;
 	result = rbtree_trygetitem(self, key);
 	if unlikely(result == ITER_DONE) {
-		err_unknown_key((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey((DeeObject *)self, key);
 		result = NULL;
 	}
 	return result;

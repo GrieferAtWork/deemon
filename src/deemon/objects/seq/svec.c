@@ -312,7 +312,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rvec_getitem_index(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->rv_length) {
-		err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rv_length);
 		return NULL;
 	}
 	RefVector_XLockRead(self);
@@ -331,7 +331,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_delitem_index(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *oldobj;
 	if unlikely(index >= self->rv_length)
-		return err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
+		return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rv_length);
 	if unlikely(!RefVector_IsWritable(self))
 		return err_readonly_rvec();
 	RefVector_LockWrite(self);
@@ -347,7 +347,7 @@ rvec_setitem_index(RefVector *self, size_t index,
                  DeeObject *value) {
 	DREF DeeObject *oldobj;
 	if unlikely(index >= self->rv_length)
-		return err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
+		return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rv_length);
 	if unlikely(!RefVector_IsWritable(self))
 		return err_readonly_rvec();
 	Dee_Incref(value);
@@ -385,7 +385,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 rvec_xchitem_index(RefVector *self, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->rv_length) {
-		err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rv_length);
 		goto err;
 	}
 	if unlikely(!RefVector_IsWritable(self)) {
@@ -992,7 +992,7 @@ svec_getitem_index(SharedVector *__restrict self, size_t index) {
 	if unlikely(index >= self->sv_length) {
 		size_t my_length = self->sv_length;
 		SharedVector_LockEndRead(self);
-		err_index_out_of_bounds((DeeObject *)self, index, my_length);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, my_length);
 		return NULL;
 	}
 	result = self->sv_vector[index];

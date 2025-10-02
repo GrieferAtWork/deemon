@@ -933,9 +933,7 @@ INTDEF DeeTypeObject BitsetIterator_Type;
 
 
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_empty_sequence)(DeeObject *__restrict seq);
-INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_index_out_of_bounds)(DeeObject *__restrict self, size_t index, size_t size);
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_changed_sequence)(DeeObject *__restrict seq);
-INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_key)(DeeObject *__restrict map, DeeObject *__restrict key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp, char const *__restrict name);
 INTERN ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_attribute_string)(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name);

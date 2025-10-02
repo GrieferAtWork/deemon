@@ -48,19 +48,8 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_cannot_weak_reference(DeeObject *__r
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_reference_loop(DeeObject *a, DeeObject *b);
 INTDEF ATTR_COLD int DCALL err_cannot_lock_weakref(void);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_bytes_not_writable(DeeObject *__restrict bytes_ob);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_index_out_of_bounds(DeeObject *__restrict self, size_t index, size_t size);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_index_out_of_bounds_ob(DeeObject *self, DeeObject *index);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_va_index_out_of_bounds(struct function_object *__restrict func, size_t index, size_t size);
-
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key(DeeObject *map, DeeObject *key);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_key_int(DeeObject *map, size_t key);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key_str(DeeObject *map, char const *key);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key_str_len(DeeObject *map, char const *key, size_t keylen);
-
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_readonly_key(DeeObject *self, DeeObject *key);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_readonly_key_int(DeeObject *self, size_t key);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_readonly_key_str(DeeObject *self, char const *key);
-
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_single_character_string(DeeObject *__restrict str);
 #define xcheck_empty_keywords(kw) (!(kw) ? 0 : check_empty_keywords(kw))
 INTDEF NONNULL((1, 2)) int DFCALL check_empty_keywords(DeeObject *kw, DeeTypeObject *tp_self);
@@ -165,12 +154,8 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_reference_loop(a, b)                                                                          Dee_ASSUMED_VALUE(err_reference_loop(a, b), -1)
 #define err_cannot_lock_weakref()                                                                         Dee_ASSUMED_VALUE(err_cannot_lock_weakref(), -1)
 #define err_bytes_not_writable(bytes_ob)                                                                  Dee_ASSUMED_VALUE(err_bytes_not_writable(bytes_ob), -1)
-#define err_index_out_of_bounds(self, index, size)                                                        Dee_ASSUMED_VALUE(err_index_out_of_bounds(self, index, size), -1)
 #define err_index_out_of_bounds_ob(self, index)                                                           Dee_ASSUMED_VALUE(err_index_out_of_bounds_ob(self, index), -1)
 #define err_va_index_out_of_bounds(func, index, size)                                                     Dee_ASSUMED_VALUE(err_va_index_out_of_bounds(func, index, size), -1)
-#define err_readonly_key(self, key)                                                                       Dee_ASSUMED_VALUE(err_readonly_key(self, key), -1)
-#define err_readonly_key_int(self, key)                                                                   Dee_ASSUMED_VALUE(err_readonly_key_int(self, key), -1)
-#define err_readonly_key_str(self, key)                                                                   Dee_ASSUMED_VALUE(err_readonly_key_str(self, key), -1)
 #define err_expected_single_character_string(str)                                                         Dee_ASSUMED_VALUE(err_expected_single_character_string(str), -1)
 #define err_keywords_not_accepted(tp_self, kw)                                                            Dee_ASSUMED_VALUE(err_keywords_not_accepted(tp_self, kw), -1)
 #define err_keywords_func_not_accepted_string(tp_self, name, kw)                                          Dee_ASSUMED_VALUE(err_keywords_func_not_accepted_string(tp_self, name, kw), -1)
@@ -206,10 +191,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_invalid_class_addr(tp_self, addr)                                                             Dee_ASSUMED_VALUE(err_invalid_class_addr(tp_self, addr), -1)
 #define err_invalid_instance_addr(tp_self, self, addr)                                                    Dee_ASSUMED_VALUE(err_invalid_instance_addr(tp_self, self, addr), -1)
 #define err_invalid_refs_size(code, num_refs)                                                             Dee_ASSUMED_VALUE(err_invalid_refs_size(code, num_refs), -1)
-#define err_unknown_key(map, key)                                                                         Dee_ASSUMED_VALUE(err_unknown_key(map, key), -1)
-#define err_unknown_key_int(map, key)                                                                     Dee_ASSUMED_VALUE(err_unknown_key_int(map, key), -1)
-#define err_unknown_key_str(map, key)                                                                     Dee_ASSUMED_VALUE(err_unknown_key_str(map, key), -1)
-#define err_unknown_key_str_len(map, key, keylen)                                                         Dee_ASSUMED_VALUE(err_unknown_key_str_len(map, key, keylen), -1)
 #define err_empty_sequence(seq)                                                                           Dee_ASSUMED_VALUE(err_empty_sequence(seq), -1)
 #define err_changed_sequence(seq)                                                                         Dee_ASSUMED_VALUE(err_changed_sequence(seq), -1)
 #define err_item_not_found(seq, item)                                                                     Dee_ASSUMED_VALUE(err_item_not_found(seq, item), -1)

@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -712,10 +713,10 @@ do_compare_positive:
 	if unlikely(error != 0) {
 		if unlikely(error < 0)
 			goto err;
-		goto oob;
+		goto err_oob;
 	}
 	return result;
-oob:
+err_oob:
 	err_index_out_of_bounds_ob((DeeObject *)self, index);
 err:
 	return NULL;
@@ -1384,8 +1385,8 @@ intrange_getitem_index(IntRange *__restrict self, size_t index) {
 		goto oob;
 	return DeeInt_NewSSize(result);
 oob:
-	err_index_out_of_bounds((DeeObject *)self, index,
-	                        intrange_size(self));
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+	                          intrange_size(self));
 	return NULL;
 }
 

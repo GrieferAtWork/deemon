@@ -25,6 +25,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/code.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
@@ -113,7 +114,7 @@ f_builtin_bounditem(size_t argc, DeeObject *const *argv) {
 	switch (DeeObject_BoundItem(self, key)) {
 	default:
 		if unlikely(!allow_missing) {
-			err_unknown_key(self, key);
+			DeeRT_ErrUnknownKey(self, key);
 			goto err;
 		}
 		ATTR_FALLTHROUGH

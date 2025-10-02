@@ -2490,7 +2490,7 @@ err_unbound:
 	DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 	return NULL;
 err_index:
-	err_index_out_of_bounds((DeeObject *)self, index, self->ot_size);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->ot_size);
 	return NULL;
 }
 
@@ -2517,7 +2517,7 @@ ot_delitem_index(ObjectTable *__restrict self, size_t index) {
 	Dee_XDecref(oldval);
 	return 0;
 err_index:
-	return err_index_out_of_bounds((DeeObject *)self, index, self->ot_size);
+	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->ot_size);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
@@ -2533,7 +2533,7 @@ ot_setitem_index(ObjectTable *self, size_t index, DeeObject *value) {
 	Dee_XDecref(oldval);
 	return 0;
 err_index:
-	return err_index_out_of_bounds((DeeObject *)self, index, self->ot_size);
+	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->ot_size);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2564,7 +2564,7 @@ err_unbound:
 	DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 	goto err;
 err_index:
-	err_index_out_of_bounds((DeeObject *)self, index, self->ot_size);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->ot_size);
 err:
 	return NULL;
 }

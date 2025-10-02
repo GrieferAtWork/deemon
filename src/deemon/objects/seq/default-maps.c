@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/gc.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
@@ -1009,7 +1010,7 @@ mi_getitem(MapIntersection *__restrict self, DeeObject *key) {
 	}
 	return DeeObject_InvokeMethodHint(map_operator_getitem, self->mi_map, key);
 err_key:
-	err_unknown_key((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -1434,7 +1435,7 @@ md_getitem(MapDifference *self, DeeObject *key) {
 	if unlikely(in_keys != 0) {
 		if unlikely(in_keys < 0)
 			goto err;
-		err_unknown_key((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey((DeeObject *)self, key);
 		goto err;
 	}
 	return DeeObject_InvokeMethodHint(map_operator_getitem, self->md_map, key);
@@ -1832,7 +1833,7 @@ msd_getitem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 	return result;
 err_key_r:
 	Dee_Decref(result);
-	err_unknown_key((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -1921,7 +1922,7 @@ msd_getitem_index(MapSymmetricDifference *__restrict self, size_t key) {
 	return result;
 err_key_r:
 	Dee_Decref(result);
-	err_unknown_key_int((DeeObject *)self, key);
+	DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -2011,7 +2012,7 @@ msd_getitem_string_hash(MapSymmetricDifference *__restrict self,
 	return result;
 err_key_r:
 	Dee_Decref(result);
-	err_unknown_key_str((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -2104,7 +2105,7 @@ msd_getitem_string_len_hash(MapSymmetricDifference *__restrict self,
 	return result;
 err_key_r:
 	Dee_Decref(result);
-	err_unknown_key_str((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
 err:
 	return NULL;
 }

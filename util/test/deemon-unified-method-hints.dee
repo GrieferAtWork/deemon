@@ -102,7 +102,7 @@ class SupportedSeq: Sequence {
 		case 1: return "second";
 		case 2: return "third";
 		default:
-			throw IndexError();
+			throw IndexError(seq: this, index: index, length: 3);
 		}
 	}
 }

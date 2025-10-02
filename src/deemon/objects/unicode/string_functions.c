@@ -1481,9 +1481,8 @@ string_ord(String *self, size_t argc, DeeObject *const *argv) {
 		if (DeeArg_Unpack(argc, argv, UNPuSIZ ":ord", &index))
 			goto err;
 		if (index >= DeeString_WLEN(self)) {
-			err_index_out_of_bounds((DeeObject *)self,
-			                        index,
-			                        DeeString_WLEN(self));
+			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+			                          DeeString_WLEN(self));
 			goto err;
 		}
 	} else if unlikely(DeeString_WLEN(self) != 1) {
@@ -1534,9 +1533,8 @@ err:
 			if (DeeObject_AsSize(argv[0], &start))                     \
 				goto err;                                              \
 			if unlikely(start >= DeeString_WLEN(self)) {               \
-				err_index_out_of_bounds((DeeObject *)self,             \
-				                        start,                         \
-				                        DeeString_WLEN(self));         \
+				DeeRT_ErrIndexOutOfBounds((DeeObject *)self, start,    \
+				                          DeeString_WLEN(self));       \
 				goto err;                                              \
 			}                                                          \
 			ch = DeeString_GetChar(self, start);                       \
@@ -1625,8 +1623,8 @@ string_asdigit(String *self, size_t argc, DeeObject *const *argv) {
 		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asdigit", &index, &defl))
 			goto err;
 		if unlikely(index >= DeeString_WLEN(self)) {
-			err_index_out_of_bounds((DeeObject *)self, index,
-			                        DeeString_WLEN(self));
+			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+			                          DeeString_WLEN(self));
 			goto err;
 		}
 		ch = DeeString_GetChar(self, index);
@@ -1664,8 +1662,8 @@ string_asxdigit(String *self, size_t argc, DeeObject *const *argv) {
 		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asxdigit", &index, &defl))
 			goto err;
 		if unlikely(index >= DeeString_WLEN(self)) {
-			err_index_out_of_bounds((DeeObject *)self, index,
-			                        DeeString_WLEN(self));
+			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+			                          DeeString_WLEN(self));
 			goto err;
 		}
 		ch = DeeString_GetChar(self, index);
@@ -1704,8 +1702,8 @@ string_asnumeric(String *self, size_t argc, DeeObject *const *argv) {
 		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asnumeric", &index, &defl))
 			goto err;
 		if unlikely(index >= DeeString_WLEN(self)) {
-			err_index_out_of_bounds((DeeObject *)self, index,
-			                        DeeString_WLEN(self));
+			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+			                          DeeString_WLEN(self));
 			goto err;
 		}
 		ch = DeeString_GetChar(self, index);

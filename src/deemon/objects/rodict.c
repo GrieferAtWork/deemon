@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/dict.h>
+#include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
@@ -1185,7 +1186,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 rodict_getitemnr(RoDict *self, DeeObject *key) {
 	DeeObject *result = rodict_trygetitemnr(self, key);
 	if unlikely(result == ITER_DONE) {
-		err_unknown_key((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey((DeeObject *)self, key);
 		result = NULL;
 	}
 	return result;
@@ -1197,7 +1198,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 rodict_getitemnr_string_hash(RoDict *self, char const *key, Dee_hash_t hash) {
 	DeeObject *result = rodict_trygetitemnr_string_hash(self, key, hash);
 	if unlikely(result == ITER_DONE) {
-		err_unknown_key_str((DeeObject *)self, key);
+		DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
 		result = NULL;
 	}
 	return result;
@@ -1209,7 +1210,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 rodict_getitemnr_string_len_hash(RoDict *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	DeeObject *result = rodict_trygetitemnr_string_len_hash(self, key, keylen, hash);
 	if unlikely(result == ITER_DONE) {
-		err_unknown_key_str_len((DeeObject *)self, key, keylen);
+		DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
 		result = NULL;
 	}
 	return result;
@@ -1264,7 +1265,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_getitem_index(RoDict *self, size_t key) {
 	DREF DeeObject *result = rodict_trygetitem_index(self, key);
 	if unlikely(result == ITER_DONE) {
-		err_unknown_key_int((DeeObject *)self, key);
+		DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
 		result = NULL;
 	}
 	return result;
@@ -1706,7 +1707,7 @@ rodict_mh_seq_getitem_index(RoDict *__restrict self, size_t index) {
 	Dee_Incref(result->t_elem[1]);
 	return result;
 err_oob:
-	err_index_out_of_bounds((DeeObject *)self, index, self->rd_vsize);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rd_vsize);
 err:
 	return NULL;
 }

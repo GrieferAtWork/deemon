@@ -38,7 +38,7 @@ __map_setitem__.map_operator_setitem([[nonnull]] DeeObject *self,
 %{$none = 0}
 %{$empty = {
 	(void)value;
-	return err_unknown_key(self, key);
+	return DeeRT_ErrUnknownKey(self, key);
 }}
 %{using [map_operator_setitem_index, map_operator_setitem_string_len_hash]: {
 	size_t key_value;
@@ -204,7 +204,7 @@ __map_setitem__.map_operator_setitem_index([[nonnull]] DeeObject *self, size_t k
 %{$none = 0}
 %{$empty = {
 	(void)value;
-	return err_unknown_key_int(self, key);
+	return DeeRT_ErrUnknownKeyInt(self, key);
 }}
 %{using map_operator_setitem: {
 	int result;
@@ -242,7 +242,7 @@ __map_setitem__.map_operator_setitem_string_hash([[nonnull]] DeeObject *self,
 %{$empty = {
 	(void)hash;
 	(void)value;
-	return err_unknown_key_str(self, key);
+	return DeeRT_ErrUnboundKeyStr(self, key);
 }}
 %{using map_operator_setitem: {
 	int result;
@@ -281,7 +281,7 @@ __map_setitem__.map_operator_setitem_string_len_hash([[nonnull]] DeeObject *self
 %{$empty = {
 	(void)hash;
 	(void)value;
-	return err_unknown_key_str_len(self, key, keylen);
+	return DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 }}
 %{using map_operator_setitem: {
 	int result;

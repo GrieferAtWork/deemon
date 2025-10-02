@@ -1236,7 +1236,7 @@ bytes_getitem_index(Bytes *__restrict self, size_t index) {
 	return DeeInt_NewUInt8(value);
 #endif /* !DeeInt_8bit */
 err_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, DeeBytes_SIZE(self));
 	return NULL;
 }
 
@@ -1258,7 +1258,7 @@ bytes_getitem_index_fast(Bytes *__restrict self, size_t index) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytes_delitem_index(Bytes *__restrict self, size_t index) {
 	if unlikely(index >= DeeBytes_SIZE(self)) {
-		err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, DeeBytes_SIZE(self));
 		goto err;
 	}
 	if unlikely(!DeeBytes_WRITABLE(self))
@@ -1277,7 +1277,7 @@ bytes_setitem_index(Bytes *self, size_t index, DeeObject *value) {
 	if (DeeObject_AsByte(value, &val))
 		goto err;
 	if unlikely(index >= DeeBytes_SIZE(self)) {
-		err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, DeeBytes_SIZE(self));
 		goto err;
 	}
 	if unlikely(!DeeBytes_WRITABLE(self))

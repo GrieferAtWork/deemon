@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -1675,7 +1676,7 @@ string_getitem_index(String *__restrict self, size_t index) {
 
 	}
 err_oob:
-	err_index_out_of_bounds((DeeObject *)self, index, len);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, len);
 	return NULL;
 }
 
@@ -2129,7 +2130,7 @@ string_getitem(String *self, DeeObject *index) {
 
 	}
 err_oob:
-	err_index_out_of_bounds((DeeObject *)self, i, len);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, i, len);
 err:
 	return NULL;
 }

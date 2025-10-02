@@ -466,8 +466,8 @@ repeat_getitem(Repeat *self, DeeObject *index_ob) {
 	if unlikely(seq_size == (size_t)-1)
 		goto err;
 	if unlikely(index >= seq_size * self->rp_num) {
-		err_index_out_of_bounds((DeeObject *)self, index,
-		                        seq_size * self->rp_num);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+		                          seq_size * self->rp_num);
 		goto err;
 	}
 	index %= seq_size;
@@ -509,8 +509,8 @@ repeat_getitem_index(Repeat *__restrict self, size_t index) {
 	if unlikely(seq_size == (size_t)-1)
 		goto err;
 	if unlikely(index >= seq_size * self->rp_num) {
-		err_index_out_of_bounds((DeeObject *)self, index,
-		                        seq_size * self->rp_num);
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+		                          seq_size * self->rp_num);
 		goto err;
 	}
 	index %= seq_size;
@@ -948,7 +948,7 @@ repeatitem_getitem_index(RepeatItem *__restrict self, size_t index) {
 		goto err_bounds;
 	return_reference_(self->rpit_obj);
 err_bounds:
-	err_index_out_of_bounds((DeeObject *)self, index, self->rpit_num);
+	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rpit_num);
 /*err:*/
 	return NULL;
 }

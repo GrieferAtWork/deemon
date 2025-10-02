@@ -52,26 +52,6 @@ err_empty_sequence(DeeObject *__restrict seq) {
 	                       Dee_TYPE(seq));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int DCALL
-err_index_out_of_bounds(DeeObject *__restrict self,
-                        size_t index, size_t size) {
-	ASSERT_OBJECT(self);
-	ASSERT(index >= size);
-	return DeeError_Throwf(&DeeError_IndexError,
-	                       "Index `%" PRFuSIZ "' lies outside the valid bounds "
-	                       "`0...%" PRFuSIZ "' of sequence of type `%k'",
-	                       index, size, Dee_TYPE(self));
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
-err_unknown_key(DeeObject *__restrict map, DeeObject *__restrict key) {
-	ASSERT_OBJECT(map);
-	ASSERT_OBJECT(key);
-	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Could not find key `%k' in %k `%k'",
-	                       key, Dee_TYPE(map), map);
-}
-
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp,
                                      char const *__restrict name) {
