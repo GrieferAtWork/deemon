@@ -2451,7 +2451,7 @@ nullable_tuple_getitem_index(Tuple *__restrict self, size_t index) {
 		goto err_unbound;
 	return_reference(self->t_elem[index]);
 err_unbound:
-	err_unbound_index((DeeObject *)self, index);
+	DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 	return NULL;
 err_bounds:
 	err_index_out_of_bounds((DeeObject *)self, index, self->t_size);

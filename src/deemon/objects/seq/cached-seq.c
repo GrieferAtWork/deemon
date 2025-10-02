@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -1255,7 +1256,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cswgi_getitem(CachedSeq_WithGetItem *self, DeeObject *index) {
 	DREF DeeObject *result = cswgi_getitem_object_ex(self, index);
 	if unlikely(result == CSWGI_GETITEM_UNBOUND) {
-		err_unbound_index_ob((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndexObj((DeeObject *)self, index);
 		goto err;
 	}
 	if unlikely(result == CSWGI_GETITEM_OOB) {
@@ -1348,7 +1349,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cswgi_getitem_index(CachedSeq_WithGetItem *self, size_t index) {
 	DREF DeeObject *result = cswgi_getitem_index_ex(self, index);
 	if unlikely(result == CSWGI_GETITEM_UNBOUND) {
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		goto err;
 	}
 	if unlikely(result == CSWGI_GETITEM_OOB) {

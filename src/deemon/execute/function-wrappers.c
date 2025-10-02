@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -336,7 +337,7 @@ funcstatics_getitem_index(FunctionStatics *__restrict self, size_t index) {
 	if unlikely(!ITER_ISOK(result)) {
 		DeeFunction_RefLockEndRead(func);
 		index -= code->co_refc;
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		return NULL;
 	}
 	Dee_Incref(result);
@@ -430,7 +431,7 @@ funcstatics_mh_seq_xchitem_index(FunctionStatics *self, size_t index, DeeObject 
 	if unlikely(!ITER_ISOK(oldval)) {
 		DeeFunction_RefLockEndWrite(func);
 		index -= code->co_refc;
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		Dee_Decref_unlikely(value);
 		return NULL;
 	}
@@ -1314,8 +1315,8 @@ err:
 PRIVATE NONNULL((1)) int DCALL
 err_funcsymbolsbyname_rid_unbound(FunctionSymbolsByName *self, uint16_t rid) {
 	char const *name = DeeCode_GetRSymbolName((DeeObject *)self->fsbn_func->fo_code, rid);
-	return name ? err_unbound_key_str((DeeObject *)self, name)
-	            : err_unbound_key_int((DeeObject *)self, rid - self->fsbn_rid_start);
+	return name ? DeeRT_ErrUnboundKeyStr((DeeObject *)self, name)
+	            : DeeRT_ErrUnboundKeyInt((DeeObject *)self, rid - self->fsbn_rid_start);
 }
 
 PRIVATE NONNULL((1)) int DCALL
@@ -2611,7 +2612,7 @@ yfuncsymbolsbyname_getitem(YieldFunctionSymbolsByName *self,
 		goto err;
 	result = YieldFunction_TryGetSymbol(self->yfsbn_yfunc, symid);
 	if unlikely(!result)
-		err_unbound_key((DeeObject *)self, key);
+		DeeRT_ErrUnboundKey((DeeObject *)self, key);
 	return result;
 err:
 	return NULL;
@@ -2986,7 +2987,7 @@ use_default:
 		result = code->co_defaultv[index - code->co_argc_min];
 		if (!result) {
 			DeeFrame_LockEndRead((DeeObject *)self->fa_frame);
-			err_unbound_index((DeeObject *)self, index);
+			DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 			goto err;
 		}
 	}
@@ -3228,7 +3229,7 @@ framelocals_getitem_index(FrameLocals *__restrict self, size_t index) {
 	result = frame->cf_frame[index];
 	if unlikely(!result) {
 		DeeFrame_LockEndRead((DeeObject *)self->fl_frame);
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(result);
@@ -3313,7 +3314,7 @@ framelocals_mh_seq_xchitem_index(FrameLocals *self, size_t index, DeeObject *val
 	oldvalue = frame->cf_frame[index];
 	if unlikely(!oldvalue) {
 		DeeFrame_LockEndWrite((DeeObject *)self->fl_frame);
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(value);
@@ -5084,7 +5085,7 @@ framesymbolsbyname_getitem(FrameSymbolsByName *self, DeeObject *key) {
 		goto err_unbound;
 	return result;
 err_unbound:
-	err_unbound_key((DeeObject *)self, key);
+	DeeRT_ErrUnboundKey((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -5159,7 +5160,7 @@ framesymbolsbyname_getitem_index(FrameSymbolsByName *self, size_t key) {
 		goto err_unbound;
 	return result;
 err_unbound:
-	err_unbound_key_int((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyInt((DeeObject *)self, key);
 err:
 	return NULL;
 }
@@ -5235,7 +5236,7 @@ framesymbolsbyname_getitem_string_len_hash(FrameSymbolsByName *self,
 		goto err_unbound;
 	return result;
 err_unbound:
-	err_unbound_key_str((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
 err:
 	return NULL;
 }

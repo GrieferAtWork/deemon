@@ -218,6 +218,12 @@ DDATDEF DeeObject DeeError_Interrupt_instance;
  * Upon success, the actual error object thrown is discarded during this process. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL DeeError_Catch(DeeTypeObject *__restrict type);
 
+/* Same as `DeeError_Catch()', but returns the actual, caught
+ * error on success, or "NULL" if no error was thrown, or the
+ * currently thrown error doesn't implement `type'. */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeError_CatchError(DeeTypeObject *__restrict type);
+
 /* Throw a given object `error' as an error.
  * @return: -1: Always returns `-1' */
 DFUNDEF ATTR_COLD NONNULL((1)) int

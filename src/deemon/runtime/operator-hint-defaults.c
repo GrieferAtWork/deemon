@@ -3715,7 +3715,7 @@ tdefault__getitem__with__trygetitem__and__hasitem(DeeTypeObject *tp_self, DeeObj
 	if unlikely(result == ITER_DONE) {
 		int has = (*(tp_self->tp_seq->tp_hasitem == &default__hasitem__with__bounditem ? &tdefault__hasitem__with__bounditem : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index ? &tdefault__hasitem__with__hasitem_index : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__size__and__getitem_index_fast ? &tdefault__hasitem__with__size__and__getitem_index_fast : &tdefault__hasitem))(tp_self, self, index);
 		if (has > 0) {
-			err_unbound_key(self, index);
+			DeeRT_ErrUnboundKey(self, index);
 		} else if (has == 0) {
 			err_unknown_key(self, index);
 		}
@@ -3832,7 +3832,7 @@ default__getitem__with__trygetitem__and__hasitem(DeeObject *self, DeeObject *ind
 	if unlikely(result == ITER_DONE) {
 		int has = (*Dee_TYPE(self)->tp_seq->tp_hasitem)(self, index);
 		if (has > 0) {
-			err_unbound_key(self, index);
+			DeeRT_ErrUnboundKey(self, index);
 		} else if (has == 0) {
 			err_unknown_key(self, index);
 		}
@@ -3868,7 +3868,7 @@ tdefault__getitem_index__with__size__and__getitem_index_fast(DeeTypeObject *tp_s
 		goto err_oob;
 	result = (*tp_self->tp_seq->tp_getitem_index_fast)(self, index);
 	if unlikely(!result)
-		err_unbound_index(self, index);
+		DeeRT_ErrUnboundIndex(self, index);
 	return result;
 err_oob:
 	err_index_out_of_bounds(self, index, size);
@@ -3882,7 +3882,7 @@ tdefault__getitem_index__with__trygetitem_index__and__hasitem_index(DeeTypeObjec
 	if unlikely(result == ITER_DONE) {
 		int has = (*(tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__bounditem_index ? &tdefault__hasitem_index__with__bounditem_index : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__size__and__getitem_index_fast ? &tdefault__hasitem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__hasitem ? &tdefault__hasitem_index__with__hasitem : &tdefault__hasitem_index))(tp_self, self, index);
 		if (has > 0) {
-			err_unbound_key_int(self, index);
+			DeeRT_ErrUnboundKeyInt(self, index);
 		} else if (has == 0) {
 			err_unknown_key_int(self, index);
 		}
@@ -3933,7 +3933,7 @@ default__getitem_index__with__size__and__getitem_index_fast(DeeObject *self, siz
 		goto err_oob;
 	result = (*Dee_TYPE(self)->tp_seq->tp_getitem_index_fast)(self, index);
 	if unlikely(!result)
-		err_unbound_index(self, index);
+		DeeRT_ErrUnboundIndex(self, index);
 	return result;
 err_oob:
 	err_index_out_of_bounds(self, index, size);
@@ -3951,7 +3951,7 @@ default__getitem_index__with__trygetitem_index__and__hasitem_index(DeeObject *se
 	if unlikely(result == ITER_DONE) {
 		int has = (*Dee_TYPE(self)->tp_seq->tp_hasitem_index)(self, index);
 		if (has > 0) {
-			err_unbound_key_int(self, index);
+			DeeRT_ErrUnboundKeyInt(self, index);
 		} else if (has == 0) {
 			err_unknown_key_int(self, index);
 		}
@@ -4005,7 +4005,7 @@ tdefault__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string
 	if unlikely(result == ITER_DONE) {
 		int has = (*(tp_self->tp_seq->tp_hasitem_string_hash == &default__hasitem_string_hash__with__bounditem_string_hash ? &tdefault__hasitem_string_hash__with__bounditem_string_hash : tp_self->tp_seq->tp_hasitem_string_hash == &default__hasitem_string_hash__with__hasitem_string_len_hash ? &tdefault__hasitem_string_hash__with__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem_string_hash == &default__hasitem_string_hash__with__hasitem ? &tdefault__hasitem_string_hash__with__hasitem : &tdefault__hasitem_string_hash))(tp_self, self, key, hash);
 		if (has > 0) {
-			err_unbound_key_str(self, key);
+			DeeRT_ErrUnboundKeyStr(self, key);
 		} else if (has == 0) {
 			err_unknown_key_str(self, key);
 		}
@@ -4061,7 +4061,7 @@ default__getitem_string_hash__with__trygetitem_string_hash__and__hasitem_string_
 	if unlikely(result == ITER_DONE) {
 		int has = (*Dee_TYPE(self)->tp_seq->tp_hasitem_string_hash)(self, key, hash);
 		if (has > 0) {
-			err_unbound_key_str(self, key);
+			DeeRT_ErrUnboundKeyStr(self, key);
 		} else if (has == 0) {
 			err_unknown_key_str(self, key);
 		}
@@ -4165,7 +4165,7 @@ tdefault__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasite
 	if unlikely(result == ITER_DONE) {
 		int has = (*(tp_self->tp_seq->tp_hasitem_string_len_hash == &default__hasitem_string_len_hash__with__bounditem_string_len_hash ? &tdefault__hasitem_string_len_hash__with__bounditem_string_len_hash : tp_self->tp_seq->tp_hasitem_string_len_hash == &default__hasitem_string_len_hash__with__hasitem_string_hash ? &tdefault__hasitem_string_len_hash__with__hasitem_string_hash : tp_self->tp_seq->tp_hasitem_string_len_hash == &default__hasitem_string_len_hash__with__hasitem ? &tdefault__hasitem_string_len_hash__with__hasitem : &tdefault__hasitem_string_len_hash))(tp_self, self, key, keylen, hash);
 		if (has > 0) {
-			err_unbound_key_str_len(self, key, keylen);
+			DeeRT_ErrUnboundKeyStrLen(self, key, keylen);
 		} else if (has == 0) {
 			err_unknown_key_str_len(self, key, keylen);
 		}
@@ -4228,7 +4228,7 @@ default__getitem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem
 	if unlikely(result == ITER_DONE) {
 		int has = (*Dee_TYPE(self)->tp_seq->tp_hasitem_string_len_hash)(self, key, keylen, hash);
 		if (has > 0) {
-			err_unbound_key_str_len(self, key, keylen);
+			DeeRT_ErrUnboundKeyStrLen(self, key, keylen);
 		} else if (has == 0) {
 			err_unknown_key_str_len(self, key, keylen);
 		}

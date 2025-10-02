@@ -104,7 +104,7 @@ err:
 
 struct indexbtab_item {
 	DREF DeeIntObject *ibti_index; /* [1..1] Integer index. */
-	DREF DeeObject    *ibti_value; /* [0..1] Value of this index (NULL means `err_unbound_key') */
+	DREF DeeObject    *ibti_value; /* [0..1] Value of this index (NULL means `DeeRT_ErrUnboundKey') */
 };
 
 struct indexbtab {

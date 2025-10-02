@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
@@ -494,7 +495,7 @@ filterub_getitem(Filter *self, DeeObject *index) {
 	if unlikely(temp < 0)
 		goto err_r;
 	if unlikely(!temp) {
-		err_unbound_key((DeeObject *)self, index);
+		DeeRT_ErrUnboundKey((DeeObject *)self, index);
 		goto err_r;
 	}
 	return result;
@@ -515,7 +516,7 @@ filterub_getitem_index(Filter *self, size_t index) {
 	if unlikely(temp < 0)
 		goto err_r;
 	if unlikely(!temp) {
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		goto err_r;
 	}
 	return result;

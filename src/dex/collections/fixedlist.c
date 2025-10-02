@@ -29,6 +29,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dex.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -371,7 +372,7 @@ fl_getitem_index(FixedList *__restrict self, size_t index) {
 	result = self->fl_elem[index];
 	if unlikely(!result) {
 		FixedList_LockEndRead(self);
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(result);
@@ -723,7 +724,7 @@ fl_xchitem_index(FixedList *self, size_t index, DeeObject *value) {
 	result = self->fl_elem[index];
 	if unlikely(!result) {
 		FixedList_LockEndRead(self);
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(value);
@@ -746,8 +747,8 @@ fl_mh_pop(FixedList *__restrict self, Dee_ssize_t index) {
 	self->fl_elem[(size_t)index] = NULL;
 	FixedList_LockEndRead(self);
 	if unlikely(!result) {
-		err_unbound_index((DeeObject *)self,
-		                  (size_t)index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self,
+		                      (size_t)index);
 	}
 	return result;
 err_bounds:

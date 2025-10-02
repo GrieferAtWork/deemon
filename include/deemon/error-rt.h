@@ -106,6 +106,7 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU128)(Dee_uint128_t value, 
 
 /* Throws an `DeeError_UnboundItem' indicating that a given index/key is unbound */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundKey)(DeeObject *seq, DeeObject *key);
+DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrUnboundKeyWithInner)(DeeObject *seq, DeeObject *key, /*inherit(always)*/ DREF DeeObject *inner);
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnboundKeyInt)(DeeObject *seq, size_t key);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundKeyStr)(DeeObject *seq, char const *key);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundKeyStrLen)(DeeObject *seq, char const *key, size_t keylen);
@@ -132,6 +133,13 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject
 #endif /* __SIZEOF_SIZE_T__ < 8 */
 #define DeeRT_ErrIntegerOverflowS128(value, minval, maxval) Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowS128)(value, minval, maxval), -1)
 #define DeeRT_ErrIntegerOverflowU128(value, maxval)         Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowU128)(value, maxval), -1)
+#define DeeRT_ErrUnboundKey(seq, key)                       Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKey)(seq, key), -1)
+#define DeeRT_ErrUnboundKeyWithInner(seq, key, inner)       Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyWithInner)(seq, key, inner), -1)
+#define DeeRT_ErrUnboundKeyInt(seq, key)                    Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyInt)(seq, key), -1)
+#define DeeRT_ErrUnboundKeyStr(seq, key)                    Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStr)(seq, key), -1)
+#define DeeRT_ErrUnboundKeyStrLen(seq, key, keylen)         Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStrLen)(seq, key, keylen), -1)
+#define DeeRT_ErrUnboundIndex(seq, index)                   Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndex)(seq, index), -1)
+#define DeeRT_ErrUnboundIndexObj(seq, index)                Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndexObj)(seq, index), -1)
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
 DECL_END

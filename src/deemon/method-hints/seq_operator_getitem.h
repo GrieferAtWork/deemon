@@ -55,7 +55,7 @@ err:
 	if likely(status == -2)
 		return data.dmgiwme_result;
 	if unlikely(status == -3) {
-		err_unbound_index_ob(self, index);
+		DeeRT_ErrUnboundIndexObj(self, index);
 		goto err;
 	}
 	ASSERT(status == -1 || status == 0);
@@ -198,7 +198,7 @@ err:
 		goto err;
 	if unlikely(index >= size)
 		goto err_bad_bounds;
-	err_unbound_index(self, index);
+	DeeRT_ErrUnboundIndex(self, index);
 	goto err;
 err_bad_bounds:
 	err_index_out_of_bounds((DeeObject *)self, index, size);
@@ -231,7 +231,7 @@ err:
 		goto err_unbound;
 	return data.dsgiiwme_result;
 err_unbound:
-	err_unbound_index(self, index);
+	DeeRT_ErrUnboundIndex(self, index);
 	goto err;
 err_bad_bounds:
 	err_index_out_of_bounds((DeeObject *)self, index, index - data.dsgiiwme_nskip);
@@ -248,7 +248,7 @@ err:
 	                         &data, index, (size_t)-1);
 	if likely(status == -2) {
 		if unlikely(!data.dsgiiwsei_result)
-			err_unbound_index(self, index);
+			DeeRT_ErrUnboundIndex(self, index);
 		return data.dsgiiwsei_result;
 	}
 	if likely(status == 0)

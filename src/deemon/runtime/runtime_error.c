@@ -277,36 +277,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       index, size);
 }
 
-INTERN ATTR_COLD NONNULL((1)) int /* TODO: DEPRECATED */
-(DCALL err_unbound_index)(DeeObject *__restrict self, size_t index) {
-	return DeeRT_ErrUnboundIndex(self, index);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int /* TODO: DEPRECATED */
-(DCALL err_unbound_index_ob)(DeeObject *self, DeeObject *indexob) {
-	return DeeRT_ErrUnboundIndexObj(self, indexob);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int /* TODO: DEPRECATED */
-(DCALL err_unbound_key)(DeeObject *self, DeeObject *key) {
-	return DeeRT_ErrUnboundKey(self, key);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int /* TODO: DEPRECATED */
-(DCALL err_unbound_key_int)(DeeObject *self, size_t key) {
-	return DeeRT_ErrUnboundKeyInt(self, key);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int /* TODO: DEPRECATED */
-(DCALL err_unbound_key_str)(DeeObject *self, char const *key) {
-	return DeeRT_ErrUnboundKeyStr(self, key);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int /* TODO: DEPRECATED */
-(DCALL err_unbound_key_str_len)(DeeObject *self, char const *key, size_t keylen) {
-	return DeeRT_ErrUnboundKeyStrLen(self, key, keylen);
-}
-
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unknown_key)(DeeObject *map, DeeObject *key) {
 	ASSERT_OBJECT(map);

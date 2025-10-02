@@ -1358,7 +1358,7 @@ default__seq_operator_getitem__with__seq_enumerate(DeeObject *self, DeeObject *i
 	if likely(status == -2)
 		return data.dmgiwme_result;
 	if unlikely(status == -3) {
-		err_unbound_index_ob(self, index);
+		DeeRT_ErrUnboundIndexObj(self, index);
 		goto err;
 	}
 	ASSERT(status == -1 || status == 0);
@@ -1454,7 +1454,7 @@ default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_
 		goto err;
 	if unlikely(index >= size)
 		goto err_bad_bounds;
-	err_unbound_index(self, index);
+	DeeRT_ErrUnboundIndex(self, index);
 	goto err;
 err_bad_bounds:
 	err_index_out_of_bounds((DeeObject *)self, index, size);
@@ -1511,7 +1511,7 @@ default__seq_operator_getitem_index__with__map_enumerate(DeeObject *__restrict s
 		goto err_unbound;
 	return data.dsgiiwme_result;
 err_unbound:
-	err_unbound_index(self, index);
+	DeeRT_ErrUnboundIndex(self, index);
 	goto err;
 err_bad_bounds:
 	err_index_out_of_bounds((DeeObject *)self, index, index - data.dsgiiwme_nskip);
@@ -1550,7 +1550,7 @@ default__seq_operator_getitem_index__with__seq_enumerate_index(DeeObject *__rest
 	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_getitem_index_with_seq_enumerate_index_cb, &data, index, (size_t)-1);
 	if likely(status == -2) {
 		if unlikely(!data.dsgiiwsei_result)
-			err_unbound_index(self, index);
+			DeeRT_ErrUnboundIndex(self, index);
 		return data.dsgiiwsei_result;
 	}
 	if likely(status == 0)
@@ -17356,7 +17356,7 @@ default__map_operator_getitem__with__map_enumerate(DeeObject *self, DeeObject *k
 	if likely(status == -2)
 		return data.dmgiwme_result;
 	if unlikely(status == -3) {
-		err_unbound_key(self, key);
+		DeeRT_ErrUnboundKey(self, key);
 		goto err;
 	}
 	ASSERT(status == -1 || status == 0);
@@ -17584,7 +17584,7 @@ default__map_operator_getitem_string_hash__with__map_enumerate(DeeObject *self, 
 	if likely(status == -2)
 		return data.mgished_result;
 	if unlikely(status == -3) {
-		err_unbound_key_str(self, key);
+		DeeRT_ErrUnboundKeyStr(self, key);
 		goto err;
 	}
 	ASSERT(status == -1 || status == 0);
@@ -17711,7 +17711,7 @@ default__map_operator_getitem_string_len_hash__with__map_enumerate(DeeObject *se
 	if likely(status == -2)
 		return data.mgislhed_result;
 	if unlikely(status == -3) {
-		err_unbound_key_str(self, key);
+		DeeRT_ErrUnboundKeyStr(self, key);
 		goto err;
 	}
 	ASSERT(status == -1 || status == 0);

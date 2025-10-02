@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
@@ -321,10 +322,12 @@ mfa_getitem(MapFromAttr *self, DeeObject *key) {
 		/* TODO: Go through all uses of "DeeError_Catch()" and adjust code
 		 *       such that the original exception becomes the "inner" of
 		 *       the new exception */
-		if (DeeError_Catch(&DeeError_UnboundAttribute)) {
-			err_unbound_key((DeeObject *)self, key); /* TODO: Set caught error as "inner" */
-		} else if (DeeError_Catch(&DeeError_AttributeError)) {
-			err_unknown_key((DeeObject *)self, key); /* TODO: Set caught error as "inner" */
+		DREF DeeObject *error;
+		if ((error = DeeError_CatchError(&DeeError_UnboundAttribute)) != NULL) {
+			DeeRT_ErrUnboundKeyWithInner((DeeObject *)self, key, error);
+		} else if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL) {
+			err_unknown_key((DeeObject *)self, key);
+			Dee_Decref(error); /* TODO: Set caught error as "inner" */
 		}
 	}
 	return result;
@@ -388,7 +391,7 @@ mfa_getitem_string_hash(MapFromAttr *self, char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result = DeeObject_GetAttrStringHash(self->mfa_ob, key, hash);
 	if unlikely(!result) {
 		if (DeeError_Catch(&DeeError_UnboundAttribute)) {
-			err_unbound_key_str((DeeObject *)self, key);
+			DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
 		} else if (DeeError_Catch(&DeeError_AttributeError)) {
 			err_unknown_key_str((DeeObject *)self, key);
 		}
@@ -424,7 +427,7 @@ mfa_getitem_string_len_hash(MapFromAttr *self, char const *key, size_t keylen, D
 	DREF DeeObject *result = DeeObject_GetAttrStringLenHash(self->mfa_ob, key, keylen, hash);
 	if unlikely(!result) {
 		if (DeeError_Catch(&DeeError_UnboundAttribute)) {
-			err_unbound_key_str_len((DeeObject *)self, key, keylen);
+			DeeRT_ErrUnboundKeyStrLen((DeeObject *)self, key, keylen);
 		} else if (DeeError_Catch(&DeeError_AttributeError)) {
 			err_unknown_key_str_len((DeeObject *)self, key, keylen);
 		}

@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
@@ -318,7 +319,7 @@ rvec_getitem_index(RefVector *__restrict self, size_t index) {
 	result = self->rv_vector[index];
 	if unlikely(!result) {
 		RefVector_XLockEndRead(self);
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		return NULL;
 	}
 	Dee_Incref(result);
@@ -395,7 +396,7 @@ rvec_xchitem_index(RefVector *self, size_t index, DeeObject *value) {
 	result = self->rv_vector[index];
 	if unlikely(!result) {
 		RefVector_LockEndWrite(self);
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(value);

@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/method-hints.h>
@@ -363,7 +364,7 @@ rs_giif_getitem_index(DefaultReversed_WithGetItemIndex *__restrict self, size_t 
 		goto err_obb;
 	result = (*self->drwgii_tp_getitem_index)(self->drwgii_seq, self->drwgii_max - index);
 	if unlikely(!result)
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 	return result;
 err_obb:
 	err_index_out_of_bounds((DeeObject *)self, index, self->drwgii_size);

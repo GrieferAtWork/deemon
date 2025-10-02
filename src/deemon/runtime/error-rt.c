@@ -752,7 +752,7 @@ INIT_LIKE_ERROR("TypeError", "(" Error_init_params ")",
 /************************************************************************/
 typedef struct {
 	ERROR_OBJECT_HEAD
-	struct Dee_variant ve_value; /* Value that's overflowing */
+	struct Dee_variant ve_value; /* [const] Value that caused the error (exact meaning is specific to sub-class) */
 } ValueError;
 
 PRIVATE struct type_member tpconst ValueError_class_members[] = {
@@ -851,7 +851,7 @@ INIT_CUSTOM_ERROR("SequenceError", "(" SequenceError_init_params ")",
 /************************************************************************/
 typedef struct {
 	SequenceError      ke_base;
-	struct Dee_variant ke_key; /* Key in question */
+	struct Dee_variant ke_key; /* [const] Key in question */
 } KeyError;
 
 PRIVATE struct type_member tpconst KeyError_members[] = {
@@ -877,7 +877,7 @@ INIT_CUSTOM_ERROR("KeyError", "(" KeyError_init_params ")",
 /************************************************************************/
 typedef struct {
 	KeyError           ie_base;   /* "key" is renamed to "index" */
-	struct Dee_variant ie_length; /* Length of the sequence */
+	struct Dee_variant ie_length; /* [const] Length of the sequence */
 } IndexError;
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -935,8 +935,8 @@ INIT_CUSTOM_ERROR("IndexError", "(" IndexError_init_params ")",
 /************************************************************************/
 typedef struct {
 	KeyError ui_base;
-	bool     ui_iskey; /* True if this is about an unbound key (like in mappings)
-	                    * False if this is about an unbound index (like in sequences) */
+	bool     ui_iskey; /* [const] True if this is about an unbound key (like in mappings)
+	                    *         False if this is about an unbound index (like in sequences) */
 } UnboundItem;
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1008,6 +1008,24 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	return DeeRT_ErrUnboundItemInherited(seq, key, true);
 }
 
+PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
+(DCALL DeeRT_ErrUnboundKeyWithInner)(DeeObject *seq, DeeObject *key,
+                                     /*inherit(always)*/ DREF DeeObject *inner) {
+	DREF UnboundItem *result = DeeObject_MALLOC(UnboundItem);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
+	result->ui_base.ke_base.e_message = NULL;
+	result->ui_base.ke_base.e_inner   = inner; /* Inherit reference */
+	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
+	Dee_variant_init_object(&result->ui_base.ke_key, key);
+	result->ui_iskey = true;
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	Dee_Decref(inner);
+	return -1;
+}
+
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrUnboundKeyInt)(DeeObject *seq, size_t key) {
 	return DeeRT_ErrUnboundItemInt(seq, key, true);
@@ -1052,9 +1070,9 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 /************************************************************************/
 typedef struct {
 	SequenceError      ue_base;
-	struct Dee_variant ue_count;    /* Actual value count */
-	struct Dee_variant ue_mincount; /* Lower bound for expected count */
-	struct Dee_variant ue_maxcount; /* Upper bound for expected count */
+	struct Dee_variant ue_count;    /* [const] Actual value count */
+	struct Dee_variant ue_mincount; /* [const] Lower bound for expected count */
+	struct Dee_variant ue_maxcount; /* [const] Upper bound for expected count */
 } UnpackError;
 
 PRIVATE struct type_member tpconst UnpackError_members[] = {
@@ -1143,29 +1161,28 @@ INIT_CUSTOM_ERROR("BufferError", "(" BufferError_init_params ")",
 /* Error.ValueError.ArithmeticError.IntegerOverflow                     */
 /************************************************************************/
 typedef struct {
-	ERROR_OBJECT_HEAD
-	struct Dee_variant io_value;    /* Value that's overflowing */
-	struct Dee_variant io_minval;   /* Min valid value */
-	struct Dee_variant io_maxval;   /* Max valid value */
-	bool               io_positive; /* Is the overflow positive? */
+	ArithmeticError    io_base;
+	struct Dee_variant io_minval;   /* [const] Min valid value */
+	struct Dee_variant io_maxval;   /* [const] Max valid value */
+	bool               io_positive; /* [const] Is the overflow positive? */
 } IntegerOverflow;
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 integer_overflow_print(IntegerOverflow *__restrict self,
                        Dee_formatprinter_t printer, void *arg) {
-	if (self->e_message)
-		return DeeString_PrintUtf8((DeeObject *)self->e_message, printer, arg);
+	if (self->io_base.e_message)
+		return DeeString_PrintUtf8((DeeObject *)self->io_base.e_message, printer, arg);
 	return DeeFormat_Printf(printer, arg,
 	                        "%s integer overflow: %Vk exceeds range of valid values [%Vk,%Vk]",
 	                        self->io_positive ? "positive" : "negative",
-	                        &self->io_value, &self->io_minval, &self->io_maxval);
+	                        &self->io_base.ve_value, &self->io_minval, &self->io_maxval);
 }
 
 PRIVATE struct type_member tpconst integer_overflow_members[] = {
-	TYPE_MEMBER_FIELD_DOC("value", STRUCT_VARIANT | STRUCT_CONST,
-	                      offsetof(IntegerOverflow, io_value),
+	/*TYPE_MEMBER_FIELD_DOC("value", STRUCT_VARIANT | STRUCT_CONST,
+	                      offsetof(IntegerOverflow, io_base.ve_value),
 	                      "->?DNumeric\n"
-	                      "Value that is overflowing"),
+	                      "Value that is overflowing"),*/
 	TYPE_MEMBER_FIELD_DOC("minval", STRUCT_VARIANT | STRUCT_CONST,
 	                      offsetof(IntegerOverflow, io_minval),
 	                      "->?DNumeric\n"
@@ -1182,7 +1199,7 @@ PRIVATE struct type_member tpconst integer_overflow_members[] = {
 
 PUBLIC DeeTypeObject DeeError_IntegerOverflow =
 INIT_CUSTOM_ERROR("IntegerOverflow",
-                  "(" ArithmeticError_init_params ",value?:?DNumeric,minval?:?DNumeric,maxval?:?DNumeric,positive=!f)",
+                  "(" ArithmeticError_init_params ",minval?:?DNumeric,maxval?:?DNumeric,positive=!f)",
                   TP_FNORMAL, &DeeError_ArithmeticError,
                   IntegerOverflow, NULL, &integer_overflow_print,
                   NULL, NULL, integer_overflow_members, NULL);
@@ -1205,13 +1222,13 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 	DREF IntegerOverflow *result = DeeObject_MALLOC(IntegerOverflow);
 	if unlikely(!result)
 		goto err;
-	result->e_message = NULL;
-	result->e_inner   = NULL;
-	Dee_variant_init_object(&result->io_value, value);
+	result->io_base.e_message = NULL;
+	result->io_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->io_base.ve_value, value);
 	Dee_variant_init_object(&result->io_minval, minval);
 	Dee_variant_init_object(&result->io_maxval, maxval);
 	result->io_positive = positive;
-	DeeObject_Init(result, &DeeError_IntegerOverflow);
+	DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
 	return -1;
@@ -1229,8 +1246,8 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	DREF IntegerOverflow *result = DeeObject_MALLOC(IntegerOverflow);
 	if unlikely(!result)
 		goto err;
-	result->e_message = NULL;
-	result->e_inner   = NULL;
+	result->io_base.e_message = NULL;
+	result->io_base.e_inner   = NULL;
 	max_bits = num_bits;
 	if (flags & DeeRT_ErrIntegerOverflowEx_F_SIGNED)
 		--max_bits;
@@ -1289,9 +1306,9 @@ err_r_maxval:
 			Dee_variant_init_object_inherited(&result->io_minval, minval);
 		}
 	}
-	Dee_variant_init_object(&result->io_value, value);
+	Dee_variant_init_object(&result->io_base.ve_value, value);
 	result->io_positive = (flags & DeeRT_ErrIntegerOverflowEx_F_POSITIVE) != 0;
-	DeeObject_Init(result, &DeeError_IntegerOverflow);
+	DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
 	return DeeError_ThrowInherited((DeeObject *)result);
 err_r:
 	DeeObject_FREE(result);
@@ -1309,19 +1326,19 @@ PRIVATE ATTR_COLD int
 	DREF IntegerOverflow *result = DeeObject_MALLOC(IntegerOverflow);
 	if unlikely(!result)
 		goto err;
-	result->e_message = NULL;
-	result->e_inner   = NULL;
-	Dee_variant_init_int32(&result->io_value, value);
+	result->io_base.e_message = NULL;
+	result->io_base.e_inner   = NULL;
+	Dee_variant_init_int32(&result->io_base.ve_value, value);
 	Dee_variant_init_int32(&result->io_minval, minval);
 	Dee_variant_init_int32(&result->io_maxval, maxval);
 	result->io_positive = value > maxval;
 	if (!is_signed) {
-		result->io_value.var_type  = Dee_VARIANT_UINT32;
-		result->io_minval.var_type = Dee_VARIANT_UINT32;
-		result->io_maxval.var_type = Dee_VARIANT_UINT32;
+		result->io_base.ve_value.var_type = Dee_VARIANT_UINT32;
+		result->io_minval.var_type        = Dee_VARIANT_UINT32;
+		result->io_maxval.var_type        = Dee_VARIANT_UINT32;
 		result->io_positive = true;
 	}
-	DeeObject_Init(result, &DeeError_IntegerOverflow);
+	DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
 	return -1;
@@ -1336,19 +1353,19 @@ PRIVATE ATTR_COLD int
 	DREF IntegerOverflow *result = DeeObject_MALLOC(IntegerOverflow);
 	if unlikely(!result)
 		goto err;
-	result->e_message = NULL;
-	result->e_inner   = NULL;
-	Dee_variant_init_int64(&result->io_value, value);
+	result->io_base.e_message = NULL;
+	result->io_base.e_inner   = NULL;
+	Dee_variant_init_int64(&result->io_base.ve_value, value);
 	Dee_variant_init_int64(&result->io_minval, minval);
 	Dee_variant_init_int64(&result->io_maxval, maxval);
 	result->io_positive = value > maxval;
 	if (!is_signed) {
-		result->io_value.var_type  = Dee_VARIANT_UINT64;
-		result->io_minval.var_type = Dee_VARIANT_UINT64;
-		result->io_maxval.var_type = Dee_VARIANT_UINT64;
+		result->io_base.ve_value.var_type = Dee_VARIANT_UINT64;
+		result->io_minval.var_type        = Dee_VARIANT_UINT64;
+		result->io_maxval.var_type        = Dee_VARIANT_UINT64;
 		result->io_positive = true;
 	}
-	DeeObject_Init(result, &DeeError_IntegerOverflow);
+	DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
 	return -1;
@@ -1362,19 +1379,19 @@ PRIVATE ATTR_COLD int
 	DREF IntegerOverflow *result = DeeObject_MALLOC(IntegerOverflow);
 	if unlikely(!result)
 		goto err;
-	result->e_message = NULL;
-	result->e_inner   = NULL;
-	Dee_variant_init_int128(&result->io_value, value);
+	result->io_base.e_message = NULL;
+	result->io_base.e_inner   = NULL;
+	Dee_variant_init_int128(&result->io_base.ve_value, value);
 	Dee_variant_init_int128(&result->io_minval, minval);
 	Dee_variant_init_int128(&result->io_maxval, maxval);
 	result->io_positive = __hybrid_int128_gr128(value, maxval);
 	if (!is_signed) {
-		result->io_value.var_type  = Dee_VARIANT_UINT128;
-		result->io_minval.var_type = Dee_VARIANT_UINT128;
-		result->io_maxval.var_type = Dee_VARIANT_UINT128;
+		result->io_base.ve_value.var_type = Dee_VARIANT_UINT128;
+		result->io_minval.var_type        = Dee_VARIANT_UINT128;
+		result->io_maxval.var_type        = Dee_VARIANT_UINT128;
 		result->io_positive = true;
 	}
-	DeeObject_Init(result, &DeeError_IntegerOverflow);
+	DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
 	return -1;

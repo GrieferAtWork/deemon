@@ -573,7 +573,7 @@ ds_sgif_getitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, 
 		goto err_obb;
 	result = (*self->dssgi_tp_getitem_index)(self->dssgi_seq, used_index);
 	if unlikely(result == NULL)
-		err_unbound_index(self->dssgi_seq, used_index);
+		DeeRT_ErrUnboundIndex(self->dssgi_seq, used_index);
 	return result;
 err_obb:
 	err_index_out_of_bounds((DeeObject *)self, index, ds_sgif_size(self));
@@ -590,7 +590,7 @@ ds_stgi_getitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, 
 		goto err_obb;
 	result = (*self->dssgi_tp_getitem_index)(self->dssgi_seq, used_index);
 	if unlikely(result == ITER_DONE) {
-		err_unbound_index(self->dssgi_seq, used_index);
+		DeeRT_ErrUnboundIndex(self->dssgi_seq, used_index);
 		result = NULL;
 	}
 	return result;

@@ -28,6 +28,7 @@
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/instancemethod.h>
@@ -2486,7 +2487,7 @@ ot_getitem_index(ObjectTable *__restrict self, size_t index) {
 	return result;
 err_unbound:
 	Dee_instance_desc_lock_endread(self->ot_desc);
-	err_unbound_index((DeeObject *)self, index);
+	DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 	return NULL;
 err_index:
 	err_index_out_of_bounds((DeeObject *)self, index, self->ot_size);
@@ -2560,7 +2561,7 @@ ot_mh_seq_xchitem_index(ObjectTable *self, size_t index, DeeObject *newval) {
 	return oldval;
 err_unbound:
 	Dee_instance_desc_lock_endwrite(self->ot_desc);
-	err_unbound_index((DeeObject *)self, index);
+	DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 	goto err;
 err_index:
 	err_index_out_of_bounds((DeeObject *)self, index, self->ot_size);

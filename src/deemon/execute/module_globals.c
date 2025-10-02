@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
@@ -1248,7 +1249,7 @@ modglobals_getitem_index(ModuleGlobals *self, size_t index) {
 	if unlikely(!result) {
 		DeeModule_LockEndRead(mod);
 		DeeModule_UnlockSymbols(mod);
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(result);
@@ -1324,7 +1325,7 @@ modglobals_xchitem_index(ModuleGlobals *self, size_t index, DeeObject *value) {
 	oldvalue = mod->mo_globalv[index];
 	if unlikely(!oldvalue) {
 		DeeModule_UnlockSymbols(mod);
-		err_unbound_index((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(value);

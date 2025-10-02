@@ -102,7 +102,7 @@ err:
 	if unlikely(result == ITER_DONE) {
 		int has = CALL_DEPENDENCY(tp_seq->tp_hasitem, self, index);
 		if (has > 0) {
-			err_unbound_key(self, index);
+			DeeRT_ErrUnboundKey(self, index);
 		} else if (has == 0) {
 			err_unknown_key(self, index);
 		}
@@ -134,7 +134,7 @@ tp_seq->tp_getitem_index([[nonnull]] DeeObject *self, size_t index)
 		goto err_oob;
 	result = CALL_DEPENDENCY(tp_seq->tp_getitem_index_fast, self, index);
 	if unlikely(!result)
-		err_unbound_index(self, index);
+		DeeRT_ErrUnboundIndex(self, index);
 	return result;
 err_oob:
 	err_index_out_of_bounds(self, index, size);
@@ -146,7 +146,7 @@ err:
 	if unlikely(result == ITER_DONE) {
 		int has = CALL_DEPENDENCY(tp_seq->tp_hasitem_index, self, index);
 		if (has > 0) {
-			err_unbound_key_int(self, index);
+			DeeRT_ErrUnboundKeyInt(self, index);
 		} else if (has == 0) {
 			err_unknown_key_int(self, index);
 		}
@@ -189,7 +189,7 @@ tp_seq->tp_getitem_string_hash([[nonnull]] DeeObject *self,
 	if unlikely(result == ITER_DONE) {
 		int has = CALL_DEPENDENCY(tp_seq->tp_hasitem_string_hash, self, key, hash);
 		if (has > 0) {
-			err_unbound_key_str(self, key);
+			DeeRT_ErrUnboundKeyStr(self, key);
 		} else if (has == 0) {
 			err_unknown_key_str(self, key);
 		}
@@ -288,7 +288,7 @@ err:
 	if unlikely(result == ITER_DONE) {
 		int has = CALL_DEPENDENCY(tp_seq->tp_hasitem_string_len_hash, self, key, keylen, hash);
 		if (has > 0) {
-			err_unbound_key_str_len(self, key, keylen);
+			DeeRT_ErrUnboundKeyStrLen(self, key, keylen);
 		} else if (has == 0) {
 			err_unknown_key_str_len(self, key, keylen);
 		}

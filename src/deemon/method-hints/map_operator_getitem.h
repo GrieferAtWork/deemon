@@ -128,7 +128,7 @@ err:
 	if likely(status == -2)
 		return data.dmgiwme_result;
 	if unlikely(status == -3) {
-		err_unbound_key(self, key);
+		DeeRT_ErrUnboundKey(self, key);
 		goto err;
 	}
 	ASSERT(status == -1 || status == 0);
@@ -412,7 +412,7 @@ __map_getitem__.map_operator_getitem_string_hash([[nonnull]] DeeObject *self,
 	if likely(status == -2)
 		return data.mgished_result;
 	if unlikely(status == -3) {
-		err_unbound_key_str(self, key);
+		DeeRT_ErrUnboundKeyStr(self, key);
 		goto err;
 	}
 	ASSERT(status == -1 || status == 0);
@@ -563,7 +563,7 @@ __map_getitem__.map_operator_getitem_string_len_hash([[nonnull]] DeeObject *self
 	if likely(status == -2)
 		return data.mgislhed_result;
 	if unlikely(status == -3) {
-		err_unbound_key_str(self, key);
+		DeeRT_ErrUnboundKeyStr(self, key);
 		goto err;
 	}
 	ASSERT(status == -1 || status == 0);

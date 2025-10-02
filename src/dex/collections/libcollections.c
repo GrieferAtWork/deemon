@@ -63,14 +63,6 @@ err_index_out_of_bounds(DeeObject *__restrict self,
 	                       index, size, Dee_TYPE(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int DCALL
-err_unbound_index(DeeObject *__restrict self, size_t index) {
-	ASSERT_OBJECT(self);
-	return DeeError_Throwf(&DeeError_UnboundItem,
-	                       "Index `%" PRFuSIZ "' of instance of `%k': %k has not been bound",
-	                       index, Dee_TYPE(self), self);
-}
-
 INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unknown_key(DeeObject *__restrict map, DeeObject *__restrict key) {
 	ASSERT_OBJECT(map);

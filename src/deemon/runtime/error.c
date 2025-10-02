@@ -57,6 +57,24 @@ DeeError_Catch(DeeTypeObject *__restrict type) {
 	return false;
 }
 
+/* Same as `DeeError_Catch()', but returns the actual, caught
+ * error on success, or "NULL" if no error was thrown, or the
+ * currently thrown error doesn't implement `type'. */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeError_CatchError(DeeTypeObject *__restrict type) {
+	DeeObject *current;
+	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
+	current = DeeError_Current();
+	if (current && DeeObject_Implements(current, type)) {
+		Dee_Incref(current);
+		if likely(DeeError_Handled(ERROR_HANDLED_INTERRUPT))
+			return current;
+		Dee_Decref_unlikely(current);
+	}
+	return false;
+}
+
+
 STATIC_ASSERT(ERROR_PRINT_DOHANDLE   == ERROR_HANDLED_RESTORE);
 STATIC_ASSERT(ERROR_PRINT_HANDLEINTR == ERROR_HANDLED_INTERRUPT);
 
