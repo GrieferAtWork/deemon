@@ -319,15 +319,11 @@ mfa_getitem(MapFromAttr *self, DeeObject *key) {
 		goto err;
 	result = DeeObject_GetAttr(self->mfa_ob, key);
 	if unlikely(!result) {
-		/* TODO: Go through all uses of "DeeError_Catch()" and adjust code
-		 *       such that the original exception becomes the "inner" of
-		 *       the new exception */
 		DREF DeeObject *error;
 		if ((error = DeeError_CatchError(&DeeError_UnboundAttribute)) != NULL) {
 			DeeRT_ErrUnboundKeyWithInner((DeeObject *)self, key, error);
 		} else if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL) {
-			err_unknown_key((DeeObject *)self, key);
-			Dee_Decref(error); /* TODO: Set caught error as "inner" */
+			DeeRT_ErrUnknownKeyWithInner((DeeObject *)self, key, error);
 		}
 	}
 	return result;

@@ -1157,6 +1157,11 @@ EXPORTS
 	DeeRT_ErrUnboundKeyStr@8=_DeeRT_ErrUnboundKeyStr@8
 	DeeRT_ErrUnboundKeyStrLen@12=_DeeRT_ErrUnboundKeyStrLen@12
 	DeeRT_ErrUnboundKeyWithInner@12=_DeeRT_ErrUnboundKeyWithInner@12
+	DeeRT_ErrUnknownKey@8=_DeeRT_ErrUnknownKey@8
+	DeeRT_ErrUnknownKeyInt@8=_DeeRT_ErrUnknownKeyInt@8
+	DeeRT_ErrUnknownKeyStr@8=_DeeRT_ErrUnknownKeyStr@8
+	DeeRT_ErrUnknownKeyStrLen@12=_DeeRT_ErrUnknownKeyStrLen@12
+	DeeRT_ErrUnknownKeyWithInner@12=_DeeRT_ErrUnknownKeyWithInner@12
 	DeeRange_New@12=_DeeRange_New@12
 	DeeRange_NewInt@12=_DeeRange_NewInt@12
 	DeeRefVector_New@16=_DeeRefVector_New@16

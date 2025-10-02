@@ -54,6 +54,7 @@ final global		SequenceError = ValueError.SequenceError;
 final global			KeyError = SequenceError.KeyError;
 final global				IndexError = KeyError.IndexError;
 final global				UnboundItem = KeyError.UnboundItem;
+final global				UnknownKey = KeyError.UnknownKey;
 final global			UnpackError = SequenceError.UnpackError;
 final global		UnicodeError = ValueError.UnicodeError;
 final global			UnicodeDecodeError = UnicodeError.UnicodeDecodeError;

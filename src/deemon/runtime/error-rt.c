@@ -863,6 +863,7 @@ PRIVATE struct type_member tpconst KeyError_members[] = {
 PRIVATE struct type_member tpconst KeyError_class_members[] = {
 	TYPE_MEMBER_CONST("IndexError", &DeeError_IndexError),
 	TYPE_MEMBER_CONST("UnboundItem", &DeeError_UnboundItem),
+	TYPE_MEMBER_CONST("UnknownKey", &DeeError_UnknownKey),
 	TYPE_MEMBER_END
 };
 
@@ -931,6 +932,104 @@ INIT_CUSTOM_ERROR("IndexError", "(" IndexError_init_params ")",
 
 
 /************************************************************************/
+/* Error.ValueError.SequenceError.KeyError.UnknownKey                   */
+/************************************************************************/
+typedef KeyError UnknownKey;
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+UnknownKey_print(UnknownKey *__restrict self,
+                 Dee_formatprinter_t printer, void *arg) {
+	if (self->ke_base.e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	return DeeFormat_Printf(printer, arg,
+	                        "Could not find key `%Vk' in %K `%Vk'",
+	                        &self->ke_key, SequenceError_GetSeqType(&self->ke_base),
+	                        &self->ke_base.ve_value);
+}
+
+PUBLIC DeeTypeObject DeeError_UnknownKey =
+INIT_CUSTOM_ERROR("UnknownKey", "(" KeyError_init_params ")",
+                  TP_FNORMAL, &DeeError_KeyError, UnknownKey, NULL, &UnknownKey_print,
+                  NULL, NULL, NULL, NULL);
+
+PRIVATE ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrUnknownKeyInherited)(DeeObject *map, /*inherit(always)*/ DREF DeeObject *key) {
+	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	Dee_variant_init_object_inherited(&result->ke_key, key);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	Dee_Decref(key);
+	return -1;
+}
+
+/* Throws an `DeeError_UnknownKey' indicating that a given index/key is unknown */
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrUnknownKey)(DeeObject *map, DeeObject *key) {
+	Dee_Incref(key);
+	return DeeRT_ErrUnknownKeyInherited(map, key);
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
+(DCALL DeeRT_ErrUnknownKeyWithInner)(DeeObject *map, DeeObject *key,
+                                     /*inherit(always)*/ DREF DeeObject *inner) {
+	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = inner; /* Inherit reference */
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	Dee_variant_init_object(&result->ke_key, key);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	Dee_Decref(inner);
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrUnknownKeyInt)(DeeObject *map, size_t key) {
+	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	Dee_variant_init_size(&result->ke_key, key);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrUnknownKeyStr)(DeeObject *map, char const *key) {
+	DREF DeeObject *keyob = DeeString_New(key);
+	if unlikely(!keyob)
+		goto err;
+	return DeeRT_ErrUnknownKeyInherited(map, keyob);
+err:
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrUnknownKeyStrLen)(DeeObject *map, char const *key, size_t keylen) {
+	DREF DeeObject *keyob = DeeString_NewSized(key, keylen);
+	if unlikely(!keyob)
+		goto err;
+	return DeeRT_ErrUnknownKeyInherited(map, keyob);
+err:
+	return -1;
+}
+
+
+
+/************************************************************************/
 /* Error.ValueError.SequenceError.KeyError.UnboundItem                  */
 /************************************************************************/
 typedef struct {
@@ -983,6 +1082,7 @@ PRIVATE ATTR_COLD NONNULL((1, 2)) int
 	result->ui_iskey = is_key;
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
+	Dee_Decref(key_or_index);
 	return -1;
 }
 

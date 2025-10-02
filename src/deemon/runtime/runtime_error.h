@@ -51,13 +51,16 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_bytes_not_writable(DeeObject *__rest
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_index_out_of_bounds(DeeObject *__restrict self, size_t index, size_t size);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_index_out_of_bounds_ob(DeeObject *self, DeeObject *index);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_va_index_out_of_bounds(struct function_object *__restrict func, size_t index, size_t size);
+
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key(DeeObject *map, DeeObject *key);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_key_int(DeeObject *map, size_t key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key_str(DeeObject *map, char const *key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key_str_len(DeeObject *map, char const *key, size_t keylen);
+
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_readonly_key(DeeObject *self, DeeObject *key);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_readonly_key_int(DeeObject *self, size_t key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_readonly_key_str(DeeObject *self, char const *key);
+
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_single_character_string(DeeObject *__restrict str);
 #define xcheck_empty_keywords(kw) (!(kw) ? 0 : check_empty_keywords(kw))
 INTDEF NONNULL((1, 2)) int DFCALL check_empty_keywords(DeeObject *kw, DeeTypeObject *tp_self);

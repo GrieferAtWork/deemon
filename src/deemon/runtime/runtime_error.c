@@ -277,37 +277,29 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       index, size);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
 (DCALL err_unknown_key)(DeeObject *map, DeeObject *key) {
 	ASSERT_OBJECT(map);
 	ASSERT_OBJECT(key);
-	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Could not find key `%k' in %k `%k'",
-	                       key, Dee_TYPE(map), map);
+	return DeeRT_ErrUnknownKey(map, key);
 }
 
-INTERN ATTR_COLD NONNULL((1)) int
+INTERN ATTR_COLD NONNULL((1)) int /* DEPRECATED! */
 (DCALL err_unknown_key_int)(DeeObject *map, size_t key) {
 	ASSERT_OBJECT(map);
-	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Could not find key `%" PRFuSIZ "' in %k `%k'",
-	                       key, Dee_TYPE(map), map);
+	return DeeRT_ErrUnknownKeyInt(map, key);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
 (DCALL err_unknown_key_str)(DeeObject *map, char const *key) {
 	ASSERT_OBJECT(map);
-	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Could not find key `%s' in %k `%k'",
-	                       key, Dee_TYPE(map), map);
+	return DeeRT_ErrUnknownKeyStr(map, key);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
 (DCALL err_unknown_key_str_len)(DeeObject *map, char const *key, size_t keylen) {
 	ASSERT_OBJECT(map);
-	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Could not find key `%$s' in %k `%k'",
-	                       keylen, key, Dee_TYPE(map), map);
+	return DeeRT_ErrUnknownKeyStrLen(map, key, keylen);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int

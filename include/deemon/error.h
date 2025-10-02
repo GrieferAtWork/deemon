@@ -135,6 +135,8 @@ DDATDEF DeeTypeObject /*    */ DeeError_SequenceError;
 DDATDEF DeeTypeObject /*        */ DeeError_KeyError;
 DDATDEF DeeTypeObject /*            */ DeeError_IndexError;
 DDATDEF DeeTypeObject /*            */ DeeError_UnboundItem;
+DDATDEF DeeTypeObject /*            */ DeeError_UnknownKey;
+/* TODO: DeeError_ReadOnlyKey */
 DDATDEF DeeTypeObject /*        */ DeeError_UnpackError;
 DDATDEF DeeTypeObject /*    */ DeeError_UnicodeError;
 DDATDEF DeeTypeObject /*        */ DeeError_UnicodeDecodeError;
@@ -217,6 +219,9 @@ DDATDEF DeeObject DeeError_Interrupt_instance;
  * returning true if doing so was possible.
  * Upon success, the actual error object thrown is discarded during this process. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL DeeError_Catch(DeeTypeObject *__restrict type);
+/* TODO: Go through all uses of "DeeError_Catch()" and adjust code
+ *       such that the original exception becomes the "inner" of
+ *       the new exception wherever a different error is thrown */
 
 /* Same as `DeeError_Catch()', but returns the actual, caught
  * error on success, or "NULL" if no error was thrown, or the
