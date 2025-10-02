@@ -136,7 +136,7 @@ DDATDEF DeeTypeObject /*        */ DeeError_KeyError;
 DDATDEF DeeTypeObject /*            */ DeeError_IndexError;
 DDATDEF DeeTypeObject /*            */ DeeError_UnboundItem;
 DDATDEF DeeTypeObject /*            */ DeeError_UnknownKey;
-/* TODO: DeeError_ReadOnlyKey */
+DDATDEF DeeTypeObject /*            */ DeeError_ReadOnlyKey;
 DDATDEF DeeTypeObject /*        */ DeeError_UnpackError;
 DDATDEF DeeTypeObject /*    */ DeeError_UnicodeError;
 DDATDEF DeeTypeObject /*        */ DeeError_UnicodeDecodeError;

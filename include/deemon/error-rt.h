@@ -111,6 +111,12 @@ DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnknownKeyInt)(DeeObject *map
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnknownKeyStr)(DeeObject *map, char const *key);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnknownKeyStrLen)(DeeObject *map, char const *key, size_t keylen);
 
+/* Throws an `DeeError_ReadOnlyKey' indicating that a given index/key is read-only */
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrReadOnlyKey)(DeeObject *map, DeeObject *key);
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrReadOnlyKeyInt)(DeeObject *map, size_t key);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrReadOnlyKeyStr)(DeeObject *map, char const *key);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrReadOnlyKeyStrLen)(DeeObject *map, char const *key, size_t keylen);
+
 /* Throws an `DeeError_UnboundItem' indicating that a given index/key is unbound */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundKey)(DeeObject *seq, DeeObject *key);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrUnboundKeyWithInner)(DeeObject *seq, DeeObject *key, /*inherit(always)*/ DREF DeeObject *inner);
@@ -145,6 +151,10 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject
 #define DeeRT_ErrUnknownKeyInt(map, key)                    Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyInt)(map, key), -1)
 #define DeeRT_ErrUnknownKeyStr(map, key)                    Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStr)(map, key), -1)
 #define DeeRT_ErrUnknownKeyStrLen(map, key, keylen)         Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStrLen)(map, key, keylen), -1)
+#define DeeRT_ErrReadOnlyKey(map, key)                      Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKey)(map, key), -1)
+#define DeeRT_ErrReadOnlyKeyInt(map, key)                   Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKeyInt)(map, key), -1)
+#define DeeRT_ErrReadOnlyKeyStr(map, key)                   Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKeyStr)(map, key), -1)
+#define DeeRT_ErrReadOnlyKeyStrLen(map, key, keylen)        Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKeyStrLen)(map, key, keylen), -1)
 #define DeeRT_ErrUnboundKey(seq, key)                       Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKey)(seq, key), -1)
 #define DeeRT_ErrUnboundKeyWithInner(seq, key, inner)       Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyWithInner)(seq, key, inner), -1)
 #define DeeRT_ErrUnboundKeyInt(seq, key)                    Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyInt)(seq, key), -1)

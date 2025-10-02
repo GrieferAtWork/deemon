@@ -864,6 +864,7 @@ PRIVATE struct type_member tpconst KeyError_class_members[] = {
 	TYPE_MEMBER_CONST("IndexError", &DeeError_IndexError),
 	TYPE_MEMBER_CONST("UnboundItem", &DeeError_UnboundItem),
 	TYPE_MEMBER_CONST("UnknownKey", &DeeError_UnknownKey),
+	TYPE_MEMBER_CONST("ReadOnlyKey", &DeeError_ReadOnlyKey),
 	TYPE_MEMBER_END
 };
 
@@ -942,7 +943,7 @@ UnknownKey_print(UnknownKey *__restrict self,
 	if (self->ke_base.e_message)
 		return error_print((DeeErrorObject *)self, printer, arg);
 	return DeeFormat_Printf(printer, arg,
-	                        "Could not find key `%Vk' in %K `%Vk'",
+	                        "Could not find key %Vr in %K: %Vk",
 	                        &self->ke_key, SequenceError_GetSeqType(&self->ke_base),
 	                        &self->ke_base.ve_value);
 }
@@ -1023,6 +1024,86 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	if unlikely(!keyob)
 		goto err;
 	return DeeRT_ErrUnknownKeyInherited(map, keyob);
+err:
+	return -1;
+}
+
+
+/************************************************************************/
+/* Error.ValueError.SequenceError.KeyError.ReadOnlyKey                   */
+/************************************************************************/
+typedef KeyError ReadOnlyKey;
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ReadOnlyKey_print(ReadOnlyKey *__restrict self,
+                 Dee_formatprinter_t printer, void *arg) {
+	if (self->ke_base.e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	return DeeFormat_Printf(printer, arg,
+	                        "Key %Vr of instance of %K: %Vk is read-only and cannot be modified",
+	                        &self->ke_key, SequenceError_GetSeqType(&self->ke_base),
+	                        &self->ke_base.ve_value);
+}
+
+PUBLIC DeeTypeObject DeeError_ReadOnlyKey =
+INIT_CUSTOM_ERROR("ReadOnlyKey", "(" KeyError_init_params ")",
+                  TP_FNORMAL, &DeeError_KeyError, ReadOnlyKey, NULL, &ReadOnlyKey_print,
+                  NULL, NULL, NULL, NULL);
+
+PRIVATE ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrReadOnlyKeyInherited)(DeeObject *map, /*inherit(always)*/ DREF DeeObject *key) {
+	DREF ReadOnlyKey *result = DeeObject_MALLOC(ReadOnlyKey);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	Dee_variant_init_object_inherited(&result->ke_key, key);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	Dee_Decref(key);
+	return -1;
+}
+
+/* Throws an `DeeError_ReadOnlyKey' indicating that a given index/key is unknown */
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrReadOnlyKey)(DeeObject *map, DeeObject *key) {
+	Dee_Incref(key);
+	return DeeRT_ErrReadOnlyKeyInherited(map, key);
+}
+
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrReadOnlyKeyInt)(DeeObject *map, size_t key) {
+	DREF ReadOnlyKey *result = DeeObject_MALLOC(ReadOnlyKey);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	Dee_variant_init_size(&result->ke_key, key);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrReadOnlyKeyStr)(DeeObject *map, char const *key) {
+	DREF DeeObject *keyob = DeeString_New(key);
+	if unlikely(!keyob)
+		goto err;
+	return DeeRT_ErrReadOnlyKeyInherited(map, keyob);
+err:
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrReadOnlyKeyStrLen)(DeeObject *map, char const *key, size_t keylen) {
+	DREF DeeObject *keyob = DeeString_NewSized(key, keylen);
+	if unlikely(!keyob)
+		goto err;
+	return DeeRT_ErrReadOnlyKeyInherited(map, keyob);
 err:
 	return -1;
 }

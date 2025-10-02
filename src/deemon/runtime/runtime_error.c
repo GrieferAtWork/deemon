@@ -302,27 +302,21 @@ INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
 	return DeeRT_ErrUnknownKeyStrLen(map, key, keylen);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
 (DCALL err_readonly_key)(DeeObject *self, DeeObject *key) {
 	ASSERT_OBJECT(self);
 	ASSERT_OBJECT(key);
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Key `%r' of instance of `%k': %k is read-only and cannot be modified",
-	                       key, Dee_TYPE(self), self);
+	return DeeRT_ErrReadOnlyKey(self, key);
 }
 
-INTERN ATTR_COLD NONNULL((1)) int
+INTERN ATTR_COLD NONNULL((1)) int /* DEPRECATED! */
 (DCALL err_readonly_key_int)(DeeObject *self, size_t key) {
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Key `%" PRFuSIZ "' of instance of `%k': %k is read-only and cannot be modified",
-	                       key, Dee_TYPE(self), self);
+	return DeeRT_ErrReadOnlyKeyInt(self, key);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
 (DCALL err_readonly_key_str)(DeeObject *self, char const *key) {
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Key `%q' of instance of `%k': %k is read-only and cannot be modified",
-	                       key, Dee_TYPE(self), self);
+	return DeeRT_ErrReadOnlyKeyStr(self, key);
 }
 
 
