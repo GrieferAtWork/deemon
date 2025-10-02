@@ -223,7 +223,7 @@ PRIVATE struct type_member tpconst byattr_members[] = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 byattr_printrepr(MapByAttr *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "%r.byattr", self->mba_map);
@@ -257,7 +257,7 @@ INTERN DeeTypeObject MapByAttr_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&byattr_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&byattr_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&byattr_visit,
 	/* .tp_gc            = */ NULL,

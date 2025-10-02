@@ -679,7 +679,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		buflen = 0;
 	} else {
 		buffer->s_data = NULL;
-		buffer->s_hash = (dhash_t)-1;
+		buffer->s_hash = (Dee_hash_t)-1;
 	}
 	libpath = DeeModule_GetPath();
 	DeeList_LockRead(libpath);
@@ -705,11 +705,12 @@ tpp_unknown_file(int mode, char *__restrict filename,
 				goto err_path;
 			if (!buffer) {
 				new_buffer->s_data = NULL;
-				new_buffer->s_hash = (dhash_t)-1;
+				new_buffer->s_hash = (Dee_hash_t)-1;
 			}
 			buffer = new_buffer;
 			buflen = req_length;
 		}
+		ASSERT(buffer);
 		dst = buffer->s_str;
 
 		/* Copy the library path. */

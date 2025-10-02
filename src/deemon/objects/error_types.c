@@ -658,22 +658,20 @@ INIT_LIKE_ERROR("ThreadCrash", "(" ThreadCrash_init_params ")",
 /* BEGIN::NoMemory */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 nomemory_str(DeeNoMemoryErrorObject *__restrict self) {
-	if (self->nm_allocsize) {
-		return DeeString_Newf("Failed to allocated %" PRFuSIZ " bytes",
-		                      self->nm_allocsize);
-	}
-	return error_str((DeeErrorObject *)self);
+	if (self->e_message)
+		return error_str((DeeErrorObject *)self);
+	return DeeString_Newf("Failed to allocated %" PRFuSIZ " bytes",
+	                      self->nm_allocsize);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 nomemory_print(DeeNoMemoryErrorObject *__restrict self,
                Dee_formatprinter_t printer, void *arg) {
-	if (self->nm_allocsize) {
-		return DeeFormat_Printf(printer, arg,
-		                        "Failed to allocated %" PRFuSIZ " bytes",
-		                        self->nm_allocsize);
-	}
-	return error_print((DeeErrorObject *)self, printer, arg);
+	if (self->e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	return DeeFormat_Printf(printer, arg,
+	                        "Failed to allocated %" PRFuSIZ " bytes",
+	                        self->nm_allocsize);
 }
 
 PRIVATE struct type_member tpconst nomemory_members[] = {
@@ -1499,6 +1497,24 @@ PRIVATE struct type_method tpconst appexit_class_methods[] = {
 	TYPE_METHOD_END
 };
 
+/* A very special error type that doesn't actually derive from
+ * `Error', or even `object' for that matter. It does however
+ * have the `TP_FINTERRUPT' flag set, meaning that it can only
+ * be caught by interrupt-enabled exception handlers.
+ *
+ * The main purpose of this error is to allow user-code to throw
+ * it (the type is accessible as `(Error from deemon).AppExit'),
+ * while also providing for proper stack unwinding and correct
+ * destruction of all existing objects.
+ *
+ * The implementation's main() function should then terminate by
+ * returning the contained `ae_exitcode' value. Note that this
+ * type is final, meaning that user-classes cannot be further
+ * derived from it.
+ *
+ * Additionally, this type of error is used by the builtin
+ * implementation of `exit()' when deemon was built without
+ * support for a native exit function. */
 PUBLIC DeeTypeObject DeeError_AppExit = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "AppExit",
@@ -1513,7 +1529,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	                         "()\n"
 	                         "(exitcode:?Dint)\n"
 	                         "Construct a new AppExit object using the given @exitcode "
-	                         /**/ "or the host's default value for #CEXIT_SUCCESS, or $1"),
+	                         /**/ "or the host's default value for #CEXIT_SUCCESS, or $0"),
 	/* .tp_flags    = */ TP_FFINAL | TP_FINTERRUPT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

@@ -12418,8 +12418,8 @@ DECL_BEGIN
 #define memcpy dee_memcpy
 LOCAL WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) void *
 dee_memcpy(void *__restrict dst, void const *__restrict src, size_t num_bytes) {
-	uint8_t *dst_p = (uint8_t *)dst;
-	uint8_t const *src_p = (uint8_t const *)src;
+	__BYTE_TYPE__ *dst_p = (__BYTE_TYPE__ *)dst;
+	__BYTE_TYPE__ const *src_p = (__BYTE_TYPE__ const *)src;
 	while (num_bytes--)
 		*dst_p++ = *src_p++;
 	return dst;
@@ -12435,9 +12435,9 @@ DECL_BEGIN
 #define memset dee_memset
 LOCAL WUNUSED ATTR_OUTS(1, 3) void *
 dee_memset(void *__restrict dst, int byte, size_t num_bytes) {
-	uint8_t *dst_p = (uint8_t *)dst;
+	__BYTE_TYPE__ *dst_p = (__BYTE_TYPE__ *)dst;
 	while (num_bytes--)
-		*dst_p++ = (uint8_t)(unsigned int)byte;
+		*dst_p++ = (__BYTE_TYPE__)(unsigned int)byte;
 	return dst;
 }
 DECL_END
@@ -12450,16 +12450,16 @@ DECL_BEGIN
 #define memmove dee_memmove
 LOCAL WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) void *
 dee_memmove(void *dst, void const *src, size_t num_bytes) {
-	uint8_t *dst_p;
-	uint8_t const *src_p;
+	__BYTE_TYPE__ *dst_p;
+	__BYTE_TYPE__ const *src_p;
 	if (dst <= src) {
-		dst_p = (uint8_t *)dst;
-		src_p = (uint8_t const *)src;
+		dst_p = (__BYTE_TYPE__ *)dst;
+		src_p = (__BYTE_TYPE__ const *)src;
 		while (num_bytes--)
 			*dst_p++ = *src_p++;
 	} else {
-		dst_p = (uint8_t *)dst + num_bytes;
-		src_p = (uint8_t const *)src + num_bytes;
+		dst_p = (__BYTE_TYPE__ *)dst + num_bytes;
+		src_p = (__BYTE_TYPE__ const *)src + num_bytes;
 		while (num_bytes--)
 			*--dst_p = *--src_p;
 	}
@@ -12475,10 +12475,10 @@ DECL_BEGIN
 #define memcmp dee_memcmp
 LOCAL WUNUSED NONNULL((1, 2)) int
 dee_memcmp(void const *s1, void const *s2, size_t n) {
-	uint8_t const *p1 = (uint8_t const *)s1;
-	uint8_t const *p2 = (uint8_t const *)s2;
+	__BYTE_TYPE__ const *p1 = (__BYTE_TYPE__ const *)s1;
+	__BYTE_TYPE__ const *p2 = (__BYTE_TYPE__ const *)s2;
 	while (n--) {
-		uint8_t v1, v2;
+		__BYTE_TYPE__ v1, v2;
 		if ((v1 = *p1++) != (v2 = *p2++)) {
 			return v1 < v2 ? -1 : 1;
 		}
@@ -12607,8 +12607,8 @@ DECL_END
 		return buf;                                                 \
 	}
 
-#define DeeSystem_DEFINE_memccpy(name)  _DeeSystem_DEFINE_memccpyT(void, uint8_t, int, name)
-#define DeeSystem_DEFINE_memrchr(name)  _DeeSystem_DEFINE_memrchrT(void, uint8_t, int, name)
+#define DeeSystem_DEFINE_memccpy(name)  _DeeSystem_DEFINE_memccpyT(void, __BYTE_TYPE__, int, name)
+#define DeeSystem_DEFINE_memrchr(name)  _DeeSystem_DEFINE_memrchrT(void, __BYTE_TYPE__, int, name)
 #define DeeSystem_DEFINE_memrchrw(name) _DeeSystem_DEFINE_memrchrT(uint16_t, uint16_t, uint16_t, name)
 #define DeeSystem_DEFINE_memrchrl(name) _DeeSystem_DEFINE_memrchrT(uint32_t, uint32_t, uint32_t, name)
 #define DeeSystem_DEFINE_memrchrq(name) _DeeSystem_DEFINE_memrchrT(uint64_t, uint64_t, uint64_t, name)
@@ -12665,7 +12665,7 @@ DECL_END
 DECL_BEGIN
 #undef memchr
 #define memchr dee_memchr
-_DeeSystem_DEFINE_memchrT(void, uint8_t, int, dee_memchr)
+_DeeSystem_DEFINE_memchrT(void, __BYTE_TYPE__, int, dee_memchr)
 DECL_END
 #endif /* !CONFIG_HAVE_memchr */
 
@@ -12674,7 +12674,7 @@ DECL_END
 DECL_BEGIN
 #undef memcmp
 #define memcmp dee_memcmp
-_DeeSystem_DEFINE_memcmpT(uint8_t, dee_memcmp)
+_DeeSystem_DEFINE_memcmpT(__BYTE_TYPE__, dee_memcmp)
 DECL_END
 #endif /* !CONFIG_HAVE_memcmp */
 
@@ -12719,12 +12719,12 @@ DECL_END
 		return NULL;                                                               \
 	}
 
-#define DeeSystem_DEFINE_memmem(name) _DeeSystem_DEFINE_memmemT(void, uint8_t, memchr, 0 == bcmp, name)
+#define DeeSystem_DEFINE_memmem(name) _DeeSystem_DEFINE_memmemT(void, __BYTE_TYPE__, memchr, 0 == bcmp, name)
 #define DeeSystem_DEFINE_memmemw(name, memchrw, memeqw) _DeeSystem_DEFINE_memmemT(uint16_t, uint16_t, memchrw, memeqw, name)
 #define DeeSystem_DEFINE_memmeml(name, memchrl, memeql) _DeeSystem_DEFINE_memmemT(uint32_t, uint32_t, memchrl, memeql, name)
 #define DeeSystem_DEFINE_memmemq(name, memchrq, memeqq) _DeeSystem_DEFINE_memmemT(uint64_t, uint64_t, memchrq, memeqq, name)
 
-#define DeeSystem_DEFINE_memrmem(name) _DeeSystem_DEFINE_memrmemT(void, uint8_t, memrchr, 0 == bcmp, name)
+#define DeeSystem_DEFINE_memrmem(name) _DeeSystem_DEFINE_memrmemT(void, __BYTE_TYPE__, memrchr, 0 == bcmp, name)
 #define DeeSystem_DEFINE_memrmemw(name, memrchrw, memeqw) _DeeSystem_DEFINE_memrmemT(uint16_t, uint16_t, memrchrw, memeqw, name)
 #define DeeSystem_DEFINE_memrmeml(name, memrchrl, memeql) _DeeSystem_DEFINE_memrmemT(uint32_t, uint32_t, memrchrl, memeql, name)
 #define DeeSystem_DEFINE_memrmemq(name, memrchrq, memeqq) _DeeSystem_DEFINE_memrmemT(uint64_t, uint64_t, memrchrq, memeqq, name)
@@ -12748,11 +12748,11 @@ DECL_END
 		}                                                                       \
 		return result;                                                          \
 	}
-#define DeeSystem_DEFINE_memcnt(name)     _DeeSystem_DEFINE_memcntT(uint8_t, name, memmem)
+#define DeeSystem_DEFINE_memcnt(name)     _DeeSystem_DEFINE_memcntT(__BYTE_TYPE__, name, memmem)
 #define DeeSystem_DEFINE_memcntw(name)    _DeeSystem_DEFINE_memcntT(uint16_t, name, memmemw)
 #define DeeSystem_DEFINE_memcntl(name)    _DeeSystem_DEFINE_memcntT(uint32_t, name, memmeml)
 #define DeeSystem_DEFINE_memcntq(name)    _DeeSystem_DEFINE_memcntT(uint64_t, name, memmemq)
-#define DeeSystem_DEFINE_memcasecnt(name) _DeeSystem_DEFINE_memcntT(uint8_t, name, memcasemem)
+#define DeeSystem_DEFINE_memcasecnt(name) _DeeSystem_DEFINE_memcntT(__BYTE_TYPE__, name, memcasemem)
 
 #define DeeSystem_DEFINE_strnlen(name)                              \
 	LOCAL ATTR_PURE WUNUSED size_t                                  \
@@ -12805,58 +12805,58 @@ DECL_END
 		}                                                  \
 		return (rT *)haystack;                             \
 	}
-#define DeeSystem_DEFINE_rawmemchr(name)  _DeeSystem_DEFINE_rawmemchrT(void, uint8_t, int, rawmemchr)
+#define DeeSystem_DEFINE_rawmemchr(name)  _DeeSystem_DEFINE_rawmemchrT(void, __BYTE_TYPE__, int, rawmemchr)
 #define DeeSystem_DEFINE_rawmemchrw(name) _DeeSystem_DEFINE_rawmemchrT(uint16_t, uint16_t, uint16_t, rawmemchrw)
 #define DeeSystem_DEFINE_rawmemchrl(name) _DeeSystem_DEFINE_rawmemchrT(uint32_t, uint32_t, uint32_t, rawmemchrl)
 #define DeeSystem_DEFINE_rawmemchrq(name) _DeeSystem_DEFINE_rawmemchrT(uint64_t, uint64_t, uint64_t, rawmemchrq)
 
-#define DeeSystem_DEFINE_rawmemrchr(name)       \
-	LOCAL ATTR_PURE WUNUSED NONNULL((1)) void * \
-	name(void const *__restrict p, int c) {     \
-		uint8_t *haystack = (uint8_t *)p;       \
-		for (;;) {                              \
-			if (*--haystack == (uint8_t)c)      \
-				break;                          \
-		}                                       \
-		return haystack;                        \
+#define DeeSystem_DEFINE_rawmemrchr(name)             \
+	LOCAL ATTR_PURE WUNUSED NONNULL((1)) void *       \
+	name(void const *__restrict p, int c) {           \
+		__BYTE_TYPE__ *haystack = (__BYTE_TYPE__ *)p; \
+		for (;;) {                                    \
+			if (*--haystack == (__BYTE_TYPE__)c)      \
+				break;                                \
+		}                                             \
+		return haystack;                              \
 	}
 
-#define DeeSystem_DEFINE_memend(name)              \
-	LOCAL ATTR_PURE WUNUSED void *                 \
-	name(void const *p, int c, size_t num_bytes) { \
-		uint8_t *haystack = (uint8_t *)p;          \
-		for (; num_bytes--; ++haystack) {          \
-			if (*haystack == (uint8_t)c)           \
-				break;                             \
-		}                                          \
-		return haystack;                           \
+#define DeeSystem_DEFINE_memend(name)                 \
+	LOCAL ATTR_PURE WUNUSED void *                    \
+	name(void const *p, int c, size_t num_bytes) {    \
+		__BYTE_TYPE__ *haystack = (__BYTE_TYPE__ *)p; \
+		for (; num_bytes--; ++haystack) {             \
+			if (*haystack == (__BYTE_TYPE__)c)        \
+				break;                                \
+		}                                             \
+		return haystack;                              \
 	}
 
-#define DeeSystem_DEFINE_memxend(name)             \
-	LOCAL ATTR_PURE WUNUSED void *                 \
-	name(void const *p, int c, size_t num_bytes) { \
-		uint8_t *haystack = (uint8_t *)p;          \
-		for (; num_bytes--; ++haystack) {          \
-			if (*haystack != (uint8_t)c)           \
-				break;                             \
-		}                                          \
-		return haystack;                           \
+#define DeeSystem_DEFINE_memxend(name)                \
+	LOCAL ATTR_PURE WUNUSED void *                    \
+	name(void const *p, int c, size_t num_bytes) {    \
+		__BYTE_TYPE__ *haystack = (__BYTE_TYPE__ *)p; \
+		for (; num_bytes--; ++haystack) {             \
+			if (*haystack != (__BYTE_TYPE__)c)        \
+				break;                                \
+		}                                             \
+		return haystack;                              \
 	}
 
-#define DeeSystem_DEFINE_memrend(name)             \
-	LOCAL ATTR_PURE WUNUSED void *                 \
-	name(void const *p, int c, size_t num_bytes) { \
-		uint8_t *haystack = (uint8_t *)p;          \
-		haystack += num_bytes;                     \
-		for (;;) {                                 \
-			--haystack;                            \
-			if unlikely(!num_bytes)                \
-				break;                             \
-			if unlikely(*haystack == (uint8_t)c)   \
-				break;                             \
-			--num_bytes;                           \
-		}                                          \
-		return haystack;                           \
+#define DeeSystem_DEFINE_memrend(name)                 \
+	LOCAL ATTR_PURE WUNUSED void *                     \
+	name(void const *p, int c, size_t num_bytes) {     \
+		__BYTE_TYPE__ *haystack = (__BYTE_TYPE__ *)p;  \
+		haystack += num_bytes;                         \
+		for (;;) {                                     \
+			--haystack;                                \
+			if unlikely(!num_bytes)                    \
+				break;                                 \
+			if unlikely(*haystack == (__BYTE_TYPE__)c) \
+				break;                                 \
+			--num_bytes;                               \
+		}                                              \
+		return haystack;                               \
 	}
 
 #define DeeSystem_DEFINE_memlen(name)                                       \
@@ -12881,7 +12881,7 @@ DECL_END
 	LOCAL ATTR_PURE WUNUSED size_t name(void const *p, Tneedle c) { \
 		return (size_t)((T const *)rawmemchr(p, c) - (T const *)p); \
 	}
-#define DeeSystem_DEFINE_rawmemlen(name)  _DeeSystem_DEFINE_rawmemlenT(uint8_t, int, rawmemlen, rawmemchr)
+#define DeeSystem_DEFINE_rawmemlen(name)  _DeeSystem_DEFINE_rawmemlenT(__BYTE_TYPE__, int, rawmemlen, rawmemchr)
 #define DeeSystem_DEFINE_rawmemlenw(name) _DeeSystem_DEFINE_rawmemlenT(uint16_t, uint16_t, rawmemlenw, rawmemchrw)
 #define DeeSystem_DEFINE_rawmemlenl(name) _DeeSystem_DEFINE_rawmemlenT(uint32_t, uint32_t, rawmemlenl, rawmemchrl)
 #define DeeSystem_DEFINE_rawmemlenq(name) _DeeSystem_DEFINE_rawmemlenT(uint64_t, uint64_t, rawmemlenq, rawmemchrq)
@@ -12895,23 +12895,23 @@ DECL_END
 #define DeeSystem_DEFINE_memxchr(name)                \
 	LOCAL ATTR_PURE WUNUSED void *                    \
 	name(void const *__restrict p, int c, size_t n) { \
-		uint8_t *haystack = (uint8_t *)p;             \
+		__BYTE_TYPE__ *haystack = (__BYTE_TYPE__ *)p; \
 		for (; n--; ++haystack) {                     \
-			if (*haystack != (uint8_t)c)              \
+			if (*haystack != (__BYTE_TYPE__)c)        \
 				return haystack;                      \
 		}                                             \
 		return NULL;                                  \
 	}
 
-#define DeeSystem_DEFINE_rawmemxchr(name)   \
-	LOCAL ATTR_PURE WUNUSED void *          \
-	name(void const *__restrict p, int c) { \
-		uint8_t *haystack = (uint8_t *)p;   \
-		for (;; ++haystack) {               \
-			if (*haystack != (uint8_t)c)    \
-				break;                      \
-		}                                   \
-		return haystack;                    \
+#define DeeSystem_DEFINE_rawmemxchr(name)             \
+	LOCAL ATTR_PURE WUNUSED void *                    \
+	name(void const *__restrict p, int c) {           \
+		__BYTE_TYPE__ *haystack = (__BYTE_TYPE__ *)p; \
+		for (;; ++haystack) {                         \
+			if (*haystack != (__BYTE_TYPE__)c)        \
+				break;                                \
+		}                                             \
+		return haystack;                              \
 	}
 
 #define DeeSystem_DEFINE_rawmemxlen(name)                               \
@@ -12920,30 +12920,31 @@ DECL_END
 		return (size_t)((uintptr_t)rawmemxchr(p, byte) - (uintptr_t)p); \
 	}
 
-#define DeeSystem_DEFINE_memcasecmp(name)               \
-	LOCAL ATTR_PURE WUNUSED int                         \
-	name(void const *a, void const *b, size_t n) {      \
-		uint8_t *pa = (uint8_t *)a, *pb = (uint8_t *)b; \
-		uint8_t av, bv;                                 \
-		av = bv = 0;                                    \
-		while (n-- &&                                   \
-		       (((av = *pa++) == (bv = *pb++)) ||       \
-		        (av = tolower(av), bv = tolower(bv),    \
-		         av == bv)))                            \
-			;                                           \
-		return (int)av - (int)bv;                       \
+#define DeeSystem_DEFINE_memcasecmp(name)            \
+	LOCAL ATTR_PURE WUNUSED int                      \
+	name(void const *a, void const *b, size_t n) {   \
+		__BYTE_TYPE__ *pa = (__BYTE_TYPE__ *)a;      \
+		__BYTE_TYPE__ *pb = (__BYTE_TYPE__ *)b;      \
+		__BYTE_TYPE__ av, bv;                        \
+		av = bv = 0;                                 \
+		while (n-- &&                                \
+		       (((av = *pa++) == (bv = *pb++)) ||    \
+		        (av = tolower(av), bv = tolower(bv), \
+		         av == bv)))                         \
+			;                                        \
+		return (int)av - (int)bv;                    \
 	}
 
 
-#define DeeSystem_DEFINE__memlowerchr(name)                 \
-	LOCAL ATTR_PURE WUNUSED void *                          \
-	name(void const *__restrict p, uint8_t c, size_t n) {   \
-		while (n--) {                                       \
-			if ((uint8_t)tolower(*(uint8_t const *)p) == c) \
-				return (void *)p;                           \
-			p = (uint8_t const *)p + 1;                     \
-		}                                                   \
-		return NULL;                                        \
+#define DeeSystem_DEFINE__memlowerchr(name)                             \
+	LOCAL ATTR_PURE WUNUSED void *                                      \
+	name(void const *__restrict p, __BYTE_TYPE__ c, size_t n) {         \
+		while (n--) {                                                   \
+			if ((__BYTE_TYPE__)tolower(*(__BYTE_TYPE__ const *)p) == c) \
+				return (void *)p;                                       \
+			p = (__BYTE_TYPE__ const *)p + 1;                           \
+		}                                                               \
+		return NULL;                                                    \
 	}
 #define DeeSystem_DEFINE_memcasemem(name)                \
 	DeeSystem_DEFINE__memlowerchr(_##name##_memlowerchr) \
@@ -12953,13 +12954,13 @@ DECL_END
 	name(void const *haystack, size_t haystack_len,                                     \
 	     void const *needle, size_t needle_len) {                                       \
 		void const *candidate;                                                          \
-		uint8_t marker;                                                                 \
+		__BYTE_TYPE__ marker;                                                           \
 		if unlikely(!needle_len)                                                        \
 			return (void *)haystack;                                                    \
 		if unlikely(needle_len > haystack_len)                                          \
 			return NULL;                                                                \
 		haystack_len -= needle_len - 1;                                                 \
-		marker = (uint8_t)tolower(*(uint8_t const *)needle);                            \
+		marker = (__BYTE_TYPE__)tolower(*(__BYTE_TYPE__ const *)needle);                \
 		while ((candidate = memlowerchr(haystack, marker, haystack_len)) != NULL) {     \
 			if (memcasecmp(candidate, needle, needle_len) == 0)                         \
 				return (void *)candidate;                                               \
@@ -12971,37 +12972,37 @@ DECL_END
 	}
 
 
-#define DeeSystem_DEFINE_memrev(name)      \
-	LOCAL ATTR_INOUTS(1, 2) void *         \
-	name(void *__restrict buf, size_t n) { \
-		uint8_t *iter, *end;               \
-		end = (iter = (uint8_t *)buf) + n; \
-		while (iter < end) {               \
-			uint8_t temp = *iter;          \
-			*iter++      = *--end;         \
-			*end         = temp;           \
-		}                                  \
-		return buf;                        \
+#define DeeSystem_DEFINE_memrev(name)            \
+	LOCAL ATTR_INOUTS(1, 2) void *               \
+	name(void *__restrict buf, size_t n) {       \
+		__BYTE_TYPE__ *iter, *end;               \
+		end = (iter = (__BYTE_TYPE__ *)buf) + n; \
+		while (iter < end) {                     \
+			__BYTE_TYPE__ temp = *iter;          \
+			*iter++      = *--end;               \
+			*end         = temp;                 \
+		}                                        \
+		return buf;                              \
 	}
 
-#define DeeSystem_DEFINE_memrxchr(name)               \
-	LOCAL ATTR_PURE WUNUSED void *                    \
-	name(void const *__restrict p, int c, size_t n) { \
-		uint8_t *haystack = (uint8_t *)p + n;         \
-		while (n--) {                                 \
-			if (*--haystack != (uint8_t)c)            \
-				return haystack;                      \
-		}                                             \
-		return NULL;                                  \
+#define DeeSystem_DEFINE_memrxchr(name)                   \
+	LOCAL ATTR_PURE WUNUSED void *                        \
+	name(void const *__restrict p, int c, size_t n) {     \
+		__BYTE_TYPE__ *haystack = (__BYTE_TYPE__ *)p + n; \
+		while (n--) {                                     \
+			if (*--haystack != (__BYTE_TYPE__)c)          \
+				return haystack;                          \
+		}                                                 \
+		return NULL;                                      \
 	}
 
 #define DeeSystem_DEFINE_memrxend(name)               \
 	LOCAL ATTR_PURE WUNUSED void *                    \
 	name(void const *p, int byte, size_t num_bytes) { \
-		uint8_t *haystack = (uint8_t *)p;             \
+		__BYTE_TYPE__ *haystack = (__BYTE_TYPE__ *)p; \
 		haystack += num_bytes;                        \
 		while (num_bytes--) {                         \
-			if (*--haystack != (uint8_t)byte)         \
+			if (*--haystack != (__BYTE_TYPE__)byte)   \
 				break;                                \
 		}                                             \
 		return haystack;                              \
@@ -13013,15 +13014,15 @@ DECL_END
 		return (size_t)((uintptr_t)memrxend(p, byte, num_bytes) - (uintptr_t)p); \
 	}
 
-#define DeeSystem_DEFINE_rawmemrxchr(name)  \
-	LOCAL ATTR_PURE WUNUSED void *          \
-	name(void const *__restrict p, int c) { \
-		uint8_t *haystack = (uint8_t *)p;   \
-		for (;;) {                          \
-			if (*--haystack != (uint8_t)c)  \
-				break;                      \
-		}                                   \
-		return haystack;                    \
+#define DeeSystem_DEFINE_rawmemrxchr(name)            \
+	LOCAL ATTR_PURE WUNUSED void *                    \
+	name(void const *__restrict p, int c) {           \
+		__BYTE_TYPE__ *haystack = (__BYTE_TYPE__ *)p; \
+		for (;;) {                                    \
+			if (*--haystack != (__BYTE_TYPE__)c)      \
+				break;                                \
+		}                                             \
+		return haystack;                              \
 	}
 
 #define DeeSystem_DEFINE_rawmemrxlen(name)                               \
@@ -13030,16 +13031,16 @@ DECL_END
 		return (size_t)((uintptr_t)rawmemrxchr(p, byte) - (uintptr_t)p); \
 	}
 
-#define DeeSystem_DEFINE__memlowerrchr(name)              \
-	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) void *         \
-	name(void const *__restrict p, uint8_t c, size_t n) { \
-		uint8_t *iter = (uint8_t *)p + n;                 \
-		while (iter-- != (uint8_t *)p) {                  \
-			if ((uint8_t)tolower(*iter) == c)             \
-				return iter;                              \
-		}                                                 \
-		return NULL;                                      \
-	}                                                     \
+#define DeeSystem_DEFINE__memlowerrchr(name)                    \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) void *               \
+	name(void const *__restrict p, __BYTE_TYPE__ c, size_t n) { \
+		__BYTE_TYPE__ *iter = (__BYTE_TYPE__ *)p + n;           \
+		while (iter-- != (__BYTE_TYPE__ *)p) {                  \
+			if ((__BYTE_TYPE__)tolower(*iter) == c)             \
+				return iter;                                    \
+		}                                                       \
+		return NULL;                                            \
+	}                                                           \
 
 #define DeeSystem_DEFINE_memcasermem(name)                 \
 	DeeSystem_DEFINE__memlowerrchr(_##name##_memlowerrchr) \
@@ -13049,13 +13050,13 @@ DECL_END
 	name(void const *haystack, size_t haystack_len,                                  \
 	     void const *needle, size_t needle_len) {                                    \
 		void const *candidate;                                                       \
-		uint8_t marker;                                                              \
+		__BYTE_TYPE__ marker;                                                        \
 		if unlikely(!needle_len)                                                     \
 			return (void *)((uintptr_t)haystack + haystack_len);                     \
 		if unlikely(needle_len > haystack_len)                                       \
 			return NULL;                                                             \
 		haystack_len -= needle_len - 1;                                              \
-		marker = (uint8_t)tolower(*(uint8_t *)needle);                               \
+		marker = (__BYTE_TYPE__)tolower(*(__BYTE_TYPE__ *)needle);                   \
 		while ((candidate = memlowerrchr(haystack, marker, haystack_len)) != NULL) { \
 			if (memcasecmp(candidate, needle, needle_len) == 0)                      \
 				return (void *)candidate;                                            \
@@ -13066,30 +13067,32 @@ DECL_END
 		return NULL;                                                                 \
 	}
 
-#define DeeSystem_DEFINE_qsort(name)                                                \
-	LOCAL void _##name##_swapmemory(uint8_t *a, uint8_t *b,                         \
-	                                size_t num_bytes) {                             \
-		size_t i;                                                                   \
-		for (i = 0; i < num_bytes; ++i) {                                           \
-			uint8_t temp;                                                           \
-			temp = a[i];                                                            \
-			a[i] = b[i];                                                            \
-			b[i] = temp;                                                            \
-		}                                                                           \
-	}                                                                               \
-	LOCAL void name(void *base, size_t count, size_t size,                          \
-	                int (*compare)(void const *a, void const *b)) {                 \
-		size_t i, j;                                                                \
-		/* Not actually quick-sort, but this function's only used as fallback       \
-		 * when the linked libc doesn't offer a real qsort function, so it's ok! */ \
-		for (i = 0; i < count; ++i) {                                               \
-			for (j = i; j < count; ++j) {                                           \
-				uint8_t *a = (uint8_t *)base + j * size;                            \
-				uint8_t *b = (uint8_t *)base + i * size;                            \
-				if ((*compare)(a, b) < 0)                                           \
-					_##name##_swapmemory(a, b, size);                               \
-			}                                                                       \
-		}                                                                           \
+#define DeeSystem_DEFINE_qsort(name)                                 \
+	LOCAL void _##name##_swapmemory(__BYTE_TYPE__ *a,                \
+	                                __BYTE_TYPE__ *b,                \
+	                                size_t num_bytes) {              \
+		size_t i;                                                    \
+		for (i = 0; i < num_bytes; ++i) {                            \
+			__BYTE_TYPE__ temp;                                      \
+			temp = a[i];                                             \
+			a[i] = b[i];                                             \
+			b[i] = temp;                                             \
+		}                                                            \
+	}                                                                \
+	LOCAL void name(void *base, size_t count, size_t size,           \
+	                int (*compare)(void const *a, void const *b)) {  \
+		size_t i, j;                                                 \
+		/* Not actually quick-sort, but this function's only used as \
+		 * fallback when the linked libc doesn't offer a real qsort  \
+		 * function, so that's ok! */                                \
+		for (i = 0; i < count; ++i) {                                \
+			for (j = i; j < count; ++j) {                            \
+				__BYTE_TYPE__ *a = (__BYTE_TYPE__ *)base + j * size; \
+				__BYTE_TYPE__ *b = (__BYTE_TYPE__ *)base + i * size; \
+				if ((*compare)(a, b) < 0)                            \
+					_##name##_swapmemory(a, b, size);                \
+			}                                                        \
+		}                                                            \
 	}
 
 #define _DeeSystem_DEFINE_memsetT(T, name)    \
@@ -13643,7 +13646,7 @@ DECL_END
 #ifndef CONFIG_HAVE_mempset
 #define CONFIG_HAVE_mempset
 #undef mempset
-#define mempset(dst, byte, num_bytes) ((uint8_t *)memset(dst, byte, num_bytes) + (num_bytes))
+#define mempset(dst, byte, num_bytes) (void *)((__BYTE_TYPE__ *)memset(dst, byte, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempset */
 
 #if !defined(CONFIG_HAVE_mempsetw) && defined(CONFIG_HAVE_memsetw)
@@ -13964,7 +13967,7 @@ DECL_END
 #ifndef CONFIG_HAVE_mempcpy
 #define CONFIG_HAVE_mempcpy
 #define mempcpy(dst, src, num_bytes) \
-	((uint8_t *)memcpy(dst, src, num_bytes) + (num_bytes))
+	(void *)((__BYTE_TYPE__ *)memcpy(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempcpy */
 
 #ifndef CONFIG_HAVE_mempcpyw
@@ -13988,19 +13991,19 @@ DECL_END
 #ifndef CONFIG_HAVE_mempcpyc
 #define CONFIG_HAVE_mempcpyc
 #define mempcpyc(dst, src, elem_count, elem_size) \
-	(void *)((uint8_t *)memcpyc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
+	(void *)((__BYTE_TYPE__ *)memcpyc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
 #endif /* !CONFIG_HAVE_mempcpyc */
 
 #ifndef CONFIG_HAVE_mempset
 #define CONFIG_HAVE_mempset
 #define mempset(dst, byte, num_bytes) \
-	(void *)((uint8_t *)memset(dst, byte, num_bytes) + (num_bytes))
+	(void *)((__BYTE_TYPE__ *)memset(dst, byte, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempset */
 
 #ifndef CONFIG_HAVE_mempmove
 #define CONFIG_HAVE_mempmove
 #define mempmove(dst, src, num_bytes) \
-	(void *)((uint8_t *)memmove(dst, src, num_bytes) + (num_bytes))
+	(void *)((__BYTE_TYPE__ *)memmove(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempmove */
 
 #ifndef CONFIG_HAVE_mempmovew
@@ -14024,13 +14027,13 @@ DECL_END
 #ifndef CONFIG_HAVE_mempmovec
 #define CONFIG_HAVE_mempmovec
 #define mempmovec(dst, src, elem_count, elem_size) \
-	(void *)((uint8_t *)memmovec(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
+	(void *)((__BYTE_TYPE__ *)memmovec(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
 #endif /* !CONFIG_HAVE_mempmovec */
 
 #ifndef CONFIG_HAVE_mempmoveup
 #define CONFIG_HAVE_mempmoveup
 #define mempmoveup(dst, src, num_bytes) \
-	(void *)((uint8_t *)memmoveup(dst, src, num_bytes) + (num_bytes))
+	(void *)((__BYTE_TYPE__ *)memmoveup(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempmoveup */
 
 #ifndef CONFIG_HAVE_mempmoveupw
@@ -14054,13 +14057,13 @@ DECL_END
 #ifndef CONFIG_HAVE_mempmoveupc
 #define CONFIG_HAVE_mempmoveupc
 #define mempmoveupc(dst, src, elem_count, elem_size) \
-	(void *)((uint8_t *)memmoveupc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
+	(void *)((__BYTE_TYPE__ *)memmoveupc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
 #endif /* !CONFIG_HAVE_mempmoveupc */
 
 #ifndef CONFIG_HAVE_mempmovedown
 #define CONFIG_HAVE_mempmovedown
 #define mempmovedown(dst, src, num_bytes) \
-	(void *)((uint8_t *)memmovedown(dst, src, num_bytes) + (num_bytes))
+	(void *)((__BYTE_TYPE__ *)memmovedown(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempmovedown */
 
 #ifndef CONFIG_HAVE_mempmovedownw
@@ -14084,7 +14087,7 @@ DECL_END
 #ifndef CONFIG_HAVE_mempmovedownc
 #define CONFIG_HAVE_mempmovedownc
 #define mempmovedownc(dst, src, elem_count, elem_size) \
-	(void *)((uint8_t *)memmovedownc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
+	(void *)((__BYTE_TYPE__ *)memmovedownc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
 #endif /* !CONFIG_HAVE_mempmovedownc */
 
 #undef memchrp

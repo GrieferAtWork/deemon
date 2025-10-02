@@ -108,6 +108,8 @@ DDATDEF DeeTypeObject /**/ DeeError_Interrupt;
 DDATDEF DeeTypeObject /*    */ DeeError_KeyboardInterrupt;
 DDATDEF DeeTypeObject /*    */ DeeError_ThreadExit;
 DDATDEF DeeTypeObject /**/ DeeError_StopIteration;
+
+
 DDATDEF DeeTypeObject DeeError_Error;
 DDATDEF DeeTypeObject /**/ DeeError_AttributeError;
 DDATDEF DeeTypeObject /*    */ DeeError_UnboundAttribute;
@@ -155,21 +157,24 @@ DDATDEF DeeTypeObject /*        */ DeeError_CrossDeviceLink;
 DDATDEF DeeTypeObject /*        */ DeeError_BusyFile;
 
 
-/* A very special error type that doesn't actually derive
- * from `Error', or even `object' for that matter.
- * It does however have the `TP_FINTERRUPT' flag set,
- * meaning that it can only be caught by interrupt-enabled
- * exception handlers.
- * The main purpose of this error is to allow user-code to
- * throw it (the type is accessible as `(Error from deemon).AppExit'),
+/* A very special error type that doesn't actually derive from
+ * `Error', or even `object' for that matter. It does however
+ * have the `TP_FINTERRUPT' flag set, meaning that it can only
+ * be caught by interrupt-enabled exception handlers.
+ *
+ * The main purpose of this error is to allow user-code to throw
+ * it (the type is accessible as `(Error from deemon).AppExit'),
  * while also providing for proper stack unwinding and correct
  * destruction of all existing objects.
- * The implementation's main() function should then terminate
- * by returning the contained `ae_exitcode' value.
- * Note that this type is final, meaning that
- * user-classes cannot be further derived from it.
- * Additionally, this type of error is used by the builtin implementation
- * of `exit()' when deemon was built with support for a native exit function. */
+ *
+ * The implementation's main() function should then terminate by
+ * returning the contained `ae_exitcode' value. Note that this
+ * type is final, meaning that user-classes cannot be further
+ * derived from it.
+ *
+ * Additionally, this type of error is used by the builtin
+ * implementation of `exit()' when deemon was built without
+ * support for a native exit function. */
 DDATDEF DeeTypeObject DeeError_AppExit;
 struct Dee_appexit_object {
 	Dee_OBJECT_HEAD
