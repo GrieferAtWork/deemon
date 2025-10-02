@@ -329,7 +329,7 @@ INTERN DeeTypeObject SeqRemoveIfWithRemoveAllKey_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)&seq_removeif_with_removeall_key_init,
-				TYPE_FIXED_ALLOCATOR(DeeObject)
+				TYPE_FIXED_ALLOCATOR(SeqRemoveIfWithRemoveAllKey)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *))&seq_removeif_with_removeall_key_fini,
