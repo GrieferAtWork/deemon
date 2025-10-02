@@ -76,6 +76,20 @@ struct_offset_renamed_after(DeeTypeObject const *stop,
 	return false;
 }
 
+/* Check if a field at "field_offset" exists below (or within) "start" */
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+struct_offset_exists_r(DeeTypeObject const *start,
+                       uintptr_half_t field_offset) {
+	while (start != &DeeObject_Type) {
+		if (struct_offset_exists(start, field_offset))
+			return true;
+		start = DeeType_Base(start);
+		if unlikely(!start)
+			break;
+	}
+	return false;
+}
+
 PRIVATE NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 struct_foreach_field_at(DeeTypeObject *type,
                         DeeTypeObject const *origin,
@@ -500,6 +514,7 @@ PUBLIC NONNULL((1)) void DCALL /* Remember to set "Dee_TF_TPVISIT" */
 DeeStructObject_Visit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                       Dee_visit_t proc, void *arg) {
 	struct type_member const *member = tp_self->tp_members;
+	DeeTypeObject *tp_base = DeeType_Base(tp_self);
 	if (member) {
 		for (; member->m_name; ++member) {
 			byte_t *dst;
@@ -509,10 +524,12 @@ DeeStructObject_Visit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 			switch (member->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 			case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
 			case STRUCT_OBJECT & ~STRUCT_CONST:
-				Dee_XVisit(*(DREF DeeObject **)dst);
+				if (!struct_offset_exists_r(tp_base, member->m_desc.md_field.mdf_offset))
+					Dee_XVisit(*(DREF DeeObject **)dst);
 				break;
 			case STRUCT_VARIANT:
-				Dee_variant_visit((struct Dee_variant *)dst);
+				if (!struct_offset_exists_r(tp_base, member->m_desc.md_field.mdf_offset))
+					Dee_variant_visit((struct Dee_variant *)dst, proc, arg);
 				break;
 			default: break;
 			}
@@ -523,10 +540,13 @@ DeeStructObject_Visit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 PUBLIC NONNULL((1)) void DCALL /* Only finalizes fields defined by "Dee_TYPE(self)" */
 DeeStructObject_Fini(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
+	DeeTypeObject *tp_base = DeeType_Base(tp_self);
 	struct type_member const *member = tp_self->tp_members;
 	if (member) {
 		for (; member->m_name; ++member) {
 			if (!TYPE_MEMBER_ISFIELD(member))
+				continue;
+			if (struct_offset_exists_r(tp_base, member->m_desc.md_field.mdf_offset))
 				continue;
 			struct_fini_cb(self, tp_self, member);
 		}

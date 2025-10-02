@@ -220,9 +220,6 @@ LOCAL WUNUSED NONNULL((1)) double (DCALL _Dee_variant_get_float)(struct Dee_vari
 #define Dee_variant_fini(self)                       \
 	(void)((self)->var_type != Dee_VARIANT_OBJECT || \
 	       (Dee_Decref((self)->var_data.d_object), 0))
-#define Dee_variant_visit(self)                      \
-	(void)((self)->var_type != Dee_VARIANT_OBJECT || \
-	       (Dee_Visit((self)->var_data.d_object), 0))
 #define Dee_variant_gettype(self)           ((enum Dee_variant_type)Dee_atomic_read((int *)&(self)->var_type))
 #define Dee_variant_isbound(self)           (Dee_variant_gettype(self) != Dee_VARIANT_UNBOUND)
 #define Dee_variant_gettype_nonatomic(self) (self)->var_type
@@ -235,6 +232,9 @@ Dee_variant_init_copy(struct Dee_variant *__restrict self,
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_variant_init_deepcopy(struct Dee_variant *__restrict self,
                           struct Dee_variant *__restrict other);
+DFUNDEF NONNULL((1, 2)) void DCALL
+Dee_variant_visit(struct Dee_variant *__restrict self,
+                  Dee_visit_t proc, void *arg);
 
 
 /* Get the value of a variant in the form of a deemon object.
@@ -248,6 +248,10 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 Dee_variant_getobject(struct Dee_variant *__restrict self,
                       DeeObject *owner, char const *attr);
 
+/* Returns the type of the object bound to "self" (or "NULL" if "self" is unbound) */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+Dee_variant_getobjecttype(struct Dee_variant *__restrict self);
+
 /* Set the value of a variant (these can never fail) */
 DFUNDEF NONNULL((1)) void DCALL Dee_variant_setunbound(struct Dee_variant *__restrict self);
 DFUNDEF NONNULL((1, 2)) void DCALL Dee_variant_setobject(struct Dee_variant *__restrict self, DeeObject *value);
@@ -257,6 +261,43 @@ DFUNDEF NONNULL((1)) void DCALL Dee_variant_setint64(struct Dee_variant *__restr
 DFUNDEF NONNULL((1)) void DCALL Dee_variant_setuint64(struct Dee_variant *__restrict self, uint64_t value);
 DFUNDEF NONNULL((1)) void DCALL Dee_variant_setint128(struct Dee_variant *__restrict self, Dee_int128_t value);
 DFUNDEF NONNULL((1)) void DCALL Dee_variant_setuint128(struct Dee_variant *__restrict self, Dee_uint128_t value);
+
+DFUNDEF NONNULL((1, 2)) bool DCALL Dee_variant_setobject_if_unbound(struct Dee_variant *__restrict self, DeeObject *value);
+DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setint32_if_unbound(struct Dee_variant *__restrict self, int32_t value);
+DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setuint32_if_unbound(struct Dee_variant *__restrict self, uint32_t value);
+DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setint64_if_unbound(struct Dee_variant *__restrict self, int64_t value);
+DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setuint64_if_unbound(struct Dee_variant *__restrict self, uint64_t value);
+DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setint128_if_unbound(struct Dee_variant *__restrict self, Dee_int128_t value);
+DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setuint128_if_unbound(struct Dee_variant *__restrict self, Dee_uint128_t value);
+
+#if __SIZEOF_SIZE_T__ <= 4
+#define _Dee_variant_set_size(self, value)           _Dee_variant_set_uint32(self, (uint32_t)(value))
+#define _Dee_variant_set_ssize(self, value)          _Dee_variant_set_int32(self, (int32_t)(value))
+#define Dee_variant_init_size(self, value)           Dee_variant_init_uint32(self, (uint32_t)(value))
+#define Dee_variant_set_ssize(self, value)           Dee_variant_init_int32(self, (int32_t)(value))
+#define Dee_variant_setsize(self, value)             Dee_variant_setuint32(self, (uint32_t)(value))
+#define Dee_variant_setsize_if_unbound(self, value)  Dee_variant_setuint32_if_unbound(self, (uint32_t)(value))
+#define Dee_variant_setssize(self, value)            Dee_variant_setint32(self, (int32_t)(value))
+#define Dee_variant_setssize_if_unbound(self, value) Dee_variant_setint32_if_unbound(self, (int32_t)(value))
+#elif __SIZEOF_SIZE_T__ <= 8
+#define _Dee_variant_set_size(self, value)           _Dee_variant_set_uint64(self, (uint64_t)(value))
+#define _Dee_variant_set_ssize(self, value)          _Dee_variant_set_int64(self, (int64_t)(value))
+#define Dee_variant_init_size(self, value)           Dee_variant_init_uint64(self, (uint64_t)(value))
+#define Dee_variant_set_ssize(self, value)           Dee_variant_init_int64(self, (int64_t)(value))
+#define Dee_variant_setsize(self, value)             Dee_variant_setuint64(self, (uint64_t)(value))
+#define Dee_variant_setsize_if_unbound(self, value)  Dee_variant_setuint64_if_unbound(self, (uint64_t)(value))
+#define Dee_variant_setssize(self, value)            Dee_variant_setint64(self, (int64_t)(value))
+#define Dee_variant_setssize_if_unbound(self, value) Dee_variant_setint64_if_unbound(self, (int64_t)(value))
+#else /* __SIZEOF_SIZE_T__ <= ... */
+#define _Dee_variant_set_size(self, value)           _Dee_variant_set_uint128(self, value)
+#define _Dee_variant_set_ssize(self, value)          _Dee_variant_set_int128(self, value)
+#define Dee_variant_init_size(self, value)           Dee_variant_sinituint128(self, value)
+#define Dee_variant_set_ssize(self, value)           Dee_variant_sinitint128(self, value)
+#define Dee_variant_setsize(self, value)             Dee_variant_setuint128(self, value)
+#define Dee_variant_setsize_if_unbound(self, value)  Dee_variant_setuint128_if_unbound(self, value)
+#define Dee_variant_setssize(self, value)            Dee_variant_setint128(self, value)
+#define Dee_variant_setssize_if_unbound(self, value) Dee_variant_setint128_if_unbound(self, value)
+#endif /* __SIZEOF_SIZE_T__ > ... */
 
 /* Print the DeeObject_Str() or DeeObject_Repr() of the object linked to "self"
  * When the variant "self" is unbound, nothing is printed and "0" is returned.

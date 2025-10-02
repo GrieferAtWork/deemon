@@ -174,7 +174,7 @@ local __objects = deemon.List {
 	/* 0x006f */ deemon.Error,
 	/* 0x0070 */ deemon.Error.AttributeError,
 	/* 0x0071 */ deemon.Error.CompilerError,
-	/* 0x0072 */ deemon.Error.ValueError.KeyError,
+	/* 0x0072 */ deemon.Error.ValueError.SequenceError.KeyError,
 	/* 0x0073 */ deemon.Error.NoMemory,
 	/* 0x0074 */ deemon.Error.RuntimeError.NotImplemented,
 	/* 0x0075 */ deemon.Error.RuntimeError,
@@ -441,7 +441,7 @@ local __objects = deemon.List {
 	/* 0x017a */ ctypes.StructType,
 	/* 0x017b */ rt.Compiler.Scope,
 	/* 0x017c */ none, /* TODO: &DeeLexerIterator_Type */
-	/* 0x017d */ deemon.Error.ValueError.IndexError,
+	/* 0x017d */ deemon.Error.ValueError.SequenceError.KeyError.IndexError,
 	/* 0x017e */ deemon.HashSet,
 	/* 0x017f */ deemon.HashSet.Iterator,
 	/* 0x0180 */ (path, val) -> fs.chtime(path, val, none, none),

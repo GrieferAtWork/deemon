@@ -163,7 +163,18 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	frame->ef_trace = (DREF DeeTracebackObject *)ITER_DONE;
 	ts->t_except    = frame;
 	++ts->t_exceptsz;
-	Dee_DPRINTF("[RT] Throw exception: %r (%" PRFu16 ")\n", error, ts->t_exceptsz);
+#ifndef Dee_DPRINT_IS_NOOP
+	if (ts->t_exceptsz == 1) {
+		/* Only print first-level exceptions to prevent recursion if the error's "repr"
+		 * is implemented like:
+		 * >> class MyError {
+		 * >>     operator repr() {
+		 * >>         throw this; // or "throw MyError();"
+		 * >>     }
+		 * >> } */
+		Dee_DPRINTF("[RT] Throw exception: %r (%" PRFu16 ")\n", error, ts->t_exceptsz);
+	}
+#endif /* !Dee_DPRINT_IS_NOOP */
 	return -1;
 err:
 	Dee_Decref(error);

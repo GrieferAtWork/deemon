@@ -326,7 +326,7 @@ struct Dee_thread_interrupt {
 struct Dee_thread_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC object. */
-	Dee_refcnt_t                   t_inthookon;  /* [lock(ATOMIC)]  */
+	Dee_refcnt_t                   t_inthookon;  /* [lock(ATOMIC)] Are interrupt hooks enabled? */
 	struct Dee_repr_frame         *t_str_curr;   /* [lock(PRIVATE(DeeThread_Self()))][0..1]
 	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
 	                                              * Chain of GC objects currently invoking the `__str__' operator. */

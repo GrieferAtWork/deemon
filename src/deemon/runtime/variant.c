@@ -94,6 +94,15 @@ err_copy:
 	return -1;
 }
 
+PUBLIC NONNULL((1, 2)) void DCALL
+Dee_variant_visit(struct Dee_variant *__restrict self,
+                  Dee_visit_t proc, void *arg) {
+	enum Dee_variant_type type = Dee_variant_lock(self);
+	if (type == Dee_VARIANT_OBJECT)
+		(*proc)(self->var_data.d_object, arg);
+	Dee_variant_unlock(self, type);
+}
+
 
 /* Get the value of a variant in the form of a deemon object.
  * If the variant's type isn't set to "Dee_VARIANT_OBJECT", the
@@ -175,6 +184,41 @@ err_unbound:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+Dee_variant_getobjecttype_impl(struct Dee_variant *__restrict self) {
+	switch (self->var_type) {
+	case Dee_VARIANT_UNBOUND:
+		return NULL;
+	case Dee_VARIANT_OBJECT:
+		return Dee_TYPE(self->var_data.d_object);
+	case Dee_VARIANT_INT32:
+	case Dee_VARIANT_UINT32:
+	case Dee_VARIANT_INT64:
+	case Dee_VARIANT_UINT64:
+	case Dee_VARIANT_INT128:
+	case Dee_VARIANT_UINT128:
+		return &DeeInt_Type;
+#ifndef CONFIG_NO_FPU
+	case Dee_VARIANT_FLOAT:
+		return &DeeFloat_Type;
+#endif /* !CONFIG_NO_FPU */
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+/* Returns the type of the object bound to "self" (or "NULL" if "self" is unbound) */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+Dee_variant_getobjecttype(struct Dee_variant *__restrict self) {
+	DeeTypeObject *result;
+	struct Dee_variant copy;
+	Dee_variant_init_copy(&copy, self);
+	result = Dee_variant_getobjecttype_impl(&copy);
+	Dee_XIncref(result);
+	Dee_variant_fini(&copy);
+	return result;
+}
+
 
 #define VARIANT_SETVALUE(self, setter, value, type)                        \
 	do {                                                                   \
@@ -232,6 +276,63 @@ PUBLIC NONNULL((1)) void DCALL
 Dee_variant_setuint128(struct Dee_variant *__restrict self, Dee_uint128_t value) {
 	VARIANT_SETVALUE(self, _Dee_variant_set_uint128, value, Dee_VARIANT_UINT128);
 }
+
+PUBLIC NONNULL((1, 2)) bool DCALL
+Dee_variant_setobject_if_unbound(struct Dee_variant *__restrict self, DeeObject *value) {
+	enum Dee_variant_type old_type = Dee_variant_lock(self);
+	if (old_type != Dee_VARIANT_UNBOUND) {
+		Dee_variant_unlock(self, old_type);
+		return false;
+	}
+	Dee_Incref(value);
+	self->var_data.d_object = value;
+	Dee_variant_unlock(self, Dee_VARIANT_OBJECT);
+	return true;
+}
+
+#define VARIANT_SETVALUE_IF_UNBOUND(self, setter, value, type)   \
+	do {                                                         \
+		enum Dee_variant_type old_type = Dee_variant_lock(self); \
+		if (old_type != Dee_VARIANT_UNBOUND) {                   \
+			Dee_variant_unlock(self, old_type);                  \
+			return false;                                        \
+		}                                                        \
+		setter(self, value);                                     \
+		Dee_variant_unlock(self, type);                          \
+		return true;                                             \
+	}	__WHILE0
+
+PUBLIC NONNULL((1)) bool DCALL
+Dee_variant_setint32_if_unbound(struct Dee_variant *__restrict self, int32_t value) {
+	VARIANT_SETVALUE_IF_UNBOUND(self, _Dee_variant_set_int32, value, Dee_VARIANT_INT32);
+}
+
+PUBLIC NONNULL((1)) bool DCALL
+Dee_variant_setuint32_if_unbound(struct Dee_variant *__restrict self, uint32_t value) {
+	VARIANT_SETVALUE_IF_UNBOUND(self, _Dee_variant_set_uint32, value, Dee_VARIANT_UINT32);
+}
+
+PUBLIC NONNULL((1)) bool DCALL
+Dee_variant_setint64_if_unbound(struct Dee_variant *__restrict self, int64_t value) {
+	VARIANT_SETVALUE_IF_UNBOUND(self, _Dee_variant_set_int64, value, Dee_VARIANT_INT64);
+}
+
+PUBLIC NONNULL((1)) bool DCALL
+Dee_variant_setuint64_if_unbound(struct Dee_variant *__restrict self, uint64_t value) {
+	VARIANT_SETVALUE_IF_UNBOUND(self, _Dee_variant_set_uint64, value, Dee_VARIANT_UINT64);
+}
+
+PUBLIC NONNULL((1)) bool DCALL
+Dee_variant_setint128_if_unbound(struct Dee_variant *__restrict self, Dee_int128_t value) {
+	VARIANT_SETVALUE_IF_UNBOUND(self, _Dee_variant_set_int128, value, Dee_VARIANT_INT128);
+}
+
+PUBLIC NONNULL((1)) bool DCALL
+Dee_variant_setuint128_if_unbound(struct Dee_variant *__restrict self, Dee_uint128_t value) {
+	VARIANT_SETVALUE_IF_UNBOUND(self, _Dee_variant_set_uint128, value, Dee_VARIANT_UINT128);
+}
+
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_variant_print_impl(struct Dee_variant *__restrict self,

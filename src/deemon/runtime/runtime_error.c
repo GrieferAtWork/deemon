@@ -25,6 +25,7 @@
 #include <deemon/bytes.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/format.h>
@@ -276,53 +277,34 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       index, size);
 }
 
-INTERN ATTR_COLD NONNULL((1)) int
+INTERN ATTR_COLD NONNULL((1)) int /* TODO: DEPRECATED */
 (DCALL err_unbound_index)(DeeObject *__restrict self, size_t index) {
-	ASSERT_OBJECT(self);
-	return DeeError_Throwf(&DeeError_UnboundItem,
-	                       "Index `%" PRFuSIZ "' of instance of `%k': %k has not been bound",
-	                       index, Dee_TYPE(self), self);
+	return DeeRT_ErrUnboundIndex(self, index);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1, 2)) int /* TODO: DEPRECATED */
 (DCALL err_unbound_index_ob)(DeeObject *self, DeeObject *indexob) {
-	ASSERT_OBJECT(self);
-	return DeeError_Throwf(&DeeError_UnboundItem,
-	                       "Index `%r' of instance of `%k': %k has not been bound",
-	                       indexob, Dee_TYPE(self), self);
+	return DeeRT_ErrUnboundIndexObj(self, indexob);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1, 2)) int /* TODO: DEPRECATED */
 (DCALL err_unbound_key)(DeeObject *self, DeeObject *key) {
-	ASSERT_OBJECT(self);
-	ASSERT_OBJECT(key);
-	return DeeError_Throwf(&DeeError_UnboundItem,
-	                       "Key `%r' of instance of `%k': %k has not been bound",
-	                       key, Dee_TYPE(self), self);
+	return DeeRT_ErrUnboundKey(self, key);
 }
 
-INTERN ATTR_COLD NONNULL((1)) int
+INTERN ATTR_COLD NONNULL((1)) int /* TODO: DEPRECATED */
 (DCALL err_unbound_key_int)(DeeObject *self, size_t key) {
-	ASSERT_OBJECT(self);
-	return DeeError_Throwf(&DeeError_UnboundItem,
-	                       "Key `%" PRFuSIZ "' of instance of `%k': %k has not been bound",
-	                       key, Dee_TYPE(self), self);
+	return DeeRT_ErrUnboundKeyInt(self, key);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1, 2)) int /* TODO: DEPRECATED */
 (DCALL err_unbound_key_str)(DeeObject *self, char const *key) {
-	ASSERT_OBJECT(self);
-	return DeeError_Throwf(&DeeError_UnboundItem,
-	                       "Key `%q' of instance of `%k': %k has not been bound",
-	                       key, Dee_TYPE(self), self);
+	return DeeRT_ErrUnboundKeyStr(self, key);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1, 2)) int /* TODO: DEPRECATED */
 (DCALL err_unbound_key_str_len)(DeeObject *self, char const *key, size_t keylen) {
-	ASSERT_OBJECT(self);
-	return DeeError_Throwf(&DeeError_UnboundItem,
-	                       "Key `%$q' of instance of `%k': %k has not been bound",
-	                       keylen, key, Dee_TYPE(self), self);
+	return DeeRT_ErrUnboundKeyStrLen(self, key, keylen);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int

@@ -22,6 +22,8 @@
 import * from deemon;
 import * from errors;
 
+#define TRY(x) (try x catch (e...) e)
+
 
 assert IntegerOverflow() == IntegerOverflow();
 assert IntegerOverflow("foo").message == "foo";
@@ -44,4 +46,17 @@ assert IntegerOverflow(value: 42).maxval !is bound;
 assert IntegerOverflow(value: 42).positive == false;
 assert "IntegerOverflow()" == repr IntegerOverflow();
 assert "IntegerOverflow(value: 42)" == repr IntegerOverflow(value: 42);
+
+/* Make sure that field renaming in custom error classes works (here: "ValueError" calls it "value", but "SequenceError" calls it "seq") */
+assert IndexError(seq: {10, 20}).seq == {10, 20};
+assert IndexError(seq: {10, 20}) is KeyError;
+assert IndexError(seq: {10, 20}) is SequenceError;
+assert IndexError(seq: {10, 20}) is ValueError;
+assert KeyError.seq(IndexError(seq: {10, 20})) == {10, 20};
+assert SequenceError.seq(IndexError(seq: {10, 20})) == {10, 20};
+assert ValueError.value(IndexError(seq: {10, 20})) == {10, 20};
+
+assert ValueError(value: {10, 20}) == ValueError(value: {10, 20});
+assert TRY(IndexError(value: {10, 20})) is TypeError,
+	"Not allowed because field got renamed to 'seq' by SequenceError";
 
