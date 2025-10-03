@@ -181,10 +181,9 @@ BUILTIN_DOC(boundattr, &DeeBuiltin_BoundAttr, MODSYM_FREADONLY | MODSYM_FCONSTEX
 BUILTIN_DOC(bounditem, &DeeBuiltin_BoundItem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(ob,index:?Dint,allow_missing=!t)->?Dbool\n"
             "(ob,key:?O,allow_missing=!t)->?Dbool\n"
-            "#tIndexError{The given @index doesn't exist, and @allow_missing is ?f}"
             "#tKeyError{The given @key doesn't exist, and @allow_missing is ?f}"
             "#r{Indicative of item @index or @key of @ob currently being bound}"
-            "If the item doesn't exist, return ?f, or throw an :IndexError or :KeyError, "
+            "If the item doesn't exist, return ?f, or throw :KeyError (or :IndexError), "
             /**/ "depending on the given @allow_missing\n"
             "${"
             /**/ "import bounditem from deemon;\n"

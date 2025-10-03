@@ -28,6 +28,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -278,9 +279,19 @@ array_get(DeeArrayTypeObject *tp_self, void *base, DeeObject *index_ob) {
 
 	/* Check bounds. */
 	if unlikely(index >= tp_self->at_count) {
-		DeeError_Throwf(&DeeError_IndexError,
-		                "Index `%" PRFuSIZ "' lies outside the valid bounds `0...%" PRFuSIZ "'",
-		                index, tp_self->at_count);
+		DREF DeeLValueTypeObject *lv_type;
+		lv_type = DeeSType_LValue(DeeArrayType_AsSType(tp_self));
+		if unlikely(!lv_type)
+			goto err;
+		result = DeeObject_MALLOC(struct lvalue_object);
+		if unlikely(!result) {
+			Dee_Decref_unlikely(DeeLValueType_AsType(lv_type));
+			goto err;
+		}
+		result->l_ptr.ptr = base;
+		DeeObject_InitNoref(result, DeeLValueType_AsType(lv_type));
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)result, index, tp_self->at_count);
+		Dee_Decref_unlikely(result);
 		goto err;
 	}
 	lval_type = DeeSType_LValue(tp_self->at_orig);

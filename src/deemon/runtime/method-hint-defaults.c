@@ -5180,9 +5180,9 @@ default__seq_enumerate__with__seq_operator_size__and__seq_operator_getitem_index
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err_indexob;
 			}
 		}
@@ -5263,9 +5263,9 @@ default__seq_enumerate__with__seq_operator_sizeob__and__seq_operator_getitem(Dee
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err_sizeob_indexob;
 			}
 		}
@@ -5308,9 +5308,9 @@ default__seq_enumerate__with__seq_operator_getitem_index(DeeObject *__restrict s
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err_indexob;
 			}
 		}
@@ -5344,9 +5344,9 @@ default__seq_enumerate__with__seq_operator_getitem(DeeObject *__restrict self, D
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err_indexob;
 			}
 		}
@@ -5516,9 +5516,9 @@ default__seq_enumerate_index__with__seq_operator_size__and__seq_operator_getitem
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err;
 			}
 		}
@@ -5582,9 +5582,9 @@ default__seq_enumerate_index__with__seq_operator_getitem_index(DeeObject *__rest
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err;
 			}
 		}
@@ -17433,9 +17433,8 @@ default__map_operator_trygetitem__with__map_operator_getitem(DeeObject *self, De
 	DREF DeeObject *result;
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_getitem))(self, key);
 	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_IndexError) ||
-		    DeeError_Catch(&DeeError_KeyError) ||
-		    DeeError_Catch(&DeeError_UnboundItem))
+		if (DeeError_Catch(&DeeError_KeyError) /*||
+		    DeeError_Catch(&DeeError_UnboundItem)*/)
 			result = ITER_DONE;
 	}
 	return result;
@@ -17783,8 +17782,7 @@ default__map_operator_bounditem__with__map_operator_getitem(DeeObject *self, Dee
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }
@@ -17879,8 +17877,7 @@ default__map_operator_bounditem_index__with__map_operator_getitem_index(DeeObjec
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }
@@ -17927,8 +17924,7 @@ default__map_operator_bounditem_string_hash__with__map_operator_getitem_string_h
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }
@@ -17975,8 +17971,7 @@ default__map_operator_bounditem_string_len_hash__with__map_operator_getitem_stri
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }

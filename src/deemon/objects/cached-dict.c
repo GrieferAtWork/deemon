@@ -900,8 +900,7 @@ cdict_bounditem(CachedDict *self, DeeObject *key) {
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 err:
 	return Dee_BOUND_ERR;
@@ -926,8 +925,7 @@ cdict_bounditem_string_hash(CachedDict *self, char const *key, Dee_hash_t hash) 
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 err:
 	return Dee_BOUND_ERR;
@@ -952,8 +950,7 @@ cdict_bounditem_string_len_hash(CachedDict *self, char const *key, size_t keylen
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 err:
 	return Dee_BOUND_ERR;

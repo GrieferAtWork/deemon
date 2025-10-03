@@ -153,9 +153,9 @@ err:
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err_indexob;
 			}
 		}
@@ -232,9 +232,9 @@ err:
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err_sizeob_indexob;
 			}
 		}
@@ -275,9 +275,9 @@ err:
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err_indexob;
 			}
 		}
@@ -309,9 +309,9 @@ err:
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err_indexob;
 			}
 		}
@@ -479,9 +479,9 @@ err:
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err;
 			}
 		}
@@ -541,9 +541,9 @@ err:
 		if unlikely(!index_value) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break; /* Index out-of-bounds */
 			} else {
-				if (DeeError_Catch(&DeeError_IndexError))
-					break;
 				goto err;
 			}
 		}

@@ -386,8 +386,7 @@ err:
 %{using tp_seq->tp_getitem: {
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_getitem, self, index);
 	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_IndexError) ||
-		    DeeError_Catch(&DeeError_KeyError) /*||
+		if (DeeError_Catch(&DeeError_KeyError) /*||
 		    DeeError_Catch(&DeeError_UnboundItem)*/)
 			result = ITER_DONE;
 	}
@@ -415,8 +414,7 @@ err:
 %{using tp_seq->tp_getitem_index: {
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_getitem_index, self, index);
 	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_IndexError) ||
-		    DeeError_Catch(&DeeError_KeyError) /*||
+		if (DeeError_Catch(&DeeError_KeyError) /*||
 		    DeeError_Catch(&DeeError_UnboundItem)*/)
 			result = ITER_DONE;
 	}
@@ -445,8 +443,7 @@ tp_seq->tp_trygetitem_string_hash([[nonnull]] DeeObject *self,
 %{using tp_seq->tp_getitem_string_hash: {
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_getitem_string_hash, self, key, hash);
 	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_IndexError) ||
-		    DeeError_Catch(&DeeError_KeyError) /*||
+		if (DeeError_Catch(&DeeError_KeyError) /*||
 		    DeeError_Catch(&DeeError_UnboundItem)*/)
 			result = ITER_DONE;
 	}
@@ -481,8 +478,7 @@ err:
 %{using tp_seq->tp_getitem_string_len_hash: {
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_getitem_string_len_hash, self, key, keylen, hash);
 	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_IndexError) ||
-		    DeeError_Catch(&DeeError_KeyError) /*||
+		if (DeeError_Catch(&DeeError_KeyError) /*||
 		    DeeError_Catch(&DeeError_UnboundItem)*/)
 			result = ITER_DONE;
 	}
@@ -553,8 +549,7 @@ err:
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }}
@@ -638,8 +633,7 @@ err:
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }}
@@ -693,8 +687,7 @@ tp_seq->tp_bounditem_string_hash([[nonnull]] DeeObject *self,
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }}
@@ -752,8 +745,7 @@ tp_seq->tp_bounditem_string_len_hash([[nonnull]] DeeObject *self,
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }}

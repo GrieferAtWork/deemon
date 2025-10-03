@@ -244,9 +244,8 @@ err:
 	DREF DeeObject *result;
 	result = CALL_DEPENDENCY(map_operator_getitem, self, key);
 	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_IndexError) ||
-		    DeeError_Catch(&DeeError_KeyError) ||
-		    DeeError_Catch(&DeeError_UnboundItem))
+		if (DeeError_Catch(&DeeError_KeyError) /*||
+		    DeeError_Catch(&DeeError_UnboundItem)*/)
 			result = ITER_DONE;
 	}
 	return result;
@@ -719,8 +718,7 @@ err:
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }} = $with__map_operator_getitem;
@@ -774,8 +772,7 @@ err:
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }} = $with__map_operator_getitem_index;
@@ -825,8 +822,7 @@ err:
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }} = $with__map_operator_getitem_string_hash;
@@ -874,8 +870,7 @@ err:
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
 		return Dee_BOUND_NO;
-	if (DeeError_Catch(&DeeError_KeyError) ||
-	    DeeError_Catch(&DeeError_IndexError))
+	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }} = $with__map_operator_getitem_string_len_hash;

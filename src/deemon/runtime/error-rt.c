@@ -907,7 +907,7 @@ err:
 PRIVATE struct type_member tpconst IndexError_members[] = {
 #define IndexError_init_params SequenceError_init_params ",index?:?X2?DNumeric?Dint,length?:?X2?DNumeric?Dint"
 	TYPE_MEMBER_FIELD_DOC("index", STRUCT_VARIANT | STRUCT_CONST, offsetof(IndexError, ie_base.ke_key), "->?X2?DNumeric?Dint"),
-	/* TODO: Have another "getset" that shadows "length" can calls "IndexError_GetLength()" */
+	/* TODO: Have another "getset" that shadows "length" and calls "IndexError_GetLength()" */
 	TYPE_MEMBER_FIELD_DOC("length", STRUCT_VARIANT | STRUCT_CONST, offsetof(IndexError, ie_length), "->?X2?DNumeric?Dint"),
 	TYPE_MEMBER_END
 };

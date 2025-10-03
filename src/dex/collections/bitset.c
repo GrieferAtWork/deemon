@@ -29,6 +29,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -145,18 +146,9 @@ typedef struct {
 
 
 /************************************************************************/
-
-PRIVATE ATTR_COLD int DCALL
-bitset_err_bad_index(size_t bitno, size_t nbits) {
-	return DeeError_Throwf(&DeeError_IndexError,
-	                       "Index `%" PRFuSIZ "' lies outside the valid bounds "
-	                       "[0,%" PRFuSIZ ") of sequence of type `Bitset'",
-	                       bitno, nbits);
-}
-
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 bs_err_bad_index(Bitset *__restrict self, size_t bitno) {
-	return bitset_err_bad_index(bitno, self->bs_nbits);
+	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, bitno, self->bs_nbits);
 }
 
 
@@ -368,9 +360,10 @@ bitset_ref_fix(struct bitset_ref *__restrict self) {
 	}
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 bitset_ref_assign(struct bitset_ref *__restrict dst,
-                  struct bitset_ref *__restrict src) {
+                  struct bitset_ref *__restrict src,
+                  DeeObject *dst_obj) {
 	size_t dst_bits = bitset_ref_nbits(dst);
 	size_t src_bits = bitset_ref_nbits(src);
 	if (src_bits > dst_bits) {
@@ -382,7 +375,7 @@ bitset_ref_assign(struct bitset_ref *__restrict dst,
 		if (oob_index < src->bsr_endbit) {
 			oob_index -= src->bsr_startbit;
 			ASSERT(oob_index >= dst_bits);
-			return bitset_err_bad_index(oob_index, dst_bits);
+			return DeeRT_ErrIndexOutOfBounds(dst_obj, oob_index, dst_bits);
 		}
 		/* Trim to the size of our own bitset. */
 		src->bsr_endbit = src->bsr_startbit + dst_bits;
@@ -762,14 +755,14 @@ bs_setrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *v
 		dst.bsr_endbit   = range.sr_end;
 		bitset_ref_fix(&dst);
 		if (DeeObject_AsBitset(value, &src))
-			return bitset_ref_assign(&dst, &src);
+			return bitset_ref_assign(&dst, &src, (DeeObject *)self);
 		value_bitset = bs_init_fromseq(value, NULL);
 		if unlikely(!value_bitset)
 			goto err;
 		src.bsr_bitset   = value_bitset->bs_bitset;
 		src.bsr_startbit = 0;
 		src.bsr_endbit   = value_bitset->bs_nbits;
-		result = bitset_ref_assign(&dst, &src);
+		result = bitset_ref_assign(&dst, &src, (DeeObject *)self);
 		Dee_DecrefDokill(value_bitset);
 		return result;
 	}
@@ -2502,7 +2495,7 @@ INTERN DeeTypeObject RoBitset_Type = {
 
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 bsv_err_bad_index(BitsetView *__restrict self, size_t bitno) {
-	return bitset_err_bad_index(bitno, BitsetView_GetNBits(self));
+	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, bitno, BitsetView_GetNBits(self));
 }
 
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
@@ -2849,14 +2842,14 @@ bsv_setrange_index(BitsetView *self, Dee_ssize_t start,
 		dst.bsr_endbit   = self->bsv_startbit + range.sr_end;
 		bitset_ref_fix(&dst);
 		if (DeeObject_AsBitset(value, &src))
-			return bitset_ref_assign(&dst, &src);
+			return bitset_ref_assign(&dst, &src, (DeeObject *)self);
 		value_bitset = bs_init_fromseq(value, NULL);
 		if unlikely(!value_bitset)
 			goto err;
 		src.bsr_bitset   = value_bitset->bs_bitset;
 		src.bsr_startbit = 0;
 		src.bsr_endbit   = value_bitset->bs_nbits;
-		result = bitset_ref_assign(&dst, &src);
+		result = bitset_ref_assign(&dst, &src, (DeeObject *)self);
 		Dee_DecrefDokill(value_bitset);
 		return result;
 	}
@@ -3550,14 +3543,14 @@ bsv_assign(BitsetView *self, DeeObject *value) {
 		goto err_readonly;
 	bitset_ref_fromview(&dst, self);
 	if (DeeObject_AsBitset(value, &src))
-		return bitset_ref_assign(&dst, &src);
+		return bitset_ref_assign(&dst, &src, (DeeObject *)self);
 	value_bitset = bs_init_fromseq(value, NULL);
 	if unlikely(!value_bitset)
 		goto err;
 	src.bsr_bitset   = value_bitset->bs_bitset;
 	src.bsr_startbit = 0;
 	src.bsr_endbit   = value_bitset->bs_nbits;
-	result = bitset_ref_assign(&dst, &src);
+	result = bitset_ref_assign(&dst, &src, (DeeObject *)self);
 	Dee_DecrefDokill(value_bitset);
 	return result;
 err_readonly:

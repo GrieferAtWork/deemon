@@ -11206,9 +11206,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_METHOD_F("indexmatch", &string_indexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	              "(" string_indexmatch_params ")->?Dint\n"
-	              "#tIndexError{No instance of @close without a matching @open "
+	              "#tItemNotFound{No instance of @close without a matching @open "
 	              /*             */ "exists within ${this.substr(start, end)}}"
-	              "Same as ?#findmatch, but throw an :IndexError instead of "
+	              "Same as ?#findmatch, but throw :ItemNotFound instead of "
 	              /**/ "returning ${-1} if no @close without a matching @open exists"),
 	TYPE_METHOD_F("casefindmatch", &string_casefindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
@@ -11240,9 +11240,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_METHOD_F("rindexmatch", &string_rindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	              "(" string_rindexmatch_params ")->?Dint\n"
-	              "#tIndexError{No instance of @open without a matching @close "
+	              "#tItemNotFound{No instance of @open without a matching @close "
 	              /*             */ "exists within ${this.substr(start, end)}}"
-	              "Same as ?#rfindmatch, but throw an :IndexError instead of "
+	              "Same as ?#rfindmatch, but throw :ItemNotFound instead of "
 	              /**/ "returning ${-1} if no @open without a matching @close exists"),
 	TYPE_METHOD_F("caserfindmatch", &string_caserfindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
@@ -11499,8 +11499,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
-	                "#tIndexError{No substring matching the given @pattern could be found}"
-	                "Same as ?#refind, but throw an :IndexError when no match can be found"),
+	                "#tRegexNotFound{No substring matching the given @pattern could be found}"
+	                "Same as ?#refind, but throw :RegexNotFound when no match can be found"),
 	TYPE_KWMETHOD_F("rerindex", &string_rerindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?T2?Dint?Dint\n"
@@ -11508,8 +11508,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
-	                "#tIndexError{No substring matching the given @pattern could be found}"
-	                "Same as ?#rerfind, but throw an :IndexError when no match can be found"),
+	                "#tRegexNotFound{No substring matching the given @pattern could be found}"
+	                "Same as ?#rerfind, but throw :RegexNotFound when no match can be found"),
 	TYPE_KWMETHOD_F("relocate", &string_relocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?X2?.?N\n"
@@ -11753,8 +11753,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
-	                "#tIndexError{No substring matching the given @pattern could be found}"
-	                "Same as ?#regfind, but throw an :IndexError when no match can be found"),
+	                "#tRegexNotFound{No substring matching the given @pattern could be found}"
+	                "Same as ?#regfind, but throw :RegexNotFound when no match can be found"),
 	TYPE_KWMETHOD_F("regrindex", &string_regrindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
@@ -11762,8 +11762,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
-	                "#tIndexError{No substring matching the given @pattern could be found}"
-	                "Same as ?#regrfind, but throw an :IndexError when no match can be found"),
+	                "#tRegexNotFound{No substring matching the given @pattern could be found}"
+	                "Same as ?#regrfind, but throw :RegexNotFound when no match can be found"),
 
 	TYPE_KWMETHOD_F("reglocate", &string_reglocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,

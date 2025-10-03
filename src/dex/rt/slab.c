@@ -24,6 +24,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/bool.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -119,9 +120,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF SlabInfoObject *DCALL
 ss_getitem_index(SlabStatObject *__restrict self, size_t index) {
 	DREF SlabInfoObject *result;
 	if unlikely(index >= self->st_stat.st_slabcount) {
-		DeeError_Throwf(&DeeError_IndexError,
-		                "Index `%" PRFuSIZ "' lies outside the valid bounds `0...%" PRFuSIZ "' of sequence of type `%k'",
-		                index, self->st_stat.st_slabcount, Dee_TYPE(self));
+		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->st_stat.st_slabcount);
 		return NULL;
 	}
 	result = DeeObject_MALLOC(SlabInfoObject);
