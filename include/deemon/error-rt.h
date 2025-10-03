@@ -130,6 +130,20 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOutOfBounds)(DeeObject *seq, size_t index, size_t length);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeObject *seq, DeeObject *index, DeeObject *length);
 
+/* Throws an `DeeError_ItemNotFound' indicating that a given item could not be found within some sequence */
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFound)(DeeObject *seq, DeeObject *item);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFoundEx)(DeeObject *seq, DeeObject *item, size_t start, size_t end, DeeObject *key);
+#define DeeRT_ErrSubstringNotFound(string, substring_or_substrings, start, end) \
+	DeeRT_ErrItemNotFoundEx(string, substring_or_substrings, start, end, NULL)
+
+/* Throws an `DeeError_RegexNotFound' indicating that
+ * the given "regex" could not be found within "data"
+ * @param: eflags: Set of `DEE_RE_EXEC_*' */
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrRegexNotFound)(DeeObject *data, DeeObject *regex,
+                               size_t start, size_t end, size_t range,
+                               DeeObject *rules, unsigned int eflags);
+
 
 
 
@@ -168,6 +182,10 @@ DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrIndexOutOfBoundsObj)(De
 #define DeeRT_ErrUnboundIndexObj(seq, index)                Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndexObj)(seq, index), -1)
 #define DeeRT_ErrIndexOutOfBounds(seq, index, length)       Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBounds)(seq, index, length), -1)
 #define DeeRT_ErrIndexOutOfBoundsObj(seq, index, length)    Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBoundsObj)(seq, index, length), -1)
+#define DeeRT_ErrItemNotFound(seq, item)                    Dee_ASSUMED_VALUE((DeeRT_ErrItemNotFound)(seq, item), -1)
+#define DeeRT_ErrItemNotFoundEx(seq, item, start, end, key) Dee_ASSUMED_VALUE((DeeRT_ErrItemNotFoundEx)(seq, item, start, end, key), -1)
+#define DeeRT_ErrRegexNotFound(data, regex, start, end, range, rules, eflags) \
+	Dee_ASSUMED_VALUE((DeeRT_ErrRegexNotFound)(data, regex, start, end, range, rules, eflags), -1)
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
 DECL_END

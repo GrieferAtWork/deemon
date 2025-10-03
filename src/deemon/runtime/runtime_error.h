@@ -92,9 +92,6 @@ INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_invalid_instance_addr(DeeTypeObje
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_refs_size(DeeObject *__restrict code, size_t num_refs);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_empty_sequence(DeeObject *__restrict seq);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_changed_sequence(DeeObject *__restrict seq);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_item_not_found(DeeObject *seq, DeeObject *item);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_index_not_found(DeeObject *seq, DeeObject *item);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_regex_index_not_found(DeeObject *seq);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_no_super_class(DeeTypeObject *__restrict type);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_immutable_sequence(DeeObject *__restrict self);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_fixedlength_sequence(DeeObject *__restrict self);
@@ -193,9 +190,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_invalid_refs_size(code, num_refs)                                                             Dee_ASSUMED_VALUE(err_invalid_refs_size(code, num_refs), -1)
 #define err_empty_sequence(seq)                                                                           Dee_ASSUMED_VALUE(err_empty_sequence(seq), -1)
 #define err_changed_sequence(seq)                                                                         Dee_ASSUMED_VALUE(err_changed_sequence(seq), -1)
-#define err_item_not_found(seq, item)                                                                     Dee_ASSUMED_VALUE(err_item_not_found(seq, item), -1)
-#define err_index_not_found(seq, item)                                                                    Dee_ASSUMED_VALUE(err_index_not_found(seq, item), -1)
-#define err_regex_index_not_found(seq)                                                                    Dee_ASSUMED_VALUE(err_regex_index_not_found(seq), -1)
 #define err_no_super_class(type)                                                                          Dee_ASSUMED_VALUE(err_no_super_class(type), -1)
 #define err_immutable_sequence(self)                                                                      Dee_ASSUMED_VALUE(err_immutable_sequence(self), -1)
 #define err_fixedlength_sequence(self)                                                                    Dee_ASSUMED_VALUE(err_fixedlength_sequence(self), -1)

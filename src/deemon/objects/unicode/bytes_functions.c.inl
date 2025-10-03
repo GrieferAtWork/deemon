@@ -203,7 +203,7 @@ bytes_index(Bytes *self, size_t argc,
 	if likely(result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 not_found:
-	err_index_not_found((DeeObject *)self, args.needle);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -275,7 +275,7 @@ bytes_caseindex(Bytes *self, size_t argc,
 		return DeeTuple_NewII(index, index + needle.n_size);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self, args.needle);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -343,7 +343,7 @@ bytes_rindex(Bytes *self, size_t argc,
 	if likely(result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 not_found:
-	err_index_not_found((DeeObject *)self, args.needle);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -415,7 +415,7 @@ bytes_caserindex(Bytes *self, size_t argc,
 		return DeeTuple_NewII(index, index + needle.n_size);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self, args.needle);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -515,7 +515,7 @@ bytes_indexany(Bytes *self, size_t argc,
 	if (data.bfad_result < data.bfad_size || status == -2)
 		return DeeInt_NewSize(args.start + data.bfad_result);
 not_found:
-	err_index_not_found((DeeObject *)self, args.needles);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needles, args.start, args.end);
 err:
 	return NULL;
 }
@@ -622,7 +622,7 @@ bytes_caseindexany(Bytes *self, size_t argc,
 		                      args.start + data.bcfad_result + data.bcfad_reslen);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self, args.needles);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needles, args.start, args.end);
 err:
 	return NULL;
 }
@@ -719,7 +719,7 @@ bytes_rindexany(Bytes *self, size_t argc,
 	if (data.brfad_base > orig_base || status == -2)
 		return DeeInt_NewSize(args.start + ((data.brfad_base - 1) - orig_base));
 not_found:
-	err_index_not_found((DeeObject *)self, args.needles);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needles, args.start, args.end);
 err:
 	return NULL;
 }
@@ -820,7 +820,7 @@ bytes_caserindexany(Bytes *self, size_t argc,
 		return DeeTuple_NewII(index, index + data.bcrfad_reslen);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self, args.needles);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needles, args.start, args.end);
 err:
 	return NULL;
 }
@@ -3926,7 +3926,7 @@ bytes_indexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 not_found:
-	err_index_not_found((DeeObject *)self, args.close);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.close, args.start, args.end);
 err:
 	return NULL;
 }
@@ -3968,7 +3968,7 @@ bytes_rindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 not_found:
-	err_index_not_found((DeeObject *)self, args.open);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.open, args.start, args.end);
 err:
 	return NULL;
 }
@@ -4096,7 +4096,7 @@ bytes_caseindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	result = (size_t)(ptr - scan_str);
 	return DeeTuple_NewII(result, result + s_clos.n_size);
 not_found:
-	err_index_not_found((DeeObject *)self, args.close);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.close, args.start, args.end);
 err:
 	return NULL;
 }
@@ -4139,7 +4139,7 @@ bytes_caserindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	result = (size_t)(ptr - scan_str);
 	return DeeTuple_NewII(result, result + s_open.n_size);
 not_found:
-	err_index_not_found((DeeObject *)self, args.open);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.open, args.start, args.end);
 err:
 	return NULL;
 }
@@ -4529,8 +4529,10 @@ err:
 /************************************************************************/
 #ifdef __INTELLISENSE__ /* Stuff we share with "./string_functions.c" */
 struct DeeRegexExecWithRange {
-	struct DeeRegexExec rewr_exec;  /* Normal exec args */
-	size_t              rewr_range; /* Max # of search attempts to perform (in bytes) */
+	struct DeeRegexExec rewr_exec;    /* Normal exec args */
+	size_t              rewr_range;   /* Max # of search attempts to perform (in bytes) */
+	DeeStringObject    *rewr_pattern; /* [1..1] Pattern string that is being used */
+	DeeStringObject    *rewr_rules;   /* [0..1] Pattern rules */
 };
 
 struct DeeRegexBaseExec {
@@ -4601,19 +4603,20 @@ PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
 bytes_search_regex_getargs(Bytes *self, size_t argc, DeeObject *const *argv,
                            DeeObject *kw, char const *__restrict fmt,
                            struct DeeRegexExecWithRange *__restrict result) {
-	DeeObject *pattern, *rules = NULL;
 	result->rewr_exec.rx_startoff = 0;
 	result->rewr_exec.rx_endoff   = (size_t)-1;
-	result->rewr_range            = (size_t)-1;
+	result->rewr_range = (size_t)-1;
+	result->rewr_rules = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, bytes_search_regex_kwlist, fmt,
-	                    &pattern, &result->rewr_exec.rx_startoff,
+	                    &result->rewr_pattern, &result->rewr_exec.rx_startoff,
 	                    &result->rewr_exec.rx_endoff,
-	                    &result->rewr_range,
-	                    &rules))
+	                    &result->rewr_range, &result->rewr_rules))
 		goto err;
-	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(result->rewr_pattern, &DeeString_Type))
 		goto err;
-	result->rewr_exec.rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NOUTF8, rules);
+	result->rewr_exec.rx_code = DeeString_GetRegex((DeeObject *)result->rewr_pattern,
+	                                               DEE_REGEX_COMPILE_NOUTF8,
+	                                               (DeeObject *)result->rewr_rules);
 	if unlikely(!result->rewr_exec.rx_code)
 		goto err;
 	result->rewr_exec.rx_nmatch = 0;
@@ -4905,6 +4908,17 @@ err:
 	return NULL;
 }
 
+PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
+err_regex_not_found_in_bytes(Bytes *self, struct DeeRegexExecWithRange const *__restrict exec) {
+	return DeeRT_ErrRegexNotFound((DeeObject *)self,
+	                              (DeeObject *)exec->rewr_pattern,
+	                              exec->rewr_exec.rx_startoff,
+	                              exec->rewr_exec.rx_endoff,
+	                              exec->rewr_range,
+	                              (DeeObject *)exec->rewr_rules,
+	                              exec->rewr_exec.rx_eflags);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_reindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t result;
@@ -4922,7 +4936,7 @@ bytes_reindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	match_size += (size_t)result;
 	return DeeTuple_NewII((size_t)result, (size_t)match_size);
 not_found:
-	err_regex_index_not_found((DeeObject *)self);
+	err_regex_not_found_in_bytes(self, &exec);
 err:
 	return NULL;
 }
@@ -4944,7 +4958,7 @@ bytes_rerindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	match_size += (size_t)result;
 	return DeeTuple_NewII((size_t)result, (size_t)match_size);
 not_found:
-	err_regex_index_not_found((DeeObject *)self);
+	err_regex_not_found_in_bytes(self, &exec);
 err:
 	return NULL;
 }
@@ -4975,7 +4989,7 @@ bytes_regindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
 	return (DREF DeeObject *)groups;
 not_found:
-	err_regex_index_not_found((DeeObject *)self);
+	err_regex_not_found_in_bytes(self, &exec);
 err_g:
 	ReGroups_Free(groups);
 err:
@@ -5008,7 +5022,7 @@ bytes_regrindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
 	return (DREF DeeObject *)groups;
 not_found:
-	err_regex_index_not_found((DeeObject *)self);
+	err_regex_not_found_in_bytes(self, &exec);
 err_g:
 	ReGroups_Free(groups);
 err:

@@ -29,6 +29,7 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/symbol.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -285,7 +286,7 @@ scope_getitem(DeeCompilerScopeObject *self, DeeObject *elem) {
 		goto err;
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
 	if unlikely(!sym) {
-		err_item_not_found((DeeObject *)self, elem);
+		DeeRT_ErrItemNotFound((DeeObject *)self, elem);
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetSymbol(sym);
@@ -311,7 +312,7 @@ scope_delitem(DeeCompilerScopeObject *__restrict self,
 		goto err;
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
 	if unlikely(!sym) {
-		err_item_not_found((DeeObject *)self, elem);
+		DeeRT_ErrItemNotFound((DeeObject *)self, elem);
 		result = -1;
 	} else {
 		/* Delete the symbol. */

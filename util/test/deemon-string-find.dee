@@ -26,8 +26,8 @@ function t(x, w) {
 	assert w("xxx") !in x;
 	assert x.find(w("xxx")) == -1;
 	assert x.rfind(w("xxx")) == -1;
-	assert (try x.index(w("xxx")) catch (e...) e) is IndexError;
-	assert (try x.rindex(w("xxx")) catch (e...) e) is IndexError;
+	assert (try x.index(w("xxx")) catch (e...) e) is ItemNotFound;
+	assert (try x.rindex(w("xxx")) catch (e...) e) is ItemNotFound;
 	for (local op: { "find", "index" }) {
 		local rop = f"r{op}";
 		assert x.operator . (op)(w("a")) == 0;

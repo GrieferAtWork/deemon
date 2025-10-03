@@ -47,25 +47,25 @@ function assertFindAnyImpl2(expected: none | int | (int, int), s: string, method
 	identical(expected, s.operator . (method)(needles));
 	identical(expected, b.operator . (method)(needles));
 	identical(expected, b.operator . (method)(needles.each.bytes()));
-	identical(expected, try s.operator . (indexMethod)(needles) catch (IndexError) none);
-	identical(expected, try b.operator . (indexMethod)(needles) catch (IndexError) none);
-	identical(expected, try b.operator . (indexMethod)(needles.each.bytes()) catch (IndexError) none);
+	identical(expected, try s.operator . (indexMethod)(needles) catch (ItemNotFound) none);
+	identical(expected, try b.operator . (indexMethod)(needles) catch (ItemNotFound) none);
+	identical(expected, try b.operator . (indexMethod)(needles.each.bytes()) catch (ItemNotFound) none);
 	if ((expected is int && expected >= 1) ||
 	    (expected is Sequence && #expected == 2 && expected[0] >= 1)) {
 		identical(expected, s.operator . (method)(needles, 1));
 		identical(expected, b.operator . (method)(needles, 1));
 		identical(expected, b.operator . (method)(needles.each.bytes(), 1));
-		identical(expected, try s.operator . (indexMethod)(needles, 1) catch (IndexError) none);
-		identical(expected, try b.operator . (indexMethod)(needles, 1) catch (IndexError) none);
-		identical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (IndexError) none);
+		identical(expected, try s.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
+		identical(expected, try b.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
+		identical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (ItemNotFound) none);
 	} else if ((expected is int && expected < 1) ||
 	           (expected is Sequence && #expected == 2 && expected[0] < 1)) {
 		nonIdentical(expected, s.operator . (method)(needles, 1));
 		nonIdentical(expected, b.operator . (method)(needles, 1));
 		nonIdentical(expected, b.operator . (method)(needles.each.bytes(), 1));
-		nonIdentical(expected, try s.operator . (indexMethod)(needles, 1) catch (IndexError) none);
-		nonIdentical(expected, try b.operator . (indexMethod)(needles, 1) catch (IndexError) none);
-		nonIdentical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (IndexError) none);
+		nonIdentical(expected, try s.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
+		nonIdentical(expected, try b.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
+		nonIdentical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (ItemNotFound) none);
 	}
 	if (s) {
 		local lenMinusOne = #s - 1;
@@ -73,16 +73,16 @@ function assertFindAnyImpl2(expected: none | int | (int, int), s: string, method
 			identical(expected, s.operator . (method)(needles, 0, lenMinusOne));
 			identical(expected, b.operator . (method)(needles, 0, lenMinusOne));
 			identical(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
-			identical(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
-			identical(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
-			identical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (IndexError) none);
+			identical(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
+			identical(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
+			identical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (ItemNotFound) none);
 		} else if (expected is Sequence && #expected == 2 && expected[1] > lenMinusOne) {
 			nonIdentical(expected, s.operator . (method)(needles, 0, lenMinusOne));
 			nonIdentical(expected, b.operator . (method)(needles, 0, lenMinusOne));
 			nonIdentical(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
-			nonIdentical(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
-			nonIdentical(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
-			nonIdentical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (IndexError) none);
+			nonIdentical(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
+			nonIdentical(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
+			nonIdentical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (ItemNotFound) none);
 		}
 	}
 }

@@ -1946,12 +1946,12 @@ struct Dee_type_seq {
 	 * @return: Dee_BOUND_YES:     Item is bound.
 	 * @return: Dee_BOUND_NO:      Item isn't bound. (in `tp_getitem': `UnboundItem')
 	 * @return: Dee_BOUND_ERR:     An error occurred.
-	 * @return: Dee_BOUND_MISSING: Item doesn't exist (in `tp_getitem': `KeyError' or `IndexError'). */
+	 * @return: Dee_BOUND_MISSING: Item doesn't exist (in `tp_getitem': `KeyError'). */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem)(DeeObject *self, DeeObject *index);
 
 	/* Check if a given item exists (`deemon.hasitem(self, index)') (inherited alongside `tp_getitem')
 	 * @return: >  0: Does exists.   (in `tp_getitem': `UnboundItem' or <no error>)
-	 * @return: == 0: Doesn't exist. (in `tp_getitem': `KeyError' or `IndexError')
+	 * @return: == 0: Doesn't exist. (in `tp_getitem': `KeyError')
 	 * @return: <  0: Error. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem)(DeeObject *self, DeeObject *index);
 
@@ -1992,8 +1992,8 @@ struct Dee_type_seq {
 	/* Operators meant to speed up map operators. */
 
 	/* Same as `tp_getitem', but returns `ITER_DONE' instead of throwing
-	 * `KeyError' or `IndexError' (or `UnboundItem', which is a given
-	 * since that one's a sub-class of `IndexError') */
+	 * `KeyError' (or `UnboundItem', which is a given since that one's a
+	 * sub-class of `KeyError') */
 	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_trygetitem)(DeeObject *self, DeeObject *index);
 	WUNUSED_T NONNULL_T((1))       DREF DeeObject *(DCALL *tp_trygetitem_index)(DeeObject *self, size_t index);
 	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_trygetitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
@@ -4831,7 +4831,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringLenHash)(DeeOb
 /* Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
  * @return: Dee_BOUND_YES:     Item is bound.
  * @return: Dee_BOUND_NO:      Item isn't bound. (`UnboundItem' was caught internally)
- * @return: Dee_BOUND_MISSING: Item doesn't exist (`KeyError' or `IndexError' were caught).
+ * @return: Dee_BOUND_MISSING: Item doesn't exist (`KeyError' was caught).
  * @return: Dee_BOUND_ERR:     An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItem)(DeeObject *self, DeeObject *index);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self, size_t index);

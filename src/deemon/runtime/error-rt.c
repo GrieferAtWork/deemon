@@ -31,6 +31,7 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
@@ -837,6 +838,7 @@ PRIVATE struct type_member tpconst SequenceError_members[] = {
 PRIVATE struct type_member tpconst SequenceError_class_members[] = {
 	TYPE_MEMBER_CONST("KeyError", &DeeError_KeyError),
 	TYPE_MEMBER_CONST("UnpackError", &DeeError_UnpackError),
+	TYPE_MEMBER_CONST("ItemNotFound", &DeeError_ItemNotFound),
 	TYPE_MEMBER_END
 };
 
@@ -1279,6 +1281,202 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 }
 
 
+/************************************************************************/
+/* Error.ValueError.SequenceError.ItemNotFound                           */
+/************************************************************************/
+typedef struct {
+	SequenceError      inf_base;
+	DREF DeeObject    *inf_item;  /* [0..1][const] Missing item */
+	size_t             inf_start; /* [const] Sequence start index */
+	struct Dee_variant inf_end;   /* [const] Sequence end index (or unbound if unlimited) */
+	DREF DeeObject    *inf_key;   /* [0..1][const] Key function applied to items */
+} ItemNotFound;
+
+PRIVATE struct type_member tpconst ItemNotFound_members[] = {
+#define ItemNotFound_init_params SequenceError_init_params ",item?,start=!0,end?:?Dint,key?:?DCallable"
+	TYPE_MEMBER_FIELD("item", STRUCT_OBJECT_OPT, offsetof(ItemNotFound, inf_item)),
+	TYPE_MEMBER_FIELD("start", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ItemNotFound, inf_start)),
+	TYPE_MEMBER_FIELD_DOC("end", STRUCT_VARIANT | STRUCT_CONST, offsetof(ItemNotFound, inf_end), "->?Dint"),
+	TYPE_MEMBER_FIELD_DOC("key", STRUCT_OBJECT_OPT, offsetof(ItemNotFound, inf_key), "->?DCallable"),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst ItemNotFound_class_members[] = {
+	TYPE_MEMBER_CONST("RegexNotFound", &DeeError_RegexNotFound),
+	TYPE_MEMBER_END
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ItemNotFound_print(ItemNotFound *__restrict self,
+                   Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result;
+	struct Dee_variant active_end;
+	if (self->inf_base.e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	Dee_variant_init_copy(&active_end, &self->inf_end);
+	if ((Dee_variant_isbound_nonatomic(&active_end) || self->inf_start) && self->inf_key) {
+		result = DeeFormat_Printf(printer, arg,
+		                          "Could not locate item `%k(%Vk)' in sequence `%Vk' [%" PRFuSIZ ",%Vk)",
+		                          self->inf_key, &self->inf_item, &self->inf_base.ve_value,
+		                          self->inf_start, &active_end);
+	} else if (Dee_variant_isbound_nonatomic(&active_end) || self->inf_start) {
+		result = DeeFormat_Printf(printer, arg,
+		                          "Could not locate item `%Vk' in sequence `%Vk' [%" PRFuSIZ ",%Vk)",
+		                          &self->inf_item, &self->inf_base.ve_value,
+		                          self->inf_start, &active_end);
+	} else if (self->inf_key) {
+		result = DeeFormat_Printf(printer, arg,
+		                          "Could not locate item `%k(%Vk)' in sequence `%Vk'",
+		                          self->inf_key, &self->inf_item, &self->inf_base.ve_value);
+	} else {
+		result = DeeFormat_Printf(printer, arg,
+		                          "Could not locate item `%Vk' in sequence `%Vk'",
+		                          &self->inf_item, &self->inf_base.ve_value);
+	}
+	Dee_variant_fini(&active_end);
+	return result;
+}
+
+PUBLIC DeeTypeObject DeeError_ItemNotFound =
+INIT_CUSTOM_ERROR("ItemNotFound", "(" ItemNotFound_init_params ")",
+                  TP_FNORMAL, &DeeError_SequenceError, ItemNotFound, NULL, &ItemNotFound_print,
+                  NULL, NULL, ItemNotFound_members, ItemNotFound_class_members);
+
+/* Throws an `DeeError_ItemNotFound' indicating that a given item could not be found within some sequence */
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrItemNotFound)(DeeObject *seq, DeeObject *item) {
+	return DeeRT_ErrItemNotFoundEx(seq, item, 0, (size_t)-1, NULL);
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2, 5)) int
+(DCALL DeeRT_ErrItemNotFoundEx)(DeeObject *seq, DeeObject *item,
+                                size_t start, size_t end, DeeObject *key) {
+	DREF ItemNotFound *result = DeeObject_MALLOC(ItemNotFound);
+	if unlikely(!result)
+		goto err;
+	if (key && DeeNone_Check(key))
+		key = NULL;
+	result->inf_base.e_message = NULL;
+	result->inf_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->inf_base.ve_value, seq);
+	Dee_Incref(item);
+	result->inf_item = item;
+	result->inf_start = start;
+	if (end == (size_t)-1) {
+		Dee_variant_init_unbound(&result->inf_end);
+	} else {
+		Dee_variant_init_size(&result->inf_end, end);
+	}
+	Dee_XIncref(key);
+	result->inf_key = key;
+	DeeObject_Init(&result->inf_base, &DeeError_ItemNotFound);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+
+
+
+/************************************************************************/
+/* Error.ValueError.SequenceError.ItemNotFound.RegexNotFound            */
+/************************************************************************/
+typedef struct {
+	ItemNotFound rnf_base;  /* "seq" -> "data", "item" -> "regex", "key" -> "rules" */
+	size_t       rnf_range; /* [const] Regex scan range (in characters) */
+} RegexNotFound;
+
+PRIVATE struct type_member tpconst RegexNotFound_members[] = {
+#define RegexNotFound_init_params Error_init_params ",data?:?X2?Dstring?DBytes,regex?:?Dstring,start=!0,end?:?Dint,range=!0,rules?:?Dstring"
+	TYPE_MEMBER_FIELD_DOC("data", STRUCT_OBJECT_OPT, offsetof(RegexNotFound, rnf_base.inf_base.ve_value), "->?X2?Dstring?DBytes"),
+	TYPE_MEMBER_FIELD_DOC("regex", STRUCT_OBJECT_OPT, offsetof(RegexNotFound, rnf_base.inf_item), "->?Dstring"),
+	TYPE_MEMBER_FIELD("start", STRUCT_SIZE_T | STRUCT_CONST, offsetof(RegexNotFound, rnf_base.inf_start)),
+	TYPE_MEMBER_FIELD_DOC("end", STRUCT_VARIANT | STRUCT_CONST, offsetof(RegexNotFound, rnf_base.inf_end), "->?Dint"),
+	TYPE_MEMBER_FIELD_DOC("range", STRUCT_SIZE_T | STRUCT_CONST, offsetof(RegexNotFound, rnf_range), "->?Dint"),
+	TYPE_MEMBER_FIELD_DOC("rules", STRUCT_OBJECT_OPT, offsetof(RegexNotFound, rnf_base.inf_key), "->?Dstring"),
+	TYPE_MEMBER_END
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+RegexNotFound_print(RegexNotFound *__restrict self,
+                    Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result, temp;
+	struct Dee_variant active_end;
+	if (self->rnf_base.inf_base.e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	result = DeeFormat_Printf(printer, arg,
+	                          "Could not locate regex pattern %r in %Vr",
+	                          self->rnf_base.inf_item,
+	                          &self->rnf_base.inf_base.ve_value);
+	if unlikely(result < 0)
+		return result;
+	Dee_variant_init_copy(&active_end, &self->rnf_base.inf_end);
+	if (Dee_variant_isbound_nonatomic(&active_end) || self->rnf_base.inf_start) {
+		temp = DeeFormat_Printf(printer, arg, " in range [%" PRFuSIZ ",%Vk)",
+		                        self->rnf_base.inf_start, &active_end);
+		if unlikely(temp < 0) {
+			Dee_variant_fini(&active_end);
+			goto err_temp;
+		}
+		result += temp;
+	}
+	Dee_variant_fini(&active_end);
+	if (self->rnf_range != 0 && self->rnf_range != (size_t)-1) {
+		temp = DeeFormat_Printf(printer, arg, " after %" PRFuSIZ " attempts",
+		                        self->rnf_range);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	if (self->rnf_base.inf_key) {
+		temp = DeeFormat_Printf(printer, arg, " with rules %r",
+		                        self->rnf_base.inf_key);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
+PUBLIC DeeTypeObject DeeError_RegexNotFound =
+INIT_CUSTOM_ERROR("RegexNotFound", "(" RegexNotFound_init_params ")",
+                  TP_FNORMAL, &DeeError_ItemNotFound, RegexNotFound, NULL, &RegexNotFound_print,
+                  NULL, NULL, RegexNotFound_members, NULL);
+
+/* Throws an `DeeError_RegexNotFound' indicating that
+ * the given "regex" could not be found within "data"
+ * @param: eflags: Set of `DEE_RE_EXEC_*' */
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrRegexNotFound)(DeeObject *data, DeeObject *regex,
+                               size_t start, size_t end, size_t range,
+                               DeeObject *rules, unsigned int eflags) {
+	DREF RegexNotFound *result = DeeObject_MALLOC(RegexNotFound);
+	if unlikely(!result)
+		goto err;
+	if (rules == NULL)
+		rules = Dee_EmptyString;
+	result->rnf_base.inf_base.e_message = NULL;
+	result->rnf_base.inf_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->rnf_base.inf_base.ve_value, data);
+	Dee_Incref(regex);
+	result->rnf_base.inf_item  = regex;
+	result->rnf_base.inf_start = start;
+	if (end == (size_t)-1) {
+		Dee_variant_init_unbound(&result->rnf_base.inf_end);
+	} else {
+		Dee_variant_init_size(&result->rnf_base.inf_end, end);
+	}
+	Dee_Incref(rules);
+	result->rnf_base.inf_key = rules;
+	result->rnf_range = range;
+	(void)eflags; /* TODO: Once user-code can set these, must also save them here! */
+	DeeObject_Init(&result->rnf_base.inf_base, &DeeError_RegexNotFound);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
 
 
 /************************************************************************/
@@ -1292,7 +1490,7 @@ typedef struct {
 } UnpackError;
 
 PRIVATE struct type_member tpconst UnpackError_members[] = {
-#define UnpackError_init_params Error_init_params ",buffer?:?X2?DBytes?O"
+#define UnpackError_init_params SequenceError_init_params ",count?:?X2?DNumeric?Dint,mincount?:?X2?DNumeric?Dint,maxcount?:?X2?DNumeric?Dint"
 	TYPE_MEMBER_FIELD_DOC("count", STRUCT_VARIANT | STRUCT_CONST, offsetof(UnpackError, ue_count), "->?X2?DNumeric?Dint"),
 	TYPE_MEMBER_FIELD_DOC("mincount", STRUCT_VARIANT | STRUCT_CONST, offsetof(UnpackError, ue_mincount), "->?X2?DNumeric?Dint"),
 	TYPE_MEMBER_FIELD_DOC("maxcount", STRUCT_VARIANT | STRUCT_CONST, offsetof(UnpackError, ue_maxcount), "->?X2?DNumeric?Dint"),

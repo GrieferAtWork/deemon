@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
@@ -565,7 +566,7 @@ seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err_no_item;
 	return DeeInt_NewSize(result);
 err_no_item:
-	err_item_not_found(self, args.item);
+	DeeRT_ErrItemNotFoundEx(self, args.item, args.start, args.end, args.key);
 err:
 	return NULL;
 }
@@ -598,7 +599,7 @@ seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		goto err_no_item;
 	return DeeInt_NewSize(result);
 err_no_item:
-	err_item_not_found(self, args.item);
+	DeeRT_ErrItemNotFoundEx(self, args.item, args.start, args.end, args.key);
 err:
 	return NULL;
 }
@@ -734,7 +735,7 @@ seq_bindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		goto err_not_found;
 	return DeeInt_NewSize(result);
 err_not_found:
-	err_item_not_found(self, args.item);
+	DeeRT_ErrItemNotFoundEx(self, args.item, args.start, args.end, args.key);
 err:
 	return NULL;
 }

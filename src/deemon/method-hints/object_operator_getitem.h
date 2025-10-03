@@ -323,8 +323,8 @@ err:
 
 
 /* Same as `tp_getitem', but returns `ITER_DONE' instead of throwing
- * `KeyError' or `IndexError' (or `UnboundItem', which is a given
- * since that one's a sub-class of `IndexError') */
+ * `KeyError' (or `UnboundItem', which is a given since that one's a
+ * sub-class of `KeyError') */
 [[export("DeeObject_{|T}TryGetItem")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_trygetitem([[nonnull]] DeeObject *self,

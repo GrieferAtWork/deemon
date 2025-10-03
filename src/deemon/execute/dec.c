@@ -159,6 +159,11 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define DEC_BUILTIN_SET0_FileNotFound          0x30 /* DeeError_FileNotFound   */
 #define DEC_BUILTIN_SET0_FileExists            0x31 /* DeeError_FileExists     */
 #define DEC_BUILTIN_SET0_FileClosed            0x32 /* DeeError_FileClosed     */
+#define DEC_BUILTIN_SET0_NoMemory              0x33 /* DeeError_NoMemory       */
+#define DEC_BUILTIN_SET0_IntegerOverflow       0x34 /* DeeError_IntegerOverflow */
+#define DEC_BUILTIN_SET0_UnknownKey            0x35 /* DeeError_UnknownKey     */
+#define DEC_BUILTIN_SET0_ItemNotFound          0x36 /* DeeError_ItemNotFound   */
+#define DEC_BUILTIN_SET0_BufferError           0x37 /* DeeError_BufferError    */
 /*      DEC_BUILTIN_SET0_                      0x33 /* ... */
 /*      DEC_BUILTIN_SET0_                      0x34 /* ... */
 /*      DEC_BUILTIN_SET0_                      0x35 /* ... */
@@ -310,7 +315,7 @@ for (local setname, setlist: sets) {
 }
 ]]]*/
 #define NUM_BUILTIN_OBJECT_SETS 1
-#define NUM_BUILTIN_OBJECTS     59
+#define NUM_BUILTIN_OBJECTS     64
 PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
 	{ (DeeObject *)&DeeError_Signal, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Signal) },
 	{ (DeeObject *)&DeeError_Interrupt, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Interrupt) },
@@ -342,6 +347,11 @@ PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
 	{ (DeeObject *)&DeeError_FileNotFound, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FileNotFound) },
 	{ (DeeObject *)&DeeError_FileExists, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FileExists) },
 	{ (DeeObject *)&DeeError_FileClosed, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FileClosed) },
+	{ (DeeObject *)&DeeError_NoMemory, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_NoMemory) },
+	{ (DeeObject *)&DeeError_IntegerOverflow, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_IntegerOverflow) },
+	{ (DeeObject *)&DeeError_UnknownKey, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnknownKey) },
+	{ (DeeObject *)&DeeError_ItemNotFound, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ItemNotFound) },
+	{ (DeeObject *)&DeeError_BufferError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_BufferError) },
 	{ (DeeObject *)&DeeObject_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Object) },
 	{ (DeeObject *)&DeeSeq_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Sequence) },
 	{ (DeeObject *)&DeeMapping_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Mapping) },
@@ -408,11 +418,11 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 	/* 0x30 */ (DeeObject *)&DeeError_FileNotFound, /* FileNotFound */
 	/* 0x31 */ (DeeObject *)&DeeError_FileExists, /* FileExists */
 	/* 0x32 */ (DeeObject *)&DeeError_FileClosed, /* FileClosed */
-	/* 0x33 */ NULL,
-	/* 0x34 */ NULL,
-	/* 0x35 */ NULL,
-	/* 0x36 */ NULL,
-	/* 0x37 */ NULL,
+	/* 0x33 */ (DeeObject *)&DeeError_NoMemory, /* NoMemory */
+	/* 0x34 */ (DeeObject *)&DeeError_IntegerOverflow, /* IntegerOverflow */
+	/* 0x35 */ (DeeObject *)&DeeError_UnknownKey, /* UnknownKey */
+	/* 0x36 */ (DeeObject *)&DeeError_ItemNotFound, /* ItemNotFound */
+	/* 0x37 */ (DeeObject *)&DeeError_BufferError, /* BufferError */
 	/* 0x38 */ NULL,
 	/* 0x39 */ NULL,
 	/* 0x3a */ NULL,

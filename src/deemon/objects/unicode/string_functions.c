@@ -2840,8 +2840,7 @@ string_index(String *self, size_t argc,
 		goto not_found;
 	return DeeInt_NewSize(result);
 not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.needle);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -2901,8 +2900,7 @@ string_rindex(String *self, size_t argc,
 		goto not_found;
 	return DeeInt_NewSize(result);
 not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.needle);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -2960,12 +2958,11 @@ string_caseindex(String *self, size_t argc,
 	status = string_casefind_impl(self, args.needle, args.start, args.end, match_start_and_end);
 	if unlikely(status < 0)
 		goto err;
-	if (status == 0) {
-		return DeeTuple_NewII(match_start_and_end[0],
-		                      match_start_and_end[1]);
-	}
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.needle);
+	if unlikely(status != 0)
+		goto not_found;
+	return DeeTuple_NewII(match_start_and_end[0], match_start_and_end[1]);
+not_found:
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -3023,12 +3020,11 @@ string_caserindex(String *self, size_t argc,
 	status = string_caserfind_impl(self, args.needle, args.start, args.end, match_start_and_end);
 	if unlikely(status < 0)
 		goto err;
-	if (status == 0) {
-		return DeeTuple_NewII(match_start_and_end[0],
-		                      match_start_and_end[1]);
-	}
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.needle);
+	if unlikely(status != 0)
+		goto not_found;
+	return DeeTuple_NewII(match_start_and_end[0], match_start_and_end[1]);
+not_found:
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needle, args.start, args.end);
 err:
 	return NULL;
 }
@@ -3088,7 +3084,7 @@ string_indexany(String *self, size_t argc,
 		goto not_found;
 	return DeeInt_NewSize(result);
 not_found:
-	err_index_not_found((DeeObject *)self, args.needles);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needles, args.start, args.end);
 err:
 	return NULL;
 }
@@ -3146,11 +3142,11 @@ string_caseindexany(String *self, size_t argc,
 	status = string_casefindany_impl(self, args.needles, args.start, args.end, match_start_and_end);
 	if unlikely(status < 0)
 		goto err;
-	if (status == 0) {
-		return DeeTuple_NewII(match_start_and_end[0],
-		                      match_start_and_end[1]);
-	}
-	err_index_not_found((DeeObject *)self, args.needles);
+	if unlikely(status != 0)
+		goto not_found;
+	return DeeTuple_NewII(match_start_and_end[0], match_start_and_end[1]);
+not_found:
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needles, args.start, args.end);
 err:
 	return NULL;
 }
@@ -3211,7 +3207,7 @@ string_rindexany(String *self, size_t argc,
 		goto not_found;
 	return DeeInt_NewSize(result);
 not_found:
-	err_index_not_found((DeeObject *)self, args.needles);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needles, args.start, args.end);
 err:
 	return NULL;
 }
@@ -3269,11 +3265,11 @@ string_caserindexany(String *self, size_t argc,
 	status = string_caserfindany_impl(self, args.needles, args.start, args.end, match_start_and_end);
 	if unlikely(status < 0)
 		goto err;
-	if (status == 0) {
-		return DeeTuple_NewII(match_start_and_end[0],
-		                      match_start_and_end[1]);
-	}
-	err_index_not_found((DeeObject *)self, args.needles);
+	if unlikely(status != 0)
+		goto not_found;
+	return DeeTuple_NewII(match_start_and_end[0], match_start_and_end[1]);
+not_found:
+	DeeRT_ErrSubstringNotFound((DeeObject *)self, args.needles, args.start, args.end);
 err:
 	return NULL;
 }
@@ -7826,8 +7822,9 @@ string_indexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 	return DeeInt_NewSize(result);
 not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.close);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self,
+	                           (DeeObject *)args.close,
+	                           args.start, args.end);
 err:
 	return NULL;
 }
@@ -8030,8 +8027,9 @@ string_caseindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 	return DeeTuple_NewII(result, result + match_length);
 not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.close);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self,
+	                           (DeeObject *)args.close,
+	                           args.start, args.end);
 err:
 	return NULL;
 }
@@ -8228,8 +8226,9 @@ string_rindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 	return DeeInt_NewSize(result);
 not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.open);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self,
+	                           (DeeObject *)args.open,
+	                           args.start, args.end);
 err:
 	return NULL;
 }
@@ -8432,8 +8431,9 @@ string_caserindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 	return DeeTuple_NewII(result, result + match_length);
 not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)args.open);
+	DeeRT_ErrSubstringNotFound((DeeObject *)self,
+	                           (DeeObject *)args.open,
+	                           args.start, args.end);
 err:
 	return NULL;
 }
@@ -9187,8 +9187,10 @@ err:
 
 
 struct DeeRegexExecWithRange {
-	struct DeeRegexExec rewr_exec;  /* Normal exec args */
-	size_t              rewr_range; /* Max # of search attempts to perform (in bytes) */
+	struct DeeRegexExec rewr_exec;    /* Normal exec args */
+	size_t              rewr_range;   /* Max # of search attempts to perform (in bytes) */
+	DeeStringObject    *rewr_pattern; /* [1..1] Pattern string that is being used */
+	DeeStringObject    *rewr_rules;   /* [0..1] Pattern rules */
 };
 
 #define SEARCH_REGEX_GETARGS_FMT(name) "o|" UNPuSIZ UNPxSIZ UNPxSIZ "o:" name
@@ -9196,19 +9198,20 @@ PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
 search_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
                      DeeObject *kw, char const *__restrict fmt,
                      struct DeeRegexExecWithRange *__restrict result) {
-	DeeObject *pattern, *rules = NULL;
 	result->rewr_exec.rx_startoff = 0;
 	result->rewr_exec.rx_endoff   = (size_t)-1;
-	result->rewr_range            = (size_t)-1;
+	result->rewr_range = (size_t)-1;
+	result->rewr_rules = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__pattern_start_end_range_rules, fmt,
-	                    &pattern, &result->rewr_exec.rx_startoff,
+	                    &result->rewr_pattern, &result->rewr_exec.rx_startoff,
 	                    &result->rewr_exec.rx_endoff,
-	                    &result->rewr_range,
-	                    &rules))
+	                    &result->rewr_range, &result->rewr_rules))
 		goto err;
-	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(result->rewr_pattern, &DeeString_Type))
 		goto err;
-	result->rewr_exec.rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NORMAL, rules);
+	result->rewr_exec.rx_code = DeeString_GetRegex((DeeObject *)result->rewr_pattern,
+	                                               DEE_REGEX_COMPILE_NORMAL,
+	                                               (DeeObject *)result->rewr_rules);
 	if unlikely(!result->rewr_exec.rx_code)
 		goto err;
 	result->rewr_exec.rx_nmatch = 0;
@@ -9522,6 +9525,21 @@ err:
 	return NULL;
 }
 
+PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
+err_regex_not_found_in_string(String *self, struct DeeRegexExecWithRange const *__restrict exec) {
+	size_t start, end, range;
+	start = exec->rewr_exec.rx_startoff;
+	end   = exec->rewr_exec.rx_endoff - start;
+	start = string_bytecnt2charcnt(self, start, (char const *)exec->rewr_exec.rx_inbase);
+	end   = string_bytecnt2charcnt(self, end, (char const *)exec->rewr_exec.rx_inbase + exec->rewr_exec.rx_startoff);
+	end  += start;
+	range = exec->rewr_range;
+	range = string_bytecnt2charcnt(self, range, (char const *)exec->rewr_exec.rx_inbase + exec->rewr_exec.rx_startoff);
+	return DeeRT_ErrRegexNotFound((DeeObject *)self, (DeeObject *)exec->rewr_pattern,
+	                              start, end, range, (DeeObject *)exec->rewr_rules,
+	                              exec->rewr_exec.rx_eflags);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_reindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t result;
@@ -9539,7 +9557,7 @@ string_reindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	match_size += (size_t)result;
 	return DeeTuple_NewII((size_t)result, (size_t)match_size);
 err_not_found:
-	err_regex_index_not_found((DeeObject *)self);
+	err_regex_not_found_in_string(self, &exec);
 err:
 	return NULL;
 }
@@ -9561,7 +9579,7 @@ string_rerindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	match_size += (size_t)result;
 	return DeeTuple_NewII((size_t)result, (size_t)match_size);
 err_not_found:
-	err_regex_index_not_found((DeeObject *)self);
+	err_regex_not_found_in_string(self, &exec);
 err:
 	return NULL;
 }
@@ -9595,7 +9613,7 @@ string_regindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
 	return (DREF DeeObject *)groups;
 err_not_found:
-	err_regex_index_not_found((DeeObject *)self);
+	err_regex_not_found_in_string(self, &exec);
 err_g:
 	ReGroups_Free(groups);
 err:
@@ -9631,7 +9649,7 @@ string_regrindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
 	return (DREF DeeObject *)groups;
 err_not_found:
-	err_regex_index_not_found((DeeObject *)self);
+	err_regex_not_found_in_string(self, &exec);
 err_g:
 	ReGroups_Free(groups);
 err:

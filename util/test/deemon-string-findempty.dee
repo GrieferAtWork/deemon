@@ -30,10 +30,10 @@ function assertFindFunction(expected, s: string, find: string, args: Tuple) {
 	assert expected       == s.bytes().operator . (casefind)(args...);
 	assert expected.first == s.operator . (find)(args...);
 	assert expected.first == s.bytes().operator . (find)(args...);
-	assert expected       == try s.operator . (caseindex)(args...) catch (IndexError) none;
-	assert expected       == try s.bytes().operator . (caseindex)(args...) catch (IndexError) none;
-	assert expected.first == try s.operator . (index)(args...) catch (IndexError) none;
-	assert expected.first == try s.bytes().operator . (index)(args...) catch (IndexError) none;
+	assert expected       == try s.operator . (caseindex)(args...) catch (ItemNotFound) none;
+	assert expected       == try s.bytes().operator . (caseindex)(args...) catch (ItemNotFound) none;
+	assert expected.first == try s.operator . (index)(args...) catch (ItemNotFound) none;
+	assert expected.first == try s.bytes().operator . (index)(args...) catch (ItemNotFound) none;
 }
 
 assertFindFunction((3, 6), "foobar", "find",  ("bar",));

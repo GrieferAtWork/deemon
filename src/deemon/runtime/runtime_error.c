@@ -1010,30 +1010,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_item_not_found)(DeeObject *seq, DeeObject *item) {
-	ASSERT_OBJECT(seq);
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Could not locate item `%k' in sequence `%k'",
-	                       item, seq);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_index_not_found)(DeeObject *seq, DeeObject *item) {
-	ASSERT_OBJECT(seq);
-	return DeeError_Throwf(&DeeError_IndexError, /* TODO: This needs to be a new "SequenceError.ItemNotFound" error */
-	                       "Could not locate item `%k' in sequence `%k'",
-	                       item, seq);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_regex_index_not_found)(DeeObject *seq) {
-	ASSERT_OBJECT(seq);
-	return DeeError_Throwf(&DeeError_IndexError, /* TODO: This needs to be a new "SequenceError.ItemNotFound" error */
-	                       "Could not locate regex pattern in string %r",
-	                       seq);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_class_protected_member)(DeeTypeObject *__restrict class_type,
                                    struct class_attribute *__restrict member) {
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
