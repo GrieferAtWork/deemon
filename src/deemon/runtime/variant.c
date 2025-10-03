@@ -25,10 +25,12 @@
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 #include <deemon/variant.h>
 
+#include <hybrid/minmax.h>
 #include <hybrid/sched/yield.h>
 
 #include "runtime_error.h"
@@ -148,6 +150,13 @@ Dee_variant_trygetobject(struct Dee_variant *__restrict self) {
 	case Dee_VARIANT_UINT128:
 		result = DeeInt_NewUInt128(_Dee_variant_get_uint128(&copy));
 		break;
+	case Dee_VARIANT_CSTR:
+		result = DeeString_New(_Dee_variant_get_cstr(&copy));
+		break;
+	case Dee_VARIANT_CSTRLEN:
+		result = DeeString_NewSized(_Dee_variant_get_cstr(&copy),
+		                            _Dee_variant_get_cstrlen(&copy));
+		break;
 #ifndef CONFIG_NO_FPU
 	case Dee_VARIANT_FLOAT:
 		result = DeeFloat_New(_Dee_variant_get_float(&copy));
@@ -198,6 +207,9 @@ Dee_variant_getobjecttype_impl(struct Dee_variant *__restrict self) {
 	case Dee_VARIANT_INT128:
 	case Dee_VARIANT_UINT128:
 		return &DeeInt_Type;
+	case Dee_VARIANT_CSTR:
+	case Dee_VARIANT_CSTRLEN:
+		return &DeeString_Type;
 #ifndef CONFIG_NO_FPU
 	case Dee_VARIANT_FLOAT:
 		return &DeeFloat_Type;
@@ -277,6 +289,67 @@ Dee_variant_setuint128(struct Dee_variant *__restrict self, Dee_uint128_t value)
 	VARIANT_SETVALUE(self, _Dee_variant_set_uint128, value, Dee_VARIANT_UINT128);
 }
 
+PUBLIC NONNULL((1, 2)) void DCALL
+Dee_variant_setcstr(struct Dee_variant *__restrict self, char const *str) {
+	VARIANT_SETVALUE(self, _Dee_variant_set_cstr, str, Dee_VARIANT_CSTR);
+}
+
+PUBLIC NONNULL((1)) void DCALL
+Dee_variant_setcstrlen(struct Dee_variant *__restrict self,
+                       char const *str, size_t len) {
+#define _setpair(a, v) (_Dee_variant_set_cstr(a, str), _Dee_variant_set_cstrlen(a, len))
+	VARIANT_SETVALUE(self, _setpair, ~, Dee_VARIANT_CSTRLEN);
+#undef _setpair
+}
+
+
+PRIVATE WUNUSED bool DCALL
+ptr_is_static(void const *ptr) {
+	/* TODO: OS-specific magic */
+	(void)ptr;
+	return false;
+}
+
+/* Same as `Dee_variant_init_cstr()', but check at runtime if "str" is guarantied
+ * to point into statically allocated memory. If it does, use "Dee_VARIANT_CSTR"
+ * as variant typing, else use "Dee_VARIANT_OBJECT" and "DeeString_New()".
+ *
+ * When there is doubt regarding "str" being static, these functions always go the
+ * safe route by assuming that it isn't, and turning them into string objects. */
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+Dee_variant_init_cstr_maybe(struct Dee_variant *__restrict self,
+                            char const *str) {
+	if (!ptr_is_static(str)) {
+		DREF DeeObject *obj = DeeString_New(str);
+		if unlikely(!obj)
+			goto err;
+		Dee_variant_init_object_inherited(self, obj);
+		return 0;
+	}
+	Dee_variant_init_cstr(self, str);
+	return 0;
+err:
+	return -1;
+}
+
+
+PUBLIC WUNUSED NONNULL((1)) ATTR_INS(2, 3) int DCALL
+Dee_variant_init_cstrlen_maybe(struct Dee_variant *__restrict self,
+                               char const *str, size_t len) {
+	if (!ptr_is_static(str)) {
+		DREF DeeObject *obj = DeeString_NewSized(str, len);
+		if unlikely(!obj)
+			goto err;
+		Dee_variant_init_object_inherited(self, obj);
+		return 0;
+	}
+	Dee_variant_init_cstrlen(self, str, len);
+	return 0;
+err:
+	return -1;
+}
+
+
 PUBLIC NONNULL((1, 2)) bool DCALL
 Dee_variant_setobject_if_unbound(struct Dee_variant *__restrict self, DeeObject *value) {
 	enum Dee_variant_type old_type = Dee_variant_lock(self);
@@ -336,7 +409,8 @@ Dee_variant_setuint128_if_unbound(struct Dee_variant *__restrict self, Dee_uint1
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_variant_print_impl(struct Dee_variant *__restrict self,
-                       Dee_formatprinter_t printer, void *arg) {
+                       Dee_formatprinter_t printer, void *arg,
+                       bool repr) {
 	switch (self->var_type) {
 	case Dee_VARIANT_UNBOUND:
 		return 0;
@@ -354,6 +428,19 @@ Dee_variant_print_impl(struct Dee_variant *__restrict self,
 		return DeeFormat_Printf(printer, arg, "%" PRFd128, _Dee_variant_get_int128(self));
 	case Dee_VARIANT_UINT128:
 		return DeeFormat_Printf(printer, arg, "%" PRFu128, _Dee_variant_get_uint128(self));
+	case Dee_VARIANT_CSTR: {
+		char const *cstr = _Dee_variant_get_cstr(self);
+		if (repr)
+			return DeeFormat_Printf(printer, arg, "%q", cstr);
+		return (*printer)(arg, cstr, strlen(cstr));
+	}	break;
+	case Dee_VARIANT_CSTRLEN:
+		if (repr) {
+			return DeeFormat_Printf(printer, arg, "%$q",
+			                        _Dee_variant_get_cstrlen(self),
+			                        _Dee_variant_get_cstr(self));
+		}
+		return (*printer)(arg, _Dee_variant_get_cstr(self), _Dee_variant_get_cstrlen(self));
 #ifndef CONFIG_NO_FPU
 	case Dee_VARIANT_FLOAT:
 		return DeeFormat_Printf(printer, arg, "%f", _Dee_variant_get_float(self));
@@ -381,7 +468,7 @@ Dee_variant_print(struct Dee_variant *__restrict self,
 	Dee_ssize_t result;
 	struct Dee_variant copy;
 	Dee_variant_init_copy(&copy, self);
-	result = Dee_variant_print_impl(&copy, printer, arg);
+	result = Dee_variant_print_impl(&copy, printer, arg, false);
 	Dee_variant_fini(&copy);
 	return result;
 }
@@ -396,7 +483,7 @@ Dee_variant_printrepr(struct Dee_variant *__restrict self,
 	if (copy.var_type == Dee_VARIANT_OBJECT) {
 		result = DeeObject_PrintRepr(copy.var_data.d_object, printer, arg);
 	} else {
-		result = Dee_variant_print_impl(&copy, printer, arg);
+		result = Dee_variant_print_impl(&copy, printer, arg, true);
 	}
 	Dee_variant_fini(&copy);
 	return result;
@@ -434,6 +521,10 @@ Dee_variant_hash_impl(struct Dee_variant const *__restrict self) {
 		return (Dee_hash_t)__hybrid_uint128_get64(value);
 #endif /* Dee_SIZEOF_HASH_T > 4 */
 	}	break;
+	case Dee_VARIANT_CSTR:
+		return Dee_HashStr(_Dee_variant_get_cstr(self));
+	case Dee_VARIANT_CSTRLEN:
+		return Dee_HashPtr(_Dee_variant_get_cstr(self), _Dee_variant_get_cstrlen(self));
 #ifndef CONFIG_NO_FPU
 	case Dee_VARIANT_FLOAT: {
 		double value = _Dee_variant_get_float(self);
@@ -444,6 +535,25 @@ Dee_variant_hash_impl(struct Dee_variant const *__restrict self) {
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
+}
+
+PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL
+dee_memcmp2(void const *lhs, size_t lhs_size,
+            void const *rhs, size_t rhs_size) {
+	size_t common = MIN(lhs_size, rhs_size);
+	int result = memcmp(lhs, rhs, common * sizeof(char));
+	if (result < -1) {
+		result = -1;
+	} else if (result > 1) {
+		result = 1;
+	} else if (result == 0) {
+		if (lhs_size < rhs_size) {
+			result = -1;
+		} else if (lhs_size > rhs_size) {
+			result = 1;
+		}
+	}
+	return result;
 }
 
 /* Fast-pass comparison function that only implements cases that
@@ -538,6 +648,38 @@ Dee_variant_fast_compare_impl(struct Dee_variant const *__restrict lhs,
 			if (__hybrid_uint128_gr128(lhs_value, rhs_value))
 				return 1;
 			return 0;
+		}
+	}	break;
+
+	case Dee_VARIANT_CSTR: {
+		char const *lhs_str = _Dee_variant_get_cstr(lhs);
+		if (rhs->var_type == Dee_VARIANT_CSTR) {
+			char const *rhs_str = _Dee_variant_get_cstr(rhs);
+			int result = strcmp(lhs_str, rhs_str);
+			if (result < -1)
+				result = -1;
+			if (result > 1)
+				result = 1;
+			return result;
+		} else if (rhs->var_type == Dee_VARIANT_CSTRLEN) {
+			char const *rhs_str = _Dee_variant_get_cstr(rhs);
+			size_t lhs_len = strlen(lhs_str);
+			size_t rhs_len = _Dee_variant_get_cstrlen(rhs);
+			return dee_memcmp2(lhs_str, lhs_len, rhs_str, rhs_len);
+		}
+	}	break;
+
+	case Dee_VARIANT_CSTRLEN: {
+		char const *lhs_str = _Dee_variant_get_cstr(lhs);
+		size_t lhs_len = _Dee_variant_get_cstrlen(lhs);
+		if (rhs->var_type == Dee_VARIANT_CSTR) {
+			char const *rhs_str = _Dee_variant_get_cstr(rhs);
+			size_t rhs_len = strlen(rhs_str);
+			return dee_memcmp2(lhs_str, lhs_len, rhs_str, rhs_len);
+		} else if (rhs->var_type == Dee_VARIANT_CSTRLEN) {
+			char const *rhs_str = _Dee_variant_get_cstr(rhs);
+			size_t rhs_len = _Dee_variant_get_cstrlen(rhs);
+			return dee_memcmp2(lhs_str, lhs_len, rhs_str, rhs_len);
 		}
 	}	break;
 
@@ -697,8 +839,6 @@ Dee_variant_trycompare_eq(struct Dee_variant *lhs, struct Dee_variant *rhs) {
 	Dee_variant_fini(&lhs_copy);
 	return result;
 }
-
-
 
 DECL_END
 

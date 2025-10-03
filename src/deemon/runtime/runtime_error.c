@@ -293,25 +293,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 #define SIZE_WIDTH_STR PP_STR(__SIZE_WIDTH__)
 #endif /* __SIZE_WIDTH__ != ... */
 
-INTERN NONNULL((1, 2)) int
-(DFCALL check_empty_keywords)(DeeObject *kw, DeeTypeObject *tp_self) {
-	if (DeeKwds_Check(kw)) {
-		if (DeeKwds_SIZE(kw) != 0)
-			goto err_no_keywords;
-	} else {
-		size_t temp = DeeObject_Size(kw);
-		if unlikely(temp == (size_t)-1)
-			goto err;
-		if (temp != 0)
-			goto err_no_keywords;
-	}
-	return 0;
-err_no_keywords:
-	err_keywords_not_accepted(tp_self, kw);
-err:
-	return -1;
-}
-
 INTERN NONNULL((1)) int
 (DFCALL check_empty_keywords_obj)(DeeObject *__restrict kw) {
 	if (DeeKwds_Check(kw)) {

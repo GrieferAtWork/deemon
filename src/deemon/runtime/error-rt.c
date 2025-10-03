@@ -392,23 +392,39 @@ PUBLIC DeeTypeObject DeeError_Error = {
 
 
 
+/************************************************************************/
+/* Error.AttributeError                                                 */
+/************************************************************************/
+typedef struct {
+	ERROR_OBJECT_HEAD
+	/* TODO: Somehow embed "struct Dee_attrdesc" here, so we can
+	 *       provide a getter that returns "DeeAttribute_Type" */
+} AttributeError;
 
-
-/* BEGIN::AttributeError */
-PRIVATE struct type_member tpconst attribute_error_class_members[] = {
+PRIVATE struct type_member tpconst AttributeError_class_members[] = {
 	TYPE_MEMBER_CONST("UnboundAttribute", &DeeError_UnboundAttribute),
 	TYPE_MEMBER_END
 };
+
+PRIVATE struct type_member tpconst AttributeError_members[] = {
 #define AttributeError_init_params Error_init_params
+	/* TODO */
+	TYPE_MEMBER_END
+};
+
 PUBLIC DeeTypeObject DeeError_AttributeError =
-INIT_LIKE_ERROR("AttributeError", "(" AttributeError_init_params ")",
-                TP_FNORMAL, &DeeError_Error, NULL, NULL,
-                NULL, NULL, attribute_error_class_members);
+INIT_CUSTOM_ERROR("AttributeError", "(" AttributeError_init_params ")",
+                  TP_FNORMAL, &DeeError_Error, AttributeError, NULL, NULL,
+                  NULL, NULL, AttributeError_members, AttributeError_class_members);
+
+
+/************************************************************************/
+/* Error.AttributeError.UnboundAttribute                                */
+/************************************************************************/
 PUBLIC DeeTypeObject DeeError_UnboundAttribute =
-INIT_LIKE_ERROR("UnboundAttribute", "(" AttributeError_init_params ")",
-                TP_FNORMAL, &DeeError_AttributeError, NULL, NULL,
-                NULL, NULL, NULL);
-/* END::AttributeError */
+INIT_LIKE_BASECLASS("UnboundAttribute", "(" AttributeError_init_params ")",
+                    TP_FNORMAL, &DeeError_AttributeError, AttributeError, NULL, NULL,
+                    NULL, NULL, NULL);
 
 
 
@@ -1018,27 +1034,20 @@ INIT_CUSTOM_ERROR("UnknownKey", "(" KeyError_init_params ")",
                   TP_FNORMAL, &DeeError_KeyError, UnknownKey, NULL, &UnknownKey_print,
                   NULL, NULL, NULL, NULL);
 
-PRIVATE ATTR_COLD NONNULL((1, 2)) int
-(DCALL DeeRT_ErrUnknownKeyInherited)(DeeObject *map, /*inherit(always)*/ DREF DeeObject *key) {
-	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
-	if unlikely(!result)
-		goto err;
-	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
-	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = NULL;
-	Dee_variant_init_object(&result->ke_base.ve_value, map);
-	Dee_variant_init_object_inherited(&result->ke_key, key);
-	return DeeError_ThrowInherited((DeeObject *)result);
-err:
-	Dee_Decref(key);
-	return -1;
-}
-
 /* Throws an `DeeError_UnknownKey' indicating that a given index/key is unknown */
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrUnknownKey)(DeeObject *map, DeeObject *key) {
-	Dee_Incref(key);
-	return DeeRT_ErrUnknownKeyInherited(map, key);
+	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
+	if unlikely(!result)
+		goto err;
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	Dee_variant_init_object(&result->ke_key, key);
+	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
@@ -1075,20 +1084,36 @@ err:
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrUnknownKeyStr)(DeeObject *map, char const *key) {
-	DREF DeeObject *keyob = DeeString_New(key);
-	if unlikely(!keyob)
+	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
+	if unlikely(!result)
 		goto err;
-	return DeeRT_ErrUnknownKeyInherited(map, keyob);
+	if unlikely(Dee_variant_init_cstr_maybe(&result->ke_key, key))
+		goto err_r;
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err_r:
+	DeeObject_FREE(result);
 err:
 	return -1;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrUnknownKeyStrLen)(DeeObject *map, char const *key, size_t keylen) {
-	DREF DeeObject *keyob = DeeString_NewSized(key, keylen);
-	if unlikely(!keyob)
+	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
+	if unlikely(!result)
 		goto err;
-	return DeeRT_ErrUnknownKeyInherited(map, keyob);
+	if unlikely(Dee_variant_init_cstrlen_maybe(&result->ke_key, key, keylen))
+		goto err_r;
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err_r:
+	DeeObject_FREE(result);
 err:
 	return -1;
 }
@@ -1115,27 +1140,20 @@ INIT_CUSTOM_ERROR("ReadOnlyKey", "(" KeyError_init_params ")",
                   TP_FNORMAL, &DeeError_KeyError, ReadOnlyKey, NULL, &ReadOnlyKey_print,
                   NULL, NULL, NULL, NULL);
 
-PRIVATE ATTR_COLD NONNULL((1, 2)) int
-(DCALL DeeRT_ErrReadOnlyKeyInherited)(DeeObject *map, /*inherit(always)*/ DREF DeeObject *key) {
-	DREF ReadOnlyKey *result = DeeObject_MALLOC(ReadOnlyKey);
-	if unlikely(!result)
-		goto err;
-	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
-	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = NULL;
-	Dee_variant_init_object(&result->ke_base.ve_value, map);
-	Dee_variant_init_object_inherited(&result->ke_key, key);
-	return DeeError_ThrowInherited((DeeObject *)result);
-err:
-	Dee_Decref(key);
-	return -1;
-}
-
 /* Throws an `DeeError_ReadOnlyKey' indicating that a given index/key is unknown */
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrReadOnlyKey)(DeeObject *map, DeeObject *key) {
-	Dee_Incref(key);
-	return DeeRT_ErrReadOnlyKeyInherited(map, key);
+	DREF ReadOnlyKey *result = DeeObject_MALLOC(ReadOnlyKey);
+	if unlikely(!result)
+		goto err;
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	Dee_variant_init_object(&result->ke_key, key);
+	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
 }
 
 PUBLIC ATTR_COLD NONNULL((1)) int
@@ -1143,11 +1161,11 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	DREF ReadOnlyKey *result = DeeObject_MALLOC(ReadOnlyKey);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
 	result->ke_base.e_message = NULL;
 	result->ke_base.e_inner   = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	Dee_variant_init_size(&result->ke_key, key);
+	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
 	return -1;
@@ -1155,20 +1173,36 @@ err:
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrReadOnlyKeyStr)(DeeObject *map, char const *key) {
-	DREF DeeObject *keyob = DeeString_New(key);
-	if unlikely(!keyob)
+	DREF ReadOnlyKey *result = DeeObject_MALLOC(ReadOnlyKey);
+	if unlikely(!result)
 		goto err;
-	return DeeRT_ErrReadOnlyKeyInherited(map, keyob);
+	if unlikely(Dee_variant_init_cstr_maybe(&result->ke_key, key))
+		goto err_r;
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err_r:
+	DeeObject_FREE(result);
 err:
 	return -1;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrReadOnlyKeyStrLen)(DeeObject *map, char const *key, size_t keylen) {
-	DREF DeeObject *keyob = DeeString_NewSized(key, keylen);
-	if unlikely(!keyob)
+	DREF ReadOnlyKey *result = DeeObject_MALLOC(ReadOnlyKey);
+	if unlikely(!result)
 		goto err;
-	return DeeRT_ErrReadOnlyKeyInherited(map, keyob);
+	if unlikely(Dee_variant_init_cstrlen_maybe(&result->ke_key, key, keylen))
+		goto err_r;
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err_r:
+	DeeObject_FREE(result);
 err:
 	return -1;
 }
@@ -1213,10 +1247,8 @@ INIT_CUSTOM_ERROR("UnboundItem", "(" UnboundItem_init_params ")",
                   TP_FNORMAL, &DeeError_KeyError, UnboundItem, NULL, &UnboundItem_print,
                   NULL, NULL, UnboundItem_members, NULL);
 
-PRIVATE ATTR_COLD NONNULL((1, 2)) int
-(DCALL DeeRT_ErrUnboundItemInherited)(DeeObject *seq,
-                                      /*inherit(always)*/ DREF DeeObject *key_or_index,
-                                      bool is_key) {
+PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
+DeeRT_ErrUnboundItemImpl(DeeObject *seq, DeeObject *key_or_index, bool is_key) {
 	DREF UnboundItem *result = DeeObject_MALLOC(UnboundItem);
 	if unlikely(!result)
 		goto err;
@@ -1224,11 +1256,10 @@ PRIVATE ATTR_COLD NONNULL((1, 2)) int
 	result->ui_base.ke_base.e_message = NULL;
 	result->ui_base.ke_base.e_inner   = NULL;
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
-	Dee_variant_init_object_inherited(&result->ui_base.ke_key, key_or_index);
+	Dee_variant_init_object(&result->ui_base.ke_key, key_or_index);
 	result->ui_iskey = is_key;
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
-	Dee_Decref(key_or_index);
 	return -1;
 }
 
@@ -1250,8 +1281,7 @@ err:
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrUnboundKey)(DeeObject *seq, DeeObject *key) {
-	Dee_Incref(key);
-	return DeeRT_ErrUnboundItemInherited(seq, key, true);
+	return DeeRT_ErrUnboundItemImpl(seq, key, true);
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
@@ -1274,20 +1304,38 @@ err:
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrUnboundKeyStr)(DeeObject *seq, char const *key) {
-	DREF DeeObject *keyob = DeeString_New(key);
-	if unlikely(!keyob)
+	DREF UnboundItem *result = DeeObject_MALLOC(UnboundItem);
+	if unlikely(!result)
 		goto err;
-	return DeeRT_ErrUnboundItemInherited(seq, keyob, true);
+	if unlikely(Dee_variant_init_cstr_maybe(&result->ui_base.ke_key, key))
+		goto err_r;
+	result->ui_base.ke_base.e_message = NULL;
+	result->ui_base.ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
+	result->ui_iskey = true;
+	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err_r:
+	DeeObject_FREE(result);
 err:
 	return -1;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrUnboundKeyStrLen)(DeeObject *seq, char const *key, size_t keylen) {
-	DREF DeeObject *keyob = DeeString_NewSized(key, keylen);
-	if unlikely(!keyob)
+	DREF UnboundItem *result = DeeObject_MALLOC(UnboundItem);
+	if unlikely(!result)
 		goto err;
-	return DeeRT_ErrUnboundItemInherited(seq, keyob, true);
+	if unlikely(Dee_variant_init_cstrlen_maybe(&result->ui_base.ke_key, key, keylen))
+		goto err_r;
+	result->ui_base.ke_base.e_message = NULL;
+	result->ui_base.ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
+	result->ui_iskey = true;
+	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err_r:
+	DeeObject_FREE(result);
 err:
 	return -1;
 }
@@ -1304,8 +1352,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject *seq, DeeObject *index) {
-	Dee_Incref(index);
-	return DeeRT_ErrUnboundItemInherited(seq, index, false);
+	return DeeRT_ErrUnboundItemImpl(seq, index, false);
 }
 
 
@@ -1322,10 +1369,10 @@ typedef struct {
 
 PRIVATE struct type_member tpconst ItemNotFound_members[] = {
 #define ItemNotFound_init_params SequenceError_init_params ",item?,start=!0,end?:?Dint,key?:?DCallable"
-	TYPE_MEMBER_FIELD("item", STRUCT_OBJECT_OPT, offsetof(ItemNotFound, inf_item)),
+	TYPE_MEMBER_FIELD("item", STRUCT_OBJECT, offsetof(ItemNotFound, inf_item)),
 	TYPE_MEMBER_FIELD("start", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ItemNotFound, inf_start)),
 	TYPE_MEMBER_FIELD_DOC("end", STRUCT_VARIANT | STRUCT_CONST, offsetof(ItemNotFound, inf_end), "->?Dint"),
-	TYPE_MEMBER_FIELD_DOC("key", STRUCT_OBJECT_OPT, offsetof(ItemNotFound, inf_key), "->?DCallable"),
+	TYPE_MEMBER_FIELD_DOC("key", STRUCT_OBJECT, offsetof(ItemNotFound, inf_key), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 
@@ -1416,12 +1463,12 @@ typedef struct {
 
 PRIVATE struct type_member tpconst RegexNotFound_members[] = {
 #define RegexNotFound_init_params Error_init_params ",data?:?X2?Dstring?DBytes,regex?:?Dstring,start=!0,end?:?Dint,range=!0,rules?:?Dstring"
-	TYPE_MEMBER_FIELD_DOC("data", STRUCT_OBJECT_OPT, offsetof(RegexNotFound, rnf_base.inf_base.ve_value), "->?X2?Dstring?DBytes"),
-	TYPE_MEMBER_FIELD_DOC("regex", STRUCT_OBJECT_OPT, offsetof(RegexNotFound, rnf_base.inf_item), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("data", STRUCT_OBJECT, offsetof(RegexNotFound, rnf_base.inf_base.ve_value), "->?X2?Dstring?DBytes"),
+	TYPE_MEMBER_FIELD_DOC("regex", STRUCT_OBJECT, offsetof(RegexNotFound, rnf_base.inf_item), "->?Dstring"),
 	TYPE_MEMBER_FIELD("start", STRUCT_SIZE_T | STRUCT_CONST, offsetof(RegexNotFound, rnf_base.inf_start)),
 	TYPE_MEMBER_FIELD_DOC("end", STRUCT_VARIANT | STRUCT_CONST, offsetof(RegexNotFound, rnf_base.inf_end), "->?Dint"),
 	TYPE_MEMBER_FIELD_DOC("range", STRUCT_SIZE_T | STRUCT_CONST, offsetof(RegexNotFound, rnf_range), "->?Dint"),
-	TYPE_MEMBER_FIELD_DOC("rules", STRUCT_OBJECT_OPT, offsetof(RegexNotFound, rnf_base.inf_key), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("rules", STRUCT_OBJECT, offsetof(RegexNotFound, rnf_base.inf_key), "->?Dstring"),
 	TYPE_MEMBER_END
 };
 

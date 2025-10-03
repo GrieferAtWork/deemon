@@ -50,8 +50,6 @@ INTDEF ATTR_COLD int DCALL err_cannot_lock_weakref(void);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_bytes_not_writable(DeeObject *__restrict bytes_ob);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_index_out_of_bounds_ob(DeeObject *self, DeeObject *index);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_single_character_string(DeeObject *__restrict str);
-#define xcheck_empty_keywords(kw) (!(kw) ? 0 : check_empty_keywords(kw))
-INTDEF NONNULL((1, 2)) int DFCALL check_empty_keywords(DeeObject *kw, DeeTypeObject *tp_self);
 INTDEF NONNULL((1)) int DFCALL check_empty_keywords_obj(DeeObject *__restrict kw);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_not_accepted(DeeTypeObject *tp_self, DeeObject *kw);
 INTDEF ATTR_COLD NONNULL((1, 2, 3)) int DCALL err_keywords_func_not_accepted_string(DeeTypeObject *tp_self, char const *__restrict name, DeeObject *__restrict kw);

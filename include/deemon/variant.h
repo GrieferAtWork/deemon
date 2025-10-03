@@ -55,6 +55,8 @@ enum Dee_variant_type {
 	Dee_VARIANT_UINT64,  /* ... */
 	Dee_VARIANT_INT128,  /* ... */
 	Dee_VARIANT_UINT128, /* ... */
+	Dee_VARIANT_CSTR,    /* ... */
+	Dee_VARIANT_CSTRLEN, /* ... */
 #ifndef CONFIG_NO_FPU
 	Dee_VARIANT_FLOAT,   /* ... */
 #endif /* !CONFIG_NO_FPU */
@@ -91,6 +93,11 @@ struct Dee_variant {
 		__BYTE_TYPE__  _d_int128[16];  /* [valid_if(var_type == Dee_VARIANT_INT128)] */
 		__BYTE_TYPE__  _d_uint128[16]; /* [valid_if(var_type == Dee_VARIANT_UINT128)] */
 #endif /* __ALIGNOF_INT128__ > __ALIGNOF_POINTER__ */
+		char const     *d_cstr;        /* [1..1][valid_if(var_type == Dee_VARIANT_CSTR)] Statically allocated NUL-terminated C-string */
+		union {
+			char const *sl_str;        /* [0..sl_len] Statically allocated C-string */
+			size_t      sl_len;        /* # of char-s in `sl_str' */
+		}               d_cstrlen;     /* [valid_if(var_type == Dee_VARIANT_CSTRLEN)] Statically allocated C-string */
 #ifndef CONFIG_NO_FPU
 #if __ALIGNOF_DOUBLE__ <= __ALIGNOF_POINTER__
 		double          d_float;       /* [valid_if(var_type == Dee_VARIANT_FLOAT)] */
@@ -298,6 +305,32 @@ DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setuint128_if_unbound(struct Dee_var
 #define Dee_variant_setssize(self, value)            Dee_variant_setint128(self, value)
 #define Dee_variant_setssize_if_unbound(self, value) Dee_variant_setint128_if_unbound(self, value)
 #endif /* __SIZEOF_SIZE_T__ > ... */
+
+
+/* !!!CAUTION!!! -- Only use these functions when "str" is a statically allocated string,
+ *                  or if its lifetime **always** (no matter what user-code does) exceeds
+ *                  the life-time of `self'. */
+#define _Dee_variant_get_cstr(self)              (self)->var_data.d_cstr
+#define _Dee_variant_get_cstrlen(self)           (self)->var_data.d_cstrlen.sl_len
+#define _Dee_variant_set_cstr(self, v)           (void)((self)->var_data.d_cstr = (v))
+#define _Dee_variant_set_cstrlen(self, v)        (void)((self)->var_data.d_cstrlen.sl_len = (v))
+#define Dee_variant_init_cstr(self, str)         (void)((self)->var_type = Dee_VARIANT_CSTR, _Dee_variant_set_cstr(self, str))
+#define Dee_variant_init_cstrlen(self, str, len) (void)((self)->var_type = Dee_VARIANT_CSTRLEN, _Dee_variant_set_cstr(self, str), _Dee_variant_set_cstrlen(self, len))
+DFUNDEF NONNULL((1, 2)) void DCALL Dee_variant_setcstr(struct Dee_variant *__restrict self, char const *str);
+DFUNDEF NONNULL((1)) void DCALL Dee_variant_setcstrlen(struct Dee_variant *__restrict self, char const *str, size_t len);
+
+/* Same as `Dee_variant_init_cstr()', but check at runtime if "str" is guarantied
+ * to point into statically allocated memory. If it does, use "Dee_VARIANT_CSTR"
+ * as variant typing, else use "Dee_VARIANT_OBJECT" and "DeeString_New()".
+ *
+ * When there is doubt regarding "str" being static, these functions always go the
+ * safe route by assuming that it isn't, and turning them into string objects. */
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_variant_init_cstr_maybe(struct Dee_variant *__restrict self, char const *str);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) int DCALL
+Dee_variant_init_cstrlen_maybe(struct Dee_variant *__restrict self, char const *str, size_t len);
+
+
 
 /* Print the DeeObject_Str() or DeeObject_Repr() of the object linked to "self"
  * When the variant "self" is unbound, nothing is printed and "0" is returned.

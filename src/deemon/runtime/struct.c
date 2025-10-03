@@ -391,8 +391,8 @@ Dee_type_member_init(struct type_member const *desc,
                      DeeObject *self, DeeObject *value) {
 	byte_t *dst = (byte_t *)self + desc->m_desc.md_field.mdf_offset;
 	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
-	case STRUCT_OBJECT & ~STRUCT_CONST:
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
+	case STRUCT_OBJECT & ~STRUCT_CONST:
 		Dee_Incref(value);
 		*(DeeObject **)dst = value;
 		break;
@@ -420,6 +420,7 @@ Dee_type_member_init_unbound(struct type_member const *desc, DeeObject *self) {
 	byte_t *dst = (byte_t *)self + desc->m_desc.md_field.mdf_offset;
 	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
+	case STRUCT_OBJECT & ~STRUCT_CONST:
 		*(DeeObject **)dst = NULL;
 		break;
 	case STRUCT_WOBJECT_OPT:
