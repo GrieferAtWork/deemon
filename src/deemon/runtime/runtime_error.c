@@ -262,16 +262,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_va_index_out_of_bounds)(DeeFunctionObject *__restrict func,
-                                   size_t index, size_t size) {
-	(void)func;
-	ASSERT(index >= size);
-	return DeeError_Throwf(&DeeError_IndexError,
-	                       "Index `%" PRFuSIZ "' lies outside the valid bounds `0...%" PRFuSIZ "' of varargs",
-	                       index, size);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_expected_single_character_string)(DeeObject *__restrict str) {
 	size_t length;
 	ASSERT_OBJECT(str);

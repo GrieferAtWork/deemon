@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/code.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
@@ -965,6 +966,33 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 err:
 	return -1;
 }
+
+#ifdef CONFIG_BUILDING_DEEMON
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrVaIndexOutOfBounds)(struct Dee_code_frame const *__restrict frame,
+                                    size_t index) {
+	int result;
+	DREF DeeTupleObject *varargs = frame->cf_vargs;
+	if (varargs) {
+		Dee_Incref(varargs);
+	} else {
+		DeeCodeObject *code = frame->cf_func->fo_code;
+		if (frame->cf_argc <= code->co_argc_max) {
+			varargs = (DREF DeeTupleObject *)DeeTuple_NewEmpty();
+		} else {
+			varargs = (DREF DeeTupleObject *)DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
+			                                                    frame->cf_argv + code->co_argc_max);
+			if unlikely(!varargs)
+				return -1;
+		}
+	}
+	result = DeeRT_ErrIndexOutOfBounds((DeeObject *)varargs, index,
+	                                   DeeTuple_SIZE(varargs));
+	Dee_Decref_unlikely(varargs);
+	return result;
+}
+#endif /* CONFIG_BUILDING_DEEMON */
+
 
 
 

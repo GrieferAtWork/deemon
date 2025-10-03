@@ -1139,6 +1139,8 @@ EXPORTS
 	_DeeObject_XInplaceDeepCopyWithRWLock@8=DeeObject_XInplaceDeepCopyWithRWLock@8
 	_DeeObject_Xor@8=DeeObject_Xor@8
 	_DeeObject_XorUInt32@8=DeeObject_XorUInt32@8
+	_DeeRT_ErrIndexOutOfBounds@12=DeeRT_ErrIndexOutOfBounds@12
+	_DeeRT_ErrIndexOutOfBoundsObj@12=DeeRT_ErrIndexOutOfBoundsObj@12
 	_DeeRT_ErrIntegerOverflow@16=DeeRT_ErrIntegerOverflow@16
 	_DeeRT_ErrIntegerOverflowEx@12=DeeRT_ErrIntegerOverflowEx@12
 	_DeeRT_ErrIntegerOverflowS128@48=DeeRT_ErrIntegerOverflowS128@48
@@ -1149,7 +1151,14 @@ EXPORTS
 	_DeeRT_ErrIntegerOverflowU@8=DeeRT_ErrIntegerOverflowU@8
 	_DeeRT_ErrIntegerOverflowUAdd@8=DeeRT_ErrIntegerOverflowUAdd@8
 	_DeeRT_ErrIntegerOverflowUMul@8=DeeRT_ErrIntegerOverflowUMul@8
+	_DeeRT_ErrItemNotFound@8=DeeRT_ErrItemNotFound@8
+	_DeeRT_ErrItemNotFoundEx@20=DeeRT_ErrItemNotFoundEx@20
 	_DeeRT_ErrNoActiveException@0=DeeRT_ErrNoActiveException@0
+	_DeeRT_ErrReadOnlyKey@8=DeeRT_ErrReadOnlyKey@8
+	_DeeRT_ErrReadOnlyKeyInt@8=DeeRT_ErrReadOnlyKeyInt@8
+	_DeeRT_ErrReadOnlyKeyStr@8=DeeRT_ErrReadOnlyKeyStr@8
+	_DeeRT_ErrReadOnlyKeyStrLen@12=DeeRT_ErrReadOnlyKeyStrLen@12
+	_DeeRT_ErrRegexNotFound@28=DeeRT_ErrRegexNotFound@28
 	_DeeRT_ErrUnboundIndex@8=DeeRT_ErrUnboundIndex@8
 	_DeeRT_ErrUnboundIndexObj@8=DeeRT_ErrUnboundIndexObj@8
 	_DeeRT_ErrUnboundKey@8=DeeRT_ErrUnboundKey@8

@@ -3629,18 +3629,12 @@ target_varargs_getitem_i:
 	sp_push %eax, 1
 	jmp    .disp
 80:	subl   %ecx, %eax       /* EAX = index; */
-	movl   FRAME_ARGC, %ecx
-	LOAD_CODE(%edx)
-	movzwl co_argc_max(CODE_OR_EDX), %edx
-	subl   %edx, %ecx       /* ECX = frame->cf_argc - code->co_argc_max */
-	pushl  FRAME_FUNC       /* err_va_index_out_of_bounds:func */
+	pushl  %eax             /* DeeRT_ErrVaIndexOutOfBounds:index */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %ecx             /* err_va_index_out_of_bounds:size */
+	pushl  FRAME            /* DeeRT_ErrVaIndexOutOfBounds:frame */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %eax             /* err_va_index_out_of_bounds:index */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(err_va_index_out_of_bounds,12)
-	ADJUST_CFA_OFFSET(-12)
+	call   fSYM(DeeRT_ErrVaIndexOutOfBounds,8)
+	ADJUST_CFA_OFFSET(-8)
 	jmp    .except
 
 

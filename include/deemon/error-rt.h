@@ -129,6 +129,13 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject
 /* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOutOfBounds)(DeeObject *seq, size_t index, size_t length);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeObject *seq, DeeObject *index, DeeObject *length);
+#ifdef CONFIG_BUILDING_DEEMON
+#ifdef DEE_SOURCE
+#define Dee_code_frame code_frame
+#endif /* DEE_SOURCE */
+struct Dee_code_frame;
+INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaIndexOutOfBounds)(struct Dee_code_frame const *__restrict frame, size_t index);
+#endif /* CONFIG_BUILDING_DEEMON */
 
 /* Throws an `DeeError_ItemNotFound' indicating that a given item could not be found within some sequence */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFound)(DeeObject *seq, DeeObject *item);
@@ -182,6 +189,9 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int
 #define DeeRT_ErrUnboundIndexObj(seq, index)                Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndexObj)(seq, index), -1)
 #define DeeRT_ErrIndexOutOfBounds(seq, index, length)       Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBounds)(seq, index, length), -1)
 #define DeeRT_ErrIndexOutOfBoundsObj(seq, index, length)    Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBoundsObj)(seq, index, length), -1)
+#ifdef CONFIG_BUILDING_DEEMON
+#define DeeRT_ErrVaIndexOutOfBounds(frame, index) Dee_ASSUMED_VALUE((DeeRT_ErrVaIndexOutOfBounds)(frame, index), -1)
+#endif /* CONFIG_BUILDING_DEEMON */
 #define DeeRT_ErrItemNotFound(seq, item)                    Dee_ASSUMED_VALUE((DeeRT_ErrItemNotFound)(seq, item), -1)
 #define DeeRT_ErrItemNotFoundEx(seq, item, start, end, key) Dee_ASSUMED_VALUE((DeeRT_ErrItemNotFoundEx)(seq, item, start, end, key), -1)
 #define DeeRT_ErrRegexNotFound(data, regex, start, end, range, rules, eflags) \
