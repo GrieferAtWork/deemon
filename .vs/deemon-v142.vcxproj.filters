@@ -1934,6 +1934,9 @@
 		<ClCompile Include="..\src\deemon\runtime\computed-operators.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\error-rt-attribute.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\error-rt.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>

@@ -654,6 +654,7 @@
 		<ClCompile Include="..\src\deemon\runtime\builtin.c" />
 		<ClCompile Include="..\src\deemon\runtime\builtin_functions.c" />
 		<ClCompile Include="..\src\deemon\runtime\computed-operators.c" />
+		<ClCompile Include="..\src\deemon\runtime\error-rt-attribute.c" />
 		<ClCompile Include="..\src\deemon\runtime\error-rt.c" />
 		<ClCompile Include="..\src\deemon\runtime\error.c" />
 		<ClCompile Include="..\src\deemon\runtime\format.c" />
