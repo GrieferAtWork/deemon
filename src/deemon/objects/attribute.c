@@ -232,13 +232,14 @@ attr_print(Attr *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	                        self->a_desc.ad_name);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-attr_printrepr(Attr *__restrict self, Dee_formatprinter_t printer, void *arg) {
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+attr_printrepr_impl(struct Dee_attrdesc const *__restrict self,
+                    Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result;
 	char perm_str[COMPILER_LENOF(attr_permchars) + 1];
 	char *perm_ptr = perm_str;
 	shift_t perm_index;
-	Dee_attrperm_t perm_mask = self->a_desc.ad_perm & ATTR_PERMMASK;
+	Dee_attrperm_t perm_mask = self->ad_perm & ATTR_PERMMASK;
 	for (perm_index = 0; perm_mask; perm_mask >>= 1, ++perm_index) {
 		if (perm_mask & 1)
 			*perm_ptr++ = attr_permchars[perm_index];
@@ -246,24 +247,31 @@ attr_printrepr(Attr *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	*perm_ptr = '\0';
 	result = DeeFormat_Printf(printer, arg,
 	                          "Attribute(%r, %q",
-	                          self->a_desc.ad_info.ai_decl,
-	                          self->a_desc.ad_name);
+	                          self->ad_info.ai_decl,
+	                          self->ad_name);
 	if unlikely(result < 0)
 		goto done;
-	if (self->a_desc.ad_doc) {
-		temp = DeeFormat_Printf(printer, arg, ", doc: %q", self->a_desc.ad_doc);
+	if (self->ad_doc) {
+		temp = DeeFormat_Printf(printer, arg, ", doc: %q", self->ad_doc);
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
 	}
-	temp = DeeFormat_Printf(printer, arg, ", perm: %q)", perm_str);
-	if unlikely(temp < 0)
-		goto err;
-	result += temp;
+	if (*perm_str) {
+		temp = DeeFormat_Printf(printer, arg, ", perm: %q)", perm_str);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
 done:
 	return result;
 err:
 	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+attr_printrepr(Attr *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return attr_printrepr_impl(&self->a_desc, printer, arg);
 }
 
 

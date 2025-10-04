@@ -3152,8 +3152,7 @@ list_get_first(List *__restrict me) {
 	return result;
 err_empty_endread:
 	DeeList_LockEndRead(me);
-	err_empty_sequence((DeeObject *)me); /* TODO: Unbound attribute */
-	return NULL;
+	return DeeRT_ErrTUnboundAttr(&DeeList_Type, me, &str_first);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -3224,8 +3223,7 @@ list_get_last(List *__restrict me) {
 	return result;
 err_empty_endread:
 	DeeList_LockEndRead(me);
-	err_empty_sequence((DeeObject *)me); /* TODO: Unbound attribute */
-	return NULL;
+	return DeeRT_ErrTUnboundAttr(&DeeList_Type, me, &str_last);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

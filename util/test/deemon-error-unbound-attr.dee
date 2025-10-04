@@ -1,0 +1,89 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+
+#define TRY(x) (try x catch (e...) e)
+
+local v = IndexError();
+assert TRY(v.seq) == UnboundAttribute(ob: v, attr: "seq", decl: SequenceError);
+
+local v = [];
+assert TRY(v.first) == UnboundAttribute(ob: v, attr: "first", decl: List);
+assert TRY(v.last) == UnboundAttribute(ob: v, attr: "last", decl: List);
+
+class MyClass {
+	this = default;
+
+	@@I am FOO
+	public final member foo;
+
+	@@I am BAR
+	public member bar;
+
+	public getFoo() {
+		return foo;
+	}
+	public getBar() {
+		return bar;
+	}
+};
+
+local v = MyClass();
+assert UnboundAttribute(ob: v, attr: "foo", decl: MyClass) == TRY(v.foo);
+assert UnboundAttribute(ob: v, attr: "bar", decl: MyClass) == TRY(v.bar);
+
+local e = TRY(v.getFoo());
+assert e == UnboundAttribute(ob: v, attr: "foo", decl: MyClass);
+assert e.attr.doc == "I am FOO";
+assert e.name == "foo";
+
+local e = TRY(v.getBar());
+assert UnboundAttribute(ob: v, attr: "bar", decl: MyClass) == e;
+assert e.attr.doc == "I am BAR";
+assert e.name == "bar";
+
+
+class MySubClass: MyClass {
+	this = default;
+
+	public final member subFoo;
+	public member subBar;
+
+	public getSubFoo() {
+		return subFoo;
+	}
+	public getSubBar() {
+		return subBar;
+	}
+}
+
+local v = MySubClass();
+assert UnboundAttribute(ob: v, attr: "foo", decl: MyClass) == TRY(v.foo);
+assert UnboundAttribute(ob: v, attr: "bar", decl: MyClass) == TRY(v.bar);
+assert UnboundAttribute(ob: v, attr: "subFoo", decl: MySubClass) == TRY(v.subFoo);
+assert UnboundAttribute(ob: v, attr: "subBar", decl: MySubClass) == TRY(v.subBar);
+
+assert UnboundAttribute(ob: v, attr: "foo", decl: MyClass) == TRY(v.getFoo());
+assert UnboundAttribute(ob: v, attr: "bar", decl: MyClass) == TRY(v.getBar());
+assert UnboundAttribute(ob: v, attr: "subFoo", decl: MySubClass) == TRY(v.getSubFoo());
+assert UnboundAttribute(ob: v, attr: "subBar", decl: MySubClass) == TRY(v.getSubBar());

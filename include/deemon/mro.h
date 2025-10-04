@@ -79,6 +79,7 @@ struct Dee_type_member;
 #define Dee_ATTRINFO_INSTANCE_GETSET 7 /* Wrapper for producing `DeeClsProperty_Type' (ai_decl is a `DeeTypeObject') */
 #define Dee_ATTRINFO_INSTANCE_MEMBER 8 /* Wrapper for producing `DeeClsMember_Type' (ai_decl is a `DeeTypeObject') */
 #define Dee_ATTRINFO_INSTANCE_ATTR   9 /* Wrapper for producing `DeeInstanceMember_Type' / `DeeInstanceMethod_Type' / `DeeProperty_Type' (ai_decl is a `DeeTypeObject' with non-NULL `tp_class') */
+#define Dee_ATTRINFO_COUNT          10 /* # of possible values */
 #define Dee_ATTRINFO_ISINSTANCE(x)      ((x) >= Dee_ATTRINFO_INSTANCE_METHOD)
 #define Dee_ATTRINFO_WITHOUTINSTANCE(x) ((x) - (Dee_ATTRINFO_INSTANCE_METHOD - Dee_ATTRINFO_METHOD))
 #define Dee_ATTRINFO_WITHINSTANCE(x)    ((x) + (Dee_ATTRINFO_INSTANCE_METHOD - Dee_ATTRINFO_METHOD))
@@ -87,6 +88,7 @@ struct Dee_attrinfo {
 	uintptr_t  ai_type; /* Type of attribute (one of `Dee_ATTRINFO_*'). */
 	DeeObject *ai_decl; /* [1..1] Declaring object (the type implementing the operators/attribute/instance-attribute, or the module for ATTR_TYPE_MODSYM) */
 	union {
+		void const                       *v_any;             /* [1..1] Data pointer */
 		struct Dee_type_attr const       *v_custom;          /* [1..1][Dee_ATTRINFO_CUSTOM] Custom attribute access operators (same as `((DeeTypeObject *)ai_decl)->tp_attr'). */
 		struct Dee_class_attribute const *v_attr;            /* [1..1][Dee_ATTRINFO_ATTR] Attribute to access or produce a `DeeInstanceMethod_Type' for */
 		struct Dee_type_method const     *v_method;          /* [1..1][Dee_ATTRINFO_METHOD] Method to create a `DeeObjMethod_Type' / `DeeKwObjMethod_Type' for */
@@ -226,6 +228,15 @@ struct Dee_attrdesc {
 };
 #define Dee_attrdesc_nameobj(self) COMPILER_CONTAINER_OF((self)->ad_name, DeeStringObject, s_str)
 #define Dee_attrdesc_docobj(self)  COMPILER_CONTAINER_OF((self)->ad_doc, DeeStringObject, s_str)
+#define Dee_attrdesc_init_copy(self, other)                            \
+	(void)(*(self) = *(other),                                         \
+	       ((self)->ad_perm & Dee_ATTRPERM_F_NAMEOBJ)                  \
+	       ? (void)Dee_Incref(Dee_attrdesc_nameobj(self))              \
+	       : (void)0,                                                  \
+	       ((self)->ad_perm & Dee_ATTRPERM_F_DOCOBJ && (self)->ad_doc) \
+	       ? (void)Dee_Incref(Dee_attrdesc_docobj(self))               \
+	       : (void)0,                                                  \
+	       Dee_XIncref((self)->ad_type))
 
 #define _Dee_attrdesc_fini_WITHOUT_NAME(self)                    \
 	(((self)->ad_perm & Dee_ATTRPERM_F_DOCOBJ && (self)->ad_doc) \

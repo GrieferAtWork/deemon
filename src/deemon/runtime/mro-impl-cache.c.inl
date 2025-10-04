@@ -1965,7 +1965,6 @@ err:
 #undef LOCAL_invoke_dobjmethod_thisarg
 #undef LOCAL_invoke_dkwobjmethod
 #undef LOCAL_invoke_dobjmethod
-#undef LOCAL_invoke_type_member_get
 #undef LOCAL_invoke_object_thisarg
 #undef LOCAL_invoke_object_thisarg_inherited
 #undef LOCAL_invoke_object

@@ -4216,7 +4216,7 @@ DeeInstance_GetAttribute(struct class_desc *__restrict desc,
 	}
 	return result;
 unbound:
-	return DeeRT_ErrCUnboundAttrCA(desc, this_arg, attr);
+	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
 	err_cant_access_attribute_string_c(desc,
 	                                   DeeString_STR(attr->ca_name),
@@ -4305,7 +4305,7 @@ DeeInstance_CallAttribute(struct class_desc *__restrict desc,
 		return DeeObject_ThisCallInherited(callback, this_arg, argc, argv);
 	return DeeObject_CallInherited(callback, argc, argv);
 unbound:
-	return DeeRT_ErrCUnboundAttrCA(desc, this_arg, attr);
+	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
 	err_cant_access_attribute_string_c(desc,
 	                                   DeeString_STR(attr->ca_name),
@@ -4355,7 +4355,7 @@ DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
 		return DeeObject_VThisCallInheritedf(callback, this_arg, format, args);
 	return DeeObject_VCallInheritedf(callback, format, args);
 unbound:
-	return DeeRT_ErrCUnboundAttrCA(desc, this_arg, attr);
+	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
 	err_cant_access_attribute_string_c(desc,
 	                                   DeeString_STR(attr->ca_name),
@@ -4406,7 +4406,7 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
 		return DeeObject_ThisCallKwInherited(callback, this_arg, argc, argv, kw);
 	return DeeObject_CallKwInherited(callback, argc, argv, kw);
 err_unbound:
-	return DeeRT_ErrCUnboundAttrCA(desc, this_arg, attr);
+	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 err_illegal:
 	err_cant_access_attribute_string_c(desc,
 	                                   DeeString_STR(attr->ca_name),
@@ -4457,7 +4457,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *
 		return DeeObject_ThisCallTupleInherited(callback, this_arg, args);
 	return DeeObject_CallTupleInherited(callback, args);
 unbound:
-	return DeeRT_ErrCUnboundAttrCA(desc, this_arg, attr);
+	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
 	err_cant_access_attribute_string_c(desc,
 	                                   DeeString_STR(attr->ca_name),
@@ -4517,7 +4517,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *
 	}
 	return result;
 unbound:
-	return DeeRT_ErrCUnboundAttrCA(desc, this_arg, attr);
+	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
 	err_cant_access_attribute_string_c(desc,
 	                                   DeeString_STR(attr->ca_name),
@@ -4813,65 +4813,6 @@ DeeClassDescriptor_QueryInstanceAttributeStringLenHash(DeeClassDescriptorObject 
 	return NULL;
 }
 
-PRIVATE ATTR_COLD NONNULL((1, 2)) DeeObject *DCALL
-err_unbound_class_member(/*Class*/ DeeTypeObject *__restrict class_type,
-                         struct class_desc *__restrict desc,
-                         uint16_t addr) {
-	/* Check if we can find the proper member so we can pass its name. */
-	size_t i;
-	struct class_attribute *attr;
-	for (i = 0; i <= desc->cd_desc->cd_cattr_mask; ++i) {
-		attr = &desc->cd_desc->cd_cattr_list[i];
-		if (!attr->ca_name)
-			continue;
-		if (addr < attr->ca_addr)
-			continue;
-		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
-			continue;
-		goto got_it;
-	}
-	for (i = 0; i <= desc->cd_desc->cd_iattr_mask; ++i) {
-		attr = &desc->cd_desc->cd_iattr_list[i];
-		if (!attr->ca_name)
-			continue;
-		if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
-			continue;
-		if (addr < attr->ca_addr)
-			continue;
-		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
-			continue;
-		goto got_it;
-	}
-	/* Throw the error. */
-	return DeeRT_ErrUnboundAttrCStr((DeeObject *)class_type, "??" "?");
-got_it:
-	return DeeRT_ErrUnboundClassAttrCA(class_type, attr);
-}
-
-PRIVATE ATTR_COLD NONNULL((1, 2)) DeeObject *DCALL
-err_unbound_member(/*Class*/ DeeTypeObject *__restrict tp_self,
-                   /*Instance*/ DeeObject *__restrict self,
-                   uint16_t addr) {
-	/* Check if we can find the proper member so we can pass its name. */
-	size_t i;
-	struct class_desc *desc = DeeClass_DESC(tp_self);
-	for (i = 0; i <= desc->cd_desc->cd_iattr_mask; ++i) {
-		struct class_attribute *attr;
-		attr = &desc->cd_desc->cd_iattr_list[i];
-		if (!attr->ca_name)
-			continue;
-		if (addr < attr->ca_addr)
-			continue;
-		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
-			continue;
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
-			continue;
-		return DeeRT_ErrTUnboundAttrCA(tp_self, self, attr);
-	}
-	return DeeRT_ErrTUnboundAttrCStr(tp_self, self, "??" "?");
-}
-
-
 /* Instance member access (by addr) */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeInstance_GetMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
@@ -4892,7 +4833,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	Dee_XIncref(result);
 	Dee_instance_desc_lock_endread(inst);
 	if unlikely(result == NULL)
-		result = err_unbound_member(tp_self, self, addr);
+		result = DeeRT_ErrCUnboundInstanceMember(tp_self, self, addr);
 	return result;
 }
 
@@ -5176,7 +5117,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	return result;
 err_unlock_unbound:
 	Dee_class_desc_lock_endread(desc);
-	return err_unbound_class_member(self, desc, addr);
+	return DeeRT_ErrCUnboundClassMember(self, addr);
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *

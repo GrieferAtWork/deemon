@@ -3302,9 +3302,8 @@ time_init_kw(DeeTimeObject *__restrict self,
 #undef IF_LOADARG
 	if unlikely(DeeKwArgs_Done(&kwds, argc, "Time"))
 		goto err;
-	if unlikely(argc > 21) {
-		/* TODO: Error */
-	}
+	if unlikely(argc > 21)
+		return DeeArg_BadArgcEx("Time", argc, 0, 21);
 	return 0;
 err:
 	return -1;

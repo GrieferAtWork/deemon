@@ -216,8 +216,7 @@ fast_DeeInstance_GetAttribute(struct instance_desc *__restrict self,
 	}
 	return result;
 unbound:
-	return DeeRT_ErrCUnboundAttrCA(class_desc_from_instance(self, this_arg),
-	                               this_arg, attr);
+	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
 	err_cant_access_attribute_string_c(class_desc_from_instance(self, this_arg),
 	                                   DeeString_STR(attr->ca_name),
