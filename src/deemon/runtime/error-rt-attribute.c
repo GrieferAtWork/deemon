@@ -46,7 +46,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <hybrid/__atomic.h>
 
 DECL_BEGIN
 
