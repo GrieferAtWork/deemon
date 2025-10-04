@@ -146,6 +146,14 @@ comerr_visit(DeeCompilerErrorObject *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+comerr_print(DeeCompilerErrorObject *__restrict self,
+             Dee_formatprinter_t printer, void *arg) {
+	if (self->e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	return DeeCompilerError_Print((DeeObject *)self, printer, arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 comerr_printrepr(DeeCompilerErrorObject *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	/* TODO */
@@ -189,7 +197,7 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ &DeeCompilerError_Print, /* TODO: Print "e_message" if non-NULL */
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&comerr_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&comerr_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&comerr_visit,
