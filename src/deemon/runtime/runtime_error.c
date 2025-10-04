@@ -809,22 +809,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unknown_attribute_lookup_string)(DeeTypeObject *__restrict tp,
-                                            char const *__restrict name) {
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Unknown attribute `%r.%s'",
-	                       tp, name);
-}
-
-INTERN ATTR_COLD NONNULL((2)) int
-(DCALL err_nodoc_attribute_string)(char const *base,
-                                   char const *__restrict name) {
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "No documentation found for `%s.%s'",
-	                       base ? base : "?", name);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_cant_access_attribute_string)(DeeTypeObject *__restrict tp,
                                          char const *__restrict name,
                                          int access) {
@@ -860,23 +844,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s attribute `%s.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
-	                       get_desc_name(desc), name);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp,
-                                     char const *__restrict name) {
-	ASSERT_OBJECT(tp);
-	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "Unbound attribute `%r.%s'",
-	                       tp, name);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unbound_attribute_string_c)(struct class_desc *__restrict desc,
-                                       char const *__restrict name) {
-	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "Unbound attribute `%s.%s'",
 	                       get_desc_name(desc), name);
 }
 

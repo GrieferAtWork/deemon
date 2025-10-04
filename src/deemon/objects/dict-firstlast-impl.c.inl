@@ -176,7 +176,7 @@ LOCAL_dict_getspecial(Dict *__restrict self) {
 	return result;
 err_maybe_r_unbound_unlock:
 	DeeDict_LockEndRead(self);
-	err_unbound_attribute_string(&DeeDict_Type, LOCAL_STR_getset);
+	DeeRT_ErrTUnboundAttrCStr(&DeeDict_Type, (DeeObject *)self, LOCAL_STR_getset);
 #ifdef LOCAL_IS_PAIR
 	DeeTuple_FreeUninitializedPair(result);
 err:

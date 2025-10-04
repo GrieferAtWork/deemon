@@ -30,6 +30,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/none.h>
@@ -79,22 +80,14 @@ typedef struct {
 #define DeeOnce_InUseWaitFor(self) (void)0
 #endif /* CONFIG_NO_THREADS */
 
-PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
-err_unbound_attribute_string(DeeTypeObject *__restrict tp,
-                             char const *__restrict name) {
-	ASSERT_OBJECT(tp);
-	ASSERT(DeeType_Check(tp));
-	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "Unbound attribute `%k.%s'",
-	                       tp, name);
+PRIVATE ATTR_COLD NONNULL((1)) DeeObject *DCALL
+err_unbound_once_callback(DeeOnceObject *__restrict self) {
+	return DeeRT_ErrTUnboundAttrCStr(&DeeOnce_Type, self, "callback");
 }
 
-PRIVATE ATTR_COLD int DCALL err_unbound_once_callback(void) {
-	return err_unbound_attribute_string(&DeeOnce_Type, "callback");
-}
-
-PRIVATE ATTR_COLD int DCALL err_unbound_once_result(void) {
-	return err_unbound_attribute_string(&DeeOnce_Type, "result");
+PRIVATE ATTR_COLD NONNULL((1)) DeeObject *DCALL
+err_unbound_once_result(DeeOnceObject *__restrict self) {
+	return DeeRT_ErrTUnboundAttrCStr(&DeeOnce_Type, self, "result");
 }
 
 PRIVATE ATTR_COLD int DCALL err_once_already_finished(void) {
@@ -351,8 +344,7 @@ already_run:
 	Dee_XDecref(callback);
 	return result;
 err_unbound_result:
-	err_unbound_once_result();
-	goto err;
+	return err_unbound_once_result(self);
 err_abort:
 	Dee_once_abort(&self->o_once);
 err:
@@ -413,8 +405,8 @@ once_callback_get(DeeOnceObject *__restrict self) {
 	result = self->o_value;
 	Dee_XIncref(result);
 	Dee_once_abort(&self->o_once);
-	if unlikely(!result)
-		err_unbound_once_callback();
+	if unlikely(result == NULL)
+		result = err_unbound_once_callback(self);
 	return result;
 err_already_finished:
 	err_once_already_finished();
@@ -474,15 +466,13 @@ once_result_get(DeeOnceObject *__restrict self) {
 	result = self->o_value;
 	if unlikely(!result) {
 		DeeOnce_InUseDec(self);
-		err_unbound_once_result();
-		goto err;
+		return err_unbound_once_result(self);
 	}
 	Dee_Incref(result);
 	DeeOnce_InUseDec(self);
 	return result;
 err_not_finished:
 	err_once_not_finished();
-err:
 	return NULL;
 }
 

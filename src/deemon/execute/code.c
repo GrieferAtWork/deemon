@@ -1228,8 +1228,7 @@ code_get_kwds(DeeCodeObject *__restrict self) {
 	}
 	if (self->co_argc_max == 0)
 		return DeeSeq_NewEmpty();
-	err_unbound_attribute_string(&DeeCode_Type, STR___kwds__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str___kwds__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1269,7 +1268,7 @@ code_get_name(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_doc);
 	if likely(info.fi_name)
 		return (DREF DeeObject *)info.fi_name;
-	err_unbound_attribute_string(&DeeCode_Type, STR___name__);
+	DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str___name__);
 err:
 	return NULL;
 }
@@ -1310,7 +1309,7 @@ code_get_type(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_doc);
 	if likely(info.fi_type)
 		return info.fi_type;
-	err_unbound_attribute_string(&DeeCode_Type, STR___type__);
+	DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str___type__);
 err:
 	return NULL;
 }
@@ -1338,7 +1337,7 @@ code_get_operator(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_opname != (Dee_operator_t)-1)
 		return DeeInt_NewUInt16(info.fi_opname);
-	err_unbound_attribute_string(&DeeCode_Type, "__operator__");
+	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__operator__");
 err:
 	return NULL;
 }
@@ -1374,7 +1373,7 @@ code_get_operatorname(DeeCodeObject *__restrict self) {
 		return DeeString_New(op->oi_sname);
 	}
 	Dee_XDecref(info.fi_type);
-	err_unbound_attribute_string(&DeeCode_Type, "__operatorname__");
+	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__operatorname__");
 err:
 	return NULL;
 }
@@ -1389,7 +1388,7 @@ code_get_property(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	if (info.fi_getset != (uint16_t)-1)
 		return DeeInt_NewUInt16(info.fi_getset);
-	err_unbound_attribute_string(&DeeCode_Type, "__property__");
+	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__property__");
 err:
 	return NULL;
 }

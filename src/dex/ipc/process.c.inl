@@ -27,6 +27,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/dict.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/format.h>
@@ -4205,8 +4206,7 @@ process_get_exe(Process *__restrict self) {
 	/* Make sure that the process has already started. */
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
 		Process_LockEndRead(self);
-#define WANT_err_unbound_attribute
-		err_unbound_attribute_string(&DeeProcess_Type, "exe");
+		DeeRT_ErrTUnboundAttrCStr(&DeeProcess_Type, self, "exe");
 		goto err;
 	}
 
@@ -4418,8 +4418,7 @@ process_get_argv(Process *__restrict self)
 	/* Make sure that the process has already started. */
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
 		Process_LockEndRead(self);
-#define WANT_err_unbound_attribute
-		err_unbound_attribute_string(&DeeProcess_Type, "argv");
+		DeeRT_ErrTUnboundAttrCStr(&DeeProcess_Type, self, "argv");
 		goto err;
 	}
 
@@ -4658,8 +4657,7 @@ process_get_environ(Process *__restrict self) {
 	/* Make sure that the process has already started. */
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
 		Process_LockEndRead(self);
-#define WANT_err_unbound_attribute
-		err_unbound_attribute_string(&DeeProcess_Type, "environ");
+		DeeRT_ErrTUnboundAttrCStr(&DeeProcess_Type, self, "environ");
 		goto err;
 	}
 
@@ -4805,8 +4803,7 @@ process_get_pwd(Process *__restrict self) {
 	/* Make sure that the process has already started. */
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
 		Process_LockEndRead(self);
-#define WANT_err_unbound_attribute
-		err_unbound_attribute_string(&DeeProcess_Type, "pwd");
+		DeeRT_ErrTUnboundAttrCStr(&DeeProcess_Type, self, "pwd");
 		goto err;
 	}
 
@@ -4947,8 +4944,7 @@ process_get_stdfd(Process *__restrict self, unsigned int std_handle_id) {
 	/* Make sure that the process has already started. */
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
 		Process_LockEndRead(self);
-#define WANT_err_unbound_attribute
-		err_unbound_attribute_string(&DeeProcess_Type, std_handle_names[std_handle_id]);
+		DeeRT_ErrTUnboundAttrCStr(&DeeProcess_Type, self, std_handle_names[std_handle_id]);
 		goto err;
 	}
 

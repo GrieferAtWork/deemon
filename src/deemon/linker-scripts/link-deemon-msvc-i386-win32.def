@@ -1139,6 +1139,7 @@ EXPORTS
 	DeeObject_XInplaceDeepCopyWithRWLock@8=_DeeObject_XInplaceDeepCopyWithRWLock@8
 	DeeObject_Xor@8=_DeeObject_Xor@8
 	DeeObject_XorUInt32@8=_DeeObject_XorUInt32@8
+	DeeRT_ErrCUnboundAttrCA@12=_DeeRT_ErrCUnboundAttrCA@12
 	DeeRT_ErrIndexOutOfBounds@12=_DeeRT_ErrIndexOutOfBounds@12
 	DeeRT_ErrIndexOutOfBoundsObj@12=_DeeRT_ErrIndexOutOfBoundsObj@12
 	DeeRT_ErrIntegerOverflow@16=_DeeRT_ErrIntegerOverflow@16
@@ -1159,6 +1160,12 @@ EXPORTS
 	DeeRT_ErrReadOnlyKeyStr@8=_DeeRT_ErrReadOnlyKeyStr@8
 	DeeRT_ErrReadOnlyKeyStrLen@12=_DeeRT_ErrReadOnlyKeyStrLen@12
 	DeeRT_ErrRegexNotFound@28=_DeeRT_ErrRegexNotFound@28
+	DeeRT_ErrTUnboundAttr@12=_DeeRT_ErrTUnboundAttr@12
+	DeeRT_ErrTUnboundAttrCA@12=_DeeRT_ErrTUnboundAttrCA@12
+	DeeRT_ErrTUnboundAttrCStr@12=_DeeRT_ErrTUnboundAttrCStr@12
+	DeeRT_ErrUnboundAttr@8=_DeeRT_ErrUnboundAttr@8
+	DeeRT_ErrUnboundAttrCStr@8=_DeeRT_ErrUnboundAttrCStr@8
+	DeeRT_ErrUnboundAttrEx@12=_DeeRT_ErrUnboundAttrEx@12
 	DeeRT_ErrUnboundIndex@8=_DeeRT_ErrUnboundIndex@8
 	DeeRT_ErrUnboundIndexObj@8=_DeeRT_ErrUnboundIndexObj@8
 	DeeRT_ErrUnboundKey@8=_DeeRT_ErrUnboundKey@8
@@ -1166,6 +1173,7 @@ EXPORTS
 	DeeRT_ErrUnboundKeyStr@8=_DeeRT_ErrUnboundKeyStr@8
 	DeeRT_ErrUnboundKeyStrLen@12=_DeeRT_ErrUnboundKeyStrLen@12
 	DeeRT_ErrUnboundKeyWithInner@12=_DeeRT_ErrUnboundKeyWithInner@12
+	DeeRT_ErrUnboundMember@8=_DeeRT_ErrUnboundMember@8
 	DeeRT_ErrUnknownKey@8=_DeeRT_ErrUnknownKey@8
 	DeeRT_ErrUnknownKeyInt@8=_DeeRT_ErrUnknownKeyInt@8
 	DeeRT_ErrUnknownKeyStr@8=_DeeRT_ErrUnknownKeyStr@8
@@ -1606,13 +1614,17 @@ EXPORTS
 	Dee_unicode_writeutf8@8=_Dee_unicode_writeutf8@8
 	Dee_variant_compare@8=_Dee_variant_compare@8
 	Dee_variant_compare_eq@8=_Dee_variant_compare_eq@8
-	Dee_variant_getobject@12=_Dee_variant_getobject@12
+	Dee_variant_getobject@4=_Dee_variant_getobject@4
 	Dee_variant_getobjecttype@4=_Dee_variant_getobjecttype@4
 	Dee_variant_hash@4=_Dee_variant_hash@4
 	Dee_variant_init_copy@8=_Dee_variant_init_copy@8
+	Dee_variant_init_cstr_maybe@8=_Dee_variant_init_cstr_maybe@8
+	Dee_variant_init_cstrlen_maybe@12=_Dee_variant_init_cstrlen_maybe@12
 	Dee_variant_init_deepcopy@8=_Dee_variant_init_deepcopy@8
 	Dee_variant_print@12=_Dee_variant_print@12
 	Dee_variant_printrepr@12=_Dee_variant_printrepr@12
+	Dee_variant_setcstr@8=_Dee_variant_setcstr@8
+	Dee_variant_setcstrlen@12=_Dee_variant_setcstrlen@12
 	Dee_variant_setint128@20=_Dee_variant_setint128@20
 	Dee_variant_setint128_if_unbound@20=_Dee_variant_setint128_if_unbound@20
 	Dee_variant_setint32@8=_Dee_variant_setint32@8
@@ -1629,7 +1641,6 @@ EXPORTS
 	Dee_variant_setuint64_if_unbound@12=_Dee_variant_setuint64_if_unbound@12
 	Dee_variant_setunbound@4=_Dee_variant_setunbound@4
 	Dee_variant_trycompare_eq@8=_Dee_variant_trycompare_eq@8
-	Dee_variant_trygetobject@4=_Dee_variant_trygetobject@4
 	Dee_variant_visit@12=_Dee_variant_visit@12
 	Dee_vsnprintf@16=_Dee_vsnprintf@16
 	Dee_vsprintf@12=_Dee_vsprintf@12

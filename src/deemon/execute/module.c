@@ -1195,19 +1195,19 @@ module_attriter_next(struct module_attriter *__restrict self,
 		} while (!MODULE_SYMBOL_GETNAMESTR(sym) || (sym->ss_flags & MODSYM_FHIDDEN));
 	} while (!atomic_cmpxch_or_write(&self->mai_hidx, old_hidx, new_hidx));
 
-	perm = Dee_ATTRPERM_F_IMEMBER | ATTR_ACCESS_GET;
+	perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET;
 	ASSERT(sym->ss_index < mod->mo_globalc);
 	if (!(sym->ss_flags & MODSYM_FREADONLY))
-		perm |= (ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
+		perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 	if (sym->ss_flags & MODSYM_FPROPERTY) {
-		perm &= ~(ATTR_ACCESS_GET | ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
+		perm &= ~(Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 		if (!(sym->ss_flags & MODSYM_FCONSTEXPR))
 			perm |= Dee_ATTRPERM_F_PROPERTY;
 	}
 
 #if 0 /* Always allow this! (we allow it for user-classes, as well!) */
 	/* For constant-expression symbols, we can predict
-		* their type (as well as their value)... */
+	 * their type (as well as their value)... */
 	if (sym->ss_flags & MODSYM_FCONSTEXPR)
 #endif
 	{
@@ -1218,13 +1218,13 @@ module_attriter_next(struct module_attriter *__restrict self,
 			if (sym->ss_flags & MODSYM_FPROPERTY) {
 				/* Check which property operations have been bound. */
 				if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
-					perm |= ATTR_ACCESS_GET;
+					perm |= Dee_ATTRPERM_F_CANGET;
 				if (!(sym->ss_flags & MODSYM_FREADONLY)) {
 					/* These callbacks are only allocated if the READONLY flag isn't set. */
 					if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_DEL])
-						perm |= ATTR_ACCESS_DEL;
+						perm |= Dee_ATTRPERM_F_CANDEL;
 					if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_SET])
-						perm |= ATTR_ACCESS_SET;
+						perm |= Dee_ATTRPERM_F_CANSET;
 				}
 			}
 			DeeModule_LockEndRead(mod);

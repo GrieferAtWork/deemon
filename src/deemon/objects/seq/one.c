@@ -197,8 +197,7 @@ soi_getitem(SeqOneIterator *__restrict self) {
 	DREF DeeObject *result = soi_trygetitemref(self);
 	if likely(result != ITER_DONE)
 		return result;
-	err_unbound_attribute_string(&SeqOneIterator_Type, "__item__");
-	return NULL;
+	return DeeRT_ErrUnboundAttrCStr(self, "__item__");
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -219,8 +218,7 @@ soi_getseq(SeqOneIterator *__restrict self) {
 	DREF DeeObject *result = soi_trygetitemref(self);
 	if likely(result != ITER_DONE)
 		return (DREF SeqOne *)DeeSeq_PackOneInherited(result);
-	err_unbound_attribute_string(&SeqOneIterator_Type, STR_seq);
-	return NULL;
+	return (DREF SeqOne *)DeeRT_ErrUnboundAttr(self, &str_seq);
 }
 
 PRIVATE struct type_getset tpconst soi_getsets[] = {

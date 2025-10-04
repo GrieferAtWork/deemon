@@ -512,8 +512,7 @@ cswi_getiter(CachedSeq_WithIter *__restrict self) {
 		return result;
 	}
 	CachedSeq_WithIter_LockRelease(self);
-	err_unbound_attribute_string(&CachedSeq_WithIter_Type, "__iter__");
-	return NULL;
+	return DeeRT_ErrUnboundAttrCStr(self, "__iter__");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

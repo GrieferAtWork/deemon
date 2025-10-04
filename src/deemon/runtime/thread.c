@@ -4426,8 +4426,7 @@ thread_callback_get(DeeThreadObject *__restrict self) {
 err_unbound:
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	(void)self;
-	err_unbound_attribute_string(&DeeThread_Type, "callback");
-	return NULL;
+	return DeeRT_ErrTUnboundAttrCStr(&DeeThread_Type, self, "callback");
 }
 
 PRIVATE ATTR_COLD int DCALL
@@ -4487,8 +4486,7 @@ thread_callargs_get(DeeThreadObject *__restrict self) {
 err_unbound:
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	(void)self;
-	err_unbound_attribute_string(&DeeThread_Type, "callargs");
-	return NULL;
+	return (DREF DeeTupleObject *)DeeRT_ErrTUnboundAttrCStr(&DeeThread_Type, self, "callargs");
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -4545,8 +4543,7 @@ thread_result_get(DeeThreadObject *__restrict self) {
 err_unbound:
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	(void)self;
-	err_unbound_attribute_string(&DeeThread_Type, "result");
-	return NULL;
+	return DeeRT_ErrTUnboundAttrCStr(&DeeThread_Type, self, "result");
 }
 
 
@@ -4558,8 +4555,7 @@ thread_id(DeeThreadObject *__restrict self) {
 	return DeeInt_NEWU(result);
 #else /* Dee_pid_t */
 	(void)self;
-	err_unbound_attribute_string(&DeeThread_Type, "id");
-	return NULL;
+	return DeeRT_ErrTUnboundAttrCStr(&DeeThread_Type, self, "id");
 #endif /* !Dee_pid_t */
 }
 
@@ -4698,8 +4694,7 @@ thread_get_osfhandle_np(DeeThreadObject *__restrict self) {
 	uint32_t state = atomic_read(&self->t_state);
 	if likely(state & Dee_THREAD_STATE_HASTHREAD)
 		return DeeInt_NewUIntptr((uintptr_t)hThread);
-	err_unbound_attribute_string(&DeeThread_Type, Dee_fd_osfhandle_GETSET);
-	return NULL;
+	return DeeRT_ErrTUnboundAttrCStr(&DeeThread_Type, self, Dee_fd_osfhandle_GETSET);
 }
 #endif /* DeeThread_USE_CreateThread */
 

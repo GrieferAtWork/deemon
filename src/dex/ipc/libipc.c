@@ -35,7 +35,6 @@
 #else /* !__INTELLISENSE__ */
 #define WANT_DeeObject_AsFileSystemPathString
 #define WANT_ipc_unimplemented
-#define WANT_err_unbound_attribute
 #define WANT_err_file_not_found
 DECL_BEGIN
 PRIVATE WUNUSED DREF DeeStringObject *DCALL process_get_shell(void);
@@ -77,19 +76,6 @@ INTERN ATTR_COLD int DCALL ipc_unimplemented(void) {
 	                       "IPC function not supported");
 }
 #endif /* !WANT_ipc_unimplemented */
-
-#ifdef WANT_err_unbound_attribute
-#undef WANT_err_unbound_attribute
-INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
-err_unbound_attribute_string(DeeTypeObject *__restrict tp,
-                             char const *__restrict name) {
-	ASSERT_OBJECT(tp);
-	ASSERT(DeeType_Check(tp));
-	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "Unbound attribute `%k.%s'",
-	                       tp, name);
-}
-#endif /* WANT_err_unbound_attribute */
 
 #ifdef WANT_err_file_not_found
 #undef WANT_err_file_not_found

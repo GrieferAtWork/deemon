@@ -109,10 +109,10 @@ Dee_variant_visit(struct Dee_variant *__restrict self,
 /* Get the value of a variant in the form of a deemon object.
  * If the variant's type isn't set to "Dee_VARIANT_OBJECT", the
  * linked object is lazily allocated and assigned
- * @return: ITER_DONE: [Dee_variant_trygetobject] Returned if the variant is unbound
- * @return: NULL:      An error was thrown (`Dee_variant_getobject()' throws an UnboundAttribute error if "self" is unbound) */
+ * @return: ITER_DONE: Variant is unbound
+ * @return: NULL:      An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_variant_trygetobject(struct Dee_variant *__restrict self) {
+Dee_variant_getobject(struct Dee_variant *__restrict self) {
 	DREF DeeObject *result;
 	struct Dee_variant copy;
 	copy.var_type = Dee_variant_lock(self);
@@ -179,18 +179,6 @@ Dee_variant_trygetobject(struct Dee_variant *__restrict self) {
 		}
 	}
 	return result;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-Dee_variant_getobject(struct Dee_variant *__restrict self,
-                      DeeObject *owner, char const *attr) {
-	DREF DeeObject *result = Dee_variant_trygetobject(self);
-	if unlikely(result == ITER_DONE)
-		goto err_unbound;
-	return result;
-err_unbound:
-	err_unbound_attribute_string(Dee_TYPE(owner), attr);
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
@@ -706,7 +694,7 @@ Dee_variant_compare_impl(struct Dee_variant *__restrict lhs,
 	int result = Dee_variant_fast_compare_impl(lhs, rhs);
 	if (result != Dee_COMPARE_ERR)
 		return result;
-	lhs_ob = Dee_variant_trygetobject(lhs);
+	lhs_ob = Dee_variant_getobject(lhs);
 	if unlikely(!ITER_ISOK(lhs_ob)) {
 		if unlikely(!lhs_ob)
 			goto err;
@@ -714,7 +702,7 @@ Dee_variant_compare_impl(struct Dee_variant *__restrict lhs,
 		       ? -1 /* UNBOUND < BOUND */
 		       : 0; /* UNBOUND == UNBOUND */
 	}
-	rhs_ob = Dee_variant_trygetobject(rhs);
+	rhs_ob = Dee_variant_getobject(rhs);
 	if unlikely(!ITER_ISOK(rhs_ob)) {
 		Dee_Decref(lhs_ob);
 		if unlikely(!rhs_ob)
@@ -737,7 +725,7 @@ Dee_variant_compare_eq_impl(struct Dee_variant *__restrict lhs,
 	int result = Dee_variant_fast_compare_impl(lhs, rhs);
 	if (result != Dee_COMPARE_ERR)
 		return result;
-	lhs_ob = Dee_variant_trygetobject(lhs);
+	lhs_ob = Dee_variant_getobject(lhs);
 	if unlikely(!ITER_ISOK(lhs_ob)) {
 		if unlikely(!lhs_ob)
 			goto err;
@@ -745,7 +733,7 @@ Dee_variant_compare_eq_impl(struct Dee_variant *__restrict lhs,
 		       ? -1 /* UNBOUND < BOUND */
 		       : 0; /* UNBOUND == UNBOUND */
 	}
-	rhs_ob = Dee_variant_trygetobject(rhs);
+	rhs_ob = Dee_variant_getobject(rhs);
 	if unlikely(!ITER_ISOK(rhs_ob)) {
 		Dee_Decref(lhs_ob);
 		if unlikely(!rhs_ob)
@@ -768,7 +756,7 @@ Dee_variant_trycompare_eq_impl(struct Dee_variant *__restrict lhs,
 	int result = Dee_variant_fast_compare_impl(lhs, rhs);
 	if (result != Dee_COMPARE_ERR)
 		return result;
-	lhs_ob = Dee_variant_trygetobject(lhs);
+	lhs_ob = Dee_variant_getobject(lhs);
 	if unlikely(!ITER_ISOK(lhs_ob)) {
 		if unlikely(!lhs_ob)
 			goto err;
@@ -776,7 +764,7 @@ Dee_variant_trycompare_eq_impl(struct Dee_variant *__restrict lhs,
 		       ? -1 /* UNBOUND < BOUND */
 		       : 0; /* UNBOUND == UNBOUND */
 	}
-	rhs_ob = Dee_variant_trygetobject(rhs);
+	rhs_ob = Dee_variant_getobject(rhs);
 	if unlikely(!ITER_ISOK(rhs_ob)) {
 		Dee_Decref(lhs_ob);
 		if unlikely(!rhs_ob)

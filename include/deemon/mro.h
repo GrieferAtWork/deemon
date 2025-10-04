@@ -322,6 +322,7 @@ struct Dee_attrspec {
 
 
 
+struct Dee_attriter;
 struct Dee_attriter_type {
 	/* [1..1] Yield the next attribute from the iterator.
 	 * @return: 1 : Enumeration has finished (in this case, contents of `desc' are undefined)
@@ -347,7 +348,7 @@ struct Dee_attriter_type {
 	                        Dee_visit_t proc, void *arg);
 
 	/* [0..1] Called when the attribute iterator buffer was moved to a
-	 *        different memory location, where `old_loc + delta == new_loc'. */
+	 *        different memory location, where `old_loc + delta == self'. */
 	NONNULL_T((1))
 	void (DCALL *ait_moved)(struct Dee_attriter *__restrict self,
 	                        ptrdiff_t delta);

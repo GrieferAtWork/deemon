@@ -1421,7 +1421,7 @@ rodict_getfirst(RoDict *__restrict self) {
 	Dee_Incref(result->t_elem[1]);
 	return result;
 err_unbound:
-	err_unbound_attribute_string(&DeeRoDict_Type, STR_first);
+	DeeRT_ErrUnboundAttr(self, &str_first);
 err:
 	return NULL;
 }
@@ -1443,7 +1443,7 @@ rodict_getlast(RoDict *__restrict self) {
 	Dee_Incref(result->t_elem[1]);
 	return result;
 err_unbound:
-	err_unbound_attribute_string(&DeeRoDict_Type, STR_last);
+	DeeRT_ErrUnboundAttr(self, &str_last);
 err:
 	return NULL;
 }
@@ -1468,8 +1468,7 @@ rodict_getfirstkey(RoDict *__restrict self) {
 		goto err_unbound;
 	return_reference(_DeeRoDict_GetRealVTab(self)[0].di_key);
 err_unbound:
-	err_unbound_attribute_string(&DeeRoDict_Type, STR_first);
-	return NULL;
+	return DeeRT_ErrUnboundAttrCStr(self, "firstkey");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1478,8 +1477,7 @@ rodict_getlastkey(RoDict *__restrict self) {
 		goto err_unbound;
 	return_reference(_DeeRoDict_GetRealVTab(self)[self->rd_vsize - 1].di_key);
 err_unbound:
-	err_unbound_attribute_string(&DeeRoDict_Type, STR_first);
-	return NULL;
+	return DeeRT_ErrUnboundAttrCStr(self, "lastkey");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1488,8 +1486,7 @@ rodict_getfirstvalue(RoDict *__restrict self) {
 		goto err_unbound;
 	return_reference(_DeeRoDict_GetRealVTab(self)[0].di_value);
 err_unbound:
-	err_unbound_attribute_string(&DeeRoDict_Type, STR_first);
-	return NULL;
+	return DeeRT_ErrUnboundAttrCStr(self, "firstvalue");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1498,8 +1495,7 @@ rodict_getlastvalue(RoDict *__restrict self) {
 		goto err_unbound;
 	return_reference(_DeeRoDict_GetRealVTab(self)[self->rd_vsize - 1].di_value);
 err_unbound:
-	err_unbound_attribute_string(&DeeRoDict_Type, STR_first);
-	return NULL;
+	return DeeRT_ErrUnboundAttrCStr(self, "lastvalue");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

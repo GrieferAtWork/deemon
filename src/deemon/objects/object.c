@@ -29,6 +29,7 @@
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
@@ -4375,7 +4376,7 @@ type_get_module(DeeTypeObject *__restrict self) {
 	result = DeeType_GetModule(self);
 	if likely(result)
 		return result;
-	err_unbound_attribute_string(Dee_TYPE(self), STR___module__);
+	DeeRT_ErrTUnboundAttr(&DeeType_Type, (DeeObject *)self, (DeeObject *)&str___module__);
 	return NULL;
 }
 
@@ -4424,7 +4425,7 @@ type_get_instancesize(DeeTypeObject *__restrict self) {
 	}
 	return DeeInt_NewSize(instance_size);
 unknown:
-	err_unbound_attribute_string(Dee_TYPE(self), "__instancesize__");
+	DeeRT_ErrTUnboundAttrCStr(&DeeType_Type, (DeeObject *)self, "__instancesize__");
 	return NULL;
 }
 

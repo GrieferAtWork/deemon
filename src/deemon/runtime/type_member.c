@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
@@ -734,8 +735,12 @@ handle_null_ob:
 	CASE(STRUCT_CHAR):
 		return DeeString_Chr(FIELD(unsigned char));
 
-	CASE(STRUCT_VARIANT):
-		return Dee_variant_getobject(&FIELD(struct Dee_variant), self, desc->m_name);
+	CASE(STRUCT_VARIANT): {
+		DREF DeeObject *result = Dee_variant_getobject(&FIELD(struct Dee_variant));
+		if unlikely(result == ITER_DONE)
+			goto is_unbound;
+		return result;
+	}	break;
 
 	CASE(STRUCT_BOOL8):
 		return_bool(FIELD(uint8_t) != 0);
@@ -809,9 +814,7 @@ handle_null_ob:
 	default: break;
 	}
 is_unbound:
-	err_unbound_attribute_string(type_member_typeof(desc, self),
-	                             desc->m_name);
-	return NULL;
+	return DeeRT_ErrUnboundMember(self, desc);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) bool DCALL

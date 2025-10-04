@@ -26,6 +26,7 @@
 #include <deemon/callable.h>
 #include <deemon/class.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/instancemethod.h>
@@ -275,7 +276,7 @@ instancemethod_get_type(InstanceMethod *__restrict self) {
 	DeeTypeObject *result;
 	if (instancemethod_getattr(self, NULL, &result))
 		return_reference_(result);
-	err_unbound_attribute_string(&DeeInstanceMethod_Type, STR___type__);
+	DeeRT_ErrTUnboundAttr(&DeeInstanceMethod_Type, (DeeObject *)self, (DeeObject *)&str___type__);
 	return NULL;
 }
 

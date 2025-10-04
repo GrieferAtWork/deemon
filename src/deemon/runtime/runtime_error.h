@@ -117,14 +117,11 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator3(DeeTypeObjec
 /* @param: access: One of `ATTR_ACCESS_*' */
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_attribute_string(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_attribute_string_len(DeeTypeObject *__restrict tp, char const *name, size_t namelen, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_attribute_lookup_string(DeeTypeObject *__restrict tp, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nodoc_attribute_string(char const *base, char const *__restrict name);
 /* @param: access: One of `ATTR_ACCESS_*' */
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute_string(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_cant_access_attribute_string_len(DeeTypeObject *__restrict tp, char const *name, size_t namelen, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute_string_c(struct class_desc *__restrict desc, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_attribute_string(DeeTypeObject *__restrict tp, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_attribute_string_c(struct class_desc *__restrict desc, char const *__restrict name);
+
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_string_for_attribute(DeeObject *__restrict but_instead_got);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_class_protected_member(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict member);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_string(struct module_object *__restrict self, char const *__restrict name, int access);
@@ -203,14 +200,10 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_unknown_attribute(tp, name, access)                                                           err_unknown_attribute_string(tp, DeeString_STR(name), access)
 #define err_unknown_attribute_string(tp, name, access)                                                    Dee_ASSUMED_VALUE(err_unknown_attribute_string(tp, name, access), -1)
 #define err_unknown_attribute_string_len(tp, name, namelen, access)                                       Dee_ASSUMED_VALUE(err_unknown_attribute_string_len(tp, name, namelen, access), -1)
-#define err_unknown_attribute_lookup_string(tp, name)                                                     Dee_ASSUMED_VALUE(err_unknown_attribute_lookup_string(tp, name), -1)
-#define err_nodoc_attribute_string(base, name)                                                            Dee_ASSUMED_VALUE(err_nodoc_attribute_string(base, name), -1)
 #define err_cant_access_attribute(tp, name, access)                                                       err_cant_access_attribute_string(tp, DeeString_STR(name), access)
 #define err_cant_access_attribute_string(tp, name, access)                                                Dee_ASSUMED_VALUE(err_cant_access_attribute_string(tp, name, access), -1)
 #define err_cant_access_attribute_string_len(tp, name, namelen, access)                                   Dee_ASSUMED_VALUE(err_cant_access_attribute_string_len(tp, name, namelen, access), -1)
 #define err_cant_access_attribute_string_c(desc, name, access)                                            Dee_ASSUMED_VALUE(err_cant_access_attribute_string_c(desc, name, access), -1)
-#define err_unbound_attribute_string(tp, name)                                                            Dee_ASSUMED_VALUE(err_unbound_attribute_string(tp, name), -1)
-#define err_unbound_attribute_string_c(desc, name)                                                        Dee_ASSUMED_VALUE(err_unbound_attribute_string_c(desc, name), -1)
 #define err_expected_string_for_attribute(but_instead_got)                                                Dee_ASSUMED_VALUE(err_expected_string_for_attribute(but_instead_got), -1)
 #define err_class_protected_member(class_type, member)                                                    Dee_ASSUMED_VALUE(err_class_protected_member(class_type, member), -1)
 #define err_module_not_loaded_attr_string(self, name, access)                                             Dee_ASSUMED_VALUE(err_module_not_loaded_attr_string(self, name, access), -1)

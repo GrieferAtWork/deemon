@@ -870,8 +870,7 @@ err_changed_unlock:
 		RBTree_LockEndRead(tree);                                              \
 		return result;                                                         \
 	err_unbound:                                                               \
-		err_unbound_attribute_string(&RBTreeIterator_Type, str_FOO);           \
-		return NULL;                                                           \
+		return DeeRT_ErrTUnboundAttrCStr(&RBTreeIterator_Type, self, str_FOO); \
 	err_changed_unlock:                                                        \
 		RBTree_LockEndRead(tree);                                              \
 	/*err_changed:*/                                                           \
@@ -903,7 +902,8 @@ rbtreeiter_set_value(RBTreeIterator *self, DeeObject *value) {
 	Dee_Decref(oldval);
 	return 0;
 err_unbound:
-	return err_unbound_attribute_string(&RBTreeIterator_Type, "value");
+	DeeRT_ErrTUnboundAttrCStr(&RBTreeIterator_Type, self, "value");
+	return -1;
 err_changed_unlock:
 	RBTree_LockEndWrite(tree);
 /*err_changed:*/
@@ -942,8 +942,7 @@ err_changed_unlock:
 	err_r_unlock_unbound:                                                        \
 		RBTree_LockEndRead(tree);                                                \
 		DeeObject_FREE(result);                                                  \
-		err_unbound_attribute_string(&RBTreeIterator_Type, str_FOO);             \
-		return NULL;                                                             \
+		return DeeRT_ErrTUnboundAttrCStr(&RBTreeIterator_Type, self, str_FOO);   \
 	err_r_changed_unlock:                                                        \
 		RBTree_LockEndRead(tree);                                                \
 	/*err_r_changed:*/                                                           \
@@ -972,8 +971,7 @@ rbtreeiter_get_isred(RBTreeIterator *__restrict self) {
 	return_bool(result);
 err_unlock_unbound:
 	RBTree_LockEndRead(tree);
-	err_unbound_attribute_string(&RBTreeIterator_Type, "__isred__");
-	return NULL;
+	return DeeRT_ErrTUnboundAttrCStr(&RBTreeIterator_Type, self, "__isred__");
 err_changed_unlock:
 	RBTree_LockEndRead(tree);
 /*err_changed:*/

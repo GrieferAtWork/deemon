@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -830,7 +831,7 @@ frame_get_thisarg(Frame *__restrict self) {
 	return result;
 err_unlock_unbound:
 	DeeFrame_LockEndRead((DeeObject *)self);
-	err_unbound_attribute_string(&DeeFrame_Type, "__this__");
+	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__this__");
 err:
 	return NULL;
 }
@@ -871,7 +872,7 @@ frame_get_return(Frame *__restrict self) {
 err_unlock_unbound:
 	DeeFrame_LockEndRead((DeeObject *)self);
 err_unbound:
-	err_unbound_attribute_string(&DeeFrame_Type, "__return__");
+	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__return__");
 err:
 	return NULL;
 }
@@ -1005,7 +1006,7 @@ frame_get_function_kwds(Frame *__restrict self) {
 	return result;
 err_unbound_code:
 	Dee_Decref_unlikely(code);
-	err_unbound_attribute_string(&DeeFrame_Type, "__kwds__");
+	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__kwds__");
 err:
 	return NULL;
 }

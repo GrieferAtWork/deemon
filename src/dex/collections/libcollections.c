@@ -52,15 +52,6 @@ err_empty_sequence(DeeObject *__restrict seq) {
 	                       Dee_TYPE(seq));
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp,
-                                     char const *__restrict name) {
-	ASSERT_OBJECT(tp);
-	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "Unbound attribute `%r.%s'",
-	                       tp, name);
-}
-
 PRIVATE char const access_names[4][4] = {
 	/* [ATTR_ACCESS_GET] = */ "get",
 	/* [ATTR_ACCESS_DEL] = */ "del",

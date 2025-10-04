@@ -899,14 +899,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	                       get_desc_name(desc), name);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unbound_attribute_string_c)(struct class_desc *__restrict desc,
-                                       char const *__restrict name) {
-	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "Unbound attribute `%s.%s'",
-	                       get_desc_name(desc), name);
-}
-
 INTERN ATTR_COLD int
 (DFCALL err_cannot_import_relative)(char const *module_name,
                                     size_t module_namelen) {

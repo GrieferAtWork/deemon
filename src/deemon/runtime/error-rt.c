@@ -23,6 +23,8 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/attribute.h>
+#include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
@@ -32,18 +34,23 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/module.h>
+#include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/struct.h>
+#include <deemon/super.h>
 #include <deemon/variant.h>
 
 #include <hybrid/int128.h>
+#include <hybrid/sched/yield.h>
 #include <hybrid/typecore.h>
 /**/
 
 #include "strings.h"
+#include "runtime_error.h"
 /**/
 
 #include <stddef.h>
@@ -395,11 +402,207 @@ PUBLIC DeeTypeObject DeeError_Error = {
 /************************************************************************/
 /* Error.AttributeError                                                 */
 /************************************************************************/
+PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
+type_member_typeof(DeeObject *__restrict ob, struct type_member const *attr) {
+	DeeTypeObject *result;
+	DeeTypeMRO mro;
+	result = DeeTypeMRO_Init(&mro, Dee_TYPE(ob));
+	do {
+		if (result->tp_members == attr)
+			return result;
+	} while ((result = DeeTypeMRO_Next(&mro, result)) != NULL);
+	if (DeeType_Check(ob)) {
+		result = DeeTypeMRO_Init(&mro, (DeeTypeObject *)ob);
+		do {
+			if (result->tp_class_members == attr)
+				return result;
+		} while ((result = DeeTypeMRO_Next(&mro, result)) != NULL);
+	}
+	return Dee_TYPE(ob);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
+class_desc_typeof(DeeObject *__restrict ob, struct class_desc const *desc) {
+	DeeTypeObject *result;
+	DeeTypeMRO mro;
+	result = DeeTypeMRO_Init(&mro, Dee_TYPE(ob));
+	do {
+		if (result->tp_class == desc)
+			return result;
+	} while ((result = DeeTypeMRO_Next(&mro, result)) != NULL);
+	return Dee_TYPE(ob);
+}
+
 typedef struct {
 	ERROR_OBJECT_HEAD
-	/* TODO: Somehow embed "struct Dee_attrdesc" here, so we can
-	 *       provide a getter that returns "DeeAttribute_Type" */
+	DREF DeeObject     *ae_obj;   /* [0..1][const] Object whose attributes were accessed */
+	struct Dee_attrdesc ae_desc;  /* Attribute descriptor. Fields in here are loaded when:
+	                               * - ad_name:          [1..1][valid_if(ae_obj != NULL)]
+	                               * - ad_info.ai_decl:  [valid_if(ad_info.ai_decl != NULL)][DREF]
+	                               *                     [if(ae_flags & AttributeError_F_INFOLOADED, [1..1])]
+	                               *   When wanting to set "AttributeError_F_INFOLOADED", if
+	                               *   this field is still "NULL" (i.e.: wasn't set during
+	                               *   object construction), it is initialized then
+	                               * - ad_info.ai_type:  [valid_if(ae_flags & AttributeError_F_INFOLOADED)]
+	                               * - ad_info.ai_value: [valid_if(ae_flags & AttributeError_F_INFOLOADED)]
+	                               * - ad_doc:           [valid_if(ae_flags & AttributeError_F_DESCLOADED)]
+	                               * - ad_perm:          [valid_if(ae_flags & AttributeError_F_DESCLOADED)]
+	                               * - ad_type:          [valid_if(ae_flags & AttributeError_F_DESCLOADED)]
+	                               * NOTE: The "Dee_ATTRPERM_F_NAMEOBJ" flag in "ad_perm" is [const]
+	                               *       and set during object construction.
+	                               * Also: all fields are [lock(WRITE_ONCE)] (with initialization
+	                               *       happening **BEFORE** the relevant `AttributeError_F_*'
+	                               *       flag is set) */
+#define AttributeError_F_INFOLOADED 0x01 /* "struct Dee_attrinfo"-portion was loaded (requires "AttributeError_F_DECLLOADED" to also be set) */
+#define AttributeError_F_DESCLOADED 0x02 /* "struct Dee_attrdesc"-portion was loaded (requires "AttributeError_F_INFOLOADED" to also be set) */
+#ifndef CONFIG_NO_THREADS
+#define AttributeError_F_LOADLOCK 0x8000 /* Lock to ensure only 1 thread does the loading */
+#endif /* !CONFIG_NO_THREADS */
+	unsigned int        ae_flags; /* [valid_if(ae_obj != NULL)] */
 } AttributeError;
+
+/* Ensure that "AttributeError_F_INFOLOADED" is set
+ * @return: true:  Success
+ * @return: false: Attribute info cannot be loaded */
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+AttributeError_LoadInfo(AttributeError *__restrict self) {
+	bool ok;
+	struct Dee_attrinfo info;
+	char const *name;
+	size_t namelen;
+	Dee_hash_t namehash;
+	for (;;) {
+		unsigned int flags = atomic_read(&self->ae_flags);
+		if (flags & AttributeError_F_INFOLOADED)
+			return true;
+		if unlikely(!self->ae_obj)
+			return false;
+#ifndef CONFIG_NO_THREADS
+		flags = atomic_fetchor(&self->ae_flags, AttributeError_F_LOADLOCK);
+		if (flags & AttributeError_F_LOADLOCK) {
+			SCHED_YIELD();
+			continue;
+		}
+#endif /* !CONFIG_NO_THREADS */
+		break;
+	}
+
+	/* Load attribute name */
+	name = self->ae_desc.ad_name;
+	ASSERT(name);
+	if (self->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
+		DeeStringObject *name_ob;
+		name_ob  = COMPILER_CONTAINER_OF(name, DeeStringObject, s_str);
+		namelen  = DeeString_SIZE(name_ob);
+		namehash = DeeString_Hash((DeeObject *)name_ob);
+	} else {
+		namelen  = strlen(name);
+		namehash = Dee_HashPtr(name, namelen);
+	}
+
+	/* Load attribute info */
+	if (self->ae_desc.ad_info.ai_decl) {
+		DeeObject *decl = self->ae_desc.ad_info.ai_decl;
+		DeeObject *obj = self->ae_obj;
+		DeeTypeObject *tp_obj = Dee_TYPE(obj);
+		if (tp_obj == &DeeSuper_Type) {
+			tp_obj = DeeSuper_TYPE(obj);
+			obj    = DeeSuper_SELF(obj);
+		}
+		if (decl != self->ae_obj && DeeType_Check(decl) &&
+		    DeeType_Implements(tp_obj, (DeeTypeObject *)decl)) {
+			ok = DeeObject_TFindPrivateAttrInfoStringLenHash((DeeTypeObject *)decl,
+			                                                 obj, name, namelen,
+			                                                 namehash, &info);
+		} else {
+			ok = DeeObject_FindAttrInfoStringLenHash(obj, name, namelen, namehash, &info);
+		}
+		if (ok && info.ai_decl != decl)
+			ok = false; /* Ensure that the correct declaring object is referenced */
+	} else {
+		ok = DeeObject_FindAttrInfoStringLenHash(self->ae_obj, name, namelen, namehash, &info);
+	}
+
+	/* If the specified attribute doesn't exist, then we can't access it */
+	if likely(ok) {
+		if (!self->ae_desc.ad_info.ai_decl) {
+			Dee_Incref(info.ai_decl);
+			self->ae_desc.ad_info.ai_decl = info.ai_decl;
+		}
+		self->ae_desc.ad_info.ai_type  = info.ai_type;
+		self->ae_desc.ad_info.ai_value = info.ai_value;
+		COMPILER_WRITE_BARRIER();
+		atomic_or(&self->ae_flags, AttributeError_F_INFOLOADED);
+	}
+#ifndef CONFIG_NO_THREADS
+	atomic_and(&self->ae_flags, ~AttributeError_F_LOADLOCK);
+#endif /* !CONFIG_NO_THREADS */
+	return ok;
+}
+
+/* Ensure that "AttributeError_F_DESCLOADED" is set
+ * @return: true:  Success
+ * @return: false: Attribute info cannot be loaded */
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+AttributeError_LoadDesc(AttributeError *__restrict self) {
+	for (;;) {
+		unsigned int flags = atomic_read(&self->ae_flags);
+		if (flags & AttributeError_F_DESCLOADED)
+			return true;
+		if (!(flags & AttributeError_F_INFOLOADED)) {
+			if (!AttributeError_LoadInfo(self))
+				return false;
+			continue;
+		}
+#ifndef CONFIG_NO_THREADS
+		flags = atomic_fetchor(&self->ae_flags, AttributeError_F_LOADLOCK);
+		if (flags & AttributeError_F_LOADLOCK) {
+			SCHED_YIELD();
+			continue;
+		}
+#endif /* !CONFIG_NO_THREADS */
+		break;
+	}
+
+	/* Initialize to defaults */
+	self->ae_desc.ad_doc  = NULL;
+	self->ae_desc.ad_type = NULL;
+	self->ae_desc.ad_perm &= Dee_ATTRPERM_F_NAMEOBJ;
+
+	/* Load attribute properties based on implementation */
+	switch (self->ae_desc.ad_info.ai_type) {
+	case Dee_ATTRINFO_MODSYM: {
+		struct module_symbol const *sym;
+		self->ae_desc.ad_perm |= Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET;
+		sym = self->ae_desc.ad_info.ai_value.v_modsym;
+		if (!(sym->ss_flags & MODSYM_FREADONLY))
+			self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
+		if (sym->ss_flags & MODSYM_FPROPERTY) {
+			self->ae_desc.ad_perm &= ~(Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
+			if (!(sym->ss_flags & MODSYM_FCONSTEXPR))
+				self->ae_desc.ad_perm |= Dee_ATTRPERM_F_PROPERTY;
+		}
+	}	break;
+
+#define Dee_ATTRINFO_MODSYM          1 /* Access a module symbol (ai_decl is a `DeeModuleObject') */
+#define Dee_ATTRINFO_METHOD          2 /* Wrapper for producing `DeeObjMethod_Type' / `DeeKwObjMethod_Type' (ai_decl is a `DeeTypeObject') */
+#define Dee_ATTRINFO_GETSET          3 /* GetSet that uses the original "this"-argument. (ai_decl is a `DeeTypeObject') */
+#define Dee_ATTRINFO_MEMBER          4 /* Member that uses the original "this"-argument. (ai_decl is a `DeeTypeObject') */
+#define Dee_ATTRINFO_ATTR            5 /* Wrapper for producing `DeeInstanceMethod_Type' or directly accessing a property/member (ai_decl is a `DeeTypeObject' with non-NULL `tp_class') */
+#define Dee_ATTRINFO_INSTANCE_METHOD 6 /* Wrapper for producing `DeeClsMethod_Type' / `DeeKwClsMethod_Type' (ai_decl is a `DeeTypeObject') */
+#define Dee_ATTRINFO_INSTANCE_GETSET 7 /* Wrapper for producing `DeeClsProperty_Type' (ai_decl is a `DeeTypeObject') */
+#define Dee_ATTRINFO_INSTANCE_MEMBER 8 /* Wrapper for producing `DeeClsMember_Type' (ai_decl is a `DeeTypeObject') */
+#define Dee_ATTRINFO_INSTANCE_ATTR   9 /* Wrapper for producing `DeeInstanceMember_Type' / `DeeInstanceMethod_Type' / `DeeProperty_Type' (ai_decl is a `DeeTypeObject' with non-NULL `tp_class') */
+	default: break;
+	}
+
+	atomic_or(&self->ae_flags, AttributeError_F_DESCLOADED);
+#ifndef CONFIG_NO_THREADS
+	atomic_and(&self->ae_flags, ~AttributeError_F_LOADLOCK);
+#endif /* !CONFIG_NO_THREADS */
+	return true;
+}
+
 
 PRIVATE struct type_member tpconst AttributeError_class_members[] = {
 	TYPE_MEMBER_CONST("UnboundAttribute", &DeeError_UnboundAttribute),
@@ -407,15 +610,89 @@ PRIVATE struct type_member tpconst AttributeError_class_members[] = {
 };
 
 PRIVATE struct type_member tpconst AttributeError_members[] = {
-#define AttributeError_init_params Error_init_params
 	/* TODO */
 	TYPE_MEMBER_END
 };
+
+//TODO:#define AttributeError_init_params Error_init_params ",ob?,attr?:?X2?Dstring?DAttribute,decl?:?DType"
+#define AttributeError_init_params Error_init_params
 
 PUBLIC DeeTypeObject DeeError_AttributeError =
 INIT_CUSTOM_ERROR("AttributeError", "(" AttributeError_init_params ")",
                   TP_FNORMAL, &DeeError_Error, AttributeError, NULL, NULL,
                   NULL, NULL, AttributeError_members, AttributeError_class_members);
+
+/* Throws an `DeeError_UnboundAttribute' indicating that some attribute isn't bound */
+PRIVATE ATTR_COLD NONNULL((1, 2)) int
+(DCALL old_err_unbound_attribute_string)(DeeObject *__restrict tp,
+                                         char const *__restrict name) {
+	ASSERT_OBJECT(tp);
+	return DeeError_Throwf(&DeeError_UnboundAttribute,
+	                       "Unbound attribute `%r.%s'",
+	                       tp, name);
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
+(DCALL DeeRT_ErrUnboundAttr)(DeeObject *ob, /*string*/ DeeObject *attr) {
+	ASSERT_OBJECT_TYPE_EXACT(attr, &DeeString_Type);
+	old_err_unbound_attribute_string((DeeObject *)Dee_TYPE(ob), DeeString_STR(attr)); /* TODO */
+	return NULL;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
+(DCALL DeeRT_ErrUnboundAttrCStr)(DeeObject *ob, /*static*/ char const *attr) {
+	old_err_unbound_attribute_string((DeeObject *)Dee_TYPE(ob), attr); /* TODO */
+	return NULL;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
+(DCALL DeeRT_ErrUnboundMember)(DeeObject *ob, struct Dee_type_member const *attr) {
+	DeeTypeObject *decl = type_member_typeof(ob, attr);
+	return DeeRT_ErrTUnboundAttrCStr(decl, ob, attr->m_name); /* TODO */
+}
+
+
+PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
+(DCALL DeeRT_ErrUnboundAttrEx)(DeeObject *decl, DeeObject *ob,
+                               struct Dee_attrdesc const *attr) {
+	(void)ob;
+	old_err_unbound_attribute_string(decl, attr->ad_name); /* TODO */
+	return NULL;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
+(DCALL DeeRT_ErrTUnboundAttr)(DeeObject *decl, DeeObject *ob, /*string*/ DeeObject *attr) {
+	ASSERT_OBJECT_TYPE_EXACT(attr, &DeeString_Type);
+	(void)ob;
+	old_err_unbound_attribute_string(decl, DeeString_STR(attr)); /* TODO */
+	return NULL;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
+(DCALL DeeRT_ErrTUnboundAttrCStr)(DeeObject *decl, DeeObject *ob, /*static*/ char const *attr) {
+	(void)ob;
+	old_err_unbound_attribute_string(decl, attr); /* TODO */
+	return NULL;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
+(DCALL DeeRT_ErrTUnboundAttrCA)(DeeObject *decl, DeeObject *ob,
+                                struct Dee_class_attribute const *attr) {
+	(void)ob;
+	old_err_unbound_attribute_string(decl, DeeString_STR(attr->ca_name)); /* TODO */
+	return NULL;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
+(DCALL DeeRT_ErrCUnboundAttrCA)(struct Dee_class_desc *decl, DeeObject *ob,
+                                struct Dee_class_attribute const *attr) {
+	DeeTypeObject *tp = class_desc_typeof(ob, decl);
+	return DeeRT_ErrTUnboundAttrCA(tp, ob, attr); /* TODO */
+}
+
+
+
+
 
 
 /************************************************************************/
@@ -906,7 +1183,7 @@ IndexError_GetLength(IndexError *__restrict self,
                      struct Dee_variant *__restrict p_length) {
 	Dee_variant_init_copy(p_length, &self->ie_length);
 	if (!Dee_variant_isbound_nonatomic(p_length)) {
-		DREF DeeObject *seq = Dee_variant_trygetobject(&self->ie_base.ke_base.ve_value);
+		DREF DeeObject *seq = Dee_variant_getobject(&self->ie_base.ke_base.ve_value);
 		if (seq) {
 			size_t seq_length;
 			seq_length = DeeObject_InvokeMethodHint(seq_operator_size, seq);
@@ -1523,7 +1800,7 @@ INIT_CUSTOM_ERROR("RegexNotFound", "(" RegexNotFound_init_params ")",
 /* Throws an `DeeError_RegexNotFound' indicating that
  * the given "regex" could not be found within "data"
  * @param: eflags: Set of `DEE_RE_EXEC_*' */
-DFUNDEF ATTR_COLD NONNULL((1, 2)) int
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrRegexNotFound)(DeeObject *data, DeeObject *regex,
                                size_t start, size_t end, size_t range,
                                DeeObject *rules, unsigned int eflags) {

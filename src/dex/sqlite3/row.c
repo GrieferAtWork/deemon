@@ -127,7 +127,7 @@ cellfmt_getdecltype(CellFmt *__restrict self) {
 		Dee_Incref(result);
 		return result;
 	}
-	err_unbound_attribute_string(&CellFmt_Type, "decltype");
+	DeeRT_ErrTUnboundAttrCStr(&CellFmt_Type, self, "decltype");
 	return NULL;
 }
 
@@ -634,7 +634,7 @@ row_getquery(Row *__restrict self) {
 	result = self->r_query;
 	if unlikely(!result) {
 		Row_LockEndRead(self);
-		err_unbound_attribute_string(&Row_Type, "query");
+		DeeRT_ErrTUnboundAttrCStr(&Row_Type, self, "query");
 		return NULL;
 	}
 	Dee_Incref(result);

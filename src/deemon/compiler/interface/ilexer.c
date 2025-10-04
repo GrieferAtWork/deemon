@@ -3808,7 +3808,7 @@ file_stream(DeeCompilerItemObject *__restrict self) {
 			if likely(result) {
 				Dee_Incref(result);
 			} else {
-				err_unbound_attribute_string(&DeeCompilerFile_Type, "stream");
+				result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "stream");
 			}
 		}
 	}

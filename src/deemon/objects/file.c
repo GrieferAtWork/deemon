@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
@@ -1691,15 +1692,11 @@ file_std_isbound(unsigned int id) {
 		return file_std_isbound(DEE_STDXXX);                        \
 	}                                                               \
 	PRIVATE WUNUSED NONNULL((1)) int DCALL                          \
-	file_class_del_##stdxxx(DeeObject *__restrict self) {           \
+	file_class_del_##stdxxx(DeeObject *__restrict UNUSED(self)) {   \
 		DREF DeeObject *old_stream;                                 \
 		old_stream = DeeFile_SetStd(DEE_STDXXX, NULL);              \
-		if unlikely(!old_stream)                                    \
-			goto err_unbound;                                       \
+		Dee_XDecref(old_stream);                                    \
 		return 0;                                                   \
-	err_unbound:                                                    \
-		err_unbound_attribute_string(Dee_TYPE(self), #stdxxx);      \
-		return -1;                                                  \
 	}                                                               \
 	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                       \
 	file_class_set_##stdxxx(DeeObject *UNUSED(self),                \

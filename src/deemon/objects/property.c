@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/module.h>
@@ -305,7 +306,7 @@ property_get_name(Property *__restrict self) {
 	result = property_callback_getattr(self, &str___name__);
 	if (result != ITER_DONE)
 		return result;
-	err_unbound_attribute_string(&DeeProperty_Type, STR___name__);
+	DeeRT_ErrTUnboundAttr(&DeeProperty_Type, self, &str___name__);
 err:
 	return NULL;
 }
@@ -379,7 +380,7 @@ property_get_type(Property *__restrict self) {
 	result = (DREF DeeTypeObject *)property_callback_getattr(self, &str___type__);
 	if (result != (DREF DeeTypeObject *)ITER_DONE)
 		return result;
-	err_unbound_attribute_string(&DeeProperty_Type, STR___type__);
+	DeeRT_ErrTUnboundAttr(&DeeProperty_Type, self, &str___type__);
 err:
 	return NULL;
 }
@@ -406,8 +407,7 @@ get_function_module(DeeFunctionObject *__restrict self) {
 	DeeModuleObject *mod = self->fo_code->co_module;
 	if likely(mod)
 		return_reference_((DeeObject *)mod);
-	err_unbound_attribute_string(&DeeFunction_Type, STR___module__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -428,8 +428,7 @@ property_get_module(Property *__restrict self) {
 	result = property_callback_getattr(self, &str___module__);
 	if (result != ITER_DONE)
 		return result;
-	err_unbound_attribute_string(&DeeProperty_Type, STR___module__);
-	return NULL;
+	return DeeRT_ErrTUnboundAttr(&DeeProperty_Type, self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -483,7 +482,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_call(Property *self, size_t argc, DeeObject *const *argv) {
 	if likely(self->p_get)
 		return DeeObject_Call(self->p_get, argc, argv);
-	err_unbound_attribute_string(&DeeProperty_Type, "getter");
+	DeeRT_ErrTUnboundAttrCStr(&DeeProperty_Type, (DeeObject *)self, "getter");
 	return NULL;
 }
 
@@ -491,7 +490,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_call_kw(Property *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	if likely(self->p_get)
 		return DeeObject_CallKw(self->p_get, argc, argv, kw);
-	err_unbound_attribute_string(&DeeProperty_Type, "getter");
+	DeeRT_ErrTUnboundAttrCStr(&DeeProperty_Type, (DeeObject *)self, "getter");
 	return NULL;
 }
 

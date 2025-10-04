@@ -43,6 +43,23 @@ global final _printedPrefixBlocks: {string...} = HashSet();
 #define BEGIN_PREFIX(text) true
 #endif
 
+global getAllMethodHintAttributes;
+
+function encode_DeeRT_ErrUnboundAttr(tpSelfExpr: string, self: string, encodedName: string): string {
+	local decodedName = encodedName.decode("c-escape");
+	local isKnownAttribute = decodedName in getAllMethodHintAttributes();
+	local requiresType = tpSelfExpr != f"Dee_TYPE({self})";
+	if (requiresType) {
+		return isKnownAttribute
+			? f"DeeRT_ErrTUnboundAttr({tpSelfExpr}, {self}, &str_{decodedName})"
+			: f"DeeRT_ErrTUnboundAttrCStr({tpSelfExpr}, {self}, {encodedName})";
+	} else {
+		return isKnownAttribute
+			? f"DeeRT_ErrUnboundAttr({self}, &str_{decodedName})"
+			: f"DeeRT_ErrUnboundAttrCStr({self}, {encodedName})";
+	}
+}
+
 
 
 class PPCondPrinter {
@@ -852,6 +869,8 @@ final class NativeMethod {
 					return f"DeeMH_{dep}_t cached_{dep} = DeeType_RequireMethodHint({
 							tpSelfExpr}, {dep});";
 				},
+				"DeeRT_ErrUnboundAttrCStr": (self, name) ->
+					encode_DeeRT_ErrUnboundAttr(tpSelfExpr, self, name),
 			};
 		}
 		for (local dependencies, impl: usingImpls) {
@@ -1120,6 +1139,8 @@ final class MethodHint: WeakRefAble {
 				return f"DeeMH_{dep}_t cached_{dep} = DeeType_RequireMethodHint({
 						tpSelfExpr}, {dep});";
 			},
+			"DeeRT_ErrUnboundAttrCStr": (self, name) ->
+				encode_DeeRT_ErrUnboundAttr(tpSelfExpr, self, name),
 		});
 		print("PUBLIC "),;
 		call2native.printDecl(f"DeeMA_{name}",
@@ -1545,7 +1566,9 @@ final class NativeOperator {
 				"CALL_DEPENDENCY": callDependency,
 				"PRELOAD_DEPENDENCY": (dep) -> "", // TODO
 				"IF_TYPED_ELSE": (ifTyped, ifNotTyped) ->
-					typedName is none ? ifTyped : ifNotTyped
+					typedName is none ? ifTyped : ifNotTyped,
+				"DeeRT_ErrUnboundAttrCStr": (self, name) ->
+					encode_DeeRT_ErrUnboundAttr(tpSelfExpr, self, name),
 			});
 			result.append(symName);
 		}
@@ -1579,10 +1602,17 @@ global ANONYMOUS_METHOD_HINTS: {string: NativeMethod} = Dict();
 global NATIVE_OPERATORS: {NativeOperatorName: NativeOperator} = Dict();
 
 
-function getAllMethodHintAttributes(): {string...} {
+function getAllMethodHintAttributesUncached(): {string...} {
+	local result = [];
 	for (local none, hint: METHOD_HINTS) {
-		yield hint.allAttributes...;
+		result.extend(hint.allAttributes);
 	}
+	return result;
+}
+
+function getAllMethodHintAttributes(): {string...} {
+	static local result = getAllMethodHintAttributesUncached();
+	return result;
 }
 
 

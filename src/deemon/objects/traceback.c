@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
@@ -752,8 +753,7 @@ traceback_current(DeeObject *__restrict self) {
 	Dee_Incref(result);
 	return result;
 err_no_except:
-	err_unbound_attribute_string(Dee_TYPE(self), "current");
-	return NULL;
+	return DeeRT_ErrUnboundAttrCStr(self, "current");
 }
 
 PRIVATE struct type_getset tpconst traceback_class_getsets[] = {

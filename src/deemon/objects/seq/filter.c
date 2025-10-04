@@ -843,20 +843,16 @@ filter_trygetlast(Filter *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 filter_getfirst(Filter *__restrict self) {
 	DREF DeeObject *result = filter_trygetfirst(self);
-	if unlikely(result == ITER_DONE) {
-		result = NULL;
-		err_unbound_attribute_string(&SeqFilter_Type, STR_first);
-	}
+	if unlikely(result == ITER_DONE)
+		result = DeeRT_ErrUnboundAttr(self, &str_first);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 filter_getlast(Filter *__restrict self) {
 	DREF DeeObject *result = filter_trygetlast(self);
-	if unlikely(result == ITER_DONE) {
-		result = NULL;
-		err_unbound_attribute_string(&SeqFilter_Type, STR_last);
-	}
+	if unlikely(result == ITER_DONE)
+		result = DeeRT_ErrUnboundAttr(self, &str_last);
 	return result;
 }
 

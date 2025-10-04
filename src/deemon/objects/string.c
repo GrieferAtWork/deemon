@@ -2320,8 +2320,7 @@ string_getfirst(String *__restrict self) {
 		goto err_empty;
 	return DeeString_Chr(STRING_WIDTH_GETCHAR(width, str, 0));
 err_empty:
-	err_unbound_attribute_string(&DeeString_Type, STR_first);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str_first);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2333,8 +2332,7 @@ string_getlast(String *__restrict self) {
 		goto err_empty;
 	return DeeString_Chr(STRING_WIDTH_GETCHAR(width, str, length - 1));
 err_empty:
-	err_unbound_attribute_string(&DeeString_Type, STR_last);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str_last);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

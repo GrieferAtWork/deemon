@@ -353,7 +353,7 @@ Dee_attrdesc_callget(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 	case Dee_ATTRINFO_INSTANCE_GETSET:
 	case Dee_ATTRINFO_INSTANCE_MEMBER:
 	case Dee_ATTRINFO_INSTANCE_ATTR: {
-		if unlikely(thisarg == self->ad_info.ai_decl) {
+		if unlikely(thisarg != self->ad_info.ai_decl) {
 			err_bad_instance_access_thisarg(self, thisarg);
 			goto err;
 		}
@@ -457,7 +457,7 @@ Dee_attrdesc_callbound(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 	case Dee_ATTRINFO_INSTANCE_GETSET:
 	case Dee_ATTRINFO_INSTANCE_MEMBER:
 	case Dee_ATTRINFO_INSTANCE_ATTR: {
-		if unlikely(thisarg == self->ad_info.ai_decl) {
+		if unlikely(thisarg != self->ad_info.ai_decl) {
 			err_bad_instance_access_thisarg(self, thisarg);
 			goto err;
 		}
@@ -544,7 +544,7 @@ Dee_attrdesc_calldel(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 	case Dee_ATTRINFO_INSTANCE_GETSET:
 	case Dee_ATTRINFO_INSTANCE_MEMBER:
 	case Dee_ATTRINFO_INSTANCE_ATTR: {
-		if unlikely(thisarg == self->ad_info.ai_decl) {
+		if unlikely(thisarg != self->ad_info.ai_decl) {
 			err_bad_instance_access_thisarg(self, thisarg);
 			goto err;
 		}
@@ -632,7 +632,7 @@ Dee_attrdesc_callset(struct Dee_attrdesc const *self, DeeObject *thisarg, DeeObj
 	case Dee_ATTRINFO_INSTANCE_GETSET:
 	case Dee_ATTRINFO_INSTANCE_MEMBER:
 	case Dee_ATTRINFO_INSTANCE_ATTR: {
-		if unlikely(thisarg == self->ad_info.ai_decl) {
+		if unlikely(thisarg != self->ad_info.ai_decl) {
 			err_bad_instance_access_thisarg(self, thisarg);
 			goto err;
 		}
@@ -738,7 +738,7 @@ again:
 	case Dee_ATTRINFO_INSTANCE_MEMBER:
 	case Dee_ATTRINFO_INSTANCE_ATTR: {
 		DeeObject *real_thisarg;
-		if unlikely(thisarg == self->ad_info.ai_decl) {
+		if unlikely(thisarg != self->ad_info.ai_decl) {
 			err_bad_instance_access_thisarg(self, thisarg);
 			goto err;
 		}
@@ -1254,6 +1254,7 @@ again:
 		Dee_membercache_waitfor(cache);
 
 		/* Pop this entry from the global chain. */
+		ASSERT(LIST_ISBOUND(cache, mc_link));
 		LIST_UNBIND(cache, mc_link);
 		membercache_list_lock_release();
 

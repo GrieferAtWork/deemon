@@ -552,8 +552,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_multiple_statements(DeeStringObject 
 #define ERR_SQL_THROWERROR_F_NORMAL    0x0000
 #define ERR_SQL_THROWERROR_F_UNLOCK_DB 0x0001 /* The "db" argument is non-NULL and **MUST** be unlocked, no matter what will be returned. */
 
-INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp, char const *__restrict name);
-
 /************************************************************************/
 /* Initialization                                                       */
 /************************************************************************/

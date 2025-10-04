@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/module.h>
@@ -215,8 +216,7 @@ objmethod_get_func(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
 		return DeeClsMethod_New(origin.omo_type, self->om_func);
-	err_unbound_attribute_string(Dee_TYPE(self), "__func__");
-	return NULL;
+	return DeeRT_ErrUnboundAttrCStr(self, "__func__");
 }
 
 #define objmethod_bound_name objmethod_bound_origin
@@ -225,8 +225,7 @@ objmethod_get_name(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
 		return DeeString_NewAuto(origin.omo_decl->m_name);
-	err_unbound_attribute_string(Dee_TYPE(self), STR___name__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___name__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -244,8 +243,7 @@ objmethod_get_type(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
 		return_reference_(origin.omo_type);
-	err_unbound_attribute_string(Dee_TYPE(self), STR___type__);
-	return NULL;
+	return (DREF DeeTypeObject *)DeeRT_ErrUnboundAttr(self, &str___type__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -256,8 +254,7 @@ objmethod_get_module(DeeObjMethodObject *__restrict self) {
 		if likely(result)
 			return result;
 	}
-	err_unbound_attribute_string(Dee_TYPE(self), STR___module__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -861,8 +858,7 @@ kwobjmethod_get_func(DeeKwObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeKwObjMethod_GetOrigin((DeeObject *)self, &origin))
 		return DeeKwClsMethod_New(origin.omo_type, self->om_func);
-	err_unbound_attribute_string(Dee_TYPE(self), "__func__");
-	return NULL;
+	return DeeRT_ErrUnboundAttrCStr(self, "__func__");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -870,8 +866,7 @@ kwobjmethod_get_kwds(DeeKwObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeKwObjMethod_GetOrigin((DeeObject *)self, &origin))
 		return doc_decode_kwds((DeeObject *)self, origin.omo_decl->m_doc);
-	err_unbound_attribute_string(Dee_TYPE(self), STR___kwds__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___kwds__);
 }
 #define kwobjmethod_bound_kwds objmethod_bound_origin
 
@@ -1121,8 +1116,7 @@ clsmethod_get_name(DeeClsMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeClsMethod_GetOrigin((DeeObject *)self, &origin))
 		return DeeString_NewAuto(origin.omo_decl->m_name);
-	err_unbound_attribute_string(Dee_TYPE(self), STR___name__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___name__);
 }
 #define clsmethod_bound_name clsmethod_bound_origin
 
@@ -1140,8 +1134,7 @@ kwclsmethod_get_kwds(DeeClsMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeKwClsMethod_GetOrigin((DeeObject *)self, &origin))
 		return doc_decode_kwds((DeeObject *)self, origin.omo_decl->m_doc);
-	err_unbound_attribute_string(Dee_TYPE(self), STR___kwds__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___kwds__);
 }
 #define kwclsmethod_bound_kwds clsmethod_bound_origin
 
@@ -1151,8 +1144,7 @@ clsmethod_get_module(DeeClsMethodObject *__restrict self) {
 	result = DeeType_GetModule(self->cm_type);
 	if likely(result)
 		return result;
-	err_unbound_attribute_string(Dee_TYPE(self), STR___module__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1696,8 +1688,7 @@ clsproperty_get_name(DeeClsPropertyObject *__restrict self) {
 	struct clsproperty_origin origin;
 	if likely(DeeClsProperty_GetOrigin((DeeObject *)self, &origin))
 		return DeeString_NewAuto(origin.cpo_decl->gs_name);
-	err_unbound_attribute_string(&DeeClsProperty_Type, STR___name__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___name__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1715,8 +1706,7 @@ clsproperty_get_module(DeeClsPropertyObject *__restrict self) {
 	result = DeeType_GetModule(self->cp_type);
 	if likely(result)
 		return result;
-	err_unbound_attribute_string(&DeeClsProperty_Type, STR___module__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2038,8 +2028,7 @@ clsmember_get_module(DeeClsMemberObject *__restrict self) {
 	result = DeeType_GetModule(self->cm_type);
 	if likely(result)
 		return result;
-	err_unbound_attribute_string(&DeeClsMember_Type, STR___module__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2274,10 +2263,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_module(DeeCMethodObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeModule_FromStaticPointer(*(void **)&self->cm_func);
-	if (result)
+	if likely(result)
 		return result;
-	err_unbound_attribute_string(Dee_TYPE(self), STR___module__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2318,8 +2306,7 @@ kwcmethod_get_kwds(DeeCMethodObject *__restrict self) {
 		Dee_cmethod_origin_fini(&origin);
 		return result;
 	}
-	err_unbound_attribute_string(&DeeKwCMethod_Type, STR___kwds__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___kwds__);
 }
 
 #define cmethod_bound_name cmethod_bound_origin
@@ -2331,8 +2318,7 @@ cmethod_get_name(DeeCMethodObject *__restrict self) {
 		Dee_cmethod_origin_fini(&origin);
 		return result;
 	}
-	err_unbound_attribute_string(&DeeKwCMethod_Type, STR___name__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___name__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2343,8 +2329,7 @@ cmethod_get_type(DeeCMethodObject *__restrict self) {
 		if (origin.cmo_type)
 			return (DREF DeeObject *)origin.cmo_type;
 	}
-	err_unbound_attribute_string(&DeeKwCMethod_Type, STR___type__);
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str___type__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

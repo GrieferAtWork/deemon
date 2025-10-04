@@ -247,13 +247,10 @@ Dee_variant_visit(struct Dee_variant *__restrict self,
 /* Get the value of a variant in the form of a deemon object.
  * If the variant's type isn't set to "Dee_VARIANT_OBJECT", the
  * linked object is lazily allocated and assigned
- * @return: ITER_DONE: [Dee_variant_trygetobject] Returned if the variant is unbound
- * @return: NULL:      An error was thrown (`Dee_variant_getobject()' throws an UnboundAttribute error if "self" is unbound) */
+ * @return: ITER_DONE: Variant is unbound
+ * @return: NULL:      An error was thrown */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_variant_trygetobject(struct Dee_variant *__restrict self);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-Dee_variant_getobject(struct Dee_variant *__restrict self,
-                      DeeObject *owner, char const *attr);
+Dee_variant_getobject(struct Dee_variant *__restrict self);
 
 /* Returns the type of the object bound to "self" (or "NULL" if "self" is unbound) */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL

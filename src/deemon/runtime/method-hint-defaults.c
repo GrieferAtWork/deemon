@@ -6971,8 +6971,7 @@ default__seq_getfirst__unsupported(DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_getfirst__empty(DeeObject *__restrict self) {
-	err_unbound_attribute_string(Dee_TYPE(self), "first");
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str_first);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -6983,10 +6982,8 @@ default__seq_getfirst__with__seq_operator_getitem_index(DeeObject *__restrict se
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_getfirst__with__seq_trygetfirst(DeeObject *__restrict self) {
 	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_trygetfirst))(self);
-	if unlikely(result == ITER_DONE) {
-		err_unbound_attribute_string(Dee_TYPE(self), "first");
-		result = NULL;
-	}
+	if unlikely(result == ITER_DONE)
+		return default__seq_getfirst__empty(self);
 	return result;
 }
 
@@ -7212,8 +7209,7 @@ default__seq_getlast__unsupported(DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_getlast__empty(DeeObject *__restrict self) {
-	err_unbound_attribute_string(Dee_TYPE(self), "last");
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str_last);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL

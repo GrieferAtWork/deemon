@@ -56,15 +56,6 @@ DeeSystem_DEFINE_memcasemem(dee_memcasemem)
 /* GENERIC DEEMON ERROR THROWING                                        */
 /************************************************************************/
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp,
-                                     char const *__restrict name) {
-	ASSERT_OBJECT(tp);
-	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "Unbound attribute `%r.%s'",
-	                       tp, name);
-}
-
 INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_multiple_statements(DeeStringObject *__restrict sql) {
 	return DeeError_Throwf(&DeeError_SyntaxError,

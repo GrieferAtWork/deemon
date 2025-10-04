@@ -94,19 +94,14 @@ err:
 __seq_first__.seq_getfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("first"))}
 %{$none = return_none}
-%{$empty = {
-	err_unbound_attribute_string(THIS_TYPE, "first");
-	return NULL;
-}}
+%{$empty = DeeRT_ErrUnboundAttrCStr(self, "first")}
 %{$with__seq_operator_getitem_index = {
 	return CALL_DEPENDENCY(seq_operator_getitem_index, self, 0);
 }}
 %{$with__seq_trygetfirst = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_trygetfirst, self);
-	if unlikely(result == ITER_DONE) {
-		err_unbound_attribute_string(THIS_TYPE, "first");
-		result = NULL;
-	}
+	if unlikely(result == ITER_DONE)
+		return default__seq_getfirst__empty(self);
 	return result;
 }} {
 	return LOCAL_GETATTR(self);
