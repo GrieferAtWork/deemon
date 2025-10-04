@@ -44,6 +44,7 @@
 
 #include <deemon/api.h>
 #include <deemon/class.h>
+#include <deemon/error-rt.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/types.h>
@@ -250,11 +251,11 @@
 DECL_BEGIN
 
 #ifdef LOCAL_IS_SET
-#define LOCAL_ATTR_ACCESS_OP ATTR_ACCESS_SET
+#define LOCAL_ATTR_ACCESS_OP DeeRT_ATTRIBUTE_ACCESS_SET
 #elif defined(LOCAL_IS_DEL)
-#define LOCAL_ATTR_ACCESS_OP ATTR_ACCESS_DEL
+#define LOCAL_ATTR_ACCESS_OP DeeRT_ATTRIBUTE_ACCESS_DEL
 #else /* ... */
-#define LOCAL_ATTR_ACCESS_OP ATTR_ACCESS_GET
+#define LOCAL_ATTR_ACCESS_OP DeeRT_ATTRIBUTE_ACCESS_GET
 #endif /* !... */
 
 #if defined(LOCAL_IS_GET) || defined(LOCAL_IS_CALL_LIKE)
@@ -417,9 +418,9 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 
 #if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FIND)
 #ifdef LOCAL_HAS_len
-	err_unknown_attribute_string_len(self, attr, attrlen, LOCAL_ATTR_ACCESS_OP);
+	DeeRT_ErrUnknownTypeInstanceAttrStrLen(self, attr, attrlen, LOCAL_ATTR_ACCESS_OP);
 #else /* LOCAL_HAS_len */
-	err_unknown_attribute_string(self, attr, LOCAL_ATTR_ACCESS_OP);
+	DeeRT_ErrUnknownTypeInstanceAttrStr(self, attr, LOCAL_ATTR_ACCESS_OP);
 #endif /* !LOCAL_HAS_len */
 err:
 	return LOCAL_ERROR_RETURN_VALUE;

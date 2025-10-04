@@ -115,9 +115,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator3(DeeTypeObjec
 #define ATTR_ACCESS_SET     2
 #define ATTR_ACCESS_MASK    3
 /* @param: access: One of `ATTR_ACCESS_*' */
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_attribute_string(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_attribute_string_len(DeeTypeObject *__restrict tp, char const *name, size_t namelen, int access);
-/* @param: access: One of `ATTR_ACCESS_*' */
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute_string(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_cant_access_attribute_string_len(DeeTypeObject *__restrict tp, char const *name, size_t namelen, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute_string_c(struct class_desc *__restrict desc, char const *__restrict name, int access);
@@ -197,9 +194,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_unimplemented_operator(tp, operator_name)                                                     Dee_ASSUMED_VALUE(err_unimplemented_operator(tp, operator_name), -1)
 #define err_unimplemented_operator2(tp, operator_name, operator_name2)                                    Dee_ASSUMED_VALUE(err_unimplemented_operator2(tp, operator_name, operator_name2), -1)
 #define err_unimplemented_operator3(tp, operator_name, operator_name2, operator_name3)                    Dee_ASSUMED_VALUE(err_unimplemented_operator3(tp, operator_name, operator_name2, operator_name3), -1)
-#define err_unknown_attribute(tp, name, access)                                                           err_unknown_attribute_string(tp, DeeString_STR(name), access)
-#define err_unknown_attribute_string(tp, name, access)                                                    Dee_ASSUMED_VALUE(err_unknown_attribute_string(tp, name, access), -1)
-#define err_unknown_attribute_string_len(tp, name, namelen, access)                                       Dee_ASSUMED_VALUE(err_unknown_attribute_string_len(tp, name, namelen, access), -1)
 #define err_cant_access_attribute(tp, name, access)                                                       err_cant_access_attribute_string(tp, DeeString_STR(name), access)
 #define err_cant_access_attribute_string(tp, name, access)                                                Dee_ASSUMED_VALUE(err_cant_access_attribute_string(tp, name, access), -1)
 #define err_cant_access_attribute_string_len(tp, name, namelen, access)                                   Dee_ASSUMED_VALUE(err_cant_access_attribute_string_len(tp, name, namelen, access), -1)

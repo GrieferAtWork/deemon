@@ -52,24 +52,6 @@ err_empty_sequence(DeeObject *__restrict seq) {
 	                       Dee_TYPE(seq));
 }
 
-PRIVATE char const access_names[4][4] = {
-	/* [ATTR_ACCESS_GET] = */ "get",
-	/* [ATTR_ACCESS_DEL] = */ "del",
-	/* [ATTR_ACCESS_SET] = */ "set",
-	/* [?]               = */ "",
-};
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unknown_attribute_string)(DeeTypeObject *__restrict tp,
-                                     char const *__restrict name,
-                                     int access) {
-	ASSERT_OBJECT(tp);
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s unknown attribute `%r.%s'",
-	                       access_names[access & ATTR_ACCESS_MASK],
-	                       tp, name);
-}
-
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name) {
 	struct opinfo const *info;

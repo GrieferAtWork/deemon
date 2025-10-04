@@ -478,6 +478,15 @@ DFUNDEF ATTR_COLD NONNULL((3)) int
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 
+/* Returns "true" if "ptr" points into statically allocated memory.
+ * If "ptr" is heap-allocated, or it being statically allocated can't
+ * be determined for some other reason, return "false".
+ *
+ * If the given "ptr" is "NULL" or otherwise not at least readable,
+ * behavior is undefined (meaning this function may SEGFAULT is given
+ * a faulty pointer) */
+DFUNDEF ATTR_CONST WUNUSED NONNULL((1)) bool DCALL
+DeeSystem_IsStaticPointer(void const *ptr);
 
 DECL_END
 

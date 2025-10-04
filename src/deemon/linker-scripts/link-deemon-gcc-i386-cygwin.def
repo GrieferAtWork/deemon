@@ -1164,6 +1164,9 @@ EXPORTS
 	_DeeRT_ErrRegexNotFound@28=DeeRT_ErrRegexNotFound@28
 	_DeeRT_ErrTUnboundAttr@12=DeeRT_ErrTUnboundAttr@12
 	_DeeRT_ErrTUnboundAttrCStr@12=DeeRT_ErrTUnboundAttrCStr@12
+	_DeeRT_ErrTUnknownAttr@16=DeeRT_ErrTUnknownAttr@16
+	_DeeRT_ErrTUnknownAttrStr@16=DeeRT_ErrTUnknownAttrStr@16
+	_DeeRT_ErrTUnknownAttrStrLen@20=DeeRT_ErrTUnknownAttrStrLen@20
 	_DeeRT_ErrUnboundAttr@8=DeeRT_ErrUnboundAttr@8
 	_DeeRT_ErrUnboundAttrCStr@8=DeeRT_ErrUnboundAttrCStr@8
 	_DeeRT_ErrUnboundAttrEx@8=DeeRT_ErrUnboundAttrEx@8
@@ -1313,6 +1316,7 @@ EXPORTS
 	_DeeSystem_GetFilenameOfFD@4=DeeSystem_GetFilenameOfFD@4
 	_DeeSystem_GetLastModified@4=DeeSystem_GetLastModified@4
 	_DeeSystem_GetWalltime@0=DeeSystem_GetWalltime@0
+	_DeeSystem_IsStaticPointer@4=DeeSystem_IsStaticPointer@4
 	_DeeSystem_MakeAbsolute@4=DeeSystem_MakeAbsolute@4
 	_DeeSystem_PrintFilenameOfFD@8=DeeSystem_PrintFilenameOfFD@8
 	_DeeSystem_PrintPwd@8=DeeSystem_PrintPwd@8

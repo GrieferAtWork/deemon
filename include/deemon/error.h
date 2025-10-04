@@ -113,6 +113,7 @@ DDATDEF DeeTypeObject /**/ DeeError_StopIteration;
 DDATDEF DeeTypeObject DeeError_Error;
 DDATDEF DeeTypeObject /**/ DeeError_AttributeError;
 DDATDEF DeeTypeObject /*    */ DeeError_UnboundAttribute;
+DDATDEF DeeTypeObject /*    */ DeeError_UnknownAttribute;
 DDATDEF DeeTypeObject /**/ DeeError_CompilerError;
 DDATDEF DeeTypeObject /*    */ DeeError_SyntaxError;
 DDATDEF DeeTypeObject /*    */ DeeError_SymbolError;

@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/class.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -31,8 +32,8 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
-#include <deemon/string.h>
 #include <deemon/seq.h>
+#include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
@@ -3090,10 +3091,12 @@ instance_autoload_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
 	at = DeeClassDesc_QueryInstanceAttribute(data->ialf_desc, key);
-	if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
-		err_unknown_attribute_string(data->ialf_tp_self,
-		                             DeeString_STR(key),
-		                             ATTR_ACCESS_SET);
+	if unlikely(!at) {
+		DeeRT_ErrUnknownAttrDuringInitialization(data->ialf_tp_self, key);
+		goto err;
+	}
+	if unlikely(!CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
+		err_cant_access_attribute(data->ialf_tp_self, key, ATTR_ACCESS_SET);
 		goto err;
 	}
 	if unlikely(at->ca_addr < data->ialf_next_table_index) {
@@ -3145,10 +3148,12 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 			at = DeeClassDesc_QueryInstanceAttributeHash(desc,
 			                                             (DeeObject *)kwds->kw_map[i].ke_name,
 			                                             kwds->kw_map[i].ke_hash);
-			if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
-				err_unknown_attribute_string(tp_self,
-				                             DeeString_STR(kwds->kw_map[i].ke_name),
-				                             ATTR_ACCESS_SET);
+			if unlikely(!at) {
+				DeeRT_ErrUnknownAttrDuringInitialization(tp_self, kwds->kw_map[i].ke_name);
+				goto err;
+			}
+			if unlikely(!CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
+				err_cant_access_attribute(tp_self, kwds->kw_map[i].ke_name, ATTR_ACCESS_SET);
 				goto err;
 			}
 			if unlikely(at->ca_addr < next_table_index) {

@@ -934,14 +934,7 @@ INTDEF DeeTypeObject BitsetIterator_Type;
 
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_empty_sequence)(DeeObject *__restrict seq);
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_changed_sequence)(DeeObject *__restrict seq);
-INTERN ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_attribute_string)(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name);
-
-#define ATTR_ACCESS_GET     0
-#define ATTR_ACCESS_DEL     1
-#define ATTR_ACCESS_SET     2
-#define ATTR_ACCESS_MASK    3
-
 
 
 /* Common error documentation strings */

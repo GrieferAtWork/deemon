@@ -20,7 +20,7 @@
 #ifdef __INTELLISENSE__
 #include "attribute.c"
 //#define DEFINE_DeeObject_GetAttr
-//#define DEFINE_DeeObject_TGetAttr
+#define DEFINE_DeeObject_TGetAttr
 //#define DEFINE_DeeObject_GetAttrStringHash
 //#define DEFINE_DeeObject_TGetAttrStringHash
 //#define DEFINE_DeeObject_GetAttrStringLenHash
@@ -82,7 +82,7 @@
 //#define DEFINE_DeeObject_TFindAttrInfoStringHash
 //#define DEFINE_DeeObject_TFindAttrInfoStringLenHash
 //#define DEFINE_DeeObject_TFindPrivateAttrInfoStringHash
-#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
+//#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
 //#define DEFINE_DeeObject_FindAttr
 //#define DEFINE_DeeObject_IterAttr
 #endif /* __INTELLISENSE__ */
@@ -90,6 +90,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/class.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
@@ -724,20 +725,20 @@ DECL_BEGIN
 
 /* Access code for how an attribute is being accessed */
 #ifdef LOCAL_IS_SET
-#define LOCAL_ATTR_ACCESS_OP ATTR_ACCESS_SET
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_SET
 #elif defined(LOCAL_IS_DEL)
-#define LOCAL_ATTR_ACCESS_OP ATTR_ACCESS_DEL
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_DEL
 #else /* ... */
-#define LOCAL_ATTR_ACCESS_OP ATTR_ACCESS_GET
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_GET
 #endif /* !... */
 
 /* Helpers to throw errors */
 #ifndef LOCAL_HAS_string
-#define LOCAL_err_unknown_attribute(tp_self, access) err_unknown_attribute(tp_self, attr, access)
+#define LOCAL_err_unknown_attribute(tp_self, self, access) DeeRT_ErrTUnknownAttr(tp_self, self, attr, access)
 #elif defined(LOCAL_HAS_len)
-#define LOCAL_err_unknown_attribute(tp_self, access) err_unknown_attribute_string_len(tp_self, attr, attrlen, access)
+#define LOCAL_err_unknown_attribute(tp_self, self, access) DeeRT_ErrTUnknownAttrStrLen(tp_self, self, attr, attrlen, access)
 #else /* ... */
-#define LOCAL_err_unknown_attribute(tp_self, access) err_unknown_attribute_string(tp_self, attr, access)
+#define LOCAL_err_unknown_attribute(tp_self, self, access) DeeRT_ErrTUnknownAttrStr(tp_self, self, attr, access)
 #endif /* !... */
 
 /* Access code for how an attribute is being accessed */
@@ -1379,7 +1380,7 @@ break_search:
 #endif /* WANT_break_search */
 
 #if !defined(LOCAL_IS_TEST_FUNCTION) && !defined(LOCAL_IS_ITER) && !defined(LOCAL_IS_FIND) && !defined(LOCAL_IS_FINDINFO)
-	LOCAL_err_unknown_attribute(tp_self, LOCAL_ATTR_ACCESS_OP);
+	LOCAL_err_unknown_attribute(tp_self, self, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 err:
 	return LOCAL_ERROR_RESULT;
 #endif /* !LOCAL_IS_TEST_FUNCTION && !LOCAL_IS_ITER && !LOCAL_IS_FIND && !LOCAL_IS_FINDINFO */
@@ -1455,7 +1456,7 @@ err:
 #undef LOCAL_HAS_tp_self
 #undef LOCAL_DECL
 #undef LOCAL_ATTR_NONNULL
-#undef LOCAL_ATTR_ACCESS_OP
+#undef LOCAL_DeeRT_ATTRIBUTE_ACCESS
 #undef LOCAL_err_unknown_attribute
 
 DECL_END

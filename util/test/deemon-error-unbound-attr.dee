@@ -24,6 +24,15 @@ import * from errors;
 
 #define TRY(x) (try x catch (e...) e)
 
+/* Assert that "isget" defaults to "true" for "UnboundAttribute()" */
+assert UnboundAttribute().isget;
+assert UnboundAttribute(isget: true).isget;
+assert !UnboundAttribute(isget: false).isget;
+assert !AttributeError().isget;
+assert AttributeError(isget: true).isget;
+assert !AttributeError(isget: false).isget;
+
+/* Assert that the correct "UnboundAttribute" error is thrown in different situations... */
 local v = IndexError();
 assert TRY(v.seq) == UnboundAttribute(ob: v, attr: "seq", decl: SequenceError);
 
@@ -56,11 +65,17 @@ local e = TRY(v.getFoo());
 assert e == UnboundAttribute(ob: v, attr: "foo", decl: MyClass);
 assert e.attr.doc == "I am FOO";
 assert e.name == "foo";
+assert e.isget;
+assert !e.isdel;
+assert !e.isset;
 
 local e = TRY(v.getBar());
 assert UnboundAttribute(ob: v, attr: "bar", decl: MyClass) == e;
 assert e.attr.doc == "I am BAR";
 assert e.name == "bar";
+assert e.isget;
+assert !e.isdel;
+assert !e.isset;
 
 
 class MySubClass: MyClass {

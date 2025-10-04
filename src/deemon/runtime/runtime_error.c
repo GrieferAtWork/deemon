@@ -786,29 +786,6 @@ PRIVATE char const access_names[4][4] = {
 };
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unknown_attribute_string)(DeeTypeObject *__restrict tp,
-                                     char const *__restrict name,
-                                     int access) {
-	ASSERT_OBJECT(tp);
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s unknown attribute `%r.%s'",
-	                       access_names[access & ATTR_ACCESS_MASK],
-	                       tp, name);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_unknown_attribute_string_len)(DeeTypeObject *__restrict tp,
-                                         char const *name, size_t namelen,
-                                         int access) {
-	ASSERT_OBJECT(tp);
-	ASSERT(!namelen || name);
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s unknown attribute `%r.%$s'",
-	                       access_names[access & ATTR_ACCESS_MASK],
-	                       tp, namelen, name);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_cant_access_attribute_string)(DeeTypeObject *__restrict tp,
                                          char const *__restrict name,
                                          int access) {

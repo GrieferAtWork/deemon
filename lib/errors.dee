@@ -32,6 +32,7 @@ final global		StopIteration = deemon.Signal.StopIteration;
 final global Error = deemon.Error;
 final global	AttributeError = deemon.Error.AttributeError;
 final global		UnboundAttribute = AttributeError.UnboundAttribute;
+final global		UnknownAttribute = AttributeError.UnknownAttribute;
 final global	CompilerError = deemon.Error.CompilerError;
 final global		SyntaxError = CompilerError.SyntaxError;
 final global		SymbolError = CompilerError.SymbolError;

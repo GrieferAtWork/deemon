@@ -89,7 +89,7 @@ f_builtin_boundattr(size_t argc, DeeObject *const *argv) {
 	switch (DeeObject_BoundAttr(self, attr)) {
 	default:
 		if unlikely(!allow_missing) {
-			err_unknown_attribute(DeeObject_Class(self), attr, ATTR_ACCESS_GET);
+			DeeRT_ErrUnknownAttr(self, attr, DeeRT_ATTRIBUTE_ACCESS_BOUND);
 			goto err;
 		}
 		ATTR_FALLTHROUGH

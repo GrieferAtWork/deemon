@@ -45,6 +45,7 @@
 #include <deemon/system-features.h>
 #include <deemon/variant.h>
 
+#include <hybrid/host.h>
 #include <hybrid/int128.h>
 #include <hybrid/minmax.h>
 #include <hybrid/sched/yield.h>
@@ -84,12 +85,18 @@ print define_Dee_HashStr("inner");
 print define_Dee_HashStr("ob");
 print define_Dee_HashStr("attr");
 print define_Dee_HashStr("decl");
+print define_Dee_HashStr("isget");
+print define_Dee_HashStr("isdel");
+print define_Dee_HashStr("isset");
 ]]]*/
 #define Dee_HashStr__message _Dee_HashSelectC(0x14820755, 0xbeaa4b97155366df)
 #define Dee_HashStr__inner _Dee_HashSelectC(0x20e82985, 0x4f20d07bb803c1fe)
 #define Dee_HashStr__ob _Dee_HashSelectC(0xdfa5fee2, 0x80a90888850ad043)
 #define Dee_HashStr__attr _Dee_HashSelectC(0x55cfee3, 0xe4311a2c8443755d)
 #define Dee_HashStr__decl _Dee_HashSelectC(0x95fe81e2, 0xdc35fdc1dce5cffc)
+#define Dee_HashStr__isget _Dee_HashSelectC(0x5c9806e4, 0x5d9b765d747113e0)
+#define Dee_HashStr__isdel _Dee_HashSelectC(0xb56dbf78, 0x80c483cf4d2ec758)
+#define Dee_HashStr__isset _Dee_HashSelectC(0xbc9a78a1, 0x5b60f653e62d5e87)
 /*[[[end]]]*/
 
 
@@ -528,6 +535,7 @@ typedef struct {
 #define AttributeError_F_GET DeeRT_ATTRIBUTE_ACCESS_GET /* Attempted to get attribute */
 #define AttributeError_F_DEL DeeRT_ATTRIBUTE_ACCESS_DEL /* Attempted to del attribute */
 #define AttributeError_F_SET DeeRT_ATTRIBUTE_ACCESS_SET /* Attempted to set attribute */
+#define AttributeError_F_ACCESS (AttributeError_F_GET | AttributeError_F_DEL | AttributeError_F_SET)
 #define AttributeError_F_INFOLOADED 0x0100 /* "struct Dee_attrinfo"-portion was loaded (requires "AttributeError_F_DECLLOADED" to also be set) */
 #define AttributeError_F_DESCLOADED 0x0200 /* "struct Dee_attrdesc"-portion was loaded (requires "AttributeError_F_INFOLOADED" to also be set) */
 #define AttributeError_F_ISDEFAULT  0x0400 /* Set if "ae_desc" is the result of "DeeObject_FindAttrInfoStringLenHash" */
@@ -537,7 +545,7 @@ typedef struct {
 #ifndef CONFIG_NO_THREADS
 #define AttributeError_F_LOADLOCK 0x8000 /* Lock to ensure only 1 thread does the loading */
 #endif /* !CONFIG_NO_THREADS */
-	unsigned int        ae_flags; /* [valid_if(ae_obj != NULL)] */
+	unsigned int        ae_flags; /* Set of `AttributeError_F_*' */
 	union {
 		struct type_member_buffer eas_type_member; /* Maybe used internally when "AttributeError_F_LAZYDECL" is set */
 	} ea_storage;
@@ -1004,13 +1012,13 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 			if (sym->ss_flags & MODSYM_FPROPERTY) {
 				/* Check which property operations have been bound. */
 				if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
-					self->ae_desc.ad_perm |= ATTR_ACCESS_GET;
+					self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANGET;
 				if (!(sym->ss_flags & MODSYM_FREADONLY)) {
 					/* These callbacks are only allocated if the READONLY flag isn't set. */
 					if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_DEL])
-						self->ae_desc.ad_perm |= ATTR_ACCESS_DEL;
+						self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL;
 					if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_SET])
-						self->ae_desc.ad_perm |= ATTR_ACCESS_SET;
+						self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANSET;
 				}
 			}
 			DeeModule_LockEndRead(mod);
@@ -1178,10 +1186,27 @@ AttributeError_LoadIsDefault(AttributeError *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
+AttributeError_init_access_flag(AttributeError *__restrict self,
+                                DeeObject *state, unsigned int mask) {
+	int temp;
+	if (!state)
+		return 0;
+	temp = DeeObject_Bool(state);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		self->ae_flags |= mask;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
                        DeeObject *const *argv, DeeObject *kw) {
 	DeeKwArgs kwds;
 	DeeObject *attr;
+	DeeObject *isget, *isdel, *isset;
 	if unlikely(DeeKwArgs_Init(&kwds, &argc, argv, kw))
 		goto err;
 #define LOADARG(dst, i, name)               \
@@ -1197,19 +1222,32 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 			}                               \
 		}                                   \
 	}	__WHILE0
-#define AttributeError_init_params Error_init_params ",ob?,attr?:?X2?Dstring?DAttribute,decl?:?X3?DType?DModule?O"
+#define AttributeError_init_params   Error_init_params ",ob?,attr?:?X2?Dstring?DAttribute,decl?:?X3?DType?DModule?O,isget=!f,isdel=!f,isset=!f"
+#define UnboundAttribute_init_params Error_init_params ",ob?,attr?:?X2?Dstring?DAttribute,decl?:?X3?DType?DModule?O,isget=!t,isdel=!f,isset=!f"
 	LOADARG(&self->e_message, 0, message);
 	LOADARG(&self->e_inner, 1, inner);
 	LOADARG(&self->ae_obj, 2, ob);
 	LOADARG(&attr, 3, attr);
 	LOADARG(&self->ae_desc.ad_info.ai_decl, 4, decl);
+	LOADARG(&isget, 5, isget);
+	LOADARG(&isdel, 6, isdel);
+	LOADARG(&isset, 7, isset);
 #undef LOADARG
-	if (argc > 5)
-		return DeeArg_BadArgcEx(Dee_TYPE(self)->tp_name, argc, 0, 5);
+	if (argc > 8)
+		return DeeArg_BadArgcEx(Dee_TYPE(self)->tp_name, argc, 0, 8);
+	self->ae_flags = 0;
+	if unlikely(AttributeError_init_access_flag(self, isget, AttributeError_F_GET))
+		goto err;
+	if unlikely(AttributeError_init_access_flag(self, isdel, AttributeError_F_DEL))
+		goto err;
+	if unlikely(AttributeError_init_access_flag(self, isset, AttributeError_F_SET))
+		goto err;
+	/* Hacky special case: in "UnboundAttribute", "isget" defaults to "true" */
+	if (!isget && DeeObject_InstanceOf(self, &DeeError_UnboundAttribute))
+		self->ae_flags |= AttributeError_F_GET;
 	if (attr) {
 		if unlikely(!self->ae_obj)
 			return DeeError_Throwf(&DeeError_TypeError, "%s: 'attr' given, but no 'ob'", Dee_TYPE(self)->tp_name);
-		self->ae_flags = 0;
 		if (DeeObject_InstanceOf(attr, &DeeAttribute_Type)) {
 			DeeAttributeObject *attrib = (DeeAttributeObject *)attr;
 			if unlikely(self->ae_desc.ad_info.ai_decl)
@@ -1316,6 +1354,49 @@ AttributeError_visit(AttributeError *__restrict self, Dee_visit_t proc, void *ar
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+AttributeError_print_access_mode(AttributeError *__restrict self,
+                                 Dee_formatprinter_t printer, void *arg) {
+	char const *word;
+	char buffer[sizeof("{get,del,set}")];
+	unsigned int flags = atomic_read(&self->ae_flags);
+	switch (flags) {
+	case 0:
+		word = "access";
+		break;
+	case AttributeError_F_GET:
+		word = "read";
+		break;
+	case AttributeError_F_DEL:
+		word = "delete";
+		break;
+	case AttributeError_F_SET:
+		word = "write";
+		break;
+	default: {
+		char *iter = buffer;
+		*iter++ = '{';
+		if (flags & AttributeError_F_GET)
+			iter = stpcpy(iter, "get");
+		if (flags & AttributeError_F_DEL) {
+			if (flags & AttributeError_F_GET)
+				*iter++ = ',';
+			iter = stpcpy(iter, "del");
+		}
+		if (flags & AttributeError_F_SET) {
+			if (flags & (AttributeError_F_GET | AttributeError_F_DEL))
+				*iter++ = ',';
+			iter = stpcpy(iter, "set");
+		}
+		*iter++ = '}';
+		*iter++ = '\0';
+
+		word = buffer;
+	}	break;
+	}
+	return DeeFormat_PrintStr(printer, arg, word);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 AttributeError_print_attr_str(AttributeError *__restrict self,
                               Dee_formatprinter_t printer, void *arg) {
 	DeeObject *decl = AttributeError_GetDecl(self);
@@ -1386,6 +1467,12 @@ AttributeError_printrepr(AttributeError *__restrict self,
 			DO(err_temp, DeeFormat_Printf(printer, arg, "%sob: %r", prefix, self->ae_obj));
 		}
 	}
+	if (self->ae_flags & AttributeError_F_GET)
+		DO(err_temp, DeeFormat_PRINT(printer, arg, ", isget: true"));
+	if (self->ae_flags & AttributeError_F_DEL)
+		DO(err_temp, DeeFormat_PRINT(printer, arg, ", isdel: true"));
+	if (self->ae_flags & AttributeError_F_SET)
+		DO(err_temp, DeeFormat_PRINT(printer, arg, ", isset: true"));
 	DO(err_temp, DeeFormat_PRINT(printer, arg, ")"));
 done:
 	return result;
@@ -1496,6 +1583,15 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 		}
 #endif
 	}
+
+	/* Compare access mode. */
+	{
+		unsigned int lhs_flags = atomic_read(&lhs->ae_flags) & AttributeError_F_ACCESS;
+		unsigned int rhs_flags = atomic_read(&rhs->ae_flags) & AttributeError_F_ACCESS;
+		if (lhs_flags != rhs_flags)
+			return Dee_CompareNe(lhs_flags, rhs_flags);
+	}
+
 	return 0;
 }
 
@@ -1520,6 +1616,7 @@ AttributeError_hash(AttributeError *__restrict self) {
 		if (decl && decl != self->ae_obj)
 			result = Dee_HashCombine(result, DeeObject_Hash(decl));
 	}
+	result = Dee_HashCombine(result, atomic_read(&self->ae_flags) & AttributeError_F_ACCESS);
 	return result;
 }
 
@@ -1649,6 +1746,7 @@ PRIVATE struct type_member tpconst AttributeError_members[] = {
 
 PRIVATE struct type_member tpconst AttributeError_class_members[] = {
 	TYPE_MEMBER_CONST("UnboundAttribute", &DeeError_UnboundAttribute),
+	TYPE_MEMBER_CONST("UnknownAttribute", &DeeError_UnknownAttribute),
 	TYPE_MEMBER_END
 };
 
@@ -1752,23 +1850,32 @@ PUBLIC DeeTypeObject DeeError_AttributeError = {
 		/* .tp_class_members = */ tp_class_members                          \
 	}
 
-PRIVATE ATTR_COLD NONNULL((1, 3, 4)) DeeObject *
-(DCALL DeeRT_ErrAttributeError_impl)(DeeTypeObject *error_type, DeeObject *decl,
-                                     DeeObject *ob, DeeObject *attr,
-                                     unsigned int flags) {
+PRIVATE NONNULL((1, 2)) void DCALL
+unwrap_decl_and_ob(DeeObject **p_decl, DeeObject **p_ob) {
+	if (*p_decl == (DeeObject *)&DeeSuper_Type &&
+	    DeeObject_InstanceOf(*p_ob, &DeeSuper_Type)) {
+		*p_decl = (DeeObject *)DeeSuper_TYPE(*p_ob);
+		*p_ob   = DeeSuper_SELF(*p_ob);
+	}
+}
+
+PRIVATE ATTR_COLD NONNULL((1, 3, 4)) DeeObject *DCALL
+DeeRT_ErrAttributeError_impl(DeeTypeObject *error_type, DeeObject *decl,
+                             DeeObject *ob, DeeObject *attr,
+                             unsigned int flags) {
 	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
 	if unlikely(!result)
 		goto err;
+	unwrap_decl_and_ob(&decl, &ob);
 	DBG_memset(result, 0xcc, sizeof(*result));
-	ASSERTF((flags & ~(AttributeError_F_GET |
-	                   AttributeError_F_DEL |
-	                   AttributeError_F_SET)) == 0,
+	ASSERTF((flags & ~AttributeError_F_ACCESS) == 0,
 	        "Only these flags may be specified");
 	ASSERT_OBJECT_TYPE_EXACT(attr, &DeeString_Type);
 	result->e_message = NULL;
 	result->e_inner   = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
+	Dee_Incref(attr);
 	result->ae_desc.ad_name = DeeString_STR(attr);
 	result->ae_desc.ad_perm = Dee_ATTRPERM_F_NAMEOBJ;
 	Dee_XIncref(decl);
@@ -1780,13 +1887,14 @@ err:
 	return NULL;
 }
 
-PRIVATE ATTR_COLD NONNULL((1, 3, 4)) DeeObject *
-(DCALL DeeRT_ErrAttributeErrorCStr_impl)(DeeTypeObject *error_type, DeeObject *decl,
-                                         DeeObject *ob, /*static*/ char const *attr,
-                                         unsigned int flags) {
+PRIVATE ATTR_COLD NONNULL((1, 3, 4)) DeeObject *DCALL
+DeeRT_ErrAttributeErrorCStr_impl(DeeTypeObject *error_type, DeeObject *decl,
+                                 DeeObject *ob, /*static*/ char const *attr,
+                                 unsigned int flags) {
 	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
 	if unlikely(!result)
 		goto err;
+	unwrap_decl_and_ob(&decl, &ob);
 	DBG_memset(result, 0xcc, sizeof(*result));
 	ASSERTF((flags & ~(AttributeError_F_GET |
 	                   AttributeError_F_DEL |
@@ -1832,7 +1940,7 @@ err_temp:
 }
 
 PUBLIC DeeTypeObject DeeError_UnboundAttribute =
-INIT_LIKE_ATTRIBUTE_ERROR("UnboundAttribute", "(" AttributeError_init_params ")",
+INIT_LIKE_ATTRIBUTE_ERROR("UnboundAttribute", "(" UnboundAttribute_init_params ")",
                           TP_FNORMAL, &DeeError_AttributeError, NULL, &UnboundAttribute_print,
                           NULL, NULL, NULL);
 
@@ -1967,6 +2075,86 @@ PUBLIC ATTR_COLD NONNULL((1)) DeeObject *
 err:
 	return NULL;
 }
+
+
+
+/************************************************************************/
+/* Error.AttributeError.UnknownAttribute                                */
+/************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+UnknownAttribute_print(AttributeError *__restrict self,
+                       Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result;
+	if (self->e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	result = DeeFormat_PRINT(printer, arg, "Cannot ");
+	if unlikely(result < 0)
+		goto done;
+	DO(err_temp, AttributeError_print_access_mode(self, printer, arg));
+	DO(err_temp, DeeFormat_PRINT(printer, arg, " unknown attribute "));
+	DO(err_temp, AttributeError_print_attr_str(self, printer, arg));
+done:
+	return result;
+err_temp:
+	return temp;
+}
+
+PUBLIC DeeTypeObject DeeError_UnknownAttribute =
+INIT_LIKE_ATTRIBUTE_ERROR("UnknownAttribute", "(" AttributeError_init_params ")",
+                          TP_FNORMAL, &DeeError_AttributeError, NULL, &UnknownAttribute_print,
+                          NULL, NULL, NULL);
+
+/* Throws an `DeeError_UnknownAttribute' indicating that some attribute doesn't exist */
+PUBLIC ATTR_COLD NONNULL((2, 3)) int
+(DCALL DeeRT_ErrTUnknownAttr)(DeeObject *decl, DeeObject *ob,
+                              DeeObject *attr, unsigned int access) {
+	DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl, ob, attr, access);
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((2, 3)) int
+(DCALL DeeRT_ErrTUnknownAttrStr)(DeeObject *decl, DeeObject *ob,
+                                 char const *attr, unsigned int access) {
+	if (DeeSystem_IsStaticPointer(attr)) {
+		DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnknownAttribute, decl, ob, attr, access);
+	} else {
+		DREF DeeObject *attr_ob = DeeString_New(attr);
+		if likely(attr_ob) {
+			DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl, ob, attr_ob, access);
+			Dee_Decref_unlikely(attr_ob);
+		}
+	}
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((2, 3)) int
+(DCALL DeeRT_ErrTUnknownAttrStrLen)(DeeObject *decl, DeeObject *ob,
+                                    char const *attr, size_t attrlen,
+                                    unsigned int access) {
+	DREF DeeObject *attr_ob;
+#ifdef __ARCH_PAGESIZE
+	if (DeeSystem_IsStaticPointer(attr)) {
+		char const *attr_end = attr + attrlen;
+		uintptr_t attr_startpage = (uintptr_t)attr & (__ARCH_PAGESIZE - 1);
+		uintptr_t attr_endpage = (uintptr_t)attr_end & (__ARCH_PAGESIZE - 1);
+		if (attr_startpage == attr_endpage && *attr_end == '\0') {
+			DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnknownAttribute,
+			                                 decl, ob, attr, access);
+			return -1;
+		}
+	}
+#endif /* __ARCH_PAGESIZE */
+	attr_ob = DeeString_NewSized(attr, attrlen);
+	if likely(attr_ob) {
+		DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl, ob, attr_ob, access);
+		Dee_Decref_unlikely(attr_ob);
+	}
+	return -1;
+}
+
+
+
 
 
 

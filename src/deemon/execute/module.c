@@ -1316,9 +1316,9 @@ module_findattr_impl(DeeModuleObject *__restrict self,
 			Dee_attrperm_t perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET;
 			ASSERT(sym->ss_index < self->mo_globalc);
 			if (!(sym->ss_flags & MODSYM_FREADONLY))
-				perm |= (ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
+				perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 			if (sym->ss_flags & MODSYM_FPROPERTY) {
-				perm &= ~(ATTR_ACCESS_GET | ATTR_ACCESS_DEL | ATTR_ACCESS_SET);
+				perm &= ~(Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 				if (!(sym->ss_flags & MODSYM_FCONSTEXPR))
 					perm |= Dee_ATTRPERM_F_PROPERTY;
 			}
@@ -1335,13 +1335,13 @@ module_findattr_impl(DeeModuleObject *__restrict self,
 					if (sym->ss_flags & MODSYM_FPROPERTY) {
 						/* Check which property operations have been bound. */
 						if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
-							perm |= ATTR_ACCESS_GET;
+							perm |= Dee_ATTRPERM_F_CANGET;
 						if (!(sym->ss_flags & MODSYM_FREADONLY)) {
 							/* These callbacks are only allocated if the READONLY flag isn't set. */
 							if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_DEL])
-								perm |= ATTR_ACCESS_DEL;
+								perm |= Dee_ATTRPERM_F_CANDEL;
 							if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_SET])
-								perm |= ATTR_ACCESS_SET;
+								perm |= Dee_ATTRPERM_F_CANSET;
 						}
 					}
 					DeeModule_LockEndRead(self);

@@ -3560,7 +3560,7 @@ type_boundinstanceattr(DeeTypeObject *self, size_t argc,
 	switch (DeeType_BoundInstanceAttr(self, name)) {
 	default:
 		if unlikely(!allow_missing) {
-			err_unknown_attribute(self, name, ATTR_ACCESS_GET);
+			DeeRT_ErrUnknownTypeInstanceAttr(self, name, DeeRT_ATTRIBUTE_ACCESS_BOUND);
 			goto err;
 		}
 		ATTR_FALLTHROUGH

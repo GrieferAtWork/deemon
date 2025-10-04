@@ -27,6 +27,7 @@
 #include <deemon/int.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
+#include <deemon/system.h>
 #include <deemon/util/atomic.h>
 #include <deemon/variant.h>
 
@@ -291,13 +292,6 @@ Dee_variant_setcstrlen(struct Dee_variant *__restrict self,
 }
 
 
-PRIVATE WUNUSED bool DCALL
-ptr_is_static(void const *ptr) {
-	/* TODO: OS-specific magic */
-	(void)ptr;
-	return false;
-}
-
 /* Same as `Dee_variant_init_cstr()', but check at runtime if "str" is guarantied
  * to point into statically allocated memory. If it does, use "Dee_VARIANT_CSTR"
  * as variant typing, else use "Dee_VARIANT_OBJECT" and "DeeString_New()".
@@ -307,7 +301,7 @@ ptr_is_static(void const *ptr) {
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 Dee_variant_init_cstr_maybe(struct Dee_variant *__restrict self,
                             char const *str) {
-	if (!ptr_is_static(str)) {
+	if (!DeeSystem_IsStaticPointer(str)) {
 		DREF DeeObject *obj = DeeString_New(str);
 		if unlikely(!obj)
 			goto err;
@@ -324,7 +318,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) ATTR_INS(2, 3) int DCALL
 Dee_variant_init_cstrlen_maybe(struct Dee_variant *__restrict self,
                                char const *str, size_t len) {
-	if (!ptr_is_static(str)) {
+	if (!DeeSystem_IsStaticPointer(str)) {
 		DREF DeeObject *obj = DeeString_NewSized(str, len);
 		if unlikely(!obj)
 			goto err;

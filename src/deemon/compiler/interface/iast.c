@@ -3029,8 +3029,7 @@ ast_getactiona(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_ACTION);
 		result = NULL;
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 1) {
-		err_unknown_attribute_string(Dee_TYPE(self), "actiona", ATTR_ACCESS_GET);
-		result = NULL;
+		result = DeeRT_ErrUnboundAttrCStr(self, "actiona");
 	} else {
 		result = DeeCompiler_GetAst(me->a_action.a_act0);
 	}
@@ -3057,7 +3056,7 @@ ast_setactiona(Ast *__restrict self,
 	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 1) {
-		result = err_unknown_attribute_string(Dee_TYPE(self), "actiona", ATTR_ACCESS_SET);
+		result = err_cant_access_attribute_string(Dee_TYPE(self), "actiona", ATTR_ACCESS_SET);
 	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
@@ -3082,8 +3081,7 @@ ast_getactionb(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_ACTION);
 		result = NULL;
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 2) {
-		err_unknown_attribute_string(Dee_TYPE(self), "actionb", ATTR_ACCESS_GET);
-		result = NULL;
+		result = DeeRT_ErrUnboundAttrCStr(self, "actionb");
 	} else {
 		result = DeeCompiler_GetAst(me->a_action.a_act1);
 	}
@@ -3110,7 +3108,7 @@ ast_setactionb(Ast *__restrict self,
 	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 2) {
-		result = err_unknown_attribute_string(Dee_TYPE(self), "actionb", ATTR_ACCESS_SET);
+		result = err_cant_access_attribute_string(Dee_TYPE(self), "actionb", ATTR_ACCESS_SET);
 	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
@@ -3135,8 +3133,7 @@ ast_getactionc(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_ACTION);
 		result = NULL;
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 3) {
-		err_unknown_attribute_string(Dee_TYPE(self), "actionc", ATTR_ACCESS_GET);
-		result = NULL;
+		result = DeeRT_ErrUnboundAttrCStr(self, "actionc");
 	} else {
 		result = DeeCompiler_GetAst(me->a_action.a_act2);
 	}
@@ -3163,7 +3160,7 @@ ast_setactionc(Ast *__restrict self,
 	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 3) {
-		result = err_unknown_attribute_string(Dee_TYPE(self), "actionc", ATTR_ACCESS_SET);
+		result = err_cant_access_attribute_string(Dee_TYPE(self), "actionc", ATTR_ACCESS_SET);
 	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);

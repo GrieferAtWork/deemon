@@ -409,7 +409,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 rangemap_iterator_get(DeeTypeObject *__restrict self) {
 	if (self == &RangeMap_Type)
 		return_reference_(&DeeIterator_Type);
-	err_unknown_attribute_string(self, "Iterator", ATTR_ACCESS_GET);
+	DeeRT_ErrUnknownAttrStr(self, "Iterator", DeeRT_ATTRIBUTE_ACCESS_GET);
 	return NULL;
 }
 
