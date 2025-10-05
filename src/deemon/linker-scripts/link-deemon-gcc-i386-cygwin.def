@@ -1139,6 +1139,8 @@ EXPORTS
 	_DeeObject_XInplaceDeepCopyWithRWLock@8=DeeObject_XInplaceDeepCopyWithRWLock@8
 	_DeeObject_Xor@8=DeeObject_Xor@8
 	_DeeObject_XorUInt32@8=DeeObject_XorUInt32@8
+	_DeeRT_ErrCAlreadyBoundInstanceMember@12=DeeRT_ErrCAlreadyBoundInstanceMember@12
+	_DeeRT_ErrCRestrictedAttrCA@12=DeeRT_ErrCRestrictedAttrCA@12
 	_DeeRT_ErrCUnboundAttrCA@8=DeeRT_ErrCUnboundAttrCA@8
 	_DeeRT_ErrCUnboundClassMember@8=DeeRT_ErrCUnboundClassMember@8
 	_DeeRT_ErrCUnboundInstanceMember@12=DeeRT_ErrCUnboundInstanceMember@12
@@ -1162,6 +1164,12 @@ EXPORTS
 	_DeeRT_ErrReadOnlyKeyStr@8=DeeRT_ErrReadOnlyKeyStr@8
 	_DeeRT_ErrReadOnlyKeyStrLen@12=DeeRT_ErrReadOnlyKeyStrLen@12
 	_DeeRT_ErrRegexNotFound@28=DeeRT_ErrRegexNotFound@28
+	_DeeRT_ErrRestrictedAttrEx@12=DeeRT_ErrRestrictedAttrEx@12
+	_DeeRT_ErrRestrictedGetSet@12=DeeRT_ErrRestrictedGetSet@12
+	_DeeRT_ErrRestrictedMember@12=DeeRT_ErrRestrictedMember@12
+	_DeeRT_ErrRestrictedMethod@12=DeeRT_ErrRestrictedMethod@12
+	_DeeRT_ErrTRestrictedAttr@16=DeeRT_ErrTRestrictedAttr@16
+	_DeeRT_ErrTRestrictedAttrCStr@16=DeeRT_ErrTRestrictedAttrCStr@16
 	_DeeRT_ErrTUnboundAttr@12=DeeRT_ErrTUnboundAttr@12
 	_DeeRT_ErrTUnboundAttrCStr@12=DeeRT_ErrTUnboundAttrCStr@12
 	_DeeRT_ErrTUnknownAttr@16=DeeRT_ErrTUnknownAttr@16

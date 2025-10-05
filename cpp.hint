@@ -1451,6 +1451,12 @@
 #define PREFIX_TARGET(...)
 #define F(x) x
 #define X(x) x
+#define S(a,...) a
+#define NLen(x) x
+#define N_len(x) x
+#define NLenHash(x) x##Hash
+#define N_len_hash(x) x##_hash
+#define ATTR_ARG char const *attr
 #define CC
 #define VCC
 #define PRIVATE_AST_GENERATOR_UNPACK_ARGS(...) (__VA_ARGS__,char const*file,int line)

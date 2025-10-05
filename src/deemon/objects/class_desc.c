@@ -47,6 +47,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/typecore.h>
+
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -55,6 +57,9 @@
 
 #include <stddef.h> /* offsetof, size_t */
 #include <stdint.h> /* uint16_t */
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -4077,11 +4082,8 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 	if unlikely(!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
 		goto err_noaccess;
 	/* Make sure not to re-write readonly attributes. */
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
-		return err_cant_access_attribute_string(class_type,
-		                                        DeeString_STR(attr->ca_name),
-		                                        ATTR_ACCESS_DEL);
-	}
+	if unlikely(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+		goto err_noaccess;
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
 		DREF DeeObject *old_value;
 		/* Simple case: directly delete a class-based attr. */
@@ -4106,9 +4108,7 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 	}
 	return 0;
 err_noaccess:
-	return err_cant_access_attribute_string(class_type,
-	                                        DeeString_STR(attr->ca_name),
-	                                        ATTR_ACCESS_DEL);
+	return DeeRT_ErrCRestrictedAttrCA(class_type, attr, DeeRT_ATTRIBUTE_ACCESS_DEL);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -4118,14 +4118,9 @@ DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
 	struct class_desc *my_class = DeeClass_DESC(class_type);
 	if unlikely(!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
 		goto err_noaccess;
-
 	/* Make sure not to re-write readonly attributes. */
-	if unlikely(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
-		err_cant_access_attribute_string(class_type,
-		                                 DeeString_STR(attr->ca_name),
-		                                 ATTR_ACCESS_SET);
-		goto err;
-	}
+	if unlikely(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+		goto err_noaccess;
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *old_value[3];
 		if (DeeObject_AssertType(value, &DeeProperty_Type))
@@ -4162,9 +4157,7 @@ DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
 	}
 	return 0;
 err_noaccess:
-	err_cant_access_attribute_string(class_type,
-	                                 DeeString_STR(attr->ca_name),
-	                                 ATTR_ACCESS_SET);
+	DeeRT_ErrCRestrictedAttrCA(class_type, attr, DeeRT_ATTRIBUTE_ACCESS_SET);
 err:
 	return -1;
 }
@@ -4218,9 +4211,7 @@ DeeInstance_GetAttribute(struct class_desc *__restrict desc,
 unbound:
 	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
-	err_cant_access_attribute_string_c(desc,
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_GET);
+	DeeRT_ErrCRestrictedAttrCA(this_arg, attr, DeeRT_ATTRIBUTE_ACCESS_GET);
 	return NULL;
 }
 
@@ -4307,9 +4298,7 @@ DeeInstance_CallAttribute(struct class_desc *__restrict desc,
 unbound:
 	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
-	err_cant_access_attribute_string_c(desc,
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_GET);
+	DeeRT_ErrCRestrictedAttrCA(this_arg, attr, DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
 	return NULL;
 }
@@ -4357,9 +4346,7 @@ DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
 unbound:
 	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
-	err_cant_access_attribute_string_c(desc,
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_GET);
+	DeeRT_ErrCRestrictedAttrCA(this_arg, attr, DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
 	return NULL;
 }
@@ -4408,9 +4395,7 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
 err_unbound:
 	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 err_illegal:
-	err_cant_access_attribute_string_c(desc,
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_GET);
+	DeeRT_ErrCRestrictedAttrCA(this_arg, attr, DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
 	return NULL;
 }
@@ -4459,9 +4444,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *
 unbound:
 	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
-	err_cant_access_attribute_string_c(desc,
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_GET);
+	DeeRT_ErrCRestrictedAttrCA(this_arg, attr, DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
 	return NULL;
 #else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
@@ -4519,9 +4502,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *
 unbound:
 	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
-	err_cant_access_attribute_string_c(desc,
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_GET);
+	DeeRT_ErrCRestrictedAttrCA(this_arg, attr, DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
 	return NULL;
 #else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
@@ -4542,7 +4523,7 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
 	ASSERT_OBJECT(this_arg);
 
 	/* Make sure that the access is allowed. */
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+	if unlikely(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 		goto illegal;
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
@@ -4574,9 +4555,7 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
 	}
 	return 0;
 illegal:
-	err_cant_access_attribute_string_c(desc,
-	                            DeeString_STR(attr->ca_name),
-	                            ATTR_ACCESS_DEL);
+	return DeeRT_ErrCRestrictedAttrCA(this_arg, attr, DeeRT_ATTRIBUTE_ACCESS_DEL);
 err:
 	return -1;
 }
@@ -4630,9 +4609,7 @@ DeeInstance_SetAttribute(struct class_desc *__restrict desc,
 	}
 	return 0;
 illegal:
-	err_cant_access_attribute_string_c(desc,
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_SET);
+	return DeeRT_ErrCRestrictedAttrCA(this_arg, attr, DeeRT_ATTRIBUTE_ACCESS_SET);
 err:
 	return -1;
 }
@@ -4666,10 +4643,12 @@ INTERN WUNUSED NONNULL((1, 2, 3, 4)) int
 	}
 	Dee_instance_desc_lock_endwrite(self);
 	return 0;
+	{
+		DeeObject *instance;
 illegal:
-	return err_cant_access_attribute_string_c(desc,
-	                                          DeeString_STR(attr->ca_name),
-	                                          ATTR_ACCESS_SET);
+		instance = (DeeObject *)((byte_t *)self - desc->cd_offset);
+		return DeeRT_ErrRestrictedAttrCADuringInitialization(Dee_TYPE(instance), attr);
+	}
 }
 
 
@@ -4901,31 +4880,6 @@ PUBLIC NONNULL((1, 2, 4)) void
 	Dee_XDecref(old_value);
 }
 
-PRIVATE ATTR_COLD NONNULL((1)) int
-(DCALL err_readonly_member_already_bound)(struct class_desc *__restrict desc,
-                                          uint16_t addr) {
-	/* Check if we can find the proper member so we can pass its name. */
-	size_t i;
-	char const *name = "??" "?";
-	for (i = 0; i <= desc->cd_desc->cd_iattr_mask; ++i) {
-		struct class_attribute *attr;
-		attr = &desc->cd_desc->cd_iattr_list[i];
-		if (!attr->ca_name)
-			continue;
-		if (addr < attr->ca_addr)
-			continue;
-		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
-			continue;
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
-			continue;
-		name = DeeString_STR(attr->ca_name);
-		break;
-	}
-
-	/* Throw the error. */
-	return err_cant_access_attribute_string_c(desc, name, ATTR_ACCESS_SET);
-}
-
 PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 (DCALL DeeInstance_SetMemberInitial)(/*Class*/ DeeTypeObject *tp_self,
                                      /*Instance*/ DeeObject *self,
@@ -4945,7 +4899,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 	if unlikely(inst->id_vtab[addr]) {
 		Dee_instance_desc_lock_endwrite(inst);
 		Dee_DecrefNokill(value);
-		return err_readonly_member_already_bound(desc, addr);
+		return DeeRT_ErrCAlreadyBoundInstanceMember(tp_self, self, addr);
 	}
 	inst->id_vtab[addr] = value;
 	Dee_instance_desc_lock_endwrite(inst);

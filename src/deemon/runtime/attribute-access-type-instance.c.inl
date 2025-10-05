@@ -203,31 +203,31 @@
 #elif defined(DEFINE_DeeType_DelInstanceAttrStringHash)
 #define LOCAL_DeeType_AccessInstanceAttr                             DeeType_DelInstanceAttrStringHash
 #define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_DelCachedInstanceAttrStringHash(self, attr, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL) : 1)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL) : 1)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL) : 1)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedMethod(tp_self, DeeType_LocateIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash), DeeRT_ATTRIBUTE_ACCESS_DEL)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedGetSet(tp_self, DeeType_LocateIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash), DeeRT_ATTRIBUTE_ACCESS_DEL)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedMember(tp_self, DeeType_LocateIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash), DeeRT_ATTRIBUTE_ACCESS_DEL)
 #define LOCAL_IS_DEL
 #elif defined(DEFINE_DeeType_DelInstanceAttrStringLenHash)
 #define LOCAL_DeeType_AccessInstanceAttr                             DeeType_DelInstanceAttrStringLenHash
 #define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_DelCachedInstanceAttrStringLenHash(self, attr, attrlen, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_DEL) : 1)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_DEL) : 1)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_DEL) : 1)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedMethod(tp_self, DeeType_LocateIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash), DeeRT_ATTRIBUTE_ACCESS_DEL)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedGetSet(tp_self, DeeType_LocateIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash), DeeRT_ATTRIBUTE_ACCESS_DEL)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedMember(tp_self, DeeType_LocateIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash), DeeRT_ATTRIBUTE_ACCESS_DEL)
 #define LOCAL_IS_DEL
 #define LOCAL_HAS_len
 #elif defined(DEFINE_DeeType_SetInstanceAttrStringHash)
 #define LOCAL_DeeType_AccessInstanceAttr                             DeeType_SetInstanceAttrStringHash
 #define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_SetCachedInstanceAttrStringHash(self, attr, hash, value)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_SET) : 1)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_SET) : 1)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_SET) : 1)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedMethod(tp_self, DeeType_LocateIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash), DeeRT_ATTRIBUTE_ACCESS_SET)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedGetSet(tp_self, DeeType_LocateIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash), DeeRT_ATTRIBUTE_ACCESS_SET)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedMember(tp_self, DeeType_LocateIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash), DeeRT_ATTRIBUTE_ACCESS_SET)
 #define LOCAL_IS_SET
 #elif defined(DEFINE_DeeType_SetInstanceAttrStringLenHash)
 #define LOCAL_DeeType_AccessInstanceAttr                             DeeType_SetInstanceAttrStringLenHash
 #define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_SetCachedInstanceAttrStringLenHash(self, attr, attrlen, hash, value)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedMethod(tp_self, DeeType_LocateIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash), DeeRT_ATTRIBUTE_ACCESS_SET)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedGetSet(tp_self, DeeType_LocateIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash), DeeRT_ATTRIBUTE_ACCESS_SET)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) _DeeRT_MaybeErrRestrictedMember(tp_self, DeeType_LocateIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash), DeeRT_ATTRIBUTE_ACCESS_SET)
 #define LOCAL_IS_SET
 #define LOCAL_HAS_len
 #elif defined(DEFINE_DeeType_FindInstanceAttr)
@@ -251,11 +251,11 @@
 DECL_BEGIN
 
 #ifdef LOCAL_IS_SET
-#define LOCAL_ATTR_ACCESS_OP DeeRT_ATTRIBUTE_ACCESS_SET
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_SET
 #elif defined(LOCAL_IS_DEL)
-#define LOCAL_ATTR_ACCESS_OP DeeRT_ATTRIBUTE_ACCESS_DEL
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_DEL
 #else /* ... */
-#define LOCAL_ATTR_ACCESS_OP DeeRT_ATTRIBUTE_ACCESS_GET
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_GET
 #endif /* !... */
 
 #if defined(LOCAL_IS_GET) || defined(LOCAL_IS_CALL_LIKE)
@@ -389,8 +389,10 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #ifdef LOCAL_IS_HAS
 				return true;
 #else /* LOCAL_IS_HAS */
-				if (!class_attribute_mayaccess(cattr, iter)) {
-					err_class_protected_member(iter, cattr);
+				if unlikely(!class_attribute_mayaccess(cattr, iter)) {
+					DeeRT_ErrCRestrictedAttrCA(self, cattr,
+					                           LOCAL_DeeRT_ATTRIBUTE_ACCESS |
+					                           DeeRT_ATTRIBUTE_ACCESS_PRIVATE);
 					goto err;
 				}
 				return LOCAL_DeeClass_AccessInstanceAttribute(iter, cattr);
@@ -418,9 +420,9 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 
 #if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FIND)
 #ifdef LOCAL_HAS_len
-	DeeRT_ErrUnknownTypeInstanceAttrStrLen(self, attr, attrlen, LOCAL_ATTR_ACCESS_OP);
+	DeeRT_ErrUnknownTypeInstanceAttrStrLen(self, attr, attrlen, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 #else /* LOCAL_HAS_len */
-	DeeRT_ErrUnknownTypeInstanceAttrStr(self, attr, LOCAL_ATTR_ACCESS_OP);
+	DeeRT_ErrUnknownTypeInstanceAttrStr(self, attr, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 #endif /* !LOCAL_HAS_len */
 err:
 	return LOCAL_ERROR_RETURN_VALUE;
@@ -448,7 +450,7 @@ done:
 #undef LOCAL_IS_FIND
 #undef LOCAL_HAS_len
 #undef LOCAL_ATTR_NONNULL
-#undef LOCAL_ATTR_ACCESS_OP
+#undef LOCAL_DeeRT_ATTRIBUTE_ACCESS
 
 #undef LOCAL_DeeType_QueryInstanceAttribute
 #undef LOCAL_DeeClass_AccessInstanceAttribute

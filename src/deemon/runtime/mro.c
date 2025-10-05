@@ -376,8 +376,7 @@ Dee_attrdesc_callget(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 
 	default: break;
 	}
-	err_cant_access_attribute_string((DeeTypeObject *)self->ad_info.ai_decl,
-	                                 self->ad_name, ATTR_ACCESS_GET);
+	DeeRT_ErrRestrictedAttrEx(thisarg, self, DeeRT_ATTRIBUTE_ACCESS_GET);
 err:
 	return NULL;
 }
@@ -474,8 +473,7 @@ Dee_attrdesc_callbound(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 
 	default: break;
 	}
-	err_cant_access_attribute_string((DeeTypeObject *)self->ad_info.ai_decl,
-	                                 self->ad_name, ATTR_ACCESS_GET);
+	DeeRT_ErrRestrictedAttrEx(thisarg, self, DeeRT_ATTRIBUTE_ACCESS_BOUND);
 err:
 	return Dee_BOUND_ERR;
 }
@@ -561,8 +559,7 @@ Dee_attrdesc_calldel(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 
 	default: break;
 	}
-	err_cant_access_attribute_string((DeeTypeObject *)self->ad_info.ai_decl,
-	                                 self->ad_name, ATTR_ACCESS_DEL);
+	DeeRT_ErrRestrictedAttrEx(thisarg, self, DeeRT_ATTRIBUTE_ACCESS_DEL);
 err:
 	return -1;
 }
@@ -649,8 +646,7 @@ Dee_attrdesc_callset(struct Dee_attrdesc const *self, DeeObject *thisarg, DeeObj
 
 	default: break;
 	}
-	err_cant_access_attribute_string((DeeTypeObject *)self->ad_info.ai_decl,
-	                                 self->ad_name, ATTR_ACCESS_SET);
+	DeeRT_ErrRestrictedAttrEx(thisarg, self, DeeRT_ATTRIBUTE_ACCESS_SET);
 err:
 	return -1;
 }
@@ -783,8 +779,7 @@ again:
 
 	default: break;
 	}
-	err_cant_access_attribute_string((DeeTypeObject *)self->ad_info.ai_decl,
-	                                 self->ad_name, ATTR_ACCESS_GET);
+	DeeRT_ErrRestrictedAttrEx(thisarg, self, DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
 	return NULL;
 assert_no_kw:

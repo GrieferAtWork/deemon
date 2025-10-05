@@ -3096,7 +3096,7 @@ instance_autoload_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 		goto err;
 	}
 	if unlikely(!CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
-		err_cant_access_attribute(data->ialf_tp_self, key, ATTR_ACCESS_SET);
+		DeeRT_ErrRestrictedAttrCADuringInitialization(data->ialf_tp_self, at);
 		goto err;
 	}
 	if unlikely(at->ca_addr < data->ialf_next_table_index) {
@@ -3153,7 +3153,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				goto err;
 			}
 			if unlikely(!CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
-				err_cant_access_attribute(tp_self, kwds->kw_map[i].ke_name, ATTR_ACCESS_SET);
+				DeeRT_ErrRestrictedAttrCADuringInitialization(tp_self, at);
 				goto err;
 			}
 			if unlikely(at->ca_addr < next_table_index) {

@@ -534,7 +534,7 @@ mfkv_getitem(MapFromKeys *self, DeeObject *key) {
 	int result = DeeObject_InvokeMethodHint(seq_contains, self->mfk_keys, key);
 	if unlikely(result <= 0) {
 		if (result == 0)
-			DeeRT_ErrUnknownKey((DeeObject *)self, key);
+			DeeRT_ErrUnknownKey(self, key);
 		goto err;
 	}
 	return_reference_(self->mfk_value);
@@ -560,7 +560,7 @@ mfkc_getitem(MapFromKeys *self, DeeObject *key) {
 	int result = DeeObject_InvokeMethodHint(seq_contains, self->mfk_keys, key);
 	if unlikely(result <= 0) {
 		if (result == 0)
-			DeeRT_ErrUnknownKey((DeeObject *)self, key);
+			DeeRT_ErrUnknownKey(self, key);
 		goto err;
 	}
 	return DeeObject_Call(self->mfk_value, 1, &key);

@@ -366,47 +366,6 @@ type_obmemb_iterattr(DeeTypeObject *__restrict tp_self,
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
-type_getset_typeof(struct type_getset const *chain,
-                   DeeObject *__restrict self) {
-	DeeTypeObject *result;
-	DeeTypeMRO mro;
-	result = DeeTypeMRO_Init(&mro, Dee_TYPE(self));
-	do {
-		if (result->tp_getsets == chain)
-			return result;
-	} while ((result = DeeTypeMRO_Next(&mro, result)) != NULL);
-	if (DeeType_Check(self)) {
-		result = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-		do {
-			if (result->tp_class_getsets == chain)
-				return result;
-		} while ((result = DeeTypeMRO_Next(&mro, result)) != NULL);
-	}
-	return Dee_TYPE(self);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
-type_member_typeof(struct type_member const *chain,
-                   DeeObject *__restrict self) {
-	DeeTypeObject *result;
-	DeeTypeMRO mro;
-	result = DeeTypeMRO_Init(&mro, Dee_TYPE(self));
-	do {
-		if (result->tp_members == chain)
-			return result;
-	} while ((result = DeeTypeMRO_Next(&mro, result)) != NULL);
-	if (DeeType_Check(self)) {
-		result = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-		do {
-			if (result->tp_class_members == chain)
-				return result;
-		} while ((result = DeeTypeMRO_Next(&mro, result)) != NULL);
-	}
-	return Dee_TYPE(self);
-}
-
-
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obmeth_call(DeeTypeObject *cls_type,
                  struct type_method const *desc,
@@ -533,8 +492,7 @@ type_getset_get(struct type_getset const *desc,
                 DeeObject *__restrict self) {
 	if likely(desc->gs_get)
 		return (*desc->gs_get)(self);
-	err_cant_access_attribute_string(type_getset_typeof(desc, self),
-	                                 desc->gs_name, ATTR_ACCESS_GET);
+	DeeRT_ErrRestrictedGetSet(self, desc, DeeRT_ATTRIBUTE_ACCESS_GET);
 	return NULL;
 }
 
@@ -543,8 +501,7 @@ type_getset_del(struct type_getset const *desc,
                 DeeObject *__restrict self) {
 	if likely(desc->gs_del)
 		return (*desc->gs_del)(self);
-	return err_cant_access_attribute_string(type_getset_typeof(desc, self),
-	                                        desc->gs_name, ATTR_ACCESS_DEL);
+	return DeeRT_ErrRestrictedGetSet(self, desc, DeeRT_ATTRIBUTE_ACCESS_DEL);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -552,8 +509,7 @@ type_getset_set(struct type_getset const *desc,
                 DeeObject *self, DeeObject *value) {
 	if likely(desc->gs_set)
 		return (*desc->gs_set)(self, value);
-	return err_cant_access_attribute_string(type_getset_typeof(desc, self),
-	                                        desc->gs_name, ATTR_ACCESS_SET);
+	return DeeRT_ErrRestrictedGetSet(self, desc, DeeRT_ATTRIBUTE_ACCESS_SET);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -568,7 +524,7 @@ type_obprop_call(DeeTypeObject *cls_type,
 		goto err;
 	return (*desc->gs_get)(thisarg);
 err_unbound:
-	err_cant_access_attribute_string(cls_type, desc->gs_name, ATTR_ACCESS_GET);
+	DeeRT_ErrRestrictedGetSet(cls_type, desc, DeeRT_ATTRIBUTE_ACCESS_GET);
 err:
 	return NULL;
 }
@@ -587,7 +543,7 @@ type_obprop_call_kw(DeeTypeObject *cls_type,
 		goto err;
 	return (*desc->gs_get)(thisarg);
 err_unbound:
-	err_cant_access_attribute_string(cls_type, desc->gs_name, ATTR_ACCESS_GET);
+	DeeRT_ErrRestrictedGetSet(cls_type, desc, DeeRT_ATTRIBUTE_ACCESS_GET);
 err:
 	return NULL;
 }
@@ -613,7 +569,7 @@ err_thisarg:
 err:
 	return NULL;
 err_unbound:
-	err_cant_access_attribute_string(cls_type, desc->gs_name, ATTR_ACCESS_GET);
+	DeeRT_ErrRestrictedGetSet(cls_type, desc, DeeRT_ATTRIBUTE_ACCESS_GET);
 	goto err;
 }
 
@@ -1070,8 +1026,7 @@ Dee_type_member_set(struct type_member const *desc,
 		goto err_cant_access;
 	return Dee_type_member_set_impl(desc, self, value);
 err_cant_access:
-	return err_cant_access_attribute_string(type_member_typeof(desc, self),
-	                                        desc->m_name, ATTR_ACCESS_SET);
+	return DeeRT_ErrRestrictedMember(self, desc, DeeRT_ATTRIBUTE_ACCESS_SET);
 }
 
 
@@ -1089,8 +1044,7 @@ Dee_type_member_del(struct type_member const *desc, DeeObject *self) {
 	}
 	return Dee_type_member_set_impl(desc, self, Dee_None);
 cant_access:
-	return err_cant_access_attribute_string(type_member_typeof(desc, self),
-	                                        desc->m_name, ATTR_ACCESS_SET);
+	return DeeRT_ErrRestrictedMember(self, desc, DeeRT_ATTRIBUTE_ACCESS_DEL);
 }
 
 #undef IF_THREADS

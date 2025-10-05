@@ -1557,7 +1557,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 dict_mh_pop(Dict *self, DeeObject *key) {
 	DREF DeeObject *result = dict_popvalue(self, key);
 	if unlikely(result == ITER_DONE) {
-		DeeRT_ErrUnknownKey((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey(self, key);
 		result = NULL;
 	}
 	return result;
@@ -1577,7 +1577,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 dict_getitem(Dict *self, DeeObject *key) {
 	DREF DeeObject *result = dict_trygetitem(self, DeeObject key);
 	if unlikely(result == ITER_DONE) {
-		DeeRT_ErrUnknownKey((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey(self, key);
 		result = NULL;
 	}
 	return result;

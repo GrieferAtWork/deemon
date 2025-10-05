@@ -352,11 +352,11 @@
 DECL_BEGIN
 
 #ifdef LOCAL_IS_SET
-#define LOCAL_ATTR_ACCESS_OP DeeRT_ATTRIBUTE_ACCESS_SET
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_SET
 #elif defined(LOCAL_IS_DEL)
-#define LOCAL_ATTR_ACCESS_OP DeeRT_ATTRIBUTE_ACCESS_DEL
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_DEL
 #else /* ... */
-#define LOCAL_ATTR_ACCESS_OP DeeRT_ATTRIBUTE_ACCESS_GET
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_GET
 #endif /* !... */
 
 #if defined(LOCAL_IS_GET) || defined(LOCAL_IS_CALL_LIKE)
@@ -553,8 +553,10 @@ continue_at_iter:
 				retinfo->ai_value.v_attr = cattr;
 				return true;
 #else /* ... */
-				if (!class_attribute_mayaccess(cattr, iter)) {
-					err_class_protected_member(iter, cattr);
+				if unlikely(!class_attribute_mayaccess(cattr, iter)) {
+					DeeRT_ErrCRestrictedAttrCA(self, cattr,
+					                           LOCAL_DeeRT_ATTRIBUTE_ACCESS |
+					                           DeeRT_ATTRIBUTE_ACCESS_PRIVATE);
 					goto err;
 				}
 				return LOCAL_DeeClass_AccessClassAttribute(iter, cattr);
@@ -570,8 +572,10 @@ continue_at_iter:
 				retinfo->ai_value.v_instance_attr = cattr;
 				return true;
 #else /* ... */
-				if (!class_attribute_mayaccess(cattr, iter)) {
-					err_class_protected_member(iter, cattr);
+				if unlikely(!class_attribute_mayaccess(cattr, iter)) {
+					DeeRT_ErrCRestrictedAttrCA(self, cattr,
+					                           LOCAL_DeeRT_ATTRIBUTE_ACCESS |
+					                           DeeRT_ATTRIBUTE_ACCESS_PRIVATE);
 					goto err;
 				}
 				return LOCAL_DeeClass_AccessInstanceAttribute(iter, cattr);
@@ -627,9 +631,9 @@ continue_at_iter:
 
 #if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FINDINFO) && !defined(LOCAL_IS_FIND) && !defined(LOCAL_IS_ITER)
 #ifdef LOCAL_HAS_len
-	DeeRT_ErrUnknownTypeAttrStrLen(self, attr, attrlen, LOCAL_ATTR_ACCESS_OP);
+	DeeRT_ErrUnknownTypeAttrStrLen(self, attr, attrlen, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 #else /* LOCAL_HAS_len */
-	DeeRT_ErrUnknownTypeAttrStr(self, attr, LOCAL_ATTR_ACCESS_OP);
+	DeeRT_ErrUnknownTypeAttrStr(self, attr, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 #endif /* !LOCAL_HAS_len */
 err:
 	return LOCAL_ERROR_RETURN_VALUE;
@@ -684,7 +688,7 @@ err:
 #undef LOCAL_IS_ITER
 #undef LOCAL_HAS_len
 #undef LOCAL_ATTR_NONNULL
-#undef LOCAL_ATTR_ACCESS_OP
+#undef LOCAL_DeeRT_ATTRIBUTE_ACCESS
 
 #undef LOCAL_DeeType_QueryClassAttribute
 #undef LOCAL_DeeType_QueryInstanceAttribute

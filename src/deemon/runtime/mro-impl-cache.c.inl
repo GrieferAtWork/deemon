@@ -990,13 +990,11 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 
 #ifdef LOCAL_HAS_len
 #define LOCAL_Dee_membercache_slot_matches(item)             streq_len(item->mcs_name, LOCAL_attr, attrlen)
-#define LOCAL_err_cant_access_attribute(tp, access)          err_cant_access_attribute_string_len(tp, LOCAL_attr, attrlen, access)
 #define LOCAL_err_classmember_requires_1_argument()          err_classmember_requires_1_argument_string_len(tp_self, LOCAL_attr, attrlen)
 #define LOCAL_err_classproperty_requires_1_argument()        err_classproperty_requires_1_argument_string_len(tp_self, LOCAL_attr, attrlen)
 #define LOCAL_err_classmethod_requires_at_least_1_argument() err_classmethod_requires_at_least_1_argument_string_len(tp_self, LOCAL_attr, attrlen)
 #else /* LOCAL_HAS_len */
 #define LOCAL_Dee_membercache_slot_matches(item)             streq(item->mcs_name, LOCAL_attr)
-#define LOCAL_err_cant_access_attribute(tp, access)          err_cant_access_attribute_string(tp, LOCAL_attr, access)
 #define LOCAL_err_classmember_requires_1_argument()          err_classmember_requires_1_argument_string(tp_self, LOCAL_attr)
 #define LOCAL_err_classproperty_requires_1_argument()        err_classproperty_requires_1_argument_string(tp_self, LOCAL_attr)
 #define LOCAL_err_classmethod_requires_at_least_1_argument() err_classmethod_requires_at_least_1_argument_string(tp_self, LOCAL_attr)
@@ -1010,11 +1008,11 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
      defined(LOCAL_IS_CALL) || defined(LOCAL_IS_CALL_KW) ||                       \
      defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW) ||           \
      defined(LOCAL_IS_VCALLF))
-#define LOCAL_ATTR_ACCESS ATTR_ACCESS_GET
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_GET
 #elif defined(LOCAL_IS_DEL)
-#define LOCAL_ATTR_ACCESS ATTR_ACCESS_DEL
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_DEL
 #elif defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
-#define LOCAL_ATTR_ACCESS ATTR_ACCESS_SET
+#define LOCAL_DeeRT_ATTRIBUTE_ACCESS DeeRT_ATTRIBUTE_ACCESS_SET
 #endif /* !LOCAL_IS_CLASS */
 #if (defined(LOCAL_HAS_self) &&                              \
      (defined(LOCAL_IS_CALL) || defined(LOCAL_IS_CALL_KW) || \
@@ -1274,17 +1272,23 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 			return DeeClsProperty_NewEx(decl, get, del, set, bound);
 #else /* !LOCAL_HAS_self */
+			char const *getset_name;
+			DeeTypeObject *decl;
 			if likely(get) {
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 				return (*get)(LOCAL_self);
 			}
+			getset_name = item->mcs_name;
+			decl = item->mcs_decl;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			LOCAL_err_cant_access_attribute(tp_self, LOCAL_ATTR_ACCESS);
+			DeeRT_ErrTRestrictedAttrCStr(decl, LOCAL_self, getset_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 			goto err;
 #define NEED_err
 #endif /* LOCAL_HAS_self */
 #else /* LOCAL_IS_GET */
 			Dee_getmethod_t getter;
+			DeeTypeObject *decl;
+			char const *getset_name;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
 #ifdef LOCAL_HAS_self
@@ -1307,7 +1311,7 @@ check_and_invoke_callback:
 #else /* LOCAL_HAS_self */
 				DREF DeeObject *result;
 				/*maybe:DREF*/ DeeObject *thisarg;
-				DeeTypeObject *decl = item->mcs_decl;
+				decl = item->mcs_decl;
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 				if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
 					goto err;
@@ -1320,8 +1324,14 @@ check_and_invoke_callback:
 				return result;
 #endif /* !LOCAL_HAS_self */
 			}
+			getset_name = item->mcs_name;
+			decl = item->mcs_decl;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			LOCAL_err_cant_access_attribute(tp_self, LOCAL_ATTR_ACCESS);
+#ifdef LOCAL_HAS_self
+			DeeRT_ErrTRestrictedAttrCStr(decl, LOCAL_self, getset_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
+#else /* LOCAL_HAS_self */
+			DeeRT_ErrRestrictedInstanceAttrCStr(decl, getset_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
+#endif /* !LOCAL_HAS_self */
 			goto err;
 #define NEED_err
 #endif /* !LOCAL_IS_GET */
@@ -1459,11 +1469,13 @@ check_and_invoke_callback:
 			return DeeClsProperty_NewEx(decl, get, del, set, bound);
 #else /* LOCAL_IS_GET */
 			Dee_getmethod_t getter;
+			DeeTypeObject *decl;
+			char const *getset_name;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
 				DREF DeeObject *result;
 				/*maybe:DREF*/ DeeObject *thisarg;
-				DeeTypeObject *decl = item->mcs_decl;
+				decl = item->mcs_decl;
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 				if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
 					goto err;
@@ -1475,8 +1487,10 @@ check_and_invoke_callback:
 				LOCAL_unpack_one_for_getter_cleanup(thisarg);
 				return result;
 			}
+			decl = item->mcs_decl;
+			getset_name = item->mcs_name;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			LOCAL_err_cant_access_attribute(tp_self, LOCAL_ATTR_ACCESS);
+			DeeRT_ErrRestrictedInstanceAttrCStr(decl, getset_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 			goto err;
 #define NEED_err
 #endif /* !LOCAL_IS_GET */
@@ -1550,8 +1564,13 @@ check_and_invoke_callback:
 			return 1;
 #elif defined(LOCAL_IS_DEL) || defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
 			DeeTypeObject *decl = item->mcs_decl;
+			char const *item_name = item->mcs_name;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			return LOCAL_err_cant_access_attribute(decl, LOCAL_ATTR_ACCESS);
+#ifdef LOCAL_HAS_self
+			return DeeRT_ErrTRestrictedAttrCStr(decl, LOCAL_self, item_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
+#else /* LOCAL_HAS_self */
+			return DeeRT_ErrRestrictedInstanceAttrCStr(decl, item_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
+#endif /* !LOCAL_HAS_self */
 #else /* ... */
 #error "Invalid configuration"
 #endif /* !... */
@@ -1582,27 +1601,31 @@ check_and_invoke_callback:
 #elif defined(LOCAL_IS_DEL)
 			Dee_delmethod_t del;
 			DeeTypeObject *decl;
+			char const *getset_name;
 			del = item->mcs_getset.gs_del;
 			if likely(del) {
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 				return (*del)(LOCAL_self);
 			}
 			decl = item->mcs_decl;
+			getset_name = item->mcs_name;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			LOCAL_err_cant_access_attribute(decl, LOCAL_ATTR_ACCESS);
+			DeeRT_ErrTRestrictedAttrCStr(decl, LOCAL_self, getset_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 			goto err;
 #define NEED_err
 #elif defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
 			Dee_setmethod_t set;
 			DeeTypeObject *decl;
+			char const *getset_name;
 			set = item->mcs_getset.gs_set;
 			if likely(set) {
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 				return (*set)(LOCAL_self, value);
 			}
 			decl = item->mcs_decl;
+			getset_name = item->mcs_name;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			LOCAL_err_cant_access_attribute(decl, LOCAL_ATTR_ACCESS);
+			DeeRT_ErrTRestrictedAttrCStr(decl, LOCAL_self, getset_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 			goto err;
 #define NEED_err
 #else /* ... */
@@ -1943,10 +1966,9 @@ err:
 #endif /* !... */
 #endif /* NEED_err */
 
-#undef LOCAL_ATTR_ACCESS
+#undef LOCAL_DeeRT_ATTRIBUTE_ACCESS
 #undef LOCAL_DeeInstance_DESC
 #undef LOCAL_Dee_membercache_slot_matches
-#undef LOCAL_err_cant_access_attribute
 #undef LOCAL_err_classmember_requires_1_argument
 #undef LOCAL_err_classproperty_requires_1_argument
 #undef LOCAL_err_classmethod_requires_at_least_1_argument

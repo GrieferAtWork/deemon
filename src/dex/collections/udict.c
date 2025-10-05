@@ -765,7 +765,7 @@ udict_getitem(UDict *self, DeeObject *key) {
 			break;
 	}
 	UDict_LockEndRead(self);
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 	return NULL;
 }
 
@@ -827,7 +827,7 @@ udict_mh_pop(UDict *self, DeeObject *key) {
 			break;
 	}
 	UDict_LockEndWrite(self);
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 	return NULL;
 }
 
@@ -1895,7 +1895,7 @@ urodict_getitem(URoDict *self, DeeObject *key) {
 		if (USAME(item->di_key, key))
 			return_reference_(item->di_value); /* Found it! */
 	}
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 	return NULL;
 }
 

@@ -41,6 +41,7 @@ DECL_BEGIN
  * exception. Thrown by user-code "throw;" (re-throw exception) statement
  * when there is no active exception. */
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNoActiveException)(void);
+#define DeeRT_ErrNoActiveException() Dee_ASSUMED_VALUE((DeeRT_ErrNoActiveException)(), -1)
 
 
 /* Throws a `DeeError_IntegerOverflow' indicating that some an integer
@@ -58,6 +59,12 @@ DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int
                                  /*Numeric*/ DeeObject *minval,
                                  /*Numeric*/ DeeObject *maxval,
                                  bool positive);
+#define DeeRT_ErrIntegerOverflow(value, minval, maxval, positive)                          \
+	Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflow)((DeeObject *)Dee_REQUIRES_OBJECT(value),  \
+	                                             (DeeObject *)Dee_REQUIRES_OBJECT(minval), \
+	                                             (DeeObject *)Dee_REQUIRES_OBJECT(maxval), \
+	                                             positive),                                \
+	                  -1)
 
 /* Same as "DeeRT_ErrIntegerOverflow", but minval/maxval are set as
  * >> minval   = (flags & (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_ANYSIGN)) ? -(1 << (num_bits - 1)) : 0;
@@ -67,25 +74,37 @@ DFUNDEF ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrIntegerOverflowEx)(/*Numeric*/ DeeObject *value,
                                    size_t num_bits,
                                    unsigned int flags);
+#define DeeRT_ErrIntegerOverflowEx(value, num_bits, flags) \
+	Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowEx)((DeeObject *)Dee_REQUIRES_OBJECT(value), num_bits, flags), -1)
 #define DeeRT_ErrIntegerOverflowEx_F_NEGATIVE 0 /* Given "value" is negative (and less than "minval") */
 #define DeeRT_ErrIntegerOverflowEx_F_POSITIVE 1 /* Given "value" is positive (and greater than "maxval") */
 #define DeeRT_ErrIntegerOverflowEx_F_UNSIGNED 0 /* Wanted to case to "uint{num_bits}_t" */
 #define DeeRT_ErrIntegerOverflowEx_F_SIGNED   2 /* Wanted to case to "int{num_bits}_t" */
 #define DeeRT_ErrIntegerOverflowEx_F_ANYSIGN  4 /* Wanted to case to "int{num_bits}_t" or "uint{num_bits}_t" */
 
+
+
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowS)(Dee_ssize_t value, Dee_ssize_t minval, Dee_ssize_t maxval);
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU)(size_t value, size_t maxval);
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowUMul)(size_t lhs, size_t rhs);
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowUAdd)(size_t lhs, size_t rhs);
+#define DeeRT_ErrIntegerOverflowS(value, minval, maxval) Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowS)(value, minval, maxval), -1)
+#define DeeRT_ErrIntegerOverflowU(value, maxval)         Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowU)(value, maxval), -1)
+#define DeeRT_ErrIntegerOverflowUMul(lhs, rhs)           Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowUMul)(lhs, rhs), -1)
+#define DeeRT_ErrIntegerOverflowUAdd(lhs, rhs)           Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowUAdd)(lhs, rhs), -1)
 #if __SIZEOF_SIZE_T__ >= 8
 #define DeeRT_ErrIntegerOverflowS64(value, minval, maxval) DeeRT_ErrIntegerOverflowS(value, minval, maxval)
 #define DeeRT_ErrIntegerOverflowU64(value, maxval)         DeeRT_ErrIntegerOverflowU(value, maxval)
 #else  /* __SIZEOF_SIZE_T__ >= 8 */
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowS64)(int64_t value, int64_t minval, int64_t maxval);
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU64)(uint64_t value, uint64_t maxval);
+#define DeeRT_ErrIntegerOverflowS64(value, minval, maxval) Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowS64)(value, minval, maxval), -1)
+#define DeeRT_ErrIntegerOverflowU64(value, maxval)         Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowU64)(value, maxval), -1)
 #endif /* __SIZEOF_SIZE_T__ < 8 */
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowS128)(Dee_int128_t value, Dee_int128_t minval, Dee_int128_t maxval);
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU128)(Dee_uint128_t value, Dee_uint128_t maxval);
+#define DeeRT_ErrIntegerOverflowS128(value, minval, maxval) Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowS128)(value, minval, maxval), -1)
+#define DeeRT_ErrIntegerOverflowU128(value, maxval)         Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowU128)(value, maxval), -1)
 #define DeeRT_ErrIntegerOverflowS8(value, minval, maxval) DeeRT_ErrIntegerOverflowS(value, minval, maxval)
 #define DeeRT_ErrIntegerOverflowU8(value, maxval)         DeeRT_ErrIntegerOverflowU(value, maxval)
 #if __SIZEOF_SIZE_T__ >= 2
@@ -104,18 +123,28 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU128)(Dee_uint128_t value, 
 #endif /* __SIZEOF_SIZE_T__ < 4 */
 
 
+
 /* Throws an `DeeError_UnknownKey' indicating that a given index/key is unknown */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnknownKey)(DeeObject *map, DeeObject *key);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrUnknownKeyWithInner)(DeeObject *map, DeeObject *key, /*inherit(always)*/ DREF DeeObject *inner);
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnknownKeyInt)(DeeObject *map, size_t key);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnknownKeyStr)(DeeObject *map, char const *key);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnknownKeyStrLen)(DeeObject *map, char const *key, size_t keylen);
+#define DeeRT_ErrUnknownKey(map, key)                 Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKey)((DeeObject *)Dee_REQUIRES_OBJECT(map), (DeeObject *)Dee_REQUIRES_OBJECT(key)), -1)
+#define DeeRT_ErrUnknownKeyWithInner(map, key, inner) Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyWithInner)((DeeObject *)Dee_REQUIRES_OBJECT(map), (DeeObject *)Dee_REQUIRES_OBJECT(key), (DeeObject *)Dee_REQUIRES_OBJECT(inner)), -1)
+#define DeeRT_ErrUnknownKeyInt(map, key)              Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyInt)((DeeObject *)Dee_REQUIRES_OBJECT(map), key), -1)
+#define DeeRT_ErrUnknownKeyStr(map, key)              Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStr)((DeeObject *)Dee_REQUIRES_OBJECT(map), key), -1)
+#define DeeRT_ErrUnknownKeyStrLen(map, key, keylen)   Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStrLen)((DeeObject *)Dee_REQUIRES_OBJECT(map), key, keylen), -1)
 
 /* Throws an `DeeError_ReadOnlyKey' indicating that a given key is read-only */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrReadOnlyKey)(DeeObject *map, DeeObject *key);
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrReadOnlyKeyInt)(DeeObject *map, size_t key);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrReadOnlyKeyStr)(DeeObject *map, char const *key);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrReadOnlyKeyStrLen)(DeeObject *map, char const *key, size_t keylen);
+#define DeeRT_ErrReadOnlyKey(map, key)               Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKey)((DeeObject *)Dee_REQUIRES_OBJECT(map), (DeeObject *)Dee_REQUIRES_OBJECT(key)), -1)
+#define DeeRT_ErrReadOnlyKeyInt(map, key)            Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKeyInt)((DeeObject *)Dee_REQUIRES_OBJECT(map), key), -1)
+#define DeeRT_ErrReadOnlyKeyStr(map, key)            Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKeyStr)((DeeObject *)Dee_REQUIRES_OBJECT(map), key), -1)
+#define DeeRT_ErrReadOnlyKeyStrLen(map, key, keylen) Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKeyStrLen)((DeeObject *)Dee_REQUIRES_OBJECT(map), key, keylen), -1)
 
 /* Throws an `DeeError_UnboundItem' indicating that a given index/key is unbound */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundKey)(DeeObject *seq, DeeObject *key);
@@ -125,21 +154,34 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundKeyStrLen)(DeeObjec
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnboundKeyInt)(DeeObject *seq, size_t key);
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnboundIndex)(DeeObject *seq, size_t index);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject *seq, DeeObject *index);
+#define DeeRT_ErrUnboundKey(seq, key)                 Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKey)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(key)), -1)
+#define DeeRT_ErrUnboundKeyWithInner(seq, key, inner) Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyWithInner)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(key), (DeeObject *)Dee_REQUIRES_OBJECT(inner)), -1)
+#define DeeRT_ErrUnboundKeyStr(seq, key)              Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStr)((DeeObject *)Dee_REQUIRES_OBJECT(seq), key), -1)
+#define DeeRT_ErrUnboundKeyStrLen(seq, key, keylen)   Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStrLen)((DeeObject *)Dee_REQUIRES_OBJECT(seq), key, keylen), -1)
+#define DeeRT_ErrUnboundKeyInt(seq, key)              Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyInt)((DeeObject *)Dee_REQUIRES_OBJECT(seq), key), -1)
+#define DeeRT_ErrUnboundIndex(seq, index)             Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndex)((DeeObject *)Dee_REQUIRES_OBJECT(seq), index), -1)
+#define DeeRT_ErrUnboundIndexObj(seq, index)          Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndexObj)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(index)), -1)
 
 /* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOutOfBounds)(DeeObject *seq, size_t index, size_t length);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeObject *seq, DeeObject *index, DeeObject *length);
+#define DeeRT_ErrIndexOutOfBounds(seq, index, length)    Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBounds)((DeeObject *)Dee_REQUIRES_OBJECT(seq), index, length), -1)
+#define DeeRT_ErrIndexOutOfBoundsObj(seq, index, length) Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBoundsObj)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(index), (DeeObject *)Dee_REQUIRES_OBJECT(length)), -1)
 #ifdef CONFIG_BUILDING_DEEMON
 #ifdef DEE_SOURCE
 #define Dee_code_frame code_frame
 #endif /* DEE_SOURCE */
 struct Dee_code_frame; /* Exception thrown by "ASM_VARARGS_GETITEM" if the index is out-of-bounds */
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaIndexOutOfBounds)(struct Dee_code_frame const *__restrict frame, size_t index);
+#define DeeRT_ErrVaIndexOutOfBounds(frame, index) \
+	Dee_ASSUMED_VALUE((DeeRT_ErrVaIndexOutOfBounds)(frame, index), -1)
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Throws an `DeeError_ItemNotFound' indicating that a given item could not be found within some sequence */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFound)(DeeObject *seq, DeeObject *item);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFoundEx)(DeeObject *seq, DeeObject *item, size_t start, size_t end, DeeObject *key);
+#define DeeRT_ErrItemNotFound(seq, item)                    Dee_ASSUMED_VALUE((DeeRT_ErrItemNotFound)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(item)), -1)
+#define DeeRT_ErrItemNotFoundEx(seq, item, start, end, key) Dee_ASSUMED_VALUE((DeeRT_ErrItemNotFoundEx)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(item), start, end, key), -1)
 #define DeeRT_ErrSubstringNotFound(string, substring_or_substrings, start, end) \
 	DeeRT_ErrItemNotFoundEx(string, substring_or_substrings, start, end, NULL)
 
@@ -150,15 +192,26 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrRegexNotFound)(DeeObject *data, DeeObject *regex,
                                size_t start, size_t end, size_t range,
                                DeeObject *rules, unsigned int eflags);
+#define DeeRT_ErrRegexNotFound(data, regex, start, end, range, rules, eflags)           \
+	Dee_ASSUMED_VALUE((DeeRT_ErrRegexNotFound)((DeeObject *)Dee_REQUIRES_OBJECT(data),  \
+	                                           (DeeObject *)Dee_REQUIRES_OBJECT(regex), \
+	                                           start, end, range,                       \
+	                                           (DeeObject *)Dee_REQUIRES_OBJECT(rules), \
+	                                           eflags),                                 \
+	                  -1)
 
 #ifdef DEE_SOURCE
 #define Dee_class_attribute class_attribute
 #define Dee_class_desc      class_desc
+#define Dee_type_method     type_method
+#define Dee_type_getset     type_getset
 #define Dee_type_member     type_member
 #endif /* DEE_SOURCE */
 struct Dee_attrdesc;
 struct Dee_class_attribute;
 struct Dee_class_desc;
+struct Dee_type_method;
+struct Dee_type_getset;
 struct Dee_type_member;
 
 /* Throws an `DeeError_UnboundAttribute' indicating that some attribute isn't bound
@@ -182,9 +235,12 @@ DFUNDEF ATTR_COLD NONNULL((1)) DeeObject *(DCALL DeeRT_ErrCUnboundClassMember)(D
 #define DeeRT_ErrCUnboundClassMember(class_type, addr)              Dee_ASSUMED_VALUE((DeeRT_ErrCUnboundClassMember)(class_type, addr), (DeeObject *)NULL)
 #define DeeRT_ErrUnboundInstanceAttrCA(class_type, attr)            DeeRT_ErrCUnboundAttrCA((DeeObject *)Dee_REQUIRES_OBJECT(class_type), attr)
 
+/* Possible values for the "access" of `DeeRT_Err*UnknownAttr*' and `DeeRT_Err*RestrictedAttr*' */
 #define DeeRT_ATTRIBUTE_ACCESS_GET   1 /* Attempted to get attribute */
 #define DeeRT_ATTRIBUTE_ACCESS_DEL   2 /* Attempted to del attribute */
 #define DeeRT_ATTRIBUTE_ACCESS_SET   4 /* Attempted to set attribute */
+#define DeeRT_ATTRIBUTE_ACCESS_PRIVATE 0 /* Attempted to access a private attribute */
+#define DeeRT_ATTRIBUTE_ACCESS_CALL  DeeRT_ATTRIBUTE_ACCESS_GET /* Call-to-attribute */
 #define DeeRT_ATTRIBUTE_ACCESS_BOUND DeeRT_ATTRIBUTE_ACCESS_GET /* Bound test (with "allow_missing = false") */
 #define DeeRT_ATTRIBUTE_ACCESS_INIT  DeeRT_ATTRIBUTE_ACCESS_SET /* Initialization */
 
@@ -208,58 +264,34 @@ DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTUnknownAttrStrLen)(DeeObj
 #define DeeRT_ErrUnknownTypeInstanceAttrStr(self, attr, access)             DeeRT_ErrTUnknownAttrStr(Dee_REQUIRES_TYPE(DeeTypeObject *, self), self, attr, access)
 #define DeeRT_ErrUnknownTypeInstanceAttrStrLen(self, attr, attrlen, access) DeeRT_ErrTUnknownAttrStrLen(Dee_REQUIRES_TYPE(DeeTypeObject *, self), self, attr, attrlen, access)
 
-//TODO:DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrRestrictedAttr)(DeeObject *ob, DeeObject *attr, unsigned int access);
-//TODO:DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrRestrictedAttrStr)(DeeObject *ob, char const *attr, unsigned int access);
-//TODO:DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrRestrictedAttrStrLen)(DeeObject *ob, char const *attr, size_t attrlen, unsigned int access);
-//TODO:DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrTRestrictedAttr)(DeeTypeObject *decl, DeeObject *ob, DeeObject *attr, unsigned int access);
-//TODO:DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrRestrictedAttrEx)(DeeTypeObject *decl, DeeObject *ob, struct Dee_attrdesc const *attr, unsigned int access);
+/* Throws an `DeeError_RestrictedAttribute' indicating that the specified attribute access is invalid */
+DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTRestrictedAttr)(DeeObject *decl, DeeObject *ob, DeeObject *attr, unsigned int access);
+DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTRestrictedAttrCStr)(DeeObject *decl, DeeObject *ob, char const *attr, unsigned int access);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrCRestrictedAttrCA)(DeeObject *ob, struct Dee_class_attribute const *attr, unsigned int access);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrRestrictedAttrEx)(DeeObject *ob, struct Dee_attrdesc const *attr, unsigned int access);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrRestrictedMethod)(DeeObject *ob, struct Dee_type_method const *attr, unsigned int access);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrRestrictedGetSet)(DeeObject *ob, struct Dee_type_getset const *attr, unsigned int access);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrRestrictedMember)(DeeObject *ob, struct Dee_type_member const *attr, unsigned int access);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrCAlreadyBoundInstanceMember)(DeeTypeObject *class_type, DeeObject *instance, uint16_t addr);
+#define DeeRT_ErrTRestrictedAttr(decl, ob, attr, access)        Dee_ASSUMED_VALUE((DeeRT_ErrTRestrictedAttr)((DeeObject *)Dee_REQUIRES_OBJECT(decl), (DeeObject *)Dee_REQUIRES_OBJECT(ob), (DeeObject *)Dee_REQUIRES_OBJECT(attr), access), -1)
+#define DeeRT_ErrTRestrictedAttrCStr(decl, ob, attr, access)    Dee_ASSUMED_VALUE((DeeRT_ErrTRestrictedAttrCStr)((DeeObject *)Dee_REQUIRES_OBJECT(decl), (DeeObject *)Dee_REQUIRES_OBJECT(ob), attr, access), -1)
+#define DeeRT_ErrCRestrictedAttrCA(ob, attr, access)            Dee_ASSUMED_VALUE((DeeRT_ErrCRestrictedAttrCA)((DeeObject *)Dee_REQUIRES_OBJECT(ob), attr, access), -1)
+#define DeeRT_ErrRestrictedAttrEx(ob, attr, access)             Dee_ASSUMED_VALUE((DeeRT_ErrRestrictedAttrEx)((DeeObject *)Dee_REQUIRES_OBJECT(ob), attr, access), -1)
+#define DeeRT_ErrRestrictedMethod(ob, attr, access)             Dee_ASSUMED_VALUE((DeeRT_ErrRestrictedMethod)((DeeObject *)Dee_REQUIRES_OBJECT(ob), attr, access), -1)
+#define DeeRT_ErrRestrictedGetSet(ob, attr, access)             Dee_ASSUMED_VALUE((DeeRT_ErrRestrictedGetSet)((DeeObject *)Dee_REQUIRES_OBJECT(ob), attr, access), -1)
+#define DeeRT_ErrRestrictedMember(ob, attr, access)             Dee_ASSUMED_VALUE((DeeRT_ErrRestrictedMember)((DeeObject *)Dee_REQUIRES_OBJECT(ob), attr, access), -1)
+#define DeeRT_ErrRestrictedInstanceAttrCStr(type, attr, access) DeeRT_ErrTRestrictedAttrCStr(Dee_REQUIRES_TYPE(DeeTypeObject *, type), type, attr, access)
+#define DeeRT_ErrRestrictedAttr(ob, attr, access)               DeeRT_ErrTRestrictedAttr((DeeObject *)NULL, ob, attr, access)
+#define DeeRT_ErrRestrictedAttrCStr(ob, attr, access)           DeeRT_ErrTRestrictedAttrCStr((DeeObject *)NULL, ob, attr, access)
+#define DeeRT_ErrRestrictedAttrCADuringInitialization(decl, attr)        \
+	DeeRT_ErrCRestrictedAttrCA(Dee_REQUIRES_TYPE(DeeTypeObject *, decl), \
+	                           attr, DeeRT_ATTRIBUTE_ACCESS_INIT)
 
 
 
 
 
 
-
-#ifndef Dee_ASSUMED_VALUE_IS_NOOP
-#define DeeRT_ErrNoActiveException()                              Dee_ASSUMED_VALUE((DeeRT_ErrNoActiveException)(), -1)
-#define DeeRT_ErrIntegerOverflow(value, minval, maxval, positive) Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflow)(value, minval, maxval, positive), -1)
-#define DeeRT_ErrIntegerOverflowEx(value, num_bits, flags)        Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowEx)(value, num_bits, flags), -1)
-#define DeeRT_ErrIntegerOverflowS(value, minval, maxval)          Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowS)(value, minval, maxval), -1)
-#define DeeRT_ErrIntegerOverflowU(value, maxval)                  Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowU)(value, maxval), -1)
-#define DeeRT_ErrIntegerOverflowUMul(lhs, rhs)                    Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowUMul)(lhs, rhs), -1)
-#define DeeRT_ErrIntegerOverflowUAdd(lhs, rhs)                    Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowUAdd)(lhs, rhs), -1)
-#if __SIZEOF_SIZE_T__ < 8
-#define DeeRT_ErrIntegerOverflowS64(value, minval, maxval) Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowS64)(value, minval, maxval), -1)
-#define DeeRT_ErrIntegerOverflowU64(value, maxval)         Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowU64)(value, maxval), -1)
-#endif /* __SIZEOF_SIZE_T__ < 8 */
-#define DeeRT_ErrIntegerOverflowS128(value, minval, maxval) Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowS128)(value, minval, maxval), -1)
-#define DeeRT_ErrIntegerOverflowU128(value, maxval)         Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowU128)(value, maxval), -1)
-#define DeeRT_ErrUnknownKey(map, key)                       Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKey)(map, key), -1)
-#define DeeRT_ErrUnknownKeyWithInner(map, key, inner)       Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyWithInner)(map, key, inner), -1)
-#define DeeRT_ErrUnknownKeyInt(map, key)                    Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyInt)(map, key), -1)
-#define DeeRT_ErrUnknownKeyStr(map, key)                    Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStr)(map, key), -1)
-#define DeeRT_ErrUnknownKeyStrLen(map, key, keylen)         Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStrLen)(map, key, keylen), -1)
-#define DeeRT_ErrReadOnlyKey(map, key)                      Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKey)(map, key), -1)
-#define DeeRT_ErrReadOnlyKeyInt(map, key)                   Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKeyInt)(map, key), -1)
-#define DeeRT_ErrReadOnlyKeyStr(map, key)                   Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKeyStr)(map, key), -1)
-#define DeeRT_ErrReadOnlyKeyStrLen(map, key, keylen)        Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKeyStrLen)(map, key, keylen), -1)
-#define DeeRT_ErrUnboundKey(seq, key)                       Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKey)(seq, key), -1)
-#define DeeRT_ErrUnboundKeyWithInner(seq, key, inner)       Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyWithInner)(seq, key, inner), -1)
-#define DeeRT_ErrUnboundKeyStr(seq, key)                    Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStr)(seq, key), -1)
-#define DeeRT_ErrUnboundKeyStrLen(seq, key, keylen)         Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStrLen)(seq, key, keylen), -1)
-#define DeeRT_ErrUnboundKeyInt(seq, key)                    Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyInt)(seq, key), -1)
-#define DeeRT_ErrUnboundIndex(seq, index)                   Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndex)(seq, index), -1)
-#define DeeRT_ErrUnboundIndexObj(seq, index)                Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndexObj)(seq, index), -1)
-#define DeeRT_ErrIndexOutOfBounds(seq, index, length)       Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBounds)(seq, index, length), -1)
-#define DeeRT_ErrIndexOutOfBoundsObj(seq, index, length)    Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBoundsObj)(seq, index, length), -1)
-#ifdef CONFIG_BUILDING_DEEMON
-#define DeeRT_ErrVaIndexOutOfBounds(frame, index) Dee_ASSUMED_VALUE((DeeRT_ErrVaIndexOutOfBounds)(frame, index), -1)
-#endif /* CONFIG_BUILDING_DEEMON */
-#define DeeRT_ErrItemNotFound(seq, item)                    Dee_ASSUMED_VALUE((DeeRT_ErrItemNotFound)(seq, item), -1)
-#define DeeRT_ErrItemNotFoundEx(seq, item, start, end, key) Dee_ASSUMED_VALUE((DeeRT_ErrItemNotFoundEx)(seq, item, start, end, key), -1)
-#define DeeRT_ErrRegexNotFound(data, regex, start, end, range, rules, eflags) \
-	Dee_ASSUMED_VALUE((DeeRT_ErrRegexNotFound)(data, regex, start, end, range, rules, eflags), -1)
-#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
 DECL_END
 

@@ -1791,7 +1791,7 @@ rbtree_getitem(RBTree *self, DeeObject *key) {
 	DREF DeeObject *result;
 	result = rbtree_trygetitem(self, key);
 	if unlikely(result == ITER_DONE) {
-		DeeRT_ErrUnknownKey((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey(self, key);
 		result = NULL;
 	}
 	return result;

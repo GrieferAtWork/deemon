@@ -1010,7 +1010,7 @@ mi_getitem(MapIntersection *__restrict self, DeeObject *key) {
 	}
 	return DeeObject_InvokeMethodHint(map_operator_getitem, self->mi_map, key);
 err_key:
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 err:
 	return NULL;
 }
@@ -1435,7 +1435,7 @@ md_getitem(MapDifference *self, DeeObject *key) {
 	if unlikely(in_keys != 0) {
 		if unlikely(in_keys < 0)
 			goto err;
-		DeeRT_ErrUnknownKey((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey(self, key);
 		goto err;
 	}
 	return DeeObject_InvokeMethodHint(map_operator_getitem, self->md_map, key);
@@ -1833,7 +1833,7 @@ msd_getitem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 	return result;
 err_key_r:
 	Dee_Decref(result);
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 err:
 	return NULL;
 }

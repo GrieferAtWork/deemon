@@ -1580,7 +1580,7 @@ ast_delloopiternext(Ast *__restrict self) {
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (me->a_flag & AST_FLOOP_FOREACH) {
-		result = err_cant_access_attribute_string(Dee_TYPE(self), "loopiternext", ATTR_ACCESS_DEL);
+		result = DeeRT_ErrRestrictedAttrCStr(self, "loopiternext", DeeRT_ATTRIBUTE_ACCESS_DEL);
 	} else if (me->a_loop.l_iter) {
 		ast_decref(me->a_loop.l_iter);
 		me->a_loop.l_iter = NULL;
@@ -3056,7 +3056,7 @@ ast_setactiona(Ast *__restrict self,
 	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 1) {
-		result = err_cant_access_attribute_string(Dee_TYPE(self), "actiona", ATTR_ACCESS_SET);
+		result = DeeRT_ErrRestrictedAttrCStr(self, "actiona", DeeRT_ATTRIBUTE_ACCESS_SET);
 	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
@@ -3108,7 +3108,7 @@ ast_setactionb(Ast *__restrict self,
 	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 2) {
-		result = err_cant_access_attribute_string(Dee_TYPE(self), "actionb", ATTR_ACCESS_SET);
+		result = DeeRT_ErrRestrictedAttrCStr(self, "actionb", DeeRT_ATTRIBUTE_ACCESS_SET);
 	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
@@ -3160,7 +3160,7 @@ ast_setactionc(Ast *__restrict self,
 	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 3) {
-		result = err_cant_access_attribute_string(Dee_TYPE(self), "actionc", ATTR_ACCESS_SET);
+		result = DeeRT_ErrRestrictedAttrCStr(self, "actionc", DeeRT_ATTRIBUTE_ACCESS_SET);
 	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);

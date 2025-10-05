@@ -1515,15 +1515,15 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_get(DeeClsPropertyObject *__restrict self,
                 size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
-	if (!self->cp_get) {
-		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
-		goto err;
-	}
+	if unlikely(!self->cp_get)
+		goto err_unbound;
 	_DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
 		goto err;
 	return (*self->cp_get)(thisarg);
+err_unbound:
+	DeeRT_ErrRestrictedAttrCStr(self, "get", DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
 	return NULL;
 }
@@ -1533,16 +1533,16 @@ clsproperty_get_kw(DeeClsPropertyObject *__restrict self,
                    size_t argc, DeeObject *const *argv,
                    DeeObject *kw) {
 	DeeObject *thisarg;
-	if unlikely(!self->cp_get) {
-		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
-		goto err;
-	}
+	if unlikely(!self->cp_get)
+		goto err_unbound;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
 		goto err;
 	return (*self->cp_get)(thisarg);
+err_unbound:
+	DeeRT_ErrRestrictedAttrCStr(self, "get", DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
 	return NULL;
 }
@@ -1553,10 +1553,8 @@ clsproperty_isbound_kw(DeeClsPropertyObject *__restrict self,
                        DeeObject *kw) {
 	int isbound;
 	DeeObject *thisarg;
-	if unlikely(!self->cp_get) {
-		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
-		goto err;
-	}
+	if unlikely(!self->cp_get)
+		goto err_unbound;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:isbound", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
@@ -1579,6 +1577,8 @@ clsproperty_isbound_kw(DeeClsPropertyObject *__restrict self,
 		}
 	}
 	return_bool(Dee_BOUND_ISBOUND(isbound));
+err_unbound:
+	DeeRT_ErrRestrictedAttrCStr(self, "get", DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
 	return NULL;
 }
@@ -1588,10 +1588,8 @@ clsproperty_delete(DeeClsPropertyObject *__restrict self,
                    size_t argc, DeeObject *const *argv,
                    DeeObject *kw) {
 	DeeObject *thisarg;
-	if unlikely(!self->cp_del) {
-		err_cant_access_attribute_string(&DeeClsProperty_Type, "delete", ATTR_ACCESS_GET);
-		goto err;
-	}
+	if unlikely(!self->cp_del)
+		goto err_unbound;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:delete", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
@@ -1600,6 +1598,8 @@ clsproperty_delete(DeeClsPropertyObject *__restrict self,
 	if unlikely((*self->cp_del)(thisarg))
 		goto err;
 	return_none;
+err_unbound:
+	DeeRT_ErrRestrictedAttrCStr(self, "delete", DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
 	return NULL;
 }
@@ -1609,10 +1609,8 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
                 size_t argc, DeeObject *const *argv,
                 DeeObject *kw) {
 	DeeObject *thisarg, *value;
-	if unlikely(!self->cp_set) {
-		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_set, ATTR_ACCESS_GET);
-		goto err;
-	}
+	if unlikely(!self->cp_set)
+		goto err_unbound;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg_value, "oo:set", &thisarg, &value))
 		goto err;
 	/* Allow non-instance objects for generic types. */
@@ -1621,6 +1619,8 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
 	if unlikely((*self->cp_set)(thisarg, value))
 		goto err;
 	return_none;
+err_unbound:
+	DeeRT_ErrRestrictedAttrCStr(self, "set", DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
 	return NULL;
 }

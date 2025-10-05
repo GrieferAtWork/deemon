@@ -1,0 +1,53 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import errors;
+import * from deemon;
+
+/* Assert that all built-in errors have constructors compatible with:
+ * >> class SomeError: Error {
+ * >>     this(message: string | none = none, inner: Error | none = none) { ... }
+ * >> }
+ */
+for (local ErrorType: Mapping.fromattr(errors).values) {
+	if (ErrorType.extends(Error)) {
+		local empty = ErrorType();
+		assert empty == ErrorType();
+		assert empty.message is none;
+		assert empty.inner is none;
+
+		local withInner = ErrorType(inner: empty);
+		assert withInner == ErrorType(inner: empty);
+		assert withInner.message is none;
+		assert withInner.inner === empty;
+
+		local withMessage = ErrorType(message: "My Message");
+		assert withMessage == ErrorType("My Message");
+		assert withMessage.message == "My Message";
+		assert withMessage.inner is none;
+
+		local withMessageAndInner = ErrorType(message: "My Message 2", inner: withInner);
+		assert withMessageAndInner == ErrorType("My Message 2", withInner);
+		assert withMessageAndInner.message == "My Message 2";
+		assert withMessageAndInner.inner === withInner;
+	}
+}
+

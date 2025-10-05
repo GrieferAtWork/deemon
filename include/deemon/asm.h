@@ -958,7 +958,7 @@
 #define ASM_GETMEMBER_THIS_R  0xd8 /* [3][-0,+1]   `push getmember this, ref <imm8>, $<imm8>' - Same as `ASM_GETMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
 #define ASM_DELMEMBER_THIS_R  0xd9 /* [3][-0,+0]   `delmember this, ref <imm8>, $<imm8>' - Same as `ASM_DELMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
 #define ASM_SETMEMBER_THIS_R  0xda /* [3][-1,+0]   `setmember this, ref <imm8>, $<imm8>, pop' - Same as `ASM_SETMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
-#define ASM_SETMEMBERI_THIS_R 0xdb /* [3][-1,+0]   `setmemberi this, ref <imm8>, $<imm8>, pop' - Same as `ASM_SETMEMBER_THIS_R', but does `err_cant_access_attribute_string_c()' if the member already has a value (the "i" stands for "initial"). */
+#define ASM_SETMEMBERI_THIS_R 0xdb /* [3][-1,+0]   `setmemberi this, ref <imm8>, $<imm8>, pop' - Same as `ASM_SETMEMBER_THIS_R', but does `DeeRT_ErrCAlreadyBoundInstanceMember()' if the member already has a value (the "i" stands for "initial"). */
 #define ASM_BOUNDMEMBER_THIS_R 0xdc/* [3][-0,+1]   `push boundmember this, ref <imm8>, $<imm8>' - Same as `ASM_BOUNDMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
 #define ASM_CALL_EXTERN       0xdd /* [4][-n,+1]   `push call extern <imm8>:<imm8>, #<imm8>' - Pop #<imm8> (second) values from the stack, pack then into a Tuple, then call an external function referenced by <imm8>:<imm8> (first). */
 #define ASM_CALL_GLOBAL       0xde /* [3][-n,+1]   `push call global <imm8>, #<imm8>'   - Pop #<imm8> (second) values from the stack, pack then into a Tuple, then call a function in global slot <imm8> (first). */
@@ -1457,7 +1457,7 @@
 #define ASM16_GETMEMBER_THIS_R 0xf0d8/* [6][-0,+1]   `push getmember this, ref <imm16>, $<imm16>' - Same as `ASM16_GETMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
 #define ASM16_DELMEMBER_THIS_R 0xf0d9/* [6][-0,+0]   `delmember this, ref <imm16>, $<imm16>' - Same as `ASM16_DELMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
 #define ASM16_SETMEMBER_THIS_R 0xf0da/* [6][-1,+0]   `setmember this, ref <imm16>, $<imm16>, pop' - Same as `ASM16_SETMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
-#define ASM16_SETMEMBERI_THIS_R 0xf0db/*[6][-1,+0]   `setmemberi this, ref <imm16>, $<imm16>, pop' - Same as `ASM16_SETMEMBER_THIS_R', but does `err_cant_access_attribute_string_c()' if the member already has a value (the "i" stands for "initial"). */
+#define ASM16_SETMEMBERI_THIS_R 0xf0db/*[6][-1,+0]   `setmemberi this, ref <imm16>, $<imm16>, pop' - Same as `ASM16_SETMEMBER_THIS_R', but does `DeeRT_ErrCAlreadyBoundInstanceMember()' if the member already has a value (the "i" stands for "initial"). */
 #define ASM16_BOUNDMEMBER_THIS_R 0xf0dc/*[6][-0,+1]  `push boundmember this, ref <imm16>, $<imm16>' - Same as `ASM16_BOUNDMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
 #define ASM16_CALL_EXTERN     0xf0dd /* [7][-n,+1]   `push call extern <imm16>:<imm16>, #<imm8>' - Pop #<imm8> values from the stack, pack then into a Tuple, then call an external function referenced by <imm16>:<imm16>. */
 #define ASM16_CALL_GLOBAL     0xf0de /* [5][-n,+1]   `push call global <imm16>, #<imm8>'  - Pop #<imm8> values from the stack, pack then into a Tuple, then call a function in global slot <imm16>. */

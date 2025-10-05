@@ -786,45 +786,6 @@ PRIVATE char const access_names[4][4] = {
 };
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_cant_access_attribute_string)(DeeTypeObject *__restrict tp,
-                                         char const *__restrict name,
-                                         int access) {
-	ASSERT_OBJECT(tp);
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s attribute `%r.%s'",
-	                       access_names[access & ATTR_ACCESS_MASK],
-	                       tp, name);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_cant_access_attribute_string_len)(DeeTypeObject *__restrict tp,
-                                             char const *name, size_t namelen,
-                                             int access) {
-	ASSERT_OBJECT(tp);
-	ASSERT(!namelen || name);
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s attribute `%r.%$s'",
-	                       access_names[access & ATTR_ACCESS_MASK],
-	                       tp, namelen, name);
-}
-
-PRIVATE ATTR_RETNONNULL WUNUSED char const *DCALL
-get_desc_name(struct class_desc *__restrict desc) {
-	return desc->cd_desc->cd_name
-	       ? DeeString_STR(desc->cd_desc->cd_name)
-	       : "<unnamed>";
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_cant_access_attribute_string_c)(struct class_desc *__restrict desc,
-                                           char const *__restrict name, int access) {
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s attribute `%s.%s'",
-	                       access_names[access & ATTR_ACCESS_MASK],
-	                       get_desc_name(desc), name);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_module_not_loaded_attr_string)(DeeModuleObject *__restrict self,
                                           char const *__restrict name, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
@@ -922,17 +883,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 	return DeeError_Throwf(&DeeError_SequenceError,
 	                       "Instances of sequence type `%k' have a fixed length",
 	                       Dee_TYPE(self));
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_class_protected_member)(DeeTypeObject *__restrict class_type,
-                                   struct class_attribute *__restrict member) {
-	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
-	ASSERT(DeeType_IsClass(class_type));
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot access %s member `%k' of class `%k'",
-	                       (member->ca_flag & CLASS_ATTRIBUTE_FPRIVATE) ? "private" : "public",
-	                       member->ca_name, class_type);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int

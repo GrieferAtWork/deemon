@@ -1735,12 +1735,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DFCALL syn_import_expected_import_after_from(J
 INTDEF ATTR_COLD NONNULL((1)) int DFCALL syn_import_unexpected_from_after_module_import_list(JITLexer *__restrict self);
 INTDEF ATTR_COLD NONNULL((1)) int DFCALL syn_import_unexpected_star_duplication_in_import_list(JITLexer *__restrict self);
 
-#define ATTR_ACCESS_GET     0
-#define ATTR_ACCESS_DEL     1
-#define ATTR_ACCESS_SET     2
-#define ATTR_ACCESS_MASK    3
-
-INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_cant_access_attribute_string_c)(struct class_desc *__restrict desc, char const *__restrict name, int access);
 INTDEF ATTR_COLD int (DFCALL err_cannot_import_relative)(char const *module_name, size_t module_namelen);
 
 /* TODO: Dee_ASSUMED_VALUE-optimizations for all of the errors above! */

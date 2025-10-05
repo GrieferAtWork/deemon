@@ -362,12 +362,12 @@ read_symbol:
 		DeeModule_LockEndRead(self);
 		if unlikely(!result) {
 			if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
-				DeeRT_ErrUnknownKey((DeeObject *)exports_map,
-				                    (DeeObject *)COMPILER_CONTAINER_OF(symbol->ss_name,
-				                                                       DeeStringObject,
-				                                                       s_str));
+				DeeRT_ErrUnknownKey(exports_map,
+				                    COMPILER_CONTAINER_OF(symbol->ss_name,
+				                                          DeeStringObject,
+				                                          s_str));
 			} else {
-				DeeRT_ErrUnboundKeyStr((DeeObject *)exports_map, symbol->ss_name);
+				DeeRT_ErrUnboundKeyStr(exports_map, symbol->ss_name);
 			}
 		}
 		return result;
@@ -381,12 +381,12 @@ read_symbol:
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback) {
 			if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
-				DeeRT_ErrUnknownKey((DeeObject *)exports_map,
-				                    (DeeObject *)COMPILER_CONTAINER_OF(symbol->ss_name,
-				                                                       DeeStringObject,
-				                                                       s_str));
+				DeeRT_ErrUnknownKey(exports_map,
+				                    COMPILER_CONTAINER_OF(symbol->ss_name,
+				                                          DeeStringObject,
+				                                          s_str));
 			} else {
-				DeeRT_ErrUnboundKeyStr((DeeObject *)exports_map, symbol->ss_name);
+				DeeRT_ErrUnboundKeyStr(exports_map, symbol->ss_name);
 			}
 			return NULL;
 		}
@@ -505,7 +505,7 @@ modexports_getitem(ModuleExports *self, DeeObject *key) {
 	return result;
 err_nokey_unlock:
 	DeeModule_UnlockSymbols(mod);
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 err:
 	return NULL;
 }
@@ -619,7 +619,7 @@ modexports_delitem(ModuleExports *self, DeeObject *key) {
 	return result;
 err_nokey_unlock:
 	DeeModule_UnlockSymbols(mod);
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 err:
 	return -1;
 }
@@ -648,7 +648,7 @@ modexports_setitem(ModuleExports *self, DeeObject *key, DeeObject *value) {
 	return result;
 err_nokey_unlock:
 	DeeModule_UnlockSymbols(mod);
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 err:
 	return -1;
 }

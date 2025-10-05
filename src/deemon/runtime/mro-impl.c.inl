@@ -686,82 +686,82 @@ N_len_hash(type_member_setattr_string)(struct Dee_membercache *cache, DeeTypeObj
 }
 
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* METHOD */
-N_len_hash(type_method_hasattr_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
-                                       struct type_method const *chain, ATTR_ARG, dhash_t hash) {
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) struct type_method const *DCALL /* METHOD */
+N_len_hash(type_method_locateattr_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
+                                          struct type_method const *chain, ATTR_ARG, dhash_t hash) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
 		Dee_membercache_addmethod(cache, decl, hash, chain);
-		return true;
+		return chain;
 	}
-	return false;
+	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) bool DCALL
-NLenHash(DeeType_HasInstanceMethodAttrString)(DeeTypeObject *tp_invoker,
-                                              DeeTypeObject *tp_self,
-                                              ATTR_ARG, dhash_t hash) {
+INTERN WUNUSED NONNULL((1, 2, 3)) struct type_method const *DCALL
+NLenHash(DeeType_LocateInstanceMethodAttrString)(DeeTypeObject *tp_invoker,
+                                                 DeeTypeObject *tp_self,
+                                                 ATTR_ARG, dhash_t hash) {
 	struct type_method const *chain = tp_self->tp_methods;
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
 		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
-		return true;
+		return chain;
 	}
-	return false;
+	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* GETSET */
-N_len_hash(type_getset_hasattr_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
-                                       struct type_getset const *chain, ATTR_ARG, dhash_t hash) {
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) struct type_getset const *DCALL /* GETSET */
+N_len_hash(type_getset_locateattr_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
+                                          struct type_getset const *chain, ATTR_ARG, dhash_t hash) {
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
 		Dee_membercache_addgetset(cache, decl, hash, chain);
-		return true;
+		return chain;
 	}
-	return false;
+	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) bool DCALL
-NLenHash(DeeType_HasInstanceGetSetAttrString)(DeeTypeObject *tp_invoker,
-                                              DeeTypeObject *tp_self,
-                                              ATTR_ARG, dhash_t hash) {
+INTERN WUNUSED NONNULL((1, 2, 3)) struct type_getset const *DCALL
+NLenHash(DeeType_LocateInstanceGetSetAttrString)(DeeTypeObject *tp_invoker,
+                                                 DeeTypeObject *tp_self,
+                                                 ATTR_ARG, dhash_t hash) {
 	struct type_getset const *chain = tp_self->tp_getsets;
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
 		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, hash, chain);
-		return true;
+		return chain;
 	}
-	return false;
+	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* MEMBER */
-N_len_hash(type_member_hasattr_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
-                                       struct type_member const *chain, ATTR_ARG, dhash_t hash) {
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) struct type_member const *DCALL /* MEMBER */
+N_len_hash(type_member_locateattr_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
+                                          struct type_member const *chain, ATTR_ARG, dhash_t hash) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
 		Dee_membercache_addmember(cache, decl, hash, chain);
-		return true;
+		return chain;
 	}
-	return false;
+	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) bool DCALL
-NLenHash(DeeType_HasInstanceMemberAttrString)(DeeTypeObject *tp_invoker,
-                                              DeeTypeObject *tp_self,
-                                              ATTR_ARG, dhash_t hash) {
+INTERN WUNUSED NONNULL((1, 2, 3)) struct type_member const *DCALL
+NLenHash(DeeType_LocateInstanceMemberAttrString)(DeeTypeObject *tp_invoker,
+                                                 DeeTypeObject *tp_self,
+                                                 ATTR_ARG, dhash_t hash) {
 	struct type_member const *chain = tp_self->tp_members;
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
 		Dee_membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, hash, chain);
-		return true;
+		return chain;
 	}
-	return false;
+	return NULL;
 }
 
 

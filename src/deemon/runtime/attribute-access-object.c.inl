@@ -1037,8 +1037,10 @@ continue_at_iter:
 #else /* LOCAL_IS_HAS */
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
-				if (!class_attribute_mayaccess(cattr, tp_iter)) {
-					err_class_protected_member(tp_iter, cattr);
+				if unlikely(!class_attribute_mayaccess(cattr, tp_iter)) {
+					DeeRT_ErrCRestrictedAttrCA(self, cattr,
+					                           LOCAL_DeeRT_ATTRIBUTE_ACCESS |
+					                           DeeRT_ATTRIBUTE_ACCESS_PRIVATE);
 					goto err;
 				}
 				desc = DeeClass_DESC(tp_iter);

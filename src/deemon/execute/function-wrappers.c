@@ -1172,7 +1172,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) uint16_t DCALL
 FunctionSymbolsByName_GetRefIdByObject(FunctionSymbolsByName const *self, DeeObject *key) {
 	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByObject(self, key);
 	if unlikely(rid == RID_UNK) {
-		DeeRT_ErrUnknownKey((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey(self, key);
 		rid = RID_ERR;
 	}
 	return rid;
@@ -2437,7 +2437,7 @@ YieldFunctionSymbolsByName_LookupSymByObject(YieldFunctionSymbolsByName const *s
                                              DeeObject *key) {
 	yfuncsymbol_t result = YieldFunctionSymbolsByName_TryLookupSymByObject(self, key);
 	if unlikely(result == YFUNCSYMBOL_INVALID) {
-		DeeRT_ErrUnknownKey((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey(self, key);
 		result = YFUNCSYMBOL_ERROR;
 	}
 	return result;
@@ -4367,7 +4367,7 @@ FrameSymbolsByName_XchCLidValue(FrameSymbolsByName *self,
 		name = FrameSymbolsByName_GetCLidName(self, clid);
 		if unlikely(!name)
 			goto err;
-		DeeRT_ErrUnknownKey((DeeObject *)self, name);
+		DeeRT_ErrUnknownKey(self, name);
 		Dee_Decref(name);
 		goto err;
 	}
@@ -4904,7 +4904,7 @@ FrameSymbolsByName_Key2LocId(FrameSymbolsByName *self, DeeObject *key) {
 		goto err_no_such_key;
 	return result;
 err_no_such_key:
-	return (canonical_lid_t)DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	return (canonical_lid_t)DeeRT_ErrUnknownKey(self, key);
 }
 
 
@@ -5019,7 +5019,7 @@ framesymbolsbyname_mh_setnew_ex(FrameSymbolsByName *self,
 	}
 	__builtin_unreachable();
 err_no_such_key:
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 err:
 	return NULL;
 }

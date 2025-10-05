@@ -871,34 +871,6 @@ syn_import_unexpected_star_duplication_in_import_list(JITLexer *__restrict self)
 }
 
 
-
-
-
-
-PRIVATE ATTR_RETNONNULL WUNUSED char const *DCALL
-get_desc_name(struct class_desc *__restrict desc) {
-	return desc->cd_desc->cd_name
-	       ? DeeString_STR(desc->cd_desc->cd_name)
-	       : "<unnamed>";
-}
-
-PRIVATE char const access_names[4][4] = {
-	/* [ATTR_ACCESS_GET] = */ "get",
-	/* [ATTR_ACCESS_DEL] = */ "del",
-	/* [ATTR_ACCESS_SET] = */ "set",
-	/* [?]               = */ "",
-};
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_cant_access_attribute_string_c)(struct class_desc *__restrict desc,
-                                           char const *__restrict name,
-                                           int access) {
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s attribute `%s.%s'",
-	                       access_names[access & ATTR_ACCESS_MASK],
-	                       get_desc_name(desc), name);
-}
-
 INTERN ATTR_COLD int
 (DFCALL err_cannot_import_relative)(char const *module_name,
                                     size_t module_namelen) {

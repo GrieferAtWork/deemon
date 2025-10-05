@@ -218,9 +218,7 @@ fast_DeeInstance_GetAttribute(struct instance_desc *__restrict self,
 unbound:
 	return DeeRT_ErrCUnboundAttrCA(this_arg, attr);
 illegal:
-	err_cant_access_attribute_string_c(class_desc_from_instance(self, this_arg),
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_GET);
+	DeeRT_ErrCRestrictedAttrCA(this_arg, attr, DeeRT_ATTRIBUTE_ACCESS_GET);
 	return NULL;
 }
 
@@ -296,9 +294,7 @@ fast_DeeInstance_DelAttribute(struct instance_desc *__restrict self,
 	}
 	return 0;
 illegal:
-	err_cant_access_attribute_string_c(class_desc_from_instance(self, this_arg),
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_DEL);
+	return DeeRT_ErrCRestrictedAttrCA(this_arg, attr, DeeRT_ATTRIBUTE_ACCESS_DEL);
 err:
 	return -1;
 }
@@ -348,9 +344,7 @@ fast_DeeInstance_SetAttribute(struct instance_desc *__restrict self,
 	}
 	return 0;
 illegal:
-	err_cant_access_attribute_string_c(class_desc_from_instance(self, this_arg),
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_SET);
+	return DeeRT_ErrCRestrictedAttrCA(this_arg, attr, DeeRT_ATTRIBUTE_ACCESS_SET);
 err:
 	return -1;
 }

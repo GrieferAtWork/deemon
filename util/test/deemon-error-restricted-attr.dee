@@ -1,0 +1,64 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+
+#define TRY(x) (try (x) catch (e...) e)
+
+class MyClass {
+	this = default;
+	private member foo = 10;
+	private final member bar = 20;
+}
+
+local v = "foo";
+assert TRY(v.length = 42) == RestrictedAttribute(ob: v, attr: "length", isset: true);
+assert TRY(del(v.length)) == RestrictedAttribute(ob: v, attr: "length", isdel: true);
+
+local v = MyClass();
+assert TRY(v.foo) == RestrictedAttribute(ob: v, attr: "foo", decl: MyClass, isget: true);
+assert TRY(v.bar) == RestrictedAttribute(ob: v, attr: "bar", decl: MyClass, isget: true);
+
+/* FIXME: The member cache doesn't appear to validate the "private" flag */
+//assert TRY(v.foo) == RestrictedAttribute(ob: v, attr: "foo", decl: MyClass, isget: true);
+//assert TRY(v.bar) == RestrictedAttribute(ob: v, attr: "bar", decl: MyClass, isget: true);
+
+
+class MyProperty {
+	this = default;
+	public property getOnly = { get() -> "foo"; };
+	public property delOnly = { del() { } };
+	public property setOnly = { set(v) { } };
+}
+
+local v = MyProperty();
+assert TRY(v.getOnly) == "foo";
+assert TRY(v.delOnly) == RestrictedAttribute(ob: v, attr: "delOnly", decl: MyProperty, isget: true);
+assert TRY(v.setOnly) == RestrictedAttribute(ob: v, attr: "setOnly", decl: MyProperty, isget: true);
+
+assert TRY(del(v.getOnly)) == RestrictedAttribute(ob: v, attr: "getOnly", decl: MyProperty, isdel: true);
+assert TRY(del(v.delOnly)) is none;
+assert TRY(del(v.setOnly)) == RestrictedAttribute(ob: v, attr: "setOnly", decl: MyProperty, isdel: true);
+
+assert TRY(v.getOnly = 42) == RestrictedAttribute(ob: v, attr: "getOnly", decl: MyProperty, isset: true);
+assert TRY(v.delOnly = 42) == RestrictedAttribute(ob: v, attr: "delOnly", decl: MyProperty, isset: true);
+assert TRY(v.setOnly = 42) == 42;

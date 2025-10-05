@@ -335,16 +335,16 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 	Dee_Incref(def);
 	return def;
 #elif defined(LOCAL_HAS_KEY_IS_STRING_LEN_HASH)
-	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+	DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 #define NEED_err_fallthru
 #elif defined(LOCAL_HAS_KEY_IS_STRING_HASH)
-	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyStr(self, key);
 #define NEED_err_fallthru
 #elif defined(LOCAL_HAS_KEY_IS_INDEX)
-	DeeRT_ErrUnknownKeyInt((DeeObject *)self, index);
+	DeeRT_ErrUnknownKeyInt(self, index);
 #define NEED_err_fallthru
 #else /* ... */
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 #define NEED_err_fallthru
 #endif /* !... */
 

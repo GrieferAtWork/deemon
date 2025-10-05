@@ -272,16 +272,16 @@ LOCAL_rodict_getitem(RoDict *self, LOCAL_KEY_PARAMS) {
 #ifdef LOCAL_return_NOKEY
 	LOCAL_return_NOKEY;
 #elif defined(LOCAL_HAS_STRING_LEN_HASH)
-	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+	DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 #define NEED_err_fallthru
 #elif defined(LOCAL_HAS_STRING_HASH)
-	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyStr(self, key);
 #define NEED_err_fallthru
 #elif defined(LOCAL_HAS_INDEX)
-	DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
+	DeeRT_ErrUnknownKeyInt(self, key);
 #define NEED_err_fallthru
 #else /* ... */
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 #define NEED_err_fallthru
 #endif /* !... */
 

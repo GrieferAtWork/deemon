@@ -101,14 +101,14 @@ error_print(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *
 /************************************************************************/
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 ClassDescriptor_IsInstanceAttr(DeeClassDescriptorObject *__restrict self,
-                               struct Dee_class_attribute const *__restrict attr) {
+                               struct class_attribute const *__restrict attr) {
 	return attr >= self->cd_iattr_list &&
 	       attr <= (self->cd_iattr_list + self->cd_iattr_mask);
 }
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 ClassDescriptor_IsClassAttr(DeeClassDescriptorObject *__restrict self,
-                            struct Dee_class_attribute const *__restrict attr) {
+                            struct class_attribute const *__restrict attr) {
 	return attr >= self->cd_cattr_list &&
 	       attr <= (self->cd_cattr_list + self->cd_cattr_mask);
 }
@@ -483,48 +483,26 @@ return_decl_type:
 	case Dee_ATTRINFO_INSTANCE_MEMBER: {
 		DeeTypeMRO mro;
 		struct type_member const *member;
+		struct type_member_buffer const *buffer;
 		member = self->ae_desc.ad_info.ai_value.v_member;
-		self->ae_desc.ad_name = member->m_name;
+		buffer = type_member_asmember_buffer(member);
+		self->ae_desc.ad_name = buffer->mb_name;
 		self->ae_desc.ad_perm = 0;
 		decl_type = DeeTypeMRO_Init(&mro, Dee_TYPE(ob));
-		if (member == type_member_buffer_asmember(Dee_attrdesc__type_member_buffer(&self->ae_desc))) {
-			struct type_member_buffer *buffer;
-			buffer = type_member_asmember_buffer(member);
-			ASSERT(buffer == Dee_attrdesc__type_member_buffer(&self->ae_desc));
+		do {
+			if ((member = type_members_findbuffer(decl_type->tp_members, buffer)) != NULL)
+				goto got_member_from_buffer;
+		} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
+		if (DeeType_Check(ob)) {
+			decl_type = DeeTypeMRO_Init(&mro, (DeeTypeObject *)ob);
 			do {
-				member = type_members_findbuffer(decl_type->tp_members, buffer);
-				if (member)
+				if ((member = type_members_findbuffer(decl_type->tp_class_members, buffer)) != NULL)
 					goto got_member_from_buffer;
+				if ((member = type_members_findbuffer(decl_type->tp_members, buffer)) != NULL) {
+					self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_MEMBER;
+					goto got_member_from_buffer;
+				}
 			} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
-			if (DeeType_Check(ob)) {
-				decl_type = DeeTypeMRO_Init(&mro, (DeeTypeObject *)ob);
-				do {
-					member = type_members_findbuffer(decl_type->tp_class_members, buffer);
-					if (member)
-						goto got_member_from_buffer;
-					member = type_members_findbuffer(decl_type->tp_members, buffer);
-					if (member) {
-						self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_MEMBER;
-						goto got_member_from_buffer;
-					}
-				} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
-			}
-		} else {
-			do {
-				if (type_members_contains(decl_type->tp_members, member))
-					goto return_decl_type;
-			} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
-			if (DeeType_Check(ob)) {
-				decl_type = DeeTypeMRO_Init(&mro, (DeeTypeObject *)ob);
-				do {
-					if (type_members_contains(decl_type->tp_class_members, member))
-						goto return_decl_type;
-					if (type_members_contains(decl_type->tp_members, member)) {
-						self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_MEMBER;
-						goto return_decl_type;
-					}
-				} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
-			}
 		}
 		goto fail_no_clear_name;
 got_member_from_buffer:
@@ -1510,6 +1488,7 @@ PRIVATE struct type_member tpconst AttributeError_members[] = {
 PRIVATE struct type_member tpconst AttributeError_class_members[] = {
 	TYPE_MEMBER_CONST("UnboundAttribute", &DeeError_UnboundAttribute),
 	TYPE_MEMBER_CONST("UnknownAttribute", &DeeError_UnknownAttribute),
+	TYPE_MEMBER_CONST("RestrictedAttribute", &DeeError_RestrictedAttribute),
 	TYPE_MEMBER_END
 };
 
@@ -1678,6 +1657,136 @@ err:
 	return -1;
 }
 
+PRIVATE ATTR_COLD NONNULL((1, 2, 3)) int DCALL
+DeeRT_ErrAttributeErrorEx_impl(DeeTypeObject *error_type, DeeObject *ob,
+                               struct Dee_attrdesc const *attr,
+                               unsigned int flags) {
+	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
+	if unlikely(!result)
+		goto err;
+	ASSERTF((flags & ~(AttributeError_F_GET |
+	                   AttributeError_F_DEL |
+	                   AttributeError_F_SET)) == 0,
+	        "Only these flags may be specified");
+	DBG_memset(result, 0xcc, sizeof(*result));
+	result->e_message = NULL;
+	result->e_inner   = NULL;
+	Dee_Incref(ob);
+	result->ae_obj = ob;
+	Dee_attrdesc_init_copy(&result->ae_desc, attr);
+	Dee_Incref(result->ae_desc.ad_info.ai_decl);
+	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_DESCLOADED;
+	DeeObject_Init(result, error_type);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+PRIVATE ATTR_COLD NONNULL((1, 2, 3)) int DCALL
+DeeRT_ErrAttributeErrorCA_impl(DeeTypeObject *error_type, DeeObject *ob,
+                               struct class_attribute const *attr, unsigned int flags) {
+	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
+	if unlikely(!result)
+		goto err;
+	ASSERTF((flags & ~(AttributeError_F_GET |
+	                   AttributeError_F_DEL |
+	                   AttributeError_F_SET)) == 0,
+	        "Only these flags may be specified");
+	DBG_memset(result, 0xcc, sizeof(*result));
+	result->e_message = NULL;
+	result->e_inner   = NULL;
+	Dee_Incref(ob);
+	result->ae_obj = ob;
+	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTR; /* Changed to "Dee_ATTRINFO_INSTANCE_ATTR" if appropriate */
+	result->ae_desc.ad_info.ai_value.v_attr = attr;
+	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
+	DeeObject_Init(result, error_type);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+PRIVATE ATTR_COLD NONNULL((1, 2, 3)) int DCALL
+DeeRT_ErrAttributeErrorMethod_impl(DeeTypeObject *error_type, DeeObject *ob,
+                                   struct type_method const *attr, unsigned int flags) {
+	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
+	if unlikely(!result)
+		goto err;
+	ASSERTF((flags & ~(AttributeError_F_GET |
+	                   AttributeError_F_DEL |
+	                   AttributeError_F_SET)) == 0,
+	        "Only these flags may be specified");
+	DBG_memset(result, 0xcc, sizeof(*result));
+	result->e_message = NULL;
+	result->e_inner   = NULL;
+	Dee_Incref(ob);
+	result->ae_obj = ob;
+	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_METHOD; /* Changed to "Dee_ATTRINFO_INSTANCE_METHOD" if appropriate */
+	result->ae_desc.ad_info.ai_value.v_method = attr;
+	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
+	DeeObject_Init(result, error_type);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+PRIVATE ATTR_COLD NONNULL((1, 2, 3)) int DCALL
+DeeRT_ErrAttributeErrorGetSet_impl(DeeTypeObject *error_type, DeeObject *ob,
+                                   struct type_getset const *attr, unsigned int flags) {
+	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
+	if unlikely(!result)
+		goto err;
+	ASSERTF((flags & ~(AttributeError_F_GET |
+	                   AttributeError_F_DEL |
+	                   AttributeError_F_SET)) == 0,
+	        "Only these flags may be specified");
+	DBG_memset(result, 0xcc, sizeof(*result));
+	result->e_message = NULL;
+	result->e_inner   = NULL;
+	Dee_Incref(ob);
+	result->ae_obj = ob;
+	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_GETSET; /* Changed to "Dee_ATTRINFO_INSTANCE_GETSET" if appropriate */
+	result->ae_desc.ad_info.ai_value.v_getset = attr;
+	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
+	DeeObject_Init(result, error_type);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+PRIVATE ATTR_COLD NONNULL((1, 2, 3)) int DCALL
+DeeRT_ErrAttributeErrorMember_impl(DeeTypeObject *error_type, DeeObject *ob,
+                                   struct Dee_type_member const *attr, unsigned int flags) {
+	struct type_member_buffer *buffer;
+	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
+	if unlikely(!result)
+		goto err;
+	ASSERTF((flags & ~(AttributeError_F_GET |
+	                   AttributeError_F_DEL |
+	                   AttributeError_F_SET)) == 0,
+	        "Only these flags may be specified");
+	DBG_memset(result, 0xcc, sizeof(*result));
+	result->e_message = NULL;
+	result->e_inner   = NULL;
+	Dee_Incref(ob);
+	result->ae_obj = ob;
+	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_MEMBER; /* Changed to "Dee_ATTRINFO_INSTANCE_MEMBER" if appropriate */
+	buffer = Dee_attrdesc__type_member_buffer(&result->ae_desc);
+	result->ae_desc.ad_info.ai_value.v_member = type_member_buffer_asmember(buffer);
+	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
+	/* Special case: We might get here from a context where "attr" is a stack-allocated copy
+	 *               of an incomplete (as in: missing the doc string) member descriptor that
+	 *               was previously copied out of `struct Dee_membercache_slot'.
+	 * To deal with this case, we have to create yet another copy that will then be resolved
+	 * lazily when the attribute error's declaration location is loaded. */
+	type_member_buffer_init(buffer, attr);
+	DeeObject_Init(result, error_type);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+
 
 
 /************************************************************************/
@@ -1725,80 +1834,35 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 (DCALL DeeRT_ErrUnboundMember)(DeeObject *ob, struct Dee_type_member const *attr) {
-	struct type_member_buffer *buffer;
-	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
-	if unlikely(!result)
-		goto err;
-	DBG_memset(result, 0xcc, sizeof(*result));
-	result->e_message = NULL;
-	result->e_inner   = NULL;
-	Dee_Incref(ob);
-	result->ae_obj = ob;
-	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_MEMBER; /* Changed to "Dee_ATTRINFO_INSTANCE_MEMBER" if appropriate */
-	buffer = Dee_attrdesc__type_member_buffer(&result->ae_desc);
-	result->ae_desc.ad_info.ai_value.v_member = type_member_buffer_asmember(buffer);
-	result->ae_flags = AttributeError_F_GET | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
-	/* Special case: We might get here from a context where "attr" is a stack-allocated copy
-	 *               of an incomplete (as in: missing the doc string) member descriptor that
-	 *               was previously copied out of `struct Dee_membercache_slot'.
-	 * To deal with this case, we have to create yet another copy that will then be resolved
-	 * lazily when the attribute error's declaration location is loaded. */
-	type_member_buffer_init(buffer, attr);
-	DeeObject_Init(result, &DeeError_UnboundAttribute);
-	DeeError_ThrowInherited((DeeObject *)result);
-err:
+	DeeRT_ErrAttributeErrorMember_impl(&DeeError_UnboundAttribute, ob,
+	                                   attr, AttributeError_F_GET);
 	return NULL;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 (DCALL DeeRT_ErrUnboundAttrEx)(DeeObject *ob, struct Dee_attrdesc const *attr) {
-	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
-	if unlikely(!result)
-		goto err;
-	DBG_memset(result, 0xcc, sizeof(*result));
-	result->e_message = NULL;
-	result->e_inner   = NULL;
-	Dee_Incref(ob);
-	result->ae_obj = ob;
-	Dee_attrdesc_init_copy(&result->ae_desc, attr);
-	Dee_Incref(result->ae_desc.ad_info.ai_decl);
-	result->ae_flags = AttributeError_F_GET | AttributeError_F_INFOLOADED | AttributeError_F_DESCLOADED;
-	DeeObject_Init(result, &DeeError_UnboundAttribute);
-	DeeError_ThrowInherited((DeeObject *)result);
-err:
+	DeeRT_ErrAttributeErrorEx_impl(&DeeError_UnboundAttribute, ob,
+	                               attr, AttributeError_F_GET);
 	return NULL;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
 (DCALL DeeRT_ErrTUnboundAttr)(DeeObject *decl, DeeObject *ob, /*string*/ DeeObject *attr) {
-	DeeRT_ErrAttributeError_impl(&DeeError_UnboundAttribute, decl, ob,
-	                             attr, AttributeError_F_GET);
+	DeeRT_ErrAttributeError_impl(&DeeError_UnboundAttribute, decl,
+	                             ob, attr, AttributeError_F_GET);
 	return NULL;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
 (DCALL DeeRT_ErrTUnboundAttrCStr)(DeeObject *decl, DeeObject *ob, /*static*/ char const *attr) {
-	DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnboundAttribute, decl, ob,
-	                                 attr, AttributeError_F_GET);
+	DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnboundAttribute, decl,
+	                                 ob, attr, AttributeError_F_GET);
 	return NULL;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
-(DCALL DeeRT_ErrCUnboundAttrCA)(DeeObject *ob, struct Dee_class_attribute const *attr) {
-	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
-	if unlikely(!result)
-		goto err;
-	DBG_memset(result, 0xcc, sizeof(*result));
-	result->e_message = NULL;
-	result->e_inner   = NULL;
-	Dee_Incref(ob);
-	result->ae_obj = ob;
-	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTR; /* Changed to "Dee_ATTRINFO_INSTANCE_ATTR" if appropriate */
-	result->ae_desc.ad_info.ai_value.v_attr = attr;
-	result->ae_flags = AttributeError_F_GET | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
-	DeeObject_Init(result, &DeeError_UnboundAttribute);
-	DeeError_ThrowInherited((DeeObject *)result);
-err:
+(DCALL DeeRT_ErrCUnboundAttrCA)(DeeObject *ob, struct class_attribute const *attr) {
+	DeeRT_ErrAttributeErrorCA_impl(&DeeError_UnboundAttribute, ob, attr, AttributeError_F_GET);
 	return NULL;
 }
 
@@ -1920,12 +1984,122 @@ PUBLIC ATTR_COLD NONNULL((2, 3)) int
 	attr_ob = DeeString_NewSized(attr, attrlen);
 	if unlikely(!attr_ob)
 		goto err;
-	result = DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl, ob, attr_ob, access);
+	result = DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute,
+	                                      decl, ob, attr_ob, access);
 	Dee_Decref_unlikely(attr_ob);
 	return result;
 err:
 	return -1;
 }
+
+
+
+
+/************************************************************************/
+/* Error.AttributeError.RestrictedAttribute                                */
+/************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+RestrictedAttribute_print(AttributeError *__restrict self,
+                          Dee_formatprinter_t printer, void *arg) {
+	char const *what;
+	Dee_ssize_t temp, result;
+	if (self->e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	result = DeeFormat_PRINT(printer, arg, "Cannot ");
+	if unlikely(result < 0)
+		goto done;
+	DO(err_temp, AttributeError_print_access_mode(self, printer, arg));
+	what = "restricted";
+	if (AttributeError_LoadDesc(self)) {
+		/* Print custom error description based on attribute permission flags. */
+		if (self->ae_desc.ad_perm & Dee_ATTRPERM_F_PRIVATE)
+			what = "private";
+		/* TODO: Check for more reasons (e.g. when "Dee_ATTRPERM_F_CANSET" isn't
+		 *       set, but "AttributeError_F_SET" is, state that the attribute is
+		 *       "read-only") */
+
+		// TODO: #define Dee_ATTRPERM_F_CANGET   0x0001 /* [NAME("g")] Attribute supports get/has queries (g -- get). */
+		// TODO: #define Dee_ATTRPERM_F_CANDEL   0x0002 /* [NAME("d")] Attribute supports del queries (d -- del). */
+		// TODO: #define Dee_ATTRPERM_F_CANSET   0x0004 /* [NAME("s")] Attribute supports set queries (s -- set). */
+		// TODO: #define Dee_ATTRPERM_F_CANCALL  0x0008 /* [NAME("f")] The attribute is intended to be called (f -- function). */
+		// TODO: #define Dee_ATTRPERM_F_IMEMBER  0x0010 /* [NAME("i")] This attribute is an instance attribute (i -- instance). */
+		// TODO: #define Dee_ATTRPERM_F_CMEMBER  0x0020 /* [NAME("c")] This attribute is a class attribute (c -- class). */
+	}
+	DO(err_temp, DeeFormat_Printf(printer, arg, " %s attribute ", what));
+	DO(err_temp, AttributeError_print_attr_str(self, printer, arg));
+done:
+	return result;
+err_temp:
+	return temp;
+}
+
+PUBLIC DeeTypeObject DeeError_RestrictedAttribute =
+INIT_LIKE_ATTRIBUTE_ERROR("RestrictedAttribute", "(" AttributeError_init_params ")",
+                          TP_FNORMAL, &DeeError_AttributeError, NULL, &RestrictedAttribute_print,
+                          NULL, NULL, NULL);
+
+
+/* Throws an `DeeError_RestrictedAttribute' indicating that the specified attribute access is invalid */
+PUBLIC ATTR_COLD NONNULL((2, 3)) int
+(DCALL DeeRT_ErrTRestrictedAttr)(DeeObject *decl, DeeObject *ob, DeeObject *attr, unsigned int access) {
+	return DeeRT_ErrAttributeError_impl(&DeeError_RestrictedAttribute, decl, ob, attr, access);
+}
+
+PUBLIC ATTR_COLD NONNULL((2, 3)) int
+(DCALL DeeRT_ErrTRestrictedAttrCStr)(DeeObject *decl, DeeObject *ob, char const *attr, unsigned int access) {
+	return DeeRT_ErrAttributeErrorCStr_impl(&DeeError_RestrictedAttribute, decl, ob, attr, access);
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrCRestrictedAttrCA)(DeeObject *ob, struct class_attribute const *attr, unsigned int access) {
+	return DeeRT_ErrAttributeErrorCA_impl(&DeeError_RestrictedAttribute, ob, attr, access);
+}
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrRestrictedAttrEx)(DeeObject *ob, struct Dee_attrdesc const *attr, unsigned int access) {
+	return DeeRT_ErrAttributeErrorEx_impl(&DeeError_RestrictedAttribute, ob, attr, access);
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrRestrictedMethod)(DeeObject *ob, struct type_method const *attr, unsigned int access) {
+	return DeeRT_ErrAttributeErrorMethod_impl(&DeeError_RestrictedAttribute, ob, attr, access);
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrRestrictedGetSet)(DeeObject *ob, struct type_getset const *attr, unsigned int access) {
+	return DeeRT_ErrAttributeErrorGetSet_impl(&DeeError_RestrictedAttribute, ob, attr, access);
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrRestrictedMember)(DeeObject *ob, struct type_member const *attr, unsigned int access) {
+	return DeeRT_ErrAttributeErrorMember_impl(&DeeError_RestrictedAttribute, ob, attr, access);
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrCAlreadyBoundInstanceMember)(DeeTypeObject *class_type,
+                                             DeeObject *instance, uint16_t addr) {
+	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
+	if unlikely(!result)
+		goto err;
+	DBG_memset(result, 0xcc, sizeof(*result));
+	ASSERT_OBJECT_TYPE_A(instance, class_type);
+	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
+	ASSERT(DeeType_IsClass(class_type));
+	result->e_message = NULL;
+	result->e_inner   = NULL;
+	Dee_Incref(instance);
+	result->ae_obj = instance;
+	result->ae_desc.ad_info.ai_decl = (DeeObject *)class_type;
+	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT;
+	result->ae_desc.ad_info.ai_value.v_any = (void *)(uintptr_t)addr;
+	result->ae_flags = AttributeError_F_SET | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
+	DeeObject_Init(result, &DeeError_RestrictedAttribute);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+
 
 DECL_END
 

@@ -610,7 +610,7 @@ kwds_getitem(Kwds *self, DeeObject *key) {
 		goto nope;
 	return DeeInt_NewSize(index);
 nope:
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 	return NULL;
 }
 
@@ -1274,7 +1274,7 @@ kmap_getitem(KwdsMapping *self, DeeObject *key) {
 		return result;
 	}
 nope:
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 	return NULL;
 }
 
@@ -1387,7 +1387,7 @@ kmap_getitemnr(DeeKwdsMappingObject *__restrict self,
 		DeeKwdsMapping_LockEndRead(self);
 		return result;
 	}
-	DeeRT_ErrUnknownKey((DeeObject *)self, name);
+	DeeRT_ErrUnknownKey(self, name);
 	return NULL;
 }
 

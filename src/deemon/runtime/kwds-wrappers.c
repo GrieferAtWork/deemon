@@ -545,7 +545,7 @@ blv_getitemnr(DeeBlackListKwdsObject *__restrict self,
 	DeeBlackListKwds_LockEndRead(self);
 	return result;
 missing:
-	DeeRT_ErrUnknownKey((DeeObject *)self, name);
+	DeeRT_ErrUnknownKey(self, name);
 	return NULL;
 }
 
@@ -563,7 +563,7 @@ blv_getitemnr_string_hash(DeeBlackListKwdsObject *__restrict self,
 	DeeBlackListKwds_LockEndRead(self);
 	return result;
 missing:
-	DeeRT_ErrUnboundKeyStr((DeeObject *)self, name);
+	DeeRT_ErrUnboundKeyStr(self, name);
 	return NULL;
 }
 
@@ -582,7 +582,7 @@ blv_getitemnr_string_len_hash(DeeBlackListKwdsObject *__restrict self,
 	DeeBlackListKwds_LockEndRead(self);
 	return result;
 missing:
-	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, name, namelen);
+	DeeRT_ErrUnknownKeyStrLen(self, name, namelen);
 	return NULL;
 }
 
@@ -642,7 +642,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blv_getitem(DeeBlackListKwdsObject *self, DeeObject *key) {
 	DREF DeeObject *result;
 	if unlikely(!DeeString_Check(key)) {
-		DeeRT_ErrUnknownKey((DeeObject *)self, key);
+		DeeRT_ErrUnknownKey(self, key);
 		return NULL;
 	}
 	result = blv_getitemnr(self, key);
@@ -1427,7 +1427,7 @@ blkw_getitemnr(DeeBlackListKwObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	if likely(!DeeBlackListKw_IsBlackListed(self, name))
 		return DeeKw_GetItemNR(DeeBlackListKw_KW(self), name);
-	DeeRT_ErrUnknownKey((DeeObject *)self, name);
+	DeeRT_ErrUnknownKey(self, name);
 	return NULL;
 }
 
@@ -1436,7 +1436,7 @@ blkw_getitemnr_string_hash(DeeBlackListKwObject *__restrict self,
                            char const *__restrict name, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringHash(self, name, hash))
 		return DeeKw_GetItemNRStringHash(DeeBlackListKw_KW(self), name, hash);
-	DeeRT_ErrUnboundKeyStr((DeeObject *)self, name);
+	DeeRT_ErrUnboundKeyStr(self, name);
 	return NULL;
 }
 
@@ -1446,7 +1446,7 @@ blkw_getitemnr_string_len_hash(DeeBlackListKwObject *__restrict self,
                                size_t namelen, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, hash))
 		return DeeKw_GetItemNRStringLenHash(DeeBlackListKw_KW(self), name, namelen, hash);
-	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, name, namelen);
+	DeeRT_ErrUnknownKeyStrLen(self, name, namelen);
 	return NULL;
 }
 
@@ -1577,7 +1577,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blkw_getitem(DeeBlackListKwObject *self, DeeObject *key) {
 	if likely(DeeString_Check(key) && !DeeBlackListKw_IsBlackListed(self, key))
 		return DeeObject_GetItem(DeeBlackListKw_KW(self), key);
-	DeeRT_ErrUnknownKey((DeeObject *)self, key);
+	DeeRT_ErrUnknownKey(self, key);
 	return NULL;
 }
 
@@ -1585,7 +1585,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blkw_getitem_string_hash(DeeBlackListKwObject *__restrict self, char const *key, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringHash(self, key, hash))
 		return DeeObject_GetItemStringHash(DeeBlackListKw_KW(self), key, hash);
-	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyStr(self, key);
 	return NULL;
 }
 
@@ -1593,7 +1593,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blkw_getitem_string_len_hash(DeeBlackListKwObject *__restrict self, char const *key, size_t keylen, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, key, keylen, hash))
 		return DeeObject_GetItemStringLenHash(DeeBlackListKw_KW(self), key, keylen, hash);
-	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+	DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 	return NULL;
 }
 
