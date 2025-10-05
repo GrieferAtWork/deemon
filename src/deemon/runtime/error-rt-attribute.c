@@ -55,6 +55,9 @@ DECL_BEGIN
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 #define DO(err, expr)                    \
 	do {                                 \
 		if unlikely((temp = (expr)) < 0) \
@@ -156,12 +159,29 @@ struct type_member_buffer {
 	char const                *mb_name;
 	union Dee_type_member_desc mb_desc;
 };
+STATIC_ASSERT_MSG(sizeof(struct type_member_buffer) == (2 * sizeof(char *)),
+                  "Type member buffers must be sized such they fit over the "
+                  "'ad_name' and 'ad_doc' fields of 'struct Dee_attrdesc'");
+STATIC_ASSERT_MSG((COMPILER_OFFSETAFTER(struct Dee_attrdesc, ad_name) == offsetof(struct Dee_attrdesc, ad_doc)) ||
+                  (COMPILER_OFFSETAFTER(struct Dee_attrdesc, ad_doc) == offsetof(struct Dee_attrdesc, ad_name)),
+                  "The 'ad_name' and 'ad_doc' fields must be adjacent, so that "
+                  "we're able to overlay then with 'struct type_member_buffer'");
+#define Dee_attrdesc__offsetof__type_member_buffer \
+	__hybrid_min_c2(offsetof(struct Dee_attrdesc, ad_name), offsetof(struct Dee_attrdesc, ad_doc))
+
+/* Returns a pointer to the "struct type_member_buffer" that may be embedded into
+ * "struct Dee_attrdesc" by "AttributeError" when "AttributeError_F_LAZYDECL" is
+ * used with "Dee_ATTRINFO_MEMBER" (or "Dee_ATTRINFO_INSTANCE_MEMBER") */
+#define Dee_attrdesc__type_member_buffer(self) \
+	((struct type_member_buffer *)((byte_t *)(self) + Dee_attrdesc__offsetof__type_member_buffer))
 
 #define type_member_buffer_init(self, member)  \
 	(void)((self)->mb_name = (member)->m_name, \
 	       (self)->mb_desc = (member)->m_desc)
 #define type_member_buffer_asmember(self) \
 	COMPILER_CONTAINER_OF(&(self)->mb_name, struct type_member, m_name)
+#define type_member_asmember_buffer(self) \
+	COMPILER_CONTAINER_OF(&(self)->m_name, struct type_member_buffer, mb_name)
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((2)) struct type_member const *DCALL
 type_members_findbuffer(struct type_member const *chain,
@@ -212,9 +232,7 @@ typedef struct {
 #define AttributeError_F_LOADLOCK 0x8000 /* Lock to ensure only 1 thread does the loading */
 #endif /* !CONFIG_NO_THREADS */
 	unsigned int        ae_flags; /* Set of `AttributeError_F_*' */
-	union {
-		struct type_member_buffer eas_type_member; /* Maybe used internally when "AttributeError_F_LAZYDECL" is set */
-	} ea_storage;
+
 	/* When "AttributeError_F_LAZYDECL" is set, a second-stage lazy initialization
 	 * takes places whenever the "name" and/or "decl" of the exception is required.
 	 * This initialization requires that "AttributeError_F_INFOLOADED" be already
@@ -257,9 +275,9 @@ typedef struct {
 	 *   "Dee_ATTRINFO_MEMBER" is changed to "Dee_ATTRINFO_INSTANCE_MEMBER"
 	 *   if "ae_obj" is a type, and "v_member" is one of its "tp_members".
 	 *   Alternatively, you can also set:
-	 *   - struct type_member const  *ae_desc.ad_info.ai_value.v_member = (struct type_member *)&ea_storage.eas_type_member;
-	 *   - char const                *ea_storage.eas_type_member.mb_name = <`m_name' of accessed type_member>;
-	 *   - union Dee_type_member_desc ea_storage.eas_type_member.mb_desc = <`m_desc' of accessed type_member>;
+	 *   - struct type_member const  *ae_desc.ad_info.ai_value.v_member = (struct type_member *)Dee_attrdesc__type_member_buffer(&ae_desc);
+	 *   - char const                *Dee_attrdesc__type_member_buffer(&ae_desc)->mb_name = <`m_name' of accessed type_member>;
+	 *   - union Dee_type_member_desc Dee_attrdesc__type_member_buffer(&ae_desc)->mb_desc = <`m_desc' of accessed type_member>;
 	 *   This behaves the same as the above, but also works then you don't have access
 	 *   to the pointer to the original "struct type_member" from the relevant type's
 	 *   "tp_members" or "tp_class_members", as is the case when called from a type's
@@ -469,22 +487,22 @@ return_decl_type:
 		self->ae_desc.ad_name = member->m_name;
 		self->ae_desc.ad_perm = 0;
 		decl_type = DeeTypeMRO_Init(&mro, Dee_TYPE(ob));
-		if (member == type_member_buffer_asmember(&self->ea_storage.eas_type_member)) {
+		if (member == type_member_buffer_asmember(Dee_attrdesc__type_member_buffer(&self->ae_desc))) {
+			struct type_member_buffer *buffer;
+			buffer = type_member_asmember_buffer(member);
+			ASSERT(buffer == Dee_attrdesc__type_member_buffer(&self->ae_desc));
 			do {
-				member = type_members_findbuffer(decl_type->tp_members,
-				                                 &self->ea_storage.eas_type_member);
+				member = type_members_findbuffer(decl_type->tp_members, buffer);
 				if (member)
 					goto got_member_from_buffer;
 			} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
 			if (DeeType_Check(ob)) {
 				decl_type = DeeTypeMRO_Init(&mro, (DeeTypeObject *)ob);
 				do {
-					member = type_members_findbuffer(decl_type->tp_class_members,
-					                                 &self->ea_storage.eas_type_member);
+					member = type_members_findbuffer(decl_type->tp_class_members, buffer);
 					if (member)
 						goto got_member_from_buffer;
-					member = type_members_findbuffer(decl_type->tp_members,
-					                                 &self->ea_storage.eas_type_member);
+					member = type_members_findbuffer(decl_type->tp_members, buffer);
 					if (member) {
 						self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_MEMBER;
 						goto got_member_from_buffer;
@@ -1707,6 +1725,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 (DCALL DeeRT_ErrUnboundMember)(DeeObject *ob, struct Dee_type_member const *attr) {
+	struct type_member_buffer *buffer;
 	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
 	if unlikely(!result)
 		goto err;
@@ -1716,14 +1735,15 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_MEMBER; /* Changed to "Dee_ATTRINFO_INSTANCE_MEMBER" if appropriate */
-	result->ae_desc.ad_info.ai_value.v_member = (struct type_member const *)&result->ea_storage.eas_type_member;
+	buffer = Dee_attrdesc__type_member_buffer(&result->ae_desc);
+	result->ae_desc.ad_info.ai_value.v_member = type_member_buffer_asmember(buffer);
 	result->ae_flags = AttributeError_F_GET | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
 	/* Special case: We might get here from a context where "attr" is a stack-allocated copy
 	 *               of an incomplete (as in: missing the doc string) member descriptor that
 	 *               was previously copied out of `struct Dee_membercache_slot'.
 	 * To deal with this case, we have to create yet another copy that will then be resolved
 	 * lazily when the attribute error's declaration location is loaded. */
-	type_member_buffer_init(&result->ea_storage.eas_type_member, attr);
+	type_member_buffer_init(buffer, attr);
 	DeeObject_Init(result, &DeeError_UnboundAttribute);
 	DeeError_ThrowInherited((DeeObject *)result);
 err:
