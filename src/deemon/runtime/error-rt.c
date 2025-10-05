@@ -1168,7 +1168,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	return DeeRT_ErrItemNotFoundEx(seq, item, 0, (size_t)-1, NULL);
 }
 
-PUBLIC ATTR_COLD NONNULL((1, 2, 5)) int
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrItemNotFoundEx)(DeeObject *seq, DeeObject *item,
                                 size_t start, size_t end, DeeObject *key) {
 	DREF ItemNotFound *result = DeeObject_MALLOC(ItemNotFound);

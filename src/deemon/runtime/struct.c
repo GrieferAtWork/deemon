@@ -48,7 +48,7 @@ DECL_BEGIN
 #define byte_t __BYTE_TYPE__
 
 /* Check if "type" defines a type_member field at "field_offset" */
-PRIVATE WUNUSED NONNULL((1)) bool DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 struct_offset_exists(DeeTypeObject const *type,
                      uintptr_half_t field_offset) {
 	struct type_member const *member = type->tp_members;
@@ -64,7 +64,7 @@ struct_offset_exists(DeeTypeObject const *type,
 }
 
 /* Check if a field at "field_offset" is defined within [origin,stop) */
-PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 struct_offset_renamed_after(DeeTypeObject const *stop,
                             DeeTypeObject const *origin,
                             uintptr_half_t field_offset) {
@@ -77,7 +77,7 @@ struct_offset_renamed_after(DeeTypeObject const *stop,
 }
 
 /* Check if a field at "field_offset" exists below (or within) "start" */
-PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 struct_offset_exists_r(DeeTypeObject const *start,
                        uintptr_half_t field_offset) {
 	while (start != &DeeObject_Type) {
