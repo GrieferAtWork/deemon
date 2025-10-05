@@ -5449,9 +5449,6 @@ do_pack_dict:
 #endif /* !EXEC_SAFE */
 					index += code->co_argc_max;
 					if (index >= frame->cf_argc) {
-						size_t va_size = 0;
-						if (frame->cf_argc > code->co_argc_max)
-							va_size = (size_t)(frame->cf_argc - code->co_argc_max);
 						DeeRT_ErrVaIndexOutOfBounds(frame, (size_t)(index - code->co_argc_max));
 						HANDLE_EXCEPT();
 					}

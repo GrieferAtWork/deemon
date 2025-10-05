@@ -875,12 +875,12 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 	DeeObject *isget, *isdel, *isset;
 	if unlikely(DeeKwArgs_Init(&kwds, &argc, argv, kw))
 		goto err;
-#define LOADARG(dst, i, name)               \
+#define LOADARG(T, dst, i, name)            \
 	do {                                    \
 		if ((i) < argc)                     \
-			*(DeeObject **)(dst) = argv[i]; \
+			*(dst) = (T *)argv[i];          \
 		else {                              \
-			*(DeeObject **)(dst) = DeeKwArgs_TryGetItemNRStringHash(&kwds, #name, Dee_HashStr__##name); \
+			*(dst) = (T *)DeeKwArgs_TryGetItemNRStringHash(&kwds, #name, Dee_HashStr__##name); \
 			if (!ITER_ISOK(*(dst))) {       \
 				if unlikely(*(dst) == NULL) \
 					goto err;               \
@@ -890,14 +890,14 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 	}	__WHILE0
 #define AttributeError_init_params   Error_init_params ",ob?,attr?:?X2?Dstring?DAttribute,decl?:?X3?DType?DModule?O,isget=!f,isdel=!f,isset=!f"
 #define UnboundAttribute_init_params Error_init_params ",ob?,attr?:?X2?Dstring?DAttribute,decl?:?X3?DType?DModule?O,isget=!t,isdel=!f,isset=!f"
-	LOADARG(&self->e_message, 0, message);
-	LOADARG(&self->e_inner, 1, inner);
-	LOADARG(&self->ae_obj, 2, ob);
-	LOADARG(&attr, 3, attr);
-	LOADARG(&self->ae_desc.ad_info.ai_decl, 4, decl);
-	LOADARG(&isget, 5, isget);
-	LOADARG(&isdel, 6, isdel);
-	LOADARG(&isset, 7, isset);
+	LOADARG(DeeStringObject, &self->e_message, 0, message);
+	LOADARG(DeeObject, &self->e_inner, 1, inner);
+	LOADARG(DeeObject, &self->ae_obj, 2, ob);
+	LOADARG(DeeObject, &attr, 3, attr);
+	LOADARG(DeeObject, &self->ae_desc.ad_info.ai_decl, 4, decl);
+	LOADARG(DeeObject, &isget, 5, isget);
+	LOADARG(DeeObject, &isdel, 6, isdel);
+	LOADARG(DeeObject, &isset, 7, isset);
 #undef LOADARG
 	if (argc > 8)
 		return DeeArg_BadArgcEx(Dee_TYPE(self)->tp_name, argc, 0, 8);

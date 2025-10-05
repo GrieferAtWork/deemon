@@ -24,9 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
-#include <deemon/class.h>
 #include <deemon/code.h>
-#include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
@@ -34,13 +32,16 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/method-hints.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/struct.h>
 #include <deemon/system-features.h>
+#include <deemon/tuple.h>
 #include <deemon/variant.h>
 
 #include <hybrid/int128.h>
