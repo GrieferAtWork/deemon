@@ -1085,9 +1085,12 @@ AttributeError_print(AttributeError *__restrict self,
 	Dee_ssize_t temp, result;
 	if (self->e_message)
 		return error_print((DeeErrorObject *)self, printer, arg);
-	result = DeeFormat_Printf(printer, arg, "<%s ", Dee_TYPE(self)->tp_name);
+	result = DeeFormat_Printf(printer, arg, "<%s", Dee_TYPE(self)->tp_name);
 	if unlikely(result < 0)
 		goto done;
+	DO(err_temp, DeeFormat_PRINT(printer, arg, " during "));
+	DO(err_temp, AttributeError_print_access_mode(self, printer, arg));
+	DO(err_temp, DeeFormat_PRINT(printer, arg, " of "));
 	DO(err_temp, AttributeError_print_attr_str(self, printer, arg));
 	DO(err_temp, DeeFormat_PRINT(printer, arg, ">"));
 done:
@@ -1525,7 +1528,7 @@ unwrap_decl_and_ob(DeeObject **p_decl, DeeObject **p_ob) {
 	}
 }
 
-PRIVATE ATTR_COLD NONNULL((1, 3, 4)) DeeObject *DCALL
+PRIVATE ATTR_COLD NONNULL((1, 3, 4)) int DCALL
 DeeRT_ErrAttributeError_impl(DeeTypeObject *error_type, DeeObject *decl,
                              DeeObject *ob, DeeObject *attr,
                              unsigned int flags) {
@@ -1548,12 +1551,12 @@ DeeRT_ErrAttributeError_impl(DeeTypeObject *error_type, DeeObject *decl,
 	result->ae_desc.ad_info.ai_decl = decl;
 	result->ae_flags = flags;
 	DeeObject_Init(result, error_type);
-	DeeError_ThrowInherited((DeeObject *)result);
+	return DeeError_ThrowInherited((DeeObject *)result);
 err:
-	return NULL;
+	return -1;
 }
 
-PRIVATE ATTR_COLD NONNULL((1, 3, 4)) DeeObject *DCALL
+PRIVATE ATTR_COLD NONNULL((1, 3, 4)) int DCALL
 DeeRT_ErrAttributeErrorCStr_impl(DeeTypeObject *error_type, DeeObject *decl,
                                  DeeObject *ob, /*static*/ char const *attr,
                                  unsigned int flags) {
@@ -1576,9 +1579,9 @@ DeeRT_ErrAttributeErrorCStr_impl(DeeTypeObject *error_type, DeeObject *decl,
 	result->ae_desc.ad_info.ai_decl = decl;
 	result->ae_flags = flags;
 	DeeObject_Init(result, error_type);
-	DeeError_ThrowInherited((DeeObject *)result);
+	return DeeError_ThrowInherited((DeeObject *)result);
 err:
-	return NULL;
+	return -1;
 }
 
 
@@ -1614,12 +1617,16 @@ INIT_LIKE_ATTRIBUTE_ERROR("UnboundAttribute", "(" UnboundAttribute_init_params "
  * @return: NULL: Always returns "NULL" (for easy chaining when called form getters) */
 PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 (DCALL DeeRT_ErrUnboundAttr)(DeeObject *ob, /*string*/ DeeObject *attr) {
-	return DeeRT_ErrAttributeError_impl(&DeeError_UnboundAttribute, NULL, ob, attr, AttributeError_F_GET);
+	DeeRT_ErrAttributeError_impl(&DeeError_UnboundAttribute, NULL,
+	                             ob, attr, AttributeError_F_GET);
+	return NULL;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 (DCALL DeeRT_ErrUnboundAttrCStr)(DeeObject *ob, /*static*/ char const *attr) {
-	return DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnboundAttribute, NULL, ob, attr, AttributeError_F_GET);
+	DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnboundAttribute, NULL,
+	                                 ob, attr, AttributeError_F_GET);
+	return NULL;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
@@ -1668,14 +1675,16 @@ err:
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
 (DCALL DeeRT_ErrTUnboundAttr)(DeeObject *decl, DeeObject *ob, /*string*/ DeeObject *attr) {
-	return DeeRT_ErrAttributeError_impl(&DeeError_UnboundAttribute, decl, ob,
-	                                    attr, AttributeError_F_GET);
+	DeeRT_ErrAttributeError_impl(&DeeError_UnboundAttribute, decl, ob,
+	                             attr, AttributeError_F_GET);
+	return NULL;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
 (DCALL DeeRT_ErrTUnboundAttrCStr)(DeeObject *decl, DeeObject *ob, /*static*/ char const *attr) {
-	return DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnboundAttribute, decl, ob,
-	                                        attr, AttributeError_F_GET);
+	DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnboundAttribute, decl, ob,
+	                                 attr, AttributeError_F_GET);
+	return NULL;
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
@@ -1775,22 +1784,23 @@ INIT_LIKE_ATTRIBUTE_ERROR("UnknownAttribute", "(" AttributeError_init_params ")"
 PUBLIC ATTR_COLD NONNULL((2, 3)) int
 (DCALL DeeRT_ErrTUnknownAttr)(DeeObject *decl, DeeObject *ob,
                               DeeObject *attr, unsigned int access) {
-	DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl, ob, attr, access);
-	return -1;
+	return DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl, ob, attr, access);
 }
 
 PUBLIC ATTR_COLD NONNULL((2, 3)) int
 (DCALL DeeRT_ErrTUnknownAttrStr)(DeeObject *decl, DeeObject *ob,
                                  char const *attr, unsigned int access) {
-	if (DeeSystem_IsStaticPointer(attr)) {
-		DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnknownAttribute, decl, ob, attr, access);
-	} else {
-		DREF DeeObject *attr_ob = DeeString_New(attr);
-		if likely(attr_ob) {
-			DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl, ob, attr_ob, access);
-			Dee_Decref_unlikely(attr_ob);
-		}
-	}
+	int result;
+	DREF DeeObject *attr_ob;
+	if (DeeSystem_IsStaticPointer(attr))
+		return DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnknownAttribute, decl, ob, attr, access);
+	attr_ob = DeeString_New(attr);
+	if unlikely(!attr_ob)
+		goto err;
+	result = DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl, ob, attr_ob, access);
+	Dee_Decref_unlikely(attr_ob);
+	return result;
+err:
 	return -1;
 }
 
@@ -1798,6 +1808,7 @@ PUBLIC ATTR_COLD NONNULL((2, 3)) int
 (DCALL DeeRT_ErrTUnknownAttrStrLen)(DeeObject *decl, DeeObject *ob,
                                     char const *attr, size_t attrlen,
                                     unsigned int access) {
+	int result;
 	DREF DeeObject *attr_ob;
 #ifdef __ARCH_PAGESIZE
 	if (DeeSystem_IsStaticPointer(attr)) {
@@ -1805,17 +1816,18 @@ PUBLIC ATTR_COLD NONNULL((2, 3)) int
 		uintptr_t attr_startpage = (uintptr_t)attr & (__ARCH_PAGESIZE - 1);
 		uintptr_t attr_endpage = (uintptr_t)attr_end & (__ARCH_PAGESIZE - 1);
 		if (attr_startpage == attr_endpage && *attr_end == '\0') {
-			DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnknownAttribute,
-			                                 decl, ob, attr, access);
-			return -1;
+			return DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnknownAttribute,
+			                                        decl, ob, attr, access);
 		}
 	}
 #endif /* __ARCH_PAGESIZE */
 	attr_ob = DeeString_NewSized(attr, attrlen);
-	if likely(attr_ob) {
-		DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl, ob, attr_ob, access);
-		Dee_Decref_unlikely(attr_ob);
-	}
+	if unlikely(!attr_ob)
+		goto err;
+	result = DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl, ob, attr_ob, access);
+	Dee_Decref_unlikely(attr_ob);
+	return result;
+err:
 	return -1;
 }
 

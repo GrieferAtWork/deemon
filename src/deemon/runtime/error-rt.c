@@ -76,21 +76,9 @@ DECL_BEGIN
 import define_Dee_HashStr from rt.gen.hash;
 print define_Dee_HashStr("message");
 print define_Dee_HashStr("inner");
-print define_Dee_HashStr("ob");
-print define_Dee_HashStr("attr");
-print define_Dee_HashStr("decl");
-print define_Dee_HashStr("isget");
-print define_Dee_HashStr("isdel");
-print define_Dee_HashStr("isset");
 ]]]*/
 #define Dee_HashStr__message _Dee_HashSelectC(0x14820755, 0xbeaa4b97155366df)
 #define Dee_HashStr__inner _Dee_HashSelectC(0x20e82985, 0x4f20d07bb803c1fe)
-#define Dee_HashStr__ob _Dee_HashSelectC(0xdfa5fee2, 0x80a90888850ad043)
-#define Dee_HashStr__attr _Dee_HashSelectC(0x55cfee3, 0xe4311a2c8443755d)
-#define Dee_HashStr__decl _Dee_HashSelectC(0x95fe81e2, 0xdc35fdc1dce5cffc)
-#define Dee_HashStr__isget _Dee_HashSelectC(0x5c9806e4, 0x5d9b765d747113e0)
-#define Dee_HashStr__isdel _Dee_HashSelectC(0xb56dbf78, 0x80c483cf4d2ec758)
-#define Dee_HashStr__isset _Dee_HashSelectC(0xbc9a78a1, 0x5b60f653e62d5e87)
 /*[[[end]]]*/
 
 

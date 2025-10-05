@@ -150,13 +150,8 @@ STATIC_ASSERT(sizeof(long) == __SIZEOF_LONG__);
 			goto err;                    \
 		result += temp;                  \
 	}	__WHILE0
-#define print(p, s)                   \
-	do {                              \
-		temp = (*printer)(arg, p, s); \
-		if unlikely(temp < 0)         \
-			goto err;                 \
-		result += temp;               \
-	}	__WHILE0
+#define print(p, s) \
+	DO((*printer)(arg, p, s))
 
 PRIVATE NONNULL((1)) void DCALL
 format_cleanup(char const *__restrict format, va_list args) {

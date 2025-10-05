@@ -2210,7 +2210,8 @@ PUBLIC void
 }
 
 PUBLIC ATTR_NORETURN void
-(_DeeAssert_XFailf)(char const *expr, char const *file, int line, char const *format, ...) {
+(_DeeAssert_XFailf)(char const *expr, char const *file,
+                    int line, char const *format, ...) {
 	assert_printf("\n\n\n"
 	              "%s(%d) : Assertion failed : %s\n",
 	              file, line, expr);
@@ -2310,8 +2311,6 @@ PUBLIC ATTR_CONST WUNUSED size_t
 	}
 	return result;
 }
-
-
 
 DECL_END
 
