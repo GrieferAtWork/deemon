@@ -215,6 +215,78 @@ typedef struct {
 	union {
 		struct type_member_buffer eas_type_member; /* Maybe used internally when "AttributeError_F_LAZYDECL" is set */
 	} ea_storage;
+	/* When "AttributeError_F_LAZYDECL" is set, a second-stage lazy initialization
+	 * takes places whenever the "name" and/or "decl" of the exception is required.
+	 * This initialization requires that "AttributeError_F_INFOLOADED" be already
+	 * set, and its actions depend on "ae_desc.ad_info.ai_type" and the following
+	 * pre-initializations:
+	 *
+	 * - Dee_ATTRINFO_CUSTOM:
+	 *   - DREF DeeObject         *ae_obj = <Accessed Object>;
+	 *   - char const             *ae_desc.ad_name = <name_of_attribute>; // [DREF_IF(Dee_ATTRPERM_F_NAMEOBJ)]
+	 *   - Dee_attrperm_t          ae_desc.ad_perm = 0 | Dee_ATTRPERM_F_NAMEOBJ;
+	 *   - uintptr_t               ae_desc.ad_info.ai_type = Dee_ATTRINFO_CUSTOM;
+	 *   - struct type_attr const *ae_desc.ad_info.ai_value.v_custom = <attribute operators>;
+	 *
+	 * - Dee_ATTRINFO_MODSYM:
+	 *   - DREF DeeModuleObject       *ae_obj = <Accessed Module>;
+	 *   - uintptr_t                   ae_desc.ad_info.ai_type = Dee_ATTRINFO_MODSYM;
+	 *   - struct module_symbol const *ae_desc.ad_info.ai_value.v_modsym = <accessed symbol>;
+	 *
+	 * - Dee_ATTRINFO_METHOD:
+	 *   Dee_ATTRINFO_INSTANCE_METHOD:
+	 *   - DREF DeeObject           *ae_obj = <Accessed Object or Type>;
+	 *   - uintptr_t                 ae_desc.ad_info.ai_type = Dee_ATTRINFO_METHOD;
+	 *   - struct type_method const *ae_desc.ad_info.ai_value.v_method = <accessed method>;
+	 *   "Dee_ATTRINFO_METHOD" is changed to "Dee_ATTRINFO_INSTANCE_METHOD"
+	 *   if "ae_obj" is a type, and "v_method" is one of its "tp_methods".
+	 *
+	 * - Dee_ATTRINFO_GETSET:
+	 *   Dee_ATTRINFO_INSTANCE_GETSET:
+	 *   - DREF DeeObject           *ae_obj = <Accessed Object or Type>;
+	 *   - uintptr_t                 ae_desc.ad_info.ai_type = Dee_ATTRINFO_GETSET;
+	 *   - struct type_getset const *ae_desc.ad_info.ai_value.v_getset = <accessed getset>;
+	 *   "Dee_ATTRINFO_GETSET" is changed to "Dee_ATTRINFO_INSTANCE_GETSET"
+	 *   if "ae_obj" is a type, and "v_getset" is one of its "tp_getsets".
+	 *
+	 * - Dee_ATTRINFO_MEMBER:
+	 *   Dee_ATTRINFO_INSTANCE_MEMBER:
+	 *   - DREF DeeObject           *ae_obj = <Accessed Object or Type>;
+	 *   - uintptr_t                 ae_desc.ad_info.ai_type = Dee_ATTRINFO_MEMBER;
+	 *   - struct type_member const *ae_desc.ad_info.ai_value.v_member = <accessed member>;
+	 *   "Dee_ATTRINFO_MEMBER" is changed to "Dee_ATTRINFO_INSTANCE_MEMBER"
+	 *   if "ae_obj" is a type, and "v_member" is one of its "tp_members".
+	 *   Alternatively, you can also set:
+	 *   - struct type_member const  *ae_desc.ad_info.ai_value.v_member = (struct type_member *)&ea_storage.eas_type_member;
+	 *   - char const                *ea_storage.eas_type_member.mb_name = <`m_name' of accessed type_member>;
+	 *   - union Dee_type_member_desc ea_storage.eas_type_member.mb_desc = <`m_desc' of accessed type_member>;
+	 *   This behaves the same as the above, but also works then you don't have access
+	 *   to the pointer to the original "struct type_member" from the relevant type's
+	 *   "tp_members" or "tp_class_members", as is the case when called from a type's
+	 *   "struct Dee_membercache_table".
+	 *
+	 * - Dee_ATTRINFO_ATTR:
+	 *   Dee_ATTRINFO_INSTANCE_ATTR:
+	 *   - DREF DeeObject               *ae_obj = <Accessed Object or Type>;
+	 *   - uintptr_t                     ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTR;
+	 *   - struct class_attribute const *ae_desc.ad_info.ai_value.v_attr = <accessed attribute>;
+	 *   "Dee_ATTRINFO_ATTR" is changed to "Dee_ATTRINFO_INSTANCE_ATTR" if "ae_obj"
+	 *   is a type, and "v_attr" is one of its "tp_class->cd_desc->cd_iattr_list".
+	 *
+	 * - Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT:
+	 *   - DREF DeeTypeObject *ae_obj = <Accessed Type (which must be DeeType_IsClass)>;
+	 *   - uintptr_t           ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT;
+	 *   - uint16_t            ae_desc.ad_info.ai_value.v_any = <Index into `struct class_desc::cd_members'>;
+	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT" is changed to "Dee_ATTRINFO_ATTR"
+	 *   or "Dee_ATTRINFO_INSTANCE_ATTR" as appropriate.
+	 *
+	 * - Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT:
+	 *   - DREF DeeObject *ae_obj = <Accessed instance object (or a class type)>;
+	 *   - DeeTypeObject  *ae_desc.ad_info.ai_decl = <Accessed Type (which must be DeeType_IsClass)>; // -- !!NOT!! initialized as a reference!
+	 *   - uintptr_t       ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT;
+	 *   - uint16_t        ae_desc.ad_info.ai_value.v_any = <Index into `struct instance_desc::id_vtab'>;
+	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT" is changed to "Dee_ATTRINFO_ATTR".
+	 */
 } AttributeError;
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) struct class_attribute const *DCALL
@@ -446,11 +518,15 @@ got_member_from_buffer:
 		uint16_t addr = (uint16_t)(uintptr_t)self->ae_desc.ad_info.ai_value.v_any;
 		DeeTypeObject *class_type = (DeeTypeObject *)self->ae_obj;
 		struct class_attribute const *attr;
+		DeeClassDescriptorObject *desc;
 		ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 		ASSERT(DeeType_IsClass(class_type));
-		attr = ClassDescriptor_ClassAttrAt(DeeClass_DESC(class_type)->cd_desc, addr);
+		desc = DeeClass_DESC(class_type)->cd_desc;
+		attr = ClassDescriptor_ClassAttrAt(desc, addr);
 		if likely(attr) {
 			self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTR;
+			if (ClassDescriptor_IsInstanceAttr(desc, attr))
+				self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_ATTR;
 			self->ae_desc.ad_info.ai_value.v_attr = attr;
 			self->ae_desc.ad_name = DeeString_STR(attr->ca_name);
 			Dee_Incref(Dee_attrdesc_nameobj(&self->ae_desc));
