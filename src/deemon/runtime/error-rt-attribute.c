@@ -1010,6 +1010,11 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 			return DeeError_Throwf(&DeeError_TypeError, "%s: 'decl' given, but no 'attr'", Dee_TYPE(self)->tp_name);
 		if unlikely(self->ae_obj)
 			return DeeError_Throwf(&DeeError_TypeError, "%s: 'ob' given, but no 'attr'", Dee_TYPE(self)->tp_name);
+		/* Debug-memset with bad data so string pointers are non-equal between instances,
+		 * thus ensuring that when comparing errors, deemon crashes when strings are accessed
+		 * even when there isn't an object (strings shouldn't be accessed when there is
+		 * no "ob" linked to the AttributeError) */
+		DBG_memset(&self->ae_desc, 0xcc ^ (uint8_t)Dee_HashPointer(self), sizeof(self->ae_desc));
 	}
 	Dee_XIncref(self->e_message);
 	Dee_XIncref(self->e_inner);
@@ -1243,7 +1248,6 @@ dee_memcmp2(void const *lhs, size_t lhs_size,
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
                             int (DCALL *cmp)(DeeObject *, DeeObject *)) {
-	DeeObject *lhs_decl, *rhs_decl;
 	int result;
 	if (lhs->e_message != rhs->e_message) {
 		if (!lhs->e_message)
@@ -1279,50 +1283,54 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 #endif
 	}
 
-	AttributeError_LoadInfo(lhs);
-	AttributeError_LoadInfo(rhs);
-	lhs_decl = AttributeError_GetDecl(lhs);
-	rhs_decl = AttributeError_GetDecl(rhs);
-	/* Only touch names after decls were loaded. */
-	if (lhs->ae_desc.ad_name != rhs->ae_desc.ad_name) {
-		if (!lhs->ae_desc.ad_name)
-			return -1;
-		if (!rhs->ae_desc.ad_name)
-			return 1;
-		if ((lhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) &&
-		    (rhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ)) {
-			DeeStringObject *lhs_name = Dee_attrdesc_nameobj(&lhs->ae_desc);
-			DeeStringObject *rhs_name = Dee_attrdesc_nameobj(&rhs->ae_desc);
-			result = (*cmp)((DeeObject *)lhs_name, (DeeObject *)rhs_name);
-		} else {
-			char const *lhs_str = lhs->ae_desc.ad_name;
-			char const *rhs_str = rhs->ae_desc.ad_name;
-			size_t lhs_len = (lhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) ? WSTR_LENGTH(lhs_str) : strlen(lhs_str);
-			size_t rhs_len = (rhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) ? WSTR_LENGTH(rhs_str) : strlen(rhs_str);
-			result = dee_memcmp2(lhs_str, lhs_len, rhs_str, rhs_len);
-		}
-		if (result != 0)
-			return result;
-	}
-	if (lhs_decl != rhs_decl) {
-		if (!lhs_decl)
-			return -1;
-		if (!rhs_decl)
-			return 1;
-#if 1 /* If instances differ, then then the errors aren't the same */
-		return Dee_CompareNe(DeeObject_Id(lhs_decl),
-		                     DeeObject_Id(rhs_decl));
-#else
-		if ((lhs_decl == lhs->ae_obj) &&
-		    (rhs_decl == rhs->ae_obj)) {
-			/* Already compared (and was equal) */
-		} else {
-			result = (*cmp)(lhs_decl,
-			                rhs_decl);
+	/* Only compare attribute info when there are objects. */
+	if (lhs->ae_obj) {
+		DeeObject *lhs_decl, *rhs_decl;
+		AttributeError_LoadInfo(lhs);
+		AttributeError_LoadInfo(rhs);
+		lhs_decl = AttributeError_GetDecl(lhs);
+		rhs_decl = AttributeError_GetDecl(rhs);
+		/* Only touch names after decls were loaded. */
+		if (lhs->ae_desc.ad_name != rhs->ae_desc.ad_name) {
+			if (!lhs->ae_desc.ad_name)
+				return -1;
+			if (!rhs->ae_desc.ad_name)
+				return 1;
+			if ((lhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) &&
+			    (rhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ)) {
+				DeeStringObject *lhs_name = Dee_attrdesc_nameobj(&lhs->ae_desc);
+				DeeStringObject *rhs_name = Dee_attrdesc_nameobj(&rhs->ae_desc);
+				result = (*cmp)((DeeObject *)lhs_name, (DeeObject *)rhs_name);
+			} else {
+				char const *lhs_str = lhs->ae_desc.ad_name;
+				char const *rhs_str = rhs->ae_desc.ad_name;
+				size_t lhs_len = (lhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) ? WSTR_LENGTH(lhs_str) : strlen(lhs_str);
+				size_t rhs_len = (rhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) ? WSTR_LENGTH(rhs_str) : strlen(rhs_str);
+				result = dee_memcmp2(lhs_str, lhs_len, rhs_str, rhs_len);
+			}
 			if (result != 0)
 				return result;
 		}
+		if (lhs_decl != rhs_decl) {
+			if (!lhs_decl)
+				return -1;
+			if (!rhs_decl)
+				return 1;
+#if 1 /* If instances differ, then then the errors aren't the same */
+			return Dee_CompareNe(DeeObject_Id(lhs_decl),
+			                     DeeObject_Id(rhs_decl));
+#else
+			if ((lhs_decl == lhs->ae_obj) &&
+			    (rhs_decl == rhs->ae_obj)) {
+				/* Already compared (and was equal) */
+			} else {
+				result = (*cmp)(lhs_decl,
+				                rhs_decl);
+				if (result != 0)
+					return result;
+			}
 #endif
+		}
 	}
 
 	/* Compare access mode. */
