@@ -23,6 +23,8 @@
 #include "api.h"
 /**/
 
+#include <hybrid/typecore.h>
+
 #include "types.h"
 /**/
 
@@ -127,14 +129,18 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU128)(Dee_uint128_t value, 
 /* Throws an `DeeError_UnknownKey' indicating that a given index/key is unknown */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnknownKey)(DeeObject *map, DeeObject *key);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrUnknownKeyWithInner)(DeeObject *map, DeeObject *key, /*inherit(always)*/ DREF DeeObject *inner);
-DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnknownKeyInt)(DeeObject *map, size_t key);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnknownKeyStr)(DeeObject *map, char const *key);
+DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrUnknownKeyStrWithInner)(DeeObject *map, char const *key, /*inherit(always)*/ DREF DeeObject *inner);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnknownKeyStrLen)(DeeObject *map, char const *key, size_t keylen);
-#define DeeRT_ErrUnknownKey(map, key)                 Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKey)((DeeObject *)Dee_REQUIRES_OBJECT(map), (DeeObject *)Dee_REQUIRES_OBJECT(key)), -1)
-#define DeeRT_ErrUnknownKeyWithInner(map, key, inner) Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyWithInner)((DeeObject *)Dee_REQUIRES_OBJECT(map), (DeeObject *)Dee_REQUIRES_OBJECT(key), (DeeObject *)Dee_REQUIRES_OBJECT(inner)), -1)
-#define DeeRT_ErrUnknownKeyInt(map, key)              Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyInt)((DeeObject *)Dee_REQUIRES_OBJECT(map), key), -1)
-#define DeeRT_ErrUnknownKeyStr(map, key)              Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStr)((DeeObject *)Dee_REQUIRES_OBJECT(map), key), -1)
-#define DeeRT_ErrUnknownKeyStrLen(map, key, keylen)   Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStrLen)((DeeObject *)Dee_REQUIRES_OBJECT(map), key, keylen), -1)
+DFUNDEF ATTR_COLD NONNULL((1, 2, 4)) int (DCALL DeeRT_ErrUnknownKeyStrLenWithInner)(DeeObject *map, char const *key, size_t keylen, /*inherit(always)*/ DREF DeeObject *inner);
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnknownKeyInt)(DeeObject *map, size_t key);
+#define DeeRT_ErrUnknownKey(map, key)                               Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKey)((DeeObject *)Dee_REQUIRES_OBJECT(map), (DeeObject *)Dee_REQUIRES_OBJECT(key)), -1)
+#define DeeRT_ErrUnknownKeyWithInner(map, key, inner)               Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyWithInner)((DeeObject *)Dee_REQUIRES_OBJECT(map), (DeeObject *)Dee_REQUIRES_OBJECT(key), (DeeObject *)Dee_REQUIRES_OBJECT(inner)), -1)
+#define DeeRT_ErrUnknownKeyStr(map, key)                            Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStr)((DeeObject *)Dee_REQUIRES_OBJECT(map), key), -1)
+#define DeeRT_ErrUnknownKeyStrWithInner(map, key, inner)            Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStrWithInner)((DeeObject *)Dee_REQUIRES_OBJECT(map), key, (DeeObject *)Dee_REQUIRES_OBJECT(inner)), -1)
+#define DeeRT_ErrUnknownKeyStrLen(map, key, keylen)                 Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStrLen)((DeeObject *)Dee_REQUIRES_OBJECT(map), key, keylen), -1)
+#define DeeRT_ErrUnknownKeyStrLenWithInner(map, key, keylen, inner) Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStrLenWithInner)((DeeObject *)Dee_REQUIRES_OBJECT(map), key, keylen, (DeeObject *)Dee_REQUIRES_OBJECT(inner)), -1)
+#define DeeRT_ErrUnknownKeyInt(map, key)                            Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyInt)((DeeObject *)Dee_REQUIRES_OBJECT(map), key), -1)
 
 /* Throws an `DeeError_ReadOnlyKey' indicating that a given key is read-only */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrReadOnlyKey)(DeeObject *map, DeeObject *key);
@@ -150,17 +156,21 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrReadOnlyKeyStrLen)(DeeObje
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundKey)(DeeObject *seq, DeeObject *key);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrUnboundKeyWithInner)(DeeObject *seq, DeeObject *key, /*inherit(always)*/ DREF DeeObject *inner);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundKeyStr)(DeeObject *seq, char const *key);
+DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrUnboundKeyStrWithInner)(DeeObject *seq, char const *key, /*inherit(always)*/ DREF DeeObject *inner);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundKeyStrLen)(DeeObject *seq, char const *key, size_t keylen);
+DFUNDEF ATTR_COLD NONNULL((1, 2, 4)) int (DCALL DeeRT_ErrUnboundKeyStrLenWithInner)(DeeObject *seq, char const *key, size_t keylen, /*inherit(always)*/ DREF DeeObject *inner);
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnboundKeyInt)(DeeObject *seq, size_t key);
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnboundIndex)(DeeObject *seq, size_t index);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject *seq, DeeObject *index);
-#define DeeRT_ErrUnboundKey(seq, key)                 Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKey)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(key)), -1)
-#define DeeRT_ErrUnboundKeyWithInner(seq, key, inner) Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyWithInner)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(key), (DeeObject *)Dee_REQUIRES_OBJECT(inner)), -1)
-#define DeeRT_ErrUnboundKeyStr(seq, key)              Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStr)((DeeObject *)Dee_REQUIRES_OBJECT(seq), key), -1)
-#define DeeRT_ErrUnboundKeyStrLen(seq, key, keylen)   Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStrLen)((DeeObject *)Dee_REQUIRES_OBJECT(seq), key, keylen), -1)
-#define DeeRT_ErrUnboundKeyInt(seq, key)              Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyInt)((DeeObject *)Dee_REQUIRES_OBJECT(seq), key), -1)
-#define DeeRT_ErrUnboundIndex(seq, index)             Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndex)((DeeObject *)Dee_REQUIRES_OBJECT(seq), index), -1)
-#define DeeRT_ErrUnboundIndexObj(seq, index)          Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndexObj)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(index)), -1)
+#define DeeRT_ErrUnboundKey(seq, key)                               Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKey)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(key)), -1)
+#define DeeRT_ErrUnboundKeyWithInner(seq, key, inner)               Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyWithInner)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(key), (DeeObject *)Dee_REQUIRES_OBJECT(inner)), -1)
+#define DeeRT_ErrUnboundKeyStr(seq, key)                            Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStr)((DeeObject *)Dee_REQUIRES_OBJECT(seq), key), -1)
+#define DeeRT_ErrUnboundKeyStrWithInner(seq, key, inner)            Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStrWithInner)((DeeObject *)Dee_REQUIRES_OBJECT(seq), key, (DeeObject *)Dee_REQUIRES_OBJECT(inner)), -1)
+#define DeeRT_ErrUnboundKeyStrLen(seq, key, keylen)                 Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStrLen)((DeeObject *)Dee_REQUIRES_OBJECT(seq), key, keylen), -1)
+#define DeeRT_ErrUnboundKeyStrLenWithInner(seq, key, keylen, inner) Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyStrLenWithInner)((DeeObject *)Dee_REQUIRES_OBJECT(seq), key, keylen, (DeeObject *)Dee_REQUIRES_OBJECT(inner)), -1)
+#define DeeRT_ErrUnboundKeyInt(seq, key)                            Dee_ASSUMED_VALUE((DeeRT_ErrUnboundKeyInt)((DeeObject *)Dee_REQUIRES_OBJECT(seq), key), -1)
+#define DeeRT_ErrUnboundIndex(seq, index)                           Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndex)((DeeObject *)Dee_REQUIRES_OBJECT(seq), index), -1)
+#define DeeRT_ErrUnboundIndexObj(seq, index)                        Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndexObj)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(index)), -1)
 
 /* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOutOfBounds)(DeeObject *seq, size_t index, size_t length);

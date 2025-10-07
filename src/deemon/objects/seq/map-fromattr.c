@@ -349,9 +349,9 @@ mfa_setitem(MapFromAttr *self, DeeObject *key, DeeObject *value) {
 		goto err;
 	result = DeeObject_SetAttr(self->mfa_ob, key, value);
 	if unlikely(result) {
-		DREF DeeObject *inner;
-		if ((inner = DeeError_CatchError(&DeeError_AttributeError)) != NULL)
-			DeeRT_ErrUnknownKeyWithInner((DeeObject *)self, key, inner);
+		DREF DeeObject *error;
+		if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL)
+			DeeRT_ErrUnknownKeyWithInner((DeeObject *)self, key, error);
 	}
 	return result;
 err:
@@ -387,10 +387,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mfa_getitem_string_hash(MapFromAttr *self, char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result = DeeObject_GetAttrStringHash(self->mfa_ob, key, hash);
 	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_UnboundAttribute)) {
-			DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
-		} else if (DeeError_Catch(&DeeError_AttributeError)) {
-			DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+		DREF DeeObject *error;
+		if ((error = DeeError_CatchError(&DeeError_UnboundAttribute)) != NULL) {
+			DeeRT_ErrUnboundKeyStrWithInner((DeeObject *)self, key, error);
+		} else if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL) {
+			DeeRT_ErrUnknownKeyStrWithInner((DeeObject *)self, key, error);
 		}
 	}
 	return result;
@@ -408,8 +409,9 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 mfa_setitem_string_hash(MapFromAttr *self, char const *key, Dee_hash_t hash, DeeObject *value) {
 	int result = DeeObject_SetAttrStringHash(self->mfa_ob, key, hash, value);
 	if unlikely(result) {
-		if (DeeError_Catch(&DeeError_AttributeError))
-			DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+		DREF DeeObject *error;
+		if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL)
+			DeeRT_ErrUnboundKeyStrWithInner((DeeObject *)self, key, error);
 	}
 	return result;
 }
@@ -423,10 +425,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mfa_getitem_string_len_hash(MapFromAttr *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	DREF DeeObject *result = DeeObject_GetAttrStringLenHash(self->mfa_ob, key, keylen, hash);
 	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_UnboundAttribute)) {
-			DeeRT_ErrUnboundKeyStrLen((DeeObject *)self, key, keylen);
-		} else if (DeeError_Catch(&DeeError_AttributeError)) {
-			DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+		DREF DeeObject *error;
+		if ((error = DeeError_CatchError(&DeeError_UnboundAttribute)) != NULL) {
+			DeeRT_ErrUnboundKeyStrLenWithInner((DeeObject *)self, key, keylen, error);
+		} else if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL) {
+			DeeRT_ErrUnknownKeyStrLenWithInner((DeeObject *)self, key, keylen, error);
 		}
 	}
 	return result;
@@ -445,8 +448,9 @@ mfa_setitem_string_len_hash(MapFromAttr *self, char const *key, size_t keylen,
                             Dee_hash_t hash, DeeObject *value) {
 	int result = DeeObject_SetAttrStringLenHash(self->mfa_ob, key, keylen, hash, value);
 	if unlikely(result) {
-		if (DeeError_Catch(&DeeError_AttributeError))
-			DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+		DREF DeeObject *error;
+		if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL)
+			DeeRT_ErrUnknownKeyStrLenWithInner((DeeObject *)self, key, keylen, error);
 	}
 	return result;
 }

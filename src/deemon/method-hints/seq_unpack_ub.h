@@ -144,7 +144,7 @@ err:
 				/* Early sequence end (sequence may have been truncated) */
 				if (i >= min_count)
 					return i;
-				err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+				err_invalid_unpack_size_minmax(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
 				goto err_result_i;
 			} else {
 				goto err_result_i;

@@ -808,7 +808,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 	Dee_variant_init_object(&result->ke_key, key);
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
-	Dee_Decref(inner);
+	Dee_Decref(inner); /* Always inherited */
 	return -1;
 }
 
@@ -845,6 +845,26 @@ err:
 	return -1;
 }
 
+PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
+(DCALL DeeRT_ErrUnknownKeyStrWithInner)(DeeObject *map, char const *key,
+                                        /*inherit(always)*/ DREF DeeObject *inner) {
+	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
+	if unlikely(!result)
+		goto err;
+	if unlikely(Dee_variant_init_cstr_maybe(&result->ke_key, key))
+		goto err_r;
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = inner; /* Inherit reference */
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err_r:
+	DeeObject_FREE(result);
+err:
+	Dee_Decref(inner); /* Always inherited */
+	return -1;
+}
+
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrUnknownKeyStrLen)(DeeObject *map, char const *key, size_t keylen) {
 	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
@@ -860,6 +880,26 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 err_r:
 	DeeObject_FREE(result);
 err:
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2, 4)) int
+(DCALL DeeRT_ErrUnknownKeyStrLenWithInner)(DeeObject *map, char const *key, size_t keylen,
+                                           /*inherit(always)*/ DREF DeeObject *inner) {
+	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
+	if unlikely(!result)
+		goto err;
+	if unlikely(Dee_variant_init_cstrlen_maybe(&result->ke_key, key, keylen))
+		goto err_r;
+	result->ke_base.e_message = NULL;
+	result->ke_base.e_inner   = inner; /* Inherit reference */
+	Dee_variant_init_object(&result->ke_base.ve_value, map);
+	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err_r:
+	DeeObject_FREE(result);
+err:
+	Dee_Decref(inner); /* Always inherited */
 	return -1;
 }
 
@@ -1043,7 +1083,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 	result->ui_iskey = true;
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
-	Dee_Decref(inner);
+	Dee_Decref(inner); /* Always inherited */
 	return -1;
 }
 
@@ -1066,6 +1106,28 @@ err:
 	return -1;
 }
 
+PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
+(DCALL DeeRT_ErrUnboundKeyStrWithInner)(DeeObject *seq, char const *key,
+                                        /*inherit(always)*/ DREF DeeObject *inner) {
+	DREF UnboundItem *result = DeeObject_MALLOC(UnboundItem);
+	if unlikely(!result)
+		goto err;
+	if unlikely(Dee_variant_init_cstr_maybe(&result->ui_base.ke_key, key))
+		goto err_r;
+	result->ui_base.ke_base.e_message = NULL;
+	result->ui_base.ke_base.e_inner   = inner; /* Inherit reference */
+	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
+	result->ui_iskey = true;
+	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err_r:
+	DeeObject_FREE(result);
+err:
+	Dee_Decref(inner); /* Always inherited */
+	return -1;
+}
+
+
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrUnboundKeyStrLen)(DeeObject *seq, char const *key, size_t keylen) {
 	DREF UnboundItem *result = DeeObject_MALLOC(UnboundItem);
@@ -1082,6 +1144,27 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 err_r:
 	DeeObject_FREE(result);
 err:
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2, 4)) int
+(DCALL DeeRT_ErrUnboundKeyStrLenWithInner)(DeeObject *seq, char const *key, size_t keylen,
+                                           /*inherit(always)*/ DREF DeeObject *inner) {
+	DREF UnboundItem *result = DeeObject_MALLOC(UnboundItem);
+	if unlikely(!result)
+		goto err;
+	if unlikely(Dee_variant_init_cstrlen_maybe(&result->ui_base.ke_key, key, keylen))
+		goto err_r;
+	result->ui_base.ke_base.e_message = NULL;
+	result->ui_base.ke_base.e_inner   = inner; /* Inherit reference */
+	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
+	result->ui_iskey = true;
+	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err_r:
+	DeeObject_FREE(result);
+err:
+	Dee_Decref(inner); /* Always inherited */
 	return -1;
 }
 
@@ -1720,8 +1803,6 @@ PUBLIC ATTR_COLD int
 
 
 
-/* TODO: Custom handling for: DeeError_IndexError (include attributes for relevant sequence / index) */
-/* TODO: Custom handling for: DeeError_UnboundItem */
 
 
 

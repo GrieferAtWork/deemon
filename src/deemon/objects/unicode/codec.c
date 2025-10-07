@@ -893,7 +893,7 @@ DeeCodec_Decode(DeeObject *self, DeeObject *name,
 	libcodecs = libcodecs_get();
 	if unlikely(!libcodecs) {
 		if (DeeError_Catch(&DeeError_FileNotFound))
-			goto err_unknown; /* Codec library not found */
+			goto err_unknown; /* Codec library not found */ /* TODO: Pass orig error as "inner" */
 		goto err_name;
 	}
 	result = DeeObject_CallAttrPack(libcodecs,
@@ -909,7 +909,7 @@ DeeCodec_Decode(DeeObject *self, DeeObject *name,
 		 * This includes things such as key-errors thrown by the codec library,
 		 * as is likely to be the case when a Dict is used by the implementation. */
 		if (DeeError_Catch(&DeeError_ValueError))
-			goto err_unknown;
+			goto err_unknown; /* TODO: Pass orig error as "inner" */
 	}
 #endif
 done:
@@ -948,7 +948,7 @@ DeeCodec_Encode(DeeObject *self, DeeObject *name,
 	libcodecs = libcodecs_get();
 	if unlikely(!libcodecs) {
 		if (DeeError_Catch(&DeeError_FileNotFound))
-			goto err_unknown; /* Codec library not found */
+			goto err_unknown; /* Codec library not found */ /* TODO: Pass orig error as "inner" */
 		goto err_name;
 	}
 	result = DeeObject_CallAttrPack(libcodecs,
@@ -964,7 +964,7 @@ DeeCodec_Encode(DeeObject *self, DeeObject *name,
 		 * This includes things such as key-errors thrown by the codec library,
 		 * as is likely to be the case when a Dict is used by the implementation. */
 		if (DeeError_Catch(&DeeError_ValueError))
-			goto err_unknown;
+			goto err_unknown; /* TODO: Pass orig error as "inner" */
 	}
 #endif
 done:
