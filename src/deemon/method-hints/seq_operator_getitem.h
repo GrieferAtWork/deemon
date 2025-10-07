@@ -45,6 +45,7 @@ __seq_getitem__.seq_operator_getitem([[nonnull]] DeeObject *self,
 		goto err;
 	return CALL_DEPENDENCY(seq_operator_getitem_index, self, index_value);
 err:
+	DeeRT_ErrIndexOverflow(self);
 	return NULL;
 }}
 %{$with__seq_enumerate = [[prefix(DEFINE_default_map_getitem_with_map_enumerate_cb)]] {
@@ -321,6 +322,8 @@ __seq_getitem__.seq_operator_trygetitem([[nonnull]] DeeObject *self,
 		goto err;
 	return CALL_DEPENDENCY(seq_operator_trygetitem_index, self, index_value);
 err:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		return ITER_DONE;
 	return NULL;
 }}
 %{$with__seq_enumerate = [[prefix(DEFINE_default_map_getitem_with_map_enumerate_cb)]] {
@@ -494,6 +497,8 @@ err:
 		goto err;
 	return CALL_DEPENDENCY(seq_operator_hasitem_index, self, index_value);
 err:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		return 0;
 	return -1;
 }}
 %{using seq_operator_getitem: {
@@ -637,6 +642,8 @@ __seq_getitem__.seq_operator_bounditem([[nonnull]] DeeObject *self,
 		goto err;
 	return CALL_DEPENDENCY(seq_operator_bounditem_index, self, index_value);
 err:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }}
 %{using seq_operator_getitem: {

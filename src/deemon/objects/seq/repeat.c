@@ -310,7 +310,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatiter_set_num(RepeatIterator *__restrict self,
                    DeeObject *__restrict value) {
 	size_t newvalue;
-	if (DeeObject_AsSize(value, &newvalue))
+	if unlikely(DeeObject_AsSize(value, &newvalue))
 		goto err;
 	RepeatIterator_LockWrite(self);
 	self->rpi_num = newvalue;
@@ -460,8 +460,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeat_getitem(Repeat *self, DeeObject *index_ob) {
 	size_t index;
 	size_t seq_size;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
+	if unlikely(DeeObject_AsSize(index_ob, &index))
+		goto err_maybe_overflow;
 	seq_size = DeeObject_Size(self->rp_seq);
 	if unlikely(seq_size == (size_t)-1)
 		goto err;
@@ -472,6 +472,8 @@ repeat_getitem(Repeat *self, DeeObject *index_ob) {
 	}
 	index %= seq_size;
 	return DeeObject_GetItemIndex(self->rp_seq, index);
+err_maybe_overflow:
+	DeeRT_ErrIndexOverflow(self);
 err:
 	return NULL;
 }

@@ -1830,8 +1830,6 @@ PUBLIC ATTR_COLD int
  * @return: -1: Always returns `-1', no matter what this function ended up doing. */
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrIndexOverflow)(DeeObject *seq) {
-	/* TODO: Call this function from everywhere that converts an object into a "size_t"
-	 *       for the purpose of using it as an index! */
 	DREF DeeThreadObject *me = DeeThread_Self();
 	struct except_frame *error = me->t_except;
 	ASSERT(error != NULL);

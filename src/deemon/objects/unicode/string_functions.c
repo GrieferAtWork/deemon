@@ -1530,8 +1530,8 @@ err:
 		size_t start = 0, end = (size_t)-1;                            \
 		if (argc == 1) {                                               \
 			uint32_t ch;                                               \
-			if (DeeObject_AsSize(argv[0], &start))                     \
-				goto err;                                              \
+			if unlikely(DeeObject_AsSize(argv[0], &start))             \
+				goto err_maybe_overflow;                               \
 			if unlikely(start >= DeeString_WLEN(self)) {               \
 				DeeRT_ErrIndexOutOfBounds((DeeObject *)self, start,    \
 				                          DeeString_WLEN(self));       \
@@ -1548,6 +1548,9 @@ err:
 		}                                                              \
 	err:                                                               \
 		return NULL;                                                   \
+	err_maybe_overflow:                                                \
+		DeeRT_ErrIndexOverflow(self);                                  \
+		goto err;                                                      \
 	}
 #define DEFINE_ANY_STRING_TRAIT(name, function)                                       \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                             \

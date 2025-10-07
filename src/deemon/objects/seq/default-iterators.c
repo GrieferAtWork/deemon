@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -433,6 +434,7 @@ di_sgif_setindex(DefaultIterator_WithSizeAndGetItemIndex *self, DeeObject *value
 	atomic_write(&self->disgi_index, index);
 	return 0;
 err:
+	DeeRT_ErrIndexOverflow(self);
 	return -1;
 }
 

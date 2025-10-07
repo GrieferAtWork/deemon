@@ -1310,7 +1310,7 @@ unlock_and_err_index:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 list_delitem(List *me, DeeObject *index) {
 	size_t i;
-	if (DeeObject_AsSize(index, &i)) {
+	if unlikely(DeeObject_AsSize(index, &i)) {
 		DeeRT_ErrIndexOverflow((DeeObject *)me);
 		goto err;
 	}
@@ -1353,7 +1353,7 @@ list_hasitem_index(List *me, size_t index) {
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 list_setitem(List *me, DeeObject *index, DeeObject *value) {
 	size_t i;
-	if (DeeObject_AsSize(index, &i)) {
+	if unlikely(DeeObject_AsSize(index, &i)) {
 		DeeRT_ErrIndexOverflow((DeeObject *)me);
 		goto err;
 	}

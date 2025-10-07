@@ -43,6 +43,7 @@ __seq_setitem__.seq_operator_setitem([[nonnull]] DeeObject *self,
 		goto err;
 	return CALL_DEPENDENCY(seq_operator_setitem_index, self, index_value, value);
 err:
+	DeeRT_ErrIndexOverflow(self);
 	return -1;
 }} {
 	DREF DeeObject *result;

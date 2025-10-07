@@ -1394,10 +1394,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 intrange_getitem(IntRange *self,
                  DeeObject *index_ob) {
 	size_t index;
-	if (DeeObject_AsSize(index_ob, &index))
+	if unlikely(DeeObject_AsSize(index_ob, &index))
 		goto err;
 	return intrange_getitem_index(self, index);
 err:
+	DeeRT_ErrIndexOverflow(self);
 	return NULL;
 }
 

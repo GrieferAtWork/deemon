@@ -195,6 +195,7 @@ INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaIndexOutOfBounds)(struct Dee
  *
  * @return: -1: Always returns `-1', no matter what this function ended up doing. */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOverflow)(DeeObject *seq);
+#define DeeRT_ErrIndexOverflow(seq) Dee_ASSUMED_VALUE((DeeRT_ErrIndexOverflow)((DeeObject *)Dee_REQUIRES_OBJECT(seq)), -1)
 
 
 /* Throws an `DeeError_ItemNotFound' indicating that a given item could not be found within some sequence */

@@ -2113,8 +2113,8 @@ string_getitem(String *self, DeeObject *index) {
 	size_t i, len;
 	str.ptr = DeeString_WSTR(self);
 	len     = WSTR_LENGTH(str.ptr);
-	if (DeeObject_AsSize(index, &i))
-		goto err;
+	if unlikely(DeeObject_AsSize(index, &i))
+		goto err_maybe_overflow;
 	if unlikely(i >= len)
 		goto err_oob;
 	SWITCH_SIZEOF_WIDTH(width) {
@@ -2133,6 +2133,9 @@ err_oob:
 	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, i, len);
 err:
 	return NULL;
+err_maybe_overflow:
+	DeeRT_ErrIndexOverflow(self);
+	goto err;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL

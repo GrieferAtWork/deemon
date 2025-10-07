@@ -434,9 +434,11 @@ rowfmt_getitem(RowFmt *self, DeeObject *key) {
 	if (DeeString_Check(key))
 		return rowfmt_getitem_string_len_hash(self, DeeString_STR(key), DeeString_SIZE(key), 0);
 	if (DeeObject_AsSize(key, &index))
-		goto err;
+		goto err_maybe_overflow;
 	return rowfmt_getitem_index(self, index);
-err:
+err_maybe_overflow:
+	DeeRT_ErrIndexOverflow(self);
+/*err:*/
 	return NULL;
 }
 
@@ -462,9 +464,12 @@ rowfmt_bounditem(RowFmt *self, DeeObject *key) {
 	if (DeeString_Check(key))
 		return rowfmt_bounditem_string_len_hash(self, DeeString_STR(key), DeeString_SIZE(key), 0);
 	if (DeeObject_AsSize(key, &index))
-		goto err;
+		goto err_maybe_overflow;
 	return rowfmt_bounditem_index(self, index);
-err:
+err_maybe_overflow:
+	if (DeeError_Catch(&DeeError_IndexError))
+		return Dee_BOUND_MISSING;
+/*err:*/
 	return Dee_BOUND_ERR;
 }
 
@@ -894,9 +899,11 @@ row_getitem(Row *self, DeeObject *key) {
 	if (DeeString_Check(key))
 		return row_getitem_string_len_hash(self, DeeString_STR(key), DeeString_SIZE(key), 0);
 	if (DeeObject_AsSize(key, &index))
-		goto err;
+		goto err_maybe_overflow;
 	return row_getitem_index(self, index);
-err:
+err_maybe_overflow:
+	DeeRT_ErrIndexOverflow(self);
+/*err:*/
 	return NULL;
 }
 
@@ -906,9 +913,12 @@ row_bounditem(Row *self, DeeObject *key) {
 	if (DeeString_Check(key))
 		return row_bounditem_string_len_hash(self, DeeString_STR(key), DeeString_SIZE(key), 0);
 	if (DeeObject_AsSize(key, &index))
-		goto err;
+		goto err_maybe_overflow;
 	return row_bounditem_index(self, index);
-err:
+err_maybe_overflow:
+	if (DeeError_Catch(&DeeError_IndexError))
+		return Dee_BOUND_MISSING;
+/*err:*/
 	return Dee_BOUND_ERR;
 }
 

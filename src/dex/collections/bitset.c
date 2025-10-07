@@ -623,6 +623,8 @@ bs_contains(Bitset *self, DeeObject *key) {
 	return_bool(bitno < self->bs_nbits &&
 	            bitset_test(self->bs_bitset, bitno));
 err:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		return_false;
 	return NULL;
 }
 
@@ -797,7 +799,7 @@ bs_flip(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t index;
 		bool old_state;
 		if (DeeObject_AsSize(argv[0], &index))
-			goto err;
+			goto err_maybe_overflow;
 		if unlikely(index >= self->bs_nbits) {
 			bs_err_bad_index(self, index);
 			goto err;
@@ -824,6 +826,8 @@ bs_flip(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	}
 	return_none;
+err_maybe_overflow:
+	DeeRT_ErrIndexOverflow(self);
 err:
 	return NULL;
 }
@@ -839,7 +843,7 @@ bs_set(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t index;
 		bool old_state;
 		if (DeeObject_AsSize(argv[0], &index))
-			goto err;
+			goto err_maybe_overflow;
 		if unlikely(index >= self->bs_nbits) {
 			bs_err_bad_index(self, index);
 			goto err;
@@ -866,6 +870,8 @@ bs_set(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	}
 	return_none;
+err_maybe_overflow:
+	DeeRT_ErrIndexOverflow(self);
 err:
 	return NULL;
 }
@@ -881,7 +887,7 @@ bs_clear(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t index;
 		bool old_state;
 		if (DeeObject_AsSize(argv[0], &index))
-			goto err;
+			goto err_maybe_overflow;
 		if unlikely(index >= self->bs_nbits) {
 			bs_err_bad_index(self, index);
 			goto err;
@@ -908,6 +914,8 @@ bs_clear(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	}
 	return_none;
+err_maybe_overflow:
+	DeeRT_ErrIndexOverflow(self);
 err:
 	return NULL;
 }
@@ -2674,6 +2682,8 @@ bsv_contains(BitsetView *self, DeeObject *key) {
 	            bitset_test(BitsetView_GetBitset(self),
 	                        bitno + self->bsv_startbit));
 err:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		return_false;
 	return NULL;
 }
 
@@ -2903,7 +2913,7 @@ bsv_flip(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t index;
 		bool old_state;
 		if (DeeObject_AsSize(argv[0], &index))
-			goto err;
+			goto err_maybe_overflow;
 		if unlikely(index >= BitsetView_GetNBits(self)) {
 			bsv_err_bad_index(self, index);
 			goto err;
@@ -2938,6 +2948,9 @@ err_readonly:
 	bsv_err_readonly(self);
 err:
 	return NULL;
+err_maybe_overflow:
+	DeeRT_ErrIndexOverflow(self);
+	goto err;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2954,7 +2967,7 @@ bsv_set(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t index;
 		bool old_state;
 		if (DeeObject_AsSize(argv[0], &index))
-			goto err;
+			goto err_maybe_overflow;
 		if unlikely(index >= BitsetView_GetNBits(self)) {
 			bsv_err_bad_index(self, index);
 			goto err;
@@ -2989,6 +3002,9 @@ err_readonly:
 	bsv_err_readonly(self);
 err:
 	return NULL;
+err_maybe_overflow:
+	DeeRT_ErrIndexOverflow(self);
+	goto err;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3005,7 +3021,7 @@ bsv_clear(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 		size_t index;
 		bool old_state;
 		if (DeeObject_AsSize(argv[0], &index))
-			goto err;
+			goto err_maybe_overflow;
 		if unlikely(index >= BitsetView_GetNBits(self)) {
 			bsv_err_bad_index(self, index);
 			goto err;
@@ -3040,6 +3056,9 @@ err_readonly:
 	bsv_err_readonly(self);
 err:
 	return NULL;
+err_maybe_overflow:
+	DeeRT_ErrIndexOverflow(self);
+	goto err;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

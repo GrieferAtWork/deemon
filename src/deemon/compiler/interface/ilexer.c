@@ -2868,8 +2868,10 @@ lexer_syspaths_getitem(DeeCompilerWrapperObject *self,
                        DeeObject *index) {
 	DREF DeeObject *result;
 	size_t i;
-	if (DeeObject_AsSize(index, &i))
+	if unlikely(DeeObject_AsSize(index, &i)) {
+		DeeRT_ErrIndexOverflow(self);
 		goto err;
+	}
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
 	if (i >= TPPLexer_Current->l_syspaths.il_pathc) {

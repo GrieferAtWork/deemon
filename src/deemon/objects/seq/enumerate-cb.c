@@ -247,7 +247,7 @@ sew_docall(SeqEnumerateWrapper *self, size_t argc, DeeObject *const *argv) {
 		result = (*self->sew_cb.cb_enumerate)(self->sew_arg, key, value);
 	} else {
 		size_t index;
-		if (DeeObject_AsSize(key, &index))
+		if unlikely(DeeObject_AsSize(key, &index))
 			goto err;
 		result = (*self->sew_cb.cb_enumerate_index)(self->sew_arg, index, value);
 	}

@@ -1172,8 +1172,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tuple_getitem(Tuple *self, DeeObject *index) {
 	size_t i;
-	if (DeeObject_AsSize(index, &i))
-		goto err;
+	if unlikely(DeeObject_AsSize(index, &i))
+		goto err_maybe_overflow;
 	if unlikely(i >= DeeTuple_SIZE(self))
 		goto err_bounds;
 	return_reference(DeeTuple_GET(self, i));
@@ -1182,6 +1182,9 @@ err_bounds:
 	                          DeeTuple_SIZE(self));
 err:
 	return NULL;
+err_maybe_overflow:
+	DeeRT_ErrIndexOverflow(self);
+	goto err;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL

@@ -1313,6 +1313,7 @@ default__seq_operator_getitem__with__seq_operator_getitem_index(DeeObject *self,
 		goto err;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index))(self, index_value);
 err:
+	DeeRT_ErrIndexOverflow(self);
 	return NULL;
 }
 
@@ -1583,6 +1584,8 @@ default__seq_operator_trygetitem__with__seq_operator_trygetitem_index(DeeObject 
 		goto err;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index))(self, index_value);
 err:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		return ITER_DONE;
 	return NULL;
 }
 
@@ -1700,6 +1703,8 @@ default__seq_operator_hasitem__with__seq_operator_hasitem_index(DeeObject *self,
 		goto err;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_hasitem_index))(self, index_value);
 err:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		return 0;
 	return -1;
 }
 
@@ -1831,6 +1836,8 @@ default__seq_operator_bounditem__with__seq_operator_bounditem_index(DeeObject *s
 		goto err;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_bounditem_index))(self, index_value);
 err:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }
 
@@ -1987,6 +1994,7 @@ default__seq_operator_delitem__with__seq_operator_delitem_index(DeeObject *self,
 		goto err;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_delitem_index))(self, index_value);
 err:
+	DeeRT_ErrIndexOverflow(self);
 	return -1;
 }
 
@@ -2112,6 +2120,7 @@ default__seq_operator_setitem__with__seq_operator_setitem_index(DeeObject *self,
 		goto err;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_setitem_index))(self, index_value, value);
 err:
+	DeeRT_ErrIndexOverflow(self);
 	return -1;
 }
 
@@ -6370,7 +6379,7 @@ default__seq_unpack__with__seq_operator_size__and__seq_operator_getitem_index(De
 			/* This can only mean that the size changed, because we're
 			 * allowed to assume "__seq_getitem_always_bound__" */
 			if (DeeError_Catch(&DeeError_IndexError))
-				return err_invalid_unpack_size(self, count, i);
+				return err_invalid_unpack_size(self, count, i); /* TODO: Pass orig error as "inner" */
 			goto err;
 		}
 		result[i] = item; /* Inherit reference */
@@ -6633,7 +6642,7 @@ default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index
 			if (DeeError_Catch(&DeeError_IndexError)) {
 				if (i >= min_count)
 					return i;
-				return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+				return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
 			}
 			goto err;
 		}
@@ -6869,7 +6878,7 @@ default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_getitem_index
 				/* Early sequence end (sequence may have been truncated) */
 				if (i >= min_count)
 					return i;
-				err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+				err_invalid_unpack_size_minmax(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
 				goto err_result_i;
 			} else {
 				goto err_result_i;

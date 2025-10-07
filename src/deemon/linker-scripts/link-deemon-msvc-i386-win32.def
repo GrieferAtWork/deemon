@@ -1146,6 +1146,7 @@ EXPORTS
 	DeeRT_ErrCUnboundInstanceMember@12=_DeeRT_ErrCUnboundInstanceMember@12
 	DeeRT_ErrIndexOutOfBounds@12=_DeeRT_ErrIndexOutOfBounds@12
 	DeeRT_ErrIndexOutOfBoundsObj@12=_DeeRT_ErrIndexOutOfBoundsObj@12
+	DeeRT_ErrIndexOverflow@4=_DeeRT_ErrIndexOverflow@4
 	DeeRT_ErrIntegerOverflow@16=_DeeRT_ErrIntegerOverflow@16
 	DeeRT_ErrIntegerOverflowEx@12=_DeeRT_ErrIntegerOverflowEx@12
 	DeeRT_ErrIntegerOverflowS128@48=_DeeRT_ErrIntegerOverflowS128@48
@@ -1184,12 +1185,16 @@ EXPORTS
 	DeeRT_ErrUnboundKeyInt@8=_DeeRT_ErrUnboundKeyInt@8
 	DeeRT_ErrUnboundKeyStr@8=_DeeRT_ErrUnboundKeyStr@8
 	DeeRT_ErrUnboundKeyStrLen@12=_DeeRT_ErrUnboundKeyStrLen@12
+	DeeRT_ErrUnboundKeyStrLenWithInner@16=_DeeRT_ErrUnboundKeyStrLenWithInner@16
+	DeeRT_ErrUnboundKeyStrWithInner@12=_DeeRT_ErrUnboundKeyStrWithInner@12
 	DeeRT_ErrUnboundKeyWithInner@12=_DeeRT_ErrUnboundKeyWithInner@12
 	DeeRT_ErrUnboundMember@8=_DeeRT_ErrUnboundMember@8
 	DeeRT_ErrUnknownKey@8=_DeeRT_ErrUnknownKey@8
 	DeeRT_ErrUnknownKeyInt@8=_DeeRT_ErrUnknownKeyInt@8
 	DeeRT_ErrUnknownKeyStr@8=_DeeRT_ErrUnknownKeyStr@8
 	DeeRT_ErrUnknownKeyStrLen@12=_DeeRT_ErrUnknownKeyStrLen@12
+	DeeRT_ErrUnknownKeyStrLenWithInner@16=_DeeRT_ErrUnknownKeyStrLenWithInner@16
+	DeeRT_ErrUnknownKeyStrWithInner@12=_DeeRT_ErrUnknownKeyStrWithInner@12
 	DeeRT_ErrUnknownKeyWithInner@12=_DeeRT_ErrUnknownKeyWithInner@12
 	DeeRange_New@12=_DeeRange_New@12
 	DeeRange_NewInt@12=_DeeRange_NewInt@12

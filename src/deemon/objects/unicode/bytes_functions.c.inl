@@ -1423,8 +1423,8 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 		size_t start = 0, end = (size_t)-1;                          \
 		if (argc == 1) {                                             \
 			byte_t ch;                                               \
-			if (DeeObject_AsSize(argv[0], &start))                   \
-				goto err;                                            \
+			if unlikely(DeeObject_AsSize(argv[0], &start))           \
+				goto err_maybe_overflow;                             \
 			if unlikely(start >= DeeBytes_SIZE(self)) {              \
 				DeeRT_ErrIndexOutOfBounds((DeeObject *)self, start,  \
 				                          DeeBytes_SIZE(self));      \
@@ -1441,6 +1441,9 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 		}                                                            \
 	err:                                                             \
 		return NULL;                                                 \
+	err_maybe_overflow:                                              \
+		DeeRT_ErrIndexOverflow(self);                                \
+		goto err;                                                    \
 	}
 #define DEFINE_ANY_BYTES_TRAIT(name, function)                                      \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                           \

@@ -476,7 +476,7 @@ so_add(SeqOne *lhs, DeeObject *rhs) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 so_mul(SeqOne *self, DeeObject *countob) {
 	size_t count;
-	if (DeeObject_AsSize(countob, &count))
+	if unlikely(DeeObject_AsSize(countob, &count))
 		goto err;
 	return DeeSeq_RepeatItem(self->so_item, count);
 err:

@@ -275,7 +275,7 @@ array_get(DeeArrayTypeObject *tp_self, void *base, DeeObject *index_ob) {
 	DREF DeeLValueTypeObject *lval_type;
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
+		goto err_maybe_overflow;
 
 	/* Check bounds. */
 	if unlikely(index >= tp_self->at_count) {
@@ -311,6 +311,9 @@ err_lval_type:
 	Dee_Decref(DeeLValueType_AsType(lval_type));
 err:
 	return NULL;
+err_maybe_overflow:
+	/*TODO:DeeRT_ErrIndexOverflow();*/
+	goto err;
 }
 
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
