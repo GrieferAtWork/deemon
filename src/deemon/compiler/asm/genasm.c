@@ -1364,10 +1364,10 @@ pop_unused:
 			/* Special optimizations for integer indices. */
 			if (DeeInt_Check(index) &&
 			    DeeInt_TryAsInt32(index, &temp) &&
-			    temp >= INT16_MIN && temp <= INT16_MAX) {
+			    temp >= 0 && temp <= UINT16_MAX) {
 				DO(ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES));
 				DO(asm_putddi(self));
-				DO(asm_ggetitem_index((int16_t)temp));
+				DO(asm_ggetitem_index((uint16_t)temp));
 				goto pop_unused;
 			}
 
