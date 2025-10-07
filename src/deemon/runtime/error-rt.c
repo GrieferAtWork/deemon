@@ -45,6 +45,7 @@
 #include <deemon/variant.h>
 
 #include <hybrid/int128.h>
+#include <hybrid/limitcore.h>
 #include <hybrid/typecore.h>
 /**/
 
@@ -55,6 +56,13 @@
 #include <stdint.h>
 
 DECL_BEGIN
+
+#ifndef UINT32_MAX
+#define UINT32_MAX __UINT32_MAX__
+#endif /* !UINT32_MAX */
+#ifndef UINT64_MAX
+#define UINT64_MAX __UINT64_MAX__
+#endif /* !UINT64_MAX */
 
 #ifndef NDEBUG
 #define DBG_memset (void)memset
@@ -677,15 +685,18 @@ PRIVATE struct type_member tpconst IndexError_members[] = {
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 IndexError_print(IndexError *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result;
 	struct Dee_variant length;
 	if (self->ie_base.ke_base.e_message)
 		return error_print((DeeErrorObject *)self, printer, arg);
 	if unlikely(IndexError_GetLength(self, &length))
 		goto err;
-	return DeeFormat_Printf(printer, arg,
-	                        "Index `%Vr' lies outside the valid bounds `0...%VR' of sequence of type `%K'",
-	                        &self->ie_base.ke_base, &length,
-	                        SequenceError_GetSeqType(&self->ie_base.ke_base));
+	result = DeeFormat_Printf(printer, arg,
+	                          "Index %Vr lies outside the valid bounds [0,%Vr) of %K",
+	                          &self->ie_base.ke_key, &length,
+	                          SequenceError_GetSeqType(&self->ie_base.ke_base));
+	Dee_variant_fini(&length);
+	return result;
 err:
 	return -1;
 }
@@ -1572,11 +1583,11 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	if (num_bits <= 32) {
 		if (flags & (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_ANYSIGN))
 			Dee_variant_init_int32(&result->io_minval, -((int32_t)1 << (num_bits - 1)));
-		Dee_variant_init_uint32(&result->io_maxval, ((uint32_t)1 << max_bits) - 1);
+		Dee_variant_init_uint32(&result->io_maxval, max_bits == 32 ? UINT32_MAX : ((uint32_t)1 << max_bits) - 1);
 	} else if (num_bits <= 64) {
 		if (flags & (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_ANYSIGN))
 			Dee_variant_init_int64(&result->io_minval, -((int64_t)1 << (num_bits - 1)));
-		Dee_variant_init_uint64(&result->io_maxval, ((uint64_t)1 << max_bits) - 1);
+		Dee_variant_init_uint64(&result->io_maxval, max_bits == 64 ? UINT64_MAX : ((uint64_t)1 << max_bits) - 1);
 	} else if (num_bits <= 128) {
 		Dee_uint128_t maxval;
 		if (flags & (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_ANYSIGN)) {
@@ -1586,8 +1597,12 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 			__hybrid_int128_neg(minval);
 			Dee_variant_init_int128(&result->io_minval, minval);
 		}
-		__hybrid_uint128_setone(maxval);
-		__hybrid_uint128_shl(maxval, max_bits);
+		if (max_bits == 128) {
+			__hybrid_uint128_setzero(maxval);
+		} else {
+			__hybrid_uint128_setone(maxval);
+			__hybrid_uint128_shl(maxval, max_bits);
+		}
 		__hybrid_uint128_dec(maxval);
 		Dee_variant_init_uint128(&result->io_maxval, maxval);
 	} else {
