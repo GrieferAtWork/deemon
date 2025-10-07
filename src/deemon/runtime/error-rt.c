@@ -651,7 +651,7 @@ INIT_CUSTOM_ERROR("KeyError", "(" KeyError_init_params ")",
 /************************************************************************/
 typedef struct {
 	KeyError           ie_base;   /* "key" is renamed to "index" */
-	struct Dee_variant ie_length; /* [const] Length of the sequence */
+	struct Dee_variant ie_length; /* [const] Length of the sequence (or "unbound" if lazily calculated) */
 } IndexError;
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -663,6 +663,7 @@ IndexError_GetLength(IndexError *__restrict self,
 		if (seq) {
 			size_t seq_length;
 			seq_length = DeeObject_InvokeMethodHint(seq_operator_size, seq);
+			Dee_Decref_unlikely(seq);
 			if unlikely(seq_length == (size_t)-1)
 				goto err;
 			Dee_variant_setsize_if_unbound(&self->ie_length, seq_length);
