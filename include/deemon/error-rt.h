@@ -187,6 +187,16 @@ INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaIndexOutOfBounds)(struct Dee
 	Dee_ASSUMED_VALUE((DeeRT_ErrVaIndexOutOfBounds)(frame, index), -1)
 #endif /* CONFIG_BUILDING_DEEMON */
 
+/* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
+ * error within an `IndexError' (setting it as the `IndexError's "inner"), and using
+ * `seq' as the accompanying sequence.
+ *
+ * If the currently-thrown exception isn't an `IntegerOverflow', do nothing.
+ *
+ * @return: -1: Always returns `-1', no matter what this function ended up doing. */
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOverflow)(DeeObject *seq);
+
+
 /* Throws an `DeeError_ItemNotFound' indicating that a given item could not be found within some sequence */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFound)(DeeObject *seq, DeeObject *item);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFoundEx)(DeeObject *seq, DeeObject *item, size_t start, size_t end, DeeObject *key);

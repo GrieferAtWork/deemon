@@ -41,6 +41,7 @@
 #include <deemon/string.h>
 #include <deemon/struct.h>
 #include <deemon/system-features.h>
+#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/variant.h>
 
@@ -1815,6 +1816,58 @@ PUBLIC ATTR_COLD int
 	__hybrid_uint128_set(maxval, SIZE_MAX);
 	return DeeRT_ErrIntegerOverflowU128(value, maxval);
 #endif /* __SIZEOF_SIZE_T__ >= 8 */
+}
+
+
+
+
+/* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
+ * error within an `IndexError' (setting it as the `IndexError's "inner"), and using
+ * `seq' as the accompanying sequence.
+ *
+ * If the currently-thrown exception isn't an `IntegerOverflow', do nothing.
+ *
+ * @return: -1: Always returns `-1', no matter what this function ended up doing. */
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrIndexOverflow)(DeeObject *seq) {
+	/* TODO: Call this function from everywhere that converts an object into a "size_t"
+	 *       for the purpose of using it as an index! */
+	DREF DeeThreadObject *me = DeeThread_Self();
+	struct except_frame *error = me->t_except;
+	ASSERT(error != NULL);
+	ASSERT(me->t_exceptsz > 0);
+	if (DeeObject_InstanceOf(error->ef_error, &DeeError_IntegerOverflow) &&
+	    likely(!(atomic_read(&me->t_state) & Dee_THREAD_STATE_TERMINATED))) {
+		IntegerOverflow *overflow = (IntegerOverflow *)error->ef_error;
+		DREF IndexError *result = DeeObject_MALLOC(IndexError);
+		if unlikely(!result) {
+			struct except_frame *oom = me->t_except;
+			if likely(oom != error) {
+				ASSERT(me->t_exceptsz >= 2);
+				ASSERT(oom->ef_prev == error);
+				oom->ef_prev = error->ef_prev;
+				error->ef_prev = oom;
+				me->t_except = error;
+				/* Handle the original IntegerOverflow error so only the OOM error remains */
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			}
+			goto done;
+		}
+
+		/* Set IndexError parameters:
+		 * - "seq"    (ve_value)  = <caller-given "seq">
+		 * - "index"  (ke_key)    = <value from "IntegerOverflow" error>
+		 * - "length" (ie_length) = <unbound (lazily load from "seq")> */
+		Dee_variant_init_object(&result->ie_base.ke_base.ve_value, seq);
+		Dee_variant_init_copy(&result->ie_base.ke_key, &overflow->io_base.ve_value);
+		Dee_variant_init_unbound(&result->ie_length);
+		result->ie_base.ke_base.e_message = NULL;
+		result->ie_base.ke_base.e_inner   = (DREF DeeObject *)overflow; /* Inherit reference */
+		DeeObject_Init(&result->ie_base.ke_base, &DeeError_IndexError);
+		error->ef_error = (DREF DeeObject *)result; /* Inherit reference */
+	}
+done:
+	return -1;
 }
 
 
