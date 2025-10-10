@@ -2467,13 +2467,11 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operat
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getrange_index))(self, start, (Dee_ssize_t)size);
@@ -2495,13 +2493,11 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__operator_g
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
@@ -2527,13 +2523,11 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operat
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
@@ -2559,13 +2553,11 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operat
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
@@ -2591,13 +2583,11 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operat
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeObAndGetItem);
@@ -2753,13 +2743,11 @@ default__seq_operator_delrange_index__with__seq_operator_size__and__seq_erase(De
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_erase))(self, (size_t)start, size - (size_t)start);
@@ -2792,13 +2780,11 @@ default__seq_operator_delrange_index_n__with__seq_operator_size__and__seq_operat
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_delrange_index))(self, start, (Dee_ssize_t)size);
@@ -2981,14 +2967,12 @@ default__seq_operator_setrange_index_n__with__seq_operator_size__and__seq_operat
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0) {
-					start = 0;
-				} else {
-					start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-				}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0) {
+				start = 0;
+			} else {
+				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 			}
 		}
 	}

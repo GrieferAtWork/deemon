@@ -309,13 +309,11 @@ err:
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
@@ -338,13 +336,11 @@ err:
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	return CALL_DEPENDENCY(seq_operator_getrange_index, self, start, (Dee_ssize_t)size);
@@ -359,13 +355,11 @@ err:
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
@@ -389,13 +383,11 @@ err:
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
@@ -419,13 +411,11 @@ err:
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
+		start += size;
+		if unlikely(start < 0) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 		}
 	}
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeObAndGetItem);
