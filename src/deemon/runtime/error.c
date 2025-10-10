@@ -174,8 +174,15 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	} else {
 		frame = except_frame_alloc();
 	}
-	if unlikely(!frame)
+	if unlikely(!frame) {
+		/* TODO: OOM needs special handling where we:
+		 * - Always have at least 1 fallback "except_frame" per thread for use by OOM
+		 * - Every "except_frame" has a way of encoding that N additional OOM errors
+		 *   happened after that frame (but before the next frame)
+		 * - This way, OOM can always be thrown, even if no further frame can be
+		 *   allocated anymore. */
 		goto err;
+	}
 	frame->ef_prev  = ts->t_except;
 	frame->ef_error = error;
 	frame->ef_trace = (DREF DeeTracebackObject *)ITER_DONE;
