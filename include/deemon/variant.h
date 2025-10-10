@@ -274,6 +274,40 @@ DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setuint64_if_unbound(struct Dee_vari
 DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setint128_if_unbound(struct Dee_variant *__restrict self, Dee_int128_t value);
 DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setuint128_if_unbound(struct Dee_variant *__restrict self, Dee_uint128_t value);
 
+/* Compare "self" with "oldval" (asserting identical types and memcmp()'ing "var_data").
+ * If this compare indicates equality, atomically assign "newval" to "self" and return
+ * "true". Else, do nothing and return "false".
+ *
+ * For this purpose, it is assumed that "oldval" and "newval" will not be changed by
+ * another thread (you can easily assert this by simply ensuring that both "oldval" and
+ * "newval" are allocated on your stack)
+ *
+ * Example usage:
+ * >> struct Dee_variant oldval;
+ * >> struct Dee_variant newval;
+ * >> for (;;) {
+ * >>     Dee_variant_init_copy(&oldval, &VARIANT);
+ * >>     Dee_variant_init_uint32(&newval, 42);
+ * >>     if (Dee_variant_cmpxch(&VARIANT, &oldval, &newval))
+ * >>         break;
+ * >>     Dee_variant_fini(&oldval);
+ * >> }
+ * >> Dee_variant_fini(&newval);
+ * >>
+ * >> // At this point, "self" is known to be "uint32:42"
+ * >> // and "oldval" is whatever it was before
+ * >> ...
+ * >>
+ * >> Dee_variant_fini(&oldval);
+ *
+ * @param: self:   The variant whose value to change
+ * @param: oldval: The expected old value of "self"
+ * @param: newval: The new value to assign when "self" still equals "oldval" */
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) bool DCALL
+Dee_variant_cmpxch(struct Dee_variant *__restrict self,
+                   struct Dee_variant const *__restrict oldval,
+                   struct Dee_variant const *__restrict newval);
+
 #if __SIZEOF_SIZE_T__ <= 4
 #define _Dee_variant_set_size(self, value)           _Dee_variant_set_uint32(self, (uint32_t)(value))
 #define _Dee_variant_set_ssize(self, value)          _Dee_variant_set_int32(self, (int32_t)(value))

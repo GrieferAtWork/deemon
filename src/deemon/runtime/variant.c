@@ -388,6 +388,95 @@ Dee_variant_setuint128_if_unbound(struct Dee_variant *__restrict self, Dee_uint1
 }
 
 
+/* Check if "var_data" of "a" and "b" are identical */
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_variant_samedata(struct Dee_variant const *__restrict a,
+                     struct Dee_variant const *__restrict b,
+                     enum Dee_variant_type type) {
+	switch (type) {
+	case Dee_VARIANT_UNBOUND:
+		return true;
+	case Dee_VARIANT_OBJECT:
+		return a->var_data.d_object == b->var_data.d_object;
+	case Dee_VARIANT_INT32:
+	case Dee_VARIANT_UINT32:
+		return _Dee_variant_get_uint32(a) == _Dee_variant_get_uint32(b);
+	case Dee_VARIANT_INT64:
+	case Dee_VARIANT_UINT64:
+		return _Dee_variant_get_uint64(a) == _Dee_variant_get_uint64(b);
+	case Dee_VARIANT_INT128:
+	case Dee_VARIANT_UINT128: {
+		Dee_uint128_t aval = _Dee_variant_get_uint128(a);
+		Dee_uint128_t bval = _Dee_variant_get_uint128(b);
+		return __hybrid_uint128_eq128(aval, bval);
+	}	break;
+	case Dee_VARIANT_CSTRLEN:
+		if (_Dee_variant_get_cstrlen(a) != _Dee_variant_get_cstrlen(b))
+			return false;
+		ATTR_FALLTHROUGH
+	case Dee_VARIANT_CSTR:
+		return _Dee_variant_get_cstr(a) == _Dee_variant_get_cstr(b);
+#ifndef CONFIG_NO_FPU
+	case Dee_VARIANT_FLOAT:
+		return _Dee_variant_get_float(a) == _Dee_variant_get_float(b);
+#endif /* !CONFIG_NO_FPU */
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+
+/* Compare "self" with "oldval" (asserting identical types and memcmp()'ing "var_data").
+ * If this compare indicates equality, atomically assign "newval" to "self" and return
+ * "true". Else, do nothing and return "false".
+ *
+ * For this purpose, it is assumed that "oldval" and "newval" will not be changed by
+ * another thread (you can easily assert this by simply ensuring that both "oldval" and
+ * "newval" are allocated on your stack)
+ *
+ * Example usage:
+ * >> struct Dee_variant oldval;
+ * >> struct Dee_variant newval;
+ * >> for (;;) {
+ * >>     Dee_variant_init_copy(&oldval, &VARIANT);
+ * >>     Dee_variant_init_uint32(&newval, 42);
+ * >>     if (Dee_variant_cmpxch(&VARIANT, &oldval, &newval))
+ * >>         break;
+ * >>     Dee_variant_fini(&oldval);
+ * >> }
+ * >> Dee_variant_fini(&newval);
+ * >>
+ * >> // At this point, "self" is known to be "uint32:42"
+ * >> // and "oldval" is whatever it was before
+ * >> ...
+ * >>
+ * >> Dee_variant_fini(&oldval);
+ *
+ * @param: self:   The variant whose value to change
+ * @param: oldval: The expected old value of "self"
+ * @param: newval: The new value to assign when "self" still equals "oldval" */
+PUBLIC WUNUSED NONNULL((1, 2, 3)) bool DCALL
+Dee_variant_cmpxch(struct Dee_variant *__restrict self,
+                   struct Dee_variant const *__restrict oldval,
+                   struct Dee_variant const *__restrict newval) {
+	bool result;
+	enum Dee_variant_type old_type = Dee_variant_lock(self);
+	ASSERT(self != oldval);
+	ASSERT(self != newval);
+	result = old_type == oldval->var_type &&
+	         Dee_variant_samedata(self, oldval, old_type);
+	if (result) {
+		memcpy(&self->var_data, &newval->var_data, sizeof(self->var_data));
+		Dee_variant_unlock(self, newval->var_type);
+		if (old_type == Dee_VARIANT_OBJECT)
+			Dee_Decref(oldval->var_data.d_object);
+	} else {
+		Dee_variant_unlock(self, old_type);
+	}
+	return result;
+}
+
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_variant_print_impl(struct Dee_variant *__restrict self,
