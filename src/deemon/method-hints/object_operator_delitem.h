@@ -30,7 +30,7 @@ tp_seq->tp_delitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *index)
 %{class using OPERATOR_DELITEM: {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_DELITEM, 1, &index);
+	store_DeeClass_CallOperator_1Arg(err, result, THIS_TYPE, self, OPERATOR_DELITEM, index);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:

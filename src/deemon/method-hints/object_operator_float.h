@@ -30,7 +30,7 @@ tp_math->tp_double([[nonnull]] DeeObject *__restrict self,
                    [[nonnull]] double *__restrict p_result)
 %{class using OPERATOR_FLOAT: {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_FLOAT, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, THIS_TYPE, self, OPERATOR_FLOAT);
 	if (DeeObject_AssertTypeExact(result, &DeeFloat_Type))
 		goto err_r;
 	*p_result = DeeFloat_VALUE(result);

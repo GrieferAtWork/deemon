@@ -29,7 +29,7 @@ operator {
 [[wunused]] DREF DeeObject *
 tp_seq->tp_sizeob([[nonnull]] DeeObject *__restrict self)
 %{class using OPERATOR_SIZE: {
-	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_SIZE, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(THIS_TYPE, self, OPERATOR_SIZE);
 }}
 %{using tp_seq->tp_size: {
 	size_t result = CALL_DEPENDENCY(tp_seq->tp_size, self);

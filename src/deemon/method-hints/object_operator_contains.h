@@ -29,7 +29,7 @@ operator {
 tp_seq->tp_contains([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *item)
 %{class using OPERATOR_CONTAINS: {
-	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_CONTAINS, 1, &item);
+	return_DeeClass_CallOperator_1Arg(THIS_TYPE, self, OPERATOR_CONTAINS, item);
 }} = OPERATOR_CONTAINS;
 
 } /* operator */

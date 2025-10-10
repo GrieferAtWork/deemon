@@ -28,7 +28,7 @@ operator {
 [[wunused]] DREF DeeObject *
 tp_seq->tp_iter([[nonnull]] DeeObject *__restrict self)
 %{class using OPERATOR_ITER: {
-	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_ITER, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(THIS_TYPE, self, OPERATOR_ITER);
 }}
 %{using tp_seq->tp_foreach: {
 	/* TODO: Custom iterator type that uses "tp_foreach" */

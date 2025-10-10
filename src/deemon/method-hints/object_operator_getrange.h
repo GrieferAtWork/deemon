@@ -30,10 +30,7 @@ tp_seq->tp_getrange([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *start,
                     [[nonnull]] DeeObject *end)
 %{class using OPERATOR_GETRANGE: {
-	DeeObject *args[2];
-	args[0] = start;
-	args[1] = end;
-	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_GETRANGE, 2, args);
+	return_DeeClass_CallOperator_2Args(THIS_TYPE, self, OPERATOR_GETRANGE, start, end);
 }}
 %{using [tp_seq->tp_getrange_index, tp_seq->tp_getrange_index_n]: {
 	Dee_ssize_t start_index, end_index;

@@ -519,7 +519,7 @@ function gen(eq: string, ne: string, cmp: string, iseq: bool) {
 	print("tp_cmp->tp_", eq, "([[nonnull]] DeeObject *lhs,");
 	print("              [[nonnull]] DeeObject *rhs)");
 	print("%{class using OPERATOR_", EQ, ": {");
-	print("	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_", EQ, ", 1, &rhs);");
+	print("	return_DeeClass_CallOperator_1Arg(THIS_TYPE, lhs, OPERATOR_", EQ, ", rhs);");
 	print("}}");
 	print("%{using tp_cmp->tp_", ne, ": [[prefix(DEFINE_xinvoke_not)]] {");
 	print("	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_", ne, ", lhs, rhs);");
@@ -549,7 +549,7 @@ gen("ge", "lo", ">=", false);
 tp_cmp->tp_eq([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class using OPERATOR_EQ: {
-	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_EQ, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(THIS_TYPE, lhs, OPERATOR_EQ, rhs);
 }}
 %{using tp_cmp->tp_ne: [[prefix(DEFINE_xinvoke_not)]] {
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_ne, lhs, rhs);
@@ -571,7 +571,7 @@ err:
 tp_cmp->tp_ne([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class using OPERATOR_NE: {
-	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_NE, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(THIS_TYPE, lhs, OPERATOR_NE, rhs);
 }}
 %{using tp_cmp->tp_eq: [[prefix(DEFINE_xinvoke_not)]] {
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_eq, lhs, rhs);
@@ -593,7 +593,7 @@ err:
 tp_cmp->tp_lo([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class using OPERATOR_LO: {
-	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_LO, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(THIS_TYPE, lhs, OPERATOR_LO, rhs);
 }}
 %{using tp_cmp->tp_ge: [[prefix(DEFINE_xinvoke_not)]] {
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_ge, lhs, rhs);
@@ -615,7 +615,7 @@ err:
 tp_cmp->tp_le([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class using OPERATOR_LE: {
-	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_LE, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(THIS_TYPE, lhs, OPERATOR_LE, rhs);
 }}
 %{using tp_cmp->tp_gr: [[prefix(DEFINE_xinvoke_not)]] {
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_gr, lhs, rhs);
@@ -637,7 +637,7 @@ err:
 tp_cmp->tp_gr([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class using OPERATOR_GR: {
-	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_GR, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(THIS_TYPE, lhs, OPERATOR_GR, rhs);
 }}
 %{using tp_cmp->tp_le: [[prefix(DEFINE_xinvoke_not)]] {
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_le, lhs, rhs);
@@ -659,7 +659,7 @@ err:
 tp_cmp->tp_ge([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class using OPERATOR_GE: {
-	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_GE, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(THIS_TYPE, lhs, OPERATOR_GE, rhs);
 }}
 %{using tp_cmp->tp_lo: [[prefix(DEFINE_xinvoke_not)]] {
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_lo, lhs, rhs);

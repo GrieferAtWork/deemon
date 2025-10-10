@@ -41,7 +41,7 @@ tp_seq->tp_getitem_index_fast([[nonnull]] DeeObject *self, size_t index); /* !!!
 tp_seq->tp_getitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *index)
 %{class using OPERATOR_GETITEM: {
-	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_GETITEM, 1, &index);
+	return_DeeClass_CallOperator_1Arg(THIS_TYPE, self, OPERATOR_GETITEM, index);
 }}
 %{using [tp_seq->tp_getitem_index, tp_seq->tp_getitem_string_len_hash]: {
 	size_t index_value;

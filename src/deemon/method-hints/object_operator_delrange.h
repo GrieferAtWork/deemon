@@ -31,10 +31,7 @@ tp_seq->tp_delrange([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *end)
 %{class using OPERATOR_DELRANGE: {
 	DREF DeeObject *result;
-	DeeObject *args[2];
-	args[0] = start;
-	args[1] = end;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_DELRANGE, 2, args);
+	store_DeeClass_CallOperator_2Args(err, result, THIS_TYPE, self, OPERATOR_DELRANGE, start, end);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:

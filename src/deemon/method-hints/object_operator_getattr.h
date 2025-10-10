@@ -29,7 +29,7 @@ operator {
 tp_attr->tp_getattr([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *attr)
 %{class using OPERATOR_GETATTR: {
-	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_GETATTR, 1, &attr);
+	return_DeeClass_CallOperator_1Arg(THIS_TYPE, self, OPERATOR_GETATTR, attr);
 }} = OPERATOR_GETATTR;
 
 [[custom_unsupported_impl_name(NULL)]]

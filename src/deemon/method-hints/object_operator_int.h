@@ -29,7 +29,7 @@ operator {
 tp_math->tp_int([[nonnull]] DeeObject *__restrict self)
 %{class using OPERATOR_INT: {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_INT, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, THIS_TYPE, self, OPERATOR_INT);
 	if (DeeObject_AssertTypeExact(result, &DeeInt_Type))
 		goto err_r;
 	return result;

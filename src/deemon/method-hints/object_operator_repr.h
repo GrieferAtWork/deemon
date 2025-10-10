@@ -29,7 +29,7 @@ operator {
 tp_cast.tp_repr([[nonnull]] DeeObject *__restrict self)
 %{class using OPERATOR_REPR: {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_REPR, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, THIS_TYPE, self, OPERATOR_REPR);
 	if (DeeObject_AssertTypeExact(result, &DeeString_Type))
 		goto err_r;
 	return result;

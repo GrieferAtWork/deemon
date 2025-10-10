@@ -31,7 +31,7 @@ tp_init.tp_move_assign([[nonnull]] DeeObject *self,
                        [[nonnull]] DeeObject *value)
 %{class using OPERATOR_MOVEASSIGN: {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_MOVEASSIGN, 1, &value);
+	store_DeeClass_CallOperator_1Arg(err, result, THIS_TYPE, self, OPERATOR_MOVEASSIGN, value);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:

@@ -53,7 +53,7 @@ err:
 tp_cast.tp_str([[nonnull]] DeeObject *__restrict self)
 %{class using OPERATOR_STR: {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_STR, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, THIS_TYPE, self, OPERATOR_STR);
 	if (DeeObject_AssertTypeExact(result, &DeeString_Type))
 		goto err_r;
 	return result;

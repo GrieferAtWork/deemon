@@ -97,6 +97,45 @@ DECL_BEGIN
 	}	__WHILE0
 #endif /* !__OPTIMIZE_SIZE__ */
 
+#define return_DeeClass_CallOperator_NoArgs(tp_self, self, operator) \
+	return_DeeClass_CallOperator(tp_self, self, operator, 0, NULL)
+#define store_DeeClass_CallOperator_NoArgs(err, result, tp_self, self, operator) \
+	store_DeeClass_CallOperator(err, result, tp_self, self, operator, 0, NULL)
+#define return_DeeClass_CallOperator_1Arg(tp_self, self, operator, arg0) \
+	return_DeeClass_CallOperator(tp_self, self, operator, 1, &arg0)
+#define store_DeeClass_CallOperator_1Arg(err, result, tp_self, self, operator, arg0) \
+	store_DeeClass_CallOperator(err, result, tp_self, self, operator, 1, &arg0)
+#define return_DeeClass_CallOperator_2Args(tp_self, self, operator, arg0, arg1) \
+	do {                                                                        \
+		DeeObject *_args[2];                                                    \
+		_args[0] = arg0;                                                        \
+		_args[1] = arg1;                                                        \
+		return_DeeClass_CallOperator(tp_self, self, operator, 2, _args);        \
+	}	__WHILE0
+#define store_DeeClass_CallOperator_2Args(err, result, tp_self, self, operator, arg0, arg1) \
+	do {                                                                                    \
+		DeeObject *_args[2];                                                                \
+		_args[0] = arg0;                                                                    \
+		_args[1] = arg1;                                                                    \
+		store_DeeClass_CallOperator(err, result, tp_self, self, operator, 2, _args);        \
+	}	__WHILE0
+#define return_DeeClass_CallOperator_3Args(tp_self, self, operator, arg0, arg1, arg2) \
+	do {                                                                              \
+		DeeObject *_args[3];                                                          \
+		_args[0] = arg0;                                                              \
+		_args[1] = arg1;                                                              \
+		_args[2] = arg2;                                                              \
+		return_DeeClass_CallOperator(tp_self, self, operator, 3, _args);              \
+	}	__WHILE0
+#define store_DeeClass_CallOperator_3Args(err, result, tp_self, self, operator, arg0, arg1, arg2) \
+	do {                                                                                          \
+		DeeObject *_args[3];                                                                      \
+		_args[0] = arg0;                                                                          \
+		_args[1] = arg1;                                                                          \
+		_args[2] = arg2;                                                                          \
+		store_DeeClass_CallOperator(err, result, tp_self, self, operator, 3, _args);              \
+	}	__WHILE0
+
 
 /* clang-format off */
 /*[[[deemon (printNativeOperatorHintImpls from "..method-hints.method-hints")();]]]*/
@@ -104,7 +143,7 @@ DECL_BEGIN
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__assign__with__ASSIGN(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_ASSIGN, 1, &value);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, self, OPERATOR_ASSIGN, value);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -122,7 +161,7 @@ usrtype__assign__with__ASSIGN(DeeObject *self, DeeObject *value) {
 	return tusrtype__assign__with__ASSIGN(Dee_TYPE(self), self, value);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_ASSIGN, 1, &value);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(self), self, OPERATOR_ASSIGN, value);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -134,7 +173,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__move_assign__with__MOVEASSIGN(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_MOVEASSIGN, 1, &value);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, self, OPERATOR_MOVEASSIGN, value);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -157,7 +196,7 @@ usrtype__move_assign__with__MOVEASSIGN(DeeObject *self, DeeObject *value) {
 	return tusrtype__move_assign__with__MOVEASSIGN(Dee_TYPE(self), self, value);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_MOVEASSIGN, 1, &value);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(self), self, OPERATOR_MOVEASSIGN, value);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -179,7 +218,7 @@ default__move_assign__with__assign(DeeObject *self, DeeObject *value) {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__str__with__STR(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_STR, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, tp_self, self, OPERATOR_STR);
 	if (DeeObject_AssertTypeExact(result, &DeeString_Type))
 		goto err_r;
 	return result;
@@ -247,7 +286,7 @@ usrtype__str__with__STR(DeeObject *__restrict self) {
 	return tusrtype__str__with__STR(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_STR, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, Dee_TYPE(self), self, OPERATOR_STR);
 	if (DeeObject_AssertTypeExact(result, &DeeString_Type))
 		goto err_r;
 	return result;
@@ -434,7 +473,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__repr__with__REPR(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_REPR, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, tp_self, self, OPERATOR_REPR);
 	if (DeeObject_AssertTypeExact(result, &DeeString_Type))
 		goto err_r;
 	return result;
@@ -481,7 +520,7 @@ usrtype__repr__with__REPR(DeeObject *__restrict self) {
 	return tusrtype__repr__with__REPR(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_REPR, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, Dee_TYPE(self), self, OPERATOR_REPR);
 	if (DeeObject_AssertTypeExact(result, &DeeString_Type))
 		goto err_r;
 	return result;
@@ -627,7 +666,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tusrtype__bool__with__BOOL(DeeTypeObject *tp_self, DeeObject *self) {
 	int retval;
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_BOOL, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, tp_self, self, OPERATOR_BOOL);
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
 	retval = DeeBool_IsTrue(result);
@@ -651,7 +690,7 @@ usrtype__bool__with__BOOL(DeeObject *__restrict self) {
 #else /* __OPTIMIZE_SIZE__ */
 	int retval;
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_BOOL, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, Dee_TYPE(self), self, OPERATOR_BOOL);
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
 	retval = DeeBool_IsTrue(result);
@@ -1492,7 +1531,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__int__with__INT(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_INT, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, tp_self, self, OPERATOR_INT);
 	if (DeeObject_AssertTypeExact(result, &DeeInt_Type))
 		goto err_r;
 	return result;
@@ -1550,7 +1589,7 @@ usrtype__int__with__INT(DeeObject *__restrict self) {
 	return tusrtype__int__with__INT(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_INT, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, Dee_TYPE(self), self, OPERATOR_INT);
 	if (DeeObject_AssertTypeExact(result, &DeeInt_Type))
 		goto err_r;
 	return result;
@@ -1862,7 +1901,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__double__with__FLOAT(DeeTypeObject *tp_self, DeeObject *self, double *p_result) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_FLOAT, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, tp_self, self, OPERATOR_FLOAT);
 	if (DeeObject_AssertTypeExact(result, &DeeFloat_Type))
 		goto err_r;
 	*p_result = DeeFloat_VALUE(result);
@@ -1924,7 +1963,7 @@ usrtype__double__with__FLOAT(DeeObject *__restrict self, double *__restrict p_re
 	return tusrtype__double__with__FLOAT(Dee_TYPE(self), self, p_result);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_FLOAT, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, Dee_TYPE(self), self, OPERATOR_FLOAT);
 	if (DeeObject_AssertTypeExact(result, &DeeFloat_Type))
 		goto err_r;
 	*p_result = DeeFloat_VALUE(result);
@@ -2950,7 +2989,7 @@ default__trycompare_eq__with__compare_eq(DeeObject *lhs, DeeObject *rhs) {
 /* tp_cmp->tp_eq */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__eq__with__EQ(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_EQ, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_EQ, rhs);
 }
 
 #ifndef DEFINED_xinvoke_not
@@ -2995,7 +3034,7 @@ usrtype__eq__with__EQ(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__eq__with__EQ(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_EQ, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_EQ, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -3026,7 +3065,7 @@ err:
 /* tp_cmp->tp_ne */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__ne__with__NE(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_NE, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_NE, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -3055,7 +3094,7 @@ usrtype__ne__with__NE(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__ne__with__NE(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_NE, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_NE, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -3086,7 +3125,7 @@ err:
 /* tp_cmp->tp_lo */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__lo__with__LO(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_LO, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_LO, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -3115,7 +3154,7 @@ usrtype__lo__with__LO(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__lo__with__LO(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_LO, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_LO, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -3146,7 +3185,7 @@ err:
 /* tp_cmp->tp_le */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__le__with__LE(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_LE, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_LE, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -3175,7 +3214,7 @@ usrtype__le__with__LE(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__le__with__LE(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_LE, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_LE, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -3206,7 +3245,7 @@ err:
 /* tp_cmp->tp_gr */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__gr__with__GR(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_GR, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_GR, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -3235,7 +3274,7 @@ usrtype__gr__with__GR(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__gr__with__GR(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_GR, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_GR, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -3266,7 +3305,7 @@ err:
 /* tp_cmp->tp_ge */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__ge__with__GE(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_GE, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_GE, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -3295,7 +3334,7 @@ usrtype__ge__with__GE(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__ge__with__GE(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_GE, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_GE, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -3326,7 +3365,7 @@ err:
 /* tp_seq->tp_iter */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__iter__with__ITER(DeeTypeObject *tp_self, DeeObject *self) {
-	return_DeeClass_CallOperator(tp_self, self, OPERATOR_ITER, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(tp_self, self, OPERATOR_ITER);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -3357,7 +3396,7 @@ usrtype__iter__with__ITER(DeeObject *__restrict self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__iter__with__ITER(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(self), self, OPERATOR_ITER, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(Dee_TYPE(self), self, OPERATOR_ITER);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -3556,7 +3595,7 @@ err:
 /* tp_seq->tp_sizeob */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__sizeob__with__SIZE(DeeTypeObject *tp_self, DeeObject *self) {
-	return_DeeClass_CallOperator(tp_self, self, OPERATOR_SIZE, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(tp_self, self, OPERATOR_SIZE);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -3579,7 +3618,7 @@ usrtype__sizeob__with__SIZE(DeeObject *__restrict self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__sizeob__with__SIZE(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(self), self, OPERATOR_SIZE, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(Dee_TYPE(self), self, OPERATOR_SIZE);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -3631,7 +3670,7 @@ err:
 /* tp_seq->tp_contains */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__contains__with__CONTAINS(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item) {
-	return_DeeClass_CallOperator(tp_self, self, OPERATOR_CONTAINS, 1, &item);
+	return_DeeClass_CallOperator_1Arg(tp_self, self, OPERATOR_CONTAINS, item);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -3644,7 +3683,7 @@ usrtype__contains__with__CONTAINS(DeeObject *self, DeeObject *item) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__contains__with__CONTAINS(Dee_TYPE(self), self, item);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(self), self, OPERATOR_CONTAINS, 1, &item);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(self), self, OPERATOR_CONTAINS, item);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -3652,7 +3691,7 @@ usrtype__contains__with__CONTAINS(DeeObject *self, DeeObject *item) {
 /* tp_seq->tp_getitem */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__getitem__with__GETITEM(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
-	return_DeeClass_CallOperator(tp_self, self, OPERATOR_GETITEM, 1, &index);
+	return_DeeClass_CallOperator_1Arg(tp_self, self, OPERATOR_GETITEM, index);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -3745,7 +3784,7 @@ usrtype__getitem__with__GETITEM(DeeObject *self, DeeObject *index) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__getitem__with__GETITEM(Dee_TYPE(self), self, index);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(self), self, OPERATOR_GETITEM, 1, &index);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(self), self, OPERATOR_GETITEM, index);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -5820,7 +5859,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__delitem__with__DELITEM(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_DELITEM, 1, &index);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, self, OPERATOR_DELITEM, index);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -5892,7 +5931,7 @@ usrtype__delitem__with__DELITEM(DeeObject *self, DeeObject *index) {
 	return tusrtype__delitem__with__DELITEM(Dee_TYPE(self), self, index);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_DELITEM, 1, &index);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(self), self, OPERATOR_DELITEM, index);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -6124,10 +6163,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 tusrtype__setitem__with__SETITEM(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value) {
 	DREF DeeObject *result;
-	DeeObject *args[2];
-	args[0] = index;
-	args[1] = value;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_SETITEM, 2, args);
+	store_DeeClass_CallOperator_2Args(err, result, tp_self, self, OPERATOR_SETITEM, index, value);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -6199,10 +6235,7 @@ usrtype__setitem__with__SETITEM(DeeObject *self, DeeObject *index, DeeObject *va
 	return tusrtype__setitem__with__SETITEM(Dee_TYPE(self), self, index, value);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	DeeObject *args[2];
-	args[0] = index;
-	args[1] = value;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_SETITEM, 2, args);
+	store_DeeClass_CallOperator_2Args(err, result, Dee_TYPE(self), self, OPERATOR_SETITEM, index, value);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -6433,10 +6466,7 @@ err:
 /* tp_seq->tp_getrange */
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 tusrtype__getrange__with__GETRANGE(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end) {
-	DeeObject *args[2];
-	args[0] = start;
-	args[1] = end;
-	return_DeeClass_CallOperator(tp_self, self, OPERATOR_GETRANGE, 2, args);
+	return_DeeClass_CallOperator_2Args(tp_self, self, OPERATOR_GETRANGE, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
@@ -6463,10 +6493,7 @@ usrtype__getrange__with__GETRANGE(DeeObject *self, DeeObject *start, DeeObject *
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__getrange__with__GETRANGE(Dee_TYPE(self), self, start, end);
 #else /* __OPTIMIZE_SIZE__ */
-	DeeObject *args[2];
-	args[0] = start;
-	args[1] = end;
-	return_DeeClass_CallOperator(Dee_TYPE(self), self, OPERATOR_GETRANGE, 2, args);
+	return_DeeClass_CallOperator_2Args(Dee_TYPE(self), self, OPERATOR_GETRANGE, start, end);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -6580,10 +6607,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 tusrtype__delrange__with__DELRANGE(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end) {
 	DREF DeeObject *result;
-	DeeObject *args[2];
-	args[0] = start;
-	args[1] = end;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_DELRANGE, 2, args);
+	store_DeeClass_CallOperator_2Args(err, result, tp_self, self, OPERATOR_DELRANGE, start, end);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -6615,10 +6639,7 @@ usrtype__delrange__with__DELRANGE(DeeObject *self, DeeObject *start, DeeObject *
 	return tusrtype__delrange__with__DELRANGE(Dee_TYPE(self), self, start, end);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	DeeObject *args[2];
-	args[0] = start;
-	args[1] = end;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_DELRANGE, 2, args);
+	store_DeeClass_CallOperator_2Args(err, result, Dee_TYPE(self), self, OPERATOR_DELRANGE, start, end);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -6736,11 +6757,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 tusrtype__setrange__with__SETRANGE(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values) {
 	DREF DeeObject *result;
-	DeeObject *args[3];
-	args[0] = start;
-	args[1] = end;
-	args[2] = values;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_SETRANGE, 3, args);
+	store_DeeClass_CallOperator_3Args(err, result, tp_self, self, OPERATOR_SETRANGE, start, end, values);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -6772,11 +6789,7 @@ usrtype__setrange__with__SETRANGE(DeeObject *self, DeeObject *start, DeeObject *
 	return tusrtype__setrange__with__SETRANGE(Dee_TYPE(self), self, start, end, values);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	DeeObject *args[3];
-	args[0] = start;
-	args[1] = end;
-	args[2] = values;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_SETRANGE, 3, args);
+	store_DeeClass_CallOperator_3Args(err, result, Dee_TYPE(self), self, OPERATOR_SETRANGE, start, end, values);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -6893,7 +6906,7 @@ err:
 /* tp_math->tp_inv */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__inv__with__INV(DeeTypeObject *tp_self, DeeObject *self) {
-	return_DeeClass_CallOperator(tp_self, self, OPERATOR_INV, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(tp_self, self, OPERATOR_INV);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -6906,14 +6919,14 @@ usrtype__inv__with__INV(DeeObject *self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__inv__with__INV(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(self), self, OPERATOR_INV, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(Dee_TYPE(self), self, OPERATOR_INV);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
 /* tp_math->tp_pos */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__pos__with__POS(DeeTypeObject *tp_self, DeeObject *self) {
-	return_DeeClass_CallOperator(tp_self, self, OPERATOR_POS, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(tp_self, self, OPERATOR_POS);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -6926,14 +6939,14 @@ usrtype__pos__with__POS(DeeObject *self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__pos__with__POS(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(self), self, OPERATOR_POS, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(Dee_TYPE(self), self, OPERATOR_POS);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
 /* tp_math->tp_neg */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__neg__with__NEG(DeeTypeObject *tp_self, DeeObject *self) {
-	return_DeeClass_CallOperator(tp_self, self, OPERATOR_NEG, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(tp_self, self, OPERATOR_NEG);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -6946,14 +6959,14 @@ usrtype__neg__with__NEG(DeeObject *self) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__neg__with__NEG(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(self), self, OPERATOR_NEG, 0, NULL);
+	return_DeeClass_CallOperator_NoArgs(Dee_TYPE(self), self, OPERATOR_NEG);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
 /* tp_math->tp_add */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__add__with__ADD(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_ADD, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_ADD, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -6966,7 +6979,7 @@ usrtype__add__with__ADD(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__add__with__ADD(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_ADD, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_ADD, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -6974,7 +6987,7 @@ usrtype__add__with__ADD(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__inplace_add__with__INPLACE_ADD(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_ADD, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_ADD, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7005,7 +7018,7 @@ usrtype__inplace_add__with__INPLACE_ADD(DREF DeeObject **__restrict p_lhs, DeeOb
 	return tusrtype__inplace_add__with__INPLACE_ADD(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_ADD, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_ADD, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7033,7 +7046,7 @@ err:
 /* tp_math->tp_sub */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__sub__with__SUB(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_SUB, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_SUB, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -7046,7 +7059,7 @@ usrtype__sub__with__SUB(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__sub__with__SUB(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_SUB, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_SUB, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -7054,7 +7067,7 @@ usrtype__sub__with__SUB(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__inplace_sub__with__INPLACE_SUB(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_SUB, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_SUB, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7085,7 +7098,7 @@ usrtype__inplace_sub__with__INPLACE_SUB(DREF DeeObject **__restrict p_lhs, DeeOb
 	return tusrtype__inplace_sub__with__INPLACE_SUB(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_SUB, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_SUB, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7113,7 +7126,7 @@ err:
 /* tp_math->tp_mul */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__mul__with__MUL(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_MUL, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_MUL, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -7126,7 +7139,7 @@ usrtype__mul__with__MUL(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__mul__with__MUL(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_MUL, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_MUL, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -7134,7 +7147,7 @@ usrtype__mul__with__MUL(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__inplace_mul__with__INPLACE_MUL(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_MUL, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_MUL, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7165,7 +7178,7 @@ usrtype__inplace_mul__with__INPLACE_MUL(DREF DeeObject **__restrict p_lhs, DeeOb
 	return tusrtype__inplace_mul__with__INPLACE_MUL(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_MUL, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_MUL, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7193,7 +7206,7 @@ err:
 /* tp_math->tp_div */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__div__with__DIV(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_DIV, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_DIV, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -7206,7 +7219,7 @@ usrtype__div__with__DIV(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__div__with__DIV(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_DIV, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_DIV, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -7214,7 +7227,7 @@ usrtype__div__with__DIV(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__inplace_div__with__INPLACE_DIV(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_DIV, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_DIV, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7245,7 +7258,7 @@ usrtype__inplace_div__with__INPLACE_DIV(DREF DeeObject **__restrict p_lhs, DeeOb
 	return tusrtype__inplace_div__with__INPLACE_DIV(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_DIV, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_DIV, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7273,7 +7286,7 @@ err:
 /* tp_math->tp_mod */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__mod__with__MOD(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_MOD, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_MOD, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -7286,7 +7299,7 @@ usrtype__mod__with__MOD(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__mod__with__MOD(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_MOD, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_MOD, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -7294,7 +7307,7 @@ usrtype__mod__with__MOD(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__inplace_mod__with__INPLACE_MOD(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_MOD, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_MOD, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7325,7 +7338,7 @@ usrtype__inplace_mod__with__INPLACE_MOD(DREF DeeObject **__restrict p_lhs, DeeOb
 	return tusrtype__inplace_mod__with__INPLACE_MOD(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_MOD, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_MOD, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7353,7 +7366,7 @@ err:
 /* tp_math->tp_shl */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__shl__with__SHL(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_SHL, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_SHL, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -7366,7 +7379,7 @@ usrtype__shl__with__SHL(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__shl__with__SHL(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_SHL, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_SHL, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -7374,7 +7387,7 @@ usrtype__shl__with__SHL(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__inplace_shl__with__INPLACE_SHL(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_SHL, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_SHL, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7405,7 +7418,7 @@ usrtype__inplace_shl__with__INPLACE_SHL(DREF DeeObject **__restrict p_lhs, DeeOb
 	return tusrtype__inplace_shl__with__INPLACE_SHL(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_SHL, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_SHL, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7433,7 +7446,7 @@ err:
 /* tp_math->tp_shr */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__shr__with__SHR(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_SHR, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_SHR, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -7446,7 +7459,7 @@ usrtype__shr__with__SHR(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__shr__with__SHR(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_SHR, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_SHR, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -7454,7 +7467,7 @@ usrtype__shr__with__SHR(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__inplace_shr__with__INPLACE_SHR(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_SHR, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_SHR, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7485,7 +7498,7 @@ usrtype__inplace_shr__with__INPLACE_SHR(DREF DeeObject **__restrict p_lhs, DeeOb
 	return tusrtype__inplace_shr__with__INPLACE_SHR(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_SHR, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_SHR, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7513,7 +7526,7 @@ err:
 /* tp_math->tp_and */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__and__with__AND(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_AND, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_AND, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -7526,7 +7539,7 @@ usrtype__and__with__AND(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__and__with__AND(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_AND, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_AND, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -7534,7 +7547,7 @@ usrtype__and__with__AND(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__inplace_and__with__INPLACE_AND(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_AND, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_AND, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7565,7 +7578,7 @@ usrtype__inplace_and__with__INPLACE_AND(DREF DeeObject **__restrict p_lhs, DeeOb
 	return tusrtype__inplace_and__with__INPLACE_AND(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_AND, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_AND, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7593,7 +7606,7 @@ err:
 /* tp_math->tp_or */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__or__with__OR(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_OR, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_OR, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -7606,7 +7619,7 @@ usrtype__or__with__OR(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__or__with__OR(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_OR, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_OR, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -7614,7 +7627,7 @@ usrtype__or__with__OR(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__inplace_or__with__INPLACE_OR(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_OR, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_OR, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7645,7 +7658,7 @@ usrtype__inplace_or__with__INPLACE_OR(DREF DeeObject **__restrict p_lhs, DeeObje
 	return tusrtype__inplace_or__with__INPLACE_OR(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_OR, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_OR, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7673,7 +7686,7 @@ err:
 /* tp_math->tp_xor */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__xor__with__XOR(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_XOR, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_XOR, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -7686,7 +7699,7 @@ usrtype__xor__with__XOR(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__xor__with__XOR(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_XOR, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_XOR, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -7694,7 +7707,7 @@ usrtype__xor__with__XOR(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__inplace_xor__with__INPLACE_XOR(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_XOR, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_XOR, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7725,7 +7738,7 @@ usrtype__inplace_xor__with__INPLACE_XOR(DREF DeeObject **__restrict p_lhs, DeeOb
 	return tusrtype__inplace_xor__with__INPLACE_XOR(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_XOR, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_XOR, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7753,7 +7766,7 @@ err:
 /* tp_math->tp_pow */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__pow__with__POW(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
-	return_DeeClass_CallOperator(tp_self, lhs, OPERATOR_POW, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(tp_self, lhs, OPERATOR_POW, rhs);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -7766,7 +7779,7 @@ usrtype__pow__with__POW(DeeObject *lhs, DeeObject *rhs) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__pow__with__POW(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(lhs), lhs, OPERATOR_POW, 1, &rhs);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(lhs), lhs, OPERATOR_POW, rhs);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -7774,7 +7787,7 @@ usrtype__pow__with__POW(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__inplace_pow__with__INPLACE_POW(DeeTypeObject *tp_self, DREF DeeObject **p_lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_POW, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, *p_lhs, OPERATOR_INPLACE_POW, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7805,7 +7818,7 @@ usrtype__inplace_pow__with__INPLACE_POW(DREF DeeObject **__restrict p_lhs, DeeOb
 	return tusrtype__inplace_pow__with__INPLACE_POW(Dee_TYPE(*p_lhs), p_lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_POW, 1, &rhs);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(*p_lhs), *p_lhs, OPERATOR_INPLACE_POW, rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -7834,7 +7847,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tusrtype__inc__with__INC(DeeTypeObject *tp_self, DREF DeeObject **p_self) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_self, OPERATOR_INC, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, tp_self, *p_self, OPERATOR_INC);
 	Dee_Decref_unlikely(*p_self);
 	*p_self = result; /* Inherit reference */
 	return 0;
@@ -7870,7 +7883,7 @@ usrtype__inc__with__INC(DREF DeeObject **__restrict p_self) {
 	return tusrtype__inc__with__INC(Dee_TYPE(*p_self), p_self);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_self), *p_self, OPERATOR_INC, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, Dee_TYPE(*p_self), *p_self, OPERATOR_INC);
 	Dee_Decref_unlikely(*p_self);
 	*p_self = result; /* Inherit reference */
 	return 0;
@@ -7908,7 +7921,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tusrtype__dec__with__DEC(DeeTypeObject *tp_self, DREF DeeObject **p_self) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, *p_self, OPERATOR_DEC, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, tp_self, *p_self, OPERATOR_DEC);
 	Dee_Decref_unlikely(*p_self);
 	*p_self = result; /* Inherit reference */
 	return 0;
@@ -7944,7 +7957,7 @@ usrtype__dec__with__DEC(DREF DeeObject **__restrict p_self) {
 	return tusrtype__dec__with__DEC(Dee_TYPE(*p_self), p_self);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(*p_self), *p_self, OPERATOR_DEC, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, Dee_TYPE(*p_self), *p_self, OPERATOR_DEC);
 	Dee_Decref_unlikely(*p_self);
 	*p_self = result; /* Inherit reference */
 	return 0;
@@ -7982,7 +7995,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tusrtype__enter__with__ENTER(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_ENTER, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, tp_self, self, OPERATOR_ENTER);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref_unlikely(result);
@@ -8002,7 +8015,7 @@ usrtype__enter__with__ENTER(DeeObject *__restrict self) {
 	return tusrtype__enter__with__ENTER(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_ENTER, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, Dee_TYPE(self), self, OPERATOR_ENTER);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref_unlikely(result);
@@ -8016,7 +8029,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tusrtype__leave__with__LEAVE(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_LEAVE, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, tp_self, self, OPERATOR_LEAVE);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref_unlikely(result);
@@ -8036,7 +8049,7 @@ usrtype__leave__with__LEAVE(DeeObject *__restrict self) {
 	return tusrtype__leave__with__LEAVE(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_LEAVE, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, Dee_TYPE(self), self, OPERATOR_LEAVE);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref_unlikely(result);
@@ -8049,7 +8062,7 @@ err:
 /* tp_attr->tp_getattr */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tusrtype__getattr__with__GETATTR(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) {
-	return_DeeClass_CallOperator(tp_self, self, OPERATOR_GETATTR, 1, &attr);
+	return_DeeClass_CallOperator_1Arg(tp_self, self, OPERATOR_GETATTR, attr);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -8062,7 +8075,7 @@ usrtype__getattr__with__GETATTR(DeeObject *self, DeeObject *attr) {
 #ifdef __OPTIMIZE_SIZE__
 	return tusrtype__getattr__with__GETATTR(Dee_TYPE(self), self, attr);
 #else /* __OPTIMIZE_SIZE__ */
-	return_DeeClass_CallOperator(Dee_TYPE(self), self, OPERATOR_GETATTR, 1, &attr);
+	return_DeeClass_CallOperator_1Arg(Dee_TYPE(self), self, OPERATOR_GETATTR, attr);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -8382,7 +8395,7 @@ default__hasattr_string_len_hash__with__boundattr_string_len_hash(DeeObject *sel
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tusrtype__delattr__with__DELATTR(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_DELATTR, 1, &attr);
+	store_DeeClass_CallOperator_1Arg(err, result, tp_self, self, OPERATOR_DELATTR, attr);
 	Dee_Decref_probably_none(result);
 	return 0;
 err:
@@ -8400,7 +8413,7 @@ usrtype__delattr__with__DELATTR(DeeObject *self, DeeObject *attr) {
 	return tusrtype__delattr__with__DELATTR(Dee_TYPE(self), self, attr);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_DELATTR, 1, &attr);
+	store_DeeClass_CallOperator_1Arg(err, result, Dee_TYPE(self), self, OPERATOR_DELATTR, attr);
 	Dee_Decref_probably_none(result);
 	return 0;
 err:
@@ -8484,10 +8497,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 tusrtype__setattr__with__SETATTR(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr, DeeObject *value) {
 	DREF DeeObject *result;
-	DeeObject *args[2];
-	args[0] = attr;
-	args[1] = value;
-	store_DeeClass_CallOperator(err, result, tp_self, self, OPERATOR_SETATTR, 2, args);
+	store_DeeClass_CallOperator_2Args(err, result, tp_self, self, OPERATOR_SETATTR, attr, value);
 	Dee_Decref_probably_none(result);
 	return 0;
 err:
@@ -8505,10 +8515,7 @@ usrtype__setattr__with__SETATTR(DeeObject *self, DeeObject *attr, DeeObject *val
 	return tusrtype__setattr__with__SETATTR(Dee_TYPE(self), self, attr, value);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *result;
-	DeeObject *args[2];
-	args[0] = attr;
-	args[1] = value;
-	store_DeeClass_CallOperator(err, result, Dee_TYPE(self), self, OPERATOR_SETATTR, 2, args);
+	store_DeeClass_CallOperator_2Args(err, result, Dee_TYPE(self), self, OPERATOR_SETATTR, attr, value);
 	Dee_Decref_probably_none(result);
 	return 0;
 err:

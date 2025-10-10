@@ -38,7 +38,7 @@ tp_cast.tp_bool([[nonnull]] DeeObject *__restrict self)
 %{class using OPERATOR_BOOL: {
 	int retval;
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_BOOL, 0, NULL);
+	store_DeeClass_CallOperator_NoArgs(err, result, THIS_TYPE, self, OPERATOR_BOOL);
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
 	retval = DeeBool_IsTrue(result);

@@ -31,10 +31,7 @@ tp_attr->tp_setattr([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *value)
 %{class using OPERATOR_SETATTR: {
 	DREF DeeObject *result;
-	DeeObject *args[2];
-	args[0] = attr;
-	args[1] = value;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_SETATTR, 2, args);
+	store_DeeClass_CallOperator_2Args(err, result, THIS_TYPE, self, OPERATOR_SETATTR, attr, value);
 	Dee_Decref_probably_none(result);
 	return 0;
 err:

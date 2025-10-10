@@ -31,10 +31,7 @@ tp_seq->tp_setitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *value)
 %{class using OPERATOR_SETITEM: {
 	DREF DeeObject *result;
-	DeeObject *args[2];
-	args[0] = index;
-	args[1] = value;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_SETITEM, 2, args);
+	store_DeeClass_CallOperator_2Args(err, result, THIS_TYPE, self, OPERATOR_SETITEM, index, value);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
