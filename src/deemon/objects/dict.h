@@ -488,11 +488,11 @@ hmask_memmovedown_and_maybe_downcast(void *dst, shift_t dst_hidxio,
 	} else {
 		Dee_dict_gethidx_t src_get = Dee_dict_hidxio[src_hidxio].dhxio_get;
 		Dee_dict_sethidx_t dst_set = Dee_dict_hidxio[dst_hidxio].dhxio_set;
-		while (n_words) {
+		size_t i;
+		for (i = 0; i < n_words; ++i) {
 			/*virt*/Dee_dict_vidx_t word;
-			--n_words;
-			word = (*src_get)(src, n_words);
-			(*dst_set)(dst, n_words, word);
+			word = (*src_get)(src, i);
+			(*dst_set)(dst, i, word);
 		}
 	}
 }
