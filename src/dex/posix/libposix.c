@@ -282,7 +282,7 @@ print("#if POSIX_STUBS_TOTLEN != 0");
 print("PRIVATE struct {");
 print("	OBJECT_HEAD");
 print("	struct string_utf *s_data;");
-print("	dhash_t            s_hash;");
+print("	Dee_hash_t         s_hash;");
 print("	size_t             s_len;");
 print("	char               s_str[POSIX_STUBS_TOTLEN];");
 print("	struct string_utf  s_utf;");
@@ -1358,7 +1358,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 PRIVATE struct {
 	OBJECT_HEAD
 	struct string_utf *s_data;
-	dhash_t            s_hash;
+	Dee_hash_t         s_hash;
 	size_t             s_len;
 	char               s_str[POSIX_STUBS_TOTLEN];
 	struct string_utf  s_utf;

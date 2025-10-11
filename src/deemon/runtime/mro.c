@@ -1277,7 +1277,7 @@ STATIC_ASSERT(MEMBERCACHE_UNUSED == 0);
 PRIVATE NONNULL((1, 2)) void DCALL
 Dee_membercache_table_do_addslot(struct Dee_membercache_table *__restrict self,
                                  struct Dee_membercache_slot const *__restrict item) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	struct Dee_membercache_slot *slot;
 	perturb = i = Dee_membercache_table_hashst(self, item->mcs_hash);
 	for (;; Dee_membercache_table_hashnx(i, perturb)) {
@@ -1348,7 +1348,7 @@ PRIVATE NONNULL((1, 2)) int DCALL
 Dee_membercache_table_addslot(struct Dee_membercache_table *__restrict self,
                               struct Dee_membercache_slot const *__restrict item,
                               bool allow_bad_hash_ratios) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	struct Dee_membercache_slot *slot;
 
 	/* Try to allocate a slot within the table. */
@@ -1568,7 +1568,7 @@ do_operate_with_old_table:
 
 INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addmethod(struct Dee_membercache *self,
-                          DeeTypeObject *decl, dhash_t hash,
+                          DeeTypeObject *decl, Dee_hash_t hash,
                           struct type_method const *method) {
 	struct Dee_membercache_slot slot;
 	slot.mcs_type = MEMBERCACHE_METHOD;
@@ -1580,7 +1580,7 @@ Dee_membercache_addmethod(struct Dee_membercache *self,
 
 INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addinstancemethod(struct Dee_membercache *self,
-                                  DeeTypeObject *decl, dhash_t hash,
+                                  DeeTypeObject *decl, Dee_hash_t hash,
                                   struct type_method const *method) {
 	struct Dee_membercache_slot slot;
 	ASSERT(self != &decl->tp_cache);
@@ -1593,7 +1593,7 @@ Dee_membercache_addinstancemethod(struct Dee_membercache *self,
 
 INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addgetset(struct Dee_membercache *self,
-                          DeeTypeObject *decl, dhash_t hash,
+                          DeeTypeObject *decl, Dee_hash_t hash,
                           struct type_getset const *getset) {
 	struct Dee_membercache_slot slot;
 	slot.mcs_type = MEMBERCACHE_GETSET;
@@ -1605,7 +1605,7 @@ Dee_membercache_addgetset(struct Dee_membercache *self,
 
 INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addinstancegetset(struct Dee_membercache *self,
-                                  DeeTypeObject *decl, dhash_t hash,
+                                  DeeTypeObject *decl, Dee_hash_t hash,
                                   struct type_getset const *getset) {
 	struct Dee_membercache_slot slot;
 	ASSERT(self != &decl->tp_cache);
@@ -1618,7 +1618,7 @@ Dee_membercache_addinstancegetset(struct Dee_membercache *self,
 
 INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addmember(struct Dee_membercache *self,
-                          DeeTypeObject *decl, dhash_t hash,
+                          DeeTypeObject *decl, Dee_hash_t hash,
                           struct type_member const *member) {
 	struct Dee_membercache_slot slot;
 	slot.mcs_type = MEMBERCACHE_MEMBER;
@@ -1630,7 +1630,7 @@ Dee_membercache_addmember(struct Dee_membercache *self,
 
 INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addinstancemember(struct Dee_membercache *self,
-                                  DeeTypeObject *decl, dhash_t hash,
+                                  DeeTypeObject *decl, Dee_hash_t hash,
                                   struct type_member const *member) {
 	struct Dee_membercache_slot slot;
 	ASSERT(self != &decl->tp_cache);
@@ -1643,7 +1643,7 @@ Dee_membercache_addinstancemember(struct Dee_membercache *self,
 
 INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addattrib(struct Dee_membercache *self,
-                          DeeTypeObject *decl, dhash_t hash,
+                          DeeTypeObject *decl, Dee_hash_t hash,
                           struct class_attribute *attrib) {
 	struct Dee_membercache_slot slot;
 	slot.mcs_type          = MEMBERCACHE_ATTRIB;
@@ -1657,7 +1657,7 @@ Dee_membercache_addattrib(struct Dee_membercache *self,
 
 INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addinstanceattrib(struct Dee_membercache *self,
-                                  DeeTypeObject *decl, dhash_t hash,
+                                  DeeTypeObject *decl, Dee_hash_t hash,
                                   struct class_attribute *attrib) {
 	struct Dee_membercache_slot slot;
 	ASSERT(self != &decl->tp_cache);

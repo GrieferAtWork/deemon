@@ -166,7 +166,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 	/* Set the symbol table and global variable vector. */
 	for (symi = 0; symi < (uint16_t)glbcount; ++symi) {
 		struct dex_symbol const *sym = &symbols[symi];
-		dhash_t i, perturb, hash;
+		Dee_hash_t i, perturb, hash;
 		ASSERT(sym->ds_name);
 		ASSERTF(!sym->ds_obj || DeeObject_Check(sym->ds_obj),
 		        "Invalid object %p exported: `%s' by `%s'",

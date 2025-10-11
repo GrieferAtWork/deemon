@@ -74,7 +74,7 @@ hashset_insert_remainder_with_duplicates(HashSet *self, size_t num_items,
 next_keyitem:
 	while (key_i < num_items) {
 		DREF DeeObject *key = items[key_i++];
-		dhash_t i, perturb, hash = DeeObject_Hash(key);
+		Dee_hash_t i, perturb, hash = DeeObject_Hash(key);
 		perturb = i = hash & self->hs_mask;
 		for (;; DeeHashSet_HashNx(i, perturb)) {
 			struct hashset_item *item = &self->hs_elem[i & self->hs_mask];
@@ -178,7 +178,7 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 		result->hs_size = num_items;
 		while (num_items--) {
 			DREF DeeObject *key = *items++;
-			dhash_t i, perturb, hash = DeeObject_Hash(key);
+			Dee_hash_t i, perturb, hash = DeeObject_Hash(key);
 			perturb = i = hash & mask;
 			for (;; DeeHashSet_HashNx(i, perturb)) {
 				struct hashset_item *item = &result->hs_elem[i & mask];
@@ -502,7 +502,7 @@ hashset_deepload(HashSet *__restrict self) {
 
 	/* Insert all the copied items into the new map. */
 	for (i = 0; i < item_count; ++i) {
-		dhash_t j, perturb, hash;
+		Dee_hash_t j, perturb, hash;
 		hash    = DeeObject_Hash(items[i]);
 		perturb = j = hash & new_mask;
 		for (;; DeeHashSet_HashNx(j, perturb)) {
@@ -683,7 +683,7 @@ hashset_rehash(HashSet *__restrict self, int sizedir) {
 		end = (iter = self->hs_elem) + (self->hs_mask + 1);
 		for (; iter < end; ++iter) {
 			struct hashset_item *item;
-			dhash_t i, perturb;
+			Dee_hash_t i, perturb;
 
 			/* Skip dummy keys. */
 			if (iter->hsi_key == dummy)
@@ -723,7 +723,7 @@ DeeHashSet_Unify(DeeObject *self, DeeObject *search_item) {
 	size_t mask;
 	struct hashset_item *vector;
 	struct hashset_item *first_dummy;
-	dhash_t i, perturb, hash = DeeObject_Hash(search_item);
+	Dee_hash_t i, perturb, hash = DeeObject_Hash(search_item);
 again_lock:
 	DeeHashSet_LockRead(me);
 again:
@@ -828,7 +828,7 @@ DeeHashSet_Insert(DeeObject *self,
 	size_t mask;
 	struct hashset_item *vector;
 	struct hashset_item *first_dummy;
-	dhash_t i, perturb, hash = DeeObject_Hash(search_item);
+	Dee_hash_t i, perturb, hash = DeeObject_Hash(search_item);
 again_lock:
 	DeeHashSet_LockRead(me);
 again:
@@ -918,8 +918,8 @@ DeeHashSet_Remove(DeeObject *self,
 	HashSet *me = (HashSet *)self;
 	size_t mask;
 	struct hashset_item *vector;
-	dhash_t i, perturb;
-	dhash_t hash = DeeObject_Hash(search_item);
+	Dee_hash_t i, perturb;
+	Dee_hash_t hash = DeeObject_Hash(search_item);
 	DeeHashSet_LockRead(me);
 restart:
 	vector  = me->hs_elem;
@@ -991,8 +991,8 @@ DeeHashSet_Contains(DeeObject *self, DeeObject *search_item) {
 	HashSet *me = (HashSet *)self;
 	size_t mask;
 	struct hashset_item *vector;
-	dhash_t i, perturb;
-	dhash_t hash = DeeObject_Hash(search_item);
+	Dee_hash_t i, perturb;
+	Dee_hash_t hash = DeeObject_Hash(search_item);
 	DeeHashSet_LockRead(me);
 restart:
 	vector  = me->hs_elem;

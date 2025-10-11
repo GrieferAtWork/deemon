@@ -308,7 +308,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) struct class_attribute *DCALL
 class_maker_newcattr(struct class_maker *__restrict self,
                      DeeStringObject *__restrict name,
                      struct ast_loc *__restrict loc) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	struct class_attribute *result;
 	DeeClassDescriptorObject *desc = self->cm_desc;
 	if ((desc->cd_cattr_mask == 0 ||
@@ -358,7 +358,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) struct class_attribute *DCALL
 class_maker_newiattr(struct class_maker *__restrict self,
                      DeeStringObject *__restrict name,
                      struct ast_loc *__restrict loc) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	struct class_attribute *result;
 	DeeClassDescriptorObject *desc = self->cm_desc;
 	if ((desc->cd_iattr_mask == 0) ||

@@ -94,7 +94,7 @@ struct notify_entry {
 	uint16_t              nh_class; /* The notification class. */
 	uint16_t              nh_pad[(sizeof(void *)-2)/2]; /* ... */
 	DREF DeeStringObject *nh_name;  /* [0..1] The notification name (or NULL if the entry is unused) */
-	dhash_t               nh_hash;  /* The effective hash of the name (using `Dee_HashCasePtr' when `Dee_NOTIFICATION_CLASS_FNOCASE' is set) */
+	Dee_hash_t            nh_hash;  /* The effective hash of the name (using `Dee_HashCasePtr' when `Dee_NOTIFICATION_CLASS_FNOCASE' is set) */
 	Dee_notify_t          nh_func;  /* [1..1][valid_if(nh_name)] The callback invoked for the purposes of this notification. */
 	DREF DeeObject       *nh_arg;   /* [0..1][valid_if(nh_name)] The argument passed to `nh_func' */
 };
@@ -177,7 +177,7 @@ notify_rehash(int sizedir) {
 		end = (iter = notify_list) + (notify_mask + 1);
 		for (; iter < end; ++iter) {
 			struct notify_entry *item;
-			dhash_t i, perturb;
+			Dee_hash_t i, perturb;
 			/* Skip dummy keys. */
 			if (!iter->nh_name || iter->nh_func == &dummy_notify)
 				continue;
@@ -221,7 +221,7 @@ PUBLIC WUNUSED NONNULL((2, 3)) int DCALL
 DeeNotify_StartListen(uint16_t cls, DeeObject *__restrict name,
                       Dee_notify_t callback, DeeObject *arg) {
 	struct notify_entry *first_dummy;
-	dhash_t hash, perturb, i;
+	Dee_hash_t hash, perturb, i;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	hash = (cls & Dee_NOTIFICATION_CLASS_FNOCASE)
 	       ? DeeString_HashCase(name)
@@ -290,7 +290,7 @@ again:
 PUBLIC NONNULL((2, 3)) int DCALL
 DeeNotify_EndListen(uint16_t cls, DeeObject *__restrict name,
                     Dee_notify_t callback, DeeObject *arg) {
-	dhash_t hash, perturb, i;
+	Dee_hash_t hash, perturb, i;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	hash = (cls & Dee_NOTIFICATION_CLASS_FNOCASE)
 	       ? DeeString_HashCase(name)
@@ -342,9 +342,9 @@ PRIVATE WUNUSED NONNULL((2)) int DCALL
 DeeNotify_DoBroadcast(uint16_t cls,
                       char const *__restrict name,
                       size_t name_size,
-                      dhash_t name_hash) {
+                      Dee_hash_t name_hash) {
 	int result = 0;
-	dhash_t perturb, i;
+	Dee_hash_t perturb, i;
 	size_t mask;
 	struct notify_entry *list;
 	notify_lock_read();
@@ -401,7 +401,7 @@ done:
 PUBLIC WUNUSED NONNULL((2)) int
 (DCALL DeeNotify_Broadcast)(uint16_t cls, DeeObject *__restrict name) {
 	size_t name_size;
-	dhash_t name_hash;
+	Dee_hash_t name_hash;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	name_size = DeeString_SIZE(name);
 	name_hash = (cls & Dee_NOTIFICATION_CLASS_FNOCASE)
@@ -413,7 +413,7 @@ PUBLIC WUNUSED NONNULL((2)) int
 PUBLIC WUNUSED NONNULL((2)) int
 (DCALL DeeNotify_BroadcastString)(uint16_t cls, char const *__restrict name) {
 	size_t name_size;
-	dhash_t name_hash;
+	Dee_hash_t name_hash;
 	name_size = strlen(name);
 	name_hash = (cls & Dee_NOTIFICATION_CLASS_FNOCASE)
 	            ? Dee_HashCasePtr(name, name_size * sizeof(char))

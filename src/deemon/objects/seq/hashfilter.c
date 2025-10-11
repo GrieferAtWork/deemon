@@ -139,7 +139,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_filteriterator_next(HashFilterIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *key_and_value[2];
-	dhash_t key_hash;
+	Dee_hash_t key_hash;
 again:
 	result = DeeObject_IterNext(self->fi_iter);
 	if unlikely(!ITER_ISOK(result))
@@ -164,7 +164,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 filteriterator_hash(HashFilterIterator *__restrict self) {
 	return Dee_HashCombine(DeeObject_Hash(self->fi_iter), self->fi_hash);
 }
@@ -184,7 +184,7 @@ STATIC_ASSERT(offsetof(HashFilterIterator, fi_iter) == offsetof(ProxyObject, po_
 #define filteriterator_compare generic_proxy__compare_recursive
 
 PRIVATE struct type_cmp filteriterator_cmp = {
-	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&filteriterator_hash,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&filteriterator_hash,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&filteriterator_compare_eq,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&filteriterator_compare,
 	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),

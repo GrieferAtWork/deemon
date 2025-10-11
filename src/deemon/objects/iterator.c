@@ -81,7 +81,7 @@ has_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) 
 		}
 	} else {
 		char const *name = DeeString_STR(attr);
-		dhash_t hash     = DeeString_Hash(attr);
+		Dee_hash_t hash     = DeeString_Hash(attr);
 		/* TODO: Search the type's instance-attribute cache and check
 		 *       if the attribute is implemented by the type itself. */
 		if (DeeType_IsClass(tp_self))
@@ -105,7 +105,7 @@ yes:
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name) {
 	DREF DeeObject *result;
-	dhash_t hash;
+	Dee_hash_t hash;
 	ASSERT_OBJECT(tp_self);
 	ASSERT_OBJECT(self);
 	ASSERT(DeeType_Check(tp_self));

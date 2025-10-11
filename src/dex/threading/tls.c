@@ -614,7 +614,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 tls_hash(TLS *__restrict self) {
 	return DeeObject_HashGeneric(self);
 }

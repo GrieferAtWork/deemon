@@ -46,7 +46,7 @@ JITLexer_ReferenceKeyword(JITLexer *__restrict self,
                           char const *__restrict name,
                           size_t size) {
 	JITObjectTable *iter;
-	dhash_t hash;
+	Dee_hash_t hash;
 	if (self->jl_scandata.jl_flags & JIT_SCANDATA_FERROR)
 		return;
 	hash = Dee_HashUtf8(name, size);

@@ -165,7 +165,7 @@ get_token_from_obj(DeeObject *__restrict obj, bool create_missing);
 /* @return: NULL:      An error occurred (and was thrown)
  * @return: ITER_DONE: The given `id' does not refer to a valid token id. */
 INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL get_token_name(tok_t id, struct TPPKeyword *kwd);
-INTDEF WUNUSED dhash_t DCALL get_token_namehash(tok_t id, struct TPPKeyword *kwd);
+INTDEF WUNUSED Dee_hash_t DCALL get_token_namehash(tok_t id, struct TPPKeyword *kwd);
 
 /* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing'
  * NOTE: `typing' doesn't necessarily need to be a type object!

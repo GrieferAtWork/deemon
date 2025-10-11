@@ -347,7 +347,7 @@ END(_impl_assert_failed)
 #define mo_next        (DEE_OBJECT_OFFSETOF_DATA+8)  /* DeeModuleObject *mo_next; */
 #define mo_path        (DEE_OBJECT_OFFSETOF_DATA+12) /* DREF struct string_object *mo_path; */
 #ifdef CONFIG_HOST_WINDOWS /* DEE_SYSTEM_FS_ICASE */
-#define mo_pathihash   (DEE_OBJECT_OFFSETOF_DATA+16) /* dhash_t mo_pathihash; */
+#define mo_pathihash   (DEE_OBJECT_OFFSETOF_DATA+16) /* Dee_hash_t mo_pathihash; */
 #define mo_globpself   (DEE_OBJECT_OFFSETOF_DATA+20) /* DeeModuleObject **mo_globpself; */
 #else /* CONFIG_HOST_WINDOWS */
 #define mo_globpself   (DEE_OBJECT_OFFSETOF_DATA+16) /* DeeModuleObject **mo_globpself; */

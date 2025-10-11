@@ -794,7 +794,7 @@ err:
 }
 
 PRIVATE struct type_cmp handle_cmp = {
-	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&handle_hash,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&handle_hash,
 	/* .tp_compare_eq = */ NULL,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&handle_compare,
 };

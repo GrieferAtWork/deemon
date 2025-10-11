@@ -945,7 +945,6 @@
 #define PUBLIC_TPCONST
 
 #define dssize_t Dee_ssize_t
-#define dhash_t Dee_hash_t
 #define dfunptr_t Dee_funptr_t
 
 #define DeePrivateSystem_IF_E1(errno,e1,...)

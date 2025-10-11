@@ -870,7 +870,7 @@ done:
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bytes_contains(Bytes *self, DeeObject *needle);
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 bytes_hash(Bytes *__restrict self) {
 	return Dee_HashPtr(DeeBytes_DATA(self),
 	                   DeeBytes_SIZE(self));
@@ -1205,7 +1205,7 @@ PRIVATE struct type_math bytes_math = {
 };
 
 PRIVATE struct type_cmp bytes_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&bytes_hash,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&bytes_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&bytes_compare_eq,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&bytes_compare,
 	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),

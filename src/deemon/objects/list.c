@@ -4125,10 +4125,10 @@ list_compare(List *lhs, DeeObject *rhs) {
 	return default__seq_operator_compare__with__seq_operator_size__and__seq_operator_getitem_index((DeeObject *)lhs, rhs);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 list_hash(List *__restrict me) {
 	size_t i;
-	dhash_t result;
+	Dee_hash_t result;
 	DREF DeeObject *elem;
 	DeeList_LockRead(me);
 	if unlikely(!me->l_list.ol_elemc) {
@@ -4155,7 +4155,7 @@ list_hash(List *__restrict me) {
 
 
 PRIVATE struct type_cmp list_cmp = {
-	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&list_hash,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&list_hash,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_compare_eq,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_compare,
 	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),

@@ -58,7 +58,7 @@ DECL_BEGIN
 /*   SET INVERSION                                                                  */
 /* ================================================================================ */
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 invset_hash(SetInversion *__restrict self) {
 	return ~DeeObject_InvokeMethodHint(set_operator_hash, self->si_set);
 }
@@ -206,7 +206,7 @@ PRIVATE struct type_member tpconst invset_members[] = {
 };
 
 PRIVATE struct type_cmp invset_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&invset_hash,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&invset_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&invset_compare_eq,
 	/* .tp_compare       = */ DEFIMPL(&default__compare_eq__with__lo__and__gr),
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&invset_trycompare_eq,

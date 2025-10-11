@@ -1196,7 +1196,7 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 		uint16_t flags, addr, addr2;
 		char const *name, *doc;
 		uint32_t doclen;
-		dhash_t name_hash, hash_i, perturb;
+		Dee_hash_t name_hash, hash_i, perturb;
 		if unlikely(reader >= end)
 			GOTO_CORRUPTED(reader, stop_symbolv); /* Validate bounds. */
 		flags = UNALIGNED_GETLE16(reader), reader += 2;
@@ -1573,7 +1573,7 @@ err_function_code:
 			descriptor->cd_cattr_mask = cattr_mask;
 			for (i = 0; i < cattr_count; ++i) {
 				struct class_attribute *entry;
-				dhash_t j, perturb, hash;
+				Dee_hash_t j, perturb, hash;
 				uint8_t ataddr, atflags;
 				DREF DeeStringObject *name_ob;
 				if unlikely(reader >= (uint8_t const *)fileend)
@@ -1618,7 +1618,7 @@ err_function_code:
 		/* Load the instance attribute descriptor table. */
 		for (i = 0; i < iattr_count; ++i) {
 			struct class_attribute *entry;
-			dhash_t j, perturb, hash;
+			Dee_hash_t j, perturb, hash;
 			uint8_t ataddr, atflags;
 			DREF DeeStringObject *name_ob;
 			if unlikely(reader >= (uint8_t const *)fileend)
@@ -1955,7 +1955,7 @@ err_function_code:
 				descriptor->cd_cattr_mask = cattr_mask;
 				for (i = 0; i < cattr_count; ++i) {
 					struct class_attribute *entry;
-					dhash_t j, perturb, hash;
+					Dee_hash_t j, perturb, hash;
 					uint16_t ataddr, atflags;
 					DREF DeeStringObject *name_ob;
 					if unlikely(reader >= (uint8_t const *)fileend)
@@ -2000,7 +2000,7 @@ err_function_code:
 			/* Load the instance attribute descriptor table. */
 			for (i = 0; i < iattr_count; ++i) {
 				struct class_attribute *entry;
-				dhash_t j, perturb, hash;
+				Dee_hash_t j, perturb, hash;
 				uint16_t ataddr, atflags;
 				DREF DeeStringObject *name_ob;
 				if unlikely(reader >= (uint8_t const *)fileend)
@@ -2920,7 +2920,7 @@ struct mtime_entry {
 	DREF DeeStringObject *me_file; /* [0..1] Absolute, normalized filename.
 	                                *  NOTE: When NULL, then this entry is unused. */
 #ifdef DEE_SYSTEM_FS_ICASE
-	dhash_t               me_casehash; /* Case-insensitive hash for `me_file' */
+	Dee_hash_t               me_casehash; /* Case-insensitive hash for `me_file' */
 #endif /* DEE_SYSTEM_FS_ICASE */
 	uint64_t              me_mtim; /* Last-modified time of `me_file' */
 };
@@ -3016,8 +3016,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 mtime_cache_lookup(DeeObject *__restrict path,
                    uint64_t *__restrict p_result) {
 	bool result = false;
-	dhash_t i, perturb;
-	dhash_t hash = fs_hashobj(path);
+	Dee_hash_t i, perturb;
+	Dee_hash_t hash = fs_hashobj(path);
 	mtime_cache_lock_read();
 	perturb = i = MCACHE_HASHST(hash);
 	for (;; MCACHE_HASHNX(i, perturb)) {
@@ -3057,7 +3057,7 @@ mtime_cache_rehash(void) {
 		end = (iter = mtime_cache.mc_list) + (mtime_cache.mc_mask + 1);
 		for (; iter < end; ++iter) {
 			struct mtime_entry *item;
-			dhash_t i, perturb;
+			Dee_hash_t i, perturb;
 
 			/* Skip NULL entries. */
 			if (!iter->me_file)
@@ -3084,7 +3084,7 @@ PRIVATE NONNULL((1)) void DCALL
 mtime_cache_insert(DeeObject *__restrict path,
                    uint64_t value) {
 	size_t mask;
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	hash = fs_hashobj(path);
 	mtime_cache_lock_write();
 again:

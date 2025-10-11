@@ -886,7 +886,7 @@ deepassoc_rehash(DeeThreadObject *__restrict self) {
 		end = (iter = self->t_deepassoc.da_list) + (self->t_deepassoc.da_mask + 1);
 		for (; iter < end; ++iter) {
 			struct deep_assoc_entry *item;
-			dhash_t i, perturb;
+			Dee_hash_t i, perturb;
 
 			/* Skip NULL entries. */
 			if (!iter->de_old)
@@ -923,7 +923,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *
 (DCALL Dee_DeepCopyAddAssoc)(DeeObject *new_object,
                              DeeObject *old_object) {
 	size_t mask;
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	DeeThreadObject *self = DeeThread_Self();
 	ASSERT_OBJECT(old_object);
 	ASSERT_OBJECT(new_object);

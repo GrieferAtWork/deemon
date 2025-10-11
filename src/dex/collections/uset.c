@@ -287,7 +287,7 @@ USet_InitWithHint(USet *__restrict self, size_t size_hint) {
 
 LOCAL NONNULL((1, 2)) void DCALL
 USet_DoInsertTrackedUnlocked(USet *self, DREF DeeObject *ob) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	perturb = i = UHASH(ob) & self->us_mask;
 	for (;; USet_HashNx(i, perturb)) {
 		struct uset_item *item = &self->us_elem[i & self->us_mask];
@@ -357,7 +357,7 @@ uset_rehash(USet *__restrict self, int sizedir) {
 		end = (iter = self->us_elem) + (self->us_mask + 1);
 		for (; iter < end; ++iter) {
 			struct uset_item *item;
-			dhash_t i, perturb;
+			Dee_hash_t i, perturb;
 			/* Skip dummy and NULL keys. */
 			if (iter->usi_key == NULL || iter->usi_key == dummy)
 				continue;
@@ -385,7 +385,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 uset_mh_remove(USet *self, DeeObject *ob) {
 	size_t mask;
 	struct uset_item *vector;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	USet_LockRead(self);
 restart:
 	vector  = self->us_elem;
@@ -425,7 +425,7 @@ restart:
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 USet_Contains(USet *self, DeeObject *ob) {
 	size_t mask;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	USet_LockRead(self);
 	mask    = self->us_mask;
 	perturb = i = UHASH(ob) & mask;
@@ -448,7 +448,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 uset_mh_insert(USet *self, DeeObject *ob) {
 	struct uset_item *first_dummy;
 	size_t mask;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 again_lock:
 	USet_LockRead(self);
 again:
@@ -520,7 +520,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 USet_DoInsertNolock(USet *self, DeeObject *ob) {
 	struct uset_item *first_dummy;
 	size_t mask;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 again:
 	first_dummy = NULL;
 	mask        = self->us_mask;
@@ -807,7 +807,7 @@ uset_deepload(USet *__restrict self) {
 		goto err_items_v;
 	/* Insert all the copied items into the new map. */
 	for (i = 0; i < item_count; ++i) {
-		dhash_t j, perturb;
+		Dee_hash_t j, perturb;
 		perturb = j = UHASH(items[i]) & new_mask;
 		for (;; USet_HashNx(j, perturb)) {
 			struct uset_item *item = &new_map[j & new_mask];
@@ -1478,7 +1478,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 URoSet_Contains(URoSet *__restrict self,
                 DeeObject *__restrict ob) {
 	size_t mask;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	mask    = self->urs_mask;
 	perturb = i = UHASH(ob) & mask;
 	for (;; USet_HashNx(i, perturb)) {
@@ -1619,7 +1619,7 @@ INTERN WUNUSED DREF URoSet *DCALL URoSet_New(void) {
 LOCAL NONNULL((1, 2)) void DCALL
 URoSet_DoInsertUnlocked(URoSet *__restrict self,
                         DREF DeeObject *__restrict ob) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	ASSERT(ob != dummy);
 	perturb = i = UHASH(ob) & self->urs_mask;
 	for (;; USet_HashNx(i, perturb)) {
@@ -1639,7 +1639,7 @@ URoSet_DoInsertUnlocked(URoSet *__restrict self,
 LOCAL NONNULL((1, 2)) void DCALL
 URoSet_DoInsertForce(URoSet *__restrict self,
                      DREF DeeObject *__restrict ob) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	ASSERT(ob != dummy);
 	perturb = i = UHASH(ob) & self->urs_mask;
 	for (;; USet_HashNx(i, perturb)) {
@@ -1656,7 +1656,7 @@ URoSet_DoInsertForce(URoSet *__restrict self,
 LOCAL WUNUSED NONNULL((1, 2)) URoSet *DCALL
 URoSet_DoInsertOrRehash(URoSet *__restrict self,
                         /*inherit(always)*/ DREF DeeObject *__restrict ob) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	if ((self->urs_size + 1) >= self->urs_mask) {
 		/* Must re-hash */
 		size_t newmsk;

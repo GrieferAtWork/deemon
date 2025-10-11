@@ -48,7 +48,7 @@ __seq_clear__.seq_clear([[nonnull]] DeeObject *__restrict self)
 	return CALL_DEPENDENCY(seq_erase, self, 0, (size_t)-1);
 }}
 //TODO:%{$with__set_removeall = {
-//TODO:	Set.remove(this, Set.frozen(this));
+//TODO:	Set.removeall(this, Set.frozen(this));
 //TODO:}}
 //TODO:%{$with__map_keys__and__map_removekeys = {
 //TODO:	Mapping.removekeys(this, Set.frozen(Mapping.keys(this)));

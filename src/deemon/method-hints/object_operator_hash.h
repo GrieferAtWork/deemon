@@ -30,7 +30,7 @@ operator {
 tp_cmp->tp_hash([[nonnull]] DeeObject *__restrict self)
 %{class using OPERATOR_HASH: {
 	DREF DeeObject *func, *result;
-	dhash_t result_value;
+	Dee_hash_t result_value;
 	int temp;
 	func = DeeClass_TryGetOperator(THIS_TYPE, OPERATOR_HASH);
 	if unlikely(!func)

@@ -368,7 +368,7 @@ print "#define Dee_HashStr_slash_slash", _Dee_HashSelect("//");
 #define Dee_HashStr_slash_slash _Dee_HashSelectC(0x838f93fb, 0x32ed7842efd9cb44)
 /*[[[end]]]*/
 
-INTERN WUNUSED dhash_t DCALL
+INTERN WUNUSED Dee_hash_t DCALL
 get_token_namehash(tok_t id, struct TPPKeyword *kwd) {
 	if ((unsigned int)id <= 255) {
 		char name[2];
@@ -389,7 +389,7 @@ get_token_namehash(tok_t id, struct TPPKeyword *kwd) {
 	if (!kwd)
 		kwd = TPPLexer_LookupKeywordID(id);
 	if unlikely(!kwd)
-		return (dhash_t)-1;
+		return (Dee_hash_t)-1;
 	return Dee_HashUtf8(kwd->k_name, kwd->k_size);
 }
 
@@ -3313,9 +3313,9 @@ PRIVATE struct type_method tpconst lexer_token_methods[] = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 token_hash(DeeCompilerWrapperObject *__restrict self) {
-	dhash_t result;
+	Dee_hash_t result;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
 	result = get_token_namehash(tok, token.t_kwd);
@@ -3323,7 +3323,7 @@ token_hash(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 err:
 	DeeError_Print("Error hashing token\n", Dee_ERROR_PRINT_DOHANDLE);
-	return (dhash_t)-1;
+	return (Dee_hash_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -3347,7 +3347,7 @@ err:
 }
 
 PRIVATE struct type_cmp token_cmp = {
-	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&token_hash,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&token_hash,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&token_compare_eq,
 };
 

@@ -952,7 +952,7 @@ PRIVATE int DCALL
 module_import_symbol(DeeModuleObject *self,
                      DeeStringObject *name,
                      DeeObject *value) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	DREF DeeObject **new_globalv;
 	/* Rehash the global symbol table is need be. */
 	if (self->mo_globalc / 2 >= self->mo_bucketm &&

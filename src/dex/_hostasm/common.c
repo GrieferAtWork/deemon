@@ -1404,7 +1404,7 @@ inlined_references_rehash(struct inlined_references *__restrict self) {
 		end = (iter = self->ir_elem) + (self->ir_mask + 1);
 		for (; iter < end; ++iter) {
 			DREF DeeObject **item;
-			dhash_t i, perturb;
+			Dee_hash_t i, perturb;
 			/* Skip NULL keys. */
 			if (*iter == NULL)
 				continue;
@@ -1430,7 +1430,7 @@ inlined_references_rehash(struct inlined_references *__restrict self) {
 INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 inlined_references_ref(struct inlined_references *__restrict self,
                        /*inherit(always)*/ DREF DeeObject *inherit_me) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	/* Check if a rehash is needed */
 	if ((self->ir_size + 1) * 2 > self->ir_mask) {
 		if unlikely(inlined_references_rehash(self)) {

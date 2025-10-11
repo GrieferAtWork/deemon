@@ -2031,7 +2031,7 @@ default__double__with__int32(DeeObject *__restrict self, double *__restrict p_re
 INTERN WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL
 tusrtype__hash__with__HASH(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *func, *result;
-	dhash_t result_value;
+	Dee_hash_t result_value;
 	int temp;
 	func = DeeClass_TryGetOperator(tp_self, OPERATOR_HASH);
 	if unlikely(!func)
@@ -2084,7 +2084,7 @@ usrtype__hash__with__HASH(DeeObject *__restrict self) {
 	return tusrtype__hash__with__HASH(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *func, *result;
-	dhash_t result_value;
+	Dee_hash_t result_value;
 	int temp;
 	func = DeeClass_TryGetOperator(Dee_TYPE(self), OPERATOR_HASH);
 	if unlikely(!func)

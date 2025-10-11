@@ -94,7 +94,6 @@ typedef void (*Dee_funptr_t)();
 
 #ifdef DEE_SOURCE
 typedef Dee_ssize_t  dssize_t;       /* Deprecated! (use `Dee_ssize_t' instead) */
-typedef Dee_hash_t   dhash_t;        /* Deprecated! (use `Dee_hash_t' instead) */
 typedef Dee_funptr_t dfunptr_t;      /* Deprecated! (use `Dee_funptr_t' instead) */
 #endif /* DEE_SOURCE */
 

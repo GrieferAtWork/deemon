@@ -496,7 +496,7 @@ LOCAL void DCALL
 gc_deps_insert(struct gc_deps *__restrict self,
                DeeObject *__restrict obj,
                Dee_refcnt_t num_tracked_references) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	ASSERT(num_tracked_references != 0);
 #if 0 /* Can't happen */
 	perturb = i = VD_HASHOF(self, obj);
@@ -592,7 +592,7 @@ gc_leafs_rehash(struct gc_leafs *__restrict self) {
 LOCAL void DCALL
 gc_leafs_insert(struct gc_leafs *__restrict self,
                 DeeObject *__restrict obj) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	if (self->gl_cnt * 2 >= self->gl_msk &&
 	    !gc_leafs_rehash(self)) {
 		if (self->gl_cnt == self->gl_msk) {

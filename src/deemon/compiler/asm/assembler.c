@@ -2818,7 +2818,7 @@ PRIVATE bool DCALL rehash_globals(void) {
 		/* Re-hash the table. */
 		end = (iter = current_rootscope->rs_bucketv) + (current_rootscope->rs_bucketm + 1);
 		for (; iter < end; ++iter) {
-			dhash_t i, perturb;
+			Dee_hash_t i, perturb;
 			i = perturb = (iter->ss_hash & new_mask);
 			for (;; MODULE_HASHNX(i, perturb)) {
 				struct module_symbol *dst = &new_vector[i & new_mask];
@@ -2839,10 +2839,10 @@ PRIVATE bool DCALL rehash_globals(void) {
 INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_gsymid(struct symbol *__restrict sym) {
 	uint16_t result;
-	dhash_t name_hash;
+	Dee_hash_t name_hash;
 	struct TPPKeyword *name;
 	struct module_symbol *iter;
-	dhash_t perturb, i;
+	Dee_hash_t perturb, i;
 	ASSERT(sym->s_type == SYMBOL_TYPE_GLOBAL);
 	ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope, &DeeRootScope_Type);
 	if (sym->s_flag & SYMBOL_FALLOC)

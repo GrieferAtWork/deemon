@@ -1867,7 +1867,7 @@ err_oo_class_reinit_lvalue:
 			} else if (JITLexer_ISKWD(self, "from")) {
 #ifdef JIT_EVAL
 				DREF DeeObject *mod;
-				dhash_t symbol_hash;
+				Dee_hash_t symbol_hash;
 				JITLexer_Yield(self);
 				mod = JITLexer_EvalModule(self);
 				if unlikely(!mod)

@@ -279,7 +279,7 @@ gcset_size(GCSet *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 gcset_contains(GCSet *self, DeeObject *other) {
-	dhash_t i, perturb, j;
+	Dee_hash_t i, perturb, j;
 	i = perturb = GCSET_HASHOBJ(other) & self->gs_mask;
 	for (;; GCSET_HASHNXT(i, perturb)) {
 		j = i & self->gs_mask;

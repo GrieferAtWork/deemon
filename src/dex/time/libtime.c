@@ -3049,7 +3049,7 @@ PRIVATE WUNUSED NONNULL((1, 5, 7)) int DFCALL
 time_init_getarg(DeeKwArgs *__restrict kwds,
                  size_t argc, DeeObject *const *argv,
                  size_t default_argi,
-                 char const *__restrict argname, dhash_t hash,
+                 char const *__restrict argname, Dee_hash_t hash,
                  Dee_int128_t *__restrict p_result) {
 	DeeObject *arg;
 	if (default_argi < argc)
@@ -3402,7 +3402,7 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 time_hash(DeeTimeObject *__restrict self) {
 	return Dee_HashPtr(&self->t_nanos, 16);
 }
@@ -3423,7 +3423,7 @@ err:
 }
 
 PRIVATE struct type_cmp time_cmp = {
-	/* .tp_hash       = */ (dhash_t(DCALL *)(DeeObject *__restrict self))&time_hash,
+	/* .tp_hash       = */ (Dee_hash_t(DCALL *)(DeeObject *__restrict self))&time_hash,
 	/* .tp_compare_eq = */ NULL,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&time_compare,
 };

@@ -359,7 +359,7 @@ PUBLIC WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #ifdef LOCAL_HAS_len
                                            size_t attrlen,
 #endif /* LOCAL_HAS_len */
-                                           dhash_t hash
+                                           Dee_hash_t hash
 #ifdef LOCAL_IS_CALL
                                            , size_t argc, DeeObject *const *argv
 #elif defined(LOCAL_IS_CALL_KW)

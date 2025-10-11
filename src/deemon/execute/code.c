@@ -1576,9 +1576,9 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	TYPE_GETSET_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 code_hash(DeeCodeObject *__restrict self) {
-	dhash_t result;
+	Dee_hash_t result;
 	result = Dee_HashPtr(DeeObject_DATA(self),
 	                     COMPILER_OFFSETAFTER(DeeCodeObject, co_codebytes) -
 	                     sizeof(DeeObject));
@@ -1601,7 +1601,7 @@ code_hash(DeeCodeObject *__restrict self) {
 	if (self->co_exceptv) {
 		uint16_t i;
 		for (i = 0; i < self->co_exceptc; ++i) {
-			dhash_t spec;
+			Dee_hash_t spec;
 			spec = Dee_HashPtr(&self->co_exceptv[i].eh_start,
 			                   sizeof(struct except_handler) -
 			                   offsetof(struct except_handler, eh_start));
@@ -1720,7 +1720,7 @@ code_trycompare_eq(DeeCodeObject *self, DeeCodeObject *other) {
 }
 
 PRIVATE struct type_cmp code_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&code_hash,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&code_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&code_compare_eq,
 	/* .tp_compare       = */ DEFIMPL_UNSUPPORTED(&default__compare__unsupported),
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&code_trycompare_eq,

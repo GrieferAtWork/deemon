@@ -330,10 +330,10 @@ bs_size(Bitset *__restrict self) {
 	return bitset_popcount(self->bs_bitset, self->bs_nbits);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 bs_hash(Bitset *__restrict self) {
 	size_t bitno;
-	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
 	bitset_foreach (bitno, self->bs_bitset, self->bs_nbits) {
 		result = Dee_HashCombine(result, bitno);
 	}
@@ -2521,10 +2521,10 @@ bsv_size(BitsetView *__restrict self) {
 	                        self->bsv_endbit);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 bsv_hash(BitsetView *__restrict self) {
 	size_t bitno;
-	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
 	for (bitno = self->bsv_startbit;
 	     bitno < self->bsv_endbit; ++bitno) {
 		if (bitset_test(BitsetView_GetBitset(self), bitno)) {

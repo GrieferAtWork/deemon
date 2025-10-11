@@ -547,7 +547,7 @@ PRIVATE Dee_atomic_rwlock_t modules_glob_lock = DEE_ATOMIC_RWLOCK_INIT;
 
 
 PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
-find_file_module(DeeStringObject *__restrict module_file, dhash_t hash) {
+find_file_module(DeeStringObject *__restrict module_file, Dee_hash_t hash) {
 	DeeModuleObject *result = NULL;
 	ASSERT(modules_lock_reading());
 	if (modules_a) {
@@ -566,7 +566,7 @@ find_file_module(DeeStringObject *__restrict module_file, dhash_t hash) {
 
 PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
 find_glob_module(DeeStringObject *__restrict module_name) {
-	dhash_t hash = fs_hashobj(module_name);
+	Dee_hash_t hash = fs_hashobj(module_name);
 	DeeModuleObject *result = NULL;
 	ASSERT(modules_glob_lock_reading());
 	if (modules_glob_a) {
@@ -585,7 +585,7 @@ find_glob_module(DeeStringObject *__restrict module_name) {
 PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
 find_glob_module_str(/*utf-8*/ char const *__restrict module_name_str,
                      size_t module_name_len) {
-	dhash_t hash = fs_hashutf8(module_name_str, module_name_len);
+	Dee_hash_t hash = fs_hashutf8(module_name_str, module_name_len);
 	DeeModuleObject *result = NULL;
 	ASSERT(modules_glob_lock_reading());
 	if (modules_glob_a) {
@@ -687,7 +687,7 @@ do_alloc_new_vector:
 
 PRIVATE NONNULL((1)) bool DCALL
 add_file_module(DeeModuleObject *__restrict self) {
-	dhash_t hash;
+	Dee_hash_t hash;
 	struct module_object_list *bucket;
 	ASSERT(!LIST_ISBOUND(self, mo_link));
 	ASSERT_OBJECT_TYPE_EXACT(self->mo_path, &DeeString_Type);
@@ -706,7 +706,7 @@ add_file_module(DeeModuleObject *__restrict self) {
 
 PRIVATE NONNULL((1)) bool DCALL
 add_glob_module(DeeModuleObject *__restrict self) {
-	dhash_t hash;
+	Dee_hash_t hash;
 	struct module_object_list *bucket;
 	ASSERT(!LIST_ISBOUND(self, mo_globlink));
 	ASSERT(self->mo_name);
@@ -784,7 +784,7 @@ DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
 	DREF DeeStringObject *module_name_ob;
 	DREF DeeStringObject *module_path_ob;
 	DREF DeeObject *input_stream;
-	dhash_t hash;
+	Dee_hash_t hash;
 	ASSERT_OBJECT_TYPE(source_pathname, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_OPT(module_global_name, &DeeString_Type);
 	module_path_ob = (DREF DeeStringObject *)DeeSystem_MakeAbsolute(source_pathname);
@@ -1277,7 +1277,7 @@ err_module_not_found(DeeObject *__restrict module_name) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_DoGet(char const *__restrict name,
-                size_t size, dhash_t hash) {
+                size_t size, Dee_hash_t hash) {
 	DREF DeeModuleObject *result = NULL;
 	/* Check if the caller requested the builtin deemon module. */
 	if (size == 6 && hash == HASHOF_str_deemon &&
@@ -1362,7 +1362,7 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	char *buf, *dst;
 	char const *module_name_start;
 	size_t i, len;
-	dhash_t hash;
+	Dee_hash_t hash;
 	Dee_DPRINTF("[RT] Searching for %s%k in %$q as %$q\n",
 	            module_global_name ? "global module " : STR_module,
 	            module_global_name ? module_global_name : Dee_EmptyString,
@@ -2730,7 +2730,7 @@ module_import_symbol(void *arg, DeeObject *name, DeeObject *value) {
 		sym->s_const = value;
 		Dee_Incref(value);
 	} else {
-		dhash_t i, perturb, hash;
+		Dee_hash_t i, perturb, hash;
 		uint16_t addr;
 
 		/* Rehash the global symbol table is need be. */

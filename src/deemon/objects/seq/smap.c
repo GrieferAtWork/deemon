@@ -341,8 +341,8 @@ PRIVATE NONNULL((1, 2, 3)) void DCALL
 smap_cache(SharedMap *__restrict self,
            DeeObject *key,
            DeeObject *value,
-           dhash_t hash) {
-	dhash_t i, perturb;
+           Dee_hash_t hash) {
+	Dee_hash_t i, perturb;
 	SharedItemEx *item;
 	perturb = i = SMAP_HASHST(self, hash);
 	for (;; SMAP_HASHNX(i, perturb)) {
@@ -387,7 +387,7 @@ smap_mark_loaded_and_endwrite(SharedMap *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 smap_contains(SharedMap *self, DeeObject *key) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	SharedItemEx *item;
 	bool was_loaded;
 	was_loaded = self->sm_loaded != 0;
@@ -430,7 +430,7 @@ again_search:
 	} else {
 		for (i = 0; i < self->sm_length; ++i) {
 			DREF DeeObject *item_key, *item_value;
-			dhash_t item_hash;
+			Dee_hash_t item_hash;
 			item_key   = self->sm_vector[i].si_key;
 			item_value = self->sm_vector[i].si_value;
 			Dee_Incref(item_key);
@@ -472,7 +472,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 smap_trygetitem(SharedMap *self, DeeObject *key) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	SharedItemEx *item;
 	bool was_loaded;
 	was_loaded = self->sm_loaded != 0;
@@ -520,7 +520,7 @@ again_search:
 	} else {
 		for (i = 0; i < self->sm_length; ++i) {
 			DREF DeeObject *item_key, *item_value;
-			dhash_t item_hash;
+			Dee_hash_t item_hash;
 			item_key   = self->sm_vector[i].si_key;
 			item_value = self->sm_vector[i].si_value;
 			Dee_Incref(item_key);
@@ -598,7 +598,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 smap_trygetitem_string_hash(SharedMap *self, char const *key, Dee_hash_t hash) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	SharedItemEx *item;
 	bool was_loaded;
 	was_loaded = self->sm_loaded != 0;
@@ -642,7 +642,7 @@ again_search:
 	} else {
 		for (i = 0; i < self->sm_length; ++i) {
 			DREF DeeObject *item_key, *item_value;
-			dhash_t item_hash;
+			Dee_hash_t item_hash;
 			item_key   = self->sm_vector[i].si_key;
 			item_value = self->sm_vector[i].si_value;
 			Dee_Incref(item_key);
@@ -678,7 +678,7 @@ not_found:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 smap_trygetitem_string_len_hash(SharedMap *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	SharedItemEx *item;
 	bool was_loaded;
 	was_loaded = self->sm_loaded != 0;
@@ -722,7 +722,7 @@ again_search:
 	} else {
 		for (i = 0; i < self->sm_length; ++i) {
 			DREF DeeObject *item_key, *item_value;
-			dhash_t item_hash;
+			Dee_hash_t item_hash;
 			item_key   = self->sm_vector[i].si_key;
 			item_value = self->sm_vector[i].si_value;
 			Dee_Incref(item_key);

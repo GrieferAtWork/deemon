@@ -66,7 +66,7 @@ PRIVATE WUNUSED NONNULL((1)) int
 		end = (iter = self->aa_syms.sa_elem) + (self->aa_syms.sa_mask + 1);
 		for (; iter < end; ++iter) {
 			struct ast_symbol_assume *item;
-			dhash_t i, perturb;
+			Dee_hash_t i, perturb;
 			/* Skip NULL entries. */
 			if (!iter->sa_sym)
 				continue;
@@ -92,7 +92,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) struct ast_symbol_assume *DCALL
 ast_assumes_getsymbol(struct ast_assumes *__restrict self,
                       struct symbol *__restrict sym) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	hash = sym->s_name->k_id;
 	if (!self->aa_syms.sa_elem)
 		goto nope;
@@ -113,7 +113,7 @@ nope:
 PRIVATE WUNUSED NONNULL((1, 2)) struct ast_symbol_assume *DCALL
 ast_assumes_newsymbol(struct ast_assumes *__restrict self,
                       struct symbol *__restrict sym) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	hash = sym->s_name->k_id;
 	if (!self->aa_syms.sa_elem) {
 		if unlikely(ast_assumes_rehashsymbol(self))

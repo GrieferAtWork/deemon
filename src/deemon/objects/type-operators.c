@@ -213,7 +213,7 @@ err:
 }
 
 DEFINE_OPERATOR_INVOKE(operator_hash, &usrtype__hash__with__HASH, &do_inherit_builtin_operator) {
-	dhash_t result;
+	Dee_hash_t result;
 	(void)p_self;
 	(void)opname;
 	_DeeArg_Unpack0(err, argc, argv, OPNAME("hash"));

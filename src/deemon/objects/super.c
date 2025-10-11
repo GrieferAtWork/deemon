@@ -311,7 +311,7 @@ super_thiscall_tuple_kw(Super *self, DeeObject *thisarg, DeeObject *args, DeeObj
 }
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 super_hash(Super *__restrict self) {
 	return DeeObject_THash(self->s_type, self->s_self);
 }
@@ -584,7 +584,7 @@ super_trycompare_eq(Super *self, DeeObject *some_object) {
 }
 
 PRIVATE struct type_cmp super_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&super_hash,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&super_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_compare_eq,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_compare,
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_trycompare_eq,

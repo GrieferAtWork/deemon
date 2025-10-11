@@ -1119,10 +1119,10 @@ PRIVATE struct type_gc tpconst function_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&function_clear
 };
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 function_hash(Function *__restrict self) {
 	DeeCodeObject *code = self->fo_code;
-	dhash_t result;
+	Dee_hash_t result;
 	result = DeeObject_Hash((DeeObject *)code);
 	result = Dee_HashCombine(result, DeeObject_Hashv(self->fo_refv, code->co_refc));
 	if unlikely(code->co_refstaticc > code->co_refc) {
@@ -1205,7 +1205,7 @@ err:
 }
 
 PRIVATE struct type_cmp function_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&function_hash,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&function_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&function_compare_eq,
 	/* .tp_compare       = */ DEFIMPL_UNSUPPORTED(&default__compare__unsupported),
 	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),

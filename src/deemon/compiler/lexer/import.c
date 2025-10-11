@@ -111,8 +111,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
 import_module_symbol(DeeModuleObject *__restrict mod,
                      struct TPPKeyword *__restrict name) {
-	dhash_t i, perturb;
-	dhash_t hash = Dee_HashUtf8(name->k_name, name->k_size);
+	Dee_hash_t i, perturb;
+	Dee_hash_t hash = Dee_HashUtf8(name->k_name, name->k_size);
 	perturb = i = MODULE_HASHST(mod, hash);
 	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(mod, i);
