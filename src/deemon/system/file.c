@@ -3056,7 +3056,7 @@ PRIVATE struct type_member tpconst sysfile_members[] = {
 #endif /* DEESYSTEM_FILE_USE_STDIO */
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 sysfile_print(SystemFile *__restrict self, Dee_formatprinter_t printer, void * arg) {
 #ifdef DEESYSTEM_FILE_HAVE_sf_filename
 	if (self->sf_filename != NULL)
@@ -3074,7 +3074,7 @@ sysfile_print(SystemFile *__restrict self, Dee_formatprinter_t printer, void * a
 #endif /* !... */
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 sysfile_printrepr(SystemFile *__restrict self, Dee_formatprinter_t printer, void * arg) {
 #ifdef DEESYSTEM_FILE_HAVE_sf_filename
 	if (self->sf_filename != NULL)
@@ -3162,8 +3162,8 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 			/* .tp_str       = */ NULL,
 			/* .tp_repr      = */ NULL,
 			/* .tp_bool      = */ NULL,
-			/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sysfile_print,
-			/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sysfile_printrepr
+			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sysfile_print,
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sysfile_printrepr
 		},
 			/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sysfile_visit,
 		/* .tp_gc            = */ NULL,

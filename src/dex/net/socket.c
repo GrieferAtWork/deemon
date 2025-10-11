@@ -1097,13 +1097,13 @@ restart_after_timeout:
 
 #ifdef CONFIG_HOST_WINDOWS
 #define send(socket, buffer, length, flags) \
-	((dssize_t)send(socket, (char const *)(buffer), (int)(length), flags))
+	((Dee_ssize_t)send(socket, (char const *)(buffer), (int)(length), flags))
 #define sendto(socket, buffer, length, flags, target, targetlen) \
-	((dssize_t)sendto(socket, (char const *)(buffer), (int)(length), flags, target, targetlen))
+	((Dee_ssize_t)sendto(socket, (char const *)(buffer), (int)(length), flags, target, targetlen))
 #define recv(socket, buffer, length, flags) \
-	((dssize_t)recv(socket, (char *)(buffer), (int)(length), flags))
+	((Dee_ssize_t)recv(socket, (char *)(buffer), (int)(length), flags))
 #define recvfrom(socket, buffer, length, flags, target, targetlen) \
-	((dssize_t)recvfrom(socket, (char *)(buffer), (int)(length), flags, target, targetlen))
+	((Dee_ssize_t)recvfrom(socket, (char *)(buffer), (int)(length), flags, target, targetlen))
 #endif /* CONFIG_HOST_WINDOWS */
 
 
@@ -1356,12 +1356,12 @@ err_connect_reset(neterrno_t error, Socket *__restrict socket) {
 }
 
 
-INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeSocket_Send(DeeSocketObject *__restrict self,
                uint64_t timeout_nanoseconds,
                void const *__restrict buf, size_t bufsize,
                int flags) {
-	dssize_t result;
+	Dee_ssize_t result;
 	uint64_t end_time, timeout_microseconds;
 	/* TODO: Change this function to use nano-seconds internally! */
 	timeout_microseconds = timeout_nanoseconds / 1000;
@@ -1462,12 +1462,12 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeSocket_Recv(DeeSocketObject *__restrict self,
                uint64_t timeout_nanoseconds,
                void *__restrict buf, size_t bufsize,
                int flags) {
-	dssize_t result;
+	Dee_ssize_t result;
 	uint64_t end_time, timeout_microseconds;
 	/* TODO: Change this function to use nano-seconds internally! */
 	timeout_microseconds = timeout_nanoseconds / 1000;
@@ -1575,12 +1575,12 @@ err_host_unreachable(neterrno_t error, Socket *__restrict socket,
 	                                            SOCKADDR_STR_FNODNS));
 }
 
-INTERN WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3, 6)) Dee_ssize_t DCALL
 DeeSocket_SendTo(DeeSocketObject *__restrict self,
                  uint64_t timeout_nanoseconds,
                  void const *__restrict buf, size_t bufsize,
                  int flags, SockAddr const *__restrict target) {
-	dssize_t result;
+	Dee_ssize_t result;
 	uint64_t end_time, timeout_microseconds;
 	/* TODO: Change this function to use nano-seconds internally! */
 	timeout_microseconds = timeout_nanoseconds / 1000;
@@ -1702,12 +1702,12 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3, 6)) Dee_ssize_t DCALL
 DeeSocket_RecvFrom(DeeSocketObject *__restrict self,
                    uint64_t timeout_nanoseconds,
                    void *__restrict buf, size_t bufsize,
                    int flags, SockAddr *__restrict source) {
-	dssize_t result;
+	Dee_ssize_t result;
 	socklen_t length;
 	uint64_t end_time, timeout_microseconds;
 	/* TODO: Change this function to use nano-seconds internally! */
@@ -1832,7 +1832,7 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
                    size_t max_bufsize, int flags,
                    SockAddr *source) {
 	DREF DeeObject *result;
-	dssize_t recv_length;
+	Dee_ssize_t recv_length;
 	if (max_bufsize == (size_t)-1) {
 		if (!source) {
 			struct bytes_printer printer = BYTES_PRINTER_INIT;
@@ -2017,14 +2017,14 @@ socket_recv(Socket *self, size_t argc, DeeObject *const *argv) {
 			} else {
 				/* "(max_size=!-1,int flags=!P{})->?Dstring\n" */
 				/* "(max_size=!-1,timeout_nanoseconds=!-1)->?Dstring\n" */
-				if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
+				if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
 					goto err;
 			}
 		}
 	} else if (!arg_2) {
 		/* "(max_size=!-1,int flags=!P{})->?Dstring\n" */
 		/* "(max_size=!-1,timeout_nanoseconds=!-1)->?Dstring\n" */
-		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
+		if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
 			goto err;
 		if (DeeString_Check(arg_1)) {
 			if (sock_getmsgflagsof(arg_1, &flags))
@@ -2038,7 +2038,7 @@ socket_recv(Socket *self, size_t argc, DeeObject *const *argv) {
 	} else {
 		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!P{})->?Dstring\n" */
 		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!0)->?Dstring\n" */
-		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
+		if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
 			goto err;
 		if (DeeObject_AsInt64(arg_1, (int64_t *)&timeout))
 			goto err;
@@ -2063,7 +2063,7 @@ socket_recvinto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *arg1 = NULL, *arg2 = NULL;
 	uint64_t timeout;
 	int flags;
-	dssize_t result;
+	Dee_ssize_t result;
 	_DeeArg_Unpack1Or2Or3(err, argc, argv, "recvinto", &data, &arg1, &arg2);
 	if (!arg1) {
 		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
@@ -2127,14 +2127,14 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 			} else {
 				/* "(max_size=!-1,int flags=!P{})->(sockaddr,string)\n" */
 				/* "(max_size=!-1,timeout_nanoseconds=!-1)->(sockaddr,string)\n" */
-				if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
+				if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
 					goto err;
 			}
 		}
 	} else if (!arg_2) {
 		/* "(max_size=!-1,int flags=!P{})->(sockaddr,string)\n" */
 		/* "(max_size=!-1,timeout_nanoseconds=!-1)->(sockaddr,string)\n" */
-		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
+		if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
 			goto err;
 		if (DeeString_Check(arg_1)) {
 			if (sock_getmsgflagsof(arg_1, &flags))
@@ -2148,7 +2148,7 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 	} else {
 		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!P{})->(sockaddr,string)\n" */
 		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!0)->(sockaddr,string)\n" */
-		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
+		if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
 			goto err;
 		if (DeeObject_AsInt64(arg_1, (int64_t *)&timeout))
 			goto err;
@@ -2199,7 +2199,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *arg1 = NULL, *arg2 = NULL;
 	uint64_t timeout;
 	int flags;
-	dssize_t result_size;
+	Dee_ssize_t result_size;
 	DREF DeeSockAddrObject *result_addr;
 	DREF DeeTupleObject *result;
 	_DeeArg_Unpack1Or2Or3(err, argc, argv, "recvfrominto", &data, &arg1, &arg2);
@@ -2279,7 +2279,7 @@ socket_send(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *data, *arg_0 = NULL, *arg_1 = NULL;
 	uint64_t timeout;
 	int flags;
-	dssize_t result;
+	Dee_ssize_t result;
 	_DeeArg_Unpack1Or2Or3(err, argc, argv, "send", &data, &arg_0, &arg_1);
 	if (!arg_0) {
 		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
@@ -2330,7 +2330,7 @@ socket_sendto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *target, *data, *arg_0 = NULL, *arg_1 = NULL;
 	uint64_t timeout;
 	int flags;
-	dssize_t result;
+	Dee_ssize_t result;
 	if (DeeArg_Unpack(argc, argv, "oo|oo:sendto", &target, &data, &arg_0, &arg_1))
 		goto err;
 	/* Construct the target address. */

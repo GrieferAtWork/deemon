@@ -138,7 +138,7 @@ STATIC_ASSERT(offsetof(SetInversion, si_set) == offsetof(ProxyObject, po_obj));
 #define invset_fini  generic_proxy__fini
 #define invset_visit generic_proxy__visit
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 invset_printrepr(SetInversion *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	if (DeeObject_Implements(self->si_set, &DeeSet_Type))
@@ -370,7 +370,7 @@ INTERN DeeTypeObject SetInversion_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL(&default__seq_operator_bool__with__set_operator_compare_eq),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&invset_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&invset_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&invset_visit,
 	/* .tp_gc            = */ NULL,

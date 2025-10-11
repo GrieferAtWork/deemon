@@ -46,17 +46,17 @@
  * @param: flags: Set of `DEEFLOAT_PRINT_F*' */
 #ifdef DEFINE_DeeFloat_LPrint
 #define LOCAL_float_t __LONGDOUBLE
-PUBLIC WUNUSED NONNULL((2)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 DeeFloat_LPrint(LOCAL_float_t value, Dee_formatprinter_t printer, void *arg,
                 size_t width, size_t precision, unsigned int flags)
 #else /* DEFINE_DeeFloat_LPrint */
 #define LOCAL_float_t double
-PUBLIC WUNUSED NONNULL((2)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 DeeFloat_Print(LOCAL_float_t value, Dee_formatprinter_t printer, void *arg,
                size_t width, size_t precision, unsigned int flags)
 #endif /* !DEFINE_DeeFloat_LPrint */
 {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	PRIVATE LOCAL_float_t const pow10[10] = {
 		1, 10, 100, 1000, 10000, 100000, 1000000,
 		10000000, 100000000, 1000000000

@@ -494,13 +494,13 @@ property_call_kw(Property *self, size_t argc, DeeObject *const *argv, DeeObject 
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 property_printrepr(Property *__restrict self,
                    Dee_formatprinter_t printer, void *arg) {
 	/* TODO: Better distinction between *actual* properties, and
 	 *       custom properties (w/ an attribute `iscustom: bool',
 	 *       and us making the repr dependent on that) */
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	struct function_info info;
 	int error;
 	error = property_info(self, &info);
@@ -601,7 +601,7 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&property_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&property_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&property_visit,
 	/* .tp_gc            = */ NULL,

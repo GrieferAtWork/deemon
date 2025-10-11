@@ -362,11 +362,11 @@ done:
 	return 0;
 }
 
-PRIVATE NONNULL((1)) dssize_t DPRINTER_CC
+PRIVATE NONNULL((1)) Dee_ssize_t DPRINTER_CC
 tpp_string_printer_print(void *arg, char const *__restrict buf, size_t bufsize) {
 	if unlikely(tpp_string_printer_append((struct tpp_string_printer *)arg, buf, bufsize))
 		goto err;
-	return (dssize_t)bufsize;
+	return (Dee_ssize_t)bufsize;
 err:
 	return -1;
 }
@@ -459,7 +459,7 @@ PRIVATE /*REF*/ struct TPPString *DCALL parse_brace_text(void) {
 		default:
 			if (is_after_linefeed && TPP_ISKEYWORD(tok)) {
 				struct ast_loc loc;
-				dssize_t error;
+				Dee_ssize_t error;
 				loc_here(&loc);
 				/* Insert an automatic DDI directive, describing
 				 * the location of this instruction token. */

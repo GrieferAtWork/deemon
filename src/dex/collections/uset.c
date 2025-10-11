@@ -933,7 +933,7 @@ uset_contains(USet *self, DeeObject *search_item) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 uset_repr(USet *__restrict self) {
 	struct unicode_printer p;
-	dssize_t error;
+	Dee_ssize_t error;
 	struct uset_item *iter, *end;
 	bool is_first;
 	struct uset_item *vector;
@@ -980,10 +980,10 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 uset_printrepr(USet *__restrict self,
                Dee_formatprinter_t printer, void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	struct uset_item *iter, *end;
 	struct uset_item *vector;
 	size_t mask;
@@ -1290,7 +1290,7 @@ INTERN DeeTypeObject USet_Type = {
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_repr,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&uset_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&uset_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&uset_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uset_visit,
 	/* .tp_gc            = */ &uset_gc,
@@ -1449,10 +1449,10 @@ STATIC_ASSERT(offsetof(URoSet, urs_size) == offsetof(USet, us_used));
 #define uroset_bool uset_bool
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 uroset_printrepr(URoSet *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	bool is_first = true;
 	size_t i;
 	result = DeeFormat_PRINT(printer, arg, "collections.UniqueSet.Frozen({ ");
@@ -1979,7 +1979,7 @@ INTERN DeeTypeObject URoSet_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&uroset_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&uroset_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&uroset_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uroset_visit,
 	/* .tp_gc            = */ NULL,

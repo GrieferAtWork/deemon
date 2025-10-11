@@ -145,7 +145,7 @@ comerr_visit(DeeCompilerErrorObject *__restrict self,
 	}
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 comerr_print(DeeCompilerErrorObject *__restrict self,
              Dee_formatprinter_t printer, void *arg) {
 	if (self->e_message)
@@ -153,7 +153,7 @@ comerr_print(DeeCompilerErrorObject *__restrict self,
 	return DeeCompilerError_Print((DeeObject *)self, printer, arg);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 comerr_printrepr(DeeCompilerErrorObject *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	/* TODO */

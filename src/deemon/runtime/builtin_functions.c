@@ -178,7 +178,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_hash(size_t argc, DeeObject *const *argv) {
-	dssize_t result = DeeObject_Hashv(argv, argc);
+	Dee_ssize_t result = DeeObject_Hashv(argv, argc);
 	return DeeInt_NewHash(result);
 }
 

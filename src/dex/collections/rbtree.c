@@ -3224,7 +3224,7 @@ again:
 		node = node->rbtn_lhs;
 	version = self->rbt_version;
 	do {
-		dssize_t temp;
+		Dee_ssize_t temp;
 		DREF DeeObject *item[3];
 		item[0] = rbtree_node_get_minkey(node);
 		item[1] = rbtree_node_get_maxkey(node);
@@ -3264,9 +3264,9 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rbtree_printrepr(RBTree *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	struct rbtree_node *node;
 	uintptr_t version;
 	bool is_first;
@@ -3331,7 +3331,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rbtree_foreach(RBTree *self, Dee_foreach_t proc, void *arg) {
 	DREF DeeTupleObject *tuple;
 	DREF DeeObject *start, *end, *value;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	struct rbtree_node *node;
 	uintptr_t version;
 	RBTree_LockRead(self);
@@ -3382,7 +3382,7 @@ err_start_end_value:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rbtree_foreach_pair(RBTree *self, Dee_foreach_pair_t proc, void *arg) {
 	DREF DeeObject *range, *start, *end, *value;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	struct rbtree_node *node;
 	uintptr_t version;
 	RBTree_LockRead(self);
@@ -3672,7 +3672,7 @@ INTERN DeeTypeObject RBTree_Type = {
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rbtree_repr,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&rbtree_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rbtree_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rbtree_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rbtree_visit,
 	/* .tp_gc            = */ &rbtree_gc,

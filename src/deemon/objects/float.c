@@ -132,7 +132,7 @@ float_str(Float *__restrict self) {
 	return DeeString_Newf("%f", self->f_value);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 float_print(Float *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	return DeeFloat_PrintRepr(self, printer, arg);
 }
@@ -926,8 +926,8 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_str,
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_str,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&float_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&float_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&float_print,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&float_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&float_print,
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,

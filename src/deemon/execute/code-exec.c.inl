@@ -4865,7 +4865,7 @@ do_cmpxch_ub_c:
 					} else
 #endif /* __SIZEOF_SIZE_T__ <= 4 */
 					{
-						range_object = DeeRange_NewInt(0, (dssize_t)range_end, 1);
+						range_object = DeeRange_NewInt(0, (Dee_ssize_t)range_end, 1);
 					}
 					if unlikely(!range_object)
 						HANDLE_EXCEPT();

@@ -378,10 +378,10 @@ return_sep:
 #define TRACEBACK_SLASH_S           DeeSystem_SEP_S
 #endif /* !DeeSystem_ALTSEP */
 
-INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 print_ddi(Dee_formatprinter_t printer, void *arg,
           DeeCodeObject *__restrict code, code_addr_t ip) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	struct ddi_state state;
 	if (!DeeCode_FindDDI((DeeObject *)code, &state, NULL, ip,
 	                     DDI_STATE_FNOTHROW | DDI_STATE_FNONAMES)) {
@@ -449,10 +449,10 @@ frame_visit(Frame *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit(self->f_owner);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 frame_print(Frame *__restrict self,
             Dee_formatprinter_t printer, void *arg) {
-	dssize_t result;
+	Dee_ssize_t result;
 	DREF DeeCodeObject *code;
 	code_addr_t ip;
 	struct code_frame const *frame;
@@ -1255,7 +1255,7 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
 		/* .tp_str  = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr = */ DEFIMPL(&object_repr),
 		/* .tp_bool = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&frame_print,
+		/* .tp_print = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&frame_print,
 		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&frame_visit,

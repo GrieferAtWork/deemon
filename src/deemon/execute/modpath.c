@@ -2697,7 +2697,7 @@ struct module_import_data {
 	uint16_t         mid_globala; /* Allocated vector size of `mid_self->mo_globalv' */
 };
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 module_import_symbol(void *arg, DeeObject *name, DeeObject *value) {
 	struct module_import_data *data = (struct module_import_data *)arg;
 	DeeModuleObject *self = data->mid_self;
@@ -2786,12 +2786,12 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 module_import_symbols(DeeModuleObject *self,
                       DeeObject *default_symbols,
                       unsigned int mode,
                       uint16_t *__restrict p_globala) {
-	dssize_t result;
+	Dee_ssize_t result;
 	struct module_import_data mid;
 	mid.mid_self    = self;
 	mid.mid_mode    = mode;

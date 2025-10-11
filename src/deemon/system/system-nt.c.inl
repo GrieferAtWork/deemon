@@ -3341,7 +3341,7 @@ err:
 /* @param: p_success: Set to `false' if the system call failed and nothing was printed (s.a. `GetLastError()')
  * @return: >= 0: Success.
  * @return: < 0:  A deemon callback failed and an error was thrown (`*p_success' is undefined). */
-PUBLIC WUNUSED NONNULL((1, 8)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 8)) Dee_ssize_t DCALL
 DeeNTSystem_PrintFormatMessage(Dee_formatprinter_t printer, void *arg,
                                DeeNT_DWORD dwFlags, void const *lpSource,
                                DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
@@ -3358,9 +3358,9 @@ DeeNTSystem_PrintFormatMessage(Dee_formatprinter_t printer, void *arg,
 		if unlikely(error < 0)
 			return -1;
 		*p_success = error == 0;
-		return (dssize_t)(UNICODE_PRINTER_LENGTH(upn) - oldlen);
+		return (Dee_ssize_t)(UNICODE_PRINTER_LENGTH(upn) - oldlen);
 	} else {
-		dssize_t result;
+		Dee_ssize_t result;
 		struct unicode_printer uprinter = UNICODE_PRINTER_INIT;
 		int error;
 		error = DeeNTSystem_UPrintFormatMessage(&uprinter, dwFlags, lpSource,

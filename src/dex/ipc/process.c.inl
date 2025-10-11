@@ -1056,7 +1056,7 @@ PRIVATE struct type_gc tpconst process_gc = {
 		result += temp;                  \
 	}	__WHILE0
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 process_print(Process *__restrict self,
               Dee_formatprinter_t printer, void *arg) {
 	DREF DeeObject *proc_exe;
@@ -1070,7 +1070,7 @@ process_print(Process *__restrict self,
 	ipc_Process_pid_t proc_pid;
 #endif /* ipc_Process_pid_t */
 	uint16_t proc_state;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 
 	/* Load process properties. */
 	Process_LockRead(self);
@@ -1154,7 +1154,7 @@ err:
 	goto done;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 process_printrepr(Process *__restrict self,
                   Dee_formatprinter_t printer, void *arg) {
 	DREF DeeObject *proc_exe;
@@ -1166,7 +1166,7 @@ process_printrepr(Process *__restrict self,
 	DREF DeeStringObject *proc_cmdline;
 #endif /* ipc_Process_USE_cmdline */
 	uint16_t proc_state;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 
 	/* Load process properties. */
 	Process_LockRead(self);
@@ -5288,8 +5288,8 @@ INTERN DeeTypeObject DeeProcess_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&process_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&process_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&process_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&process_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&process_visit,
 	/* .tp_gc            = */ &process_gc,

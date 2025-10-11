@@ -1345,7 +1345,7 @@ DeeObject_PTInvokeOperatorf(DeeTypeObject *tp_self, DREF DeeObject **__restrict 
 		result += temp;                  \
 	}	__WHILE0
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 print_call_args_repr(Dee_formatprinter_t printer, void *arg,
                      size_t argc, DeeObject *const *argv,
                      DeeObject *kw) {

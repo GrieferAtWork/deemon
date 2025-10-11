@@ -83,8 +83,8 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v) {
-	dssize_t j = ABS(v->ob_size);
-	dssize_t i = j;
+	Dee_ssize_t j = ABS(v->ob_size);
+	Dee_ssize_t i = j;
 	while (i > 0 && v->ob_digit[i - 1] == 0)
 		--i;
 	if (i != j)
@@ -122,14 +122,14 @@ int_neg_inherit(/*inherit(always)*/ DREF DeeIntObject *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 x_add(DeeIntObject *a, DeeIntObject *b) {
-	dssize_t size_a = ABS(a->ob_size);
-	dssize_t size_b = ABS(b->ob_size);
-	dssize_t i;
+	Dee_ssize_t size_a = ABS(a->ob_size);
+	Dee_ssize_t size_b = ABS(b->ob_size);
+	Dee_ssize_t i;
 	DeeIntObject *z;
 	digit carry = 0;
 	if (size_a < size_b) {
 		SWAP(DeeIntObject *, a, b);
-		SWAP(dssize_t, size_a, size_b);
+		SWAP(Dee_ssize_t, size_a, size_b);
 	}
 	z = DeeInt_Alloc(size_a + 1);
 	if unlikely(!z)
@@ -152,16 +152,16 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 x_sub(DeeIntObject *a, DeeIntObject *b) {
-	dssize_t size_a = ABS(a->ob_size);
-	dssize_t size_b = ABS(b->ob_size);
-	dssize_t i;
+	Dee_ssize_t size_a = ABS(a->ob_size);
+	Dee_ssize_t size_b = ABS(b->ob_size);
+	Dee_ssize_t i;
 	DeeIntObject *z;
 	int sign     = 1;
 	digit borrow = 0;
 	if (size_a < size_b) {
 		sign = -1;
 		SWAP(DeeIntObject *, a, b);
-		SWAP(dssize_t, size_a, size_b);
+		SWAP(Dee_ssize_t, size_a, size_b);
 	} else if (size_a == size_b) {
 		i = size_a;
 		while (--i >= 0 && a->ob_digit[i] == b->ob_digit[i])
@@ -268,8 +268,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_add_int(DeeIntObject *__restrict a, digit b) {
-	dssize_t size_a = ABS(a->ob_size);
-	dssize_t i;
+	Dee_ssize_t size_a = ABS(a->ob_size);
+	Dee_ssize_t i;
 	DeeIntObject *z;
 	digit carry;
 	ASSERT(size_a >= 2);
@@ -292,8 +292,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_add_int2(DeeIntObject *__restrict a, twodigits b) {
-	dssize_t size_a = ABS(a->ob_size);
-	dssize_t i;
+	Dee_ssize_t size_a = ABS(a->ob_size);
+	Dee_ssize_t i;
 	DeeIntObject *z;
 	digit carry;
 	ASSERT(size_a >= 2);
@@ -320,8 +320,8 @@ err:
 #if (DIGIT_BITS * 2) < 32
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_add_int3(DeeIntObject *__restrict a, uint32_t b) {
-	dssize_t size_a = ABS(a->ob_size);
-	dssize_t i;
+	Dee_ssize_t size_a = ABS(a->ob_size);
+	Dee_ssize_t i;
 	DeeIntObject *z;
 	digit carry;
 	ASSERT(size_a >= 2);
@@ -361,8 +361,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((2)) DREF DeeIntObject *DCALL
 x_sub_revint(digit a, DeeIntObject *__restrict b) {
-	dssize_t size_b = ABS(b->ob_size);
-	dssize_t i;
+	Dee_ssize_t size_b = ABS(b->ob_size);
+	Dee_ssize_t i;
 	DeeIntObject *z;
 	digit borrow;
 	ASSERT(size_b >= 2);
@@ -392,7 +392,7 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b);
 
 PRIVATE WUNUSED NONNULL((2)) DREF DeeIntObject *DCALL
 x_sub_revint3(uint32_t a, DeeIntObject *__restrict b) {
-	dssize_t size_b = ABS(b->ob_size);
+	Dee_ssize_t size_b = ABS(b->ob_size);
 	DeeIntObject *z;
 	digit borrow;
 	ASSERT(size_b >= 2);
@@ -446,8 +446,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_sub_int(DeeIntObject *__restrict a, digit b) {
-	dssize_t size_a = ABS(a->ob_size);
-	dssize_t i;
+	Dee_ssize_t size_a = ABS(a->ob_size);
+	Dee_ssize_t i;
 	DeeIntObject *z;
 	digit borrow;
 	ASSERT(size_a >= 2);
@@ -472,8 +472,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
-	dssize_t size_a = ABS(a->ob_size);
-	dssize_t i;
+	Dee_ssize_t size_a = ABS(a->ob_size);
+	Dee_ssize_t i;
 	DeeIntObject *z;
 	digit borrow;
 	ASSERT(size_a >= 2);
@@ -543,9 +543,9 @@ err:
 #if (DIGIT_BITS * 2) < 32
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
-	dssize_t size_a = ABS(a->ob_size);
+	Dee_ssize_t size_a = ABS(a->ob_size);
 	digit borrow;
-	dssize_t i;
+	Dee_ssize_t i;
 	DeeIntObject *z;
 	ASSERT(size_a >= 2);
 	if (size_a == 2) {
@@ -643,7 +643,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((2)) DREF DeeIntObject *DCALL
 x_sub_revint2(twodigits a, DeeIntObject *__restrict b) {
-	dssize_t size_b = ABS(b->ob_size);
+	Dee_ssize_t size_b = ABS(b->ob_size);
 	DeeIntObject *z;
 	digit borrow;
 	ASSERT(size_b >= 2);
@@ -947,9 +947,9 @@ DeeInt_SubUInt32(DeeIntObject *__restrict a, uint32_t b) {
 
 
 PRIVATE NONNULL((1, 3)) digit DCALL
-v_iadd(digit *__restrict x, dssize_t m,
-       digit const *__restrict y, dssize_t n) {
-	dssize_t i;
+v_iadd(digit *__restrict x, Dee_ssize_t m,
+       digit const *__restrict y, Dee_ssize_t n) {
+	Dee_ssize_t i;
 	digit carry = 0;
 	ASSERT(m >= n);
 	for (i = 0; i < n; ++i) {
@@ -968,9 +968,9 @@ v_iadd(digit *__restrict x, dssize_t m,
 }
 
 PRIVATE NONNULL((1, 3)) digit DCALL
-v_isub(digit *__restrict x, dssize_t m,
-       digit const *__restrict y, dssize_t n) {
-	dssize_t i;
+v_isub(digit *__restrict x, Dee_ssize_t m,
+       digit const *__restrict y, Dee_ssize_t n) {
+	Dee_ssize_t i;
 	digit borrow = 0;
 	ASSERT(m >= n);
 	for (i = 0; i < n; ++i) {
@@ -991,8 +991,8 @@ v_isub(digit *__restrict x, dssize_t m,
 PRIVATE NONNULL((1, 2)) digit DCALL
 v_lshift(digit *__restrict z,
          digit const *__restrict a,
-         dssize_t m, int d) {
-	dssize_t i;
+         Dee_ssize_t m, int d) {
+	Dee_ssize_t i;
 	digit carry = 0;
 	ASSERT(0 <= d && d < DIGIT_BITS);
 	for (i = 0; i < m; i++) {
@@ -1007,8 +1007,8 @@ v_lshift(digit *__restrict z,
 PRIVATE NONNULL((1, 2)) digit DCALL
 v_rshift(digit *__restrict z,
          digit const *__restrict a,
-         dssize_t m, int d) {
-	dssize_t i;
+         Dee_ssize_t m, int d) {
+	Dee_ssize_t i;
 	digit carry = 0;
 	digit mask  = ((digit)1 << d) - 1U;
 	ASSERT(0 <= d && d < DIGIT_BITS);
@@ -1024,7 +1024,7 @@ v_rshift(digit *__restrict z,
 PRIVATE NONNULL((1, 2)) digit DCALL
 inplace_divrem1(digit *__restrict pout,
                 digit const *__restrict pin,
-                dssize_t size, digit n) {
+                Dee_ssize_t size, digit n) {
 	twodigits rem = 0;
 	ASSERT(n > 0 && n <= DIGIT_MASK);
 	pin += size;
@@ -1041,7 +1041,7 @@ inplace_divrem1(digit *__restrict pout,
 PRIVATE WUNUSED NONNULL((1, 3)) DeeIntObject *DCALL
 divrem1(DeeIntObject *__restrict a, digit n, digit *p_rem) {
 	DeeIntObject *z;
-	dssize_t size = ABS(a->ob_size);
+	Dee_ssize_t size = ABS(a->ob_size);
 	ASSERT(n > 0 && n <= DIGIT_MASK);
 	z = DeeInt_Alloc(size);
 	if unlikely(!z)
@@ -1056,9 +1056,9 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 x_mul(DeeIntObject *a, DeeIntObject *b) {
 	DeeIntObject *z;
-	dssize_t i;
-	dssize_t size_a = ABS(a->ob_size);
-	dssize_t size_b = ABS(b->ob_size);
+	Dee_ssize_t i;
+	Dee_ssize_t size_a = ABS(a->ob_size);
+	Dee_ssize_t size_b = ABS(b->ob_size);
 	z = DeeInt_Alloc(size_a + size_b);
 	if unlikely(!z)
 		goto err;
@@ -1118,13 +1118,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
-kmul_split(DeeIntObject *n, dssize_t size,
+kmul_split(DeeIntObject *n, Dee_ssize_t size,
            DREF DeeIntObject **__restrict phigh,
            DREF DeeIntObject **__restrict plow) {
 	DREF DeeIntObject *hi, *lo;
-	dssize_t size_n  = ABS(n->ob_size);
-	dssize_t size_lo = MIN(size_n, size);
-	dssize_t size_hi = size_n - size_lo;
+	Dee_ssize_t size_n  = ABS(n->ob_size);
+	Dee_ssize_t size_lo = MIN(size_n, size);
+	Dee_ssize_t size_hi = size_n - size_lo;
 	hi = DeeInt_Alloc(size_hi);
 	if unlikely(!hi)
 		goto err;
@@ -1147,12 +1147,12 @@ k_lopsided_mul(DeeIntObject *a, DeeIntObject *b);
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 k_mul(DeeIntObject *a, DeeIntObject *b) {
-	dssize_t asize   = ABS(a->ob_size);
-	dssize_t bsize   = ABS(b->ob_size);
+	Dee_ssize_t asize   = ABS(a->ob_size);
+	Dee_ssize_t bsize   = ABS(b->ob_size);
 	DeeIntObject *ah = NULL, *al = NULL;
 	DeeIntObject *bh = NULL, *bl = NULL;
 	DeeIntObject *t1, *t2, *t3, *ret = NULL;
-	dssize_t shift, i;
+	Dee_ssize_t shift, i;
 	if (asize > bsize) {
 		t1 = a, a = b, b = t1;
 		i = asize, asize = bsize, bsize = i;
@@ -1256,9 +1256,9 @@ fail:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 k_lopsided_mul(DeeIntObject *a, DeeIntObject *b) {
-	dssize_t asize = ABS(a->ob_size);
-	dssize_t bsize = ABS(b->ob_size);
-	dssize_t nbdone;
+	Dee_ssize_t asize = ABS(a->ob_size);
+	Dee_ssize_t bsize = ABS(b->ob_size);
+	Dee_ssize_t nbdone;
 	DeeIntObject *ret, *bslice = NULL;
 	ASSERT(asize > KARATSUBA_CUTOFF);
 	ASSERT(2 * asize <= bsize);
@@ -1272,7 +1272,7 @@ k_lopsided_mul(DeeIntObject *a, DeeIntObject *b) {
 	nbdone = 0;
 	while (bsize > 0) {
 		DeeIntObject *product;
-		dssize_t nbtouse = MIN(bsize, asize);
+		Dee_ssize_t nbtouse = MIN(bsize, asize);
 		memcpyc(bslice->ob_digit,
 		        b->ob_digit + nbdone,
 		        nbtouse, sizeof(digit));
@@ -1328,8 +1328,8 @@ int_divrem(DeeIntObject *a,
            DeeIntObject **p_div,
            DeeIntObject **p_rem) {
 	DREF DeeIntObject *z;
-	dssize_t size_a = ABS(a->ob_size);
-	dssize_t size_b = ABS(b->ob_size);
+	Dee_ssize_t size_a = ABS(a->ob_size);
+	Dee_ssize_t size_b = ABS(b->ob_size);
 	if (size_b == 0) {
 		err_divide_by_zero((DeeObject *)a, (DeeObject *)b);
 		goto err;
@@ -1396,7 +1396,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DeeIntObject *DCALL
 x_divrem(DeeIntObject *v1, DeeIntObject *w1,
          DeeIntObject **__restrict p_rem) {
 	DeeIntObject *v, *w, *a;
-	dssize_t i, k, size_v, size_w;
+	Dee_ssize_t i, k, size_v, size_w;
 	digit wm1, wm2, carry, q, r, vtop, *v0, *vk, *w0, *ak;
 	twodigits vv;
 	stwodigits z;
@@ -1602,7 +1602,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 int_shr(DeeIntObject *a, DeeObject *b) {
 	DeeIntObject *z;
 	digit lomask, himask;
-	dssize_t shiftby, newsize, wordshift, loshift, hishift, i, j;
+	Dee_ssize_t shiftby, newsize, wordshift, loshift, hishift, i, j;
 	if (a->ob_size < 0) {
 		DeeIntObject *a1, *a2;
 		a1 = int_inv(a);
@@ -1654,7 +1654,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 int_shl(DeeIntObject *a, DeeObject *b) {
 	DREF DeeIntObject *result;
 	twodigits accum;
-	dssize_t shiftby, oldsize, newsize, wordshift, remshift, i, j;
+	Dee_ssize_t shiftby, oldsize, newsize, wordshift, remshift, i, j;
 	if (DeeObject_AsSSize(b, &shiftby))
 		goto err;
 	if (shiftby < 0) {
@@ -1854,7 +1854,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 int_pow(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *z, *b;
-	dssize_t i, j, k;
+	Dee_ssize_t i, j, k;
 	DeeIntObject *table[32] = {
 		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1899,7 +1899,7 @@ int_pow(DeeIntObject *a, DeeObject *b_ob) {
 	} else {
 		Dee_Incref(z);
 		table[0] = z;
-		for (i = 1; i < (dssize_t)COMPILER_LENOF(table); ++i)
+		for (i = 1; i < (Dee_ssize_t)COMPILER_LENOF(table); ++i)
 			MULT(table[i - 1], a, table[i]);
 		for (i = b->ob_size - 1; i >= 0; --i) {
 			digit bi = b->ob_digit[i];

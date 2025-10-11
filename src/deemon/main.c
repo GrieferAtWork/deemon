@@ -1057,7 +1057,7 @@ PRIVATE WUNUSED int DCALL cmd_help(char *arg) {
 	} else {
 		/* `print Doc from doc(arg)' */
 		DREF DeeObject *doc_module, *doc_node;
-		dssize_t error;
+		Dee_ssize_t error;
 		doc_module = DeeModule_OpenGlobalString("doc", 3, NULL, true);
 		if unlikely(!doc_module)
 			goto err_fp;
@@ -2719,7 +2719,7 @@ operation_mode_format(int argc, char **argv) {
 		filename = argv[i];
 		if (argc > 1) {
 			DREF DeeObject *fp;
-			dssize_t temp;
+			Dee_ssize_t temp;
 			fp = DeeFile_GetStd(DEE_STDOUT);
 			if unlikely(!fp)
 				goto err;

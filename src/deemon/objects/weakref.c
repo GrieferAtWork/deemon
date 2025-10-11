@@ -181,10 +181,10 @@ ob_weakref_moveassign(WeakRef *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ob_weakref_print(WeakRef *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
-	dssize_t result;
+	Dee_ssize_t result;
 	DREF DeeObject *refobj;
 	refobj = Dee_weakref_lock(&self->wr_ref);
 	if (refobj) {
@@ -196,10 +196,10 @@ ob_weakref_print(WeakRef *__restrict self,
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ob_weakref_printrepr(WeakRef *__restrict self,
                      Dee_formatprinter_t printer, void *arg) {
-	dssize_t result;
+	Dee_ssize_t result;
 	DREF DeeObject *refobj;
 	refobj = Dee_weakref_lock(&self->wr_ref);
 	if (refobj) {
@@ -444,8 +444,8 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&ob_weakref_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ob_weakref_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ob_weakref_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ob_weakref_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ob_weakref_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ob_weakref_visit,
 	/* .tp_gc            = */ NULL,

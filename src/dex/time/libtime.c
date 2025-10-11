@@ -1335,14 +1335,14 @@ get_repr_id(char const *__restrict name, size_t length) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 3, 4)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4)) Dee_ssize_t DCALL
 time_format(Dee_formatprinter_t printer, void *arg,
             char const *__restrict format,
             DeeTimeObject *__restrict self) {
 	/* TODO: re-write this function from scratch! */
 #define print(p, s) DO(err, DeeFormat_Print(printer, arg, p, s))
 #define printf(...) DO(err, DeeFormat_Printf(printer, arg, __VA_ARGS__))
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	Dee_int128_t number;
 	char const *text;
 	for (;;) {
@@ -3309,17 +3309,17 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 time_print(DeeTimeObject *__restrict self,
            Dee_formatprinter_t printer, void *arg) {
 	/* TODO: Re-design me! (and include special handling for delta timestamps) */
 	return time_format(printer, arg, "%A, the %[n:mday] of %B %Y, %H:%M:%S", self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 time_printrepr(DeeTimeObject *__restrict self,
                Dee_formatprinter_t printer, void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	result = DeeFormat_PRINT(printer, arg, "Time(");
 	if unlikely(result < 0)
 		goto done;
@@ -3539,8 +3539,8 @@ INTERN DeeTypeObject DeeTime_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int(DCALL *)(DeeObject *__restrict))&time_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&time_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&time_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&time_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&time_printrepr
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,

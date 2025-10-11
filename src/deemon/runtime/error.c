@@ -106,7 +106,7 @@ DeeError_Print(char const *reason, unsigned int handle_errors) {
 
 
 
-PRIVATE WUNUSED ATTR_INS(2, 3) dssize_t DPRINTER_CC
+PRIVATE WUNUSED ATTR_INS(2, 3) Dee_ssize_t DPRINTER_CC
 stderr_printer(void *__restrict self,
                char const *__restrict data, size_t datalen) {
 	size_t result;
@@ -122,7 +122,7 @@ stderr_printer(void *__restrict self,
 	} else {
 		result = (size_t)-1;
 	}
-	return (dssize_t)result;
+	return (Dee_ssize_t)result;
 }
 
 
@@ -131,7 +131,7 @@ PUBLIC NONNULL((2)) void DCALL
 DeeError_Display(char const *reason,
                  DeeObject *error,
                  DeeObject *traceback) {
-	dssize_t status;
+	Dee_ssize_t status;
 	ASSERT_OBJECT(error);
 	ASSERT_OBJECT_TYPE_OPT(traceback, &DeeTraceback_Type);
 	if (reason == NULL)

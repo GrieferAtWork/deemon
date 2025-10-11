@@ -1947,7 +1947,7 @@ extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputS
 extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 #endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
 
-PRIVATE dssize_t DPRINTER_CC
+PRIVATE Dee_ssize_t DPRINTER_CC
 debug_printer(void *UNUSED(closure),
               char const *__restrict buffer, size_t bufsize) {
 #ifdef CONFIG_HOST_WINDOWS
@@ -1979,9 +1979,9 @@ debug_printer(void *UNUSED(closure),
 			bufsize -= part;
 		}
 	}
-	return (dssize_t)result;
+	return (Dee_ssize_t)result;
 #else /* CONFIG_HOST_WINDOWS */
-	return (dssize_t)DeeFile_Write(DeeFile_DefaultStddbg, buffer, bufsize);
+	return (Dee_ssize_t)DeeFile_Write(DeeFile_DefaultStddbg, buffer, bufsize);
 #endif /* !CONFIG_HOST_WINDOWS */
 }
 #endif /* !Dee_DPRINT_IS_NOOP */
@@ -2083,18 +2083,18 @@ PUBLIC NONNULL((1)) void
 #endif /* !Dee_DPRINT_IS_NOOP */
 }
 
-PUBLIC dssize_t
+PUBLIC Dee_ssize_t
 (DPRINTER_CC _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen) {
 #ifdef Dee_DPRINT_IS_NOOP
 	(void)arg;
 	(void)data;
-	return (dssize_t)datalen;
+	return (Dee_ssize_t)datalen;
 #else /* Dee_DPRINT_IS_NOOP */
-	dssize_t result;
+	Dee_ssize_t result;
 	if (_Dee_dprint_enabled == 2)
 		determine_is_dprint_enabled();
 	if (!_Dee_dprint_enabled)
-		return (dssize_t)datalen;
+		return (Dee_ssize_t)datalen;
 	result = debug_printer(arg, data, datalen);
 	if (result < 0) {
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
@@ -2107,7 +2107,7 @@ PUBLIC dssize_t
 
 PRIVATE NONNULL((1)) void
 assert_vprintf(char const *format, va_list args) {
-	dssize_t error;
+	Dee_ssize_t error;
 	error = DeeFile_VPrintf(DeeFile_DefaultStddbg, format, args);
 	if unlikely(error < 0)
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
@@ -2149,7 +2149,7 @@ PRIVATE void assert_attach_debugger_loop(void) {
 #define assert_attach_debugger_loop() (void)0
 #endif /* !CONFIG_HOST_WINDOWS */
 
-INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 print_ddi(Dee_formatprinter_t printer, void *arg,
           DeeCodeObject *__restrict code, code_addr_t ip);
 

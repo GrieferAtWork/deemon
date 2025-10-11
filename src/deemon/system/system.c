@@ -594,7 +594,7 @@ err:
 #endif /* DeeSystem_PrintPwd_USE_getenv */
 
 #ifdef DeeSystem_PrintPwd_USE_DOT
-	dssize_t error;
+	Dee_ssize_t error;
 	error = unicode_printer_printutf8(printer,
 	                                  "." DeeSystem_SEP_S,
 	                                  include_trailing_sep ? 2 : 1);

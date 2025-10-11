@@ -990,7 +990,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 module_import_symbol_pair(void *arg, DeeObject *key, DeeObject *value) {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;

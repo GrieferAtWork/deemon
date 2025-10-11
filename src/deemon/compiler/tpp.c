@@ -181,9 +181,9 @@ DECL_END
 
 
 /* Configure #pragma message to output text via deemon's stdout file. */
-PRIVATE dssize_t DCALL
+PRIVATE Dee_ssize_t DCALL
 tpp_pragma_message_printf(char const *format, ...) {
-	dssize_t result;
+	Dee_ssize_t result;
 	DREF DeeObject *stdout_file;
 	va_list args;
 	stdout_file = DeeFile_GetStd(DEE_STDOUT);
@@ -524,7 +524,7 @@ get_warning_error_class(int wnum) {
 	return &DeeError_CompilerError;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeCompilerError_Print(DeeObject *__restrict self,
                        Dee_formatprinter_t printer, void *arg) {
 #if defined(_MSC_VER) && 0
@@ -552,7 +552,7 @@ DeeCompilerError_Print(DeeObject *__restrict self,
 		result += temp;                                             \
 	}	__WHILE0
 	DeeCompilerErrorObject *me;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	size_t i, count;
 	struct compiler_error_loc *main_loc;
 	struct compiler_error_loc *iter;

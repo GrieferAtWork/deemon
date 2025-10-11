@@ -476,10 +476,10 @@ roset_bool(RoSet *__restrict self) {
 	return self->rs_size != 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 roset_printrepr(RoSet *__restrict self,
                 Dee_formatprinter_t printer, void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	bool is_first = true;
 	size_t i;
 	result = DeeFormat_PRINT(printer, arg, "HashSet.Frozen({ ");
@@ -723,7 +723,7 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&roset_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&roset_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&roset_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&roset_visit,
 	/* .tp_gc            = */ NULL,

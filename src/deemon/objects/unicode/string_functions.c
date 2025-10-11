@@ -6799,7 +6799,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-	dssize_t result;
+	Dee_ssize_t result;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "fuzzycompare"))
 		goto err;
@@ -6847,7 +6847,7 @@ string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		                            ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
-	if unlikely(result == (dssize_t)-1)
+	if unlikely(result == (Dee_ssize_t)-1)
 		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
@@ -6858,7 +6858,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-	dssize_t result;
+	Dee_ssize_t result;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "casefuzzycompare"))
 		goto err;
@@ -6906,7 +6906,7 @@ string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		                                ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
-	if unlikely(result == (dssize_t)-1)
+	if unlikely(result == (Dee_ssize_t)-1)
 		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
@@ -12115,7 +12115,7 @@ err:
 }
 
 
-INTDEF dssize_t DCALL
+INTDEF Dee_ssize_t DCALL
 DeeString_CFormat(Dee_formatprinter_t printer,
                   Dee_formatprinter_t format_printer, void *arg,
                   /*utf-8*/ char const *__restrict format, size_t format_len,

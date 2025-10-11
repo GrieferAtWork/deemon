@@ -141,11 +141,11 @@ typedef struct {
 /* CORE ABSTRACT TYPE                                                   */
 /************************************************************************/
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rangemap_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	DREF DeeObject *iterator;
 	DREF DeeObject *elem;
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	bool is_first;
 	result = DeeFormat_PRINT(printer, arg, "{ ");
 	if unlikely(result < 0)
@@ -302,7 +302,7 @@ err:
 
 #define rangemap_popitem rangemap_popfront
 
-PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 rangemap_insert_range(void *arg, DeeObject *elem) {
 	int result;
 	DREF DeeObject *item[3];
@@ -796,7 +796,7 @@ INTERN DeeTypeObject RangeMap_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL, /* Inherited function already does the correct thing */
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rangemap_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rangemap_printrepr,
 	},
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
@@ -1049,7 +1049,7 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 rangemap_keys_getsize_foreach(void *arg, DeeObject *elem) {
 	size_t temp, *p_result = (size_t *)arg;
 	DREF DeeObject *item[3];

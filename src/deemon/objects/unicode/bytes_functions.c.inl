@@ -3108,12 +3108,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_fuzzycompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct bcompare_args args;
-	dssize_t result;
+	Dee_ssize_t result;
 	if (get_bcompare_args(self, &args, argc, argv, "fuzzycompare"))
 		goto err;
 	result = dee_fuzzy_compareb(args.lhs_ptr, args.lhs_len,
 	                            args.rhs_ptr, args.lhs_len);
-	if unlikely(result == (dssize_t)-1)
+	if unlikely(result == (Dee_ssize_t)-1)
 		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
@@ -3184,12 +3184,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casefuzzycompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct bcompare_args args;
-	dssize_t result;
+	Dee_ssize_t result;
 	if (get_bcompare_args(self, &args, argc, argv, "casefuzzycompare"))
 		goto err;
 	result = dee_fuzzy_casecompare_ascii(args.lhs_ptr, args.lhs_len,
 	                                     args.rhs_ptr, args.lhs_len);
-	if unlikely(result == (dssize_t)-1)
+	if unlikely(result == (Dee_ssize_t)-1)
 		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:

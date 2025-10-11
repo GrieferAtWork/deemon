@@ -66,7 +66,7 @@ bool_str(DeeObject *__restrict self) {
 	return_reference(bool_string(self));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 bool_print(DeeObject *__restrict self,
            Dee_formatprinter_t printer, void *arg) {
 	DeeObject *str = bool_string(self);
@@ -174,7 +174,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_shl(DeeObject *self, DeeObject *other) {
-	dssize_t shift_value;
+	Dee_ssize_t shift_value;
 	if (DeeObject_AsSSize(other, &shift_value))
 		goto err;
 	if unlikely(shift_value < 0) {
@@ -188,7 +188,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_shr(DeeObject *self, DeeObject *other) {
-	dssize_t shift_value;
+	Dee_ssize_t shift_value;
 	if (DeeObject_AsSSize(other, &shift_value))
 		goto err;
 	if unlikely(shift_value < 0) {

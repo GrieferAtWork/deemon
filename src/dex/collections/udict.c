@@ -1111,7 +1111,7 @@ udict_sizeof(UDict *self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 udict_repr(UDict *__restrict self) {
 	struct unicode_printer p;
-	dssize_t error;
+	Dee_ssize_t error;
 	struct udict_item *iter, *end;
 	bool is_first;
 	struct udict_item *vector;
@@ -1161,10 +1161,10 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 udict_printrepr(UDict *__restrict self,
                 Dee_formatprinter_t printer, void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	struct udict_item *iter, *end;
 	struct udict_item *vector;
 	size_t mask;
@@ -1376,7 +1376,7 @@ INTERN DeeTypeObject UDict_Type = {
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_repr,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&udict_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&udict_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&udict_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&udict_visit,
 	/* .tp_gc            = */ &udict_gc,
@@ -1819,10 +1819,10 @@ urodict_visit(URoDict *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 urodict_printrepr(URoDict *__restrict self,
                   Dee_formatprinter_t printer, void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	bool is_first = true;
 	size_t i;
 	result = DeeFormat_PRINT(printer, arg, "collections.UniqueDict.Frozen({ ");
@@ -2061,7 +2061,7 @@ INTERN DeeTypeObject URoDict_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&urodict_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&urodict_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&urodict_printrepr
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&urodict_visit,
 	/* .tp_gc            = */ NULL,

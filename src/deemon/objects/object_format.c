@@ -42,7 +42,7 @@ DECL_BEGIN
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name);
 
-INTERN WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 object_format_generic(DeeObject *__restrict self,
                       Dee_formatprinter_t printer, void *arg,
                       /*utf-8*/ char const *__restrict format_str,
@@ -58,7 +58,7 @@ object_format_generic(DeeObject *__restrict self,
 	char const *filler_str;
 	size_t filler_len;
 	DREF DeeObject *self_str;
-	dssize_t result, temp;
+	Dee_ssize_t result, temp;
 	size_t self_len;
 	if (!format_len)
 		return DeeObject_Print(self, printer, arg);
@@ -246,7 +246,7 @@ err:
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 object_format_impl(DeeObject *__restrict self,
                    Dee_formatprinter_t printer, void *arg,
                    /*utf-8*/ char const *__restrict format_str,
@@ -281,7 +281,7 @@ check_attribute_error:
 		                                        (DeeObject *)&str___format__);
 		if (format_function != ITER_DONE) {
 			DREF DeeObject *callback_result;
-			dssize_t result;
+			Dee_ssize_t result;
 			if unlikely(!format_function)
 				goto check_attribute_error;
 call_format_function:
@@ -310,7 +310,7 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 DeeObject_PrintFormatString(DeeObject *__restrict self,
                             Dee_formatprinter_t printer, void *arg,
                             /*utf-8*/ char const *__restrict format_str,
@@ -318,7 +318,7 @@ DeeObject_PrintFormatString(DeeObject *__restrict self,
 	return object_format_impl(self, printer, arg, format_str, format_len, NULL);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 DeeObject_PrintFormat(DeeObject *__restrict self,
                       Dee_formatprinter_t printer, void *arg,
                       DeeObject *__restrict format_str) {

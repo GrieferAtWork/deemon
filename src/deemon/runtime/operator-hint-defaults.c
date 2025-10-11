@@ -347,7 +347,7 @@ err:
 
 #ifndef DEFINED_instance_call_with_file_printer
 #define DEFINED_instance_call_with_file_printer
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 instance_call_with_file_printer(DeeObject *self, DeeObject *func,
                                 Dee_formatprinter_t printer, void *arg) {
 	DREF DeeObject *status;
@@ -380,7 +380,7 @@ instance_call_with_file_printer(DeeObject *self, DeeObject *func,
 	if unlikely(!status)
 		goto err_printer_file;
 	Dee_Decref(status);
-	return (dssize_t)DeeFile_ClosePrinter(printer_file);
+	return (Dee_ssize_t)DeeFile_ClosePrinter(printer_file);
 err_printer_file:
 	Dee_Decref(printer_file);
 err:

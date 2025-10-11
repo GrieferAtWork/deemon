@@ -234,13 +234,13 @@ typedef union {
 /* read()                                                               */
 /************************************************************************/
 #ifndef posix_read_USE_STUB
-FORCELOCAL WUNUSED dssize_t DCALL
+FORCELOCAL WUNUSED Dee_ssize_t DCALL
 posix_read_f_impl(int fd, void *buf, size_t count) {
 #ifdef posix_read_USE_read
-	dssize_t result_value;
+	Dee_ssize_t result_value;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-	result_value = (dssize_t)read(fd, buf, count);
+	result_value = (Dee_ssize_t)read(fd, buf, count);
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value == -1) {
 		int error = DeeSystem_GetErrno();
@@ -279,7 +279,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const
 	DeeObject *fd;
 	DeeObject *buf_or_count = DeeInt_MinusOne;
 	size_t count = (size_t)-1;
-	dssize_t error;
+	Dee_ssize_t error;
 	if (DeeArg_Unpack(argc, argv, "o|o" UNPuSIZ ":read", &fd, &buf_or_count, &count))
 		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
@@ -299,7 +299,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const
 		return DeeInt_NewSize((size_t)error);
 	} else {
 		DREF DeeBytesObject *result_bytes;
-		if (DeeObject_AsSSize(buf_or_count, (dssize_t *)&count))
+		if (DeeObject_AsSSize(buf_or_count, (Dee_ssize_t *)&count))
 			goto err;
 		if (count <= POSIX_READ_BUFSIZE) {
 			/* Directly read into a Bytes object. */
@@ -473,17 +473,17 @@ err:
 /* pread()                                                              */
 /************************************************************************/
 #ifndef posix_pread_USE_STUB
-FORCELOCAL WUNUSED dssize_t DCALL
+FORCELOCAL WUNUSED Dee_ssize_t DCALL
 posix_pread_f_impl(int fd, void *buf, size_t count, PREAD_OFF_T offset) {
 
 #if defined(posix_pread_USE_pread64) || defined(posix_pread_USE_pread)
-	dssize_t result;
+	Dee_ssize_t result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_pread_USE_pread64
-	result = (dssize_t)pread64(fd, buf, count, offset);
+	result = (Dee_ssize_t)pread64(fd, buf, count, offset);
 #else /* posix_pread_USE_pread64 */
-	result = (dssize_t)pread(fd, buf, count, offset);
+	result = (Dee_ssize_t)pread(fd, buf, count, offset);
 #endif /* !posix_pread_USE_pread64 */
 	if (result == -1) {
 		int error = DeeSystem_GetErrno();
@@ -542,14 +542,14 @@ again_ReadFile:
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
-	ASSERT((dssize_t)bytes_written != -1);
-	return (dssize_t)bytes_written;
+	ASSERT((Dee_ssize_t)bytes_written != -1);
+	return (Dee_ssize_t)bytes_written;
 err:
 	return -1;
 #endif /* posix_pread_USE_ReadFile */
 
 #ifdef posix_pread_USE_lseek_AND_read
-	dssize_t result;
+	Dee_ssize_t result;
 	PREAD_OFF_T oldpos, newpos;
 EINTR_HANDLE(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -602,7 +602,7 @@ err:
 		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint\n" doc) },
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_pread_USE_STUB
-	dssize_t error;
+	Dee_ssize_t error;
 	if (argc == 3) {
 		/* Read into a new buffer. */
 		DREF DeeBytesObject *result_bytes;
@@ -737,14 +737,14 @@ FORCELOCAL WUNUSED NONNULL((2))DREF DeeObject *DCALL posix_write_f_impl(int fd, 
 {
 #ifdef posix_write_USE_write
 	DeeBuffer buffer;
-	dssize_t result_value;
+	Dee_ssize_t result_value;
 	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
 	if (buffer.bb_size > count)
 		buffer.bb_size = count;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-	result_value = (dssize_t)write(fd, buffer.bb_base, buffer.bb_size);
+	result_value = (Dee_ssize_t)write(fd, buffer.bb_base, buffer.bb_size);
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value < 0) {
 		int error = DeeSystem_GetErrno();
@@ -778,17 +778,17 @@ err:
 /* pwrite()                                                             */
 /************************************************************************/
 #ifndef posix_pwrite_USE_STUB
-FORCELOCAL WUNUSED dssize_t DCALL
+FORCELOCAL WUNUSED Dee_ssize_t DCALL
 posix_pwrite_f_impl(int fd, void const *buf, size_t count, PWRITE_OFF_T offset) {
 
 #if defined(posix_pwrite_USE_pwrite64) || defined(posix_pwrite_USE_pwrite)
-	dssize_t result;
+	Dee_ssize_t result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_pwrite_USE_pwrite64
-	result = (dssize_t)pwrite64(fd, buf, count, offset);
+	result = (Dee_ssize_t)pwrite64(fd, buf, count, offset);
 #else /* posix_pwrite_USE_pwrite64 */
-	result = (dssize_t)pwrite(fd, buf, count, offset);
+	result = (Dee_ssize_t)pwrite(fd, buf, count, offset);
 #endif /* !posix_pwrite_USE_pwrite64 */
 	if (result == -1) {
 		int error = DeeSystem_GetErrno();
@@ -847,15 +847,15 @@ again_WriteFile:
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
-	ASSERT((dssize_t)bytes_written != -1);
-	return (dssize_t)bytes_written;
+	ASSERT((Dee_ssize_t)bytes_written != -1);
+	return (Dee_ssize_t)bytes_written;
 err:
 	return -1;
 #endif /* posix_pwrite_USE_WriteFile */
 
 #ifdef posix_pwrite_USE_lseek_AND_write
 	int error;
-	dssize_t result;
+	Dee_ssize_t result;
 	PWRITE_OFF_T oldpos, newpos;
 EINTR_HANDLE(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -908,7 +908,7 @@ err:
 	      "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint\n" doc) },
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_pwrite_USE_STUB
-	dssize_t result;
+	Dee_ssize_t result;
 	DeeObject *fd, *buf;
 	DeeBuffer buffer;
 	int fd_fd;

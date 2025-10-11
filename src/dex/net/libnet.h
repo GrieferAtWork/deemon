@@ -733,22 +733,22 @@ DeeSocket_Accept(DeeSocketObject *__restrict self,
  * @return: * : The number of received bytes.
  * @return: -1: An error occurred.
  * @return: -2: The given `timeout_nanoseconds' has expired. */
-INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeSocket_Recv(DeeSocketObject *__restrict self,
                uint64_t timeout_nanoseconds,
                void *__restrict buf, size_t bufsize,
                int flags);
-INTDEF WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 3, 6)) Dee_ssize_t DCALL
 DeeSocket_RecvFrom(DeeSocketObject *__restrict self,
                    uint64_t timeout_nanoseconds,
                    void *__restrict buf, size_t bufsize,
                    int flags, SockAddr *__restrict source);
-INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeSocket_Send(DeeSocketObject *__restrict self,
                uint64_t timeout_nanoseconds,
                void const *__restrict buf, size_t bufsize,
                int flags);
-INTDEF WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 3, 6)) Dee_ssize_t DCALL
 DeeSocket_SendTo(DeeSocketObject *__restrict self,
                  uint64_t timeout_nanoseconds,
                  void const *__restrict buf, size_t bufsize,

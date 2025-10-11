@@ -391,7 +391,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 encode_c_escape(DeeObject *__restrict self) {
-	dssize_t error;
+	Dee_ssize_t error;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	if (DeeBytes_Check(self)) {
 		error = DeeFormat_QuoteBytes(&ascii_printer_print, &printer,

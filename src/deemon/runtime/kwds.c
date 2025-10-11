@@ -505,7 +505,7 @@ kwds_visit(Kwds *__restrict self, dvisit_t proc, void *arg) {
 		Dee_XVisit(self->kw_map[i].ke_name);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 kwds_printrepr(Kwds *__restrict self,
                Dee_formatprinter_t printer, void *arg) {
 #define DO(err, expr)                    \
@@ -514,7 +514,7 @@ kwds_printrepr(Kwds *__restrict self,
 			goto err;                    \
 		result += temp;                  \
 	}	__WHILE0
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	size_t i;
 	bool is_first = true;
 	result = DeeFormat_PRINT(printer, arg, "{ ");
@@ -787,7 +787,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&kwds_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwds_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwds_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwds_visit,
 	/* .tp_gc            = */ NULL,

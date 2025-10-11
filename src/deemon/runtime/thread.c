@@ -3623,11 +3623,11 @@ err:
 }
 #endif /* Dee_pid_t */
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 thread_print_impl(DeeThreadObject *__restrict self,
                   Dee_formatprinter_t printer, void *arg,
                   bool do_repr) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 #ifndef DeeThread_USE_SINGLE_THREADED
 	DREF DeeObject *thread_main;
 	DREF DeeTupleObject *thread_args;
@@ -3785,13 +3785,13 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 thread_print(DeeThreadObject *__restrict self,
              Dee_formatprinter_t printer, void *arg) {
 	return thread_print_impl(self, printer, arg, false);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 thread_printrepr(DeeThreadObject *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	return thread_print_impl(self, printer, arg, true);
@@ -4890,8 +4890,8 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&thread_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&thread_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&thread_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&thread_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&thread_visit,
 	/* .tp_gc            = */ thread_gc_PTR,

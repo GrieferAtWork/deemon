@@ -123,7 +123,7 @@ libdisasm_public_printcode_f(size_t argc,
                              DeeObject *kw) {
 	DeeObject *fp = NULL;
 	DeeCodeObject *code;
-	dssize_t error;
+	Dee_ssize_t error;
 	DeeObject *flags_ob = NULL;
 	unsigned int flags  = PCODE_FNORMAL /*|PCODE_FDDI*/;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(code), K(out), K(flags), KEND });

@@ -1034,11 +1034,11 @@ function_visit(Function *__restrict self,
 		result += temp;                  \
 	}	__WHILE0
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 function_print(Function *__restrict self,
                Dee_formatprinter_t printer, void *arg) {
 	char const *name = DeeCode_NAME(self->fo_code);
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	uint16_t i;
 	if (name != NULL)
 		return DeeFormat_Printf(printer, arg, "<Function %s>", name);
@@ -1062,7 +1062,7 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 function_printrepr(Function *__restrict self,
                    Dee_formatprinter_t printer, void *arg) {
 	char const *name = DeeCode_NAME(self->fo_code);
@@ -1255,8 +1255,8 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&function_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&function_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&function_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&function_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&function_visit,
 	/* .tp_gc            = */ &function_gc,
