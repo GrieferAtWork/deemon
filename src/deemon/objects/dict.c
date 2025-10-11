@@ -2909,6 +2909,7 @@ again_index_start:
 		}
 		item = &_DeeDict_GetRealVTab(self)[start];
 		item_key = item->di_key;
+		ASSERT(item_key);
 		Dee_Incref(item_key);
 		item_value = item->di_value;
 		Dee_Incref(item_value);
@@ -2994,10 +2995,11 @@ LOCAL NONNULL((1)) void DCALL
 dict_htab_reverse8(Dict *__restrict self, uint8_t vmin, uint8_t vmax) {
 	size_t i;
 	uint8_t *htab = (uint8_t *)self->d_htab;
+	uint8_t upper = vmin + vmax;
 	for (i = 0; i <= self->d_hmask; ++i) {
 		uint8_t idx = htab[i];
 		if (idx >= vmin && idx <= vmax)
-			htab[i] = vmin + vmax - idx;
+			htab[i] = upper - idx;
 	}
 }
 
@@ -3006,10 +3008,11 @@ LOCAL NONNULL((1)) void DCALL
 dict_htab_reverse16(Dict *__restrict self, uint16_t vmin, uint16_t vmax) {
 	size_t i;
 	uint16_t *htab = (uint16_t *)self->d_htab;
+	uint16_t upper = vmin + vmax;
 	for (i = 0; i <= self->d_hmask; ++i) {
 		uint16_t idx = htab[i];
 		if (idx >= vmin && idx <= vmax)
-			htab[i] = vmin + vmax - idx;
+			htab[i] = upper - idx;
 	}
 }
 #endif /* DEE_DICT_HIDXIO_COUNT >= 2 */
@@ -3019,10 +3022,11 @@ LOCAL NONNULL((1)) void DCALL
 dict_htab_reverse32(Dict *__restrict self, uint32_t vmin, uint32_t vmax) {
 	size_t i;
 	uint32_t *htab = (uint32_t *)self->d_htab;
+	uint32_t upper = vmin + vmax;
 	for (i = 0; i <= self->d_hmask; ++i) {
 		uint32_t idx = htab[i];
 		if (idx >= vmin && idx <= vmax)
-			htab[i] = vmin + vmax - idx;
+			htab[i] = upper - idx;
 	}
 }
 #endif /* DEE_DICT_HIDXIO_COUNT >= 3 */
@@ -3032,10 +3036,11 @@ LOCAL NONNULL((1)) void DCALL
 dict_htab_reverse64(Dict *__restrict self, uint64_t vmin, uint64_t vmax) {
 	size_t i;
 	uint64_t *htab = (uint64_t *)self->d_htab;
+	uint64_t upper = vmin + vmax;
 	for (i = 0; i <= self->d_hmask; ++i) {
 		uint64_t idx = htab[i];
 		if (idx >= vmin && idx <= vmax)
-			htab[i] = vmin + vmax - idx;
+			htab[i] = upper - idx;
 	}
 }
 #endif /* DEE_DICT_HIDXIO_COUNT >= 4 */

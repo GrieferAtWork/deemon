@@ -123,8 +123,8 @@ STATIC_ASSERT(DICT_VTAB_HTAB_RATIO_H > DICT_VTAB_HTAB_RATIO_V);
 /* Returns true if "d_htab" *should* be grown to its next larger multiple */
 #define _DeeDict_ShouldGrowHTab(self) \
 	_DeeDict_ShouldGrowHTab2((self)->d_vused, (self)->d_hmask)
-#define _DeeDict_ShouldGrowHTab2(vused, hmask)                                      \
-	((dict_suggesed_max_valloc_from_count((vused) + 1) * DICT_VTAB_HTAB_RATIO_V) >= \
+#define _DeeDict_ShouldGrowHTab2(vused, hmask)                                       \
+	((dict_suggested_max_valloc_from_count((vused) + 1) * DICT_VTAB_HTAB_RATIO_V) >= \
 	 ((hmask) * DICT_VTAB_HTAB_RATIO_H))
 
 /* Returns true if "d_htab" *MUST* be grown to its next larger
@@ -193,7 +193,7 @@ STATIC_ASSERT(DICT_VTAB_HTAB_RATIO_H > DICT_VTAB_HTAB_RATIO_V);
 
 
 LOCAL ATTR_CONST size_t DCALL
-dict_suggesed_max_valloc_from_count(size_t num_item) {
+dict_suggested_max_valloc_from_count(size_t num_item) {
 	shift_t items_nbits;
 	size_t result;
 	ASSERT(num_item > 0);
@@ -220,7 +220,7 @@ dict_valloc_from_hmask_and_count(size_t hmask, size_t num_item, bool allow_overa
 		return num_item;
 	if unlikely(!num_item)
 		return 0;
-	max_valloc = dict_suggesed_max_valloc_from_count(num_item);
+	max_valloc = dict_suggested_max_valloc_from_count(num_item);
 	if (result > max_valloc)
 		result = max_valloc;
 	ASSERT(result >= num_item);

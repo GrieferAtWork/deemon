@@ -1791,7 +1791,7 @@ write_regular_local:
 				int error;
 				DREF DeeObject *key, *value;
 				key = _DeeDict_GetVirtVTab(d)[i].di_key;
-				if (!key || key == &DeeDict_Dummy)
+				if (!key)
 					continue;
 				value = _DeeDict_GetVirtVTab(d)[i].di_value;
 				Dee_Incref(key);
