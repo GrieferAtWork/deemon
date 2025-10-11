@@ -851,10 +851,10 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor, /* Allow default-construction of sequence objects. */
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorCtor, /* Allow default-construction of sequence objects. */
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}
 		},

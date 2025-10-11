@@ -592,16 +592,16 @@ PRIVATE struct type_nii tpconst jseqiter_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&jseqiter_getseq,
-			/* .nii_getindex = */ (dfunptr_t)NULL,
-			/* .nii_setindex = */ (dfunptr_t)NULL,
-			/* .nii_rewind   = */ (dfunptr_t)&jseqiter_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)NULL,
-			/* .nii_advance  = */ (dfunptr_t)NULL,
-			/* .nii_prev     = */ (dfunptr_t)&jiter_nii_prev,
-			/* .nii_next     = */ (dfunptr_t)&jiter_nii_next,
-			/* .nii_hasprev  = */ (dfunptr_t)&jseqiter_nii_hasprev,
-			/* .nii_peek     = */ (dfunptr_t)&jseqiter_nii_peek
+			/* .nii_getseq   = */ (Dee_funptr_t)&jseqiter_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)NULL,
+			/* .nii_setindex = */ (Dee_funptr_t)NULL,
+			/* .nii_rewind   = */ (Dee_funptr_t)&jseqiter_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)NULL,
+			/* .nii_advance  = */ (Dee_funptr_t)NULL,
+			/* .nii_prev     = */ (Dee_funptr_t)&jiter_nii_prev,
+			/* .nii_next     = */ (Dee_funptr_t)&jiter_nii_next,
+			/* .nii_hasprev  = */ (Dee_funptr_t)&jseqiter_nii_hasprev,
+			/* .nii_peek     = */ (Dee_funptr_t)&jseqiter_nii_peek
 		}
 	}
 };
@@ -611,16 +611,16 @@ PRIVATE struct type_nii tpconst jmapiter_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&jmapiter_getseq,
-			/* .nii_getindex = */ (dfunptr_t)NULL,
-			/* .nii_setindex = */ (dfunptr_t)NULL,
-			/* .nii_rewind   = */ (dfunptr_t)&jmapiter_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)NULL,
-			/* .nii_advance  = */ (dfunptr_t)NULL,
-			/* .nii_prev     = */ (dfunptr_t)&jiter_nii_prev,
-			/* .nii_next     = */ (dfunptr_t)&jiter_nii_next,
-			/* .nii_hasprev  = */ (dfunptr_t)&jmapiter_nii_hasprev,
-			/* .nii_peek     = */ (dfunptr_t)&jmapiter_nii_peek
+			/* .nii_getseq   = */ (Dee_funptr_t)&jmapiter_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)NULL,
+			/* .nii_setindex = */ (Dee_funptr_t)NULL,
+			/* .nii_rewind   = */ (Dee_funptr_t)&jmapiter_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)NULL,
+			/* .nii_advance  = */ (Dee_funptr_t)NULL,
+			/* .nii_prev     = */ (Dee_funptr_t)&jiter_nii_prev,
+			/* .nii_next     = */ (Dee_funptr_t)&jiter_nii_next,
+			/* .nii_hasprev  = */ (Dee_funptr_t)&jmapiter_nii_hasprev,
+			/* .nii_peek     = */ (Dee_funptr_t)&jmapiter_nii_peek
 		}
 	}
 };
@@ -1308,10 +1308,10 @@ INTERN DeeTypeObject DeeJsonSequenceIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&jseqiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&jseqiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&jseqiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&jseqiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&jseqiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&jseqiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&jseqiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&jseqiter_init,
 				TYPE_FIXED_ALLOCATOR(DeeJsonIteratorObject)
 			}
 		},
@@ -1354,10 +1354,10 @@ INTERN DeeTypeObject DeeJsonMappingIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&jmapiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&jmapiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&jmapiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&jmapiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&jmapiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&jmapiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&jmapiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&jmapiter_init,
 				TYPE_FIXED_ALLOCATOR(DeeJsonIteratorObject)
 			}
 		},
@@ -1404,10 +1404,10 @@ INTERN DeeTypeObject DeeJsonSequence_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&jseq_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&jseq_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&jseq_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&jseq_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&jseq_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&jseq_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&jseq_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&jseq_init,
 				TYPE_FIXED_ALLOCATOR(DeeJsonSequenceObject)
 			}
 		},
@@ -1451,10 +1451,10 @@ INTERN DeeTypeObject DeeJsonMapping_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&jmap_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&jmap_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&jmap_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&jmap_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&jmap_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&jmap_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&jmap_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&jmap_init,
 				TYPE_FIXED_ALLOCATOR(DeeJsonMappingObject)
 			}
 		},

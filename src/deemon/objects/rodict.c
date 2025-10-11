@@ -771,10 +771,10 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rditer_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&rditer_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&rditer_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&rditer_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&rditer_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&rditer_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&rditer_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&rditer_init,
 				TYPE_FIXED_ALLOCATOR(RoDictIterator)
 			}
 		},
@@ -2229,11 +2229,11 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rodict_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (dfunptr_t)&rodict_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&rodict_init,
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)&rodict_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&rodict_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&rodict_init,
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rodict_fini,

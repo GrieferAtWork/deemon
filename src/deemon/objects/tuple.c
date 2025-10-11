@@ -988,16 +988,16 @@ PRIVATE struct type_nii tpconst tuple_iterator_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&tuple_iterator_nii_getseq,
-			/* .nii_getindex = */ (dfunptr_t)&tuple_iterator_nii_getindex,
-			/* .nii_setindex = */ (dfunptr_t)&tuple_iterator_nii_setindex,
-			/* .nii_rewind   = */ (dfunptr_t)&tuple_iterator_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)&tuple_iterator_nii_revert,
-			/* .nii_advance  = */ (dfunptr_t)&tuple_iterator_nii_advance,
-			/* .nii_prev     = */ (dfunptr_t)&tuple_iterator_nii_prev,
-			/* .nii_next     = */ (dfunptr_t)&tuple_iterator_nii_next,
-			/* .nii_hasprev  = */ (dfunptr_t)&tuple_iterator_nii_hasprev,
-			/* .nii_peek     = */ (dfunptr_t)&tuple_iterator_nii_peek
+			/* .nii_getseq   = */ (Dee_funptr_t)&tuple_iterator_nii_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)&tuple_iterator_nii_getindex,
+			/* .nii_setindex = */ (Dee_funptr_t)&tuple_iterator_nii_setindex,
+			/* .nii_rewind   = */ (Dee_funptr_t)&tuple_iterator_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)&tuple_iterator_nii_revert,
+			/* .nii_advance  = */ (Dee_funptr_t)&tuple_iterator_nii_advance,
+			/* .nii_prev     = */ (Dee_funptr_t)&tuple_iterator_nii_prev,
+			/* .nii_next     = */ (Dee_funptr_t)&tuple_iterator_nii_next,
+			/* .nii_hasprev  = */ (Dee_funptr_t)&tuple_iterator_nii_hasprev,
+			/* .nii_peek     = */ (Dee_funptr_t)&tuple_iterator_nii_peek
 		}
 	}
 };
@@ -1032,10 +1032,10 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&tuple_iterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&tuple_iterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&tuple_iterator_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&tuple_iterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&tuple_iterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&tuple_iterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&tuple_iterator_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&tuple_iterator_init,
 				TYPE_FIXED_ALLOCATOR(TupleIterator)
 			}
 		},
@@ -2256,11 +2256,11 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&tuple_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (dfunptr_t)&tuple_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&tuple_init,
-				/* .tp_free      = */ (dfunptr_t)tuple_tp_free_PTR
+				/* .tp_ctor      = */ (Dee_funptr_t)&tuple_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&tuple_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&tuple_init,
+				/* .tp_free      = */ (Dee_funptr_t)tuple_tp_free_PTR
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tuple_fini,
@@ -2667,11 +2667,11 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&nullable_tuple_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (dfunptr_t)&nullable_tuple_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&nullable_tuple_init,
-				/* .tp_free      = */ (dfunptr_t)tuple_tp_free_PTR
+				/* .tp_ctor      = */ (Dee_funptr_t)&nullable_tuple_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&nullable_tuple_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&nullable_tuple_init,
+				/* .tp_free      = */ (Dee_funptr_t)tuple_tp_free_PTR
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&nullable_tuple_fini,

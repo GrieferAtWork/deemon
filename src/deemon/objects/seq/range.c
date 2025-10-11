@@ -440,10 +440,10 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&ri_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&ri_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&ri_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&ri_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&ri_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&ri_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&ri_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&ri_init,
 				TYPE_FIXED_ALLOCATOR_GC(RangeIterator)
 			}
 		},
@@ -1107,10 +1107,10 @@ INTERN DeeTypeObject SeqRange_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&range_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&range_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&range_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&range_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&range_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&range_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&range_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&range_init,
 				TYPE_FIXED_ALLOCATOR(Range)
 			}
 		},
@@ -1268,10 +1268,10 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&iri_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&iri_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&iri_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&iri_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&iri_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&iri_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&iri_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&iri_init,
 				TYPE_FIXED_ALLOCATOR(IntRangeIterator)
 			}
 		},
@@ -1615,10 +1615,10 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&intrange_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&intrange_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&intrange_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&intrange_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&intrange_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&intrange_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&intrange_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&intrange_init,
 				TYPE_FIXED_ALLOCATOR(IntRange)
 			}
 		},

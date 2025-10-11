@@ -409,10 +409,10 @@ INTERN DeeTypeObject MapUnion_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&mu_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&mu_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&mu_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&mu_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&mu_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&mu_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&mu_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&mu_init,
 				TYPE_FIXED_ALLOCATOR(MapUnion)
 			}
 		},
@@ -882,10 +882,10 @@ INTERN DeeTypeObject MapUnionIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&muiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&muiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&muiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&muiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&muiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&muiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&muiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&muiter_init,
 				TYPE_FIXED_ALLOCATOR_GC(MapUnionIterator)
 			}
 		},
@@ -1131,10 +1131,10 @@ INTERN DeeTypeObject MapIntersection_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&mi_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&mi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&mi_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&mi_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&mi_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&mi_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&mi_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&mi_init,
 				TYPE_FIXED_ALLOCATOR(MapIntersection)
 			}
 		},
@@ -1325,10 +1325,10 @@ INTERN DeeTypeObject MapIntersectionIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&miiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&miiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&miiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&miiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&miiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&miiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&miiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&miiter_init,
 				TYPE_FIXED_ALLOCATOR(MapIntersectionIterator)
 			}
 		},
@@ -1564,10 +1564,10 @@ INTERN DeeTypeObject MapDifference_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&md_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&md_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&md_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&md_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&md_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&md_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&md_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&md_init,
 				TYPE_FIXED_ALLOCATOR(MapDifference)
 			}
 		},
@@ -1695,10 +1695,10 @@ INTERN DeeTypeObject MapDifferenceIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&mditer_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&mditer_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&mditer_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&mditer_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&mditer_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&mditer_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&mditer_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&mditer_init,
 				TYPE_FIXED_ALLOCATOR(MapDifferenceIterator)
 			}
 		},
@@ -2264,10 +2264,10 @@ INTERN DeeTypeObject MapSymmetricDifference_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&msd_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&msd_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&msd_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&msd_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&msd_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&msd_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&msd_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&msd_init,
 				TYPE_FIXED_ALLOCATOR(MapSymmetricDifference)
 			}
 		},
@@ -2725,10 +2725,10 @@ INTERN DeeTypeObject MapSymmetricDifferenceIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&msditer_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&msditer_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&msditer_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&msditer_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&msditer_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&msditer_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&msditer_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&msditer_init,
 				TYPE_FIXED_ALLOCATOR_GC(MapSymmetricDifferenceIterator)
 			}
 		},

@@ -999,48 +999,48 @@ my_custom_getitem(DeeObject *self, DeeObject *index) {
 
 #define INIT_CUSTOM_SEQ_TYPE(tp_seq) \
 	INIT_CUSTOM_SEQ_TYPE_EX(&DeeSeq_Type, tp_seq, NULL, NULL, NULL)
-#define INIT_CUSTOM_SEQ_TYPE_EX(tp_base, tp_seq, tp_methods, \
-                                tp_getsets, tp_method_hints) \
-	{                                                        \
-		OBJECT_HEAD_INIT(&DeeType_Type),                     \
-		/* .tp_name     = */ NULL,                           \
-		/* .tp_doc      = */ NULL,                           \
-		/* .tp_flags    = */ TP_FNORMAL | TP_FINHERITCTOR,   \
-		/* .tp_weakrefs = */ 0,                              \
-		/* .tp_features = */ TF_NONE,                        \
-		/* .tp_base     = */ tp_base,                        \
-		/* .tp_init = */ {                                   \
-			{                                                \
-				/* .tp_alloc = */ {                          \
-					/* .tp_ctor      = */ (dfunptr_t)NULL,   \
-					/* .tp_copy_ctor = */ (dfunptr_t)NULL,   \
-					/* .tp_deep_ctor = */ (dfunptr_t)NULL,   \
-					/* .tp_any_ctor  = */ (dfunptr_t)NULL,   \
-					TYPE_AUTO_ALLOCATOR(DeeObject)           \
-				}                                            \
-			},                                               \
-			/* .tp_dtor        = */ NULL,                    \
-			/* .tp_assign      = */ NULL,                    \
-			/* .tp_move_assign = */ NULL                     \
-		},                                                   \
-		/* .tp_cast = */ { NULL },                           \
-		/* .tp_visit         = */ NULL,                      \
-		/* .tp_gc            = */ NULL,                      \
-		/* .tp_math          = */ NULL,                      \
-		/* .tp_cmp           = */ NULL,                      \
-		/* .tp_seq           = */ tp_seq,                    \
-		/* .tp_iter_next     = */ NULL,                      \
-		/* .tp_iterator      = */ NULL,                      \
-		/* .tp_attr          = */ NULL,                      \
-		/* .tp_with          = */ NULL,                      \
-		/* .tp_buffer        = */ NULL,                      \
-		/* .tp_methods       = */ tp_methods,                \
-		/* .tp_getsets       = */ tp_getsets,                \
-		/* .tp_members       = */ NULL,                      \
-		/* .tp_class_methods = */ NULL,                      \
-		/* .tp_class_getsets = */ NULL,                      \
-		/* .tp_class_members = */ NULL,                      \
-		/* .tp_method_hints  = */ tp_method_hints            \
+#define INIT_CUSTOM_SEQ_TYPE_EX(tp_base, tp_seq, tp_methods,  \
+                                tp_getsets, tp_method_hints)  \
+	{                                                         \
+		OBJECT_HEAD_INIT(&DeeType_Type),                      \
+		/* .tp_name     = */ NULL,                            \
+		/* .tp_doc      = */ NULL,                            \
+		/* .tp_flags    = */ TP_FNORMAL | TP_FINHERITCTOR,    \
+		/* .tp_weakrefs = */ 0,                               \
+		/* .tp_features = */ TF_NONE,                         \
+		/* .tp_base     = */ tp_base,                         \
+		/* .tp_init = */ {                                    \
+			{                                                 \
+				/* .tp_alloc = */ {                           \
+					/* .tp_ctor      = */ (Dee_funptr_t)NULL, \
+					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL, \
+					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, \
+					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, \
+					TYPE_AUTO_ALLOCATOR(DeeObject)            \
+				}                                             \
+			},                                                \
+			/* .tp_dtor        = */ NULL,                     \
+			/* .tp_assign      = */ NULL,                     \
+			/* .tp_move_assign = */ NULL                      \
+		},                                                    \
+		/* .tp_cast = */ { NULL },                            \
+		/* .tp_visit         = */ NULL,                       \
+		/* .tp_gc            = */ NULL,                       \
+		/* .tp_math          = */ NULL,                       \
+		/* .tp_cmp           = */ NULL,                       \
+		/* .tp_seq           = */ tp_seq,                     \
+		/* .tp_iter_next     = */ NULL,                       \
+		/* .tp_iterator      = */ NULL,                       \
+		/* .tp_attr          = */ NULL,                       \
+		/* .tp_with          = */ NULL,                       \
+		/* .tp_buffer        = */ NULL,                       \
+		/* .tp_methods       = */ tp_methods,                 \
+		/* .tp_getsets       = */ tp_getsets,                 \
+		/* .tp_members       = */ NULL,                       \
+		/* .tp_class_methods = */ NULL,                       \
+		/* .tp_class_getsets = */ NULL,                       \
+		/* .tp_class_members = */ NULL,                       \
+		/* .tp_method_hints  = */ tp_method_hints             \
 	}
 
 PRIVATE struct type_seq type_seq_with_size_and_getitem_index = {
@@ -1713,10 +1713,10 @@ PRIVATE DeeTypeObject type_with_seq_enumerate = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_AUTO_ALLOCATOR(DeeObject)
 			}
 		},
@@ -1816,10 +1816,10 @@ PRIVATE DeeTypeObject type_with_map_enumerate = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_AUTO_ALLOCATOR(DeeObject)
 			}
 		},

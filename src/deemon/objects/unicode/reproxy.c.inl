@@ -423,10 +423,10 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&refaiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&refaiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&refaiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&refaiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&refaiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&refaiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&refaiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&refaiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -475,10 +475,10 @@ INTERN DeeTypeObject ReBytesFindAllIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rebfaiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&rebfaiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&rebfaiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&rebfaiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&rebfaiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&rebfaiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&rebfaiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&rebfaiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -664,10 +664,10 @@ INTERN DeeTypeObject RegFindAllIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&regfaiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&regfaiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&regfaiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&regfaiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&regfaiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&regfaiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&regfaiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&regfaiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -716,10 +716,10 @@ INTERN DeeTypeObject RegBytesFindAllIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&regbfaiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&regbfaiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&regbfaiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&regbfaiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&regbfaiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&regbfaiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&regbfaiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&regbfaiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -907,10 +907,10 @@ INTERN DeeTypeObject RegLocateAllIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&reglaiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&reglaiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&reglaiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&reglaiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&reglaiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&reglaiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&reglaiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&reglaiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -959,10 +959,10 @@ INTERN DeeTypeObject RegBytesLocateAllIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&regblaiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&regblaiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&regblaiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&regblaiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&regblaiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&regblaiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&regblaiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&regblaiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -1116,10 +1116,10 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&relaiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&relaiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&relaiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&relaiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&relaiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&relaiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&relaiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&relaiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -1168,10 +1168,10 @@ INTERN DeeTypeObject ReBytesLocateAllIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&reblaiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&reblaiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&reblaiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&reblaiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&reblaiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&reblaiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&reblaiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&reblaiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -1351,10 +1351,10 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&respiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&respiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&respiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&respiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&respiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&respiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&respiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&respiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -1403,10 +1403,10 @@ INTERN DeeTypeObject ReBytesSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rebspiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&rebspiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&rebspiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&rebspiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&rebspiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&rebspiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&rebspiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&rebspiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -1666,10 +1666,10 @@ INTERN DeeTypeObject ReFindAll_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&refa_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&refa_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -1716,10 +1716,10 @@ INTERN DeeTypeObject ReBytesFindAll_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rebfa_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&rebfa_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -1911,10 +1911,10 @@ INTERN DeeTypeObject RegFindAll_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&regfa_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&regfa_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -1961,10 +1961,10 @@ INTERN DeeTypeObject RegBytesFindAll_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&regbfa_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&regbfa_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -2159,10 +2159,10 @@ INTERN DeeTypeObject RegLocateAll_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&regla_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&regla_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -2209,10 +2209,10 @@ INTERN DeeTypeObject RegBytesLocateAll_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&regbla_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&regbla_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -2405,10 +2405,10 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rela_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&rela_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -2455,10 +2455,10 @@ INTERN DeeTypeObject ReBytesLocateAll_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rebla_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&rebla_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -2673,10 +2673,10 @@ INTERN DeeTypeObject ReSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&resp_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&resp_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -2723,10 +2723,10 @@ INTERN DeeTypeObject ReBytesSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rebsp_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&rebsp_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},

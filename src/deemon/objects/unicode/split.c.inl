@@ -333,10 +333,10 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&splititer_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&splititer_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&splititer_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&splititer_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&splititer_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&splititer_init,
 				TYPE_FIXED_ALLOCATOR(StringSplitIterator)
 			}
 		},
@@ -385,10 +385,10 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&splititer_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&splititer_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&splititer_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&splititer_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&splititer_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&splititer_init,
 				TYPE_FIXED_ALLOCATOR(StringSplitIterator)
 			}
 		},
@@ -643,10 +643,10 @@ INTERN DeeTypeObject StringSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&split_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&split_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&split_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&split_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&split_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&split_init,
 				TYPE_FIXED_ALLOCATOR(StringSplit)
 			}
 		},
@@ -693,10 +693,10 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&split_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&split_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&split_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&split_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&split_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&split_init,
 				TYPE_FIXED_ALLOCATOR(StringSplit)
 			}
 		},
@@ -973,10 +973,10 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&lineiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&lineiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&lineiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&lineiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&lineiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&lineiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&lineiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&lineiter_init,
 				TYPE_FIXED_ALLOCATOR(LineSplitIterator)
 			}
 		},
@@ -1135,10 +1135,10 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&linesplit_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&linesplit_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&linesplit_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&linesplit_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&linesplit_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&linesplit_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&linesplit_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&linesplit_init,
 				TYPE_FIXED_ALLOCATOR(LineSplit)
 			}
 		},

@@ -429,10 +429,10 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&bool_return_false,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (dfunptr_t)&bool_new
+				/* .tp_ctor      = */ (Dee_funptr_t)&bool_return_false,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&bool_new
 			}
 		},
 		/* .tp_dtor        = */ NULL,

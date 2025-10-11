@@ -184,10 +184,10 @@ INTERN DeeTypeObject BytesIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&bytesiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&bytesiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&bytesiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&bytesiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&bytesiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&bytesiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&bytesiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&bytesiter_init,
 				TYPE_FIXED_ALLOCATOR(BytesIterator)
 			}
 		},
@@ -2060,11 +2060,11 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&bytes_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&bytes_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&bytes_init,
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)&bytes_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&bytes_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&bytes_init,
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bytes_fini,

@@ -1377,16 +1377,16 @@ PRIVATE struct type_nii tpconst hashsetiterator_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&hseti_nii_getseq,
-			/* .nii_getindex = */ (dfunptr_t)&hseti_nii_getindex,
-			/* .nii_setindex = */ (dfunptr_t)&hseti_nii_setindex,
-			/* .nii_rewind   = */ (dfunptr_t)&hseti_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)&hseti_nii_revert,
-			/* .nii_advance  = */ (dfunptr_t)&hseti_nii_advance,
-			/* .nii_prev     = */ (dfunptr_t)&hseti_nii_prev,
-			/* .nii_next     = */ (dfunptr_t)&hseti_nii_next,
-			/* .nii_hasprev  = */ (dfunptr_t)&hseti_nii_hasprev,
-			/* .nii_peek     = */ (dfunptr_t)&hseti_nii_peek
+			/* .nii_getseq   = */ (Dee_funptr_t)&hseti_nii_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)&hseti_nii_getindex,
+			/* .nii_setindex = */ (Dee_funptr_t)&hseti_nii_setindex,
+			/* .nii_rewind   = */ (Dee_funptr_t)&hseti_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)&hseti_nii_revert,
+			/* .nii_advance  = */ (Dee_funptr_t)&hseti_nii_advance,
+			/* .nii_prev     = */ (Dee_funptr_t)&hseti_nii_prev,
+			/* .nii_next     = */ (Dee_funptr_t)&hseti_nii_next,
+			/* .nii_hasprev  = */ (Dee_funptr_t)&hseti_nii_hasprev,
+			/* .nii_peek     = */ (Dee_funptr_t)&hseti_nii_peek
 		}
 	}
 };
@@ -1417,10 +1417,10 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&hashsetiterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&hashsetiterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (dfunptr_t)&hashsetiterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&hashsetiterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&hashsetiterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&hashsetiterator_init,
 				TYPE_FIXED_ALLOCATOR(HashSetIterator)
 			}
 		},
@@ -1889,10 +1889,10 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&hashset_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&hashset_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&hashset_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&hashset_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&hashset_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&hashset_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&hashset_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&hashset_init,
 				TYPE_FIXED_ALLOCATOR_GC(HashSet)
 			}
 		},

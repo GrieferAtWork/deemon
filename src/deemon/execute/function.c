@@ -1240,11 +1240,11 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL, /* TODO */
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (dfunptr_t)&function_init,
-				/* .tp_free      = */ (dfunptr_t)NULL, /* XXX: Use the tuple-allocator? */
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&function_init,
+				/* .tp_free      = */ (Dee_funptr_t)NULL, /* XXX: Use the tuple-allocator? */
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&function_fini,
@@ -1779,11 +1779,11 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&yf_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&yf_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&yf_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
-				/* .tp_free      = */ (dfunptr_t)NULL, /* XXX: Use the tuple-allocator? */
+				/* .tp_ctor      = */ (Dee_funptr_t)&yf_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&yf_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&yf_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_free      = */ (Dee_funptr_t)NULL, /* XXX: Use the tuple-allocator? */
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yf_fini,
@@ -3040,10 +3040,10 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&yfi_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&yfi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&yfi_new,
+				/* .tp_ctor      = */ (Dee_funptr_t)&yfi_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&yfi_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&yfi_new,
 				TYPE_FIXED_ALLOCATOR_GC(YFIterator)
 			}
 		},

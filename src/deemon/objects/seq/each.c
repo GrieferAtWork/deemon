@@ -1322,10 +1322,10 @@ INTERN DeeTypeObject SeqEach_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&se_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&se_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&se_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&se_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&se_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&se_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&se_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&se_init,
 				TYPE_FIXED_ALLOCATOR(SeqEachBase)
 			}
 		},
@@ -2073,10 +2073,10 @@ PUBLIC DeeTypeObject DeeSeqSome_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&ss_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&ss_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&ss_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&ss_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&ss_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&ss_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&ss_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&ss_init,
 				TYPE_FIXED_ALLOCATOR(SeqEachBase)
 			}
 		},
@@ -3403,10 +3403,10 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&seo_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&seo_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&seo_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&seo_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&seo_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&seo_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&seo_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&seo_init,
 				TYPE_SIZED_ALLOCATOR_R(offsetof(SeqEachOperator, so_opargv), sizeof(SeqEachOperator))
 			}
 		},
@@ -3879,10 +3879,10 @@ INTERN DeeTypeObject SeqSomeOperator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&seo_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&seo_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&seo_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&seo_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&seo_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&seo_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&seo_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&seo_init,
 				TYPE_SIZED_ALLOCATOR_R(offsetof(SeqEachOperator, so_opargv), sizeof(SeqEachOperator))
 			}
 		},
@@ -4021,16 +4021,16 @@ PRIVATE struct type_nii tpconst sewi_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&sewi_nii_getseq,
-			/* .nii_getindex = */ (dfunptr_t)&sewi_nii_getindex,
-			/* .nii_setindex = */ (dfunptr_t)&sewi_nii_setindex,
-			/* .nii_rewind   = */ (dfunptr_t)&sewi_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)&sewi_nii_revert,
-			/* .nii_advance  = */ (dfunptr_t)&sewi_nii_advance,
-			/* .nii_prev     = */ (dfunptr_t)&sewi_nii_prev,
-			/* .nii_next     = */ (dfunptr_t)&sewi_nii_next,
-			/* .nii_hasprev  = */ (dfunptr_t)&sewi_nii_hasprev,
-			/* .nii_peek     = */ (dfunptr_t)&sewi_nii_peek
+			/* .nii_getseq   = */ (Dee_funptr_t)&sewi_nii_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)&sewi_nii_getindex,
+			/* .nii_setindex = */ (Dee_funptr_t)&sewi_nii_setindex,
+			/* .nii_rewind   = */ (Dee_funptr_t)&sewi_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)&sewi_nii_revert,
+			/* .nii_advance  = */ (Dee_funptr_t)&sewi_nii_advance,
+			/* .nii_prev     = */ (Dee_funptr_t)&sewi_nii_prev,
+			/* .nii_next     = */ (Dee_funptr_t)&sewi_nii_next,
+			/* .nii_hasprev  = */ (Dee_funptr_t)&sewi_nii_hasprev,
+			/* .nii_peek     = */ (Dee_funptr_t)&sewi_nii_peek
 		}
 	}
 };
@@ -4075,10 +4075,10 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&seoi_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&sewi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&sewi_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&seoi_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&seoi_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&sewi_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&sewi_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&seoi_init,
 				TYPE_FIXED_ALLOCATOR(SeqEachIterator)
 			}
 		},

@@ -2815,12 +2815,12 @@ INTERN DeeTypeObject DeeSocket_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor   = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor   = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
+				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeSocketObject),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&socket_ctor,
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&socket_ctor,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&socket_fini,

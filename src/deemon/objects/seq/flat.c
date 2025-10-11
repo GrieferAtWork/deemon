@@ -910,10 +910,10 @@ INTERN DeeTypeObject SeqFlat_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&sf_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&sf_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&sf_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&sf_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&sf_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&sf_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&sf_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&sf_init,
 				TYPE_FIXED_ALLOCATOR(SeqFlat)
 			}
 		},
@@ -1303,10 +1303,10 @@ INTERN DeeTypeObject SeqFlatIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&sfi_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&sfi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&sfi_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&sfi_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&sfi_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&sfi_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&sfi_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&sfi_init,
 				TYPE_FIXED_ALLOCATOR_GC(SeqFlatIterator)
 			}
 		},

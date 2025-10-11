@@ -354,10 +354,10 @@ INTERN DeeTypeObject SetInversion_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&invset_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&invset_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&invset_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&invset_init,
 				TYPE_FIXED_ALLOCATOR(SetInversion)
 			}
 		},
@@ -752,10 +752,10 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&suiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&suiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&suiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&suiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&suiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&suiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&suiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&suiter_init,
 				TYPE_FIXED_ALLOCATOR_GC(SetUnionIterator)
 			}
 		},
@@ -974,10 +974,10 @@ INTERN DeeTypeObject SetUnion_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&su_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&su_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&su_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&su_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&su_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&su_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&su_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&su_init,
 				TYPE_FIXED_ALLOCATOR(SetUnion)
 			}
 		},
@@ -1135,10 +1135,10 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&ssditer_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&ssditer_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&ssditer_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&ssditer_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&ssditer_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&ssditer_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&ssditer_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&ssditer_init,
 				TYPE_FIXED_ALLOCATOR_GC(SetSymmetricDifferenceIterator)
 			}
 		},
@@ -1319,10 +1319,10 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&ssd_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&ssd_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&ssd_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&ssd_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&ssd_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&ssd_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&ssd_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&ssd_init,
 				TYPE_FIXED_ALLOCATOR(SetSymmetricDifference)
 			}
 		},
@@ -1488,10 +1488,10 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&siiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&siiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&siiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&siiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&siiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&siiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&siiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&siiter_init,
 				TYPE_FIXED_ALLOCATOR(SetIntersectionIterator)
 			}
 		},
@@ -1661,10 +1661,10 @@ INTERN DeeTypeObject SetIntersection_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&si_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&si_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&si_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&si_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&si_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&si_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&si_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&si_init,
 				TYPE_FIXED_ALLOCATOR(SetIntersection)
 			}
 		},
@@ -1759,10 +1759,10 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&sditer_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&sditer_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&sditer_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&sditer_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&sditer_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&sditer_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&sditer_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&sditer_init,
 				TYPE_FIXED_ALLOCATOR(SetDifferenceIterator)
 			}
 		},
@@ -1929,10 +1929,10 @@ INTERN DeeTypeObject SetDifference_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&sd_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&sd_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&sd_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&sd_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&sd_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&sd_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&sd_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&sd_init,
 				TYPE_FIXED_ALLOCATOR(SetDifference)
 			}
 		},

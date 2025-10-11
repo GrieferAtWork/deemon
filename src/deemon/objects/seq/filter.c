@@ -192,10 +192,10 @@ INTERN DeeTypeObject SeqFilterIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&filteriterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&filteriterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&filteriterator_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&filteriterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&filteriterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&filteriterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&filteriterator_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&filteriterator_init,
 				TYPE_FIXED_ALLOCATOR(FilterIterator)
 			}
 		},
@@ -921,10 +921,10 @@ INTERN DeeTypeObject SeqFilter_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&filter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&filter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&filter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&filter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&filter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&filter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&filter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&filter_init,
 				TYPE_FIXED_ALLOCATOR(Filter)
 			}
 		},
@@ -972,10 +972,10 @@ INTERN DeeTypeObject SeqFilterAsUnbound_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&filter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&filter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&filter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&filter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&filter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&filter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&filter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&filter_init,
 				TYPE_FIXED_ALLOCATOR(Filter)
 			}
 		},

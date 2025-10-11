@@ -434,10 +434,10 @@ INTERN DeeTypeObject SeqCombinations_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&sc_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&sc_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&sc_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&sc_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&sc_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&sc_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&sc_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&sc_init,
 				TYPE_FIXED_ALLOCATOR(SeqCombinations)
 			}
 		},
@@ -487,10 +487,10 @@ INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&src_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&src_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&src_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&src_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&src_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&src_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&src_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&src_init,
 				TYPE_FIXED_ALLOCATOR(SeqCombinations)
 			}
 		},
@@ -538,10 +538,10 @@ INTERN DeeTypeObject SeqPermutations_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&sp_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&sp_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&sp_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&sp_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&sp_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&sp_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&sp_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&sp_init,
 				TYPE_FIXED_ALLOCATOR(SeqCombinations)
 			}
 		},
@@ -1016,10 +1016,10 @@ INTERN DeeTypeObject SeqCombinationsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&sci_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&sci_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&sci_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&sci_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&sci_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&sci_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&sci_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&sci_init,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sci_fini,
@@ -1067,10 +1067,10 @@ INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&srci_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&srci_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&srci_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&srci_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&srci_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&srci_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&srci_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&srci_init,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&srci_fini,
@@ -1118,10 +1118,10 @@ INTERN DeeTypeObject SeqPermutationsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&spi_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&spi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&spi_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&spi_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&spi_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&spi_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&spi_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&spi_init,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&spi_fini,
@@ -1473,10 +1473,10 @@ INTERN DeeTypeObject SeqCombinationsView_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&scv_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&scv_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&scv_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&scv_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&scv_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&scv_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&scv_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&scv_init,
 				TYPE_FIXED_ALLOCATOR(SeqCombinationsView)
 			}
 		},

@@ -227,10 +227,10 @@ INTERN DeeTypeObject DeeBlackListKwdsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&blvi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&blvi_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&blvi_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&blvi_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DeeBlackListKwdsIterator)
 			}
 		},
@@ -977,13 +977,13 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor        = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor   = */ (dfunptr_t)&blv_copy,
-				/* .tp_deep_ctor   = */ (dfunptr_t)&blv_deep,
-				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
-				/* .tp_free        = */ (dfunptr_t)NULL,
-				/* .tp_alloc       = */ { (dfunptr_t)NULL },
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&blv_init_kw,
+				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor   = */ (Dee_funptr_t)&blv_copy,
+				/* .tp_deep_ctor   = */ (Dee_funptr_t)&blv_deep,
+				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
+				/* .tp_free        = */ (Dee_funptr_t)NULL,
+				/* .tp_alloc       = */ { (Dee_funptr_t)NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&blv_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blv_fini,
@@ -1213,10 +1213,10 @@ INTERN DeeTypeObject DeeBlackListKwIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&blmi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&blmi_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DeeBlackListKwIterator)
 			}
 		},
@@ -1898,13 +1898,13 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor        = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor   = */ (dfunptr_t)&blkw_copy,
-				/* .tp_deep_ctor   = */ (dfunptr_t)&blkw_deep,
-				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
-				/* .tp_free        = */ (dfunptr_t)NULL,
-				/* .tp_alloc       = */ { (dfunptr_t)NULL },
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&blkw_init_kw,
+				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor   = */ (Dee_funptr_t)&blkw_copy,
+				/* .tp_deep_ctor   = */ (Dee_funptr_t)&blkw_deep,
+				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
+				/* .tp_free        = */ (Dee_funptr_t)NULL,
+				/* .tp_alloc       = */ { (Dee_funptr_t)NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&blkw_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blkw_fini,

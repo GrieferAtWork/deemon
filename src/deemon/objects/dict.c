@@ -342,10 +342,10 @@ INTERN DeeTypeObject DictIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&diter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&diter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&diter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&diter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&diter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&diter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&diter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&diter_init,
 				TYPE_FIXED_ALLOCATOR(DictIterator)
 			}
 		},
@@ -4165,10 +4165,10 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&dict_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&dict_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&dict_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&dict_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&dict_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&dict_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&dict_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&dict_init,
 				TYPE_FIXED_ALLOCATOR_GC(Dict)
 			}
 		},

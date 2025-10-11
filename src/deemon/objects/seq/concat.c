@@ -359,10 +359,10 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&catiterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&catiterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&catiterator_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&catiterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&catiterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&catiterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&catiterator_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&catiterator_init,
 				TYPE_FIXED_ALLOCATOR_GC(CatIterator)
 			}
 		},
@@ -725,11 +725,11 @@ INTERN DeeTypeObject SeqConcat_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (dfunptr_t)&cat_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
-				/* .tp_free      = */ (dfunptr_t)&cat_tp_free,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&cat_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_free      = */ (Dee_funptr_t)&cat_tp_free,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cat_fini,

@@ -143,7 +143,7 @@
 /* Disable warnings about casting incompatible function pointers (for now)
  * While I really welcome these warnings, they pose one big problem with the
  * way in which I've introduced support for keyword-enabled functions, and
- * with how casts to `dfunptr_t' work. */
+ * with how casts to `Dee_funptr_t' work. */
 __pragma_GCC_diagnostic_ignored(Wcast_function_type)
 
 /* When declaring DeeTypeObject objects and the like, we often skip

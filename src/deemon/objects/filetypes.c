@@ -267,10 +267,10 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (dfunptr_t)&mf_init,
-					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+					/* .tp_ctor      = */ (Dee_funptr_t)&mf_init,
+					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(MemoryFile)
 				}
 			},
@@ -767,12 +767,12 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (dfunptr_t)&reader_ctor,
-					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+					/* .tp_ctor      = */ (Dee_funptr_t)&reader_ctor,
+					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(Reader),
-					/* .tp_any_ctor_kw = */ (dfunptr_t)&reader_init_kw
+					/* .tp_any_ctor_kw = */ (Dee_funptr_t)&reader_init_kw
 				}
 			},
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&reader_fini,
@@ -1732,10 +1732,10 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (dfunptr_t)&writer_ctor,
-					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-					/* .tp_any_ctor  = */ (dfunptr_t)&writer_init,
+					/* .tp_ctor      = */ (Dee_funptr_t)&writer_ctor,
+					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_any_ctor  = */ (Dee_funptr_t)&writer_init,
 					TYPE_FIXED_ALLOCATOR(Writer)
 				}
 			},
@@ -1856,10 +1856,10 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (dfunptr_t)NULL,
-					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+					/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(Printer)
 				}
 			},
@@ -2115,12 +2115,12 @@ PUBLIC DeeTypeObject DeeMapFile_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeMapFileObject),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&mapfile_init_kw
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&mapfile_init_kw
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mapfile_fini,

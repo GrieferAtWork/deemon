@@ -195,10 +195,10 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&stringordinals_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&stringordinals_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&stringordinals_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&stringordinals_init,
 				TYPE_FIXED_ALLOCATOR(StringOrdinals)
 			}
 		},

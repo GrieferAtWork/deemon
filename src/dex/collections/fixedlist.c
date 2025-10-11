@@ -1452,11 +1452,11 @@ INTERN DeeTypeObject FixedList_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&fl_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&fl_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&fl_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&fl_init,
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)&fl_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&fl_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&fl_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&fl_init,
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&fl_fini,
@@ -1647,16 +1647,16 @@ PRIVATE struct type_nii tpconst fli_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&fli_getseq,
-			/* .nii_getindex = */ (dfunptr_t)&fli_getindex,
-			/* .nii_setindex = */ (dfunptr_t)&fli_setindex,
-			/* .nii_rewind   = */ (dfunptr_t)&fli_rewind,
-			/* .nii_revert   = */ (dfunptr_t)&fli_revert,
-			/* .nii_advance  = */ (dfunptr_t)&fli_advance,
-			/* .nii_prev     = */ (dfunptr_t)NULL,
-			/* .nii_next     = */ (dfunptr_t)NULL,
-			/* .nii_hasprev  = */ (dfunptr_t)NULL,
-			/* .nii_peek     = */ (dfunptr_t)&fli_peek,
+			/* .nii_getseq   = */ (Dee_funptr_t)&fli_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)&fli_getindex,
+			/* .nii_setindex = */ (Dee_funptr_t)&fli_setindex,
+			/* .nii_rewind   = */ (Dee_funptr_t)&fli_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)&fli_revert,
+			/* .nii_advance  = */ (Dee_funptr_t)&fli_advance,
+			/* .nii_prev     = */ (Dee_funptr_t)NULL,
+			/* .nii_next     = */ (Dee_funptr_t)NULL,
+			/* .nii_hasprev  = */ (Dee_funptr_t)NULL,
+			/* .nii_peek     = */ (Dee_funptr_t)&fli_peek,
 		}
 	}
 };
@@ -1725,10 +1725,10 @@ INTERN DeeTypeObject FixedListIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&fli_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&fli_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&fli_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&fli_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&fli_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&fli_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&fli_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&fli_init,
 				TYPE_FIXED_ALLOCATOR(FixedListIterator)
 			}
 		},

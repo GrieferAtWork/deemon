@@ -247,10 +247,10 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_var = */ {
-					/* .tp_ctor      = */ (dfunptr_t)&debugfile_get,
-					/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-					/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-					/* .tp_any_ctor  = */ (dfunptr_t)NULL
+					/* .tp_ctor      = */ (Dee_funptr_t)&debugfile_get,
+					/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+					/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL
 				}
 			},
 			/* .tp_dtor        = */ NULL,
@@ -3138,15 +3138,15 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor        = */ (dfunptr_t)NULL,
-					/* .tp_copy_ctor   = */ (dfunptr_t)NULL,
-					/* .tp_deep_ctor   = */ (dfunptr_t)NULL,
-					/* .tp_any_ctor    = */ (dfunptr_t)NULL,
+					/* .tp_ctor        = */ (Dee_funptr_t)NULL,
+					/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
+					/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
+					/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile),
 #ifdef deemon_file_HAVE_sysfile_init_kw
-					/* .tp_any_ctor_kw = */ (dfunptr_t)&sysfile_init_kw
+					/* .tp_any_ctor_kw = */ (Dee_funptr_t)&sysfile_init_kw
 #else /* deemon_file_HAVE_sysfile_init_kw */
-					/* .tp_any_ctor_kw = */ (dfunptr_t)NULL
+					/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL
 #endif /* !deemon_file_HAVE_sysfile_init_kw */
 				}
 			},
@@ -3235,10 +3235,10 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (dfunptr_t)NULL,
-					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+					/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},

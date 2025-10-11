@@ -779,10 +779,10 @@ INTERN DeeTypeObject RangeMap_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorCtor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeObject)
 			}
 		},
@@ -1757,10 +1757,10 @@ INTERN DeeTypeObject RangeMapProxy_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxy)
 			}
 		},
@@ -1811,10 +1811,10 @@ INTERN DeeTypeObject RangeMapKeys_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxy)
 			}
 		},
@@ -1861,10 +1861,10 @@ INTERN DeeTypeObject RangeMapValues_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxy)
 			}
 		},
@@ -1907,10 +1907,10 @@ INTERN DeeTypeObject RangeMapItems_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxy)
 			}
 		},
@@ -1953,10 +1953,10 @@ INTERN DeeTypeObject RangeMapNodes_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxy)
 			}
 		},
@@ -1999,10 +1999,10 @@ INTERN DeeTypeObject RangeMapRanges_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxy)
 			}
 		},
@@ -2045,10 +2045,10 @@ INTERN DeeTypeObject RangeMapMapItems_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxy)
 			}
 		},
@@ -2099,10 +2099,10 @@ INTERN DeeTypeObject RangeMapAsMap_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxy)
 			}
 		},
@@ -2421,10 +2421,10 @@ INTERN DeeTypeObject RangeMapProxyIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_iterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_iterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_iterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_iterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_iterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxyIterator)
 			}
 		},
@@ -2466,10 +2466,10 @@ INTERN DeeTypeObject RangeMapValuesIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_items_iterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_items_iterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_items_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_items_iterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_items_iterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_items_iterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_items_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_items_iterator_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxyItemsIterator)
 			}
 		},
@@ -2511,10 +2511,10 @@ INTERN DeeTypeObject RangeMapItemsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_items_iterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_items_iterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_items_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_items_iterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_items_iterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_items_iterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_items_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_items_iterator_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxyItemsIterator)
 			}
 		},
@@ -2556,10 +2556,10 @@ INTERN DeeTypeObject RangeMapRangesIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_items_iterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_items_iterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_items_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_items_iterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_items_iterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_items_iterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_items_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_items_iterator_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxyItemsIterator)
 			}
 		},
@@ -2601,10 +2601,10 @@ INTERN DeeTypeObject RangeMapNodesIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_iterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_iterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_iterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_iterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_iterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxyIterator)
 			}
 		},
@@ -3209,10 +3209,10 @@ INTERN DeeTypeObject RangeMapKeysIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_keys_iterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_keys_iterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_keys_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_keys_iterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_keys_iterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_keys_iterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_keys_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_keys_iterator_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxyKeysIterator)
 			}
 		},
@@ -3254,10 +3254,10 @@ INTERN DeeTypeObject RangeMapMapItemsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_mapitems_iterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_mapitems_iterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_mapitems_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_mapitems_iterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_mapitems_iterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_mapitems_iterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_mapitems_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_mapitems_iterator_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxyKeysIterator)
 			}
 		},
@@ -3299,10 +3299,10 @@ INTERN DeeTypeObject RangeMapAsMapIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_mapitems_iterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_mapitems_iterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_mapitems_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_mapitems_iterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_mapitems_iterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_mapitems_iterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_mapitems_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_mapitems_iterator_init,
 				TYPE_FIXED_ALLOCATOR(RangeMapProxyKeysIterator)
 			}
 		},

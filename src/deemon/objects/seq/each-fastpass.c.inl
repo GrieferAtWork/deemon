@@ -1340,19 +1340,19 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 		{
 #if !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE)
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&LOCAL_seX(ctor),
-				/* .tp_copy_ctor = */ (dfunptr_t)&LOCAL_seX(copy),
-				/* .tp_deep_ctor = */ (dfunptr_t)&LOCAL_seX(deep),
-				/* .tp_any_ctor  = */ (dfunptr_t)&LOCAL_seX(init),
+				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_seX(ctor),
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&LOCAL_seX(copy),
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&LOCAL_seX(deep),
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_seX(init),
 				TYPE_FIXED_ALLOCATOR(LOCAL_SeqEach)
 			}
 #else /* !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE) */
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&LOCAL_seX(ctor),
-				/* .tp_copy_ctor = */ (dfunptr_t)&LOCAL_seX(copy),
-				/* .tp_deep_ctor = */ (dfunptr_t)&LOCAL_seX(deep),
-				/* .tp_any_ctor  = */ (dfunptr_t)&LOCAL_seX(init),
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_seX(ctor),
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&LOCAL_seX(copy),
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&LOCAL_seX(deep),
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_seX(init),
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 #endif /* LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE */
 		},
@@ -1463,10 +1463,10 @@ INTERN DeeTypeObject LOCAL_SeqEachIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&LOCAL_seXi(ctor),
-				/* .tp_copy_ctor = */ (dfunptr_t)&sewi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&sewi_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&LOCAL_seXi(init),
+				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_seXi(ctor),
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&sewi_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&sewi_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_seXi(init),
 				TYPE_FIXED_ALLOCATOR(SeqEachIterator)
 			}
 		},
@@ -1831,19 +1831,19 @@ INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 		{
 #if !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE)
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&LOCAL_seX(ctor),
-				/* .tp_copy_ctor = */ (dfunptr_t)&LOCAL_seX(copy),
-				/* .tp_deep_ctor = */ (dfunptr_t)&LOCAL_seX(deep),
-				/* .tp_any_ctor  = */ (dfunptr_t)&LOCAL_seX(init),
+				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_seX(ctor),
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&LOCAL_seX(copy),
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&LOCAL_seX(deep),
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_seX(init),
 				TYPE_FIXED_ALLOCATOR(LOCAL_SeqEach)
 			}
 #else /* !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE) */
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&LOCAL_seX(ctor),
-				/* .tp_copy_ctor = */ (dfunptr_t)&LOCAL_seX(copy),
-				/* .tp_deep_ctor = */ (dfunptr_t)&LOCAL_seX(deep),
-				/* .tp_any_ctor  = */ (dfunptr_t)&LOCAL_seX(init),
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_seX(ctor),
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&LOCAL_seX(copy),
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&LOCAL_seX(deep),
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_seX(init),
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 #endif /* LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE */
 		},

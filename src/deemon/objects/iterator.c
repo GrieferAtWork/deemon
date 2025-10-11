@@ -2643,10 +2643,10 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorCtor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}
 		},
@@ -2836,10 +2836,10 @@ INTERN DeeTypeObject IteratorFuture_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&if_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&if_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&if_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&if_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&if_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&if_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&if_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&if_init,
 				TYPE_FIXED_ALLOCATOR(IteratorFuture)
 			}
 		},
@@ -2986,10 +2986,10 @@ INTERN DeeTypeObject IteratorPending_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&ip_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&ip_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&ip_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&ip_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&ip_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&ip_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&ip_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&ip_init,
 				TYPE_FIXED_ALLOCATOR(IteratorPending)
 			}
 		},

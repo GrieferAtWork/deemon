@@ -1435,10 +1435,10 @@ INTERN DeeTypeObject Deque_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&deq_ctor, /* Allow default-construction of sequence objects. */
-				/* .tp_copy_ctor = */ (dfunptr_t)&deq_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&deq_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&deq_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&deq_ctor, /* Allow default-construction of sequence objects. */
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&deq_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&deq_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&deq_init,
 				TYPE_FIXED_ALLOCATOR_GC(Deque)
 			}
 		},
@@ -1662,10 +1662,10 @@ INTERN DeeTypeObject DequeIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&deqiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&deqiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&deqiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&deqiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&deqiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&deqiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&deqiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&deqiter_init,
 				TYPE_FIXED_ALLOCATOR(DequeIteratorObject)
 			}
 		},

@@ -327,10 +327,10 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 			/* .tp_init = */ {
 				{
 					/* .tp_alloc = */ {
-						/* .tp_ctor      = */ (dfunptr_t)NULL,
-						/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-						/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-						/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+						/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+						/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+						/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+						/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 						TYPE_FIXED_ALLOCATOR(struct pointer_object)
 					}
 				},
@@ -762,10 +762,10 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 			/* .tp_init = */ {
 				{
 					/* .tp_var = */ {
-						/* .tp_ctor      = */ (dfunptr_t)&lvalue_ctor,
-						/* .tp_copy_ctor = */ (dfunptr_t)&lvalue_copy,
-						/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-						/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+						/* .tp_ctor      = */ (Dee_funptr_t)&lvalue_ctor,
+						/* .tp_copy_ctor = */ (Dee_funptr_t)&lvalue_copy,
+						/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+						/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 						TYPE_FIXED_ALLOCATOR(struct pointer_object)
 					}
 				},

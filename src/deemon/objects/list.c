@@ -4322,10 +4322,10 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&list_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&list_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&list_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&list_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&list_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&list_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&list_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&list_init,
 				TYPE_FIXED_ALLOCATOR_GC(List)
 			}
 		},
@@ -4565,16 +4565,16 @@ PRIVATE struct type_nii tpconst list_iterator_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&list_iterator_nii_getseq,
-			/* .nii_getindex = */ (dfunptr_t)&list_iterator_nii_getindex,
-			/* .nii_setindex = */ (dfunptr_t)&list_iterator_nii_setindex,
-			/* .nii_rewind   = */ (dfunptr_t)&list_iterator_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)&list_iterator_nii_revert,
-			/* .nii_advance  = */ (dfunptr_t)&list_iterator_nii_advance,
-			/* .nii_prev     = */ (dfunptr_t)&list_iterator_nii_prev,
-			/* .nii_next     = */ (dfunptr_t)&list_iterator_nii_next,
-			/* .nii_hasprev  = */ (dfunptr_t)&list_iterator_nii_hasprev,
-			/* .nii_peek     = */ (dfunptr_t)&list_iterator_nii_peek
+			/* .nii_getseq   = */ (Dee_funptr_t)&list_iterator_nii_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)&list_iterator_nii_getindex,
+			/* .nii_setindex = */ (Dee_funptr_t)&list_iterator_nii_setindex,
+			/* .nii_rewind   = */ (Dee_funptr_t)&list_iterator_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)&list_iterator_nii_revert,
+			/* .nii_advance  = */ (Dee_funptr_t)&list_iterator_nii_advance,
+			/* .nii_prev     = */ (Dee_funptr_t)&list_iterator_nii_prev,
+			/* .nii_next     = */ (Dee_funptr_t)&list_iterator_nii_next,
+			/* .nii_hasprev  = */ (Dee_funptr_t)&list_iterator_nii_hasprev,
+			/* .nii_peek     = */ (Dee_funptr_t)&list_iterator_nii_peek
 		}
 	}
 };
@@ -4612,10 +4612,10 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&li_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&li_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&li_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&li_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&li_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&li_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&li_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&li_init,
 				TYPE_FIXED_ALLOCATOR(ListIterator)
 			}
 		},

@@ -380,12 +380,12 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (dfunptr_t)&im_ctor,
-				/* .tp_copy_ctor   = */ (dfunptr_t)&im_copy,
-				/* .tp_deep_ctor   = */ (dfunptr_t)&im_deepcopy,
-				/* .tp_any_ctor    = */ (dfunptr_t)&im_init,
+				/* .tp_ctor        = */ (Dee_funptr_t)&im_ctor,
+				/* .tp_copy_ctor   = */ (Dee_funptr_t)&im_copy,
+				/* .tp_deep_ctor   = */ (Dee_funptr_t)&im_deepcopy,
+				/* .tp_any_ctor    = */ (Dee_funptr_t)&im_init,
 				TYPE_FIXED_ALLOCATOR(InstanceMethod),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&im_init_kw,
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&im_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&im_fini,

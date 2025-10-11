@@ -176,10 +176,10 @@ INTERN DeeTypeObject DistinctIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&di_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&di_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&di_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&di_init,
 				TYPE_FIXED_ALLOCATOR_GC(DistinctIterator)
 			}
 		},
@@ -347,10 +347,10 @@ INTERN DeeTypeObject DistinctIteratorWithKey_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&uqiwk_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&uqiwk_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&uqiwk_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&uqiwk_init,
 				TYPE_FIXED_ALLOCATOR_GC(DistinctIteratorWithKey)
 			}
 		},
@@ -499,10 +499,10 @@ INTERN DeeTypeObject DistinctSetWithKey_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&dswk_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&dswk_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&dswk_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&dswk_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&dswk_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&dswk_init,
 				TYPE_FIXED_ALLOCATOR(DistinctSetWithKey)
 			}
 		},
@@ -628,10 +628,10 @@ INTERN DeeTypeObject DistinctMappingIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&dmi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&dmi_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&dmi_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&dmi_init,
 				TYPE_FIXED_ALLOCATOR_GC(DistinctIterator)
 			}
 		},

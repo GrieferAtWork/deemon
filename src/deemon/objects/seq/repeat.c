@@ -343,10 +343,10 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&repeatiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&repeatiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&repeatiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&repeatiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&repeatiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&repeatiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&repeatiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&repeatiter_init,
 				TYPE_FIXED_ALLOCATOR_GC(RepeatIterator)
 			}
 		},
@@ -663,10 +663,10 @@ INTERN DeeTypeObject SeqRepeat_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&repeat_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&repeat_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&repeat_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&repeat_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&repeat_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&repeat_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&repeat_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&repeat_init,
 				TYPE_FIXED_ALLOCATOR(Repeat)
 			}
 		},
@@ -822,10 +822,10 @@ INTERN DeeTypeObject SeqItemRepeatIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&repeatitemiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&repeatitemiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&repeatitemiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&repeatitemiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&repeatitemiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&repeatitemiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&repeatitemiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&repeatitemiter_init,
 				TYPE_FIXED_ALLOCATOR(RepeatItemIterator)
 			}
 		},
@@ -1108,10 +1108,10 @@ INTERN DeeTypeObject SeqItemRepeat_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&repeatitem_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&repeatitem_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&repeatitem_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&repeatitem_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&repeatitem_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&repeatitem_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&repeatitem_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&repeatitem_init,
 				TYPE_FIXED_ALLOCATOR(RepeatItem)
 			}
 		},

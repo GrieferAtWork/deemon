@@ -262,10 +262,10 @@ INTERN DeeTypeObject UDictIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&udictiterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&udictiterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (dfunptr_t)&udictiterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&udictiterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&udictiterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&udictiterator_init,
 				TYPE_FIXED_ALLOCATOR(USetIterator)
 			}
 		},
@@ -1359,10 +1359,10 @@ INTERN DeeTypeObject UDict_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&udict_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&udict_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&udict_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&udict_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&udict_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&udict_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&udict_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&udict_init,
 				TYPE_FIXED_ALLOCATOR_GC(UDict)
 			}
 		},
@@ -1535,10 +1535,10 @@ INTERN DeeTypeObject URoDictIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&urodictiterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&urodictiterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (dfunptr_t)&urodictiterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&urodictiterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&urodictiterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&urodictiterator_init,
 				TYPE_FIXED_ALLOCATOR(URoSetIterator)
 			}
 		},
@@ -2045,10 +2045,10 @@ INTERN DeeTypeObject URoDict_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&URoDict_New,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (dfunptr_t)&urodict_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&urodict_init
+				/* .tp_ctor      = */ (Dee_funptr_t)&URoDict_New,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&urodict_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&urodict_init
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&urodict_fini,

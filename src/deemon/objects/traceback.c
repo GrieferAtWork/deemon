@@ -386,16 +386,16 @@ PRIVATE struct type_nii tpconst traceiter_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&traceiter_nii_getseq,
-			/* .nii_getindex = */ (dfunptr_t)&traceiter_nii_getindex,
-			/* .nii_setindex = */ (dfunptr_t)&traceiter_nii_setindex,
-			/* .nii_rewind   = */ (dfunptr_t)&traceiter_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)NULL, //TODO:&traceiter_nii_revert,
-			/* .nii_advance  = */ (dfunptr_t)NULL, //TODO:&traceiter_nii_advance,
-			/* .nii_prev     = */ (dfunptr_t)NULL, //TODO:&traceiter_nii_prev,
-			/* .nii_next     = */ (dfunptr_t)&traceiter_nii_next,
-			/* .nii_hasprev  = */ (dfunptr_t)&traceiter_nii_hasprev,
-			/* .nii_peek     = */ (dfunptr_t)&traceiter_nii_peek
+			/* .nii_getseq   = */ (Dee_funptr_t)&traceiter_nii_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)&traceiter_nii_getindex,
+			/* .nii_setindex = */ (Dee_funptr_t)&traceiter_nii_setindex,
+			/* .nii_rewind   = */ (Dee_funptr_t)&traceiter_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)NULL, //TODO:&traceiter_nii_revert,
+			/* .nii_advance  = */ (Dee_funptr_t)NULL, //TODO:&traceiter_nii_advance,
+			/* .nii_prev     = */ (Dee_funptr_t)NULL, //TODO:&traceiter_nii_prev,
+			/* .nii_next     = */ (Dee_funptr_t)&traceiter_nii_next,
+			/* .nii_hasprev  = */ (Dee_funptr_t)&traceiter_nii_hasprev,
+			/* .nii_peek     = */ (Dee_funptr_t)&traceiter_nii_peek
 		}
 	}
 };
@@ -442,10 +442,10 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&traceiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&traceiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&traceiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&traceiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&traceiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&traceiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&traceiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&traceiter_init,
 				TYPE_FIXED_ALLOCATOR(TraceIterator)
 			}
 		},
@@ -808,10 +808,10 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&traceback_new,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)&traceback_new,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&traceback_fini,

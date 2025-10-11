@@ -196,10 +196,10 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rosetiterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&rosetiterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (dfunptr_t)&rosetiterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&rosetiterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&rosetiterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&rosetiterator_init,
 				TYPE_FIXED_ALLOCATOR(RoSetIterator)
 			}
 		},
@@ -706,11 +706,11 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&roset_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (dfunptr_t)&roset_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&roset_init,
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)&roset_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&roset_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&roset_init,
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&roset_fini,

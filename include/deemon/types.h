@@ -92,10 +92,6 @@ typedef void (*Dee_funptr_t)(void);
 typedef void (*Dee_funptr_t)();
 #endif /* !__cplusplus */
 
-#ifdef DEE_SOURCE
-typedef Dee_funptr_t dfunptr_t;      /* Deprecated! (use `Dee_funptr_t' instead) */
-#endif /* DEE_SOURCE */
-
 /* Foreach callbacks. */
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
 typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void *arg, DeeObject *key, DeeObject *value);

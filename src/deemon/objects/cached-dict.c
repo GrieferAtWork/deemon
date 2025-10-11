@@ -1064,10 +1064,10 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&cdict_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&cdict_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&cdict_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&cdict_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&cdict_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&cdict_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&cdict_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&cdict_init,
 				TYPE_FIXED_ALLOCATOR_GC(CachedDict)
 			}
 		},

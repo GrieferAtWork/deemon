@@ -5565,11 +5565,11 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&int_return_zero,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef, /* No need to actually copy. - Integers are immutable! */
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (dfunptr_t)&int_new,
-				/* .tp_free      = */ (dfunptr_t)int_free_PTR
+				/* .tp_ctor      = */ (Dee_funptr_t)&int_return_zero,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef, /* No need to actually copy. - Integers are immutable! */
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&int_new,
+				/* .tp_free      = */ (Dee_funptr_t)int_free_PTR
 			}
 		},
 		/* .tp_dtor        = */ NULL,

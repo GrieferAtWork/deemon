@@ -241,10 +241,10 @@ INTERN DeeTypeObject MapByAttr_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&byattr_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&byattr_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&byattr_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&byattr_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&byattr_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&byattr_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&byattr_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&byattr_init,
 				TYPE_FIXED_ALLOCATOR(MapByAttr)
 			}
 		},

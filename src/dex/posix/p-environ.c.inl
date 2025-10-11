@@ -2084,10 +2084,10 @@ INTERN DeeTypeObject DeeEnvironIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&environ_iterator_init,
-				/* .tp_copy_ctor = */ (dfunptr_t)&environ_iterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&environ_iterator_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&environ_iterator_init,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&environ_iterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&environ_iterator_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(EnvironIterator)
 			}
 		},
@@ -2275,11 +2275,11 @@ INTERN DeeTypeObject DeeEnviron_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&environ_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)&environ_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ NULL,

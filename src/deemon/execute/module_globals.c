@@ -248,10 +248,10 @@ INTERN DeeTypeObject ModuleExportsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&modexportsiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&modexportsiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&modexportsiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&modexportsiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&modexportsiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&modexportsiter_init,
 				TYPE_FIXED_ALLOCATOR(ModuleExportsIterator)
 			}
 		},
@@ -1148,10 +1148,10 @@ INTERN DeeTypeObject ModuleExports_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&modexports_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&modexports_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&modexports_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&modexports_init,
 				TYPE_FIXED_ALLOCATOR(ModuleExports)
 			}
 		},
@@ -1448,10 +1448,10 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&modglobals_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&modglobals_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&modglobals_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&modglobals_init,
 				TYPE_FIXED_ALLOCATOR(ModuleExports)
 			}
 		},

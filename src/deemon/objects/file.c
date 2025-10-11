@@ -1121,10 +1121,10 @@ PUBLIC DeeTypeObject DeeFileType_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&filetype_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&filetype_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DeeFileTypeObject)
 			}
 		},
@@ -2855,10 +2855,10 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
-					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+					/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorCtor,
+					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(DeeFileObject)
 				}
 			},

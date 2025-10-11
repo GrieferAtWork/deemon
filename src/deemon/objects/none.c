@@ -1017,10 +1017,10 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorVarCtor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorVarCopy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorVarCopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&DeeNone_OperatorVarInit
+				/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorVarCtor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeNone_OperatorVarCopy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeNone_OperatorVarCopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&DeeNone_OperatorVarInit
 			}
 		},
 		/* .tp_dtor        = */ NULL,

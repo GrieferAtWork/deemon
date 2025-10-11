@@ -249,10 +249,10 @@ INTERN DeeTypeObject SeqHashFilterIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&filteriterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&filteriterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&filteriterator_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&seq_filteriterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&filteriterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&filteriterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&filteriterator_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&seq_filteriterator_init,
 				TYPE_FIXED_ALLOCATOR(HashFilterIterator)
 			}
 		},
@@ -299,10 +299,10 @@ INTERN DeeTypeObject MapHashFilterIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&filteriterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&filteriterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&filteriterator_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&map_filteriterator_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&filteriterator_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&filteriterator_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&filteriterator_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&map_filteriterator_init,
 				TYPE_FIXED_ALLOCATOR(HashFilterIterator)
 			}
 		},
@@ -528,10 +528,10 @@ INTERN DeeTypeObject SeqHashFilter_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&filter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&filter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&filter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&seq_filter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&filter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&filter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&filter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&seq_filter_init,
 				TYPE_FIXED_ALLOCATOR(HashFilter)
 			}
 		},
@@ -579,10 +579,10 @@ INTERN DeeTypeObject MapHashFilter_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&filter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&filter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&filter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&map_filter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&filter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&filter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&filter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&map_filter_init,
 				TYPE_FIXED_ALLOCATOR(HashFilter)
 			}
 		},

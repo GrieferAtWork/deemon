@@ -248,16 +248,16 @@ PRIVATE struct type_nii tpconst typemroiter_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&typemroiter_nii_getseq,
-			/* .nii_getindex = */ (dfunptr_t)NULL,
-			/* .nii_setindex = */ (dfunptr_t)NULL,
-			/* .nii_rewind   = */ (dfunptr_t)&typemroiter_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)NULL,
-			/* .nii_advance  = */ (dfunptr_t)NULL,
-			/* .nii_prev     = */ (dfunptr_t)NULL,
-			/* .nii_next     = */ (dfunptr_t)NULL,
-			/* .nii_hasprev  = */ (dfunptr_t)NULL,
-			/* .nii_peek     = */ (dfunptr_t)&typemroiter_nii_peek
+			/* .nii_getseq   = */ (Dee_funptr_t)&typemroiter_nii_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)NULL,
+			/* .nii_setindex = */ (Dee_funptr_t)NULL,
+			/* .nii_rewind   = */ (Dee_funptr_t)&typemroiter_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)NULL,
+			/* .nii_advance  = */ (Dee_funptr_t)NULL,
+			/* .nii_prev     = */ (Dee_funptr_t)NULL,
+			/* .nii_next     = */ (Dee_funptr_t)NULL,
+			/* .nii_hasprev  = */ (Dee_funptr_t)NULL,
+			/* .nii_peek     = */ (Dee_funptr_t)&typemroiter_nii_peek
 		}
 	}
 };
@@ -267,16 +267,16 @@ PRIVATE struct type_nii tpconst typebasesiter_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&typebasesiter_nii_getseq,
-			/* .nii_getindex = */ (dfunptr_t)NULL,
-			/* .nii_setindex = */ (dfunptr_t)NULL,
-			/* .nii_rewind   = */ (dfunptr_t)&typebasesiter_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)NULL,
-			/* .nii_advance  = */ (dfunptr_t)NULL,
-			/* .nii_prev     = */ (dfunptr_t)NULL,
-			/* .nii_next     = */ (dfunptr_t)NULL,
-			/* .nii_hasprev  = */ (dfunptr_t)NULL,
-			/* .nii_peek     = */ (dfunptr_t)&typebasesiter_nii_peek
+			/* .nii_getseq   = */ (Dee_funptr_t)&typebasesiter_nii_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)NULL,
+			/* .nii_setindex = */ (Dee_funptr_t)NULL,
+			/* .nii_rewind   = */ (Dee_funptr_t)&typebasesiter_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)NULL,
+			/* .nii_advance  = */ (Dee_funptr_t)NULL,
+			/* .nii_prev     = */ (Dee_funptr_t)NULL,
+			/* .nii_next     = */ (Dee_funptr_t)NULL,
+			/* .nii_hasprev  = */ (Dee_funptr_t)NULL,
+			/* .nii_peek     = */ (Dee_funptr_t)&typebasesiter_nii_peek
 		}
 	}
 };
@@ -341,10 +341,10 @@ INTERN DeeTypeObject TypeMROIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&typemroiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&typemroiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&typemroiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&typemroiter_init,
 				TYPE_FIXED_ALLOCATOR(TypeMROIterator)
 			}
 		},
@@ -392,10 +392,10 @@ INTERN DeeTypeObject TypeBasesIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&typebasesiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&typebasesiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&typebasesiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&typebasesiter_init,
 				TYPE_FIXED_ALLOCATOR(TypeMROIterator)
 			}
 		},
@@ -764,10 +764,10 @@ INTERN DeeTypeObject TypeMRO_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&typemro_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&typemro_init,
 				TYPE_FIXED_ALLOCATOR(TypeMRO)
 			}
 		},
@@ -814,10 +814,10 @@ INTERN DeeTypeObject TypeBases_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&typebases_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&typebases_init,
 				TYPE_FIXED_ALLOCATOR(TypeMRO)
 			}
 		},

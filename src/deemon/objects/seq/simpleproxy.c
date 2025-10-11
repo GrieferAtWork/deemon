@@ -721,10 +721,10 @@ INTERN DeeTypeObject SeqIds_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
 			}
 		},
@@ -771,10 +771,10 @@ INTERN DeeTypeObject SeqTypes_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
 			}
 		},
@@ -821,10 +821,10 @@ INTERN DeeTypeObject SeqClasses_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
 			}
 		},
@@ -1013,10 +1013,10 @@ INTERN DeeTypeObject SeqIdsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&iter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&iter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&iter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&iter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&iter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&iter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&iter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&iter_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxyIterator)
 			}
 		},
@@ -1063,10 +1063,10 @@ INTERN DeeTypeObject SeqTypesIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&iter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&iter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&iter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&iter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&iter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&iter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&iter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&iter_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxyIterator)
 			}
 		},
@@ -1113,10 +1113,10 @@ INTERN DeeTypeObject SeqClassesIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&iter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&iter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&iter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&iter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&iter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&iter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&iter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&iter_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxyIterator)
 			}
 		},

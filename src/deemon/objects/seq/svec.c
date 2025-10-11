@@ -160,16 +160,16 @@ PRIVATE struct type_nii tpconst rveciter_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&rveciter_nii_getseq,
-			/* .nii_getindex = */ (dfunptr_t)&rveciter_nii_getindex,
-			/* .nii_setindex = */ (dfunptr_t)&rveciter_nii_setindex,
-			/* .nii_rewind   = */ (dfunptr_t)&rveciter_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)NULL,
-			/* .nii_advance  = */ (dfunptr_t)NULL,
-			/* .nii_prev     = */ (dfunptr_t)NULL,
-			/* .nii_next     = */ (dfunptr_t)NULL,
-			/* .nii_hasprev  = */ (dfunptr_t)NULL,
-			/* .nii_peek     = */ (dfunptr_t)NULL,
+			/* .nii_getseq   = */ (Dee_funptr_t)&rveciter_nii_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)&rveciter_nii_getindex,
+			/* .nii_setindex = */ (Dee_funptr_t)&rveciter_nii_setindex,
+			/* .nii_rewind   = */ (Dee_funptr_t)&rveciter_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)NULL,
+			/* .nii_advance  = */ (Dee_funptr_t)NULL,
+			/* .nii_prev     = */ (Dee_funptr_t)NULL,
+			/* .nii_next     = */ (Dee_funptr_t)NULL,
+			/* .nii_hasprev  = */ (Dee_funptr_t)NULL,
+			/* .nii_peek     = */ (Dee_funptr_t)NULL,
 		}
 	}
 };
@@ -207,10 +207,10 @@ INTERN DeeTypeObject RefVectorIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&rveciter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&rveciter_ctor,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&rveciter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&rveciter_ctor,
 				TYPE_FIXED_ALLOCATOR(RefVectorIterator)
 			}
 		},
@@ -704,10 +704,10 @@ INTERN DeeTypeObject RefVector_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rvec_init,
-				/* .tp_copy_ctor = */ (dfunptr_t)&rvec_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&rvec_init,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&rvec_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(RefVector)
 			}
 		},
@@ -915,10 +915,10 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&sveciter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&sveciter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&sveciter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&sveciter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&sveciter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&sveciter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&sveciter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&sveciter_init,
 				TYPE_FIXED_ALLOCATOR(SharedVectorIterator)
 			}
 		},
@@ -1363,10 +1363,10 @@ PUBLIC DeeTypeObject DeeSharedVector_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&svec_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&svec_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&svec_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&svec_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&svec_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&svec_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(SharedVector)
 			}
 		},

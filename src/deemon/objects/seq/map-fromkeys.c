@@ -219,10 +219,10 @@ INTERN DeeTypeObject MapFromKeysAndValueIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&mfkvi_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&mfkvi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&mfkvi_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&mfkvi_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&mfkvi_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&mfkvi_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&mfkvi_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfkvi_init,
 				TYPE_FIXED_ALLOCATOR(MapFromKeysIterator)
 			}
 		},
@@ -272,10 +272,10 @@ INTERN DeeTypeObject MapFromKeysAndCallbackIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&mfkci_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&mfkci_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&mfkci_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&mfkci_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&mfkci_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&mfkci_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&mfkci_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfkci_init,
 				TYPE_FIXED_ALLOCATOR(MapFromKeysIterator)
 			}
 		},
@@ -684,10 +684,10 @@ INTERN DeeTypeObject MapFromKeysAndValue_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&mfkv_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&mfkv_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&mfkv_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&mfkv_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&mfkv_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&mfkv_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&mfkv_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfkv_init,
 				TYPE_FIXED_ALLOCATOR(MapFromKeys)
 			}
 		},
@@ -735,10 +735,10 @@ INTERN DeeTypeObject MapFromKeysAndCallback_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&mfkc_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&mfkc_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&mfkc_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&mfkc_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&mfkc_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&mfkc_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&mfkc_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfkc_init,
 				TYPE_FIXED_ALLOCATOR(MapFromKeys)
 			}
 		},

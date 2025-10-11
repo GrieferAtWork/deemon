@@ -1539,16 +1539,16 @@ PRIVATE struct type_nii tpconst stringiter_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&stringiter_nii_getseq,
-			/* .nii_getindex = */ (dfunptr_t)&stringiter_nii_getindex,
-			/* .nii_setindex = */ (dfunptr_t)&stringiter_nii_setindex,
-			/* .nii_rewind   = */ (dfunptr_t)&stringiter_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)NULL, //TODO:&stringiter_nii_revert,
-			/* .nii_advance  = */ (dfunptr_t)NULL, //TODO:&stringiter_nii_advance,
-			/* .nii_prev     = */ (dfunptr_t)&stringiter_nii_prev,
-			/* .nii_next     = */ (dfunptr_t)&stringiter_nii_next,
-			/* .nii_hasprev  = */ (dfunptr_t)&stringiter_nii_hasprev,
-			/* .nii_peek     = */ (dfunptr_t)&stringiter_nii_peek
+			/* .nii_getseq   = */ (Dee_funptr_t)&stringiter_nii_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)&stringiter_nii_getindex,
+			/* .nii_setindex = */ (Dee_funptr_t)&stringiter_nii_setindex,
+			/* .nii_rewind   = */ (Dee_funptr_t)&stringiter_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)NULL, //TODO:&stringiter_nii_revert,
+			/* .nii_advance  = */ (Dee_funptr_t)NULL, //TODO:&stringiter_nii_advance,
+			/* .nii_prev     = */ (Dee_funptr_t)&stringiter_nii_prev,
+			/* .nii_next     = */ (Dee_funptr_t)&stringiter_nii_next,
+			/* .nii_hasprev  = */ (Dee_funptr_t)&stringiter_nii_hasprev,
+			/* .nii_peek     = */ (Dee_funptr_t)&stringiter_nii_peek
 		}
 	}
 };
@@ -1580,10 +1580,10 @@ INTERN DeeTypeObject StringIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&stringiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&stringiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&stringiter_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&stringiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&stringiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&stringiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&stringiter_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&stringiter_init,
 				TYPE_FIXED_ALLOCATOR(StringIterator)
 			}
 		},
@@ -2841,10 +2841,10 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&string_new_empty,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (dfunptr_t)&string_new
+				/* .tp_ctor      = */ (Dee_funptr_t)&string_new_empty,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&string_new
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&string_fini,

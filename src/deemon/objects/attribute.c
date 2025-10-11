@@ -715,12 +715,12 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor   = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor   = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
+				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(Attr),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&attr_init_kw
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&attr_init_kw
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&attr_fini,
@@ -945,12 +945,12 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(EnumAttr),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&enumattr_init_kw
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&enumattr_init_kw
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&enumattr_fini,
@@ -1088,11 +1088,11 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&enumattriter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&enumattriter_init,
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&enumattriter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&enumattriter_init,
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&enumattriter_fini,

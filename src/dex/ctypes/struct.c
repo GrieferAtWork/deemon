@@ -368,11 +368,11 @@ INTERN DeeTypeObject DeeStructType_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&struct_type_new_empty,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (dfunptr_t)&struct_type_init,
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)&struct_type_new_empty,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&struct_type_init,
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&struct_type_fini,
@@ -670,10 +670,10 @@ INTERN struct empty_struct_type_object DeeStruct_Type = {
 			/* .tp_init = */ {
 				{
 					/* .tp_alloc = */ {
-						/* .tp_ctor      = */ (dfunptr_t)NULL,
-						/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-						/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-						/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+						/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+						/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+						/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+						/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 						TYPE_FIXED_ALLOCATOR_S(DeeObject)
 					}
 				},

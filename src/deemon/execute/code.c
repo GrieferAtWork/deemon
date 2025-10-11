@@ -2563,13 +2563,13 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&code_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&code_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&code_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				/* .tp_free      = */ (dfunptr_t)NULL,
-				/* .tp_pad       = */ { (dfunptr_t)NULL },
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&code_init_kw
+				/* .tp_ctor      = */ (Dee_funptr_t)&code_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&code_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&code_deepcopy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+				/* .tp_free      = */ (Dee_funptr_t)NULL,
+				/* .tp_pad       = */ { (Dee_funptr_t)NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&code_init_kw
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&code_fini,

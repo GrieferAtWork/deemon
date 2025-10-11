@@ -1931,10 +1931,10 @@ INTERN DeeTypeObject Bitset_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&bs_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&bs_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&bs_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&bs_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&bs_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&bs_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&bs_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&bs_init,
 			}
 		},
 		/* .tp_dtor        = */ NULL, /* No destructor needed! */
@@ -2454,10 +2454,10 @@ INTERN DeeTypeObject RoBitset_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&robs_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (dfunptr_t)&robs_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&robs_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&robs_init,
 			}
 		},
 		/* .tp_dtor        = */ NULL, /* No destructor needed! */
@@ -4209,10 +4209,10 @@ INTERN DeeTypeObject BitsetView_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&bsv_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&bsv_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&bsv_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&bsv_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&bsv_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&bsv_init,
 				TYPE_FIXED_ALLOCATOR(BitsetView)
 			}
 		},
@@ -4476,16 +4476,16 @@ PRIVATE struct type_nii tpconst bsiter_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&bsiter_nii_getseq,
-			/* .nii_getindex = */ (dfunptr_t)&bsiter_nii_getindex,
-			/* .nii_setindex = */ (dfunptr_t)&bsiter_nii_setindex,
-			/* .nii_rewind   = */ (dfunptr_t)&bsiter_nii_rewind,
-			/* .nii_revert   = */ (dfunptr_t)&bsiter_nii_revert,
-			/* .nii_advance  = */ (dfunptr_t)&bsiter_nii_advance,
-			/* .nii_prev     = */ (dfunptr_t)&bsiter_nii_prev,
-			/* .nii_next     = */ (dfunptr_t)&bsiter_nii_next,
-			/* .nii_hasprev  = */ (dfunptr_t)&bsiter_nii_hasprev,
-			/* .nii_peek     = */ (dfunptr_t)&bsiter_nii_peek
+			/* .nii_getseq   = */ (Dee_funptr_t)&bsiter_nii_getseq,
+			/* .nii_getindex = */ (Dee_funptr_t)&bsiter_nii_getindex,
+			/* .nii_setindex = */ (Dee_funptr_t)&bsiter_nii_setindex,
+			/* .nii_rewind   = */ (Dee_funptr_t)&bsiter_nii_rewind,
+			/* .nii_revert   = */ (Dee_funptr_t)&bsiter_nii_revert,
+			/* .nii_advance  = */ (Dee_funptr_t)&bsiter_nii_advance,
+			/* .nii_prev     = */ (Dee_funptr_t)&bsiter_nii_prev,
+			/* .nii_next     = */ (Dee_funptr_t)&bsiter_nii_next,
+			/* .nii_hasprev  = */ (Dee_funptr_t)&bsiter_nii_hasprev,
+			/* .nii_peek     = */ (Dee_funptr_t)&bsiter_nii_peek
 		}
 	}
 };
@@ -4528,10 +4528,10 @@ INTERN DeeTypeObject BitsetIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&bsiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&bsiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&bsiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&bsiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&bsiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&bsiter_init,
 				TYPE_FIXED_ALLOCATOR(BitsetIterator)
 			}
 		},

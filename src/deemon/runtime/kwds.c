@@ -281,10 +281,10 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&kwdsiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&kwdsiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&kwdsiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&kwdsiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&kwdsiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&kwdsiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&kwdsiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&kwdsiter_init,
 				TYPE_FIXED_ALLOCATOR(KwdsIterator)
 			}
 		},
@@ -770,11 +770,11 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&kwds_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (dfunptr_t)&kwds_init,
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)&kwds_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&kwds_init,
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwds_fini,
@@ -1042,10 +1042,10 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&kmapiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&kmapiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&kmapiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&kmapiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&kmapiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&kmapiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&kmapiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&kmapiter_init,
 				TYPE_FIXED_ALLOCATOR(KmapIterator)
 			}
 		},
@@ -1546,11 +1546,11 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&kmap_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&kmap_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&kmap_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&kmap_init,
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor      = */ (Dee_funptr_t)&kmap_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&kmap_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&kmap_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&kmap_init,
+				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmap_fini,

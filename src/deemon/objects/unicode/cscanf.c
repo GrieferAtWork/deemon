@@ -605,10 +605,10 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL, /* TODO */
-				/* .tp_copy_ctor = */ (dfunptr_t)&ssi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&ssi_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(StringScanIterator)
 			}
 		},
@@ -762,10 +762,10 @@ INTERN DeeTypeObject StringScan_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(StringScanner)
 			}
 		},

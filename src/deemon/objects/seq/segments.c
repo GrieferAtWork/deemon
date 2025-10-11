@@ -179,10 +179,10 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&segiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&segiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&segiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&segiter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&segiter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&segiter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&segiter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&segiter_init,
 				TYPE_FIXED_ALLOCATOR(SegmentsIterator)
 			}
 		},
@@ -424,10 +424,10 @@ INTERN DeeTypeObject SeqSegments_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&seg_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&seg_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&seg_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&seg_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&seg_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&seg_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&seg_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&seg_init,
 				TYPE_FIXED_ALLOCATOR(Segments)
 			}
 		},

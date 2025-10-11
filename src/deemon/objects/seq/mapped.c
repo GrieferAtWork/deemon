@@ -173,10 +173,10 @@ INTERN DeeTypeObject SeqMappedIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&mappediter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&mappediter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&mappediter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&mappediter_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&mappediter_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&mappediter_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&mappediter_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&mappediter_init,
 				TYPE_FIXED_ALLOCATOR(SeqMappedIterator)
 			}
 		},
@@ -661,10 +661,10 @@ INTERN DeeTypeObject SeqMapped_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&mapped_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&mapped_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&mapped_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&mapped_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&mapped_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&mapped_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&mapped_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&mapped_init,
 				TYPE_FIXED_ALLOCATOR(SeqMapped)
 			}
 		},
