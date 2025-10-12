@@ -864,20 +864,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_immutable_sequence)(DeeObject *__restrict self) {
-	return DeeError_Throwf(&DeeError_SequenceError,
-	                       "Instances of sequence type `%k' are immutable",
-	                       Dee_TYPE(self));
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_fixedlength_sequence)(DeeObject *__restrict self) {
-	return DeeError_Throwf(&DeeError_SequenceError,
-	                       "Instances of sequence type `%k' have a fixed length",
-	                       Dee_TYPE(self));
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_no_super_class)(DeeTypeObject *__restrict type) {
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	return DeeError_Throwf(&DeeError_TypeError,

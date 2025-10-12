@@ -89,8 +89,6 @@ INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_invalid_instance_addr(DeeTypeObje
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_refs_size(DeeObject *__restrict code, size_t num_refs);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_changed_sequence(DeeObject *__restrict seq);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_no_super_class(DeeTypeObject *__restrict type);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_immutable_sequence(DeeObject *__restrict self);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_fixedlength_sequence(DeeObject *__restrict self);
 
 /* Safe-exec error handling. */
 struct code_frame;
@@ -176,8 +174,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_invalid_refs_size(code, num_refs)                                                             Dee_ASSUMED_VALUE(err_invalid_refs_size(code, num_refs), -1)
 #define err_changed_sequence(seq)                                                                         Dee_ASSUMED_VALUE(err_changed_sequence(seq), -1)
 #define err_no_super_class(type)                                                                          Dee_ASSUMED_VALUE(err_no_super_class(type), -1)
-#define err_immutable_sequence(self)                                                                      Dee_ASSUMED_VALUE(err_immutable_sequence(self), -1)
-#define err_fixedlength_sequence(self)                                                                    Dee_ASSUMED_VALUE(err_fixedlength_sequence(self), -1)
 #define err_srt_invalid_sp(frame, access_sp)                                                              Dee_ASSUMED_VALUE(err_srt_invalid_sp(frame, access_sp), -1)
 #define err_srt_invalid_static(frame, sid)                                                                Dee_ASSUMED_VALUE(err_srt_invalid_static(frame, sid), -1)
 #define err_srt_invalid_const(frame, cid)                                                                 Dee_ASSUMED_VALUE(err_srt_invalid_const(frame, cid), -1)
