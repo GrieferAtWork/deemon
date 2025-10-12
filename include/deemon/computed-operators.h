@@ -156,7 +156,7 @@ INTDEF struct type_callable default__tp_callable__EC3FFC1C149A47D0;
 INTDEF struct type_cmp default__tp_cmp__8F384E6A64571883;
 INTDEF struct type_iterator default__tp_iterator__1806D264FE42CE33;
 INTDEF struct type_math default__tp_math__AE7A38D3B0C75E4B;
-INTDEF struct type_seq default__tp_seq__2019F6A38C2B50B6;
+INTDEF struct type_seq default__tp_seq__A0A5A432B5FA58F3;
 INTDEF struct type_with default__tp_with__0476D7EDEFD2E7B7;
 #endif /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 /*[[[end::computed-operator-decls]]]*/

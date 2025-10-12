@@ -675,7 +675,7 @@ INTERN struct type_math default__tp_math__AE7A38D3B0C75E4B = {
 	/* .tp_inplace_xor = */ UNSUPPORTED(&default__inplace_xor__unsupported),
 	/* .tp_inplace_pow = */ UNSUPPORTED(&default__inplace_pow__unsupported),
 };
-INTERN struct type_seq default__tp_seq__2019F6A38C2B50B6 = {
+INTERN struct type_seq default__tp_seq__A0A5A432B5FA58F3 = {
 	/* .tp_iter                         = */ UNSUPPORTED(&default__iter__unsupported),
 	/* .tp_sizeob                       = */ UNSUPPORTED(&default__sizeob__unsupported),
 	/* .tp_contains                     = */ UNSUPPORTED(&default__contains__unsupported),

@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/class.h>
+#include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -1456,11 +1457,17 @@ AttributeError_bound_decl(AttributeError *__restrict self) {
 	return Dee_BOUND_FROMBOOL(decl != NULL);
 }
 
-PRIVATE struct Dee_type_cmp AttributeError_cmp = {
+PRIVATE struct type_cmp AttributeError_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&AttributeError_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *self, DeeObject *))&AttributeError_compare_eq,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *self, DeeObject *))&AttributeError_compare,
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *self, DeeObject *))&AttributeError_trycompare_eq,
+	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
+	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
+	/* .tp_lo            = */ DEFIMPL(&default__lo__with__compare),
+	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
+	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
+	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
 };
 
 PRIVATE struct type_getset tpconst AttributeError_getsets[] = {
@@ -1521,31 +1528,34 @@ PUBLIC DeeTypeObject DeeError_AttributeError = {
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&AttributeError_fini,
 		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
+		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
-		/* .tp_bool      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&AttributeError_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&AttributeError_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&AttributeError_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &AttributeError_cmp,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ AttributeError_getsets,
 	/* .tp_members       = */ AttributeError_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ AttributeError_class_members
+	/* .tp_class_members = */ AttributeError_class_members,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
 
