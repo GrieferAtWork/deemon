@@ -2063,9 +2063,6 @@ struct Dee_type_seq {
 	 *       would be possible), reason being that the amount of runtime
 	 *       overhead would be too great for those few types that define
 	 *       these operators. */
-	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_getitemnr)(DeeObject *__restrict self, /*string*/ DeeObject *__restrict name);
-	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_getitemnr_string_hash)(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
-	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_getitemnr_string_len_hash)(DeeObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
 	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_trygetitemnr)(DeeObject *__restrict self, /*string*/ DeeObject *__restrict name);
 	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_trygetitemnr_string_hash)(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
 	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_trygetitemnr_string_len_hash)(DeeObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
@@ -2463,9 +2460,6 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&myob_hasitem_string_len_hash,
 	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_asvector,
 	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_asvector_nothrow,
-	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))NULL,
-	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))NULL,
-	/* .tp_getitemnr_string_len_hash    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))NULL,
 	/* .tp_trygetitemnr                 = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))NULL,
 	/* .tp_trygetitemnr_string_hash     = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))NULL,
 	/* .tp_trygetitemnr_string_len_hash = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))NULL,

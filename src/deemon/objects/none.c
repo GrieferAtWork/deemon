@@ -239,29 +239,6 @@ DeeNone_OperatorNe(DeeObject *UNUSED(self), DeeObject *other) {
 	return_bool(!DeeNone_Check(other));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeNone_OperatorGetItemNR(DeeObject *__restrict UNUSED(self),
-                          /*string*/ DeeObject *__restrict key) {
-	DeeRT_ErrUnknownKey(Dee_None, key);
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeNone_OperatorGetItemNRStringHash(DeeObject *__restrict UNUSED(self),
-                                    char const *__restrict key,
-                                    Dee_hash_t UNUSED(hash)) {
-	DeeRT_ErrUnboundKeyStr(Dee_None, key);
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeNone_OperatorGetItemNRStringLenHash(DeeObject *__restrict UNUSED(self),
-                                       char const *__restrict key,
-                                       size_t keylen, Dee_hash_t UNUSED(hash)) {
-	DeeRT_ErrUnknownKeyStrLen(Dee_None, key, keylen);
-	return NULL;
-}
-
 #define DeeNone_OperatorVarCtor    DeeNone_NewRef
 #define DeeNone_OperatorVarCopy    (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_NewRef1)
 #define DeeNone_OperatorVarInit    (*(DREF DeeObject *(DCALL *)(size_t, DeeObject *const *))&_DeeNone_NewRef2)
@@ -499,9 +476,6 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_hasitem_string_len_hash      = */ &DeeNone_OperatorHasItemStringLenHash,
 	/* .tp_asvector                     = */ &DeeNone_OperatorAsVector,
 	/* .tp_asvector_nothrow             = */ &DeeNone_OperatorAsVectorNothrow,
-	/* .tp_getitemnr                    = */ &DeeNone_OperatorGetItemNR,
-	/* .tp_getitemnr_string_hash        = */ &DeeNone_OperatorGetItemNRStringHash,
-	/* .tp_getitemnr_string_len_hash    = */ &DeeNone_OperatorGetItemNRStringLenHash,
 	/* .tp_trygetitemnr                 = */ &DeeNone_OperatorTryGetItemNR,
 	/* .tp_trygetitemnr_string_hash     = */ &DeeNone_OperatorTryGetItemNRStringHash,
 	/* .tp_trygetitemnr_string_len_hash = */ &DeeNone_OperatorTryGetItemNRStringLenHash,

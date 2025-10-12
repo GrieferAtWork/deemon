@@ -7,9 +7,6 @@ EXPORTS
 	_DeeArg_BadArgc1@8=DeeArg_BadArgc1@8
 	_DeeArg_BadArgc@12=DeeArg_BadArgc@12
 	_DeeArg_BadArgcEx@16=DeeArg_BadArgcEx@16
-	_DeeArg_GetKwNR@16=DeeArg_GetKwNR@16
-	_DeeArg_GetKwNRStringHash@20=DeeArg_GetKwNRStringHash@20
-	_DeeArg_GetKwNRStringLenHash@24=DeeArg_GetKwNRStringLenHash@24
 	_DeeArg_TryGetKwNR@16=DeeArg_TryGetKwNR@16
 	_DeeArg_TryGetKwNRStringHash@20=DeeArg_TryGetKwNRStringHash@20
 	_DeeArg_TryGetKwNRStringLenHash@24=DeeArg_TryGetKwNRStringLenHash@24
@@ -430,9 +427,6 @@ EXPORTS
 	_DeeIterator_Foreach@12=DeeIterator_Foreach@12
 	_DeeIterator_ForeachPair@12=DeeIterator_ForeachPair@12
 	_DeeKwArgs_Done@12=DeeKwArgs_Done@12
-	_DeeKwArgs_GetItemNR@8=DeeKwArgs_GetItemNR@8
-	_DeeKwArgs_GetItemNRStringHash@12=DeeKwArgs_GetItemNRStringHash@12
-	_DeeKwArgs_GetItemNRStringLenHash@16=DeeKwArgs_GetItemNRStringLenHash@16
 	_DeeKwArgs_Init@16=DeeKwArgs_Init@16
 	_DeeKwArgs_TryGetItemNR@8=DeeKwArgs_TryGetItemNR@8
 	_DeeKwArgs_TryGetItemNRStringHash@12=DeeKwArgs_TryGetItemNRStringHash@12
@@ -447,9 +441,6 @@ EXPORTS
 	_DeeKwObjMethod_New@8=DeeKwObjMethod_New@8
 	_DeeKwObjMethod_VCallFuncf@16=DeeKwObjMethod_VCallFuncf@16
 	_DeeKw_ForceWrap@4=DeeKw_ForceWrap@4
-	_DeeKw_GetItemNR@8=DeeKw_GetItemNR@8
-	_DeeKw_GetItemNRStringHash@12=DeeKw_GetItemNRStringHash@12
-	_DeeKw_GetItemNRStringLenHash@16=DeeKw_GetItemNRStringLenHash@16
 	_DeeKw_TryGetItemNR@8=DeeKw_TryGetItemNR@8
 	_DeeKw_TryGetItemNRStringHash@12=DeeKw_TryGetItemNRStringHash@12
 	_DeeKw_TryGetItemNRStringLenHash@16=DeeKw_TryGetItemNRStringLenHash@16

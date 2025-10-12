@@ -1374,56 +1374,6 @@ kmap_hasitem_string_len_hash(KwdsMapping *self, char const *key, size_t keylen, 
 	return kwds_hasitem_string_len_hash(self->kmo_kwds, key, keylen, hash);
 }
 
-
-PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-kmap_getitemnr(DeeKwdsMappingObject *__restrict self,
-               /*string*/ DeeObject *__restrict name) {
-	size_t index = DeeKwds_IndexOf((DeeObject *)self->kmo_kwds, name);
-	if likely(index != (size_t)-1) {
-		DeeObject *result;
-		ASSERT(index < self->kmo_kwds->kw_size);
-		DeeKwdsMapping_LockRead(self);
-		result = self->kmo_argv[index];
-		DeeKwdsMapping_LockEndRead(self);
-		return result;
-	}
-	DeeRT_ErrUnknownKey(self, name);
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-kmap_getitemnr_string_hash(DeeKwdsMappingObject *__restrict self,
-                           char const *__restrict name, Dee_hash_t hash) {
-	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->kmo_kwds, name, hash);
-	if likely(index != (size_t)-1) {
-		DeeObject *result;
-		ASSERT(index < self->kmo_kwds->kw_size);
-		DeeKwdsMapping_LockRead(self);
-		result = self->kmo_argv[index];
-		DeeKwdsMapping_LockEndRead(self);
-		return result;
-	}
-	DeeRT_ErrUnboundKeyStr((DeeObject *)self, name);
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-kmap_getitemnr_string_len_hash(DeeKwdsMappingObject *__restrict self,
-                               char const *__restrict name,
-                               size_t namelen, Dee_hash_t hash) {
-	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->kmo_kwds, name, namelen, hash);
-	if likely(index != (size_t)-1) {
-		DeeObject *result;
-		ASSERT(index < self->kmo_kwds->kw_size);
-		DeeKwdsMapping_LockRead(self);
-		result = self->kmo_argv[index];
-		DeeKwdsMapping_LockEndRead(self);
-		return result;
-	}
-	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, name, namelen);
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 kmap_trygetitemnr(DeeKwdsMappingObject *__restrict self,
                   /*string*/ DeeObject *__restrict name) {
@@ -1515,9 +1465,6 @@ PRIVATE struct type_seq kmap_seq = {
 	/* .tp_hasitem_string_len_hash      = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&kmap_hasitem_string_len_hash,
 	/* .tp_asvector                     = */ NULL,
 	/* .tp_asvector_nothrow             = */ NULL,
-	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&kmap_getitemnr,
-	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&kmap_getitemnr_string_hash,
-	/* .tp_getitemnr_string_len_hash    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&kmap_getitemnr_string_len_hash,
 	/* .tp_trygetitemnr                 = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&kmap_trygetitemnr,
 	/* .tp_trygetitemnr_string_hash     = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&kmap_trygetitemnr_string_hash,
 	/* .tp_trygetitemnr_string_len_hash = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&kmap_trygetitemnr_string_len_hash,
@@ -1741,82 +1688,6 @@ err:
  * @return: * :   Reference to named keyword argument.
  * @return: NULL: An error was thrown.*/
 PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeKwArgs_GetItemNR(DeeKwArgs *__restrict self,
-                    /*string*/ DeeObject *__restrict name) {
-	DeeObject *result;
-	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
-	if (!self->kwa_kw) {
-		DeeRT_ErrUnknownKey(Dee_EmptyRoDict, name);
-		return NULL;
-	}
-	if (DeeKwds_Check(self->kwa_kw)) {
-		size_t kw_index;
-		kw_index = DeeKwds_IndexOf(self->kwa_kw, name);
-		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found(name);
-			return NULL;
-		}
-		++self->kwa_kwused;
-		return self->kwa_kwargv[kw_index];
-	}
-	result = DeeKw_GetItemNR(self->kwa_kw, name);
-	if likely(result)
-		++self->kwa_kwused;
-	return result;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeKwArgs_GetItemNRStringHash(DeeKwArgs *__restrict self,
-                              char const *__restrict name,
-                              Dee_hash_t hash) {
-	DeeObject *result;
-	if (!self->kwa_kw) {
-		DeeRT_ErrUnboundKeyStr(Dee_EmptyRoDict, name);
-		return NULL;
-	}
-	if (DeeKwds_Check(self->kwa_kw)) {
-		size_t kw_index;
-		kw_index = DeeKwds_IndexOfStringHash(self->kwa_kw, name, hash);
-		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found_str(name);
-			return NULL;
-		}
-		++self->kwa_kwused;
-		return self->kwa_kwargv[kw_index];
-	}
-	result = DeeKw_GetItemNRStringHash(self->kwa_kw, name, hash);
-	if likely(result)
-		++self->kwa_kwused;
-	return result;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeKwArgs_GetItemNRStringLenHash(DeeKwArgs *__restrict self,
-                                 char const *__restrict name,
-                                 size_t namelen, Dee_hash_t hash) {
-	DeeObject *result;
-	if (!self->kwa_kw) {
-		DeeRT_ErrUnboundKeyStr(Dee_EmptyRoDict, name);
-		return NULL;
-	}
-	++self->kwa_kwused;
-	if (DeeKwds_Check(self->kwa_kw)) {
-		size_t kw_index;
-		kw_index = DeeKwds_IndexOfStringLenHash(self->kwa_kw, name, namelen, hash);
-		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found_str_len(name, namelen);
-			return NULL;
-		}
-		++self->kwa_kwused;
-		return self->kwa_kwargv[kw_index];
-	}
-	result = DeeKw_GetItemNRStringLenHash(self->kwa_kw, name, namelen, hash);
-	if likely(result)
-		++self->kwa_kwused;
-	return result;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeKwArgs_TryGetItemNR(DeeKwArgs *__restrict self,
                        /*string*/ DeeObject *__restrict name) {
 	DeeObject *result;
@@ -1880,85 +1751,14 @@ DeeKwArgs_TryGetItemNRStringLenHash(DeeKwArgs *__restrict self,
 }
 
 
-PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL
-DeeArg_GetKwNR(size_t argc, DeeObject *const *argv, DeeObject *kw,
-               /*string*/ DeeObject *__restrict name) {
-	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
-	if (!kw) {
-		DeeRT_ErrUnknownKey(Dee_EmptyRoDict, name);
-		return NULL;
-	}
-	if (DeeKwds_Check(kw)) {
-		size_t kw_index;
-		size_t num_keywords = DeeKwds_SIZE(kw);
-		if unlikely(num_keywords > argc) {
-			/* Argument list is too short of the given keywords */
-			err_keywords_bad_for_argc((DeeKwdsObject *)kw, argc, argv);
-			return NULL;
-		}
-		kw_index = DeeKwds_IndexOf(kw, name);
-		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found(name);
-			return NULL;
-		}
-		ASSERT(kw_index < num_keywords);
-		return argv[(argc - num_keywords) + kw_index];
-	}
-	return DeeKw_GetItemNR(kw, name);
-}
-
-PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL
-DeeArg_GetKwNRStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
-                         char const *__restrict name, Dee_hash_t hash) {
-	if (!kw) {
-		DeeRT_ErrUnboundKeyStr(Dee_EmptyRoDict, name);
-		return NULL;
-	}
-	if (DeeKwds_Check(kw)) {
-		size_t kw_index;
-		size_t num_keywords = DeeKwds_SIZE(kw);
-		if unlikely(num_keywords > argc) {
-			/* Argument list is too short of the given keywords */
-			err_keywords_bad_for_argc((DeeKwdsObject *)kw, argc, argv);
-			return NULL;
-		}
-		kw_index = DeeKwds_IndexOfStringHash(kw, name, hash);
-		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found_str(name);
-			return NULL;
-		}
-		ASSERT(kw_index < num_keywords);
-		return argv[(argc - num_keywords) + kw_index];
-	}
-	return DeeKw_GetItemNRStringHash(kw, name, hash);
-}
-
-PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL
-DeeArg_GetKwNRStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
-                            char const *__restrict name, size_t namelen, Dee_hash_t hash) {
-	if (!kw) {
-		DeeRT_ErrUnknownKeyStrLen(Dee_EmptyRoDict, name, namelen);
-		return NULL;
-	}
-	if (DeeKwds_Check(kw)) {
-		size_t kw_index;
-		size_t num_keywords = DeeKwds_SIZE(kw);
-		if unlikely(num_keywords > argc) {
-			/* Argument list is too short of the given keywords */
-			err_keywords_bad_for_argc((DeeKwdsObject *)kw, argc, argv);
-			return NULL;
-		}
-		kw_index = DeeKwds_IndexOfStringLenHash(kw, name, namelen, hash);
-		if unlikely(kw_index == (size_t)-1) {
-			err_keywords_not_found_str(name);
-			return NULL;
-		}
-		ASSERT(kw_index < num_keywords);
-		return argv[(argc - num_keywords) + kw_index];
-	}
-	return DeeKw_GetItemNRStringLenHash(kw, name, namelen, hash);
-}
-
+/* In a keyword-enabled function, return the argument associated with a given
+ * `name', or throw a TypeError exception or return `def' if not provided.
+ *
+ * Use these functions when you're uncertain if "kw" is non-NULL or might be
+ * `DeeKwds_Check()'. If you're certain that `kw != NULL && !DeeKwds_Check(kw)',
+ * you can also use the set of `DeeKw_TryGetItemNR*' functions below.
+ *
+ * IMPORTANT: These functions do *NOT* return references! */
 PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL
 DeeArg_TryGetKwNR(size_t argc, DeeObject *const *argv, DeeObject *kw,
                   /*string*/ DeeObject *__restrict name) {
@@ -2051,38 +1851,6 @@ DeeKw_ForceWrap(DeeObject *__restrict kwds) {
  * when the caller knows that `kw != NULL && DeeObject_IsKw(kw) && !DeeKwds_Check(kw)'.
  *
  * IMPORTANT: These functions do *NOT* return references! */
-PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeKw_GetItemNR(DeeObject *__restrict kw,
-                /*string*/ DeeObject *__restrict name) {
-	DeeTypeObject *kw_type = Dee_TYPE(kw);
-	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
-	ASSERT(DeeType_IsKw(kw_type));
-	ASSERT(kw_type->tp_seq);
-	ASSERT(kw_type->tp_seq->tp_getitemnr);
-	return (*kw_type->tp_seq->tp_getitemnr)(kw, name);
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeKw_GetItemNRStringHash(DeeObject *__restrict kw,
-                          char const *__restrict name,
-                          Dee_hash_t hash) {
-	DeeTypeObject *kw_type = Dee_TYPE(kw);
-	ASSERT(DeeType_IsKw(kw_type));
-	ASSERT(kw_type->tp_seq);
-	ASSERT(kw_type->tp_seq->tp_getitemnr_string_hash);
-	return (*kw_type->tp_seq->tp_getitemnr_string_hash)(kw, name, hash);
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeKw_GetItemNRStringLenHash(DeeObject *kw, char const *__restrict name,
-                             size_t namelen, Dee_hash_t hash) {
-	DeeTypeObject *kw_type = Dee_TYPE(kw);
-	ASSERT(DeeType_IsKw(kw_type));
-	ASSERT(kw_type->tp_seq);
-	ASSERT(kw_type->tp_seq->tp_getitemnr_string_len_hash);
-	return (*kw_type->tp_seq->tp_getitemnr_string_len_hash)(kw, name, namelen, hash);
-}
-
 PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeKw_TryGetItemNR(DeeObject *kw, /*string*/ DeeObject *name) {
 	DeeTypeObject *kw_type = Dee_TYPE(kw);

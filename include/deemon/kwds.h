@@ -40,17 +40,17 @@ DECL_BEGIN
  *   - >> DeeKwArgs kwargs;
  *     >> DO(DeeKwArgs_Init(&kwargs, &argc, argv, kw));
  *     >> HANDLE_POSITION_ARGS(argc, argv); // "argc" was updated to exclude kw-through-argv (s.a. `DeeKwdsObject')
- *     >> DeeObject *a = DeeKwArgs_GetItemNRStringDef(&kwargs, "arg1", Dee_None);
- *     >> DeeObject *b = DeeKwArgs_GetItemNRStringDef(&kwargs, "arg2", Dee_None);
- *     >> DeeObject *c = DeeKwArgs_GetItemNRStringDef(&kwargs, "arg3", Dee_None);
+ *     >> DeeObject *a = DeeKwArgs_TryGetItemNRString(&kwargs, "arg1");
+ *     >> DeeObject *b = DeeKwArgs_TryGetItemNRString(&kwargs, "arg2");
+ *     >> DeeObject *c = DeeKwArgs_TryGetItemNRString(&kwargs, "arg3");
  *     >> DO(DeeKwArgs_Done(&kwargs, argc)); // Asserts that all keyword arguments were used
  *
- * DeeArg_GetKwNR
+ * DeeArg_TryGetKwNR
  * - Usage:
  *   - Direct function to load a specific keyword argument in C
- *   - >> DeeObject *a = DeeArg_GetKwNRStringDef(argc, argv, kw, "arg1", Dee_None);
- *     >> DeeObject *b = DeeArg_GetKwNRStringDef(argc, argv, kw, "arg2", Dee_None);
- *     >> DeeObject *c = DeeArg_GetKwNRStringDef(argc, argv, kw, "arg3", Dee_None);
+ *   - >> DeeObject *a = DeeArg_TryGetKwNRString(argc, argv, kw, "arg1");
+ *     >> DeeObject *b = DeeArg_TryGetKwNRString(argc, argv, kw, "arg2");
+ *     >> DeeObject *c = DeeArg_TryGetKwNRString(argc, argv, kw, "arg3");
  *
  * DeeKw_Wrap
  * - Usage:
@@ -59,10 +59,10 @@ DECL_BEGIN
  *   - In user-code, the `ASM_CAST_VARKWDS' instruction calls this function
  *   - This function checks if the given "kwds" is kw-capable (DeeObject_IsKw),
  *     and if it isn't, it returns "DeeCachedDict_New(kwds)".
- *   - kw-capable means that the object supports `DeeKw_GetItemNR*', which is the
- *     set of low-level functions used for loading keyword arguments.
+ *   - kw-capable means that the object supports `DeeKw_TryGetItemNR*', which
+ *     is the set of low-level functions used for loading keyword arguments.
  *
- * DeeKw_GetItemNR
+ * DeeKw_TryGetItemNR
  * - Usage:
  *   - Don't use unless you know what you're doing.
  *   - Used to load keyword arguments from kw-capable kw-objects, but does *NOT*
@@ -418,19 +418,14 @@ DFUNDEF WUNUSED NONNULL((1)) int
 /* Lookup a named keyword argument from `self'
  * @return: * :   Reference to named keyword argument.
  * @return: NULL: An error was thrown.*/
-DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKwArgs_GetItemNR(DeeKwArgs *self, /*string*/ DeeObject *name);
-DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKwArgs_GetItemNRStringHash(DeeKwArgs *__restrict self, char const *__restrict name, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKwArgs_GetItemNRStringLenHash(DeeKwArgs *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKwArgs_TryGetItemNR(DeeKwArgs *self, /*string*/ DeeObject *name);
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKwArgs_TryGetItemNRStringHash(DeeKwArgs *__restrict self, char const *__restrict name, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKwArgs_TryGetItemNRStringLenHash(DeeKwArgs *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
-#define DeeKwArgs_GetItemNRString(self, name)                     DeeKwArgs_GetItemNRStringHash(self, name, Dee_HashStr(name))
-#define DeeKwArgs_GetItemNRStringLen(self, name, namelen)         DeeKwArgs_GetItemNRStringLenHash(self, name, namelen, Dee_HashPtr(name, namelen))
-#define DeeKwArgs_TryGetItemNRString(self, name)                  DeeKwArgs_TryGetItemNRStringHash(self, name, Dee_HashStr(name))
-#define DeeKwArgs_TryGetItemNRStringLen(self, name, namelen)      DeeKwArgs_TryGetItemNRStringLenHash(self, name, namelen, Dee_HashPtr(name, namelen))
+#define DeeKwArgs_TryGetItemNRString(self, name)             DeeKwArgs_TryGetItemNRStringHash(self, name, Dee_HashStr(name))
+#define DeeKwArgs_TryGetItemNRStringLen(self, name, namelen) DeeKwArgs_TryGetItemNRStringLenHash(self, name, namelen, Dee_HashPtr(name, namelen))
 
 /* Helpers allowing the caller to specify a default value. */
-LOCAL WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
+LOCAL WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL /* TODO: Remove this */
 DeeKwArgs_GetItemNRDef(DeeKwArgs *self, /*string*/ DeeObject *name, DeeObject *def) {
 	DeeObject *result = DeeKwArgs_TryGetItemNR(self, name);
 	if (result == ITER_DONE)
@@ -438,7 +433,7 @@ DeeKwArgs_GetItemNRDef(DeeKwArgs *self, /*string*/ DeeObject *name, DeeObject *d
 	return result;
 }
 
-LOCAL WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL
+LOCAL WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL /* TODO: Remove this */
 DeeKwArgs_GetItemNRStringHashDef(DeeKwArgs *__restrict self, char const *__restrict name,
                                  Dee_hash_t hash, DeeObject *def) {
 	DeeObject *result = DeeKwArgs_TryGetItemNRStringHash(self, name, hash);
@@ -447,7 +442,7 @@ DeeKwArgs_GetItemNRStringHashDef(DeeKwArgs *__restrict self, char const *__restr
 	return result;
 }
 
-LOCAL WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL
+LOCAL WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL /* TODO: Remove this */
 DeeKwArgs_GetItemNRStringLenHashDef(DeeKwArgs *__restrict self, char const *__restrict name,
                                     size_t namelen, Dee_hash_t hash, DeeObject *def) {
 	DeeObject *result = DeeKwArgs_TryGetItemNRStringLenHash(self, name, namelen, hash);
@@ -456,9 +451,9 @@ DeeKwArgs_GetItemNRStringLenHashDef(DeeKwArgs *__restrict self, char const *__re
 	return result;
 }
 
-#define DeeKwArgs_GetItemNRStringDef(self, name, def) \
+#define DeeKwArgs_GetItemNRStringDef(self, name, def) /* TODO: Remove this */ \
 	DeeKwArgs_GetItemNRStringHashDef(self, name, Dee_HashStr(name), def)
-#define DeeKwArgs_GetItemNRStringLenDef(self, name, namelen, def) \
+#define DeeKwArgs_GetItemNRStringLenDef(self, name, namelen, def) /* TODO: Remove this */ \
 	DeeKwArgs_GetItemNRStringLenHashDef(self, name, namelen, Dee_HashPtr(name, namelen), def)
 
 
@@ -467,17 +462,12 @@ DeeKwArgs_GetItemNRStringLenHashDef(DeeKwArgs *__restrict self, char const *__re
  *
  * Use these functions when you're uncertain if "kw" is non-NULL or might be
  * `DeeKwds_Check()'. If you're certain that `kw != NULL && !DeeKwds_Check(kw)',
- * you can also use the set of `DeeKw_GetItemNR*' functions below.
+ * you can also use the set of `DeeKw_TryGetItemNR*' functions below.
  *
  * IMPORTANT: These functions do *NOT* return references! */
-DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_GetKwNR(size_t argc, DeeObject *const *argv, DeeObject *kw, /*string*/ DeeObject *__restrict name);
-DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_GetKwNRStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw, char const *__restrict name, Dee_hash_t hash);
-DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_GetKwNRStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw, char const *__restrict name, size_t namelen, Dee_hash_t hash);
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_TryGetKwNR(size_t argc, DeeObject *const *argv, DeeObject *kw, /*string*/ DeeObject *__restrict name);
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_TryGetKwNRStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw, char const *__restrict name, Dee_hash_t hash);
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_TryGetKwNRStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw, char const *__restrict name, size_t namelen, Dee_hash_t hash);
-#define DeeArg_GetKwNRString(argc, argv, kw, name)                DeeArg_GetKwNRStringHash(argc, argv, kw, name, Dee_HashStr(name))
-#define DeeArg_GetKwNRStringLen(argc, argv, kw, name, namelen)    DeeArg_GetKwNRStringLenHash(argc, argv, kw, name, namelen, Dee_HashPtr(name, namelen))
 #define DeeArg_TryGetKwNRString(argc, argv, kw, name)             DeeArg_TryGetKwNRStringHash(argc, argv, kw, name, Dee_HashStr(name))
 #define DeeArg_TryGetKwNRStringLen(argc, argv, kw, name, namelen) DeeArg_TryGetKwNRStringLenHash(argc, argv, kw, name, namelen, Dee_HashPtr(name, namelen))
 
@@ -515,14 +505,9 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKw_ForceWrap(DeeObject *__
  * when the caller knows that `kw != NULL && DeeObject_IsKw(kw) && !DeeKwds_Check(kw)'.
  *
  * IMPORTANT: These functions do *NOT* return references! */
-DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKw_GetItemNR(DeeObject *__restrict kw, /*string*/ DeeObject *__restrict name);
-DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKw_GetItemNRStringHash(DeeObject *__restrict kw, char const *__restrict name, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKw_GetItemNRStringLenHash(DeeObject *kw, char const *__restrict name, size_t namelen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKw_TryGetItemNR(DeeObject *kw, /*string*/ DeeObject *name);
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKw_TryGetItemNRStringHash(DeeObject *kw, char const *__restrict name, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKw_TryGetItemNRStringLenHash(DeeObject *kw, char const *__restrict name, size_t namelen, Dee_hash_t hash);
-#define DeeKw_GetItemNRString(kw, name)                DeeKw_GetItemNRStringHash(kw, name, Dee_HashStr(name))
-#define DeeKw_GetItemNRStringLen(kw, name, namelen)    DeeKw_GetItemNRStringLenHash(kw, name, namelen, Dee_HashPtr(name, namelen))
 #define DeeKw_TryGetItemNRString(kw, name)             DeeKw_TryGetItemNRStringHash(kw, name, Dee_HashStr(name))
 #define DeeKw_TryGetItemNRStringLen(kw, name, namelen) DeeKw_TryGetItemNRStringLenHash(kw, name, namelen, Dee_HashPtr(name, namelen))
 

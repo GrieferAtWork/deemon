@@ -340,9 +340,11 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >>         if (argc < {co_argc_min}) {
 		 * >>             size_t i = argc;
 		 * >>             do {
-		 * >>                 DeeObject *arg = DeeKw_GetItemNR(kw, {co_keywords}[i]);
+		 * >>                 DeeObject *arg = DeeKw_TryGetItemNR(kw, {co_keywords}[i]);
 		 * >>                 if (!arg)
 		 * >>                     HANDLE_EXCEPT();
+		 * >>                 if (arg == ITER_DONE)
+		 * >>                     err_invalid_argc(...); // ERROR: Too few positional arguments / missing keyword argument
 		 * >>                 kw_argv[i] = arg;
 		 * >> #if !(co_flags & CODE_FVARKWDS)
 		 * >>                 ++kw_used;
