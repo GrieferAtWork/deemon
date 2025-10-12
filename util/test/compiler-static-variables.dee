@@ -40,10 +40,10 @@ function bar() {
  * location within the code object itself, which would that `y1(43)'
  * would still return the initial `42`.
  *
- * This was not only unintuitive, but also impossible to support _jit,
+ * This was not only unintuitive, but also impossible to support _strexec,
  * which doesn't have a concept of Code vs. Function objects. As such,
  * these new, more intuitive semantics for static variables were added
- * (that also align with what is done by _jit)
+ * (that also align with what is done by _strexec)
  */
 local x1 = foo();
 try {

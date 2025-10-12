@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_JIT_PARSER_C
-#define GUARD_DEX_JIT_PARSER_C 1
+#ifndef GUARD_DEX_STREXEC_PARSER_C
+#define GUARD_DEX_STREXEC_PARSER_C 1
 #define DEE_SOURCE
 
 #include "libjit.h"
@@ -1447,4 +1447,4 @@ DECL_END
 #include "parser-impl.c.inl"
 #endif /* !__INTELLISENSE__ */
 
-#endif /* !GUARD_DEX_JIT_PARSER_C */
+#endif /* !GUARD_DEX_STREXEC_PARSER_C */

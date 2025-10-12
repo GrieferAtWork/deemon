@@ -778,13 +778,13 @@ Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv) {
 }
 
 INTDEF bool DCALL libcodecs_shutdown(void);
-INTDEF bool DCALL clear_jit_cache(void);
+INTDEF bool DCALL clear_strexec_cache(void);
 
 PRIVATE bool DCALL shutdown_globals(void) {
 	bool result;
 	result = DeeModule_FiniPath();
 	result |= libcodecs_shutdown();
-	result |= clear_jit_cache();
+	result |= clear_strexec_cache();
 	result |= DeeFile_ResetStd();
 	result |= DeeThread_ClearTls();
 #ifndef CONFIG_NO_THREADS

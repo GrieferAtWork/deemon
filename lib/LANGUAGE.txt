@@ -578,7 +578,7 @@
  *            Note however that doing this is non-portable, as implementations
  *            are not required to share any compatibility when it comes to how
  *            bytecode is written (if it can be written at all)
- *            For reference, the above doesn't work with the jit-compiler.
+ *            For reference, the above doesn't work with the strexec-compiler.
  *      - __builtin_typeof(x)
  *          - Replace with `type(x)'
  *      - __builtin_help(x)

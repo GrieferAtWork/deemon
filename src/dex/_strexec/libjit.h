@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_JIT_LIBJIT_H
-#define GUARD_DEX_JIT_LIBJIT_H 1
+#ifndef GUARD_DEX_STREXEC_LIBJIT_H
+#define GUARD_DEX_STREXEC_LIBJIT_H 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
@@ -1741,4 +1741,4 @@ INTDEF ATTR_COLD int (DFCALL err_cannot_import_relative)(char const *module_name
 
 DECL_END
 
-#endif /* !GUARD_DEX_JIT_LIBJIT_H */
+#endif /* !GUARD_DEX_STREXEC_LIBJIT_H */

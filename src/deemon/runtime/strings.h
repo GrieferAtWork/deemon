@@ -93,7 +93,7 @@ local STRINGS = List {
 	"seq",
 	"operators",
 	"files",
-	"_jit",
+	"_strexec",
 	"codecs",
 	"__encode",
 	"__decode",
@@ -360,9 +360,9 @@ DEF_STRING(str_operators, "operators", 0xd4b6b76c, 0xc8d5b5ae0eb7316e)
 #define Dee_HashStr__files _Dee_HashSelectC(0x908e29de, 0x41e984160894009c)
 DEF_STRING(str_files, "files", 0x908e29de, 0x41e984160894009c)
 #define STR_files DeeString_STR(&str_files)
-#define Dee_HashStr___jit _Dee_HashSelectC(0x6f3e4261, 0xbcf5fb303015dc89)
-DEF_STRING(str__jit, "_jit", 0x6f3e4261, 0xbcf5fb303015dc89)
-#define STR__jit DeeString_STR(&str__jit)
+#define Dee_HashStr___strexec _Dee_HashSelectC(0x33d8c7c0, 0x570df672f4433a0e)
+DEF_STRING(str__strexec, "_strexec", 0x33d8c7c0, 0x570df672f4433a0e)
+#define STR__strexec DeeString_STR(&str__strexec)
 #define Dee_HashStr__codecs _Dee_HashSelectC(0x341958d7, 0x51cf434bd995d8ac)
 DEF_STRING(str_codecs, "codecs", 0x341958d7, 0x51cf434bd995d8ac)
 #define STR_codecs DeeString_STR(&str_codecs)

@@ -2,22 +2,22 @@
 # DEX Files
 ########################################################################
 
-# $(call dex_objects,_jit,$(DEX_SOURCES__jit))
+# $(call dex_objects,_strexec,$(DEX_SOURCES__strexec))
 override define dex_objects
 $(foreach F,$2,$(BLD_PATH)/dex/$1/$(call relpath,$(F:.c=.o),$(SRC_ROOT)))
 endef
 
 
-### _jit
-DEX += _jit
-DEX_SOURCES__jit += $(wildcard $(SRC_ROOT)/src/dex/_jit/*.c)
-DEX_OBJECTS__jit = $(call dex_objects,_jit,$(DEX_SOURCES__jit))
--include $(foreach F,$(DEX_OBJECTS__jit),$(F:.o=.MF))
-$(BLD_PATH)/dex/_jit/%.o: $(SRC_ROOT)/%.c
+### _strexec
+DEX += _strexec
+DEX_SOURCES__strexec += $(wildcard $(SRC_ROOT)/src/dex/_strexec/*.c)
+DEX_OBJECTS__strexec = $(call dex_objects,_strexec,$(DEX_SOURCES__strexec))
+-include $(foreach F,$(DEX_OBJECTS__strexec),$(F:.o=.MF))
+$(BLD_PATH)/dex/_strexec/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
-$(BIN_PATH)/lib/_jit$(DLL): $(DEX_OBJECTS__jit) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS__jit) $(LIBS) $(DEX_LIBS)
+$(BIN_PATH)/lib/_strexec$(DLL): $(DEX_OBJECTS__strexec) $(BIN_PATH)/deemon$(EXE)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS__strexec) $(LIBS) $(DEX_LIBS)
 
 
 ### collections

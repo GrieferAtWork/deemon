@@ -35,87 +35,88 @@
 		</ProjectConfiguration>
 	</ItemGroup>
 	<ItemGroup>
-		<ClInclude Include="..\..\src\dex\_jit\_res.h" />
-		<ClInclude Include="..\..\src\dex\_jit\libjit.h" />
-		<ClInclude Include="..\..\src\dex\_jit\parser-impl-class.c.inl" />
-		<ClInclude Include="..\..\src\dex\_jit\parser-impl-comma.c.inl" />
-		<ClInclude Include="..\..\src\dex\_jit\parser-impl-hybrid-parts.c.inl" />
-		<ClInclude Include="..\..\src\dex\_jit\parser-impl-hybrid.c.inl" />
-		<ClInclude Include="..\..\src\dex\_jit\parser-impl-statement.c.inl" />
-		<ClInclude Include="..\..\src\dex\_jit\parser-impl-template-string.c.inl" />
-		<ClInclude Include="..\..\src\dex\_jit\parser-impl.c.inl" />
+		<ClInclude Include="..\..\src\dex\_strexec\_res.h" />
+		<ClInclude Include="..\..\src\dex\_strexec\libjit.h" />
+		<ClInclude Include="..\..\src\dex\_strexec\parser-impl-class.c.inl" />
+		<ClInclude Include="..\..\src\dex\_strexec\parser-impl-comma.c.inl" />
+		<ClInclude Include="..\..\src\dex\_strexec\parser-impl-hybrid-parts.c.inl" />
+		<ClInclude Include="..\..\src\dex\_strexec\parser-impl-hybrid.c.inl" />
+		<ClInclude Include="..\..\src\dex\_strexec\parser-impl-statement.c.inl" />
+		<ClInclude Include="..\..\src\dex\_strexec\parser-impl-template-string.c.inl" />
+		<ClInclude Include="..\..\src\dex\_strexec\parser-impl.c.inl" />
 	</ItemGroup>
 	<ItemGroup>
-		<ClCompile Include="..\..\src\dex\_jit\context.c" />
-		<ClCompile Include="..\..\src\dex\_jit\error.c" />
-		<ClCompile Include="..\..\src\dex\_jit\function-scanner.c" />
-		<ClCompile Include="..\..\src\dex\_jit\function.c" />
-		<ClCompile Include="..\..\src\dex\_jit\lexer.c" />
-		<ClCompile Include="..\..\src\dex\_jit\libjit.c" />
-		<ClCompile Include="..\..\src\dex\_jit\object-table.c" />
-		<ClCompile Include="..\..\src\dex\_jit\parser.c" />
-		<ClCompile Include="..\..\src\dex\_jit\type-annotations.c" />
-		<ClCompile Include="..\..\src\dex\_jit\yieldfunction.c" />
+		<ClCompile Include="..\..\src\dex\_strexec\context.c" />
+		<ClCompile Include="..\..\src\dex\_strexec\error.c" />
+		<ClCompile Include="..\..\src\dex\_strexec\function-scanner.c" />
+		<ClCompile Include="..\..\src\dex\_strexec\function.c" />
+		<ClCompile Include="..\..\src\dex\_strexec\lexer.c" />
+		<ClCompile Include="..\..\src\dex\_strexec\libjit.c" />
+		<ClCompile Include="..\..\src\dex\_strexec\object-table.c" />
+		<ClCompile Include="..\..\src\dex\_strexec\parser.c" />
+		<ClCompile Include="..\..\src\dex\_strexec\type-annotations.c" />
+		<ClCompile Include="..\..\src\dex\_strexec\yieldfunction.c" />
 	</ItemGroup>
 	<PropertyGroup Label="Globals">
-		<ProjectGuid>{85DE4E2D-552A-48E3-A320-00000000A7BC}</ProjectGuid>
-		<RootNamespace>_jit</RootNamespace>
-		<ProjectName>_jit</ProjectName>
+		<ProjectGuid>{85DE4E2D-552A-48E3-A320-00000A11F74B}</ProjectGuid>
+		<RootNamespace>_strexec</RootNamespace>
+		<WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+		<ProjectName>_strexec</ProjectName>
 	</PropertyGroup>
 	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
@@ -155,7 +156,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-		<TargetName>_jit</TargetName>
+		<TargetName>_strexec</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">
@@ -166,7 +167,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-		<TargetName>_jit</TargetName>
+		<TargetName>_strexec</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">
@@ -177,7 +178,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-		<TargetName>_jit</TargetName>
+		<TargetName>_strexec</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">
@@ -188,7 +189,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-		<TargetName>_jit</TargetName>
+		<TargetName>_strexec</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">
@@ -199,7 +200,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-		<TargetName>_jit</TargetName>
+		<TargetName>_strexec</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">
@@ -210,7 +211,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-		<TargetName>_jit</TargetName>
+		<TargetName>_strexec</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">
@@ -221,7 +222,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-		<TargetName>_jit</TargetName>
+		<TargetName>_strexec</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">
@@ -232,7 +233,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-		<TargetName>_jit</TargetName>
+		<TargetName>_strexec</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">

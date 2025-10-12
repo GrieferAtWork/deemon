@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_JIT_LIBJIT_C
-#define GUARD_DEX_JIT_LIBJIT_C 1
+#ifndef GUARD_DEX_STREXEC_LIBJIT_C
+#define GUARD_DEX_STREXEC_LIBJIT_C 1
 #define DEE_SOURCE
 
 #include "libjit.h"
@@ -431,4 +431,4 @@ PUBLIC struct dex DEX = {
 
 DECL_END
 
-#endif /* !GUARD_DEX_JIT_LIBJIT_C */
+#endif /* !GUARD_DEX_STREXEC_LIBJIT_C */

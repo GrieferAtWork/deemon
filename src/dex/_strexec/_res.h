@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_JIT__RES_H
-#define GUARD_DEX_JIT__RES_H 1
+#ifndef GUARD_DEX_STREXEC__RES_H
+#define GUARD_DEX_STREXEC__RES_H 1
 
 #include <deemon/api.h>
 
@@ -27,4 +27,4 @@ DECL_BEGIN
 
 DECL_END
 
-#endif /* !GUARD_DEX_JIT__RES_H */
+#endif /* !GUARD_DEX_STREXEC__RES_H */

@@ -227,57 +227,57 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *jit_module = NULL; /* import("_jit") */
-PRIVATE DREF DeeObject *jit_exec = NULL;   /* _jit.exec */
+PRIVATE DREF DeeObject *strexec_module = NULL; /* import("_strexec") */
+PRIVATE DREF DeeObject *strexec_exec = NULL;   /* _strexec.exec */
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t jit_access_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t strexec_access_lock = DEE_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
-#define jit_access_lock_reading()    Dee_atomic_rwlock_reading(&jit_access_lock)
-#define jit_access_lock_writing()    Dee_atomic_rwlock_writing(&jit_access_lock)
-#define jit_access_lock_tryread()    Dee_atomic_rwlock_tryread(&jit_access_lock)
-#define jit_access_lock_trywrite()   Dee_atomic_rwlock_trywrite(&jit_access_lock)
-#define jit_access_lock_canread()    Dee_atomic_rwlock_canread(&jit_access_lock)
-#define jit_access_lock_canwrite()   Dee_atomic_rwlock_canwrite(&jit_access_lock)
-#define jit_access_lock_waitread()   Dee_atomic_rwlock_waitread(&jit_access_lock)
-#define jit_access_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&jit_access_lock)
-#define jit_access_lock_read()       Dee_atomic_rwlock_read(&jit_access_lock)
-#define jit_access_lock_write()      Dee_atomic_rwlock_write(&jit_access_lock)
-#define jit_access_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&jit_access_lock)
-#define jit_access_lock_upgrade()    Dee_atomic_rwlock_upgrade(&jit_access_lock)
-#define jit_access_lock_downgrade()  Dee_atomic_rwlock_downgrade(&jit_access_lock)
-#define jit_access_lock_endwrite()   Dee_atomic_rwlock_endwrite(&jit_access_lock)
-#define jit_access_lock_endread()    Dee_atomic_rwlock_endread(&jit_access_lock)
-#define jit_access_lock_end()        Dee_atomic_rwlock_end(&jit_access_lock)
+#define strexec_access_lock_reading()    Dee_atomic_rwlock_reading(&strexec_access_lock)
+#define strexec_access_lock_writing()    Dee_atomic_rwlock_writing(&strexec_access_lock)
+#define strexec_access_lock_tryread()    Dee_atomic_rwlock_tryread(&strexec_access_lock)
+#define strexec_access_lock_trywrite()   Dee_atomic_rwlock_trywrite(&strexec_access_lock)
+#define strexec_access_lock_canread()    Dee_atomic_rwlock_canread(&strexec_access_lock)
+#define strexec_access_lock_canwrite()   Dee_atomic_rwlock_canwrite(&strexec_access_lock)
+#define strexec_access_lock_waitread()   Dee_atomic_rwlock_waitread(&strexec_access_lock)
+#define strexec_access_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&strexec_access_lock)
+#define strexec_access_lock_read()       Dee_atomic_rwlock_read(&strexec_access_lock)
+#define strexec_access_lock_write()      Dee_atomic_rwlock_write(&strexec_access_lock)
+#define strexec_access_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&strexec_access_lock)
+#define strexec_access_lock_upgrade()    Dee_atomic_rwlock_upgrade(&strexec_access_lock)
+#define strexec_access_lock_downgrade()  Dee_atomic_rwlock_downgrade(&strexec_access_lock)
+#define strexec_access_lock_endwrite()   Dee_atomic_rwlock_endwrite(&strexec_access_lock)
+#define strexec_access_lock_endread()    Dee_atomic_rwlock_endread(&strexec_access_lock)
+#define strexec_access_lock_end()        Dee_atomic_rwlock_end(&strexec_access_lock)
 
-INTERN bool DCALL clear_jit_cache(void) {
+INTERN bool DCALL clear_strexec_cache(void) {
 	DREF DeeObject *mod, *exec;
-	jit_access_lock_write();
-	mod  = jit_module;
-	exec = jit_exec;
+	strexec_access_lock_write();
+	mod  = strexec_module;
+	exec = strexec_exec;
 	if (!ITER_ISOK(mod)) {
 		ASSERT(!ITER_ISOK(exec));
-		jit_access_lock_endwrite();
+		strexec_access_lock_endwrite();
 		return false;
 	}
-	jit_module = NULL;
-	jit_exec   = NULL;
-	jit_access_lock_endwrite();
+	strexec_module = NULL;
+	strexec_exec   = NULL;
+	strexec_access_lock_endwrite();
 	Dee_Decref(mod);
 	if (ITER_ISOK(exec))
 		Dee_Decref(exec);
 	return true;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL get_jit_module(void) {
+PRIVATE WUNUSED DREF DeeObject *DCALL get_strexec_module(void) {
 	DREF DeeObject *result;
 again:
-	jit_access_lock_read();
-	result = jit_module;
+	strexec_access_lock_read();
+	result = strexec_module;
 	if unlikely(!result) {
-		jit_access_lock_endread();
-		result = DeeModule_OpenGlobal((DeeObject *)&str__jit, NULL, false);
+		strexec_access_lock_endread();
+		result = DeeModule_OpenGlobal((DeeObject *)&str__strexec, NULL, false);
 		if unlikely(!ITER_ISOK(result)) {
 			if (!result)
 				return NULL;
@@ -286,21 +286,21 @@ again:
 				Dee_Decref(result);
 				return NULL;
 			}
-			Dee_Incref(result); /* The reference stored in `jit_module' */
+			Dee_Incref(result); /* The reference stored in `strexec_module' */
 		}
-		jit_access_lock_write();
-		if unlikely(atomic_read(&jit_module)) {
-			jit_access_lock_endwrite();
+		strexec_access_lock_write();
+		if unlikely(atomic_read(&strexec_module)) {
+			strexec_access_lock_endwrite();
 			if (ITER_ISOK(result))
 				Dee_Decref(result);
 			goto again;
 		}
-		jit_module = result; /* Inherit reference. */
-		jit_access_lock_endwrite();
+		strexec_module = result; /* Inherit reference. */
+		strexec_access_lock_endwrite();
 	} else {
 		if (result != ITER_DONE)
 			Dee_Incref(result);
-		jit_access_lock_endread();
+		strexec_access_lock_endread();
 	}
 	return result;
 }
@@ -309,38 +309,38 @@ again:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_exec(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *exec;
-	jit_access_lock_read();
-	exec = jit_exec;
+	strexec_access_lock_read();
+	exec = strexec_exec;
 	if likely(ITER_ISOK(exec)) {
 		Dee_Incref(exec);
-		jit_access_lock_endread();
+		strexec_access_lock_endread();
 do_exec:
 		return DeeObject_CallKwInherited(exec, argc, argv, kw);
 	}
-	jit_access_lock_endread();
+	strexec_access_lock_endread();
 	if unlikely(exec == ITER_DONE)
 		goto fallback;
 	/* Load the exec function. */
 	{
 		DREF DeeObject *module;
-		module = get_jit_module();
+		module = get_strexec_module();
 		if unlikely(!ITER_ISOK(module)) {
 			if unlikely(!module)
 				goto err;
-			jit_access_lock_write();
-			exec = atomic_read(&jit_exec);
+			strexec_access_lock_write();
+			exec = atomic_read(&strexec_exec);
 			if (exec == NULL) {
-				jit_exec = ITER_DONE;
-				jit_access_lock_endwrite();
+				strexec_exec = ITER_DONE;
+				strexec_access_lock_endwrite();
 				goto fallback;
 			}
 			if unlikely(ITER_ISOK(exec)) {
 				/* Shouldn't happen... */
 				Dee_Incref(exec);
-				jit_access_lock_endwrite();
+				strexec_access_lock_endwrite();
 				goto do_exec;
 			}
-			jit_access_lock_endwrite();
+			strexec_access_lock_endwrite();
 			goto fallback;
 		}
 		/* Load the exec function. */
@@ -348,19 +348,19 @@ do_exec:
 		Dee_Decref(module);
 		if unlikely(!exec)
 			goto err;
-		jit_access_lock_write();
-		module = atomic_read(&jit_exec);
+		strexec_access_lock_write();
+		module = atomic_read(&strexec_exec);
 		if likely(!module) {
 set_exec_and_run:
-			jit_exec = exec;
+			strexec_exec = exec;
 			Dee_Incref(exec);
-			jit_access_lock_endwrite();
+			strexec_access_lock_endwrite();
 			goto do_exec;
 		}
 		if unlikely(module == ITER_DONE)
 			goto set_exec_and_run;
 		Dee_Incref(module);
-		jit_access_lock_endwrite();
+		strexec_access_lock_endwrite();
 		Dee_Decref(exec);
 		exec = module;
 		goto do_exec;

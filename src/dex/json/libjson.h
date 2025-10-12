@@ -87,7 +87,7 @@
  *   deemon is actually syntactically compatible with JSON, and if you were to
  *   write `global final null = none;', it would be fully compatible!
  *   As such, technically speaking all functionality provided by this dex is
- *   also already available by `_jit' (and `deemon.exec()'), though it should
+ *   also already available by `_strexec' (and `deemon.exec()'), though it should
  *   be obvious that *executing as code* would be a security risk in case you
  *   received the JSON-blob from an untrusted source (or really *any source*
  *   for that matter).

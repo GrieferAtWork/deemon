@@ -1677,7 +1677,7 @@ skip_rbrck_and_done:
 			}
 			if (name == ENCODE_INT32('s', 'u', 'p', 'e') &&
 			    UNALIGNED_GET8(tok_begin + 4) == 'r') {
-				/* In jit, `super' is essentially compiled as `this as __identifier(class).base'
+				/* In strexec, `super' is essentially compiled as `this as __identifier(class).base'
 				 * s.a. `JIT_RTSYM_THIS' and `JIT_RTSYM_CLASS' */
 #ifdef JIT_EVAL
 				DeeTypeObject *oo_super;
