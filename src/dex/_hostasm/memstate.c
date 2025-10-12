@@ -776,7 +776,7 @@ err:
 
 
 /* Ensure that at least `min_alloc' stack slots are allocated. */
-INTERN NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 memstate_reqvstack(struct memstate *__restrict self,
                    vstackaddr_t min_alloc) {
 	ASSERT(self->ms_stackc <= self->ms_stacka);

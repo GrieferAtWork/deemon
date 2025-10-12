@@ -1463,7 +1463,7 @@ memstate_copy(struct memstate *__restrict self);
 	 memstate_inplace_copy_because_shared(p_self))
 
 /* Ensure that at least `min_alloc' stack slots are allocated. */
-INTDEF NONNULL((1)) int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 memstate_reqvstack(struct memstate *__restrict self,
                    vstackaddr_t min_alloc);
 
