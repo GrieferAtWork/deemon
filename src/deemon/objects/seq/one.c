@@ -621,7 +621,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 so_mh_seq_min_with_range(SeqOne *__restrict self, size_t start, size_t end) {
 	if likely(start == 0 && end >= 1)
 		return_reference(self->so_item);
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 
@@ -657,7 +657,7 @@ so_mh_seq_reduce_with_range_and_init(SeqOne *self, DeeObject *combine,
                                      DeeObject *init) {
 	if likely(start == 0 && end >= 1)
 		return so_mh_seq_reduce_with_init(self, combine, init);
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 

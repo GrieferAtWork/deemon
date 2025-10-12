@@ -55,6 +55,7 @@ final global			NegativeShift = ArithmeticError.NegativeShift;
 final global		SequenceError = ValueError.SequenceError;
 final global			KeyError = SequenceError.KeyError;
 final global				IndexError = KeyError.IndexError;
+final global					EmptySequence = IndexError.EmptySequence;
 final global				UnboundItem = KeyError.UnboundItem;
 final global				UnknownKey = KeyError.UnknownKey;
 final global				ReadOnlyKey = KeyError.ReadOnlyKey;

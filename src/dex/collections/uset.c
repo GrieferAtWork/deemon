@@ -29,6 +29,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dict.h> /* DeeDict_Dummy */
+#include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/hashset.h>
@@ -1079,7 +1080,7 @@ uset_mh_pop(USet *__restrict self) {
 	}
 	USet_LockEndWrite(self);
 	/* Set is already empty. */
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 

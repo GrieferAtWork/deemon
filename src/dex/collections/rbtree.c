@@ -2618,7 +2618,7 @@ rbtree_popfront(RBTree *self, size_t argc, DeeObject *const *argv) {
 	rbtree_node_free(node); /* NOTE: free; not destroy! (because we stole references) */
 	return (DREF DeeObject *)result;
 err_empty:
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 err:
 	return NULL;
 }
@@ -2648,7 +2648,7 @@ rbtree_popback(RBTree *self, size_t argc, DeeObject *const *argv) {
 	rbtree_node_free(node); /* NOTE: free; not destroy! (because we stole references) */
 	return (DREF DeeObject *)result;
 err_empty:
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 err:
 	return NULL;
 }
@@ -2915,7 +2915,7 @@ done:
 err_r_unlock_empty:
 	RBTree_LockEndRead(self);
 	DeeObject_FREE(result);
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 
@@ -2943,7 +2943,7 @@ done:
 	return result;
 err_r_empty:
 	DeeTuple_FreeUninitialized(result);
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 
@@ -2971,7 +2971,7 @@ done:
 	return result;
 err_r_empty:
 	DeeTuple_FreeUninitialized(result);
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 

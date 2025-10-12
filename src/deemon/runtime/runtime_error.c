@@ -856,14 +856,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_empty_sequence)(DeeObject *__restrict seq) {
-	ASSERT_OBJECT(seq);
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Empty sequence of type `%k' encountered",
-	                       Dee_TYPE(seq));
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_changed_sequence)(DeeObject *__restrict seq) {
 	ASSERT_OBJECT(seq);
 	return DeeError_Throwf(&DeeError_RuntimeError,

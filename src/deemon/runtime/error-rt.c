@@ -703,10 +703,15 @@ err:
 	return -1;
 }
 
+PRIVATE struct type_member tpconst IndexError_class_members[] = {
+	TYPE_MEMBER_CONST("EmptySequence", &DeeError_EmptySequence),
+	TYPE_MEMBER_END
+};
+
 PUBLIC DeeTypeObject DeeError_IndexError =
 INIT_CUSTOM_ERROR("IndexError", "(" IndexError_init_params ")",
                   TP_FNORMAL, &DeeError_KeyError, IndexError, NULL, &IndexError_print,
-                  NULL, NULL, IndexError_members, NULL);
+                  NULL, NULL, IndexError_members, IndexError_class_members);
 
 /* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
 PUBLIC ATTR_COLD NONNULL((1)) int
@@ -768,6 +773,42 @@ INTERN ATTR_COLD NONNULL((1)) int
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
+/************************************************************************/
+/* Error.ValueError.SequenceError.KeyError.IndexError.EmptySequence     */
+/************************************************************************/
+typedef IndexError EmptySequence;
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+EmptySequence_print(IndexError *__restrict self,
+                    Dee_formatprinter_t printer, void *arg) {
+	if (self->ie_base.ke_base.e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	return DeeFormat_Printf(printer, arg,
+	                        "Empty sequence of type `%K' encountered",
+	                        SequenceError_GetSeqType(&self->ie_base.ke_base));
+}
+
+PUBLIC DeeTypeObject DeeError_EmptySequence =
+INIT_LIKE_BASECLASS("EmptySequence", "(" IndexError_init_params ")",
+                    TP_FNORMAL, &DeeError_IndexError, EmptySequence, NULL, &EmptySequence_print,
+                    NULL, NULL, NULL);
+
+/* Throws an `DeeError_EmptySequence' indicating that a given sequence is empty */
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrEmptySequence)(DeeObject *seq) {
+	DREF EmptySequence *result = DeeObject_MALLOC(EmptySequence);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->ie_base.ke_base, &DeeError_EmptySequence);
+	result->ie_base.ke_base.e_message = NULL;
+	result->ie_base.ke_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ie_base.ke_base.ve_value, seq);
+	Dee_variant_init_unbound(&result->ie_base.ke_key);
+	Dee_variant_init_unbound(&result->ie_length);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
 
 
 

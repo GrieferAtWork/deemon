@@ -3798,7 +3798,7 @@ framestack_mh_seq_pop(FrameStack *self, Dee_ssize_t index) {
 	stackc = Dee_code_frame_getspaddr(frame);
 	if unlikely(!stackc) {
 		DeeFrame_LockEndWrite((DeeObject *)self->fs_frame);
-		err_empty_sequence((DeeObject *)self);
+		DeeRT_ErrEmptySequence(self);
 		goto err;
 	}
 

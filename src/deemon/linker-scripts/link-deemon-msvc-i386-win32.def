@@ -1144,6 +1144,7 @@ EXPORTS
 	DeeRT_ErrCUnboundAttrCA@8=_DeeRT_ErrCUnboundAttrCA@8
 	DeeRT_ErrCUnboundClassMember@8=_DeeRT_ErrCUnboundClassMember@8
 	DeeRT_ErrCUnboundInstanceMember@12=_DeeRT_ErrCUnboundInstanceMember@12
+	DeeRT_ErrEmptySequence@4=_DeeRT_ErrEmptySequence@4
 	DeeRT_ErrIndexOutOfBounds@12=_DeeRT_ErrIndexOutOfBounds@12
 	DeeRT_ErrIndexOutOfBoundsObj@12=_DeeRT_ErrIndexOutOfBoundsObj@12
 	DeeRT_ErrIndexOverflow@4=_DeeRT_ErrIndexOverflow@4
@@ -1630,6 +1631,7 @@ EXPORTS
 	Dee_unicode_readutf8_n@8=_Dee_unicode_readutf8_n@8
 	Dee_unicode_readutf8_rev_n@8=_Dee_unicode_readutf8_rev_n@8
 	Dee_unicode_writeutf8@8=_Dee_unicode_writeutf8@8
+	Dee_variant_cmpxch@12=_Dee_variant_cmpxch@12
 	Dee_variant_compare@8=_Dee_variant_compare@8
 	Dee_variant_compare_eq@8=_Dee_variant_compare_eq@8
 	Dee_variant_getobject@4=_Dee_variant_getobject@4

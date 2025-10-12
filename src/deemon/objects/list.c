@@ -3181,7 +3181,7 @@ list_del_first(List *__restrict me) {
 	return 0;
 err_empty_endwrite:
 	DeeList_LockEndWrite(me);
-	return err_empty_sequence((DeeObject *)me);
+	return DeeRT_ErrEmptySequence(me);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -3198,7 +3198,7 @@ list_set_first(List *me, DeeObject *value) {
 	return 0;
 err_empty_endwrite:
 	DeeList_LockEndWrite(me);
-	return err_empty_sequence((DeeObject *)me);
+	return DeeRT_ErrEmptySequence(me);
 }
 
 
@@ -3246,7 +3246,7 @@ list_del_last(List *__restrict me) {
 	return 0;
 err_empty_endwrite:
 	DeeList_LockEndWrite(me);
-	return err_empty_sequence((DeeObject *)me);
+	return DeeRT_ErrEmptySequence(me);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -3265,7 +3265,7 @@ list_set_last(List *me, DeeObject *value) {
 	return 0;
 err_empty_endwrite:
 	DeeList_LockEndWrite(me);
-	return err_empty_sequence((DeeObject *)me);
+	return DeeRT_ErrEmptySequence(me);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

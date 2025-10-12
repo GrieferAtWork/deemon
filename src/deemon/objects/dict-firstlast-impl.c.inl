@@ -28,6 +28,7 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/seq.h>
+#include <deemon/error-rt.h>
 
 #if (defined(DEFINE_dict_first) +      \
      defined(DEFINE_dict_firstkey) +   \
@@ -271,7 +272,7 @@ LOCAL_dict_setspecial_pair_getindex(void *arg, Dict *self,
 	data = (struct dict_mh_seq_setitem_index_impl_data *)arg;
 	if unlikely(!self->d_vused) {
 		DeeDict_LockEndWrite(self);
-		err_empty_sequence((DeeObject *)self);
+		DeeRT_ErrEmptySequence(self);
 		return Dee_DICT_HTAB_EOF;
 	}
 #ifdef LOCAL_IS_FIRST
@@ -316,7 +317,7 @@ LOCAL_dict_setspecial_key_getindex(void *arg, Dict *self,
 	data = (struct dict_setspecial_key_old_data *)arg;
 	if unlikely(!self->d_vused) {
 		DeeDict_LockEndWrite(self);
-		err_empty_sequence((DeeObject *)self);
+		DeeRT_ErrEmptySequence(self);
 		return Dee_DICT_HTAB_EOF;
 	}
 	LOCAL_dict_loaditem(self, item);
@@ -364,7 +365,7 @@ LOCAL_dict_setspecial(Dict *self, DeeObject *value) {
 	return 0;
 err_empty:
 	DeeDict_LockEndWrite(self);
-	return err_empty_sequence((DeeObject *)self);
+	return DeeRT_ErrEmptySequence(self);
 #else /* ... */
 	int result;
 	DREF DeeObject *key_and_value[2];

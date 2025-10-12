@@ -154,9 +154,7 @@ __seq_first__.seq_setfirst([[nonnull]] DeeObject *self,
 	return err_seq_unsupportedf(self, "first = %r", value);
 })}
 %{$none = 0}
-%{$empty = {
-	return err_empty_sequence(self);
-}}
+%{$empty = DeeRT_ErrEmptySequence(self)}
 %{$with__seq_operator_setitem_index = {
 	return CALL_DEPENDENCY(seq_operator_setitem_index, self, 0, value);
 }} {

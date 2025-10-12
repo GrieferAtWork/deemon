@@ -180,16 +180,16 @@ __seq_last__.seq_setlast([[nonnull]] DeeObject *self,
 	return err_seq_unsupportedf(self, "last = %r", value);
 })}
 %{$none = 0}
-%{$empty = {
-	return err_empty_sequence(self);
-}}
+%{$empty = DeeRT_ErrEmptySequence(self)}
 %{$with__seq_operator_size__and__seq_operator_setitem_index = {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if unlikely(!size)
-		return err_empty_sequence(self);
+	if unlikely(size == 0)
+		goto err_empty;
 	return CALL_DEPENDENCY(seq_operator_setitem_index, self, size - 1, value);
+err_empty:
+	return DeeRT_ErrEmptySequence(self);
 err:
 	return -1;
 }} {

@@ -1524,7 +1524,7 @@ bytes_getfirst(Bytes *__restrict self) {
 		goto err_empty;
 	return DeeInt_NEWU(DeeBytes_DATA(self)[0]);
 err_empty:
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 
@@ -1540,7 +1540,7 @@ bytes_setfirst(Bytes *__restrict self, DeeObject *__restrict value) {
 	DeeBytes_DATA(self)[0] = int_value;
 	return 0;
 err_empty:
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	goto err;
 err_readonly:
 	err_bytes_not_writable((DeeObject *)self);
@@ -1554,7 +1554,7 @@ bytes_getlast(Bytes *__restrict self) {
 		goto err_empty;
 	return DeeInt_NEWU(DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1]);
 err_empty:
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 
@@ -1570,7 +1570,7 @@ bytes_setlast(Bytes *__restrict self, DeeObject *__restrict value) {
 	DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1] = int_value;
 	return 0;
 err_empty:
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	goto err;
 err_readonly:
 	err_bytes_not_writable((DeeObject *)self);

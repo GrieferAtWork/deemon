@@ -124,7 +124,7 @@ __seq_reduce__.seq_reduce([[nonnull]] DeeObject *self,
 %{$none = return_none}
 %{$empty = {
 	(void)combine;
-	err_empty_sequence(self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }}
 %{$with__seq_operator_foreach =
@@ -137,7 +137,7 @@ __seq_reduce__.seq_reduce([[nonnull]] DeeObject *self,
 	if unlikely(foreach_status < 0)
 		goto err_data_result;
 	if unlikely(!data.gsr_result)
-		err_empty_sequence(self);
+		DeeRT_ErrEmptySequence(self);
 	return data.gsr_result;
 err_data_result:
 	Dee_XDecref(data.gsr_result);
@@ -188,7 +188,7 @@ __seq_reduce__.seq_reduce_with_range([[nonnull]] DeeObject *self,
 	(void)combine;
 	(void)start;
 	(void)end;
-	err_empty_sequence(self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }}
 %{$with__seq_enumerate_index =
@@ -201,7 +201,7 @@ __seq_reduce__.seq_reduce_with_range([[nonnull]] DeeObject *self,
 	if unlikely(foreach_status < 0)
 		goto err_data_result;
 	if unlikely(!data.gsr_result)
-		err_empty_sequence(self);
+		DeeRT_ErrEmptySequence(self);
 	return data.gsr_result;
 err_data_result:
 	Dee_XDecref(data.gsr_result);

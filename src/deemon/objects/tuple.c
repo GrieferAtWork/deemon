@@ -1547,7 +1547,7 @@ tuple_getfirst(Tuple *__restrict self) {
 		goto err_empty;
 	return_reference_(DeeTuple_GET(self, 0));
 err_empty:
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 
@@ -1557,7 +1557,7 @@ tuple_getlast(Tuple *__restrict self) {
 		goto err_empty;
 	return_reference_(DeeTuple_GET(self, DeeTuple_SIZE(self) - 1));
 err_empty:
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 

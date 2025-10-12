@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/dict.h>
+#include <deemon/error-rt.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -1696,7 +1697,7 @@ hashset_mh_pop(HashSet *self) {
 	}
 	DeeHashSet_LockEndWrite(self);
 	/* HashSet is already empty. */
-	err_empty_sequence((DeeObject *)self);
+	DeeRT_ErrEmptySequence(self);
 /*err:*/
 	return NULL;
 }

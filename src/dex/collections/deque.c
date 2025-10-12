@@ -414,7 +414,7 @@ Deque_PopFront(Deque *__restrict self) {
 	Deque_LockWrite(self);
 	if unlikely(!self->d_size) {
 		Deque_LockEndWrite(self);
-		err_empty_sequence((DeeObject *)self);
+		DeeRT_ErrEmptySequence(self);
 		return NULL;
 	}
 	result = Deque_PopFront_unlocked(self);
@@ -428,7 +428,7 @@ Deque_PopBack(Deque *__restrict self) {
 	Deque_LockWrite(self);
 	if unlikely(!self->d_size) {
 		Deque_LockEndWrite(self);
-		err_empty_sequence((DeeObject *)self);
+		DeeRT_ErrEmptySequence(self);
 		return NULL;
 	}
 	result = Deque_PopBack_unlocked(self);
@@ -501,9 +501,9 @@ Deque_Pop(Deque *__restrict self, size_t index) {
 	Deque_LockWrite(self);
 	if unlikely(index >= self->d_size) {
 		index = self->d_size;
-		if (!index) {
+		if unlikely(!index) {
 			Deque_LockEndWrite(self);
-			err_empty_sequence((DeeObject *)self);
+			DeeRT_ErrEmptySequence(self);
 			return NULL;
 		}
 		--index;
@@ -521,9 +521,9 @@ Deque_Pops(Deque *__restrict self, Dee_ssize_t index) {
 		index += self->d_size;
 	if unlikely((size_t)index >= self->d_size) {
 		index = self->d_size;
-		if (!index) {
+		if unlikely(!index) {
 			Deque_LockEndWrite(self);
-			err_empty_sequence((DeeObject *)self);
+			DeeRT_ErrEmptySequence(self);
 			return NULL;
 		}
 	}

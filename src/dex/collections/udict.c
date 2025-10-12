@@ -1065,7 +1065,7 @@ udict_mh_popitem(UDict *__restrict self) {
 	if unlikely(!self->ud_used) {
 		UDict_LockEndWrite(self);
 		DeeTuple_FreeUninitializedPair(result);
-		err_empty_sequence((DeeObject *)self);
+		DeeRT_ErrEmptySequence(self);
 		goto err;
 	}
 	iter = self->ud_elem;

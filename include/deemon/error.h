@@ -136,6 +136,7 @@ DDATDEF DeeTypeObject /*        */ DeeError_NegativeShift;
 DDATDEF DeeTypeObject /*    */ DeeError_SequenceError;
 DDATDEF DeeTypeObject /*        */ DeeError_KeyError;
 DDATDEF DeeTypeObject /*            */ DeeError_IndexError;
+DDATDEF DeeTypeObject /*                */ DeeError_EmptySequence;
 DDATDEF DeeTypeObject /*            */ DeeError_UnboundItem;
 DDATDEF DeeTypeObject /*            */ DeeError_UnknownKey;
 DDATDEF DeeTypeObject /*            */ DeeError_ReadOnlyKey;

@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -121,7 +122,7 @@ ds_mk_mh_set_pop(DefaultSequence_MapProxy *self) {
 		return key_and_value[0];
 	}
 	Dee_DecrefNokill(item);
-	err_empty_sequence(self->dsmp_map);
+	DeeRT_ErrEmptySequence(self->dsmp_map);
 err:
 	return NULL;
 }

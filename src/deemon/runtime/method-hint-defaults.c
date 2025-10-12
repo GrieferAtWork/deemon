@@ -7097,7 +7097,7 @@ default__seq_setfirst__unsupported(DeeObject *self, DeeObject *value) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_setfirst__empty(DeeObject *self, DeeObject *UNUSED(value)) {
-	return err_empty_sequence(self);
+	return DeeRT_ErrEmptySequence(self);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -7353,7 +7353,7 @@ default__seq_setlast__unsupported(DeeObject *self, DeeObject *value) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_setlast__empty(DeeObject *self, DeeObject *UNUSED(value)) {
-	return err_empty_sequence(self);
+	return DeeRT_ErrEmptySequence(self);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -7361,9 +7361,11 @@ default__seq_setlast__with__seq_operator_size__and__seq_operator_setitem_index(D
 	size_t size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if unlikely(!size)
-		return err_empty_sequence(self);
+	if unlikely(size == 0)
+		goto err_empty;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_setitem_index))(self, size - 1, value);
+err_empty:
+	return DeeRT_ErrEmptySequence(self);
 err:
 	return -1;
 }
@@ -8446,7 +8448,7 @@ default__seq_reduce__unsupported(DeeObject *self, DeeObject *combine) {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_reduce__empty(DeeObject *self, DeeObject *combine) {
 	(void)combine;
-	err_empty_sequence(self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 
@@ -8500,7 +8502,7 @@ default__seq_reduce__with__seq_operator_foreach(DeeObject *self, DeeObject *comb
 	if unlikely(foreach_status < 0)
 		goto err_data_result;
 	if unlikely(!data.gsr_result)
-		err_empty_sequence(self);
+		DeeRT_ErrEmptySequence(self);
 	return data.gsr_result;
 err_data_result:
 	Dee_XDecref(data.gsr_result);
@@ -8623,7 +8625,7 @@ default__seq_reduce_with_range__empty(DeeObject *self, DeeObject *combine, size_
 	(void)combine;
 	(void)start;
 	(void)end;
-	err_empty_sequence(self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 
@@ -8680,7 +8682,7 @@ default__seq_reduce_with_range__with__seq_enumerate_index(DeeObject *self, DeeOb
 	if unlikely(foreach_status < 0)
 		goto err_data_result;
 	if unlikely(!data.gsr_result)
-		err_empty_sequence(self);
+		DeeRT_ErrEmptySequence(self);
 	return data.gsr_result;
 err_data_result:
 	Dee_XDecref(data.gsr_result);
@@ -16871,7 +16873,7 @@ default__set_pop__unsupported(DeeObject *self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__set_pop__empty(DeeObject *self) {
-	err_empty_sequence(self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 
@@ -16880,7 +16882,7 @@ default__set_pop__with__seq_trygetfirst__and__set_remove(DeeObject *self) {
 	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_trygetfirst))(self);
 	if unlikely(!ITER_ISOK(result)) {
 		if (result == ITER_DONE)
-			err_empty_sequence(self);
+			DeeRT_ErrEmptySequence(self);
 		goto err;
 	}
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_remove))(self, result) < 0)
@@ -16897,9 +16899,9 @@ default__set_pop__with__map_popitem(DeeObject *self) {
 	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_popitem))(self);
 	if unlikely(!result)
 		goto err;
-	if (DeeNone_Check(result)) {
+	if unlikely(DeeNone_Check(result)) {
 		Dee_DecrefNokill(result);
-		err_empty_sequence(self);
+		DeeRT_ErrEmptySequence(self);
 		goto err;
 	}
 	return result;

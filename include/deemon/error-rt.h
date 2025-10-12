@@ -187,6 +187,11 @@ INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaIndexOutOfBounds)(struct Dee
 	Dee_ASSUMED_VALUE((DeeRT_ErrVaIndexOutOfBounds)(frame, index), -1)
 #endif /* CONFIG_BUILDING_DEEMON */
 
+/* Throws an `DeeError_EmptySequence' indicating that a given sequence is empty */
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrEmptySequence)(DeeObject *seq);
+#define DeeRT_ErrEmptySequence(seq) Dee_ASSUMED_VALUE((DeeRT_ErrEmptySequence)((DeeObject *)Dee_REQUIRES_OBJECT(seq)), -1)
+
+
 /* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
  * error within an `IndexError' (setting it as the `IndexError's "inner"), and using
  * `seq' as the accompanying sequence.

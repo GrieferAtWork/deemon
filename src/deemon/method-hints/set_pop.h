@@ -34,14 +34,14 @@ __set_pop__.set_pop([[nonnull]] DeeObject *self)
 %{unsupported(auto)}
 %{$none = return_none}
 %{$empty = {
-	err_empty_sequence(self);
+	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }}
 %{$with__seq_trygetfirst__and__set_remove = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_trygetfirst, self);
 	if unlikely(!ITER_ISOK(result)) {
 		if (result == ITER_DONE)
-			err_empty_sequence(self);
+			DeeRT_ErrEmptySequence(self);
 		goto err;
 	}
 	if unlikely(CALL_DEPENDENCY(set_remove, self, result) < 0)
@@ -56,9 +56,9 @@ err:
 	DREF DeeObject *result = CALL_DEPENDENCY(map_popitem, self);
 	if unlikely(!result)
 		goto err;
-	if (DeeNone_Check(result)) {
+	if unlikely(DeeNone_Check(result)) {
 		Dee_DecrefNokill(result);
-		err_empty_sequence(self);
+		DeeRT_ErrEmptySequence(self);
 		goto err;
 	}
 	return result;
