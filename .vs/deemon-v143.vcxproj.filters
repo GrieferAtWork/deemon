@@ -474,6 +474,12 @@
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\pp\bubble.h">
 			<Filter>include\kos-headers\hybrid\pp</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__atomic-lock.h">
+			<Filter>include\kos-headers\hybrid\sched</Filter>
+		</ClInclude>
+		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__atomic-rwlock.h">
+			<Filter>include\kos-headers\hybrid\sched</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__gettid.h">
 			<Filter>include\kos-headers\hybrid\sched</Filter>
 		</ClInclude>

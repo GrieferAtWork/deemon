@@ -847,12 +847,12 @@ PRIVATE struct type_member tpconst LOCAL_lockapi_members[] = {
 #else /* CONFIG_NO_THREADS */
 #ifdef LOCAL_IS_SHARED
 	TYPE_MEMBER_FIELD_DOC(STR_acquired,
-	                      STRUCT_CONST | STRUCT_ATOMIC | STRUCT_BOOL(__SIZEOF_ATOMIC_LOCK),
+	                      STRUCT_CONST | STRUCT_ATOMIC | STRUCT_BOOL(Dee_SIZEOF_ATOMIC_LOCK),
 	                      offsetof(LOCAL_DeeLockObject, l_lock.s_lock.a_lock),
 	                      DOC_GET(doc_lock_acquired)),
 #else /* LOCAL_IS_SHARED */
 	TYPE_MEMBER_FIELD_DOC(STR_acquired,
-	                      STRUCT_CONST | STRUCT_ATOMIC | STRUCT_BOOL(__SIZEOF_ATOMIC_LOCK),
+	                      STRUCT_CONST | STRUCT_ATOMIC | STRUCT_BOOL(Dee_SIZEOF_ATOMIC_LOCK),
 	                      offsetof(LOCAL_DeeLockObject, l_lock.a_lock),
 	                      DOC_GET(doc_lock_acquired)),
 #endif /* !LOCAL_IS_SHARED */

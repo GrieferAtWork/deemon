@@ -207,8 +207,8 @@ DECL_END
 /**/
 
 #include <hybrid/__atomic.h>
-#include <hybrid/sched/atomic-lock.h>
-#include <hybrid/sched/atomic-rwlock.h>
+#include <hybrid/sched/__atomic-lock.h>
+#include <hybrid/sched/__atomic-rwlock.h>
 /**/
 
 #include <stdbool.h> /* bool */
@@ -217,62 +217,64 @@ DECL_END
 DECL_BEGIN
 
 /* Simply implement atomic locks using the hybrid-API */
-typedef struct atomic_lock Dee_atomic_lock_t;
-#define DEE_ATOMIC_LOCK_INIT            ATOMIC_LOCK_INIT
-#define DEE_ATOMIC_LOCK_INIT_ACQUIRED   ATOMIC_LOCK_INIT_ACQUIRED
-#define Dee_atomic_lock_init            atomic_lock_init
-#define Dee_atomic_lock_init_acquired   atomic_lock_init_acquired
-#define Dee_atomic_lock_cinit           atomic_lock_cinit
-#define Dee_atomic_lock_cinit_acquired  atomic_lock_cinit_acquired
-#define Dee_atomic_lock_available       atomic_lock_available
-#define Dee_atomic_lock_acquired        atomic_lock_acquired
-#define Dee_atomic_lock_tryacquire      atomic_lock_tryacquire
-#define Dee_atomic_lock_acquire         atomic_lock_acquire
-#define Dee_atomic_lock_waitfor         atomic_lock_waitfor
-#define Dee_atomic_lock_release         atomic_lock_release
-#define _Dee_atomic_lock_release_NDEBUG _atomic_lock_release_NDEBUG
+#define Dee_SIZEOF_ATOMIC_LOCK __SIZEOF_HYBRID_ATOMIC_LOCK
+typedef struct __hybrid_atomic_lock Dee_atomic_lock_t;
+#define DEE_ATOMIC_LOCK_INIT            __HYBRID_ATOMIC_LOCK_INIT
+#define DEE_ATOMIC_LOCK_INIT_ACQUIRED   __HYBRID_ATOMIC_LOCK_INIT_ACQUIRED
+#define Dee_atomic_lock_init            __hybrid_atomic_lock_init
+#define Dee_atomic_lock_init_acquired   __hybrid_atomic_lock_init_acquired
+#define Dee_atomic_lock_cinit           __hybrid_atomic_lock_cinit
+#define Dee_atomic_lock_cinit_acquired  __hybrid_atomic_lock_cinit_acquired
+#define Dee_atomic_lock_available       __hybrid_atomic_lock_available
+#define Dee_atomic_lock_acquired        __hybrid_atomic_lock_acquired
+#define Dee_atomic_lock_tryacquire      __hybrid_atomic_lock_tryacquire
+#define Dee_atomic_lock_acquire         __hybrid_atomic_lock_acquire
+#define Dee_atomic_lock_waitfor         __hybrid_atomic_lock_waitfor
+#define Dee_atomic_lock_release         __hybrid_atomic_lock_release
+#define _Dee_atomic_lock_release_NDEBUG ___hybrid_atomic_lock_release_NDEBUG
 #define Dee_atomic_read_with_atomic_lock(p, self) \
 	__hybrid_atomic_load_with_atomic_lock(p, __ATOMIC_ACQUIRE, self)
 
 /* Simply implement atomic R/W-locks using the hybrid-API */
-typedef struct atomic_rwlock Dee_atomic_rwlock_t;
-#define DEE_ATOMIC_RWLOCK_MAX_READERS        ATOMIC_RWLOCK_MAX_READERS
-#define DEE_ATOMIC_RWLOCK_INIT               ATOMIC_RWLOCK_INIT
-#define DEE_ATOMIC_RWLOCK_INIT_READ          ATOMIC_RWLOCK_INIT_READ
-#define DEE_ATOMIC_RWLOCK_INIT_WRITE         ATOMIC_RWLOCK_INIT_WRITE
-#define Dee_atomic_rwlock_cinit              atomic_rwlock_cinit
-#define Dee_atomic_rwlock_cinit_read         atomic_rwlock_cinit_read
-#define Dee_atomic_rwlock_cinit_write        atomic_rwlock_cinit_write
-#define Dee_atomic_rwlock_init               atomic_rwlock_init
-#define Dee_atomic_rwlock_init_read          atomic_rwlock_init_read
-#define Dee_atomic_rwlock_init_write         atomic_rwlock_init_write
-#define Dee_atomic_rwlock_reading            atomic_rwlock_reading
-#define Dee_atomic_rwlock_writing            atomic_rwlock_writing
-#define Dee_atomic_rwlock_tryread            atomic_rwlock_tryread
-#define Dee_atomic_rwlock_trywrite           atomic_rwlock_trywrite
-#define Dee_atomic_rwlock_canread            atomic_rwlock_canread
-#define Dee_atomic_rwlock_canwrite           atomic_rwlock_canwrite
-#define Dee_atomic_rwlock_canendread         atomic_rwlock_canendread
-#define Dee_atomic_rwlock_canendwrite        atomic_rwlock_canendwrite
-#define Dee_atomic_rwlock_canend             atomic_rwlock_canend
-#define Dee_atomic_rwlock_waitread           atomic_rwlock_waitread
-#define Dee_atomic_rwlock_waitwrite          atomic_rwlock_waitwrite
-#define Dee_atomic_rwlock_read               atomic_rwlock_read
-#define Dee_atomic_rwlock_write              atomic_rwlock_write
-#define Dee_atomic_rwlock_tryupgrade         atomic_rwlock_tryupgrade
-#define Dee_atomic_rwlock_upgrade            atomic_rwlock_upgrade
-#define Dee_atomic_rwlock_downgrade          atomic_rwlock_downgrade
-#define _Dee_atomic_rwlock_downgrade_NDEBUG  _atomic_rwlock_downgrade_NDEBUG
-#define Dee_atomic_rwlock_endwrite           atomic_rwlock_endwrite
-#define Dee_atomic_rwlock_endread            atomic_rwlock_endread
-#define Dee_atomic_rwlock_end                atomic_rwlock_end
-#define Dee_atomic_rwlock_endread_ex         atomic_rwlock_endread_ex
-#define Dee_atomic_rwlock_end_ex             atomic_rwlock_end_ex
-#define _Dee_atomic_rwlock_endwrite_NDEBUG   _atomic_rwlock_endwrite_NDEBUG
-#define _Dee_atomic_rwlock_endread_NDEBUG    _atomic_rwlock_endread_NDEBUG
-#define _Dee_atomic_rwlock_end_NDEBUG        _atomic_rwlock_end_NDEBUG
-#define _Dee_atomic_rwlock_endread_ex_NDEBUG _atomic_rwlock_endread_ex_NDEBUG
-#define _Dee_atomic_rwlock_end_ex_NDEBUG     _atomic_rwlock_end_ex_NDEBUG
+#define Dee_SIZEOF_ATOMIC_RWLOCK __SIZEOF_HYBRID_ATOMIC_RWLOCK
+typedef struct __hybrid_atomic_rwlock Dee_atomic_rwlock_t;
+#define DEE_ATOMIC_RWLOCK_MAX_READERS        __HYBRID_ATOMIC_RWLOCK_MAX_READERS
+#define DEE_ATOMIC_RWLOCK_INIT               __HYBRID_ATOMIC_RWLOCK_INIT
+#define DEE_ATOMIC_RWLOCK_INIT_READ          __HYBRID_ATOMIC_RWLOCK_INIT_READ
+#define DEE_ATOMIC_RWLOCK_INIT_WRITE         __HYBRID_ATOMIC_RWLOCK_INIT_WRITE
+#define Dee_atomic_rwlock_cinit              __hybrid_atomic_rwlock_cinit
+#define Dee_atomic_rwlock_cinit_read         __hybrid_atomic_rwlock_cinit_read
+#define Dee_atomic_rwlock_cinit_write        __hybrid_atomic_rwlock_cinit_write
+#define Dee_atomic_rwlock_init               __hybrid_atomic_rwlock_init
+#define Dee_atomic_rwlock_init_read          __hybrid_atomic_rwlock_init_read
+#define Dee_atomic_rwlock_init_write         __hybrid_atomic_rwlock_init_write
+#define Dee_atomic_rwlock_reading            __hybrid_atomic_rwlock_reading
+#define Dee_atomic_rwlock_writing            __hybrid_atomic_rwlock_writing
+#define Dee_atomic_rwlock_tryread            __hybrid_atomic_rwlock_tryread
+#define Dee_atomic_rwlock_trywrite           __hybrid_atomic_rwlock_trywrite
+#define Dee_atomic_rwlock_canread            __hybrid_atomic_rwlock_canread
+#define Dee_atomic_rwlock_canwrite           __hybrid_atomic_rwlock_canwrite
+#define Dee_atomic_rwlock_canendread         __hybrid_atomic_rwlock_canendread
+#define Dee_atomic_rwlock_canendwrite        __hybrid_atomic_rwlock_canendwrite
+#define Dee_atomic_rwlock_canend             __hybrid_atomic_rwlock_canend
+#define Dee_atomic_rwlock_waitread           __hybrid_atomic_rwlock_waitread
+#define Dee_atomic_rwlock_waitwrite          __hybrid_atomic_rwlock_waitwrite
+#define Dee_atomic_rwlock_read               __hybrid_atomic_rwlock_read
+#define Dee_atomic_rwlock_write              __hybrid_atomic_rwlock_write
+#define Dee_atomic_rwlock_tryupgrade         __hybrid_atomic_rwlock_tryupgrade
+#define Dee_atomic_rwlock_upgrade            __hybrid_atomic_rwlock_upgrade
+#define Dee_atomic_rwlock_downgrade          __hybrid_atomic_rwlock_downgrade
+#define _Dee_atomic_rwlock_downgrade_NDEBUG  ___hybrid_atomic_rwlock_downgrade_NDEBUG
+#define Dee_atomic_rwlock_endwrite           __hybrid_atomic_rwlock_endwrite
+#define Dee_atomic_rwlock_endread            __hybrid_atomic_rwlock_endread
+#define Dee_atomic_rwlock_end                __hybrid_atomic_rwlock_end
+#define Dee_atomic_rwlock_endread_ex         __hybrid_atomic_rwlock_endread_ex
+#define Dee_atomic_rwlock_end_ex             __hybrid_atomic_rwlock_end_ex
+#define _Dee_atomic_rwlock_endwrite_NDEBUG   ___hybrid_atomic_rwlock_endwrite_NDEBUG
+#define _Dee_atomic_rwlock_endread_NDEBUG    ___hybrid_atomic_rwlock_endread_NDEBUG
+#define _Dee_atomic_rwlock_end_NDEBUG        ___hybrid_atomic_rwlock_end_NDEBUG
+#define _Dee_atomic_rwlock_endread_ex_NDEBUG ___hybrid_atomic_rwlock_endread_ex_NDEBUG
+#define _Dee_atomic_rwlock_end_ex_NDEBUG     ___hybrid_atomic_rwlock_end_ex_NDEBUG
 #define Dee_atomic_read_with_atomic_rwlock(p, self) \
 	__hybrid_atomic_load_with_atomic_rwlock(p, __ATOMIC_ACQUIRE, self)
 

@@ -367,18 +367,18 @@ typedef struct {
 #define DEE_RATOMIC_RWLOCK_INIT \
 	{ DEE_ATOMIC_RWLOCK_INIT, __HYBRID_GETTID_INVALID, 0 }
 #define Dee_ratomic_rwlock_init(self)                     \
-	(void)(atomic_rwlock_init(&(self)->rarw_lock),        \
+	(void)(Dee_atomic_rwlock_init(&(self)->rarw_lock),    \
 	       (self)->rarw_tid    = __HYBRID_GETTID_INVALID, \
 	       (self)->rarw_nwrite = 0)
 #ifdef __HYBRID_GETTID_INVALID_IS_ZERO
 #define Dee_ratomic_rwlock_cinit(self)                              \
-	(void)(atomic_rwlock_cinit(&(self)->rarw_lock),                 \
+	(void)(Dee_atomic_rwlock_cinit(&(self)->rarw_lock),             \
 	       Dee_ASSERT((self)->rarw_tid == __HYBRID_GETTID_INVALID), \
 	       Dee_ASSERT((self)->rarw_nwrite == 0))
 #else /* __HYBRID_GETTID_INVALID_IS_ZERO */
-#define Dee_ratomic_rwlock_cinit(self)                 \
-	(void)(atomic_rwlock_cinit(&(self)->rarw_lock),    \
-	       (self)->rarw_tid = __HYBRID_GETTID_INVALID, \
+#define Dee_ratomic_rwlock_cinit(self)                  \
+	(void)(Dee_atomic_rwlock_cinit(&(self)->rarw_lock), \
+	       (self)->rarw_tid = __HYBRID_GETTID_INVALID,  \
 	       Dee_ASSERT((self)->rarw_nwrite == 0))
 #endif /* !__HYBRID_GETTID_INVALID_IS_ZERO */
 

@@ -166,6 +166,8 @@
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\pp\__bubble.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\pp\__va_nargs.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\pp\bubble.h" />
+		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__atomic-lock.h" />
+		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__atomic-rwlock.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__gettid.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__preemption.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__yield.h" />
