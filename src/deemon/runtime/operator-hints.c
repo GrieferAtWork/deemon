@@ -1562,7 +1562,7 @@ is_disliked_impl(enum Dee_tno_id id, Dee_funptr_t impl) {
 	}
 }
 
-/* Returns the # score from "actions". Here, a lower score is perferred over a greater one. */
+/* Returns the # score from "actions". Here, a lower score is preferred over a greater one. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
 Dee_tno_assign_score(struct Dee_tno_assign const *actions,
                      size_t actions_count) {

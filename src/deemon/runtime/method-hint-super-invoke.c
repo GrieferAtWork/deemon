@@ -4102,7 +4102,7 @@ PUBLIC NONNULL((1, 3)) bool
 	if unlikely(!view_impl)
 		return false;
 
-	/* Load invocation specs for `specs' */
+	/* Load invocation specs for `id' */
 	specs = &mh_super_maps[id];
 
 	/* Apply callback replacements */

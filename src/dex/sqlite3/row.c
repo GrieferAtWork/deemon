@@ -365,7 +365,7 @@ rowfmt_indexof_string(RowFmt *__restrict self, char const *column_name) {
 	unsigned int i;
 	for (i = 0; i < self->rf_ncol; ++i) {
 		struct cellfmt *cell = &self->rf_cols[i];
-		if (DeeString_EqualsCStr(cell->cfmt_name, column_name))
+		if (strcmp(DeeString_STR(cell->cfmt_name), column_name) == 0)
 			return i;
 	}
 	return (unsigned int)-1;

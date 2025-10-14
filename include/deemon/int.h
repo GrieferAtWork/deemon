@@ -446,13 +446,9 @@ struct _Dee_int_1digit_object {
 	Dee_digit_t ob_digit[1];
 
 	/* Pad to whole pointers. */
-#if __SIZEOF_POINTER__ == 4 && Dee_SIZEOF_DIGIT == 2
-	uint16_t _ob_pad;
-#elif __SIZEOF_POINTER__ == 8 && Dee_SIZEOF_DIGIT == 4
-	uint32_t _ob_pad;
-#elif __SIZEOF_POINTER__ == 8 && Dee_SIZEOF_DIGIT == 2
-	uint16_t _ob_pad[3];
-#endif /* ... */
+#if ((__SIZEOF_POINTER__ - (Dee_SIZEOF_DIGIT % __SIZEOF_POINTER__)) % __SIZEOF_POINTER__) != 0
+	__BYTE_TYPE__ _ob_pad[(__SIZEOF_POINTER__ - (Dee_SIZEOF_DIGIT % __SIZEOF_POINTER__)) % __SIZEOF_POINTER__];
+#endif /* (__SIZEOF_POINTER__ - (Dee_SIZEOF_DIGIT % __SIZEOF_POINTER__)) % __SIZEOF_POINTER__ */
 };
 
 DDATDEF struct _Dee_int_1digit_object DeeInt_MinusOne_Zero_One[3];

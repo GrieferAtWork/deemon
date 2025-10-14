@@ -514,7 +514,7 @@ cdict_getitemnr_string_hash(DeeCachedDictObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->cdi_key))
 			continue;
-		if (!strcmp(DeeString_STR(item->cdi_key), key)) {
+		if (strcmp(DeeString_STR(item->cdi_key), key) == 0) {
 			result = item->cdi_value;
 			DeeCachedDict_LockEndRead(self);
 			return result;
@@ -610,7 +610,7 @@ cdict_trygetitemnr_string_hash(DeeCachedDictObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->cdi_key))
 			continue;
-		if (!strcmp(DeeString_STR(item->cdi_key), key)) {
+		if (strcmp(DeeString_STR(item->cdi_key), key) == 0) {
 			result = item->cdi_value;
 			DeeCachedDict_LockEndRead(self);
 			return result;
@@ -701,7 +701,7 @@ cdict_iscached_string_hash(DeeCachedDictObject *self, char const *key, Dee_hash_
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->cdi_key))
 			continue;
-		if (!strcmp(DeeString_STR(item->cdi_key), key)) {
+		if (strcmp(DeeString_STR(item->cdi_key), key) == 0) {
 			DeeCachedDict_LockEndRead(self);
 			return true;
 		}

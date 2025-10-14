@@ -647,8 +647,6 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 	(DeeString_SIZE(lhs) == DeeString_SIZE(rhs_STR) && \
 	 bcmp(DeeString_STR(lhs), DeeString_STR(rhs_STR),  \
 	      DeeString_SIZE(lhs) * sizeof(char)) == 0)
-#define DeeString_EqualsCStr(lhs, rhs_CStr) \
-	(bcmp(DeeString_STR(lhs), rhs_CStr, (DeeString_SIZE(lhs) + 1) * sizeof(char)) == 0)
 #define DeeString_StartsWithSTR(lhs, rhs_STR)          \
 	(DeeString_SIZE(lhs) >= DeeString_SIZE(rhs_STR) && \
 	 bcmp(DeeString_STR(lhs), DeeString_STR(rhs_STR),  \

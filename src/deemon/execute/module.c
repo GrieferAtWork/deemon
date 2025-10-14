@@ -235,7 +235,7 @@ DeeModule_GetSymbol(DeeModuleObject const *__restrict self,
 			break; /* Not found */
 		if (item->ss_hash != hash)
 			continue; /* Non-matching hash */
-		if (!DeeString_EqualsCStr(name, item->ss_name))
+		if (strcmp(DeeString_STR(name), item->ss_name) != 0)
 			continue; /* Differing strings. */
 		return item;  /* Found it! */
 	}
