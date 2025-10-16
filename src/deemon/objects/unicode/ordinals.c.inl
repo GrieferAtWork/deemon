@@ -213,7 +213,7 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&stringordinals_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&stringordinals_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__DC202CECA797EF15),

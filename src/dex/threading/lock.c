@@ -2253,7 +2253,7 @@ lock_union_fini(LockUnion *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-lock_union_visit(LockUnion *__restrict self, dvisit_t proc, void *arg) {
+lock_union_visit(LockUnion *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visitv(self->lu_elem, self->lu_size);
 }
 
@@ -2859,7 +2859,7 @@ INTERN DeeTypeObject DeeLockUnion_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&lock_union_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&lock_union_printrepr
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&lock_union_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&lock_union_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

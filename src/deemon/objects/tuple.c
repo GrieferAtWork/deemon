@@ -1050,7 +1050,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tuple_iterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&tuple_iterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &tuple_iterator_cmp,
@@ -1404,7 +1404,7 @@ PRIVATE struct type_member tpconst tuple_class_members[] = {
 };
 
 INTERN NONNULL((1, 2)) void DCALL
-tuple_visit(Tuple *__restrict self, dvisit_t proc, void *arg) {
+tuple_visit(Tuple *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visitv(DeeTuple_ELEM(self),
 	           DeeTuple_SIZE(self));
 }
@@ -2274,7 +2274,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&tuple_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&tuple_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tuple_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&tuple_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &tuple_math,
 	/* .tp_cmp           = */ &tuple_cmp,
@@ -2417,7 +2417,7 @@ nullable_tuple_fini(Tuple *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-nullable_tuple_visit(Tuple *__restrict self, dvisit_t proc, void *arg) {
+nullable_tuple_visit(Tuple *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisitv(DeeTuple_ELEM(self),
 	            DeeTuple_SIZE(self));
 }
@@ -2685,7 +2685,7 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&nullable_tuple_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&nullable_tuple_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ &nullable_tuple_cmp,

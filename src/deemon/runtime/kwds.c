@@ -115,7 +115,7 @@ kwdsiter_fini(KwdsIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-kwdsiter_visit(KwdsIterator *__restrict self, dvisit_t proc, void *arg) {
+kwdsiter_visit(KwdsIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->ki_map);
 }
 
@@ -300,7 +300,7 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwdsiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&kwdsiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &kwdsiter_cmp,
@@ -499,7 +499,7 @@ kwds_fini(Kwds *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-kwds_visit(Kwds *__restrict self, dvisit_t proc, void *arg) {
+kwds_visit(Kwds *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i <= self->kw_mask; ++i)
 		Dee_XVisit(self->kw_map[i].ke_name);
@@ -789,7 +789,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwds_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwds_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&kwds_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E), /* TODO */
@@ -926,7 +926,7 @@ err:
 
 #define kmapiter_fini kwdsiter_fini
 PRIVATE NONNULL((1, 2)) void DCALL
-kmapiter_visit(KmapIterator *__restrict self, dvisit_t proc, void *arg) {
+kmapiter_visit(KmapIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->ki_map);
 }
 
@@ -1061,7 +1061,7 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kmapiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&kmapiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &kmapiter_cmp,
@@ -1191,7 +1191,7 @@ kmap_fini(KwdsMapping *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-kmap_visit(KwdsMapping *__restrict self, dvisit_t proc, void *arg) {
+kmap_visit(KwdsMapping *__restrict self, Dee_visit_t proc, void *arg) {
 	DeeKwdsMapping_LockRead(self);
 	Dee_Visitv(self->kmo_argv, self->kmo_kwds->kw_size);
 	DeeKwdsMapping_LockEndRead(self);
@@ -1512,7 +1512,7 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kmap_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&kmap_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E),

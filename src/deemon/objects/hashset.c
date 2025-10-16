@@ -611,7 +611,7 @@ hashset_clear(HashSet *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-hashset_visit(HashSet *__restrict self, dvisit_t proc, void *arg) {
+hashset_visit(HashSet *__restrict self, Dee_visit_t proc, void *arg) {
 	DeeHashSet_LockRead(self);
 	ASSERT((self->hs_elem == empty_hashset_items) == (self->hs_mask == 0));
 	ASSERT((self->hs_elem == empty_hashset_items) == (self->hs_used == 0));
@@ -1436,7 +1436,7 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&hashsetiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&hashsetiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &hashsetiterator_cmp,
@@ -1909,7 +1909,7 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&hashset_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&hashset_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&hashset_visit,
 	/* .tp_gc            = */ &hashset_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__47C97A4265F9F31F),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__A5C53AFDF1233C5A), /* TODO: &hashset_cmp */

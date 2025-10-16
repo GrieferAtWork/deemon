@@ -145,7 +145,7 @@ usetiterator_fini(USetIterator *__restrict self) {
 
 INTERN NONNULL((1, 2)) void DCALL
 usetiterator_visit(USetIterator *__restrict self,
-                   dvisit_t proc, void *arg) {
+                   Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->usi_set);
 }
 
@@ -228,7 +228,7 @@ INTERN DeeTypeObject USetIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&usetiterator_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&usetiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&usetiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &usetiterator_cmp,
@@ -889,7 +889,7 @@ PRIVATE NONNULL((1)) void DCALL uset_clear(USet *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-uset_visit(USet *__restrict self, dvisit_t proc, void *arg) {
+uset_visit(USet *__restrict self, Dee_visit_t proc, void *arg) {
 	USet_LockRead(self);
 	ASSERT((self->us_elem == empty_set_items) == (self->us_mask == 0));
 	ASSERT((self->us_elem == empty_set_items) == (self->us_used == 0));
@@ -1293,7 +1293,7 @@ INTERN DeeTypeObject USet_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&uset_printrepr
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uset_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&uset_visit,
 	/* .tp_gc            = */ &uset_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1426,7 +1426,7 @@ INTERN DeeTypeObject URoSetIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&urosetiterator_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&urosetiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&urosetiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &urosetiterator_cmp,
@@ -1595,7 +1595,7 @@ PRIVATE struct type_seq uroset_seq = {
 };
 
 PRIVATE NONNULL((1, 2)) void DCALL
-uroset_visit(URoSet *__restrict self, dvisit_t proc, void *arg) {
+uroset_visit(URoSet *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i <= self->urs_mask; ++i) {
 		DeeObject *key = self->urs_elem[i].usi_key;
@@ -1982,7 +1982,7 @@ INTERN DeeTypeObject URoSet_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&uroset_printrepr
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uroset_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&uroset_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

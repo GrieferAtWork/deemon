@@ -127,7 +127,7 @@ shlib_fini(Shlib *__restrict self) {
 
 #ifndef CONFIG_NO_CFUNCTION
 PRIVATE NONNULL((1, 2)) void DCALL
-shlib_visit(Shlib *__restrict self, dvisit_t proc, void *arg) {
+shlib_visit(Shlib *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisit((DeeObject *)self->sh_vfunptr);
 }
 #endif /* !CONFIG_NO_CFUNCTION */
@@ -552,7 +552,7 @@ INTERN DeeTypeObject DeeShlib_Type = {
 		/* .tp_bool = */ NULL
 	},
 #ifndef CONFIG_NO_CFUNCTION
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&shlib_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&shlib_visit,
 #else /* !CONFIG_NO_CFUNCTION */
 	/* .tp_visit         = */ NULL,
 #endif /* CONFIG_NO_CFUNCTION */

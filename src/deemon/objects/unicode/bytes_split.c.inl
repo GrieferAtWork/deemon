@@ -285,7 +285,7 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&bsi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &bsi_cmp,
@@ -337,7 +337,7 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&bsi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &bsi_cmp,
@@ -450,7 +450,7 @@ bs_fini(BytesSplit *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-bs_visit(BytesSplit *__restrict self, dvisit_t proc, void *arg) {
+bs_visit(BytesSplit *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->bs_bytes);
 	Dee_XVisit(self->bs_sep_owner);
 }
@@ -646,7 +646,7 @@ INTERN DeeTypeObject BytesSplit_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bs_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&bs_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),
@@ -696,7 +696,7 @@ INTERN DeeTypeObject BytesCaseSplit_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bs_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&bs_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),
@@ -1001,7 +1001,7 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blsi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&blsi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &blsi_cmp,
@@ -1174,7 +1174,7 @@ INTERN DeeTypeObject BytesLineSplit_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bls_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&bls_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),

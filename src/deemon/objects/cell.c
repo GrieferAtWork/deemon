@@ -131,7 +131,7 @@ cell_moveassign(DeeCellObject *__restrict self,
 
 PRIVATE NONNULL((1, 2)) void DCALL
 cell_visit(DeeCellObject *__restrict self,
-           dvisit_t proc, void *arg) {
+           Dee_visit_t proc, void *arg) {
 	DeeCell_LockRead(self);
 	Dee_XVisit(self->c_item);
 	DeeCell_LockEndRead(self);
@@ -630,7 +630,7 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cell_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cell_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cell_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&cell_visit,
 	/* .tp_gc            = */ &cell_gc,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &cell_cmp,

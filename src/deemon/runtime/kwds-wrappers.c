@@ -245,7 +245,7 @@ INTERN DeeTypeObject DeeBlackListKwdsIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blvi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&blvi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &blvi_cmp,
@@ -455,7 +455,7 @@ blv_fini(DeeBlackListKwdsObject *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-blv_visit(DeeBlackListKwdsObject *__restrict self, dvisit_t proc, void *arg) {
+blv_visit(DeeBlackListKwdsObject *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t argc;
 	DeeBlackListKwds_LockRead(self);
 	argc = DeeKwds_SIZE(self->blkd_kwds);
@@ -974,7 +974,7 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blv_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&blv_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E),
@@ -1207,7 +1207,7 @@ INTERN DeeTypeObject DeeBlackListKwIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blmi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&blmi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &blmi_cmp,
@@ -1863,7 +1863,7 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blkw_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&blkw_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E),

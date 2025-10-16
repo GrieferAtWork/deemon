@@ -91,7 +91,7 @@ jy_fini(JITYieldFunction *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-jy_visit(JITYieldFunction *__restrict self, dvisit_t proc, void *arg) {
+jy_visit(JITYieldFunction *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visitv(self->jy_argv, self->jy_argc);
 	Dee_XVisit(self->jy_kw);
 	Dee_Visit(self->jy_func);
@@ -328,7 +328,7 @@ INTERN DeeTypeObject JITYieldFunction_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&jy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1850,7 +1850,7 @@ err_try:
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-ji_visit(JITYieldFunctionIterator *__restrict self, dvisit_t proc, void *arg) {
+ji_visit(JITYieldFunctionIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	JITFunctionObject *jf = self->ji_func->jy_func;
 	JITObjectTable *tab;
 	JITYieldFunctionIterator_AcquireNoInt(self); /* Read lock would be enough here... */
@@ -1988,7 +1988,7 @@ INTERN DeeTypeObject JITYieldFunctionIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ji_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ji_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

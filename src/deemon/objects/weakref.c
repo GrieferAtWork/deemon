@@ -53,7 +53,7 @@ ob_weakref_fini(WeakRef *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-ob_weakref_visit(WeakRef *__restrict self, dvisit_t proc, void *arg) {
+ob_weakref_visit(WeakRef *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisit(self->wr_del);
 }
 
@@ -447,7 +447,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ob_weakref_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ob_weakref_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ob_weakref_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ob_weakref_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &ob_weakref_cmp,

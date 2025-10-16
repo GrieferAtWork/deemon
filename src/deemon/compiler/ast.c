@@ -974,7 +974,7 @@ cleanup_switch_cases(struct text_label *switch_cases,
 #define ast_visit(x) ast_visit_impl(x, proc, arg)
 PRIVATE NONNULL((1, 2)) void DCALL
 ast_visit_impl(struct ast *__restrict self,
-               dvisit_t proc, void *arg);
+               Dee_visit_t proc, void *arg);
 #else /* ... */
 #define ast_visit(x) Dee_Visit(x)
 #endif /* !... */
@@ -982,7 +982,7 @@ ast_visit_impl(struct ast *__restrict self,
 
 INTERN NONNULL((2)) void DCALL
 visit_switch_cases(struct text_label *switch_cases,
-                   dvisit_t proc, void *arg) {
+                   Dee_visit_t proc, void *arg) {
 	while (switch_cases) {
 		ASSERT_AST(switch_cases->tl_expr);
 		ast_visit(switch_cases->tl_expr);
@@ -1135,7 +1135,7 @@ do_xdecref_3:
 
 PRIVATE NONNULL((1, 2)) void DCALL
 ast_visit_impl(struct ast *__restrict self,
-               dvisit_t proc, void *arg) {
+               Dee_visit_t proc, void *arg) {
 	switch (self->a_type) {
 
 	case AST_CLASS: {
@@ -1283,7 +1283,7 @@ INTERN DeeTypeObject DeeAst_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ast_visit_impl,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ast_visit_impl,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

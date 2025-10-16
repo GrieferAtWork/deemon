@@ -135,7 +135,7 @@ property_fini(Property *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-property_visit(Property *__restrict self, dvisit_t proc, void *arg) {
+property_visit(Property *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisit(self->p_get);
 	Dee_XVisit(self->p_del);
 	Dee_XVisit(self->p_set);
@@ -603,7 +603,7 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&property_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&property_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&property_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &property_cmp,

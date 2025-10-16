@@ -2911,7 +2911,7 @@ fallback:
 
 
 INTDEF NONNULL((1)) void DCALL class_fini(DeeTypeObject *__restrict self);
-INTDEF NONNULL((1, 2)) void DCALL class_visit(DeeTypeObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL class_visit(DeeTypeObject *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL class_clear(DeeTypeObject *__restrict self);
 INTDEF NONNULL((1)) void DCALL class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority);
 
@@ -2967,7 +2967,7 @@ type_fini(DeeTypeObject *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 type_visit(DeeTypeObject *__restrict self,
-           dvisit_t proc, void *arg) {
+           Dee_visit_t proc, void *arg) {
 	if (DeeType_IsClass(self))
 		class_visit(self, proc, arg);
 	if (self->tp_mro != NULL) {
@@ -4917,7 +4917,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 		/* .tp_print     = */ &type_print,
 		/* .tp_printrepr = */ &type_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&type_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&type_visit,
 	/* .tp_gc            = */ &type_gc_data,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &type_cmp_,

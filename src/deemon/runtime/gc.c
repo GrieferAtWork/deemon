@@ -803,7 +803,7 @@ found_chain_link:
 	data->vd_chain       = &node;
 
 	/* Recursively search this object. */
-	DeeObject_Visit(self, (dvisit_t)&visit_object, data);
+	DeeObject_Visit(self, (Dee_visit_t)&visit_object, data);
 
 	/* Step #4: Remove our stack-allocated dependency entry if it
 	 *          is the one located on-top of the stack. */
@@ -882,7 +882,7 @@ gc_trydestroy(struct gc_head *__restrict head,
 	}
 
 	/* Recursively visit our initial dependency. */
-	DeeObject_Visit(&head->gc_object, (dvisit_t)&visit_object, &visit);
+	DeeObject_Visit(&head->gc_object, (Dee_visit_t)&visit_object, &visit);
 
 #define OPTIMIZE_DEPS_SET()                                \
 	do {                                                   \
@@ -1561,7 +1561,7 @@ gciter_fini(GCIter *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-gciter_visit(GCIter *__restrict self, dvisit_t proc, void *arg) {
+gciter_visit(GCIter *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisit(self->gi_next);
 }
 
@@ -1640,7 +1640,7 @@ PRIVATE DeeTypeObject GCIter_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&gciter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&gciter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__439AAF00B07ABA02),

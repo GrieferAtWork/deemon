@@ -928,7 +928,7 @@ INTERN DeeTypeObject SeqFlat_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sf_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__3C4D336761465F8A),
@@ -1028,7 +1028,7 @@ err:
 
 PRIVATE NONNULL((1, 2)) void DCALL
 sfi_visit(SeqFlatIterator *__restrict self,
-          dvisit_t proc, void *arg) {
+          Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->sfi_baseiter);
 	SeqFlatIterator_LockAcquire(self);
 	Dee_Visit(self->sfi_curriter);
@@ -1321,7 +1321,7 @@ INTERN DeeTypeObject SeqFlatIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sfi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sfi_visit,
 	/* .tp_gc            = */ &sfi_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__439AAF00B07ABA02),

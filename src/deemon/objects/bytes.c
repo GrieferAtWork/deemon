@@ -87,7 +87,7 @@ bytesiter_fini(BytesIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-bytesiter_visit(BytesIterator *__restrict self, dvisit_t proc, void *arg) {
+bytesiter_visit(BytesIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->bi_bytes);
 }
 
@@ -202,7 +202,7 @@ INTERN DeeTypeObject BytesIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bytesiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&bytesiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &bytesiter_cmp,
@@ -647,7 +647,7 @@ bytes_fini(Bytes *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-bytes_visit(Bytes *__restrict self, dvisit_t proc, void *arg) {
+bytes_visit(Bytes *__restrict self, Dee_visit_t proc, void *arg) {
 	/* Check for special case: we're owning the object buffer outself. */
 	if (self->b_orig == (DREF DeeObject *)self)
 		return;
@@ -2078,7 +2078,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 		/* .tp_print     = */ &DeeBytes_Print,
 		/* .tp_printrepr = */ &DeeBytes_PrintRepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bytes_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&bytes_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &bytes_math,
 	/* .tp_cmp           = */ &bytes_cmp,

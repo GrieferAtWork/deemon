@@ -649,7 +649,7 @@ ddi_fini(DeeDDIObject *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-ddi_visit(DeeDDIObject *__restrict self, dvisit_t proc, void *arg) {
+ddi_visit(DeeDDIObject *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->d_strtab);
 }
 
@@ -777,7 +777,7 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ddi_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ddi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ddi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &ddi_cmp,

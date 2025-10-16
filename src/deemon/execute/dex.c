@@ -511,7 +511,7 @@ dex_fini(DeeDexObject *__restrict self) {
 #if 0
 PRIVATE NONNULL((1, 2)) void DCALL
 dex_visit(DeeDexObject *__restrict self,
-          dvisit_t proc, void *arg) {
+          Dee_visit_t proc, void *arg) {
 	if (self->d_module.mo_flags & MODULE_FDIDLOAD) {
 		struct dex_symbol *iter;
 		ASSERT(self->d_dex);
@@ -554,7 +554,7 @@ PUBLIC DeeTypeObject DeeDex_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&module_printrepr),
 	},
-	/* .tp_visit         = */ NULL, // (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dex_visit,
+	/* .tp_visit         = */ NULL, // (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&dex_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__8C153DCE147F6A78),

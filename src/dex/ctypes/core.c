@@ -559,7 +559,7 @@ ptype_fini(DeePointerTypeObject *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-ptype_visit(DeePointerTypeObject *__restrict self, dvisit_t proc, void *arg) {
+ptype_visit(DeePointerTypeObject *__restrict self, Dee_visit_t proc, void *arg) {
 	ASSERTF(DeeObject_Check(DeeSType_AsType(self->pt_orig)),
 	        "Missing base type for %p:%s",
 	        self,
@@ -605,7 +605,7 @@ INTERN DeeTypeObject DeePointerType_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ptype_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ptype_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -747,7 +747,7 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ltype_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ptype_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -2051,7 +2051,7 @@ INTERN DeeTypeObject DeeArrayType_Type = {
 		/* .tp_repr = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&atype_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ptype_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -2096,7 +2096,7 @@ ftype_fini(DeeCFunctionTypeObject *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-ftype_visit(DeeCFunctionTypeObject *__restrict self, dvisit_t proc, void *arg) {
+ftype_visit(DeeCFunctionTypeObject *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(DeeSType_AsType(self->ft_orig));
 	Dee_Visitv((DeeObject **)self->ft_argv, self->ft_argc);
 }
@@ -2209,7 +2209,7 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 		/* .tp_repr = */ CFUNCTION_OPERATOR((DeeObject *(DCALL *)(DeeObject *__restrict))&ftype_repr),
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ CFUNCTION_OPERATOR((void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ftype_visit),
+	/* .tp_visit         = */ CFUNCTION_OPERATOR((void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ftype_visit),
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

@@ -70,7 +70,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__copy_recursive(ProxyObje
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__deepcopy(ProxyObject *__restrict self, ProxyObject *__restrict other);
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__init(ProxyObject *__restrict self, size_t argc, DeeObject *const *argv); /* (obj) */
 
-INTDEF NONNULL((1, 2)) void DCALL generic_proxy__visit(ProxyObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL generic_proxy__visit(ProxyObject *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy__fini(ProxyObject *__restrict self);
 #define generic_proxy__fini_likely   generic_proxy__fini
 #define generic_proxy__fini_unlikely generic_proxy__fini
@@ -82,7 +82,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__copy_recursive1_alias2(
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__deepcopy(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy2__init(ProxyObject2 *__restrict self, size_t argc, DeeObject *const *argv); /* (obj1,obj2) */
 
-INTDEF NONNULL((1, 2)) void DCALL generic_proxy2__visit(ProxyObject2 *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL generic_proxy2__visit(ProxyObject2 *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy2__fini(ProxyObject2 *__restrict self);
 #define generic_proxy2__fini_normal_likely     generic_proxy2__fini
 #define generic_proxy2__fini_normal_unlikely   generic_proxy2__fini
@@ -97,7 +97,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__copy_alias123(ProxyObje
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__deepcopy(ProxyObject3 *__restrict self, ProxyObject3 *__restrict other);
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy3__init(ProxyObject3 *__restrict self, size_t argc, DeeObject *const *argv); /* (obj1,obj2,obj3) */
 
-INTDEF NONNULL((1, 2)) void DCALL generic_proxy3__visit(ProxyObject3 *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL generic_proxy3__visit(ProxyObject3 *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy3__fini(ProxyObject3 *__restrict self);
 
 

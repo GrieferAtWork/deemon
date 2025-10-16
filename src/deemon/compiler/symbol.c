@@ -527,7 +527,7 @@ delsym(struct symbol *__restrict self)
 }
 
 PRIVATE void DCALL
-visitsym(struct symbol *__restrict self, dvisit_t proc, void *arg) {
+visitsym(struct symbol *__restrict self, Dee_visit_t proc, void *arg) {
 	switch (self->s_type) {
 
 	case SYMBOL_TYPE_EXTERN:
@@ -583,7 +583,7 @@ scope_fini(DeeScopeObject *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-scope_visit(DeeScopeObject *__restrict self, dvisit_t proc, void *arg) {
+scope_visit(DeeScopeObject *__restrict self, Dee_visit_t proc, void *arg) {
 	struct symbol **biter, **bend, *iter;
 	DeeCompiler_LockReadNoInt();
 	biter = self->s_map;
@@ -631,7 +631,7 @@ INTERN DeeTypeObject DeeScope_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&scope_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&scope_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -726,7 +726,7 @@ cleanup_switch_cases(struct text_label *switch_cases,
                      struct text_label *switch_default);
 INTDEF NONNULL((2)) void DCALL
 visit_switch_cases(struct text_label *switch_cases,
-                   dvisit_t proc, void *arg);
+                   Dee_visit_t proc, void *arg);
 
 
 /* -------- DeeBaseScopeObject Implementation -------- */
@@ -758,7 +758,7 @@ base_scope_fini(DeeBaseScopeObject *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 base_scope_visit(DeeBaseScopeObject *__restrict self,
-                 dvisit_t proc, void *arg) {
+                 Dee_visit_t proc, void *arg) {
 	DeeCompiler_LockReadNoInt();
 	ASSERT(self->bs_argc_max >= self->bs_argc_min);
 	visit_switch_cases(self->bs_swcase, proc, arg);
@@ -795,7 +795,7 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&base_scope_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&base_scope_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -877,7 +877,7 @@ root_scope_str(DeeRootScopeObject *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 root_scope_visit(DeeRootScopeObject *__restrict self,
-                 dvisit_t proc, void *arg) {
+                 Dee_visit_t proc, void *arg) {
 	size_t i;
 	DeeCompiler_LockReadNoInt();
 	Dee_Visit(self->rs_module);
@@ -914,7 +914,7 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&root_scope_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&root_scope_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

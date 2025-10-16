@@ -2855,7 +2855,7 @@ sysfile_fini(SystemFile *__restrict self) {
 #endif /* deemon_file_HAVE_sysfile_fini */
 
 PRIVATE NONNULL((1, 2)) void DCALL
-sysfile_visit(SystemFile *__restrict self, dvisit_t proc, void *arg) {
+sysfile_visit(SystemFile *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisit(self->sf_filename);
 }
 
@@ -3165,7 +3165,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sysfile_print,
 			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sysfile_printrepr
 		},
-			/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sysfile_visit,
+			/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sysfile_visit,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,

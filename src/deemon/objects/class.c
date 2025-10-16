@@ -221,7 +221,7 @@ again:
 }
 
 INTERN NONNULL((1, 2)) void DCALL
-class_visit(DeeTypeObject *__restrict self, dvisit_t proc, void *arg) {
+class_visit(DeeTypeObject *__restrict self, Dee_visit_t proc, void *arg) {
 	struct class_desc *my_class;
 	uint16_t i, size;
 	my_class = DeeClass_DESC(self);
@@ -3638,7 +3638,7 @@ instance_iterattr(DeeTypeObject *tp_self, DeeObject *__restrict self,
 INTERN NONNULL((1, 2, 3)) void DCALL
 instance_tvisit(DeeTypeObject *tp_self,
                 DeeObject *__restrict self,
-                dvisit_t proc, void *arg) {
+                Dee_visit_t proc, void *arg) {
 	struct class_desc *desc;
 	struct instance_desc *instance;
 	desc     = DeeClass_DESC(tp_self);
@@ -3723,7 +3723,7 @@ again_i:
 
 INTERN NONNULL((1, 2)) void DCALL
 instance_visit(DeeObject *__restrict self,
-               dvisit_t proc, void *arg) {
+               Dee_visit_t proc, void *arg) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	do {
 		instance_tvisit(tp_self, self, proc, arg);

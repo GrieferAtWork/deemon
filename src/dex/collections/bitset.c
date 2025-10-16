@@ -3549,7 +3549,7 @@ bsv_fini(BitsetView *__restrict self) {
 }
 
 PRIVATE NONNULL((1)) void DCALL
-bsv_visit(BitsetView *__restrict self, dvisit_t proc, void *arg) {
+bsv_visit(BitsetView *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->bsv_owner);
 }
 
@@ -4228,7 +4228,7 @@ INTERN DeeTypeObject BitsetView_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&bsv_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsv_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&bsv_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &bsv_math,
 	/* .tp_cmp           = */ &bsv_cmp,
@@ -4466,7 +4466,7 @@ bsiter_fini(BitsetIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1)) void DCALL
-bsiter_visit(BitsetIterator *__restrict self, dvisit_t proc, void *arg) {
+bsiter_visit(BitsetIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->bsi_owner);
 }
 
@@ -4545,7 +4545,7 @@ INTERN DeeTypeObject BitsetIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bsiter_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&bsiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &bsiter_cmp,

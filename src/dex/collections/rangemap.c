@@ -869,7 +869,7 @@ proxy_fini(RangeMapProxy *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-proxy_visit(RangeMapProxy *__restrict self, dvisit_t proc, void *arg) {
+proxy_visit(RangeMapProxy *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->rmp_rmap);
 }
 
@@ -1773,7 +1773,7 @@ INTERN DeeTypeObject RangeMapProxy_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&proxy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -2237,7 +2237,7 @@ proxy_iterator_fini(RangeMapProxyIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-proxy_iterator_visit(RangeMapProxyIterator *__restrict self, dvisit_t proc, void *arg) {
+proxy_iterator_visit(RangeMapProxyIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->rmpi_iter);
 	Dee_Visit(self->rmpi_rmap);
 }
@@ -2437,7 +2437,7 @@ INTERN DeeTypeObject RangeMapProxyIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_iterator_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_iterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&proxy_iterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -2732,7 +2732,7 @@ proxy_keys_iterator_fini(RangeMapProxyKeysIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-proxy_keys_iterator_visit(RangeMapProxyKeysIterator *__restrict self, dvisit_t proc, void *arg) {
+proxy_keys_iterator_visit(RangeMapProxyKeysIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	RangeMapProxyKeysIterator_LockAcquire(self);
 	Dee_Visit(self->rmpki_prvkey);
 	Dee_Visit(self->rmpki_maxkey);
@@ -2845,7 +2845,7 @@ proxy_mapitems_iterator_fini(RangeMapProxyKeysIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-proxy_mapitems_iterator_visit(RangeMapProxyKeysIterator *__restrict self, dvisit_t proc, void *arg) {
+proxy_mapitems_iterator_visit(RangeMapProxyKeysIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	RangeMapProxyKeysIterator_LockAcquire(self);
 	Dee_Visit(self->rmpki_base.rmpii_value);
 	Dee_Visit(self->rmpki_prvkey);
@@ -3225,7 +3225,7 @@ INTERN DeeTypeObject RangeMapKeysIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_keys_iterator_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_keys_iterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&proxy_keys_iterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -3270,7 +3270,7 @@ INTERN DeeTypeObject RangeMapMapItemsIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_keys_iterator_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_mapitems_iterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&proxy_mapitems_iterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

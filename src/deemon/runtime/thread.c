@@ -3481,7 +3481,7 @@ thread_clear(DeeThreadObject *__restrict self) {
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 
 PRIVATE NONNULL((1, 2)) void DCALL
-thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
+thread_visit(DeeThreadObject *__restrict self, Dee_visit_t proc, void *arg) {
 	uint32_t state;
 	struct thread_interrupt *iter;
 
@@ -4893,7 +4893,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&thread_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&thread_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&thread_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&thread_visit,
 	/* .tp_gc            = */ thread_gc_PTR,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &DeeObject_GenericCmpByAddr,

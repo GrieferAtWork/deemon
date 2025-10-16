@@ -1013,7 +1013,7 @@ function_fini(Function *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 function_visit(Function *__restrict self,
-               dvisit_t proc, void *arg) {
+               Dee_visit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i < self->fo_code->co_refc; ++i)
 		Dee_Visit(self->fo_refv[i]);
@@ -1258,7 +1258,7 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&function_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&function_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&function_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&function_visit,
 	/* .tp_gc            = */ &function_gc,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &function_cmp,
@@ -1295,7 +1295,7 @@ yf_fini(YFunction *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-yf_visit(YFunction *__restrict self, dvisit_t proc, void *arg) {
+yf_visit(YFunction *__restrict self, Dee_visit_t proc, void *arg) {
 	if (self->yf_kw) {
 		Dee_Visit(self->yf_kw->fk_kw);
 		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS)
@@ -1797,7 +1797,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yf_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&yf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),
@@ -1928,7 +1928,7 @@ yfi_dtor(YFIterator *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 yfi_visit(YFIterator *__restrict self,
-          dvisit_t proc, void *arg) {
+          Dee_visit_t proc, void *arg) {
 	if (self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING)
 		return; /* Can't visit a frame that is current executing. */
 
@@ -3059,7 +3059,7 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yfi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&yfi_visit,
 	/* .tp_gc            = */ &yfi_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__439AAF00B07ABA02),

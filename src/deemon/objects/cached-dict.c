@@ -166,7 +166,7 @@ cdict_clear(CachedDict *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-cdict_visit(CachedDict *__restrict self, dvisit_t proc, void *arg) {
+cdict_visit(CachedDict *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->cd_map);
 	DeeCachedDict_LockRead(self);
 	ASSERT((self->cd_elem == empty_cdict_items) == (self->cd_mask == 0));
@@ -1080,7 +1080,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cdict_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cdict_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&cdict_visit,
 	/* .tp_gc            = */ &cdict_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ &cdict_cmp,

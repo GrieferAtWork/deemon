@@ -1629,7 +1629,7 @@ buffer_fini(Buffer *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-buffer_visit(Buffer *__restrict self, dvisit_t proc, void *arg) {
+buffer_visit(Buffer *__restrict self, Dee_visit_t proc, void *arg) {
 	DeeFileBuffer_LockWriteNoInt(self);
 	Dee_XVisit(self->fb_file);
 	DeeFileBuffer_LockEndWrite(self);
@@ -1973,7 +1973,7 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&buffer_print,
 			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&buffer_printrepr
 		},
-			/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&buffer_visit,
+			/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&buffer_visit,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,

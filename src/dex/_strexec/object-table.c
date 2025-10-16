@@ -94,7 +94,7 @@ JITObjectTable_Fini(JITObjectTable *__restrict self) {
 }
 
 INTERN NONNULL((1, 2)) void DCALL
-JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg) {
+JITObjectTable_Visit(JITObjectTable *__restrict self, Dee_visit_t proc, void *arg) {
 	if (self->ot_list != jit_empty_object_list) {
 		size_t i;
 		for (i = 0; i <= self->ot_mask; ++i) {

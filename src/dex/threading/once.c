@@ -209,7 +209,7 @@ once_fini(DeeOnceObject *__restrict self) {
 }
 
 PRIVATE NONNULL((1)) void DCALL
-once_visit(DeeOnceObject *__restrict self, dvisit_t proc, void *arg) {
+once_visit(DeeOnceObject *__restrict self, Dee_visit_t proc, void *arg) {
 	switch (Dee_once_trybegin(&self->o_once)) {
 
 	case 0: {
@@ -729,7 +729,7 @@ INTERN DeeTypeObject DeeOnce_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&once_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&once_printrepr
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&once_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&once_visit,
 	/* .tp_gc            = */ &once_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

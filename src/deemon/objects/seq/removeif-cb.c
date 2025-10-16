@@ -63,7 +63,7 @@ srwrip_fini(SeqRemoveWithRemoveIfPredicate *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-srwrip_visit(SeqRemoveWithRemoveIfPredicate *__restrict self, dvisit_t proc, void *arg) {
+srwrip_visit(SeqRemoveWithRemoveIfPredicate *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->srwrip_item);
 }
 
@@ -74,7 +74,7 @@ srwripwk_fini(SeqRemoveWithRemoveIfPredicateWithKey *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-srwripwk_visit(SeqRemoveWithRemoveIfPredicateWithKey *__restrict self, dvisit_t proc, void *arg) {
+srwripwk_visit(SeqRemoveWithRemoveIfPredicateWithKey *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->srwripwk_item);
 	Dee_Visit(self->srwripwk_key);
 }
@@ -141,7 +141,7 @@ INTERN DeeTypeObject SeqRemoveWithRemoveIfPredicate_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&srwrip_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&srwrip_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -188,7 +188,7 @@ INTERN DeeTypeObject SeqRemoveWithRemoveIfPredicateWithKey_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&srwripwk_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&srwripwk_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -343,7 +343,7 @@ INTERN DeeTypeObject SeqRemoveIfWithRemoveAllKey_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&seq_removeif_with_removeall_key_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *, dvisit_t, void *))&seq_removeif_with_removeall_key_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *, Dee_visit_t, void *))&seq_removeif_with_removeall_key_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

@@ -1012,7 +1012,7 @@ process_fini(Process *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-process_visit(Process *__restrict self, dvisit_t proc, void *arg) {
+process_visit(Process *__restrict self, Dee_visit_t proc, void *arg) {
 	Process_LockRead(self);
 	Dee_XVisitv(self->p_stdfd, COMPILER_LENOF(self->p_stdfd));
 	Dee_XVisit(self->p_envp);
@@ -5291,7 +5291,7 @@ INTERN DeeTypeObject DeeProcess_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&process_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&process_printrepr
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&process_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&process_visit,
 	/* .tp_gc            = */ &process_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

@@ -1035,7 +1035,7 @@ err:
 
 PRIVATE NONNULL((1, 2)) void DCALL
 list_visit(List *__restrict self,
-           dvisit_t proc, void *arg) {
+           Dee_visit_t proc, void *arg) {
 	DeeList_LockRead(self);
 	Dee_Visitv(DeeList_ELEM(self),
 	           DeeList_SIZE(self));
@@ -4341,7 +4341,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&list_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&list_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&list_visit,
 	/* .tp_gc            = */ &list_gc,
 	/* .tp_math          = */ &list_math,
 	/* .tp_cmp           = */ &list_cmp,
@@ -4631,7 +4631,7 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&li_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&li_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &li_cmp,

@@ -1972,7 +1972,7 @@ err:
 
 
 PRIVATE NONNULL((1, 2)) void DCALL
-diriter_visit(DeeDirIteratorObject *__restrict self, dvisit_t proc, void *arg) {
+diriter_visit(DeeDirIteratorObject *__restrict self, Dee_visit_t proc, void *arg) {
 	/* Not needed (and mustn't be enabled; `diriter_visit' is re-used as `dir_visit'!) */
 	/*Dee_XVisit(self->odi_pathstr);*/
 	Dee_Visit(self->odi_path);
@@ -2110,7 +2110,7 @@ INTERN DeeTypeObject DeeDirIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&diriter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&diriter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -2301,7 +2301,7 @@ INTERN DeeTypeObject DeeDir_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dir_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&dir_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

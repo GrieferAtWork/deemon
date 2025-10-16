@@ -140,7 +140,7 @@ INTERN DeeTypeObject QueryIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&qiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&qiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

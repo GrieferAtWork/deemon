@@ -61,7 +61,7 @@ DeeCompilerItem_Fini(CompilerItem *__restrict self) {
 }
 
 INTERN NONNULL((1, 2)) void DCALL
-DeeCompilerItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg) {
+DeeCompilerItem_Visit(CompilerItem *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->ci_compiler);
 }
 
@@ -84,7 +84,7 @@ DeeCompilerObjItem_Fini(CompilerItem *__restrict self) {
 }
 
 INTERN NONNULL((1, 2)) void DCALL
-DeeCompilerObjItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg) {
+DeeCompilerObjItem_Visit(CompilerItem *__restrict self, Dee_visit_t proc, void *arg) {
 	COMPILER_BEGIN_NOINT(self->ci_compiler);
 	Dee_Visit(self->ci_compiler);
 	Dee_Visit((DeeObject *)self->ci_value);
@@ -126,7 +126,7 @@ INTERN DeeTypeObject DeeCompilerItem_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerItem_Visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&DeeCompilerItem_Visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -171,7 +171,7 @@ INTERN DeeTypeObject DeeCompilerObjItem_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerObjItem_Visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&DeeCompilerObjItem_Visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -223,7 +223,7 @@ INTERN DeeTypeObject DeeCompilerWrapper_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerWrapper_Visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&DeeCompilerWrapper_Visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

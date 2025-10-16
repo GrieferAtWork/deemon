@@ -895,7 +895,7 @@ deq_bool(Deque *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-deq_visit(Deque *__restrict self, dvisit_t proc, void *arg) {
+deq_visit(Deque *__restrict self, Dee_visit_t proc, void *arg) {
 	DequeBucket *iter;
 	if (!self->d_size)
 		return;
@@ -1452,7 +1452,7 @@ INTERN DeeTypeObject Deque_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&deq_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&deq_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&deq_visit,
 	/* .tp_gc            = */ &deq_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1582,7 +1582,7 @@ deqiter_fini(DequeIteratorObject *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-deqiter_visit(DequeIteratorObject *__restrict self, dvisit_t proc, void *arg) {
+deqiter_visit(DequeIteratorObject *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->di_deq);
 }
 
@@ -1679,7 +1679,7 @@ INTERN DeeTypeObject DequeIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&deqiter_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&deqiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&deqiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL, /* TODO: bi-directional iterator support */
 	/* .tp_cmp           = */ NULL,

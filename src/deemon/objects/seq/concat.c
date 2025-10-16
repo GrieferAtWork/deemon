@@ -137,7 +137,7 @@ catiterator_fini(CatIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-catiterator_visit(CatIterator *__restrict self, dvisit_t proc, void *arg) {
+catiterator_visit(CatIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	CatIterator_LockRead(self);
 	Dee_Visit(self->cti_curr);
 	CatIterator_LockEndRead(self);
@@ -377,7 +377,7 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&catiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&catiterator_visit,
 	/* .tp_gc            = */ &catiterator_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &catiterator_cmp,
@@ -400,7 +400,7 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 
 
 INTDEF NONNULL((1)) void DCALL tuple_fini(DeeTupleObject *__restrict self);
-INTDEF NONNULL((1, 2)) void DCALL tuple_visit(DeeTupleObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL tuple_visit(DeeTupleObject *__restrict self, Dee_visit_t proc, void *arg);
 #define cat_fini   tuple_fini
 #define cat_visit  tuple_visit
 
@@ -743,7 +743,7 @@ INTERN DeeTypeObject SeqConcat_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cat_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&cat_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__26B2EC529683DE3C),

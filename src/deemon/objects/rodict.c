@@ -789,7 +789,7 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rditer_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rditer_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &rditer_cmp,
@@ -911,7 +911,7 @@ rodict_fini(RoDict *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-rodict_visit(RoDict *__restrict self, dvisit_t proc, void *arg) {
+rodict_visit(RoDict *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i < self->rd_vsize; ++i) {
 		struct Dee_dict_item *item;
@@ -2203,7 +2203,7 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rodict_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rodict_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rodict_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E), /* TODO: &rodict_cmp */

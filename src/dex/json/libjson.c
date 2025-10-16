@@ -1264,7 +1264,7 @@ jseq_fini(DeeJsonSequenceObject *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 jseq_visit(DeeJsonSequenceObject *__restrict self,
-           dvisit_t proc, void *arg) {
+           Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->js_owner);
 }
 
@@ -1325,7 +1325,7 @@ INTERN DeeTypeObject DeeJsonSequenceIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&jseqiter_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jseqiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&jseqiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &jseqiter_cmp,
@@ -1371,7 +1371,7 @@ INTERN DeeTypeObject DeeJsonMappingIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&jmapiter_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jmapiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&jmapiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &jmapiter_cmp,
@@ -1418,7 +1418,7 @@ INTERN DeeTypeObject DeeJsonSequence_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&jseq_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jseq_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&jseq_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1465,7 +1465,7 @@ INTERN DeeTypeObject DeeJsonMapping_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&jmap_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jmap_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&jmap_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

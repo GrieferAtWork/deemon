@@ -427,7 +427,7 @@ INTERN DeeTypeObject MapUnion_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mu_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&mu_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E),
@@ -528,7 +528,7 @@ muiter_set_in2nd(MapUnionIterator *__restrict self,
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-muiter_visit(MapUnionIterator *__restrict self, dvisit_t proc, void *arg) {
+muiter_visit(MapUnionIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->mui_union);
 	MapUnionIterator_LockRead(self);
 	Dee_Visit(self->mui_iter);
@@ -900,7 +900,7 @@ INTERN DeeTypeObject MapUnionIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&muiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&muiter_visit,
 	/* .tp_gc            = */ &muiter_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__439AAF00B07ABA02),
@@ -1149,7 +1149,7 @@ INTERN DeeTypeObject MapIntersection_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&mi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E),
@@ -1343,7 +1343,7 @@ INTERN DeeTypeObject MapIntersectionIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&miiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&miiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &miiter_cmp,
@@ -1582,7 +1582,7 @@ INTERN DeeTypeObject MapDifference_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&md_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&md_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E),
@@ -1713,7 +1713,7 @@ INTERN DeeTypeObject MapDifferenceIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mditer_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&mditer_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &mditer_cmp,
@@ -2282,7 +2282,7 @@ INTERN DeeTypeObject MapSymmetricDifference_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&msd_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&msd_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E),
@@ -2388,7 +2388,7 @@ STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_symdiff) == offsetof
 #define msditer_visit muiter_visit
 #else
 PRIVATE NONNULL((1, 2)) void DCALL
-msditer_visit(MapSymmetricDifferenceIterator *__restrict self, dvisit_t proc, void *arg) {
+msditer_visit(MapSymmetricDifferenceIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->msdi_symdiff);
 	MapSymmetricDifferenceIterator_LockRead(self);
 	Dee_Visit(self->msdi_iter);
@@ -2743,7 +2743,7 @@ INTERN DeeTypeObject MapSymmetricDifferenceIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&msditer_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&msditer_visit,
 	/* .tp_gc            = */ &msditer_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &msditer_cmp,

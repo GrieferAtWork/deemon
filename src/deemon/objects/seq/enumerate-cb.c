@@ -312,7 +312,7 @@ sew_fini(SeqEnumerateWrapper *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-sew_visit(SeqEnumerateWrapper *__restrict self, dvisit_t proc, void *arg) {
+sew_visit(SeqEnumerateWrapper *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_rshared_lock_acquire_noint(&self->sew_lock);
 	Dee_XVisit(self->sew_err);
 	Dee_rshared_lock_release(&self->sew_lock);

@@ -214,7 +214,7 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rosetiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rosetiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &rosetiterator_cmp,
@@ -462,7 +462,7 @@ roset_fini(RoSet *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-roset_visit(RoSet *__restrict self, dvisit_t proc, void *arg) {
+roset_visit(RoSet *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i <= self->rs_mask; ++i) {
 		if (!self->rs_elem[i].rsi_key)
@@ -725,7 +725,7 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&roset_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&roset_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&roset_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__F6E3D7B2219AE1EB),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__A5C53AFDF1233C5A), /* TODO: &roset_cmp */

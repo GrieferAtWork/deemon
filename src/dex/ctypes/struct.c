@@ -236,7 +236,7 @@ struct_type_fini(DeeStructTypeObject *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-struct_type_visit(DeeStructTypeObject *__restrict self, dvisit_t proc, void *arg) {
+struct_type_visit(DeeStructTypeObject *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_hash_t i;
 	for (i = 0; i <= self->st_fmsk; ++i) {
 		if (!self->st_fvec[i].sf_name)
@@ -384,7 +384,7 @@ INTERN DeeTypeObject DeeStructType_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&struct_type_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&struct_type_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

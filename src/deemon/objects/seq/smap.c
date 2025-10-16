@@ -283,7 +283,7 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&smapiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&smapiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &smapiter_cmp,
@@ -317,7 +317,7 @@ smap_fini(SharedMap *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-smap_visit(SharedMap *__restrict self, dvisit_t proc, void *arg) {
+smap_visit(SharedMap *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visitv((DeeObject **)self->sm_vector,
 	           self->sm_length * 2);
 }
@@ -842,7 +842,7 @@ PUBLIC DeeTypeObject DeeSharedMap_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&map_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&smap_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&smap_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E),

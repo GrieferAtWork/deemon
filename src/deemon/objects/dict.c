@@ -360,7 +360,7 @@ INTERN DeeTypeObject DictIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&diter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&diter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &diter_cmp,
@@ -2024,7 +2024,7 @@ dict_fini(Dict *__restrict self) {
 }
 
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_visit(Dict *__restrict self, dvisit_t proc, void *arg) {
+dict_visit(Dict *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_dict_vidx_t i;
 	struct Dee_dict_item *vtab;
 	DeeDict_LockRead(self);
@@ -4189,7 +4189,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&dict_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dict_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&dict_visit,
 	/* .tp_gc            = */ &dict_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__E66FA6851AAFE176),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E), /* TODO */

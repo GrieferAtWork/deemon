@@ -1340,7 +1340,7 @@ INTERN DeeTypeObject SeqEach_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&se_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&se_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&se_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&se_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &se_math,
 	/* .tp_cmp           = */ &se_cmp,
@@ -2091,7 +2091,7 @@ PUBLIC DeeTypeObject DeeSeqSome_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ss_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ss_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ss_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ss_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &ss_math,
 	/* .tp_cmp           = */ &ss_cmp,
@@ -2260,7 +2260,7 @@ seo_fini(SeqEachOperator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-seo_visit(SeqEachOperator *__restrict self, dvisit_t proc, void *arg) {
+seo_visit(SeqEachOperator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->se_seq);
 	Dee_Visitv(self->so_opargv, self->so_opargc);
 }
@@ -3421,7 +3421,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))seo_operator_printrepr_PTR,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seo_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&seo_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &seo_math,
 	/* .tp_cmp           = */ &sew_cmp,
@@ -3897,7 +3897,7 @@ INTERN DeeTypeObject SeqSomeOperator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sso_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seo_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&seo_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &ssw_math,
 	/* .tp_cmp           = */ &sso_cmp,
@@ -4093,7 +4093,7 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sewi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sewi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &sewi_cmp,

@@ -1292,7 +1292,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&super_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&super_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&super_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&super_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &super_math,
 	/* .tp_cmp           = */ &super_cmp,

@@ -90,7 +90,7 @@ attr_fini(Attr *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-attr_visit(Attr *__restrict self, dvisit_t proc, void *arg) {
+attr_visit(Attr *__restrict self, Dee_visit_t proc, void *arg) {
 	/* No need to visit the name/doc (strings don't need to be visited) */
 	Dee_Visit(self->a_desc.ad_info.ai_decl);
 }
@@ -734,7 +734,7 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&attr_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&attr_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&attr_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&attr_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &attr_cmp,
@@ -809,7 +809,7 @@ enumattr_fini(EnumAttr *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-enumattr_visit(EnumAttr *__restrict self, dvisit_t proc, void *arg) {
+enumattr_visit(EnumAttr *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->ea_obj);
 	Dee_XVisit(self->ea_hint.ah_decl);
 }
@@ -964,7 +964,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&enumattr_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&enumattr_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),
@@ -1028,7 +1028,7 @@ enumattriter_fini(EnumAttrIter *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-enumattriter_visit(EnumAttrIter *__restrict self, dvisit_t proc, void *arg) {
+enumattriter_visit(EnumAttrIter *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_attriter_visit(&self->ei_iter);
 	Dee_Visit(self->ei_seq);
 }
@@ -1106,7 +1106,7 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&enumattriter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&enumattriter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__439AAF00B07ABA02),

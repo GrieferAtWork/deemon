@@ -694,7 +694,7 @@ copyfile_progress_fini(DeeCopyFileProgressObject *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 copyfile_progress_visit(DeeCopyFileProgressObject *__restrict self,
-                        dvisit_t proc, void *arg) {
+                        Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->cfp_srcfile);
 	Dee_Visit(self->cfp_dstfile);
 }
@@ -779,7 +779,7 @@ INTERN DeeTypeObject DeeCopyFileProgress_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&copyfile_progress_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&copyfile_progress_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

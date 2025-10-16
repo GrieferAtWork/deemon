@@ -256,7 +256,7 @@ tls_fini(TLS *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-tls_visit(TLS *__restrict self, dvisit_t proc, void *arg) {
+tls_visit(TLS *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisit(self->t_factory);
 }
 
@@ -465,7 +465,7 @@ tls_fini(TLS *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-tls_visit(TLS *__restrict self, dvisit_t proc, void *arg) {
+tls_visit(TLS *__restrict self, Dee_visit_t proc, void *arg) {
 	if (ITER_ISOK(self->t_value))
 		Dee_Visit(self->t_value);
 	Dee_XVisit(self->t_factory);
@@ -788,7 +788,7 @@ INTERN DeeTypeObject DeeTLS_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&tls_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tls_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&tls_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &DeeObject_GenericCmpByAddr,

@@ -289,7 +289,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL fl_bool(FixedList *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-fl_visit(FixedList *__restrict self, dvisit_t proc, void *arg) {
+fl_visit(FixedList *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t i;
 	FixedList_LockRead(self);
 	for (i = 0; i < self->fl_size; ++i)
@@ -1469,7 +1469,7 @@ INTERN DeeTypeObject FixedList_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&fl_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&fl_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&fl_visit,
 	/* .tp_gc            = */ &fl_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL, /* TODO */
@@ -1544,7 +1544,7 @@ fli_fini(FixedListIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-fli_visit(FixedListIterator *__restrict self, dvisit_t proc, void *arg) {
+fli_visit(FixedListIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->li_list);
 }
 
@@ -1742,7 +1742,7 @@ INTERN DeeTypeObject FixedListIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&fli_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&fli_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&fli_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &fli_cmp,

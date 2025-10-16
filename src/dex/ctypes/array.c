@@ -74,7 +74,7 @@ aiter_fini(ArrayIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-aiter_visit(ArrayIterator *__restrict self, dvisit_t proc, void *arg) {
+aiter_visit(ArrayIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(DeeLValueType_AsType(self->ai_type));
 }
 
@@ -175,7 +175,7 @@ PRIVATE DeeTypeObject ArrayIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&aiter_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&aiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&aiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

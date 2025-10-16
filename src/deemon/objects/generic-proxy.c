@@ -85,7 +85,7 @@ generic_proxy__init(ProxyObject *__restrict self,
 
 INTERN NONNULL((1, 2)) void DCALL
 generic_proxy__visit(ProxyObject *__restrict self,
-                     dvisit_t proc, void *arg) {
+                     Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->po_obj);
 }
 
@@ -157,7 +157,7 @@ generic_proxy2__init(ProxyObject2 *__restrict self,
 
 INTERN NONNULL((1, 2)) void DCALL
 generic_proxy2__visit(ProxyObject2 *__restrict self,
-                      dvisit_t proc, void *arg) {
+                      Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->po_obj1);
 	Dee_Visit(self->po_obj2);
 }
@@ -222,7 +222,7 @@ generic_proxy3__init(ProxyObject3 *__restrict self,
 }
 
 INTERN NONNULL((1, 2)) void DCALL
-generic_proxy3__visit(ProxyObject3 *__restrict self, dvisit_t proc, void *arg) {
+generic_proxy3__visit(ProxyObject3 *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->po_obj1);
 	Dee_Visit(self->po_obj2);
 	Dee_Visit(self->po_obj3);

@@ -69,7 +69,7 @@ JITLValue_Fini(JITLValue *__restrict self) {
 }
 
 INTERN NONNULL((1, 2)) void DFCALL
-JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, void *arg) {
+JITLValue_Visit(JITLValue *__restrict self, Dee_visit_t proc, void *arg) {
 	switch (self->lv_kind) {
 
 	case JIT_LVALUE_RANGE:

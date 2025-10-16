@@ -1752,7 +1752,7 @@ to_fini(TypeOperators *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-to_visit(TypeOperators *__restrict self, dvisit_t proc, void *arg) {
+to_visit(TypeOperators *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->to_type);
 }
 
@@ -1979,7 +1979,7 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&toi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&toi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &toi_cmp,
@@ -2029,7 +2029,7 @@ INTERN DeeTypeObject TypeOperators_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&to_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&to_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__F6E3D7B2219AE1EB),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__A5C53AFDF1233C5A),

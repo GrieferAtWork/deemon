@@ -287,7 +287,7 @@ traceiter_fini(TraceIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-traceiter_visit(TraceIterator *__restrict self, dvisit_t proc, void *arg) {
+traceiter_visit(TraceIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->ti_trace);
 }
 
@@ -460,7 +460,7 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&traceiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&traceiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &traceiter_cmp,
@@ -523,7 +523,7 @@ traceback_fini(DeeTracebackObject *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 traceback_visit(DeeTracebackObject *__restrict self,
-                dvisit_t proc, void *arg) {
+                Dee_visit_t proc, void *arg) {
 	struct code_frame *iter, *end;
 	DeeTraceback_LockAcquire(self);
 	Dee_Visit(self->tb_thread);
@@ -825,7 +825,7 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 		/* .tp_print = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&traceback_print,
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&traceback_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&traceback_visit,
 	/* .tp_gc            = */ &traceback_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),

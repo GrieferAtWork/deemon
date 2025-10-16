@@ -1031,7 +1031,7 @@ rbtreeiter_fini(RBTreeIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-rbtreeiter_visit(RBTreeIterator *__restrict self, dvisit_t proc, void *arg) {
+rbtreeiter_visit(RBTreeIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->rbti_tree);
 }
 
@@ -1146,7 +1146,7 @@ INTERN DeeTypeObject RBTreeIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&rbtreeiter_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rbtreeiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rbtreeiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &rbtreeiter_cmp,
@@ -3160,7 +3160,7 @@ rbtree_move_assign(RBTree *self, RBTree *other) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-rbtree_node_visit_tree(struct rbtree_node *__restrict self, dvisit_t proc, void *arg) {
+rbtree_node_visit_tree(struct rbtree_node *__restrict self, Dee_visit_t proc, void *arg) {
 again:
 	Dee_Visit(rbtree_node_get_minkey(self));
 	Dee_Visit(rbtree_node_get_maxkey(self));
@@ -3178,7 +3178,7 @@ again:
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-rbtree_visit(RBTree *__restrict self, dvisit_t proc, void *arg) {
+rbtree_visit(RBTree *__restrict self, Dee_visit_t proc, void *arg) {
 	if (self->rbt_root)
 		rbtree_node_visit_tree(self->rbt_root, proc, arg);
 }
@@ -3674,7 +3674,7 @@ INTERN DeeTypeObject RBTree_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rbtree_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rbtree_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rbtree_visit,
 	/* .tp_gc            = */ &rbtree_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

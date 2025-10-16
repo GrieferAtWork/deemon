@@ -1196,7 +1196,7 @@ code_fini(DeeCodeObject *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 code_visit(DeeCodeObject *__restrict self,
-           dvisit_t proc, void *arg) {
+           Dee_visit_t proc, void *arg) {
 	size_t i;
 	/* Visit the accompanying module.
 	 * NOTE: We must use `Dee_XVisit()' here because the pointer
@@ -2583,7 +2583,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&code_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&code_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&code_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&code_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &code_cmp,

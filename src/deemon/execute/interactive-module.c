@@ -831,7 +831,7 @@ decref_options(struct compiler_options *__restrict self) {
 }
 
 PRIVATE void DCALL
-visit_options(struct compiler_options *__restrict self, dvisit_t proc, void *arg) {
+visit_options(struct compiler_options *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisit(self->co_pathname);
 	Dee_XVisit(self->co_filename);
 	Dee_XVisit(self->co_rootname);
@@ -900,7 +900,7 @@ free_options_chain(struct compiler_options *entry,
 PRIVATE void DCALL
 visit_options_chain(struct compiler_options *entry,
                     struct compiler_options *base,
-                    unsigned int depth, dvisit_t proc, void *arg) {
+                    unsigned int depth, Dee_visit_t proc, void *arg) {
 	unsigned int i;
 	struct compiler_options *iter = base;
 	for (i = 0; i < depth; ++i) {
@@ -1874,7 +1874,7 @@ imod_clear(InteractiveModule *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-imod_visit(InteractiveModule *__restrict self, dvisit_t proc, void *arg) {
+imod_visit(InteractiveModule *__restrict self, Dee_visit_t proc, void *arg) {
 	InteractiveModule_ExecLockReadNoInt(self);
 	InteractiveModule_LockReadNoInt(self);
 	Dee_Visit(self->im_stream);
@@ -1980,7 +1980,7 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&module_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&imod_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&imod_visit,
 	/* .tp_gc            = */ &imod_gc,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__8C153DCE147F6A78),

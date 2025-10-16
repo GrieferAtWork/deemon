@@ -199,7 +199,7 @@ ri_fini(RangeIterator *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 ri_visit(RangeIterator *__restrict self,
-         dvisit_t proc, void *arg) {
+         Dee_visit_t proc, void *arg) {
 	RangeIterator_LockRead(self);
 	Dee_Visit(self->ri_index);
 	RangeIterator_LockEndRead(self);
@@ -458,7 +458,7 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ri_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ri_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C), /* TODO: bi-directional iterator support */
 	/* .tp_cmp           = */ &ri_cmp,
@@ -488,7 +488,7 @@ range_fini(Range *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-range_visit(Range *__restrict self, dvisit_t proc, void *arg) {
+range_visit(Range *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->r_start);
 	Dee_Visit(self->r_end);
 	Dee_XVisit(self->r_step);
@@ -1125,7 +1125,7 @@ INTERN DeeTypeObject SeqRange_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&range_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&range_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&range_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__5819FE7E0C5EF426),

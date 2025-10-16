@@ -557,7 +557,7 @@ jf_fini(JITFunction *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-jf_visit(JITFunction *__restrict self, dvisit_t proc, void *arg) {
+jf_visit(JITFunction *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t i;
 	Dee_Visit(self->jf_source);
 	Dee_XVisit(self->jf_impbase);
@@ -1324,7 +1324,7 @@ INTERN DeeTypeObject JITFunction_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jf_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&jf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &jf_cmp,

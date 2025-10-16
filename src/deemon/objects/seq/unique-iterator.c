@@ -94,7 +94,7 @@ di_fini(DistinctIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-di_visit(DistinctIterator *__restrict self, dvisit_t proc, void *arg) {
+di_visit(DistinctIterator *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->di_iter);
 	Dee_simple_hashset_with_lock_visit(&self->di_encountered, proc, arg);
 }
@@ -194,7 +194,7 @@ INTERN DeeTypeObject DistinctIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&di_visit,
 	/* .tp_gc            = */ &di_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &di_cmp,
@@ -270,7 +270,7 @@ uqiwk_fini(DistinctIteratorWithKey *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-uqiwk_visit(DistinctIteratorWithKey *__restrict self, dvisit_t proc, void *arg) {
+uqiwk_visit(DistinctIteratorWithKey *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->diwk_iter);
 	Dee_simple_hashset_with_lock_visit(&self->diwk_encountered, proc, arg);
 	Dee_Visit(self->diwk_key);
@@ -365,7 +365,7 @@ INTERN DeeTypeObject DistinctIteratorWithKey_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uqiwk_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&uqiwk_visit,
 	/* .tp_gc            = */ &uqiwk_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &uqiwk_cmp,
@@ -517,7 +517,7 @@ INTERN DeeTypeObject DistinctSetWithKey_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_set_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dswk_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&dswk_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__F6E3D7B2219AE1EB),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__A5C53AFDF1233C5A),
@@ -646,7 +646,7 @@ INTERN DeeTypeObject DistinctMappingIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dmi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&dmi_visit,
 	/* .tp_gc            = */ &dmi_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &dmi_cmp,

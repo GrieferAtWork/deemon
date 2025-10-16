@@ -66,7 +66,7 @@ STATIC_ASSERT(offsetof(UDictIterator, udi_next) == offsetof(USetIterator, usi_ne
 INTDEF struct type_cmp usetiterator_cmp;
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL usetiterator_copy(USetIterator *__restrict self, USetIterator *__restrict other);
 INTDEF NONNULL((1)) void DCALL usetiterator_fini(USetIterator *__restrict self);
-INTDEF NONNULL((1, 2)) void DCALL usetiterator_visit(USetIterator *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL usetiterator_visit(USetIterator *__restrict self, Dee_visit_t proc, void *arg);
 #define udictiterator_cmp   usetiterator_cmp
 #define udictiterator_copy  usetiterator_copy
 #define udictiterator_fini  usetiterator_fini
@@ -278,7 +278,7 @@ INTERN DeeTypeObject UDictIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&udictiterator_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&udictiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&udictiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &udictiterator_cmp,
@@ -596,7 +596,7 @@ udict_clear(UDict *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-udict_visit(UDict *__restrict self, dvisit_t proc, void *arg) {
+udict_visit(UDict *__restrict self, Dee_visit_t proc, void *arg) {
 	UDict_LockRead(self);
 	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_mask == 0));
 	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_size == 0));
@@ -1378,7 +1378,7 @@ INTERN DeeTypeObject UDict_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&udict_printrepr
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&udict_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&udict_visit,
 	/* .tp_gc            = */ &udict_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1551,7 +1551,7 @@ INTERN DeeTypeObject URoDictIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&urodictiterator_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&urodictiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&urodictiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &urodictiterator_cmp,
@@ -1808,7 +1808,7 @@ urodict_fini(URoDict *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-urodict_visit(URoDict *__restrict self, dvisit_t proc, void *arg) {
+urodict_visit(URoDict *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i <= self->urd_mask; ++i) {
 		if (!self->urd_elem[i].di_key)
@@ -2063,7 +2063,7 @@ INTERN DeeTypeObject URoDict_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&urodict_printrepr
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&urodict_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&urodict_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

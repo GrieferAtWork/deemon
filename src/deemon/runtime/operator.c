@@ -1082,7 +1082,7 @@ recursion:
 #undef Xrepr_frame
 
 
-DEFINE_OPERATOR(void, Visit, (DeeObject *__restrict self, dvisit_t proc, void *arg)) {
+DEFINE_OPERATOR(void, Visit, (DeeObject *__restrict self, Dee_visit_t proc, void *arg)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_visit) {

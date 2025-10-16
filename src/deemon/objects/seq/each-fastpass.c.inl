@@ -1027,7 +1027,7 @@ LOCAL_seX(fini)(LOCAL_SeqEach *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-LOCAL_seX(visit)(LOCAL_SeqEach *__restrict self, dvisit_t proc, void *arg) {
+LOCAL_seX(visit)(LOCAL_SeqEach *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->se_seq);
 	Dee_Visit(self->sg_attr);
 #ifdef DEFINE_SeqEachCallAttrKw
@@ -1367,7 +1367,7 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))LOCAL_seX_operator_printrepr_PTR,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&LOCAL_seX(visit),
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&LOCAL_seX(visit),
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &LOCAL_seX(math),
 	/* .tp_cmp           = */ &sew_cmp,
@@ -1479,7 +1479,7 @@ INTERN DeeTypeObject LOCAL_SeqEachIterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sewi_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sewi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sewi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &sewi_cmp,
@@ -1858,7 +1858,7 @@ INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&LOCAL_ssX(printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&LOCAL_seX(visit),
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&LOCAL_seX(visit),
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &ssw_math,
 	/* .tp_cmp           = */ &LOCAL_ssX(cmp),

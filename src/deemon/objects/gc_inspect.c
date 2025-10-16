@@ -188,7 +188,7 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&gcsetiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&gcsetiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &gcset_iterator_cmp,
@@ -249,7 +249,7 @@ gcset_fini(GCSet *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-gcset_visit(GCSet *__restrict self, dvisit_t proc, void *arg) {
+gcset_visit(GCSet *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisitv(self->gs_elem, self->gs_mask + 1);
 }
 
@@ -371,7 +371,7 @@ INTERN DeeTypeObject DeeGCSet_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_set_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&gcset_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&gcset_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__F6E3D7B2219AE1EB),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__A5C53AFDF1233C5A),
@@ -657,7 +657,7 @@ visit_reachable_func(DeeObject *__restrict self,
 		int error = GCSetMaker_Insert(data, self);
 		if (error == 0) {
 			Dee_Incref(self);
-			DeeObject_Visit(self, (dvisit_t)&visit_reachable_func, data);
+			DeeObject_Visit(self, (Dee_visit_t)&visit_reachable_func, data);
 		}
 	}
 }
@@ -671,7 +671,7 @@ DeeGC_CollectReferred(GCSetMaker *__restrict self,
                       DeeObject *__restrict start) {
 again:
 	self->gs_err = 0;
-	DeeObject_TVisit(tp_start, start, (dvisit_t)&visit_referr_func, self);
+	DeeObject_TVisit(tp_start, start, (Dee_visit_t)&visit_referr_func, self);
 	if unlikely(self->gs_err) {
 		if (Dee_CollectMemory(self->gs_err))
 			goto again;
@@ -686,7 +686,7 @@ DeeGC_CollectReachable(GCSetMaker *__restrict self,
                        DeeObject *__restrict start) {
 again:
 	self->gs_err = 0;
-	DeeObject_TVisit(tp_start, start, (dvisit_t)&visit_reachable_func, self);
+	DeeObject_TVisit(tp_start, start, (Dee_visit_t)&visit_reachable_func, self);
 	if unlikely(self->gs_err) {
 		if (Dee_CollectMemory(self->gs_err))
 			goto again;
@@ -718,7 +718,7 @@ DeeGC_ReferredBy(DeeObject *source,
 		return true;
 	data.target = target;
 	data.did    = false;
-	DeeObject_Visit(source, (dvisit_t)&visit_referred_by_func, &data);
+	DeeObject_Visit(source, (Dee_visit_t)&visit_referred_by_func, &data);
 	return data.did;
 }
 

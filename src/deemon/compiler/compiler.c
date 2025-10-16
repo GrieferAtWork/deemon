@@ -314,7 +314,7 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-compiler_visit(DeeCompilerObject *__restrict self, dvisit_t proc, void *arg) {
+compiler_visit(DeeCompilerObject *__restrict self, Dee_visit_t proc, void *arg) {
 	/* First: Make sure that the compiler is fully unloaded. */
 	DeeCompiler_Unload(self);
 
@@ -369,7 +369,7 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&compiler_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&compiler_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__8F384E6A64571883),

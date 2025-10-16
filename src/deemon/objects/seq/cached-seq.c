@@ -176,7 +176,7 @@ cswi_fini(CachedSeq_WithIter *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-cswi_visit(CachedSeq_WithIter *__restrict self, dvisit_t proc, void *arg) {
+cswi_visit(CachedSeq_WithIter *__restrict self, Dee_visit_t proc, void *arg) {
 	CachedSeq_WithIter_LockAcquire(self);
 	Dee_Visitv(self->cswi_cache.ol_elemv,
 	           self->cswi_cache.ol_elemc);
@@ -591,7 +591,7 @@ INTERN DeeTypeObject CachedSeq_WithIter_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cswi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&cswi_visit,
 	/* .tp_gc            = */ &cswi_gc,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__247219960F1E745D),
@@ -750,7 +750,7 @@ INTERN DeeTypeObject CachedSeq_WithIter_Iterator_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cswiiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&cswiiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__439AAF00B07ABA02),
@@ -924,7 +924,7 @@ cswgi_fini(CachedSeq_WithGetItem *__restrict self) {
 #define cswsogi_visit cswgi_visit
 #define cswsgi_visit  cswgi_visit
 PRIVATE NONNULL((1, 2)) void DCALL
-cswgi_visit(CachedSeq_WithGetItem *__restrict self, dvisit_t proc, void *arg) {
+cswgi_visit(CachedSeq_WithGetItem *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t i;
 	CachedSeq_WithGetItem_LockAcquire(self);
 	Dee_XVisit(self->cswgi_seq);
@@ -1084,7 +1084,7 @@ err:
 #define cswsogi_clear cswgi_clear
 #define cswsgi_clear  cswgi_clear
 PRIVATE NONNULL((1, 2)) void DCALL
-cswgi_clear(CachedSeq_WithGetItem *__restrict self, dvisit_t proc, void *arg) {
+cswgi_clear(CachedSeq_WithGetItem *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t i;
 	DREF DeeObject *old_seq;
 	DREF DeeIntObject *old_sizeob;
@@ -1765,7 +1765,7 @@ INTERN DeeTypeObject CachedSeq_WithGetItem_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cswgi_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cswgi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&cswgi_visit,
 	/* .tp_gc            = */ &cswgi_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1813,7 +1813,7 @@ INTERN DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cswsogi_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cswsogi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&cswsogi_visit,
 	/* .tp_gc            = */ &cswsogi_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1861,7 +1861,7 @@ INTERN DeeTypeObject CachedSeq_WithSizeAndGetItem_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cswsgi_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cswsgi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&cswsgi_visit,
 	/* .tp_gc            = */ &cswsgi_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1916,7 +1916,7 @@ INTERN DeeTypeObject CachedSeq_WithGetItem_Iterator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cswgiiter_bool
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cswgiiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&cswgiiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

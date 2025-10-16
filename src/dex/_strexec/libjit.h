@@ -455,7 +455,7 @@ struct jit_lvalue {
 INTDEF NONNULL((1)) void DFCALL
 JITLValue_Fini(JITLValue *__restrict self);
 INTDEF NONNULL((1, 2)) void DFCALL
-JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, void *arg);
+JITLValue_Visit(JITLValue *__restrict self, Dee_visit_t proc, void *arg);
 
 /* Interact with an L-Value
  * NOTE: For all of these, the caller must ensure that `self->lv_kind != JIT_LVALUE_NONE' */
@@ -726,7 +726,7 @@ INTDEF struct jit_object_entry jit_empty_object_list[1];
 	 (self)->ot_list = jit_empty_object_list,                 \
 	 (self)->ot_star_importc = 0, (self)->ot_star_importv = NULL)
 INTDEF NONNULL((1)) void DCALL JITObjectTable_Fini(JITObjectTable *__restrict self);
-INTDEF NONNULL((1, 2)) void DCALL JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL JITObjectTable_Visit(JITObjectTable *__restrict self, Dee_visit_t proc, void *arg);
 
 /* Allocate/free a JIT object table from cache. */
 #define JITObjectTable_Alloc()   DeeObject_MALLOC(struct jit_object_table)
