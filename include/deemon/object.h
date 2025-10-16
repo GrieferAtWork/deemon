@@ -529,7 +529,7 @@ typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, voi
 #define Dee_Visit(ob)  (*proc)((DeeObject *)Dee_REQUIRES_OBJECT(ob), arg)
 #define Dee_XVisit(ob) (void)(!(ob) || (Dee_Visit(ob), 0))
 #ifdef DEE_SOURCE
-typedef Dee_visit_t  dvisit_t;
+typedef Dee_visit_t  dvisit_t; /* !DEPRECATED */
 #endif /* DEE_SOURCE */
 
 #define Dee_Visitv(object_vector, object_count)                                             \

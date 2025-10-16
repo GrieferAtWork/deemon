@@ -1652,8 +1652,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
  * This function asserts that `kwa_kwused == #kwa_kw' so-as
  * to ensure that `kwa_kw' doesn't contain any unused keyword
  * arguments.
- * @return: 0 : Success
  * @param: positional_argc: The value of `*p_argc' after `DeeKwArgs_Init()' returned.
+ * @return: 0 : Success
  * @return: -1: An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeKwArgs_Done)(DeeKwArgs *__restrict self,

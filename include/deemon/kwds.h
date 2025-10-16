@@ -681,7 +681,7 @@ typedef struct {
 	Dee_atomic_rwlock_t                            blkw_lock;  /* Lock for this kwds wrapper. */
 #endif /* !CONFIG_NO_THREADS */
 	size_t                                         blkw_ckwc;  /* [const][!0] Number of black-listed keywords */
-	struct Dee_string_object *const               *blkw_ckwv;  /* [1..1][const][1..blkw_ckwc][const] Vector of black-listed keywords. */
+	struct Dee_string_object               *const *blkw_ckwv;  /* [1..1][const][1..blkw_ckwc][const] Vector of black-listed keywords. */
 	size_t                                         blkw_load;  /* [lock(blkw_lock, INCREMENT_ONLY)][<= blkw_ckwc]
 	                                                            * Index of the next keyword which has yet to be loaded into
 	                                                            * the `blkw_blck' hash-set for blacklisted identifiers. */
