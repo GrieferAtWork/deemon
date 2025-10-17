@@ -151,7 +151,7 @@ bool_div(DeeObject *self, DeeObject *other) {
 	if unlikely(temp < 0)
 		goto err;
 	if unlikely(!temp) {
-		DeeRT_ErrDivideByZeroEx(self, other);
+		DeeRT_ErrDivideByZero(self, other);
 		goto err;
 	}
 	return_reference_(self);
@@ -165,7 +165,7 @@ bool_mod(DeeObject *self, DeeObject *other) {
 	if unlikely(temp < 0)
 		goto err;
 	if unlikely(!temp) {
-		DeeRT_ErrDivideByZeroEx(self, other);
+		DeeRT_ErrDivideByZero(self, other);
 		goto err;
 	}
 	return_false;

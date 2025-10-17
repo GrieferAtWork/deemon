@@ -2366,7 +2366,7 @@ err_cannot_divide_timestamp:
 	                self, other);
 	goto err;
 err_divzero:
-	DeeRT_ErrDivideByZeroEx(self, other);
+	DeeRT_ErrDivideByZero(self, other);
 err:
 	return NULL;
 }
@@ -2397,7 +2397,7 @@ err_cannot_divide_timestamp:
 	                self, other);
 	goto err;
 err_divzero:
-	DeeRT_ErrDivideByZeroEx(self, other);
+	DeeRT_ErrDivideByZero(self, other);
 err:
 	return NULL;
 }

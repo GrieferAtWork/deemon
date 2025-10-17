@@ -33,7 +33,8 @@ function assertBits(i: int,
 		assert i.ctz == ctz, f"Wrong value for {i}.ctz";
 		assert i.ffs == ffs, f"Wrong value for {i}.ffs";
 	} else {
-		assert (try i.ctz catch (e...) e) is IntegerOverflow;
+		assert i == 0;
+		assert (try i.ctz catch (e...) e) is DivideByZero;
 	}
 	if (msb !is none) {
 		assert fls is none;

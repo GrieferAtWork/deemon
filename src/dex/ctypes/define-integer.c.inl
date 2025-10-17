@@ -731,7 +731,7 @@ F(int_divzero)(T value, DeeObject *__restrict some_object) {
 	Dee_variant_init_uint32(&lhs, value);
 #endif /* ... */
 	Dee_variant_init_object(&rhs, some_object);
-	result = DeeRT_ErrDivideByZeroVar(&lhs, &rhs);
+	result = DeeRT_ErrDivideByZeroEx(&lhs, &rhs);
 	Dee_variant_fini(&rhs);
 	return result;
 }

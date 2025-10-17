@@ -56,10 +56,10 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNoActiveException)(void);
  *
  * @param: positive: When true, assume "value > maxval".
  *                   Else, assume "value < maxval" */
-DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int
-(DCALL DeeRT_ErrIntegerOverflow)(/*Numeric*/ DeeObject *value,
-                                 /*Numeric*/ DeeObject *minval,
-                                 /*Numeric*/ DeeObject *maxval,
+DFUNDEF ATTR_COLD int
+(DCALL DeeRT_ErrIntegerOverflow)(/*Numeric*/ /*0..1*/ DeeObject *value,
+                                 /*Numeric*/ /*0..1*/ DeeObject *minval,
+                                 /*Numeric*/ /*0..1*/ DeeObject *maxval,
                                  bool positive);
 #define DeeRT_ErrIntegerOverflow(value, minval, maxval, positive)                          \
 	Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflow)((DeeObject *)Dee_REQUIRES_OBJECT(value),  \
@@ -174,12 +174,10 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject
 
 /* Throws an `DeeError_DivideByZero' indicating that a zero-division attempt has taken place. */
 struct Dee_variant;
-DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrDivideByZero)(DeeObject *lhs);
-DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZeroEx)(DeeObject *lhs, DeeObject *rhs);
-DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZeroVar)(struct Dee_variant *lhs, struct Dee_variant *rhs);
-#define DeeRT_ErrDivideByZero(lhs)         Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZero)((DeeObject *)Dee_REQUIRES_OBJECT(lhs)), -1)
-#define DeeRT_ErrDivideByZeroEx(lhs, rhs)  Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZeroEx)((DeeObject *)Dee_REQUIRES_OBJECT(lhs), (DeeObject *)Dee_REQUIRES_OBJECT(rhs)), -1)
-#define DeeRT_ErrDivideByZeroVar(lhs, rhs) Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZeroVar)(lhs, rhs), -1)
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZero)(DeeObject *lhs, DeeObject *rhs);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZeroEx)(struct Dee_variant *lhs, struct Dee_variant *rhs);
+#define DeeRT_ErrDivideByZero(lhs, rhs)   Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZero)((DeeObject *)Dee_REQUIRES_OBJECT(lhs), (DeeObject *)Dee_REQUIRES_OBJECT(rhs)), -1)
+#define DeeRT_ErrDivideByZeroEx(lhs, rhs) Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZeroEx)(lhs, rhs), -1)
 
 /* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOutOfBounds)(DeeObject *seq, size_t index, size_t length);

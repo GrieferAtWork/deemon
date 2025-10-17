@@ -223,6 +223,8 @@ LOCAL WUNUSED NONNULL((1)) double (DCALL _Dee_variant_get_float)(struct Dee_vari
 #ifndef CONFIG_NO_FPU
 #define Dee_variant_init_float(self, v) (void)((self)->var_type = Dee_VARIANT_FLOAT, _Dee_variant_set_float(self, v))
 #endif /* !CONFIG_NO_FPU */
+#define Dee_variant_init_object_or_unbound(self, v) \
+	((v) ? Dee_variant_init_object(self, v) : Dee_variant_init_unbound(self))
 
 #define Dee_variant_fini(self)                       \
 	(void)((self)->var_type != Dee_VARIANT_OBJECT || \

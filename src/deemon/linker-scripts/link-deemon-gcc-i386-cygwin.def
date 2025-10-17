@@ -1135,9 +1135,8 @@ EXPORTS
 	_DeeRT_ErrCUnboundAttrCA@8=DeeRT_ErrCUnboundAttrCA@8
 	_DeeRT_ErrCUnboundClassMember@8=DeeRT_ErrCUnboundClassMember@8
 	_DeeRT_ErrCUnboundInstanceMember@12=DeeRT_ErrCUnboundInstanceMember@12
-	_DeeRT_ErrDivideByZero@4=DeeRT_ErrDivideByZero@4
+	_DeeRT_ErrDivideByZero@8=DeeRT_ErrDivideByZero@8
 	_DeeRT_ErrDivideByZeroEx@8=DeeRT_ErrDivideByZeroEx@8
-	_DeeRT_ErrDivideByZeroVar@8=DeeRT_ErrDivideByZeroVar@8
 	_DeeRT_ErrEmptySequence@4=DeeRT_ErrEmptySequence@4
 	_DeeRT_ErrIndexOutOfBounds@12=DeeRT_ErrIndexOutOfBounds@12
 	_DeeRT_ErrIndexOutOfBoundsObj@12=DeeRT_ErrIndexOutOfBoundsObj@12

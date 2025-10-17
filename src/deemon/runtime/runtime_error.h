@@ -40,9 +40,6 @@ struct function_object;
 #define err_unimplemented_constructor(tp, argc, argv) err_unimplemented_constructor_kw(tp, argc, argv, NULL)
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_constructor_kw(DeeTypeObject *tp, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_negative_shift(DeeObject *lhs, DeeObject *rhs, bool is_left_shift);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_int_negative(DeeObject *__restrict ob);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_int_negative_or_zero(DeeObject *__restrict ob);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_int_zero(DeeObject *__restrict ob);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_cannot_weak_reference(DeeObject *__restrict ob);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_reference_loop(DeeObject *a, DeeObject *b);
 INTDEF ATTR_COLD int DCALL err_cannot_lock_weakref(void);

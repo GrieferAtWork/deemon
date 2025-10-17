@@ -1332,7 +1332,7 @@ int_divrem(DeeIntObject *a,
 	Dee_ssize_t size_a = ABS(a->ob_size);
 	Dee_ssize_t size_b = ABS(b->ob_size);
 	if unlikely(size_b == 0) {
-		DeeRT_ErrDivideByZeroEx(a, b);
+		DeeRT_ErrDivideByZero(a, b);
 		goto err;
 	}
 	if (size_a < size_b ||

@@ -613,23 +613,8 @@ INIT_CUSTOM_ERROR("DivideByZero", "(" DivideByZero_init_params ")",
                   NULL, &DivideByZero_print, NULL, NULL, DivideByZero_members, NULL);
 
 /* Throws an `DeeError_DivideByZero' indicating that a zero-division attempt has taken place. */
-PUBLIC ATTR_COLD NONNULL((1)) int
-(DCALL DeeRT_ErrDivideByZero)(DeeObject *lhs) {
-	DREF DivideByZero *result = DeeObject_MALLOC(DivideByZero);
-	if unlikely(!result)
-		goto err;
-	DeeObject_Init(&result->dbz_base, &DeeError_DivideByZero);
-	result->dbz_base.e_message = NULL;
-	result->dbz_base.e_inner   = NULL;
-	Dee_variant_init_object(&result->dbz_base.ve_value, lhs);
-	Dee_variant_init_unbound(&result->dbz_rhs);
-	return DeeError_ThrowInherited((DeeObject *)result);
-err:
-	return -1;
-}
-
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
-(DCALL DeeRT_ErrDivideByZeroEx)(DeeObject *lhs, DeeObject *rhs) {
+(DCALL DeeRT_ErrDivideByZero)(DeeObject *lhs, DeeObject *rhs) {
 	DREF DivideByZero *result = DeeObject_MALLOC(DivideByZero);
 	if unlikely(!result)
 		goto err;
@@ -644,7 +629,7 @@ err:
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
-(DCALL DeeRT_ErrDivideByZeroVar)(struct Dee_variant *lhs, struct Dee_variant *rhs) {
+(DCALL DeeRT_ErrDivideByZeroEx)(struct Dee_variant *lhs, struct Dee_variant *rhs) {
 	DREF DivideByZero *result = DeeObject_MALLOC(DivideByZero);
 	if unlikely(!result)
 		goto err;
@@ -1627,10 +1612,20 @@ integer_overflow_print(IntegerOverflow *__restrict self,
                        Dee_formatprinter_t printer, void *arg) {
 	if (self->io_base.e_message)
 		return DeeString_PrintUtf8((DeeObject *)self->io_base.e_message, printer, arg);
-	return DeeFormat_Printf(printer, arg,
-	                        "%s integer overflow: %Vk exceeds range of valid values [%Vk,%Vk]",
-	                        self->io_positive ? "positive" : "negative",
-	                        &self->io_base.ve_value, &self->io_minval, &self->io_maxval);
+	if (!self->io_positive && !Dee_variant_isbound(&self->io_maxval)) {
+		return DeeFormat_Printf(printer, arg,
+		                        "Unexpected value %Vk is not greater than or equal to %Vk",
+		                        &self->io_base.ve_value, &self->io_minval);
+	} else if (self->io_positive && !Dee_variant_isbound(&self->io_minval)) {
+		return DeeFormat_Printf(printer, arg,
+		                        "Unexpected value %Vk is not less than or equal to %Vk",
+		                        &self->io_base.ve_value, &self->io_maxval);
+	} else {
+		return DeeFormat_Printf(printer, arg,
+		                        "%s integer overflow: %Vk exceeds range of valid values [%Vk,%Vk]",
+		                        self->io_positive ? "positive" : "negative",
+		                        &self->io_base.ve_value, &self->io_minval, &self->io_maxval);
+	}
 }
 
 PRIVATE struct type_member tpconst integer_overflow_members[] = {
@@ -1669,7 +1664,7 @@ INIT_CUSTOM_ERROR("IntegerOverflow",
  *
  * @param: positive: When true, assume "value > maxval".
  *                   Else, assume "value < maxval" */
-PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
+PUBLIC ATTR_COLD int
 (DCALL DeeRT_ErrIntegerOverflow)(/*Numeric*/ DeeObject *value,
                                  /*Numeric*/ DeeObject *minval,
                                  /*Numeric*/ DeeObject *maxval,
@@ -1679,9 +1674,9 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 		goto err;
 	result->io_base.e_message = NULL;
 	result->io_base.e_inner   = NULL;
-	Dee_variant_init_object(&result->io_base.ve_value, value);
-	Dee_variant_init_object(&result->io_minval, minval);
-	Dee_variant_init_object(&result->io_maxval, maxval);
+	Dee_variant_init_object_or_unbound(&result->io_base.ve_value, value);
+	Dee_variant_init_object_or_unbound(&result->io_minval, minval);
+	Dee_variant_init_object_or_unbound(&result->io_maxval, maxval);
 	result->io_positive = positive;
 	DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
 	return DeeError_ThrowInherited((DeeObject *)result);

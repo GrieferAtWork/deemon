@@ -5057,7 +5057,7 @@ int_get_popcount(DeeIntObject *__restrict self) {
 	}
 	return (DREF DeeIntObject *)DeeInt_NewSize(result);
 err_neg:
-	err_int_negative((DeeObject *)self);
+	DeeRT_ErrIntegerOverflow(self, DeeInt_Zero, (DeeObject *)NULL, false);
 	return NULL;
 }
 
@@ -5108,7 +5108,7 @@ int_get_parity(DeeIntObject *__restrict self) {
 	result = PARITY(sum);
 	return (DREF DeeIntObject *)DeeInt_NEWU(result);
 err_neg:
-	err_int_negative((DeeObject *)self);
+	DeeRT_ErrIntegerOverflow(self, DeeInt_Zero, (DeeObject *)NULL, false);
 	return NULL;
 }
 
@@ -5145,7 +5145,7 @@ int_get_ctz(DeeIntObject *__restrict self) {
 	}
 	return (DREF DeeIntObject *)DeeInt_NewSize(result);
 err_zero:
-	err_int_zero((DeeObject *)self);
+	DeeRT_ErrDivideByZero(self, self);
 	return NULL;
 }
 
@@ -5187,7 +5187,7 @@ int_get_ct1(DeeIntObject *__restrict self) {
 	}
 	return (DREF DeeIntObject *)DeeInt_NewSize(result);
 err_minus_one:
-	err_int_negative((DeeObject *)self);
+	DeeRT_ErrIntegerOverflow(self, DeeInt_Zero, (DeeObject *)NULL, false);
 	return NULL;
 }
 
@@ -5206,7 +5206,7 @@ int_get_fls(DeeIntObject *__restrict self) {
 	result -= CLZ(msb_digit);
 	return (DREF DeeIntObject *)DeeInt_NewSize(result);
 err_neg:
-	err_int_negative((DeeObject *)self);
+	DeeRT_ErrIntegerOverflow(self, DeeInt_Zero, (DeeObject *)NULL, false);
 	return NULL;
 }
 
@@ -5222,7 +5222,7 @@ int_get_msb(DeeIntObject *__restrict self) {
 	result -= CLZ(msb_digit);
 	return (DREF DeeIntObject *)DeeInt_NewSize(result);
 err_neg_or_zero:
-	err_int_negative_or_zero((DeeObject *)self);
+	DeeRT_ErrIntegerOverflow(self, DeeInt_One, (DeeObject *)NULL, false);
 	return NULL;
 }
 
@@ -5333,7 +5333,7 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	TYPE_GETTER_AB_F("ctz", &int_get_ctz,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?Dint\n"
-	                 "#tIntegerOverflow{When ${this == 0}}"
+	                 "#tDivideByZero{When ${this == 0}}"
 	                 "CountTrailingZeros: return the number of trailing zero-bits:\n"
 	                 "${"
 	                 /**/ "local n = this.ctz;\n"
