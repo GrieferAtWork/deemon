@@ -24,6 +24,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/int.h>
 #include <deemon/numeric.h>
 #include <deemon/object.h>
@@ -150,7 +151,7 @@ bool_div(DeeObject *self, DeeObject *other) {
 	if unlikely(temp < 0)
 		goto err;
 	if unlikely(!temp) {
-		err_divide_by_zero(self, other);
+		DeeRT_ErrDivideByZeroEx(self, other);
 		goto err;
 	}
 	return_reference_(self);
@@ -164,7 +165,7 @@ bool_mod(DeeObject *self, DeeObject *other) {
 	if unlikely(temp < 0)
 		goto err;
 	if unlikely(!temp) {
-		err_divide_by_zero(self, other);
+		DeeRT_ErrDivideByZeroEx(self, other);
 		goto err;
 	}
 	return_false;

@@ -571,10 +571,94 @@ INIT_LIKE_BASECLASS("ArithmeticError", "(" ArithmeticError_init_params ")",
 /************************************************************************/
 /* Error.ValueError.ArithmeticError.DivideByZero                        */
 /************************************************************************/
+typedef struct {
+	ArithmeticError    dbz_base; /* Base error (value is the left-hand-side of division) */
+	struct Dee_variant dbz_rhs;  /* right-hand-side of division */
+} DivideByZero;
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DivideByZero_print(DivideByZero *__restrict self,
+                   Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result;
+	struct Dee_variant lhs, rhs;
+	if (self->dbz_base.e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	Dee_variant_init_copy(&lhs, &self->dbz_base.ve_value);
+	Dee_variant_init_copy(&rhs, &self->dbz_rhs);
+	if (!Dee_variant_isbound_nonatomic(&rhs)) {
+#if 1
+		Dee_variant_init_uint32(&rhs, 0);
+#else
+		Dee_variant_setuint32(&rhs, 0);
+#endif
+	}
+	result = DeeFormat_Printf(printer, arg,
+	                          "Divide by Zero: `%Vk / %Vk'",
+	                          &lhs, &rhs);
+	Dee_variant_fini(&rhs);
+	Dee_variant_fini(&lhs);
+	return result;
+}
+
+PRIVATE struct type_member tpconst DivideByZero_members[] = {
+#define DivideByZero_init_params Error_init_params ",lhs?:?DNumeric,rhs?:?DNumeric"
+	TYPE_MEMBER_FIELD_DOC("lhs", STRUCT_VARIANT | STRUCT_CONST, offsetof(DivideByZero, dbz_base.ve_value), "->?DNumeric"),
+	TYPE_MEMBER_FIELD_DOC("rhs", STRUCT_VARIANT | STRUCT_CONST, offsetof(DivideByZero, dbz_rhs), "->?DNumeric"),
+	TYPE_MEMBER_END
+};
+
 PUBLIC DeeTypeObject DeeError_DivideByZero =
-INIT_LIKE_BASECLASS("DivideByZero", "(" ArithmeticError_init_params ")",
-                    TP_FNORMAL, &DeeError_ArithmeticError, ArithmeticError,
-                    NULL, NULL, NULL, NULL, NULL);
+INIT_CUSTOM_ERROR("DivideByZero", "(" DivideByZero_init_params ")",
+                  TP_FNORMAL, &DeeError_ArithmeticError, DivideByZero,
+                  NULL, &DivideByZero_print, NULL, NULL, DivideByZero_members, NULL);
+
+/* Throws an `DeeError_DivideByZero' indicating that a zero-division attempt has taken place. */
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrDivideByZero)(DeeObject *lhs) {
+	DREF DivideByZero *result = DeeObject_MALLOC(DivideByZero);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->dbz_base, &DeeError_DivideByZero);
+	result->dbz_base.e_message = NULL;
+	result->dbz_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->dbz_base.ve_value, lhs);
+	Dee_variant_init_unbound(&result->dbz_rhs);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrDivideByZeroEx)(DeeObject *lhs, DeeObject *rhs) {
+	DREF DivideByZero *result = DeeObject_MALLOC(DivideByZero);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->dbz_base, &DeeError_DivideByZero);
+	result->dbz_base.e_message = NULL;
+	result->dbz_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->dbz_base.ve_value, lhs);
+	Dee_variant_init_object(&result->dbz_rhs, rhs);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrDivideByZeroVar)(struct Dee_variant *lhs, struct Dee_variant *rhs) {
+	DREF DivideByZero *result = DeeObject_MALLOC(DivideByZero);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(&result->dbz_base, &DeeError_DivideByZero);
+	result->dbz_base.e_message = NULL;
+	result->dbz_base.e_inner   = NULL;
+	Dee_variant_init_copy(&result->dbz_base.ve_value, lhs);
+	Dee_variant_init_copy(&result->dbz_rhs, rhs);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+
 
 
 /************************************************************************/

@@ -34,6 +34,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -41,6 +42,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/util/lock.h>
+#include <deemon/variant.h>
 
 #include <hybrid/int128.h>
 #include <hybrid/typecore.h>
@@ -713,9 +715,25 @@ err:
 
 PRIVATE ATTR_COLD NONNULL((2)) int DCALL
 F(int_divzero)(T value, DeeObject *__restrict some_object) {
-	return DeeError_Throwf(&DeeError_DivideByZero,
-	                       "Divide by Zero: `" FORMAT_STR " / %k'",
-	                       (FORMAT_TYP)value, some_object);
+	int result;
+	struct Dee_variant lhs, rhs;
+#if SIZEOF >= 16 && defined(SIGNED)
+	Dee_variant_init_int128(&lhs, value);
+#elif SIZEOF >= 16
+	Dee_variant_init_uint128(&lhs, value);
+#elif SIZEOF >= 8 && defined(SIGNED)
+	Dee_variant_init_int64(&lhs, value);
+#elif SIZEOF >= 8
+	Dee_variant_init_uint64(&lhs, value);
+#elif defined(SIGNED)
+	Dee_variant_init_int32(&lhs, value);
+#else /* ... */
+	Dee_variant_init_uint32(&lhs, value);
+#endif /* ... */
+	Dee_variant_init_object(&rhs, some_object);
+	result = DeeRT_ErrDivideByZeroVar(&lhs, &rhs);
+	Dee_variant_fini(&rhs);
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL

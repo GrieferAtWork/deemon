@@ -27,6 +27,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dex.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -2330,13 +2331,6 @@ err:
 	return NULL;
 }
 
-PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
-err_divide_by_zero(DeeTimeObject *self, DeeObject *other) {
-	return DeeError_Throwf(&DeeError_DivideByZero,
-	                       "Divide by Zero: `%k / %k'",
-	                       self, other);
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 time_div(DeeTimeObject *self, DeeObject *other) {
 	DREF DeeTimeObject *result;
@@ -2372,7 +2366,7 @@ err_cannot_divide_timestamp:
 	                self, other);
 	goto err;
 err_divzero:
-	err_divide_by_zero(self, other);
+	DeeRT_ErrDivideByZeroEx(self, other);
 err:
 	return NULL;
 }
@@ -2403,7 +2397,7 @@ err_cannot_divide_timestamp:
 	                self, other);
 	goto err;
 err_divzero:
-	err_divide_by_zero(self, other);
+	DeeRT_ErrDivideByZeroEx(self, other);
 err:
 	return NULL;
 }

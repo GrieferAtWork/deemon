@@ -137,15 +137,6 @@ err:
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_divide_by_zero)(DeeObject *lhs, DeeObject *rhs) {
-	ASSERT_OBJECT(lhs);
-	ASSERT_OBJECT(rhs);
-	return DeeError_Throwf(&DeeError_DivideByZero,
-	                       "Divide by Zero: `%k / %k'",
-	                       lhs, rhs);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_negative_shift)(DeeObject *lhs, DeeObject *rhs, bool is_left_shift) {
 	ASSERT_OBJECT(lhs);
 	ASSERT_OBJECT(rhs);

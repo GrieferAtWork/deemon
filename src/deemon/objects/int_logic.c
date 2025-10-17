@@ -17,6 +17,7 @@
 #include "int_logic.h"
 
 #include <deemon/api.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
@@ -1330,8 +1331,8 @@ int_divrem(DeeIntObject *a,
 	DREF DeeIntObject *z;
 	Dee_ssize_t size_a = ABS(a->ob_size);
 	Dee_ssize_t size_b = ABS(b->ob_size);
-	if (size_b == 0) {
-		err_divide_by_zero((DeeObject *)a, (DeeObject *)b);
+	if unlikely(size_b == 0) {
+		DeeRT_ErrDivideByZeroEx(a, b);
 		goto err;
 	}
 	if (size_a < size_b ||

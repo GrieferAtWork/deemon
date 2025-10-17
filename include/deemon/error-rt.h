@@ -172,6 +172,15 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject
 #define DeeRT_ErrUnboundIndex(seq, index)                           Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndex)((DeeObject *)Dee_REQUIRES_OBJECT(seq), index), -1)
 #define DeeRT_ErrUnboundIndexObj(seq, index)                        Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndexObj)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(index)), -1)
 
+/* Throws an `DeeError_DivideByZero' indicating that a zero-division attempt has taken place. */
+struct Dee_variant;
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrDivideByZero)(DeeObject *lhs);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZeroEx)(DeeObject *lhs, DeeObject *rhs);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZeroVar)(struct Dee_variant *lhs, struct Dee_variant *rhs);
+#define DeeRT_ErrDivideByZero(lhs)         Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZero)((DeeObject *)Dee_REQUIRES_OBJECT(lhs)), -1)
+#define DeeRT_ErrDivideByZeroEx(lhs, rhs)  Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZeroEx)((DeeObject *)Dee_REQUIRES_OBJECT(lhs), (DeeObject *)Dee_REQUIRES_OBJECT(rhs)), -1)
+#define DeeRT_ErrDivideByZeroVar(lhs, rhs) Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZeroVar)(lhs, rhs), -1)
+
 /* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOutOfBounds)(DeeObject *seq, size_t index, size_t length);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeObject *seq, DeeObject *index, DeeObject *length);
