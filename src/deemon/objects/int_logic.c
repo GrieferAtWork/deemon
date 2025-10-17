@@ -1326,8 +1326,8 @@ x_divrem(DeeIntObject *v1, DeeIntObject *w1,
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 int_divrem(DeeIntObject *a,
            DeeIntObject *b,
-           DeeIntObject **p_div,
-           DeeIntObject **p_rem) {
+           DREF DeeIntObject **p_div,
+           DREF DeeIntObject **p_rem) {
 	DREF DeeIntObject *z;
 	Dee_ssize_t size_a = ABS(a->ob_size);
 	Dee_ssize_t size_b = ABS(b->ob_size);
@@ -1369,7 +1369,7 @@ int_divrem(DeeIntObject *a,
 	*p_div = maybe_small_int(z);
 	return 0;
 err_prem:
-	Dee_Clear(*p_rem);
+	Dee_Decref(*p_rem);
 	goto err;
 err_z:
 	Dee_Decref(z);
@@ -1705,8 +1705,11 @@ v_complement(digit *z, digit const *a, size_t m) {
 }
 
 
+#define INT_BITWISE_AND 0
+#define INT_BITWISE_OR  1
+#define INT_BITWISE_XOR 2
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeIntObject *DCALL
-int_bitwise(DeeIntObject *__restrict a, char op,
+int_bitwise(DeeIntObject *__restrict a, unsigned int op,
             DeeIntObject *__restrict b) {
 	int nega, negb, negz;
 	DREF DeeIntObject *z;
@@ -1745,43 +1748,39 @@ int_bitwise(DeeIntObject *__restrict a, char op,
 		negb   = negz;
 	}
 	switch (op) {
-
-	case '^':
-		negz   = nega ^ negb;
-		size_z = size_a;
-		break;
-
-	case '&':
+	case INT_BITWISE_AND:
 		negz   = nega & negb;
 		size_z = negb ? size_a : size_b;
 		break;
-
-	default:
+	case INT_BITWISE_OR:
 		negz   = nega | negb;
 		size_z = negb ? size_b : size_a;
 		break;
+	case INT_BITWISE_XOR:
+		negz   = nega ^ negb;
+		size_z = size_a;
+		break;
+	default: __builtin_unreachable();
 	}
 	z = DeeInt_Alloc(size_z + negz);
 	if unlikely(!z)
 		goto err_a_b;
 	switch (op) {
-
-	case '&':
+	case INT_BITWISE_AND:
 		for (i = 0; i < size_b; ++i)
 			z->ob_digit[i] = a->ob_digit[i] & b->ob_digit[i];
 		break;
-
-	case '^':
-		for (i = 0; i < size_b; ++i)
-			z->ob_digit[i] = a->ob_digit[i] ^ b->ob_digit[i];
-		break;
-
-	default:
+	case INT_BITWISE_OR:
 		for (i = 0; i < size_b; ++i)
 			z->ob_digit[i] = a->ob_digit[i] | b->ob_digit[i];
 		break;
+	case INT_BITWISE_XOR:
+		for (i = 0; i < size_b; ++i)
+			z->ob_digit[i] = a->ob_digit[i] ^ b->ob_digit[i];
+		break;
+	default: __builtin_unreachable();
 	}
-	if (op == '^' && negb) {
+	if (op == INT_BITWISE_XOR && negb) {
 		for (; i < size_z; ++i)
 			z->ob_digit[i] = a->ob_digit[i] ^ DIGIT_MASK;
 	} else if (i < size_z) {
@@ -1814,7 +1813,7 @@ int_and(DeeIntObject *a, DeeObject *b_ob) {
 	b = (DeeIntObject *)DeeObject_Int(b_ob);
 	if unlikely(!b)
 		goto err;
-	c = (DREF DeeIntObject *)int_bitwise(a, '&', b);
+	c = (DREF DeeIntObject *)int_bitwise(a, INT_BITWISE_AND, b);
 	Dee_Decref(b);
 	return c;
 err:
@@ -1828,7 +1827,7 @@ int_xor(DeeIntObject *a, DeeObject *b_ob) {
 	b = (DeeIntObject *)DeeObject_Int(b_ob);
 	if unlikely(!b)
 		goto err;
-	c = (DREF DeeIntObject *)int_bitwise(a, '^', b);
+	c = (DREF DeeIntObject *)int_bitwise(a, INT_BITWISE_XOR, b);
 	Dee_Decref(b);
 	return c;
 err:
@@ -1842,7 +1841,7 @@ int_or(DeeIntObject *a, DeeObject *b_ob) {
 	b = (DeeIntObject *)DeeObject_Int(b_ob);
 	if unlikely(!b)
 		goto err;
-	c = (DREF DeeIntObject *)int_bitwise(a, '|', b);
+	c = (DREF DeeIntObject *)int_bitwise(a, INT_BITWISE_OR, b);
 	Dee_Decref(b);
 	return c;
 err:
