@@ -1026,6 +1026,32 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define DeeDbgObject_TRYCALLOC(T, file, line)    ((T *)DeeDbgObject_FTryCalloc(sizeof(T), file, line))
 #define DeeDbgObject_FREE(typed_ptr, file, line)       DeeDbgObject_FFree(typed_ptr, sizeof(*(typed_ptr)), file, line)
 
+/* Helpers for type-safe allocation of variable-length objects:
+ * >> typedef struct {
+ * >>     ...
+ * >> } MyObjectItem;
+ * >> typedef struct {
+ * >>     OBJECT_HEAD
+ * >>     size_t                                mo_count;
+ * >>     COMPILER_FLEXIBLE_ARRAY(MyObjectItem, mo_items);
+ * >> } MyObject;
+ * >> 
+ * >> #define MyObject_Alloc(n) DeeObject_MALLOCC(MyObject, mo_items, n)
+ * >> #define MyObject_Free(p)  DeeObject_Free(p) */
+#define DeeObject_MALLOCC(T, m, c)             ((T *)DeeObject_Mallocc(__builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+#define DeeObject_CALLOCC(T, m, c)             ((T *)DeeObject_Callocc(__builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+#define DeeObject_REALLOCC(p, T, m, c)         ((T *)DeeObject_Reallocc(Dee_REQUIRES_TYPE(T *, p), __builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+#define DeeObject_TRYMALLOCC(T, m, c)          ((T *)DeeObject_TryMallocc(__builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+#define DeeObject_TRYCALLOCC(T, m, c)          ((T *)DeeObject_TryCallocc(__builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+#define DeeObject_TRYREALLOCC(p, T, m, c)      ((T *)DeeObject_TryReallocc(Dee_REQUIRES_TYPE(T *, p), __builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+#define DeeObject_MALLOCC_SAFE(T, m, c)        ((T *)DeeObject_MalloccSafe(__builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+#define DeeObject_CALLOCC_SAFE(T, m, c)        ((T *)DeeObject_CalloccSafe(__builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+#define DeeObject_REALLOCC_SAFE(p, T, m, c)    ((T *)DeeObject_RealloccSafe(Dee_REQUIRES_TYPE(T *, p), __builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+#define DeeObject_TRYMALLOCC_SAFE(T, m, c)     ((T *)DeeObject_TryMalloccSafe(__builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+#define DeeObject_TRYCALLOCC_SAFE(T, m, c)     ((T *)DeeObject_TryCalloccSafe(__builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+#define DeeObject_TRYREALLOCC_SAFE(p, T, m, c) ((T *)DeeObject_TryRealloccSafe(Dee_REQUIRES_TYPE(T *, p), __builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
+
+
 #ifndef DEE_TYPE_ALLOCATOR
 /* Specifies a custom object allocator declaration. */
 #define DEE_TYPE_ALLOCATOR(tp_malloc, tp_free) (Dee_funptr_t)(tp_free), { (Dee_funptr_t)(tp_malloc) }

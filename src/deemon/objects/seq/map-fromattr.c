@@ -81,7 +81,7 @@ mfaki_ofobj(DeeObject *__restrict ob) {
 	size_t req_bufsize;
 	size_t cur_bufsize = Dee_ITERATTR_DEFAULT_BUFSIZE;
 	result = (DREF MapFromAttrIterator *)DeeObject_Malloc(offsetof(MapFromAttrIterator, mfai_iter) +
-	                                                                  cur_bufsize);
+	                                                      cur_bufsize);
 	if unlikely(!result)
 		goto err;
 	Dee_attrhint_initall(&hint);

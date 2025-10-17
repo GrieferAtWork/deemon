@@ -1575,19 +1575,18 @@ INTERN DeeTypeObject URoDictIterator_Type = {
 STATIC_ASSERT(offsetof(URoDict, urd_size) == offsetof(UDict, ud_used));
 #define urodict_bool udict_bool
 
-#define SIZEOF_URODICT(mask)      _Dee_MallococBufsize(offsetof(URoDict, urd_elem), (mask) + 1, sizeof(struct udict_item))
-#define SIZEOF_URODICT_SAFE(mask) _Dee_MallococBufsizeSafe(offsetof(URoDict, urd_elem), (mask) + 1, sizeof(struct udict_item))
-#define URODICT_ALLOC(mask)       ((DREF URoDict *)DeeObject_Calloc(SIZEOF_URODICT_SAFE(mask)))
-#define URODICT_TRYALLOC(mask)    ((DREF URoDict *)DeeObject_TryCalloc(SIZEOF_URODICT_SAFE(mask)))
-#define URODICT_INITIAL_MASK 0x03
+#define URoDict_MALLOC(mask)   DeeObject_MALLOCC_SAFE(URoDict, urd_elem, (mask) + 1)
+#define URoDict_ALLOC(mask)    DeeObject_CALLOCC_SAFE(URoDict, urd_elem, (mask) + 1)
+#define URoDict_TRYALLOC(mask) DeeObject_TRYCALLOCC_SAFE(URoDict, urd_elem, (mask) + 1)
+#define URODICT_INITIAL_MASK   0x03
 
 INTERN WUNUSED DREF URoDict *DCALL URoDict_New(void) {
 	DREF URoDict *result;
-	result = (DREF URoDict *)DeeObject_Malloc(SIZEOF_URODICT(0));
+	result = URoDict_MALLOC(0);
 	if unlikely(!result)
 		goto done;
-	result->urd_mask           = 0;
-	result->urd_size           = 0;
+	result->urd_mask = 0;
+	result->urd_size = 0;
 	result->urd_elem[0].di_key = NULL;
 	DeeObject_Init(result, &URoDict_Type);
 done:
@@ -1601,7 +1600,7 @@ URoDict_NewWithHint(size_t num_items) {
 	while (mask <= num_items)
 		mask = (mask << 1) | 1;
 	mask   = (mask << 1) | 1;
-	result = URODICT_ALLOC(mask);
+	result = URoDict_ALLOC(mask);
 	if unlikely(!result)
 		goto done;
 	result->urd_mask = mask;
@@ -1616,7 +1615,7 @@ urodict_rehash(DREF URoDict *__restrict self,
                size_t old_mask, size_t new_mask) {
 	DREF URoDict *result;
 	size_t i;
-	result = URODICT_ALLOC(new_mask);
+	result = URoDict_ALLOC(new_mask);
 	if unlikely(!result)
 		goto done;
 	for (i = 0; i <= old_mask; ++i) {
@@ -1702,10 +1701,10 @@ URoDict_FromSequence_fallback(DeeObject *__restrict self) {
 	}
 
 	/* Construct a read-only Dict from an iterator. */
-	result = URODICT_TRYALLOC(initial_mask);
+	result = URoDict_TRYALLOC(initial_mask);
 	if unlikely(!result) {
 		initial_mask = 1;
-		result = URODICT_ALLOC(initial_mask);
+		result = URoDict_ALLOC(initial_mask);
 		if unlikely(!result)
 			goto err;
 	}
