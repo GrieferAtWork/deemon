@@ -175,31 +175,25 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_shl(DeeObject *self, DeeObject *other) {
-	Dee_ssize_t shift_value;
-	if (DeeObject_AsSSize(other, &shift_value))
+	size_t shift_value;
+	if (DeeObject_AsSize(other, &shift_value))
 		goto err;
-	if unlikely(shift_value < 0) {
-		err_negative_shift(self, other, true);
-		goto err;
-	}
 	return_reference_(self);
 err:
+	DeeRT_ErrNegativeShiftOverflow(self, true);
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_shr(DeeObject *self, DeeObject *other) {
-	Dee_ssize_t shift_value;
-	if (DeeObject_AsSSize(other, &shift_value))
+	size_t shift_value;
+	if (DeeObject_AsSize(other, &shift_value))
 		goto err;
-	if unlikely(shift_value < 0) {
-		err_negative_shift(self, other, false);
-		goto err;
-	}
 	if (shift_value != 0)
 		return_false;
 	return_reference_(self);
 err:
+	DeeRT_ErrNegativeShiftOverflow(self, false);
 	return NULL;
 }
 

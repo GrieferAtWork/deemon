@@ -1602,8 +1602,6 @@ err_v:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 int_shr(DeeIntObject *a, DeeObject *b) {
 	DeeIntObject *z;
-	digit lomask, himask;
-	Dee_ssize_t shiftby, newsize, wordshift, loshift, hishift, i, j;
 	if (a->ob_size < 0) {
 		DeeIntObject *a1, *a2;
 		a1 = int_inv(a);
@@ -1620,16 +1618,16 @@ int_shr(DeeIntObject *a, DeeObject *b) {
 		Dee_Decref(a2);
 #endif /* !HAVE_int_inv_inherited */
 	} else {
-		if (DeeObject_AsSSize(b, &shiftby))
-			goto err;
-		if (shiftby < 0) {
-			err_negative_shift((DeeObject *)a, b, false);
-			goto err;
-		}
+		digit lomask, himask;
+		size_t shiftby, wordshift, newsize, lhs_size;
+		size_t loshift, hishift, i, j;
+		if (DeeObject_AsSize(b, &shiftby))
+			goto err_maybe_negative_shift;
 		wordshift = shiftby / DIGIT_BITS;
-		newsize   = ABS(a->ob_size) - wordshift;
-		if (newsize <= 0)
+		lhs_size = (size_t)ABS(a->ob_size);
+		if (lhs_size <= wordshift)
 			return (DeeIntObject *)DeeInt_NewZero();
+		newsize = lhs_size - wordshift;
 		loshift = shiftby % DIGIT_BITS;
 		hishift = DIGIT_BITS - loshift;
 		lomask  = ((digit)1 << hishift) - 1;
@@ -1647,6 +1645,8 @@ int_shr(DeeIntObject *a, DeeObject *b) {
 		z = int_normalize(z);
 	}
 	return maybe_small_int(z);
+err_maybe_negative_shift:
+	DeeRT_ErrNegativeShiftOverflow(a, false);
 err:
 	return NULL;
 }
@@ -1655,16 +1655,12 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 int_shl(DeeIntObject *a, DeeObject *b) {
 	DREF DeeIntObject *result;
 	twodigits accum;
-	Dee_ssize_t shiftby, oldsize, newsize, wordshift, remshift, i, j;
-	if (DeeObject_AsSSize(b, &shiftby))
-		goto err;
-	if (shiftby < 0) {
-		err_negative_shift((DeeObject *)a, b, true);
-		goto err;
-	}
+	size_t shiftby, oldsize, newsize, wordshift, remshift, i, j;
+	if (DeeObject_AsSize(b, &shiftby))
+		goto err_maybe_negative_shift;
 	wordshift = shiftby / DIGIT_BITS;
 	remshift  = shiftby - wordshift * DIGIT_BITS;
-	oldsize   = ABS(a->ob_size);
+	oldsize   = (size_t)ABS(a->ob_size);
 	newsize   = oldsize + wordshift;
 	if (remshift)
 		++newsize;
@@ -1672,7 +1668,7 @@ int_shl(DeeIntObject *a, DeeObject *b) {
 	if unlikely(!result)
 		goto err;
 	if (a->ob_size < 0) {
-		ASSERT(result->ob_refcnt == 1);
+		ASSERT(!DeeObject_IsShared(result));
 		result->ob_size = -result->ob_size;
 	}
 	for (i = 0; i < wordshift; i++)
@@ -1690,6 +1686,8 @@ int_shl(DeeIntObject *a, DeeObject *b) {
 	}
 	result = int_normalize(result);
 	return maybe_small_int(result);
+err_maybe_negative_shift:
+	DeeRT_ErrNegativeShiftOverflow(a, true);
 err:
 	return NULL;
 }

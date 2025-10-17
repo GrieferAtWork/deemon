@@ -136,16 +136,6 @@ err:
 	return -1;
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_negative_shift)(DeeObject *lhs, DeeObject *rhs, bool is_left_shift) {
-	ASSERT_OBJECT(lhs);
-	ASSERT_OBJECT(rhs);
-	return DeeError_Throwf(&DeeError_NegativeShift,
-	                       "Negative %s shift: `%k %s %k'",
-	                       is_left_shift ? "left" : "right", lhs,
-	                       is_left_shift ? "<<" : ">>", rhs);
-}
-
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_cannot_weak_reference)(DeeObject *__restrict ob) {
 	ASSERT_OBJECT(ob);

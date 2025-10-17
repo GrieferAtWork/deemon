@@ -1153,6 +1153,7 @@ EXPORTS
 	DeeRT_ErrIntegerOverflowUMul@8=_DeeRT_ErrIntegerOverflowUMul@8
 	DeeRT_ErrItemNotFound@8=_DeeRT_ErrItemNotFound@8
 	DeeRT_ErrItemNotFoundEx@20=_DeeRT_ErrItemNotFoundEx@20
+	DeeRT_ErrNegativeShiftOverflow@8=_DeeRT_ErrNegativeShiftOverflow@8
 	DeeRT_ErrNoActiveException@0=_DeeRT_ErrNoActiveException@0
 	DeeRT_ErrReadOnlyKey@8=_DeeRT_ErrReadOnlyKey@8
 	DeeRT_ErrReadOnlyKeyInt@8=_DeeRT_ErrReadOnlyKeyInt@8

@@ -649,10 +649,42 @@ err:
 /************************************************************************/
 /* Error.ValueError.ArithmeticError.NegativeShift                       */
 /************************************************************************/
+typedef struct {
+	ArithmeticError    nsf_base; /* Base error (value is the left-hand-side of shift) */
+	struct Dee_variant nsf_rhs;  /* right-hand-side of shift (value here should be negative) */
+	bool               nsf_left; /* "true" if left-shift; "false" if right-shift */
+} NegativeShift;
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+NegativeShift_print(NegativeShift *__restrict self,
+                   Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result;
+	struct Dee_variant lhs, rhs;
+	if (self->nsf_base.e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	Dee_variant_init_copy(&lhs, &self->nsf_base.ve_value);
+	Dee_variant_init_copy(&rhs, &self->nsf_rhs);
+	result = DeeFormat_Printf(printer, arg,
+	                          "Negative %s shift: `%k %s %k'",
+	                          self->nsf_left ? "left" : "right", &lhs,
+	                          self->nsf_left ? "<<" : ">>", &rhs);
+	Dee_variant_fini(&rhs);
+	Dee_variant_fini(&lhs);
+	return result;
+}
+
+PRIVATE struct type_member tpconst NegativeShift_members[] = {
+#define NegativeShift_init_params Error_init_params ",lhs?:?DNumeric,rhs?:?DNumeric,left=!f"
+	TYPE_MEMBER_FIELD_DOC("lhs", STRUCT_VARIANT | STRUCT_CONST, offsetof(NegativeShift, nsf_base.ve_value), "->?DNumeric"),
+	TYPE_MEMBER_FIELD_DOC("rhs", STRUCT_VARIANT | STRUCT_CONST, offsetof(NegativeShift, nsf_rhs), "->?DNumeric"),
+	TYPE_MEMBER_FIELD("left", STRUCT_BOOL(__SIZEOF_BOOL__) | STRUCT_CONST, offsetof(NegativeShift, nsf_left)),
+	TYPE_MEMBER_END
+};
+
 PUBLIC DeeTypeObject DeeError_NegativeShift =
-INIT_LIKE_BASECLASS("NegativeShift", "(" ArithmeticError_init_params ")",
-                    TP_FNORMAL, &DeeError_ArithmeticError, ArithmeticError,
-                    NULL, NULL, NULL, NULL, NULL);
+INIT_CUSTOM_ERROR("NegativeShift", "(" NegativeShift_init_params ")",
+                  TP_FNORMAL, &DeeError_ArithmeticError, NegativeShift,
+                  NULL, &NegativeShift_print, NULL, NULL, NegativeShift_members, NULL);
 
 
 /************************************************************************/
@@ -1982,6 +2014,54 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		result->ie_base.ke_base.e_message = NULL;
 		result->ie_base.ke_base.e_inner   = (DREF DeeObject *)overflow; /* Inherit reference */
 		DeeObject_Init(&result->ie_base.ke_base, &DeeError_IndexError);
+		error->ef_error = (DREF DeeObject *)result; /* Inherit reference */
+	}
+done:
+	return -1;
+}
+
+
+/* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
+ * error within a `NegativeShift' (setting it as the `NegativeShift's "inner"), and
+ * using `lhs' as the shift's left-hand-side expression.
+ *
+ * If the currently-thrown exception isn't an `IntegerOverflow', do nothing.
+ *
+ * @return: -1: Always returns `-1', no matter what this function ended up doing. */
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrNegativeShiftOverflow)(DeeObject *lhs, bool is_left_shift) {
+	DREF DeeThreadObject *me = DeeThread_Self();
+	struct except_frame *error = me->t_except;
+	ASSERT(error != NULL);
+	ASSERT(me->t_exceptsz > 0);
+	if (DeeObject_InstanceOf(error->ef_error, &DeeError_IntegerOverflow) &&
+	    likely(!(atomic_read(&me->t_state) & Dee_THREAD_STATE_TERMINATED))) {
+		IntegerOverflow *overflow = (IntegerOverflow *)error->ef_error;
+		DREF NegativeShift *result = DeeObject_MALLOC(NegativeShift);
+		if unlikely(!result) {
+			struct except_frame *oom = me->t_except;
+			if likely(oom != error) {
+				ASSERT(me->t_exceptsz >= 2);
+				ASSERT(oom->ef_prev == error);
+				oom->ef_prev = error->ef_prev;
+				error->ef_prev = oom;
+				me->t_except = error;
+				/* Handle the original IntegerOverflow error so only the OOM error remains */
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			}
+			goto done;
+		}
+
+		/* Set NegativeShift parameters:
+		 * - "lhs"  (ve_value) = <caller-given "lhs">
+		 * - "rhs"  (nsf_rhs)  = <value from "IntegerOverflow" error>
+		 * - "left" (nsf_left) = <caller-given "is_left_shift")> */
+		Dee_variant_init_object(&result->nsf_base.ve_value, lhs);
+		Dee_variant_init_copy(&result->nsf_rhs, &overflow->io_base.ve_value);
+		result->nsf_left = is_left_shift;
+		result->nsf_base.e_message = NULL;
+		result->nsf_base.e_inner   = (DREF DeeObject *)overflow; /* Inherit reference */
+		DeeObject_Init(&result->nsf_base, &DeeError_NegativeShift);
 		error->ef_error = (DREF DeeObject *)result; /* Inherit reference */
 	}
 done:

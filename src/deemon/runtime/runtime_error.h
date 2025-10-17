@@ -39,7 +39,6 @@ struct function_object;
 
 #define err_unimplemented_constructor(tp, argc, argv) err_unimplemented_constructor_kw(tp, argc, argv, NULL)
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_constructor_kw(DeeTypeObject *tp, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_negative_shift(DeeObject *lhs, DeeObject *rhs, bool is_left_shift);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_cannot_weak_reference(DeeObject *__restrict ob);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_reference_loop(DeeObject *a, DeeObject *b);
 INTDEF ATTR_COLD int DCALL err_cannot_lock_weakref(void);
@@ -126,7 +125,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 
 #ifndef Dee_ASSUMED_VALUE_IS_NOOP
 #define err_unimplemented_constructor_kw(tp, argc, argv, kw)                                              Dee_ASSUMED_VALUE(err_unimplemented_constructor_kw(tp, argc, argv, kw), -1)
-#define err_negative_shift(a, b, is_left_shift)                                                           Dee_ASSUMED_VALUE(err_negative_shift(a, b, is_left_shift), -1)
 #define err_cannot_weak_reference(ob)                                                                     Dee_ASSUMED_VALUE(err_cannot_weak_reference(ob), -1)
 #define err_reference_loop(a, b)                                                                          Dee_ASSUMED_VALUE(err_reference_loop(a, b), -1)
 #define err_cannot_lock_weakref()                                                                         Dee_ASSUMED_VALUE(err_cannot_lock_weakref(), -1)

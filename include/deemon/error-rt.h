@@ -126,6 +126,28 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU128)(Dee_uint128_t value, 
 
 
 
+/* Throws an `DeeError_DivideByZero' indicating that a zero-division attempt has taken place. */
+struct Dee_variant;
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZero)(DeeObject *lhs, DeeObject *rhs);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZeroEx)(struct Dee_variant *lhs, struct Dee_variant *rhs);
+#define DeeRT_ErrDivideByZero(lhs, rhs)   Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZero)((DeeObject *)Dee_REQUIRES_OBJECT(lhs), (DeeObject *)Dee_REQUIRES_OBJECT(rhs)), -1)
+#define DeeRT_ErrDivideByZeroEx(lhs, rhs) Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZeroEx)(lhs, rhs), -1)
+
+
+/* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
+ * error within a `NegativeShift' (setting it as the `NegativeShift's "inner"), and
+ * using `lhs' as the shift's left-hand-side expression.
+ *
+ * If the currently-thrown exception isn't an `IntegerOverflow', do nothing.
+ *
+ * @return: -1: Always returns `-1', no matter what this function ended up doing. */
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrNegativeShiftOverflow)(DeeObject *lhs, bool is_left_shift);
+#define DeeRT_ErrNegativeShiftOverflow(lhs, is_left_shift) \
+	Dee_ASSUMED_VALUE((DeeRT_ErrNegativeShiftOverflow)((DeeObject *)Dee_REQUIRES_OBJECT(lhs), is_left_shift), -1)
+
+
+
+
 /* Throws an `DeeError_UnknownKey' indicating that a given index/key is unknown */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnknownKey)(DeeObject *map, DeeObject *key);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrUnknownKeyWithInner)(DeeObject *map, DeeObject *key, /*inherit(always)*/ DREF DeeObject *inner);
@@ -172,13 +194,6 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject
 #define DeeRT_ErrUnboundIndex(seq, index)                           Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndex)((DeeObject *)Dee_REQUIRES_OBJECT(seq), index), -1)
 #define DeeRT_ErrUnboundIndexObj(seq, index)                        Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndexObj)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(index)), -1)
 
-/* Throws an `DeeError_DivideByZero' indicating that a zero-division attempt has taken place. */
-struct Dee_variant;
-DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZero)(DeeObject *lhs, DeeObject *rhs);
-DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZeroEx)(struct Dee_variant *lhs, struct Dee_variant *rhs);
-#define DeeRT_ErrDivideByZero(lhs, rhs)   Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZero)((DeeObject *)Dee_REQUIRES_OBJECT(lhs), (DeeObject *)Dee_REQUIRES_OBJECT(rhs)), -1)
-#define DeeRT_ErrDivideByZeroEx(lhs, rhs) Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZeroEx)(lhs, rhs), -1)
-
 /* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOutOfBounds)(DeeObject *seq, size_t index, size_t length);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeObject *seq, DeeObject *index, DeeObject *length);
@@ -194,11 +209,6 @@ INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaIndexOutOfBounds)(struct Dee
 	Dee_ASSUMED_VALUE((DeeRT_ErrVaIndexOutOfBounds)(frame, index), -1)
 #endif /* CONFIG_BUILDING_DEEMON */
 
-/* Throws an `DeeError_EmptySequence' indicating that a given sequence is empty */
-DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrEmptySequence)(DeeObject *seq);
-#define DeeRT_ErrEmptySequence(seq) Dee_ASSUMED_VALUE((DeeRT_ErrEmptySequence)((DeeObject *)Dee_REQUIRES_OBJECT(seq)), -1)
-
-
 /* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
  * error within an `IndexError' (setting it as the `IndexError's "inner"), and using
  * `seq' as the accompanying sequence.
@@ -209,6 +219,10 @@ DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrEmptySequence)(DeeObject *seq
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOverflow)(DeeObject *seq);
 #define DeeRT_ErrIndexOverflow(seq) Dee_ASSUMED_VALUE((DeeRT_ErrIndexOverflow)((DeeObject *)Dee_REQUIRES_OBJECT(seq)), -1)
 
+
+/* Throws an `DeeError_EmptySequence' indicating that a given sequence is empty */
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrEmptySequence)(DeeObject *seq);
+#define DeeRT_ErrEmptySequence(seq) Dee_ASSUMED_VALUE((DeeRT_ErrEmptySequence)((DeeObject *)Dee_REQUIRES_OBJECT(seq)), -1)
 
 /* Throws an `DeeError_ItemNotFound' indicating that a given item could not be found within some sequence */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFound)(DeeObject *seq, DeeObject *item);
