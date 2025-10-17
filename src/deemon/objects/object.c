@@ -1022,7 +1022,7 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 					refcnt = atomic_read(&self->ob_refcnt);
 					if (refcnt == 0)
 						goto destroy_weak;
-				} while unlikely(atomic_cmpxch_weak_or_write(&self->ob_refcnt, refcnt, refcnt + 1));
+				} while unlikely(!atomic_cmpxch_weak_or_write(&self->ob_refcnt, refcnt, refcnt + 1));
 				return false;
 			}
 		}
