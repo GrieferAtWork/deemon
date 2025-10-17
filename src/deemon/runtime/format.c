@@ -1691,10 +1691,8 @@ print_keyword_argument_type_foreach(void *arg, DeeObject *key, DeeObject *value)
 	if unlikely(temp < 0)
 		goto err;
 	result += temp;
-	str = Dee_TYPE(value)->tp_name;
-	if unlikely(!str)
-		str = "<anonymous_type>";
-	temp = (*me->pkatd_printer)(me->pkatd_arg, str, strlen(str));
+	str = DeeType_GetName(Dee_TYPE(value));
+	temp = DeeFormat_PrintStr(me->pkatd_printer, me->pkatd_arg, str);
 	if unlikely(temp < 0)
 		goto err;
 	result += temp;
@@ -1727,10 +1725,8 @@ PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) Dee_ssize_t
 						goto err;
 					result += temp;
 				}
-				str = Dee_TYPE(argv[i])->tp_name;
-				if unlikely(!str)
-					str = "<anonymous_type>";
-				temp = (*printer)(arg, str, strlen(str));
+				str  = DeeType_GetName(Dee_TYPE(argv[i]));
+				temp = DeeFormat_PrintStr(printer, arg, str);
 				if unlikely(temp < 0)
 					goto err;
 				result += temp;
@@ -1755,10 +1751,8 @@ PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) Dee_ssize_t
 					goto err;
 				result += temp;
 			}
-			str = Dee_TYPE(argv[argc - kwargc + i])->tp_name;
-			if unlikely(!str)
-				str = "<anonymous_type>";
-			temp = (*printer)(arg, str, strlen(str));
+			str  = DeeType_GetName(Dee_TYPE(argv[argc - kwargc + i]));
+			temp = DeeFormat_PrintStr(printer, arg, str);
 			if unlikely(temp < 0)
 				goto err;
 			result += temp;
@@ -1773,10 +1767,8 @@ PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) Dee_ssize_t
 				goto err;
 			result += temp;
 		}
-		str = Dee_TYPE(argv[i])->tp_name;
-		if unlikely(!str)
-			str = "<anonymous_type>";
-		temp = (*printer)(arg, str, strlen(str));
+		str  = DeeType_GetName(Dee_TYPE(argv[i]));
+		temp = DeeFormat_PrintStr(printer, arg, str);
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;

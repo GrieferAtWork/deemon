@@ -108,9 +108,7 @@ INTERN ATTR_COLD NONNULL((1)) int
                                          DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *error_args[1], *error_ob;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	char const *name               = tp->tp_name;
-	if (!name)
-		name = "<anonymous type>";
+	char const *name = DeeType_GetName(tp);
 	if unlikely(unicode_printer_printf(&printer, "Constructor `%s(", name) < 0)
 		goto err_printer;
 	if unlikely(DeeFormat_PrintArgumentTypesKw(&unicode_printer_print,

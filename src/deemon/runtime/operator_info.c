@@ -1097,8 +1097,8 @@ DeeType_InheritGenericOperator(DeeTypeObject *__restrict self,
 					atomic_cmpxch_or_write((void **)((byte_t *)self_container + info->oi_offset), NULL, base_ptr);
 				}
 #if 1
-				Dee_DPRINTF("[RT] Inherit `" OPNAME("%s") "' from %q into %q\n",
-				            info->oi_sname, base->tp_name, self->tp_name);
+				Dee_DPRINTF("[RT] Inherit `" OPNAME("%s") "' from %k into %k\n",
+				            info->oi_sname, base, self);
 #endif
 				return true;
 			}

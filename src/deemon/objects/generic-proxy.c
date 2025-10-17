@@ -77,9 +77,7 @@ generic_proxy__init(ProxyObject *__restrict self,
 		Dee_Incref(self->po_obj);
 		return 0;
 	}
-	tp_name = Dee_TYPE(self)->tp_name;
-	if unlikely(!tp_name)
-		tp_name = "<unnamed type>";
+	tp_name = DeeType_GetName(Dee_TYPE(self));
 	return err_invalid_argc(tp_name, argc, 1, 1);
 }
 
@@ -149,9 +147,7 @@ generic_proxy2__init(ProxyObject2 *__restrict self,
 		Dee_Incref(self->po_obj2);
 		return 0;
 	}
-	tp_name = Dee_TYPE(self)->tp_name;
-	if unlikely(!tp_name)
-		tp_name = "<unnamed type>";
+	tp_name = DeeType_GetName(Dee_TYPE(self));
 	return err_invalid_argc(tp_name, argc, 2, 2);
 }
 
@@ -215,9 +211,7 @@ generic_proxy3__init(ProxyObject3 *__restrict self,
 		Dee_Incref(self->po_obj3);
 		return 0;
 	}
-	tp_name = Dee_TYPE(self)->tp_name;
-	if unlikely(!tp_name)
-		tp_name = "<unnamed type>";
+	tp_name = DeeType_GetName(Dee_TYPE(self));
 	return err_invalid_argc(tp_name, argc, 3, 3);
 }
 

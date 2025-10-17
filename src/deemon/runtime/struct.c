@@ -483,7 +483,7 @@ DeeStructObject_InitKw(DeeObject *__restrict self,
 	if unlikely(DeeStructObject_ForeachField(tp_self, &struct_init_cb,
 	                                         &struct_init_undo_cb, &data))
 		goto err;
-	result = DeeKwArgs_Done(&data.sid_kwargs, argc, tp_self->tp_name);
+	result = DeeKwArgs_Done(&data.sid_kwargs, argc, DeeType_GetName(tp_self));
 	if unlikely(result)
 		struct_fini_all(self);
 	return result;
@@ -845,7 +845,7 @@ DeeStructObject_PrintRepr(DeeObject *__restrict self,
 	Dee_ssize_t temp, result;
 	struct struct_printrepr_data data;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	result = DeeFormat_Printf(printer, arg, "%s(", tp_self->tp_name);
+	result = DeeFormat_Printf(printer, arg, "%s(", DeeType_GetName(tp_self));
 	if unlikely(result < 0)
 		goto done;
 	data.spr_self    = self;

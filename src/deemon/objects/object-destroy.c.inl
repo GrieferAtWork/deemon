@@ -312,8 +312,8 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 		do {
 			ASSERT(self->ob_refcnt == 0);
 			ASSERTF(type == orig_type || !(type->tp_flags & TP_FFINAL),
-			        "Final type `%s' with sub-class `%s'",
-			        type->tp_name, orig_type->tp_name);
+			        "Final type `%k' with sub-class `%k'",
+			        type, orig_type);
 			if (type->tp_init.tp_dtor) {
 				/* Update the object's typing to mirror what is written here.
 				 * NOTE: We're allowed to modify the type of `self' _ONLY_

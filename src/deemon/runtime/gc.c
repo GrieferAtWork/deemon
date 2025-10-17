@@ -226,12 +226,12 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 	head = DeeGC_Head(ob);
 #ifdef GCHEAD_ISTRACKED
 	ASSERTF(GCHEAD_ISTRACKED(head),
-	        "Object %p of type %s isn't being tracked\n"
+	        "Object %p of type %k isn't being tracked\n"
 	        "repr: `%r'",
-	        ob, ob->ob_type->tp_name, ob);
+	        ob, ob->ob_type, ob);
 #endif /* GCHEAD_ISTRACKED */
 	GCLOCK_ACQUIRE_S();
-	/*printf("Untrack: %s:%p\n", ob->ob_type->tp_name, ob);*/
+	/*printf("Untrack: %s:%p\n", DeeType_GetName(ob->ob_type), ob);*/
 	/* Unlink the gc head from whatever chain it is apart of. */
 	/* HINT: If the following line crashes, it is likely that a GC-object was
 	 *       allocated using something other than the GC-object allocators:
@@ -1885,7 +1885,7 @@ PRIVATE DeeTypeObject GCEnum_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_GCEnum",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FNAMEOBJECT | TP_FABSTRACT,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FABSTRACT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_SINGLETON,
 	/* .tp_base     = */ &DeeSeq_Type,

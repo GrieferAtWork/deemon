@@ -2100,8 +2100,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 4, 5, 6)) Dee_funptr_t
 #define LOCAL_VERIFY_DEP_IMPL() (dep_impl != NULL)
 #endif /* !CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 				ASSERTF(LOCAL_VERIFY_DEP_IMPL(),
-				        "Transitive operator '%u' used as dependency was not initialized in '%s'",
-				        (unsigned int)dep, from->tp_name);
+				        "Transitive operator '%u' used as dependency was not initialized in '%k'",
+				        (unsigned int)dep, from);
 #undef LOCAL_VERIFY_DEP_IMPL
 				dep_impl = do_DeeType_InheritNativeOperatorWithoutHints(from, into, dep, actions, p_nactions, dep_impl);
 				if unlikely(!dep_impl)
@@ -2152,10 +2152,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_funptr_t
 			struct Dee_opinfo const *info = op < OPERATOR_USERCOUNT
 			    ? DeeTypeType_GetOperatorById(Dee_TYPE(from), op)
 			    : NULL;
-			Dee_DPRINTF("[RT] Inherit '%s.operator %s' into '%s' [tno: %u, ptr: %p]\n",
-			            from->tp_name ? from->tp_name : "<anonymous>",
-			            info ? info->oi_sname : "?",
-			            into->tp_name ? into->tp_name : "<anonymous>",
+			Dee_DPRINTF("[RT] Inherit '%k.operator %s' into '%k' [tno: %u, ptr: %p]\n",
+			            from, info ? info->oi_sname : "?", into,
 			            (unsigned int)actions[i].tnoi_id,
 			            *(void **)&actions[i].tnoi_cb);
 #endif /* !Dee_DPRINT_IS_NOOP */

@@ -284,7 +284,7 @@ error_init(DeeObject *__restrict self,
 	DeeErrorObject *me = (DeeErrorObject *)self;
 	me->e_message = NULL;
 	me->e_inner   = NULL;
-	_DeeArg_Unpack0Or1Or2(err, argc, argv, Dee_TYPE(me)->tp_name,
+	_DeeArg_Unpack0Or1Or2(err, argc, argv, DeeType_GetName(Dee_TYPE(me)),
 	                      &me->e_message, &me->e_inner);
 	if (me->e_message) {
 		if (DeeObject_AssertTypeExact(me->e_message, &DeeString_Type))
@@ -328,11 +328,11 @@ error_init_kw(DeeObject *__restrict self, size_t argc,
 		me->e_inner   = argv[1];
 		break;
 	default:
-		return DeeArg_BadArgcEx(Dee_TYPE(me)->tp_name, argc, 0, 2);
+		return DeeArg_BadArgcEx(DeeType_GetName(Dee_TYPE(me)), argc, 0, 2);
 	}
 	Dee_XIncref(me->e_message);
 	Dee_XIncref(me->e_inner);
-	if unlikely(DeeKwArgs_Done(&kwds, argc, Dee_TYPE(me)->tp_name))
+	if unlikely(DeeKwArgs_Done(&kwds, argc, DeeType_GetName(Dee_TYPE(me))))
 		goto err_self;
 	return 0;
 err_self:

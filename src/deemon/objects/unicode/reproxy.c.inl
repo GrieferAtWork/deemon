@@ -182,7 +182,7 @@ ReSequenceIterator__init(ReSequenceIterator *__restrict self,
 	ReSequence *reseq;
 	DeeTypeObject *tp_seq, *tp_self = Dee_TYPE(self);
 	if unlikely(argc != 1)
-		return err_invalid_argc(tp_self->tp_name, argc, 1, 1);
+		return err_invalid_argc(DeeType_GetName(tp_self), argc, 1, 1);
 	if (tp_self == &ReFindAllIterator_Type) {
 		tp_seq = &ReFindAll_Type;
 	} else if (tp_self == &RegFindAllIterator_Type) {

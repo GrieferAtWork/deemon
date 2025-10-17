@@ -1463,9 +1463,10 @@ PRIVATE char const membercache_type_names[][16] = {
 PRIVATE NONNULL((1, 2)) void DCALL
 Dee_membercache_addslot_log_success(struct Dee_membercache *__restrict self,
                                     struct Dee_membercache_slot const *__restrict slot) {
-	Dee_DPRINTF("[RT] Cached %s `%s.%s' in `%s' (%s)\n",
+	Dee_DPRINTF("[RT] Cached %s `%k.%s' in `%s' (%s)\n",
 	            membercache_type_names[slot->mcs_type],
-	            slot->mcs_decl->tp_name, slot->mcs_attrib.a_name,
+	            slot->mcs_decl,
+	            slot->mcs_attrib.a_name,
 	            MEMBERCACHE_GETTYPENAME(self),
 	            MEMBERCACHE_GETCLASSNAME(self));
 }
@@ -1722,9 +1723,9 @@ Dee_membercache_patch(struct Dee_membercache *self, DeeTypeObject *decl,
 		if ((*do_patch)(item, new_data, old_data)) {
 			atomic_write(&item->mcs_decl, decl);
 			result = 0;
-			Dee_DPRINTF("[RT] Patched %s `%s.%s' in `%s' (%s)\n",
+			Dee_DPRINTF("[RT] Patched %s `%k.%s' in `%s' (%s)\n",
 			            membercache_type_names[attr_type],
-			            decl->tp_name, attr,
+			            decl, attr,
 			            MEMBERCACHE_GETTYPENAME(self),
 			            MEMBERCACHE_GETCLASSNAME(self));
 		}

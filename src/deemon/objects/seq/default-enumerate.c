@@ -115,9 +115,7 @@ DefaultEnumerationWithIntFilter__init(DefaultEnumerationWithIntFilter *__restric
 		Dee_Incref(self->dewif_seq);
 		return 0;
 	}
-	tp_name = Dee_TYPE(self)->tp_name;
-	if unlikely(!tp_name)
-		tp_name = "<unnamed type>";
+	tp_name = DeeType_GetName(Dee_TYPE(self));
 	err_invalid_argc(tp_name, argc, 3, 3);
 err:
 	return -1;

@@ -198,8 +198,8 @@ is_an_imod(DeeModuleObject *__restrict self) {
 		if (tp_self == &DeeModule_Type)
 			return false;
 		tp_self = DeeType_Base(tp_self);
-		ASSERTF(tp_self, "%p (%s) isn't a module",
-		        self, Dee_TYPE(self)->tp_name);
+		ASSERTF(tp_self, "%p (%k) isn't a module",
+		        self, Dee_TYPE(self));
 	}
 }
 

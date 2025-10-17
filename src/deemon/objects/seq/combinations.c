@@ -103,7 +103,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 sc_init(SeqCombinations *__restrict self,
         size_t argc, DeeObject *const *argv) {
 	if (argc < 1 || argc > 2)
-		return err_invalid_argc(Dee_TYPE(self)->tp_name, argc, 1, 2);
+		return err_invalid_argc(DeeType_GetName(Dee_TYPE(self)), argc, 1, 2);
 	self->sc_rparam = (size_t)-1;
 	if (argc >= 2) {
 		if unlikely(DeeObject_AsSize(argv[1], &self->sc_rparam))
@@ -117,8 +117,9 @@ sc_init(SeqCombinations *__restrict self,
 	self->sc_seqsize = (size_t)-1;
 	return 0;
 err_zero_rparam:
-	DeeError_Throwf(&DeeError_ValueError, "'r' parameter of '%s' must not be 0",
-	                Dee_TYPE(self)->tp_name);
+	DeeError_Throwf(&DeeError_ValueError,
+	                "'r' parameter of '%k' must not be 0",
+	                Dee_TYPE(self));
 err:
 	return -1;
 }
@@ -667,7 +668,7 @@ sci_init_generic(size_t argc, DeeObject *const *argv,
 		goto err;
 	return (DREF SeqCombinationsIterator *)DeeObject_Iter((DeeObject *)com);
 err_bad_argc:
-	err_invalid_argc(returned_iter_type->tp_name, argc, 1, 1);
+	err_invalid_argc(DeeType_GetName(returned_iter_type), argc, 1, 1);
 err:
 	return NULL;
 }

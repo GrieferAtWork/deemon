@@ -4318,6 +4318,12 @@ DeeObject_Class(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeType_GetModule(DeeTypeObject *__restrict self);
 
+/* Returns the `tp_name' of `self', or the string
+ * "<anonymous type>" when `self' doesn't have a
+ * type name set. */
+DFUNDEF ATTR_RETNONNULL ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
+DeeType_GetName(DeeTypeObject const *__restrict self);
+
 /* Object creation (constructor invocation). */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewDefault(DeeTypeObject *__restrict object_type);
 DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv);

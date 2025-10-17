@@ -1107,7 +1107,7 @@ DeeFatal_BadIncref(DeeObject *ob, char const *file, int line) {
 	            ob->ob_refcnt, ob->ob_refcnt);
 	type = Dee_TYPE(ob);
 	if (DeeObject_Check(type) && DeeType_Check(type)) {
-		Dee_DPRINTF("type : %s (%p)", type->tp_name, type);
+		Dee_DPRINTF("type : %s (%p)", DeeType_GetName(type), type);
 	} else {
 		Dee_DPRINTF("type : <INVALID> - %p", type);
 	}
@@ -1127,7 +1127,7 @@ DeeFatal_BadDecref(DeeObject *ob, char const *file, int line) {
 	            ob->ob_refcnt, ob->ob_refcnt);
 	type = Dee_TYPE(ob);
 	if (DeeObject_Check(type) && DeeType_Check(type)) {
-		Dee_DPRINTF("type : %s (%p)", type->tp_name, type);
+		Dee_DPRINTF("type : %s (%p)", DeeType_GetName(type), type);
 	} else {
 		Dee_DPRINTF("type : <INVALID> - %p", type);
 	}
@@ -1549,7 +1549,7 @@ again:
 		            file, line, self);
 		Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n", self->ob_refcnt, self->ob_refcnt);
 		if (DeeObject_Check(type) && DeeType_Check(type)) {
-			Dee_DPRINTF("type : %s (%p)", type->tp_name, type);
+			Dee_DPRINTF("type : %s (%p)", DeeType_GetName(type), type);
 		} else {
 			Dee_DPRINTF("type : <INVALID> - %p", type);
 		}
@@ -1592,8 +1592,8 @@ again:
 		for (;;) {
 			ASSERT(self->ob_refcnt == 0);
 			ASSERTF(type == orig_type || !(type->tp_flags & TP_FFINAL),
-			        "Final type `%s' with sub-class `%s'",
-			        type->tp_name, orig_type->tp_name);
+			        "Final type `%k' with sub-class `%k'",
+			        type, orig_type);
 			if (type->tp_init.tp_dtor) {
 				/* Update the object's typing to mirror what is written here.
 				 * NOTE: We're allowed to modify the type of `self' _ONLY_
@@ -1663,11 +1663,11 @@ again:
 		for (;;) {
 			ASSERT(self->ob_refcnt == 0);
 			ASSERTF(type == orig_type || !(type->tp_flags & TP_FFINAL),
-			        "Final type `%s' with sub-class `%s'",
-			        type->tp_name, orig_type->tp_name);
+			        "Final type `%k' with sub-class `%k'",
+			        type, orig_type);
 			ASSERTF(!(type->tp_flags & TP_FGC),
-			        "non-gc type `%s' derived from gc type `%s'",
-			        orig_type->tp_name, type->tp_name);
+			        "non-gc type `%k' derived from gc type `%k'",
+			        orig_type, type);
 			if (type->tp_init.tp_dtor) {
 				/* Update the object's typing to mirror what is written here.
 				 * NOTE: We're allowed to modify the type of `self' _ONLY_
@@ -2834,6 +2834,7 @@ type_ctor(DeeTypeObject *__restrict self) {
 DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_str(DeeObject *__restrict self) {
 	DeeTypeObject *me = (DeeTypeObject *)self;
+	char const *name;
 	if (me->tp_flags & TP_FNAMEOBJECT) {
 		DREF DeeStringObject *result;
 		result = COMPILER_CONTAINER_OF(me->tp_name,
@@ -2842,14 +2843,14 @@ type_str(DeeObject *__restrict self) {
 		Dee_Incref(result);
 		return (DREF DeeObject *)result;
 	}
-	if likely(me->tp_name)
-		return DeeString_New(me->tp_name);
-	return_reference_((DREF DeeObject *)&str_Type);
+	name = DeeType_GetName(me);
+	return DeeString_New(name);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 type_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	DeeTypeObject *me = (DeeTypeObject *)self;
+	char const *name;
 	if (me->tp_flags & TP_FNAMEOBJECT) {
 		DREF DeeStringObject *nameob;
 		nameob = COMPILER_CONTAINER_OF(me->tp_name,
@@ -2857,9 +2858,8 @@ type_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 		                               s_str);
 		return DeeString_PrintUtf8((DeeObject *)nameob, printer, arg);
 	}
-	if likely(me->tp_name)
-		return DeeFormat_PrintStr(printer, arg, me->tp_name);
-	return DeeString_PrintAscii(&str_Type, printer, arg);
+	name = DeeType_GetName(me);
+	return DeeFormat_PrintStr(printer, arg, name);
 }
 
 DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2868,13 +2868,13 @@ type_repr(DeeObject *__restrict self) {
 	DREF DeeObject *mod;
 	DREF DeeStringObject *result;
 	DeeStringObject *modname;
-	if unlikely(!me->tp_name)
-		goto fallback;
+	char const *name;
 	mod = DeeType_GetModule(me);
 	if (!mod)
 		goto fallback;
 	modname = ((DeeModuleObject *)mod)->mo_name;
-	result  = (DREF DeeStringObject *)DeeString_Newf("%k.%s", modname, me->tp_name);
+	name    = DeeType_GetName(me);
+	result  = (DREF DeeStringObject *)DeeString_Newf("%k.%s", modname, name);
 	Dee_Decref(mod);
 	return (DREF DeeObject *)result;
 fallback:
@@ -2894,9 +2894,7 @@ type_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *ar
 	Dee_Decref(mod);
 	if unlikely(result < 0)
 		goto done;
-	name = me->tp_name;
-	if (name == NULL)
-		name = "<anonymous type>";
+	name = DeeType_GetName(me);
 	temp = DeeFormat_Printf(printer, arg, ".%s", name);
 	if unlikely(temp < 0)
 		goto err;
@@ -2921,8 +2919,8 @@ type_fini(DeeTypeObject *__restrict self) {
 	Dee_weakref_fini(&self->tp_module);
 	weakref_support_fini(self);
 	ASSERTF(self->tp_flags & TP_FHEAP,
-	        "Non heap-allocated type %s is being destroyed (This shouldn't happen)",
-	        self->tp_name);
+	        "Non heap-allocated type %k is being destroyed (This shouldn't happen)",
+	        self);
 
 	/* Free the method hint cache */
 	if (self->tp_mhcache)
@@ -4183,8 +4181,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_get_classdesc(DeeTypeObject *__restrict self) {
 	if (!DeeType_IsClass(self)) {
 		DeeError_Throwf(&DeeError_AttributeError,
-		                "Can't access `__class__' of non-user-defined Type `%s'",
-		                self->tp_name);
+		                "Can't access `__class__' of non-user-defined Type `%k'",
+		                self);
 		return NULL;
 	}
 	return_reference_((DeeObject *)self->tp_class->cd_desc);
@@ -4368,6 +4366,19 @@ again:
 			goto again;
 	}
 	return NULL;
+}
+
+/* Returns the `tp_name' of `self', or the string
+ * "<anonymous type>" when `self' doesn't have a
+ * type name set. */
+PUBLIC ATTR_RETNONNULL ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
+DeeType_GetName(DeeTypeObject const *__restrict self) {
+	char const *result;
+	ASSERT_OBJECT_TYPE(self, &DeeType_Type);
+	result = self->tp_name;
+	if (result == NULL)
+		result = "<anonymous type>";
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

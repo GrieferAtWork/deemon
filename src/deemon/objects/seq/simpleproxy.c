@@ -878,7 +878,7 @@ iter_init(SeqSimpleProxyIterator *__restrict self,
 	SeqSimpleProxy *seq;
 	DeeTypeObject *tp;
 	if unlikely(argc != 1)
-		return DeeArg_BadArgc1(Dee_TYPE(self)->tp_name, argc);
+		return DeeArg_BadArgc1(DeeType_GetName(Dee_TYPE(self)), argc);
 	seq = (SeqSimpleProxy *)argv[0];
 	tp = (self->ob_type == &SeqIdsIterator_Type)
 	     ? &SeqIds_Type

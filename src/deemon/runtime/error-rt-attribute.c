@@ -973,7 +973,7 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 	LOADARG(DeeObject, &isset, 7, isset);
 #undef LOADARG
 	if (argc > 8)
-		return DeeArg_BadArgcEx(Dee_TYPE(self)->tp_name, argc, 0, 8);
+		return DeeArg_BadArgcEx(DeeType_GetName(Dee_TYPE(self)), argc, 0, 8);
 	self->ae_flags = 0;
 	if unlikely(AttributeError_init_access_flag(self, isget, AttributeError_F_GET))
 		goto err;
@@ -985,12 +985,18 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 	if (!isget && DeeObject_InstanceOf(self, &DeeError_UnboundAttribute))
 		self->ae_flags |= AttributeError_F_GET;
 	if (attr) {
-		if unlikely(!self->ae_obj)
-			return DeeError_Throwf(&DeeError_TypeError, "%s: 'attr' given, but no 'ob'", Dee_TYPE(self)->tp_name);
+		if unlikely(!self->ae_obj) {
+			return DeeError_Throwf(&DeeError_TypeError,
+			                       "%k: 'attr' given, but no 'ob'",
+			                       Dee_TYPE(self));
+		}
 		if (DeeObject_InstanceOf(attr, &DeeAttribute_Type)) {
 			DeeAttributeObject *attrib = (DeeAttributeObject *)attr;
-			if unlikely(self->ae_desc.ad_info.ai_decl)
-				return DeeError_Throwf(&DeeError_TypeError, "%s: 'decl' given, but 'attr' is an Attribute and not a string", Dee_TYPE(self)->tp_name);
+			if unlikely(self->ae_desc.ad_info.ai_decl) {
+				return DeeError_Throwf(&DeeError_TypeError,
+				                       "%k: 'decl' given, but 'attr' is an Attribute and not a string",
+				                       Dee_TYPE(self));
+			}
 			Dee_attrdesc_init_copy(&self->ae_desc, &attrib->a_desc);
 			ASSERT(self->ae_desc.ad_info.ai_decl == attrib->a_desc.ad_info.ai_decl);
 			ASSERT(self->ae_desc.ad_info.ai_decl);
@@ -1007,10 +1013,16 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 		Dee_XIncref(self->ae_desc.ad_info.ai_decl);
 		Dee_Incref(self->ae_obj);
 	} else {
-		if unlikely(self->ae_desc.ad_info.ai_decl)
-			return DeeError_Throwf(&DeeError_TypeError, "%s: 'decl' given, but no 'attr'", Dee_TYPE(self)->tp_name);
-		if unlikely(self->ae_obj)
-			return DeeError_Throwf(&DeeError_TypeError, "%s: 'ob' given, but no 'attr'", Dee_TYPE(self)->tp_name);
+		if unlikely(self->ae_desc.ad_info.ai_decl) {
+			return DeeError_Throwf(&DeeError_TypeError,
+			                       "%k: 'decl' given, but no 'attr'",
+			                       Dee_TYPE(self));
+		}
+		if unlikely(self->ae_obj) {
+			return DeeError_Throwf(&DeeError_TypeError,
+			                       "%k: 'ob' given, but no 'attr'",
+			                       Dee_TYPE(self));
+		}
 		/* Debug-memset with bad data so string pointers are non-equal between instances,
 		 * thus ensuring that when comparing errors, deemon crashes when strings are accessed
 		 * even when there isn't an object (strings shouldn't be accessed when there is
@@ -1163,7 +1175,7 @@ AttributeError_print(AttributeError *__restrict self,
 	Dee_ssize_t temp, result;
 	if (self->e_message)
 		return error_print((DeeErrorObject *)self, printer, arg);
-	result = DeeFormat_Printf(printer, arg, "<%s", Dee_TYPE(self)->tp_name);
+	result = DeeFormat_Printf(printer, arg, "<%s", DeeType_GetName(Dee_TYPE(self)));
 	if unlikely(result < 0)
 		goto done;
 	DO(err_temp, DeeFormat_PRINT(printer, arg, " during "));
@@ -1186,7 +1198,7 @@ AttributeError_printrepr(AttributeError *__restrict self,
                          Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result;
 	char const *prefix = "";
-	result = DeeFormat_Printf(printer, arg, "%s(", Dee_TYPE(self)->tp_name);
+	result = DeeFormat_Printf(printer, arg, "%s(", DeeType_GetName(Dee_TYPE(self)));
 	if unlikely(result < 0)
 		goto done;
 	if (self->e_message) {

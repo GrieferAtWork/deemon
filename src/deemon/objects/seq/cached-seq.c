@@ -887,7 +887,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswgi_init(CachedSeq_WithGetItem *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	if unlikely(argc != 1)
-		return err_invalid_argc(Dee_TYPE(self)->tp_name, argc, 1, 1);
+		return err_invalid_argc(DeeType_GetName(Dee_TYPE(self)), argc, 1, 1);
 	self->cswgi_seq = argv[0];
 	Dee_Incref(self->cswgi_seq);
 	self->cswgi_size.csi_indexob    = NULL;

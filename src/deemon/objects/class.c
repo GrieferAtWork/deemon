@@ -3071,7 +3071,7 @@ instance_autoload_members(DeeTypeObject *tp_self,
 	}
 	return 0;
 err_argc:
-	err_invalid_argc(tp_self->tp_name, argc, 0, i);
+	err_invalid_argc(DeeType_GetName(tp_self), argc, 0, i);
 err:
 	return -1;
 }
@@ -3135,7 +3135,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 			struct class_attribute *at;
 			at = find_next_attribute(desc->cd_desc, &next_table_index);
 			if unlikely(!at) {
-				err_invalid_argc(tp_self->tp_name, argc, 0, i);
+				err_invalid_argc(DeeType_GetName(tp_self), argc, 0, i);
 				goto err;
 			}
 			if unlikely(DeeInstance_SetBasicAttribute(desc, instance, at, argv[i]))
@@ -3173,7 +3173,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 			struct class_attribute *at;
 			at = find_next_attribute(desc->cd_desc, &next_table_index);
 			if unlikely(!at) {
-				err_invalid_argc(tp_self->tp_name, argc, 0, i);
+				err_invalid_argc(DeeType_GetName(tp_self), argc, 0, i);
 				goto err;
 			}
 			if unlikely(DeeInstance_SetBasicAttribute(desc, instance, at, argv[i]))
@@ -3208,7 +3208,7 @@ instance_builtin_auto_tprintrepr(DeeTypeObject *tp_self,
 	uint16_t i, count = desc->cd_desc->cd_imemb_size;
 	DREF DeeObject *ob;
 	bool is_first = true;
-	result = DeeFormat_Printf(printer, arg, "%s(", tp_self->tp_name);
+	result = DeeFormat_Printf(printer, arg, "%s(", DeeType_GetName(tp_self));
 	if unlikely(result < 0)
 		goto done;
 	Dee_instance_desc_lock_read(instance);
@@ -3826,8 +3826,8 @@ bind_class_operator(DeeTypeObject *__restrict type_type,
 		if unlikely(!info->oi_invoke->opi_classhook) {
 			/* Special case: operator cannot be overwritten by user-code. */
 			DeeError_Throwf(&DeeError_TypeError,
-			                "Operator `%s' of type-type %q cannot be implemented",
-			                info->oi_uname, type_type->tp_name);
+			                "Operator `%s' of type-type %k cannot be implemented",
+			                info->oi_uname, type_type);
 			goto err;
 		}
 		class_table = (void *)class_type;
@@ -3923,8 +3923,8 @@ class_bases_fini(struct class_bases *__restrict self) {
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_cannot_use_final_type_as_base(DeeTypeObject *__restrict base) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Cannot use final, or variable type `%s' as class base",
-	                       base->tp_name);
+	                       "Cannot use final, or variable type `%k' as class base",
+	                       base);
 }
 
 /* Return the first "relevant" base of `self' (or `self' itself if it is "relevant").
@@ -4139,8 +4139,8 @@ DeeClass_New(DeeObject *bases, DeeObject *descriptor,
 		        "The type of type object '%r' isn't actually a type-type",
 		        cbases.cb_base);
 		ASSERTF(!(result_type_type->tp_flags & TP_FVARIABLE),
-		        "type-type objects must not have the variable-size flag, but %s has it set!",
-		        result_type_type->tp_name);
+		        "type-type objects must not have the variable-size flag, but %k has it set!",
+		        result_type_type);
 		if (cbases.cb_base->tp_flags & (TP_FFINAL | TP_FVARIABLE)) {
 			err_cannot_use_final_type_as_base(cbases.cb_base);
 			goto err_cbases;
@@ -4150,8 +4150,8 @@ DeeClass_New(DeeObject *bases, DeeObject *descriptor,
 	if (result_type_type->tp_init.tp_alloc.tp_free) {
 err_custom_allocator:
 		DeeError_Throwf(&DeeError_TypeError,
-		                "Cannot use `%s' with custom allocator as class base",
-		                cbases.cb_base->tp_name);
+		                "Cannot use `%k' with custom allocator as class base",
+		                cbases.cb_base);
 		goto err_cbases;
 	}
 	result_class_offset += (sizeof(void *) - 1);

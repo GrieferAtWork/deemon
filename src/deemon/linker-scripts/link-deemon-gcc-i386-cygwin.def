@@ -1384,6 +1384,7 @@ EXPORTS
 	_DeeType_GetMethodHint@8=DeeType_GetMethodHint@8
 	_DeeType_GetMethodHintForSuper@12=DeeType_GetMethodHintForSuper@12
 	_DeeType_GetModule@4=DeeType_GetModule@4
+	_DeeType_GetName@4=DeeType_GetName@4
 	_DeeType_GetNativeOperator@8=DeeType_GetNativeOperator@8
 	_DeeType_GetNativeOperatorWithoutUnsupported@8=DeeType_GetNativeOperatorWithoutUnsupported@8
 	_DeeType_GetOperatorFlags@8=DeeType_GetOperatorFlags@8
