@@ -551,7 +551,7 @@ so_mh_seq_unpack(SeqOne *__restrict self, size_t count, DREF DeeObject *result[]
 		Dee_Incref(self->so_item);
 		return 0;
 	}
-	return err_invalid_unpack_size((DeeObject *)self, count, 1);
+	return DeeRT_ErrUnpackError(self, count, 1);
 }
 
 #define so_mh_seq_unpack_ub so_mh_seq_unpack_ex
@@ -563,7 +563,7 @@ so_mh_seq_unpack_ex(SeqOne *__restrict self, size_t min_count,
 		Dee_Incref(self->so_item);
 		return 1;
 	}
-	return err_invalid_unpack_size_minmax((DeeObject *)self, min_count, max_count, 1);
+	return DeeRT_ErrUnpackErrorEx(self, min_count, max_count, 1);
 }
 
 STATIC_ASSERT(offsetof(SeqOne, so_item) == offsetof(ProxyObject, po_obj));

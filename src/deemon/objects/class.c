@@ -1571,7 +1571,7 @@ err_args:
 err:
 	return -1;
 err_invalid_init_size:
-	err_invalid_unpack_size(args, 2, DeeTuple_SIZE(args));
+	DeeRT_ErrUnpackError(args, 2, DeeTuple_SIZE(args));
 err_args_only:
 	Dee_Decref(args);
 	goto err;
@@ -1732,7 +1732,7 @@ err_args:
 err:
 	return -1;
 err_invalid_init_size:
-	err_invalid_unpack_size(args, 2, DeeTuple_SIZE(args));
+	DeeRT_ErrUnpackError(args, 2, DeeTuple_SIZE(args));
 err_args_only:
 	Dee_Decref(args);
 	goto err;
@@ -1893,7 +1893,7 @@ err_args:
 err:
 	return -1;
 err_invalid_init_size:
-	err_invalid_unpack_size(args, 2, DeeTuple_SIZE(args));
+	DeeRT_ErrUnpackError(args, 2, DeeTuple_SIZE(args));
 err_args_only:
 	Dee_Decref(args);
 	goto err;
@@ -2006,7 +2006,7 @@ instance_builtin_kwsuper_tctor(DeeTypeObject *tp_self,
 	Dee_Decref(args);
 	return 0;
 err_invalid_init_size:
-	err_invalid_unpack_size(args, 2, DeeTuple_SIZE(args));
+	DeeRT_ErrUnpackError(args, 2, DeeTuple_SIZE(args));
 	goto err_args;
 err_members:
 	instance_clear_members(instance, desc->cd_desc->cd_imemb_size);
@@ -2122,7 +2122,7 @@ instance_builtin_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *__restrict sel
 	Dee_Decref(args);
 	return 0;
 err_invalid_init_size:
-	err_invalid_unpack_size(args, 2, DeeTuple_SIZE(args));
+	DeeRT_ErrUnpackError(args, 2, DeeTuple_SIZE(args));
 	goto err_args;
 err_members:
 	instance_clear_members(instance, desc->cd_desc->cd_imemb_size);
@@ -2238,7 +2238,7 @@ instance_builtin_kwsuper_tinitkw(DeeTypeObject *tp_self,
 	Dee_Decref(args);
 	return 0;
 err_invalid_init_size:
-	err_invalid_unpack_size(args, 2, DeeTuple_SIZE(args));
+	DeeRT_ErrUnpackError(args, 2, DeeTuple_SIZE(args));
 	goto err_args;
 err_members:
 	instance_clear_members(instance, desc->cd_desc->cd_imemb_size);

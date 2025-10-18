@@ -115,7 +115,7 @@ int __seq_unpack__.seq_unpack([[nonnull]] DeeObject *__restrict self, size_t cou
 }}
 %{$empty = {
 	if unlikely(count != 0)
-		return err_invalid_unpack_size(self, count, 0);
+		return DeeRT_ErrUnpackError(self, count, 0);
 	return 0;
 }}
 %{using seq_unpack_ex: {
@@ -128,7 +128,7 @@ int __seq_unpack__.seq_unpack([[nonnull]] DeeObject *__restrict self, size_t cou
 	size_t real_count = (*THIS_TYPE->tp_seq->tp_asvector)(self, count, result);
 	if likely(real_count == count)
 		return 0;
-	err_invalid_unpack_size(self, count, real_count);
+	DeeRT_ErrUnpackError(self, count, real_count);
 	if (real_count < count)
 		Dee_Decrefv(result, real_count);
 	return -1;
@@ -141,7 +141,7 @@ int __seq_unpack__.seq_unpack([[nonnull]] DeeObject *__restrict self, size_t cou
 	if unlikely(real_count != count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return err_invalid_unpack_size(self, count, real_count);
+		return DeeRT_ErrUnpackError(self, count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*getitem_index_fast)(self, i);
@@ -149,7 +149,7 @@ int __seq_unpack__.seq_unpack([[nonnull]] DeeObject *__restrict self, size_t cou
 			/* This can only mean that the size changed, because we're
 			 * allowed to assume "__seq_getitem_always_bound__" */
 			Dee_Decrefv(result, i);
-			return err_invalid_unpack_size(self, count, i);
+			return DeeRT_ErrUnpackError(self, count, i);
 		}
 		result[i] = item; /* Inherit reference */
 	}
@@ -164,7 +164,7 @@ err:
 	if unlikely(real_count != count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return err_invalid_unpack_size(self, count, real_count);
+		return DeeRT_ErrUnpackError(self, count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, i);
@@ -174,7 +174,7 @@ err:
 				goto err;
 			/* This can only mean that the size changed, because we're
 			 * allowed to assume "__seq_getitem_always_bound__" */
-			return err_invalid_unpack_size(self, count, i);
+			return DeeRT_ErrUnpackError(self, count, i);
 		}
 		result[i] = item; /* Inherit reference */
 	}
@@ -189,7 +189,7 @@ err:
 	if unlikely(real_count != count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return err_invalid_unpack_size(self, count, real_count);
+		return DeeRT_ErrUnpackError(self, count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = CALL_DEPENDENCY(seq_operator_getitem_index, self, i);
@@ -198,7 +198,7 @@ err:
 			/* This can only mean that the size changed, because we're
 			 * allowed to assume "__seq_getitem_always_bound__" */
 			if (DeeError_Catch(&DeeError_IndexError))
-				return err_invalid_unpack_size(self, count, i); /* TODO: Pass orig error as "inner" */
+				return DeeRT_ErrUnpackError(self, count, i); /* TODO: Pass orig error as "inner" */
 			goto err;
 		}
 		result[i] = item; /* Inherit reference */
@@ -220,7 +220,7 @@ err:
 	if likely((size_t)foreach_status == count)
 		return 0;
 	Dee_Decrefv(result, (size_t)(data.duqfd_result - result));
-	err_invalid_unpack_size(self, count, (size_t)foreach_status);
+	DeeRT_ErrUnpackError(self, count, (size_t)foreach_status);
 err:
 	return -1;
 }}
@@ -234,7 +234,7 @@ err:
 		elem = DeeObject_IterNext(iter);
 		if unlikely(!ITER_ISOK(elem)) {
 			if (elem)
-				err_invalid_unpack_size(self, count, i);
+				DeeRT_ErrUnpackError(self, count, i);
 			goto err_iter_result_i;
 		}
 		result[i] = elem; /* Inherit reference. */
@@ -247,7 +247,7 @@ err:
 			goto err_iter_result_i;
 		if (OVERFLOW_UADD(remainder, count, &remainder))
 			remainder = (size_t)-1;
-		err_invalid_unpack_size(self, count, remainder);
+		DeeRT_ErrUnpackError(self, count, remainder);
 		goto err_iter_result_i;
 	}
 	Dee_Decref(iter);
@@ -265,7 +265,7 @@ err:
 	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
 		goto err_r;
 	if (DeeTuple_SIZE(resultob) != count) {
-		err_invalid_unpack_size(resultob, count, DeeTuple_SIZE(resultob));
+		DeeRT_ErrUnpackError(resultob, count, DeeTuple_SIZE(resultob));
 		goto err_r;
 	}
 	memcpyc(result, DeeTuple_ELEM(resultob), count, sizeof(DREF DeeObject *));
@@ -299,7 +299,7 @@ size_t __seq_unpack__.seq_unpack_ex([[nonnull]] DeeObject *__restrict self,
 }}
 %{$empty = {
 	if unlikely(min_count > 0)
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, 0);
 	return 0;
 }}
 %{$with__tp_asvector = [[inherit_as($with__seq_operator_foreach)]] {
@@ -307,7 +307,7 @@ size_t __seq_unpack__.seq_unpack_ex([[nonnull]] DeeObject *__restrict self,
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if (real_count < min_count) 
 			Dee_Decrefv(result, real_count);
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	return real_count;
 }}
@@ -319,7 +319,7 @@ size_t __seq_unpack__.seq_unpack_ex([[nonnull]] DeeObject *__restrict self,
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*getitem_index_fast)(self, i);
@@ -329,7 +329,7 @@ size_t __seq_unpack__.seq_unpack_ex([[nonnull]] DeeObject *__restrict self,
 			if (i >= min_count)
 				return i;
 			Dee_Decrefv(result, i);
-			return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+			return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i);
 		}
 		result[i] = item; /* Inherit reference */
 	}
@@ -344,7 +344,7 @@ err:
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, i);
@@ -356,7 +356,7 @@ err:
 			 * allowed to assume "__seq_getitem_always_bound__" */
 			if (i >= min_count)
 				return i;
-			return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+			return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i);
 		}
 		result[i] = item; /* Inherit reference */
 	}
@@ -371,7 +371,7 @@ err:
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = CALL_DEPENDENCY(seq_operator_getitem_index, self, i);
@@ -382,7 +382,7 @@ err:
 			if (DeeError_Catch(&DeeError_IndexError)) {
 				if (i >= min_count)
 					return i;
-				return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
+				return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
 			}
 			goto err;
 		}
@@ -405,7 +405,7 @@ err:
 	if likely((size_t)foreach_status >= min_count && (size_t)foreach_status <= max_count)
 		return (size_t)foreach_status;
 	Dee_Decrefv(result, (size_t)(data.duqfd_result - result));
-	err_invalid_unpack_size_minmax(self, min_count, max_count, (size_t)foreach_status);
+	DeeRT_ErrUnpackErrorEx(self, min_count, max_count, (size_t)foreach_status);
 err:
 	return (size_t)-1;
 }}
@@ -424,7 +424,7 @@ err:
 				Dee_Decref(iter);
 				return i;
 			}
-			err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+			DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i);
 			goto err_iter_result_i;
 		}
 		result[i] = elem; /* Inherit reference. */
@@ -437,7 +437,7 @@ err:
 			goto err_iter_result_i;
 		if (OVERFLOW_UADD(remainder, max_count, &remainder))
 			remainder = (size_t)-1;
-		err_invalid_unpack_size_minmax(self, min_count, max_count, remainder);
+		DeeRT_ErrUnpackErrorEx(self, min_count, max_count, remainder);
 		goto err_iter_result_i;
 	}
 	Dee_Decref(iter);
@@ -457,7 +457,7 @@ err:
 		goto err_r;
 	result_count = DeeTuple_SIZE(resultob);
 	if (result_count < min_count || result_count > max_count) {
-		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		DeeRT_ErrUnpackErrorEx(resultob, min_count, max_count, result_count);
 		goto err_r;
 	}
 	memcpyc(result, DeeTuple_ELEM(resultob), result_count, sizeof(DREF DeeObject *));

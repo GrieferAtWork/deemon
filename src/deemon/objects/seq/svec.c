@@ -492,7 +492,7 @@ rvec_setrange_index(RefVector *self, Dee_ssize_t start,
 	data.rvsre_rsize = data.rvsre_range.sr_end - data.rvsre_range.sr_start;
 	fsize = DeeObject_SizeFast(values);
 	if unlikely(fsize != (size_t)-1 && fsize != data.rvsre_rsize)
-		return err_invalid_unpack_size(values, data.rvsre_rsize, fsize);
+		return DeeRT_ErrUnpackError(values, data.rvsre_rsize, fsize);
 	data.rvsre_self  = self;
 	data.rvsre_mxidx = (size_t)-1;
 	if unlikely(DeeObject_InvokeMethodHint(seq_enumerate_index, values,
@@ -501,7 +501,7 @@ rvec_setrange_index(RefVector *self, Dee_ssize_t start,
 		goto err;
 	++data.rvsre_mxidx;
 	if unlikely(data.rvsre_mxidx != data.rvsre_rsize)
-		return err_invalid_unpack_size(values, data.rvsre_rsize, data.rvsre_mxidx);
+		return DeeRT_ErrUnpackError(values, data.rvsre_rsize, data.rvsre_mxidx);
 	return 0;
 err:
 	return -1;

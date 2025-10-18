@@ -1303,7 +1303,7 @@ tuple_asvector_nothrow(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tuple_mh_seq_unpack(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	if unlikely(self->t_size != dst_length)
-		return err_invalid_unpack_size((DeeObject *)self, dst_length, self->t_size);
+		return DeeRT_ErrUnpackError(self, dst_length, self->t_size);
 	Dee_Movrefv(dst, self->t_elem, dst_length);
 	return 0;
 }
@@ -1311,7 +1311,7 @@ tuple_mh_seq_unpack(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 tuple_mh_seq_unpack_ex(Tuple *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst) {
 	if unlikely(self->t_size < dst_length_min || self->t_size > dst_length_max)
-		return (size_t)err_invalid_unpack_size_minmax((DeeObject *)self, dst_length_min, dst_length_max, self->t_size);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, dst_length_min, dst_length_max, self->t_size);
 	Dee_Movrefv(dst, self->t_elem, self->t_size);
 	return self->t_size;
 }
@@ -2482,7 +2482,7 @@ nullable_tuple_trygetitem_index(Tuple *__restrict self, size_t index) {
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 nullable_tuple_mh_seq_unpack_ub(Tuple *self, size_t min_count, size_t max_count, /*out*/ DREF DeeObject **dst) {
 	if unlikely(self->t_size < min_count || self->t_size > max_count)
-		return err_invalid_unpack_size_minmax((DeeObject *)self, min_count, max_count, self->t_size);
+		return DeeRT_ErrUnpackErrorEx(self, min_count, max_count, self->t_size);
 	Dee_XMovrefv(dst, self->t_elem, self->t_size);
 	return self->t_size;
 }

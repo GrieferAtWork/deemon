@@ -83,7 +83,7 @@ size_t __seq_unpackub__.seq_unpack_ub([[nonnull]] DeeObject *__restrict self,
 %{$none = "default__seq_unpack_ex__none"}
 %{$empty = {
 	if unlikely(min_count > 0)
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, 0);
 	return 0;
 }}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
@@ -94,7 +94,7 @@ size_t __seq_unpackub__.seq_unpack_ub([[nonnull]] DeeObject *__restrict self,
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i)
 		result[i] = (*getitem_index_fast)(self, i); /* Inherit reference */
@@ -109,7 +109,7 @@ err:
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, i);
@@ -133,7 +133,7 @@ err:
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = CALL_DEPENDENCY(seq_operator_getitem_index, self, i);
@@ -144,7 +144,7 @@ err:
 				/* Early sequence end (sequence may have been truncated) */
 				if (i >= min_count)
 					return i;
-				err_invalid_unpack_size_minmax(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
+				DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
 				goto err_result_i;
 			} else {
 				goto err_result_i;
@@ -171,7 +171,7 @@ err:
 	}
 	result_count = DeeTuple_SIZE(resultob);
 	if (result_count < min_count || result_count > max_count) {
-		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		DeeRT_ErrUnpackErrorEx(resultob, min_count, max_count, result_count);
 		goto err_r;
 	}
 	/* XXX: DeeNullableTuple_DecrefSymbolic(resultob); */

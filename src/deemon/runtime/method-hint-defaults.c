@@ -6200,7 +6200,7 @@ default__seq_unpack__with_callattr_unpack(DeeObject *__restrict self, size_t cou
 	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
 		goto err_r;
 	if (DeeTuple_SIZE(resultob) != count) {
-		err_invalid_unpack_size(resultob, count, DeeTuple_SIZE(resultob));
+		DeeRT_ErrUnpackError(resultob, count, DeeTuple_SIZE(resultob));
 		goto err_r;
 	}
 	memcpyc(result, DeeTuple_ELEM(resultob), count, sizeof(DREF DeeObject *));
@@ -6220,7 +6220,7 @@ default__seq_unpack__with_callattr___seq_unpack__(DeeObject *__restrict self, si
 	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
 		goto err_r;
 	if (DeeTuple_SIZE(resultob) != count) {
-		err_invalid_unpack_size(resultob, count, DeeTuple_SIZE(resultob));
+		DeeRT_ErrUnpackError(resultob, count, DeeTuple_SIZE(resultob));
 		goto err_r;
 	}
 	memcpyc(result, DeeTuple_ELEM(resultob), count, sizeof(DREF DeeObject *));
@@ -6243,7 +6243,7 @@ default__seq_unpack__with_callobjectcache___seq_unpack__(DeeObject *__restrict s
 	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
 		goto err_r;
 	if (DeeTuple_SIZE(resultob) != count) {
-		err_invalid_unpack_size(resultob, count, DeeTuple_SIZE(resultob));
+		DeeRT_ErrUnpackError(resultob, count, DeeTuple_SIZE(resultob));
 		goto err_r;
 	}
 	memcpyc(result, DeeTuple_ELEM(resultob), count, sizeof(DREF DeeObject *));
@@ -6279,7 +6279,7 @@ default__seq_unpack__none(DeeObject *__restrict UNUSED(self), size_t count, DREF
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 default__seq_unpack__empty(DeeObject *__restrict self, size_t count, DREF DeeObject *UNUSED2(result, [])) {
 	if unlikely(count != 0)
-		return err_invalid_unpack_size(self, count, 0);
+		return DeeRT_ErrUnpackError(self, count, 0);
 	return 0;
 }
 
@@ -6288,7 +6288,7 @@ default__seq_unpack__with__tp_asvector(DeeObject *__restrict self, size_t count,
 	size_t real_count = (*Dee_TYPE(self)->tp_seq->tp_asvector)(self, count, result);
 	if likely(real_count == count)
 		return 0;
-	err_invalid_unpack_size(self, count, real_count);
+	DeeRT_ErrUnpackError(self, count, real_count);
 	if (real_count < count)
 		Dee_Decrefv(result, real_count);
 	return -1;
@@ -6302,7 +6302,7 @@ default__seq_unpack__with__seq_operator_size__and__operator_getitem_index_fast(D
 	if unlikely(real_count != count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return err_invalid_unpack_size(self, count, real_count);
+		return DeeRT_ErrUnpackError(self, count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*getitem_index_fast)(self, i);
@@ -6310,7 +6310,7 @@ default__seq_unpack__with__seq_operator_size__and__operator_getitem_index_fast(D
 			/* This can only mean that the size changed, because we're
 			 * allowed to assume "__seq_getitem_always_bound__" */
 			Dee_Decrefv(result, i);
-			return err_invalid_unpack_size(self, count, i);
+			return DeeRT_ErrUnpackError(self, count, i);
 		}
 		result[i] = item; /* Inherit reference */
 	}
@@ -6327,7 +6327,7 @@ default__seq_unpack__with__seq_operator_size__and__seq_operator_trygetitem_index
 	if unlikely(real_count != count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return err_invalid_unpack_size(self, count, real_count);
+		return DeeRT_ErrUnpackError(self, count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*cached_seq_operator_trygetitem_index)(self, i);
@@ -6337,7 +6337,7 @@ default__seq_unpack__with__seq_operator_size__and__seq_operator_trygetitem_index
 				goto err;
 			/* This can only mean that the size changed, because we're
 			 * allowed to assume "__seq_getitem_always_bound__" */
-			return err_invalid_unpack_size(self, count, i);
+			return DeeRT_ErrUnpackError(self, count, i);
 		}
 		result[i] = item; /* Inherit reference */
 	}
@@ -6354,7 +6354,7 @@ default__seq_unpack__with__seq_operator_size__and__seq_operator_getitem_index(De
 	if unlikely(real_count != count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return err_invalid_unpack_size(self, count, real_count);
+		return DeeRT_ErrUnpackError(self, count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*cached_seq_operator_getitem_index)(self, i);
@@ -6363,7 +6363,7 @@ default__seq_unpack__with__seq_operator_size__and__seq_operator_getitem_index(De
 			/* This can only mean that the size changed, because we're
 			 * allowed to assume "__seq_getitem_always_bound__" */
 			if (DeeError_Catch(&DeeError_IndexError))
-				return err_invalid_unpack_size(self, count, i); /* TODO: Pass orig error as "inner" */
+				return DeeRT_ErrUnpackError(self, count, i); /* TODO: Pass orig error as "inner" */
 			goto err;
 		}
 		result[i] = item; /* Inherit reference */
@@ -6407,7 +6407,7 @@ default__seq_unpack__with__seq_operator_foreach(DeeObject *__restrict self, size
 	if likely((size_t)foreach_status == count)
 		return 0;
 	Dee_Decrefv(result, (size_t)(data.duqfd_result - result));
-	err_invalid_unpack_size(self, count, (size_t)foreach_status);
+	DeeRT_ErrUnpackError(self, count, (size_t)foreach_status);
 err:
 	return -1;
 }
@@ -6423,7 +6423,7 @@ default__seq_unpack__with__seq_operator_iter(DeeObject *__restrict self, size_t 
 		elem = DeeObject_IterNext(iter);
 		if unlikely(!ITER_ISOK(elem)) {
 			if (elem)
-				err_invalid_unpack_size(self, count, i);
+				DeeRT_ErrUnpackError(self, count, i);
 			goto err_iter_result_i;
 		}
 		result[i] = elem; /* Inherit reference. */
@@ -6436,7 +6436,7 @@ default__seq_unpack__with__seq_operator_iter(DeeObject *__restrict self, size_t 
 			goto err_iter_result_i;
 		if (OVERFLOW_UADD(remainder, count, &remainder))
 			remainder = (size_t)-1;
-		err_invalid_unpack_size(self, count, remainder);
+		DeeRT_ErrUnpackError(self, count, remainder);
 		goto err_iter_result_i;
 	}
 	Dee_Decref(iter);
@@ -6461,7 +6461,7 @@ default__seq_unpack_ex__with_callattr_unpack(DeeObject *__restrict self, size_t 
 		goto err_r;
 	result_count = DeeTuple_SIZE(resultob);
 	if (result_count < min_count || result_count > max_count) {
-		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		DeeRT_ErrUnpackErrorEx(resultob, min_count, max_count, result_count);
 		goto err_r;
 	}
 	memcpyc(result, DeeTuple_ELEM(resultob), result_count, sizeof(DREF DeeObject *));
@@ -6483,7 +6483,7 @@ default__seq_unpack_ex__with_callattr___seq_unpack__(DeeObject *__restrict self,
 		goto err_r;
 	result_count = DeeTuple_SIZE(resultob);
 	if (result_count < min_count || result_count > max_count) {
-		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		DeeRT_ErrUnpackErrorEx(resultob, min_count, max_count, result_count);
 		goto err_r;
 	}
 	memcpyc(result, DeeTuple_ELEM(resultob), result_count, sizeof(DREF DeeObject *));
@@ -6508,7 +6508,7 @@ default__seq_unpack_ex__with_callobjectcache___seq_unpack__(DeeObject *__restric
 		goto err_r;
 	result_count = DeeTuple_SIZE(resultob);
 	if (result_count < min_count || result_count > max_count) {
-		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		DeeRT_ErrUnpackErrorEx(resultob, min_count, max_count, result_count);
 		goto err_r;
 	}
 	memcpyc(result, DeeTuple_ELEM(resultob), result_count, sizeof(DREF DeeObject *));
@@ -6536,7 +6536,7 @@ default__seq_unpack_ex__none(DeeObject *__restrict UNUSED(self), size_t UNUSED(m
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
 default__seq_unpack_ex__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED2(result, [])) {
 	if unlikely(min_count > 0)
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, 0);
 	return 0;
 }
 
@@ -6546,7 +6546,7 @@ default__seq_unpack_ex__with__tp_asvector(DeeObject *__restrict self, size_t min
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if (real_count < min_count) 
 			Dee_Decrefv(result, real_count);
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	return real_count;
 }
@@ -6559,7 +6559,7 @@ default__seq_unpack_ex__with__seq_operator_size__and__operator_getitem_index_fas
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*getitem_index_fast)(self, i);
@@ -6569,7 +6569,7 @@ default__seq_unpack_ex__with__seq_operator_size__and__operator_getitem_index_fas
 			if (i >= min_count)
 				return i;
 			Dee_Decrefv(result, i);
-			return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+			return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i);
 		}
 		result[i] = item; /* Inherit reference */
 	}
@@ -6586,7 +6586,7 @@ default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_trygetitem_in
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*cached_seq_operator_trygetitem_index)(self, i);
@@ -6598,7 +6598,7 @@ default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_trygetitem_in
 			 * allowed to assume "__seq_getitem_always_bound__" */
 			if (i >= min_count)
 				return i;
-			return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+			return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i);
 		}
 		result[i] = item; /* Inherit reference */
 	}
@@ -6615,7 +6615,7 @@ default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*cached_seq_operator_getitem_index)(self, i);
@@ -6626,7 +6626,7 @@ default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index
 			if (DeeError_Catch(&DeeError_IndexError)) {
 				if (i >= min_count)
 					return i;
-				return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
+				return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
 			}
 			goto err;
 		}
@@ -6651,7 +6651,7 @@ default__seq_unpack_ex__with__seq_operator_foreach(DeeObject *__restrict self, s
 	if likely((size_t)foreach_status >= min_count && (size_t)foreach_status <= max_count)
 		return (size_t)foreach_status;
 	Dee_Decrefv(result, (size_t)(data.duqfd_result - result));
-	err_invalid_unpack_size_minmax(self, min_count, max_count, (size_t)foreach_status);
+	DeeRT_ErrUnpackErrorEx(self, min_count, max_count, (size_t)foreach_status);
 err:
 	return (size_t)-1;
 }
@@ -6672,7 +6672,7 @@ default__seq_unpack_ex__with__seq_operator_iter(DeeObject *__restrict self, size
 				Dee_Decref(iter);
 				return i;
 			}
-			err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+			DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i);
 			goto err_iter_result_i;
 		}
 		result[i] = elem; /* Inherit reference. */
@@ -6685,7 +6685,7 @@ default__seq_unpack_ex__with__seq_operator_iter(DeeObject *__restrict self, size
 			goto err_iter_result_i;
 		if (OVERFLOW_UADD(remainder, max_count, &remainder))
 			remainder = (size_t)-1;
-		err_invalid_unpack_size_minmax(self, min_count, max_count, remainder);
+		DeeRT_ErrUnpackErrorEx(self, min_count, max_count, remainder);
 		goto err_iter_result_i;
 	}
 	Dee_Decref(iter);
@@ -6715,7 +6715,7 @@ default__seq_unpack_ub__with_callattr_unpackub(DeeObject *__restrict self, size_
 	}
 	result_count = DeeTuple_SIZE(resultob);
 	if (result_count < min_count || result_count > max_count) {
-		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		DeeRT_ErrUnpackErrorEx(resultob, min_count, max_count, result_count);
 		goto err_r;
 	}
 	/* XXX: DeeNullableTuple_DecrefSymbolic(resultob); */
@@ -6743,7 +6743,7 @@ default__seq_unpack_ub__with_callattr___seq_unpackub__(DeeObject *__restrict sel
 	}
 	result_count = DeeTuple_SIZE(resultob);
 	if (result_count < min_count || result_count > max_count) {
-		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		DeeRT_ErrUnpackErrorEx(resultob, min_count, max_count, result_count);
 		goto err_r;
 	}
 	/* XXX: DeeNullableTuple_DecrefSymbolic(resultob); */
@@ -6774,7 +6774,7 @@ default__seq_unpack_ub__with_callobjectcache___seq_unpackub__(DeeObject *__restr
 	}
 	result_count = DeeTuple_SIZE(resultob);
 	if (result_count < min_count || result_count > max_count) {
-		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		DeeRT_ErrUnpackErrorEx(resultob, min_count, max_count, result_count);
 		goto err_r;
 	}
 	/* XXX: DeeNullableTuple_DecrefSymbolic(resultob); */
@@ -6796,7 +6796,7 @@ default__seq_unpack_ub__unsupported(DeeObject *__restrict self, size_t min_count
 INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
 default__seq_unpack_ub__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *UNUSED2(result, [])) {
 	if unlikely(min_count > 0)
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, 0);
 	return 0;
 }
 
@@ -6808,7 +6808,7 @@ default__seq_unpack_ub__with__seq_operator_size__and__operator_getitem_index_fas
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i)
 		result[i] = (*getitem_index_fast)(self, i); /* Inherit reference */
@@ -6825,7 +6825,7 @@ default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_trygetitem_in
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*cached_seq_operator_trygetitem_index)(self, i);
@@ -6851,7 +6851,7 @@ default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_getitem_index
 	if unlikely(real_count < min_count || real_count > max_count) {
 		if unlikely(real_count == (size_t)-1)
 			goto err;
-		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*cached_seq_operator_getitem_index)(self, i);
@@ -6862,7 +6862,7 @@ default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_getitem_index
 				/* Early sequence end (sequence may have been truncated) */
 				if (i >= min_count)
 					return i;
-				err_invalid_unpack_size_minmax(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
+				DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
 				goto err_result_i;
 			} else {
 				goto err_result_i;
@@ -21638,7 +21638,7 @@ tdefault__seq_unpack__with_callobjectcache___seq_unpack__(DeeTypeObject *tp_self
 	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
 		goto err_r;
 	if (DeeTuple_SIZE(resultob) != count) {
-		err_invalid_unpack_size(resultob, count, DeeTuple_SIZE(resultob));
+		DeeRT_ErrUnpackError(resultob, count, DeeTuple_SIZE(resultob));
 		goto err_r;
 	}
 	memcpyc(result, DeeTuple_ELEM(resultob), count, sizeof(DREF DeeObject *));
@@ -21661,7 +21661,7 @@ tdefault__seq_unpack_ex__with_callobjectcache___seq_unpack__(DeeTypeObject *tp_s
 		goto err_r;
 	result_count = DeeTuple_SIZE(resultob);
 	if (result_count < min_count || result_count > max_count) {
-		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		DeeRT_ErrUnpackErrorEx(resultob, min_count, max_count, result_count);
 		goto err_r;
 	}
 	memcpyc(result, DeeTuple_ELEM(resultob), result_count, sizeof(DREF DeeObject *));
@@ -21689,7 +21689,7 @@ tdefault__seq_unpack_ub__with_callobjectcache___seq_unpackub__(DeeTypeObject *tp
 	}
 	result_count = DeeTuple_SIZE(resultob);
 	if (result_count < min_count || result_count > max_count) {
-		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		DeeRT_ErrUnpackErrorEx(resultob, min_count, max_count, result_count);
 		goto err_r;
 	}
 	/* XXX: DeeNullableTuple_DecrefSymbolic(resultob); */

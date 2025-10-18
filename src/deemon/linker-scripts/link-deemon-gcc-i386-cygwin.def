@@ -1191,6 +1191,8 @@ EXPORTS
 	_DeeRT_ErrUnknownKeyStrLenWithInner@16=DeeRT_ErrUnknownKeyStrLenWithInner@16
 	_DeeRT_ErrUnknownKeyStrWithInner@12=DeeRT_ErrUnknownKeyStrWithInner@12
 	_DeeRT_ErrUnknownKeyWithInner@12=DeeRT_ErrUnknownKeyWithInner@12
+	_DeeRT_ErrUnpackError@12=DeeRT_ErrUnpackError@12
+	_DeeRT_ErrUnpackErrorEx@16=DeeRT_ErrUnpackErrorEx@16
 	_DeeRange_New@12=DeeRange_New@12
 	_DeeRange_NewInt@12=DeeRange_NewInt@12
 	_DeeRefVector_New@16=DeeRefVector_New@16

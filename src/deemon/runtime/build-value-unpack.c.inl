@@ -384,7 +384,7 @@ invalid_argc2:
 				++format;
 				argc_max += count_unpack_args(&format);
 			}
-			return err_invalid_argc_unpack(self, argc, argc_min, argc_max);
+			return DeeRT_ErrUnpackErrorEx(self, argc_min, argc_max, argc);
 		}
 err_iter:
 		Dee_Decref(iterator);

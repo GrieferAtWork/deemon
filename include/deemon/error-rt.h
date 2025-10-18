@@ -56,8 +56,8 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNoActiveException)(void);
  *
  * @param: positive: When true, assume "value > maxval".
  *                   Else, assume "value < maxval" */
-DFUNDEF ATTR_COLD int
-(DCALL DeeRT_ErrIntegerOverflow)(/*Numeric*/ /*0..1*/ DeeObject *value,
+DFUNDEF ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrIntegerOverflow)(/*Numeric*/ /*1..1*/ DeeObject *value,
                                  /*Numeric*/ /*0..1*/ DeeObject *minval,
                                  /*Numeric*/ /*0..1*/ DeeObject *maxval,
                                  bool positive);
@@ -208,6 +208,22 @@ INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaIndexOutOfBounds)(struct Dee
 #define DeeRT_ErrVaIndexOutOfBounds(frame, index) \
 	Dee_ASSUMED_VALUE((DeeRT_ErrVaIndexOutOfBounds)(frame, index), -1)
 #endif /* CONFIG_BUILDING_DEEMON */
+
+
+/* Throws an `DeeError_UnpackError' indicating that a sequence `seq'
+ * of `actual_size' elements cannot be unpacked to `expected_size'. */
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnpackError)(DeeObject *seq, size_t expected_size, size_t actual_size);
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnpackErrorEx)(DeeObject *seq, size_t expected_size_min, size_t expected_size_max, size_t actual_size);
+#define DeeRT_ErrUnpackError(seq, expected_size, actual_size) \
+	Dee_ASSUMED_VALUE((DeeRT_ErrUnpackError)((DeeObject *)Dee_REQUIRES_OBJECT(seq), expected_size, actual_size), -1)
+#define DeeRT_ErrUnpackErrorEx(seq, expected_size_min, expected_size_max, actual_size) \
+	Dee_ASSUMED_VALUE((DeeRT_ErrUnpackErrorEx)((DeeObject *)Dee_REQUIRES_OBJECT(seq), expected_size_min, expected_size_max, actual_size), -1)
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaUnpackError)(struct Dee_code_frame const *__restrict frame, size_t expected_size);
+#define DeeRT_ErrVaUnpackError(frame, expected_size) \
+	Dee_ASSUMED_VALUE((DeeRT_ErrVaUnpackError)(frame, expected_size), -1)
+#endif /* CONFIG_BUILDING_DEEMON */
+
 
 /* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
  * error within an `IndexError' (setting it as the `IndexError's "inner"), and using

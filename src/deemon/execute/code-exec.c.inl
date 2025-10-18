@@ -5305,7 +5305,7 @@ do_pack_dict:
 				RAW_TARGET(ASM_VARARGS_UNPACK) {
 					size_t va_size;
 #ifdef EXEC_SAFE
-					if (!(code->co_flags & CODE_FVARARGS))
+					if unlikely(!(code->co_flags & CODE_FVARARGS))
 						goto err_requires_varargs_code;
 #else /* EXEC_SAFE */
 					ASSERT(code->co_flags & CODE_FVARARGS);
@@ -5315,8 +5315,8 @@ do_pack_dict:
 					va_size = likely(frame->cf_argc > code->co_argc_max)
 					          ? frame->cf_argc - code->co_argc_max
 					          : 0;
-					if (imm_val != va_size) {
-						err_invalid_va_unpack_size(imm_val, va_size);
+					if unlikely(imm_val != va_size) {
+						DeeRT_ErrVaUnpackError(frame, imm_val);
 						HANDLE_EXCEPT();
 					}
 					for (va_size = 0; va_size < imm_val; ++va_size)

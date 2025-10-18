@@ -847,7 +847,6 @@ err:
 	return -1;
 }
 
-#ifdef CONFIG_BUILDING_DEEMON
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrVaIndexOutOfBounds)(struct Dee_code_frame const *__restrict frame,
                                     size_t index) {
@@ -866,12 +865,10 @@ INTERN ATTR_COLD NONNULL((1)) int
 				return -1;
 		}
 	}
-	result = DeeRT_ErrIndexOutOfBounds((DeeObject *)varargs, index,
-	                                   DeeTuple_SIZE(varargs));
+	result = DeeRT_ErrIndexOutOfBounds(varargs, index, DeeTuple_SIZE(varargs));
 	Dee_Decref_unlikely(varargs);
 	return result;
 }
-#endif /* CONFIG_BUILDING_DEEMON */
 
 
 /************************************************************************/
@@ -1541,11 +1538,70 @@ err:
 /* Error.ValueError.SequenceError.UnpackError                           */
 /************************************************************************/
 typedef struct {
-	SequenceError      ue_base;
+	SequenceError      ue_base;     /* Sequence being unpacked */
 	struct Dee_variant ue_count;    /* [const] Actual value count */
 	struct Dee_variant ue_mincount; /* [const] Lower bound for expected count */
 	struct Dee_variant ue_maxcount; /* [const] Upper bound for expected count */
 } UnpackError;
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+UnpackError_GetCount(UnpackError *__restrict self,
+                     struct Dee_variant *__restrict result) {
+	DREF DeeObject *seq;
+	Dee_variant_init_copy(result, &self->ue_count);
+	if (Dee_variant_isbound_nonatomic(result)) {
+		size_t size_fast;
+		Dee_variant_fini(result);
+		seq = Dee_variant_getobject(&self->ue_base.ve_value);
+		if unlikely(!seq)
+			goto err;
+		size_fast = DeeObject_SizeFast(seq);
+		if (size_fast != (size_t)-1) {
+			Dee_variant_init_size(result, size_fast);
+			Dee_variant_setsize_if_unbound(&self->ue_count, size_fast);
+		} else {
+			DREF DeeObject *sizeob;
+			sizeob = DeeObject_InvokeMethodHint(seq_operator_sizeob, seq);
+			if unlikely(!sizeob)
+				goto err_seq;
+			Dee_variant_init_object_inherited(result, sizeob); /* Inherit reference */
+			Dee_variant_setobject_if_unbound(&self->ue_count, sizeob);
+		}
+	}
+	return 0;
+err_seq:
+	Dee_Decref(seq);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+UnpackError_print(UnpackError *__restrict self,
+                  Dee_formatprinter_t printer, void *arg) {
+	int bounds_equal;
+	Dee_ssize_t result;
+	struct Dee_variant count;
+	if (self->ue_base.e_message)
+		return error_print((DeeErrorObject *)self, printer, arg);
+	bounds_equal = Dee_variant_trycompare_eq(&self->ue_mincount, &self->ue_maxcount);
+	if unlikely(bounds_equal == Dee_BOUND_ERR)
+		goto err;
+	if unlikely(UnpackError_GetCount(self, &count))
+		goto err;
+	if (bounds_equal == 0) {
+		result = DeeFormat_Printf(printer, arg,
+		                          "Expected %Vk objects when %Vk were given",
+		                          &self->ue_mincount, &count);
+	} else {
+		result = DeeFormat_Printf(printer, arg,
+		                          "Expected between %Vk and %Vk objects when %Vk were given",
+		                          &self->ue_mincount, &self->ue_maxcount, &count);
+	}
+	Dee_variant_fini(&count);
+	return result;
+err:
+	return -1;
+}
 
 PRIVATE struct type_member tpconst UnpackError_members[] = {
 #define UnpackError_init_params SequenceError_init_params ",count?:?X2?DNumeric?Dint,mincount?:?X2?DNumeric?Dint,maxcount?:?X2?DNumeric?Dint"
@@ -1557,8 +1613,73 @@ PRIVATE struct type_member tpconst UnpackError_members[] = {
 
 PUBLIC DeeTypeObject DeeError_UnpackError =
 INIT_CUSTOM_ERROR("UnpackError", "(" UnpackError_init_params ")",
-                  TP_FNORMAL, &DeeError_SequenceError, UnpackError, NULL, NULL,
-                  NULL, NULL, UnpackError_members, NULL);
+                  TP_FNORMAL, &DeeError_SequenceError, UnpackError,
+                  NULL, &UnpackError_print, NULL, NULL, UnpackError_members, NULL);
+
+/* Throws an `DeeError_UnpackError' indicating that a sequence `seq'
+ * of `actual_size' elements cannot be unpacked to `expected_size'. */
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrUnpackError)(DeeObject *seq, size_t expected_size, size_t actual_size) {
+#ifdef __OPTIMIZE_SIZE__
+	return DeeRT_ErrUnpackErrorEx(seq, expected_size, expected_size, actual_size);
+#else /* __OPTIMIZE_SIZE__ */
+	DREF UnpackError *result = DeeObject_MALLOC(UnpackError);
+	if unlikely(!result)
+		goto err;
+	result->ue_base.e_message = NULL;
+	result->ue_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ue_base.ve_value, seq);
+	Dee_variant_init_size(&result->ue_mincount, expected_size);
+	Dee_variant_init_size(&result->ue_maxcount, expected_size);
+	Dee_variant_init_size(&result->ue_count, actual_size);
+	DeeObject_Init(&result->ue_base, &DeeError_UnpackError);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrUnpackErrorEx)(DeeObject *seq, size_t expected_size_min,
+                               size_t expected_size_max, size_t actual_size) {
+	DREF UnpackError *result = DeeObject_MALLOC(UnpackError);
+	if unlikely(!result)
+		goto err;
+	result->ue_base.e_message = NULL;
+	result->ue_base.e_inner   = NULL;
+	Dee_variant_init_object(&result->ue_base.ve_value, seq);
+	Dee_variant_init_size(&result->ue_mincount, expected_size_min);
+	Dee_variant_init_size(&result->ue_maxcount, expected_size_max);
+	Dee_variant_init_size(&result->ue_count, actual_size);
+	DeeObject_Init(&result->ue_base, &DeeError_UnpackError);
+	return DeeError_ThrowInherited((DeeObject *)result);
+err:
+	return -1;
+}
+
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrVaUnpackError)(struct Dee_code_frame const *__restrict frame,
+                               size_t expected_size) {
+	int result;
+	DREF DeeTupleObject *varargs = frame->cf_vargs;
+	if (varargs) {
+		Dee_Incref(varargs);
+	} else {
+		DeeCodeObject *code = frame->cf_func->fo_code;
+		if (frame->cf_argc <= code->co_argc_max) {
+			varargs = (DREF DeeTupleObject *)DeeTuple_NewEmpty();
+		} else {
+			varargs = (DREF DeeTupleObject *)DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
+			                                                    frame->cf_argv + code->co_argc_max);
+			if unlikely(!varargs)
+				return -1;
+		}
+	}
+	result = DeeRT_ErrUnpackError(varargs, expected_size, DeeTuple_SIZE(varargs));
+	Dee_Decref_unlikely(varargs);
+	return result;
+}
+
 
 
 /************************************************************************/
@@ -1643,7 +1764,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 integer_overflow_print(IntegerOverflow *__restrict self,
                        Dee_formatprinter_t printer, void *arg) {
 	if (self->io_base.e_message)
-		return DeeString_PrintUtf8((DeeObject *)self->io_base.e_message, printer, arg);
+		return error_print((DeeErrorObject *)self, printer, arg);
 	if (!self->io_positive && !Dee_variant_isbound(&self->io_maxval)) {
 		return DeeFormat_Printf(printer, arg,
 		                        "Unexpected value %Vk is not greater than or equal to %Vk",
@@ -1696,17 +1817,17 @@ INIT_CUSTOM_ERROR("IntegerOverflow",
  *
  * @param: positive: When true, assume "value > maxval".
  *                   Else, assume "value < maxval" */
-PUBLIC ATTR_COLD int
-(DCALL DeeRT_ErrIntegerOverflow)(/*Numeric*/ DeeObject *value,
-                                 /*Numeric*/ DeeObject *minval,
-                                 /*Numeric*/ DeeObject *maxval,
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrIntegerOverflow)(/*Numeric*/ /*1..1*/ DeeObject *value,
+                                 /*Numeric*/ /*0..1*/ DeeObject *minval,
+                                 /*Numeric*/ /*0..1*/ DeeObject *maxval,
                                  bool positive) {
 	DREF IntegerOverflow *result = DeeObject_MALLOC(IntegerOverflow);
 	if unlikely(!result)
 		goto err;
 	result->io_base.e_message = NULL;
 	result->io_base.e_inner   = NULL;
-	Dee_variant_init_object_or_unbound(&result->io_base.ve_value, value);
+	Dee_variant_init_object(&result->io_base.ve_value, value);
 	Dee_variant_init_object_or_unbound(&result->io_minval, minval);
 	Dee_variant_init_object_or_unbound(&result->io_maxval, maxval);
 	result->io_positive = positive;

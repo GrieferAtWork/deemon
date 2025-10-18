@@ -49,7 +49,7 @@ DECL_BEGIN
  * default functions of objects, and are used to:
  * - Make it easier to override default functions without needing to re-write
  *   the same argument processing stub every time the function gets defined.
- * - Allow for fasting dispatching to the actual, underlying function within
+ * - Allow for faster dispatching to the actual, underlying function within
  *   optimized _hostasm code.
  *
  *

@@ -263,7 +263,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		if unlikely(!data)
 			goto err;
 		if (WSTR_LENGTH(data) != num_bytes) {
-			err_invalid_unpack_size(seq, num_bytes, WSTR_LENGTH(data));
+			DeeRT_ErrUnpackError(seq, num_bytes, WSTR_LENGTH(data));
 			goto err;
 		}
 		memcpy(dst, data, num_bytes);
@@ -271,7 +271,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		/* Optional optimization for `Bytes' (though this one
 		 * would also function using the fallback code below). */
 		if (DeeBytes_SIZE(seq) != num_bytes) {
-			err_invalid_unpack_size(seq, num_bytes, DeeBytes_SIZE(seq));
+			DeeRT_ErrUnpackError(seq, num_bytes, DeeBytes_SIZE(seq));
 			goto err;
 		}
 
@@ -287,7 +287,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 			goto err;
 		req_bytes = (size_t)(data.stbf_dst - dst);
 		if unlikely(req_bytes != num_bytes) {
-			err_invalid_unpack_size(seq, num_bytes, req_bytes);
+			DeeRT_ErrUnpackError(seq, num_bytes, req_bytes);
 			goto err;
 		}
 	}

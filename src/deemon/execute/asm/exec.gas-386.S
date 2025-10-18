@@ -3449,11 +3449,11 @@ target_varargs_unpack:
 	jmp    .disp
 70:	xorl   %ecx, %ecx
 	jmp    71b
-80:	pushl  %edx /* va_size */
+80:	pushl  %eax  /* expected_size */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %eax /* need_size */
+	pushl  FRAME /* frame */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(err_invalid_va_unpack_size,8)
+	call   fSYM(DeeRT_ErrVaUnpackError,8)
 	ADJUST_CFA_OFFSET(-8)
 	jmp    .except
 
