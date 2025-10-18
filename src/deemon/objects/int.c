@@ -2733,155 +2733,161 @@ err:
  * @return: One of `INT_*' (See above) */
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryGet8Bit(/*Int*/ DeeObject *__restrict self,
-                  int8_t *__restrict value) {
-	int result;
+                  int8_t *__restrict result) {
+	int error;
 #if DIGIT_BITS <= 16
-	int16_t digval;
-	result = DeeInt_TryGet16Bit(self, &digval);
+	int16_t result_value;
+	error = DeeInt_TryGet16Bit(self, &result_value);
 #else /* DIGIT_BITS <= 16 */
-	int32_t digval;
-	result = DeeInt_TryGet32Bit(self, &digval);
+	int32_t result_value;
+	error = DeeInt_TryGet32Bit(self, &result_value);
 #endif /* DIGIT_BITS > 16 */
-	switch (result) {
+	switch (error) {
 
 	case INT_UNSIGNED:
 #if DIGIT_BITS <= 16
-		if ((uint16_t)digval > 0xff)
+		if ((uint16_t)result_value > 0xff)
 			return INT_POS_OVERFLOW;
-		*value = (int8_t)(uint8_t)(uint16_t)digval;
+		*result = (int8_t)(uint8_t)(uint16_t)result_value;
 #else /* DIGIT_BITS <= 16 */
-		if ((uint32_t)digval > 0xff)
+		if ((uint32_t)result_value > 0xff)
 			return INT_POS_OVERFLOW;
-		*value = (int8_t)(uint8_t)(uint32_t)digval;
+		*result = (int8_t)(uint8_t)(uint32_t)result_value;
 #endif /* DIGIT_BITS > 16 */
 		break;
 
 	case INT_SIGNED:
-		if (digval > INT8_MAX)
+		if (result_value > INT8_MAX)
 			return INT_POS_OVERFLOW;
-		if (digval < INT8_MIN)
+		if (result_value < INT8_MIN)
 			return INT_NEG_OVERFLOW;
-		*value = (int8_t)digval;
+		*result = (int8_t)result_value;
 		break;
 
-	default:
+	case INT_POS_OVERFLOW:
+	case INT_NEG_OVERFLOW:
 		break;
+
+	default: __builtin_unreachable();
 	}
-	return result;
+	return error;
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryGet16Bit(/*Int*/ DeeObject *__restrict self,
-                   int16_t *__restrict value) {
+                   int16_t *__restrict result) {
 #if DIGIT_BITS <= 16
 	DeeIntObject *me = (DeeIntObject *)self;
-	uint16_t prev, result;
+	uint16_t prev, result_value;
 	bool negative;
 	Dee_ssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
 	switch (me->ob_size) {
 	case 0:
-		*value = 0;
+		*result = 0;
 		return INT_UNSIGNED;
 	case 1:
-		*value = me->ob_digit[0];
+		*result = me->ob_digit[0];
 		return INT_UNSIGNED;
 	case -1:
-		*value = -(int16_t)me->ob_digit[0];
+		*result = -(int16_t)me->ob_digit[0];
 		return INT_SIGNED;
 	default: break;
 	}
-	result   = 0;
-	prev     = 0;
-	negative = false;
+	result_value = 0;
+	prev         = 0;
+	negative     = false;
 	i = me->ob_size;
 	if (i < 0) {
 		negative = true;
 		i        = -i;
 	}
 	while (--i >= 0) {
-		result = (result << DIGIT_BITS) | me->ob_digit[i];
-		if ((result >> DIGIT_BITS) != prev)
+		result_value = (result_value << DIGIT_BITS) | me->ob_digit[i];
+		if ((result_value >> DIGIT_BITS) != prev)
 			goto overflow;
-		prev = result;
+		prev = result_value;
 	}
 	if (negative) {
-		if unlikely(result > UINT16_C(0x8000))
+		if unlikely(result_value > UINT16_C(0x8000))
 			goto overflow;
-		*value = -(int16_t)result;
+		*result = -(int16_t)result_value;
 		return INT_SIGNED;
 	}
-	*value = (int16_t)result;
+	*result = (int16_t)result_value;
 	return INT_UNSIGNED;
 overflow:
 	return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 #else /* DIGIT_BITS <= 16 */
-	int32_t digval;
-	int result = DeeInt_TryGet32Bit(self, &digval);
-	switch (result) {
+	int32_t result_value32;
+	int error = DeeInt_TryGet32Bit(self, &result_value32);
+	switch (error) {
 
 	case INT_UNSIGNED:
-		if ((uint32_t)digval > 0xffff)
+		if ((uint32_t)result_value32 > 0xffff)
 			return INT_POS_OVERFLOW;
-		*value = (int16_t)(uint16_t)(uint32_t)digval;
+		*result = (int16_t)(uint16_t)(uint32_t)result_value32;
 		break;
 
 	case INT_SIGNED:
-		if (digval > INT16_MAX)
+		if (result_value32 > INT16_MAX)
 			return INT_POS_OVERFLOW;
-		if (digval < INT16_MIN)
+		if (result_value32 < INT16_MIN)
 			return INT_NEG_OVERFLOW;
-		*value = (int16_t)digval;
+		*result = (int16_t)result_value32;
 		break;
 
-	default:
+	case INT_POS_OVERFLOW:
+	case INT_NEG_OVERFLOW:
 		break;
+
+	default: __builtin_unreachable();
 	}
-	return result;
+	return error;
 #endif /* DIGIT_BITS > 16 */
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryGet32Bit(/*Int*/ DeeObject *__restrict self,
-                   int32_t *__restrict value) {
+                   int32_t *__restrict result) {
 	DeeIntObject *me = (DeeIntObject *)self;
-	uint32_t prev, result;
+	uint32_t prev, result_value;
 	bool negative;
 	Dee_ssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
 	switch (me->ob_size) {
 	case 0:
-		*value = 0;
+		*result = 0;
 		return INT_UNSIGNED;
 	case 1:
-		*value = me->ob_digit[0];
+		*result = me->ob_digit[0];
 		return INT_UNSIGNED;
 	case -1:
-		*value = -(int32_t)me->ob_digit[0];
+		*result = -(int32_t)me->ob_digit[0];
 		return INT_SIGNED;
 	default: break;
 	}
-	result   = 0;
-	prev     = 0;
-	negative = false;
+	result_value = 0;
+	prev         = 0;
+	negative     = false;
 	i = me->ob_size;
 	if (i < 0) {
 		negative = true;
 		i        = -i;
 	}
 	while (--i >= 0) {
-		result = (result << DIGIT_BITS) | me->ob_digit[i];
-		if ((result >> DIGIT_BITS) != prev)
+		result_value = (result_value << DIGIT_BITS) | me->ob_digit[i];
+		if ((result_value >> DIGIT_BITS) != prev)
 			goto overflow;
-		prev = result;
+		prev = result_value;
 	}
 	if (negative) {
-		if unlikely(result > UINT32_C(0x80000000))
+		if unlikely(result_value > UINT32_C(0x80000000))
 			goto overflow;
-		*value = -(int32_t)result;
+		*result = -(int32_t)result_value;
 		return INT_SIGNED;
 	}
-	*value = (int32_t)result;
+	*result = (int32_t)result_value;
 	return INT_UNSIGNED;
 overflow:
 	return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
@@ -2889,76 +2895,76 @@ overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryGet64Bit(/*Int*/ DeeObject *__restrict self,
-                   int64_t *__restrict value) {
+                   int64_t *__restrict result) {
 	DeeIntObject *me = (DeeIntObject *)self;
-	uint64_t prev, result;
+	uint64_t prev, result_value;
 	bool negative;
 	Dee_ssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
 	switch (me->ob_size) {
 	case 0:
-		*value = 0;
+		*result = 0;
 		return INT_UNSIGNED;
 	case 1:
-		*value = me->ob_digit[0];
+		*result = me->ob_digit[0];
 		return INT_UNSIGNED;
 	case -1:
-		*value = -(int64_t)me->ob_digit[0];
+		*result = -(int64_t)me->ob_digit[0];
 		return INT_SIGNED;
 	default: break;
 	}
-	result   = 0;
-	prev     = 0;
-	negative = false;
+	result_value = 0;
+	prev         = 0;
+	negative     = false;
 	i = me->ob_size;
 	if (i < 0) {
 		negative = true;
 		i        = -i;
 	}
 	while (--i >= 0) {
-		result = (result << DIGIT_BITS) | me->ob_digit[i];
-		if ((result >> DIGIT_BITS) != prev)
+		result_value = (result_value << DIGIT_BITS) | me->ob_digit[i];
+		if ((result_value >> DIGIT_BITS) != prev)
 			goto overflow;
-		prev = result;
+		prev = result_value;
 	}
 	if (negative) {
-		if unlikely(result > UINT64_C(0x8000000000000000))
+		if unlikely(result_value > UINT64_C(0x8000000000000000))
 			goto overflow;
-		*value = -(int64_t)result;
+		*result = -(int64_t)result_value;
 		return INT_SIGNED;
 	}
-	*value = (int64_t)result;
+	*result = (int64_t)result_value;
 	return INT_UNSIGNED;
 overflow:
 	return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 }
 
-PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
-DeeInt_TryGet128Bit(/*Int*/ DeeObject *__restrict self,
-                    Dee_int128_t *__restrict value) {
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeInt_TryGet128Bit)(/*Int*/ DeeObject *__restrict self,
+                            Dee_int128_t *__restrict result) {
 	DeeIntObject *me = (DeeIntObject *)self;
 	union {
 		Dee_uint128_t u;
 		Dee_int128_t  s;
-	} result;
+	} result_value;
 	bool negative;
 	Dee_ssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
 	switch (me->ob_size) {
 	case 0:
-		__hybrid_int128_setzero(*value);
+		__hybrid_int128_setzero(*result);
 		return INT_UNSIGNED;
 	case 1:
-		__hybrid_int128_setword64_significand(*value, 0, me->ob_digit[0]);
-		__hybrid_int128_setword64_significand(*value, 1, 0);
+		__hybrid_int128_setword64_significand(*result, 0, me->ob_digit[0]);
+		__hybrid_int128_setword64_significand(*result, 1, 0);
 		return INT_UNSIGNED;
 	case -1:
-		__hybrid_int128_setword64_significand(*value, 0, -(sdigit)me->ob_digit[0]);
-		__hybrid_int128_setword64_significand(*value, 1, -1);
+		__hybrid_int128_setword64_significand(*result, 0, -(sdigit)me->ob_digit[0]);
+		__hybrid_int128_setword64_significand(*result, 1, -1);
 		return INT_SIGNED;
 	default: break;
 	}
-	__hybrid_uint128_setzero(result.u);
+	__hybrid_uint128_setzero(result_value.u);
 	negative = false;
 	i = me->ob_size;
 	if (i < 0) {
@@ -2966,22 +2972,22 @@ DeeInt_TryGet128Bit(/*Int*/ DeeObject *__restrict self,
 		i = -i;
 	}
 	while (--i >= 0) {
-		if (__hybrid_uint128_shl_DIGIT_BITS_overflows(result.u))
+		if (__hybrid_uint128_shl_DIGIT_BITS_overflows(result_value.u))
 			goto overflow;
-		__hybrid_uint128_shl_DIGIT_BITS(result.u);
-		__hybrid_uint128_or(result.u, me->ob_digit[i]);
+		__hybrid_uint128_shl_DIGIT_BITS(result_value.u);
+		__hybrid_uint128_or(result_value.u, me->ob_digit[i]);
 	}
 	if (negative) {
 		PRIVATE Dee_uint128_t const uint128_ill_pos =
 		__HYBRID_UINT128_INIT16N(0x8000, 0x0000, 0x0000, 0x0000,
 		                         0x0000, 0x0000, 0x0000, 0x0000);
-		if (__hybrid_uint128_gr128(result.u, uint128_ill_pos))
+		if (__hybrid_uint128_gr128(result_value.u, uint128_ill_pos))
 			goto overflow;
-		__hybrid_int128_neg(result.s);
-		*value = result.s;
+		__hybrid_int128_neg(result_value.s);
+		*result = result_value.s;
 		return INT_SIGNED;
 	}
-	*value = result.s;
+	*result = result_value.s;
 	return INT_UNSIGNED;
 overflow:
 	return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
@@ -2990,9 +2996,9 @@ overflow:
 /* Similar to the functions above, but explicitly require signed/unsigned 32/64-bit values. */
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsInt8)(/*Int*/ DeeObject *__restrict self,
-                         int8_t *__restrict value) {
-	int error = DeeInt_TryGet8Bit(self, value);
-	if (error == INT_UNSIGNED && *(uint8_t const *)value > INT8_MAX)
+                         int8_t *__restrict result) {
+	int error = DeeInt_TryGet8Bit(self, result);
+	if (error == INT_UNSIGNED && *(uint8_t const *)result > INT8_MAX)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3000,9 +3006,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsInt16)(/*Int*/ DeeObject *__restrict self,
-                          int16_t *__restrict value) {
-	int error = DeeInt_TryGet16Bit(self, value);
-	if (error == INT_UNSIGNED && *(uint16_t const *)value > INT16_MAX)
+                          int16_t *__restrict result) {
+	int error = DeeInt_TryGet16Bit(self, result);
+	if (error == INT_UNSIGNED && *(uint16_t const *)result > INT16_MAX)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3010,9 +3016,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsInt32)(/*Int*/ DeeObject *__restrict self,
-                          int32_t *__restrict value) {
-	int error = DeeInt_TryGet32Bit(self, value);
-	if (error == INT_UNSIGNED && *(uint32_t const *)value > INT32_MAX)
+                          int32_t *__restrict result) {
+	int error = DeeInt_TryGet32Bit(self, result);
+	if (error == INT_UNSIGNED && *(uint32_t const *)result > INT32_MAX)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3020,9 +3026,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsInt64)(/*Int*/ DeeObject *__restrict self,
-                          int64_t *__restrict value) {
-	int error = DeeInt_TryGet64Bit(self, value);
-	if (error == INT_UNSIGNED && *(uint64_t const *)value > INT64_MAX)
+                          int64_t *__restrict result) {
+	int error = DeeInt_TryGet64Bit(self, result);
+	if (error == INT_UNSIGNED && *(uint64_t const *)result > INT64_MAX)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3030,9 +3036,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsInt128)(/*Int*/ DeeObject *__restrict self,
-                           Dee_int128_t *__restrict value) {
-	int error = DeeInt_TryGet128Bit(self, value);
-	if (error == INT_UNSIGNED && __hybrid_int128_isneg(*value))
+                           Dee_int128_t *__restrict result) {
+	int error = DeeInt_TryGet128Bit(self, result);
+	if (error == INT_UNSIGNED && __hybrid_int128_isneg(*result))
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3040,9 +3046,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt8)(/*Int*/ DeeObject *__restrict self,
-                          uint8_t *__restrict value) {
-	int error = DeeInt_TryGet8Bit(self, (int8_t *)value);
-	if (error == INT_SIGNED && *(int8_t const *)value < 0)
+                          uint8_t *__restrict result) {
+	int error = DeeInt_TryGet8Bit(self, (int8_t *)result);
+	if (error == INT_SIGNED && *(int8_t const *)result < 0)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3050,9 +3056,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt16)(/*Int*/ DeeObject *__restrict self,
-                           uint16_t *__restrict value) {
-	int error = DeeInt_TryGet16Bit(self, (int16_t *)value);
-	if (error == INT_SIGNED && *(int16_t const *)value < 0)
+                           uint16_t *__restrict result) {
+	int error = DeeInt_TryGet16Bit(self, (int16_t *)result);
+	if (error == INT_SIGNED && *(int16_t const *)result < 0)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3060,9 +3066,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt32)(/*Int*/ DeeObject *__restrict self,
-                           uint32_t *__restrict value) {
-	int error = DeeInt_TryGet32Bit(self, (int32_t *)value);
-	if (error == INT_SIGNED && *(int32_t const *)value < 0)
+                           uint32_t *__restrict result) {
+	int error = DeeInt_TryGet32Bit(self, (int32_t *)result);
+	if (error == INT_SIGNED && *(int32_t const *)result < 0)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3070,9 +3076,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt64)(/*Int*/ DeeObject *__restrict self,
-                           uint64_t *__restrict value) {
-	int error = DeeInt_TryGet64Bit(self, (int64_t *)value);
-	if (error == INT_SIGNED && *(int64_t const *)value < 0)
+                           uint64_t *__restrict result) {
+	int error = DeeInt_TryGet64Bit(self, (int64_t *)result);
+	if (error == INT_SIGNED && *(int64_t const *)result < 0)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3080,9 +3086,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt128)(/*Int*/ DeeObject *__restrict self,
-                            Dee_uint128_t *__restrict value) {
-	int error = DeeInt_TryGet128Bit(self, (Dee_int128_t *)value);
-	if (error == INT_SIGNED && __hybrid_int128_isneg(*(Dee_int128_t const *)value))
+                            Dee_uint128_t *__restrict result) {
+	int error = DeeInt_TryGet128Bit(self, (Dee_int128_t *)result);
+	if (error == INT_SIGNED && __hybrid_int128_isneg(*(Dee_int128_t const *)result))
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3093,75 +3099,75 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
  * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and return `-1'. */
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_Get8Bit)(/*Int*/ DeeObject *__restrict self,
-                       int8_t *__restrict value) {
-	int result = DeeInt_TryGet8Bit(self, value);
-	if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW)
+                       int8_t *__restrict result) {
+	int error = DeeInt_TryGet8Bit(self, result);
+	if (error == INT_POS_OVERFLOW || error == INT_NEG_OVERFLOW)
 		goto err_overflow;
-	return result;
+	return error;
 err_overflow:
 	return DeeRT_ErrIntegerOverflowEx(self, 8,
 	                                  DeeRT_ErrIntegerOverflowEx_F_ANYSIGN |
-	                                  (result == INT_POS_OVERFLOW
+	                                  (error == INT_POS_OVERFLOW
 	                                   ? DeeRT_ErrIntegerOverflowEx_F_POSITIVE
 	                                   : DeeRT_ErrIntegerOverflowEx_F_NEGATIVE));
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_Get16Bit)(/*Int*/ DeeObject *__restrict self,
-                        int16_t *__restrict value) {
-	int result = DeeInt_TryGet16Bit(self, value);
-	if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW)
+                        int16_t *__restrict result) {
+	int error = DeeInt_TryGet16Bit(self, result);
+	if (error == INT_POS_OVERFLOW || error == INT_NEG_OVERFLOW)
 		goto err_overflow;
-	return result;
+	return error;
 err_overflow:
 	return DeeRT_ErrIntegerOverflowEx(self, 16,
 	                                  DeeRT_ErrIntegerOverflowEx_F_ANYSIGN |
-	                                  (result == INT_POS_OVERFLOW
+	                                  (error == INT_POS_OVERFLOW
 	                                   ? DeeRT_ErrIntegerOverflowEx_F_POSITIVE
 	                                   : DeeRT_ErrIntegerOverflowEx_F_NEGATIVE));
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_Get32Bit)(/*Int*/ DeeObject *__restrict self,
-                        int32_t *__restrict value) {
-	int result = DeeInt_TryGet32Bit(self, value);
-	if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW)
+                        int32_t *__restrict result) {
+	int error = DeeInt_TryGet32Bit(self, result);
+	if (error == INT_POS_OVERFLOW || error == INT_NEG_OVERFLOW)
 		goto err_overflow;
-	return result;
+	return error;
 err_overflow:
 	return DeeRT_ErrIntegerOverflowEx(self, 32,
 	                                  DeeRT_ErrIntegerOverflowEx_F_ANYSIGN |
-	                                  (result == INT_POS_OVERFLOW
+	                                  (error == INT_POS_OVERFLOW
 	                                   ? DeeRT_ErrIntegerOverflowEx_F_POSITIVE
 	                                   : DeeRT_ErrIntegerOverflowEx_F_NEGATIVE));
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_Get64Bit)(/*Int*/ DeeObject *__restrict self,
-                        int64_t *__restrict value) {
-	int result = DeeInt_TryGet64Bit(self, value);
-	if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW)
+                        int64_t *__restrict result) {
+	int error = DeeInt_TryGet64Bit(self, result);
+	if (error == INT_POS_OVERFLOW || error == INT_NEG_OVERFLOW)
 		goto err_overflow;
-	return result;
+	return error;
 err_overflow:
 	return DeeRT_ErrIntegerOverflowEx(self, 64,
 	                                  DeeRT_ErrIntegerOverflowEx_F_ANYSIGN |
-	                                  (result == INT_POS_OVERFLOW
+	                                  (error == INT_POS_OVERFLOW
 	                                   ? DeeRT_ErrIntegerOverflowEx_F_POSITIVE
 	                                   : DeeRT_ErrIntegerOverflowEx_F_NEGATIVE));
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_Get128Bit)(/*Int*/ DeeObject *__restrict self,
-                         Dee_int128_t *__restrict value) {
-	int result = DeeInt_TryGet128Bit(self, value);
-	if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW)
+                         Dee_int128_t *__restrict result) {
+	int error = DeeInt_TryGet128Bit(self, result);
+	if (error == INT_POS_OVERFLOW || error == INT_NEG_OVERFLOW)
 		goto err_overflow;
-	return result;
+	return error;
 err_overflow:
 	return DeeRT_ErrIntegerOverflowEx(self, 128,
 	                                  DeeRT_ErrIntegerOverflowEx_F_ANYSIGN |
-	                                  (result == INT_POS_OVERFLOW
+	                                  (error == INT_POS_OVERFLOW
 	                                   ? DeeRT_ErrIntegerOverflowEx_F_POSITIVE
 	                                   : DeeRT_ErrIntegerOverflowEx_F_NEGATIVE));
 }
@@ -3171,9 +3177,9 @@ err_overflow:
  * @return: -1: An error occurred (Integer overflow). */
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsInt8)(/*Int*/ DeeObject *__restrict self,
-                      int8_t *__restrict value) {
-	int error = DeeInt_Get8Bit(self, value);
-	if (error == INT_UNSIGNED && *value < 0)
+                      int8_t *__restrict result) {
+	int error = DeeInt_Get8Bit(self, result);
+	if (error == INT_UNSIGNED && *result < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -3184,9 +3190,9 @@ err_overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsInt16)(/*Int*/ DeeObject *__restrict self,
-                       int16_t *__restrict value) {
-	int error = DeeInt_Get16Bit(self, value);
-	if (error == INT_UNSIGNED && *value < 0)
+                       int16_t *__restrict result) {
+	int error = DeeInt_Get16Bit(self, result);
+	if (error == INT_UNSIGNED && *result < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -3197,9 +3203,9 @@ err_overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsInt32)(/*Int*/ DeeObject *__restrict self,
-                       int32_t *__restrict value) {
-	int error = DeeInt_Get32Bit(self, value);
-	if (error == INT_UNSIGNED && *value < 0)
+                       int32_t *__restrict result) {
+	int error = DeeInt_Get32Bit(self, result);
+	if (error == INT_UNSIGNED && *result < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -3210,9 +3216,9 @@ err_overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsInt64)(/*Int*/ DeeObject *__restrict self,
-                       int64_t *__restrict value) {
-	int error = DeeInt_Get64Bit(self, value);
-	if (error == INT_UNSIGNED && *value < 0)
+                       int64_t *__restrict result) {
+	int error = DeeInt_Get64Bit(self, result);
+	if (error == INT_UNSIGNED && *result < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -3223,9 +3229,9 @@ err_overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsInt128)(/*Int*/ DeeObject *__restrict self,
-                        Dee_int128_t *__restrict value) {
-	int error = DeeInt_Get128Bit(self, value);
-	if (error == INT_UNSIGNED && __hybrid_int128_isneg(*value))
+                        Dee_int128_t *__restrict result) {
+	int error = DeeInt_Get128Bit(self, result);
+	if (error == INT_UNSIGNED && __hybrid_int128_isneg(*result))
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -3236,9 +3242,9 @@ err_overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsUInt8)(/*Int*/ DeeObject *__restrict self,
-                       uint8_t *__restrict value) {
-	int error = DeeInt_Get8Bit(self, (int8_t *)value);
-	if (error == INT_SIGNED && *(int8_t const *)value < 0)
+                       uint8_t *__restrict result) {
+	int error = DeeInt_Get8Bit(self, (int8_t *)result);
+	if (error == INT_SIGNED && *(int8_t const *)result < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -3249,9 +3255,9 @@ err_overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsUInt16)(/*Int*/ DeeObject *__restrict self,
-                        uint16_t *__restrict value) {
-	int error = DeeInt_Get16Bit(self, (int16_t *)value);
-	if (error == INT_SIGNED && *(int16_t const *)value < 0)
+                        uint16_t *__restrict result) {
+	int error = DeeInt_Get16Bit(self, (int16_t *)result);
+	if (error == INT_SIGNED && *(int16_t const *)result < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -3262,9 +3268,9 @@ err_overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsUInt32)(/*Int*/ DeeObject *__restrict self,
-                        uint32_t *__restrict value) {
-	int error = DeeInt_Get32Bit(self, (int32_t *)value);
-	if (error == INT_SIGNED && *(int32_t const *)value < 0)
+                        uint32_t *__restrict result) {
+	int error = DeeInt_Get32Bit(self, (int32_t *)result);
+	if (error == INT_SIGNED && *(int32_t const *)result < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -3275,9 +3281,9 @@ err_overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsUInt64)(/*Int*/ DeeObject *__restrict self,
-                        uint64_t *__restrict value) {
-	int error = DeeInt_Get64Bit(self, (int64_t *)value);
-	if (error == INT_SIGNED && *(int64_t const *)value < 0)
+                        uint64_t *__restrict result) {
+	int error = DeeInt_Get64Bit(self, (int64_t *)result);
+	if (error == INT_SIGNED && *(int64_t const *)result < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -3288,9 +3294,9 @@ err_overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsUInt128)(/*Int*/ DeeObject *__restrict self,
-                         Dee_uint128_t *__restrict value) {
-	int error = DeeInt_Get128Bit(self, (Dee_int128_t *)value);
-	if (error == INT_SIGNED && __hybrid_int128_isneg(*(Dee_int128_t const *)value))
+                         Dee_uint128_t *__restrict result) {
+	int error = DeeInt_Get128Bit(self, (Dee_int128_t *)result);
+	if (error == INT_SIGNED && __hybrid_int128_isneg(*(Dee_int128_t const *)result))
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -3301,14 +3307,14 @@ err_overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsDouble)(/*Int*/ DeeObject *__restrict self,
-                        double *__restrict value) {
+                        double *__restrict result) {
 	/* TODO: This is wrong; doubles can approximate values larger than 64-bit! */
 	int64_t temp;
 	int error = DeeInt_Get64Bit(self, &temp);
 	if (error == INT_UNSIGNED) {
-		*value = (double)(uint64_t)temp;
+		*result = (double)(uint64_t)temp;
 	} else {
-		*value = (double)temp;
+		*result = (double)temp;
 	}
 	return error < 0 ? -1 : 0;
 }
@@ -3319,9 +3325,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt8M1)(/*Int*/ DeeObject *__restrict self,
-                            uint8_t *__restrict value) {
-	int error = DeeInt_TryGet8Bit(self, (int8_t *)value);
-	if (error == INT_SIGNED && *(int8_t const *)value < -1)
+                            uint8_t *__restrict result) {
+	int error = DeeInt_TryGet8Bit(self, (int8_t *)result);
+	if (error == INT_SIGNED && *(int8_t const *)result < -1)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3329,9 +3335,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt16M1)(/*Int*/ DeeObject *__restrict self,
-                             uint16_t *__restrict value) {
-	int error = DeeInt_TryGet16Bit(self, (int16_t *)value);
-	if (error == INT_SIGNED && *(int16_t const *)value < -1)
+                             uint16_t *__restrict result) {
+	int error = DeeInt_TryGet16Bit(self, (int16_t *)result);
+	if (error == INT_SIGNED && *(int16_t const *)result < -1)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3339,9 +3345,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt32M1)(/*Int*/ DeeObject *__restrict self,
-                             uint32_t *__restrict value) {
-	int error = DeeInt_TryGet32Bit(self, (int32_t *)value);
-	if (error == INT_SIGNED && *(int32_t const *)value < -1)
+                             uint32_t *__restrict result) {
+	int error = DeeInt_TryGet32Bit(self, (int32_t *)result);
+	if (error == INT_SIGNED && *(int32_t const *)result < -1)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3349,9 +3355,9 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt64M1)(/*Int*/ DeeObject *__restrict self,
-                             uint64_t *__restrict value) {
-	int error = DeeInt_TryGet64Bit(self, (int64_t *)value);
-	if (error == INT_SIGNED && *(int64_t const *)value < -1)
+                             uint64_t *__restrict result) {
+	int error = DeeInt_TryGet64Bit(self, (int64_t *)result);
+	if (error == INT_SIGNED && *(int64_t const *)result < -1)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3359,11 +3365,11 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt128M1)(/*Int*/ DeeObject *__restrict self,
-                              Dee_uint128_t *__restrict value) {
-	int error = DeeInt_TryGet128Bit(self, (Dee_int128_t *)value);
+                              Dee_uint128_t *__restrict result) {
+	int error = DeeInt_TryGet128Bit(self, (Dee_int128_t *)result);
 	if (error == INT_SIGNED &&
-	    __hybrid_int128_isneg(*(Dee_int128_t const *)value) &&
-	    !__hybrid_int128_isminusone(*(Dee_int128_t const *)value))
+	    __hybrid_int128_isneg(*(Dee_int128_t const *)result) &&
+	    !__hybrid_int128_isminusone(*(Dee_int128_t const *)result))
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -3371,49 +3377,49 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsUInt8M1)(/*Int*/ DeeObject *__restrict self,
-                         uint8_t *__restrict value) {
-	int error = DeeInt_Get8Bit(self, (int8_t *)value);
-	if (error == INT_SIGNED && *(int8_t const *)value < -1)
+                         uint8_t *__restrict result) {
+	int error = DeeInt_Get8Bit(self, (int8_t *)result);
+	if (error == INT_SIGNED && *(int8_t const *)result < -1)
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return DeeRT_ErrIntegerOverflowS16(*(int8_t *)value, -1, UINT8_MAX);
+	return DeeRT_ErrIntegerOverflowS16(*(int8_t *)result, -1, UINT8_MAX);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsUInt16M1)(/*Int*/ DeeObject *__restrict self,
-                          uint16_t *__restrict value) {
-	int error = DeeInt_Get16Bit(self, (int16_t *)value);
-	if (error == INT_SIGNED && *(int16_t const *)value < -1)
+                          uint16_t *__restrict result) {
+	int error = DeeInt_Get16Bit(self, (int16_t *)result);
+	if (error == INT_SIGNED && *(int16_t const *)result < -1)
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return DeeRT_ErrIntegerOverflowS32(*(int16_t *)value, -1, UINT16_MAX);
+	return DeeRT_ErrIntegerOverflowS32(*(int16_t *)result, -1, UINT16_MAX);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsUInt32M1)(/*Int*/ DeeObject *__restrict self,
-                          uint32_t *__restrict value) {
-	int error = DeeInt_Get32Bit(self, (int32_t *)value);
-	if (error == INT_SIGNED && *(int32_t const *)value < -1)
+                          uint32_t *__restrict result) {
+	int error = DeeInt_Get32Bit(self, (int32_t *)result);
+	if (error == INT_SIGNED && *(int32_t const *)result < -1)
 		goto err_overflow;
 	return 0;
 err_overflow:
-	return DeeRT_ErrIntegerOverflowS64(*(int32_t *)value, -1, UINT32_MAX);
+	return DeeRT_ErrIntegerOverflowS64(*(int32_t *)result, -1, UINT32_MAX);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsUInt64M1)(/*Int*/ DeeObject *__restrict self,
-                          uint64_t *__restrict value) {
-	int error = DeeInt_Get64Bit(self, (int64_t *)value);
-	if (error == INT_SIGNED && *(int64_t const *)value < -1)
+                          uint64_t *__restrict result) {
+	int error = DeeInt_Get64Bit(self, (int64_t *)result);
+	if (error == INT_SIGNED && *(int64_t const *)result < -1)
 		goto err_overflow;
 	return 0;
 	{
 		Dee_int128_t val128, minval;
 		Dee_uint128_t maxval;
 err_overflow:
-		__hybrid_int128_set64(val128, *(int32_t *)value);
+		__hybrid_int128_set64(val128, *(int32_t *)result);
 		__hybrid_int128_setminusone(minval);
 		__hybrid_uint128_set64(maxval, UINT64_MAX);
 		return DeeRT_ErrIntegerOverflowS128(val128, minval, *(Dee_int128_t *)&maxval);
@@ -3452,11 +3458,11 @@ INTERN struct {
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsUInt128M1)(/*Int*/ DeeObject *__restrict self,
-                           Dee_uint128_t *__restrict value) {
-	int error = DeeInt_Get128Bit(self, (Dee_int128_t *)value);
+                           Dee_uint128_t *__restrict result) {
+	int error = DeeInt_Get128Bit(self, (Dee_int128_t *)result);
 	if (error == INT_SIGNED &&
-	    __hybrid_int128_isneg(*(Dee_int128_t const *)value) &&
-	    !__hybrid_int128_isminusone(*(Dee_int128_t const *)value))
+	    __hybrid_int128_isneg(*(Dee_int128_t const *)result) &&
+	    !__hybrid_int128_isminusone(*(Dee_int128_t const *)result))
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -3989,7 +3995,7 @@ int_bool(DeeIntObject *__restrict self) {
 PRIVATE struct type_math int_math = {
 	/* .tp_int32       = */ &DeeInt_Get32Bit,
 	/* .tp_int64       = */ &DeeInt_Get64Bit,
-	/* .tp_double      = */ DEFIMPL(&default__double__with__int), /* TODO */
+	/* .tp_double      = */ &DeeInt_AsDouble,
 	/* .tp_int         = */ &DeeObject_NewRef,
 	/* .tp_inv         = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&int_inv,
 	/* .tp_pos         = */ &DeeObject_NewRef,
@@ -4034,7 +4040,7 @@ PRIVATE struct type_math int_math = {
 #define DeeInt_TryGetSizeBit(ob, p_value) DeeInt_TryGet128Bit(ob, (Dee_int128_t *)(p_value))
 #else /* __SIZEOF_SIZE_T__ == ... */
 #error "Unsupported __SIZEOF_SIZE_T__"
-#endif /*  __SIZEOF_SIZE_T__ != ...*/
+#endif /*  __SIZEOF_SIZE_T__ != ... */
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
 Dee_ssize_compare_int(Dee_ssize_t lhs, DeeIntObject const *rhs) {
