@@ -196,7 +196,7 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject
 
 /* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOutOfBounds)(DeeObject *seq, size_t index, size_t length);
-DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeObject *seq, DeeObject *index, DeeObject *length);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeObject *seq, DeeObject *index, /*0..1*/ DeeObject *length);
 #define DeeRT_ErrIndexOutOfBounds(seq, index, length)    Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBounds)((DeeObject *)Dee_REQUIRES_OBJECT(seq), index, length), -1)
 #define DeeRT_ErrIndexOutOfBoundsObj(seq, index, length) Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBoundsObj)((DeeObject *)Dee_REQUIRES_OBJECT(seq), (DeeObject *)Dee_REQUIRES_OBJECT(index), (DeeObject *)Dee_REQUIRES_OBJECT(length)), -1)
 #ifdef CONFIG_BUILDING_DEEMON

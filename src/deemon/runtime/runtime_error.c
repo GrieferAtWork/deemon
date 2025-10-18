@@ -174,49 +174,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_unimplemented_operator2)(DeeTypeObject const *__restrict tp,
-                                    Dee_operator_t operator_name,
-                                    Dee_operator_t operator_name2) {
-	struct opinfo const *info, *info2;
-	info  = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
-	info2 = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name2);
-	ASSERT_OBJECT(tp);
-	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Neither `%r." OPNAME("%s") "', nor `%r." OPNAME("%s") "' are implemented",
-	                       tp, info ? info->oi_sname : Q3,
-	                       tp, info2 ? info2->oi_sname : Q3);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_unimplemented_operator3)(DeeTypeObject const *__restrict tp,
-                                    Dee_operator_t operator_name,
-                                    Dee_operator_t operator_name2,
-                                    Dee_operator_t operator_name3) {
-	struct opinfo const *info, *info2, *info3;
-	info  = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
-	info2 = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name2);
-	info3 = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name3);
-	ASSERT_OBJECT(tp);
-	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Neither `%r." OPNAME("%s") "', nor `%r." OPNAME("%s") "', "
-	                       "nor `%r." OPNAME("%s") "' are implemented",
-	                       tp, info ? info->oi_sname : Q3,
-	                       tp, info2 ? info2->oi_sname : Q3,
-	                       tp, info3 ? info3->oi_sname : Q3);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int /* DEPRECATED! */
-(DCALL err_index_out_of_bounds_ob)(DeeObject *self, DeeObject *index) {
-	int result;
-	DREF DeeObject *size_ob = DeeObject_SizeOb(self);
-	if unlikely(!size_ob)
-		return -1;
-	result = DeeRT_ErrIndexOutOfBoundsObj(self, index, size_ob);
-	Dee_Decref_unlikely(size_ob);
-	return result;
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_expected_single_character_string)(DeeObject *__restrict str) {
 	size_t length;
 	ASSERT_OBJECT(str);
@@ -355,29 +312,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       "Invalid keyword list containing %" PRFuSIZ " keywords "
 	                       "when only %" PRFuSIZ " arguments were given",
 	                       DeeKwds_SIZE(kwds), argc);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_keywords_not_found)(DeeObject *__restrict keyword) {
-	ASSERT_OBJECT_TYPE_EXACT(keyword, &DeeString_Type);
-	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Missing argument %r",
-	                       keyword);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_keywords_not_found_str)(char const *__restrict keyword) {
-	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Missing argument %q",
-	                       keyword);
-}
-
-INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_keywords_not_found_str_len)(char const *__restrict keyword,
-                                       size_t keyword_len) {
-	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Missing argument %$q",
-	                       keyword_len, keyword);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int

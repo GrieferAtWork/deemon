@@ -43,7 +43,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_cannot_weak_reference(DeeObject *__r
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_reference_loop(DeeObject *a, DeeObject *b);
 INTDEF ATTR_COLD int DCALL err_cannot_lock_weakref(void);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_bytes_not_writable(DeeObject *__restrict bytes_ob);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_index_out_of_bounds_ob(DeeObject *self, DeeObject *index);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_single_character_string(DeeObject *__restrict str);
 INTDEF NONNULL((1)) int DFCALL check_empty_keywords_obj(DeeObject *__restrict kw);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_not_accepted(DeeTypeObject *tp_self, DeeObject *kw);
@@ -57,9 +56,6 @@ INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classproperty_requires_1_argument
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument_string(DeeTypeObject *tp_self, char const *__restrict name);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument_string_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_bad_for_argc(struct kwds_object *kwds, size_t argc, DeeObject *const *argv);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_not_found(DeeObject *__restrict keyword);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_not_found_str(char const *__restrict keyword);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_not_found_str_len(char const *__restrict keyword, size_t keyword_len);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_shadows_positional(DeeObject *__restrict keyword);
 INTDEF ATTR_COLD int DCALL err_invalid_segment_size(size_t segsz);
 INTDEF ATTR_COLD int DCALL err_invalid_distribution_count(size_t distcnt);
@@ -99,8 +95,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_extern(struct code_frame
 
 /* @param: operator_name: One of `OPERATOR_*' */
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator2(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name, Dee_operator_t operator_name2);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator3(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name, Dee_operator_t operator_name2, Dee_operator_t operator_name3);
 
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_string_for_attribute(DeeObject *__restrict but_instead_got);
 
@@ -129,7 +123,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_reference_loop(a, b)                                                                          Dee_ASSUMED_VALUE(err_reference_loop(a, b), -1)
 #define err_cannot_lock_weakref()                                                                         Dee_ASSUMED_VALUE(err_cannot_lock_weakref(), -1)
 #define err_bytes_not_writable(bytes_ob)                                                                  Dee_ASSUMED_VALUE(err_bytes_not_writable(bytes_ob), -1)
-#define err_index_out_of_bounds_ob(self, index)                                                           Dee_ASSUMED_VALUE(err_index_out_of_bounds_ob(self, index), -1)
 #define err_expected_single_character_string(str)                                                         Dee_ASSUMED_VALUE(err_expected_single_character_string(str), -1)
 #define err_keywords_not_accepted(tp_self, kw)                                                            Dee_ASSUMED_VALUE(err_keywords_not_accepted(tp_self, kw), -1)
 #define err_keywords_func_not_accepted_string(tp_self, name, kw)                                          Dee_ASSUMED_VALUE(err_keywords_func_not_accepted_string(tp_self, name, kw), -1)
@@ -142,7 +135,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_classmethod_requires_at_least_1_argument_string(tp_self, name)                                Dee_ASSUMED_VALUE(err_classmethod_requires_at_least_1_argument_string(tp_self, name), -1)
 #define err_classmethod_requires_at_least_1_argument_string_len(tp_self, name, namelen)                   Dee_ASSUMED_VALUE(err_classmethod_requires_at_least_1_argument_string_len(tp_self, name, namelen), -1)
 #define err_keywords_bad_for_argc(kwds, argc, argv)                                                       Dee_ASSUMED_VALUE(err_keywords_bad_for_argc(kwds, argc, argv), -1)
-#define err_keywords_not_found_str(keyword)                                                               Dee_ASSUMED_VALUE(err_keywords_not_found_str(keyword), -1)
 #define err_keywords_shadows_positional(keyword)                                                          Dee_ASSUMED_VALUE(err_keywords_shadows_positional(keyword), -1)
 #define err_invalid_segment_size(segsz)                                                                   Dee_ASSUMED_VALUE(err_invalid_segment_size(segsz), -1)
 #define err_invalid_distribution_count(distcnt)                                                           Dee_ASSUMED_VALUE(err_invalid_distribution_count(distcnt), -1)
@@ -176,8 +168,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_srt_invalid_global(frame, gid)                                                                Dee_ASSUMED_VALUE(err_srt_invalid_global(frame, gid), -1)
 #define err_srt_invalid_extern(frame, mid, gid)                                                           Dee_ASSUMED_VALUE(err_srt_invalid_extern(frame, mid, gid), -1)
 #define err_unimplemented_operator(tp, operator_name)                                                     Dee_ASSUMED_VALUE(err_unimplemented_operator(tp, operator_name), -1)
-#define err_unimplemented_operator2(tp, operator_name, operator_name2)                                    Dee_ASSUMED_VALUE(err_unimplemented_operator2(tp, operator_name, operator_name2), -1)
-#define err_unimplemented_operator3(tp, operator_name, operator_name2, operator_name3)                    Dee_ASSUMED_VALUE(err_unimplemented_operator3(tp, operator_name, operator_name2, operator_name3), -1)
 #define err_expected_string_for_attribute(but_instead_got)                                                Dee_ASSUMED_VALUE(err_expected_string_for_attribute(but_instead_got), -1)
 #define err_module_not_loaded_attr_string(self, name, access)                                             Dee_ASSUMED_VALUE(err_module_not_loaded_attr_string(self, name, access), -1)
 #define err_module_not_loaded_attr_string_len(self, name, namelen, access)                                Dee_ASSUMED_VALUE(err_module_not_loaded_attr_string_len(self, name, namelen, access), -1)

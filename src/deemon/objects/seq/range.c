@@ -717,7 +717,7 @@ do_compare_positive:
 	}
 	return result;
 err_oob:
-	err_index_out_of_bounds_ob((DeeObject *)self, index);
+	DeeRT_ErrIndexOutOfBoundsObj(self, index, (DeeObject *)NULL);
 err:
 	return NULL;
 }

@@ -831,8 +831,8 @@ err:
 	return -1;
 }
 
-PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
-(DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeObject *seq, DeeObject *index, DeeObject *length) {
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeObject *seq, DeeObject *index, /*0..1*/ DeeObject *length) {
 	DREF IndexError *result = DeeObject_MALLOC(IndexError);
 	if unlikely(!result)
 		goto err;
@@ -841,7 +841,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 	result->ie_base.ke_base.e_inner   = NULL;
 	Dee_variant_init_object(&result->ie_base.ke_base.ve_value, seq);
 	Dee_variant_init_object(&result->ie_base.ke_key, index);
-	Dee_variant_init_object(&result->ie_length, length);
+	Dee_variant_init_object_or_unbound(&result->ie_length, length);
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
 	return -1;
